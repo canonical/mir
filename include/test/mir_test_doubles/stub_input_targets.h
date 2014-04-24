@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,31 +16,27 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#ifndef MIR_TEST_DOUBLES_STUB_INPUT_TARGETS_H_
+#define MIR_TEST_DOUBLES_STUB_INPUT_TARGETS_H_
 
-#ifndef MIR_SHELL_SURFACE_RANKER_H_
-#define MIR_SHELL_SURFACE_RANKER_H_
-
-#include <memory>
+#include "mir/input/input_targets.h"
 
 namespace mir
 {
-namespace scene
+namespace test
 {
-class Surface;
-
-class SurfaceRanker
+namespace doubles
 {
-public:
-    virtual void raise(std::weak_ptr<Surface> const& surface) = 0;
 
-protected:
-    SurfaceRanker() = default;
-    virtual ~SurfaceRanker() = default;
-    SurfaceRanker(SurfaceRanker const&) = delete;
-    SurfaceRanker& operator=(SurfaceRanker const&) = delete;
+class StubInputTargets : public input::InputTargets
+{
+    void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& ) override
+    {
+    }
 };
+
 }
 }
+} // namespace mir
 
-
-#endif /* MIR_SHELL_SURFACE_RANKER_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_INPUT_TARGETS_H_ */

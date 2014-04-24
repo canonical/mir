@@ -23,19 +23,19 @@
 
 namespace mir
 {
+namespace scene { class Session; }
 
 namespace shell
 {
-class Session;
 
 class TrustSession : public frontend::TrustSession
 {
 public:
-    virtual std::weak_ptr<shell::Session> get_trusted_helper() const = 0;
+    virtual std::weak_ptr<scene::Session> get_trusted_helper() const = 0;
 
-    virtual bool add_trusted_child(std::shared_ptr<shell::Session> const& session) = 0;
-    virtual void remove_trusted_child(std::shared_ptr<shell::Session> const& session) = 0;
-    virtual void for_each_trusted_child(std::function<void(std::shared_ptr<shell::Session> const&)> f, bool reverse) const = 0;
+    virtual bool add_trusted_child(std::shared_ptr<scene::Session> const& session) = 0;
+    virtual void remove_trusted_child(std::shared_ptr<scene::Session> const& session) = 0;
+    virtual void for_each_trusted_child(std::function<void(std::shared_ptr<scene::Session> const&)> f, bool reverse) const = 0;
 };
 
 }

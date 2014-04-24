@@ -45,7 +45,6 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
-namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 namespace mr = mir::report;
 

@@ -16,28 +16,28 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 
 namespace mg = mir::graphics;
-namespace msh = mir::shell;
+namespace ms = mir::scene;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-msh::SurfaceCreationParameters::SurfaceCreationParameters()
+ms::SurfaceCreationParameters::SurfaceCreationParameters()
     : name(), size(), top_left(), buffer_usage(mg::BufferUsage::undefined),
       pixel_format(mir_pixel_format_invalid),
       depth{0}, input_mode(mi::InputReceptionMode::normal)
 {
 }
 
-msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_name(std::string const& new_name)
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_name(std::string const& new_name)
 {
     name = new_name;
     return *this;
 }
 
 
-msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_size(
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_size(
         geometry::Size new_size)
 {
     size = new_size;
@@ -45,21 +45,21 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_size(
     return *this;
 }
 
-msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_size(
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_size(
     geometry::Width::ValueType width,
     geometry::Height::ValueType height)
 {
     return of_size({width, height});
 }
 
-msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_position(geometry::Point const& new_top_left)
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_position(geometry::Point const& new_top_left)
 {
     top_left = new_top_left;
 
     return *this;
 }
 
-msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_buffer_usage(
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_buffer_usage(
         mg::BufferUsage new_buffer_usage)
 {
     buffer_usage = new_buffer_usage;
@@ -67,7 +67,7 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_buffer_usage(
     return *this;
 }
 
-msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_pixel_format(
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_pixel_format(
     MirPixelFormat new_pixel_format)
 {
     pixel_format = new_pixel_format;
@@ -75,7 +75,7 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_pixel_format(
     return *this;
 }
 
-msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_depth(
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_depth(
     scene::DepthId const& new_depth)
 {
     depth = new_depth;
@@ -83,14 +83,14 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::of_depth(
     return *this;
 }
 
-msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::with_input_mode(input::InputReceptionMode const& new_mode)
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_input_mode(input::InputReceptionMode const& new_mode)
 {
     input_mode = new_mode;
 
     return *this;
 }
 
-msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::with_output_id(
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_output_id(
     graphics::DisplayConfigurationOutputId const& new_output_id)
 {
     output_id = new_output_id;
@@ -98,9 +98,9 @@ msh::SurfaceCreationParameters& msh::SurfaceCreationParameters::with_output_id(
     return *this;
 }
 
-bool msh::operator==(
+bool ms::operator==(
     const SurfaceCreationParameters& lhs,
-    const msh::SurfaceCreationParameters& rhs)
+    const ms::SurfaceCreationParameters& rhs)
 {
     return lhs.name == rhs.name &&
         lhs.size == rhs.size &&
@@ -112,14 +112,14 @@ bool msh::operator==(
         lhs.output_id == lhs.output_id;
 }
 
-bool msh::operator!=(
+bool ms::operator!=(
     const SurfaceCreationParameters& lhs,
-    const msh::SurfaceCreationParameters& rhs)
+    const ms::SurfaceCreationParameters& rhs)
 {
     return !(lhs == rhs);
 }
 
-msh::SurfaceCreationParameters msh::a_surface()
+ms::SurfaceCreationParameters ms::a_surface()
 {
     return SurfaceCreationParameters();
 }

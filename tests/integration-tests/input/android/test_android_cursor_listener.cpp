@@ -30,6 +30,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
+#include "mir_test_doubles/stub_input_targets.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
@@ -52,13 +53,6 @@ using mtd::MockEventFilter;
 namespace
 {
 using namespace ::testing;
-
-struct StubInputTargets : public mi::InputTargets
-{
-    void for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const&)
-    {
-    }
-};
 
 struct StubInputRegion : public mi::InputRegion
 {
@@ -94,7 +88,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
 
         input_manager = configuration->the_input_manager();
 
-        stub_targets = std::make_shared<StubInputTargets>();
+        stub_targets = std::make_shared<mtd::StubInputTargets>();
         configuration->set_input_targets(stub_targets);
 
         input_manager->start();
@@ -110,7 +104,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
     std::shared_ptr<MockEventFilter> event_filter;
     std::shared_ptr<mi::InputManager> input_manager;
     MockCursorListener cursor_listener;
-    std::shared_ptr<StubInputTargets> stub_targets;
+    std::shared_ptr<mtd::StubInputTargets> stub_targets;
     StubInputRegion input_region;
 };
 

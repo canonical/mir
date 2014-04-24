@@ -33,46 +33,47 @@ namespace mir
 
 namespace shell
 {
-class SurfaceFactory;
 class FocusSetter;
-class SessionListener;
 class TrustSessionListener;
 }
 
 namespace scene
 {
-class SessionEventSink;
 class SessionContainer;
+class SessionEventSink;
+class SessionListener;
 class SnapshotStrategy;
+class SurfaceCoordinator;
 class TrustSessionContainer;
 
 class SessionManager : public frontend::Shell, public shell::FocusController
 {
 public:
-    explicit SessionManager(std::shared_ptr<shell::SurfaceFactory> const& surface_factory,
+    explicit SessionManager(std::shared_ptr<SurfaceCoordinator> const& surface_coordinator,
                             std::shared_ptr<SessionContainer> const& app_container,
                             std::shared_ptr<shell::FocusSetter> const& focus_setter,
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
                             std::shared_ptr<SessionEventSink> const& session_event_sink,
-                            std::shared_ptr<shell::SessionListener> const& session_listener,
+                            std::shared_ptr<SessionListener> const& session_listener,
                             std::shared_ptr<shell::TrustSessionListener> const& trust_session_listener);
     virtual ~SessionManager();
 
     virtual std::shared_ptr<frontend::Session> open_session(
         pid_t client_pid,
         std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink);
+        std::shared_ptr<frontend::EventSink> const& sink) override;
 
-    virtual void close_session(std::shared_ptr<frontend::Session> const& session);
+    virtual void close_session(std::shared_ptr<frontend::Session> const& session) override;
 
-    frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& session,
-                                 shell::SurfaceCreationParameters const& params);
+    frontend::SurfaceId create_surface_for(
+        std::shared_ptr<frontend::Session> const& session,
+        SurfaceCreationParameters const& params) override;
 
-    void focus_next();
-    std::weak_ptr<shell::Session> focussed_application() const;
-    void set_focus_to(std::shared_ptr<shell::Session> const& focus);
+    void focus_next() override;
+    std::weak_ptr<Session> focussed_application() const;
+    void set_focus_to(std::shared_ptr<Session> const& focus) override;
 
-    void handle_surface_created(std::shared_ptr<frontend::Session> const& session);
+    void handle_surface_created(std::shared_ptr<frontend::Session> const& session) override;
 
     std::shared_ptr<frontend::TrustSession> start_trust_session_for(std::string& error,
                                                   std::shared_ptr<frontend::Session> const& session,
@@ -86,35 +87,26 @@ protected:
     SessionManager& operator=(const SessionManager&) = delete;
 
 private:
-    std::shared_ptr<shell::SurfaceFactory> const surface_factory;
+    std::shared_ptr<SurfaceCoordinator> const surface_coordinator;
     std::shared_ptr<SessionContainer> const app_container;
     std::shared_ptr<shell::FocusSetter> const focus_setter;
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionEventSink> const session_event_sink;
-    std::shared_ptr<shell::SessionListener> const session_listener;
+    std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<shell::TrustSessionListener> const trust_session_listener;
+    std::shared_ptr<TrustSessionContainer> trust_session_container;
 
     std::mutex mutex;
-    std::weak_ptr<shell::Session> focus_application;
+    std::weak_ptr<Session> focus_application;
 
-    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<shell::Session> const& next_focus);
+    void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<Session> const& next_focus);
 
     MirTrustSessionAddTrustResult add_trusted_session_for_locked(std::unique_lock<std::mutex> const&,
                                                                  std::shared_ptr<frontend::TrustSession> const& trust_session,
                                                                  pid_t session_pid);
     void stop_trust_session_locked(std::unique_lock<std::mutex> const& lock,
                                    std::shared_ptr<frontend::TrustSession> const& trust_session);
-
-    std::mutex mutable surfaces_mutex;
-
-    typedef std::vector<std::shared_ptr<frontend::TrustSession>> TrustSessions;
     std::mutex mutable trust_sessions_mutex;
-    TrustSessions trust_sessions;
-
-    typedef std::multimap<frontend::Session*, std::shared_ptr<frontend::TrustSession>> TrustedSessions2;
-    TrustedSessions2 trust_sessions2;
-
-    std::shared_ptr<TrustSessionContainer> trust_session_container;
 };
 
 }

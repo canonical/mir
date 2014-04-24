@@ -17,18 +17,18 @@
  */
 
 #include "src/server/scene/session_manager.h"
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 #include "mir/shell/focus_setter.h"
 #include "src/server/scene/default_session_container.h"
-#include "mir/shell/null_session_listener.h"
+#include "mir/scene/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
 #include "src/server/scene/basic_surface.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/null_trust_session_listener.h"
 
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_surface_factory.h"
+#include "mir_test_doubles/mock_surface_coordinator.h"
 #include "mir_test_doubles/mock_focus_setter.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
@@ -51,7 +51,7 @@ struct TestSessionManagerAndFocusSelectionStrategy : public testing::Test
 {
     TestSessionManagerAndFocusSelectionStrategy()
         : session_manager(
-              mt::fake_shared(surface_factory),
+              mt::fake_shared(surface_coordinator),
               mt::fake_shared(container),
               mt::fake_shared(focus_setter),
               std::make_shared<mtd::NullSnapshotStrategy>(),
@@ -62,11 +62,11 @@ struct TestSessionManagerAndFocusSelectionStrategy : public testing::Test
 
     }
 
-    mtd::MockSurfaceFactory surface_factory; // TODO this isn't used as a mock
+    mtd::MockSurfaceCoordinator surface_coordinator; // TODO this isn't used as a mock
     ms::DefaultSessionContainer container;
     mtd::MockFocusSetter focus_setter;
     std::shared_ptr<mf::Session> new_session;
-    msh::NullSessionListener session_listener;
+    ms::NullSessionListener session_listener;
     ms::SessionManager session_manager;
 };
 

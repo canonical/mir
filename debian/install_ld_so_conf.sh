@@ -2,10 +2,18 @@
 
 set -e
 
-mir_platform_types="platformgraphics clientplatform"
-mir_platforms="android mesa"
+DEB_HOST_ARCH=$1
+DEB_HOST_MULTIARCH=$2
 
-DEB_HOST_MULTIARCH=$1
+mir_platform_types="platformgraphics clientplatform"
+case $DEB_HOST_ARCH in
+    arm64)
+        mir_platforms="mesa"
+        ;;
+    *)
+        mir_platforms="android mesa"
+        ;;
+esac
 
 for platform_type in $mir_platform_types;
 do

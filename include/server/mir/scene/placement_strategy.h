@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,33 +16,29 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_SURFACE_FACTORY_H_
-#define MIR_TEST_DOUBLES_MOCK_SURFACE_FACTORY_H_
-
-#include "mir/shell/surface_factory.h"
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#ifndef MIR_SCENE_PLACEMENT_STRATEGY_H_
+#define MIR_SCENE_PLACEMENT_STRATEGY_H_
 
 namespace mir
 {
-namespace test
+namespace scene
 {
-namespace doubles
-{
+class Session;
+struct SurfaceCreationParameters;
 
-struct MockSurfaceFactory : public shell::SurfaceFactory
+class PlacementStrategy
 {
-    MOCK_METHOD3(create_surface, std::shared_ptr<shell::Surface>(
-        shell::Session*,
-        const shell::SurfaceCreationParameters&,
-        std::shared_ptr<scene::SurfaceObserver> const&));
+public:
+    virtual ~PlacementStrategy() = default;
 
-    void destroy_surface(std::shared_ptr<shell::Surface> const& /*surface*/) override {}
+    virtual SurfaceCreationParameters place(Session const& session, SurfaceCreationParameters const& request_parameters) = 0;
+
+protected:
+    PlacementStrategy() = default;
+    PlacementStrategy(PlacementStrategy const&) = delete;
+    PlacementStrategy& operator=(PlacementStrategy const&) = delete;
 };
+}
+} // namespace mir
 
-}
-}
-}
-
-#endif // MIR_TEST_DOUBLES_MOCK_SURFACE_FACTORY_H_
+#endif // MIR_SCENE_PLACEMENT_STRATEGY_H_

@@ -20,8 +20,8 @@
 #include "window_manager.h"
 
 #include "mir/shell/focus_controller.h"
-#include "mir/shell/session.h"
-#include "mir/shell/surface.h"
+#include "mir/scene/session.h"
+#include "mir/scene/surface.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/compositor/compositor.h"
@@ -195,8 +195,7 @@ bool me::WindowManager::handle(MirEvent const& event)
         // FIXME: https://bugs.launchpad.net/mir/+bug/1197108
         MirMotionAction action = static_cast<MirMotionAction>(event.motion.action & ~0xff00);
 
-        std::shared_ptr<msh::Session> app =
-            focus_controller->focussed_application().lock();
+        auto const app = focus_controller->focussed_application().lock();
 
         int fingers = static_cast<int>(event.motion.pointer_count);
 
@@ -207,7 +206,7 @@ bool me::WindowManager::handle(MirEvent const& event)
         {
             // FIXME: We need to be able to select individual surfaces in
             //        future and not just the "default" one.
-            std::shared_ptr<msh::Surface> surf = app->default_surface();
+            auto const surf = app->default_surface();
 
             if (surf &&
                 (event.motion.modifiers & mir_key_modifier_alt ||

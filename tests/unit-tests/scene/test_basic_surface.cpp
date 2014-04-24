@@ -24,6 +24,7 @@
 #include "mir/scene/surface_configurator.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
+#include "mir_test_doubles/stub_buffer.h"
 #include "mir_test/fake_shared.h"
 
 #include "src/server/report/null_report_factory.h"
@@ -107,6 +108,41 @@ TEST_F(BasicSurfaceTest, basics)
     EXPECT_EQ(rect.size, surface.size());
     EXPECT_EQ(rect.top_left, surface.top_left());
     EXPECT_FALSE(surface.shaped());
+}
+
+TEST_F(BasicSurfaceTest, id_always_unique)
+{
+    int const N = 10;
+    std::unique_ptr<ms::BasicSurface> surfaces[N];
+
+    for (int i = 0; i < N; ++i)
+    {
+        surfaces[i].reset(new ms::BasicSurface(
+                name, rect, false, mock_buffer_stream,
+                std::shared_ptr<mi::InputChannel>(), stub_configurator, report)
+            );
+
+        for (int j = 0; j < i; ++j)
+        {
+            ASSERT_NE(surfaces[j]->id(), surfaces[i]->id());
+        }
+    }
+}
+
+TEST_F(BasicSurfaceTest, id_never_invalid)
+{
+    int const N = 10;
+    std::unique_ptr<ms::BasicSurface> surfaces[N];
+
+    for (int i = 0; i < N; ++i)
+    {
+        surfaces[i].reset(new ms::BasicSurface(
+                name, rect, false, mock_buffer_stream,
+                std::shared_ptr<mi::InputChannel>(), stub_configurator, report)
+            );
+
+        ASSERT_TRUE(surfaces[i]->id());
+    }
 }
 
 TEST_F(BasicSurfaceTest, update_top_left)
@@ -233,6 +269,14 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
 
 TEST_F(BasicSurfaceTest, test_surface_visibility)
 {
+    using namespace testing;
+    mtd::StubBuffer mock_buffer;
+    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_,_)).Times(2)
+        .WillRepeatedly(InvokeArgument<1>(&mock_buffer));
+
+    mir::graphics::Buffer* buffer = nullptr;
+    auto const callback = [&](mir::graphics::Buffer* new_buffer) { buffer = new_buffer; };
+
     ms::BasicSurface surface{
         name,
         rect,
@@ -251,7 +295,10 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
     surface.set_hidden(true);
     EXPECT_FALSE(surface.visible());
 
-    surface.frame_posted();
+    // The second call posts the buffer returned by first
+    surface.swap_buffers(buffer, callback);
+    surface.swap_buffers(buffer, callback);
+
     EXPECT_FALSE(surface.visible());
 
     surface.set_hidden(false);
@@ -282,8 +329,9 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
 TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
 {
     using namespace testing;
-    EXPECT_CALL(mock_callback, call())
-        .Times(1);
+    mtd::StubBuffer mock_buffer;
+    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_,_)).Times(2)
+        .WillRepeatedly(InvokeArgument<1>(&mock_buffer));
 
     ms::BasicSurface surface{
         name,
@@ -297,7 +345,14 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
     auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb);
     surface.add_observer(observer);
 
-    surface.frame_posted();
+    mir::graphics::Buffer* buffer = nullptr;
+    auto const callback = [&](mir::graphics::Buffer* new_buffer) { buffer = new_buffer; };
+
+    EXPECT_CALL(mock_callback, call()).Times(1);
+
+    // The second call posts the buffer returned by first
+    surface.swap_buffers(buffer, callback);
+    surface.swap_buffers(buffer, callback);
 }
 
 // a 1x1 window at (1,1) will get events at (1,1)

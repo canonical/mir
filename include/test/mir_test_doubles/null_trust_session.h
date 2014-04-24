@@ -47,21 +47,21 @@ class NullTrustSession : public shell::TrustSession
     {
     }
 
-    std::weak_ptr<shell::Session> get_trusted_helper() const override
+    std::weak_ptr<scene::Session> get_trusted_helper() const override
     {
-      return std::weak_ptr<shell::Session>();
+      return std::weak_ptr<scene::Session>();
     }
 
-    bool add_trusted_child(std::shared_ptr<shell::Session> const&) override
+    bool add_trusted_child(std::shared_ptr<scene::Session> const&) override
     {
         return false;
     }
 
-    void remove_trusted_child(std::shared_ptr<shell::Session> const&) override
+    void remove_trusted_child(std::shared_ptr<scene::Session> const&) override
     {
     }
 
-    void for_each_trusted_child(std::function<void(std::shared_ptr<shell::Session> const&)>,
+    void for_each_trusted_child(std::function<void(std::shared_ptr<scene::Session> const&)>,
                                 bool) const override
     {
     }

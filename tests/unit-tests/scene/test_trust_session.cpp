@@ -20,7 +20,7 @@
 #include "mir/shell/trust_session_creation_parameters.h"
 #include "src/server/scene/trust_session.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_shell_session.h"
+#include "mir_test_doubles/mock_scene_session.h"
 #include "mir_test_doubles/mock_trust_session_listener.h"
 
 #include <gmock/gmock.h>
@@ -43,8 +43,8 @@ struct TrustSession : public testing::Test
     }
 
     testing::NiceMock<mtd::MockTrustSessionListener> trust_session_listener;
-    testing::NiceMock<mtd::MockShellSession> trusted_helper;
-    testing::NiceMock<mtd::MockShellSession> trusted_app1;
+    testing::NiceMock<mtd::MockSceneSession> trusted_helper;
+    testing::NiceMock<mtd::MockSceneSession> trusted_app1;
 };
 }
 

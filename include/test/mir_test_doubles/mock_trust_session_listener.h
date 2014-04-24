@@ -37,8 +37,8 @@ struct MockTrustSessionListener : public shell::TrustSessionListener
     MOCK_METHOD1(starting, void(std::shared_ptr<shell::TrustSession> const&));
     MOCK_METHOD1(stopping, void(std::shared_ptr<shell::TrustSession> const&));
 
-    MOCK_METHOD2(trusted_session_beginning, void(shell::TrustSession&, std::shared_ptr<shell::Session> const&));
-    MOCK_METHOD2(trusted_session_ending, void(shell::TrustSession&, std::shared_ptr<shell::Session> const&));
+    MOCK_METHOD2(trusted_session_beginning, void(shell::TrustSession&, std::shared_ptr<scene::Session> const&));
+    MOCK_METHOD2(trusted_session_ending, void(shell::TrustSession&, std::shared_ptr<scene::Session> const&));
 };
 
 }

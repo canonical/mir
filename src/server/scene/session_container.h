@@ -25,21 +25,21 @@
 
 namespace mir
 {
-namespace shell { class Session; }
-
 namespace scene
 {
+class Session;
+
 class SessionContainer
 {
 public:
-    virtual void insert_session(std::shared_ptr<shell::Session> const& session) = 0;
-    virtual void remove_session(std::shared_ptr<shell::Session> const& session) = 0;
+    virtual void insert_session(std::shared_ptr<Session> const& session) = 0;
+    virtual void remove_session(std::shared_ptr<Session> const& session) = 0;
 
-    virtual void for_each(std::function<void(std::shared_ptr<shell::Session> const&)> f) const = 0;
+    virtual void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const = 0;
 
     // For convenience the successor of the null session is defined as the last session
     // which would be passed to the for_each callback
-    virtual std::shared_ptr<shell::Session> successor_of(std::shared_ptr<shell::Session> const&) const = 0;
+    virtual std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const&) const = 0;
 
 protected:
     SessionContainer() = default;

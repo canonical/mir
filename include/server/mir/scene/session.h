@@ -16,23 +16,19 @@
  * Authored By: Robert Carr <racarr@canonical.com>
  */
 
-#ifndef MIR_SHELL_SESSION_H_
-#define MIR_SHELL_SESSION_H_
+#ifndef MIR_SCENE_SESSION_H_
+#define MIR_SCENE_SESSION_H_
 
 #include "mir/frontend/session.h"
-#include "mir/shell/snapshot.h"
+#include "mir/scene/snapshot.h"
 
 #include <sys/types.h>
-#include <vector>
 
 namespace mir
 {
-namespace scene { class SessionContainer; }
-
-namespace shell
+namespace scene
 {
 class Surface;
-class TrustSession;
 
 class Session : public frontend::Session
 {
@@ -43,6 +39,7 @@ public:
     virtual void take_snapshot(SnapshotCallback const& snapshot_taken) = 0;
     virtual std::shared_ptr<Surface> default_surface() const = 0;
     virtual void set_lifecycle_state(MirLifecycleState state) = 0;
+    virtual void send_display_config(graphics::DisplayConfiguration const&) = 0;
 
     virtual void begin_trust_session() = 0;
     virtual void end_trust_session() = 0;
@@ -50,4 +47,4 @@ public:
 }
 }
 
-#endif // MIR_SHELL_SESSION_H_
+#endif // MIR_SCENE_SESSION_H_
