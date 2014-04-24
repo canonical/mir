@@ -38,7 +38,6 @@ bool ms::TrustSessionContainer::insert(std::shared_ptr<mf::TrustSession> const& 
 
     Object obj{trust_session, process, insertion_order++};
     boost::tie(it,valid) = process_map.insert(obj);
-    printf("insert trust session %p -> prcess: %d  => %d\n", (void*)trust_session.get(), process, valid);
 
     return valid;
 }
@@ -55,7 +54,6 @@ void ms::TrustSessionContainer::for_each_process_for_trust_session(
     for (; it != end; ++it)
     {
         Object const& obj = *it;
-        printf("order %d\n", obj.insert_order);
         f(obj.client_process);
     }
 }
@@ -84,7 +82,6 @@ void ms::TrustSessionContainer::remove_trust_session(std::shared_ptr<frontend::T
     boost::tie(it,end) = trust_session_index.equal_range(trust_session);
 
     trust_session_index.erase(it, end);
-    printf("remove trust session: %p\n", (void*)trust_session.get());
 }
 
 void ms::TrustSessionContainer::remove_process(ClientProcess const& process)
@@ -95,5 +92,4 @@ void ms::TrustSessionContainer::remove_process(ClientProcess const& process)
     boost::tie(it,end) = process_index.equal_range(process);
 
     process_index.erase(it, end);
-    printf("remove process: %d\n", process);
 }

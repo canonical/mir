@@ -136,12 +136,9 @@ void trusted_helper(const char* server, pid_t child_pid)
     start_session(server, "trusted_helper", &mcd);
 
     // We create a trust session
-    mcd.trust_session = mir_connection_create_trust_session(mcd.connection);
+    mcd.trust_session = mir_connection_start_trust_session_sync(mcd.connection, getpid(), trust_session_event_callback, &mcd);
     assert(mcd.trust_session != NULL);
-    // register for state change events.
-    mir_trust_session_set_event_callback(mcd.trust_session, trust_session_event_callback, &mcd);
 
-    mir_trust_session_start_sync(mcd.trust_session, getpid());
     assert(mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_state_started);
     puts("trusted_helper: Started trust session");
 
@@ -155,9 +152,9 @@ void trusted_helper(const char* server, pid_t child_pid)
 
     if (mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_state_started)
     {
-        // mir_trust_session_stop_sync(mcd.trust_session);
-        // assert(mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_state_stopped);
-        // puts("trusted_helper: Stopped trust session");
+        mir_trust_session_stop_sync(mcd.trust_session);
+        assert(mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_state_stopped);
+        puts("trusted_helper: Stopped trust session");
     }
     else
     {

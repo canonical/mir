@@ -57,9 +57,10 @@ struct ClientConfigCommon : TestingClientConfiguration
         connection = new_connection;
     }
 
-    static void trust_session_start_callback(MirTrustSession * /* session */, void * context)
+    static void trust_session_start_callback(MirTrustSession * session, void * context)
     {
         ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
+        config->trust_session = session;
         config->started++;
     }
 
@@ -68,7 +69,6 @@ struct ClientConfigCommon : TestingClientConfiguration
         ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
         config->stopped++;
     }
-
 
     MirConnection* connection;
     MirTrustSession* trust_session;
@@ -89,12 +89,9 @@ TEST_F(MirClientTrustSessionAPITest, client_trust_session_api)
             EXPECT_TRUE(mir_connection_is_valid(connection));
             EXPECT_STREQ("", mir_connection_get_error_message(connection));
 
-            trust_session = mir_connection_create_trust_session(connection);
+            mir_wait_for(mir_connection_start_trust_session(connection, __LINE__, trust_session_start_callback, NULL, this));
             ASSERT_TRUE(trust_session != NULL);
-
-            mir_wait_for(mir_trust_session_start(trust_session, __LINE__, trust_session_start_callback, this));
             EXPECT_EQ(started, 1);
-            EXPECT_EQ(stopped, 0);
 
             mir_wait_for(mir_trust_session_stop(trust_session, trust_session_stop_callback, this));
             EXPECT_EQ(stopped, 1);
