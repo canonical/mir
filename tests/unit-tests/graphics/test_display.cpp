@@ -84,7 +84,7 @@ public:
 #else
         auto platform = std::make_shared<mg::mesa::Platform>(report,
             std::make_shared<mir::test::doubles::NullVirtualTerminal>(),
-            mg::mesa::BypassOption::bypass_enabled);
+            mg::mesa::BypassOption::allowed);
 #endif
         return platform->create_display(
             std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),

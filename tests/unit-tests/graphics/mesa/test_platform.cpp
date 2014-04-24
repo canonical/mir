@@ -66,7 +66,7 @@ public:
         return std::make_shared<mgm::Platform>(
             mr::null_display_report(),
             std::make_shared<mtd::NullVirtualTerminal>(),
-            mgm::BypassOption::bypass_disabled);
+            mgm::BypassOption::prohibited);
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;

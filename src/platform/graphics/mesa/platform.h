@@ -33,8 +33,8 @@ namespace mesa
 {
 enum class BypassOption
 {
-    bypass_enabled,
-    bypass_disabled
+    allowed,
+    prohibited
 };
 
 class VirtualTerminal;

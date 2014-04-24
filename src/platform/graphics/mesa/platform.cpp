@@ -216,9 +216,9 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
         options->get<int>(vt_option_name),
         report);
 
-    auto bypass_option = mgm::BypassOption::bypass_enabled;
+    auto bypass_option = mgm::BypassOption::allowed;
     if (!options->get<bool>(bypass_option_name))
-        bypass_option = mgm::BypassOption::bypass_disabled;
+        bypass_option = mgm::BypassOption::prohibited;
         
     return std::make_shared<mgm::Platform>(report, vt, bypass_option);
 }

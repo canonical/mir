@@ -66,10 +66,10 @@ protected:
         platform = std::make_shared<mgm::Platform>(
             mr::null_display_report(),
             std::make_shared<mtd::NullVirtualTerminal>(),
-            mgm::BypassOption::bypass_enabled);
+            mgm::BypassOption::allowed);
         mock_buffer_initializer = std::make_shared<testing::NiceMock<mtd::MockBufferInitializer>>();
         allocator.reset(new mgm::BufferAllocator(
-            platform->gbm.device, mock_buffer_initializer, mgm::BypassOption::bypass_enabled));
+            platform->gbm.device, mock_buffer_initializer, mgm::BypassOption::allowed));
     }
 
     // Defaults
@@ -153,7 +153,7 @@ TEST_F(MesaBufferAllocatorTest, bypass_disables_when_option_is_disabled)
     mgm::BufferAllocator alloc(
         platform->gbm.device,
         mock_buffer_initializer,
-        mgm::BypassOption::bypass_disabled);
+        mgm::BypassOption::prohibited);
     auto buf = alloc.alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
     EXPECT_FALSE(buf->can_bypass());
@@ -257,7 +257,7 @@ TEST_F(MesaBufferAllocatorTest, null_buffer_initializer_does_not_crash)
 
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     allocator.reset(new mgm::BufferAllocator(
-        platform->gbm.device, null_buffer_initializer, mgm::BypassOption::bypass_enabled));
+        platform->gbm.device, null_buffer_initializer, mgm::BypassOption::allowed));
 
     EXPECT_NO_THROW({
         allocator->alloc_buffer(buffer_properties);

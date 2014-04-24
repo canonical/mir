@@ -127,7 +127,7 @@ public:
         return std::make_shared<mgm::Platform>(
             null_report,
             std::make_shared<mtd::NullVirtualTerminal>(),
-            mgm::BypassOption::bypass_enabled);
+            mgm::BypassOption::allowed);
     }
 
     std::shared_ptr<mgm::Display> create_display(
@@ -647,7 +647,7 @@ TEST_F(MesaDisplayTest, constructor_sets_vt_graphics_mode)
         .Times(1);
 
     auto platform = std::make_shared<mgm::Platform>(
-        null_report, mock_vt, mgm::BypassOption::bypass_enabled);
+        null_report, mock_vt, mgm::BypassOption::allowed);
 
     auto display = create_display(platform);
 }
@@ -692,7 +692,7 @@ TEST_F(MesaDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
     auto platform = std::make_shared<mgm::Platform>(
         mock_report,
         std::make_shared<mtd::NullVirtualTerminal>(),
-        mgm::BypassOption::bypass_enabled);
+        mgm::BypassOption::allowed);
     auto display = std::make_shared<mgm::Display>(
                         platform,
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),

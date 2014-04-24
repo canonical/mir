@@ -188,7 +188,7 @@ geom::Rectangle mgm::DisplayBuffer::view_area() const
 bool mgm::DisplayBuffer::can_bypass() const
 {
     return ((rotation == mir_orientation_normal) &&
-            (platform->bypass_option() == mgm::BypassOption::bypass_enabled));
+            (platform->bypass_option() == mgm::BypassOption::allowed));
 }
 
 MirOrientation mgm::DisplayBuffer::orientation() const
