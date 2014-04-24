@@ -9,7 +9,7 @@ add_library(
   nested_display_configuration.cpp
   nested_output.cpp
   nested_platform.cpp
-  host_connection.cpp
+  mir_client_host_connection.cpp
 )
 
 target_link_libraries(
