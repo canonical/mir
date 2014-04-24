@@ -8,6 +8,7 @@ include_directories(
 protobuf_generate_cpp(
   GENERATED_PROTOBUF_SRCS GENERATED_PROTOBUF_HDRS
   test_protobuf.proto
+  spike_socket_request.proto
 )
 
 set(
@@ -29,6 +30,7 @@ set(
   test_protobuf.cpp
   test_client_screencast.cpp
   test_client_surface_swap_buffers.cpp
+  spike_socket_request.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )

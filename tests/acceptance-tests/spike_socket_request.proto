@@ -1,0 +1,20 @@
+option cc_generic_services = true;
+
+package mir.protobuf;
+
+message SocketFDRequest {
+  required string application_name = 1;
+}
+
+
+message SocketFD {
+  repeated sint32 fd = 1;
+  optional int32  fds_on_side_channel = 2;
+
+  optional string error = 127;
+}
+
+service SocketFDServer {
+  rpc client_socket_fd(SocketFDRequest) returns (SocketFD);
+}
+
