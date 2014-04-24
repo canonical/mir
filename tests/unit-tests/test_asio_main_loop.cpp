@@ -17,6 +17,7 @@
  */
 
 #include "mir/asio_main_loop.h"
+#include "mir/time/high_resolution_clock.h"
 #include "mir_test/pipe.h"
 #include "mir_test_framework/watchdog.h"
 
@@ -348,7 +349,7 @@ TEST(AsioMainLoopTest, main_loop_runs_until_stop_called)
     EXPECT_FALSE(checkpoint.wait_for(lock, std::chrono::milliseconds{50}, [&hit_checkpoint]() { return hit_checkpoint; }));
 }
 
-TEST(AsioMainLoopTest, alarm_fires_at_correct_time)
+TEST(AsioMainLoopTest, alarm_fires_with_correct_delay)
 {
     mir::AsioMainLoop ml;
 
@@ -372,7 +373,7 @@ TEST(AsioMainLoopTest, multiple_alarms_fire)
 
     int const alarm_count{10};
     std::atomic<int> call_count{0};
-    std::array<std::unique_ptr<mir::Alarm>, alarm_count> alarms;
+    std::array<std::unique_ptr<mir::time::Alarm>, alarm_count> alarms;
 
     for (auto& alarm : alarms)
     {
@@ -388,7 +389,7 @@ TEST(AsioMainLoopTest, multiple_alarms_fire)
 
     EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{100}));
     for (auto& alarm : alarms)
-        EXPECT_EQ(mir::Alarm::Triggered, alarm->state());
+        EXPECT_EQ(mir::time::Alarm::Triggered, alarm->state());
 }
 
 
@@ -407,7 +408,7 @@ TEST(AsioMainLoopTest, alarm_changes_to_triggered_state)
 
     ASSERT_TRUE(runner.wait_for(std::chrono::milliseconds{100}));
 
-    EXPECT_EQ(mir::Alarm::Triggered, alarm->state());
+    EXPECT_EQ(mir::time::Alarm::Triggered, alarm->state());
 }
 
 TEST(AsioMainLoopTest, alarm_starts_in_pending_state)
@@ -423,7 +424,7 @@ TEST(AsioMainLoopTest, alarm_starts_in_pending_state)
 
     runner.run([&ml](mtf::WatchDog&) { ml.run(); });
 
-    EXPECT_EQ(mir::Alarm::Pending, alarm->state());
+    EXPECT_EQ(mir::time::Alarm::Pending, alarm->state());
 }
 
 TEST(AsioMainLoopTest, cancelled_alarm_doesnt_fire)
@@ -441,7 +442,7 @@ TEST(AsioMainLoopTest, cancelled_alarm_doesnt_fire)
 
     EXPECT_TRUE(alarm->cancel());
     EXPECT_FALSE(runner.wait_for(std::chrono::milliseconds{300}));
-    EXPECT_EQ(mir::Alarm::Cancelled, alarm->state());
+    EXPECT_EQ(mir::time::Alarm::Cancelled, alarm->state());
 }
 
 TEST(AsioMainLoopTest, destroyed_alarm_doesnt_fire)
@@ -493,12 +494,12 @@ TEST(AsioMainLoopTest, rescheduled_alarm_fires_again)
                                     [&call_count](){ return call_count == 1; }));
     }
 
-    ASSERT_EQ(mir::Alarm::Triggered, alarm->state());
+    ASSERT_EQ(mir::time::Alarm::Triggered, alarm->state());
     alarm->reschedule_in(std::chrono::milliseconds{100});
-    EXPECT_EQ(mir::Alarm::Pending, alarm->state());
+    EXPECT_EQ(mir::time::Alarm::Pending, alarm->state());
 
     EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{500}));
-    EXPECT_EQ(mir::Alarm::Triggered, alarm->state());
+    EXPECT_EQ(mir::time::Alarm::Triggered, alarm->state());
 }
 
 TEST(AsioMainLoopTest, rescheduled_alarm_cancels_previous_scheduling)
@@ -521,9 +522,29 @@ TEST(AsioMainLoopTest, rescheduled_alarm_cancels_previous_scheduling)
     runner.run([&ml](mtf::WatchDog&) { ml.run(); });
 
     EXPECT_TRUE(alarm->reschedule_in(std::chrono::milliseconds{150}));
-    EXPECT_EQ(mir::Alarm::Pending, alarm->state());
+    EXPECT_EQ(mir::time::Alarm::Pending, alarm->state());
 
     EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{500}));
-    EXPECT_EQ(mir::Alarm::Triggered, alarm->state());
+    EXPECT_EQ(mir::time::Alarm::Triggered, alarm->state());
     EXPECT_EQ(1, call_count);
 }
+
+TEST(AsioMainLoopTest, alarm_fires_at_correct_time_point)
+{
+    mir::AsioMainLoop ml;
+    mir::time::HighResolutionClock clock;
+
+    mtf::WatchDog runner([&ml]() {ml.stop();});
+
+    mir::time::Timestamp real_soon = clock.sample() + std::chrono::microseconds{120};
+
+    auto alarm = ml.notify_at(real_soon, [&runner]()
+    {
+        runner.notify_done();
+    });
+
+    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
+
+    EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{200}));
+}
+

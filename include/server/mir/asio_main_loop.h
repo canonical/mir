@@ -45,8 +45,10 @@ public:
         std::initializer_list<int> fd,
         std::function<void(int)> const& handler);
 
-    std::unique_ptr<Alarm> notify_in(std::chrono::milliseconds delay,
-                                     std::function<void()> callback) override;
+    std::unique_ptr<time::Alarm> notify_in(std::chrono::milliseconds delay,
+                                           std::function<void()> callback) override;
+    std::unique_ptr<time::Alarm> notify_at(mir::time::Timestamp time_point,
+                                           std::function<void()> callback) override;
 private:
     class SignalHandler;
     class FDHandler;

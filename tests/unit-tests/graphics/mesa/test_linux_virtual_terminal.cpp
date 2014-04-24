@@ -85,14 +85,27 @@ public:
                       std::function<void(int)> const&));
 
     MOCK_METHOD2(notify_in_delegate,
-                 mir::Alarm*(std::chrono::milliseconds,
-                             std::function<void()>));
+                 mir::time::Alarm*(std::chrono::milliseconds,
+                                   std::function<void()>));
 
-    std::unique_ptr<mir::Alarm> notify_in(std::chrono::milliseconds delay,
-                                          std::function<void()> callback)
+    std::unique_ptr<mir::time::Alarm> notify_in(std::chrono::milliseconds delay,
+                                                std::function<void()> callback)
     {
-        return std::unique_ptr<mir::Alarm>{notify_in_delegate(delay, callback)};
+        return std::unique_ptr<mir::time::Alarm>{notify_in_delegate(delay, callback)};
     }
+
+
+    MOCK_METHOD2(notify_at_delegate,
+                 mir::time::Alarm*(mir::time::Timestamp,
+                                   std::function<void()>));
+
+    std::unique_ptr<mir::time::Alarm> notify_at(mir::time::Timestamp time_point,
+                                                std::function<void()> callback)
+    {
+        return std::unique_ptr<mir::time::Alarm>{notify_at_delegate(time_point, callback)};
+    }
+
+
 };
 
 ACTION_TEMPLATE(SetIoctlPointee,

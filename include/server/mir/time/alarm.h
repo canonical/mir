@@ -16,15 +16,14 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#ifndef MIR_TIME_ALARM_H_
+#define MIR_TIME_ALARM_H_
 
-#ifndef MIR_TIMER_H_
-#define MIR_TIMER_H_
-
-#include <chrono>
-#include <functional>
-#include <memory>
+#include "mir/time/clock.h"
 
 namespace mir
+{
+namespace time
 {
 
 /**
@@ -41,6 +40,8 @@ public:
         Triggered   /**< The callback has been called */
     };
 
+
+    Alarm() = default;
     /**
      * \note Destruction of the Alarm guarantees that the callback will not subsequently be called
      */
@@ -60,29 +61,26 @@ public:
     /**
      * Reschedule the alarm
      * \param delay    Delay, in milliseconds, before the Alarm will be triggered
-     * \return         True iff this reschedule supercedes a previous not-yet-triggered timeout
+     * \return         True if this reschedule supercedes a previous not-yet-triggered timeout
      *
      * \note This cancels any previous timeout set.
      */
     virtual bool reschedule_in(std::chrono::milliseconds delay) = 0;
-};
 
-class Timer
-{
-public:
-    virtual ~Timer() = default;
     /**
-     * \brief Create an Alarm that calls the callback at the specified time
+     * Reschedule the alarm
+     * \param timeout  Time point when the alarm should be triggered
+     * \return         True if this reschedule supercedes a previous not-yet-triggered timeout
      *
-     * \param delay     Time from now, in milliseconds, that the callback will fire
-     * \param callback  Function to call when the Alarm signals
-     *
-     * \return A handle to an Alarm that will fire after delay ms.
+     * \note This cancels any previous timeout set.
      */
-    virtual std::unique_ptr<Alarm> notify_in(std::chrono::milliseconds delay,
-                                             std::function<void()> callback) = 0;
+    virtual bool reschedule_for(Timestamp timeout) = 0;
+
+    Alarm(Alarm const&) = delete;
+    Alarm& operator=(Alarm const&) = delete;
 };
 
 }
+}
+#endif
 
-#endif // MIR_TIMER_H_
