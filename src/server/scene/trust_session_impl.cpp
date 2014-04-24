@@ -104,7 +104,6 @@ void ms::TrustSessionImpl::stop()
 
     for (auto session : children)
     {
-        session->end_trust_session();
         trust_session_listener->trusted_session_ending(*this, session);
     }
 }
@@ -130,7 +129,7 @@ bool ms::TrustSessionImpl::add_trusted_child(std::shared_ptr<ms::Session> const&
 
         trusted_children.push_back(session);
     }
-    session->begin_trust_session();
+
     trust_session_listener->trusted_session_beginning(*this, session);
     return true;
 }
@@ -159,7 +158,6 @@ void ms::TrustSessionImpl::remove_trusted_child(std::shared_ptr<ms::Session> con
 
     if (found)
     {
-        session->end_trust_session();
         trust_session_listener->trusted_session_ending(*this, session);
     }
 }
