@@ -118,6 +118,13 @@ public:
         /* Add the DisplayConfiguration modes corresponding to the DRM modes */
         for (auto const& mode : modes0)
             conf_modes0.push_back(conf_mode_from_drm_mode(mode));
+
+        modes1.push_back(fake::create_mode(123, 456, 138500, 2080, 1111, fake::NormalMode));
+        modes1.push_back(fake::create_mode(789, 1011, 148500, 2200, 1125, fake::NormalMode));
+        modes1.push_back(fake::create_mode(1213, 1415, 119000, 1840, 1080, fake::PreferredMode));
+
+        for (auto const& mode : modes1)
+            conf_modes1.push_back(conf_mode_from_drm_mode(mode));
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -127,6 +134,8 @@ public:
 
     std::vector<drmModeModeInfo> modes0;
     std::vector<mg::DisplayConfigurationMode> conf_modes0;
+    std::vector<drmModeModeInfo> modes1;
+    std::vector<mg::DisplayConfigurationMode> conf_modes1;
     std::vector<drmModeModeInfo> modes_empty;
 
     mtf::UdevEnvironment fake_devices;
@@ -529,5 +538,130 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         ++output_count;
     });
 
+    EXPECT_EQ(expected_outputs_after.size(), output_count);
+}
+
+TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
+{
+    using namespace ::testing;
+
+    std::vector<uint32_t> const crtc_ids{10};
+    std::vector<uint32_t> const encoder_ids{20};
+    std::vector<uint32_t> const connector_ids{30};
+    std::vector<geom::Size> const connector_physical_sizes_mm_before{
+        {480, 270}, {}
+    };
+    std::vector<geom::Size> const connector_physical_sizes_mm_after{
+        {}, {512, 642}
+    };
+    std::vector<uint32_t> possible_encoder_ids_empty;
+    uint32_t const possible_crtcs_mask_empty{0};
+    size_t const max_simultaneous_outputs{1};
+
+    /* Expected results */
+    std::vector<mg::DisplayConfigurationCard> const expected_cards =
+    {
+        {
+            mg::DisplayConfigurationCardId{0},
+            max_simultaneous_outputs
+        }
+    };
+
+    std::vector<mg::DisplayConfigurationOutput> const expected_outputs_before =
+    {
+        {
+            mg::DisplayConfigurationOutputId(connector_ids[0]),
+            mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::composite,
+            {},
+            conf_modes0,
+            1,
+            connector_physical_sizes_mm_before[0],
+            true,
+            true,
+            geom::Point(),
+            1,
+            mir_pixel_format_invalid,
+            mir_power_mode_on,
+            mir_orientation_normal
+        },
+    };
+
+    std::vector<mg::DisplayConfigurationOutput> const expected_outputs_after =
+    {
+        {
+            mg::DisplayConfigurationOutputId(connector_ids[0]),
+            mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::composite,
+            {},
+            conf_modes1,
+            2,
+            connector_physical_sizes_mm_before[0],
+            true,
+            true,
+            geom::Point(),
+            2,  // current_mode_index changed to preferred as the list of
+                // available modes has also changed
+            mir_pixel_format_invalid,
+            mir_power_mode_on,
+            mir_orientation_normal
+        },
+    };
+
+    mtd::FakeDRMResources& resources(mock_drm.fake_drm);
+
+    resources.reset();
+    resources.add_crtc(crtc_ids[0], modes0[1]);
+    resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask_empty);
+    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
+                            DRM_MODE_CONNECTED, encoder_ids[0],
+                            modes0, possible_encoder_ids_empty,
+                            connector_physical_sizes_mm_before[0]);
+    resources.prepare();
+
+    auto display = create_display(create_platform());
+    auto conf = display->configuration();
+    size_t card_count{0};
+    conf->for_each_card([&](mg::DisplayConfigurationCard const& card)
+    {
+        ASSERT_LT(card_count, expected_cards.size());
+        EXPECT_EQ(expected_cards[card_count], card) << "card_count: " << card_count;
+        ++card_count;
+    });
+
+    size_t output_count{0};
+    conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+    {
+        ASSERT_LT(output_count, expected_outputs_before.size());
+        EXPECT_EQ(expected_outputs_before[output_count], output) << "output_count: " << output_count;
+        ++output_count;
+    });
+    EXPECT_EQ(expected_outputs_before.size(), output_count);
+
+    resources.reset();
+    resources.add_crtc(crtc_ids[0], modes1[1]);
+    resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask_empty);
+    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
+                            DRM_MODE_CONNECTED, encoder_ids[0],
+                            modes1, possible_encoder_ids_empty,
+                            connector_physical_sizes_mm_before[0]);
+    resources.prepare();
+
+    conf = display->configuration();
+    card_count = 0;
+    conf->for_each_card([&](mg::DisplayConfigurationCard const& card)
+    {
+        ASSERT_LT(card_count, expected_cards.size());
+        EXPECT_EQ(expected_cards[card_count], card) << "card_count: " << card_count;
+        ++card_count;
+    });
+
+    output_count = 0;
+    conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+    {
+        ASSERT_LT(output_count, expected_outputs_after.size());
+        EXPECT_EQ(expected_outputs_after[output_count], output) << "output_count: " << output_count;
+        ++output_count;
+    });
     EXPECT_EQ(expected_outputs_after.size(), output_count);
 }
