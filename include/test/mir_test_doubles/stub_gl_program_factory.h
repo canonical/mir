@@ -15,12 +15,11 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#ifndef MIR_TEST_DOUBLES_MOCK_GL_PROGRAM_FACTORY_H_
-#define MIR_TEST_DOUBLES_MOCK_GL_PROGRAM_FACTORY_H_
+#ifndef MIR_TEST_DOUBLES_STUB_GL_PROGRAM_FACTORY_H_
+#define MIR_TEST_DOUBLES_STUB_GL_PROGRAM_FACTORY_H_
 
 #include "mir/graphics/gl_program_factory.h"
-#include <gmock/gmock.h>
-#include "mir_test/gmock_fixes.h"
+#include "stub_gl_program.h"
 
 namespace mir
 {
@@ -29,31 +28,17 @@ namespace test
 namespace doubles
 {
 
-struct StubGLProgram : public graphics::GLProgram
-{
-    operator GLuint() const override
-    {
-        return 7;
-    }
-};
-
 class StubGLProgramFactory : public graphics::GLProgramFactory
 {
 public:
     std::unique_ptr<graphics::GLProgram> create_gl_program(std::string const&, std::string const&) const
     {
-        return std::unique_ptr<StubGLProgram>(new StubGLProgram);
+        return nullptr;
     }
 };
 
-class MockGLProgramFactory : public graphics::GLProgramFactory
-{
-public:
-    MOCK_CONST_METHOD2(create_gl_program,
-        std::unique_ptr<graphics::GLProgram>(std::string const&, std::string const&));
-};
 }
 }
 } // namespace mir
 
-#endif /* MIR_TEST_DOUBLES_MOCK_GL_PROGRAM_FACTORY_H_ */
+#endif /* MIR_TEST_DOUBLES_STUB_GL_PROGRAM_FACTORY_H_ */

@@ -28,7 +28,7 @@
 #include "mir_test_doubles/stub_display_builder.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/mock_gl_config.h"
-#include "mir_test_doubles/mock_gl_program_factory.h"
+#include "mir_test_doubles/stub_gl_program_factory.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir_test_doubles/stub_driver_interpreter.h"
 

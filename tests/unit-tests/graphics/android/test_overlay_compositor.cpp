@@ -18,12 +18,14 @@
 
 #include "src/platform/graphics/android/overlay_gl_compositor.h"
 #include "mir/graphics/gl_context.h"
-#include "mir_test_doubles/mock_gl_program_factory.h"
+#include "mir/graphics/gl_program_factory.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_swapping_gl_context.h"
+#include "mir_test_doubles/stub_gl_program.h"
 #include <gtest/gtest.h>
+#include <mir_test/gmock_fixes.h>
 
 #define GLM_FORCE_RADIANS
 #define GLM_PRECISION_MEDIUMP_FLOAT
@@ -38,6 +40,13 @@ namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 namespace
 {
+
+class MockGLProgramFactory : public mg::GLProgramFactory
+{
+public:
+    MOCK_CONST_METHOD2(create_gl_program,
+        std::unique_ptr<mg::GLProgram>(std::string const&, std::string const&));
+};
 
 class MockContext : public mg::GLContext
 {
@@ -70,19 +79,19 @@ public:
             .WillByDefault(Return(texcoord_attr_loc));
         ON_CALL(mock_gl, glGenTextures(1,_))
             .WillByDefault(SetArgPointee<1>(texid));
-        }
+    }
 
-        GLint const display_transform_uniform_loc{1};
-        GLint const position_attr_loc{2};
-        GLint const texcoord_attr_loc{3};
-        GLint const tex_uniform_loc{4};
-        GLint const texid{5};
+    GLint const display_transform_uniform_loc{1};
+    GLint const position_attr_loc{2};
+    GLint const texcoord_attr_loc{3};
+    GLint const tex_uniform_loc{4};
+    GLint const texid{5};
 
-        testing::NiceMock<mtd::MockGLProgramFactory> mock_gl_program_factory;
-        testing::NiceMock<MockContext> mock_context;
-        testing::NiceMock<mtd::MockGL> mock_gl;
-        testing::NiceMock<mtd::MockEGL> mock_egl;
-        geom::Rectangle dummy_screen_pos{geom::Point{0,0}, geom::Size{500,400}};
+    testing::NiceMock<MockGLProgramFactory> mock_gl_program_factory;
+    testing::NiceMock<MockContext> mock_context;
+    testing::NiceMock<mtd::MockGL> mock_gl;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
+    geom::Rectangle dummy_screen_pos{geom::Point{0,0}, geom::Size{500,400}};
 };
 }
 
