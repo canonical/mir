@@ -222,7 +222,6 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
         {
             output.current_mode_index = current_mode_index;
         }
-/*
         else if (!modes.empty() &&  // If empty retain old current_mode_index!
                  ( output.current_mode_index >= modes.size() ||
                    output.modes[output.current_mode_index] !=
@@ -234,7 +233,7 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
             output.current_mode_index = preferred_mode_index;
         }
         // else output.current_mode_index is correct and unchanged.
-*/
+
         output.modes = modes;
         output.preferred_mode_index = preferred_mode_index;
         output.physical_size_mm = physical_size;

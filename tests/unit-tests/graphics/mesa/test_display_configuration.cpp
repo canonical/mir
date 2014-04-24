@@ -546,7 +546,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
     using namespace ::testing;
 
     std::vector<uint32_t> const crtc_ids{10};
-    std::vector<uint32_t> const encoder_ids{20};
+    std::vector<uint32_t> const encoder_ids{20, 21};
     std::vector<uint32_t> const connector_ids{30};
     std::vector<geom::Size> const connector_physical_sizes_mm_before{
         {480, 270}, {}
@@ -638,11 +638,13 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
     });
     EXPECT_EQ(expected_outputs_before.size(), output_count);
 
+    // Now simulate a change of monitor with different capabilities where the
+    // old current_mode does not exist. Mir should choose the preferred mode.
     resources.reset();
     resources.add_crtc(crtc_ids[0], modes1[1]);
     resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask_empty);
     resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
-                            DRM_MODE_CONNECTED, encoder_ids[0],
+                            DRM_MODE_CONNECTED, encoder_ids[1],
                             modes1, possible_encoder_ids_empty,
                             connector_physical_sizes_mm_before[0]);
     resources.prepare();
