@@ -20,9 +20,6 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/client/private.h"
-#include "mir/frontend/protobuf_message_sender.h"
-#include "mir/frontend/protobuf_session_creator.h"
-#include "mir/frontend/template_protobuf_message_processor.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
@@ -30,14 +27,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <atomic>
-
-namespace mf = mir::frontend;
-namespace mfd = mir::frontend::detail;
-
 namespace
 {
-
 using DemoServerConfiguration = mir_test_framework::StubbedServerConfiguration;
 
 struct DemoSocketFDServer : mir_test_framework::InProcessServer
