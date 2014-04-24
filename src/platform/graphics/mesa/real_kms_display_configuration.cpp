@@ -218,12 +218,27 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
     {
         auto& output = *iter;
 
+        if (current_mode_index != invalid_mode_index)
+        {
+            output.current_mode_index = current_mode_index;
+        }
+/*
+        else if (output.current_mode_index >= modes.size() ||
+                 output.modes[output.current_mode_index] !=
+                        modes[output.current_mode_index])
+        {
+            // current_mode_index is invalid and the definition of the old
+            // current mode has also changed (different display plugged in)
+            // so fall back to the preferred mode...
+            output.current_mode_index = preferred_mode_index;
+        }
+        // else output.current_mode_index is correct and unchanged.
+*/
+
         output.modes = modes;
         output.preferred_mode_index = preferred_mode_index;
         output.physical_size_mm = physical_size;
         output.connected = connected;
-        if (current_mode_index != invalid_mode_index)
-            output.current_mode_index = current_mode_index;
         output.current_format = mir_pixel_format_xrgb_8888;
     }
 }
