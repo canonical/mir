@@ -131,15 +131,10 @@ public:
                         google::protobuf::Closure* done) override;
 
     void client_socket_fd(
-        ::google::protobuf::RpcController* ,
-        ::mir::protobuf::SocketFDRequest const* /*parameters*/,
-        ::mir::protobuf::SocketFD* /*response*/,
-        ::google::protobuf::Closure* /*done*/)
-    {
-        throw std::runtime_error("not implemented");
-//        response->
-//        done->Run();
-    }
+        ::google::protobuf::RpcController* controller,
+        ::mir::protobuf::SocketFDRequest const* parameters,
+        ::mir::protobuf::SocketFD* response,
+        ::google::protobuf::Closure* done);
 
 private:
     void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
