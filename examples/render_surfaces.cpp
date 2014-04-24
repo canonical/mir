@@ -26,8 +26,6 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/graphics/buffer_initializer.h"
-#include "mir/graphics/cursor.h"
-#include "mir/graphics/cursor_image.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/gl_context.h"
@@ -93,18 +91,7 @@ std::atomic<bool> created{false};
 
 static const float min_alpha = 0.3f;
 
-struct NullCursor : public mg::Cursor 
-{
-    void set_image(std::shared_ptr<mg::CursorImage const> const& /* image */) 
-    {
-    }
-    void move_to(geom::Point /* position */)
-    {
-    }
-};
-
 char const* const surfaces_to_render = "surfaces-to-render";
-char const* const display_cursor     = "display-cursor";
 
 ///\internal [StopWatch_tag]
 // tracks elapsed time - for animation.
@@ -238,9 +225,7 @@ public:
 
             result->add_options()
                 (surfaces_to_render, po::value<int>()->default_value(5),
-                    "Number of surfaces to render")
-                (display_cursor, po::value<bool>()->default_value(false),
-                    "Display default cursor");
+                    "Number of surfaces to render");
 
             return result;
         }())
@@ -458,18 +443,6 @@ public:
         }
 
         created = true;
-    }
-
-    std::shared_ptr<mg::Cursor> the_cursor()
-    {
-        if (the_options()->get<bool>(display_cursor))
-        {
-            return me::ServerConfiguration::the_cursor();
-        }
-        else
-        {
-            return std::make_shared<NullCursor>();
-        }
     }
 
 private:
