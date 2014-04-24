@@ -16,16 +16,16 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SHELL_TRUST_SESSION_LISTENER_H_
-#define MIR_SHELL_TRUST_SESSION_LISTENER_H_
+#ifndef MIR_SCENE_TRUST_SESSION_LISTENER_H_
+#define MIR_SCENE_TRUST_SESSION_LISTENER_H_
 
 #include <memory>
 
 namespace mir
 {
-namespace scene { class Session; }
-namespace shell
+namespace scene
 {
+class Session;
 class TrustSession;
 
 class TrustSessionListener
@@ -34,8 +34,8 @@ public:
     virtual void starting(std::shared_ptr<TrustSession> const& trust_session) = 0;
     virtual void stopping(std::shared_ptr<TrustSession> const& trust_session) = 0;
 
-    virtual void trusted_session_beginning(TrustSession& trust_session, std::shared_ptr<scene::Session> const& session) = 0;
-    virtual void trusted_session_ending(TrustSession& trust_session, std::shared_ptr<scene::Session> const& session) = 0;
+    virtual void trusted_session_beginning(TrustSession& trust_session, std::shared_ptr<Session> const& session) = 0;
+    virtual void trusted_session_ending(TrustSession& trust_session, std::shared_ptr<Session> const& session) = 0;
 
 protected:
     TrustSessionListener() = default;
@@ -49,4 +49,4 @@ protected:
 }
 
 
-#endif // MIR_SHELL_SESSION_LISTENER_H_
+#endif // MIR_SCENE_TRUST_SESSION_LISTENER_H_

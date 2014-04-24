@@ -16,10 +16,10 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SCENE_TRUST_SESSION_H_
-#define MIR_SCENE_TRUST_SESSION_H_
+#ifndef MIR_SCENE_TRUST_SESSION_IMPL_H_
+#define MIR_SCENE_TRUST_SESSION_IMPL_H_
 
-#include "mir/shell/trust_session.h"
+#include "mir/scene/trust_session.h"
 
 #include <vector>
 #include <atomic>
@@ -27,23 +27,20 @@
 
 namespace mir
 {
-namespace shell
-{
-class TrustSessionCreationParameters;
-class TrustSessionListener;
-}
 
 namespace scene
 {
 class SessionContainer;
+class TrustSessionCreationParameters;
+class TrustSessionListener;
 
-class TrustSession : public shell::TrustSession
+class TrustSessionImpl : public TrustSession
 {
 public:
-    TrustSession(std::weak_ptr<Session> const& session,
-                 shell::TrustSessionCreationParameters const& parameters,
-                 std::shared_ptr<shell::TrustSessionListener> const& trust_session_listener);
-    ~TrustSession();
+    TrustSessionImpl(std::weak_ptr<Session> const& session,
+                 TrustSessionCreationParameters const& parameters,
+                 std::shared_ptr<TrustSessionListener> const& trust_session_listener);
+    ~TrustSessionImpl();
 
     void for_each_trusted_client_process(std::function<void(pid_t pid)> f, bool reverse) const;
 
@@ -58,12 +55,12 @@ public:
     void for_each_trusted_child(std::function<void(std::shared_ptr<Session> const&)> f, bool reverse) const;
 
 protected:
-    TrustSession(const TrustSession&) = delete;
-    TrustSession& operator=(const TrustSession&) = delete;
+    TrustSessionImpl(const TrustSessionImpl&) = delete;
+    TrustSessionImpl& operator=(const TrustSessionImpl&) = delete;
 
 private:
     std::weak_ptr<Session> const trusted_helper;
-    std::shared_ptr<shell::TrustSessionListener> const trust_session_listener;
+    std::shared_ptr<TrustSessionListener> const trust_session_listener;
     MirTrustSessionState state;
     std::string cookie;
     std::mutex mutable mutex;

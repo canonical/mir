@@ -16,50 +16,49 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#include "trust_session.h"
-#include "mir/shell/trust_session_creation_parameters.h"
+#include "trust_session_impl.h"
 #include "mir/scene/session.h"
-#include "mir/shell/trust_session_listener.h"
+#include "mir/scene/trust_session_creation_parameters.h"
+#include "mir/scene/trust_session_listener.h"
 #include "session_container.h"
 
 #include <sstream>
 #include <algorithm>
 
 namespace ms = mir::scene;
-namespace msh = mir::shell;
 
 int next_unique_id = 0;
 
-ms::TrustSession::TrustSession(
+ms::TrustSessionImpl::TrustSessionImpl(
     std::weak_ptr<ms::Session> const& session,
-    msh::TrustSessionCreationParameters const&,
-    std::shared_ptr<shell::TrustSessionListener> const& trust_session_listener) :
+    TrustSessionCreationParameters const&,
+    std::shared_ptr<TrustSessionListener> const& trust_session_listener) :
     trusted_helper(session),
     trust_session_listener(trust_session_listener),
     state(mir_trust_session_state_stopped)
 {
 }
 
-ms::TrustSession::~TrustSession()
+ms::TrustSessionImpl::~TrustSessionImpl()
 {
-    TrustSession::stop();
+    TrustSessionImpl::stop();
 }
 
-MirTrustSessionState ms::TrustSession::get_state() const
+MirTrustSessionState ms::TrustSessionImpl::get_state() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     return state;
 }
 
-std::weak_ptr<ms::Session> ms::TrustSession::get_trusted_helper() const
+std::weak_ptr<ms::Session> ms::TrustSessionImpl::get_trusted_helper() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     return trusted_helper;
 }
 
-void ms::TrustSession::start()
+void ms::TrustSessionImpl::start()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -74,7 +73,7 @@ void ms::TrustSession::start()
     }
 }
 
-void ms::TrustSession::stop()
+void ms::TrustSessionImpl::stop()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -110,11 +109,11 @@ void ms::TrustSession::stop()
     }
 }
 
-void ms::TrustSession::for_each_trusted_client_process(std::function<void(pid_t pid)>, bool) const
+void ms::TrustSessionImpl::for_each_trusted_client_process(std::function<void(pid_t pid)>, bool) const
 {
 }
 
-bool ms::TrustSession::add_trusted_child(std::shared_ptr<ms::Session> const& session)
+bool ms::TrustSessionImpl::add_trusted_child(std::shared_ptr<ms::Session> const& session)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -140,7 +139,7 @@ bool ms::TrustSession::add_trusted_child(std::shared_ptr<ms::Session> const& ses
     return true;
 }
 
-void ms::TrustSession::remove_trusted_child(std::shared_ptr<ms::Session> const& session)
+void ms::TrustSessionImpl::remove_trusted_child(std::shared_ptr<ms::Session> const& session)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -169,7 +168,7 @@ void ms::TrustSession::remove_trusted_child(std::shared_ptr<ms::Session> const& 
     }
 }
 
-void ms::TrustSession::for_each_trusted_child(
+void ms::TrustSessionImpl::for_each_trusted_child(
     std::function<void(std::shared_ptr<ms::Session> const&)> f,
     bool reverse) const
 {

@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_TRUST_SESSION_LISTENER_H_
 #define MIR_TEST_DOUBLES_MOCK_TRUST_SESSION_LISTENER_H_
 
-#include "mir/shell/trust_session_listener.h"
+#include "mir/scene/trust_session_listener.h"
 
 #include <gmock/gmock.h>
 
@@ -30,15 +30,15 @@ namespace test
 namespace doubles
 {
 
-struct MockTrustSessionListener : public shell::TrustSessionListener
+struct MockTrustSessionListener : public scene::TrustSessionListener
 {
     virtual ~MockTrustSessionListener() noexcept(true) {}
 
-    MOCK_METHOD1(starting, void(std::shared_ptr<shell::TrustSession> const&));
-    MOCK_METHOD1(stopping, void(std::shared_ptr<shell::TrustSession> const&));
+    MOCK_METHOD1(starting, void(std::shared_ptr<scene::TrustSession> const&));
+    MOCK_METHOD1(stopping, void(std::shared_ptr<scene::TrustSession> const&));
 
-    MOCK_METHOD2(trusted_session_beginning, void(shell::TrustSession&, std::shared_ptr<scene::Session> const&));
-    MOCK_METHOD2(trusted_session_ending, void(shell::TrustSession&, std::shared_ptr<scene::Session> const&));
+    MOCK_METHOD2(trusted_session_beginning, void(scene::TrustSession&, std::shared_ptr<scene::Session> const&));
+    MOCK_METHOD2(trusted_session_ending, void(scene::TrustSession&, std::shared_ptr<scene::Session> const&));
 };
 
 }

@@ -35,7 +35,7 @@
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
-#include "mir/shell/null_trust_session_listener.h"
+#include "mir/scene/null_trust_session_listener.h"
 
 #include <map>
 
@@ -87,13 +87,13 @@ mir::DefaultServerConfiguration::the_session_listener()
         });
 }
 
-std::shared_ptr<msh::TrustSessionListener>
-mir::DefaultServerConfiguration::the_shell_trust_session_listener()
+std::shared_ptr<ms::TrustSessionListener>
+mir::DefaultServerConfiguration::the_trust_session_listener()
 {
-    return shell_trust_session_listener(
+    return trust_session_listener(
         [this]
         {
-            return std::make_shared<msh::NullTrustSessionListener>();
+            return std::make_shared<ms::NullTrustSessionListener>();
         });
 }
 

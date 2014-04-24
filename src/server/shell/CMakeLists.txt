@@ -5,7 +5,6 @@ set(
   consuming_placement_strategy.cpp
   graphics_display_layout.cpp
   default_configuration.cpp
-  trust_session_creation_parameters.cpp
 )
 
 add_library(

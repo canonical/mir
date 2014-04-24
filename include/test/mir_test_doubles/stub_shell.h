@@ -51,7 +51,7 @@ struct StubShell : public frontend::Shell
     }
     std::shared_ptr<frontend::TrustSession> start_trust_session_for(std::string& /* error */,
         std::shared_ptr<frontend::Session> const& /* session */,
-        shell::TrustSessionCreationParameters const& /* params */)
+        scene::TrustSessionCreationParameters const& /* params */)
     {
         return std::shared_ptr<frontend::TrustSession>();
     }

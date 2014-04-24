@@ -41,7 +41,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/trust_session.h"
-#include "mir/shell/trust_session_creation_parameters.h"
+#include "mir/scene/trust_session_creation_parameters.h"
 
 #include "mir/geometry/rectangles.h"
 #include "client_buffer_tracker.h"
@@ -55,7 +55,6 @@
 #include <functional>
 
 namespace ms = mir::scene;
-namespace msh = mir::shell;
 namespace mf = mir::frontend;
 namespace mfd=mir::frontend::detail;
 namespace mg = mir::graphics;
@@ -465,7 +464,7 @@ void mf::SessionMediator::start_trust_session(::google::protobuf::RpcController*
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        msh::TrustSessionCreationParameters parameters;
+        ms::TrustSessionCreationParameters parameters;
         parameters.set_base_process_id(request->base_trusted_session().pid());
 
         std::ostringstream stream;

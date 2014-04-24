@@ -17,8 +17,8 @@
  */
 
 #include "mir/frontend/event_sink.h"
-#include "mir/shell/trust_session_creation_parameters.h"
-#include "src/server/scene/trust_session.h"
+#include "mir/scene/trust_session_creation_parameters.h"
+#include "src/server/scene/trust_session_impl.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_scene_session.h"
 #include "mir_test_doubles/mock_trust_session_listener.h"
@@ -27,7 +27,6 @@
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
-namespace msh = mir::shell;
 namespace ms = mir::scene;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -64,8 +63,8 @@ TEST_F(TrustSession, start_and_stop)
     auto shared_helper = mt::fake_shared(trusted_helper);
     auto shared_app1 = mt::fake_shared(trusted_app1);
 
-    ms::TrustSession trust_session(shared_helper,
-                                   msh::a_trust_session(),
+    ms::TrustSessionImpl trust_session(shared_helper,
+                                   ms::a_trust_session(),
                                    mt::fake_shared(trust_session_listener));
 
     trust_session.start();

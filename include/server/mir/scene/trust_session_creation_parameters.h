@@ -16,29 +16,31 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SHELL_TRUST_SESSION_H_
-#define MIR_SHELL_TRUST_SESSION_H_
+#ifndef MIR_SCENE_TRUSTED_SESSION_CREATION_PARAMETERS_H_
+#define MIR_SCENE_TRUSTED_SESSION_CREATION_PARAMETERS_H_
 
-#include "mir/frontend/trust_session.h"
+#include <sys/types.h>
+#include <vector>
 
 namespace mir
 {
-namespace scene { class Session; }
-
-namespace shell
+namespace scene
 {
 
-class TrustSession : public frontend::TrustSession
+struct TrustSessionCreationParameters
 {
-public:
-    virtual std::weak_ptr<scene::Session> get_trusted_helper() const = 0;
+    TrustSessionCreationParameters();
 
-    virtual bool add_trusted_child(std::shared_ptr<scene::Session> const& session) = 0;
-    virtual void remove_trusted_child(std::shared_ptr<scene::Session> const& session) = 0;
-    virtual void for_each_trusted_child(std::function<void(std::shared_ptr<scene::Session> const&)> f, bool reverse) const = 0;
+    TrustSessionCreationParameters& set_base_process_id(pid_t process_id);
+
+    pid_t base_process_id;
 };
 
+bool operator==(const TrustSessionCreationParameters& lhs, const TrustSessionCreationParameters& rhs);
+bool operator!=(const TrustSessionCreationParameters& lhs, const TrustSessionCreationParameters& rhs);
+
+TrustSessionCreationParameters a_trust_session();
 }
 }
 
-#endif // MIR_SHELL_TRUST_SESSION_H_
+#endif /* MIR_SCENE_TRUSTED_SESSION_CREATION_PARAMETERS_H_ */

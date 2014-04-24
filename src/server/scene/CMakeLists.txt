@@ -18,6 +18,7 @@ ADD_LIBRARY(
   surface_event_source.cpp
   surface_observer.cpp
   threaded_snapshot_strategy.cpp
-  trust_session.cpp
+  trust_session_impl.cpp
   trust_session_container.cpp
+  trust_session_creation_parameters.cpp
 )

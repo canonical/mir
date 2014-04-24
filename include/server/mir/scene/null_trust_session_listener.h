@@ -16,14 +16,14 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SHELL_NULL_TRUST_SESSION_LISTENER_H_
-#define MIR_SHELL_NULL_TRUST_SESSION_LISTENER_H_
+#ifndef MIR_SCENE_NULL_TRUST_SESSION_LISTENER_H_
+#define MIR_SCENE_NULL_TRUST_SESSION_LISTENER_H_
 
-#include "mir/shell/trust_session_listener.h"
+#include "mir/scene/trust_session_listener.h"
 
 namespace mir
 {
-namespace shell
+namespace scene
 {
 
 class NullTrustSessionListener : public TrustSessionListener
@@ -35,8 +35,8 @@ public:
     void starting(std::shared_ptr<TrustSession> const&) override {};
     void stopping(std::shared_ptr<TrustSession> const&) override {};
 
-    void trusted_session_beginning(TrustSession&, std::shared_ptr<scene::Session> const&) override {};
-    void trusted_session_ending(TrustSession&, std::shared_ptr<scene::Session> const&) override {};
+    void trusted_session_beginning(TrustSession&, std::shared_ptr<Session> const&) override {};
+    void trusted_session_ending(TrustSession&, std::shared_ptr<Session> const&) override {};
 
 protected:
     NullTrustSessionListener(const NullTrustSessionListener&) = delete;

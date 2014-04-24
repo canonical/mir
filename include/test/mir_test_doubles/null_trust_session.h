@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_TRUST_SESSION_H_
 #define MIR_TEST_DOUBLES_NULL_TRUST_SESSION_H_
 
-#include "mir/shell/trust_session.h"
+#include "mir/scene/trust_session.h"
 
 namespace mir
 {
@@ -28,7 +28,7 @@ namespace test
 namespace doubles
 {
 
-class NullTrustSession : public shell::TrustSession
+class NullTrustSession : public scene::TrustSession
 {
     void for_each_trusted_client_process(std::function<void(pid_t)>, bool) const
     {

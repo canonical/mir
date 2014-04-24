@@ -34,7 +34,6 @@ namespace mir
 namespace shell
 {
 class FocusSetter;
-class TrustSessionListener;
 }
 
 namespace scene
@@ -45,6 +44,7 @@ class SessionListener;
 class SnapshotStrategy;
 class SurfaceCoordinator;
 class TrustSessionContainer;
+class TrustSessionListener;
 
 class SessionManager : public frontend::Shell, public shell::FocusController
 {
@@ -55,7 +55,7 @@ public:
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
                             std::shared_ptr<SessionEventSink> const& session_event_sink,
                             std::shared_ptr<SessionListener> const& session_listener,
-                            std::shared_ptr<shell::TrustSessionListener> const& trust_session_listener);
+                            std::shared_ptr<TrustSessionListener> const& trust_session_listener);
     virtual ~SessionManager();
 
     virtual std::shared_ptr<frontend::Session> open_session(
@@ -77,7 +77,7 @@ public:
 
     std::shared_ptr<frontend::TrustSession> start_trust_session_for(std::string& error,
                                                   std::shared_ptr<frontend::Session> const& session,
-                                                  shell::TrustSessionCreationParameters const& params) override;
+                                                  TrustSessionCreationParameters const& params) override;
     MirTrustSessionAddTrustResult add_trusted_session_for(std::shared_ptr<frontend::TrustSession> const& trust_session,
                                                           pid_t session_pid) override;
     void stop_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session) override;
@@ -93,7 +93,7 @@ private:
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionEventSink> const session_event_sink;
     std::shared_ptr<SessionListener> const session_listener;
-    std::shared_ptr<shell::TrustSessionListener> const trust_session_listener;
+    std::shared_ptr<TrustSessionListener> const trust_session_listener;
     std::shared_ptr<TrustSessionContainer> trust_session_container;
 
     std::mutex mutex;

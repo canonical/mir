@@ -16,36 +16,36 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#include "mir/shell/trust_session_creation_parameters.h"
+#include "mir/scene/trust_session_creation_parameters.h"
 
-namespace msh = mir::shell;
+namespace ms = mir::scene;
 
-msh::TrustSessionCreationParameters::TrustSessionCreationParameters()
+ms::TrustSessionCreationParameters::TrustSessionCreationParameters()
     : base_process_id(0)
 {
 }
 
-msh::TrustSessionCreationParameters& msh::TrustSessionCreationParameters::set_base_process_id(pid_t process_id)
+ms::TrustSessionCreationParameters& ms::TrustSessionCreationParameters::set_base_process_id(pid_t process_id)
 {
     base_process_id = process_id;
     return *this;
 }
 
-bool msh::operator==(
+bool ms::operator==(
     const TrustSessionCreationParameters& lhs,
-    const msh::TrustSessionCreationParameters& rhs)
+    const TrustSessionCreationParameters& rhs)
 {
     return lhs.base_process_id == rhs.base_process_id;
 }
 
-bool msh::operator!=(
+bool ms::operator!=(
     const TrustSessionCreationParameters& lhs,
-    const msh::TrustSessionCreationParameters& rhs)
+    const TrustSessionCreationParameters& rhs)
 {
     return !(lhs == rhs);
 }
 
-msh::TrustSessionCreationParameters msh::a_trust_session()
+ms::TrustSessionCreationParameters ms::a_trust_session()
 {
     return TrustSessionCreationParameters();
 }
