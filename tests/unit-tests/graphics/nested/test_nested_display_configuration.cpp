@@ -53,7 +53,7 @@ uint32_t const default_physical_height_mm = 0;
 struct NestedDisplayConfiguration : public ::testing::Test
 {
     template<int NoOfOutputs, int NoOfCards>
-    MirDisplayConfiguration* build_test_config(
+    std::shared_ptr<MirDisplayConfiguration> build_test_config(
         MirDisplayOutput const (&outputs)[NoOfOutputs],
         MirDisplayCard const (&cards)[NoOfCards])
     {
@@ -63,7 +63,22 @@ struct NestedDisplayConfiguration : public ::testing::Test
         auto card_tmp = new MirDisplayCard[NoOfCards];
         std::copy(cards, cards+NoOfCards, card_tmp);
 
-        return new MirDisplayConfiguration{ NoOfOutputs, out_tmp, NoOfCards, card_tmp };
+        return std::shared_ptr<MirDisplayConfiguration>(
+            new MirDisplayConfiguration{NoOfOutputs, out_tmp, NoOfCards, card_tmp},
+            [] (MirDisplayConfiguration* conf)
+            {
+                std::for_each(
+                    conf->outputs, conf->outputs + conf->num_outputs,
+                    [] (MirDisplayOutput const& output)
+                    {
+                        delete[] output.modes;
+                        delete[] output.output_formats;
+                    });
+
+                delete[] conf->outputs;
+                delete[] conf->cards;
+                delete conf;
+            });
     }
 
     template<int NoOfModes, int NoOfFormats>
@@ -97,7 +112,7 @@ struct NestedDisplayConfiguration : public ::testing::Test
             init_output(output, modes, formats);
     }
 
-    MirDisplayConfiguration* build_trivial_configuration()
+    std::shared_ptr<MirDisplayConfiguration> build_trivial_configuration()
     {
         static MirDisplayCard const cards[] {{default_card_id,1}};
         static MirDisplayMode const modes[] = {{ 1080, 1920, 4.33f }};
@@ -129,7 +144,7 @@ struct NestedDisplayConfiguration : public ::testing::Test
         return build_test_config(outputs, cards);
     }
 
-    MirDisplayConfiguration* build_non_trivial_configuration()
+    std::shared_ptr<MirDisplayConfiguration> build_non_trivial_configuration()
     {
         static MirDisplayCard const cards[] {
             {default_card_id,1},
@@ -228,7 +243,10 @@ struct MockOutputVisitor
 
 TEST_F(NestedDisplayConfiguration, empty_configuration_is_read_correctly)
 {
-    auto empty_configuration = new MirDisplayConfiguration{ 0, nullptr, 0, nullptr };
+    auto empty_configuration =
+        std::shared_ptr<MirDisplayConfiguration>(
+            new MirDisplayConfiguration{0, nullptr, 0, nullptr});
+
     mgn::NestedDisplayConfiguration config(empty_configuration);
 
     config.for_each_card([](mg::DisplayConfigurationCard const&) { FAIL(); });

@@ -66,13 +66,12 @@ private:
 class EGLDisplayHandle
 {
 public:
-    EGLDisplayHandle(MirConnection* connection,
+    EGLDisplayHandle(EGLNativeDisplayType native_display,
                      std::shared_ptr<GLConfig> const& gl_config);
     ~EGLDisplayHandle() noexcept;
 
     void initialize(MirPixelFormat format);
     EGLConfig choose_windowed_es_config(MirPixelFormat format) const;
-    EGLNativeWindowType native_window(EGLConfig egl_config, MirSurface* mir_surface) const;
     EGLContext egl_context() const;
     operator EGLDisplay() const { return egl_display; }
 
