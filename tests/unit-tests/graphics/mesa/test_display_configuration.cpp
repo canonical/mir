@@ -545,19 +545,16 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
 {
     using namespace ::testing;
 
-    std::vector<uint32_t> const crtc_ids{10};
-    std::vector<uint32_t> const encoder_ids{20, 21};
-    std::vector<uint32_t> const connector_ids{30};
-    std::vector<geom::Size> const connector_physical_sizes_mm_before{
-        {480, 270}
-    };
-    std::vector<geom::Size> const connector_physical_sizes_mm_after{
-        {512, 642}
-    };
+    uint32_t const crtc_ids[1] = {10};
+    uint32_t const encoder_ids[2] = {20, 21};
+    uint32_t const connector_ids[1] = {30};
+    geom::Size const connector_physical_sizes_mm_before{480, 270};
+    geom::Size const connector_physical_sizes_mm_after{512, 642};
     std::vector<uint32_t> possible_encoder_ids_empty;
     uint32_t const possible_crtcs_mask_empty{0};
+    int const noutputs = 1;
 
-    std::vector<mg::DisplayConfigurationOutput> const expected_outputs_before =
+    mg::DisplayConfigurationOutput const expected_outputs_before[noutputs] =
     {
         {
             mg::DisplayConfigurationOutputId(connector_ids[0]),
@@ -566,7 +563,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
             {},
             conf_modes0,
             1,
-            connector_physical_sizes_mm_before[0],
+            connector_physical_sizes_mm_before,
             true,
             true,
             geom::Point(),
@@ -577,7 +574,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
         },
     };
 
-    std::vector<mg::DisplayConfigurationOutput> const expected_outputs_after =
+    mg::DisplayConfigurationOutput const expected_outputs_after[noutputs] =
     {
         {
             mg::DisplayConfigurationOutputId(connector_ids[0]),
@@ -586,7 +583,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
             {},
             conf_modes1,
             2,
-            connector_physical_sizes_mm_after[0],
+            connector_physical_sizes_mm_after,
             true,
             true,
             geom::Point(),
@@ -606,19 +603,19 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
     resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
                             DRM_MODE_CONNECTED, encoder_ids[0],
                             modes0, possible_encoder_ids_empty,
-                            connector_physical_sizes_mm_before[0]);
+                            connector_physical_sizes_mm_before);
     resources.prepare();
 
     auto display = create_display(create_platform());
     auto conf = display->configuration();
-    size_t output_count{0};
+    int output_count = 0;
     conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
-        ASSERT_LT(output_count, expected_outputs_before.size());
+        ASSERT_LT(output_count, noutputs);
         EXPECT_EQ(expected_outputs_before[output_count], output) << "output_count: " << output_count;
         ++output_count;
     });
-    EXPECT_EQ(expected_outputs_before.size(), output_count);
+    EXPECT_EQ(noutputs, output_count);
 
     // Now simulate a change of monitor with different capabilities where the
     // old current_mode does not exist. Mir should choose the preferred mode.
@@ -628,16 +625,16 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
     resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
                             DRM_MODE_CONNECTED, encoder_ids[1],
                             modes1, possible_encoder_ids_empty,
-                            connector_physical_sizes_mm_after[0]);
+                            connector_physical_sizes_mm_after);
     resources.prepare();
 
     conf = display->configuration();
     output_count = 0;
     conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
-        ASSERT_LT(output_count, expected_outputs_after.size());
+        ASSERT_LT(output_count, noutputs);
         EXPECT_EQ(expected_outputs_after[output_count], output) << "output_count: " << output_count;
         ++output_count;
     });
-    EXPECT_EQ(expected_outputs_after.size(), output_count);
+    EXPECT_EQ(noutputs, output_count);
 }
