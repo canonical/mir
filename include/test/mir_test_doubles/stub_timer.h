@@ -19,7 +19,8 @@
 #ifndef MIR_TEST_DOUBLES_STUB_TIMER_H_
 #define MIR_TEST_DOUBLES_STUB_TIMER_H_
 
-#include "mir/timer.h"
+#include "mir/time/alarm.h"
+#include "mir/time/timer.h"
 
 namespace mir
 {
@@ -28,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-class StubAlarm : public mir::Alarm
+class StubAlarm : public mir::time::Alarm
 {
     bool cancel() override
     {
@@ -42,13 +43,22 @@ class StubAlarm : public mir::Alarm
     {
         return false;
     }
+    bool reschedule_for(mir::time::Timestamp) override
+    {
+        return false;
+    }
 };
 
-class StubTimer : public mir::Timer
+class StubTimer : public mir::time::Timer
 {
-    std::unique_ptr<mir::Alarm> notify_in(std::chrono::milliseconds, std::function<void(void)>)
+    std::unique_ptr<mir::time::Alarm> notify_in(std::chrono::milliseconds, std::function<void(void)>) override
     {
-        return std::unique_ptr<mir::Alarm>{new StubAlarm};
+        return std::unique_ptr<mir::time::Alarm>{new StubAlarm};
+    }
+
+    std::unique_ptr<mir::time::Alarm> notify_at(mir::time::Timestamp, std::function<void(void)>) override
+    {
+        return std::unique_ptr<mir::time::Alarm>{new StubAlarm};
     }
 };
 
