@@ -22,7 +22,6 @@
 #include "surface_stack_model.h"
 
 #include "mir/compositor/scene.h"
-#include "mir/graphics/renderable.h"
 #include "mir/scene/depth_id.h"
 #include "mir/input/input_targets.h"
 
@@ -47,7 +46,7 @@ struct SurfaceCreationParameters;
 namespace input
 {
 class InputChannelFactory;
-class InputChannel;
+class Surface;
 }
 
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
@@ -66,19 +65,12 @@ public:
         std::shared_ptr<SceneReport> const& report);
     virtual ~SurfaceStack() noexcept(true) {}
 
-    graphics::RenderableList generate_renderable_list() const;
     // From Scene
+    graphics::RenderableList generate_renderable_list() const;
     virtual void set_change_callback(std::function<void()> const& f);
-    //to be deprecated
-    virtual void for_each_if(compositor::FilterForScene &filter, compositor::OperatorForScene &op);
-    virtual void reverse_for_each_if(compositor::FilterForScene& filter,
-                                     compositor::OperatorForScene& op);
-    virtual void lock();
-    virtual void unlock();
-    //end to be deprecated
     
     // From InputTargets
-    void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
+    void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback);
 
     virtual void remove_surface(std::weak_ptr<Surface> const& surface) override;
 
@@ -95,7 +87,7 @@ private:
 
     void emit_change_notification();
 
-    std::recursive_mutex mutable guard;
+    std::mutex mutable guard;
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SceneReport> const report;
     std::function<void()> const change_cb;

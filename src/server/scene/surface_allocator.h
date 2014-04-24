@@ -41,10 +41,7 @@ public:
                      std::shared_ptr<SurfaceConfigurator> const& configurator,
                      std::shared_ptr<SceneReport> const& report);
 
-    std::shared_ptr<Surface> create_surface(
-        frontend::SurfaceId id,
-        shell::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& event_sink) override;
+    std::shared_ptr<Surface> create_surface(SurfaceCreationParameters const& params) override;
 
 private:
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;

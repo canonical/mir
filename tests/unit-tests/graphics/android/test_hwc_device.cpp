@@ -56,6 +56,11 @@ public:
     {
     }
 
+    ID id() const override
+    {
+        return this;
+    }
+
     std::shared_ptr<mg::Buffer> buffer(void const*) const override
     {
         return buf;
@@ -82,7 +87,7 @@ public:
         return matrix;
     }
 
-    bool should_be_rendered_in(geom::Rectangle const&) const
+    bool visible() const
     {
         return true;
     }

@@ -49,11 +49,16 @@ mga::AndroidDisplay::AndroidDisplay(std::shared_ptr<mga::DisplayBuilder> const& 
 
 void mga::AndroidDisplay::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
 {
-    f(*display_buffer);
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+
+    if (display_buffer->configuration().power_mode == mir_power_mode_on)
+        f(*display_buffer);
 }
 
 std::unique_ptr<mg::DisplayConfiguration> mga::AndroidDisplay::configuration() const
 {
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+
     return std::unique_ptr<mg::DisplayConfiguration>(
         new mga::AndroidDisplayConfiguration(display_buffer->configuration()));
 }
@@ -65,6 +70,8 @@ void mga::AndroidDisplay::configure(mg::DisplayConfiguration const& configuratio
         BOOST_THROW_EXCEPTION(
             std::logic_error("Invalid or inconsistent display configuration"));
     }
+
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {

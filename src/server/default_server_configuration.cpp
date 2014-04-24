@@ -27,7 +27,7 @@
 #include "mir/frontend/session_authorizer.h"
 #include "mir/scene/surface_configurator.h"
 #include "mir/graphics/cursor.h"
-#include "mir/shell/null_session_listener.h"
+#include "mir/scene/null_session_listener.h"
 #include "mir/graphics/display.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/vt_filter.h"
@@ -76,13 +76,13 @@ std::string mir::DefaultServerConfiguration::the_socket_file() const
     return socket_file;
 }
 
-std::shared_ptr<msh::SessionListener>
-mir::DefaultServerConfiguration::the_shell_session_listener()
+std::shared_ptr<ms::SessionListener>
+mir::DefaultServerConfiguration::the_session_listener()
 {
-    return shell_session_listener(
+    return session_listener(
         [this]
         {
-            return std::make_shared<msh::NullSessionListener>();
+            return std::make_shared<ms::NullSessionListener>();
         });
 }
 

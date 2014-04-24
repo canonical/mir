@@ -20,54 +20,26 @@
 #define MIR_COMPOSITOR_SCENE_H_
 
 #include "mir/geometry/forward.h"
+#include "mir/graphics/renderable.h"
 
 #include <memory>
 #include <functional>
 
 namespace mir
 {
-namespace graphics { class Renderable; }
 namespace compositor
 {
-
-class FilterForScene
-{
-public:
-    virtual ~FilterForScene() {}
-
-    virtual bool operator()(graphics::Renderable const&) = 0;
-
-protected:
-    FilterForScene() = default;
-    FilterForScene(const FilterForScene&) = delete;
-    FilterForScene& operator=(const FilterForScene&) = delete;
-};
-
-class OperatorForScene
-{
-public:
-    virtual ~OperatorForScene() {}
-
-    virtual void operator()(graphics::Renderable const&) = 0;
-
-protected:
-    OperatorForScene() = default;
-    OperatorForScene(const OperatorForScene&) = delete;
-    OperatorForScene& operator=(const OperatorForScene&) = delete;
-
-};
 
 class Scene
 {
 public:
     virtual ~Scene() {}
 
-    // Back to front; normal rendering order
-    virtual void for_each_if(FilterForScene& filter, OperatorForScene& op) = 0;
-
-    // Front to back; as used when scanning for occlusions
-    virtual void reverse_for_each_if(FilterForScene& filter,
-                                     OperatorForScene& op) = 0;
+    /**
+     * Generate a valid list of renderables based on the current state of the Scene.
+     * \returns a list of mg::Renderables. The list is in stacking order from back to front.
+     */
+    virtual graphics::RenderableList generate_renderable_list() const = 0;
 
     /**
      * Sets a callback to be called whenever the state of the
@@ -78,10 +50,6 @@ public:
      * the Scene, otherwise a deadlock may occur.
      */
     virtual void set_change_callback(std::function<void()> const& f) = 0;
-
-    // Implement BasicLockable, to temporarily lock scene state:
-    virtual void lock() = 0;
-    virtual void unlock() = 0;
 
 protected:
     Scene() = default;

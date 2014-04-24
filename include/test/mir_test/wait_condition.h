@@ -31,24 +31,31 @@ namespace test
 {
 struct WaitCondition
 {
-    WaitCondition() : woken(false) {}
+    WaitCondition() : woken_(false) {}
 
     void wait_for_at_most_seconds(int seconds)
     {
         std::unique_lock<std::mutex> ul(guard);
-        if (!woken) condition.wait_for(ul, std::chrono::seconds(seconds));
+        condition.wait_for(ul, std::chrono::seconds(seconds),
+                           [this] { return woken_; });
     }
 
     void wake_up_everyone()
     {
         std::unique_lock<std::mutex> ul(guard);
-        woken = true;
+        woken_ = true;
         condition.notify_all();
+    }
+
+    bool woken()
+    {
+        std::unique_lock<std::mutex> ul(guard);
+        return woken_;
     }
 
     std::mutex guard;
     std::condition_variable condition;
-    bool woken;
+    bool woken_;
 };
 
 ACTION_P(ReturnFalseAndWakeUp, wait_condition)

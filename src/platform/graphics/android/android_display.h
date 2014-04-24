@@ -23,6 +23,7 @@
 #include "gl_context.h"
 
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -68,6 +69,7 @@ public:
 private:
     std::shared_ptr<DisplayBuilder> const display_builder;
     GLContext gl_context;
+    mutable std::mutex configuration_mutex;
 
     //we only have a primary display at the moment
     std::unique_ptr<ConfigurableDisplayBuffer> const display_buffer;
