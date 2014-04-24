@@ -556,16 +556,6 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
     };
     std::vector<uint32_t> possible_encoder_ids_empty;
     uint32_t const possible_crtcs_mask_empty{0};
-    size_t const max_simultaneous_outputs{1};
-
-    /* Expected results */
-    std::vector<mg::DisplayConfigurationCard> const expected_cards =
-    {
-        {
-            mg::DisplayConfigurationCardId{0},
-            max_simultaneous_outputs
-        }
-    };
 
     std::vector<mg::DisplayConfigurationOutput> const expected_outputs_before =
     {
@@ -621,14 +611,6 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
 
     auto display = create_display(create_platform());
     auto conf = display->configuration();
-    size_t card_count{0};
-    conf->for_each_card([&](mg::DisplayConfigurationCard const& card)
-    {
-        ASSERT_LT(card_count, expected_cards.size());
-        EXPECT_EQ(expected_cards[card_count], card) << "card_count: " << card_count;
-        ++card_count;
-    });
-
     size_t output_count{0};
     conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
@@ -650,14 +632,6 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
     resources.prepare();
 
     conf = display->configuration();
-    card_count = 0;
-    conf->for_each_card([&](mg::DisplayConfigurationCard const& card)
-    {
-        ASSERT_LT(card_count, expected_cards.size());
-        EXPECT_EQ(expected_cards[card_count], card) << "card_count: " << card_count;
-        ++card_count;
-    });
-
     output_count = 0;
     conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
