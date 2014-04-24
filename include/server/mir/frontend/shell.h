@@ -57,8 +57,7 @@ public:
 
     virtual void handle_surface_created(std::shared_ptr<Session> const& session) = 0;
 
-    virtual std::shared_ptr<TrustSession> start_trust_session_for(std::string& error,
-                                                                  std::shared_ptr<Session> const& session,
+    virtual std::shared_ptr<TrustSession> start_trust_session_for(std::shared_ptr<Session> const& session,
                                                                   scene::TrustSessionCreationParameters const& params) = 0;
     virtual MirTrustSessionAddTrustResult add_trusted_session_for(std::shared_ptr<TrustSession> const& trust_session,
                                                                   pid_t session_pid) = 0;

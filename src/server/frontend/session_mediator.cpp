@@ -475,12 +475,9 @@ void mf::SessionMediator::start_trust_session(::google::protobuf::RpcController*
         if (current_trust_session.get() != nullptr)
             BOOST_THROW_EXCEPTION(std::runtime_error("Cannot start another trust session"));
 
-        std::string error;
-        auto trust_session = shell->start_trust_session_for(error, session, parameters);
+        auto trust_session = shell->start_trust_session_for(session, parameters);
         weak_trust_session = trust_session;
 
-        if (!error.empty())
-            response->set_error(error);
         if (trust_session)
         {
             response->set_state(trust_session->get_state());

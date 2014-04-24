@@ -302,9 +302,8 @@ TEST_F(SessionManagerTrustSessionListenerSetup, trust_session_listener_is_notifi
 
     auto helper = session_manager.open_session(__LINE__, "XPlane", mt::fake_shared(event_sink));
 
-    std::string error;
     ms::TrustSessionCreationParameters parameters;
 
-    auto trust_session = session_manager.start_trust_session_for(error, helper, parameters);
+    auto trust_session = session_manager.start_trust_session_for(helper, parameters);
     session_manager.stop_trust_session(trust_session);
 }

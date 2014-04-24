@@ -75,8 +75,7 @@ public:
 
     void handle_surface_created(std::shared_ptr<frontend::Session> const& session) override;
 
-    std::shared_ptr<frontend::TrustSession> start_trust_session_for(std::string& error,
-                                                  std::shared_ptr<frontend::Session> const& session,
+    std::shared_ptr<frontend::TrustSession> start_trust_session_for(std::shared_ptr<frontend::Session> const& session,
                                                   TrustSessionCreationParameters const& params) override;
     MirTrustSessionAddTrustResult add_trusted_session_for(std::shared_ptr<frontend::TrustSession> const& trust_session,
                                                           pid_t session_pid) override;

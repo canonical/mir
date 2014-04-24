@@ -223,8 +223,7 @@ void ms::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> con
     set_focus_to(std::dynamic_pointer_cast<Session>(session));
 }
 
-std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(std::string&,
-    std::shared_ptr<mf::Session> const& session,
+std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(std::shared_ptr<mf::Session> const& session,
     TrustSessionCreationParameters const& params)
 {
     std::unique_lock<std::mutex> lock(trust_sessions_mutex);
