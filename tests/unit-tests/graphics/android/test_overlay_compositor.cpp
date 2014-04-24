@@ -18,9 +18,10 @@
 
 #include "src/platform/graphics/android/overlay_gl_compositor.h"
 #include "mir/graphics/gl_context.h"
-#include "mir_test_doubles/mock_gl_program_factory.h"
+#include "mir/graphics/gl_program_factory.h"
 #include "mir_test_doubles/mock_gl.h"
 #include <gtest/gtest.h>
+#include <mir_test/gmock_fixes.h>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -29,6 +30,13 @@ namespace mtd=mir::test::doubles;
 
 namespace
 {
+
+class MockGLProgramFactory : public mg::GLProgramFactory
+{
+public:
+    MOCK_CONST_METHOD2(create_gl_program,
+        std::unique_ptr<mg::GLProgram>(std::string const&, std::string const&));
+};
 
 class MockContext : public mg::GLContext
 {
@@ -40,7 +48,7 @@ public:
 class OverlayCompositor : public ::testing::Test
 {
 public:
-    testing::NiceMock<mtd::MockGLProgramFactory> mock_gl_program_factory;
+    testing::NiceMock<MockGLProgramFactory> mock_gl_program_factory;
     testing::NiceMock<MockContext> mock_context;
     testing::NiceMock<mtd::MockGL> mock_gl;
 };

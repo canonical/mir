@@ -30,7 +30,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
-#include "mir_test_doubles/mock_gl_program_factory.h"
+#include "mir_test_doubles/stub_gl_program_factory.h"
 #include <memory>
 
 namespace geom=mir::geometry;

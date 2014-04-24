@@ -26,7 +26,7 @@
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/stub_gl_config.h"
-#include "mir_test_doubles/mock_gl_program_factory.h"
+#include "mir_test_doubles/stub_gl_program_factory.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
 #include "src/server/report/null_report_factory.h"
 

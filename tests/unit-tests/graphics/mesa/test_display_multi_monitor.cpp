@@ -27,7 +27,7 @@
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "mir_test_doubles/stub_gl_config.h"
-#include "mir_test_doubles/mock_gl_program_factory.h"
+#include "mir_test_doubles/stub_gl_program_factory.h"
 
 #include "mir_test_framework/udev_environment.h"
 
