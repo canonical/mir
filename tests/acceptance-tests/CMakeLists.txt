@@ -8,7 +8,6 @@ include_directories(
 protobuf_generate_cpp(
   GENERATED_PROTOBUF_SRCS GENERATED_PROTOBUF_HDRS
   test_protobuf.proto
-  spike_socket_request.proto
 )
 
 set(
