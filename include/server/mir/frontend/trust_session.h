@@ -36,8 +36,6 @@ class TrustSession
 public:
     virtual ~TrustSession() = default;
 
-    virtual void for_each_trusted_client_process(std::function<void(pid_t pid)> f, bool reverse) const = 0;
-
     virtual MirTrustSessionState get_state() const = 0;
 
     virtual void start() = 0;

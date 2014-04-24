@@ -30,10 +30,6 @@ namespace doubles
 
 class NullTrustSession : public scene::TrustSession
 {
-    void for_each_trusted_client_process(std::function<void(pid_t)>, bool) const
-    {
-    }
-
     MirTrustSessionState get_state() const override
     {
       return mir_trust_session_state_stopped;

@@ -109,10 +109,6 @@ void ms::TrustSessionImpl::stop()
     }
 }
 
-void ms::TrustSessionImpl::for_each_trusted_client_process(std::function<void(pid_t pid)>, bool) const
-{
-}
-
 bool ms::TrustSessionImpl::add_trusted_child(std::shared_ptr<ms::Session> const& session)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);

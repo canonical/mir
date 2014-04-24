@@ -42,8 +42,6 @@ public:
                  std::shared_ptr<TrustSessionListener> const& trust_session_listener);
     ~TrustSessionImpl();
 
-    void for_each_trusted_client_process(std::function<void(pid_t pid)> f, bool reverse) const;
-
     MirTrustSessionState get_state() const override;
     std::weak_ptr<Session> get_trusted_helper() const override;
 
