@@ -22,7 +22,7 @@
 #include "protobuf_message_processor.h"
 #include "protobuf_responder.h"
 #include "socket_messenger.h"
-#include "socket_session.h"
+#include "socket_connection.h"
 
 #include "protobuf_ipc_factory.h"
 #include "mir/frontend/session_authorizer.h"
@@ -40,7 +40,7 @@ mf::ProtobufSessionCreator::ProtobufSessionCreator(
     session_authorizer(session_authorizer),
     report(report),
     next_session_id(0),
-    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>())
+    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketConnection>>())
 {
 }
 
@@ -71,7 +71,7 @@ void mf::ProtobufSessionCreator::create_session_for(std::shared_ptr<ba::local::s
             ipc_factory->make_ipc_server(client_pid, event_sink),
             report);
 
-        const auto& session = std::make_shared<mfd::SocketSession>(messenger, next_id(), connected_sessions, msg_processor);
+        const auto& session = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connected_sessions, msg_processor);
         connected_sessions->add(session);
         session->read_next_message();
     }
