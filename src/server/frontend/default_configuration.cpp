@@ -17,7 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
-#include "mir/frontend/protobuf_session_creator.h"
+#include "mir/frontend/protobuf_connection_creator.h"
 #include "mir/frontend/session_authorizer.h"
 
 #include "resource_cache.h"
@@ -118,7 +118,7 @@ mir::DefaultServerConfiguration::the_session_creator()
 {
     return session_creator([this]
         {
-            return std::make_shared<mf::ProtobufSessionCreator>(
+            return std::make_shared<mf::ProtobufConnectionCreator>(
                 the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
                 the_session_authorizer(),
                 the_message_processor_report());

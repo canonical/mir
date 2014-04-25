@@ -21,7 +21,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/client/private.h"
 #include "mir/frontend/protobuf_message_sender.h"
-#include "mir/frontend/protobuf_session_creator.h"
+#include "mir/frontend/protobuf_connection_creator.h"
 #include "mir/frontend/template_protobuf_message_processor.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
@@ -99,9 +99,9 @@ struct DemoMessageProcessor : mfd::MessageProcessor
     std::shared_ptr<mfd::MessageProcessor> const wrapped;
 };
 
-struct DemoSessionCreator : mf::ProtobufSessionCreator
+struct DemoSessionCreator : mf::ProtobufConnectionCreator
 {
-    using ProtobufSessionCreator::ProtobufSessionCreator;
+    using ProtobufConnectionCreator::ProtobufConnectionCreator;
 
     MOCK_CONST_METHOD3(create_processor,
         std::shared_ptr<mfd::MessageProcessor>(
@@ -114,7 +114,7 @@ struct DemoSessionCreator : mf::ProtobufSessionCreator
         std::shared_ptr<mir::protobuf::DisplayServer> const& display_server,
         std::shared_ptr<mf::MessageProcessorReport> const& report) const
     {
-        auto const wrapped = mf::ProtobufSessionCreator::create_processor(
+        auto const wrapped = mf::ProtobufConnectionCreator::create_processor(
             sender,
             display_server,
             report);
@@ -127,7 +127,7 @@ struct DemoSessionCreator : mf::ProtobufSessionCreator
         std::shared_ptr<mir::protobuf::DisplayServer> const& display_server,
         std::shared_ptr<mf::MessageProcessorReport> const& report) const
     {
-        return mf::ProtobufSessionCreator::create_processor(
+        return mf::ProtobufConnectionCreator::create_processor(
             sender,
             display_server,
             report);

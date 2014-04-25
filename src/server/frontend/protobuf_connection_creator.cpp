@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/protobuf_session_creator.h"
+#include "mir/frontend/protobuf_connection_creator.h"
 
 #include "event_sender.h"
 #include "protobuf_message_processor.h"
@@ -32,7 +32,7 @@ namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 
-mf::ProtobufSessionCreator::ProtobufSessionCreator(
+mf::ProtobufConnectionCreator::ProtobufConnectionCreator(
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
     std::shared_ptr<SessionAuthorizer> const& session_authorizer,
     std::shared_ptr<MessageProcessorReport> const& report)
@@ -40,21 +40,21 @@ mf::ProtobufSessionCreator::ProtobufSessionCreator(
     session_authorizer(session_authorizer),
     report(report),
     next_session_id(0),
-    connected_sessions(std::make_shared<mfd::Connections<mfd::SocketConnection>>())
+    connections(std::make_shared<mfd::Connections<mfd::SocketConnection>>())
 {
 }
 
-mf::ProtobufSessionCreator::~ProtobufSessionCreator() noexcept
+mf::ProtobufConnectionCreator::~ProtobufConnectionCreator() noexcept
 {
-    connected_sessions->clear();
+    connections->clear();
 }
 
-int mf::ProtobufSessionCreator::next_id()
+int mf::ProtobufConnectionCreator::next_id()
 {
     return next_session_id.fetch_add(1);
 }
 
-void mf::ProtobufSessionCreator::create_session_for(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
+void mf::ProtobufConnectionCreator::create_session_for(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
 {
     auto const messenger = std::make_shared<detail::SocketMessenger>(socket);
     auto const client_pid = messenger->client_pid();
@@ -71,14 +71,14 @@ void mf::ProtobufSessionCreator::create_session_for(std::shared_ptr<ba::local::s
             ipc_factory->make_ipc_server(client_pid, event_sink),
             report);
 
-        const auto& session = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connected_sessions, msg_processor);
-        connected_sessions->add(session);
+        const auto& session = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);
+        connections->add(session);
         session->read_next_message();
     }
 }
 
 std::shared_ptr<mfd::MessageProcessor>
-mf::ProtobufSessionCreator::create_processor(
+mf::ProtobufConnectionCreator::create_processor(
     std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<mf::MessageProcessorReport> const& report) const
