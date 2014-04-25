@@ -71,9 +71,9 @@ void mf::ProtobufConnectionCreator::create_connection_for(std::shared_ptr<ba::lo
             ipc_factory->make_ipc_server(client_pid, event_sink),
             report);
 
-        const auto& session = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);
-        connections->add(session);
-        session->read_next_message();
+        const auto& connection = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);
+        connections->add(connection);
+        connection->read_next_message();
     }
 }
 
