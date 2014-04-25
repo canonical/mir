@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_FRONTEND_PROTOBUF_SESSION_CREATOR_H_
-#define MIR_FRONTEND_PROTOBUF_SESSION_CREATOR_H_
+#ifndef MIR_FRONTEND_PROTOBUF_CONNECTION_CREATOR_H_
+#define MIR_FRONTEND_PROTOBUF_CONNECTION_CREATOR_H_
 
 #include "mir/frontend/session_creator.h"
 #include "mir/frontend/connections.h"
@@ -35,19 +35,19 @@ class SessionAuthorizer;
 
 namespace detail
 {
-struct SocketConnection;
+class SocketConnection;
 class MessageProcessor;
 class ProtobufMessageSender;
 }
 
-class ProtobufSessionCreator : public SessionCreator
+class ProtobufConnectionCreator : public SessionCreator
 {
 public:
-    ProtobufSessionCreator(
+    ProtobufConnectionCreator(
         std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<MessageProcessorReport> const& report);
-    ~ProtobufSessionCreator() noexcept;
+    ~ProtobufConnectionCreator() noexcept;
 
     void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
 
@@ -63,9 +63,9 @@ private:
     std::shared_ptr<SessionAuthorizer> const session_authorizer;
     std::shared_ptr<MessageProcessorReport> const report;
     std::atomic<int> next_session_id;
-    std::shared_ptr<detail::Connections<detail::SocketConnection>> const connected_sessions;
+    std::shared_ptr<detail::Connections<detail::SocketConnection>> const connections;
 };
 }
 }
 
-#endif /* MIR_FRONTEND_PROTOBUF_SESSION_CREATOR_H_ */
+#endif /* MIR_FRONTEND_PROTOBUF_CONNECTION_CREATOR_H_ */

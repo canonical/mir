@@ -7,7 +7,7 @@ set(
   protobuf_responder.cpp
   protobuf_buffer_packer.cpp
   published_socket_connector.cpp
-  protobuf_session_creator.cpp
+  protobuf_connection_creator.cpp
   socket_connection.cpp
   resource_cache.cpp
   socket_messenger.cpp
