@@ -54,7 +54,7 @@ int mf::ProtobufConnectionCreator::next_id()
     return next_session_id.fetch_add(1);
 }
 
-void mf::ProtobufConnectionCreator::create_session_for(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
+void mf::ProtobufConnectionCreator::create_connection_for(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
 {
     auto const messenger = std::make_shared<detail::SocketMessenger>(socket);
     auto const client_pid = messenger->client_pid();
@@ -71,9 +71,9 @@ void mf::ProtobufConnectionCreator::create_session_for(std::shared_ptr<ba::local
             ipc_factory->make_ipc_server(client_pid, event_sink),
             report);
 
-        const auto& session = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);
-        connections->add(session);
-        session->read_next_message();
+        const auto& connection = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);
+        connections->add(connection);
+        connection->read_next_message();
     }
 }
 

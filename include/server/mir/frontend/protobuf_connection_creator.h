@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_PROTOBUF_CONNECTION_CREATOR_H_
 #define MIR_FRONTEND_PROTOBUF_CONNECTION_CREATOR_H_
 
-#include "mir/frontend/session_creator.h"
+#include "mir/frontend/connection_creator.h"
 #include "mir/frontend/connections.h"
 
 #include <atomic>
@@ -40,7 +40,7 @@ class MessageProcessor;
 class ProtobufMessageSender;
 }
 
-class ProtobufConnectionCreator : public SessionCreator
+class ProtobufConnectionCreator : public ConnectionCreator
 {
 public:
     ProtobufConnectionCreator(
@@ -49,7 +49,7 @@ public:
         std::shared_ptr<MessageProcessorReport> const& report);
     ~ProtobufConnectionCreator() noexcept;
 
-    void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
+    void create_connection_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
 
     virtual std::shared_ptr<detail::MessageProcessor> create_processor(
         std::shared_ptr<detail::ProtobufMessageSender> const& sender,
