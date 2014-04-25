@@ -54,8 +54,8 @@ TEST_F(TrustSession, start_and_stop)
     EXPECT_CALL(trusted_helper, begin_trust_session()).Times(1);
     EXPECT_CALL(trusted_helper, end_trust_session()).Times(1);
 
-    EXPECT_CALL(trusted_app1, begin_trust_session()).Times(1);
-    EXPECT_CALL(trusted_app1, end_trust_session()).Times(1);
+    EXPECT_CALL(trusted_app1, begin_trust_session()).Times(0);
+    EXPECT_CALL(trusted_app1, end_trust_session()).Times(0);
 
     EXPECT_CALL(trust_session_listener, trusted_session_beginning(_,_)).Times(1);
     EXPECT_CALL(trust_session_listener, trusted_session_ending(_,_)).Times(1);

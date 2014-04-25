@@ -235,7 +235,7 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
     trust_session_container->insert(trust_session, shell_session->process_id());
 
     trust_session->start();
-    trust_session_listener->starting(trust_session);
+    trust_session_listener->starting(*(trust_session.get()));
 
     add_trusted_session_for_locked(lock, trust_session, params.base_process_id);
     return trust_session;
@@ -285,6 +285,6 @@ void ms::SessionManager::stop_trust_session_locked(std::unique_lock<std::mutex> 
 
     trust_session_container->remove_trust_session(trust_session);
 
-    trust_session_listener->stopping(scene_trust_session);
+    trust_session_listener->stopping(*(scene_trust_session).get());
 }
 
