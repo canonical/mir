@@ -84,20 +84,19 @@ void mga::DisplayBuffer::release_current()
     gl_context.release_current();
 }
 
-void mga::DisplayBuffer::render_and_post_update(
-    RenderableList const& renderlist,
-    std::function<void(Renderable const&)> const& render_fn)
+bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderlist)
 {
-    if (renderlist.empty())
-    {
-        display_device->render_gl(gl_context);
-    }
-    else
-    {
-        display_device->render_gl_and_overlays(gl_context, renderlist, render_fn);
-    }
+    //TODO: remove this once 1) the android gl program can handle the fallback, and
+    //      2) the renderlist is scanned for transforms the HWC api does not support
+    return false;
 
+    if (renderlist.empty())
+        return false;
+
+    display_device->render_gl_and_overlays(gl_context, renderlist, 
+        [](mg::Renderable const&){}); //TODO: remove this lambda
     post();
+    return true;
 }
 
 void mga::DisplayBuffer::post_update()
@@ -110,11 +109,6 @@ void mga::DisplayBuffer::post()
 {
     auto last_rendered = fb_bundle->last_rendered_buffer();
     display_device->post(*last_rendered);
-}
-
-bool mga::DisplayBuffer::can_bypass() const
-{
-    return false;
 }
 
 MirOrientation mga::DisplayBuffer::orientation() const

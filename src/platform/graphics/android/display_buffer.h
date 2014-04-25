@@ -47,11 +47,8 @@ public:
     void make_current();
     void release_current();
     void post_update();
-    bool can_bypass() const override;
+    bool post_renderables_if_optimizable(RenderableList const& renderlist);
 
-    void render_and_post_update(
-        RenderableList const& renderlist,
-        std::function<void(Renderable const&)> const& render_fn);
     MirOrientation orientation() const override;
 
     DisplayConfigurationOutput configuration() const;

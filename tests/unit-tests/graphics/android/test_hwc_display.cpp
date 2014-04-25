@@ -100,36 +100,23 @@ TEST_F(AndroidDisplayBuffer, can_post_update_with_gl_only)
     db.post_update();
 }
 
-TEST_F(AndroidDisplayBuffer, performs_default_post_if_empty_list)
+TEST_F(AndroidDisplayBuffer, rejects_empty_list_for_optimization)
 {
-    using namespace testing;
-
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
-
-    InSequence seq;
-    EXPECT_CALL(*mock_display_device, render_gl(_))
-        .Times(1);
-    EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
-        .Times(1)
-        .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
-        .Times(1);
-
     std::list<std::shared_ptr<mg::Renderable>> renderlist{};
-    auto render_fn = [] (mg::Renderable const&) {};
-    db.render_and_post_update(renderlist, render_fn);
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 }
 
-TEST_F(AndroidDisplayBuffer, posts_overlay_list)
+//disable this test until the GL fallback is in place
+TEST_F(AndroidDisplayBuffer, DISABLED_posts_overlay_list)
 {
     using namespace testing;
     std::list<std::shared_ptr<mg::Renderable>> renderlist{
         std::make_shared<mtd::StubRenderable>(),
         std::make_shared<mtd::StubRenderable>()};
-    std::function<void(mg::Renderable const&)> render_fn;
 
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, render_gl_and_overlays(_, Ref(renderlist), Ref(render_fn)))
+    EXPECT_CALL(*mock_display_device, render_gl_and_overlays(_, Ref(renderlist), _))
         .Times(1);
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
         .Times(1)
@@ -138,7 +125,7 @@ TEST_F(AndroidDisplayBuffer, posts_overlay_list)
         .Times(1);
 
     mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
-    db.render_and_post_update(renderlist, render_fn); 
+    db.post_renderables_if_optimizable(renderlist); 
 }
 
 TEST_F(AndroidDisplayBuffer, defaults_to_normal_orientation)
