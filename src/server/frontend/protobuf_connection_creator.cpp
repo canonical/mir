@@ -54,7 +54,7 @@ int mf::ProtobufConnectionCreator::next_id()
     return next_session_id.fetch_add(1);
 }
 
-void mf::ProtobufConnectionCreator::create_session_for(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
+void mf::ProtobufConnectionCreator::create_connection_for(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
 {
     auto const messenger = std::make_shared<detail::SocketMessenger>(socket);
     auto const client_pid = messenger->client_pid();
