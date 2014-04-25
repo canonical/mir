@@ -4,12 +4,6 @@ set(
   test_glmark2-es2-mir.cpp
 )
 
-find_program(GLMARK2_ES2_MIR_FOUND glmark2-es2-mir)
-
-if(NOT GLMARK2_ES2_MIR_FOUND)
-  message("warning: glmark2-es2-mir not found, performance tests _may_ fail.")
-endif()
-
 add_executable(
   mir_performance_tests
 
