@@ -1,16 +1,41 @@
+#include "mir/default_server_configuration.h"
+#include "mir/display_server.h"
+#include "mir/run_mir.h"
+
 #include <gtest/gtest.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/regex.hpp>
+#include <boost/thread/thread.hpp> 
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <thread>
 
 class GLMark2Test : public ::testing::Test
 {
 protected:
+    void launch_mir_server()
+    {
+        system("echo \"Starting mir server.....\"");
+        setenv("LD_LIBRARY_PATH",".",1);
+        char const* argv[] = {""}; 
+        int argc = sizeof(argv) / sizeof(argv[0]);
+        mir::DefaultServerConfiguration config(argc, argv);
+        //mir::DisplayServer ds(config);
+        try
+        {
+            run_mir(config, [](mir::DisplayServer&) {} );
+        }
+        catch(...)
+        {
+            mir::report_exception(std::cer);
+        }
+    }
+    
     enum ResultFileType {raw, json};
     virtual void RunGLMark2(char const* output_filename, ResultFileType file_type)
     {
@@ -21,11 +46,11 @@ protected:
         size_t len = 0;
         ssize_t read;
         std::ofstream glmark2_output;
-        
-        char const* cmd = "./mir_demo_server_shell&";
-        in = popen(cmd, "r");
-        
-        cmd = "glmark2-es2-mir --fullscreen";
+
+        std::thread mir_server(&GLMark2Test::launch_mir_server, this);
+        boost::this_thread::sleep(boost::posix_time::seconds(5));
+
+        char const* cmd = "glmark2-es2-mir --fullscreen";
         ASSERT_TRUE((in = popen(cmd, "r")));
     
         glmark2_output.open(output_filename);
