@@ -122,7 +122,7 @@ TEST_F(SocketConnectionTest, basic_msg_is_received_and_dispatched)
 
     using namespace testing;
 
-    std::shared_ptr<mfd::ConnectedSessions<mfd::SocketConnection>> null_sessions;
+    std::shared_ptr<mfd::Connections<mfd::SocketConnection>> null_sessions;
 
     mfd::SocketConnection session(mt::fake_shared(stub_receiver), 0, null_sessions, mt::fake_shared(mock_processor));
 
