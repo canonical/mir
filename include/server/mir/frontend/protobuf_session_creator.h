@@ -20,7 +20,7 @@
 #define MIR_FRONTEND_PROTOBUF_SESSION_CREATOR_H_
 
 #include "mir/frontend/session_creator.h"
-#include "mir/frontend/connected_sessions.h"
+#include "mir/frontend/connections.h"
 
 #include <atomic>
 
@@ -63,7 +63,7 @@ private:
     std::shared_ptr<SessionAuthorizer> const session_authorizer;
     std::shared_ptr<MessageProcessorReport> const report;
     std::atomic<int> next_session_id;
-    std::shared_ptr<detail::ConnectedSessions<detail::SocketConnection>> const connected_sessions;
+    std::shared_ptr<detail::Connections<detail::SocketConnection>> const connected_sessions;
 };
 }
 }

@@ -40,7 +40,7 @@ mf::ProtobufSessionCreator::ProtobufSessionCreator(
     session_authorizer(session_authorizer),
     report(report),
     next_session_id(0),
-    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketConnection>>())
+    connected_sessions(std::make_shared<mfd::Connections<mfd::SocketConnection>>())
 {
 }
 
