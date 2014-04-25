@@ -41,7 +41,7 @@ public:
     SocketConnection(
         std::shared_ptr<MessageReceiver> const& message_receiver,
         int id_,
-        std::shared_ptr<Connections<SocketConnection>> const& connected_sessions,
+        std::shared_ptr<Connections<SocketConnection>> const& connections,
         std::shared_ptr<MessageProcessor> const& processor);
 
     ~SocketConnection() noexcept;

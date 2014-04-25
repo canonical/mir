@@ -39,11 +39,11 @@ namespace mfd = mir::frontend::detail;
 mfd::SocketConnection::SocketConnection(
     std::shared_ptr<mfd::MessageReceiver> const& message_receiver,
     int id_,
-    std::shared_ptr<Connections<SocketConnection>> const& connected_sessions,
+    std::shared_ptr<Connections<SocketConnection>> const& connections,
     std::shared_ptr<MessageProcessor> const& processor)
      : message_receiver(message_receiver),
        id_(id_),
-       connections(connected_sessions),
+       connections(connections),
        processor(processor)
 {
 }
