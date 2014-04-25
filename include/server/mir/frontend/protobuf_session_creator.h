@@ -35,7 +35,7 @@ class SessionAuthorizer;
 
 namespace detail
 {
-struct SocketSession;
+struct SocketConnection;
 class MessageProcessor;
 class ProtobufMessageSender;
 }
@@ -63,7 +63,7 @@ private:
     std::shared_ptr<SessionAuthorizer> const session_authorizer;
     std::shared_ptr<MessageProcessorReport> const report;
     std::atomic<int> next_session_id;
-    std::shared_ptr<detail::ConnectedSessions<detail::SocketSession>> const connected_sessions;
+    std::shared_ptr<detail::ConnectedSessions<detail::SocketConnection>> const connected_sessions;
 };
 }
 }
