@@ -163,6 +163,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
     InSequence seq;
 
     EXPECT_CALL(mock_gl, glClear(_));
+    EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(renderable, shaped())
         .WillOnce(Return(true));

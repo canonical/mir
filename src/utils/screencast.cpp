@@ -69,20 +69,6 @@ void read_pixels(GLenum format, mir::geometry::Size const& size, void* buffer)
     auto height = size.height.as_uint32_t();
 
     glReadPixels(0, 0, width, height, format, GL_UNSIGNED_BYTE, buffer);
-
-    /*
-     * No idea why we're getting transparent pixels back from the framebuffer
-     * but the colours are right just so long as you reset alpha to 1 ... :)
-     * (LP: #1301210)
-     */
-    int alpha_offset = (format == GL_BGRA_EXT || format == GL_RGBA) ? 3 : -1;
-    if (alpha_offset > 0)
-    {
-        unsigned const bpp = 4;
-        unsigned const size = width * height * bpp;
-        for (unsigned i = alpha_offset; i < size; i += bpp)
-            static_cast<GLubyte*>(buffer)[i] = 0xff;
-    }
 }
 
 
