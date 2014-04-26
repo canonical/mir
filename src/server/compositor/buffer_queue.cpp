@@ -54,6 +54,9 @@ std::shared_ptr<mg::Buffer> pop(std::deque<std::shared_ptr<mg::Buffer>>& q)
 bool contains(std::shared_ptr<mg::Buffer> const& buffer,
               std::vector<std::shared_ptr<mg::Buffer>> const& list)
 {
+    if (list.empty())
+        return false;
+
     auto const& begin = list.cbegin();
     auto const& end = list.cend();
     return std::find(begin, end, buffer) != end;
@@ -70,7 +73,7 @@ mc::BufferQueue::BufferQueue(
       the_properties{props},
       gralloc{gralloc}
 {
-    if (nbuffers < min_num_buffers)
+    if (nbuffers < 1)
     {
         BOOST_THROW_EXCEPTION(
             std::logic_error("invalid number of buffers for BufferQueue"));
@@ -80,26 +83,40 @@ mc::BufferQueue::BufferQueue(
      * If there is increased pressure by the client to acquire
      * more buffers, more will be allocated at that time (up to nbuffers)
      */
-    for(int i = 0; i < allocated_buffers; i++)
+    for(int i = 0; i < allocated_buffers - 1; i++)
     {
-        free_queue.push_back(gralloc->alloc_buffer(the_properties));
+        free_buffers.push_back(gralloc->alloc_buffer(the_properties));
     }
-    front_buffer = free_queue.front();
+    current_compositor_buffer = gralloc->alloc_buffer(the_properties);
+
+    if (nbuffers == 1)
+        free_buffers.push_back(current_compositor_buffer);
 }
 
 void mc::BufferQueue::client_acquire(std::function<void(graphics::Buffer* buffer)> complete)
 {
     std::unique_lock<decltype(guard)> lock(guard);
+
+    if (give_to_client)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::logic_error("unexpected acquire: there is a pending completion"));
+    }
+
     give_to_client = std::move(complete);
 
-    if (!free_queue.empty())
+    if (!free_buffers.empty())
     {
-        auto const& buffer = pop(free_queue);
+        auto buffer = free_buffers.back();
+        free_buffers.pop_back();
         give_buffer_to_client(buffer, std::move(lock));
         return;
     }
 
-    /* No empty buffers, attempt allocating more*/
+    /* No empty buffers, attempt allocating more
+     * TODO: need a good heuristic to switch
+     * between double-buffering to n-buffering
+	 */
     if (allocated_buffers < nbuffers)
     {
         auto const& buffer = gralloc->alloc_buffer(the_properties);
@@ -114,10 +131,6 @@ void mc::BufferQueue::client_acquire(std::function<void(graphics::Buffer* buffer
         auto const& buffer = pop(ready_to_composite_queue);
         give_buffer_to_client(buffer, std::move(lock));
     }
-
-    /* TODO: if there are no free or ready buffers available and frame
-     * dropping is enabled, should they be stolen from the compositor?
-     */
 }
 
 void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
@@ -143,37 +156,34 @@ void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
 std::shared_ptr<mg::Buffer>
 mc::BufferQueue::compositor_acquire(void const* user_id)
 {
-    std::lock_guard<decltype(guard)> lock(guard);
+    std::unique_lock<decltype(guard)> lock(guard);
 
-    bool use_current_front_buffer =
-        ready_to_composite_queue.empty() ||
-        is_new_front_buffer_user(user_id);
+    bool use_current_buffer =
+        is_new_user(user_id) || ready_to_composite_queue.empty();
 
-    if (!use_current_front_buffer)
+    std::shared_ptr<mg::Buffer> buffer_to_release;
+    if (!use_current_buffer)
     {
-        /* The front buffer is being updated
-         * so there are no users for it yet*/
-        front_buffer_users.clear();
-
-        front_buffer = pop(ready_to_composite_queue);
-
-        /* Only the buffers taken from the ready queue are "owned"
-         * by the compositor(s). If no buffers are ready, then the
-         * last client updated buffer will be used instead, which
-         * may be already owned by the client or owned by the free
-         * queue.
+        /* No other compositors currently reference this
+         * buffer so release it
          */
-        buffers_owned_by_compositor.push_back(front_buffer);
+        if (buffers_sent_to_compositor.empty())
+            buffer_to_release = current_compositor_buffer;
+
+        /* The current compositor buffer is
+         * being changed, the new one has no users yet
+         */
+        compositor_ids.clear();
+        current_compositor_buffer = pop(ready_to_composite_queue);
     }
 
-    /* A distinction is made between buffers sent to compositor(s)
-     * and those truly owned by the compositors. buffers_sent_to_compositor
-     * is mainly used to track reference counts and to check
-     * the buffer parameter at release.
-     */
-    buffers_sent_to_compositor.push_back(front_buffer);
-    front_buffer_users.push_back(user_id);
-    return front_buffer;
+    buffers_sent_to_compositor.push_back(current_compositor_buffer);
+    compositor_ids.push_back(user_id);
+
+    if (buffer_to_release)
+        release(buffer_to_release, std::move(lock));
+
+    return current_compositor_buffer;
 }
 
 void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const& buffer)
@@ -190,24 +200,16 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     if (contains(buffer, buffers_sent_to_compositor))
         return;
 
-    /* If we can't remove it it means compositor didn't own it.
-     * This may happen when there weren't any ready buffers
-     * when compositor acquire was called.
-     */
-    if (!remove(buffer, buffers_owned_by_compositor))
-        return;
-
-    if (give_to_client)
-        give_buffer_to_client(buffer, std::move(lock));
-    else
-        free_queue.push_back(buffer);
+    /* This buffer is not owned by compositor anymore */
+    if (current_compositor_buffer != buffer)
+        release(buffer, std::move(lock));
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferQueue::snapshot_acquire()
 {
     std::unique_lock<decltype(guard)> lock(guard);
-    pending_snapshots.push_back(front_buffer);
-    return front_buffer;
+    pending_snapshots.push_back(current_compositor_buffer);
+    return current_compositor_buffer;
 }
 
 void mc::BufferQueue::snapshot_release(std::shared_ptr<graphics::Buffer> const& buffer)
@@ -248,7 +250,7 @@ void mc::BufferQueue::force_requests_to_complete()
         auto const& buffer = pop(ready_to_composite_queue);
         while (!ready_to_composite_queue.empty())
         {
-            free_queue.push_back(pop(ready_to_composite_queue));
+            free_buffers.push_back(pop(ready_to_composite_queue));
         }
         give_buffer_to_client(buffer, std::move(lock));
     }
@@ -284,9 +286,7 @@ void mc::BufferQueue::give_buffer_to_client(
     if (new_buffer)
         buffer = gralloc->alloc_buffer(the_properties);
 
-    /* Don't give to the client just yet, there's a pending
-     * snapshot - avoid tearing artifacts.
-     */
+    /* Don't give to the client just yet if there's a pending snapshot */
     if (!new_buffer && contains(buffer, pending_snapshots))
     {
         snapshot_released.wait(lock,
@@ -296,19 +296,36 @@ void mc::BufferQueue::give_buffer_to_client(
     buffers_owned_by_client.push_back(buffer);
 
     lock.unlock();
-    give_to_client_cb(buffer.get());
+    try
+    {
+        give_to_client_cb(buffer.get());
+    }
+    catch (...)
+    {
+        /* comms errors should not propagate to compositing threads */
+    }
 }
 
-bool mc::BufferQueue::is_new_front_buffer_user(void const* user_id)
+bool mc::BufferQueue::is_new_user(void const* user_id)
 {
-    if (!front_buffer_users.empty())
+    if (!compositor_ids.empty())
     {
-        auto const& begin = front_buffer_users.cbegin();
-        auto const& end = front_buffer_users.cend();
+        auto const& begin = compositor_ids.cbegin();
+        auto const& end = compositor_ids.cend();
         return std::find(begin, end, user_id) == end;
     }
-    /* The user list is really only empty the very first time.
-     * False is returned so that the front buffer can be updated.
+    /* The id list is really only empty the very first time.
+     * False is returned so that the compositor buffer is advanced.
      */
     return false;
+}
+
+void mc::BufferQueue::release(
+    std::shared_ptr<mg::Buffer> const& buffer,
+    std::unique_lock<std::mutex> lock)
+{
+    if (give_to_client)
+        give_buffer_to_client(buffer, std::move(lock));
+    else
+        free_buffers.push_back(buffer);
 }
