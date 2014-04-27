@@ -186,13 +186,13 @@ void ms::SurfaceStack::emit_change_notification()
     notify_change();
 }
 
-void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& callback)
+void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& callback)
 {
     std::lock_guard<decltype(guard)> lg(guard);
     for (auto &layer : layers_by_depth)
     {
         for (auto it = layer.second.begin(); it != layer.second.end(); ++it)
-            callback((*it)->input_channel());
+            callback(*it);
     }
 }
 

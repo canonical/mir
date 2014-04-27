@@ -27,32 +27,17 @@ namespace graphics
 {
 namespace nested
 {
+class HostSurface;
+
 namespace detail
 {
-
-class EGLSurfaceHandle;
-class MirSurfaceHandle
-{
-public:
-    explicit MirSurfaceHandle(MirSurface* mir_surface);
-
-    ~MirSurfaceHandle() noexcept;
-
-    operator MirSurface*() const { return mir_surface; }
-
-private:
-    MirSurface* mir_surface;
-
-    MirSurfaceHandle(MirSurfaceHandle const&) = delete;
-    MirSurfaceHandle operator=(MirSurfaceHandle const&) = delete;
-};
 
 class NestedOutput : public DisplayBuffer
 {
 public:
     NestedOutput(
         EGLDisplayHandle const& egl_display,
-        MirSurface* mir_surface,
+        std::shared_ptr<HostSurface> const& host_surface,
         geometry::Rectangle const& area,
         std::shared_ptr<input::EventFilter> const& event_handler,
         MirPixelFormat preferred_format);
@@ -74,7 +59,7 @@ public:
     NestedOutput operator=(NestedOutput const&) = delete;
 private:
     EGLDisplayHandle const& egl_display;
-    MirSurfaceHandle const mir_surface;
+    std::shared_ptr<HostSurface> const host_surface;
     EGLConfig const egl_config;
     EGLContextStore const egl_context;
     geometry::Rectangle const area;

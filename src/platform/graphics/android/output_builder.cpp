@@ -64,6 +64,7 @@ MirPixelFormat mga::OutputBuilder::display_format()
 }
 
 std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_display_buffer(
+    GLProgramFactory const& gl_program_factory,
     GLContext const& gl_context)
 {
     std::shared_ptr<mga::DisplayDevice> device;
@@ -101,5 +102,5 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
 
     auto native_window = res_factory->create_native_window(framebuffers);
     return std::unique_ptr<mga::DisplayBuffer>(
-        new DisplayBuffer(framebuffers, device, native_window, gl_context));
+        new DisplayBuffer(framebuffers, device, native_window, gl_context, gl_program_factory));
 }

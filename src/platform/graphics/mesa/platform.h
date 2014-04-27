@@ -48,6 +48,7 @@ public:
             const std::shared_ptr<BufferInitializer>& buffer_initializer);
     std::shared_ptr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+        std::shared_ptr<GLProgramFactory> const& program_factory,
         std::shared_ptr<GLConfig> const& gl_config);
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
     std::shared_ptr<InternalClient> create_internal_client();

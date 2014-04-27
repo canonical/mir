@@ -29,7 +29,7 @@ namespace examples
 class DemoRenderer : public compositor::GLRenderer
 {
 public:
-    DemoRenderer(geometry::Rectangle const& display_area);
+    DemoRenderer(graphics::GLProgramFactory const& factory, geometry::Rectangle const& display_area);
     ~DemoRenderer();
 
     void begin() const override;

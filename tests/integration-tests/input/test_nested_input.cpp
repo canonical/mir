@@ -18,14 +18,14 @@
 
 #include "src/server/input/nested_input_configuration.h"
 #include "src/server/input/nested_input_relay.h"
+#include "src/server/report/null/input_report.h"
 #include "mir/input/input_region.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_manager.h"
-#include "mir/input/input_targets.h"
-#include "src/server/report/null/input_report.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/raii.h"
 
+#include "mir_test_doubles/stub_input_targets.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test/fake_shared.h"
 
@@ -54,13 +54,6 @@ struct NullInputRegion : mi::InputRegion
 struct NullCursorListener : mi::CursorListener
 {
     void cursor_moved_to(float, float) override {}
-};
-
-struct NullInputTargets : mi::InputTargets
-{
-    void for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& ) override
-    {
-    }
 };
 
 MATCHER_P(MirKeyEventMatches, event, "")
@@ -94,7 +87,7 @@ TEST(NestedInputTest, applies_event_filter_on_relayed_event)
         std::make_shared<NullCursorListener>(),
         std::make_shared<mir::report::null::InputReport>()};
 
-    input_conf.set_input_targets(std::make_shared<NullInputTargets>());
+    input_conf.set_input_targets(std::make_shared<mtd::StubInputTargets>());
     auto const input_manager = input_conf.the_input_manager();
 
     auto const with_running_input_manager = mir::raii::paired_calls(
