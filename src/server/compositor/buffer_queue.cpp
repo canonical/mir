@@ -29,37 +29,60 @@ namespace mg = mir::graphics;
 
 namespace
 {
-bool remove(std::shared_ptr<mg::Buffer> const& buffer,
-            std::vector<std::shared_ptr<mg::Buffer>>& list)
-{
-    auto const& begin = list.begin();
-    auto const& end = list.end();
-    auto it = std::find(begin, end, buffer);
-
-    /* nothing to remove */
-    if (it == end)
-        return false;
-
-    list.erase(it);
-    return true;
-}
-
-std::shared_ptr<mg::Buffer> pop(std::deque<std::shared_ptr<mg::Buffer>>& q)
+mg::Buffer* pop(std::deque<mg::Buffer*>& q)
 {
     auto buffer = q.front();
     q.pop_front();
     return buffer;
 }
 
-bool contains(std::shared_ptr<mg::Buffer> const& buffer,
-              std::vector<std::shared_ptr<mg::Buffer>> const& list)
+bool remove(mg::Buffer* item, std::vector<mg::Buffer*>& list)
 {
-    if (list.empty())
-        return false;
+    int size = list.size();
+    for (int i = 0; i < size; ++i)
+    {
+        if (list[i] == item)
+        {
+            list.erase(list.begin() + i);
+            return true;
+        }
+    }
+    /* nothing removed*/
+    return false;
+}
 
-    auto const& begin = list.cbegin();
-    auto const& end = list.cend();
-    return std::find(begin, end, buffer) != end;
+bool contains(mg::Buffer* item, std::vector<mg::Buffer*> const& list)
+{
+    int size = list.size();
+    for (int i = 0; i < size; ++i)
+    {
+        if (list[i] == item)
+            return true;
+    }
+    return false;
+}
+
+std::shared_ptr<mg::Buffer> const&
+buffer_for(mg::Buffer* item, std::vector<std::shared_ptr<mg::Buffer>> const& list)
+{
+    int size = list.size();
+    for (int i = 0; i < size; ++i)
+    {
+        if (list[i].get() == item)
+            return list[i];
+    }
+    return list[0];
+}
+
+void replace(mg::Buffer* item, std::shared_ptr<mg::Buffer> const& new_buffer,
+    std::vector<std::shared_ptr<mg::Buffer>>& list)
+{
+    int size = list.size();
+    for (int i = 0; i < size; ++i)
+    {
+        if (list[i].get() == item)
+            list[i] = new_buffer;
+    }
 }
 }
 
@@ -83,12 +106,17 @@ mc::BufferQueue::BufferQueue(
      * If there is increased pressure by the client to acquire
      * more buffers, more will be allocated at that time (up to nbuffers)
      */
+    for(int i = 0; i < allocated_buffers; i++)
+    {
+        buffers.push_back(gralloc->alloc_buffer(the_properties));
+    }
+
     for(int i = 0; i < allocated_buffers - 1; i++)
     {
-        free_buffers.push_back(gralloc->alloc_buffer(the_properties));
+        free_buffers.push_back(buffers[i].get());
     }
-    current_compositor_buffer = gralloc->alloc_buffer(the_properties);
 
+    current_compositor_buffer = buffers[allocated_buffers - 1].get();
     if (nbuffers == 1)
         free_buffers.push_back(current_compositor_buffer);
 }
@@ -120,8 +148,9 @@ void mc::BufferQueue::client_acquire(std::function<void(graphics::Buffer* buffer
     if (allocated_buffers < nbuffers)
     {
         auto const& buffer = gralloc->alloc_buffer(the_properties);
+        buffers.push_back(buffer);
         allocated_buffers++;
-        give_buffer_to_client(buffer, std::move(lock));
+        give_buffer_to_client(buffer.get(), std::move(lock));
         return;
     }
 
@@ -143,7 +172,7 @@ void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
             std::logic_error("unexpected release: no buffers were given to client"));
     }
 
-    if (buffers_owned_by_client.front().get() != released_buffer)
+    if (buffers_owned_by_client.front() != released_buffer)
     {
         BOOST_THROW_EXCEPTION(
             std::logic_error("client released out of sequence"));
@@ -161,7 +190,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     bool use_current_buffer =
         is_new_user(user_id) || ready_to_composite_queue.empty();
 
-    std::shared_ptr<mg::Buffer> buffer_to_release;
+    mg::Buffer* buffer_to_release = nullptr;
     if (!use_current_buffer)
     {
         /* No other compositors currently reference this
@@ -183,39 +212,39 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     if (buffer_to_release)
         release(buffer_to_release, std::move(lock));
 
-    return current_compositor_buffer;
+    return buffer_for(current_compositor_buffer, buffers);
 }
 
 void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const& buffer)
 {
     std::unique_lock<decltype(guard)> lock(guard);
 
-    if (!remove(buffer, buffers_sent_to_compositor))
+    if (!remove(buffer.get(), buffers_sent_to_compositor))
     {
         BOOST_THROW_EXCEPTION(
             std::logic_error("unexpected release: buffer was not given to compositor"));
     }
 
     /* Not ready to release it yet, other compositors still reference this buffer */
-    if (contains(buffer, buffers_sent_to_compositor))
+    if (contains(buffer.get(), buffers_sent_to_compositor))
         return;
 
     /* This buffer is not owned by compositor anymore */
-    if (current_compositor_buffer != buffer)
-        release(buffer, std::move(lock));
+    if (current_compositor_buffer != buffer.get())
+        release(buffer.get(), std::move(lock));
 }
 
 std::shared_ptr<mg::Buffer> mc::BufferQueue::snapshot_acquire()
 {
     std::unique_lock<decltype(guard)> lock(guard);
     pending_snapshots.push_back(current_compositor_buffer);
-    return current_compositor_buffer;
+    return buffer_for(current_compositor_buffer, buffers);
 }
 
 void mc::BufferQueue::snapshot_release(std::shared_ptr<graphics::Buffer> const& buffer)
 {
     std::unique_lock<std::mutex> lock(guard);
-    if (!remove(buffer, pending_snapshots))
+    if (!remove(buffer.get(), pending_snapshots))
     {
         BOOST_THROW_EXCEPTION(
             std::logic_error("unexpected release: no buffers were given to snapshotter"));
@@ -274,17 +303,21 @@ int mc::BufferQueue::buffers_ready_for_compositor() const
 }
 
 void mc::BufferQueue::give_buffer_to_client(
-    std::shared_ptr<mg::Buffer> const& buffer_for_client,
+    mg::Buffer* buffer_for_client,
     std::unique_lock<std::mutex> lock)
 {
     /* Clears callback */
     auto give_to_client_cb = std::move(give_to_client);
 
-    std::shared_ptr<mg::Buffer> buffer{buffer_for_client};
+    mg::Buffer* buffer{buffer_for_client};
 
     bool new_buffer = buffer->size() != the_properties.size;
     if (new_buffer)
-        buffer = gralloc->alloc_buffer(the_properties);
+    {
+        auto resized_buffer = gralloc->alloc_buffer(the_properties);
+        replace(buffer, resized_buffer, buffers);
+        buffer = resized_buffer.get();
+    }
 
     /* Don't give to the client just yet if there's a pending snapshot */
     if (!new_buffer && contains(buffer, pending_snapshots))
@@ -293,12 +326,12 @@ void mc::BufferQueue::give_buffer_to_client(
             [&]{ return !contains(buffer, pending_snapshots); });
     }
 
-    buffers_owned_by_client.push_back(buffer);
+    buffers_owned_by_client.push_back(std::move(buffer));
 
     lock.unlock();
     try
     {
-        give_to_client_cb(buffer.get());
+        give_to_client_cb(buffer);
     }
     catch (...)
     {
@@ -310,9 +343,12 @@ bool mc::BufferQueue::is_new_user(void const* user_id)
 {
     if (!compositor_ids.empty())
     {
-        auto const& begin = compositor_ids.cbegin();
-        auto const& end = compositor_ids.cend();
-        return std::find(begin, end, user_id) == end;
+        int size = compositor_ids.size();
+        for (int i = 0; i < size; ++i)
+        {
+            if (compositor_ids[i] == user_id) return false;
+        }
+        return true;
     }
     /* The id list is really only empty the very first time.
      * False is returned so that the compositor buffer is advanced.
@@ -321,7 +357,7 @@ bool mc::BufferQueue::is_new_user(void const* user_id)
 }
 
 void mc::BufferQueue::release(
-    std::shared_ptr<mg::Buffer> const& buffer,
+    mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
     if (give_to_client)

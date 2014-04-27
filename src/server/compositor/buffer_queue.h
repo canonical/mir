@@ -57,22 +57,23 @@ public:
     bool framedropping_allowed() const;
 
 private:
-    void give_buffer_to_client(std::shared_ptr<graphics::Buffer> const& buffer,
+    void give_buffer_to_client(graphics::Buffer*,
         std::unique_lock<std::mutex> lock);
     bool is_new_user(void const* user_id);
-    void release(std::shared_ptr<graphics::Buffer> const& buffer,
+    void release(graphics::Buffer*,
         std::unique_lock<std::mutex> lock);
 
     mutable std::mutex guard;
 
-    std::deque<std::shared_ptr<graphics::Buffer>> ready_to_composite_queue;
-    std::deque<std::shared_ptr<graphics::Buffer>> buffers_owned_by_client;
-    std::vector<std::shared_ptr<graphics::Buffer>> free_buffers;
-    std::vector<std::shared_ptr<graphics::Buffer>> buffers_sent_to_compositor;
-    std::vector<std::shared_ptr<graphics::Buffer>> pending_snapshots;
+    std::vector<std::shared_ptr<graphics::Buffer>> buffers;
+    std::deque<graphics::Buffer*> ready_to_composite_queue;
+    std::deque<graphics::Buffer*> buffers_owned_by_client;
+    std::vector<graphics::Buffer*> free_buffers;
+    std::vector<graphics::Buffer*> buffers_sent_to_compositor;
+    std::vector<graphics::Buffer*> pending_snapshots;
 
     std::vector<void const*> compositor_ids;
-    std::shared_ptr<graphics::Buffer> current_compositor_buffer;
+    graphics::Buffer* current_compositor_buffer;
 
     std::function<void(graphics::Buffer* buffer)> give_to_client;
 
