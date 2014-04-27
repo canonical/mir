@@ -36,7 +36,7 @@ mg::Buffer* pop(std::deque<mg::Buffer*>& q)
     return buffer;
 }
 
-bool remove(mg::Buffer* item, std::vector<mg::Buffer*>& list)
+bool remove(mg::Buffer const* item, std::vector<mg::Buffer*>& list)
 {
     int size = list.size();
     for (int i = 0; i < size; ++i)
@@ -51,7 +51,7 @@ bool remove(mg::Buffer* item, std::vector<mg::Buffer*>& list)
     return false;
 }
 
-bool contains(mg::Buffer* item, std::vector<mg::Buffer*> const& list)
+bool contains(mg::Buffer const* item, std::vector<mg::Buffer*> const& list)
 {
     int size = list.size();
     for (int i = 0; i < size; ++i)
@@ -63,7 +63,7 @@ bool contains(mg::Buffer* item, std::vector<mg::Buffer*> const& list)
 }
 
 std::shared_ptr<mg::Buffer> const&
-buffer_for(mg::Buffer* item, std::vector<std::shared_ptr<mg::Buffer>> const& list)
+buffer_for(mg::Buffer const* item, std::vector<std::shared_ptr<mg::Buffer>> const& list)
 {
     int size = list.size();
     for (int i = 0; i < size; ++i)
@@ -74,7 +74,7 @@ buffer_for(mg::Buffer* item, std::vector<std::shared_ptr<mg::Buffer>> const& lis
     return list[0];
 }
 
-void replace(mg::Buffer* item, std::shared_ptr<mg::Buffer> const& new_buffer,
+void replace(mg::Buffer const* item, std::shared_ptr<mg::Buffer> const& new_buffer,
     std::vector<std::shared_ptr<mg::Buffer>>& list)
 {
     int size = list.size();
@@ -178,7 +178,7 @@ void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
             std::logic_error("client released out of sequence"));
     }
 
-    auto const& buffer = pop(buffers_owned_by_client);
+    auto buffer = pop(buffers_owned_by_client);
     ready_to_composite_queue.push_back(buffer);
 }
 
@@ -303,16 +303,14 @@ int mc::BufferQueue::buffers_ready_for_compositor() const
 }
 
 void mc::BufferQueue::give_buffer_to_client(
-    mg::Buffer* buffer_for_client,
+    mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
     /* Clears callback */
     auto give_to_client_cb = std::move(give_to_client);
 
-    mg::Buffer* buffer{buffer_for_client};
-
-    bool new_buffer = buffer->size() != the_properties.size;
-    if (new_buffer)
+    bool resize_buffer = buffer->size() != the_properties.size;
+    if (resize_buffer)
     {
         auto resized_buffer = gralloc->alloc_buffer(the_properties);
         replace(buffer, resized_buffer, buffers);
@@ -320,7 +318,7 @@ void mc::BufferQueue::give_buffer_to_client(
     }
 
     /* Don't give to the client just yet if there's a pending snapshot */
-    if (!new_buffer && contains(buffer, pending_snapshots))
+    if (!resize_buffer && contains(buffer, pending_snapshots))
     {
         snapshot_released.wait(lock,
             [&]{ return !contains(buffer, pending_snapshots); });
@@ -346,7 +344,8 @@ bool mc::BufferQueue::is_new_user(void const* user_id)
         int size = compositor_ids.size();
         for (int i = 0; i < size; ++i)
         {
-            if (compositor_ids[i] == user_id) return false;
+            if (compositor_ids[i] == user_id)
+                return false;
         }
         return true;
     }

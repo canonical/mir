@@ -39,15 +39,15 @@ class BufferQueue : public BufferBundle
 {
 public:
     BufferQueue(int nbuffers,
-                std::shared_ptr<graphics::GraphicBufferAllocator> const&,
-                graphics::BufferProperties const&);
+                std::shared_ptr<graphics::GraphicBufferAllocator> const& alloc,
+                graphics::BufferProperties const& props);
 
     void client_acquire(std::function<void(graphics::Buffer* buffer)> complete) override;
-    void client_release(graphics::Buffer*) override;
+    void client_release(graphics::Buffer* buffer) override;
     std::shared_ptr<graphics::Buffer> compositor_acquire(void const* user_id) override;
-    void compositor_release(std::shared_ptr<graphics::Buffer> const&) override;
+    void compositor_release(std::shared_ptr<graphics::Buffer> const& buffer) override;
     std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
-    void snapshot_release(std::shared_ptr<graphics::Buffer> const&) override;
+    void snapshot_release(std::shared_ptr<graphics::Buffer> const& buffer) override;
 
     graphics::BufferProperties properties() const override;
     void allow_framedropping(bool dropping_allowed) override;
@@ -57,10 +57,10 @@ public:
     bool framedropping_allowed() const;
 
 private:
-    void give_buffer_to_client(graphics::Buffer*,
+    void give_buffer_to_client(graphics::Buffer* buffer,
         std::unique_lock<std::mutex> lock);
     bool is_new_user(void const* user_id);
-    void release(graphics::Buffer*,
+    void release(graphics::Buffer* buffer,
         std::unique_lock<std::mutex> lock);
 
     mutable std::mutex guard;
