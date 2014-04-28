@@ -229,7 +229,7 @@ void switching_client_thread(mc::BufferQueue &bundle, int nframes)
 
 TEST_F(BufferQueueTest, buffer_queue_of_one_is_supported)
 {
-    ASSERT_NO_THROW(mc::BufferQueue bundle(1, allocator, basic_properties));
+    ASSERT_NO_THROW(mc::BufferQueue q(1, allocator, basic_properties));
 
     mc::BufferQueue q(1, allocator, basic_properties);
 
@@ -260,6 +260,32 @@ TEST_F(BufferQueueTest, buffer_queue_of_one_is_supported)
      * released the buffer
      */
     EXPECT_THAT(next_request->has_acquired_buffer(), Eq(true));
+    EXPECT_NO_THROW(next_request->release_buffer());
+}
+
+TEST_F(BufferQueueTest, buffer_queue_of_one_supports_resizing)
+{
+    mc::BufferQueue q(1, allocator, basic_properties);
+
+    const geom::Size expect_size{10, 20};
+    q.resize(expect_size);
+
+    auto handle = client_acquire_async(q);
+    ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+    auto buffer = handle->buffer();
+    ASSERT_THAT(expect_size, Eq(buffer->size()));
+
+    /* Client and compositor share the same buffer so
+     * expect the new size
+     */
+    std::shared_ptr<mg::Buffer> comp_buffer;
+    ASSERT_NO_THROW(comp_buffer = q.compositor_acquire(this));
+
+    EXPECT_THAT(expect_size, Eq(comp_buffer->size()));
+    EXPECT_NO_THROW(q.compositor_release(comp_buffer));
+
+    EXPECT_NO_THROW(handle->release_buffer());
+    EXPECT_NO_THROW(q.compositor_release(q.compositor_acquire(this)));
 }
 
 TEST_F(BufferQueueTest, framedropping_is_disabled_by_default)
@@ -1141,6 +1167,64 @@ TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)
             ASSERT_THAT(handle->id(), Eq(buffer->id()));
             q.compositor_release(buffer);
         }
+    }
+}
+
+TEST_F(BufferQueueTest, buffers_are_not_lost)
+{
+    for (int nbuffers = 3; nbuffers <= 5; ++nbuffers)
+    {
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+
+        void const* main_compositor = reinterpret_cast<void const*>(0);
+        void const* second_compositor = reinterpret_cast<void const*>(1);
+
+        /* Hold a reference to current compositor buffer*/
+        auto comp_buffer1 = q.compositor_acquire(main_compositor);
+
+        /* Make nbuffers -1 ready to composite */
+        int const max_ownable_buffers = nbuffers - 1;
+        for (int acquires = 0; acquires < max_ownable_buffers; ++acquires)
+        {
+            auto handle = client_acquire_async(q);
+            ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+            handle->release_buffer();
+        }
+
+        /* Have a second compositor advance the current compositor buffer at least twice */
+        for (int acquires = 0; acquires < nbuffers; ++acquires)
+        {
+            auto comp_buffer = q.compositor_acquire(second_compositor);
+            q.compositor_release(comp_buffer);
+        }
+        q.compositor_release(comp_buffer1);
+
+        /* An async client should still be able to cycle through all the available buffers */
+        std::atomic<bool> done(false);
+        auto unblock = [&] { done = true; };
+        AutoUnblockThread compositor(unblock, compositor_thread, std::ref(q), std::ref(done));
+
+        std::unordered_set<mg::Buffer *> unique_buffers_acquired;
+        for (int frame = 0; frame < max_ownable_buffers*2; frame++)
+        {
+            std::vector<mg::Buffer *> client_buffers;
+            for (int acquires = 0; acquires < max_ownable_buffers; ++acquires)
+            {
+                auto handle = client_acquire_async(q);
+                handle->wait_for(std::chrono::seconds(1));
+                ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+                unique_buffers_acquired.insert(handle->buffer());
+                client_buffers.push_back(handle->buffer());
+            }
+
+            for (auto const& buffer : client_buffers)
+            {
+                q.client_release(buffer);
+            }
+        }
+
+        EXPECT_THAT(unique_buffers_acquired.size(), Eq(nbuffers));
+
     }
 }
 
