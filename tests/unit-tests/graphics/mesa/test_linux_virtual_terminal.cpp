@@ -22,6 +22,7 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_display_report.h"
+#include "mir_test/gmock_fixes.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -84,28 +85,13 @@ public:
                  void(std::initializer_list<int>,
                       std::function<void(int)> const&));
 
-    MOCK_METHOD2(notify_in_delegate,
-                 mir::time::Alarm*(std::chrono::milliseconds,
-                                   std::function<void()>));
+    MOCK_METHOD2(notify_in,
+                 std::unique_ptr<mir::time::Alarm>(std::chrono::milliseconds,
+                                                   std::function<void()>));
 
-    std::unique_ptr<mir::time::Alarm> notify_in(std::chrono::milliseconds delay,
-                                                std::function<void()> callback)
-    {
-        return std::unique_ptr<mir::time::Alarm>{notify_in_delegate(delay, callback)};
-    }
-
-
-    MOCK_METHOD2(notify_at_delegate,
-                 mir::time::Alarm*(mir::time::Timestamp,
-                                   std::function<void()>));
-
-    std::unique_ptr<mir::time::Alarm> notify_at(mir::time::Timestamp time_point,
-                                                std::function<void()> callback)
-    {
-        return std::unique_ptr<mir::time::Alarm>{notify_at_delegate(time_point, callback)};
-    }
-
-
+    MOCK_METHOD2(notify_at,
+                 std::unique_ptr<mir::time::Alarm>(mir::time::Timestamp,
+                                                   std::function<void()>));
 };
 
 ACTION_TEMPLATE(SetIoctlPointee,

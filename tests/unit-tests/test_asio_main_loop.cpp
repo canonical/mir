@@ -467,9 +467,6 @@ TEST(AsioMainLoopTest, rescheduled_alarm_fires_again)
 {
     mir::AsioMainLoop ml;
 
-    // Somewhat counterintuitively we need some work on the mainloop to keep it running.
-    auto dummy_alarm = ml.notify_in(std::chrono::milliseconds{1000}, [](){});
-
     mtf::WatchDog runner([&ml]() {ml.stop();});
 
     std::mutex m;
@@ -505,9 +502,6 @@ TEST(AsioMainLoopTest, rescheduled_alarm_fires_again)
 TEST(AsioMainLoopTest, rescheduled_alarm_cancels_previous_scheduling)
 {
     mir::AsioMainLoop ml;
-
-    // Somewhat counterintuitively we need some work on the mainloop to keep it running.
-    auto dummy_alarm = ml.notify_in(std::chrono::milliseconds{1000}, [](){});
 
     mtf::WatchDog runner([&ml]() {ml.stop();});
 
