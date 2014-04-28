@@ -26,6 +26,7 @@
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/stub_gl_config.h"
+#include "mir_test_doubles/stub_gl_program_factory.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
 #include "src/server/report/null_report_factory.h"
 
@@ -105,6 +106,7 @@ protected:
         auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
         display = platform->create_display(
             conf_policy,
+            std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
         auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
         allocator = platform->create_buffer_allocator(buffer_initializer);

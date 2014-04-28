@@ -28,6 +28,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "mir_test_doubles/stub_gl_config.h"
+#include "mir_test_doubles/stub_gl_program_factory.h"
 
 #include "mir_test_framework/udev_environment.h"
 
@@ -102,6 +103,7 @@ public:
     {
         return platform->create_display(
             std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+            std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
     }
 
@@ -118,6 +120,13 @@ public:
         /* Add the DisplayConfiguration modes corresponding to the DRM modes */
         for (auto const& mode : modes0)
             conf_modes0.push_back(conf_mode_from_drm_mode(mode));
+
+        modes1.push_back(fake::create_mode(123, 456, 138500, 2080, 1111, fake::NormalMode));
+        modes1.push_back(fake::create_mode(789, 1011, 148500, 2200, 1125, fake::NormalMode));
+        modes1.push_back(fake::create_mode(1213, 1415, 119000, 1840, 1080, fake::PreferredMode));
+
+        for (auto const& mode : modes1)
+            conf_modes1.push_back(conf_mode_from_drm_mode(mode));
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -127,6 +136,8 @@ public:
 
     std::vector<drmModeModeInfo> modes0;
     std::vector<mg::DisplayConfigurationMode> conf_modes0;
+    std::vector<drmModeModeInfo> modes1;
+    std::vector<mg::DisplayConfigurationMode> conf_modes1;
     std::vector<drmModeModeInfo> modes_empty;
 
     mtf::UdevEnvironment fake_devices;
@@ -422,7 +433,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             false,
             true,
             geom::Point(),
-            std::numeric_limits<size_t>::max(),
+            1,  // Ensure current_mode_index is remembered even still
             mir_pixel_format_invalid,
             mir_power_mode_on,
             mir_orientation_normal
@@ -530,4 +541,102 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
     });
 
     EXPECT_EQ(expected_outputs_after.size(), output_count);
+}
+
+TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
+{
+    using namespace ::testing;
+
+    uint32_t const crtc_ids[1] = {10};
+    uint32_t const encoder_ids[2] = {20, 21};
+    uint32_t const connector_ids[1] = {30};
+    geom::Size const connector_physical_sizes_mm_before{480, 270};
+    geom::Size const connector_physical_sizes_mm_after{512, 642};
+    std::vector<uint32_t> possible_encoder_ids_empty;
+    uint32_t const possible_crtcs_mask_empty{0};
+    int const noutputs = 1;
+
+    mg::DisplayConfigurationOutput const expected_outputs_before[noutputs] =
+    {
+        {
+            mg::DisplayConfigurationOutputId(connector_ids[0]),
+            mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::composite,
+            {},
+            conf_modes0,
+            1,
+            connector_physical_sizes_mm_before,
+            true,
+            true,
+            geom::Point(),
+            1,
+            mir_pixel_format_invalid,
+            mir_power_mode_on,
+            mir_orientation_normal
+        },
+    };
+
+    mg::DisplayConfigurationOutput const expected_outputs_after[noutputs] =
+    {
+        {
+            mg::DisplayConfigurationOutputId(connector_ids[0]),
+            mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::composite,
+            {},
+            conf_modes1,
+            2,
+            connector_physical_sizes_mm_after,
+            true,
+            true,
+            geom::Point(),
+            2,  // current_mode_index changed to preferred as the list of
+                // available modes has also changed
+            mir_pixel_format_invalid,
+            mir_power_mode_on,
+            mir_orientation_normal
+        },
+    };
+
+    mtd::FakeDRMResources& resources(mock_drm.fake_drm);
+
+    resources.reset();
+    resources.add_crtc(crtc_ids[0], modes0[1]);
+    resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask_empty);
+    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
+                            DRM_MODE_CONNECTED, encoder_ids[0],
+                            modes0, possible_encoder_ids_empty,
+                            connector_physical_sizes_mm_before);
+    resources.prepare();
+
+    auto display = create_display(create_platform());
+    auto conf = display->configuration();
+    int output_count = 0;
+    conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+    {
+        ASSERT_LT(output_count, noutputs);
+        EXPECT_EQ(expected_outputs_before[output_count], output) << "output_count: " << output_count;
+        ++output_count;
+    });
+    EXPECT_EQ(noutputs, output_count);
+
+    // Now simulate a change of monitor with different capabilities where the
+    // old current_mode does not exist. Mir should choose the preferred mode.
+    resources.reset();
+    resources.add_crtc(crtc_ids[0], modes1[1]);
+    resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask_empty);
+    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
+                            DRM_MODE_CONNECTED, encoder_ids[1],
+                            modes1, possible_encoder_ids_empty,
+                            connector_physical_sizes_mm_after);
+    resources.prepare();
+
+    conf = display->configuration();
+    output_count = 0;
+    conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+    {
+        ASSERT_LT(output_count, noutputs);
+        EXPECT_EQ(expected_outputs_after[output_count], output) << "output_count: " << output_count;
+        ++output_count;
+    });
+    EXPECT_EQ(noutputs, output_count);
 }

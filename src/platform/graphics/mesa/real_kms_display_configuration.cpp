@@ -168,8 +168,9 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
         kms_connector_type_to_output_type(connector.connector_type)};
     geom::Size physical_size{connector.mmWidth, connector.mmHeight};
     bool connected{connector.connection == DRM_MODE_CONNECTED};
-    size_t current_mode_index{std::numeric_limits<size_t>::max()};
-    size_t preferred_mode_index{std::numeric_limits<size_t>::max()};
+    size_t const invalid_mode_index = std::numeric_limits<size_t>::max();
+    size_t current_mode_index{invalid_mode_index};
+    size_t preferred_mode_index{invalid_mode_index};
     std::vector<DisplayConfigurationMode> modes;
     std::vector<MirPixelFormat> formats {mir_pixel_format_argb_8888,
                                          mir_pixel_format_xrgb_8888};
@@ -217,11 +218,26 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
     {
         auto& output = *iter;
 
+        if (current_mode_index != invalid_mode_index)
+        {
+            output.current_mode_index = current_mode_index;
+        }
+        else if (!modes.empty() &&  // If empty retain old current_mode_index!
+                 ( output.current_mode_index >= modes.size() ||
+                   output.modes[output.current_mode_index] !=
+                          modes[output.current_mode_index]))
+        {
+            // current_mode_index is invalid and the definition of the old
+            // current mode has also changed (different display plugged in)
+            // so fall back to the preferred mode...
+            output.current_mode_index = preferred_mode_index;
+        }
+        // else output.current_mode_index is correct and unchanged.
+
         output.modes = modes;
         output.preferred_mode_index = preferred_mode_index;
         output.physical_size_mm = physical_size;
         output.connected = connected;
-        output.current_mode_index = current_mode_index;
         output.current_format = mir_pixel_format_xrgb_8888;
     }
 }

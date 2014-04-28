@@ -21,8 +21,10 @@
 
 #include "configurable_display_buffer.h"
 #include "mir/graphics/egl_resources.h"
+#include "mir/graphics/gl_program_factory.h"
 #include "android_display_configuration.h"
 #include "gl_context.h"
+#include "overlay_gl_compositor.h"
 #include <system/window.h>
 
 namespace mir
@@ -41,7 +43,8 @@ public:
     DisplayBuffer(std::shared_ptr<FramebufferBundle> const& fb_bundle,
                   std::shared_ptr<DisplayDevice> const& display_device,
                   std::shared_ptr<ANativeWindow> const& native_window,
-                  GLContext const& shared_gl_context);
+                  GLContext const& shared_gl_context,
+                  GLProgramFactory const& program_factory);
 
     geometry::Rectangle view_area() const;
     void make_current();
@@ -64,6 +67,7 @@ private:
     std::shared_ptr<DisplayDevice> const display_device;
     std::shared_ptr<ANativeWindow> const native_window;
     GLContext gl_context;
+    OverlayGLProgram overlay_program;
     bool prepared;
     DisplayConfigurationOutput current_configuration;
     MirOrientation rotation;
