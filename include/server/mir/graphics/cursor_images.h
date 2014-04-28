@@ -35,6 +35,8 @@ class CursorImage;
 class CursorImages
 {
 public:
+    virtual ~CursorImages() = default;
+
     /// Looks up the image for a named cursor. Cursor names
     /// follow the XCursor naming conventions.
     virtual std::shared_ptr<CursorImage> image(std::string const& cursor_name,
@@ -42,7 +44,6 @@ public:
 
 protected:
     CursorImages() = default;
-    virtual ~CursorImages() = default;
     CursorImages(CursorImages const&) = delete;
     CursorImages& operator=(CursorImages const&) = delete;
 };

@@ -29,12 +29,13 @@ namespace graphics
 class CursorImage
 {
 public:
+    virtual ~CursorImage() = default;
+
     virtual void const* as_argb_8888() const = 0;
     virtual geometry::Size size() const = 0;
 
 protected:
     CursorImage() = default;
-    virtual ~CursorImage() = default;
     CursorImage(CursorImage const&) = delete;
     CursorImage& operator=(CursorImage const&) = delete;
 };
