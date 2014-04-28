@@ -202,7 +202,7 @@ public:
 
                 for (auto const& r : renderables)
                 {
-                    if (r->visible())
+                    if (r->buffers_ready_for_compositor() > 0)
                         saved_resources.push_back(r->buffer(this));
                 }
 

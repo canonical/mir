@@ -45,6 +45,7 @@ public:
 
     MirPixelFormat display_format();
     std::unique_ptr<ConfigurableDisplayBuffer> create_display_buffer(
+        GLProgramFactory const& gl_program_factory,
         GLContext const& gl_context);
 
 private:

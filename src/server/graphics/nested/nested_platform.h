@@ -45,6 +45,7 @@ public:
             std::shared_ptr<BufferInitializer> const& buffer_initializer) override;
     std::shared_ptr<Display> create_display(
             std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+            std::shared_ptr<GLProgramFactory> const& gl_program_factory,
             std::shared_ptr<GLConfig> const& gl_config);
     std::shared_ptr<PlatformIPCPackage> get_ipc_package() override;
     std::shared_ptr<InternalClient> create_internal_client() override;

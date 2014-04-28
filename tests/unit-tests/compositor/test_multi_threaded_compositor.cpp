@@ -303,15 +303,25 @@ private:
     unsigned int render_count;
 };
 
+enum class RenderableVisibility { hidden, visible };
+
 class BufferCountingRenderable : public mtd::StubRenderable
 {
 public:
-    BufferCountingRenderable() : buffers_requested_{0} {}
+    BufferCountingRenderable(RenderableVisibility visibility)
+        : buffers_requested_{0}, visibility{visibility}
+    {
+    }
 
     std::shared_ptr<mg::Buffer> buffer(void const*) const override
     {
         ++buffers_requested_;
         return std::make_shared<mtd::StubBuffer>();
+    }
+
+    bool visible() const override
+    {
+        return visibility == RenderableVisibility::visible;
     }
 
     int buffers_requested() const
@@ -321,6 +331,7 @@ public:
 
 private:
     mutable std::atomic<int> buffers_requested_;
+    RenderableVisibility const visibility;
 };
 
 auto const null_report = mr::null_compositor_report();
@@ -589,12 +600,17 @@ TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
     compositor.stop();
 }
 
-TEST(MultiThreadedCompositor, consumes_buffers_for_renderables_that_are_not_rendered)
+namespace
+{
+struct BufferConsumption : ::testing::TestWithParam<RenderableVisibility> {};
+}
+
+TEST_P(BufferConsumption, consumes_buffers_for_renderables_that_are_not_rendered)
 {
     using namespace testing;
 
     unsigned int const nbuffers{2};
-    auto renderable = std::make_shared<BufferCountingRenderable>();
+    auto renderable = std::make_shared<BufferCountingRenderable>(GetParam());
     auto display = std::make_shared<StubDisplay>(nbuffers);
     auto stub_scene = std::make_shared<StubScene>(mg::RenderableList{renderable});
     // We use NullDisplayBufferCompositors to simulate DisplayBufferCompositors
@@ -622,6 +638,10 @@ TEST(MultiThreadedCompositor, consumes_buffers_for_renderables_that_are_not_rend
 
     compositor.stop();
 }
+
+INSTANTIATE_TEST_CASE_P(
+    MultiThreadedCompositor, BufferConsumption,
+    ::testing::Values(RenderableVisibility::hidden, RenderableVisibility::visible));
 
 TEST(MultiThreadedCompositor, cleans_up_after_throw_in_start)
 {
