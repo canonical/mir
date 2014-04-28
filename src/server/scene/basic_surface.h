@@ -118,7 +118,7 @@ public:
 
     bool visible() const;
     
-    std::unique_ptr<graphics::Renderable> renderable_for(void const* compositor_id) const;
+    std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const;
 
     void with_most_recent_buffer_do(
         std::function<void(graphics::Buffer&)> const& exec) override;

@@ -437,10 +437,10 @@ void ms::BasicSurface::remove_observer(std::shared_ptr<SurfaceObserver> const& o
 namespace
 {
 //This class avoids locking for long periods of time by copying (or lazy-copying)
-class RenderableSnapshot : public mg::Renderable
+class SurfaceSnapshot : public mg::Renderable
 {
 public:
-    RenderableSnapshot(
+    SurfaceSnapshot(
         std::shared_ptr<mc::BufferStream> const& stream,
         void const* compositor_id,
         geom::Rectangle const& position,
@@ -463,7 +463,7 @@ public:
     {
     }
 
-    ~RenderableSnapshot()
+    ~SurfaceSnapshot()
     {
     }
  
@@ -512,13 +512,13 @@ private:
 };
 }
 
-std::unique_ptr<mg::Renderable> ms::BasicSurface::renderable_for(void const* compositor_id) const
+std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const* compositor_id) const
 {
     std::unique_lock<std::mutex> lk(guard);
 
     auto const shaped = nonrectangular || (surface_alpha < 1.0f);
     return std::unique_ptr<mg::Renderable>(
-        new RenderableSnapshot(
+        new SurfaceSnapshot(
             surface_buffer_stream,
             compositor_id,
             surface_rect,

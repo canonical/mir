@@ -48,7 +48,7 @@ public:
     geometry::Point top_left() const override = 0;
 
     // member functions that don't exist in base classes
-    virtual std::unique_ptr<graphics::Renderable> renderable_for(void const* compositor_id) const = 0;
+    virtual std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const = 0;
 
     virtual float alpha() const = 0; //only used in examples/
     virtual MirSurfaceType type() const = 0;
