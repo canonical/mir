@@ -20,12 +20,12 @@
 #define MIR_MAIN_LOOP_H_
 
 #include "mir/graphics/event_handler_register.h"
-#include "mir/timer.h"
+#include "mir/time/timer.h"
 
 namespace mir
 {
 
-class MainLoop : public graphics::EventHandlerRegister, public Timer
+class MainLoop : public graphics::EventHandlerRegister, public time::Timer
 {
 public:
     virtual void run() = 0;

@@ -18,6 +18,8 @@
 
 #include "mir/asio_main_loop.h"
 
+#include "boost/date_time/posix_time/conversion.hpp"
+
 #include <cassert>
 #include <mutex>
 #include <condition_variable>
@@ -159,11 +161,15 @@ void mir::AsioMainLoop::register_fd_handler(
 
 namespace
 {
-class AlarmImpl : public mir::Alarm
+class AlarmImpl : public mir::time::Alarm
 {
 public:
     AlarmImpl(boost::asio::io_service& io,
               std::chrono::milliseconds delay,
+              std::function<void(void)> callback);
+
+    AlarmImpl(boost::asio::io_service& io,
+              mir::time::Timestamp time_point,
               std::function<void(void)> callback);
 
     ~AlarmImpl() noexcept override;
@@ -172,7 +178,9 @@ public:
     State state() const override;
 
     bool reschedule_in(std::chrono::milliseconds delay) override;
+    bool reschedule_for(mir::time::Timestamp time_point) override;
 private:
+    void update_timer();
     struct InternalState
     {
         explicit InternalState(std::function<void(void)> callback)
@@ -198,6 +206,15 @@ AlarmImpl::AlarmImpl(boost::asio::io_service& io,
     reschedule_in(delay);
 }
 
+AlarmImpl::AlarmImpl(boost::asio::io_service& io,
+                     mir::time::Timestamp time_point,
+                     std::function<void ()> callback)
+    : timer{io},
+      data{std::make_shared<InternalState>(callback)}
+{
+    reschedule_for(time_point);
+}
+
 AlarmImpl::~AlarmImpl() noexcept
 {
     AlarmImpl::cancel();
@@ -205,7 +222,7 @@ AlarmImpl::~AlarmImpl() noexcept
 
 bool AlarmImpl::cancel()
 {
-    std::unique_lock<decltype(data->m)> lock(data->m);
+    std::lock_guard<decltype(data->m)> lock(data->m);
     if (data->state == Triggered)
         return false;
 
@@ -214,9 +231,9 @@ bool AlarmImpl::cancel()
     return true;
 }
 
-mir::Alarm::State AlarmImpl::state() const
+mir::time::Alarm::State AlarmImpl::state() const
 {
-    std::unique_lock<decltype(data->m)> lock(data->m);
+    std::lock_guard<decltype(data->m)> lock(data->m);
 
     return data->state;
 }
@@ -224,7 +241,23 @@ mir::Alarm::State AlarmImpl::state() const
 bool AlarmImpl::reschedule_in(std::chrono::milliseconds delay)
 {
     bool cancelling = timer.expires_from_now(boost::posix_time::milliseconds{delay.count()});
-    std::unique_lock<decltype(data->m)> lock(data->m);
+    update_timer();
+    return cancelling;
+}
+
+bool AlarmImpl::reschedule_for(mir::time::Timestamp time_point)
+{
+    bool cancelling =
+        timer.expires_at(boost::posix_time::from_time_t(
+                std::chrono::high_resolution_clock::to_time_t(time_point)
+                ));
+    update_timer();
+    return cancelling;
+}
+
+void AlarmImpl::update_timer()
+{
+    std::lock_guard<decltype(data->m)> lock(data->m);
     // Awkwardly, we can't stop the async_wait handler from being called
     // on a destroyed AlarmImpl. This means we need to wedge a shared_ptr
     // into the async_wait callback.
@@ -244,12 +277,17 @@ bool AlarmImpl::reschedule_in(std::chrono::milliseconds delay)
         }
     });
     data->state = Pending;
-    return cancelling;
 }
 }
 
-std::unique_ptr<mir::Alarm> mir::AsioMainLoop::notify_in(std::chrono::milliseconds delay,
-                                                         std::function<void()> callback)
+std::unique_ptr<mir::time::Alarm> mir::AsioMainLoop::notify_in(std::chrono::milliseconds delay,
+                                                               std::function<void()> callback)
 {
-    return std::unique_ptr<mir::Alarm>{new AlarmImpl{io, delay, callback}};
+    return std::unique_ptr<mir::time::Alarm>{new AlarmImpl{io, delay, callback}};
+}
+
+std::unique_ptr<mir::time::Alarm> mir::AsioMainLoop::notify_at(mir::time::Timestamp time_point,
+                                                               std::function<void()> callback)
+{
+    return std::unique_ptr<mir::time::Alarm>{new AlarmImpl{io, time_point, callback}};
 }

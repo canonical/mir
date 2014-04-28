@@ -3,7 +3,6 @@ set(
 
   default_focus_mechanism.cpp
   consuming_placement_strategy.cpp
-  surface_creation_parameters.cpp
   graphics_display_layout.cpp
   default_configuration.cpp
 )
