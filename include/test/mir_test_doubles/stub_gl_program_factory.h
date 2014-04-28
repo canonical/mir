@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,20 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_TEST_DOUBLES_STUB_GL_PROGRAM_FACTORY_H_
+#define MIR_TEST_DOUBLES_STUB_GL_PROGRAM_FACTORY_H_
 
-#include "host_connection.h"
-#include "mir_toolkit/mir_client_library.h"
+#include "mir/graphics/gl_program_factory.h"
 
-namespace mgn = mir::graphics::nested;
-
-mgn::HostConnection::HostConnection(std::string const& host_socket, std::string const& name)
-    : connection{mir_connect_sync(host_socket.c_str(), name.c_str())}
+namespace mir
 {
-}
-
-mgn::HostConnection::~HostConnection()
+namespace test
 {
-    mir_connection_release(connection);
+namespace doubles
+{
+
+class StubGLProgramFactory : public graphics::GLProgramFactory
+{
+public:
+    std::unique_ptr<graphics::GLProgram> create_gl_program(std::string const&, std::string const&) const
+    {
+        return nullptr;
+    }
+};
+
 }
+}
+} // namespace mir
+
+#endif /* MIR_TEST_DOUBLES_STUB_GL_PROGRAM_FACTORY_H_ */

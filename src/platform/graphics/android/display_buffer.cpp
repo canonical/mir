@@ -34,11 +34,13 @@ mga::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<FramebufferBundle> const& fb_bundle,
     std::shared_ptr<DisplayDevice> const& display_device,
     std::shared_ptr<ANativeWindow> const& native_window,
-    mga::GLContext const& shared_gl_context)
+    mga::GLContext const& shared_gl_context,
+    mg::GLProgramFactory const& program_factory)
     : fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},
       gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())},
+      overlay_program{program_factory, gl_context},
       current_configuration{
           mg::DisplayConfigurationOutputId{1},
           mg::DisplayConfigurationCardId{0},

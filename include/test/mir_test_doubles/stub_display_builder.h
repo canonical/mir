@@ -79,6 +79,7 @@ struct StubDisplayBuilder : public graphics::android::DisplayBuilder
     }
 
     std::unique_ptr<graphics::android::ConfigurableDisplayBuffer> create_display_buffer(
+        graphics::GLProgramFactory const&,
         graphics::android::GLContext const&)
     {
         return std::unique_ptr<graphics::android::ConfigurableDisplayBuffer>(

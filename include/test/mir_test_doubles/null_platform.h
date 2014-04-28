@@ -40,6 +40,7 @@ class NullPlatform : public graphics::Platform
 
     std::shared_ptr<graphics::Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
+        std::shared_ptr<graphics::GLProgramFactory> const&,
         std::shared_ptr<graphics::GLConfig> const&)
     {
         return std::make_shared<NullDisplay>();

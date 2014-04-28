@@ -20,6 +20,7 @@
 
 #include "mir/input/input_channel.h"
 #include "mir/input/input_targets.h"
+#include "mir/input/surface.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_input_channel.h"
@@ -37,6 +38,8 @@
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
+namespace geom = mir::geometry;
+
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
@@ -45,18 +48,38 @@ namespace
 
 struct StubInputTargets : public mi::InputTargets
 {
-    StubInputTargets(std::initializer_list<std::shared_ptr<mi::InputChannel>> const& target_list)
+    StubInputTargets(std::initializer_list<std::shared_ptr<mi::Surface>> const& target_list)
         : targets(target_list.begin(), target_list.end())
     {
     }
 
-    void for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& callback) override
+    void for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& callback) override
     {
         for (auto target : targets)
             callback(target);
     }
 
-    std::vector<std::shared_ptr<mi::InputChannel>> targets;
+    std::vector<std::shared_ptr<mi::Surface>> targets;
+};
+
+struct StubInputSurface : public mi::Surface
+{
+    StubInputSurface(std::shared_ptr<mi::InputChannel> const& channel)
+        : channel(channel)
+    {
+    }
+    std::shared_ptr<mi::InputChannel> input_channel() const 
+    {
+        return channel;
+    }
+
+    std::string name() const { return {}; }
+    geom::Point top_left() const { return {}; }
+    geom::Size size() const { return {}; }
+    bool contains(geom::Point const&) const { return false; }
+    void cursor_parameters(bool&, std::string&, std::string&) const { }
+    
+    std::shared_ptr<mi::InputChannel> const channel;
 };
 
 }
@@ -64,21 +87,23 @@ struct StubInputTargets : public mi::InputTargets
 TEST(AndroidInputTargetEnumerator, enumerates_registered_handles_for_surfaces)
 {
     using namespace ::testing;
-    std::shared_ptr<mi::InputChannel> t1, t2;
-    t1 = std::make_shared<mtd::StubInputChannel>();
-    t2 = std::make_shared<mtd::StubInputChannel>();
+  
+    std::shared_ptr<mi::InputChannel> channel1 = std::make_shared<mtd::StubInputChannel>();
+    std::shared_ptr<mi::InputChannel> channel2 = std::make_shared<mtd::StubInputChannel>();
+    auto target1 = std::make_shared<StubInputSurface>(channel1);
+    auto target2 = std::make_shared<StubInputSurface>(channel2);
     mtd::MockWindowHandleRepository repository;
     droidinput::sp<droidinput::InputWindowHandle> stub_window_handle1 = new mtd::StubWindowHandle;
     droidinput::sp<droidinput::InputWindowHandle> stub_window_handle2 = new mtd::StubWindowHandle;
-    StubInputTargets targets({t1, t2});
+    StubInputTargets targets({target1, target2});
 
     Sequence seq2;
     EXPECT_CALL(repository, handle_for_channel(
-        std::const_pointer_cast<mi::InputChannel const>(t1)))
+        std::const_pointer_cast<mi::InputChannel const>(channel1)))
         .InSequence(seq2)
         .WillOnce(Return(stub_window_handle1));
     EXPECT_CALL(repository, handle_for_channel(
-        std::const_pointer_cast<mi::InputChannel const>(t2)))
+        std::const_pointer_cast<mi::InputChannel const>(channel2)))
         .InSequence(seq2)
         .WillOnce(Return(stub_window_handle2));
 
