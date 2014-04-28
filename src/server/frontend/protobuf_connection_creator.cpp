@@ -16,13 +16,13 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/protobuf_session_creator.h"
+#include "mir/frontend/protobuf_connection_creator.h"
 
 #include "event_sender.h"
 #include "protobuf_message_processor.h"
 #include "protobuf_responder.h"
 #include "socket_messenger.h"
-#include "socket_session.h"
+#include "socket_connection.h"
 
 #include "protobuf_ipc_factory.h"
 #include "mir/frontend/session_authorizer.h"
@@ -32,7 +32,7 @@ namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 
-mf::ProtobufSessionCreator::ProtobufSessionCreator(
+mf::ProtobufConnectionCreator::ProtobufConnectionCreator(
     std::shared_ptr<ProtobufIpcFactory> const& ipc_factory,
     std::shared_ptr<SessionAuthorizer> const& session_authorizer,
     std::shared_ptr<MessageProcessorReport> const& report)
@@ -40,26 +40,26 @@ mf::ProtobufSessionCreator::ProtobufSessionCreator(
     session_authorizer(session_authorizer),
     report(report),
     next_session_id(0),
-    connected_sessions(std::make_shared<mfd::ConnectedSessions<mfd::SocketSession>>())
+    connections(std::make_shared<mfd::Connections<mfd::SocketConnection>>())
 {
 }
 
-mf::ProtobufSessionCreator::~ProtobufSessionCreator() noexcept
+mf::ProtobufConnectionCreator::~ProtobufConnectionCreator() noexcept
 {
-    connected_sessions->clear();
+    connections->clear();
 }
 
-int mf::ProtobufSessionCreator::next_id()
+int mf::ProtobufConnectionCreator::next_id()
 {
     return next_session_id.fetch_add(1);
 }
 
-void mf::ProtobufSessionCreator::create_session_for(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
+void mf::ProtobufConnectionCreator::create_connection_for(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
 {
     auto const messenger = std::make_shared<detail::SocketMessenger>(socket);
-    auto const client_pid = messenger->client_pid();
+    auto const creds = messenger->client_creds();
 
-    if (session_authorizer->connection_is_allowed(client_pid))
+    if (session_authorizer->connection_is_allowed(creds))
     {
         auto const message_sender = std::make_shared<detail::ProtobufResponder>(
             messenger,
@@ -68,17 +68,17 @@ void mf::ProtobufSessionCreator::create_session_for(std::shared_ptr<ba::local::s
         auto const event_sink = std::make_shared<detail::EventSender>(messenger);
         auto const msg_processor = create_processor(
             message_sender,
-            ipc_factory->make_ipc_server(client_pid, event_sink),
+            ipc_factory->make_ipc_server(creds, event_sink),
             report);
 
-        const auto& session = std::make_shared<mfd::SocketSession>(messenger, next_id(), connected_sessions, msg_processor);
-        connected_sessions->add(session);
-        session->read_next_message();
+        const auto& connection = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);
+        connections->add(connection);
+        connection->read_next_message();
     }
 }
 
 std::shared_ptr<mfd::MessageProcessor>
-mf::ProtobufSessionCreator::create_processor(
+mf::ProtobufConnectionCreator::create_processor(
     std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
     std::shared_ptr<protobuf::DisplayServer> const& display_server,
     std::shared_ptr<mf::MessageProcessorReport> const& report) const
