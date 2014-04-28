@@ -28,6 +28,7 @@
 #include "mir_test_doubles/stub_display_builder.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/mock_gl_config.h"
+#include "mir_test_doubles/stub_gl_program_factory.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir_test_doubles/stub_driver_interpreter.h"
 
@@ -51,7 +52,8 @@ public:
           dummy_config{mock_egl.fake_configs[0]},
           null_display_report{mir::report::null_display_report()},
           stub_db_factory{std::make_shared<mtd::StubDisplayBuilder>()},
-          stub_gl_config{std::make_shared<mtd::StubGLConfig>()}
+          stub_gl_config{std::make_shared<mtd::StubGLConfig>()},
+          stub_gl_program_factory{std::make_shared<mtd::StubGLProgramFactory>()}
     {
     }
 
@@ -64,6 +66,7 @@ protected:
     std::shared_ptr<mg::DisplayReport> const null_display_report;
     std::shared_ptr<mtd::StubDisplayBuilder> const stub_db_factory;
     std::shared_ptr<mtd::StubGLConfig> const stub_gl_config;
+    std::shared_ptr<mtd::StubGLProgramFactory> const stub_gl_program_factory;
 };
 
 TEST_F(AndroidDisplay, creation_creates_egl_resources_properly)
@@ -104,7 +107,11 @@ TEST_F(AndroidDisplay, creation_creates_egl_resources_properly)
     EXPECT_CALL(mock_egl, eglTerminate(dummy_display))
         .Times(1);
 
-    mga::AndroidDisplay display(stub_db_factory, stub_gl_config, null_display_report);
+    mga::AndroidDisplay display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report);
 }
 
 TEST_F(AndroidDisplay, selects_usable_configuration)
@@ -148,7 +155,11 @@ TEST_F(AndroidDisplay, selects_usable_configuration)
         .Times(1)
         .WillOnce(Invoke(config_filler));
 
-    mga::AndroidDisplay display(stub_db_factory, stub_gl_config, null_display_report);
+    mga::AndroidDisplay display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report);
     EXPECT_EQ(correct_config, selected_config);
 }
 
@@ -172,7 +183,11 @@ TEST_F(AndroidDisplay, respects_gl_config)
                           mtd::EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits)),
                     _,_,_));
 
-    mga::AndroidDisplay display(stub_db_factory, mock_gl_config, null_display_report);
+    mga::AndroidDisplay display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        mock_gl_config,
+        null_display_report);
 }
 
 TEST_F(AndroidDisplay, logs_creation_events)
@@ -190,7 +205,11 @@ TEST_F(AndroidDisplay, logs_creation_events)
     EXPECT_CALL(*mock_display_report, report_successful_display_construction())
         .Times(1);
 
-    mga::AndroidDisplay display(stub_db_factory, stub_gl_config, mock_display_report);
+    mga::AndroidDisplay display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        mock_display_report);
 }
 
 TEST_F(AndroidDisplay, throws_on_eglMakeCurrent_failure)
@@ -210,7 +229,11 @@ TEST_F(AndroidDisplay, throws_on_eglMakeCurrent_failure)
         .Times(0);
 
     EXPECT_THROW({
-        mga::AndroidDisplay display(stub_db_factory, stub_gl_config, mock_display_report);
+        mga::AndroidDisplay display(
+            stub_db_factory,
+            stub_gl_program_factory,
+            stub_gl_config,
+            mock_display_report);
     }, std::runtime_error);
 }
 
@@ -232,14 +255,22 @@ TEST_F(AndroidDisplay, logs_error_because_of_surface_creation_failure)
         .WillOnce(Return(EGL_NO_SURFACE));
 
     EXPECT_THROW({
-        mga::AndroidDisplay display(stub_db_factory, stub_gl_config, mock_display_report);
+        mga::AndroidDisplay display(
+            stub_db_factory,
+            stub_gl_program_factory,
+            stub_gl_config,
+            mock_display_report);
     }, std::runtime_error);
 }
 
 TEST_F(AndroidDisplay, configures_display_buffer)
 {
     using namespace testing;
-    mga::AndroidDisplay display(stub_db_factory, stub_gl_config, null_display_report);
+    mga::AndroidDisplay display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report);
 
     auto configuration = display.configuration();
     configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
@@ -270,7 +301,11 @@ TEST_F(AndroidDisplay, configures_display_buffer)
 //we only have single display and single mode on android for the time being
 TEST_F(AndroidDisplay, supports_one_output_configuration)
 {
-    mga::AndroidDisplay display(stub_db_factory, stub_gl_config, null_display_report);
+    mga::AndroidDisplay display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report);
     auto config = display.configuration();
 
     size_t num_configs = 0;

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -18,6 +18,8 @@
 #ifndef MIR_FRONTEND_MESSAGE_RECEIVER_H_
 #define MIR_FRONTEND_MESSAGE_RECEIVER_H_
 
+#include "mir/frontend/session_credentials.h"
+
 #include <functional>
 #include <boost/asio.hpp>
 
@@ -35,7 +37,7 @@ public:
     virtual void async_receive_msg(MirReadHandler const& handler, boost::asio::mutable_buffers_1 const& buffer) = 0;
     virtual boost::system::error_code receive_msg(boost::asio::mutable_buffers_1 const& buffer) = 0;
     virtual size_t available_bytes() = 0;
-    virtual pid_t client_pid() = 0;
+    virtual SessionCredentials client_creds() = 0;
 
 protected:
     MessageReceiver() = default;

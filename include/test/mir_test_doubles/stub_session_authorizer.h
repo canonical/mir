@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -30,15 +30,15 @@ namespace doubles
 
 class StubSessionAuthorizer : public frontend::SessionAuthorizer
 {
-    bool connection_is_allowed(pid_t)
+    bool connection_is_allowed(mir::frontend::SessionCredentials const&)
     {
         return true;
     }
-    bool configure_display_is_allowed(pid_t)
+    bool configure_display_is_allowed(mir::frontend::SessionCredentials const&)
     {
         return true;
     }
-    bool screencast_is_allowed(pid_t)
+    bool screencast_is_allowed(mir::frontend::SessionCredentials const&)
     {
         return true;
     }
