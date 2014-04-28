@@ -51,18 +51,13 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 {
     report->began_frame(this);
 
-    static bool const bypass_env{[]
-    {
-        auto const env = getenv("MIR_BYPASS");
-        return !env || env[0] != '0';
-    }()};
     bool bypassed = false;
     bool uncomposited_buffers{false};
 
     auto const& view_area = display_buffer.view_area();
     auto renderable_list = scene->generate_renderable_list();
 
-    if (bypass_env && display_buffer.can_bypass())
+    if (display_buffer.can_bypass())
     {
         mc::BypassMatch bypass_match(view_area);
         auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);
