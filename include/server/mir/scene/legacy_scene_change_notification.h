@@ -45,7 +45,7 @@ public:
     void surfaces_reordered() override;
 
 private:
-    std::function<void()> notify_change;
+    std::function<void()> const notify_change;
     
     std::mutex surface_observers_guard;
     std::map<std::weak_ptr<Surface>, std::shared_ptr<SurfaceObserver>,
