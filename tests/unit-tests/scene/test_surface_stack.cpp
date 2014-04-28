@@ -91,6 +91,9 @@ struct MockSceneObserver : public ms::Observer
     MOCK_METHOD1(surface_added, void(std::shared_ptr<ms::Surface> const&));
     MOCK_METHOD1(surface_removed, void(std::shared_ptr<ms::Surface> const&));
     MOCK_METHOD0(surfaces_reordered, void());
+
+    MOCK_METHOD1(surface_exists, void(std::shared_ptr<ms::Surface> const&));
+    MOCK_METHOD0(end_observation, void());
 };
 
 struct SurfaceStack : public ::testing::Test
@@ -389,6 +392,7 @@ TEST_F(SurfaceStack, remove_scene_observer)
     EXPECT_CALL(observer, surface_added(Eq(stub_surface1))).Times(1);
     // We remove the scene observer before removing the surface, and thus
     // expect to NOT see the surface_removed call
+    EXPECT_CALL(observer, end_observation()).Times(1);
     EXPECT_CALL(observer, surface_removed(Eq(stub_surface1)))
         .Times(0);
     
@@ -414,9 +418,11 @@ TEST_F(SurfaceStack, scene_observer_informed_of_existing_surfaces)
     MockSceneObserver observer;
     
     InSequence seq;
-    EXPECT_CALL(observer, surface_added(Eq(stub_surface1))).Times(1);
+    EXPECT_CALL(observer, surface_exists(Eq(stub_surface1))).Times(1);
+    EXPECT_CALL(observer, surface_exists(Eq(stub_surface2))).Times(1);
     
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
 
     stack.add_observer(mt::fake_shared(observer));
 }

@@ -253,6 +253,11 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       state{CompositorState::stopped},
       compose_on_start{compose_on_start}
 {
+    observer = std::make_shared<ms::LegacySceneChangeNotification>([this]()
+        {
+            /* Recomposite whenever the scene changes */
+            schedule_compositing();
+        });
 }
 
 mc::MultiThreadedCompositor::~MultiThreadedCompositor()
@@ -287,7 +292,7 @@ void mc::MultiThreadedCompositor::start()
         }};
 
     lk.unlock();
-    add_observer();
+    scene->add_observer(observer);
     lk.lock();
 
     create_compositing_threads();
@@ -374,16 +379,3 @@ void mc::MultiThreadedCompositor::destroy_compositing_threads(std::unique_lock<s
 
     state = CompositorState::stopped;
 }
-
-void mc::MultiThreadedCompositor::add_observer()
-{
-    auto strong_observer = std::make_shared<ms::LegacySceneChangeNotification>([this]()
-        {
-            /* Recomposite whenever the scene changes */
-            schedule_compositing();
-        });
-    observer = strong_observer;
-
-    scene->add_observer(strong_observer);
-}
-

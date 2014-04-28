@@ -217,14 +217,20 @@ void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observe
         for (auto &layer : layers_by_depth)
         {
             for (auto &surface : layer.second)
-                observer->surface_added(surface);
+                observer->surface_exists(surface);
         }
     }
 }
 
 void ms::SurfaceStack::remove_observer(std::weak_ptr<ms::Observer> const& observer)
 {
-    observers.remove_observer(observer);
+    auto o = observer.lock();
+    if (!o)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid observer (destroyed)"));
+    
+    o->end_observation();
+    
+    observers.remove_observer(o);
 }
 
 void ms::Observers::surface_added(std::shared_ptr<ms::Surface> const& surface) 
@@ -251,6 +257,22 @@ void ms::Observers::surfaces_reordered()
         observer->surfaces_reordered();
 }
 
+void ms::Observers::surface_exists(std::shared_ptr<ms::Surface> const& surface)
+{
+    std::unique_lock<decltype(mutex)> lg(mutex);
+    
+    for (auto observer : observers)
+        observer->surface_exists(surface);
+}
+
+void ms::Observers::end_observation()
+{
+    std::unique_lock<decltype(mutex)> lg(mutex);
+    
+    for (auto observer : observers)
+        observer->end_observation();
+}
+
 void ms::Observers::add_observer(std::shared_ptr<ms::Observer> const& observer)
 {
     std::unique_lock<decltype(mutex)> lg(mutex);
@@ -258,15 +280,11 @@ void ms::Observers::add_observer(std::shared_ptr<ms::Observer> const& observer)
     observers.push_back(observer);
 }
 
-void ms::Observers::remove_observer(std::weak_ptr<ms::Observer> const& observer)
+void ms::Observers::remove_observer(std::shared_ptr<ms::Observer> const& observer)
 {
     std::unique_lock<decltype(mutex)> lg(mutex);
     
-    auto o = observer.lock();
-    if (!o)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid observer (destroyed)"));
-    
-    auto it = std::find(observers.begin(), observers.end(), o);
+    auto it = std::find(observers.begin(), observers.end(), observer);
     if (it == observers.end())
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (not previously added)"));
     

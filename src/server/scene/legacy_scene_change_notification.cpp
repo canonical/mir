@@ -32,16 +32,10 @@ ms::LegacySceneChangeNotification::LegacySceneChangeNotification(std::function<v
 
 ms::LegacySceneChangeNotification::~LegacySceneChangeNotification()
 {
-    std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
-    for (auto &kv : surface_observers)
-    {
-        auto surface = kv.first.lock();
-        if (surface)
-            surface->remove_observer(kv.second);
-    }
+    end_observation();
 }
 
-void ms::LegacySceneChangeNotification::surface_added(std::shared_ptr<ms::Surface> const& surface)
+void ms::LegacySceneChangeNotification::add_surface_observer(std::shared_ptr<ms::Surface> const& surface)
 {
     auto observer = std::make_shared<ms::LegacySurfaceChangeNotification>(notify_change);
     surface->add_observer(observer);
@@ -50,7 +44,18 @@ void ms::LegacySceneChangeNotification::surface_added(std::shared_ptr<ms::Surfac
         std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
         surface_observers[surface] = observer;
     }
+    
     notify_change();
+}
+
+void ms::LegacySceneChangeNotification::surface_added(std::shared_ptr<ms::Surface> const& surface)
+{
+    add_surface_observer(surface);
+}
+
+void ms::LegacySceneChangeNotification::surface_exists(std::shared_ptr<ms::Surface> const& surface)
+{
+    add_surface_observer(surface);
 }
     
 void ms::LegacySceneChangeNotification::surface_removed(std::shared_ptr<ms::Surface> const& surface)
@@ -72,3 +77,14 @@ void ms::LegacySceneChangeNotification::surfaces_reordered()
     notify_change();
 }
 
+void ms::LegacySceneChangeNotification::end_observation()
+{
+    std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
+    for (auto &kv : surface_observers)
+    {
+        auto surface = kv.first.lock();
+        if (surface)
+            surface->remove_observer(kv.second);
+    }
+    surface_observers.clear();
+}

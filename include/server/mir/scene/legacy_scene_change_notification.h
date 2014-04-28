@@ -44,12 +44,17 @@ public:
     void surface_removed(std::shared_ptr<Surface> const& surface) override;
     void surfaces_reordered() override;
 
+    void surface_exists(std::shared_ptr<Surface> const& surface) override;
+    void end_observation() override;
+
 private:
     std::function<void()> const notify_change;
     
     std::mutex surface_observers_guard;
     std::map<std::weak_ptr<Surface>, std::shared_ptr<SurfaceObserver>,
         std::owner_less<std::weak_ptr<Surface>>> surface_observers;
+    
+    void add_surface_observer(std::shared_ptr<Surface> const& surface);
 };
 
 }

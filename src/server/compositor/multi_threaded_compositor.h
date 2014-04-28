@@ -84,8 +84,7 @@ private:
 
     void schedule_compositing();
     
-    void add_observer();
-    std::weak_ptr<mir::scene::Observer> observer;
+    std::shared_ptr<mir::scene::Observer> observer;
 };
 
 }

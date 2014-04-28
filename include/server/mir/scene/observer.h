@@ -37,6 +37,12 @@ public:
     virtual void surface_removed(std::shared_ptr<Surface> const& surface) = 0;
     virtual void surfaces_reordered() = 0;
 
+    // Called at observer registration to notify of already existing surfaces.
+    virtual void surface_exists(std::shared_ptr<Surface> const& surface) = 0;
+    // Called when observer is unregistered, for example, to provide a place to
+    // unregister SurfaceObservers which may have been added in surface_added/exists
+    virtual void end_observation() = 0;
+
 protected:
     Observer() = default;
     virtual ~Observer() = default;

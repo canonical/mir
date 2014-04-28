@@ -61,6 +61,17 @@ TEST(LegacySceneChangeNotificationTest, registers_observer_with_surfaces)
     observer.surface_added(mt::fake_shared(surface));
 }
 
+TEST(LegacySceneChangeNotificationTest, registers_observer_with_existing_surfaces)
+{
+    using namespace ::testing;
+
+    mtd::MockSurface surface;
+    ms::LegacySceneChangeNotification observer([](){});
+    
+    EXPECT_CALL(surface, add_observer(_)).Times(1);
+    observer.surface_exists(mt::fake_shared(surface));
+}
+
 TEST(LegacySceneChangeNotification, observes_surface_changes)
 {
     using namespace ::testing;
@@ -93,4 +104,21 @@ TEST(LegacySceneChangeNotification, destroying_observer_unregisters_surface_obse
         ms::LegacySceneChangeNotification observer([](){});
         observer.surface_added(surface);
     }
+}
+
+TEST(LegacySceneChangeNotification, ending_observation_unregisters_observers)
+{
+   using namespace ::testing;
+    
+    auto surface = std::make_shared<mtd::MockSurface>();
+    
+    EXPECT_CALL(*surface, add_observer(_)).Times(1);
+    EXPECT_CALL(*surface, remove_observer(_)).Times(1);
+
+    ms::LegacySceneChangeNotification observer([](){});
+    observer.surface_added(surface);
+    observer.end_observation();
+    
+    // Verify that its not simply the destruction removing the observer...
+    ::testing::Mock::VerifyAndClearExpectations(&observer);
 }
