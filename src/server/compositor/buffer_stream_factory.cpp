@@ -36,7 +36,7 @@ namespace ms = mir::scene;
 
 mc::BufferStreamFactory::BufferStreamFactory(
     const std::shared_ptr<mg::GraphicBufferAllocator> &gralloc,
-    const std::shared_ptr<mir::Timer> timer)
+    const std::shared_ptr<time::Timer> timer)
         : gralloc(gralloc),
           timer{timer}
 {

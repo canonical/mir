@@ -69,7 +69,7 @@ namespace mg = mir::graphics;
 mc::SwitchingBundle::SwitchingBundle(int nbuffers,
     const std::shared_ptr<graphics::GraphicBufferAllocator> &gralloc,
     const mg::BufferProperties &property_request,
-    const std::shared_ptr<Timer> &timer,
+    const std::shared_ptr<time::Timer> &timer,
     std::chrono::milliseconds blocking_delay)
     : bundle_properties{property_request},
       gralloc{gralloc},
@@ -249,7 +249,7 @@ void mc::SwitchingBundle::client_acquire(std::function<void(graphics::Buffer* bu
                     }
                 });
             }
-            else if (acquire_timeout->state() != mir::Alarm::Pending)
+            else if (acquire_timeout->state() != mir::time::Alarm::Pending)
             {
                 acquire_timeout->reschedule_in(blocking_delay);
             }

@@ -20,7 +20,7 @@
 #ifndef MIR_COMPOSITOR_SWITCHING_BUNDLE_H_
 #define MIR_COMPOSITOR_SWITCHING_BUNDLE_H_
 
-#include "mir/timer.h"
+#include "mir/time/timer.h"
 
 #include "buffer_bundle.h"
 #include <condition_variable>
@@ -48,7 +48,7 @@ public:
     SwitchingBundle(int nbuffers,
                     const std::shared_ptr<graphics::GraphicBufferAllocator> &,
                     const graphics::BufferProperties &,
-                    const std::shared_ptr<Timer> &,
+                    const std::shared_ptr<time::Timer> &,
                     std::chrono::milliseconds blocking_time = std::chrono::milliseconds{1000});
 
     ~SwitchingBundle() noexcept;
@@ -120,8 +120,8 @@ private:
 
     std::function<void(graphics::Buffer* buffer)> client_acquire_todo;
 
-    std::shared_ptr<mir::Timer> const timer;
-    std::shared_ptr<mir::Alarm> acquire_timeout;
+    std::shared_ptr<time::Timer> const timer;
+    std::shared_ptr<time::Alarm> acquire_timeout;
     std::chrono::milliseconds const blocking_delay;
 
     friend std::ostream& operator<<(std::ostream& os, const SwitchingBundle& bundle);
