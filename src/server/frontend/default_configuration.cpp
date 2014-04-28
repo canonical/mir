@@ -17,7 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
-#include "mir/frontend/protobuf_session_creator.h"
+#include "mir/frontend/protobuf_connection_creator.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
 
@@ -114,12 +114,12 @@ private:
 };
 }
 
-std::shared_ptr<mf::SessionCreator>
-mir::DefaultServerConfiguration::the_session_creator()
+std::shared_ptr<mf::ConnectionCreator>
+mir::DefaultServerConfiguration::the_connection_creator()
 {
-    return session_creator([this]
+    return connection_creator([this]
         {
-            return std::make_shared<mf::ProtobufSessionCreator>(
+            return std::make_shared<mf::ProtobufConnectionCreator>(
                 the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
                 the_session_authorizer(),
                 the_message_processor_report());
@@ -137,7 +137,7 @@ mir::DefaultServerConfiguration::the_connector()
             if (the_options()->is_set(options::no_server_socket_opt))
             {
                 return std::make_shared<mf::BasicConnector>(
-                    the_session_creator(),
+                    the_connection_creator(),
                     threads,
                     the_connector_report());
             }
@@ -145,7 +145,7 @@ mir::DefaultServerConfiguration::the_connector()
             {
                 return std::make_shared<mf::PublishedSocketConnector>(
                     the_socket_file(),
-                    the_session_creator(),
+                    the_connection_creator(),
                     threads,
                     the_connector_report());
             }
