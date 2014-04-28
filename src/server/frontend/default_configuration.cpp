@@ -18,6 +18,7 @@
 
 #include "mir/default_server_configuration.h"
 #include "mir/frontend/protobuf_connection_creator.h"
+#include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
 
 #include "resource_cache.h"
@@ -70,13 +71,13 @@ private:
     std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
-        pid_t client_pid,
+        mf::SessionCredentials const& creds,
         std::shared_ptr<mf::EventSink> const& sink) override
     {
         std::shared_ptr<mf::DisplayChanger> changer;
         std::shared_ptr<mf::Screencast> effective_screencast;
 
-        if (session_authorizer->configure_display_is_allowed(client_pid))
+        if (session_authorizer->configure_display_is_allowed(creds))
         {
             changer = display_changer;
         }
@@ -85,7 +86,7 @@ private:
             changer = std::make_shared<mf::UnauthorizedDisplayChanger>(display_changer);
         }
 
-        if (session_authorizer->screencast_is_allowed(client_pid))
+        if (session_authorizer->screencast_is_allowed(creds))
         {
             effective_screencast = screencast;
         }
@@ -95,7 +96,7 @@ private:
         }
 
         return std::make_shared<mf::SessionMediator>(
-            client_pid,
+            creds.pid(),
             shell,
             graphics_platform,
             changer,

@@ -30,6 +30,7 @@
 
 #include <cstring>
 
+namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 namespace mt = mir::test;
@@ -94,7 +95,7 @@ private:
     boost::asio::mutable_buffers_1 async_buffer;
     std::vector<char> message;
 
-    MOCK_METHOD0(client_pid, pid_t());
+    MOCK_METHOD0(client_creds, mf::SessionCredentials());
 };
 
 struct MockProcessor : public mfd::MessageProcessor

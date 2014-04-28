@@ -15,7 +15,7 @@ set(
   surface.cpp
   unauthorized_display_changer.cpp
   unauthorized_screencast.cpp
-
+  session_credentials.cpp
   default_configuration.cpp
 
   ${PROTO_HDRS}
