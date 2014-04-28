@@ -31,14 +31,14 @@ namespace
 {
 mg::Buffer* pop(std::deque<mg::Buffer*>& q)
 {
-    auto buffer = q.front();
+    auto const buffer = q.front();
     q.pop_front();
     return buffer;
 }
 
 bool remove(mg::Buffer const* item, std::vector<mg::Buffer*>& list)
 {
-    int size = list.size();
+    int const size = list.size();
     for (int i = 0; i < size; ++i)
     {
         if (list[i] == item)
@@ -53,7 +53,7 @@ bool remove(mg::Buffer const* item, std::vector<mg::Buffer*>& list)
 
 bool contains(mg::Buffer const* item, std::vector<mg::Buffer*> const& list)
 {
-    int size = list.size();
+    int const size = list.size();
     for (int i = 0; i < size; ++i)
     {
         if (list[i] == item)
@@ -65,13 +65,13 @@ bool contains(mg::Buffer const* item, std::vector<mg::Buffer*> const& list)
 std::shared_ptr<mg::Buffer> const&
 buffer_for(mg::Buffer const* item, std::vector<std::shared_ptr<mg::Buffer>> const& list)
 {
-    int size = list.size();
+    int const size = list.size();
     for (int i = 0; i < size; ++i)
     {
         if (list[i].get() == item)
             return list[i];
     }
-    return list[0];
+    BOOST_THROW_EXCEPTION(std::logic_error("buffer for pointer not found in list"));
 }
 
 void replace(mg::Buffer const* item, std::shared_ptr<mg::Buffer> const& new_buffer,
@@ -81,8 +81,12 @@ void replace(mg::Buffer const* item, std::shared_ptr<mg::Buffer> const& new_buff
     for (int i = 0; i < size; ++i)
     {
         if (list[i].get() == item)
+        {
             list[i] = new_buffer;
+            return;
+        }
     }
+    BOOST_THROW_EXCEPTION(std::logic_error("item to replace not found in list"));
 }
 }
 
@@ -91,7 +95,6 @@ mc::BufferQueue::BufferQueue(
     std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc,
     graphics::BufferProperties const& props)
     : nbuffers{nbuffers},
-      allocated_buffers{std::min(nbuffers, 2)},
       frame_dropping_enabled{false},
       the_properties{props},
       gralloc{gralloc}
@@ -106,17 +109,22 @@ mc::BufferQueue::BufferQueue(
      * If there is increased pressure by the client to acquire
      * more buffers, more will be allocated at that time (up to nbuffers)
      */
-    for(int i = 0; i < allocated_buffers; i++)
+    for(int i = 0; i < std::min(nbuffers, 2); i++)
     {
         buffers.push_back(gralloc->alloc_buffer(the_properties));
     }
 
-    for(int i = 0; i < allocated_buffers - 1; i++)
+    /* N - 1 for clients, one for compositors */
+    int const buffers_for_client = buffers.size() - 1;
+    for(int i = 0; i < buffers_for_client; i++)
     {
         free_buffers.push_back(buffers[i].get());
     }
 
-    current_compositor_buffer = buffers[allocated_buffers - 1].get();
+    current_compositor_buffer = buffers.back().get();
+    /* Special case: with one buffer both clients and compositors
+     * need to share the same buffer
+     */
     if (nbuffers == 1)
         free_buffers.push_back(current_compositor_buffer);
 }
@@ -135,7 +143,7 @@ void mc::BufferQueue::client_acquire(std::function<void(graphics::Buffer* buffer
 
     if (!free_buffers.empty())
     {
-        auto buffer = free_buffers.back();
+        auto const buffer = free_buffers.back();
         free_buffers.pop_back();
         give_buffer_to_client(buffer, std::move(lock));
         return;
@@ -144,12 +152,12 @@ void mc::BufferQueue::client_acquire(std::function<void(graphics::Buffer* buffer
     /* No empty buffers, attempt allocating more
      * TODO: need a good heuristic to switch
      * between double-buffering to n-buffering
-	 */
+     */
+    int const allocated_buffers = buffers.size();
     if (allocated_buffers < nbuffers)
     {
         auto const& buffer = gralloc->alloc_buffer(the_properties);
         buffers.push_back(buffer);
-        allocated_buffers++;
         give_buffer_to_client(buffer.get(), std::move(lock));
         return;
     }
@@ -157,7 +165,7 @@ void mc::BufferQueue::client_acquire(std::function<void(graphics::Buffer* buffer
     /* Last resort, drop oldest buffer from the ready queue */
     if (frame_dropping_enabled && !ready_to_composite_queue.empty())
     {
-        auto const& buffer = pop(ready_to_composite_queue);
+        auto const buffer = pop(ready_to_composite_queue);
         give_buffer_to_client(buffer, std::move(lock));
     }
 }
@@ -178,7 +186,7 @@ void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
             std::logic_error("client released out of sequence"));
     }
 
-    auto buffer = pop(buffers_owned_by_client);
+    auto const buffer = pop(buffers_owned_by_client);
     ready_to_composite_queue.push_back(buffer);
 }
 
@@ -187,8 +195,8 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
 {
     std::unique_lock<decltype(guard)> lock(guard);
 
-    bool use_current_buffer =
-        is_new_user(user_id) || ready_to_composite_queue.empty();
+    bool const use_current_buffer =
+        is_new_current_buffer_user(user_id) || ready_to_composite_queue.empty();
 
     mg::Buffer* buffer_to_release = nullptr;
     if (!use_current_buffer)
@@ -196,23 +204,24 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         /* No other compositors currently reference this
          * buffer so release it
          */
-        if (buffers_sent_to_compositor.empty())
+        if (!contains(current_compositor_buffer, buffers_sent_to_compositor))
             buffer_to_release = current_compositor_buffer;
 
         /* The current compositor buffer is
          * being changed, the new one has no users yet
          */
-        compositor_ids.clear();
+        current_buffer_users.clear();
         current_compositor_buffer = pop(ready_to_composite_queue);
     }
 
     buffers_sent_to_compositor.push_back(current_compositor_buffer);
-    compositor_ids.push_back(user_id);
+    current_buffer_users.push_back(user_id);
 
+    auto const& acquired_buffer = buffer_for(current_compositor_buffer, buffers);
     if (buffer_to_release)
         release(buffer_to_release, std::move(lock));
 
-    return buffer_for(current_compositor_buffer, buffers);
+    return acquired_buffer;
 }
 
 void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const& buffer)
@@ -276,7 +285,7 @@ void mc::BufferQueue::force_requests_to_complete()
     std::unique_lock<std::mutex> lock(guard);
     if (give_to_client && !ready_to_composite_queue.empty())
     {
-        auto const& buffer = pop(ready_to_composite_queue);
+        auto const buffer = pop(ready_to_composite_queue);
         while (!ready_to_composite_queue.empty())
         {
             free_buffers.push_back(pop(ready_to_composite_queue));
@@ -309,12 +318,17 @@ void mc::BufferQueue::give_buffer_to_client(
     /* Clears callback */
     auto give_to_client_cb = std::move(give_to_client);
 
-    bool resize_buffer = buffer->size() != the_properties.size;
+    bool const resize_buffer = buffer->size() != the_properties.size;
     if (resize_buffer)
     {
-        auto resized_buffer = gralloc->alloc_buffer(the_properties);
+        auto const& resized_buffer = gralloc->alloc_buffer(the_properties);
         replace(buffer, resized_buffer, buffers);
         buffer = resized_buffer.get();
+        /* Special case: the current compositor buffer also needs to be
+         * replaced as it's shared with the client
+         */
+        if (nbuffers == 1)
+            current_compositor_buffer = buffer;
     }
 
     /* Don't give to the client just yet if there's a pending snapshot */
@@ -324,7 +338,7 @@ void mc::BufferQueue::give_buffer_to_client(
             [&]{ return !contains(buffer, pending_snapshots); });
     }
 
-    buffers_owned_by_client.push_back(std::move(buffer));
+    buffers_owned_by_client.push_back(buffer);
 
     lock.unlock();
     try
@@ -337,14 +351,14 @@ void mc::BufferQueue::give_buffer_to_client(
     }
 }
 
-bool mc::BufferQueue::is_new_user(void const* user_id)
+bool mc::BufferQueue::is_new_current_buffer_user(void const* user_id)
 {
-    if (!compositor_ids.empty())
+    if (!current_buffer_users.empty())
     {
-        int size = compositor_ids.size();
+        int size = current_buffer_users.size();
         for (int i = 0; i < size; ++i)
         {
-            if (compositor_ids[i] == user_id)
+            if (current_buffer_users[i] == user_id)
                 return false;
         }
         return true;

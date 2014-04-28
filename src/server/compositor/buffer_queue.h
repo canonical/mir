@@ -59,7 +59,7 @@ public:
 private:
     void give_buffer_to_client(graphics::Buffer* buffer,
         std::unique_lock<std::mutex> lock);
-    bool is_new_user(void const* user_id);
+    bool is_new_current_buffer_user(void const* user_id);
     void release(graphics::Buffer* buffer,
         std::unique_lock<std::mutex> lock);
 
@@ -72,13 +72,12 @@ private:
     std::vector<graphics::Buffer*> buffers_sent_to_compositor;
     std::vector<graphics::Buffer*> pending_snapshots;
 
-    std::vector<void const*> compositor_ids;
+    std::vector<void const*> current_buffer_users;
     graphics::Buffer* current_compositor_buffer;
 
     std::function<void(graphics::Buffer* buffer)> give_to_client;
 
     int nbuffers;
-    int allocated_buffers;
     bool frame_dropping_enabled;
     graphics::BufferProperties the_properties;
 
