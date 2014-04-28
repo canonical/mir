@@ -59,7 +59,10 @@ void ms::LegacySceneChangeNotification::surface_removed(std::shared_ptr<ms::Surf
         std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
         auto it = surface_observers.find(surface);
         if (it != surface_observers.end())
+        {
+            surface->remove_observer(it->second);
             surface_observers.erase(it);
+        }
     }
     notify_change();
 }
