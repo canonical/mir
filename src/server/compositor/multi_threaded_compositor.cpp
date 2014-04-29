@@ -23,6 +23,7 @@
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/compositor_report.h"
+#include "mir/run_mir.h"
 
 #include <thread>
 #include <condition_variable>
@@ -157,6 +158,7 @@ public:
     }
 
     void operator()() noexcept // noexcept is important! (LP: #1237332)
+    try
     {
         /*
          * Make the buffer the current rendering target, and release
@@ -176,6 +178,10 @@ public:
 
         run_compositing_loop([&] { return display_buffer_compositor->composite();});
     }
+    catch (...)
+    {
+        mir::terminate_with_current_exception();
+    }
 
 private:
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const display_buffer_compositor_factory;
@@ -192,6 +198,7 @@ public:
     }
 
     void operator()() noexcept // noexcept is important! (LP: #1237332)
+    try
     {
         run_compositing_loop(
             [this]
@@ -210,6 +217,10 @@ public:
 
                 return false;
             });
+    }
+    catch (...)
+    {
+        mir::terminate_with_current_exception();
     }
 
 private:
