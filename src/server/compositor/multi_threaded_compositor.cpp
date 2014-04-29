@@ -198,12 +198,12 @@ public:
             {
                 std::vector<std::shared_ptr<mg::Buffer>> saved_resources;
 
-                auto const& renderables = scene->generate_renderable_list();
+                auto const& renderables = scene->renderable_list_for(this);
 
                 for (auto const& r : renderables)
                 {
                     if (r->buffers_ready_for_compositor() > 0)
-                        saved_resources.push_back(r->buffer(this));
+                        saved_resources.push_back(r->buffer());
                 }
 
                 wait_until_next_fake_vsync();

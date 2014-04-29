@@ -132,7 +132,7 @@ void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
 
 void mc::GLRenderer::render(mg::Renderable const& renderable) const
 {
-    auto buffer = renderable.buffer(this);
+    auto buffer = renderable.buffer();
     saved_resources.insert(buffer);
 
     glUseProgram(*program);

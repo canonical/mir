@@ -55,7 +55,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     bool uncomposited_buffers{false};
 
     auto const& view_area = display_buffer.view_area();
-    auto renderable_list = scene->generate_renderable_list();
+    auto renderable_list = scene->renderable_list_for(this);
 
     if (display_buffer.can_bypass())
     {
@@ -63,13 +63,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);
         if (bypass_it != renderable_list.rend())
         {
-            /*
-             * Notice the user_id we pass to buffer() here has to be
-             * different to the one used in the Renderer. This is in case
-             * the below if() fails we want to complete the frame using the
-             * same buffer (different user_id required).
-             */
-            auto bypass_buf = (*bypass_it)->buffer(this);
+            auto bypass_buf = (*bypass_it)->buffer();
             if (bypass_buf->can_bypass())
             {
                 uncomposited_buffers = (*bypass_it)->buffers_ready_for_compositor() > 1;

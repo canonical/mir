@@ -126,7 +126,7 @@ public:
             .WillRepeatedly(Return(mir::geometry::Size{123, 456}));
 
         EXPECT_CALL(renderable, id()).WillRepeatedly(Return(&renderable));
-        EXPECT_CALL(renderable, buffer(_)).WillRepeatedly(Return(mock_buffer));
+        EXPECT_CALL(renderable, buffer()).WillRepeatedly(Return(mock_buffer));
         EXPECT_CALL(renderable, shaped()).WillRepeatedly(Return(false));
         EXPECT_CALL(renderable, alpha()).WillRepeatedly(Return(1.0f));
         EXPECT_CALL(renderable, transformation()).WillRepeatedly(Return(trans));

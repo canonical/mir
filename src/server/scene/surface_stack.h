@@ -66,7 +66,7 @@ public:
     virtual ~SurfaceStack() noexcept(true) {}
 
     // From Scene
-    graphics::RenderableList generate_renderable_list() const;
+    graphics::RenderableList renderable_list_for(CompositorID id) const;
     virtual void set_change_callback(std::function<void()> const& f);
     
     // From InputTargets
