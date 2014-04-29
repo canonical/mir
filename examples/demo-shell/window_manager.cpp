@@ -190,6 +190,10 @@ bool me::WindowManager::handle(MirEvent const& event)
                 conf->for_each_output(
                     [&](mg::UserDisplayConfigurationOutput& output) -> void
                     {
+                        // Only apply changes to the monitor the cursor is on
+                        if (!output.extents().contains(old_cursor))
+                            return;
+
                         if (rotating)
                             output.orientation = orientation;
 
@@ -335,7 +339,6 @@ bool me::WindowManager::handle(MirEvent const& event)
                 old_pos = surf->top_left();
                 old_size = surf->size();
                 old_pinch_diam = pinch_diam;
-                old_cursor = cursor;
             }
         }
 
@@ -348,6 +351,8 @@ bool me::WindowManager::handle(MirEvent const& event)
                 handled = true;
             }
         }
+
+        old_cursor = cursor;
     }
     return handled;
 }
