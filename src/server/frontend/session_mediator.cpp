@@ -411,6 +411,18 @@ void mf::SessionMediator::screencast_buffer(
     done->Run();
 }
 
+void mf::SessionMediator::client_socket_fd(
+    ::google::protobuf::RpcController* ,
+    ::mir::protobuf::SocketFDRequest const* /*parameters*/,
+    ::mir::protobuf::SocketFD* /*response*/,
+    ::google::protobuf::Closure* /*done*/)
+{
+    throw std::runtime_error("not implemented");
+//        response->
+//        done->Run();
+}
+
+
 void mf::SessionMediator::drm_auth_magic(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::DRMMagic* request,
