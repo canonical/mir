@@ -139,7 +139,7 @@ public:
     void show() override;
 
     void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
-    void remove_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
+    void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override;
 
 private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes

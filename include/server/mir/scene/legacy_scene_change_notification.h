@@ -51,8 +51,7 @@ private:
     std::function<void()> const notify_change;
     
     std::mutex surface_observers_guard;
-    // TODO: Change to weak
-    std::map<Surface*, std::shared_ptr<SurfaceObserver>> surface_observers;
+    std::map<Surface*, std::weak_ptr<SurfaceObserver>> surface_observers;
     
     void add_surface_observer(Surface* surface);
 };
