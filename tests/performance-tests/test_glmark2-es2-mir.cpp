@@ -32,7 +32,7 @@ protected:
         }
         catch(...)
         {
-            mir::report_exception(std::cer);
+            mir::report_exception(std::cerr);
         }
     }
     
@@ -50,7 +50,7 @@ protected:
         std::thread mir_server(&GLMark2Test::launch_mir_server, this);
         boost::this_thread::sleep(boost::posix_time::seconds(5));
 
-        char const* cmd = "glmark2-es2-mir --fullscreen";
+        char const* cmd = "glmark2-es2-mir -b texture --fullscreen";
         ASSERT_TRUE((in = popen(cmd, "r")));
     
         glmark2_output.open(output_filename);
@@ -62,6 +62,7 @@ protected:
             }
             else if (file_type == json)
             {
+                std::cout << line;
                 if (boost::regex_match(line, matches, re_glmark2_score))
                 {
                 std::string json =  "{";
@@ -70,10 +71,13 @@ protected:
                     json += "'score':'" + matches[1] + "'";
                     json += "}";
                 glmark2_output << json;
+                break;
                 }
             }
         }
-    
+        
+        raise(SIGINT);
+        mir_server.join(); 
         free(line);
         fclose(in);
     }
