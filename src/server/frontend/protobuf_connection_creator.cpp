@@ -77,6 +77,33 @@ void mf::ProtobufConnectionCreator::create_connection_for(std::shared_ptr<ba::lo
     }
 }
 
+void mf::ProtobufConnectionCreator::create_connection_for(
+    std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
+    std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler)
+{
+    auto const messenger = std::make_shared<detail::SocketMessenger>(socket);
+    auto const creds = messenger->client_creds();
+
+    if (session_authorizer->connection_is_allowed(creds))
+    {
+        auto const message_sender = std::make_shared<detail::ProtobufResponder>(
+            messenger,
+            ipc_factory->resource_cache());
+
+        auto const event_sink = std::make_shared<detail::EventSender>(messenger);
+        auto const msg_processor = create_processor(
+            message_sender,
+            // TODO deduplicate: this function is identical to the one above except for this line.
+            ipc_factory->make_ipc_server(creds, event_sink, connect_handler),
+            report);
+
+        const auto& connection = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);
+        connections->add(connection);
+        connection->read_next_message();
+    }
+}
+
+
 std::shared_ptr<mfd::MessageProcessor>
 mf::ProtobufConnectionCreator::create_processor(
     std::shared_ptr<mfd::ProtobufMessageSender> const& sender,

@@ -50,6 +50,9 @@ public:
     ~ProtobufConnectionCreator() noexcept;
 
     void create_connection_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
+    void create_connection_for(
+        std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
+        std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) override;
 
     virtual std::shared_ptr<detail::MessageProcessor> create_processor(
         std::shared_ptr<detail::ProtobufMessageSender> const& sender,

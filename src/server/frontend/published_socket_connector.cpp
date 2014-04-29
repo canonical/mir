@@ -205,6 +205,15 @@ void mf::BasicConnector::create_session_for(std::shared_ptr<boost::asio::local::
     connection_creator->create_connection_for(server_socket);
 }
 
+void mf::BasicConnector::create_session_for(
+    std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket,
+    std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
+{
+    report->creating_session_for(server_socket->native_handle());
+    // TODO deduplicate: this function is identical to the one above except for this line.
+    connection_creator->create_connection_for(server_socket, connect_handler);
+}
+
 int mf::BasicConnector::client_socket_fd() const
 {
     enum { server, client, size };
@@ -223,6 +232,29 @@ int mf::BasicConnector::client_socket_fd() const
     report->creating_socket_pair(socket_fd[server], socket_fd[client]);
 
     create_session_for(server_socket);
+
+    return socket_fd[client];
+}
+
+int mf::BasicConnector::client_socket_fd(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
+{
+    enum { server, client, size };
+    int socket_fd[size];
+
+    if (socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fd))
+    {
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Could not create socket pair")) << boost::errinfo_errno(errno));
+    }
+
+    auto const server_socket = std::make_shared<boost::asio::local::stream_protocol::socket>(
+        io_service, boost::asio::local::stream_protocol(), socket_fd[server]);
+
+    report->creating_socket_pair(socket_fd[server], socket_fd[client]);
+
+    // TODO deduplicate: this function is identical to the one above except for this line.
+    create_session_for(server_socket, connect_handler);
 
     return socket_fd[client];
 }
