@@ -20,19 +20,20 @@
 #include "src/server/compositor/switching_bundle.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_framework/auto_unblock_thread.h"
 #include "mir_test/wait_condition.h"
 
 #include <gtest/gtest.h>
 
 #include <atomic>
-#include <thread>
 #include <mutex>
 #include <chrono>
 #include <deque>
 #include <unordered_set>
 
-namespace geom=mir::geometry;
-namespace mtd=mir::test::doubles;
+namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
+namespace mtf = mir_test_framework;
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
 
@@ -43,7 +44,10 @@ namespace
 class SwitchingBundleTest : public ::testing::Test
 {
 public:
-    SwitchingBundleTest() {};
+    SwitchingBundleTest()
+        : max_nbuffers_to_test{mc::SwitchingBundle::max_buffers}
+    {};
+
     void SetUp()
     {
         allocator = std::make_shared<mtd::StubBufferAllocator>();
@@ -55,6 +59,7 @@ public:
         };
     }
 protected:
+    int max_nbuffers_to_test;
     std::shared_ptr<mtd::StubBufferAllocator> allocator;
     mg::BufferProperties basic_properties;
 };
@@ -120,56 +125,6 @@ private:
     bool received_buffer;
 };
 
-/* std::thread destructor will call terminate if the thread hasn't been
- * joined. These helper classes avoid doing that so that if a test
- * fails during an ASSERT any created threads will shutdown gracefully.
- */
-class AutoUnblockThread
-{
-public:
-    template<typename Callable, typename... Args>
-    explicit AutoUnblockThread(std::function<void(void)> const& unblock,
-        Callable&& f,
-        Args&&... args)
-        : unblock{unblock}, thread{f, args...}
-    {}
-
-    ~AutoUnblockThread()
-    {
-        stop();
-    }
-
-    void stop()
-    {
-        unblock();
-        if (thread.joinable())
-            thread.join();
-    }
-
-private:
-    std::function<void(void)> unblock;
-    std::thread thread;
-};
-
-class AutoJoinThread : public AutoUnblockThread
-{
-public:
-    template<typename Callable, typename... Args>
-    explicit AutoJoinThread(Callable&& f,
-        Args&&... args)
-        : AutoUnblockThread{[&]{}, f, args...}
-    {}
-};
-
-mg::Buffer* client_acquire_sync(mc::SwitchingBundle& q)
-{
-    AcquireWaitHandle wait_handle{q};
-    q.client_acquire(
-        [&](mg::Buffer* buffer) { wait_handle.receive_buffer(buffer); });
-    wait_handle.wait();
-    return wait_handle.buffer();
-}
-
 std::shared_ptr<AcquireWaitHandle> client_acquire_async(mc::SwitchingBundle& q)
 {
     std::shared_ptr<AcquireWaitHandle> wait_handle =
@@ -179,6 +134,13 @@ std::shared_ptr<AcquireWaitHandle> client_acquire_async(mc::SwitchingBundle& q)
         [&](mg::Buffer* buffer) { wait_handle->receive_buffer(buffer); });
 
     return wait_handle;
+}
+
+mg::Buffer* client_acquire_sync(mc::SwitchingBundle& q)
+{
+    auto handle = client_acquire_async(q);
+    handle->wait();
+    return handle->buffer();
 }
 
 void compositor_thread(mc::SwitchingBundle &bundle,
@@ -308,7 +270,7 @@ TEST_F(SwitchingBundleTest, throws_when_creating_with_invalid_num_buffers)
 
 TEST_F(SwitchingBundleTest, client_can_acquire_and_release_buffer)
 {
-    for (int nbuffers = 1; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -323,7 +285,7 @@ TEST_F(SwitchingBundleTest, client_can_acquire_and_release_buffer)
  */
 TEST_F(SwitchingBundleTest, DISABLED_client_cannot_acquire_all_buffers)
 {
-    for (int nbuffers = 2; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
         int const max_ownable_buffers = nbuffers - 1;
@@ -366,7 +328,7 @@ TEST_F(SwitchingBundleTest, DISABLED_throws_if_client_acquire_has_pending_comple
 
 TEST_F(SwitchingBundleTest, compositor_acquires_frames_in_order_for_synchronous_client)
 {
-    for (int nbuffers = 2; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
         ASSERT_THAT(q.framedropping_allowed(), Eq(false));
@@ -395,7 +357,7 @@ TEST_F(SwitchingBundleTest, compositor_acquires_frames_in_order_for_synchronous_
 
 TEST_F(SwitchingBundleTest, framedropping_clients_never_block)
 {
-    for (int nbuffers = 2; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
         q.allow_framedropping(true);
@@ -430,7 +392,7 @@ TEST_F(SwitchingBundleTest, clients_dont_recycle_startup_buffer)
 
 TEST_F(SwitchingBundleTest, throws_on_out_of_order_client_release)
 {
-    for (int nbuffers = 3; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -450,13 +412,14 @@ TEST_F(SwitchingBundleTest, throws_on_out_of_order_client_release)
 
 TEST_F(SwitchingBundleTest, async_client_cycles_through_all_buffers)
 {
-    for (int nbuffers = 2; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
         std::atomic<bool> done(false);
         auto unblock = [&] { done = true; };
-        AutoUnblockThread compositor(unblock, compositor_thread, std::ref(q), std::ref(done));
+        mtf::AutoUnblockThread compositor(unblock,
+            compositor_thread, std::ref(q), std::ref(done));
 
         std::unordered_set<uint32_t> ids_acquired;
         int const max_ownable_buffers = nbuffers - 1;
@@ -484,7 +447,7 @@ TEST_F(SwitchingBundleTest, async_client_cycles_through_all_buffers)
 
 TEST_F(SwitchingBundleTest, compositor_can_acquire_and_release)
 {
-    for (int nbuffers = 1; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -502,7 +465,7 @@ TEST_F(SwitchingBundleTest, compositor_can_acquire_and_release)
 
 TEST_F(SwitchingBundleTest, multiple_compositors_are_in_sync)
 {
-    for (int nbuffers = 1; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -524,7 +487,7 @@ TEST_F(SwitchingBundleTest, multiple_compositors_are_in_sync)
 
 TEST_F(SwitchingBundleTest, compositor_acquires_frames_in_order)
 {
-    for (int nbuffers = 2; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -558,7 +521,7 @@ TEST_F(SwitchingBundleTest, compositor_acquires_frames_in_order)
 
 TEST_F(SwitchingBundleTest, compositor_acquire_never_blocks)
 {
-    for (int nbuffers = 1; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -572,7 +535,7 @@ TEST_F(SwitchingBundleTest, compositor_acquire_never_blocks)
 
 TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
 {
-    for (int nbuffers = 1; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -601,7 +564,7 @@ TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
 
 TEST_F(SwitchingBundleTest, compositor_release_verifies_parameter)
 {
-    for (int nbuffers = 1; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -641,7 +604,7 @@ TEST_F(SwitchingBundleTest, compositor_client_interleaved)
 TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
 {
     // This test simulates bypass behaviour
-    for (int nbuffers = 2; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -678,7 +641,7 @@ TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
 
 TEST_F(SwitchingBundleTest, snapshot_acquire_basic)
 {
-    for (int nbuffers = 1; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -692,7 +655,7 @@ TEST_F(SwitchingBundleTest, snapshot_acquire_basic)
 
 TEST_F(SwitchingBundleTest, snapshot_acquire_never_blocks)
 {
-    for (int nbuffers = 1; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
         int const num_snapshots = 100;
@@ -708,7 +671,7 @@ TEST_F(SwitchingBundleTest, snapshot_acquire_never_blocks)
 
 TEST_F(SwitchingBundleTest, snapshot_release_verifies_parameter)
 {
-    for (int nbuffers = 2; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -732,7 +695,7 @@ TEST_F(SwitchingBundleTest, snapshot_release_verifies_parameter)
 
 TEST_F(SwitchingBundleTest, stress)
 {
-    for (int nbuffers = 2; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -740,32 +703,32 @@ TEST_F(SwitchingBundleTest, stress)
 
         auto unblock = [&]{ done = true;};
 
-        AutoUnblockThread compositor(unblock, compositor_thread,
-                                       std::ref(q),
-                                       std::ref(done));
-        AutoUnblockThread snapshotter1(unblock, snapshot_thread,
-                                         std::ref(q),
-                                         std::ref(done));
-        AutoUnblockThread snapshotter2(unblock, snapshot_thread,
-                                         std::ref(q),
-                                         std::ref(done));
+        mtf::AutoUnblockThread compositor(unblock, compositor_thread,
+                                          std::ref(q),
+                                          std::ref(done));
+        mtf::AutoUnblockThread snapshotter1(unblock, snapshot_thread,
+                                            std::ref(q),
+                                            std::ref(done));
+        mtf::AutoUnblockThread snapshotter2(unblock, snapshot_thread,
+                                            std::ref(q),
+                                            std::ref(done));
 
         q.allow_framedropping(false);
-        AutoJoinThread client1(client_thread, std::ref(q), 1000);
+        mtf::AutoJoinThread client1(client_thread, std::ref(q), 1000);
         client1.stop();
 
         q.allow_framedropping(true);
-        AutoJoinThread client2(client_thread, std::ref(q), 1000);
+        mtf::AutoJoinThread client2(client_thread, std::ref(q), 1000);
         client2.stop();
 
-        AutoJoinThread client3(switching_client_thread, std::ref(q), 1000);
+        mtf::AutoJoinThread client3(switching_client_thread, std::ref(q), 1000);
         client3.stop();
     }
 }
 
 TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
 {
-    for (int nbuffers = 3; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -806,7 +769,7 @@ TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
 
 TEST_F(SwitchingBundleTest, framedropping_clients_get_all_buffers)
 {
-    for (int nbuffers = 2; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
         q.allow_framedropping(true);
@@ -828,7 +791,7 @@ TEST_F(SwitchingBundleTest, framedropping_clients_get_all_buffers)
 
 TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_shutdown)
 {
-    for (int nbuffers = 2; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
         q.allow_framedropping(false);
@@ -863,7 +826,7 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
 
         std::atomic<bool> done(false);
 
-        AutoJoinThread monitor1([&]
+        mtf::AutoJoinThread monitor1([&]
         {
             for (unsigned long frame = 0; frame != compose_frames+3; frame++)
             {
@@ -918,7 +881,7 @@ TEST_F(SwitchingBundleTest, slow_client_framerate_matches_compositor)
         std::atomic<bool> done(false);
         std::mutex sync;
 
-        AutoJoinThread monitor1([&]
+        mtf::AutoJoinThread monitor1([&]
         {
             for (unsigned long frame = 0; frame != compose_frames+3; frame++)
             {
@@ -964,7 +927,7 @@ TEST_F(SwitchingBundleTest, slow_client_framerate_matches_compositor)
 
 TEST_F(SwitchingBundleTest, resize_affects_client_acquires_immediately)
 {
-    for (int nbuffers = 1; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -991,7 +954,7 @@ TEST_F(SwitchingBundleTest, resize_affects_client_acquires_immediately)
 
 TEST_F(SwitchingBundleTest, compositor_acquires_resized_frames)
 {
-    for (int nbuffers = 2; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
         mg::BufferID history[5];
@@ -1101,7 +1064,7 @@ TEST_F(SwitchingBundleTest, framedropping_client_acquire_does_not_block_when_no_
 
 TEST_F(SwitchingBundleTest, compositor_never_owns_client_buffers)
 {
-    for (int nbuffers = 2; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -1110,7 +1073,7 @@ TEST_F(SwitchingBundleTest, compositor_never_owns_client_buffers)
         std::atomic<bool> done(false);
 
         auto unblock = [&]{ done = true; };
-        AutoUnblockThread compositor_thread(unblock, [&]
+        mtf::AutoUnblockThread compositor_thread(unblock, [&]
         {
             while (!done)
             {
@@ -1146,7 +1109,7 @@ TEST_F(SwitchingBundleTest, compositor_never_owns_client_buffers)
         }
     }
 
-    for (int nbuffers = 2; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
         for (int i = 0; i < 100; ++i)
@@ -1177,7 +1140,7 @@ TEST_F(SwitchingBundleTest, compositor_never_owns_client_buffers)
 
 TEST_F(SwitchingBundleTest, buffers_are_not_lost)
 {
-    for (int nbuffers = 3; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
@@ -1207,7 +1170,8 @@ TEST_F(SwitchingBundleTest, buffers_are_not_lost)
         /* An async client should still be able to cycle through all the available buffers */
         std::atomic<bool> done(false);
         auto unblock = [&] { done = true; };
-        AutoUnblockThread compositor(unblock, compositor_thread, std::ref(q), std::ref(done));
+        mtf::AutoUnblockThread compositor(unblock,
+           compositor_thread, std::ref(q), std::ref(done));
 
         std::unordered_set<mg::Buffer *> unique_buffers_acquired;
         for (int frame = 0; frame < max_ownable_buffers*2; frame++)
@@ -1236,14 +1200,15 @@ TEST_F(SwitchingBundleTest, buffers_are_not_lost)
 /* FIXME (enabling this optimization breaks timing tests) */
 TEST_F(SwitchingBundleTest, DISABLED_synchronous_clients_only_get_two_real_buffers)
 {
-    for (int nbuffers = 2; nbuffers <= 5; ++nbuffers)
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
         q.allow_framedropping(false);
 
         std::atomic<bool> done(false);
         auto unblock = [&] { done = true; };
-        AutoUnblockThread compositor(unblock, compositor_thread, std::ref(q), std::ref(done));
+        mtf::AutoUnblockThread compositor(unblock,
+           compositor_thread, std::ref(q), std::ref(done));
 
         std::unordered_set<mg::Buffer *> buffers_acquired;
 
