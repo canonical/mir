@@ -16,29 +16,35 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_DISPATCHER_H_
-#define MIR_TEST_DOUBLES_MOCK_INPUT_DISPATCHER_H_
+#ifndef MIR_INPUT_INPUT_DISPATCHER_H
+#define MIR_INPUT_INPUT_DISPATCHER_H
 
-#include "mir/input/input_dispatcher.h"
-#include <gmock/gmock.h>
+#include "mir_toolkit/event.h"
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace input
 {
 
-struct MockInputDispatcher : public mir::input::InputDispatcher
+/*!
+ * \brief The InputDispatchers role is to decide what should happen with user input events.
+ *
+ * It will receive MirEvents with either MirMotionEvent or MirKeyEvent inside. The InputDispatcher
+ * implementation shall either handle the input without informing any clients or pick a client
+ * surface and send the event to it.
+ */
+class InputDispatcher
 {
-    // droidinput::InputDispatcher interface
-    MOCK_METHOD1(dispatch, void(MirEvent const&));
-    MOCK_METHOD0(start, void());
-    MOCK_METHOD0(stop, void());
+public:
+    virtual void dispatch(MirEvent const& event) = 0;
+    virtual void start() = 0;
+    virtual void stop() = 0;
+
+    virtual ~InputDispatcher() = default;
 };
 
 }
 }
-} // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_INPUT_DISPATCHER_H_
+#endif
+

@@ -25,6 +25,7 @@
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_targets.h"
 #include "mir/input/input_region.h"
+#include "mir/input/input_dispatcher_configuration.h"
 #include "mir/geometry/rectangle.h"
 
 #include "mir_test/fake_shared.h"
@@ -89,7 +90,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
         input_manager = configuration->the_input_manager();
 
         stub_targets = std::make_shared<mtd::StubInputTargets>();
-        configuration->set_input_targets(stub_targets);
+        configuration->the_input_dispatcher_configuration()->set_input_targets(stub_targets);
 
         input_manager->start();
     }
