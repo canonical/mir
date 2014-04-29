@@ -24,6 +24,7 @@
 #include "mir/default_configuration.h"
 
 #include "mir/options/program_option.h"
+#include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/scene/surface_configurator.h"
 #include "mir/graphics/cursor.h"
@@ -137,17 +138,17 @@ mir::DefaultServerConfiguration::the_session_authorizer()
 {
     struct DefaultSessionAuthorizer : public mf::SessionAuthorizer
     {
-        bool connection_is_allowed(pid_t /* pid */)
+        bool connection_is_allowed(mf::SessionCredentials const& /* creds */)
         {
             return true;
         }
 
-        bool configure_display_is_allowed(pid_t /* pid */)
+        bool configure_display_is_allowed(mf::SessionCredentials const& /* creds */)
         {
             return true;
         }
 
-        bool screencast_is_allowed(pid_t /* pid */)
+        bool screencast_is_allowed(mf::SessionCredentials const& /* creds */)
         {
             return true;
         }
@@ -157,11 +158,6 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         {
             return std::make_shared<DefaultSessionAuthorizer>();
         });
-}
-
-std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()
-{
-    return the_input_manager();
 }
 
 std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()

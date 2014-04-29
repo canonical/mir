@@ -16,9 +16,9 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-
-#include "mir/input/android/dispatcher_input_configuration.h"
+#include "input_dispatcher_configuration.h"
 #include "event_filter_dispatcher_policy.h"
+#include "android_input_dispatcher.h"
 #include "android_input_thread.h"
 #include "android_input_registrar.h"
 #include "android_input_targeter.h"
@@ -73,23 +73,19 @@ private:
 };
 }
 
-mia::DispatcherInputConfiguration::DispatcherInputConfiguration(
+mia::InputDispatcherConfiguration::InputDispatcherConfiguration(
     std::shared_ptr<mi::EventFilter> const& event_filter,
-    std::shared_ptr<mi::InputRegion> const& input_region,
-    std::shared_ptr<mi::CursorListener> const& cursor_listener,
     std::shared_ptr<mi::InputReport> const& input_report) :
     event_filter(event_filter),
-    input_region(input_region),
-    cursor_listener(cursor_listener),
     input_report(input_report)
 {
 }
 
-mia::DispatcherInputConfiguration::~DispatcherInputConfiguration()
+mia::InputDispatcherConfiguration::~InputDispatcherConfiguration()
 {
 }
 
-droidinput::sp<droidinput::InputDispatcherPolicyInterface> mia::DispatcherInputConfiguration::the_dispatcher_policy()
+droidinput::sp<droidinput::InputDispatcherPolicyInterface> mia::InputDispatcherConfiguration::the_dispatcher_policy()
 {
     return dispatcher_policy(
         [this]()
@@ -98,7 +94,7 @@ droidinput::sp<droidinput::InputDispatcherPolicyInterface> mia::DispatcherInputC
         });
 }
 
-std::shared_ptr<mia::InputThread> mia::DispatcherInputConfiguration::the_dispatcher_thread()
+std::shared_ptr<mia::InputThread> mia::InputDispatcherConfiguration::the_dispatcher_thread()
 {
     return dispatcher_thread(
         [this]()
@@ -108,7 +104,7 @@ std::shared_ptr<mia::InputThread> mia::DispatcherInputConfiguration::the_dispatc
         });
 }
 
-std::shared_ptr<ms::InputRegistrar> mia::DispatcherInputConfiguration::the_input_registrar()
+std::shared_ptr<ms::InputRegistrar> mia::InputDispatcherConfiguration::the_input_registrar()
 {
     return input_registrar(
         [this]()
@@ -117,7 +113,7 @@ std::shared_ptr<ms::InputRegistrar> mia::DispatcherInputConfiguration::the_input
         });
 }
 
-std::shared_ptr<mia::WindowHandleRepository> mia::DispatcherInputConfiguration::the_window_handle_repository()
+std::shared_ptr<mia::WindowHandleRepository> mia::InputDispatcherConfiguration::the_window_handle_repository()
 {
     return input_registrar(
         [this]()
@@ -126,7 +122,7 @@ std::shared_ptr<mia::WindowHandleRepository> mia::DispatcherInputConfiguration::
         });
 }
 
-std::shared_ptr<msh::InputTargeter> mia::DispatcherInputConfiguration::the_input_targeter()
+std::shared_ptr<msh::InputTargeter> mia::InputDispatcherConfiguration::the_input_targeter()
 {
     return input_targeter(
         [this]()
@@ -135,21 +131,30 @@ std::shared_ptr<msh::InputTargeter> mia::DispatcherInputConfiguration::the_input
         });
 }
 
-bool mia::DispatcherInputConfiguration::is_key_repeat_enabled()
+bool mia::InputDispatcherConfiguration::is_key_repeat_enabled() const
 {
     return true;
 }
 
-void mia::DispatcherInputConfiguration::set_input_targets(std::shared_ptr<mi::InputTargets> const& targets)
+void mia::InputDispatcherConfiguration::set_input_targets(std::shared_ptr<mi::InputTargets> const& targets)
 {
     the_dispatcher()->setInputEnumerator(new mia::InputTargetEnumerator(targets, the_window_handle_repository()));
 }
 
-std::shared_ptr<mi::InputManager> mia::DispatcherInputConfiguration::the_input_manager()
+droidinput::sp<droidinput::InputDispatcherInterface> mia::InputDispatcherConfiguration::the_dispatcher()
 {
-    return input_manager(
-        [this]()
+    return dispatcher(
+        [this]() -> droidinput::sp<droidinput::InputDispatcherInterface>
         {
-            return std::make_shared<mia::InputDispatcherManager>(the_dispatcher(), the_dispatcher_thread());
+            return new droidinput::InputDispatcher(the_dispatcher_policy(), input_report);
+        });
+}
+
+std::shared_ptr<mi::InputDispatcher> mia::InputDispatcherConfiguration::the_input_dispatcher()
+{
+    return input_dispatcher(
+        [this]() -> std::shared_ptr<mi::InputDispatcher>
+        {
+            return std::make_shared<mia::AndroidInputDispatcher>(the_dispatcher(), the_dispatcher_thread());
         });
 }

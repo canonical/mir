@@ -110,7 +110,7 @@ public:
         return this;
     }
 
-    std::shared_ptr<mg::Buffer> buffer(void const*) const override
+    std::shared_ptr<mg::Buffer> buffer() const override
     {
         return client->last_rendered();
     }

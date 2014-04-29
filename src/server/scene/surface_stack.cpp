@@ -58,70 +58,13 @@ ms::SurfaceStack::SurfaceStack(
 {
 }
 
-namespace
-{
-//This class avoids locking for long periods of time by copying (or lazy-copying)
-class RenderableSnapshot : public mg::Renderable
-{
-public:
-    RenderableSnapshot(std::shared_ptr<mg::Renderable> const& renderable)
-    : underlying_renderable{renderable},
-      alpha_enabled_{renderable->alpha_enabled()},
-      alpha_{renderable->alpha()},
-      shaped_{renderable->shaped()},
-      visible_{renderable->visible()},
-      screen_position_(renderable->screen_position()),
-      transformation_(renderable->transformation()),
-      id_(renderable->id())
-    {
-    }
- 
-    std::shared_ptr<mg::Buffer> buffer(void const* user_id) const override
-    { return underlying_renderable->buffer(user_id); }
-
-    int buffers_ready_for_compositor() const override
-    { return underlying_renderable->buffers_ready_for_compositor(); }
-
-    bool visible() const override
-    { return visible_; }
-
-    bool alpha_enabled() const override
-    { return alpha_enabled_; }
-
-    geom::Rectangle screen_position() const override
-    { return screen_position_; }
-
-    float alpha() const override
-    { return alpha_; }
-
-    glm::mat4 transformation() const override
-    { return transformation_; }
-
-    bool shaped() const override
-    { return shaped_; }
- 
-    mg::Renderable::ID id() const override
-    { return id_; }
-
-private:
-    std::shared_ptr<mg::Renderable> const underlying_renderable;
-    bool const alpha_enabled_;
-    float const alpha_;
-    bool const shaped_;
-    bool const visible_;
-    geom::Rectangle const screen_position_;
-    glm::mat4 const transformation_;
-    mg::Renderable::ID const id_; 
-};
-}
-
-mg::RenderableList ms::SurfaceStack::generate_renderable_list() const
+mg::RenderableList ms::SurfaceStack::renderable_list_for(CompositorID id) const
 {
     std::lock_guard<decltype(guard)> lg(guard);
     mg::RenderableList list;
     for (auto const& layer : layers_by_depth)
-        for (auto const& renderable : layer.second) 
-            list.emplace_back(std::make_shared<RenderableSnapshot>(renderable));
+        for (auto const& surface : layer.second) 
+            list.emplace_back(surface->compositor_snapshot(id));
     return list;
 }
 
@@ -186,13 +129,13 @@ void ms::SurfaceStack::emit_change_notification()
     notify_change();
 }
 
-void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& callback)
+void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& callback)
 {
     std::lock_guard<decltype(guard)> lg(guard);
     for (auto &layer : layers_by_depth)
     {
         for (auto it = layer.second.begin(); it != layer.second.end(); ++it)
-            callback((*it)->input_channel());
+            callback(*it);
     }
 }
 

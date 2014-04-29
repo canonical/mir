@@ -46,7 +46,7 @@ struct SurfaceCreationParameters;
 namespace input
 {
 class InputChannelFactory;
-class InputChannel;
+class Surface;
 }
 
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
@@ -66,11 +66,11 @@ public:
     virtual ~SurfaceStack() noexcept(true) {}
 
     // From Scene
-    graphics::RenderableList generate_renderable_list() const;
+    graphics::RenderableList renderable_list_for(CompositorID id) const;
     virtual void set_change_callback(std::function<void()> const& f);
     
     // From InputTargets
-    void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback);
+    void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback);
 
     virtual void remove_surface(std::weak_ptr<Surface> const& surface) override;
 

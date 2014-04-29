@@ -33,6 +33,8 @@ class Buffer;
 class Renderable
 {
 public:
+    virtual ~Renderable() = default;
+
     typedef void const* ID; // Mostly opaque, but zero is reserved as "invalid"
 
     /**
@@ -42,17 +44,9 @@ public:
     virtual ID id() const = 0;
 
     /**
-     * Return the next buffer that should be composited/rendered.
-     *
-     * \param [in] user_id An arbitrary unique identifier used to distinguish
-     *                     separate threads/monitors/components which need
-     *                     to concurrently receive the same buffer. Calling
-     *                     with the same user_id will return a new (different)
-     *                     buffer to that user each time. For consistency,
-     *                     all callers need to determine their user_id in the
-     *                     same way (e.g. always use "this" pointer).
+     * Return the buffer that should be composited/rendered.
      */
-    virtual std::shared_ptr<Buffer> buffer(void const* user_id) const = 0;
+    virtual std::shared_ptr<Buffer> buffer() const = 0;
 
     virtual bool alpha_enabled() const = 0;
     virtual geometry::Rectangle screen_position() const = 0;
@@ -87,7 +81,6 @@ public:
 
 protected:
     Renderable() = default;
-    virtual ~Renderable() = default;
     Renderable(Renderable const&) = delete;
     Renderable& operator=(Renderable const&) = delete;
 };

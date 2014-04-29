@@ -15,28 +15,22 @@
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
  *              Daniel d'Andradra <daniel.dandrada@canonical.com>
+ *              Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #ifndef MIR_INPUT_INPUT_MANAGER_H_
 #define MIR_INPUT_INPUT_MANAGER_H_
 
-#include "mir/input/input_channel_factory.h"
-
-#include <memory>
-
 namespace mir
 {
 namespace input
 {
-class InputChannel;
 
-class InputManager : public InputChannelFactory
+class InputManager
 {
 public:
     virtual void start() = 0;
     virtual void stop() = 0;
-
-    virtual std::shared_ptr<InputChannel> make_input_channel() = 0;
 
 protected:
     InputManager() {};

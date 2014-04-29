@@ -53,7 +53,7 @@ struct FakeScene : mc::Scene
     {
     }
 
-    mg::RenderableList generate_renderable_list() const
+    mg::RenderableList renderable_list_for(void const*) const
     {
         return renderlist;
     }
@@ -107,7 +107,7 @@ TEST_F(DefaultDisplayBufferCompositor, render)
         .Times(AtLeast(1));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
-    EXPECT_CALL(scene, generate_renderable_list())
+    EXPECT_CALL(scene, renderable_list_for(_))
         .Times(1);
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
@@ -511,17 +511,9 @@ TEST_F(DefaultDisplayBufferCompositor, decides_whether_to_recomposite_before_ren
         .WillByDefault(Return(geom::Rectangle{{0,0},{200,200}})); 
 
     //check for how many buffers should come before accessing the buffers.
-    Sequence seq;
     EXPECT_CALL(*mock_renderable, buffers_ready_for_compositor())
-        .InSequence(seq)
-        .WillOnce(Return(2));
-    EXPECT_CALL(mock_renderer, render(Ref(*mock_renderable)))
-        .InSequence(seq); 
-    EXPECT_CALL(*mock_renderable, buffers_ready_for_compositor())
-        .InSequence(seq)
+        .WillOnce(Return(2))
         .WillOnce(Return(1));
-    EXPECT_CALL(mock_renderer, render(Ref(*mock_renderable)))
-        .InSequence(seq); 
 
     mg::RenderableList list({mock_renderable});
     FakeScene scene(list);
@@ -543,9 +535,9 @@ TEST_F(DefaultDisplayBufferCompositor, renderer_ends_after_post_update)
     auto mock_renderable2 = std::make_shared<NiceMock<mtd::MockRenderable>>();
     auto buf1 = std::make_shared<mtd::StubBuffer>();
     auto buf2 = std::make_shared<mtd::StubBuffer>();
-    ON_CALL(*mock_renderable1, buffer(_))
+    ON_CALL(*mock_renderable1, buffer())
         .WillByDefault(Return(buf1));
-    ON_CALL(*mock_renderable2, buffer(_))
+    ON_CALL(*mock_renderable2, buffer())
         .WillByDefault(Return(buf2));
     ON_CALL(display_buffer, view_area())
         .WillByDefault(Return(geom::Rectangle{{0,0},{14,14}}));
