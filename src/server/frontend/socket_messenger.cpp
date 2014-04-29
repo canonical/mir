@@ -35,16 +35,9 @@ mfd::SocketMessenger::SocketMessenger(std::shared_ptr<ba::local::stream_protocol
     whole_message.reserve(serialization_buffer_size);
 }
 
-pid_t mfd::SocketMessenger::client_pid()
+mf::SessionCredentials mfd::SocketMessenger::client_creds()
 {
-    struct ucred cr;
-    socklen_t cl = sizeof(cr);
-
-    auto status = getsockopt(socket->native_handle(), SOL_SOCKET, SO_PEERCRED, &cr, &cl);
-
-    if (status)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
-    return cr.pid;
+    return mf::SessionCredentials{socket->native_handle()};
 }
 
 void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& fd_set)
