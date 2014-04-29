@@ -20,12 +20,9 @@ class GLMark2Test : public ::testing::Test
 protected:
     void launch_mir_server()
     {
-        system("echo \"Starting mir server.....\"");
-        setenv("LD_LIBRARY_PATH",".",1);
         char const* argv[] = {""}; 
         int argc = sizeof(argv) / sizeof(argv[0]);
         mir::DefaultServerConfiguration config(argc, argv);
-        //mir::DisplayServer ds(config);
         try
         {
             run_mir(config, [](mir::DisplayServer&) {} );
@@ -48,6 +45,8 @@ protected:
         std::ofstream glmark2_output;
 
         std::thread mir_server(&GLMark2Test::launch_mir_server, this);
+        
+        /*HACK to wait for the server to start*/
         boost::this_thread::sleep(boost::posix_time::seconds(5));
 
         char const* cmd = "glmark2-es2-mir -b texture --fullscreen";
@@ -65,17 +64,18 @@ protected:
                 std::cout << line;
                 if (boost::regex_match(line, matches, re_glmark2_score))
                 {
-                std::string json =  "{";
-                    json += "'benchmark_name':'glmark2-es2-mir'";
-                    json += ",";
-                    json += "'score':'" + matches[1] + "'";
-                    json += "}";
-                glmark2_output << json;
-                break;
+                    std::string json =  "{";
+                        json += "'benchmark_name':'glmark2-es2-mir'";
+                        json += ",";
+                        json += "'score':'" + matches[1] + "'";
+                        json += "}";
+                    glmark2_output << json;
+                    break;
                 }
             }
         }
         
+        /*HACK to stop the mir server*/ 
         raise(SIGINT);
         mir_server.join(); 
         free(line);
