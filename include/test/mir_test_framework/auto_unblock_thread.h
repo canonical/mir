@@ -68,7 +68,7 @@ public:
     template<typename Callable, typename... Args>
     explicit AutoJoinThread(Callable&& f,
         Args&&... args)
-        : AutoUnblockThread{[&]{}, f, args...}
+        : AutoUnblockThread{[]{}, f, args...}
     {}
 };
 
