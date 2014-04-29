@@ -173,6 +173,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::release_screencast, invocation);
         }
+        else if ("configure_cursor" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::configure_cursor, invocation);
+        }
         else if ("disconnect" == invocation.method_name())
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::disconnect, invocation);

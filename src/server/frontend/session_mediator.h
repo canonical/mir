@@ -123,6 +123,11 @@ public:
                            const mir::protobuf::ScreencastId*,
                            mir::protobuf::Buffer*,
                            google::protobuf::Closure* done);
+    
+    void configure_cursor(google::protobuf::RpcController*,
+                          mir::protobuf::CursorSetting const*,
+                          mir::protobuf::Void*,
+                          google::protobuf::Closure* done);
 
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,

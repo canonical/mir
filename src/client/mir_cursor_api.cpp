@@ -17,28 +17,42 @@
  */
 
 #include "mir_toolkit/mir_cursor.h"
+#include "cursor_representation.h"
 
-void mir_cursor_destroy(MirCursor *parameters)
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
+
+void mir_cursor_destroy(MirCursor *cursor)
 {
-    // TODO: ~racarr
-    (void) parameters;
+    assert(cursor);
+    
+    if (cursor->name)
+        free(cursor->name);
+
+    delete cursor;
 }
 
 MirCursor* mir_cursor_disabled()
 {
-    // TODO: ~racarr
-    return nullptr;
+    auto c = new MirCursor;
+    c->name = nullptr;
+    
+    return c;
 }
 
 MirCursor* mir_cursor_default()
 {
-    // TODO: ~racarr
-    return nullptr;
+    auto c = new MirCursor;
+    c->name = strdup("default");
+    
+    return c;
 }
 
 MirCursor* mir_cursor_from_name(char const* name)
 {
-    // TODO: ~racarr
-    (void) name;
-    return nullptr;
+    auto c = new MirCursor;
+    c->name = strdup(name);
+    
+    return c;
 }
