@@ -245,6 +245,14 @@ int mir_surface_get_swapinterval(MirSurface* surf)
     return surf ? surf->attrib(mir_surface_attrib_swapinterval) : -1;
 }
 
+MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursor const* cursor)
+{
+    // TODO: ~racarr
+    (void) surface;
+    (void) cursor;
+    return NULL;
+}
+
 /* Debug functions */
 
 uint32_t mir_debug_surface_current_buffer_id(MirSurface* surface)
