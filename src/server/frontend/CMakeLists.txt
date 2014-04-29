@@ -7,15 +7,15 @@ set(
   protobuf_responder.cpp
   protobuf_buffer_packer.cpp
   published_socket_connector.cpp
-  protobuf_session_creator.cpp
-  socket_session.cpp
+  protobuf_connection_creator.cpp
+  socket_connection.cpp
   resource_cache.cpp
   socket_messenger.cpp
   event_sender.cpp
   surface.cpp
   unauthorized_display_changer.cpp
   unauthorized_screencast.cpp
-
+  session_credentials.cpp
   default_configuration.cpp
 
   ${PROTO_HDRS}

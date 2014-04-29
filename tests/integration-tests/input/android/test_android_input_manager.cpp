@@ -18,7 +18,6 @@
  */
 
 #include "mir/input/event_filter.h"
-#include "mir/input/input_targets.h"
 #include "mir/input/input_region.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/geometry/point.h"
@@ -37,6 +36,7 @@
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test_doubles/mock_input_surface.h"
 #include "mir_test_doubles/stub_input_channel.h"
+#include "mir_test_doubles/stub_input_targets.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
 #include "mir_test/event_matchers.h"
@@ -70,13 +70,6 @@ using namespace ::testing;
 
 static const std::shared_ptr<mi::CursorListener> null_cursor_listener{};
 
-struct StubInputTargets : public mi::InputTargets
-{
-    void for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const&)
-    {
-    }
-};
-
 struct StubInputRegion : public mi::InputRegion
 {
     geom::Rectangle bounding_rectangle()
@@ -106,7 +99,7 @@ public:
 
         input_manager = configuration->the_input_manager();
 
-        stub_targets = std::make_shared<StubInputTargets>();
+        stub_targets = std::make_shared<mtd::StubInputTargets>();
         configuration->the_input_dispatcher_configuration()->set_input_targets(stub_targets);
 
         input_manager->start();
@@ -123,7 +116,7 @@ public:
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<MockEventFilter> event_filter;
     StubInputRegion input_region;
-    std::shared_ptr<StubInputTargets> stub_targets;
+    std::shared_ptr<mtd::StubInputTargets> stub_targets;
 };
 
 }
@@ -282,7 +275,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
 
         dispatcher_policy = dispatcher_conf->the_mock_dispatcher_policy();
 
-        stub_targets = std::make_shared<StubInputTargets>();
+        stub_targets = std::make_shared<mtd::StubInputTargets>();
         dispatcher_conf->set_input_targets(stub_targets);
     }
 
@@ -313,7 +306,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     mia::FakeEventHub* fake_event_hub;
     droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
 
-    std::shared_ptr<StubInputTargets> stub_targets;
+    std::shared_ptr<mtd::StubInputTargets> stub_targets;
 
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<ms::InputRegistrar> input_registrar;

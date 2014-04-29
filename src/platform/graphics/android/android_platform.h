@@ -45,6 +45,7 @@ public:
             std::shared_ptr<BufferInitializer> const& buffer_initializer);
     std::shared_ptr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
+        std::shared_ptr<graphics::GLProgramFactory> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/);
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
     std::shared_ptr<InternalClient> create_internal_client();
@@ -56,7 +57,6 @@ private:
 
     void initialize(std::shared_ptr<NestedContext> const& nested_context) override;
 
-    // TODO a design that has this and create_buffer_allocator is missing simplicity
     virtual std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator(
         const std::shared_ptr<BufferInitializer>& buffer_initializer);
 

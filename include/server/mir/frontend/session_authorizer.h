@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -19,21 +19,23 @@
 #ifndef MIR_FRONTEND_SESSION_AUTHORIZER_H_
 #define MIR_FRONTEND_SESSION_AUTHORIZER_H_
 
-#include <sys/types.h>
+
 
 namespace mir
 {
 namespace frontend
 {
 
+class SessionCredentials;
+
 class SessionAuthorizer
 {
 public:
     virtual ~SessionAuthorizer() = default;
 
-    virtual bool connection_is_allowed(pid_t pid) = 0;
-    virtual bool configure_display_is_allowed(pid_t pid) = 0;
-    virtual bool screencast_is_allowed(pid_t pid) = 0;
+    virtual bool connection_is_allowed(SessionCredentials const& creds) = 0;
+    virtual bool configure_display_is_allowed(SessionCredentials const& creds) = 0;
+    virtual bool screencast_is_allowed(SessionCredentials const& creds) = 0;
 
 protected:
     SessionAuthorizer() = default;

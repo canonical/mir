@@ -43,7 +43,7 @@ class Shell;
 class Connector;
 class ConnectorReport;
 class ProtobufIpcFactory;
-class SessionCreator;
+class ConnectionCreator;
 class SessionMediatorReport;
 class MessageProcessorReport;
 class SessionAuthorizer;
@@ -92,6 +92,7 @@ class BufferInitializer;
 class DisplayReport;
 class GraphicBufferAllocator;
 class GLConfig;
+class GLProgramFactory;
 namespace nested { class HostConnection; }
 }
 namespace input
@@ -189,7 +190,7 @@ public:
     /** @name frontend configuration - internal dependencies
      * internal dependencies of frontend
      *  @{ */
-    virtual std::shared_ptr<frontend::SessionCreator>         the_session_creator();
+    virtual std::shared_ptr<frontend::ConnectionCreator>      the_connection_creator();
     virtual std::shared_ptr<frontend::ConnectorReport>        the_connector_report();
     /** @} */
     /** @} */
@@ -249,6 +250,7 @@ public:
 protected:
     std::shared_ptr<options::Option> the_options() const;
 
+    virtual std::shared_ptr<graphics::GLProgramFactory> the_gl_program_factory();
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
@@ -278,7 +280,7 @@ protected:
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<frontend::EventSink> global_event_sink;
-    CachedPtr<frontend::SessionCreator>    session_creator;
+    CachedPtr<frontend::ConnectionCreator> connection_creator;
     CachedPtr<frontend::Screencast> screencast;
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
@@ -306,6 +308,7 @@ protected:
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
     CachedPtr<graphics::nested::HostConnection> host_connection;
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
+    CachedPtr<graphics::GLProgramFactory> gl_program_factory;
     CachedPtr<graphics::GLConfig> gl_config;
 
 private:

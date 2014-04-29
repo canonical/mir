@@ -134,8 +134,10 @@ GLuint generate_frame_corner_texture(float corner_radius,
 
 } // namespace
 
-DemoRenderer::DemoRenderer(geometry::Rectangle const& display_area)
-    : GLRenderer(display_area)
+DemoRenderer::DemoRenderer(
+    graphics::GLProgramFactory const& program_factory,
+    geometry::Rectangle const& display_area)
+    : GLRenderer(program_factory, display_area)
     , corner_radius(0.5f)
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
@@ -154,6 +156,10 @@ void DemoRenderer::begin() const
 {
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    // Ensure we don't change the framebuffer's alpha components (if any)
+    // as that would ruin the appearance of screengrabs. (LP: #1301210)
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 }
 
 void DemoRenderer::tessellate(std::vector<Primitive>& primitives,
