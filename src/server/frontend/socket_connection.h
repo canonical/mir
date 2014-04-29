@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -17,10 +17,10 @@
  */
 
 
-#ifndef MIR_FRONTEND_DETAIL_SOCKET_SESSION_H_
-#define MIR_FRONTEND_DETAIL_SOCKET_SESSION_H_
+#ifndef MIR_FRONTEND_DETAIL_SOCKET_CONNECTION_H_
+#define MIR_FRONTEND_DETAIL_SOCKET_CONNECTION_H_
 
-#include "mir/frontend/connected_sessions.h"
+#include "mir/frontend/connections.h"
 
 #include <boost/asio.hpp>
 
@@ -35,15 +35,16 @@ namespace detail
 class MessageProcessor;
 class MessageReceiver;
 
-struct SocketSession
+class SocketConnection
 {
-    SocketSession(
-        std::shared_ptr<MessageReceiver> const& socket_receiver,
+public:
+    SocketConnection(
+        std::shared_ptr<MessageReceiver> const& message_receiver,
         int id_,
-        std::shared_ptr<ConnectedSessions<SocketSession>> const& connected_sessions,
+        std::shared_ptr<Connections<SocketConnection>> const& connections,
         std::shared_ptr<MessageProcessor> const& processor);
 
-    ~SocketSession() noexcept;
+    ~SocketConnection() noexcept;
 
     int id() const { return id_; }
 
@@ -54,9 +55,9 @@ private:
     void on_new_message(const boost::system::error_code& ec);
     void on_read_size(const boost::system::error_code& ec);
 
-    std::shared_ptr<MessageReceiver> const socket_receiver;
+    std::shared_ptr<MessageReceiver> const message_receiver;
     int const id_;
-    std::shared_ptr<ConnectedSessions<SocketSession>> const connected_sessions;
+    std::shared_ptr<Connections<SocketConnection>> const connections;
     std::shared_ptr<MessageProcessor> processor;
 
     static size_t const header_size = 2;
@@ -68,4 +69,4 @@ private:
 }
 }
 
-#endif /* MIR_FRONTEND_DETAIL_SOCKET_SESSION_H_ */
+#endif /* MIR_FRONTEND_DETAIL_SOCKET_CONNECTION_H_ */

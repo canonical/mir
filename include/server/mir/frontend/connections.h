@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_FRONTEND_CONNECTED_SESSIONS_H_
-#define MIR_FRONTEND_CONNECTED_SESSIONS_H_
+#ifndef MIR_FRONTEND_CONNECTIONS_H_
+#define MIR_FRONTEND_CONNECTIONS_H_
 
 #include <memory>
 #include <mutex>
@@ -29,47 +29,47 @@ namespace frontend
 {
 namespace detail
 {
-template<class Session>
-class ConnectedSessions
+template<class Connection>
+class Connections
 {
 public:
-    ConnectedSessions() {}
-    ~ConnectedSessions() { clear(); }
+    Connections() {}
+    ~Connections() { clear(); }
 
-    void add(std::shared_ptr<Session> const& session)
+    void add(std::shared_ptr<Connection> const& connection)
     {
         std::unique_lock<std::mutex> lock(mutex);
-        shell_list[session->id()] = session;
+        connections[connection->id()] = connection;
     }
 
     void remove(int id)
     {
         std::unique_lock<std::mutex> lock(mutex);
-        shell_list.erase(id);
+        connections.erase(id);
     }
 
     bool includes(int id) const
     {
         std::unique_lock<std::mutex> lock(mutex);
-        return shell_list.find(id) != shell_list.end();
+        return connections.find(id) != connections.end();
     }
 
     void clear()
     {
         std::unique_lock<std::mutex> lock(mutex);
-        shell_list.clear();
+        connections.clear();
     }
 
 
 private:
-    ConnectedSessions(ConnectedSessions const&) = delete;
-    ConnectedSessions& operator =(ConnectedSessions const&) = delete;
+    Connections(Connections const&) = delete;
+    Connections& operator =(Connections const&) = delete;
 
     std::mutex mutex;
-    std::map<int, std::shared_ptr<Session>> shell_list;
+    std::map<int, std::shared_ptr<Connection>> connections;
 };
 }
 }
 }
 
-#endif // MIR_FRONTEND_CONNECTED_SESSIONS_H_
+#endif // MIR_FRONTEND_CONNECTIONS_H_

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_FRONTEND_SESSION_CREATOR_H_
-#define MIR_FRONTEND_SESSION_CREATOR_H_
+#ifndef MIR_FRONTEND_CONNECTION_CREATOR_H_
+#define MIR_FRONTEND_CONNECTION_CREATOR_H_
 
 #include <boost/asio.hpp>
 
@@ -27,18 +27,18 @@ namespace mir
 {
 namespace frontend
 {
-class SessionCreator
+class ConnectionCreator
 {
 public:
-    virtual void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket) = 0;
+    virtual void create_connection_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket) = 0;
 
 protected:
-    SessionCreator() = default;
-    virtual ~SessionCreator() noexcept = default;
-    SessionCreator(SessionCreator const&) = delete;
-    SessionCreator& operator=(SessionCreator const&) = delete;
+    ConnectionCreator() = default;
+    virtual ~ConnectionCreator() noexcept = default;
+    ConnectionCreator(ConnectionCreator const&) = delete;
+    ConnectionCreator& operator=(ConnectionCreator const&) = delete;
 };
 }
 }
 
-#endif /* MIR_FRONTEND_SESSION_CREATOR_H_ */
+#endif /* MIR_FRONTEND_CONNECTION_CREATOR_H_ */
