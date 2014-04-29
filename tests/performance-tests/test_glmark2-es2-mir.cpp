@@ -49,7 +49,7 @@ protected:
         /*HACK to wait for the server to start*/
         boost::this_thread::sleep(boost::posix_time::seconds(5));
 
-        char const* cmd = "glmark2-es2-mir -b texture --fullscreen";
+        char const* cmd = "glmark2-es2-mir --fullscreen";
         ASSERT_TRUE((in = popen(cmd, "r")));
     
         glmark2_output.open(output_filename);
