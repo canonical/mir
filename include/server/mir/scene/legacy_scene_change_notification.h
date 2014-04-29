@@ -40,21 +40,21 @@ public:
     LegacySceneChangeNotification(std::function<void()> const& notify_change);
     ~LegacySceneChangeNotification();
 
-    void surface_added(std::shared_ptr<Surface> const& surface) override;
-    void surface_removed(std::shared_ptr<Surface> const& surface) override;
+    void surface_added(Surface* surface) override;
+    void surface_removed(Surface* surface) override;
     void surfaces_reordered() override;
 
-    void surface_exists(std::shared_ptr<Surface> const& surface) override;
+    void surface_exists(Surface* surface) override;
     void end_observation() override;
 
 private:
     std::function<void()> const notify_change;
     
     std::mutex surface_observers_guard;
-    std::map<std::weak_ptr<Surface>, std::shared_ptr<SurfaceObserver>,
-        std::owner_less<std::weak_ptr<Surface>>> surface_observers;
+    // TODO: Change to weak
+    std::map<Surface*, std::shared_ptr<SurfaceObserver>> surface_observers;
     
-    void add_surface_observer(std::shared_ptr<Surface> const& surface);
+    void add_surface_observer(Surface* surface);
 };
 
 }

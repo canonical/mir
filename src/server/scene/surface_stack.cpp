@@ -132,7 +132,7 @@ void ms::SurfaceStack::add_surface(
         layers_by_depth[depth].push_back(surface);
     }
     input_registrar->input_channel_opened(surface->input_channel(), surface, input_mode);
-    observers.surface_added(surface);
+    observers.surface_added(surface.get());
 
     report->surface_added(surface.get(), surface.get()->name());
 }
@@ -163,7 +163,7 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
     if (found_surface)
     {
         input_registrar->input_channel_closed(keep_alive->input_channel());
-        observers.surface_removed(keep_alive);
+        observers.surface_removed(keep_alive.get());
 
         report->surface_removed(keep_alive.get(), keep_alive.get()->name());
     }
@@ -217,7 +217,7 @@ void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observe
         for (auto &layer : layers_by_depth)
         {
             for (auto &surface : layer.second)
-                observer->surface_exists(surface);
+                observer->surface_exists(surface.get());
         }
     }
 }
@@ -233,7 +233,7 @@ void ms::SurfaceStack::remove_observer(std::weak_ptr<ms::Observer> const& observ
     observers.remove_observer(o);
 }
 
-void ms::Observers::surface_added(std::shared_ptr<ms::Surface> const& surface) 
+void ms::Observers::surface_added(ms::Surface* surface) 
 {
     std::unique_lock<decltype(mutex)> lg(mutex);
     
@@ -241,7 +241,7 @@ void ms::Observers::surface_added(std::shared_ptr<ms::Surface> const& surface)
         observer->surface_added(surface);
 }
 
-void ms::Observers::surface_removed(std::shared_ptr<ms::Surface> const& surface)
+void ms::Observers::surface_removed(ms::Surface* surface)
 {
     std::unique_lock<decltype(mutex)> lg(mutex);
 
@@ -257,7 +257,7 @@ void ms::Observers::surfaces_reordered()
         observer->surfaces_reordered();
 }
 
-void ms::Observers::surface_exists(std::shared_ptr<ms::Surface> const& surface)
+void ms::Observers::surface_exists(ms::Surface* surface)
 {
     std::unique_lock<decltype(mutex)> lg(mutex);
     
