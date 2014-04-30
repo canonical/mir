@@ -65,7 +65,7 @@ public:
     virtual void force_requests_to_complete() = 0;
 
     virtual void add_observer(std::shared_ptr<SurfaceObserver> const& observer) = 0;
-    virtual void remove_observer(std::shared_ptr<SurfaceObserver> const& observer) = 0;
+    virtual void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) = 0;
 
     // TODO input_channel() relates to adding and removing the surface
     // TODO from the scene and is probably not cleanest interface for this.

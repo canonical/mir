@@ -22,6 +22,8 @@
 #include "mir/input/input_region.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_manager.h"
+#include "src/server/input/android/input_dispatcher_configuration.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/raii.h"
 
@@ -33,6 +35,7 @@
 #include <gmock/gmock.h>
 
 namespace mi = mir::input;
+namespace mia = mi::android;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
@@ -79,15 +82,15 @@ TEST(NestedInputTest, applies_event_filter_on_relayed_event)
 
     mi::NestedInputRelay nested_input_relay;
     mtd::MockEventFilter mock_event_filter;
+    mia::InputDispatcherConfiguration input_dispatcher_conf{
+        mt::fake_shared(mock_event_filter),
+        mir::report::null_input_report()};
 
     mi::NestedInputConfiguration input_conf{
         mt::fake_shared(nested_input_relay),
-        mt::fake_shared(mock_event_filter),
-        std::make_shared<NullInputRegion>(),
-        std::make_shared<NullCursorListener>(),
-        std::make_shared<mir::report::null::InputReport>()};
+        mt::fake_shared(input_dispatcher_conf)};
 
-    input_conf.set_input_targets(std::make_shared<mtd::StubInputTargets>());
+    input_dispatcher_conf.set_input_targets(std::make_shared<mtd::StubInputTargets>());
     auto const input_manager = input_conf.the_input_manager();
 
     auto const with_running_input_manager = mir::raii::paired_calls(
