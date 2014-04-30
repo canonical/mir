@@ -33,7 +33,6 @@ class Session;
 class ConnectionCreator
 {
 public:
-    virtual void create_connection_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket) = 0;
     virtual void create_connection_for(
         std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
         std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) = 0;

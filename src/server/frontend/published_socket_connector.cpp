@@ -202,7 +202,7 @@ void mf::BasicConnector::stop()
 void mf::BasicConnector::create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const
 {
     report->creating_session_for(server_socket->native_handle());
-    connection_creator->create_connection_for(server_socket);
+    connection_creator->create_connection_for(server_socket, [](std::shared_ptr<mf::Session> const&) {});
 }
 
 void mf::BasicConnector::create_session_for(
