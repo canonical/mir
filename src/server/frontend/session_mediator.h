@@ -68,9 +68,7 @@ public:
         std::shared_ptr<SessionMediatorReport> const& report,
         std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache,
-        std::shared_ptr<Screencast> const& screencast) :
-        SessionMediator(client_pid, shell, graphics_platform, display_changer, surface_pixel_formats, report, event_sink, resource_cache, screencast, nullptr)
-        {}
+        std::shared_ptr<Screencast> const& screencast);
 
     SessionMediator(
         pid_t client_pid,

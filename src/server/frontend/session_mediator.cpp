@@ -60,6 +60,30 @@ namespace geom = mir::geometry;
 
 mf::SessionMediator::SessionMediator(
     pid_t client_pid,
+    std::shared_ptr<Shell> const& shell,
+    std::shared_ptr<graphics::Platform> const& graphics_platform,
+    std::shared_ptr<frontend::DisplayChanger> const& display_changer,
+    std::vector<MirPixelFormat> const& surface_pixel_formats,
+    std::shared_ptr<SessionMediatorReport> const& report,
+    std::shared_ptr<EventSink> const& event_sink,
+    std::shared_ptr<ResourceCache> const& resource_cache,
+    std::shared_ptr<Screencast> const& screencast) :
+    SessionMediator(
+        client_pid,
+        shell,
+        graphics_platform,
+        display_changer,
+        surface_pixel_formats,
+        report,
+        event_sink,
+        resource_cache,
+        screencast,
+        [](std::shared_ptr<Session> const&) {})
+{
+}
+
+mf::SessionMediator::SessionMediator(
+    pid_t client_pid,
     std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
@@ -100,6 +124,8 @@ void mf::SessionMediator::connect(
     report->session_connect_called(request->application_name());
 
     {
+        auto const session = shell->open_session(client_pid, request->application_name(), event_sink);
+        connect_handler(session);
         std::unique_lock<std::mutex> lock(session_mutex);
         weak_session = shell->open_session(client_pid, request->application_name(), event_sink);
     }
@@ -145,7 +171,6 @@ void mf::SessionMediator::advance_buffer(
             complete(client_buffer, need_full_ipc);
         });
 }
-
 
 void mf::SessionMediator::create_surface(
     google::protobuf::RpcController* /*controller*/,
