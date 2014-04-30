@@ -76,7 +76,8 @@ struct SessionMediatorMesaTest : public ::testing::Test
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
                    resource_cache, std::make_shared<mtd::NullScreencast>(),
-                   [](std::shared_ptr<mf::Session> const&) {}},
+                   [](std::shared_ptr<mf::Session> const&) {},
+                   nullptr},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }

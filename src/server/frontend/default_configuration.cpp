@@ -106,7 +106,8 @@ private:
             sink,
             resource_cache(),
             effective_screencast,
-            connect_handler);
+            connect_handler,
+            nullptr);   // TODO supply connector
     }
 
     virtual std::shared_ptr<mf::ResourceCache> resource_cache()

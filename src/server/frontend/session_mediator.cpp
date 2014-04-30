@@ -68,7 +68,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast,
-    std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) :
+    std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler,
+    Connector* connector) :
     client_pid(client_pid),
     shell(shell),
     graphics_platform(graphics_platform),
@@ -78,7 +79,8 @@ mf::SessionMediator::SessionMediator(
     event_sink(sender),
     resource_cache(resource_cache),
     screencast(screencast),
-    connect_handler(connect_handler)
+    connect_handler(connect_handler),
+    connector(connector)
 {
 }
 

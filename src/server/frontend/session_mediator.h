@@ -16,7 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-
 #ifndef MIR_FRONTEND_SESSION_MEDIATOR_H_
 #define MIR_FRONTEND_SESSION_MEDIATOR_H_
 
@@ -40,12 +39,12 @@ class Display;
 class GraphicBufferAllocator;
 }
 
-
 /// Frontend interface. Mediates the interaction between client
 /// processes and the core of the mir system.
 namespace frontend
 {
 class ClientBufferTracker;
+class Connector;
 class Shell;
 class Session;
 class Surface;
@@ -70,7 +69,8 @@ public:
         std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache,
         std::shared_ptr<Screencast> const& screencast,
-        std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler);
+        std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler,
+        Connector* connector);
 
     ~SessionMediator() noexcept;
 
@@ -161,11 +161,12 @@ private:
 
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;
+
     std::function<void(std::shared_ptr<Session> const& session)> const connect_handler;
+    Connector* const connector;
 };
 
 }
 }
-
 
 #endif /* MIR_FRONTEND_SESSION_MEDIATOR_H_ */
