@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/android/overlay_gl_compositor.h"
+#include "src/platform/graphics/android/hwc_fallback_gl_renderer.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/gl_program_factory.h"
 #include "mir_test_doubles/mock_gl.h"
@@ -55,10 +55,10 @@ public:
     MOCK_CONST_METHOD0(release_current, void());
 };
 
-class OverlayCompositor : public ::testing::Test
+class HWCFallbackGLRenderer : public ::testing::Test
 {
 public:
-    OverlayCompositor()
+    HWCFallbackGLRenderer()
     {
         using namespace testing;
         ON_CALL(mock_gl_program_factory,create_gl_program(_,_))
@@ -95,7 +95,7 @@ public:
 };
 }
 
-TEST_F(OverlayCompositor, compiles_and_sets_up_gl_program)
+TEST_F(HWCFallbackGLRenderer, compiles_and_sets_up_gl_program)
 {
     using namespace testing;
     InSequence seq;
@@ -111,7 +111,7 @@ TEST_F(OverlayCompositor, compiles_and_sets_up_gl_program)
     EXPECT_CALL(mock_gl, glUseProgram(0));
     EXPECT_CALL(mock_context, release_current());
 
-    mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
+    mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
 }
 
 MATCHER_P(Matches4x4Matrix, value, "matches expected 4x4 matrix")
@@ -121,7 +121,7 @@ MATCHER_P(Matches4x4Matrix, value, "matches expected 4x4 matrix")
     return !(::testing::Test::HasFailure());
 }
 
-TEST_F(OverlayCompositor, sets_up_orthographic_matrix_based_on_screen_size)
+TEST_F(HWCFallbackGLRenderer, sets_up_orthographic_matrix_based_on_screen_size)
 {
     using namespace testing;
     geom::Size sz{800,600};
@@ -140,7 +140,7 @@ TEST_F(OverlayCompositor, sets_up_orthographic_matrix_based_on_screen_size)
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(
         display_transform_uniform_loc, 1, GL_FALSE, Matches4x4Matrix(expected_matrix)));
 
-    mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, screen_pos);
+    mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, screen_pos);
 }
 
 struct Vertex 
@@ -169,7 +169,7 @@ MATCHER_P(MatchesVertices, vertices, "matches vertices")
     return !(::testing::Test::HasFailure());
 }
 
-TEST_F(OverlayCompositor, computes_vertex_coordinates_correctly)
+TEST_F(HWCFallbackGLRenderer, computes_vertex_coordinates_correctly)
 {
     using namespace testing;
     NiceMock<mtd::MockSwappingGLContext> mock_context_s;
@@ -201,11 +201,11 @@ TEST_F(OverlayCompositor, computes_vertex_coordinates_correctly)
     EXPECT_CALL(mock_gl, glVertexAttribPointer(
         position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, MatchesVertices(expected_vertices2)));
 
-    mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
+    mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
     glprogram.render(renderlist, mock_context_s);
 }
 
-TEST_F(OverlayCompositor, computes_texture_coordinates_correctly)
+TEST_F(HWCFallbackGLRenderer, computes_texture_coordinates_correctly)
 {
     using namespace testing;
     NiceMock<mtd::MockSwappingGLContext> mock_context_s;
@@ -229,11 +229,11 @@ TEST_F(OverlayCompositor, computes_texture_coordinates_correctly)
         texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, MatchesVertices(expected_texcoord)))
         .Times(1);
 
-    mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
+    mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
     glprogram.render(renderlist, mock_context_s);
 }
 
-TEST_F(OverlayCompositor, executes_render_in_sequence)
+TEST_F(HWCFallbackGLRenderer, executes_render_in_sequence)
 {
     using namespace testing;
     NiceMock<mtd::MockSwappingGLContext> mock_context_s;
@@ -242,7 +242,7 @@ TEST_F(OverlayCompositor, executes_render_in_sequence)
         std::make_shared<mtd::StubRenderable>()
     };
 
-    mga::OverlayGLProgram glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
+    mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
 
     InSequence seq;
     EXPECT_CALL(mock_gl, glUseProgram(_));

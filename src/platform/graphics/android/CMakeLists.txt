@@ -34,7 +34,7 @@ add_library(
   internal_client.cpp
   gl_context.cpp
   real_hwc_wrapper.cpp
-  overlay_gl_compositor.cpp
+  hwc_fallback_gl_renderer.cpp
 )
 
 set_target_properties(

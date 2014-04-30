@@ -18,7 +18,7 @@
 
 #include "mir/graphics/gl_program_factory.h"
 #include "mir/graphics/gl_context.h"
-#include "overlay_gl_compositor.h"
+#include "hwc_fallback_gl_renderer.h"
 #include "gl_context.h"
 #include "buffer.h"
 
@@ -70,7 +70,7 @@ void set_display_transform(GLint uniform_loc, geom::Rectangle const& rect)
 }
 }
 
-mga::OverlayGLProgram::OverlayGLProgram(
+mga::HWCFallbackGLRenderer::HWCFallbackGLRenderer(
     GLProgramFactory const& factory,
     mg::GLContext const& context,
     geom::Rectangle const& screen_pos)
@@ -115,7 +115,7 @@ GLfloat const texcoords[]{
 };
 }
 
-void mga::OverlayGLProgram::render(
+void mga::HWCFallbackGLRenderer::render(
     RenderableList const& renderlist, SwappingGLContext const& context)
 {
     glUseProgram(*program);
@@ -140,7 +140,7 @@ void mga::OverlayGLProgram::render(
             screen_pos.bottom_right().x.as_float(), screen_pos.bottom_right().y.as_float(),
         };
 
-        renderable->buffer(this)->bind_to_texture();
+        renderable->buffer()->bind_to_texture();
         glVertexAttribPointer(position_attr, vertex_order, GL_FLOAT, GL_FALSE, 0, vertices);
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices);

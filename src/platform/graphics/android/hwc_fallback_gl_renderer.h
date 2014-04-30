@@ -16,9 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_OVERLAY_GL_PROGRAM_H_
-#define MIR_GRAPHICS_ANDROID_OVERLAY_GL_PROGRAM_H_
-
+#ifndef MIR_GRAPHICS_ANDROID_HWC_FALLBACK_GL_RENDERER_H_
+#define MIR_GRAPHICS_ANDROID_HWC_FALLBACK_GL_RENDERER_H_
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/gl_program.h"
 #include "mir/graphics/renderable.h"
@@ -36,10 +35,10 @@ namespace android
 {
 class SwappingGLContext;
 
-class OverlayGLProgram
+class HWCFallbackGLRenderer
 {
 public:
-    OverlayGLProgram(
+    HWCFallbackGLRenderer(
         GLProgramFactory const& program_factory,
         graphics::GLContext const& gl_context,
         geometry::Rectangle const& screen_position);
@@ -57,4 +56,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_OVERLAY_GL_PROGRAM_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HWC_FALLBACK_GL_RENDERER_H_ */
