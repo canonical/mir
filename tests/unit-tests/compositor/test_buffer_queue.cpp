@@ -20,11 +20,12 @@
 #include "src/server/compositor/buffer_queue.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_framework/auto_unblock_thread.h"
+#include "mir_test/auto_unblock_thread.h"
 #include "mir_test/wait_condition.h"
 
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <atomic>
 #include <mutex>
 #include <chrono>
@@ -33,7 +34,7 @@
 
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
-namespace mtf = mir_test_framework;
+namespace mt = mir::test;
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
 
@@ -173,16 +174,14 @@ void client_thread(mc::BufferQueue &bundle, int nframes)
 
 void switching_client_thread(mc::BufferQueue &bundle, int nframes)
 {
-   for (int i = 0; i < nframes; i += 10)
+   bool enable_frame_dropping{false};
+   int const nframes_to_test_before_switching{5};
+   for (int i = 0; i < nframes; ++i)
    {
-       bundle.allow_framedropping(false);
-       for (int j = 0; j < 5; j++)
+       bundle.allow_framedropping(enable_frame_dropping);
+       for (int j = 0; j < nframes_to_test_before_switching; j++)
            bundle.client_release(client_acquire_sync(bundle));
-       std::this_thread::yield();
-
-       bundle.allow_framedropping(true);
-       for (int j = 0; j < 5; j++)
-           bundle.client_release(client_acquire_sync(bundle));
+       enable_frame_dropping = !enable_frame_dropping;
        std::this_thread::yield();
    }
 }
@@ -190,32 +189,34 @@ void switching_client_thread(mc::BufferQueue &bundle, int nframes)
 
 TEST_F(BufferQueueTest, buffer_queue_of_one_is_supported)
 {
-    ASSERT_NO_THROW(mc::BufferQueue q(1, allocator, basic_properties));
+    std::unique_ptr<mc::BufferQueue> q;
+    ASSERT_NO_THROW(q = std::move(
+        std::unique_ptr<mc::BufferQueue>(
+            new mc::BufferQueue(1, allocator, basic_properties))));
+    ASSERT_THAT(q, Ne(nullptr));
 
-    mc::BufferQueue q(1, allocator, basic_properties);
-
-    auto handle = client_acquire_async(q);
+    auto handle = client_acquire_async(*q);
 
     /* Client is allowed to get the only buffer in existence */
     ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
 
     /* Client blocks until the client releases
      * the buffer and compositor composites it*/
-    auto next_request = client_acquire_async(q);
+    auto next_request = client_acquire_async(*q);
     EXPECT_THAT(next_request->has_acquired_buffer(), Eq(false));
 
-    auto comp_buffer = q.compositor_acquire(this);
+    auto comp_buffer = q->compositor_acquire(this);
     auto client_id = handle->id();
 
     /* Client and compositor always share the same buffer */
     EXPECT_THAT(client_id, Eq(comp_buffer->id()));
 
     EXPECT_NO_THROW(handle->release_buffer());
-    EXPECT_NO_THROW(q.compositor_release(comp_buffer));
+    EXPECT_NO_THROW(q->compositor_release(comp_buffer));
 
     /* Simulate a composite pass */
-    comp_buffer = q.compositor_acquire(this);
-    q.compositor_release(comp_buffer);
+    comp_buffer = q->compositor_acquire(this);
+    q->compositor_release(comp_buffer);
 
     /* The request should now be fullfilled after compositor
      * released the buffer
@@ -234,7 +235,7 @@ TEST_F(BufferQueueTest, buffer_queue_of_one_supports_resizing)
     auto handle = client_acquire_async(q);
     ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
     auto buffer = handle->buffer();
-    ASSERT_THAT(expect_size, Eq(buffer->size()));
+    ASSERT_THAT(buffer->size(), Eq(expect_size));
 
     /* Client and compositor share the same buffer so
      * expect the new size
@@ -242,7 +243,7 @@ TEST_F(BufferQueueTest, buffer_queue_of_one_supports_resizing)
     std::shared_ptr<mg::Buffer> comp_buffer;
     ASSERT_NO_THROW(comp_buffer = q.compositor_acquire(this));
 
-    EXPECT_THAT(expect_size, Eq(comp_buffer->size()));
+    EXPECT_THAT(buffer->size(), Eq(expect_size));
     EXPECT_NO_THROW(q.compositor_release(comp_buffer));
 
     EXPECT_NO_THROW(handle->release_buffer());
@@ -333,7 +334,7 @@ TEST_F(BufferQueueTest, compositor_acquires_frames_in_order_for_synchronous_clie
             auto composited_id = comp_buffer->id();
             q.compositor_release(comp_buffer);
 
-            EXPECT_THAT(client_id, Eq(composited_id));
+            EXPECT_THAT(composited_id, Eq(client_id));
 
             comp_buffer = q.compositor_acquire(second_compositor);
             EXPECT_THAT(composited_id, Eq(comp_buffer->id()));
@@ -405,7 +406,7 @@ TEST_F(BufferQueueTest, async_client_cycles_through_all_buffers)
 
         std::atomic<bool> done(false);
         auto unblock = [&done] { done = true; };
-        mtf::AutoUnblockThread compositor(unblock,
+        mt::AutoUnblockThread compositor(unblock,
             compositor_thread, std::ref(q), std::ref(done));
 
         std::unordered_set<uint32_t> ids_acquired;
@@ -530,7 +531,7 @@ TEST_F(BufferQueueTest, compositor_can_always_acquire_buffer)
         std::atomic<bool> done(false);
         auto unblock = [&done] { done = true; };
 
-        mtf::AutoJoinThread client([&q]
+        mt::AutoJoinThread client([&q]
         {
             for (int nframes = 0; nframes < 100; ++nframes)
             {
@@ -541,7 +542,7 @@ TEST_F(BufferQueueTest, compositor_can_always_acquire_buffer)
                 std::this_thread::yield();
             }
         });
-        mtf::AutoUnblockThread compositor(unblock, [&]
+        mt::AutoUnblockThread compositor(unblock, [&]
         {
             while (!done)
             {
@@ -580,7 +581,7 @@ TEST_F(BufferQueueTest, compositor_acquire_recycles_latest_ready_buffer)
             {
                 void const* user_id = reinterpret_cast<void const*>(monitor_id);
                 auto buffer = q.compositor_acquire(user_id);
-                ASSERT_THAT(client_id, Eq(buffer->id()));
+                ASSERT_THAT(buffer->id(), Eq(client_id));
                 q.compositor_release(buffer);
             }
         }
@@ -620,7 +621,7 @@ TEST_F(BufferQueueTest, compositor_client_interleaved)
     // in the original bug, compositor would be given the wrong buffer here
     auto compositor_buffer = q.compositor_acquire(this);
 
-    EXPECT_THAT(first_ready_buffer_id, Eq(compositor_buffer->id()));
+    EXPECT_THAT(compositor_buffer->id(), Eq(first_ready_buffer_id));
 
     handle->release_buffer();
     q.compositor_release(compositor_buffer);
@@ -728,25 +729,25 @@ TEST_F(BufferQueueTest, stress)
 
         auto unblock = [&done]{ done = true;};
 
-        mtf::AutoUnblockThread compositor(unblock, compositor_thread,
-                                          std::ref(q),
-                                          std::ref(done));
-        mtf::AutoUnblockThread snapshotter1(unblock, snapshot_thread,
-                                            std::ref(q),
-                                            std::ref(done));
-        mtf::AutoUnblockThread snapshotter2(unblock, snapshot_thread,
-                                            std::ref(q),
-                                            std::ref(done));
+        mt::AutoUnblockThread compositor(unblock, compositor_thread,
+                                         std::ref(q),
+                                         std::ref(done));
+        mt::AutoUnblockThread snapshotter1(unblock, snapshot_thread,
+                                           std::ref(q),
+                                           std::ref(done));
+        mt::AutoUnblockThread snapshotter2(unblock, snapshot_thread,
+                                           std::ref(q),
+                                           std::ref(done));
 
         q.allow_framedropping(false);
-        mtf::AutoJoinThread client1(client_thread, std::ref(q), 1000);
+        mt::AutoJoinThread client1(client_thread, std::ref(q), 1000);
         client1.stop();
 
         q.allow_framedropping(true);
-        mtf::AutoJoinThread client2(client_thread, std::ref(q), 1000);
+        mt::AutoJoinThread client2(client_thread, std::ref(q), 1000);
         client2.stop();
 
-        mtf::AutoJoinThread client3(switching_client_thread, std::ref(q), 1000);
+        mt::AutoJoinThread client3(switching_client_thread, std::ref(q), 1000);
         client3.stop();
     }
 }
@@ -851,7 +852,7 @@ TEST_F(BufferQueueTest, client_framerate_matches_compositor)
 
         std::atomic<bool> done(false);
 
-        mtf::AutoJoinThread monitor1([&]
+        mt::AutoJoinThread monitor1([&]
         {
             for (unsigned long frame = 0; frame != compose_frames+3; frame++)
             {
@@ -909,7 +910,7 @@ TEST_F(BufferQueueTest, slow_client_framerate_matches_compositor)
         std::atomic<bool> done(false);
         std::mutex sync;
 
-        mtf::AutoJoinThread monitor1([&]
+        mt::AutoJoinThread monitor1([&]
         {
             for (unsigned long frame = 0; frame != compose_frames+3; frame++)
             {
@@ -1101,7 +1102,7 @@ TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)
         std::atomic<bool> done(false);
 
         auto unblock = [&done]{ done = true; };
-        mtf::AutoUnblockThread compositor_thread(unblock, [&]
+        mt::AutoUnblockThread compositor_thread(unblock, [&]
         {
             while (!done)
             {
@@ -1136,7 +1137,10 @@ TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)
             client_buffer = nullptr;
         }
     }
+}
 
+TEST_F(BufferQueueTest, client_never_owns_compositor_buffers)
+{
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::BufferQueue q(nbuffers, allocator, basic_properties);
@@ -1145,11 +1149,12 @@ TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)
             auto handle = client_acquire_async(q);
             ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
 
+            auto client_id = handle->id();
             std::vector<std::shared_ptr<mg::Buffer>> buffers;
             for (int j = 0; j < nbuffers; j++)
             {
                 auto buffer = q.compositor_acquire(this);
-                ASSERT_THAT(handle->id(), Ne(buffer->id()));
+                ASSERT_THAT(client_id, Ne(buffer->id()));
                 buffers.push_back(buffer);
             }
 
@@ -1160,12 +1165,16 @@ TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)
 
             /* Flush out one ready buffer */
             auto buffer = q.compositor_acquire(this);
-            ASSERT_THAT(handle->id(), Eq(buffer->id()));
+            ASSERT_THAT(client_id, Eq(buffer->id()));
             q.compositor_release(buffer);
         }
     }
 }
 
+/* Regression test for an issue brought up at:
+ * http://code.launchpad.net/~albaguirre/mir/
+ * alternative-switching-bundle-implementation/+merge/216606/comments/517048
+ */
 TEST_F(BufferQueueTest, buffers_are_not_lost)
 {
     for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
@@ -1198,7 +1207,7 @@ TEST_F(BufferQueueTest, buffers_are_not_lost)
         /* An async client should still be able to cycle through all the available buffers */
         std::atomic<bool> done(false);
         auto unblock = [&done] { done = true; };
-        mtf::AutoUnblockThread compositor(unblock,
+        mt::AutoUnblockThread compositor(unblock,
            compositor_thread, std::ref(q), std::ref(done));
 
         std::unordered_set<mg::Buffer *> unique_buffers_acquired;
@@ -1235,7 +1244,7 @@ TEST_F(BufferQueueTest, DISABLED_synchronous_clients_only_get_two_real_buffers)
 
         std::atomic<bool> done(false);
         auto unblock = [&done] { done = true; };
-        mtf::AutoUnblockThread compositor(unblock,
+        mt::AutoUnblockThread compositor(unblock,
            compositor_thread, std::ref(q), std::ref(done));
 
         std::unordered_set<mg::Buffer *> buffers_acquired;
