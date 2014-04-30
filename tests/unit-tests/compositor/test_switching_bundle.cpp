@@ -194,7 +194,8 @@ TEST_F(SwitchingBundleTest, DISABLED_buffer_queue_of_one_is_supported)
 {
     std::unique_ptr<mc::SwitchingBundle> q;
     ASSERT_NO_THROW(q = std::move(
-        std::unique_ptr<mc::SwitchingBundle>(new mc::SwitchingBundle(1, allocator, basic_properties))));
+        std::unique_ptr<mc::SwitchingBundle>(
+            new mc::SwitchingBundle(1, allocator, basic_properties))));
     ASSERT_THAT(q, Ne(nullptr));
 
     auto handle = client_acquire_async(*q);
