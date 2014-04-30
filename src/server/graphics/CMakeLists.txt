@@ -9,6 +9,7 @@ add_library(
   gl_program.cpp
   program_factory.cpp
   surfaceless_egl_context.cpp
+  builtin_cursor_images.cpp
 )
 
 add_subdirectory(nested/)

@@ -27,6 +27,11 @@
 
 namespace mir
 {
+namespace scene
+{
+class Observer;
+}
+
 namespace compositor
 {
 
@@ -49,15 +54,8 @@ public:
     typedef void const* CompositorID;
     virtual graphics::RenderableList renderable_list_for(CompositorID id) const = 0;
 
-    /**
-     * Sets a callback to be called whenever the state of the
-     * Scene changes.
-     *
-     * The supplied callback should not directly or indirectly (e.g.,
-     * by changing a property of a surface) change the state of
-     * the Scene, otherwise a deadlock may occur.
-     */
-    virtual void set_change_callback(std::function<void()> const& f) = 0;
+    virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
+    virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
 
 protected:
     Scene() = default;
