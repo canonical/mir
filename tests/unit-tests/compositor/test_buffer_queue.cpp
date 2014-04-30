@@ -274,7 +274,7 @@ TEST_F(BufferQueueTest, client_can_acquire_and_release_buffer)
     }
 }
 
-TEST_F(BufferQueueTest, client_cannot_acquire_all_buffers)
+TEST_F(BufferQueueTest, client_can_acquire_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
@@ -285,9 +285,6 @@ TEST_F(BufferQueueTest, client_cannot_acquire_all_buffers)
             auto handle = client_acquire_async(q);
             ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
         }
-
-        auto handle = client_acquire_async(q);
-        EXPECT_THAT(handle->has_acquired_buffer(), Eq(false));
     }
 }
 
@@ -407,7 +404,7 @@ TEST_F(BufferQueueTest, async_client_cycles_through_all_buffers)
         mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         std::atomic<bool> done(false);
-        auto unblock = [&] { done = true; };
+        auto unblock = [&done] { done = true; };
         mtf::AutoUnblockThread compositor(unblock,
             compositor_thread, std::ref(q), std::ref(done));
 
@@ -509,7 +506,7 @@ TEST_F(BufferQueueTest, compositor_acquires_frames_in_order)
     }
 }
 
-TEST_F(BufferQueueTest, compositor_acquire_never_blocks)
+TEST_F(BufferQueueTest, compositor_acquire_never_blocks_when_there_are_no_ready_buffers)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
@@ -520,6 +517,44 @@ TEST_F(BufferQueueTest, compositor_acquire_never_blocks)
             auto buffer = q.compositor_acquire(this);
             q.compositor_release(buffer);
         }
+    }
+}
+
+TEST_F(BufferQueueTest, compositor_can_always_acquire_buffer)
+{
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
+    {
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        q.allow_framedropping(false);
+
+        std::atomic<bool> done(false);
+        auto unblock = [&done] { done = true; };
+
+        mtf::AutoJoinThread client([&q]
+        {
+            for (int nframes = 0; nframes < 100; ++nframes)
+            {
+                auto handle = client_acquire_async(q);
+                handle->wait_for(std::chrono::seconds(1));
+                ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+                handle->release_buffer();
+                std::this_thread::yield();
+            }
+        });
+        mtf::AutoUnblockThread compositor(unblock, [&]
+        {
+            while (!done)
+            {
+                std::shared_ptr<mg::Buffer> buffer;
+                EXPECT_NO_THROW(buffer = q.compositor_acquire(this));
+                EXPECT_THAT(buffer, Ne(nullptr));
+                EXPECT_NO_THROW(q.compositor_release(buffer));
+                std::this_thread::yield();
+            }
+        });
+
+        client.stop();
+        compositor.stop();
     }
 }
 
@@ -691,7 +726,7 @@ TEST_F(BufferQueueTest, stress)
 
         std::atomic<bool> done(false);
 
-        auto unblock = [&]{ done = true;};
+        auto unblock = [&done]{ done = true;};
 
         mtf::AutoUnblockThread compositor(unblock, compositor_thread,
                                           std::ref(q),
@@ -1065,7 +1100,7 @@ TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)
         mg::Buffer* client_buffer = nullptr;
         std::atomic<bool> done(false);
 
-        auto unblock = [&]{ done = true; };
+        auto unblock = [&done]{ done = true; };
         mtf::AutoUnblockThread compositor_thread(unblock, [&]
         {
             while (!done)
@@ -1162,7 +1197,7 @@ TEST_F(BufferQueueTest, buffers_are_not_lost)
 
         /* An async client should still be able to cycle through all the available buffers */
         std::atomic<bool> done(false);
-        auto unblock = [&] { done = true; };
+        auto unblock = [&done] { done = true; };
         mtf::AutoUnblockThread compositor(unblock,
            compositor_thread, std::ref(q), std::ref(done));
 
@@ -1199,7 +1234,7 @@ TEST_F(BufferQueueTest, DISABLED_synchronous_clients_only_get_two_real_buffers)
         q.allow_framedropping(false);
 
         std::atomic<bool> done(false);
-        auto unblock = [&] { done = true; };
+        auto unblock = [&done] { done = true; };
         mtf::AutoUnblockThread compositor(unblock,
            compositor_thread, std::ref(q), std::ref(done));
 
