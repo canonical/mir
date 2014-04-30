@@ -12,9 +12,6 @@ mir (0.1.9-0ubuntu1) UNRELEASED; urgency=medium
         any more). Instead you should iterate over the list returned by
         Scene::generate_renderable_list().
     - Bugs fixed:
-      . Crashed with SIGSEGV from
-        mir::scene::ThreadedSnapshotStrategy::~ThreadedSnapshotStrategy(). 
-        (LP: #1256360)
       . Stale socket issue. (LP: #1285215)
       . Qt render gets blocked on EGLSwapBuffers. (LP: #1292306)
       . Lock order violated found in helgrind (potential deadlock). 
@@ -25,8 +22,6 @@ mir (0.1.9-0ubuntu1) UNRELEASED; urgency=medium
         being turned off. (LP: #1231857)
       . Wrong frame is seen on wake up/resume/unlock. (LP: #1233564)
       . Nested platform is not testable (LP: #1299101)
-      . Mirplatformgraphics does not have boost program options in its symbol
-        table. (LP: #1301040)
       . [regression] mir_demo_server_shell crashes on display resume. 
         (LP: #1308941)
       . Multi-threaded composition is actually mostly serialized by
