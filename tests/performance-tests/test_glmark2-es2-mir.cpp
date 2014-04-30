@@ -14,10 +14,14 @@
 #include <fstream>
 #include <string>
 #include <thread>
-
+#include <mutex>
+#include <condition_variable>
 class GLMark2Test : public ::testing::Test
 {
 protected:
+    std::mutex mutex;
+    std::condition_variable cv;
+    mir::DisplayServer* result{nullptr};
     void launch_mir_server()
     {
         char const* argv[] = {""}; 
@@ -25,7 +29,11 @@ protected:
         mir::DefaultServerConfiguration config(argc, argv);
         try
         {
-            run_mir(config, [](mir::DisplayServer&) {} );
+            run_mir(config, [&](mir::DisplayServer& ds) {
+                std::unique_lock<std::mutex> lock(mutex);
+                result = &ds;
+                cv.notify_one();
+            } );
         }
         catch(...)
         {
@@ -46,10 +54,14 @@ protected:
 
         std::thread mir_server(&GLMark2Test::launch_mir_server, this);
         
-        /*HACK to wait for the server to start*/
-        boost::this_thread::sleep(boost::posix_time::seconds(5));
+        using namespace std::chrono; 
+        auto const time_limit = system_clock::now() + seconds(2);
+        std::unique_lock<std::mutex> lock(mutex);
+        while(!result){
+            cv.wait_until(lock, time_limit);
+        }
 
-        char const* cmd = "glmark2-es2-mir --fullscreen";
+        char const* cmd = "glmark2-es2-mir -b texture --fullscreen";
         ASSERT_TRUE((in = popen(cmd, "r")));
     
         glmark2_output.open(output_filename);
@@ -76,7 +88,7 @@ protected:
         }
         
         /*HACK to stop the mir server*/ 
-        raise(SIGINT);
+        //raise(SIGINT);
         mir_server.join(); 
         free(line);
         fclose(in);
