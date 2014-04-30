@@ -31,13 +31,17 @@ namespace mir
 namespace test
 {
 /**
- * C++ Wrapper around popen
+ *  Popen - A popen c++ wrapper
  */
 class Popen
 {
 public:
     Popen(std::string const& cmd);
 
+    /**
+     * Read a line from the output of the executed command
+     * returns false if there is nothing more to read
+     */
     bool get_line(std::string& line);
 
 private:
