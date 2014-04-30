@@ -136,11 +136,6 @@ ms::BasicSurface::BasicSurface(
     report->surface_created(this, surface_name);
 }
 
-mg::Renderable::ID ms::BasicSurface::id() const
-{
-    return this; // Always sufficient or should we cast from a SurfaceID?
-}
-
 void ms::BasicSurface::force_requests_to_complete()
 {
     surface_buffer_stream->force_requests_to_complete();
@@ -313,42 +308,16 @@ void ms::BasicSurface::set_transformation(glm::mat4 const& t)
     observers.transformation_set_to(t);
 }
 
-glm::mat4 ms::BasicSurface::transformation() const
-{
-    std::unique_lock<std::mutex> lk(guard);
-    return transformation_matrix;
-}
-
 bool ms::BasicSurface::visible() const
 {
     std::unique_lock<std::mutex> lk(guard);
+    return visible(lk); 
+}
+
+bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
+{
     return !hidden && first_frame_posted;
 } 
-
-bool ms::BasicSurface::shaped() const
-{
-    return nonrectangular;
-}
-
-std::shared_ptr<mg::Buffer> ms::BasicSurface::buffer(void const* user_id) const
-{
-    return buffer_stream()->lock_compositor_buffer(user_id);
-}
-
-bool ms::BasicSurface::alpha_enabled() const
-{
-    return shaped() || alpha() < 1.0f;
-}
-
-geom::Rectangle ms::BasicSurface::screen_position() const
-{   // This would be more efficient to return a const reference
-    return surface_rect;
-}
-
-int ms::BasicSurface::buffers_ready_for_compositor() const
-{
-    return surface_buffer_stream->buffers_ready_for_compositor();
-}
 
 void ms::BasicSurface::with_most_recent_buffer_do(
     std::function<void(mg::Buffer&)> const& exec)
@@ -460,7 +429,106 @@ void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& obse
     observers.add(observer);
 }
 
-void ms::BasicSurface::remove_observer(std::shared_ptr<SurfaceObserver> const& observer)
+void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& observer)
 {
-    observers.remove(observer);
+    auto o = observer.lock();
+    if (!o)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (previously destroyed)"));
+    observers.remove(o);
+}
+
+namespace
+{
+//This class avoids locking for long periods of time by copying (or lazy-copying)
+class SurfaceSnapshot : public mg::Renderable
+{
+public:
+    SurfaceSnapshot(
+        std::shared_ptr<mc::BufferStream> const& stream,
+        void const* compositor_id,
+        geom::Rectangle const& position,
+        glm::mat4 const& transform,
+        bool visible,
+        bool alpha_enabled,
+        float alpha,
+        bool shaped,
+        mg::Renderable::ID id)
+    : underlying_buffer_stream{stream},
+      compositor_buffer{nullptr},
+      compositor_id{compositor_id},
+      alpha_enabled_{alpha_enabled},
+      alpha_{alpha},
+      shaped_{shaped},
+      visible_{visible},
+      screen_position_(position),
+      transformation_(transform),
+      id_(id)
+    {
+    }
+
+    ~SurfaceSnapshot()
+    {
+    }
+ 
+    int buffers_ready_for_compositor() const override
+    { return underlying_buffer_stream->buffers_ready_for_compositor(); }
+
+    std::shared_ptr<mg::Buffer> buffer() const override
+    {
+        if (!compositor_buffer)
+            compositor_buffer = underlying_buffer_stream->lock_compositor_buffer(compositor_id);
+        return compositor_buffer;
+    }
+
+    bool visible() const override
+    { return visible_; }
+
+    bool alpha_enabled() const override
+    { return alpha_enabled_; }
+
+    geom::Rectangle screen_position() const override
+    { return screen_position_; }
+
+    float alpha() const override
+    { return alpha_; }
+
+    glm::mat4 transformation() const override
+    { return transformation_; }
+
+    bool shaped() const override
+    { return shaped_; }
+ 
+    mg::Renderable::ID id() const override
+    { return id_; }
+
+private:
+    std::shared_ptr<mc::BufferStream> const underlying_buffer_stream;
+    std::shared_ptr<mg::Buffer> mutable compositor_buffer;
+    void const*const compositor_id;
+    bool const alpha_enabled_;
+    float const alpha_;
+    bool const shaped_;
+    bool const visible_;
+    geom::Rectangle const screen_position_;
+    glm::mat4 const transformation_;
+    mg::Renderable::ID const id_; 
+};
+}
+
+std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const* compositor_id) const
+{
+    std::unique_lock<std::mutex> lk(guard);
+
+    auto const shaped = nonrectangular || (surface_alpha < 1.0f);
+    return std::unique_ptr<mg::Renderable>(
+        new SurfaceSnapshot(
+            surface_buffer_stream,
+            compositor_id,
+            surface_rect,
+            transformation_matrix,
+            visible(lk),
+            shaped,
+            surface_alpha,
+            nonrectangular, 
+            this));
 }

@@ -17,7 +17,7 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "src/server/frontend/socket_session.h"
+#include "src/server/frontend/socket_connection.h"
 #include "src/server/frontend/message_receiver.h"
 #include "mir/frontend/message_processor.h"
 
@@ -30,6 +30,7 @@
 
 #include <cstring>
 
+namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 namespace mt = mir::test;
@@ -94,7 +95,7 @@ private:
     boost::asio::mutable_buffers_1 async_buffer;
     std::vector<char> message;
 
-    MOCK_METHOD0(client_pid, pid_t());
+    MOCK_METHOD0(client_creds, mf::SessionCredentials());
 };
 
 struct MockProcessor : public mfd::MessageProcessor
@@ -103,13 +104,13 @@ struct MockProcessor : public mfd::MessageProcessor
 };
 }
 
-struct SocketSessionTest : public ::testing::Test
+struct SocketConnectionTest : public ::testing::Test
 {
     testing::NiceMock<MockProcessor> mock_processor;
     StubReceiver stub_receiver;
 };
 
-TEST_F(SocketSessionTest, basic_msg_is_received_and_dispatched)
+TEST_F(SocketConnectionTest, basic_msg_is_received_and_dispatched)
 {
     int const header_size = 2;
     char buffer[512];
@@ -122,9 +123,9 @@ TEST_F(SocketSessionTest, basic_msg_is_received_and_dispatched)
 
     using namespace testing;
 
-    std::shared_ptr<mfd::ConnectedSessions<mfd::SocketSession>> null_sessions;
+    std::shared_ptr<mfd::Connections<mfd::SocketConnection>> null_sessions;
 
-    mfd::SocketSession session(mt::fake_shared(stub_receiver), 0, null_sessions, mt::fake_shared(mock_processor));
+    mfd::SocketConnection session(mt::fake_shared(stub_receiver), 0, null_sessions, mt::fake_shared(mock_processor));
 
     EXPECT_CALL(mock_processor, dispatch(_)).Times(1).WillOnce(Return(true));
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -145,6 +145,7 @@ public:
 
     std::shared_ptr<mg::Display> create_display(
         std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
+        std::shared_ptr<mg::GLProgramFactory> const&,
         std::shared_ptr<mg::GLConfig> const&) override
     {
         return mt::fake_shared(mock_display);
@@ -340,7 +341,7 @@ TEST_F(DisplayConfigurationTest, display_change_request_for_unauthorized_client_
         {
             class StubAuthorizer : public mtd::StubSessionAuthorizer
             {
-                bool configure_display_is_allowed(pid_t) override { return false; }
+                bool configure_display_is_allowed(mf::SessionCredentials const&) override { return false; }
             };
 
             if (!authorizer)

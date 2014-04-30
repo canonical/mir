@@ -17,7 +17,7 @@
  */
 
 #include "published_socket_connector.h"
-#include "mir/frontend/protobuf_session_creator.h"
+#include "mir/frontend/protobuf_connection_creator.h"
 
 #include "mir/frontend/connector_report.h"
 
@@ -97,10 +97,10 @@ std::string remove_if_stale(std::string const& socket_name)
 
 mf::PublishedSocketConnector::PublishedSocketConnector(
     const std::string& socket_file,
-    std::shared_ptr<SessionCreator> const& session_creator,
+    std::shared_ptr<ConnectionCreator> const& connection_creator,
     int threads,
     std::shared_ptr<ConnectorReport> const& report)
-:   BasicConnector(session_creator, threads, report),
+:   BasicConnector(connection_creator, threads, report),
     socket_file(remove_if_stale(socket_file)),
     acceptor(io_service, socket_file)
 {
@@ -144,13 +144,13 @@ void mf::PublishedSocketConnector::on_new_connection(
 }
 
 mf::BasicConnector::BasicConnector(
-    std::shared_ptr<SessionCreator> const& session_creator,
+    std::shared_ptr<ConnectionCreator> const& connection_creator,
     int threads,
     std::shared_ptr<ConnectorReport> const& report)
 :   work(io_service),
     report(report),
     io_service_threads(threads),
-    session_creator{session_creator}
+    connection_creator{connection_creator}
 {
 }
 
@@ -202,7 +202,7 @@ void mf::BasicConnector::stop()
 void mf::BasicConnector::create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const
 {
     report->creating_session_for(server_socket->native_handle());
-    session_creator->create_session_for(server_socket);
+    connection_creator->create_connection_for(server_socket);
 }
 
 int mf::BasicConnector::client_socket_fd() const
