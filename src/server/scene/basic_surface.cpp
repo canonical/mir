@@ -429,9 +429,12 @@ void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& obse
     observers.add(observer);
 }
 
-void ms::BasicSurface::remove_observer(std::shared_ptr<SurfaceObserver> const& observer)
+void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& observer)
 {
-    observers.remove(observer);
+    auto o = observer.lock();
+    if (!o)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (previously destroyed)"));
+    observers.remove(o);
 }
 
 namespace

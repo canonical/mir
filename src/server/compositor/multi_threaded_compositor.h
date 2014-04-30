@@ -32,6 +32,11 @@ namespace graphics
 {
 class Display;
 }
+namespace scene
+{
+class Observer;
+}
+
 namespace compositor
 {
 
@@ -78,6 +83,8 @@ private:
     bool compose_on_start;
 
     void schedule_compositing();
+    
+    std::shared_ptr<mir::scene::Observer> observer;
 };
 
 }
