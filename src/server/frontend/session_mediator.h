@@ -59,16 +59,6 @@ class Screencast;
 class SessionMediator : public mir::protobuf::DisplayServer
 {
 public:
-    SessionMediator(
-        pid_t client_pid,
-        std::shared_ptr<Shell> const& shell,
-        std::shared_ptr<graphics::Platform> const& graphics_platform,
-        std::shared_ptr<frontend::DisplayChanger> const& display_changer,
-        std::vector<MirPixelFormat> const& surface_pixel_formats,
-        std::shared_ptr<SessionMediatorReport> const& report,
-        std::shared_ptr<EventSink> const& event_sink,
-        std::shared_ptr<ResourceCache> const& resource_cache,
-        std::shared_ptr<Screencast> const& screencast);
 
     SessionMediator(
         pid_t client_pid,
