@@ -68,7 +68,7 @@ void mf::ProtobufConnectionCreator::create_connection_for(std::shared_ptr<ba::lo
         auto const event_sink = std::make_shared<detail::EventSender>(messenger);
         auto const msg_processor = create_processor(
             message_sender,
-            ipc_factory->make_ipc_server(creds, event_sink),
+            ipc_factory->make_ipc_server(creds, event_sink, [](std::shared_ptr<mf::Session> const&) {}),
             report);
 
         const auto& connection = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);

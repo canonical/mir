@@ -42,10 +42,6 @@ class ProtobufIpcFactory
 public:
     virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
         SessionCredentials const& creds,
-        std::shared_ptr<EventSink> const& sink) = 0;
-
-    virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
-        SessionCredentials const& creds,
         std::shared_ptr<EventSink> const& sink,
         std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) = 0;
 

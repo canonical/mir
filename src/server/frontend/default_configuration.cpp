@@ -70,44 +70,6 @@ private:
     std::shared_ptr<mf::Screencast> const screencast;
     std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
 
-    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
-        mf::SessionCredentials const& creds,
-        std::shared_ptr<mf::EventSink> const& sink) override
-    {
-        std::shared_ptr<mf::DisplayChanger> changer;
-        std::shared_ptr<mf::Screencast> effective_screencast;
-
-        if (session_authorizer->configure_display_is_allowed(creds))
-        {
-            changer = display_changer;
-        }
-        else
-        {
-            changer = std::make_shared<mf::UnauthorizedDisplayChanger>(display_changer);
-        }
-
-        if (session_authorizer->screencast_is_allowed(creds))
-        {
-            effective_screencast = screencast;
-        }
-        else
-        {
-            effective_screencast = std::make_shared<mf::UnauthorizedScreencast>();
-        }
-
-        return std::make_shared<mf::SessionMediator>(
-            creds.pid(),
-            shell,
-            graphics_platform,
-            changer,
-            buffer_allocator->supported_pixel_formats(),
-            sm_report,
-            sink,
-            resource_cache(),
-            effective_screencast,
-            [](std::shared_ptr<mf::Session> const&) {});
-    }
-
     std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
         mf::SessionCredentials const& creds,
         std::shared_ptr<mf::EventSink> const& sink,
@@ -144,7 +106,6 @@ private:
             sink,
             resource_cache(),
             effective_screencast,
-            // TODO deduplicate: this function is identical to the one above except for this line.
             connect_handler);
     }
 
