@@ -86,7 +86,7 @@ public:
     void pause();
     void resume();
 
-    std::weak_ptr<Cursor> the_cursor();
+    std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image);
     std::unique_ptr<GLContext> create_gl_context();
 
 private:
