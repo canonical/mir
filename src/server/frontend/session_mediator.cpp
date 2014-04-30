@@ -123,12 +123,12 @@ void mf::SessionMediator::connect(
 {
     report->session_connect_called(request->application_name());
 
+    auto const session = shell->open_session(client_pid, request->application_name(), event_sink);
     {
-        auto const session = shell->open_session(client_pid, request->application_name(), event_sink);
-        connect_handler(session);
-        std::unique_lock<std::mutex> lock(session_mutex);
-        weak_session = shell->open_session(client_pid, request->application_name(), event_sink);
+        std::lock_guard<std::mutex> lock(session_mutex);
+        weak_session = session;
     }
+    connect_handler(session);
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -171,6 +171,7 @@ void mf::SessionMediator::advance_buffer(
             complete(client_buffer, need_full_ipc);
         });
 }
+
 
 void mf::SessionMediator::create_surface(
     google::protobuf::RpcController* /*controller*/,
