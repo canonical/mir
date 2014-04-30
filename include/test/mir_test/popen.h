@@ -45,6 +45,9 @@ public:
     bool get_line(std::string& line);
 
 private:
+    Popen() = delete;
+    Popen(Popen const&) = delete;
+    Popen& operator=(Popen const&) = delete;
     std::unique_ptr<std::FILE, void(*)(FILE* f)> raw_stream;
     std::unique_ptr<std::streambuf> stream_buffer;
     std::istream stream;
