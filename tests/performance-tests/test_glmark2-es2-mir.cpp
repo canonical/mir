@@ -26,7 +26,7 @@ protected:
 
     mir::DisplayServer* launch_mir_server()
     {
-        char const* argv[] = {""}; 
+        char const* argv[] = {""};
         int argc = sizeof(argv) / sizeof(argv[0]);
         mir::DefaultServerConfiguration config(argc, argv);
 
@@ -70,7 +70,7 @@ protected:
         char* line = NULL;
         size_t len = 0;
         ssize_t read;
-        std::ofstream glmark2_output;    
+        std::ofstream glmark2_output;
         glmark2_output.open(output_filename);
 
         char const* cmd = "glmark2-es2-mir -b texture --fullscreen";
@@ -80,7 +80,7 @@ protected:
         {
             if (file_type == raw)
             {
-                glmark2_output << line; 
+                glmark2_output << line;
             }
             else if (file_type == json)
             {
@@ -98,7 +98,7 @@ protected:
             }
         }
         
-        ds->stop(); 
+        ds->stop();
         if (server_thread.joinable()) server_thread.join();
         free(line);
         fclose(in);
