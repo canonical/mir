@@ -209,7 +209,7 @@ struct SessionMediatorTest : public ::testing::Test
           mediator{__LINE__, shell, graphics_platform, graphics_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
-                   resource_cache, stub_screencast},
+                   resource_cache, stub_screencast, [](std::shared_ptr<mf::Session> const&) {}},
           stubbed_session{std::make_shared<StubbedSession>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
@@ -373,7 +373,8 @@ TEST_F(SessionMediatorTest, connect_packs_display_configuration)
         __LINE__, shell, graphics_platform, mock_display,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, std::make_shared<mtd::NullScreencast>());
+        resource_cache, std::make_shared<mtd::NullScreencast>(),
+        [](std::shared_ptr<mf::Session> const&) {});
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -597,7 +598,8 @@ TEST_F(SessionMediatorTest, display_config_request)
         __LINE__, shell, graphics_platform, mock_display_selector,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(), resource_cache,
-        std::make_shared<mtd::NullScreencast>()};
+        std::make_shared<mtd::NullScreencast>(),
+        [](std::shared_ptr<mf::Session> const&) {}};
 
     session_mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 

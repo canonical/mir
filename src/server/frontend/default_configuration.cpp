@@ -104,7 +104,8 @@ private:
             sm_report,
             sink,
             resource_cache(),
-            effective_screencast);
+            effective_screencast,
+            [](std::shared_ptr<mf::Session> const&) {});
     }
 
     std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
