@@ -24,7 +24,6 @@
 #include <boost/iostreams/stream_buffer.hpp>
 
 #include <stdexcept>
-#include <cstdlib>
 
 namespace mt = mir::test;
 namespace io = boost::iostreams;

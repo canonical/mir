@@ -22,7 +22,6 @@
 
 #include <cstdio>
 #include <memory>
-#include <functional>
 #include <string>
 #include <streambuf>
 #include <istream>
