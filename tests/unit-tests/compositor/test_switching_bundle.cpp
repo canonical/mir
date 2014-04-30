@@ -280,23 +280,17 @@ TEST_F(SwitchingBundleTest, client_can_acquire_and_release_buffer)
     }
 }
 
-/* TODO: SwitchingBundle allows client to own all available buffers
- * Alternative implementations may not allow the same.
- */
-TEST_F(SwitchingBundleTest, DISABLED_client_cannot_acquire_all_buffers)
+TEST_F(SwitchingBundleTest, client_can_acquire_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
-        int const max_ownable_buffers = nbuffers - 1;
+        int const max_ownable_buffers = nbuffers;
         for (int acquires = 0; acquires < max_ownable_buffers; ++acquires)
         {
             auto handle = client_acquire_async(q);
             ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
         }
-
-        auto handle = client_acquire_async(q);
-        EXPECT_THAT(handle->has_acquired_buffer(), Eq(false));
     }
 }
 
@@ -417,7 +411,7 @@ TEST_F(SwitchingBundleTest, async_client_cycles_through_all_buffers)
         mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
 
         std::atomic<bool> done(false);
-        auto unblock = [&] { done = true; };
+        auto unblock = [&done] { done = true; };
         mtf::AutoUnblockThread compositor(unblock,
             compositor_thread, std::ref(q), std::ref(done));
 
@@ -519,7 +513,7 @@ TEST_F(SwitchingBundleTest, compositor_acquires_frames_in_order)
     }
 }
 
-TEST_F(SwitchingBundleTest, compositor_acquire_never_blocks)
+TEST_F(SwitchingBundleTest, compositor_acquire_never_blocks_when_there_are_no_ready_buffers)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
@@ -530,6 +524,44 @@ TEST_F(SwitchingBundleTest, compositor_acquire_never_blocks)
             auto buffer = q.compositor_acquire(this);
             q.compositor_release(buffer);
         }
+    }
+}
+
+TEST_F(SwitchingBundleTest, compositor_can_always_acquire_buffer)
+{
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
+    {
+        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        q.allow_framedropping(false);
+
+        std::atomic<bool> done(false);
+        auto unblock = [&done] { done = true; };
+
+        mtf::AutoJoinThread client([&q]
+        {
+            for (int nframes = 0; nframes < 100; ++nframes)
+            {
+                auto handle = client_acquire_async(q);
+                handle->wait_for(std::chrono::seconds(1));
+                ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+                handle->release_buffer();
+                std::this_thread::yield();
+            }
+        });
+        mtf::AutoUnblockThread compositor(unblock, [&]
+        {
+            while (!done)
+            {
+                std::shared_ptr<mg::Buffer> buffer;
+                EXPECT_NO_THROW(buffer = q.compositor_acquire(this));
+                EXPECT_THAT(buffer, Ne(nullptr));
+                EXPECT_NO_THROW(q.compositor_release(buffer));
+                std::this_thread::yield();
+            }
+        });
+
+        client.stop();
+        compositor.stop();
     }
 }
 
@@ -701,7 +733,7 @@ TEST_F(SwitchingBundleTest, stress)
 
         std::atomic<bool> done(false);
 
-        auto unblock = [&]{ done = true;};
+        auto unblock = [&done]{ done = true;};
 
         mtf::AutoUnblockThread compositor(unblock, compositor_thread,
                                           std::ref(q),
@@ -1072,7 +1104,7 @@ TEST_F(SwitchingBundleTest, compositor_never_owns_client_buffers)
         mg::Buffer* client_buffer = nullptr;
         std::atomic<bool> done(false);
 
-        auto unblock = [&]{ done = true; };
+        auto unblock = [&done]{ done = true; };
         mtf::AutoUnblockThread compositor_thread(unblock, [&]
         {
             while (!done)
@@ -1169,7 +1201,7 @@ TEST_F(SwitchingBundleTest, buffers_are_not_lost)
 
         /* An async client should still be able to cycle through all the available buffers */
         std::atomic<bool> done(false);
-        auto unblock = [&] { done = true; };
+        auto unblock = [&done] { done = true; };
         mtf::AutoUnblockThread compositor(unblock,
            compositor_thread, std::ref(q), std::ref(done));
 
@@ -1206,7 +1238,7 @@ TEST_F(SwitchingBundleTest, DISABLED_synchronous_clients_only_get_two_real_buffe
         q.allow_framedropping(false);
 
         std::atomic<bool> done(false);
-        auto unblock = [&] { done = true; };
+        auto unblock = [&done] { done = true; };
         mtf::AutoUnblockThread compositor(unblock,
            compositor_thread, std::ref(q), std::ref(done));
 
