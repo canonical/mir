@@ -59,7 +59,6 @@ public:
     int client_socket_fd(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const override;
 
 protected:
-    void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const;
     void create_session_for(
         std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket,
         std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const;
