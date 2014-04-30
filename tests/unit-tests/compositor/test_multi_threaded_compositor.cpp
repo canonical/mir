@@ -101,7 +101,7 @@ public:
     }
     StubScene() : StubScene(mg::RenderableList{}) {}
 
-    mg::RenderableList generate_renderable_list() const
+    mg::RenderableList renderable_list_for(void const*) const
     {
         return renderable_list;
     }
@@ -140,9 +140,6 @@ public:
     {
         throw_on_add_observer_ = flag;
     }
-
-    void lock() {}
-    void unlock() {}
 
 private:
     std::mutex observer_mutex;
@@ -331,7 +328,7 @@ public:
     {
     }
 
-    std::shared_ptr<mg::Buffer> buffer(void const*) const override
+    std::shared_ptr<mg::Buffer> buffer() const override
     {
         ++buffers_requested_;
         return std::make_shared<mtd::StubBuffer>();
@@ -609,7 +606,7 @@ TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
         .Times(1);
     EXPECT_CALL(*mock_scene, remove_observer(_))
         .Times(1);
-    EXPECT_CALL(*mock_scene, generate_renderable_list())
+    EXPECT_CALL(*mock_scene, renderable_list_for(_))
         .Times(AtLeast(0))
         .WillRepeatedly(Return(mg::RenderableList{}));
 

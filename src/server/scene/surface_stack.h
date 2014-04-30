@@ -85,7 +85,7 @@ public:
     virtual ~SurfaceStack() noexcept(true) {}
 
     // From Scene
-    graphics::RenderableList generate_renderable_list() const;
+    graphics::RenderableList renderable_list_for(CompositorID id) const;
     
     // From InputTargets
     void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback);

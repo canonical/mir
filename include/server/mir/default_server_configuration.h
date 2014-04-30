@@ -91,6 +91,9 @@ class Display;
 class BufferInitializer;
 class DisplayReport;
 class GraphicBufferAllocator;
+class Cursor;
+class CursorImage;
+class CursorImages;
 class GLConfig;
 class GLProgramFactory;
 namespace nested { class HostConnection; }
@@ -102,6 +105,7 @@ class InputManager;
 class CompositeEventFilter;
 class InputChannelFactory;
 class InputConfiguration;
+class InputDispatcherConfiguration;
 class CursorListener;
 class InputRegion;
 class NestedInputRelay;
@@ -142,6 +146,7 @@ public:
     virtual std::shared_ptr<DisplayChanger>         the_display_changer();
     virtual std::shared_ptr<graphics::Platform>     the_graphics_platform();
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
+    virtual std::shared_ptr<input::InputDispatcherConfiguration> the_input_dispatcher_configuration();
     /** @} */
 
     /** @name graphics configuration - customization
@@ -159,6 +164,10 @@ public:
      * dependencies of graphics on the rest of the Mir
      *  @{ */
     virtual std::shared_ptr<graphics::DisplayReport> the_display_report();
+    virtual std::shared_ptr<graphics::Cursor> the_cursor();
+    virtual std::shared_ptr<graphics::CursorImage> the_default_cursor_image();
+    virtual std::shared_ptr<graphics::CursorImages> the_cursor_images();
+
     /** @} */
 
     /** @name compositor configuration - customization
@@ -258,6 +267,7 @@ protected:
     CachedPtr<frontend::Connector>   connector;
 
     CachedPtr<input::InputConfiguration> input_configuration;
+    CachedPtr<input::InputDispatcherConfiguration> input_dispatcher_configuration;
 
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
@@ -270,6 +280,9 @@ protected:
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::Display>      display;
+    CachedPtr<graphics::Cursor>       cursor;
+    CachedPtr<graphics::CursorImage>  default_cursor_image;
+    CachedPtr<graphics::CursorImages> cursor_images;
 
     CachedPtr<frontend::ConnectorReport>   connector_report;
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;

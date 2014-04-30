@@ -156,6 +156,10 @@ void DemoRenderer::begin() const
 {
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    // Ensure we don't change the framebuffer's alpha components (if any)
+    // as that would ruin the appearance of screengrabs. (LP: #1301210)
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 }
 
 void DemoRenderer::tessellate(std::vector<Primitive>& primitives,
