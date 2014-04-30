@@ -247,6 +247,39 @@ TEST_F(SessionMediatorTest, disconnect_releases_session)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
+TEST_F(SessionMediatorTest, connect_calls_connect_handler)
+{
+    int connects_handled_count = 0;
+
+    auto const connect_handler = [&](std::shared_ptr<mf::Session> const&)
+        { ++connects_handled_count; };
+
+    mf::SessionMediator mediator{
+        __LINE__,
+        shell,
+        graphics_platform,
+        graphics_changer,
+        surface_pixel_formats,
+        report,
+        std::make_shared<mtd::NullEventSink>(),
+        resource_cache,
+        stub_screencast,
+        connect_handler};
+
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+
+    using namespace ::testing;
+
+    EXPECT_THAT(connects_handled_count, Eq(0));
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    EXPECT_THAT(connects_handled_count, Eq(1));
+
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+    EXPECT_THAT(connects_handled_count, Eq(1));
+}
+
 TEST_F(SessionMediatorTest, calling_methods_before_connect_throws)
 {
     EXPECT_THROW({
