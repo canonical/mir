@@ -16,18 +16,103 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "src/server/graphics/nested/nested_display.h"
+#include "src/server/graphics/nested/host_connection.h"
+#include "src/server/report/null/display_report.h"
+#include "src/server/graphics/default_display_configuration_policy.h"
+#include "mir_display_configuration_builder.h"
+
+#include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/null_event_filter.h"
+#include "mir_test_doubles/mock_gl_config.h"
+#include "mir_test_doubles/stub_gl_config.h"
+#include "mir_test_doubles/stub_host_connection.h"
+#include "mir_test/fake_shared.h"
+
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
-/*
- * TODO: Improve testability of NestedDisplay, so we can have proper unit tests.
- * In particular we need a way to fake interactions with the client library.
- * See https://bugs.launchpad.net/mir/+bug/1299101 for tracking.
- */
-TEST(NestedDisplay, DISABLED_respects_gl_config)
+namespace mg = mir::graphics;
+namespace mgn = mir::graphics::nested;
+namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
+
+namespace
 {
+
+class SingleDisplayHostConnection : public mtd::StubHostConnection
+{
+public:
+    std::shared_ptr<MirDisplayConfiguration> create_display_config() override
+    {
+        return mt::build_trivial_configuration();
+    }
+};
+
+class MockApplyDisplayConfigHostConnection : public SingleDisplayHostConnection
+{
+public:
+    MOCK_METHOD1(apply_display_config, void(MirDisplayConfiguration&));
+};
+
+struct NestedDisplay : testing::Test
+{
+    testing::NiceMock<mtd::MockEGL> mock_egl;
+    mtd::NullEventFilter null_event_filter;
+    mir::report::null::DisplayReport null_display_report;
+    mg::DefaultDisplayConfigurationPolicy default_conf_policy;
+    mtd::StubGLConfig stub_gl_config;
+};
+
 }
 
-TEST(NestedDisplay, DISABLED_nested_display_should_not_change_power_mode_when_display_is_off)
+TEST_F(NestedDisplay, respects_gl_config)
 {
+    using namespace testing;
+
+    mtd::MockGLConfig mock_gl_config;
+    EGLint const depth_bits{24};
+    EGLint const stencil_bits{8};
+
+    EXPECT_CALL(mock_gl_config, depth_buffer_bits())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(depth_bits));
+    EXPECT_CALL(mock_gl_config, stencil_buffer_bits())
+        .Times(AtLeast(1))
+        .WillRepeatedly(Return(stencil_bits));
+
+    EXPECT_CALL(mock_egl,
+                eglChooseConfig(
+                    _,
+                    AllOf(mtd::EGLConfigContainsAttrib(EGL_DEPTH_SIZE, depth_bits),
+                          mtd::EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits)),
+                    _,_,_))
+        .Times(AtLeast(1))
+        .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                        SetArgPointee<4>(1),
+                        Return(EGL_TRUE)));
+
+    mgn::NestedDisplay nested_display{
+        std::make_shared<SingleDisplayHostConnection>(),
+        mt::fake_shared(null_event_filter),
+        mt::fake_shared(null_display_report),
+        mt::fake_shared(default_conf_policy),
+        mt::fake_shared(mock_gl_config)};
 }
 
+TEST_F(NestedDisplay, does_not_change_host_display_configuration_at_construction)
+{
+    using namespace testing;
+
+    MockApplyDisplayConfigHostConnection host_connection;
+
+    EXPECT_CALL(host_connection, apply_display_config(_))
+        .Times(0);
+
+    mgn::NestedDisplay nested_display{
+        mt::fake_shared(host_connection),
+        mt::fake_shared(null_event_filter),
+        mt::fake_shared(null_display_report),
+        mt::fake_shared(default_conf_policy),
+        mt::fake_shared(stub_gl_config)};
+}

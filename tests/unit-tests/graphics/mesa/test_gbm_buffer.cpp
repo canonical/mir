@@ -74,7 +74,7 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
         .WillByDefault(Return(stride.as_uint32_t()));
 
-        auto bypass_option = mgm::BypassOption::bypass_enabled;
+        auto bypass_option = mgm::BypassOption::allowed;
         platform = std::make_shared<mgm::Platform>(
             mr::null_display_report(),
             std::make_shared<mtd::NullVirtualTerminal>(), bypass_option);

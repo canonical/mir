@@ -79,7 +79,7 @@ public:
         return std::make_shared<mg::mesa::Platform>(
             mr::null_display_report(),
             std::make_shared<mir::test::doubles::NullVirtualTerminal>(),
-            mg::mesa::BypassOption::bypass_disabled);
+            mg::mesa::BypassOption::prohibited);
 #endif
     }
 

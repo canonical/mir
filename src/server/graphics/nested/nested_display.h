@@ -66,13 +66,12 @@ private:
 class EGLDisplayHandle
 {
 public:
-    EGLDisplayHandle(MirConnection* connection,
+    EGLDisplayHandle(EGLNativeDisplayType native_display,
                      std::shared_ptr<GLConfig> const& gl_config);
     ~EGLDisplayHandle() noexcept;
 
     void initialize(MirPixelFormat format);
     EGLConfig choose_windowed_es_config(MirPixelFormat format) const;
-    EGLNativeWindowType native_window(EGLConfig egl_config, MirSurface* mir_surface) const;
     EGLContext egl_context() const;
     operator EGLDisplay() const { return egl_display; }
 
@@ -121,7 +120,7 @@ public:
     void pause() override;
     void resume() override;
 
-    std::weak_ptr<Cursor> the_cursor() override;
+    std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:

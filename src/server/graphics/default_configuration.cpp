@@ -21,18 +21,21 @@
 #include "mir/options/option.h"
 
 #include "default_display_configuration_policy.h"
-#include "nested/host_connection.h"
+#include "nested/mir_client_host_connection.h"
 #include "nested/nested_platform.h"
 #include "offscreen/display.h"
 
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/gl_config.h"
+#include "program_factory.h"
 
 #include "mir/shared_library.h"
 #include "mir/shared_library_loader.h"
 #include "mir/abnormal_exit.h"
 
 #include <boost/throw_exception.hpp>
+
+#include "builtin_cursor_images.h"
 
 #include <map>
 
@@ -109,8 +112,42 @@ mir::DefaultServerConfiguration::the_display()
             {
                 return the_graphics_platform()->create_display(
                     the_display_configuration_policy(),
+                    the_gl_program_factory(),
                     the_gl_config());
             }
+        });
+}
+
+std::shared_ptr<mg::Cursor>
+mir::DefaultServerConfiguration::the_cursor()
+{
+    return cursor(
+        [this]() -> std::shared_ptr<mg::Cursor>
+        {
+            // For now we only support a hardware cursor.
+            return the_display()->create_hardware_cursor(the_default_cursor_image());
+        });
+}
+
+std::shared_ptr<mg::CursorImage>
+mir::DefaultServerConfiguration::the_default_cursor_image()
+{
+    static geometry::Size const default_cursor_size = {geometry::Width{64},
+                                                       geometry::Height{64}};
+    return default_cursor_image(
+        [this]()
+        {
+            return the_cursor_images()->image("arrow", default_cursor_size);
+        });
+}
+
+std::shared_ptr<mg::CursorImages>
+mir::DefaultServerConfiguration::the_cursor_images()
+{
+    return cursor_images(
+        [this]()
+        {
+            return std::make_shared<mg::BuiltinCursorImages>();
         });
 }
 
@@ -145,7 +182,7 @@ auto mir::DefaultServerConfiguration::the_host_connection()
                 options->get<std::string>(options::name_opt) :
                 "nested-mir@:" + server_socket;
 
-            return std::make_shared<graphics::nested::HostConnection>(
+            return std::make_shared<graphics::nested::MirClientHostConnection>(
                 host_socket,
                 my_name);
         });
@@ -163,5 +200,15 @@ mir::DefaultServerConfiguration::the_gl_config()
                 int stencil_buffer_bits() const override { return 0; }
             };
             return std::make_shared<NoGLConfig>();
+        });
+}
+
+std::shared_ptr<mg::GLProgramFactory>
+mir::DefaultServerConfiguration::the_gl_program_factory()
+{
+    return gl_program_factory(
+        [this]
+        {
+            return std::make_shared<mg::ProgramFactory>();
         });
 }

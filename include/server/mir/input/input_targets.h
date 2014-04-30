@@ -28,14 +28,14 @@ namespace mir
 {
 namespace input
 {
-class InputChannel;
+class Surface;
 
 class InputTargets
 {
 public:
     virtual ~InputTargets() = default;
 
-    virtual void for_each(std::function<void(std::shared_ptr<input::InputChannel> const&)> const& callback) = 0;
+    virtual void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback) = 0;
 
 protected:
     InputTargets() = default;

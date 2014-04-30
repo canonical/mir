@@ -39,9 +39,11 @@
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace ms = mir::scene;
+namespace mr = mir::report;
+
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
-namespace mr = mir::report;
 
 namespace
 {
@@ -53,12 +55,17 @@ struct FakeScene : mc::Scene
     {
     }
 
-    mg::RenderableList generate_renderable_list() const
+    mg::RenderableList renderable_list_for(void const*) const
     {
         return renderlist;
     }
 
-    void set_change_callback(std::function<void()> const&) {}
+    void add_observer(std::shared_ptr<ms::Observer> const& /* observer */) override
+    {
+    }
+    void remove_observer(std::weak_ptr<ms::Observer> const& /* observer */) override
+    {
+    }
 
     void change(mg::RenderableList const& new_renderlist)
     {
@@ -107,7 +114,7 @@ TEST_F(DefaultDisplayBufferCompositor, render)
         .Times(AtLeast(1));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
-    EXPECT_CALL(scene, generate_renderable_list())
+    EXPECT_CALL(scene, renderable_list_for(_))
         .Times(1);
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
@@ -292,6 +299,40 @@ TEST_F(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
 
 #if 0
 MOVE TO MESA TEST
+=======
+TEST_F(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
+{
+    using namespace testing;
+    mg::RenderableList list{
+        small, //obscured
+        fullscreen
+    };
+    FakeScene scene(list);
+
+    EXPECT_CALL(display_buffer, view_area())
+        .WillRepeatedly(Return(screen));
+    EXPECT_CALL(display_buffer, make_current())
+        .Times(1);
+    EXPECT_CALL(display_buffer, orientation())
+        .WillOnce(Return(mir_orientation_normal));
+    EXPECT_CALL(display_buffer, post_update())
+        .Times(1);
+    EXPECT_CALL(display_buffer, can_bypass())
+        .WillRepeatedly(Return(false));
+    EXPECT_CALL(mock_renderer, render(Ref(*small)))
+        .Times(0);  // zero due to occlusion detection
+    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen)))
+        .Times(1);
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(scene),
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+    compositor.composite();
+}
+
+>>>>>>> MERGE-SOURCE
 TEST_F(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
 {
     using namespace testing;
@@ -331,6 +372,8 @@ TEST_F(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
     compositor.composite();
 }
 #endif
+
+
 TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
 {
     using namespace testing;
@@ -343,6 +386,7 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
     EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
         .InSequence(seq)
         .WillOnce(Return(false));
+
     EXPECT_CALL(display_buffer, make_current())
         .InSequence(seq);
     EXPECT_CALL(display_buffer, orientation())
@@ -361,7 +405,8 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
     EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
         .InSequence(seq)
         .WillOnce(Return(true));
-
+    //we should be testing that post_buffer is called, not just that
+    //we check the bits on the compositor buffer
     EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
         .InSequence(seq)
         .WillOnce(Return(false));
@@ -483,9 +528,9 @@ TEST_F(DefaultDisplayBufferCompositor, renderer_ends_after_post_update)
     auto mock_renderable2 = std::make_shared<NiceMock<mtd::MockRenderable>>();
     auto buf1 = std::make_shared<mtd::StubBuffer>();
     auto buf2 = std::make_shared<mtd::StubBuffer>();
-    ON_CALL(*mock_renderable1, buffer(_))
+    ON_CALL(*mock_renderable1, buffer())
         .WillByDefault(Return(buf1));
-    ON_CALL(*mock_renderable2, buffer(_))
+    ON_CALL(*mock_renderable2, buffer())
         .WillByDefault(Return(buf2));
     ON_CALL(display_buffer, view_area())
         .WillByDefault(Return(geom::Rectangle{{0,0},{14,14}}));

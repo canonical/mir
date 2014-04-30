@@ -94,7 +94,7 @@ std::pair<geom::Size, double> determine_hwc11_size_and_rate(
         HWC_DISPLAY_NO_ATTRIBUTE,
     };
 
-    int32_t size_values[sizeof(display_attribute_request) / sizeof (display_attribute_request[0])];
+    int32_t size_values[sizeof(display_attribute_request) / sizeof (display_attribute_request[0])] = {};
     hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
                                      display_attribute_request, size_values);
 

@@ -160,7 +160,7 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
      *       resizing). We may also want to check for
      *       mir_surface_state_fullscreen later when it's fully wired up.
      */
-    if ((bypass_option == mgm::BypassOption::bypass_enabled) &&
+    if ((bypass_option == mgm::BypassOption::allowed) &&
          buffer_properties.size.width.as_uint32_t() >= 800 &&
          buffer_properties.size.height.as_uint32_t() >= 600)
     {

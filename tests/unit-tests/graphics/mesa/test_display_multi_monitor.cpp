@@ -27,6 +27,7 @@
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "mir_test_doubles/stub_gl_config.h"
+#include "mir_test_doubles/stub_gl_program_factory.h"
 
 #include "mir_test_framework/udev_environment.h"
 
@@ -140,7 +141,7 @@ public:
         return std::make_shared<mgm::Platform>(
             mr::null_display_report(),
             std::make_shared<mtd::NullVirtualTerminal>(),
-            mgm::BypassOption::bypass_enabled);
+            mgm::BypassOption::allowed);
     }
 
     std::shared_ptr<mg::Display> create_display_cloned(
@@ -148,6 +149,7 @@ public:
     {
         return platform->create_display(
             std::make_shared<ClonedDisplayConfigurationPolicy>(),
+            std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
     }
 
@@ -156,6 +158,7 @@ public:
     {
         return platform->create_display(
             std::make_shared<SideBySideDisplayConfigurationPolicy>(),
+            std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
     }
 

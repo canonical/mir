@@ -17,9 +17,8 @@
  */
 
 #include "nested_output.h"
+#include "host_connection.h"
 #include "mir/input/event_filter.h"
-
-#include "mir_toolkit/mir_client_library.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -27,32 +26,22 @@
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
 
-mgn::detail::MirSurfaceHandle::MirSurfaceHandle(MirSurface* mir_surface) :
-    mir_surface(mir_surface)
-{
-}
-
-mgn::detail::MirSurfaceHandle::~MirSurfaceHandle() noexcept
-{
-    mir_surface_release_sync(mir_surface);
-}
-
 mgn::detail::NestedOutput::NestedOutput(
     EGLDisplayHandle const& egl_display,
-    MirSurface* mir_surface,
+    std::shared_ptr<HostSurface> const& host_surface,
     geometry::Rectangle const& area,
     std::shared_ptr<input::EventFilter> const& event_handler,
     MirPixelFormat preferred_format) :
     egl_display(egl_display),
-    mir_surface{mir_surface},
+    host_surface{host_surface},
     egl_config{egl_display.choose_windowed_es_config(preferred_format)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{area.top_left, area.size},
     event_handler{event_handler},
-    egl_surface{egl_display, egl_display.native_window(egl_config, mir_surface), egl_config}
+    egl_surface{egl_display, host_surface->egl_native_window(), egl_config}
 {
     MirEventDelegate ed = {event_thunk, this};
-    mir_surface_set_event_handler(mir_surface, &ed);
+    host_surface->set_event_handler(&ed);
 }
 
 geom::Rectangle mgn::detail::NestedOutput::view_area() const

@@ -194,14 +194,14 @@ MirOrientation mgm::DisplayBuffer::orientation() const
 
 bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderable_list)
 {
-    if((rotation == mir_orientation_normal) &&
-       (platform->bypass_option() == mgm::BypassOption::bypass_enabled))
+    if ((rotation == mir_orientation_normal) &&
+            (platform->bypass_option() == mgm::BypassOption::allowed))
     {
         mgm::BypassMatch bypass_match(area);
         auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);
         if (bypass_it != renderable_list.rend())
         {
-            auto bypass_buf = (*bypass_it)->buffer(this);
+            auto bypass_buf = (*bypass_it)->buffer();
             if (bypass_buf->can_bypass())
             {
                 post_update(bypass_buf);

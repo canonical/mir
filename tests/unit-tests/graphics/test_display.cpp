@@ -24,6 +24,7 @@
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/stub_gl_config.h"
+#include "mir_test_doubles/stub_gl_program_factory.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
 #ifndef ANDROID
 #include "mir_test_doubles/mock_drm.h"
@@ -84,10 +85,11 @@ public:
 #else
         auto platform = std::make_shared<mg::mesa::Platform>(report,
             std::make_shared<mir::test::doubles::NullVirtualTerminal>(),
-            mg::mesa::BypassOption::bypass_enabled);
+            mg::mesa::BypassOption::allowed);
 #endif
         return platform->create_display(
             std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+            std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
     }
 

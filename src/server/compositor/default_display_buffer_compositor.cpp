@@ -51,7 +51,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     report->began_frame(this);
 
     auto const& view_area = display_buffer.view_area();
-    auto renderable_list = scene->generate_renderable_list();
+    auto renderable_list = scene->renderable_list_for(this);
     mc::filter_occlusions_from(renderable_list, view_area);
 
     //TODO: the DisplayBufferCompositor should not have to figure out if it has to force

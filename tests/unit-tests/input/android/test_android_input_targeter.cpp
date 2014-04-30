@@ -22,7 +22,7 @@
 
 #include "mir/input/input_channel.h"
 
-#include "mir_test_doubles/mock_input_dispatcher.h"
+#include "mir_test_doubles/mock_android_input_dispatcher.h"
 #include "mir_test_doubles/stub_input_channel.h"
 
 #include "mir_test/fake_shared.h"
@@ -50,7 +50,7 @@ TEST(AndroidInputTargeterSetup, on_focus_cleared)
 {
     using namespace ::testing;
 
-    droidinput::sp<mtd::MockInputDispatcher> dispatcher = new mtd::MockInputDispatcher;
+    droidinput::sp<mtd::MockAndroidInputDispatcher> dispatcher = new mtd::MockAndroidInputDispatcher;
 
     EXPECT_CALL(*dispatcher, setKeyboardFocus(droidinput::sp<droidinput::InputWindowHandle>(0)))
         .Times(1);
@@ -68,7 +68,7 @@ TEST(AndroidInputTargeterSetup, on_focus_changed)
     std::shared_ptr<mi::InputChannel const> stub_channel = std::make_shared<mtd::StubInputChannel>();
     mtd::MockWindowHandleRepository repository;
 
-    droidinput::sp<mtd::MockInputDispatcher> dispatcher = new mtd::MockInputDispatcher;
+    droidinput::sp<mtd::MockAndroidInputDispatcher> dispatcher = new mtd::MockAndroidInputDispatcher;
     droidinput::sp<droidinput::InputWindowHandle> stub_window_handle = new mtd::StubWindowHandle;
 
     EXPECT_CALL(*dispatcher, setKeyboardFocus(stub_window_handle))
@@ -85,7 +85,7 @@ TEST(AndroidInputTargeterSetup, on_focus_changed_throw_behavior)
 {
     using namespace ::testing;
 
-    droidinput::sp<mtd::MockInputDispatcher> dispatcher = new mtd::MockInputDispatcher;
+    droidinput::sp<mtd::MockAndroidInputDispatcher> dispatcher = new mtd::MockAndroidInputDispatcher;
     mtd::MockWindowHandleRepository repository;
     mia::InputTargeter targeter(dispatcher, mt::fake_shared(repository));
 
