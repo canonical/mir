@@ -58,16 +58,6 @@ struct FakeScene : mc::Scene
         return renderlist;
     }
 
-    // Ugly...should we use delegation?
-    void for_each_if(mc::FilterForScene& filter, mc::OperatorForScene& renderable_operator)
-    {
-        for (auto it = renderlist.begin(); it != renderlist.end(); it++)
-        {
-            mg::Renderable &info = **it;
-            if (filter(info)) renderable_operator(info);
-        }
-    }
-
     void set_change_callback(std::function<void()> const&) {}
 
     void change(mg::RenderableList const& new_renderlist)
@@ -111,15 +101,13 @@ TEST_F(DefaultDisplayBufferCompositor, render)
     using namespace testing;
     mtd::MockScene scene;
 
-    EXPECT_CALL(mock_renderer, render(_,_))
+    EXPECT_CALL(mock_renderer, render(_))
         .Times(0);
     EXPECT_CALL(display_buffer, view_area())
         .Times(AtLeast(1));
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
     EXPECT_CALL(scene, generate_renderable_list())
-        .Times(1);
-    EXPECT_CALL(scene, for_each_if(_,_))
         .Times(1);
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
@@ -140,14 +128,6 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     auto mock_renderable1 = std::make_shared<NiceMock<mtd::MockRenderable>>();
     auto mock_renderable2 = std::make_shared<NiceMock<mtd::MockRenderable>>();
     auto mock_renderable3 = std::make_shared<NiceMock<mtd::MockRenderable>>();
-
-    auto buf = std::make_shared<mtd::StubBuffer>();
-    EXPECT_CALL(*mock_renderable1, buffer(_))
-        .WillOnce(Return(buf));
-    EXPECT_CALL(*mock_renderable2, buffer(_))
-        .Times(0);
-    EXPECT_CALL(*mock_renderable3, buffer(_))
-        .WillOnce(Return(buf));
 
     glm::mat4 simple;
     EXPECT_CALL(*mock_renderable1, transformation())
@@ -188,11 +168,11 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     };
     FakeScene scene(list);
 
-    EXPECT_CALL(mock_renderer, render(Ref(*mock_renderable1),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*mock_renderable1)))
         .Times(1);
-    EXPECT_CALL(mock_renderer, render(Ref(*mock_renderable2),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*mock_renderable2)))
         .Times(0);
-    EXPECT_CALL(mock_renderer, render(Ref(*mock_renderable3),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*mock_renderable3)))
         .Times(1);
 
     mc::DefaultDisplayBufferCompositor compositor(
@@ -219,9 +199,9 @@ TEST_F(DefaultDisplayBufferCompositor, bypass_skips_composition)
         .Times(1);
     EXPECT_CALL(mock_renderer, begin())
         .Times(0);
-    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*small)))
         .Times(0);
-    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen)))
         .Times(0);
     EXPECT_CALL(mock_renderer, end())
         .Times(0);
@@ -264,13 +244,13 @@ TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
         .InSequence(render_seq);
     EXPECT_CALL(mock_renderer, begin())
         .InSequence(render_seq);
-    EXPECT_CALL(mock_renderer, render(Ref(*big),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*big)))
         .InSequence(render_seq);
-    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
-        .InSequence(render_seq);
-    EXPECT_CALL(mock_renderer, end())
+    EXPECT_CALL(mock_renderer, render(Ref(*small)))
         .InSequence(render_seq);
     EXPECT_CALL(display_buffer, post_update())
+        .InSequence(render_seq);
+    EXPECT_CALL(mock_renderer, end())
         .InSequence(render_seq);
 
     mc::DefaultDisplayBufferCompositor compositor(
@@ -299,9 +279,9 @@ TEST_F(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
         .Times(1);
     EXPECT_CALL(display_buffer, make_current())
         .Times(1);
-    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen)))
         .Times(1);
-    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*small)))
         .Times(1);
     EXPECT_CALL(display_buffer, post_update())
         .Times(1);
@@ -335,9 +315,9 @@ TEST_F(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
         .Times(1);
     EXPECT_CALL(display_buffer, can_bypass())
         .WillRepeatedly(Return(false));
-    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*small)))
         .Times(0);  // zero due to occlusion detection
-    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen)))
         .Times(1);
 
     mc::DefaultDisplayBufferCompositor compositor(
@@ -369,9 +349,9 @@ TEST_F(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
     };
     FakeScene scene(list);
 
-    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*small)))
         .Times(0);  // zero due to occlusion detection
-    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen)))
         .Times(1);
 
     auto nonbypassable = std::make_shared<mtd::MockBuffer>();
@@ -412,9 +392,9 @@ TEST_F(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
         .InSequence(seq);
     EXPECT_CALL(mock_renderer, begin())
         .InSequence(seq);
-    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*fullscreen)))
         .InSequence(seq);
-    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*small)))
         .InSequence(seq);
     EXPECT_CALL(display_buffer, post_update())
         .InSequence(seq);
@@ -434,7 +414,7 @@ TEST_F(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
         .InSequence(seq);
     EXPECT_CALL(mock_renderer, begin())
         .InSequence(seq);
-    EXPECT_CALL(mock_renderer, render(Ref(*small),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*small)))
         .InSequence(seq);
     EXPECT_CALL(display_buffer, post_update())
         .InSequence(seq);
@@ -500,9 +480,9 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
     Sequence seq;
     EXPECT_CALL(display_buffer, make_current())
         .InSequence(seq);
-    EXPECT_CALL(mock_renderer, render(Ref(*window0),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*window0)))
         .InSequence(seq);
-    EXPECT_CALL(mock_renderer, render(Ref(*window3),_))
+    EXPECT_CALL(mock_renderer, render(Ref(*window3)))
         .InSequence(seq);
     EXPECT_CALL(display_buffer, post_update())
         .InSequence(seq);
@@ -535,12 +515,12 @@ TEST_F(DefaultDisplayBufferCompositor, decides_whether_to_recomposite_before_ren
     EXPECT_CALL(*mock_renderable, buffers_ready_for_compositor())
         .InSequence(seq)
         .WillOnce(Return(2));
-    EXPECT_CALL(*mock_renderable, buffer(_))
+    EXPECT_CALL(mock_renderer, render(Ref(*mock_renderable)))
         .InSequence(seq); 
     EXPECT_CALL(*mock_renderable, buffers_ready_for_compositor())
         .InSequence(seq)
         .WillOnce(Return(1));
-    EXPECT_CALL(*mock_renderable, buffer(_))
+    EXPECT_CALL(mock_renderer, render(Ref(*mock_renderable)))
         .InSequence(seq); 
 
     mg::RenderableList list({mock_renderable});
@@ -555,3 +535,42 @@ TEST_F(DefaultDisplayBufferCompositor, decides_whether_to_recomposite_before_ren
     EXPECT_TRUE(compositor.composite());
     EXPECT_FALSE(compositor.composite());
 }
+
+TEST_F(DefaultDisplayBufferCompositor, renderer_ends_after_post_update)
+{
+    using namespace testing;
+    auto mock_renderable1 = std::make_shared<NiceMock<mtd::MockRenderable>>();
+    auto mock_renderable2 = std::make_shared<NiceMock<mtd::MockRenderable>>();
+    auto buf1 = std::make_shared<mtd::StubBuffer>();
+    auto buf2 = std::make_shared<mtd::StubBuffer>();
+    ON_CALL(*mock_renderable1, buffer(_))
+        .WillByDefault(Return(buf1));
+    ON_CALL(*mock_renderable2, buffer(_))
+        .WillByDefault(Return(buf2));
+    ON_CALL(display_buffer, view_area())
+        .WillByDefault(Return(geom::Rectangle{{0,0},{14,14}}));
+    EXPECT_CALL(*mock_renderable1, screen_position())
+        .WillRepeatedly(Return(geom::Rectangle{{1,2}, {3,4}}));
+    EXPECT_CALL(*mock_renderable2, screen_position())
+        .WillRepeatedly(Return(geom::Rectangle{{0,2}, {3,4}}));
+
+    mg::RenderableList list{
+        mock_renderable1,
+        mock_renderable2
+    };
+    FakeScene scene(list);
+
+    Sequence seq;
+    EXPECT_CALL(display_buffer, post_update())
+        .InSequence(seq);
+    EXPECT_CALL(mock_renderer, end())
+        .InSequence(seq);
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(scene),
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+    compositor.composite();
+}
+

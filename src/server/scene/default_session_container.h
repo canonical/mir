@@ -32,14 +32,14 @@ namespace scene
 class DefaultSessionContainer : public SessionContainer
 {
 public:
-    void insert_session(std::shared_ptr<shell::Session> const& session);
-    void remove_session(std::shared_ptr<shell::Session> const& session);
-    void for_each(std::function<void(std::shared_ptr<shell::Session> const&)> f) const;
+    void insert_session(std::shared_ptr<Session> const& session) override;
+    void remove_session(std::shared_ptr<Session> const& session) override;
+    void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const override;
 
-    std::shared_ptr<shell::Session> successor_of(std::shared_ptr<shell::Session> const& session) const;
+    std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const& session) const override;
 
 private:
-    std::vector<std::shared_ptr<shell::Session>> apps;
+    std::vector<std::shared_ptr<Session>> apps;
     mutable std::mutex guard;
 };
 

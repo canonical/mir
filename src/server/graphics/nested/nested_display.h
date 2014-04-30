@@ -66,13 +66,12 @@ private:
 class EGLDisplayHandle
 {
 public:
-    EGLDisplayHandle(MirConnection* connection,
+    EGLDisplayHandle(EGLNativeDisplayType native_display,
                      std::shared_ptr<GLConfig> const& gl_config);
     ~EGLDisplayHandle() noexcept;
 
     void initialize(MirPixelFormat format);
     EGLConfig choose_windowed_es_config(MirPixelFormat format) const;
-    EGLNativeWindowType native_window(EGLConfig egl_config, MirSurface* mir_surface) const;
     EGLContext egl_context() const;
     operator EGLDisplay() const { return egl_display; }
 
@@ -133,6 +132,8 @@ private:
     std::mutex outputs_mutex;
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::NestedOutput>> outputs;
     DisplayConfigurationChangeHandler my_conf_change_handler;
+    void create_surfaces(mir::graphics::DisplayConfiguration const& configuration);
+    void apply_to_connection(mir::graphics::DisplayConfiguration const& configuration);
     void complete_display_initialization(MirPixelFormat format);
 };
 

@@ -28,7 +28,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
 set(MIR_VERSION_MINOR 1)
-set(MIR_VERSION_PATCH 8)
+set(MIR_VERSION_PATCH 9)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 execute_process(
@@ -151,14 +151,6 @@ macro(uses_android_input _target_name)
 endmacro()
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
-
-set (OLD_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-# Don't treat warnings as errors in 3rd_party/{gmock}
-string (REPLACE " -Werror " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-
-
-# Restore -Werror for non-3rd-party code
-set (CMAKE_CXX_FLAGS ${OLD_CMAKE_CXX_FLAGS})
 
 option(MIR_ENABLE_TESTS "Build tests" ON)
 

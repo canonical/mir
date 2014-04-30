@@ -37,7 +37,7 @@ namespace mga=mir::graphics::android;
 
 namespace
 {
-struct ServerRenderWindowTest : public ::testing::Test
+struct ServerRenderWindow : public ::testing::Test
 {
     virtual void SetUp()
     {
@@ -59,7 +59,7 @@ struct ServerRenderWindowTest : public ::testing::Test
 };
 }
 
-TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
+TEST_F(ServerRenderWindow, returns_buffer_on_request)
 {
     using namespace testing;
 
@@ -83,7 +83,7 @@ TEST_F(ServerRenderWindowTest, driver_wants_a_buffer)
     EXPECT_EQ(stub_buffer.get(), rc_buffer);
 }
 
-TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
+TEST_F(ServerRenderWindow, updates_fences_and_returns_buffer_on_queue)
 {
     using namespace testing;
     int fake_fence = 488;
@@ -112,7 +112,7 @@ TEST_F(ServerRenderWindowTest, driver_is_done_with_a_buffer_properly)
     testing::Mock::VerifyAndClearExpectations(mock_fb_bundle.get());
 }
 
-TEST_F(ServerRenderWindowTest, driver_inquires_about_format)
+TEST_F(ServerRenderWindow, returns_format)
 {
     using namespace testing;
 
@@ -125,7 +125,7 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_format)
     EXPECT_EQ(HAL_PIXEL_FORMAT_RGBA_8888, render_window.driver_requests_info(NATIVE_WINDOW_FORMAT));
 }
 
-TEST_F(ServerRenderWindowTest, driver_inquires_about_format_after_format_set)
+TEST_F(ServerRenderWindow, returns_different_format_if_format_changes)
 {
     using namespace testing;
 
@@ -136,7 +136,7 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_format_after_format_set)
     EXPECT_EQ(HAL_PIXEL_FORMAT_RGBX_8888, rc_format);
 }
 
-TEST_F(ServerRenderWindowTest, driver_inquires_about_size_without_having_been_set)
+TEST_F(ServerRenderWindow, returns_sensible_size_values_without_size_having_been_set)
 {
     using namespace testing;
     geom::Size test_size{4, 5};
@@ -157,7 +157,7 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_size_without_having_been_se
     EXPECT_EQ(test_size.height.as_uint32_t(), rc_height);
 }
 
-TEST_F(ServerRenderWindowTest, driver_inquires_about_transform)
+TEST_F(ServerRenderWindow, returns_no_transform_when_asked_for_hint)
 {
     using namespace testing;
 
@@ -166,7 +166,14 @@ TEST_F(ServerRenderWindowTest, driver_inquires_about_transform)
     EXPECT_EQ(0, render_window.driver_requests_info(NATIVE_WINDOW_TRANSFORM_HINT));
 }
 
-TEST_F(ServerRenderWindowTest, driver_unknown_inquiry)
+TEST_F(ServerRenderWindow, reports_framebuffer_concrete_type)
+{
+    mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
+
+    EXPECT_EQ(NATIVE_WINDOW_FRAMEBUFFER, render_window.driver_requests_info(NATIVE_WINDOW_CONCRETE_TYPE));
+}
+
+TEST_F(ServerRenderWindow, throws_on_driver_unknown_inquiry)
 {
     using namespace testing;
     mga::ServerRenderWindow render_window(mock_fb_bundle, mock_cache);
@@ -176,7 +183,7 @@ TEST_F(ServerRenderWindowTest, driver_unknown_inquiry)
     }, std::runtime_error);
 }
 
-TEST_F(ServerRenderWindowTest, driver_swapinterval_request)
+TEST_F(ServerRenderWindow, services_driver_swapinterval_request)
 {
     EXPECT_CALL(*mock_fb_bundle, wait_for_consumed_buffer(false))
         .Times(1);

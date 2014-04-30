@@ -21,7 +21,7 @@
 #include "mir/input/input_channel.h"
 #include "mir/scene/input_registrar.h"
 #include "mir/input/surface.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/input/composite_event_filter.h"

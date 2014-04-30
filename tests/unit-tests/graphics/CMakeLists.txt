@@ -8,6 +8,8 @@ list(APPEND UNIT_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_properties.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_pixel_format_utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/test_surfaceless_egl_context.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_overlapping_output_grouping.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_program_factory.cpp
 )
 
 add_subdirectory(nested/)

@@ -17,11 +17,11 @@
  */
 
 #include "application_session.h"
-#include "mir/shell/surface.h"
+#include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
-#include "mir/shell/surface_factory.h"
+#include "mir/scene/surface_coordinator.h"
 #include "snapshot_strategy.h"
-#include "mir/shell/session_listener.h"
+#include "mir/scene/session_listener.h"
 #include "mir/frontend/event_sink.h"
 
 #include <boost/throw_exception.hpp>
@@ -37,13 +37,13 @@ namespace msh = mir::shell;
 namespace mg = mir::graphics;
 
 ms::ApplicationSession::ApplicationSession(
-    std::shared_ptr<msh::SurfaceFactory> const& surface_factory,
+    std::shared_ptr<ms::SurfaceCoordinator> const& surface_coordinator,
     pid_t pid,
     std::string const& session_name,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
-    std::shared_ptr<msh::SessionListener> const& session_listener,
+    std::shared_ptr<SessionListener> const& session_listener,
     std::shared_ptr<mf::EventSink> const& sink) :
-    surface_factory(surface_factory),
+    surface_coordinator(surface_coordinator),
     pid(pid),
     session_name(session_name),
     snapshot_strategy(snapshot_strategy),
@@ -51,7 +51,7 @@ ms::ApplicationSession::ApplicationSession(
     event_sink(sink),
     next_surface_id(0)
 {
-    assert(surface_factory);
+    assert(surface_coordinator);
 }
 
 ms::ApplicationSession::~ApplicationSession()
@@ -60,7 +60,7 @@ ms::ApplicationSession::~ApplicationSession()
     for (auto const& pair_id_surface : surfaces)
     {
         session_listener->destroying_surface(*this, pair_id_surface.second);
-        surface_factory->destroy_surface(pair_id_surface.second);
+        surface_coordinator->remove_surface(pair_id_surface.second);
     }
 }
 
@@ -69,18 +69,20 @@ mf::SurfaceId ms::ApplicationSession::next_id()
     return mf::SurfaceId(next_surface_id.fetch_add(1));
 }
 
-mf::SurfaceId ms::ApplicationSession::create_surface(const msh::SurfaceCreationParameters& params)
+mf::SurfaceId ms::ApplicationSession::create_surface(const SurfaceCreationParameters& params)
 {
     auto const id = next_id();
 
     auto const observer = std::make_shared<scene::SurfaceEventSource>(id, event_sink);
-    auto surf = surface_factory->create_surface(this, params, observer);
+    auto surf = surface_coordinator->add_surface(params, this);
+    surf->add_observer(observer);
 
-    std::unique_lock<std::mutex> lock(surfaces_mutex);
-    surfaces[id] = surf;
+    {
+        std::unique_lock<std::mutex> lock(surfaces_mutex);
+        surfaces[id] = surf;
+    }
 
     session_listener->surface_created(*this, surf);
-
     return id;
 }
 
@@ -101,22 +103,22 @@ std::shared_ptr<mf::Surface> ms::ApplicationSession::get_surface(mf::SurfaceId i
     return checked_find(id)->second;
 }
 
-void ms::ApplicationSession::take_snapshot(msh::SnapshotCallback const& snapshot_taken)
+void ms::ApplicationSession::take_snapshot(SnapshotCallback const& snapshot_taken)
 {
     if (auto surface = default_surface())
         snapshot_strategy->take_snapshot_of(surface, snapshot_taken);
     else
-        snapshot_taken(msh::Snapshot());
+        snapshot_taken(Snapshot());
 }
 
-std::shared_ptr<msh::Surface> ms::ApplicationSession::default_surface() const
+std::shared_ptr<ms::Surface> ms::ApplicationSession::default_surface() const
 {
     std::unique_lock<std::mutex> lock(surfaces_mutex);
 
     if (surfaces.size())
         return surfaces.begin()->second;
     else
-        return std::shared_ptr<msh::Surface>();
+        return std::shared_ptr<ms::Surface>();
 }
 
 void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
@@ -130,7 +132,7 @@ void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
     surfaces.erase(p);
     lock.unlock();
 
-    surface_factory->destroy_surface(surface);
+    surface_coordinator->remove_surface(surface);
 }
 
 std::string ms::ApplicationSession::name() const
@@ -168,16 +170,6 @@ void ms::ApplicationSession::show()
     {
         id_s.second->show();
     }
-}
-
-int ms::ApplicationSession::configure_surface(mf::SurfaceId id,
-                                               MirSurfaceAttrib attrib,
-                                               int requested_value)
-{
-    std::unique_lock<std::mutex> lock(surfaces_mutex);
-    std::shared_ptr<msh::Surface> surf(checked_find(id)->second);
-
-    return surf->configure(attrib, requested_value);
 }
 
 void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const& info)

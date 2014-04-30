@@ -153,30 +153,15 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
             verification_thread = std::thread([this](){
                 verify_scene.exec([this]
                 {
-                    auto scene = the_scene();
-
-                    struct VerificationFilter : public mc::FilterForScene
-                    {
-                        bool operator()(mg::Renderable const& rend)
-                        {
-                            rects.push_back(rend.screen_position());
-                            return false;
-                        }
-
-                        std::vector<geom::Rectangle> rects;
-                    } filter;
-
-                    struct NullOperator : public mc::OperatorForScene
-                    {
-                        void operator()(mg::Renderable const&) {}
-                    } null_operator;
-
-                    scene->for_each_if(filter, null_operator);
+                    std::vector<geom::Rectangle> rects;
+                    auto list = the_scene()->generate_renderable_list();
+                    for(auto &rend : list) 
+                        rects.push_back(rend->screen_position());
 
                     auto display_rects = graphics_platform->display_rects();
                     std::sort(display_rects.begin(), display_rects.end(), RectangleCompare());
-                    std::sort(filter.rects.begin(), filter.rects.end(), RectangleCompare());
-                    EXPECT_EQ(display_rects, filter.rects);
+                    std::sort(rects.begin(), rects.end(), RectangleCompare());
+                    EXPECT_EQ(display_rects, rects);
                 });
             });
         }

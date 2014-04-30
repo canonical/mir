@@ -72,9 +72,9 @@ mir::DefaultServerConfiguration::the_compositor()
 std::shared_ptr<mc::RendererFactory> mir::DefaultServerConfiguration::the_renderer_factory()
 {
     return renderer_factory(
-        []()
+        [this]()
         {
-            return std::make_shared<mc::GLRendererFactory>();
+            return std::make_shared<mc::GLRendererFactory>(the_gl_program_factory());
         });
 }
 

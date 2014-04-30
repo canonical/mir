@@ -17,16 +17,17 @@
  */
 
 #include "mir_test_doubles/mock_display_layout.h"
-#include "mir_test_doubles/stub_shell_session.h"
+#include "mir_test_doubles/stub_scene_session.h"
 
 #include "src/server/shell/consuming_placement_strategy.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 
 #include "mir/geometry/rectangle.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
@@ -43,7 +44,7 @@ struct ConsumingPlacementStrategySetup : public testing::Test
     }
 
     std::shared_ptr<mtd::MockDisplayLayout> display_layout;
-    mtd::StubShellSession session;
+    mtd::StubSceneSession session;
 };
 }
 
@@ -52,7 +53,7 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_no_geometry_are_made_ful
 {
     using namespace ::testing;
 
-    msh::SurfaceCreationParameters input_params;
+    ms::SurfaceCreationParameters input_params;
     geom::Rectangle rect{input_params.top_left, input_params.size};
 
     EXPECT_CALL(*display_layout, size_to_output(rect)).Times(1);
@@ -66,7 +67,7 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_geometry_are_clipped)
 {
     using namespace ::testing;
 
-    msh::SurfaceCreationParameters input_params;
+    ms::SurfaceCreationParameters input_params;
     input_params.size = geom::Size{100, 200};
     geom::Rectangle rect{input_params.top_left, input_params.size};
 
@@ -81,7 +82,7 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_output_id_are_placed_in_
 {
     using namespace ::testing;
 
-    msh::SurfaceCreationParameters input_params;
+    ms::SurfaceCreationParameters input_params;
     input_params.size = geom::Size{100, 200};
     input_params.output_id = mir::graphics::DisplayConfigurationOutputId{1};
     geom::Rectangle rect{input_params.top_left, input_params.size};

@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_SHELL_H_
 #define MIR_TEST_DOUBLES_SHELL_H_
 
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/surface_id.h"
 
@@ -41,7 +41,7 @@ struct MockShell : public frontend::Shell
 
     MOCK_METHOD1(close_session, void(std::shared_ptr<frontend::Session> const&));
 
-    MOCK_METHOD2(create_surface_for, frontend::SurfaceId(std::shared_ptr<frontend::Session> const&, shell::SurfaceCreationParameters const&));
+    MOCK_METHOD2(create_surface_for, frontend::SurfaceId(std::shared_ptr<frontend::Session> const&, scene::SurfaceCreationParameters const&));
     MOCK_METHOD1(handle_surface_created, void(std::shared_ptr<frontend::Session> const&));
 };
 

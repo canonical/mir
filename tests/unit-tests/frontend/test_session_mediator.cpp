@@ -42,7 +42,6 @@
 #include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
 #include "mir/frontend/event_sink.h"
-#include "mir/shell/surface.h"
 
 #include "gmock_set_arg.h"
 #include <gtest/gtest.h>
@@ -116,7 +115,7 @@ public:
         return mock_surfaces.at(surface);
     }
 
-    mf::SurfaceId create_surface(msh::SurfaceCreationParameters const& /* params */) override
+    mf::SurfaceId create_surface(ms::SurfaceCreationParameters const& /* params */) override
     {
         using namespace ::testing;
         auto id = mf::SurfaceId{last_surface_id};
