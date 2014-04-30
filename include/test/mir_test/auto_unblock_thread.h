@@ -23,13 +23,15 @@
  * under such conditions.
  */
 
-#ifndef MIR_TEST_FRAMEWORK_AUTO_UNBLOCK_THREAD_H_
-#define MIR_TEST_FRAMEWORK_AUTO_UNBLOCK_THREAD_H_
+#ifndef MIR_TEST_AUTO_UNBLOCK_THREAD_H_
+#define MIR_TEST_AUTO_UNBLOCK_THREAD_H_
 
 #include <thread>
 #include <functional>
 
-namespace mir_test_framework
+namespace mir
+{
+namespace test
 {
 
 class AutoUnblockThread
@@ -73,5 +75,5 @@ public:
 };
 
 }
-
+}
 #endif

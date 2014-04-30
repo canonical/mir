@@ -20,7 +20,7 @@
 #include "src/server/compositor/switching_bundle.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_framework/auto_unblock_thread.h"
+#include "mir_test/auto_unblock_thread.h"
 #include "mir_test/wait_condition.h"
 
 #include <gtest/gtest.h>
@@ -33,7 +33,7 @@
 
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
-namespace mtf = mir_test_framework;
+namespace mt = mir::test;
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
 
@@ -412,7 +412,7 @@ TEST_F(SwitchingBundleTest, async_client_cycles_through_all_buffers)
 
         std::atomic<bool> done(false);
         auto unblock = [&done] { done = true; };
-        mtf::AutoUnblockThread compositor(unblock,
+        mt::AutoUnblockThread compositor(unblock,
             compositor_thread, std::ref(q), std::ref(done));
 
         std::unordered_set<uint32_t> ids_acquired;
@@ -537,7 +537,7 @@ TEST_F(SwitchingBundleTest, compositor_can_always_acquire_buffer)
         std::atomic<bool> done(false);
         auto unblock = [&done] { done = true; };
 
-        mtf::AutoJoinThread client([&q]
+        mt::AutoJoinThread client([&q]
         {
             for (int nframes = 0; nframes < 100; ++nframes)
             {
@@ -548,7 +548,7 @@ TEST_F(SwitchingBundleTest, compositor_can_always_acquire_buffer)
                 std::this_thread::yield();
             }
         });
-        mtf::AutoUnblockThread compositor(unblock, [&]
+        mt::AutoUnblockThread compositor(unblock, [&]
         {
             while (!done)
             {
@@ -735,25 +735,25 @@ TEST_F(SwitchingBundleTest, stress)
 
         auto unblock = [&done]{ done = true;};
 
-        mtf::AutoUnblockThread compositor(unblock, compositor_thread,
-                                          std::ref(q),
-                                          std::ref(done));
-        mtf::AutoUnblockThread snapshotter1(unblock, snapshot_thread,
-                                            std::ref(q),
-                                            std::ref(done));
-        mtf::AutoUnblockThread snapshotter2(unblock, snapshot_thread,
-                                            std::ref(q),
-                                            std::ref(done));
+        mt::AutoUnblockThread compositor(unblock, compositor_thread,
+                                         std::ref(q),
+                                         std::ref(done));
+        mt::AutoUnblockThread snapshotter1(unblock, snapshot_thread,
+                                           std::ref(q),
+                                           std::ref(done));
+        mt::AutoUnblockThread snapshotter2(unblock, snapshot_thread,
+                                           std::ref(q),
+                                           std::ref(done));
 
         q.allow_framedropping(false);
-        mtf::AutoJoinThread client1(client_thread, std::ref(q), 1000);
+        mt::AutoJoinThread client1(client_thread, std::ref(q), 1000);
         client1.stop();
 
         q.allow_framedropping(true);
-        mtf::AutoJoinThread client2(client_thread, std::ref(q), 1000);
+        mt::AutoJoinThread client2(client_thread, std::ref(q), 1000);
         client2.stop();
 
-        mtf::AutoJoinThread client3(switching_client_thread, std::ref(q), 1000);
+        mt::AutoJoinThread client3(switching_client_thread, std::ref(q), 1000);
         client3.stop();
     }
 }
@@ -858,7 +858,7 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
 
         std::atomic<bool> done(false);
 
-        mtf::AutoJoinThread monitor1([&]
+        mt::AutoJoinThread monitor1([&]
         {
             for (unsigned long frame = 0; frame != compose_frames+3; frame++)
             {
@@ -913,7 +913,7 @@ TEST_F(SwitchingBundleTest, slow_client_framerate_matches_compositor)
         std::atomic<bool> done(false);
         std::mutex sync;
 
-        mtf::AutoJoinThread monitor1([&]
+        mt::AutoJoinThread monitor1([&]
         {
             for (unsigned long frame = 0; frame != compose_frames+3; frame++)
             {
@@ -1105,7 +1105,7 @@ TEST_F(SwitchingBundleTest, compositor_never_owns_client_buffers)
         std::atomic<bool> done(false);
 
         auto unblock = [&done]{ done = true; };
-        mtf::AutoUnblockThread compositor_thread(unblock, [&]
+        mt::AutoUnblockThread compositor_thread(unblock, [&]
         {
             while (!done)
             {
@@ -1202,7 +1202,7 @@ TEST_F(SwitchingBundleTest, buffers_are_not_lost)
         /* An async client should still be able to cycle through all the available buffers */
         std::atomic<bool> done(false);
         auto unblock = [&done] { done = true; };
-        mtf::AutoUnblockThread compositor(unblock,
+        mt::AutoUnblockThread compositor(unblock,
            compositor_thread, std::ref(q), std::ref(done));
 
         std::unordered_set<mg::Buffer *> unique_buffers_acquired;
@@ -1239,7 +1239,7 @@ TEST_F(SwitchingBundleTest, DISABLED_synchronous_clients_only_get_two_real_buffe
 
         std::atomic<bool> done(false);
         auto unblock = [&done] { done = true; };
-        mtf::AutoUnblockThread compositor(unblock,
+        mt::AutoUnblockThread compositor(unblock,
            compositor_thread, std::ref(q), std::ref(done));
 
         std::unordered_set<mg::Buffer *> buffers_acquired;
