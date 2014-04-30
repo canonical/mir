@@ -10,61 +10,72 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/regex.hpp>
 #include <boost/thread/thread.hpp> 
+#include <condition_variable>
 #include <iostream>
+#include <mutex>
 #include <fstream>
 #include <string>
 #include <thread>
-#include <mutex>
-#include <condition_variable>
+
 class GLMark2Test : public ::testing::Test
 {
 protected:
-    std::mutex mutex;
-    std::condition_variable cv;
+    enum ResultFileType {raw, json};
     mir::DisplayServer* result{nullptr};
-    void launch_mir_server()
+    std::thread server_thread;
+
+    mir::DisplayServer* launch_mir_server()
     {
         char const* argv[] = {""}; 
         int argc = sizeof(argv) / sizeof(argv[0]);
         mir::DefaultServerConfiguration config(argc, argv);
-        try
+
+        std::condition_variable cv;
+        std::mutex mutex;
+        server_thread = std::thread([&]
         {
-            run_mir(config, [&](mir::DisplayServer& ds) {
-                std::unique_lock<std::mutex> lock(mutex);
-                result = &ds;
-                cv.notify_one();
-            } );
-        }
-        catch(...)
+            try
+            {
+                run_mir(config, [&](mir::DisplayServer& ds) {
+                    std::unique_lock<std::mutex> lock(mutex);
+                    result = &ds;
+                    cv.notify_one();
+                });
+            }
+            catch(...)
+            {
+                mir::report_exception(std::cerr);
+            }
+        });
+       
+        using namespace std::chrono; 
+        auto const time_limit = system_clock::now() + seconds(2);
+        std::unique_lock<std::mutex> lock(mutex);
+        while(!result)
         {
-            mir::report_exception(std::cerr);
+            cv.wait_until(lock, time_limit);
         }
+ 
+        return result;
     }
     
-    enum ResultFileType {raw, json};
     virtual void RunGLMark2(char const* output_filename, ResultFileType file_type)
     {
+        mir::DisplayServer* ds = launch_mir_server();
+        ASSERT_TRUE(ds);
+
         boost::cmatch matches;
         boost::regex re_glmark2_score(".*glmark2\\s+Score:\\s+(\\d+).*");
         FILE* in;
         char* line = NULL;
         size_t len = 0;
         ssize_t read;
-        std::ofstream glmark2_output;
-
-        std::thread mir_server(&GLMark2Test::launch_mir_server, this);
-        
-        using namespace std::chrono; 
-        auto const time_limit = system_clock::now() + seconds(2);
-        std::unique_lock<std::mutex> lock(mutex);
-        while(!result){
-            cv.wait_until(lock, time_limit);
-        }
+        std::ofstream glmark2_output;    
+        glmark2_output.open(output_filename);
 
         char const* cmd = "glmark2-es2-mir -b texture --fullscreen";
         ASSERT_TRUE((in = popen(cmd, "r")));
-    
-        glmark2_output.open(output_filename);
+        
         while ((read = getline(&line, &len, in)) != -1)
         {
             if (file_type == raw)
@@ -87,9 +98,8 @@ protected:
             }
         }
         
-        /*HACK to stop the mir server*/ 
-        //raise(SIGINT);
-        mir_server.join(); 
+        ds->stop(); 
+        if (server_thread.joinable()) server_thread.join();
         free(line);
         fclose(in);
     }
