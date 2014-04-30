@@ -93,7 +93,7 @@ mir::DefaultServerConfiguration::the_cursor_listener()
 {
     struct DefaultCursorListener : mi::CursorListener
     {
-        DefaultCursorListener(std::weak_ptr<mg::Cursor> const& hw_cursor,
+        DefaultCursorListener(std::shared_ptr<mg::Cursor> const& hw_cursor,
                               CachedPtr<mc::Compositor> const& compositor)
             : hw_cursor(hw_cursor), compositor(compositor)
         {
@@ -103,8 +103,7 @@ mir::DefaultServerConfiguration::the_cursor_listener()
         {
             geom::Point p{abs_x, abs_y};
 
-            if (auto c = hw_cursor.lock())
-                c->move_to(p);
+            hw_cursor->move_to(p);
 
             auto comp = *compositor;
             if (comp)
@@ -115,7 +114,7 @@ mir::DefaultServerConfiguration::the_cursor_listener()
             }
         }
 
-        std::weak_ptr<mg::Cursor> const hw_cursor;
+        std::shared_ptr<mg::Cursor> const hw_cursor;
 
         // We use the cached ptr because a shared_ptr would force early
         // construction resulting in a constructor cycle, and crash.
@@ -125,7 +124,7 @@ mir::DefaultServerConfiguration::the_cursor_listener()
         [this]() -> std::shared_ptr<mi::CursorListener>
         {
             return std::make_shared<DefaultCursorListener>(
-                the_display()->the_cursor(), compositor);
+                the_cursor(), compositor);
         });
 }
 
@@ -173,11 +172,6 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         {
             return std::make_shared<DefaultSessionAuthorizer>();
         });
-}
-
-std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()
-{
-    return the_input_manager();
 }
 
 std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()

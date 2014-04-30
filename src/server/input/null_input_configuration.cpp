@@ -18,6 +18,9 @@
 
 #include "null_input_configuration.h"
 
+#include "mir/input/input_dispatcher_configuration.h"
+#include "mir/input/input_dispatcher.h"
+#include "mir/input/input_channel_factory.h"
 #include "mir/scene/input_registrar.h"
 #include "mir/shell/input_targeter.h"
 #include "mir/input/input_manager.h"
@@ -36,11 +39,11 @@ struct NullInputRegistrar : public ms::InputRegistrar
 
     void input_channel_opened(std::shared_ptr<mi::InputChannel> const&,
                               std::shared_ptr<mi::Surface> const&,
-                              mi::InputReceptionMode /* receives_all_input */)
+                              mi::InputReceptionMode /* receives_all_input */) override
     {
     }
 
-    void input_channel_closed(std::shared_ptr<mi::InputChannel> const&)
+    void input_channel_closed(std::shared_ptr<mi::InputChannel> const&) override
     {
     }
 };
@@ -50,46 +53,95 @@ struct NullInputTargeter : public msh::InputTargeter
     NullInputTargeter() = default;
     virtual ~NullInputTargeter() noexcept(true) = default;
 
-    void focus_changed(std::shared_ptr<mi::InputChannel const> const&)
+    void focus_changed(std::shared_ptr<mi::InputChannel const> const&) override
     {
     }
 
-    void focus_cleared()
+    void focus_cleared() override
     {
     }
 };
 
-struct NullInputManager : public mi::InputManager
+class NullInputChannelFactory : public mi::InputChannelFactory
 {
-    void start()
-    {
-    }
-    void stop()
-    {
-    }
-    std::shared_ptr<mi::InputChannel> make_input_channel()
+    std::shared_ptr<mi::InputChannel> make_input_channel() override
     {
         return std::shared_ptr<mi::InputChannel>();
     }
 };
 
+class NullInputManager : public mi::InputManager
+{
+    void start() override
+    {
+    }
+    void stop() override
+    {
+    }
+};
+
+class NullInputDispatcher : public mi::InputDispatcher
+{
+    void dispatch(MirEvent const& /*event*/) override
+    {
+    }
+    void start() override
+    {
+    }
+    void stop() override
+    {
+    }
+};
+
+
+class NullInputDispatcherConfiguration : public mi::InputDispatcherConfiguration
+{
+public:
+    NullInputDispatcherConfiguration() = default;
+    std::shared_ptr<ms::InputRegistrar> the_input_registrar() override
+    {
+        return std::make_shared<NullInputRegistrar>();
+    }
+
+    std::shared_ptr<msh::InputTargeter> the_input_targeter() override
+    {
+        return std::make_shared<NullInputTargeter>();
+    }
+
+    std::shared_ptr<mi::InputDispatcher> the_input_dispatcher() override
+    {
+        return std::make_shared<NullInputDispatcher>();
+    }
+
+    bool is_key_repeat_enabled() const override
+    {
+        return true;
+    }
+
+    void set_input_targets(std::shared_ptr<mi::InputTargets> const& /*targets*/) override
+    {
+    }
+protected:
+    NullInputDispatcherConfiguration(const NullInputDispatcherConfiguration&) = delete;
+    NullInputDispatcherConfiguration& operator=(const NullInputDispatcherConfiguration&) = delete;
+};
+
 }
 
-std::shared_ptr<ms::InputRegistrar> mi::NullInputConfiguration::the_input_registrar()
+std::shared_ptr<mi::InputDispatcherConfiguration> mi::NullInputConfiguration::the_input_dispatcher_configuration()
 {
-    return std::make_shared<NullInputRegistrar>();
+    return std::make_shared<NullInputDispatcherConfiguration>();
 }
 
-std::shared_ptr<msh::InputTargeter> mi::NullInputConfiguration::the_input_targeter()
+
+std::shared_ptr<mi::InputChannelFactory> mi::NullInputConfiguration::the_input_channel_factory()
 {
-    return std::make_shared<NullInputTargeter>();
+    return std::make_shared<NullInputChannelFactory>();
 }
+
 
 std::shared_ptr<mi::InputManager> mi::NullInputConfiguration::the_input_manager()
 {
     return std::make_shared<NullInputManager>();
 }
 
-void mi::NullInputConfiguration::set_input_targets(std::shared_ptr<mi::InputTargets> const&)
-{
-}
