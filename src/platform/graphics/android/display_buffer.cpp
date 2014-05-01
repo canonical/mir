@@ -86,9 +86,7 @@ void mga::DisplayBuffer::release_current()
     gl_context.release_current();
 }
 
-void mga::DisplayBuffer::render_and_post_update(
-    RenderableList const& renderlist,
-    std::function<void(Renderable const&)> const& render_fn)
+bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderlist)
 {
     if (renderlist.empty())
     {
