@@ -39,7 +39,8 @@ class BufferStreamFactory : public scene::BufferStreamFactory
 {
 public:
 
-    explicit BufferStreamFactory(const std::shared_ptr<graphics::GraphicBufferAllocator> &gralloc, const std::shared_ptr<time::Timer> timer);
+    BufferStreamFactory(std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc,
+                        std::shared_ptr<time::Timer> const& timer);
 
     virtual ~BufferStreamFactory() {}
 

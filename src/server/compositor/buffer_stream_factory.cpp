@@ -34,13 +34,13 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 
-mc::BufferStreamFactory::BufferStreamFactory(
-    const std::shared_ptr<mg::GraphicBufferAllocator> &gralloc,
-    const std::shared_ptr<time::Timer> timer)
+mc::BufferStreamFactory::BufferStreamFactory(std::shared_ptr<mg::GraphicBufferAllocator> const& gralloc,
+                                             std::shared_ptr<time::Timer> const& timer)
         : gralloc(gralloc),
           timer{timer}
 {
     assert(gralloc);
+    assert(timer);
 }
 
 
