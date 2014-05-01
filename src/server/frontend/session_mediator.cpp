@@ -29,6 +29,7 @@
 #include "mir_toolkit/common.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/cursor_images.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
@@ -415,11 +416,34 @@ void mf::SessionMediator::screencast_buffer(
 
 void mf::SessionMediator::configure_cursor(
     google::protobuf::RpcController*,
-    mir::protobuf::CursorSetting const* /* cursor_request */,
+    mir::protobuf::CursorSetting const* cursor_request,
     mir::protobuf::Void* /* void_response */,
-    google::protobuf::Closure* /* done */)
+    google::protobuf::Closure* done)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Cursor API not yet implemented"));
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        report->session_configure_surface_called(session->name());
+
+        auto const id = frontend::SurfaceId(cursor_request->surfaceid().value());
+        auto const surface = session->get_surface(id);
+        
+        if (cursor_request->has_name())
+        {
+            auto const& image = cursor_images->image(cursor_request->name(), mg::default_cursor_size);
+            surface->set_cursor_image(image);
+        }
+        else
+        {
+            surface->set_cursor_image({});
+        }
+    }
+    done->Run();
 }
 
 void mf::SessionMediator::drm_auth_magic(
