@@ -95,7 +95,8 @@ public:
     {
         return std::make_shared<mgm::Platform>(
             mr::null_display_report(),
-            std::make_shared<mtd::NullVirtualTerminal>());
+            std::make_shared<mtd::NullVirtualTerminal>(),
+            mgm::BypassOption::allowed);
     }
 
     std::shared_ptr<mg::Display> create_display(

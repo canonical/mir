@@ -16,6 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "mir/frontend/session_credentials.h"
+
 #include "mir_toolkit/mir_screencast.h"
 #include "mir_toolkit/mir_client_library.h"
 
@@ -240,7 +242,7 @@ namespace
 
 struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
 {
-    MOCK_METHOD1(screencast_is_allowed, bool(pid_t));
+    MOCK_METHOD1(screencast_is_allowed, bool(mf::SessionCredentials const&));
 };
 
 struct MockAuthorizerServerConfig : mir_test_framework::StubbedServerConfiguration

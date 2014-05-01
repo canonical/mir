@@ -35,7 +35,7 @@ struct MockRenderable : public graphics::Renderable
     {
         ON_CALL(*this, screen_position())
             .WillByDefault(testing::Return(geometry::Rectangle{{},{}}));
-        ON_CALL(*this, buffer(testing::_))
+        ON_CALL(*this, buffer())
             .WillByDefault(testing::Return(std::make_shared<StubBuffer>()));
         ON_CALL(*this, buffers_ready_for_compositor())
             .WillByDefault(testing::Return(1));
@@ -48,7 +48,7 @@ struct MockRenderable : public graphics::Renderable
     }
 
     MOCK_CONST_METHOD0(id, ID());
-    MOCK_CONST_METHOD1(buffer, std::shared_ptr<graphics::Buffer>(void const*));
+    MOCK_CONST_METHOD0(buffer, std::shared_ptr<graphics::Buffer>());
     MOCK_CONST_METHOD0(alpha_enabled, bool());
     MOCK_CONST_METHOD0(screen_position, geometry::Rectangle());
     MOCK_CONST_METHOD0(alpha, float());

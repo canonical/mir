@@ -132,7 +132,7 @@ void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
 
 void mc::GLRenderer::render(mg::Renderable const& renderable) const
 {
-    auto buffer = renderable.buffer(this);
+    auto buffer = renderable.buffer();
     saved_resources.insert(buffer);
 
     glUseProgram(*program);
@@ -284,6 +284,10 @@ void mc::GLRenderer::set_rotation(float degrees)
 void mc::GLRenderer::begin() const
 {
     glClear(GL_COLOR_BUFFER_BIT);
+
+    // Ensure we don't change the framebuffer's alpha components (if any)
+    // as that would ruin the appearance of screengrabs. (LP: #1301210)
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 }
 
 void mc::GLRenderer::end() const

@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "socket_session.h"
+#include "socket_connection.h"
 #include "message_sender.h"
 #include "message_receiver.h"
 #include "mir/frontend/message_processor.h"
@@ -36,35 +36,35 @@ namespace bs = boost::system;
 
 namespace mfd = mir::frontend::detail;
 
-mfd::SocketSession::SocketSession(
-    std::shared_ptr<mfd::MessageReceiver> const& receiver,
+mfd::SocketConnection::SocketConnection(
+    std::shared_ptr<mfd::MessageReceiver> const& message_receiver,
     int id_,
-    std::shared_ptr<ConnectedSessions<SocketSession>> const& connected_sessions,
+    std::shared_ptr<Connections<SocketConnection>> const& connections,
     std::shared_ptr<MessageProcessor> const& processor)
-     : socket_receiver(receiver),
+     : message_receiver(message_receiver),
        id_(id_),
-       connected_sessions(connected_sessions),
+       connections(connections),
        processor(processor)
 {
 }
 
-mfd::SocketSession::~SocketSession() noexcept
+mfd::SocketConnection::~SocketConnection() noexcept
 {
 }
 
 
-void mfd::SocketSession::read_next_message()
+void mfd::SocketConnection::read_next_message()
 {
-    auto callback = std::bind(&mfd::SocketSession::on_read_size,
+    auto callback = std::bind(&mfd::SocketConnection::on_read_size,
                         this, std::placeholders::_1);
-    socket_receiver->async_receive_msg(callback, ba::buffer(header, header_size));
+    message_receiver->async_receive_msg(callback, ba::buffer(header, header_size));
 }
 
-void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
+void mfd::SocketConnection::on_read_size(const boost::system::error_code& error)
 {
     if (error)
     {
-        connected_sessions->remove(id());
+        connections->remove(id());
         BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
 
@@ -74,19 +74,19 @@ void mfd::SocketSession::on_read_size(const boost::system::error_code& error)
 
     body.resize(body_size);
 
-    if (socket_receiver->available_bytes() >= body_size)
+    if (message_receiver->available_bytes() >= body_size)
     {
-        on_new_message(socket_receiver->receive_msg(ba::buffer(body)));
+        on_new_message(message_receiver->receive_msg(ba::buffer(body)));
     }
     else
     {
-        auto callback = std::bind(&mfd::SocketSession::on_new_message,
+        auto callback = std::bind(&mfd::SocketConnection::on_new_message,
                                   this, std::placeholders::_1);
-        socket_receiver->async_receive_msg(callback, ba::buffer(body));
+        message_receiver->async_receive_msg(callback, ba::buffer(body));
     }
 }
 
-void mfd::SocketSession::on_new_message(const boost::system::error_code& error)
+void mfd::SocketConnection::on_new_message(const boost::system::error_code& error)
 try
 {
     if (error)
@@ -106,20 +106,20 @@ try
     }
     else
     {
-        connected_sessions->remove(id());
+        connections->remove(id());
     }
 }
 catch (...)
 {
-    connected_sessions->remove(id());
+    connections->remove(id());
     throw;
 }
 
-void mfd::SocketSession::on_response_sent(bs::error_code const& error, std::size_t)
+void mfd::SocketConnection::on_response_sent(bs::error_code const& error, std::size_t)
 {
     if (error)
     {
-        connected_sessions->remove(id());
+        connections->remove(id());
         BOOST_THROW_EXCEPTION(std::runtime_error(error.message()));
     }
 }

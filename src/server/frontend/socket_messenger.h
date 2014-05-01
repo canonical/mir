@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -36,10 +36,10 @@ public:
 
     void send(char const* data, size_t length, FdSets const& fds) override;
 
-    void async_receive_msg(MirReadHandler const& handler, boost::asio::mutable_buffers_1 const& buffer);
-    boost::system::error_code receive_msg(boost::asio::mutable_buffers_1 const& buffer);
+    void async_receive_msg(MirReadHandler const& handler, boost::asio::mutable_buffers_1 const& buffer) override;
+    boost::system::error_code receive_msg(boost::asio::mutable_buffers_1 const& buffer) override;
     size_t available_bytes() override;
-    pid_t client_pid();
+    SessionCredentials client_creds() override;
 
 private:
     std::shared_ptr<boost::asio::local::stream_protocol::socket> socket;

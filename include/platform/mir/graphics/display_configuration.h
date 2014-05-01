@@ -139,6 +139,7 @@ struct UserDisplayConfigurationOutput
     MirOrientation& orientation;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& master);
+    geometry::Rectangle extents() const;
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);
