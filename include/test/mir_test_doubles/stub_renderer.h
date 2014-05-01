@@ -46,8 +46,8 @@ public:
 
     void render(graphics::Renderable const& r) const override
     {
-        auto buffer = r.buffer(this);  // We need to consume a buffer to
-                                       // unblock tests with clients.
+        auto buffer = r.buffer();  // We need to consume a buffer to
+                                   // unblock tests with clients.
     }
 
     void end() const override

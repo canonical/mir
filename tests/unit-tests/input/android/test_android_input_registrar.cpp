@@ -20,6 +20,7 @@
 
 #include "src/server/input/android/android_input_registrar.h"
 
+#include "mir_test_doubles/mock_android_input_dispatcher.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
 #include "mir_test_doubles/mock_input_surface.h"
 #include "mir_test_doubles/stub_input_channel.h"
@@ -53,14 +54,14 @@ struct AndroidInputRegistrarFdSetup : public testing::Test
     {
         test_input_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
 
-        dispatcher = new mtd::MockInputDispatcher();
+        dispatcher = new mtd::MockAndroidInputDispatcher();
     }
     void TearDown() override
     {
         close(test_input_fd);
     }
     int test_input_fd;
-    droidinput::sp<mtd::MockInputDispatcher> dispatcher;
+    droidinput::sp<mtd::MockAndroidInputDispatcher> dispatcher;
 };
 
 MATCHER_P(WindowHandleFor, channel, "")
@@ -77,6 +78,7 @@ TEST_F(AndroidInputRegistrarFdSetup, input_channel_opened_behavior)
     using namespace ::testing;
 
     auto channel = std::make_shared<mtd::StubInputChannel>(test_input_fd);
+#include "mir_test_doubles/mock_input_surface.h"
     auto surface = std::make_shared<mtd::StubInputSurface>();
 
     EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(channel), _)).Times(1)

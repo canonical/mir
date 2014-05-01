@@ -24,6 +24,7 @@
 #include "mir/default_configuration.h"
 
 #include "mir/options/program_option.h"
+#include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/scene/surface_configurator.h"
 #include "mir/graphics/cursor.h"
@@ -91,25 +92,22 @@ mir::DefaultServerConfiguration::the_cursor_listener()
 {
     struct DefaultCursorListener : mi::CursorListener
     {
-        DefaultCursorListener(std::weak_ptr<mg::Cursor> const& cursor) :
+        DefaultCursorListener(std::shared_ptr<mg::Cursor> const& cursor) :
             cursor(cursor)
         {
         }
 
         void cursor_moved_to(float abs_x, float abs_y)
         {
-            if (auto c = cursor.lock())
-            {
-                c->move_to(geom::Point{abs_x, abs_y});
-            }
+            cursor->move_to(geom::Point{abs_x, abs_y});
         }
 
-        std::weak_ptr<mg::Cursor> const cursor;
+        std::shared_ptr<mg::Cursor> const cursor;
     };
     return cursor_listener(
         [this]() -> std::shared_ptr<mi::CursorListener>
         {
-            return std::make_shared<DefaultCursorListener>(the_display()->the_cursor());
+            return std::make_shared<DefaultCursorListener>(the_cursor());
         });
 }
 
@@ -137,17 +135,17 @@ mir::DefaultServerConfiguration::the_session_authorizer()
 {
     struct DefaultSessionAuthorizer : public mf::SessionAuthorizer
     {
-        bool connection_is_allowed(pid_t /* pid */)
+        bool connection_is_allowed(mf::SessionCredentials const& /* creds */)
         {
             return true;
         }
 
-        bool configure_display_is_allowed(pid_t /* pid */)
+        bool configure_display_is_allowed(mf::SessionCredentials const& /* creds */)
         {
             return true;
         }
 
-        bool screencast_is_allowed(pid_t /* pid */)
+        bool screencast_is_allowed(mf::SessionCredentials const& /* creds */)
         {
             return true;
         }
@@ -157,11 +155,6 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         {
             return std::make_shared<DefaultSessionAuthorizer>();
         });
-}
-
-std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()
-{
-    return the_input_manager();
 }
 
 std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()

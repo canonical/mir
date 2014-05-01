@@ -37,7 +37,6 @@ namespace scene
 class SurfaceObserver;
 
 class Surface :
-    public graphics::Renderable,
     public input::Surface,
     public frontend::Surface,
     public SurfaceBufferAccess
@@ -47,9 +46,11 @@ public:
     std::string name() const override = 0;
     geometry::Size size() const override = 0;
     geometry::Point top_left() const override = 0;
-    float alpha() const override = 0;
 
     // member functions that don't exist in base classes
+    virtual std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const = 0;
+
+    virtual float alpha() const = 0; //only used in examples/
     virtual MirSurfaceType type() const = 0;
     virtual MirSurfaceState state() const = 0;
     virtual void hide() = 0;
@@ -64,7 +65,7 @@ public:
     virtual void force_requests_to_complete() = 0;
 
     virtual void add_observer(std::shared_ptr<SurfaceObserver> const& observer) = 0;
-    virtual void remove_observer(std::shared_ptr<SurfaceObserver> const& observer) = 0;
+    virtual void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) = 0;
 
     // TODO input_channel() relates to adding and removing the surface
     // TODO from the scene and is probably not cleanest interface for this.
