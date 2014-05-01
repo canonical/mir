@@ -70,7 +70,7 @@ public:
         std::shared_ptr<ResourceCache> const& resource_cache,
         std::shared_ptr<Screencast> const& screencast,
         std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler,
-        Connector* connector);
+        Connector const* connector);
 
     ~SessionMediator() noexcept;
 
@@ -163,7 +163,7 @@ private:
     std::weak_ptr<Session> weak_session;
 
     std::function<void(std::shared_ptr<Session> const& session)> const connect_handler;
-    Connector* const connector;
+    Connector const* const connector;
 };
 
 }

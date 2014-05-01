@@ -204,7 +204,7 @@ void mf::BasicConnector::create_session_for(
     std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
 {
     report->creating_session_for(server_socket->native_handle());
-    connection_creator->create_connection_for(server_socket, connect_handler);
+    connection_creator->create_connection_for(server_socket, connect_handler, this);
 }
 
 int mf::BasicConnector::client_socket_fd() const

@@ -28,6 +28,7 @@ namespace mir
 {
 namespace frontend
 {
+class Connector;
 class Session;
 
 class ConnectionCreator
@@ -35,7 +36,8 @@ class ConnectionCreator
 public:
     virtual void create_connection_for(
         std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
-        std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) = 0;
+        std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler,
+        Connector const* connector) = 0;
 
 protected:
     ConnectionCreator() = default;

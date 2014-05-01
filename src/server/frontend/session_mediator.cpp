@@ -70,7 +70,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast,
     std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler,
-    Connector* connector) :
+    Connector const* connector) :
     client_pid(client_pid),
     shell(shell),
     graphics_platform(graphics_platform),

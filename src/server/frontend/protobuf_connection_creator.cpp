@@ -56,7 +56,8 @@ int mf::ProtobufConnectionCreator::next_id()
 
 void mf::ProtobufConnectionCreator::create_connection_for(
     std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
-    std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler)
+    std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler,
+    Connector const* connector)
 {
     auto const messenger = std::make_shared<detail::SocketMessenger>(socket);
     auto const creds = messenger->client_creds();
@@ -70,7 +71,7 @@ void mf::ProtobufConnectionCreator::create_connection_for(
         auto const event_sink = std::make_shared<detail::EventSender>(messenger);
         auto const msg_processor = create_processor(
             message_sender,
-            ipc_factory->make_ipc_server(creds, event_sink, connect_handler),
+            ipc_factory->make_ipc_server(creds, event_sink, connect_handler, connector),
             report);
 
         const auto& connection = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);
