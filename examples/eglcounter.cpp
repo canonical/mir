@@ -77,7 +77,7 @@ public:
           vertices{create_vertices(thickness)}, digit_drawables{create_digits()}
     {
         if (max_count > 99)
-            max_count = 99;
+            this->max_count = 99;
 
         vpos = glGetAttribLocation(program, "vPosition");
         if (vpos == -1)
