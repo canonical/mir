@@ -131,7 +131,7 @@ public:
     void show() override;
 
     void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
-    void remove_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
+    void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override;
 
 private:
     bool visible(std::unique_lock<std::mutex>&) const;

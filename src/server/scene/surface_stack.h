@@ -23,6 +23,7 @@
 
 #include "mir/compositor/scene.h"
 #include "mir/scene/depth_id.h"
+#include "mir/scene/observer.h"
 #include "mir/input/input_targets.h"
 
 #include <memory>
@@ -57,6 +58,24 @@ class InputRegistrar;
 class BasicSurface;
 class SceneReport;
 
+class Observers : public Observer
+{
+public:
+   // ms::Observer
+   void surface_added(Surface* surface) override;
+   void surface_removed(Surface* surface) override;
+   void surfaces_reordered() override;
+   void surface_exists(Surface* surface) override;
+   void end_observation();
+
+   void add_observer(std::shared_ptr<Observer> const& observer);
+   void remove_observer(std::shared_ptr<Observer> const& observer);
+
+private:
+    std::mutex mutex;
+    std::vector<std::shared_ptr<Observer>> observers;
+};
+
 class SurfaceStack : public compositor::Scene, public input::InputTargets, public SurfaceStackModel
 {
 public:
@@ -67,7 +86,6 @@ public:
 
     // From Scene
     graphics::RenderableList renderable_list_for(CompositorID id) const;
-    virtual void set_change_callback(std::function<void()> const& f);
     
     // From InputTargets
     void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback);
@@ -80,23 +98,23 @@ public:
         std::shared_ptr<Surface> const& surface,
         DepthId depth,
         input::InputReceptionMode input_mode) override;
+    
+    void add_observer(std::shared_ptr<Observer> const& observer) override;
+    void remove_observer(std::weak_ptr<Observer> const& observer) override;
 
 private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;
 
-    void emit_change_notification();
-
     std::mutex mutable guard;
+
     std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SceneReport> const report;
-    std::function<void()> const change_cb;
 
     typedef std::vector<std::shared_ptr<Surface>> Layer;
     std::map<DepthId, Layer> layers_by_depth;
 
-    std::mutex notify_change_mutex;
-    std::function<void()> notify_change;
+    Observers observers;
 };
 
 }
