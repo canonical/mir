@@ -16,30 +16,42 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir_test_framework/semaphore.h"
+#ifndef MIR_TEST_SIGNAL_H_
+#define MIR_TEST_SIGNAL_H_
 
-namespace mtf = mir_test_framework;
+#include <condition_variable>
+#include <chrono>
+#include <mutex>
 
-mtf::Semaphore::Semaphore()
-    : signalled{false}
+namespace mir
 {
+namespace test
+{
+/**
+ * @brief A threadsafe, waitable signal
+ */
+class Signal
+{
+public:
+    Signal();
+
+    void raise();
+    bool raised();
+
+    void wait();
+    template<typename rep, typename period>
+    bool wait_for(std::chrono::duration<rep, period> delay)
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        return cv.wait_for(lock, delay, [this]() { return signalled; });
+    }
+
+private:
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool signalled;
+};
+}
 }
 
-void mtf::Semaphore::raise()
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    signalled = true;
-    cv.notify_all();
-}
-
-bool mtf::Semaphore::raised()
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    return signalled;
-}
-
-void mtf::Semaphore::wait(void)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    cv.wait(lock, [this]() { return signalled; });
-}
+#endif // MIR_TEST_SEMAPHORE_H_

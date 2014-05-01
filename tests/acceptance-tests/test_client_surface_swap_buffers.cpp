@@ -22,11 +22,12 @@
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_doubles/null_display_buffer_compositor_factory.h"
-#include "mir_test_framework/semaphore.h"
+#include "mir_test/signal.h"
 
 #include <gtest/gtest.h>
 
 namespace mtf = mir_test_framework;
+namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mc = mir::compositor;
 
@@ -53,7 +54,7 @@ public:
 
 void swap_buffers_callback(MirSurface*, void* ctx)
 {
-    auto buffers_swapped = static_cast<mtf::Semaphore*>(ctx);
+    auto buffers_swapped = static_cast<mt::Signal*>(ctx);
     buffers_swapped->raise();
 }
 
@@ -80,7 +81,7 @@ TEST_F(MirSurfaceSwapBuffersTest, swap_buffers_does_not_block_when_surface_is_no
 
     for (int i = 0; i < 10; ++i)
     {
-        mtf::Semaphore buffers_swapped;
+        mt::Signal buffers_swapped;
 
         mir_surface_swap_buffers(surface, swap_buffers_callback, &buffers_swapped);
 

@@ -24,7 +24,7 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_framework/watchdog.h"
-#include "mir_test_framework/semaphore.h"
+#include "mir_test/signal.h"
 #include "mir_test/gmock_fixes.h"
 
 #include <gmock/gmock.h>
@@ -38,6 +38,7 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
+namespace mt =mir::test;
 namespace geom = mir::geometry;
 
 namespace
@@ -97,12 +98,12 @@ struct BufferStreamSurfaces : mc::BufferStreamSurfaces
     // Convenient function to allow tests to be written in linear style
     void swap_client_buffers_blocking(mg::Buffer*& buffer)
     {
-        mtf::Semaphore s;
+        mt::Signal s;
 
         swap_client_buffers_cancellable(buffer, s);
     }
 
-    void swap_client_buffers_cancellable(mg::Buffer*& buffer, mtf::Semaphore& signal)
+    void swap_client_buffers_cancellable(mg::Buffer*& buffer, mt::Signal& signal)
     {
         swap_client_buffers(buffer,
             [&](mg::Buffer* new_buffer)
@@ -393,7 +394,7 @@ TEST_F(BufferStreamTest, blocked_client_is_released_on_timeout)
 
     mg::Buffer* placeholder{nullptr};
     MockAlarm* swap_buffer_timeout{nullptr};
-    mtf::Semaphore alarm_set;
+    mt::Signal alarm_set;
 
     EXPECT_CALL(*timer, notify_in(_,_))
         .Times(1)
@@ -408,7 +409,7 @@ TEST_F(BufferStreamTest, blocked_client_is_released_on_timeout)
     for (int i = 0; i < nbuffers; ++i)
         buffer_stream.swap_client_buffers_blocking(placeholder);
 
-    mtf::Semaphore done_signal;
+    mt::Signal done_signal;
 
     mtf::WatchDog watchdog([&done_signal]() { done_signal.raise(); });
 

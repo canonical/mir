@@ -20,7 +20,7 @@
 #include "mir/asio_main_loop.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_framework/semaphore.h"
+#include "mir_test/signal.h"
 #include "mir_test_framework/watchdog.h"
 #include "mir_test/wait_condition.h"
 
@@ -38,6 +38,7 @@ namespace mtd=mir::test::doubles;
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
 namespace mtf=mir_test_framework;
+namespace mt=mir::test;
 
 using namespace testing;
 
@@ -72,7 +73,7 @@ struct SwitchingBundleTest : public ::testing::Test
     std::thread mainloop_thread;
 };
 
-auto client_acquire_cancellable(mc::SwitchingBundle& switching_bundle, std::shared_ptr<mtf::Semaphore> signal)
+auto client_acquire_cancellable(mc::SwitchingBundle& switching_bundle, std::shared_ptr<mt::Signal> signal)
 -> mg::Buffer*
 {
     mg::Buffer* result;
@@ -91,7 +92,7 @@ auto client_acquire_cancellable(mc::SwitchingBundle& switching_bundle, std::shar
 auto client_acquire_blocking(mc::SwitchingBundle& switching_bundle)
 -> mg::Buffer*
 {
-    return client_acquire_cancellable(switching_bundle, std::make_shared<mtf::Semaphore>());
+    return client_acquire_cancellable(switching_bundle, std::make_shared<mt::Signal>());
 }
 }
 
@@ -981,7 +982,7 @@ TEST_F(SwitchingBundleTest, uncomposited_client_swaps_at_given_rate)
                 auto client = client_acquire_blocking(bundle);
                 bundle.client_release(client);
             }
-            auto signal = std::make_shared<mtf::Semaphore>();
+            auto signal = std::make_shared<mt::Signal>();
             mtf::WatchDog watchdog{[signal]() { signal->raise(); }};
 
             auto start = std::chrono::high_resolution_clock::now();
@@ -1014,7 +1015,7 @@ TEST_F(SwitchingBundleTest, compositor_swapping_at_min_rate_gets_oldest_buffer)
                                    timer,
                                    vsync_delay);
 
-        mtf::Semaphore kill_switch;
+        mt::Signal kill_switch;
         mtf::WatchDog compositor_runner{[&kill_switch](){ kill_switch.raise(); }};
         mtf::WatchDog client_runner{[&kill_switch](){ kill_switch.raise(); }};
 
@@ -1080,7 +1081,7 @@ TEST_F(SwitchingBundleTest, compositor_swapping_at_min_rate_gets_oldest_buffer)
             std::unique_lock<decltype(buffer_mutex)> lock;
             for (int i = 0; !kill_switch.raised(); i++)
             {
-                mtf::Semaphore buffer_acquired;
+                mt::Signal buffer_acquired;
                 mg::Buffer* client;
 
                 bundle.client_acquire([&](mg::Buffer* new_buffer)
