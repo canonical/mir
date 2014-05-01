@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -14,38 +14,45 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ *              Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #include "nested_input_configuration.h"
 #include "nested_input_relay.h"
+#include "nested_input_manager.h"
 
-#include <InputDispatcher.h>
+#include "mir/input/input_dispatcher_configuration.h"
+#include "android/input_channel_factory.h"
+
+#include <memory>
 
 namespace mi = mir::input;
+namespace mia = mir::input::android;
 
 mi::NestedInputConfiguration::NestedInputConfiguration(
     std::shared_ptr<NestedInputRelay> const& input_relay,
-    std::shared_ptr<EventFilter> const& event_filter,
-    std::shared_ptr<InputRegion> const& input_region,
-    std::shared_ptr<CursorListener> const& cursor_listener,
-    std::shared_ptr<InputReport> const& input_report) :
-    android::DispatcherInputConfiguration(event_filter, input_region, cursor_listener, input_report),
-    input_relay(input_relay)
+    std::shared_ptr<InputDispatcherConfiguration> const& input_dispatcher_conf) :
+    input_relay(input_relay), input_dispatcher_config(input_dispatcher_conf)
 {
+    input_relay->set_dispatcher(input_dispatcher_conf->the_input_dispatcher());
 }
 
-mi::NestedInputConfiguration::~NestedInputConfiguration()
+
+std::shared_ptr<mi::InputDispatcherConfiguration> mi::NestedInputConfiguration::the_input_dispatcher_configuration()
 {
+    return input_dispatcher_config;
 }
 
-droidinput::sp<droidinput::InputDispatcherInterface> mi::NestedInputConfiguration::the_dispatcher()
+std::shared_ptr<mi::InputChannelFactory> mi::NestedInputConfiguration::the_input_channel_factory()
 {
-    return dispatcher(
+    return std::make_shared<mia::InputChannelFactory>();
+}
+
+std::shared_ptr<mi::InputManager> mi::NestedInputConfiguration::the_input_manager()
+{
+    return input_manager(
         [this]()
         {
-            auto const result = new droidinput::InputDispatcher(the_dispatcher_policy(), input_report);
-            input_relay->set_dispatcher(result);
-
-            return result;
+            return std::make_shared<NestedInputManager>(the_input_dispatcher_configuration()->the_input_dispatcher());
         });
 }

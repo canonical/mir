@@ -21,12 +21,16 @@
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
+
 #include <string>
+#include <memory>
 
 namespace mir
 {
 namespace input
 {
+class InputChannel;
+
 class Surface
 {
 public:
@@ -34,6 +38,8 @@ public:
     virtual geometry::Point top_left() const = 0;
     virtual geometry::Size size() const = 0;
     virtual bool contains(geometry::Point const& point) const = 0;
+
+    virtual std::shared_ptr<input::InputChannel> input_channel() const = 0;
 
 protected:
     Surface() = default;

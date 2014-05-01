@@ -18,6 +18,7 @@
 
 #include "mir/frontend/session.h"
 #include "mir/frontend/shell.h"
+#include "mir/input/input_dispatcher_configuration.h"
 #include "mir/input/input_configuration.h"
 
 #include "mir/scene/surface_creation_parameters.h"
@@ -87,7 +88,7 @@ struct TestConfiguration : public mir_test_framework::StubbedServerConfiguration
                     the_input_registrar(),
                     scene_report);
 
-                the_input_configuration()->set_input_targets(test_surface_stack);
+                the_input_configuration()->the_input_dispatcher_configuration()->set_input_targets(test_surface_stack);
 
                 return test_surface_stack;
             });

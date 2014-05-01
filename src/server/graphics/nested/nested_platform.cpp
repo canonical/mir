@@ -19,18 +19,11 @@
 #include "nested_platform.h"
 #include "host_connection.h"
 #include "mir/graphics/nested_context.h"
-#include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_drm.h"
 
 #include "nested_display.h"
 
-#include <boost/throw_exception.hpp>
-#include <boost/exception/errinfo_errno.hpp>
-#include <stdexcept>
-
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
-namespace mo = mir::options;
 
 namespace
 {
@@ -45,38 +38,17 @@ public:
 
     std::vector<int> platform_fd_items()
     {
-        MirPlatformPackage pkg;
-        mir_connection_get_platform(*connection, &pkg);
-        return std::vector<int>(pkg.fd, pkg.fd + pkg.fd_items);
+        return connection->platform_fd_items();
     }
 
     void drm_auth_magic(int magic)
     {
-        int status;
-        mir_wait_for(mir_connection_drm_auth_magic(*connection, magic,
-                                                   drm_auth_magic_callback, &status));
-        if (status)
-        {
-            std::string const msg("Nested Mir failed to authenticate magic");
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::runtime_error(msg)) << boost::errinfo_errno(status));
-        }
+        connection->drm_auth_magic(magic);
     }
 
     void drm_set_gbm_device(struct gbm_device* dev)
     {
-        if (!mir_connection_drm_set_gbm_device(*connection, dev))
-        {
-            std::string const msg("Nested Mir failed to set the gbm device");
-            BOOST_THROW_EXCEPTION(std::runtime_error(msg));
-        }
-    }
-
-    static void drm_auth_magic_callback(int status, void* context)
-    {
-        int* status_ret = static_cast<int*>(context);
-        *status_ret = status;
+        connection->drm_set_gbm_device(dev);
     }
 
 private:
@@ -95,11 +67,6 @@ event_handler{event_handler},
 display_report{display_report},
 connection{connection}
 {
-    if (!mir_connection_is_valid(*connection))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Platform Connection Error: " + std::string(mir_connection_get_error_message(*connection))));
-    }
-
     native_platform->initialize(std::make_shared<MirConnectionNestedContext>(connection));
 }
 
@@ -115,6 +82,7 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_a
 
 std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& conf_policy,
+    std::shared_ptr<mg::GLProgramFactory> const&,
     std::shared_ptr<mg::GLConfig> const& gl_config)
 {
     return std::make_shared<mgn::NestedDisplay>(
@@ -138,6 +106,5 @@ void mgn::NestedPlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const
 
 EGLNativeDisplayType mgn::NestedPlatform::egl_native_display() const
 {
-    return reinterpret_cast<EGLNativeDisplayType>(
-        mir_connection_get_egl_native_display(*connection));
+    return connection->egl_native_display();
 }

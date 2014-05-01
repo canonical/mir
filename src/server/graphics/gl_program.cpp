@@ -16,11 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/gl_program.h"
+#include "mir/graphics/gl_program.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-namespace mc = mir::compositor;
+namespace mg = mir::graphics;
 
 namespace
 {
@@ -49,7 +49,7 @@ void GetObjectLogAndThrow(MirGLGetObjectInfoLog getObjectInfoLog,
 }
 }
 
-mc::GLShader::GLShader(GLchar const* shader_src, GLuint type)
+mg::GLShader::GLShader(GLchar const* shader_src, GLuint type)
     : shader(glCreateShader(type))
 {
     GLint param{0};
@@ -66,17 +66,17 @@ mc::GLShader::GLShader(GLchar const* shader_src, GLuint type)
     }
 }
 
-mc::GLShader::~GLShader()
+mg::GLShader::~GLShader()
 {
     glDeleteShader(shader);
 }
 
-mc::GLShader::operator GLuint() const
+mg::GLShader::operator GLuint() const
 {
     return shader;
 }
 
-mc::GLProgram::GLProgram(
+mg::GLProgram::GLProgram(
     GLchar const* vertex_shader_src,
     GLchar const* fragment_shader_src)
   : vertex_shader(vertex_shader_src, GL_VERTEX_SHADER),
@@ -98,12 +98,12 @@ mc::GLProgram::GLProgram(
     }
 }
 
-mc::GLProgram::~GLProgram()
+mg::GLProgram::~GLProgram()
 {
     glDeleteProgram(program);
 }
 
-mc::GLProgram::operator GLuint() const
+mg::GLProgram::operator GLuint() const
 {
     return program;
 }

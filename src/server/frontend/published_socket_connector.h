@@ -40,7 +40,7 @@ namespace mir
 {
 namespace frontend
 {
-class SessionCreator;
+class ConnectionCreator;
 class ConnectorReport;
 
 /// provides a client-side socket fd for each connection
@@ -48,7 +48,7 @@ class BasicConnector : public Connector
 {
 public:
     explicit BasicConnector(
-        std::shared_ptr<SessionCreator> const& session_creator,
+        std::shared_ptr<ConnectionCreator> const& connection_creator,
         int threads,
         std::shared_ptr<ConnectorReport> const& report);
     ~BasicConnector() noexcept;
@@ -66,7 +66,7 @@ protected:
 
 private:
     std::vector<std::thread> io_service_threads;
-    std::shared_ptr<SessionCreator> const session_creator;
+    std::shared_ptr<ConnectionCreator> const connection_creator;
 };
 
 /// Accept connections over a published socket
@@ -75,7 +75,7 @@ class PublishedSocketConnector : public BasicConnector
 public:
     explicit PublishedSocketConnector(
         const std::string& socket_file,
-        std::shared_ptr<SessionCreator> const& session_creator,
+        std::shared_ptr<ConnectionCreator> const& connection_creator,
         int threads,
         std::shared_ptr<ConnectorReport> const& report);
     ~PublishedSocketConnector() noexcept;

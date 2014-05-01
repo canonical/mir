@@ -79,7 +79,7 @@ public:
     void pause();
     void resume();
 
-    std::weak_ptr<graphics::Cursor> the_cursor();
+    std::shared_ptr<graphics::Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image);
     std::unique_ptr<GLContext> create_gl_context();
 
 private:
@@ -93,7 +93,8 @@ private:
     std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
     RealKMSOutputContainer output_container;
     mutable RealKMSDisplayConfiguration current_display_configuration;
-    std::shared_ptr<Cursor> cursor;
+    
+    std::weak_ptr<Cursor> cursor;
     std::shared_ptr<GLConfig> const gl_config;
 };
 
