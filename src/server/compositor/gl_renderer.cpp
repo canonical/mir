@@ -213,7 +213,7 @@ GLuint mc::GLRenderer::load_texture(mg::Renderable const& renderable,
     tex.origin = buf_id;
     tex.used = true;
     if (changed)  // Don't upload a new texture unless the surface has changed
-        buffer.bind_to_texture();
+        buffer.gl_bind_to_texture();
 
     return tex.id;
 }
