@@ -45,11 +45,9 @@ bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
             renderable->alpha_enabled() ||
             (renderable->transformation() != identity))
         {
-            printf("abort.\n");
             return true;
         }
     }
-
     return false;
 }
 }
