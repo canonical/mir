@@ -61,7 +61,7 @@ struct ShapedRenderable : public mtd::StubRenderable
 {
     bool shaped() const override
     {
-        return false;
+        return true;
     }
 };
 

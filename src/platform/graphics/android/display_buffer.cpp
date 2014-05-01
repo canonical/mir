@@ -30,6 +30,30 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
+namespace
+{
+bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
+{
+    if (list.empty())
+        return true;
+
+    for(auto const& renderable : list)
+    {
+        //TODO: enable alpha, 90 deg rotation
+        static glm::mat4 const identity;
+        if (renderable->shaped() ||
+            renderable->alpha_enabled() ||
+            (renderable->transformation() != identity))
+        {
+            printf("abort.\n");
+            return true;
+        }
+    }
+
+    return false;
+}
+}
+
 mga::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<FramebufferBundle> const& fb_bundle,
     std::shared_ptr<DisplayDevice> const& display_device,
@@ -88,17 +112,10 @@ void mga::DisplayBuffer::release_current()
 
 bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderlist)
 {
-    return false;
+    if (renderable_list_is_hwc_incompatible(renderlist))
+        return false;
 
-    if (renderlist.empty())
-    {
-        display_device->render_gl(gl_context);
-    }
-    else
-    {
-        display_device->prepare_overlays(gl_context, renderlist, overlay_program);
-    }
-
+    display_device->prepare_overlays(gl_context, renderlist, overlay_program);
     post();
     return true;
 }
