@@ -1,3 +1,29 @@
+mir (0.2.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.2.0 (https://launchpad.net/mir/+milestone/0.2.0)
+    - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
+    - mirserver ABI unchanged, still at 19. TODO: probably needs bumping already
+    - Demo shell enhancements:
+      . You can now change graphics modes on the fly using Ctrl+Alt+(-/=).
+        To reset to the preferred mode use Ctrl+Alt+0.
+      . The above mode changing as well as existing screen rotation keys
+        (Ctrl+Alt+arrows) are now per-display; only applied to the monitor
+        the mouse pointer is on.
+    - Expand credentials to include uid/gid for session authorizer.
+    - Bypass control is now Mesa-specific and tied to the command line options.
+      So the environment variable MIR_BYPASS has changed to MIR_SERVER_BYPASS.
+    - mirscreencast screenshots now produce images with correct color instead
+      of transparency.
+    - Ongoing architectural changes in the compositor/renderer logic to
+      prepare for overlay support, and to reduce locking overhead.
+    - Made InputDispatcher replaceable.
+    - Progress made on new cursor interfaces with the end goal of client and
+      toolkit control of the mouse cursor appearance. More work required.
+    - Bugs fixed:
+      . <TODO: Fill in when proposing to archive>
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 01 May 2014 15:15:39 +0800
+
 mir (0.1.9+14.10.20140430.1-0ubuntu1) utopic; urgency=medium
 
   [ Daniel van Vugt ]
