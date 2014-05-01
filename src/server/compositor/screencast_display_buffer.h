@@ -59,9 +59,7 @@ public:
 
     void release_current();
 
-    void render_and_post_update(
-        graphics::RenderableList const&,
-        std::function<void(graphics::Renderable const&)> const&);
+    bool post_renderables_if_optimizable(graphics::RenderableList const&);
 
     void post_update();
 

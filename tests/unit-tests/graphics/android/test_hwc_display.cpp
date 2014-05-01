@@ -146,7 +146,7 @@ TEST_F(AndroidDisplayBuffer, rejects_empty_list)
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
     std::list<std::shared_ptr<mg::Renderable>> renderlist{};
-    EXPECT_FALSE(db.post_renderbles_if_optimizable(renderlist));
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 }
 
 //TODO: we could accept a 90 degree transform
@@ -159,7 +159,7 @@ TEST_F(AndroidDisplayBuffer, rejects_list_containing_transformed)
 
     auto renderable = std::make_shared<TransformedRenderable>();
     std::list<std::shared_ptr<mg::Renderable>> renderlist{renderable};
-    EXPECT_FALSE(db.post_renderbles_if_optimizable(renderlist));
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 }
 
 //TODO: remove once alpha+HWC is turned on
@@ -171,10 +171,10 @@ TEST_F(AndroidDisplayBuffer, rejects_list_containing_alpha)
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
     std::list<std::shared_ptr<mg::Renderable>> renderlist{std::make_shared<TranslucentRenderable>()};
-    EXPECT_FALSE(db.post_renderbles_if_optimizable(renderlist));
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 
     std::list<std::shared_ptr<mg::Renderable>> renderlist2{std::make_shared<ShapedRenderable>()};
-    EXPECT_FALSE(db.post_renderbles_if_optimizable(renderlist2));
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist2));
 }
 
 TEST_F(AndroidDisplayBuffer, posts_overlay_list)
@@ -185,7 +185,7 @@ TEST_F(AndroidDisplayBuffer, posts_overlay_list)
         std::make_shared<mtd::StubRenderable>()};
 
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, render_gl_and_overlays(_, Ref(renderlist)))
+    EXPECT_CALL(*mock_display_device, prepare_overlays(_, Ref(renderlist), _))
         .Times(1);
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
         .Times(1)
@@ -195,7 +195,7 @@ TEST_F(AndroidDisplayBuffer, posts_overlay_list)
 
     mga::DisplayBuffer db(
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
-    db.render_and_post_update(renderlist); 
+    EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
 }
 
 TEST_F(AndroidDisplayBuffer, defaults_to_normal_orientation)

@@ -70,9 +70,7 @@ public:
     bool can_bypass() const;
     MirOrientation orientation() const override;
 
-    void render_and_post_update(
-        RenderableList const& renderlist,
-        std::function<void(Renderable const&)> const& render_fn);
+    bool post_renderables_if_optimizable(RenderableList const& renderlist) override; 
 
 private:
     SurfacelessEGLContext const egl_context;

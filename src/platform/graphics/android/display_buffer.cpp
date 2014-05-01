@@ -88,16 +88,19 @@ void mga::DisplayBuffer::release_current()
 
 bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderlist)
 {
+    return false;
+
     if (renderlist.empty())
     {
         display_device->render_gl(gl_context);
     }
     else
     {
-        display_device->render_gl_and_overlays(gl_context, renderlist, render_fn);
+        display_device->prepare_overlays(gl_context, renderlist, overlay_program);
     }
 
     post();
+    return true;
 }
 
 void mga::DisplayBuffer::post_update()
