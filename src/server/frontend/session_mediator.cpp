@@ -19,6 +19,7 @@
 #include "session_mediator.h"
 #include "client_buffer_tracker.h"
 
+#include "mir/frontend/connector.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
@@ -420,12 +421,24 @@ void mf::SessionMediator::screencast_buffer(
 void mf::SessionMediator::client_socket_fd(
     ::google::protobuf::RpcController* ,
     ::mir::protobuf::SocketFDRequest const* /*parameters*/,
-    ::mir::protobuf::SocketFD* /*response*/,
-    ::google::protobuf::Closure* /*done*/)
+    ::mir::protobuf::SocketFD* response,
+    ::google::protobuf::Closure* done)
 {
-    throw std::runtime_error("not implemented");
-//        response->
-//        done->Run();
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        // TODO we need to have some notification to the session(?) when the client connects
+        auto const connect_handler = [&](std::shared_ptr<mf::Session> const&) {};
+
+        auto const fd = connector->client_socket_fd(connect_handler);
+        response->add_fd(fd);
+    }
+
+    done->Run();
 }
 
 

@@ -708,7 +708,6 @@ TEST_F(SessionMediatorTest, partially_packs_buffer_for_screencast_buffer)
 
 TEST_F(SessionMediatorTest, client_socket_fd_calls_connector_client_socket_fd)
 {
-    const int dummy_fd = 121;
     struct MockConnector : public mf::Connector
     {
     public:
@@ -720,6 +719,9 @@ TEST_F(SessionMediatorTest, client_socket_fd_calls_connector_client_socket_fd)
 
         MOCK_CONST_METHOD1(client_socket_fd, int (std::function<void(std::shared_ptr<mf::Session> const&)> const&));
     };
+
+    const int fd_count = 1;
+    const int dummy_fd = 121;
 
     MockConnector connector;
 
@@ -738,17 +740,19 @@ TEST_F(SessionMediatorTest, client_socket_fd_calls_connector_client_socket_fd)
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
+
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     ::mir::protobuf::SocketFDRequest request;
     ::mir::protobuf::SocketFD response;
+    request.set_number(1);
 
     using namespace ::testing;
 
     EXPECT_CALL(connector, client_socket_fd(_)).Times(1).WillOnce(Return(dummy_fd));
     mediator.client_socket_fd(nullptr, &request, &response, null_callback.get());
 
-    EXPECT_THAT(response.fd_size(), Eq(1));
+    EXPECT_THAT(response.fd_size(), Eq(fd_count));
     EXPECT_THAT(response.fd(0), Eq(dummy_fd));
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
