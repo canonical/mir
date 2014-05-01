@@ -38,6 +38,7 @@ class Buffer;
 class Platform;
 class Display;
 class GraphicBufferAllocator;
+class CursorImages;
 }
 
 
@@ -68,7 +69,8 @@ public:
         std::shared_ptr<SessionMediatorReport> const& report,
         std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache,
-        std::shared_ptr<Screencast> const& screencast);
+        std::shared_ptr<Screencast> const& screencast,
+        std::shared_ptr<graphics::CursorImages> const& cursor_images);
 
     ~SessionMediator() noexcept;
 
@@ -152,6 +154,7 @@ private:
     std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<Screencast> const screencast;
+    std::shared_ptr<graphics::CursorImages> const cursor_images;
 
     std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
     std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;

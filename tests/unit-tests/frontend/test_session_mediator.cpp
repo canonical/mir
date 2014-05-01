@@ -25,6 +25,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/cursor_images.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_display_changer.h"
@@ -196,6 +197,15 @@ struct StubScreencast : mtd::NullScreencast
     mtd::StubBuffer stub_buffer;
 };
 
+struct StubCursorImages : mg::CursorImages
+{
+    std::shared_ptr<mg::CursorImage> image(std::string const& /* cursor_name */,
+        geom::Size const& /* size */)
+    {
+        return std::shared_ptr<mg::CursorImage>();
+    }
+};
+
 struct SessionMediatorTest : public ::testing::Test
 {
     SessionMediatorTest()
@@ -209,7 +219,7 @@ struct SessionMediatorTest : public ::testing::Test
           mediator{__LINE__, shell, graphics_platform, graphics_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
-                   resource_cache, stub_screencast},
+                   resource_cache, stub_screencast, std::make_shared<StubCursorImages>()},
           stubbed_session{std::make_shared<StubbedSession>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
@@ -373,7 +383,8 @@ TEST_F(SessionMediatorTest, connect_packs_display_configuration)
         __LINE__, shell, graphics_platform, mock_display,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, std::make_shared<mtd::NullScreencast>());
+        resource_cache, std::make_shared<mtd::NullScreencast>(),
+        std::make_shared<StubCursorImages>());
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -597,7 +608,8 @@ TEST_F(SessionMediatorTest, display_config_request)
         __LINE__, shell, graphics_platform, mock_display_selector,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(), resource_cache,
-        std::make_shared<mtd::NullScreencast>()};
+        std::make_shared<mtd::NullScreencast>(),
+            std::make_shared<StubCursorImages>()};
 
     session_mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 

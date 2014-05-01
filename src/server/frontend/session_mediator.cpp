@@ -60,14 +60,15 @@ namespace geom = mir::geometry;
 
 mf::SessionMediator::SessionMediator(
     pid_t client_pid,
-    std::shared_ptr<frontend::Shell> const& shell,
-    std::shared_ptr<graphics::Platform> const & graphics_platform,
+    std::shared_ptr<mf::Shell> const& shell,
+    std::shared_ptr<mg::Platform> const & graphics_platform,
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
     std::vector<MirPixelFormat> const& surface_pixel_formats,
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache,
-    std::shared_ptr<Screencast> const& screencast) :
+    std::shared_ptr<Screencast> const& screencast,
+    std::shared_ptr<mg::CursorImages> const& cursor_images) :
     client_pid(client_pid),
     shell(shell),
     graphics_platform(graphics_platform),
@@ -76,7 +77,8 @@ mf::SessionMediator::SessionMediator(
     report(report),
     event_sink(sender),
     resource_cache(resource_cache),
-    screencast(screencast)
+    screencast(screencast),
+    cursor_images(cursor_images)
 {
 }
 

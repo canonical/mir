@@ -48,6 +48,7 @@ public:
         std::shared_ptr<mf::DisplayChanger> const& display_changer,
         std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<mf::Screencast> const& screencast,
+        std::shared_ptr<mg::CursorImages> const& cursor_images,
         std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer) :
         shell(shell),
         sm_report(sm_report),
@@ -56,6 +57,7 @@ public:
         display_changer(display_changer),
         buffer_allocator(buffer_allocator),
         screencast(screencast),
+        cursor_images(cursor_images),
         session_authorizer(session_authorizer)
     {
     }
@@ -68,6 +70,7 @@ private:
     std::shared_ptr<mf::DisplayChanger> const display_changer;
     std::shared_ptr<mg::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<mf::Screencast> const screencast;
+    std::shared_ptr<mg::CursorImages> const cursor_images;
     std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
@@ -104,7 +107,8 @@ private:
             sm_report,
             sink,
             resource_cache(),
-            effective_screencast);
+            effective_screencast,
+            cursor_images);
     }
 
     virtual std::shared_ptr<mf::ResourceCache> resource_cache()
@@ -167,6 +171,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_frontend_display_changer(),
                 allocator,
                 the_screencast(),
+                the_cursor_images(),
                 the_session_authorizer());
         });
 }
