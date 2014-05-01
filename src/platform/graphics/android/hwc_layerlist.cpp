@@ -70,7 +70,7 @@ bool mga::LayerList::update_list_and_check_if_changed(
         {
             layers_it->set_render_parameters(
                 renderable->screen_position(), renderable->alpha_enabled());
-            layers_it->set_buffer(*renderable->buffer(this));
+            layers_it->set_buffer(*renderable->buffer());
             any_buffer_updated |= layers_it->needs_hwc_commit(); 
             layers_it++;
         }
@@ -88,7 +88,7 @@ bool mga::LayerList::update_list_and_check_if_changed(
                     renderable->screen_position(),
                     renderable->alpha_enabled(),
                     hwc_representation, i++));
-            new_layers.back().set_buffer(*renderable->buffer(this));
+            new_layers.back().set_buffer(*renderable->buffer());
         }
 
         for(; i < needed_size; i++)

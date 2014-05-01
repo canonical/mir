@@ -21,26 +21,25 @@
 
 #include "mir/input/event_filter.h"
 
-#include <utils/StrongPointer.h>
-
-namespace android { class InputDispatcher; }
+#include <memory>
 
 namespace mir
 {
 namespace input
 {
+class InputDispatcher;
 class NestedInputRelay : public EventFilter
 {
 public:
     NestedInputRelay();
     ~NestedInputRelay() noexcept;
 
-    void set_dispatcher(::android::sp<::android::InputDispatcher> const& dispatcher);
+    void set_dispatcher(std::shared_ptr<InputDispatcher> const& dispatcher);
 
 private:
     bool handle(MirEvent const& event);
 
-    ::android::sp<::android::InputDispatcher> dispatcher;
+    std::shared_ptr<InputDispatcher> dispatcher;
 };
 }
 }

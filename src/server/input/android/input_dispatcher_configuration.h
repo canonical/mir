@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -14,22 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ *              Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 
 #ifndef MIR_INPUT_ANDROID_DISPATCHER_INPUT_CONFIGURATION_H_
 #define MIR_INPUT_ANDROID_DISPATCHER_INPUT_CONFIGURATION_H_
 
-#include "mir/input/input_configuration.h"
+#include "mir/input/input_dispatcher_configuration.h"
 
 #include "mir/cached_ptr.h"
 
-#include <utils/RefBase.h>
-#include <utils/StrongPointer.h>
+#include "mir/input/android/cached_android_ptr.h"
 
-#include <functional>
-
-namespace droidinput = android;
 
 namespace android
 {
@@ -37,8 +34,8 @@ class InputReaderInterface;
 class InputReaderPolicyInterface;
 class InputDispatcherPolicyInterface;
 class InputDispatcherInterface;
-class EventHubInterface;
 }
+
 
 namespace mir
 {
@@ -59,48 +56,23 @@ class InputRegistrar;
 class WindowHandleRepository;
 class InputThread;
 
-template <typename Type>
-class CachedAndroidPtr
-{
-    droidinput::wp<Type> cache;
-
-    CachedAndroidPtr(CachedAndroidPtr const&) = delete;
-    CachedAndroidPtr& operator=(CachedAndroidPtr const&) = delete;
-
-public:
-    CachedAndroidPtr() = default;
-
-    droidinput::sp<Type> operator()(std::function<droidinput::sp<Type>()> make)
-    {
-        auto result = cache.promote();
-        if (!result.get())
-        {
-            cache = result = make();
-        }
-        return result;
-    }
-};
-
-class DispatcherInputConfiguration : public input::InputConfiguration
+class InputDispatcherConfiguration : public input::InputDispatcherConfiguration
 {
 public:
-    DispatcherInputConfiguration(std::shared_ptr<EventFilter> const& event_filter,
-                              std::shared_ptr<input::InputRegion> const& input_region,
-                              std::shared_ptr<CursorListener> const& cursor_listener,
-                              std::shared_ptr<input::InputReport> const& input_report);
-    virtual ~DispatcherInputConfiguration();
+    InputDispatcherConfiguration(std::shared_ptr<EventFilter> const& event_filter,
+                                 std::shared_ptr<input::InputReport> const& input_report);
+    virtual ~InputDispatcherConfiguration();
 
-    std::shared_ptr<scene::InputRegistrar> the_input_registrar();
-    std::shared_ptr<shell::InputTargeter> the_input_targeter();
-    std::shared_ptr<input::InputManager> the_input_manager();
+    std::shared_ptr<scene::InputRegistrar> the_input_registrar() override;
+    std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
+    std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
+    virtual droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher();
 
     void set_input_targets(std::shared_ptr<input::InputTargets> const& targets);
 
-    virtual bool is_key_repeat_enabled();
+    bool is_key_repeat_enabled() const override;
 
 protected:
-    virtual droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher() = 0;
-
     virtual std::shared_ptr<InputThread> the_dispatcher_thread();
 
     virtual droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
@@ -108,11 +80,7 @@ protected:
     std::shared_ptr<WindowHandleRepository> the_window_handle_repository();
 
     std::shared_ptr<EventFilter> const event_filter;
-    std::shared_ptr<input::InputRegion> const input_region;
-    std::shared_ptr<CursorListener> const cursor_listener;
     std::shared_ptr<input::InputReport> const input_report;
-
-    CachedPtr<input::InputManager> input_manager;
 
 private:
     CachedPtr<InputThread> dispatcher_thread;
@@ -121,6 +89,8 @@ private:
     CachedPtr<shell::InputTargeter> input_targeter;
 
     CachedAndroidPtr<droidinput::InputDispatcherPolicyInterface> dispatcher_policy;
+    CachedAndroidPtr<droidinput::InputDispatcherInterface> dispatcher;
+    CachedPtr<input::InputDispatcher> input_dispatcher;
 };
 }
 }
