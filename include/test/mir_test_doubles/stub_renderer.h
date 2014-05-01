@@ -47,8 +47,7 @@ public:
     void render(graphics::RenderableList const& renderables) const override
     {
         for (auto const& r : renderables)
-            r->buffer();  // We need to consume a buffer to
-                          // unblock tests with clients.
+            r->buffer(); // We need to consume a buffer to unblock client tests
     }
 
     void end() const override
