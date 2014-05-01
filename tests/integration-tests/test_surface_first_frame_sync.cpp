@@ -101,9 +101,15 @@ public:
     {
     }
 
-    void render(mg::Renderable const&) const override
+    void render(mg::Renderable const&) const
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
+    }
+
+    void render(mg::RenderableList const& renderables) const override
+    {
+        for (auto const& r : renderables)
+            render(*r);
     }
 
 private:
