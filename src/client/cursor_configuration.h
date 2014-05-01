@@ -16,7 +16,14 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#ifndef MIR_CLIENT_CURSOR_CONFIGURATION_H_
+#define MIR_CLIENT_CURSOR_CONFIGURATION_H_
+
+#include <string>
+
 // Cursor parameterization. May grow to include RGBA cursors, etc...
-struct MirCursor {
-    char* name;
+struct MirCursorConfiguration {
+    std::string name;
 };
+
+#endif // MIR_CLIENT_CURSOR_CONFIGURATION_H_

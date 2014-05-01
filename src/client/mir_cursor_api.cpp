@@ -16,43 +16,34 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir_toolkit/mir_cursor.h"
-#include "cursor_representation.h"
+#include "mir_toolkit/mir_cursor_configuration.h"
+#include "cursor_configuration.h"
 
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-
-void mir_cursor_destroy(MirCursor *cursor)
+void mir_cursor_configuration_destroy(MirCursorConfiguration *cursor)
 {
-    assert(cursor);
-    
-    if (cursor->name)
-        free(cursor->name);
-
     delete cursor;
 }
 
-MirCursor* mir_cursor_disabled()
+MirCursorConfiguration* mir_cursor_configuration_disabled()
 {
-    auto c = new MirCursor;
-    c->name = nullptr;
+    auto c = new MirCursorConfiguration;
+    c->name = "";
     
     return c;
 }
 
-MirCursor* mir_cursor_default()
+MirCursorConfiguration* mir_cursor_configuration_default()
 {
-    auto c = new MirCursor;
-    c->name = strdup("default");
+    auto c = new MirCursorConfiguration;
+    c->name = "default";
     
     return c;
 }
 
-MirCursor* mir_cursor_from_name(char const* name)
+MirCursorConfiguration* mir_cursor_configuration_from_name(char const* name)
 {
-    auto c = new MirCursor;
-    c->name = strdup(name);
+    auto c = new MirCursorConfiguration;
+    c->name = std::string(name);
     
     return c;
 }

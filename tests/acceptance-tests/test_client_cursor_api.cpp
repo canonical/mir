@@ -253,7 +253,7 @@ TEST_F(TestClientCursorAPI, DISABLED_client_may_disable_cursor_over_surface)
         [](MirSurface *surface)
         {
             // Disable cursor
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_disabled()));
+            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_disabled()));
         });
     launch_client_process(client_conf);
 }
@@ -291,7 +291,7 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_restored_when_leaving_surface)
         [](MirSurface *surface)
         {
             // Disable cursor
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_disabled()));
+            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_disabled()));
         });
     launch_client_process(client_conf);
 }
@@ -334,14 +334,14 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_changed_when_crossing_surface_bounda
     CursorSettingClient client1_conf(test_client_name_1, client_ready_fence, client_may_exit_fence,
         [](MirSurface *surface)
         {
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_from_name(client_1_cursor.c_str())));
+            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
         });
     launch_client_process(client1_conf);
     CursorSettingClient client2_conf(test_client_name_2, client_ready_fence, client_may_exit_fence,
         [](MirSurface *surface)
         {
             // Disable cursor
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_from_name(client_2_cursor.c_str())));
+            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_2_cursor.c_str())));
         });
     launch_client_process(client2_conf);
 }
@@ -385,13 +385,13 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_request_taken_from_top_surface)
     CursorSettingClient client1_conf(test_client_name_1, client_ready_fence, client_may_exit_fence,
         [](MirSurface *surface)
         {
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_from_name(client_1_cursor.c_str())));
+            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
         });
     launch_client_process(client1_conf);
     CursorSettingClient client2_conf(test_client_name_2, client_ready_fence, client_may_exit_fence,
         [](MirSurface *surface)
         {
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_from_name(client_1_cursor.c_str())));
+            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
         });
     launch_client_process(client2_conf);
 }
@@ -431,8 +431,8 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_request_applied_without_cursor_motio
         {
             client_ready_fence.signal_ready();
             client_may_change_cursor.wait_for_signal_ready_for();
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_from_name(client_1_cursor.c_str())));
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_disabled()));
+            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
+            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_disabled()));
         });
     launch_client_process(client1_conf);
 }

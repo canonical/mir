@@ -21,7 +21,7 @@
 #include <mir_toolkit/mir_native_buffer.h>
 #include <mir_toolkit/client_types.h>
 #include <mir_toolkit/common.h>
-#include <mir_toolkit/mir_cursor.h>
+#include <mir_toolkit/mir_cursor_configuration.h>
 
 #ifdef __cplusplus
 /**
@@ -257,7 +257,7 @@ int mir_surface_get_swapinterval(MirSurface* surface);
  *                           or NULL if parameters is invalid.
  *
  */
-MirWaitHandle* mir_surface_configure_cursor(MirSurface *surface, MirCursor const* parameters);
+MirWaitHandle* mir_surface_configure_cursor(MirSurface *surface, MirCursorConfiguration const* parameters);
 
 #ifdef __cplusplus
 }

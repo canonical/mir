@@ -88,7 +88,7 @@ public:
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
     int attrib(MirSurfaceAttrib a) const;
     
-    MirWaitHandle* configure_cursor(MirCursor const* cursor);
+    MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
     void set_event_handler(MirEventDelegate const* delegate);
     void handle_event(MirEvent const& e);

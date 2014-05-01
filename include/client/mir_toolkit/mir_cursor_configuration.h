@@ -22,7 +22,7 @@
  * Opaque structure containing cursor parameterization. Create with mir_cursor* family.
  * Used with mir_surface_configure_cursor.
  */
-typedef struct MirCursor MirCursor;
+typedef struct MirCursorConfiguration MirCursorConfiguration;
 
 #ifdef __cplusplus
 /**
@@ -36,32 +36,32 @@ extern "C" {
  * Release resources assosciated with cursor parameters
  *     \param [in] parameters The operand
  */
-void mir_cursor_destroy(MirCursor *parameters);
+void mir_cursor_configuration_destroy(MirCursorConfiguration *parameters);
 
 /**
- * Returns a new MirCursor representing a disabled cursor
+ * Returns a new MirCursorConfiguration representing a disabled cursor
  *    \return A cursor parameters object which must be passed
- *            to mir_cursor_destroy
+ *            to mir_cursor_configuration_destroy
  */
-MirCursor* mir_cursor_disabled();
+MirCursorConfiguration* mir_cursor_configuration_disabled();
 
 /**
- * Returns a new MirCursor representing the default cursor
+ * Returns a new MirCursorConfiguration representing the default cursor
  * request.
  *    \return A cursor parameters object which must be passed
- *            to_mir_cursor_destroy
+ *            to_mir_cursor_configuration_destroy
  */
-MirCursor *mir_cursor_default();
+MirCursorConfiguration *mir_cursor_configuration_default();
 
 /**
- * Returns a new MirCursor representing a named cursor
+ * Returns a new MirCursorConfiguration representing a named cursor
  * from the system cursor theme. At present all implementations
  * follow XCursor naming conventions.
  *    \param [in] name The cursor name
  *    \return A cursor parameters object which must be passed
- *            to_mir_cursor_destroy
+ *            to_mir_cursor_configuration_destroy
  */
-MirCursor *mir_cursor_from_name(char const* name);
+MirCursorConfiguration *mir_cursor_configuration_from_name(char const* name);
 
 #ifdef __cplusplus
 }
