@@ -20,9 +20,11 @@
 #ifndef MIR_INPUT_ANDROID_INPUT_MANAGER_H_
 #define MIR_INPUT_ANDROID_INPUT_MANAGER_H_
 
-#include "input_dispatcher_manager.h"
+#include "mir/input/input_manager.h"
 
 #include <utils/StrongPointer.h>
+
+#include <memory>
 
 namespace android
 {
@@ -36,20 +38,20 @@ namespace mir
 
 namespace input
 {
+class InputDispatcher;
 namespace android
 {
 class InputThread;
 
-/// Encapsulates an instance of the Android input stack, that is to say an EventHub tied
-/// to an InputReader tied to an InputDispatcher. Provides interfaces for controlling input
-/// policy and dispatch (through public API and policy objects in InputConfiguration).
-class InputManager : public InputDispatcherManager
+/// Encapsulates the instances of the Android input stack that might require startup and
+//  shutdown calls, that is to say an EventHub tied to an InputReader tied to an
+//  InputDispatcher.
+class InputManager : public input::InputManager
 {
 public:
     explicit InputManager(droidinput::sp<droidinput::EventHubInterface> const& event_hub,
-                          droidinput::sp<droidinput::InputDispatcherInterface> const& dispatcher,
-                          std::shared_ptr<InputThread> const& reader_thread,
-                          std::shared_ptr<InputThread> const& dispatcher_thread);
+                          std::shared_ptr<mir::input::InputDispatcher> const& dispatcher,
+                          std::shared_ptr<InputThread> const& reader_thread);
     virtual ~InputManager();
 
     void start();
@@ -57,6 +59,7 @@ public:
 
 private:
     droidinput::sp<droidinput::EventHubInterface> const event_hub;
+    std::shared_ptr<mir::input::InputDispatcher> const dispatcher;
     std::shared_ptr<InputThread> const reader_thread;
 };
 }

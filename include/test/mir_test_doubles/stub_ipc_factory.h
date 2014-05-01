@@ -57,7 +57,7 @@ private:
         return cache;
     }
 
-    std::shared_ptr<protobuf::DisplayServer> server;
+    std::shared_ptr<protobuf::DisplayServer> const server;
     std::shared_ptr<frontend::ResourceCache> const cache;
 };
 
