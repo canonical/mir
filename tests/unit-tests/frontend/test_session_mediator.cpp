@@ -87,10 +87,18 @@ struct MockConfig : public mg::DisplayConfiguration
     MOCK_METHOD1(for_each_output, void(std::function<void(mg::UserDisplayConfigurationOutput&)>));
 };
 
-}
-
-namespace
+struct MockConnector : public mf::Connector
 {
+public:
+    void start() override {}
+    void stop() override {}
+
+    int client_socket_fd() const override { return 0; }
+    void remove_endpoint() const override {}
+
+    MOCK_CONST_METHOD1(client_socket_fd, int (std::function<void(std::shared_ptr<mf::Session> const&)> const&));
+};
+
 class StubbedSession : public mtd::StubSession
 {
 public:
@@ -211,7 +219,7 @@ struct SessionMediatorTest : public ::testing::Test
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
                    resource_cache, stub_screencast, [](std::shared_ptr<mf::Session> const&) {},
-                   nullptr  /* TODO supply connector*/ },
+                   &connector},
           stubbed_session{std::make_shared<StubbedSession>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
@@ -222,6 +230,7 @@ struct SessionMediatorTest : public ::testing::Test
             .WillByDefault(WithArg<1>(Invoke(stubbed_session.get(), &StubbedSession::create_surface)));
     }
 
+    MockConnector connector;
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<MockPlatform> const graphics_platform;
     std::shared_ptr<mf::DisplayChanger> const graphics_changer;
@@ -708,35 +717,8 @@ TEST_F(SessionMediatorTest, partially_packs_buffer_for_screencast_buffer)
 
 TEST_F(SessionMediatorTest, client_socket_fd_calls_connector_client_socket_fd)
 {
-    struct MockConnector : public mf::Connector
-    {
-    public:
-        void start() override {}
-        void stop() override {}
-
-        int client_socket_fd() const override { return 0; }
-        void remove_endpoint() const override {}
-
-        MOCK_CONST_METHOD1(client_socket_fd, int (std::function<void(std::shared_ptr<mf::Session> const&)> const&));
-    };
-
     const int fd_count = 1;
-    const int dummy_fd = 121;
-
-    MockConnector connector;
-
-    mf::SessionMediator mediator{
-        __LINE__,
-        shell,
-        graphics_platform,
-        graphics_changer,
-        surface_pixel_formats,
-        report,
-        std::make_shared<mtd::NullEventSink>(),
-        resource_cache,
-        stub_screencast,
-        [&](std::shared_ptr<mf::Session> const&) {},
-        &connector};
+    const int dummy_fd = __LINE__;
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -754,6 +736,30 @@ TEST_F(SessionMediatorTest, client_socket_fd_calls_connector_client_socket_fd)
 
     EXPECT_THAT(response.fd_size(), Eq(fd_count));
     EXPECT_THAT(response.fd(0), Eq(dummy_fd));
+
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+}
+
+TEST_F(SessionMediatorTest, client_socket_fd_allocates_requested_number_of_fds)
+{
+    const int fd_count = 11;
+    const int dummy_fd = __LINE__;
+
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+
+    ::mir::protobuf::SocketFDRequest request;
+    ::mir::protobuf::SocketFD response;
+    request.set_number(fd_count);
+
+    using namespace ::testing;
+
+    EXPECT_CALL(connector, client_socket_fd(_)).Times(fd_count).WillRepeatedly(Return(dummy_fd));
+    mediator.client_socket_fd(nullptr, &request, &response, null_callback.get());
+
+    EXPECT_THAT(response.fd_size(), Eq(fd_count));
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
