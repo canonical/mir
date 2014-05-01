@@ -61,7 +61,7 @@ public:
     }
 
 private:
-    std::shared_ptr<mf::Shell> shell;
+    std::shared_ptr<mf::Shell> const shell;
     std::shared_ptr<mf::SessionMediatorReport> const sm_report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
