@@ -41,6 +41,7 @@
 #include "mir_test_doubles/null_screencast.h"
 #include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
+#include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
 
 #include "gmock_set_arg.h"
@@ -703,4 +704,52 @@ TEST_F(SessionMediatorTest, partially_packs_buffer_for_screencast_buffer)
 
     EXPECT_EQ(stub_buffer.id().as_uint32_t(),
               protobuf_buffer.buffer_id());
+}
+
+TEST_F(SessionMediatorTest, client_socket_fd_calls_connector_client_socket_fd)
+{
+    const int dummy_fd = 121;
+    struct MockConnector : public mf::Connector
+    {
+    public:
+        void start() override {}
+        void stop() override {}
+
+        int client_socket_fd() const override { return 0; }
+        void remove_endpoint() const override {}
+
+        MOCK_CONST_METHOD1(client_socket_fd, int (std::function<void(std::shared_ptr<mf::Session> const&)> const&));
+    };
+
+    MockConnector connector;
+
+    mf::SessionMediator mediator{
+        __LINE__,
+        shell,
+        graphics_platform,
+        graphics_changer,
+        surface_pixel_formats,
+        report,
+        std::make_shared<mtd::NullEventSink>(),
+        resource_cache,
+        stub_screencast,
+        [&](std::shared_ptr<mf::Session> const&) {},
+        &connector};
+
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+
+    ::mir::protobuf::SocketFDRequest request;
+    ::mir::protobuf::SocketFD response;
+
+    using namespace ::testing;
+
+    EXPECT_CALL(connector, client_socket_fd(_)).Times(1).WillOnce(Return(dummy_fd));
+    mediator.client_socket_fd(nullptr, &request, &response, null_callback.get());
+
+    EXPECT_THAT(response.fd_size(), Eq(1));
+    EXPECT_THAT(response.fd(0), Eq(dummy_fd));
+
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
