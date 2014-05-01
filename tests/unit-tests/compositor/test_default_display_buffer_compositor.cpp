@@ -108,7 +108,7 @@ TEST_F(DefaultDisplayBufferCompositor, render)
     using namespace testing;
     mtd::MockScene scene;
 
-    mg::RenderableList empty;
+    mg::RenderableList const empty;
     EXPECT_CALL(mock_renderer, render(empty))
         .Times(1);
     EXPECT_CALL(display_buffer, view_area())
