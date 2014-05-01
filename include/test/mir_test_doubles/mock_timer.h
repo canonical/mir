@@ -21,6 +21,8 @@
 
 #include "mir/time/timer.h"
 
+#include "mir_test/gmock_fixes.h"
+
 namespace mir
 {
 namespace test
