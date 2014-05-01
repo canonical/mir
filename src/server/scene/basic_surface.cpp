@@ -115,9 +115,10 @@ ms::BasicSurface::BasicSurface(
     std::string const& name,
     geometry::Rectangle rect,
     bool nonrectangular,
-    std::shared_ptr<compositor::BufferStream> const& buffer_stream,
-    std::shared_ptr<input::InputChannel> const& input_channel,
+    std::shared_ptr<mc::BufferStream> const& buffer_stream,
+    std::shared_ptr<mi::InputChannel> const& input_channel,
     std::shared_ptr<SurfaceConfigurator> const& configurator,
+    std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
     surface_name(name),
     surface_rect(rect),
@@ -129,6 +130,7 @@ ms::BasicSurface::BasicSurface(
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
     configurator(configurator),
+    cursor_image_(cursor_image),
     report(report),
     type_value(mir_surface_type_normal),
     state_value(mir_surface_state_restored)
@@ -421,6 +423,18 @@ void ms::BasicSurface::hide()
 void ms::BasicSurface::show()
 {
     set_hidden(false);
+}
+
+void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& image)
+{
+    std::unique_lock<std::mutex> lock(guard);
+    cursor_image_ = image;
+}
+
+std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image()
+{
+    std::unique_lock<std::mutex> lock(guard);
+    return cursor_image_;
 }
 
 
