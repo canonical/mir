@@ -420,7 +420,7 @@ void mf::SessionMediator::screencast_buffer(
 
 void mf::SessionMediator::client_socket_fd(
     ::google::protobuf::RpcController* ,
-    ::mir::protobuf::SocketFDRequest const* /*parameters*/,
+    ::mir::protobuf::SocketFDRequest const* parameters,
     ::mir::protobuf::SocketFD* response,
     ::google::protobuf::Closure* done)
 {
@@ -434,8 +434,17 @@ void mf::SessionMediator::client_socket_fd(
         // TODO we need to have some notification to the session(?) when the client connects
         auto const connect_handler = [&](std::shared_ptr<mf::Session> const&) {};
 
-        auto const fd = connector->client_socket_fd(connect_handler);
-        response->add_fd(fd);
+        auto const fds_requested = parameters->number();
+
+        // < 1 is illogical, > 42 is unreasonable
+        if (fds_requested < 1 || fds_requested > 42)
+            BOOST_THROW_EXCEPTION(std::runtime_error("number of fds requested out of range"));
+
+        for (auto i  = 0; i != fds_requested; ++i)
+        {
+            auto const fd = connector->client_socket_fd(connect_handler);
+            response->add_fd(fd);
+        }
     }
 
     done->Run();
