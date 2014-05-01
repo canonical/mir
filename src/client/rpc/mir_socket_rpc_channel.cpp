@@ -147,6 +147,7 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
         mir::protobuf::Surface* surface = nullptr;
         mir::protobuf::Buffer* buffer = nullptr;
         mir::protobuf::Platform* platform = nullptr;
+        mir::protobuf::SocketFD* socket_fd = nullptr;
 
         if (message_type == "mir.protobuf.Buffer")
         {
@@ -173,6 +174,26 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
             auto connection = static_cast<mir::protobuf::Connection*>(response);
             if (connection && connection->has_platform())
                 platform = connection->mutable_platform();
+        }
+        else if (message_type == "mir.protobuf.SocketFD")
+        {
+            socket_fd = static_cast<mir::protobuf::SocketFD*>(response);
+        }
+
+        if (socket_fd)
+        {
+            socket_fd->clear_fd();
+
+            if (socket_fd->fds_on_side_channel() > 0)
+            {
+                std::vector<int32_t> fds(socket_fd->fds_on_side_channel());
+                receive_file_descriptors(fds);
+                for (auto &fd: fds)
+                    socket_fd->add_fd(fd);
+
+                rpc_report->file_descriptors_received(*response, fds);
+            }
+            socket_fd->clear_fds_on_side_channel();
         }
 
         if (surface)

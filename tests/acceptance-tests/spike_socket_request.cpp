@@ -67,4 +67,5 @@ TEST_F(DemoSocketFDServer, client_gets_fd)
     mir_connection_release(connection);
 
     EXPECT_THAT(result.fd_size(), Eq(1));
+    EXPECT_THAT(result.fds_on_side_channel(), Eq(0));
 }
