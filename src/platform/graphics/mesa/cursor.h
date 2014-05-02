@@ -68,7 +68,7 @@ public:
 
     ~Cursor() noexcept;
 
-    void set_image(std::shared_ptr<CursorImage const> const& cursor_image);
+    void set_image(CursorImage const& cursor_image) override;
 
     void move_to(geometry::Point position);
 

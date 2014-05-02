@@ -8,7 +8,6 @@ ADD_LIBRARY(
   default_session_container.cpp
   gl_pixel_buffer.cpp
   global_event_sender.cpp
-  legacy_surface_change_notification.cpp
   mediating_display_changer.cpp
   session_manager.cpp
   surface_allocator.cpp
@@ -18,4 +17,6 @@ ADD_LIBRARY(
   surface_event_source.cpp
   surface_observer.cpp
   threaded_snapshot_strategy.cpp
+  legacy_scene_change_notification.cpp
+  legacy_surface_change_notification.cpp
 )
