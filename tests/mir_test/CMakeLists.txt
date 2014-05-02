@@ -6,4 +6,5 @@ add_library(
   cross_process_action.cpp
   spin_wait.cpp
   signal.cpp
+  fake_clock.cpp
 )
