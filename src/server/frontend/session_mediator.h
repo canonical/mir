@@ -20,6 +20,7 @@
 #define MIR_FRONTEND_SESSION_MEDIATOR_H_
 
 #include "mir_protobuf.pb.h"
+#include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
 #include "mir_toolkit/common.h"
 
@@ -44,6 +45,7 @@ class GraphicBufferAllocator;
 namespace frontend
 {
 class ClientBufferTracker;
+class ConnectionContext;
 class Connector;
 class Shell;
 class Session;
@@ -69,8 +71,7 @@ public:
         std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache,
         std::shared_ptr<Screencast> const& screencast,
-        std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler,
-        Connector const* connector);
+        ConnectionContext const& connection_context);
 
     ~SessionMediator() noexcept;
 
@@ -162,8 +163,7 @@ private:
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;
 
-    std::function<void(std::shared_ptr<Session> const& session)> const connect_handler;
-    Connector const* const connector;
+    ConnectionContext const connection_context;
 };
 
 }

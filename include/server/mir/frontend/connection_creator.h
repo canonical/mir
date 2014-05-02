@@ -20,23 +20,15 @@
 #define MIR_FRONTEND_CONNECTION_CREATOR_H_
 
 #include <boost/asio.hpp>
-
 #include <memory>
-#include <functional>
 
 namespace mir
 {
 namespace frontend
 {
+class ConnectionContext;
 class Connector;
 class Session;
-
-// TODO can this grow to become a real class?
-struct ConnectionContext
-{
-    std::function<void(std::shared_ptr<Session> const& session)> const connect_handler;
-    Connector const* const connector;
-};
 
 class ConnectionCreator
 {

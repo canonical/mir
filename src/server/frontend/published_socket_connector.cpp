@@ -19,6 +19,7 @@
 #include "published_socket_connector.h"
 #include "mir/frontend/protobuf_connection_creator.h"
 
+#include "mir/frontend/connection_context.h"
 #include "mir/frontend/connector_report.h"
 
 #include <boost/signals2.hpp>

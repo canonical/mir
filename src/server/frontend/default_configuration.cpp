@@ -106,8 +106,7 @@ private:
             sink,
             resource_cache(),
             effective_screencast,
-            connection_context.connect_handler,
-            connection_context.connector);
+            connection_context);
     }
 
     virtual std::shared_ptr<mf::ResourceCache> resource_cache()

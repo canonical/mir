@@ -69,8 +69,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast,
-    std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler,
-    Connector const* connector) :
+    ConnectionContext const& connection_context) :
     client_pid(client_pid),
     shell(shell),
     graphics_platform(graphics_platform),
@@ -80,8 +79,7 @@ mf::SessionMediator::SessionMediator(
     event_sink(sender),
     resource_cache(resource_cache),
     screencast(screencast),
-    connect_handler(connect_handler),
-    connector(connector)
+    connection_context(connection_context)
 {
 }
 
@@ -107,7 +105,7 @@ void mf::SessionMediator::connect(
         std::lock_guard<std::mutex> lock(session_mutex);
         weak_session = session;
     }
-    connect_handler(session);
+    connection_context.connect_handler(session);
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -441,7 +439,7 @@ void mf::SessionMediator::client_socket_fd(
 
         for (auto i  = 0; i != fds_requested; ++i)
         {
-            auto const fd = connector->client_socket_fd(connect_handler);
+            auto const fd = connection_context.connector->client_socket_fd(connect_handler);
             response->add_fd(fd);
         }
     }
