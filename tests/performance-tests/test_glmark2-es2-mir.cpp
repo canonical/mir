@@ -1,6 +1,7 @@
 #include "mir/default_server_configuration.h"
 #include "mir/display_server.h"
 #include "mir/run_mir.h"
+#include "mir_test/popen.h"
 
 #include <gtest/gtest.h>
 
@@ -66,17 +67,13 @@ protected:
 
         boost::cmatch matches;
         boost::regex re_glmark2_score(".*glmark2\\s+Score:\\s+(\\d+).*");
-        FILE* in;
-        char* line = NULL;
-        size_t len = 0;
-        ssize_t read;
         std::ofstream glmark2_output;
         glmark2_output.open(output_filename);
-
-        char const* cmd = "glmark2-es2-mir -b texture --fullscreen";
-        ASSERT_TRUE((in = popen(cmd, "r")));
+        std::string line;
+        std::string const cmd = "glmark2-es2-mir -b texture --fullscreen";
+        mir::test::Popen p(cmd);
         
-        while ((read = getline(&line, &len, in)) != -1)
+        while (p.get_line(line))
         {
             if (file_type == raw)
             {
@@ -85,8 +82,9 @@ protected:
             else if (file_type == json)
             {
                 std::cout << line;
-                if (boost::regex_match(line, matches, re_glmark2_score))
+                if (boost::regex_match(line.c_str(), matches, re_glmark2_score))
                 {
+                    //TODO EXPECT_GT(score, threshold)
                     std::string json =  "{";
                         json += "'benchmark_name':'glmark2-es2-mir'";
                         json += ",";
@@ -99,9 +97,11 @@ protected:
         }
         
         ds->stop();
-        if (server_thread.joinable()) server_thread.join();
-        free(line);
-        fclose(in);
+        if (server_thread.joinable())
+        {
+            server_thread.join();
+        }
+            
     }
 };
 

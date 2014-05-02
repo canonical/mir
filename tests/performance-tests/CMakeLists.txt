@@ -14,6 +14,8 @@ target_link_libraries(
   mir_performance_tests
   mirserver
 
+  mir-test
+
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
