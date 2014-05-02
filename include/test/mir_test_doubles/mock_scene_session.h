@@ -53,7 +53,7 @@ struct MockSceneSession : public scene::Session
 
     MOCK_METHOD1(set_lifecycle_state, void(MirLifecycleState state));
 
-    MOCK_METHOD0(child_session_handler, std::function<void(std::shared_ptr<frontend::Session> const& session)>());
+    MOCK_METHOD0(child_connect_handler, std::function<void(std::shared_ptr<frontend::Session> const& session)>());
 };
 
 }

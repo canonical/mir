@@ -69,7 +69,7 @@ public:
 
     void set_lifecycle_state(MirLifecycleState state);
 
-    auto child_session_handler()
+    auto child_connect_handler()
     -> std::function<void(std::shared_ptr<frontend::Session> const& session)> override;
 
 protected:

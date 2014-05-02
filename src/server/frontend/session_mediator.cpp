@@ -428,7 +428,7 @@ void mf::SessionMediator::client_socket_fd(
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        auto const connect_handler = session->child_session_handler();
+        auto const connect_handler = session->child_connect_handler();
 
         auto const fds_requested = parameters->number();
 
@@ -438,7 +438,7 @@ void mf::SessionMediator::client_socket_fd(
 
         for (auto i  = 0; i != fds_requested; ++i)
         {
-            auto const fd = connection_context.client_socket_fd(connect_handler);
+            auto const fd = connection_context.fd_for_client_handled_by(connect_handler);
             response->add_fd(fd);
         }
     }

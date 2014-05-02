@@ -182,7 +182,7 @@ void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
     event_sink->handle_lifecycle_event(state);
 }
 
-auto ms::ApplicationSession::child_session_handler()
+auto ms::ApplicationSession::child_connect_handler()
 -> std::function<void(std::shared_ptr<mf::Session> const& session)>
 {
     // TODO handle connection by child session

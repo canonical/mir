@@ -77,7 +77,7 @@ struct StubSceneSession : public scene::Session
     {
     }
 
-    auto child_session_handler()
+    auto child_connect_handler()
     -> std::function<void(std::shared_ptr<frontend::Session> const& session)> override
     {
         return [](std::shared_ptr<frontend::Session> const&) {};

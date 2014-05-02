@@ -58,7 +58,7 @@ public:
     virtual void hide() = 0;
     virtual void show() = 0;
 
-    virtual auto child_session_handler()
+    virtual auto child_connect_handler()
     -> std::function<void(std::shared_ptr<Session> const& session)> = 0;
 
 protected:

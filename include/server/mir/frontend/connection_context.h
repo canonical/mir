@@ -41,7 +41,7 @@ public:
         std::function<void(std::shared_ptr<Session> const& session)> const connect_handler,
         Connector const* connector);
 
-    int client_socket_fd(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const;
+    int fd_for_client_handled_by(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const;
 
     void handle_client_connect(std::shared_ptr<Session> const& session) const { connect_handler(session); }
 
