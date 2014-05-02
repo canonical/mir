@@ -33,7 +33,7 @@ class CursorImage;
 class Cursor
 {
 public:
-    virtual void set_image(std::shared_ptr<CursorImage const> const& cursor_image) = 0;
+    virtual void set_image(CursorImage const& cursor_image) = 0;
     virtual void move_to(geometry::Point position) = 0;
 
 protected:
