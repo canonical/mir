@@ -19,31 +19,26 @@
 #include "mir_toolkit/mir_cursor_configuration.h"
 #include "cursor_configuration.h"
 
+char const *const mir_default_cursor_name = "default";
+char const *const mir_disabled_cursor_name = NULL;
+
+
 void mir_cursor_configuration_destroy(MirCursorConfiguration *cursor)
 {
     delete cursor;
 }
 
-MirCursorConfiguration* mir_cursor_configuration_disabled()
-{
-    auto c = new MirCursorConfiguration;
-    c->name = "";
-    
-    return c;
-}
-
-MirCursorConfiguration* mir_cursor_configuration_default()
-{
-    auto c = new MirCursorConfiguration;
-    c->name = "default";
-    
-    return c;
-}
-
 MirCursorConfiguration* mir_cursor_configuration_from_name(char const* name)
 {
-    auto c = new MirCursorConfiguration;
-    c->name = std::string(name);
+    try 
+    {
+        auto c = new MirCursorConfiguration;
+        c->name = std::string(name);
     
-    return c;
+        return c;
+    }
+    catch (std::exception const&)
+    {
+        return nullptr;
+    }
 }

@@ -255,7 +255,8 @@ TEST_F(TestClientCursorAPI, DISABLED_client_may_disable_cursor_over_surface)
         [](MirSurface *surface)
         {
             // Disable cursor
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_disabled()));
+            mir_wait_for(mir_surface_configure_cursor(surface, 
+                mir_cursor_configuration_from_name(mir_disabled_cursor_name)));
         });
     launch_client_process(client_conf);
 }
@@ -293,7 +294,8 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_restored_when_leaving_surface)
         [](MirSurface *surface)
         {
             // Disable cursor
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_disabled()));
+            mir_wait_for(mir_surface_configure_cursor(surface, 
+                mir_cursor_configuration_from_name(mir_disabled_cursor_name)));
         });
     launch_client_process(client_conf);
 }
@@ -435,7 +437,8 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_request_applied_without_cursor_motio
             client_ready_fence.signal_ready();
             client_may_change_cursor.wait_for_signal_ready_for();
             mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_disabled()));
+            mir_wait_for(mir_surface_configure_cursor(surface, 
+                mir_cursor_configuration_from_name(mir_disabled_cursor_name)));
         });
     launch_client_process(client1_conf);
 }

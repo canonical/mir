@@ -33,25 +33,21 @@ extern "C" {
 #endif
 
 /**
+ * A special cursor name for use with mir_cursor_configuration_from_name
+ * representing the system default cursor.
+ */
+extern char const *const mir_default_cursor_name;
+/**
+ * A special cursor name for use with mir_cursor_configuration_from_name
+ * representing a disabled cursor image.
+ */
+extern char const *const mir_disabled_cursor_name;
+
+/**
  * Release resources assosciated with cursor parameters
  *     \param [in] parameters The operand
  */
 void mir_cursor_configuration_destroy(MirCursorConfiguration *parameters);
-
-/**
- * Returns a new MirCursorConfiguration representing a disabled cursor
- *    \return A cursor parameters object which must be passed
- *            to mir_cursor_configuration_destroy
- */
-MirCursorConfiguration* mir_cursor_configuration_disabled();
-
-/**
- * Returns a new MirCursorConfiguration representing the default cursor
- * request.
- *    \return A cursor parameters object which must be passed
- *            to_mir_cursor_configuration_destroy
- */
-MirCursorConfiguration *mir_cursor_configuration_default();
 
 /**
  * Returns a new MirCursorConfiguration representing a named cursor
