@@ -28,6 +28,8 @@ class MockAlarm : public mir::time::Alarm
 {
 public:
     MockAlarm(std::function<void(void)> callback, std::shared_ptr<mt::FakeClock> const& clock);
+    ~MockAlarm() override;
+
 
     bool cancel() override;
     State state() const override;
@@ -54,6 +56,11 @@ MockAlarm::InternalState::InternalState(std::function<void(void)> callback)
 MockAlarm::MockAlarm(std::function<void(void)> callback, std::shared_ptr<mt::FakeClock> const& clock)
     : internal_state{std::make_shared<InternalState>(callback)}, clock{clock}
 {
+}
+
+MockAlarm::~MockAlarm()
+{
+    cancel();
 }
 
 bool MockAlarm::cancel()
