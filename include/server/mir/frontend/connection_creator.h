@@ -31,13 +31,19 @@ namespace frontend
 class Connector;
 class Session;
 
+// TODO can this grow to become a real class?
+struct ConnectionContext
+{
+    std::function<void(std::shared_ptr<Session> const& session)> const connect_handler;
+    Connector const* const connector;
+};
+
 class ConnectionCreator
 {
 public:
     virtual void create_connection_for(
         std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
-        std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler,
-        Connector const* connector) = 0;
+        ConnectionContext const& connection_context) = 0;
 
 protected:
     ConnectionCreator() = default;
