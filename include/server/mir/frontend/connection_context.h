@@ -29,23 +29,23 @@ namespace frontend
 class Connector;
 class Session;
 
-// TODO can this grow to become a real class?
-struct ConnectionContext
+class ConnectionContext
 {
-    ConnectionContext(
-        std::function<void(std::shared_ptr<Session> const& session)> const connect_handler,
-        Connector const* connector) :
-            connect_handler(connect_handler), connector(connector) {}
-
+public:
+    ConnectionContext() = delete;
+    ConnectionContext(const ConnectionContext&) = default;
+    ConnectionContext& operator=(const ConnectionContext&) = default;
     ConnectionContext(Connector const* connector) :
         ConnectionContext([](std::shared_ptr<Session> const&){}, connector) {}
+    ConnectionContext(
+        std::function<void(std::shared_ptr<Session> const& session)> const connect_handler,
+        Connector const* connector);
 
-    ConnectionContext() = delete;
+    int client_socket_fd(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const;
 
-    ConnectionContext(const ConnectionContext&) = default;
+    void handle_client_connect(std::shared_ptr<Session> const& session) const { connect_handler(session); }
 
-    ConnectionContext& operator=(const ConnectionContext&) = default;
-
+private:
     std::function<void(std::shared_ptr<Session> const& session)> const connect_handler;
     Connector const* const connector;
 };

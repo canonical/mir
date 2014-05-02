@@ -19,7 +19,6 @@
 #include "session_mediator.h"
 #include "client_buffer_tracker.h"
 
-#include "mir/frontend/connector.h"
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
@@ -105,7 +104,7 @@ void mf::SessionMediator::connect(
         std::lock_guard<std::mutex> lock(session_mutex);
         weak_session = session;
     }
-    connection_context.connect_handler(session);
+    connection_context.handle_client_connect(session);
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -439,7 +438,7 @@ void mf::SessionMediator::client_socket_fd(
 
         for (auto i  = 0; i != fds_requested; ++i)
         {
-            auto const fd = connection_context.connector->client_socket_fd(connect_handler);
+            auto const fd = connection_context.client_socket_fd(connect_handler);
             response->add_fd(fd);
         }
     }
