@@ -52,10 +52,17 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     report->began_frame(this);
 
     bool bypassed = false;
-    bool uncomposited_buffers{false};
 
     auto const& view_area = display_buffer.view_area();
     auto renderable_list = scene->renderable_list_for(this);
+    mc::filter_occlusions_from(renderable_list, view_area);
+
+    //TODO: the DisplayBufferCompositor should not have to figure out if it has to force
+    //      a subsequent compositon. The MultiThreadedCompositor should be smart enough to 
+    //      schedule compositions when they're needed. 
+    bool uncomposited_buffers{false};
+    for(auto const& renderable : renderable_list)
+        uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
 
     if (display_buffer.can_bypass())
     {
@@ -66,8 +73,6 @@ bool mc::DefaultDisplayBufferCompositor::composite()
             auto bypass_buf = (*bypass_it)->buffer();
             if (bypass_buf->can_bypass())
             {
-                uncomposited_buffers = (*bypass_it)->buffers_ready_for_compositor() > 1;
-
                 display_buffer.post_update(bypass_buf);
                 bypassed = true;
                 renderer->suspend();
@@ -79,16 +84,11 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     {
         display_buffer.make_current();
 
-        mc::filter_occlusions_from(renderable_list, view_area);
-
         renderer->set_rotation(display_buffer.orientation());
         renderer->begin();
 
         for(auto const& renderable : renderable_list)
-        {
-            uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
             renderer->render(*renderable);
-        }
 
         display_buffer.post_update();
         renderer->end();
