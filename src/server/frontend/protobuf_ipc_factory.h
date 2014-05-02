@@ -31,12 +31,10 @@ class DisplayServer;
 }
 namespace frontend
 {
-class Connector;
 class ConnectionContext;
 class EventSink;
 class ResourceCache;
 class MessageProcessorReport;
-class Session;
 class SessionCredentials;
 
 class ProtobufIpcFactory

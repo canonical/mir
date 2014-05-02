@@ -79,7 +79,6 @@ void mf::ProtobufConnectionCreator::create_connection_for(
     }
 }
 
-
 std::shared_ptr<mfd::MessageProcessor>
 mf::ProtobufConnectionCreator::create_processor(
     std::shared_ptr<mfd::ProtobufMessageSender> const& sender,

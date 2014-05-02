@@ -20,6 +20,7 @@
 #define MIR_FRONTEND_CONNECTION_CREATOR_H_
 
 #include <boost/asio.hpp>
+
 #include <memory>
 
 namespace mir
@@ -27,8 +28,6 @@ namespace mir
 namespace frontend
 {
 class ConnectionContext;
-class Connector;
-class Session;
 
 class ConnectionCreator
 {

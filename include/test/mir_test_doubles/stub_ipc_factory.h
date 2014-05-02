@@ -28,7 +28,6 @@ namespace mir
 {
 namespace frontend
 {
-class Session;
 class SessionCredentials;
 }
 namespace test

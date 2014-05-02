@@ -45,8 +45,6 @@ class GraphicBufferAllocator;
 namespace frontend
 {
 class ClientBufferTracker;
-class ConnectionContext;
-class Connector;
 class Shell;
 class Session;
 class Surface;
