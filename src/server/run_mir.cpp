@@ -24,6 +24,7 @@
 #include "mir/raii.h"
 
 #include <exception>
+#include <mutex>
 #include <csignal>
 #include <cstdlib>
 #include <cassert>
@@ -34,6 +35,7 @@ auto const intercepted = { SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS };
 
 std::weak_ptr<mir::frontend::Connector> weak_connector;
 std::exception_ptr termination_exception;
+std::mutex termination_exception_mutex;
 
 extern "C" void delete_endpoint()
 {
@@ -98,6 +100,10 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
 
 void mir::terminate_with_current_exception()
 {
-    termination_exception = std::current_exception();
-    raise(SIGTERM);
+    std::lock_guard<std::mutex> lock{termination_exception_mutex};
+    if (!termination_exception)
+    {
+        termination_exception = std::current_exception();
+        raise(SIGTERM);
+    }
 }
