@@ -76,7 +76,7 @@ mg::GLShader::operator GLuint() const
     return shader;
 }
 
-mg::SingleVertexSingleFragmentProgram::SingleVertexSingleFragmentProgram(
+mg::SimpleGLProgram::SimpleGLProgram(
     GLchar const* vertex_shader_src,
     GLchar const* fragment_shader_src)
   : vertex_shader(vertex_shader_src, GL_VERTEX_SHADER),
@@ -98,12 +98,12 @@ mg::SingleVertexSingleFragmentProgram::SingleVertexSingleFragmentProgram(
     }
 }
 
-mg::SingleVertexSingleFragmentProgram::~SingleVertexSingleFragmentProgram()
+mg::SimpleGLProgram::~SimpleGLProgram()
 {
     glDeleteProgram(program);
 }
 
-mg::SingleVertexSingleFragmentProgram::operator GLuint() const
+mg::SimpleGLProgram::operator GLuint() const
 {
     return program;
 }

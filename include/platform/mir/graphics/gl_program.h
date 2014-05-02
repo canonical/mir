@@ -53,13 +53,13 @@ private:
     GLProgram& operator=(GLProgram const&) = delete;
 };
 
-class SingleVertexSingleFragmentProgram : public GLProgram
+class SimpleGLProgram : public GLProgram
 {
 public:
-    SingleVertexSingleFragmentProgram(
+    SimpleGLProgram(
         GLchar const* vertex_shader_src,
         GLchar const* fragment_shader_src);
-    ~SingleVertexSingleFragmentProgram();
+    ~SimpleGLProgram();
 
     operator GLuint() const override;
 private:

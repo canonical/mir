@@ -224,7 +224,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
         clear_connected_unused_outputs();
     }
 
-    if (cursor) cursor->show_at_last_known_position();
+    if (auto c = cursor.lock()) c->show_at_last_known_position();
 }
 
 void mgm::Display::register_configuration_change_handler(
@@ -255,7 +255,7 @@ void mgm::Display::pause()
 {
     try
     {
-        if (cursor) cursor->hide();
+        if (auto c = cursor.lock()) c->hide();
         platform->drm.drop_master();
     }
     catch(std::runtime_error const& e)
@@ -291,12 +291,16 @@ void mgm::Display::resume()
         clear_connected_unused_outputs();
     }
 
-    if (cursor) cursor->show_at_last_known_position();
+    if (auto c = cursor.lock()) c->show_at_last_known_position();
 }
 
-auto mgm::Display::the_cursor() -> std::weak_ptr<graphics::Cursor>
+auto mgm::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& initial_image) -> std::shared_ptr<graphics::Cursor>
 {
-    if (!cursor)
+    // There is only one hardware cursor. We do not keep a strong reference to it in the display though,
+    // if no other component of Mir is interested (i.e. the input stack does not keep a reference to send
+    // position updates) we must be configured not to use a cursor and thusly let it deallocate.
+    std::shared_ptr<mgm::Cursor> locked_cursor = cursor.lock();
+    if (!locked_cursor)
     {
         class KMSCurrentConfiguration : public CurrentConfiguration
         {
@@ -317,11 +321,12 @@ auto mgm::Display::the_cursor() -> std::weak_ptr<graphics::Cursor>
             Display& display;
         };
 
-        cursor = std::make_shared<Cursor>(platform->gbm.device, output_container,
-                                          std::make_shared<KMSCurrentConfiguration>(*this));
+        cursor = locked_cursor = std::make_shared<Cursor>(platform->gbm.device, output_container,
+            std::make_shared<KMSCurrentConfiguration>(*this),
+            initial_image);
     }
 
-    return cursor;
+    return locked_cursor;
 }
 
 std::unique_ptr<mg::GLContext> mgm::Display::create_gl_context()

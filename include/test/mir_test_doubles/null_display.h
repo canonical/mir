@@ -58,7 +58,10 @@ class NullDisplay : public graphics::Display
     }
     void pause() {}
     void resume() {}
-    std::weak_ptr<graphics::Cursor> the_cursor() { return {}; }
+    std::shared_ptr<graphics::Cursor> create_hardware_cursor(std::shared_ptr<graphics::CursorImage> const& /* initial_image */)
+    {
+         return {}; 
+    }
     std::unique_ptr<graphics::GLContext> create_gl_context()
     {
         return std::unique_ptr<NullGLContext>{new NullGLContext()};

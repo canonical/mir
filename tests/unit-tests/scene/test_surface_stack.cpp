@@ -19,6 +19,7 @@
 #include "src/server/scene/surface_stack.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/scene/observer.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/basic_surface.h"
@@ -81,10 +82,19 @@ struct StubInputChannel : public mi::InputChannel
     int const c_fd;
 };
 
-class MockCallback
+struct MockCallback
 {
-public:
     MOCK_METHOD0(call, void());
+};
+
+struct MockSceneObserver : public ms::Observer
+{
+    MOCK_METHOD1(surface_added, void(ms::Surface*));
+    MOCK_METHOD1(surface_removed, void(ms::Surface*));
+    MOCK_METHOD0(surfaces_reordered, void());
+
+    MOCK_METHOD1(surface_exists, void(ms::Surface*));
+    MOCK_METHOD0(end_observation, void());
 };
 
 struct SurfaceStack : public ::testing::Test
@@ -333,6 +343,110 @@ TEST_F(SurfaceStack, generate_renderlist)
 
     for(auto& surface : surfacelist)
         stack.remove_surface(surface);
+}
+
+TEST_F(SurfaceStack, scene_observer_notified_of_add_and_remove)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack(
+        mt::fake_shared(input_registrar), report);
+    MockSceneObserver observer;
+    
+    InSequence seq;
+    EXPECT_CALL(observer, surface_added(stub_surface1.get())).Times(1);
+    EXPECT_CALL(observer, surface_removed(stub_surface1.get()))
+        .Times(1);
+    
+    stack.add_observer(mt::fake_shared(observer));
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.remove_surface(stub_surface1);
+}
+
+TEST_F(SurfaceStack, multiple_observers)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack(
+        mt::fake_shared(input_registrar), report);
+    MockSceneObserver observer1, observer2;
+    
+    InSequence seq;
+    EXPECT_CALL(observer1, surface_added(stub_surface1.get())).Times(1);
+    EXPECT_CALL(observer2, surface_added(stub_surface1.get())).Times(1);
+    
+    stack.add_observer(mt::fake_shared(observer1));
+    stack.add_observer(mt::fake_shared(observer2));
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+}
+
+TEST_F(SurfaceStack, remove_scene_observer)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack(
+        mt::fake_shared(input_registrar), report);
+    MockSceneObserver observer;
+    
+    InSequence seq;
+    EXPECT_CALL(observer, surface_added(stub_surface1.get())).Times(1);
+    // We remove the scene observer before removing the surface, and thus
+    // expect to NOT see the surface_removed call
+    EXPECT_CALL(observer, end_observation()).Times(1);
+    EXPECT_CALL(observer, surface_removed(stub_surface1.get()))
+        .Times(0);
+    
+    stack.add_observer(mt::fake_shared(observer));
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.remove_observer(mt::fake_shared(observer));
+
+    stack.remove_surface(stub_surface1);
+}
+
+// Many clients of the scene observer wish to install surface observers to monitor surface
+// notifications. We offer them a surface_added event for existing surfaces to give them
+// a chance to do this.
+TEST_F(SurfaceStack, scene_observer_informed_of_existing_surfaces)
+{
+    using namespace ::testing;
+
+    using namespace ::testing;
+
+    ms::SurfaceStack stack(
+        mt::fake_shared(input_registrar), report);
+    MockSceneObserver observer;
+    
+    InSequence seq;
+    EXPECT_CALL(observer, surface_exists(stub_surface1.get())).Times(1);
+    EXPECT_CALL(observer, surface_exists(stub_surface2.get())).Times(1);
+    
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
+
+    stack.add_observer(mt::fake_shared(observer));
+}
+
+TEST_F(SurfaceStack, surfaces_reordered)
+{
+    using namespace ::testing;
+
+    ms::SurfaceStack stack(
+        mt::fake_shared(input_registrar), report);
+    MockSceneObserver observer;
+    
+    EXPECT_CALL(observer, surface_added(_)).Times(AnyNumber());
+    EXPECT_CALL(observer, surface_removed(_)).Times(AnyNumber());
+
+    EXPECT_CALL(observer, surfaces_reordered()).Times(1);
+    
+    stack.add_observer(mt::fake_shared(observer));
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
+    stack.raise(stub_surface1);
 }
 
 TEST_F(SurfaceStack, renderlist_is_snapshot_of_positioning_info)

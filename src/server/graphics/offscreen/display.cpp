@@ -163,7 +163,7 @@ void mgo::Display::resume()
 {
 }
 
-std::weak_ptr<mg::Cursor> mgo::Display::the_cursor()
+std::shared_ptr<mg::Cursor> mgo::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /* initial_image */)
 {
     return {};
 }
