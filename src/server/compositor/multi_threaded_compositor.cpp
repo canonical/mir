@@ -23,6 +23,9 @@
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/compositor_report.h"
+#include "mir/scene/legacy_scene_change_notification.h"
+#include "mir/scene/surface_observer.h"
+#include "mir/scene/surface.h"
 #include "mir/run_mir.h"
 
 #include <thread>
@@ -32,6 +35,7 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace ms = mir::scene;
 
 namespace
 {
@@ -260,6 +264,11 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       state{CompositorState::stopped},
       compose_on_start{compose_on_start}
 {
+    observer = std::make_shared<ms::LegacySceneChangeNotification>([this]()
+        {
+            /* Recomposite whenever the scene changes */
+            schedule_compositing();
+        });
 }
 
 mc::MultiThreadedCompositor::~MultiThreadedCompositor()
@@ -270,6 +279,7 @@ mc::MultiThreadedCompositor::~MultiThreadedCompositor()
 void mc::MultiThreadedCompositor::schedule_compositing()
 {
     std::unique_lock<std::mutex> lk(state_guard);
+
     report->scheduled();
     for (auto& f : thread_functors)
         f->schedule_compositing();
@@ -293,8 +303,7 @@ void mc::MultiThreadedCompositor::start()
         }};
 
     lk.unlock();
-    /* Recomposite whenever the scene changes */
-    scene->set_change_callback([this]() { schedule_compositing(); });
+    scene->add_observer(observer);
     lk.lock();
 
     create_compositing_threads();
@@ -325,7 +334,7 @@ void mc::MultiThreadedCompositor::stop()
         }};
 
     lk.unlock();
-    scene->set_change_callback([]{});
+    scene->remove_observer(observer);
     lk.lock();
 
     destroy_compositing_threads(lk);
