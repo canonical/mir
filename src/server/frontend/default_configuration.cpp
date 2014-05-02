@@ -73,8 +73,7 @@ private:
     std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
         mf::SessionCredentials const& creds,
         std::shared_ptr<mf::EventSink> const& sink,
-        std::function<void(std::shared_ptr<mf::Session> const& session)> const& connect_handler,
-        mf::Connector const* connector) override
+        mf::ConnectionContext const& connection_context) override
     {
         std::shared_ptr<mf::DisplayChanger> changer;
         std::shared_ptr<mf::Screencast> effective_screencast;
@@ -107,8 +106,8 @@ private:
             sink,
             resource_cache(),
             effective_screencast,
-            connect_handler,
-            connector);
+            connection_context.connect_handler,
+            connection_context.connector);
     }
 
     virtual std::shared_ptr<mf::ResourceCache> resource_cache()
