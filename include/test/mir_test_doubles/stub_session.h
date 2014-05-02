@@ -51,6 +51,12 @@ struct StubSession : public frontend::Session
     void show() override
     {
     }
+
+    auto child_session_handler()
+    -> std::function<void(std::shared_ptr<frontend::Session> const& session)> override
+    {
+        return [](std::shared_ptr<frontend::Session> const&) {};
+    }
 };
 
 }

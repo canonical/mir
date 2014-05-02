@@ -431,8 +431,7 @@ void mf::SessionMediator::client_socket_fd(
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        // TODO we need to have some notification to the session(?) when the client connects
-        auto const connect_handler = [&](std::shared_ptr<mf::Session> const&) {};
+        auto const connect_handler = session->child_session_handler();
 
         auto const fds_requested = parameters->number();
 

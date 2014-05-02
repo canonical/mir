@@ -22,6 +22,7 @@
 #include "mir_toolkit/common.h"
 #include "mir/frontend/surface_id.h"
 
+#include <functional>
 #include <mutex>
 #include <atomic>
 #include <memory>
@@ -56,6 +57,9 @@ public:
 
     virtual void hide() = 0;
     virtual void show() = 0;
+
+    virtual auto child_session_handler()
+    -> std::function<void(std::shared_ptr<Session> const& session)> = 0;
 
 protected:
     Session() = default;
