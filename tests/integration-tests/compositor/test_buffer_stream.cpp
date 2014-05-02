@@ -26,7 +26,6 @@
 #include "mir_test_doubles/mock_timer.h"
 #include "mir_test_framework/watchdog.h"
 #include "mir_test/signal.h"
-#include "mir_test/gmock_fixes.h"
 
 #include <gmock/gmock.h>
 
@@ -52,28 +51,28 @@ struct BufferStreamSurfaces : mc::BufferStreamSurfaces
     // Convenient function to allow tests to be written in linear style
     void swap_client_buffers_blocking(mg::Buffer*& buffer)
     {
-        mt::Signal s;
-
-        swap_client_buffers_cancellable(buffer, s);
+        swap_client_buffers_cancellable(buffer, std::make_shared<mt::Signal>());
     }
 
-    void swap_client_buffers_cancellable(mg::Buffer*& buffer, mt::Signal& signal)
+    void swap_client_buffers_cancellable(mg::Buffer*& buffer, std::shared_ptr<mt::Signal> const& signal)
     {
         swap_client_buffers(buffer,
-            [&](mg::Buffer* new_buffer)
+            [signal, &buffer](mg::Buffer* new_buffer)
              {
                 buffer = new_buffer;
-                signal.raise();
+                signal->raise();
              });
 
-        signal.wait();
+        signal->wait();
     }
 };
 
 struct BufferStreamTest : public ::testing::Test
 {
     BufferStreamTest()
-        : timer{std::make_shared<testing::NiceMock<mtd::MockTimer>>()},
+        : clock{std::make_shared<mt::FakeClock>()},
+          timer{std::make_shared<mtd::MockTimer>(clock)},
+          frame_drop_timeout{1000},
           nbuffers{3},
           buffer_stream{create_bundle()}
     {
@@ -89,10 +88,13 @@ struct BufferStreamTest : public ::testing::Test
         return std::make_shared<mc::SwitchingBundle>(nbuffers,
                                                      allocator,
                                                      properties,
-                                                     timer);
+                                                     timer,
+                                                     frame_drop_timeout);
     }
 
+    std::shared_ptr<mt::FakeClock> clock;
     std::shared_ptr<mtd::MockTimer> timer;
+    std::chrono::milliseconds const frame_drop_timeout;
     const int nbuffers;
     BufferStreamSurfaces buffer_stream;
 };
@@ -347,37 +349,16 @@ TEST_F(BufferStreamTest, blocked_client_is_released_on_timeout)
     using namespace testing;
 
     mg::Buffer* placeholder{nullptr};
-    MockAlarm* swap_buffer_timeout{nullptr};
-    mt::Signal alarm_set;
-
-    EXPECT_CALL(*timer, notify_in(_,_))
-        .Times(1)
-        .WillOnce(WithArgs<1>(Invoke([&swap_buffer_timeout, &alarm_set](std::function<void(void)> callback)
-                              {
-                                  swap_buffer_timeout = new NiceMock<MockAlarm>{callback};
-                                  alarm_set.raise();
-                                  return std::unique_ptr<MockAlarm>{swap_buffer_timeout};
-                              })));
 
     // Grab all the buffers...
     for (int i = 0; i < nbuffers; ++i)
         buffer_stream.swap_client_buffers_blocking(placeholder);
 
-    mt::Signal done_signal;
+    auto swap_completed = std::make_shared<mt::Signal>();
+    buffer_stream.swap_client_buffers(placeholder, [swap_completed](mg::Buffer*) {swap_completed->raise();});
 
-    mtf::WatchDog watchdog([&done_signal]() { done_signal.raise(); });
+    EXPECT_FALSE(swap_completed->raised());
+    clock->advance_time(frame_drop_timeout + std::chrono::milliseconds{1});
 
-    watchdog.run([this, &done_signal](mtf::WatchDog& watchdog)
-    {        
-        mg::Buffer* placeholder{nullptr};
-        buffer_stream.swap_client_buffers_cancellable(placeholder, done_signal);
-        watchdog.notify_done();
-    });
-
-    // The SwitchingBundle allocates a timer the first time client_acquire would block.
-    // We need to wait for the alarm to be set before we trigger it.
-    ASSERT_TRUE(alarm_set.wait_for(std::chrono::milliseconds{50}));
-    swap_buffer_timeout->trigger();
-
-    EXPECT_TRUE(watchdog.wait_for(std::chrono::milliseconds{200}));
+    EXPECT_TRUE(swap_completed->wait_for(std::chrono::milliseconds{100}));
 }
