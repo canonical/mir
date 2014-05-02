@@ -47,7 +47,7 @@ public:
     {
     }
 
-    void set_image(std::shared_ptr<mg::CursorImage const> const&) override
+    void set_image(mg::CursorImage const&) override
     {
         // TODO: Implement software cursor image setting later
     }
