@@ -132,7 +132,7 @@ std::shared_ptr<AcquireWaitHandle> client_acquire_async(mc::SwitchingBundle& q)
         std::make_shared<AcquireWaitHandle>(q);
 
     q.client_acquire(
-        [&](mg::Buffer* buffer) { wait_handle->receive_buffer(buffer); });
+        [wait_handle](mg::Buffer* buffer) { wait_handle->receive_buffer(buffer); });
 
     return wait_handle;
 }
