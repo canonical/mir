@@ -56,7 +56,9 @@ namespace
 
 struct MockCursor : public mg::Cursor
 {
-    MOCK_METHOD1(set_image, void(std::shared_ptr<mg::CursorImage const> const&));
+    MOCK_METHOD1(show, void(mg::CursorImage const&));
+    MOCK_METHOD0(hide, void());
+
     MOCK_METHOD1(move_to, void(geom::Point));
 };
 
@@ -83,7 +85,7 @@ struct StubCursorImages : public mg::CursorImages
 
 MATCHER(DefaultCursorImage, "")
 {
-    auto image = std::dynamic_pointer_cast<NamedCursorImage const>(arg);
+    auto image = dynamic_cast<NamedCursorImage const*>(&arg);
     assert(image);
 
     if (image->cursor_name != "default")
@@ -93,7 +95,7 @@ MATCHER(DefaultCursorImage, "")
 
 MATCHER_P(CursorNamed, name, "")
 {
-   auto image = std::dynamic_pointer_cast<NamedCursorImage const>(arg);
+   auto image = dynamic_cast<NamedCursorImage const*>(&arg);
    assert(image);
 
    if (image->cursor_name != name)
@@ -210,7 +212,7 @@ struct CursorTestServerConfiguration : mtf::InputTestingServerConfiguration
         synthesize_cursor_motion(this);
         expectations_satisfied.wait_for_at_most_seconds(60);
 
-        EXPECT_CALL(cursor, set_image(_)).Times(AnyNumber()); // Client shutdown
+        EXPECT_CALL(cursor, show(_)).Times(AnyNumber()); // Client shutdown
         for (int i = 0; i < number_of_clients; i++)
             client_may_exit_fence.signal_ready();
     }
@@ -240,7 +242,7 @@ TEST_F(TestClientCursorAPI, DISABLED_client_may_disable_cursor_over_surface)
         ClientCount{1},
         [](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
         {
-            EXPECT_CALL(cursor, set_image(Eq(nullptr))).Times(1)
+            EXPECT_CALL(cursor, hide()).Times(1)
                 .WillOnce(mt::WakeUp(&expectations_satisfied));
         },
         [](CursorTestServerConfiguration *server)
@@ -253,7 +255,8 @@ TEST_F(TestClientCursorAPI, DISABLED_client_may_disable_cursor_over_surface)
         [](MirSurface *surface)
         {
             // Disable cursor
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_disabled()));
+            mir_wait_for(mir_surface_configure_cursor(surface, 
+                mir_cursor_configuration_from_name(mir_disabled_cursor_name)));
         });
     launch_client_process(client_conf);
 }
@@ -276,8 +279,8 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_restored_when_leaving_surface)
         [](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
         {
             InSequence seq;
-            EXPECT_CALL(cursor, set_image(Eq(nullptr))).Times(1);
-            EXPECT_CALL(cursor, set_image(DefaultCursorImage())).Times(1)
+            EXPECT_CALL(cursor, hide()).Times(1);
+            EXPECT_CALL(cursor, show(DefaultCursorImage())).Times(1)
                 .WillOnce(mt::WakeUp(&expectations_satisfied));
         },
         [](CursorTestServerConfiguration *server)
@@ -291,7 +294,8 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_restored_when_leaving_surface)
         [](MirSurface *surface)
         {
             // Disable cursor
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_disabled()));
+            mir_wait_for(mir_surface_configure_cursor(surface, 
+                mir_cursor_configuration_from_name(mir_disabled_cursor_name)));
         });
     launch_client_process(client_conf);
 }
@@ -320,8 +324,8 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_changed_when_crossing_surface_bounda
         [](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
         {
             InSequence seq;
-            EXPECT_CALL(cursor, set_image(CursorNamed(client_1_cursor))).Times(1);
-            EXPECT_CALL(cursor, set_image(CursorNamed(client_2_cursor))).Times(1)
+            EXPECT_CALL(cursor, show(CursorNamed(client_1_cursor))).Times(1);
+            EXPECT_CALL(cursor, show(CursorNamed(client_2_cursor))).Times(1)
                 .WillOnce(mt::WakeUp(&expectations_satisfied));
         },
         [](CursorTestServerConfiguration *server)
@@ -373,7 +377,7 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_request_taken_from_top_surface)
         [](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
         {
             InSequence seq;
-            EXPECT_CALL(cursor, set_image(CursorNamed(client_2_cursor))).Times(1)
+            EXPECT_CALL(cursor, show(CursorNamed(client_2_cursor))).Times(1)
                 .WillOnce(mt::WakeUp(&expectations_satisfied));
         },
         [](CursorTestServerConfiguration *server)
@@ -393,6 +397,7 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_request_taken_from_top_surface)
         {
             mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
         });
+
     launch_client_process(client2_conf);
 }
 
@@ -416,8 +421,8 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_request_applied_without_cursor_motio
         [](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
         {
             InSequence seq;
-            EXPECT_CALL(cursor, set_image(CursorNamed(client_1_cursor))).Times(1);
-            EXPECT_CALL(cursor, set_image(Eq(nullptr))).Times(1)
+            EXPECT_CALL(cursor, show(CursorNamed(client_1_cursor))).Times(1);
+            EXPECT_CALL(cursor, hide()).Times(1)
                 .WillOnce(mt::WakeUp(&expectations_satisfied));
         },
         [](CursorTestServerConfiguration * /* server */)
@@ -432,7 +437,8 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_request_applied_without_cursor_motio
             client_ready_fence.signal_ready();
             client_may_change_cursor.wait_for_signal_ready_for();
             mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_disabled()));
+            mir_wait_for(mir_surface_configure_cursor(surface, 
+                mir_cursor_configuration_from_name(mir_disabled_cursor_name)));
         });
     launch_client_process(client1_conf);
 }
