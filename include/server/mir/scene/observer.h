@@ -33,15 +33,15 @@ class Surface;
 class Observer
 {
 public:
-    virtual void surface_added(Surface* surface) = 0;
-    virtual void surface_removed(Surface* surface) = 0;
-    virtual void surfaces_reordered() = 0;
+    virtual void surface_added(Surface* surface);
+    virtual void surface_removed(Surface* surface);
+    virtual void surfaces_reordered();
 
     // Called at observer registration to notify of already existing surfaces.
-    virtual void surface_exists(Surface* surface) = 0;
+    virtual void surface_exists(Surface* surface);
     // Called when observer is unregistered, for example, to provide a place to
     // unregister SurfaceObservers which may have been added in surface_added/exists
-    virtual void end_observation() = 0;
+    virtual void end_observation();
 
 protected:
     Observer() = default;
