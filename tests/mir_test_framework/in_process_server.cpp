@@ -25,6 +25,7 @@
 
 #include <gtest/gtest.h>
 
+#include <boost/algorithm/string.hpp>
 #include <condition_variable>
 #include <mutex>
 
@@ -37,12 +38,15 @@ char const* const env_no_file = "MIR_SERVER_NO_FILE";
 
 mtf::InProcessServer::InProcessServer() :
     old_env(getenv(env_no_file))
-{
-    if (!old_env) setenv(env_no_file, "", true);
+{    
 }
 
 void mtf::InProcessServer::SetUp()
 {
+    if (!old_env || boost::iequals(old_env, "false")) 
+    {
+        unsetenv(env_no_file);
+    }
     display_server = start_mir_server();
     ASSERT_TRUE(display_server);
 }
