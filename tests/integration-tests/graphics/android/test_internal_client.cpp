@@ -103,7 +103,7 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto buffer_stream_factory = std::make_shared<mc::BufferStreamFactory>(allocator);
     auto scene_report = mr::null_scene_report();
     auto const surface_configurator = std::make_shared<mtd::NullSurfaceConfigurator>();
-    auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory, surface_configurator, scene_report);
+    auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory, surface_configurator, std::shared_ptr<mg::CursorImage>(), scene_report);
     auto ss = std::make_shared<ms::SurfaceStack>(stub_input_registrar, scene_report);
     auto const surface_placement = std::make_shared<NullSurfacePlacementStrategy>();
     auto surface_controller = std::make_shared<ms::SurfaceController>(surface_allocator, surface_placement, ss);
