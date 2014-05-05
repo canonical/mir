@@ -19,6 +19,7 @@
 #include "legacy_surface_change_notification.h"
 
 namespace ms = mir::scene;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 ms::LegacySurfaceChangeNotification::LegacySurfaceChangeNotification(std::function<void()> const& notify_change) :
@@ -56,5 +57,10 @@ void ms::LegacySurfaceChangeNotification::transformation_set_to(glm::mat4 const&
 
 // An attrib change alone is not enough to trigger recomposition.
 void ms::LegacySurfaceChangeNotification::attrib_changed(MirSurfaceAttrib /* attrib */, int /* value */)
+{
+}
+
+// Cursor image change request is not enough to trigger recomposition.
+void ms::LegacySurfaceChangeNotification::cursor_image_set_to(std::shared_ptr<mg::CursorImage> const& /* image */)
 {
 }

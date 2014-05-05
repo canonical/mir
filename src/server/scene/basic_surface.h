@@ -65,6 +65,7 @@ public:
     void frame_posted() override;
     void alpha_set_to(float alpha) override;
     void transformation_set_to(glm::mat4 const& t) override;
+    void cursor_image_set_to(std::shared_ptr<graphics::CursorImage> const& image) override;
 
     void add(std::shared_ptr<SurfaceObserver> const& observer);
     void remove(std::shared_ptr<SurfaceObserver> const& observer);

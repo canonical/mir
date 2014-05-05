@@ -35,13 +35,14 @@ class LegacySurfaceChangeNotification : public ms::SurfaceObserver
 public:
     LegacySurfaceChangeNotification(std::function<void()> const& notify_change);
 
-    void resized_to(geometry::Size const& /*size*/) override;
-    void moved_to(geometry::Point const& /*top_left*/) override;
-    void hidden_set_to(bool /*hide*/) override;
+    void resized_to(geometry::Size const& size) override;
+    void moved_to(geometry::Point const& top_left) override;
+    void hidden_set_to(bool hide) override;
     void frame_posted() override;
-    void alpha_set_to(float /*alpha*/) override;
-    void transformation_set_to(glm::mat4 const& /*t*/) override;
+    void alpha_set_to(float alpha) override;
+    void transformation_set_to(glm::mat4 const& t) override;
     void attrib_changed(MirSurfaceAttrib, int) override;
+    void cursor_image_set_to(std::shared_ptr<graphics::CursorImage> const& image) override;
 
 private:
     std::function<void()> const notify_change;

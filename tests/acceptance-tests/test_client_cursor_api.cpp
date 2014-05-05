@@ -19,6 +19,11 @@
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/cursor_images.h"
+#include "mir/scene/surface.h"
+#include "mir/scene/surface_factory.h"
+#include "mir/scene/null_observer.h"
+#include "mir/scene/null_surface_observer.h"
+#include "mir/compositor/scene.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -75,7 +80,7 @@ struct NamedCursorImage : public mg::CursorImage
     std::string const cursor_name;
 };
 
-struct StubCursorImages : public mg::CursorImages
+struct NamedCursorImages : public mg::CursorImages
 {
    std::shared_ptr<mg::CursorImage> image(std::string const& name, geom::Size const& /* size */)
    {
@@ -150,6 +155,46 @@ struct CursorSettingClient : mtf::TestingClientConfiguration
     }
 };
 
+struct MockSurfaceObserver : public ms::NullSurfaceObserver
+{
+    MOCK_METHOD1(cursor_image_set_to, void(std::shared_ptr<mg::CursorImage> const&));
+};
+
+struct SurfaceObserverInstaller : public ms::NullObserver
+{
+    SurfaceObserverInstaller(std::shared_ptr<ms::SurfaceObserver> const& observer)
+        : observer(observer)
+    {
+    }
+    
+    void surface_added(ms::Surface *surf) override
+    {
+        surf->add_observer(observer);
+    }
+
+    std::shared_ptr<ms::SurfaceObserver> const observer;
+};
+
+struct SurfaceObservingServerConfiguration : mtf::TestingServerConfiguration
+{
+    SurfaceObservingServerConfiguration(std::function<void(MockSurfaceObserver&)> const& set_expectations)
+        : set_expectations(set_expectations),
+          observer(std::make_shared<MockSurfaceObserver>())
+    {
+    }
+
+    void on_start() override
+    {
+        auto scene = the_scene();
+        scene->add_observer(std::make_shared<SurfaceObserverInstaller>(observer));
+        
+        set_expectations(*observer);
+    }
+
+    std::function<void(MockSurfaceObserver&)> const set_expectations;
+    std::shared_ptr<MockSurfaceObserver> const observer;
+};
+
 typedef unsigned ClientCount;
 struct CursorTestServerConfiguration : mtf::InputTestingServerConfiguration
 {
@@ -193,7 +238,7 @@ struct CursorTestServerConfiguration : mtf::InputTestingServerConfiguration
     
     std::shared_ptr<mg::CursorImages> the_cursor_images() override
     {
-        return std::make_shared<StubCursorImages>();
+        return std::make_shared<NamedCursorImages>();
     }
     
     void inject_input()
@@ -221,6 +266,34 @@ struct CursorTestServerConfiguration : mtf::InputTestingServerConfiguration
 }
 
 using TestClientCursorAPI = BespokeDisplayServerTestFixture;
+
+TEST_F(TestClientCursorAPI, client_cursor_request_is_made_surface_data)
+{
+    using namespace ::testing;
+
+    static std::string const test_client_name = "1";
+    static std::string const client_1_cursor = "1";
+
+    static mtf::CrossProcessSync client_ready_fence, client_may_exit_fence;
+
+    SurfaceObservingServerConfiguration config([&](MockSurfaceObserver &observer)
+    {
+        EXPECT_CALL(observer, cursor_image_set_to(_)).WillOnce(Invoke(
+        [&](std::shared_ptr<mg::CursorImage> const&)
+        {
+            client_may_exit_fence.signal_ready();
+        }));
+        client_ready_fence.signal_ready();
+    });
+    launch_server_process(config);
+
+    CursorSettingClient client1_conf(test_client_name, client_ready_fence, client_may_exit_fence,
+        [](MirSurface *surface)
+        {
+            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
+        });
+    launch_client_process(client1_conf);
+}
 
 // In this set we create a 1x1 client surface at the point (1,0). The client requests to disable the cursor
 // over this surface. Since the cursor starts at (0,0) we when we move the cursor by (1,0) thus causing it

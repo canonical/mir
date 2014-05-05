@@ -19,6 +19,7 @@
 #include "mir/scene/null_surface_observer.h"
 
 namespace ms = mir::scene;
+namespace mg = mir::graphics;
 
 void ms::NullSurfaceObserver::attrib_changed(MirSurfaceAttrib /*attrib*/, int /*value*/) {}
 void ms::NullSurfaceObserver::resized_to(geometry::Size const& /*size*/) {}
@@ -27,3 +28,4 @@ void ms::NullSurfaceObserver::hidden_set_to(bool /*hide*/) {}
 void ms::NullSurfaceObserver::frame_posted() {}
 void ms::NullSurfaceObserver::alpha_set_to(float /*alpha*/) {}
 void ms::NullSurfaceObserver::transformation_set_to(glm::mat4 const& /*t*/) {}
+void ms::NullSurfaceObserver::cursor_image_set_to(std::shared_ptr<mg::CursorImage> const& /*image*/) {}
