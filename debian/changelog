@@ -2,7 +2,23 @@ mir (0.2.0-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release 0.2.0 (https://launchpad.net/mir/+milestone/0.2.0)
     - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
-    - mirserver ABI unchanged, still at 19. TODO: probably needs bumping already
+    - mirserver ABI bumped to 20. Shells need rebuilding and probably changes:
+      . Cursor::set_image() parameters changed.
+      . Display::the_cursor() renamed to Display::create_hardware_cursor()
+      . Platform::create_display() requires a new parameter; gl_program_factory
+      . Renderable::buffer() no longer accepts any parameter at all. Multi-
+        monitor frame sync is guaranteed in other ways now.
+      . Scene::generate_renderable_list() renamed to renderable_list_for(id)
+        where id is an opaque compositor ID of your choosing.
+      . Scene::set_change_callback() replaced by the more generic:
+        add_observer() and remove_observer() functions.
+      . SessionCreator renamed to ConnectionCreator.
+      . ConnectedSessions renamed to Connections.
+      . ProtobufSessionCreator renamed to ProtobufConnectionCreator.
+      . SessionAuthorizer: pid_t parameters replaced by SessionCredentials.
+      . Massive architectural changes to Input-everything.
+      . Surface no longer implemnents Renderable, but emits one via
+        compositor_snapshot().
     - Demo shell enhancements:
       . You can now change graphics modes on the fly using Ctrl+Alt+(-/=).
         To reset to the preferred mode use Ctrl+Alt+0.
