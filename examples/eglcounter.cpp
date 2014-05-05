@@ -25,6 +25,7 @@
 #include <vector>
 #include <stdexcept>
 #include <iostream>
+#include <algorithm>
 
 static GLuint load_shader(const char *src, GLenum type)
 {
@@ -73,12 +74,9 @@ class TwoDigitCounter
 {
 public:
     TwoDigitCounter(GLuint prog, float thickness, unsigned int max_count)
-        : count{0}, max_count{max_count}, program{prog},
+        : count{0}, max_count{std::min(max_count, 99u)}, program{prog},
           vertices{create_vertices(thickness)}, digit_drawables{create_digits()}
     {
-        if (max_count > 99)
-            max_count = 99;
-
         vpos = glGetAttribLocation(program, "vPosition");
         if (vpos == -1)
             throw std::runtime_error("Failed to obtain vPosition attribute");
@@ -191,7 +189,7 @@ private:
     }
 
     unsigned int count;
-    unsigned int max_count;
+    unsigned int const max_count;
 
     GLint vpos;
     GLint xoff;

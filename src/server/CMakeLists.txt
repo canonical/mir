@@ -94,7 +94,7 @@ else()
   )
 endif()
 
-set(MIRSERVER_ABI 19)
+set(MIRSERVER_ABI 20) # Be sure to increment MIR_VERSION_MINOR at the same time
 
 set_target_properties(
   mirserver
