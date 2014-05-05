@@ -191,7 +191,7 @@ TEST_F(Surface, dpi_is_initialized)
         null_configurator,
         report);
 
-    EXPECT_LT(0, surf.dpi());
+    EXPECT_EQ(96, surf.dpi()); // The current default. It will change.
 }
 
 TEST_F(Surface, dpi_changes)
@@ -206,8 +206,6 @@ TEST_F(Surface, dpi_changes)
         std::shared_ptr<mi::InputChannel>(),
         null_configurator,
         report);
-
-    EXPECT_LT(0, surf.dpi());
 
     EXPECT_EQ(123, surf.configure(mir_surface_attrib_dpi, 123));
     EXPECT_EQ(123, surf.dpi());
