@@ -82,6 +82,12 @@ class NullInputManager : public mi::InputManager
 
 class NullInputDispatcher : public mi::InputDispatcher
 {
+    void configuration_changed(nsecs_t /*when*/) override
+    {
+    }
+    void device_reset(int32_t /*device_id*/, nsecs_t /*when*/) override
+    {
+    }
     void dispatch(MirEvent const& /*event*/) override
     {
     }

@@ -57,6 +57,27 @@ MATCHER(KeyDownEvent, "")
 
     return true;
 }
+MATCHER(KeyUpEvent, "")
+{
+    if (to_ref(arg).type != mir_event_type_key)
+        return false;
+
+    return to_ref(arg).key.action == mir_key_action_up;
+}
+MATCHER_P(KeyWithFlag, flag, "")
+{
+    if (arg.type != mir_event_type_key)
+        return false;
+
+    return to_ref(arg).key.flags == flag;
+}
+MATCHER_P(KeyWithModifiers, modifiers, "")
+{
+    if (arg.type != mir_event_type_key)
+        return false;
+
+    return to_ref(arg).key.modifiers == modifiers;
+}
 MATCHER_P(KeyOfSymbol, keysym, "")
 {
     if (static_cast<xkb_keysym_t>(to_ref(arg).key.key_code) == static_cast<uint32_t>(keysym))
