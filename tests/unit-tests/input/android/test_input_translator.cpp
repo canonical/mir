@@ -65,27 +65,47 @@ class InputTranslatorWithPolicyParam : public InputTranslator,
 
 }
 
-TEST_F(InputTranslator,ignores_invalid_key_events)
+TEST_F(InputTranslator, notifies_configuration_change)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(dispatcher,dispatch(_)).Times(0);
+    EXPECT_CALL(dispatcher, configuration_changed(some_time)).Times(1);
+
+    droidinput::NotifyConfigurationChangedArgs change(some_time);
+    translator.notifyConfigurationChanged(&change);
+}
+
+TEST_F(InputTranslator, notifies_device_reset)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(dispatcher, device_reset(device_id,later_time)).Times(1);
+
+    droidinput::NotifyDeviceResetArgs reset(later_time, device_id);
+    translator.notifyDeviceReset(&reset);
+}
+
+TEST_F(InputTranslator, ignores_invalid_key_events)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(dispatcher, dispatch(_)).Times(0);
 
     translator.notifyKey(nullptr);
 
     int32_t invalid_action = 5;
-    droidinput::NotifyKeyArgs key(some_time, device_id, source_id, default_policy_flags, invalid_action,no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
+    droidinput::NotifyKeyArgs key(some_time, device_id, source_id, default_policy_flags, invalid_action, no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
 
     translator.notifyKey(&key);
 }
 
-TEST_F(InputTranslator,forwards_and_convertes_up_down_key_notifications)
+TEST_F(InputTranslator, forwards_and_convertes_up_down_key_notifications)
 {
     using namespace ::testing;
 
     InSequence seq;
-    EXPECT_CALL(dispatcher,dispatch(mt::KeyDownEvent())).Times(1);
-    EXPECT_CALL(dispatcher,dispatch(mt::KeyUpEvent())).Times(1);
+    EXPECT_CALL(dispatcher, dispatch(mt::KeyDownEvent())).Times(1);
+    EXPECT_CALL(dispatcher, dispatch(mt::KeyUpEvent())).Times(1);
 
     droidinput::NotifyKeyArgs down(some_time, device_id, source_id, default_policy_flags, mir_key_action_down,
                                    no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
@@ -96,7 +116,7 @@ TEST_F(InputTranslator,forwards_and_convertes_up_down_key_notifications)
     translator.notifyKey(&up);
 }
 
-TEST_P(InputTranslatorWithPolicyParam,forwards_policy_modifiers_as_flags_and_modifiers)
+TEST_P(InputTranslatorWithPolicyParam, forwards_policy_modifiers_as_flags_and_modifiers)
 {
     using namespace ::testing;
 
