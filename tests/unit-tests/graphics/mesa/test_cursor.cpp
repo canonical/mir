@@ -257,7 +257,7 @@ TEST_F(MesaCursorTest, set_cursor_writes_to_bo)
 
     EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, StubCursorImage::image_data, cursor_size_bytes));
 
-    cursor.set_image(mt::fake_shared(image));
+    cursor.set_image(image);
 }
 
 TEST_F(MesaCursorTest, set_cursor_throws_on_incorrect_size)
@@ -275,7 +275,7 @@ TEST_F(MesaCursorTest, set_cursor_throws_on_incorrect_size)
     };
 
     EXPECT_THROW(
-        cursor.set_image(std::make_shared<InvalidlySizedCursorImage>());
+        cursor.set_image(InvalidlySizedCursorImage());
     , std::logic_error);
 }
 
