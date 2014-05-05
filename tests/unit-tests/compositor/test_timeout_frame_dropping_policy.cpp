@@ -31,31 +31,33 @@ namespace mc = mir::compositor;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
+TEST(TimeoutFrameDroppingPolicy, does_not_fire_before_notified_of_block)
+{
+    auto clock = std::make_shared<mt::FakeClock>();
+    auto timer = std::make_shared<mtd::MockTimer>(clock);
+    std::chrono::milliseconds const timeout{1000};
+    bool frame_dropped{false};
+
+    mc::TimeoutFrameDroppingPolicy policy{timer, timeout, [&frame_dropped]{ frame_dropped = true; }};
+
+    clock->advance_time(timeout + std::chrono::milliseconds{1});
+    EXPECT_FALSE(frame_dropped);
+}
+
 TEST(TimeoutFrameDroppingPolicy, schedules_alarm_for_correct_timeout)
 {
     auto clock = std::make_shared<mt::FakeClock>();
     auto timer = std::make_shared<mtd::MockTimer>(clock);
     std::chrono::milliseconds const timeout{1000};
-
-    mc::TimeoutFrameDroppingPolicy policy{timer, timeout};
     bool frame_dropped{false};
-    policy.swap_now_blocking([&frame_dropped]{ frame_dropped = true; });
+
+    mc::TimeoutFrameDroppingPolicy policy{timer, timeout, [&frame_dropped]{ frame_dropped = true; }};
+    policy.swap_now_blocking();
 
     clock->advance_time(timeout - std::chrono::milliseconds{1});
     EXPECT_FALSE(frame_dropped);
     clock->advance_time(std::chrono::milliseconds{2});
     EXPECT_TRUE(frame_dropped);
-}
-
-TEST(TimeoutFrameDroppingPolicy, blocking_while_a_block_is_pending_is_an_error)
-{
-    auto clock = std::make_shared<mt::FakeClock>();
-    auto timer = std::make_shared<mtd::MockTimer>(clock);
-    std::chrono::milliseconds const timeout{1000};
-
-    mc::TimeoutFrameDroppingPolicy policy{timer, timeout};
-    policy.swap_now_blocking([]{});
-    EXPECT_THROW({ policy.swap_now_blocking([]{}); }, std::logic_error);
 }
 
 TEST(TimeoutFrameDroppingPolicy, framedrop_callback_cancelled_by_unblock)
@@ -64,41 +66,81 @@ TEST(TimeoutFrameDroppingPolicy, framedrop_callback_cancelled_by_unblock)
     auto timer = std::make_shared<mtd::MockTimer>(clock);
     std::chrono::milliseconds const timeout{1000};
 
-    mc::TimeoutFrameDroppingPolicy policy{timer, timeout};
     bool frame_dropped{false};
-    auto cookie = policy.swap_now_blocking([&frame_dropped](){ frame_dropped = true; });
+    mc::TimeoutFrameDroppingPolicy policy{timer, timeout, [&frame_dropped]{ frame_dropped = true; }};
 
-    policy.swap_unblocked(cookie);
+    policy.swap_now_blocking();
+    policy.swap_unblocked();
 
     clock->advance_time(timeout * 10);
 
     EXPECT_FALSE(frame_dropped);
 }
 
-TEST(TimeoutFrameDroppingPolicy, calls_correct_callback_after_timeout)
+TEST(TimeoutFrameDroppingPolicy, policy_drops_one_frame_per_blocking_swap)
 {
     auto clock = std::make_shared<mt::FakeClock>();
     auto timer = std::make_shared<mtd::MockTimer>(clock);
     std::chrono::milliseconds const timeout{1000};
 
-    mc::TimeoutFrameDroppingPolicy policy{timer, timeout};
-    bool frame_dropped[3] = {false,};
-    policy.swap_now_blocking([&frame_dropped]{ frame_dropped[0] = true; });
+    bool frame_dropped{false};
+    mc::TimeoutFrameDroppingPolicy policy{timer, timeout, [&frame_dropped]{ frame_dropped = true; }};
+
+    policy.swap_now_blocking();
+    policy.swap_now_blocking();
+    policy.swap_now_blocking();
 
     clock->advance_time(timeout + std::chrono::milliseconds{1});
-    policy.swap_now_blocking([&frame_dropped]{ frame_dropped[1] = true; });
-    EXPECT_TRUE(frame_dropped[0]);
-    EXPECT_FALSE(frame_dropped[1]);
-    EXPECT_FALSE(frame_dropped[2]);
+    EXPECT_TRUE(frame_dropped);
+
+    frame_dropped = false;
+    clock->advance_time(timeout + std::chrono::milliseconds{2});
+    EXPECT_TRUE(frame_dropped);
+
+    frame_dropped = false;
+    clock->advance_time(timeout + std::chrono::milliseconds{1});
+    EXPECT_TRUE(frame_dropped);
+
+    frame_dropped = false;
+    clock->advance_time(timeout + std::chrono::milliseconds{1});
+    EXPECT_FALSE(frame_dropped);
+}
+
+TEST(TimeoutFrameDroppingPolicy, policy_drops_frames_no_more_frequently_than_timeout)
+{
+    auto clock = std::make_shared<mt::FakeClock>();
+    auto timer = std::make_shared<mtd::MockTimer>(clock);
+    std::chrono::milliseconds const timeout{1000};
+
+    bool frame_dropped{false};
+    mc::TimeoutFrameDroppingPolicy policy{timer, timeout, [&frame_dropped]{ frame_dropped = true; }};
+
+    policy.swap_now_blocking();
+    policy.swap_now_blocking();
 
     clock->advance_time(timeout + std::chrono::milliseconds{1});
-    policy.swap_now_blocking([&frame_dropped]{ frame_dropped[2] = true; });
-    EXPECT_TRUE(frame_dropped[0]);
-    EXPECT_TRUE(frame_dropped[1]);
-    EXPECT_FALSE(frame_dropped[2]);
+    EXPECT_TRUE(frame_dropped);
 
-    clock->advance_time(timeout + std::chrono::milliseconds{1});
-    EXPECT_TRUE(frame_dropped[0]);
-    EXPECT_TRUE(frame_dropped[1]);
-    EXPECT_TRUE(frame_dropped[2]);
+    frame_dropped = false;
+    clock->advance_time(timeout - std::chrono::milliseconds{1});
+    EXPECT_FALSE(frame_dropped);
+    clock->advance_time(std::chrono::milliseconds{2});
+    EXPECT_TRUE(frame_dropped);
+}
+
+TEST(TimeoutFrameDroppingPolicy, newly_blocking_frame_doesnt_reset_timeout)
+{
+    auto clock = std::make_shared<mt::FakeClock>();
+    auto timer = std::make_shared<mtd::MockTimer>(clock);
+    std::chrono::milliseconds const timeout{1000};
+
+    bool frame_dropped{false};
+    mc::TimeoutFrameDroppingPolicy policy{timer, timeout, [&frame_dropped]{ frame_dropped = true; }};
+
+    policy.swap_now_blocking();
+    clock->advance_time(timeout - std::chrono::milliseconds{1});
+
+    policy.swap_now_blocking();
+    clock->advance_time(std::chrono::milliseconds{2});
+    EXPECT_TRUE(frame_dropped);
 }

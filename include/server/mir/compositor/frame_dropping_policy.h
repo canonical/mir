@@ -31,23 +31,16 @@ namespace compositor
 class FrameDroppingPolicy
 {
 public:
-    class Cookie;
-
     virtual ~FrameDroppingPolicy() = default;
 
-    // TODO: Really we want something like observing_ptr<Cookie> here
-    //       but a raw ptr is ok.
     /**
-     * \brief Notify that a client is now blocked on a swap
-     * \param drop_frame    Function to call should a frame drop be required
-     * \return              An opaque handle identifying this swap
+     * \brief Notify that a swap has blocked
      */
-    virtual Cookie* swap_now_blocking(std::function<void(void)> drop_frame) = 0;
+    virtual void swap_now_blocking() = 0;
     /**
-     * \brief Notify that a client is no longer blocked on a swap
-     * \param cookie    The handle returned from swap_now_blocking
+     * \brief Notify that previous swap is no longer blocking
      */
-    virtual void swap_unblocked(Cookie* cookie) = 0;
+    virtual void swap_unblocked() = 0;
 };
 
 }

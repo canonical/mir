@@ -91,6 +91,7 @@ bool MockAlarm::reschedule_in(std::chrono::milliseconds delay)
                                              {
                                                  if (now > state_copy->threshold)
                                                  {
+                                                     state_copy->state = Triggered;
                                                      state_copy->callback();
                                                      return false;
                                                  }

@@ -25,6 +25,7 @@
 
 #include <memory>
 #include <chrono>
+#include <atomic>
 
 namespace mir
 {
@@ -34,15 +35,16 @@ class TimeoutFrameDroppingPolicy : public FrameDroppingPolicy
 {
 public:
     TimeoutFrameDroppingPolicy(std::shared_ptr<mir::time::Timer> const& timer,
-                               std::chrono::milliseconds timeout);
+                               std::chrono::milliseconds timeout,
+                               std::function<void(void)> drop_frame);
 
-    Cookie* swap_now_blocking(std::function<void(void)> drop_frame) override;
-    void swap_unblocked(Cookie* cookie) override;
+    void swap_now_blocking() override;
+    void swap_unblocked() override;
 
 private:
-    std::shared_ptr<mir::time::Timer> const timer;
-    std::unique_ptr<mir::time::Alarm> alarm;
     std::chrono::milliseconds const timeout;
+    std::unique_ptr<mir::time::Alarm> alarm;
+    std::atomic<unsigned int> pending_swaps;
 };
 }
 }

@@ -24,23 +24,28 @@
 namespace mc = mir::compositor;
 
 mc::TimeoutFrameDroppingPolicy::TimeoutFrameDroppingPolicy(std::shared_ptr<mir::time::Timer> const& timer,
-                                                           std::chrono::milliseconds timeout)
-    : timer{timer},
-      timeout{timeout}
+                                                           std::chrono::milliseconds timeout,
+                                                           std::function<void(void)> drop_frame)
+    : timeout{timeout},
+      pending_swaps{0}
 {
+    alarm = timer->notify_at(mir::time::Timestamp::max(), [this, drop_frame]
+    {
+       assert(pending_swaps.load() > 0);
+       drop_frame();
+       if (--pending_swaps > 0)
+           alarm->reschedule_in(this->timeout);
+    });
 }
 
-mc::FrameDroppingPolicy::Cookie* mc::TimeoutFrameDroppingPolicy::swap_now_blocking(std::function<void(void)> drop_frame)
+void mc::TimeoutFrameDroppingPolicy::swap_now_blocking()
 {
-    if (alarm)
-        BOOST_THROW_EXCEPTION(std::logic_error("Scheduling framedrop, but a framedrop is already pending"));
-
-    alarm = timer->notify_in(timeout, [this, drop_frame](){ drop_frame(); alarm.reset(); });
-    return reinterpret_cast<Cookie*>(alarm.get());
+    if (pending_swaps++ == 0)
+        alarm->reschedule_in(timeout);
 }
 
-void mc::TimeoutFrameDroppingPolicy::swap_unblocked(mc::FrameDroppingPolicy::Cookie* cookie)
+void mc::TimeoutFrameDroppingPolicy::swap_unblocked()
 {
-    assert(reinterpret_cast<mir::time::Alarm*>(cookie) == alarm.get());
-    alarm.reset();
+    if (alarm->state() != mir::time::Alarm::Cancelled && alarm->cancel())
+        pending_swaps--;
 }

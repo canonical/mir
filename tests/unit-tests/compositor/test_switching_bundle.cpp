@@ -17,9 +17,9 @@
  */
 
 #include "src/server/compositor/switching_bundle.h"
-#include "mir/asio_main_loop.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/mock_timer.h"
 #include "mir_test/signal.h"
 #include "mir_test_framework/watchdog.h"
 #include "mir_test/wait_condition.h"
@@ -55,22 +55,14 @@ struct SwitchingBundleTest : public ::testing::Test
             mir_pixel_format_abgr_8888,
             mg::BufferUsage::hardware
         };
-        timer = std::make_shared<mir::AsioMainLoop>();
-        mainloop_thread = std::thread([this]() {timer->run();});
-    }
-
-    void TearDown()
-    {
-        timer->stop();
-        if (mainloop_thread.joinable())
-            mainloop_thread.join();
+        clock = std::make_shared<mt::FakeClock>();
+        timer = std::make_shared<mtd::MockTimer>(clock);
     }
 
     std::shared_ptr<mtd::StubBufferAllocator> allocator;
-
     mg::BufferProperties basic_properties;
-    std::shared_ptr<mir::AsioMainLoop> timer;
-    std::thread mainloop_thread;
+    std::shared_ptr<mt::FakeClock> clock;
+    std::shared_ptr<mir::time::Timer> timer;
 };
 
 auto client_acquire_cancellable(mc::SwitchingBundle& switching_bundle, std::shared_ptr<mt::Signal> signal)
@@ -982,19 +974,26 @@ TEST_F(SwitchingBundleTest, uncomposited_client_swaps_at_given_rate)
                 auto client = client_acquire_blocking(bundle);
                 bundle.client_release(client);
             }
+
             auto signal = std::make_shared<mt::Signal>();
             mtf::WatchDog watchdog{[signal]() { signal->raise(); }};
 
-            auto start = std::chrono::high_resolution_clock::now();
-
-            watchdog.run([&bundle, signal](mtf::WatchDog& watchdog)
+            mt::Signal swap_started;
+            watchdog.run([&bundle, signal, &swap_started](mtf::WatchDog& watchdog)
             {
-                client_acquire_cancellable(bundle, signal);
+                bundle.client_acquire([signal](mg::Buffer*){ signal->raise(); });
+                swap_started.raise();
+                signal->wait();
                 watchdog.notify_done();
             });
-            // Give 100ms grace time for slow machines running under valgrind...
-            EXPECT_TRUE(watchdog.wait_for(block_time + std::chrono::milliseconds{100}));
-            EXPECT_GE(std::chrono::high_resolution_clock::now() - start, block_time);
+
+            ASSERT_TRUE(swap_started.wait_for(std::chrono::milliseconds{100}));
+
+            clock->advance_time(block_time - std::chrono::milliseconds{1});
+            EXPECT_FALSE(watchdog.wait_for(std::chrono::milliseconds{100}));
+            clock->advance_time(std::chrono::milliseconds{2});
+
+            EXPECT_TRUE(watchdog.wait_for(std::chrono::milliseconds{100}));
         }
     }
 }
