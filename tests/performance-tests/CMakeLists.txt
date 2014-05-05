@@ -12,9 +12,9 @@ add_executable(
 
 target_link_libraries(
   mir_performance_tests
-  mirserver
 
   mir-test
+  mir-test-framework
 
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
