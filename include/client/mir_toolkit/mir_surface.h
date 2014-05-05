@@ -246,6 +246,13 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval);
  */
 int mir_surface_get_swapinterval(MirSurface* surface);
 
+/**
+ * Query the DPI value of the surface (dots per inch). This will vary depending
+ * on the physical display configuration and where the surface is within it.
+ *   \return  The DPI of the surface.
+ */
+int mir_surface_get_dpi(MirSurface* surface);
+
 #ifdef __cplusplus
 }
 /**@}*/

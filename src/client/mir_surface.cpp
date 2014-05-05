@@ -65,6 +65,7 @@ MirSurface::MirSurface(
     attrib_cache[mir_surface_attrib_type] = mir_surface_type_normal;
     attrib_cache[mir_surface_attrib_state] = mir_surface_state_unknown;
     attrib_cache[mir_surface_attrib_swapinterval] = 1;
+    attrib_cache[mir_surface_attrib_dpi] = 0; // unknown on startup
 }
 
 MirSurface::~MirSurface()
@@ -329,6 +330,7 @@ void MirSurface::on_configured()
         case mir_surface_attrib_state:
         case mir_surface_attrib_focus:
         case mir_surface_attrib_swapinterval:
+        case mir_surface_attrib_dpi:
             if (configure_result.has_ivalue())
                 attrib_cache[a] = configure_result.ivalue();
             else

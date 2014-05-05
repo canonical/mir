@@ -245,6 +245,31 @@ int mir_surface_get_swapinterval(MirSurface* surf)
     return surf ? surf->attrib(mir_surface_attrib_swapinterval) : -1;
 }
 
+int mir_surface_get_dpi(MirSurface* surf)
+{
+    int dpi = 0;
+
+    try
+    {
+        if (surf)
+        {
+            dpi = surf->attrib(mir_surface_attrib_dpi);
+            if (!dpi)
+            {
+                // Officially we don't support setting DPI from the client.
+                // But this is a convenient way to query it on startup...
+                surf->configure(mir_surface_attrib_dpi, 0)->wait_for_all();
+                dpi = surf->attrib(mir_surface_attrib_dpi);
+            }
+        }
+    }
+    catch (std::exception const&)
+    {
+    }
+
+    return dpi;
+}
+
 /* Debug functions */
 
 uint32_t mir_debug_surface_current_buffer_id(MirSurface* surface)
