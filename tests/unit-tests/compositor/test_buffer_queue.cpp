@@ -17,7 +17,7 @@
  *              Alberto Aguirre <alberto.aguirre@canonical.com>
  */
 
-#include "src/server/compositor/switching_bundle.h"
+#include "src/server/compositor/buffer_queue.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test/auto_unblock_thread.h"
@@ -42,11 +42,11 @@ using namespace testing;
 
 namespace
 {
-class SwitchingBundleTest : public ::testing::Test
+class BufferQueueTest : public ::testing::Test
 {
 public:
-    SwitchingBundleTest()
-        : max_nbuffers_to_test{mc::SwitchingBundle::max_buffers}
+    BufferQueueTest()
+        : max_nbuffers_to_test{5}
     {};
 
     void SetUp()
@@ -68,7 +68,7 @@ protected:
 class AcquireWaitHandle
 {
 public:
-    AcquireWaitHandle(mc::SwitchingBundle& q)
+    AcquireWaitHandle(mc::BufferQueue& q)
         : buffer_{nullptr}, q{&q}, received_buffer{false}
     {}
 
@@ -120,13 +120,13 @@ public:
 
 private:
     mg::Buffer* buffer_;
-    mc::SwitchingBundle* q;
+    mc::BufferQueue* q;
     std::condition_variable cv;
     std::mutex guard;
     bool received_buffer;
 };
 
-std::shared_ptr<AcquireWaitHandle> client_acquire_async(mc::SwitchingBundle& q)
+std::shared_ptr<AcquireWaitHandle> client_acquire_async(mc::BufferQueue& q)
 {
     std::shared_ptr<AcquireWaitHandle> wait_handle =
         std::make_shared<AcquireWaitHandle>(q);
@@ -137,15 +137,14 @@ std::shared_ptr<AcquireWaitHandle> client_acquire_async(mc::SwitchingBundle& q)
     return wait_handle;
 }
 
-mg::Buffer* client_acquire_sync(mc::SwitchingBundle& q)
+mg::Buffer* client_acquire_sync(mc::BufferQueue& q)
 {
     auto handle = client_acquire_async(q);
     handle->wait();
     return handle->buffer();
 }
 
-void compositor_thread(mc::SwitchingBundle &bundle,
-                          std::atomic<bool> &done)
+void compositor_thread(mc::BufferQueue &bundle, std::atomic<bool> &done)
 {
    while (!done)
    {
@@ -154,7 +153,7 @@ void compositor_thread(mc::SwitchingBundle &bundle,
    }
 }
 
-void snapshot_thread(mc::SwitchingBundle &bundle,
+void snapshot_thread(mc::BufferQueue &bundle,
                       std::atomic<bool> &done)
 {
    while (!done)
@@ -164,7 +163,7 @@ void snapshot_thread(mc::SwitchingBundle &bundle,
    }
 }
 
-void client_thread(mc::SwitchingBundle &bundle, int nframes)
+void client_thread(mc::BufferQueue &bundle, int nframes)
 {
    for (int i = 0; i < nframes; i++)
    {
@@ -173,7 +172,7 @@ void client_thread(mc::SwitchingBundle &bundle, int nframes)
    }
 }
 
-void switching_client_thread(mc::SwitchingBundle &bundle, int nframes)
+void switching_client_thread(mc::BufferQueue &bundle, int nframes)
 {
    bool enable_frame_dropping{false};
    int const nframes_to_test_before_switching{5};
@@ -188,14 +187,12 @@ void switching_client_thread(mc::SwitchingBundle &bundle, int nframes)
 }
 }
 
-/* FIXME: SwitchingBundle is blocking at compositor_acquire but it
- * should never block */
-TEST_F(SwitchingBundleTest, DISABLED_buffer_queue_of_one_is_supported)
+TEST_F(BufferQueueTest, buffer_queue_of_one_is_supported)
 {
-    std::unique_ptr<mc::SwitchingBundle> q;
+    std::unique_ptr<mc::BufferQueue> q;
     ASSERT_NO_THROW(q = std::move(
-        std::unique_ptr<mc::SwitchingBundle>(
-            new mc::SwitchingBundle(1, allocator, basic_properties))));
+        std::unique_ptr<mc::BufferQueue>(
+            new mc::BufferQueue(1, allocator, basic_properties))));
     ASSERT_THAT(q, Ne(nullptr));
 
     auto handle = client_acquire_async(*q);
@@ -228,12 +225,9 @@ TEST_F(SwitchingBundleTest, DISABLED_buffer_queue_of_one_is_supported)
     EXPECT_NO_THROW(next_request->release_buffer());
 }
 
-/* FIXME: Compositor acquire throws exception since client owns the only
- * buffer
- */
-TEST_F(SwitchingBundleTest, DISABLED_buffer_queue_of_one_supports_resizing)
+TEST_F(BufferQueueTest, buffer_queue_of_one_supports_resizing)
 {
-    mc::SwitchingBundle q(1, allocator, basic_properties);
+    mc::BufferQueue q(1, allocator, basic_properties);
 
     const geom::Size expect_size{10, 20};
     q.resize(expect_size);
@@ -256,24 +250,24 @@ TEST_F(SwitchingBundleTest, DISABLED_buffer_queue_of_one_supports_resizing)
     EXPECT_NO_THROW(q.compositor_release(q.compositor_acquire(this)));
 }
 
-TEST_F(SwitchingBundleTest, framedropping_is_disabled_by_default)
+TEST_F(BufferQueueTest, framedropping_is_disabled_by_default)
 {
-    mc::SwitchingBundle bundle(2, allocator, basic_properties);
+    mc::BufferQueue bundle(2, allocator, basic_properties);
     EXPECT_THAT(bundle.framedropping_allowed(), Eq(false));
 }
 
-TEST_F(SwitchingBundleTest, throws_when_creating_with_invalid_num_buffers)
+TEST_F(BufferQueueTest, throws_when_creating_with_invalid_num_buffers)
 {
-    EXPECT_THROW(mc::SwitchingBundle a(0, allocator, basic_properties), std::logic_error);
-    EXPECT_THROW(mc::SwitchingBundle a(-1, allocator, basic_properties), std::logic_error);
-    EXPECT_THROW(mc::SwitchingBundle a(-10, allocator, basic_properties), std::logic_error);
+    EXPECT_THROW(mc::BufferQueue a(0, allocator, basic_properties), std::logic_error);
+    EXPECT_THROW(mc::BufferQueue a(-1, allocator, basic_properties), std::logic_error);
+    EXPECT_THROW(mc::BufferQueue a(-10, allocator, basic_properties), std::logic_error);
 }
 
-TEST_F(SwitchingBundleTest, client_can_acquire_and_release_buffer)
+TEST_F(BufferQueueTest, client_can_acquire_and_release_buffer)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         auto handle = client_acquire_async(q);
         ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -281,12 +275,12 @@ TEST_F(SwitchingBundleTest, client_can_acquire_and_release_buffer)
     }
 }
 
-TEST_F(SwitchingBundleTest, client_can_acquire_buffers)
+TEST_F(BufferQueueTest, client_can_acquire_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
-        int const max_ownable_buffers = nbuffers;
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        int const max_ownable_buffers = nbuffers - 1;
         for (int acquires = 0; acquires < max_ownable_buffers; ++acquires)
         {
             auto handle = client_acquire_async(q);
@@ -295,10 +289,9 @@ TEST_F(SwitchingBundleTest, client_can_acquire_buffers)
     }
 }
 
-/* FIXME: SwitchingBundle does not check for a pending completion */
-TEST_F(SwitchingBundleTest, DISABLED_throws_if_client_acquire_has_pending_completion)
+TEST_F(BufferQueueTest, throws_if_client_acquire_has_pending_completion)
 {
-    mc::SwitchingBundle q(2, allocator, basic_properties);
+    mc::BufferQueue q(2, allocator, basic_properties);
     ASSERT_THAT(q.framedropping_allowed(), Eq(false));
 
     auto handle = client_acquire_async(q);
@@ -321,11 +314,11 @@ TEST_F(SwitchingBundleTest, DISABLED_throws_if_client_acquire_has_pending_comple
     EXPECT_THROW(q.client_acquire(fail_if_called), std::logic_error);
 }
 
-TEST_F(SwitchingBundleTest, compositor_acquires_frames_in_order_for_synchronous_client)
+TEST_F(BufferQueueTest, compositor_acquires_frames_in_order_for_synchronous_client)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
         ASSERT_THAT(q.framedropping_allowed(), Eq(false));
 
         void const* main_compositor = reinterpret_cast<void const*>(0);
@@ -350,11 +343,11 @@ TEST_F(SwitchingBundleTest, compositor_acquires_frames_in_order_for_synchronous_
     }
 }
 
-TEST_F(SwitchingBundleTest, framedropping_clients_never_block)
+TEST_F(BufferQueueTest, framedropping_clients_never_block)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
         q.allow_framedropping(true);
 
         for (int i = 0; i < 1000; i++)
@@ -367,9 +360,9 @@ TEST_F(SwitchingBundleTest, framedropping_clients_never_block)
 }
 
 /* Regression test for LP: #1210042 */
-TEST_F(SwitchingBundleTest, clients_dont_recycle_startup_buffer)
+TEST_F(BufferQueueTest, clients_dont_recycle_startup_buffer)
 {
-    mc::SwitchingBundle q(3, allocator, basic_properties);
+    mc::BufferQueue q(3, allocator, basic_properties);
 
     auto handle = client_acquire_async(q);
     ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -385,11 +378,11 @@ TEST_F(SwitchingBundleTest, clients_dont_recycle_startup_buffer)
     q.compositor_release(comp_buffer);
 }
 
-TEST_F(SwitchingBundleTest, throws_on_out_of_order_client_release)
+TEST_F(BufferQueueTest, throws_on_out_of_order_client_release)
 {
     for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         auto handle1 = client_acquire_async(q);
         ASSERT_THAT(handle1->has_acquired_buffer(), Eq(true));
@@ -405,11 +398,11 @@ TEST_F(SwitchingBundleTest, throws_on_out_of_order_client_release)
     }
 }
 
-TEST_F(SwitchingBundleTest, async_client_cycles_through_all_buffers)
+TEST_F(BufferQueueTest, async_client_cycles_through_all_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         std::atomic<bool> done(false);
         auto unblock = [&done] { done = true; };
@@ -440,11 +433,11 @@ TEST_F(SwitchingBundleTest, async_client_cycles_through_all_buffers)
     }
 }
 
-TEST_F(SwitchingBundleTest, compositor_can_acquire_and_release)
+TEST_F(BufferQueueTest, compositor_can_acquire_and_release)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         auto handle = client_acquire_async(q);
         ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -458,11 +451,11 @@ TEST_F(SwitchingBundleTest, compositor_can_acquire_and_release)
     }
 }
 
-TEST_F(SwitchingBundleTest, multiple_compositors_are_in_sync)
+TEST_F(BufferQueueTest, multiple_compositors_are_in_sync)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         auto handle = client_acquire_async(q);
         ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -480,11 +473,11 @@ TEST_F(SwitchingBundleTest, multiple_compositors_are_in_sync)
     }
 }
 
-TEST_F(SwitchingBundleTest, compositor_acquires_frames_in_order)
+TEST_F(BufferQueueTest, compositor_acquires_frames_in_order)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         for (int i = 0; i < 10; ++i)
         {
@@ -514,11 +507,11 @@ TEST_F(SwitchingBundleTest, compositor_acquires_frames_in_order)
     }
 }
 
-TEST_F(SwitchingBundleTest, compositor_acquire_never_blocks_when_there_are_no_ready_buffers)
+TEST_F(BufferQueueTest, compositor_acquire_never_blocks_when_there_are_no_ready_buffers)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         for (int i = 0; i < 100; i++)
         {
@@ -528,11 +521,11 @@ TEST_F(SwitchingBundleTest, compositor_acquire_never_blocks_when_there_are_no_re
     }
 }
 
-TEST_F(SwitchingBundleTest, compositor_can_always_acquire_buffer)
+TEST_F(BufferQueueTest, compositor_can_always_acquire_buffer)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
         q.allow_framedropping(false);
 
         std::atomic<bool> done(false);
@@ -566,11 +559,11 @@ TEST_F(SwitchingBundleTest, compositor_can_always_acquire_buffer)
     }
 }
 
-TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
+TEST_F(BufferQueueTest, compositor_acquire_recycles_latest_ready_buffer)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         mg::BufferID client_id;
 
@@ -595,11 +588,11 @@ TEST_F(SwitchingBundleTest, compositor_acquire_recycles_latest_ready_buffer)
     }
 }
 
-TEST_F(SwitchingBundleTest, compositor_release_verifies_parameter)
+TEST_F(BufferQueueTest, compositor_release_verifies_parameter)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         auto handle = client_acquire_async(q);
         ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -612,9 +605,9 @@ TEST_F(SwitchingBundleTest, compositor_release_verifies_parameter)
 }
 
 /* Regression test for LP#1270964 */
-TEST_F(SwitchingBundleTest, compositor_client_interleaved)
+TEST_F(BufferQueueTest, compositor_client_interleaved)
 {
-    mc::SwitchingBundle q(3, allocator, basic_properties);
+    mc::BufferQueue q(3, allocator, basic_properties);
 
     auto handle = client_acquire_async(q);
     ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -634,12 +627,12 @@ TEST_F(SwitchingBundleTest, compositor_client_interleaved)
     q.compositor_release(compositor_buffer);
 }
 
-TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
+TEST_F(BufferQueueTest, overlapping_compositors_get_different_frames)
 {
     // This test simulates bypass behaviour
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         std::shared_ptr<mg::Buffer> compositor[2];
 
@@ -672,11 +665,11 @@ TEST_F(SwitchingBundleTest, overlapping_compositors_get_different_frames)
     }
 }
 
-TEST_F(SwitchingBundleTest, snapshot_acquire_basic)
+TEST_F(BufferQueueTest, snapshot_acquire_basic)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         auto comp_buffer = q.compositor_acquire(this);
         auto snapshot = q.snapshot_acquire();
@@ -686,11 +679,11 @@ TEST_F(SwitchingBundleTest, snapshot_acquire_basic)
     }
 }
 
-TEST_F(SwitchingBundleTest, snapshot_acquire_never_blocks)
+TEST_F(BufferQueueTest, snapshot_acquire_never_blocks)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
         int const num_snapshots = 100;
 
         std::shared_ptr<mg::Buffer> buf[num_snapshots];
@@ -702,11 +695,11 @@ TEST_F(SwitchingBundleTest, snapshot_acquire_never_blocks)
     }
 }
 
-TEST_F(SwitchingBundleTest, snapshot_release_verifies_parameter)
+TEST_F(BufferQueueTest, snapshot_release_verifies_parameter)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         auto handle = client_acquire_async(q);
         ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -726,11 +719,11 @@ TEST_F(SwitchingBundleTest, snapshot_release_verifies_parameter)
     }
 }
 
-TEST_F(SwitchingBundleTest, stress)
+TEST_F(BufferQueueTest, stress)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         std::atomic<bool> done(false);
 
@@ -759,11 +752,11 @@ TEST_F(SwitchingBundleTest, stress)
     }
 }
 
-TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
+TEST_F(BufferQueueTest, bypass_clients_get_more_than_two_buffers)
 {
     for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         std::shared_ptr<mg::Buffer> compositor[2];
 
@@ -800,15 +793,15 @@ TEST_F(SwitchingBundleTest, bypass_clients_get_more_than_two_buffers)
     }
 }
 
-TEST_F(SwitchingBundleTest, framedropping_clients_get_all_buffers)
+TEST_F(BufferQueueTest, framedropping_clients_get_all_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
         q.allow_framedropping(true);
 
         int const nframes = 100;
-        int max_ownable_buffers = nbuffers;
+        int max_ownable_buffers = nbuffers - 1;
         std::unordered_set<uint32_t> ids_acquired;
         for (int i = 0; i < nframes; ++i)
         {
@@ -822,14 +815,14 @@ TEST_F(SwitchingBundleTest, framedropping_clients_get_all_buffers)
     }
 }
 
-TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_shutdown)
+TEST_F(BufferQueueTest, waiting_clients_unblock_on_shutdown)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
         q.allow_framedropping(false);
 
-        int const max_ownable_buffers = nbuffers;
+        int const max_ownable_buffers = nbuffers - 1;
 
         for (int b = 0; b < max_ownable_buffers; b++)
         {
@@ -847,11 +840,11 @@ TEST_F(SwitchingBundleTest, waiting_clients_unblock_on_shutdown)
     }
 }
 
-TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
+TEST_F(BufferQueueTest, client_framerate_matches_compositor)
 {
     for (int nbuffers = 2; nbuffers <= 3; nbuffers++)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
         unsigned long client_frames = 0;
         const unsigned long compose_frames = 20;
 
@@ -900,11 +893,14 @@ TEST_F(SwitchingBundleTest, client_framerate_matches_compositor)
 }
 
 /* Regression test LP: #1241369 / LP: #1241371 */
-TEST_F(SwitchingBundleTest, slow_client_framerate_matches_compositor)
+TEST_F(BufferQueueTest, slow_client_framerate_matches_compositor)
 {
-    for (int nbuffers = 2; nbuffers <= 3; nbuffers++)
+    /* BufferQueue can only satify this for nbuffers >= 3
+     * since a client can only own nbuffers - 1 at any one time
+     */
+    for (int nbuffers = 3; nbuffers <= 3; nbuffers++)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
         unsigned long client_frames = 0;
         unsigned long const compose_frames = 100;
         auto const frame_time = std::chrono::milliseconds(16);
@@ -958,11 +954,11 @@ TEST_F(SwitchingBundleTest, slow_client_framerate_matches_compositor)
     }
 }
 
-TEST_F(SwitchingBundleTest, resize_affects_client_acquires_immediately)
+TEST_F(BufferQueueTest, resize_affects_client_acquires_immediately)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         for (int width = 1; width < 100; ++width)
         {
@@ -985,11 +981,11 @@ TEST_F(SwitchingBundleTest, resize_affects_client_acquires_immediately)
     }
 }
 
-TEST_F(SwitchingBundleTest, compositor_acquires_resized_frames)
+TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
         mg::BufferID history[5];
 
         const int width0 = 123;
@@ -1047,13 +1043,13 @@ TEST_F(SwitchingBundleTest, compositor_acquires_resized_frames)
 }
 
 /* Regression test for LP: #1306464 */
-TEST_F(SwitchingBundleTest, framedropping_client_acquire_does_not_block_when_no_available_buffers)
+TEST_F(BufferQueueTest, framedropping_client_acquire_does_not_block_when_no_available_buffers)
 {
     using namespace testing;
 
     int const nbuffers{3};
 
-    mc::SwitchingBundle q{nbuffers, allocator, basic_properties};
+    mc::BufferQueue q{nbuffers, allocator, basic_properties};
     q.allow_framedropping(true);
 
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
@@ -1095,11 +1091,11 @@ TEST_F(SwitchingBundleTest, framedropping_client_acquire_does_not_block_when_no_
     EXPECT_THAT(handle->has_acquired_buffer(), Eq(true));
 }
 
-TEST_F(SwitchingBundleTest, compositor_never_owns_client_buffers)
+TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         std::mutex client_buffer_guard;
         mg::Buffer* client_buffer = nullptr;
@@ -1143,11 +1139,11 @@ TEST_F(SwitchingBundleTest, compositor_never_owns_client_buffers)
     }
 }
 
-TEST_F(SwitchingBundleTest, client_never_owns_compositor_buffers)
+TEST_F(BufferQueueTest, client_never_owns_compositor_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
         for (int i = 0; i < 100; ++i)
         {
             auto handle = client_acquire_async(q);
@@ -1179,11 +1175,11 @@ TEST_F(SwitchingBundleTest, client_never_owns_compositor_buffers)
  * http://code.launchpad.net/~albaguirre/mir/
  * alternative-switching-bundle-implementation/+merge/216606/comments/517048
  */
-TEST_F(SwitchingBundleTest, buffers_are_not_lost)
+TEST_F(BufferQueueTest, buffers_are_not_lost)
 {
     for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
         void const* main_compositor = reinterpret_cast<void const*>(0);
         void const* second_compositor = reinterpret_cast<void const*>(1);
@@ -1239,11 +1235,11 @@ TEST_F(SwitchingBundleTest, buffers_are_not_lost)
 }
 
 /* FIXME (enabling this optimization breaks timing tests) */
-TEST_F(SwitchingBundleTest, DISABLED_synchronous_clients_only_get_two_real_buffers)
+TEST_F(BufferQueueTest, DISABLED_synchronous_clients_only_get_two_real_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::SwitchingBundle q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties);
         q.allow_framedropping(false);
 
         std::atomic<bool> done(false);

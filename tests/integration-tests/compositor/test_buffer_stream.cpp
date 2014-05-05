@@ -18,7 +18,7 @@
 
 #include "src/server/compositor/buffer_stream_surfaces.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "src/server/compositor/switching_bundle.h"
+#include "src/server/compositor/buffer_queue.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
@@ -80,7 +80,7 @@ struct BufferStreamTest : public ::testing::Test
                                         mir_pixel_format_abgr_8888,
                                         mg::BufferUsage::hardware};
 
-        return std::make_shared<mc::SwitchingBundle>(nbuffers,
+        return std::make_shared<mc::BufferQueue>(nbuffers,
                                                      allocator,
                                                      properties);
     }
@@ -122,7 +122,7 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
 {
     mg::Buffer* client_buffer{nullptr};
-    for (int i = 0; i !=  nbuffers; i++)
+    for (int i = 0; i !=  nbuffers - 1; i++)
         buffer_stream.swap_client_buffers_blocking(client_buffer);
 
     auto first_monitor = buffer_stream.lock_compositor_buffer(0);
@@ -179,6 +179,10 @@ TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
     buffer_stream.resize(old_size);
     EXPECT_EQ(old_size, buffer_stream.stream_size());
 
+    /* Release a buffer so client can acquire another */
+    auto comp = buffer_stream.lock_compositor_buffer(nullptr);
+    comp.reset();
+
     buffer_stream.swap_client_buffers_blocking(client);
     EXPECT_EQ(old_size, client->size());
 }
@@ -199,11 +203,12 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
     EXPECT_EQ(new_size, buffer_stream.stream_size());
 
     buffer_stream.swap_client_buffers_blocking(client);
-    buffer_stream.swap_client_buffers_blocking(client);
 
     auto comp1 = buffer_stream.lock_compositor_buffer(nullptr);
     EXPECT_EQ(old_size, comp1->size());
     comp1.reset();
+
+    buffer_stream.swap_client_buffers_blocking(client);
 
     auto comp2 = buffer_stream.lock_compositor_buffer(nullptr);
     EXPECT_EQ(new_size, comp2->size());
