@@ -13,15 +13,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/scene/observer.h"
+#include "mir/scene/null_surface_observer.h"
 
 namespace ms = mir::scene;
 
-void ms::Observer::surface_added(ms::Surface* /* surface */) {}
-void ms::Observer::surface_removed(ms::Surface* /* surface */) {}
-void ms::Observer::surfaces_reordered() {}
-void ms::Observer::surface_exists(ms::Surface* /* surface */) {}
-void ms::Observer::end_observation() {}
+void ms::NullSurfaceObserver::attrib_changed(MirSurfaceAttrib /*attrib*/, int /*value*/) {}
+void ms::NullSurfaceObserver::resized_to(geometry::Size const& /*size*/) {}
+void ms::NullSurfaceObserver::moved_to(geometry::Point const& /*top_left*/) {}
+void ms::NullSurfaceObserver::hidden_set_to(bool /*hide*/) {}
+void ms::NullSurfaceObserver::frame_posted() {}
+void ms::NullSurfaceObserver::alpha_set_to(float /*alpha*/) {}
+void ms::NullSurfaceObserver::transformation_set_to(glm::mat4 const& /*t*/) {}

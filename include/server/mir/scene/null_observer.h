@@ -16,41 +16,36 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SCENE_OBSERVER_H_
-#define MIR_SCENE_OBSERVER_H_
+#ifndef MIR_SCENE_NULL_OBSERVER_H_
+#define MIR_SCENE_NULL_OBSERVER_H_
 
-#include <memory>
+#include "mir/scene/observer.h"
 
 namespace mir
 {
 namespace scene
 {
-class Surface;
-
-/// An observer for top level notifications of scene changes. In order
-/// to receive more granular change notifications a user may install
-/// mir::scene::SurfaceObserver in surface_added.
-class Observer
+class NullObserver : public Observer
 {
 public:
-    virtual void surface_added(Surface* surface) = 0;
-    virtual void surface_removed(Surface* surface) = 0;
-    virtual void surfaces_reordered() = 0;
+    NullObserver() = default;
+    virtual ~NullObserver() = default;
+
+    void surface_added(Surface* surface);
+    void surface_removed(Surface* surface);
+    void surfaces_reordered();
 
     // Called at observer registration to notify of already existing surfaces.
-    virtual void surface_exists(Surface* surface) = 0;
+    void surface_exists(Surface* surface);
     // Called when observer is unregistered, for example, to provide a place to
     // unregister SurfaceObservers which may have been added in surface_added/exists
-    virtual void end_observation() = 0;
+    void end_observation();
 
 protected:
-    Observer() = default;
-    virtual ~Observer() = default;
-    Observer(Observer const&) = delete;
-    Observer& operator=(Observer const&) = delete;
+    NullObserver(NullObserver const&) = delete;
+    NullObserver& operator=(NullObserver const&) = delete;
 };
-
 }
 } // namespace mir
 
-#endif // MIR_SCENE_OBSERVER_H_
+#endif // MIR_SCENE_NULL_OBSERVER_H_
