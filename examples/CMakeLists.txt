@@ -183,6 +183,11 @@ install(TARGETS mir_demo_server_basic
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+add_executable(mir_demo_server_minimal minimal_server.cpp)
+target_link_libraries(mir_demo_server_minimal mirserver)
+install(TARGETS mir_demo_server_minimal
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
 
 add_executable(mir_demo_server_translucent
   translucent_server.cpp
