@@ -223,6 +223,7 @@ using TestClientCursorAPI = BespokeDisplayServerTestFixture;
 // In this set we create a 1x1 client surface at the point (1,0). The client requests to disable the cursor
 // over this surface. Since the cursor starts at (0,0) we when we move the cursor by (1,0) thus causing it
 // to enter the bounds of the first surface, we should observe it being disabled.
+// TODO: Enable
 TEST_F(TestClientCursorAPI, DISABLED_client_may_disable_cursor_over_surface)
 {
     using namespace ::testing;
@@ -259,6 +260,7 @@ TEST_F(TestClientCursorAPI, DISABLED_client_may_disable_cursor_over_surface)
     launch_client_process(client_conf);
 }
 
+// TODO: Enable
 TEST_F(TestClientCursorAPI, DISABLED_cursor_restored_when_leaving_surface)
 {
     using namespace ::testing;
@@ -298,6 +300,7 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_restored_when_leaving_surface)
     launch_client_process(client_conf);
 }
 
+// TODO: Enable
 TEST_F(TestClientCursorAPI, DISABLED_cursor_changed_when_crossing_surface_boundaries)
 {
     using namespace ::testing;
@@ -348,6 +351,7 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_changed_when_crossing_surface_bounda
     launch_client_process(client2_conf);
 }
 
+// TODO: Enable
 TEST_F(TestClientCursorAPI, DISABLED_cursor_request_taken_from_top_surface)
 {
     using namespace ::testing;
@@ -399,6 +403,7 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_request_taken_from_top_surface)
     launch_client_process(client2_conf);
 }
 
+// TODO: Enable
 TEST_F(TestClientCursorAPI, DISABLED_cursor_request_applied_without_cursor_motion)
 {
     using namespace ::testing;
