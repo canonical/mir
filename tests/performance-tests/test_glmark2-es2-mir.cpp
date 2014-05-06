@@ -73,7 +73,11 @@ private:
 
 TEST_F(GLMark2Test, benchmark_fullscreen_default)
 {
+    char const* origenv = getenv("MIR_SERVER_NO_FILE");
     unsetenv("MIR_SERVER_NO_FILE");
+
     RunGLMark2("glmark2_fullscreen_default.json", json);
+
+    setenv("MIR_SERVER_NO_FILE", origenv, true);
 }
 }
