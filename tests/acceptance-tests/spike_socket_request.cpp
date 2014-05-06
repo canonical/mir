@@ -58,7 +58,7 @@ TEST_F(DemoSocketFDServer, client_gets_fd)
 
     SocketFD result;
 
-    server.client_socket_fd(
+    server.new_fds_for_trusted_clients(
         nullptr,
         &parameters,
         &result,

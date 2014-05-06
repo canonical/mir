@@ -21,7 +21,9 @@
 
 #include "mir/scene/session.h"
 
+#include <atomic>
 #include <map>
+#include <mutex>
 
 namespace mir
 {
@@ -68,9 +70,6 @@ public:
     void send_display_config(graphics::DisplayConfiguration const& info);
 
     void set_lifecycle_state(MirLifecycleState state);
-
-    auto child_connect_handler()
-    -> std::function<void(std::shared_ptr<frontend::Session> const& session)> override;
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;

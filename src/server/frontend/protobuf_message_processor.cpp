@@ -174,9 +174,9 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::release_screencast, invocation);
         }
-        else if ("client_socket_fd" == invocation.method_name())
+        else if ("new_fds_for_trusted_clients" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &protobuf::DisplayServer::client_socket_fd, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::new_fds_for_trusted_clients, invocation);
         }
         else if ("disconnect" == invocation.method_name())
         {

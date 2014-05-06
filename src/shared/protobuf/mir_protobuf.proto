@@ -206,5 +206,5 @@ service DisplayServer {
   rpc create_screencast(ScreencastParameters) returns (Screencast);
   rpc screencast_buffer(ScreencastId) returns (Buffer);
   rpc release_screencast(ScreencastId) returns (Void);
-  rpc client_socket_fd(SocketFDRequest) returns (SocketFD);
+  rpc new_fds_for_trusted_clients(SocketFDRequest) returns (SocketFD);
 }

@@ -113,17 +113,17 @@ public:
     void create_screencast(google::protobuf::RpcController*,
                            const mir::protobuf::ScreencastParameters*,
                            mir::protobuf::Screencast*,
-                           google::protobuf::Closure* done);
+                           google::protobuf::Closure* done) override;
 
     void release_screencast(google::protobuf::RpcController*,
                             const mir::protobuf::ScreencastId*,
                             mir::protobuf::Void*,
-                            google::protobuf::Closure* done);
+                            google::protobuf::Closure* done) override;
 
     void screencast_buffer(google::protobuf::RpcController*,
                            const mir::protobuf::ScreencastId*,
                            mir::protobuf::Buffer*,
-                           google::protobuf::Closure* done);
+                           google::protobuf::Closure* done) override;
 
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,
@@ -131,11 +131,11 @@ public:
                         mir::protobuf::DRMAuthMagicStatus* response,
                         google::protobuf::Closure* done) override;
 
-    void client_socket_fd(
+    void new_fds_for_trusted_clients(
         ::google::protobuf::RpcController* controller,
         ::mir::protobuf::SocketFDRequest const* parameters,
         ::mir::protobuf::SocketFD* response,
-        ::google::protobuf::Closure* done);
+        ::google::protobuf::Closure* done) override;
 
 private:
     void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,

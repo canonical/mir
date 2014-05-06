@@ -76,12 +76,6 @@ struct StubSceneSession : public scene::Session
     void set_lifecycle_state(MirLifecycleState /*state*/)
     {
     }
-
-    auto child_connect_handler()
-    -> std::function<void(std::shared_ptr<frontend::Session> const& session)> override
-    {
-        return [](std::shared_ptr<frontend::Session> const&) {};
-    }
 };
 
 }

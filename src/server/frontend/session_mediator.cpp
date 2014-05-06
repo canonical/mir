@@ -415,7 +415,7 @@ void mf::SessionMediator::screencast_buffer(
     done->Run();
 }
 
-void mf::SessionMediator::client_socket_fd(
+void mf::SessionMediator::new_fds_for_trusted_clients(
     ::google::protobuf::RpcController* ,
     ::mir::protobuf::SocketFDRequest const* parameters,
     ::mir::protobuf::SocketFD* response,
@@ -428,7 +428,8 @@ void mf::SessionMediator::client_socket_fd(
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        auto const connect_handler = session->child_connect_handler();
+        // TODO write a handler that connects the new session to our trust session
+        auto const connect_handler = [](std::shared_ptr<frontend::Session> const&) {};
 
         auto const fds_requested = parameters->number();
 
@@ -438,14 +439,13 @@ void mf::SessionMediator::client_socket_fd(
 
         for (auto i  = 0; i != fds_requested; ++i)
         {
-            auto const fd = connection_context.fd_for_client_handled_by(connect_handler);
+            auto const fd = connection_context.fd_for_new_client(connect_handler);
             response->add_fd(fd);
         }
     }
 
     done->Run();
 }
-
 
 void mf::SessionMediator::drm_auth_magic(
     google::protobuf::RpcController* /*controller*/,
