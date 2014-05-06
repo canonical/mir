@@ -16,7 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "src/server/compositor/timeout_frame_dropping_policy.h"
+#include "src/server/compositor/timeout_frame_dropping_policy_factory.h"
+#include "mir/compositor/frame_dropping_policy.h"
 
 #include "mir_test_doubles/mock_timer.h"
 
@@ -38,7 +39,8 @@ TEST(TimeoutFrameDroppingPolicy, does_not_fire_before_notified_of_block)
     std::chrono::milliseconds const timeout{1000};
     bool frame_dropped{false};
 
-    mc::TimeoutFrameDroppingPolicy policy{timer, timeout, [&frame_dropped]{ frame_dropped = true; }};
+    mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
 
     clock->advance_time(timeout + std::chrono::milliseconds{1});
     EXPECT_FALSE(frame_dropped);
@@ -51,8 +53,9 @@ TEST(TimeoutFrameDroppingPolicy, schedules_alarm_for_correct_timeout)
     std::chrono::milliseconds const timeout{1000};
     bool frame_dropped{false};
 
-    mc::TimeoutFrameDroppingPolicy policy{timer, timeout, [&frame_dropped]{ frame_dropped = true; }};
-    policy.swap_now_blocking();
+    mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+    policy->swap_now_blocking();
 
     clock->advance_time(timeout - std::chrono::milliseconds{1});
     EXPECT_FALSE(frame_dropped);
@@ -67,10 +70,11 @@ TEST(TimeoutFrameDroppingPolicy, framedrop_callback_cancelled_by_unblock)
     std::chrono::milliseconds const timeout{1000};
 
     bool frame_dropped{false};
-    mc::TimeoutFrameDroppingPolicy policy{timer, timeout, [&frame_dropped]{ frame_dropped = true; }};
+    mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
 
-    policy.swap_now_blocking();
-    policy.swap_unblocked();
+    policy->swap_now_blocking();
+    policy->swap_unblocked();
 
     clock->advance_time(timeout * 10);
 
@@ -84,11 +88,12 @@ TEST(TimeoutFrameDroppingPolicy, policy_drops_one_frame_per_blocking_swap)
     std::chrono::milliseconds const timeout{1000};
 
     bool frame_dropped{false};
-    mc::TimeoutFrameDroppingPolicy policy{timer, timeout, [&frame_dropped]{ frame_dropped = true; }};
+    mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
 
-    policy.swap_now_blocking();
-    policy.swap_now_blocking();
-    policy.swap_now_blocking();
+    policy->swap_now_blocking();
+    policy->swap_now_blocking();
+    policy->swap_now_blocking();
 
     clock->advance_time(timeout + std::chrono::milliseconds{1});
     EXPECT_TRUE(frame_dropped);
@@ -113,10 +118,11 @@ TEST(TimeoutFrameDroppingPolicy, policy_drops_frames_no_more_frequently_than_tim
     std::chrono::milliseconds const timeout{1000};
 
     bool frame_dropped{false};
-    mc::TimeoutFrameDroppingPolicy policy{timer, timeout, [&frame_dropped]{ frame_dropped = true; }};
+    mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
 
-    policy.swap_now_blocking();
-    policy.swap_now_blocking();
+    policy->swap_now_blocking();
+    policy->swap_now_blocking();
 
     clock->advance_time(timeout + std::chrono::milliseconds{1});
     EXPECT_TRUE(frame_dropped);
@@ -135,12 +141,13 @@ TEST(TimeoutFrameDroppingPolicy, newly_blocking_frame_doesnt_reset_timeout)
     std::chrono::milliseconds const timeout{1000};
 
     bool frame_dropped{false};
-    mc::TimeoutFrameDroppingPolicy policy{timer, timeout, [&frame_dropped]{ frame_dropped = true; }};
+    mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
 
-    policy.swap_now_blocking();
+    policy->swap_now_blocking();
     clock->advance_time(timeout - std::chrono::milliseconds{1});
 
-    policy.swap_now_blocking();
+    policy->swap_now_blocking();
     clock->advance_time(std::chrono::milliseconds{2});
     EXPECT_TRUE(frame_dropped);
 }

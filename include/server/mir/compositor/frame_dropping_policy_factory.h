@@ -16,37 +16,30 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-
-#ifndef MIR_COMPOSITOR_TIMEOUT_FRAME_DROPPING_POLICY_H_
-#define MIR_COMPOSITOR_TIMEOUT_FRAME_DROPPING_POLICY_H_
-
-#include "mir/compositor/frame_dropping_policy.h"
-#include "mir/time/timer.h"
+#ifndef MIR_COMPOSITOR_FRAME_DROPPING_POLICY_FACTORY_H_
+#define MIR_COMPOSITOR_FRAME_DROPPING_POLICY_FACTORY_H_
 
 #include <memory>
-#include <chrono>
-#include <atomic>
 
 namespace mir
 {
 namespace compositor
 {
-class TimeoutFrameDroppingPolicy : public FrameDroppingPolicy
+class FrameDroppingPolicy;
+
+class FrameDroppingPolicyFactory
 {
 public:
-    TimeoutFrameDroppingPolicy(std::shared_ptr<mir::time::Timer> const& timer,
-                               std::chrono::milliseconds timeout,
-                               std::function<void(void)> drop_frame);
-
-    void swap_now_blocking() override;
-    void swap_unblocked() override;
-
-private:
-    std::chrono::milliseconds const timeout;
-    std::unique_ptr<mir::time::Alarm> alarm;
-    std::atomic<unsigned int> pending_swaps;
+    virtual ~FrameDroppingPolicyFactory() = default;
+    /**
+     * \brief Create a FrameDroppingPolicy that will call \param{drop_frame} to drop frames
+     * \param drop_frame    Function to call when a frame needs to be dropped
+     * \return              The policy object.
+     */
+    virtual std::unique_ptr<FrameDroppingPolicy> create_policy(std::function<void(void)> drop_frame) = 0;
 };
+
 }
 }
 
-#endif // MIR_COMPOSITOR_TIMEOUT_FRAME_DROPPING_POLICY_H_
+#endif // MIR_COMPOSITOR_FRAME_DROPPING_POLICY_FACTORY_H_

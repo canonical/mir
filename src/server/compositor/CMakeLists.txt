@@ -15,7 +15,7 @@ set(
   default_configuration.cpp
   screencast_display_buffer.cpp
   compositing_screencast.cpp
-  timeout_frame_dropping_policy.cpp
+  timeout_frame_dropping_policy_factory.cpp
 )
 
 ADD_LIBRARY(
