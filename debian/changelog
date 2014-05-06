@@ -1,5 +1,6 @@
-mir (0.1.9-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.1.9+14.10.20140430.1-0ubuntu1) utopic; urgency=medium
 
+  [ Daniel van Vugt ]
   * New upstream release 0.1.9 (https://launchpad.net/mir/+milestone/0.1.9)
     - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
     - mirserver ABI bumped to 19. Shells need rebuilding.
@@ -12,9 +13,39 @@ mir (0.1.9-0ubuntu1) UNRELEASED; urgency=medium
         any more). Instead you should iterate over the list returned by
         Scene::generate_renderable_list().
     - Bugs fixed:
-      . TODO: fill in when proposing to Ubuntu
+      . Stale socket issue. (LP: #1285215)
+      . Qt render gets blocked on EGLSwapBuffers. (LP: #1292306)
+      . Lock order violated found in helgrind (potential deadlock). 
+        (LP: #1296544)
+      . [regression] SwitchingBundle in framedropping mode can hang. 
+        (LP: #1306464)
+      . [DPMS] Display backlight turns back on almost immediately after
+        being turned off. (LP: #1231857)
+      . Wrong frame is seen on wake up/resume/unlock. (LP: #1233564)
+      . Nested platform is not testable (LP: #1299101)
+      . [regression] mir_demo_server_shell crashes on display resume. 
+        (LP: #1308941)
+      . Multi-threaded composition is actually mostly serialized by
+        SurfaceStack::guard. (LP: #1234018)
+      . Mirscreencast slows down compositing and makes it very jerky. 
+        (LP: #1280938)
+      . Mirscreencast can cause clients to render faster than the screen
+        refresh rate. (LP: #1294361)
+      . Screen turns on when a new session/surface appears. (LP: #1297876)
+      . mir-doc package is >56MB in size, expands to >100MB of files. 
+        (LP: #1304998)
+      . [regression] Clang: 'mir::test::doubles::MockSurface::visible'
+        hides overloaded virtual function [-Woverloaded-virtual]. 
+        (LP: #1301135)
+      . [regression] GLRenderer* unit tests have recently become noisy. 
+        (LP: #1308905)
+      . FocusController::set_focus_to() no longer seems to raise a session
+        to the top. (LP: #1302689)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 15 Apr 2014 13:35:04 +0800
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 30 Apr 2014 13:26:58 +0000
 
 mir (0.1.8+14.04.20140411-0ubuntu1) trusty; urgency=medium
 
