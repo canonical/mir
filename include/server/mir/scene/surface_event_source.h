@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_SURFACE_EVENT_SOURCE_H_
 #define MIR_SCENE_SURFACE_EVENT_SOURCE_H_
 
-#include "mir/scene/surface_observer.h"
+#include "mir/scene/null_surface_observer.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/event_sink.h"
 
@@ -29,15 +29,15 @@ namespace mir
 {
 namespace scene
 {
-class SurfaceEventSource : public SurfaceObserver
+class SurfaceEventSource : public NullSurfaceObserver
 {
 public:
     SurfaceEventSource(
         frontend::SurfaceId id,
         std::shared_ptr<frontend::EventSink> const& event_sink);
 
-    void attrib_changed(MirSurfaceAttrib attrib, int value);
-    void resized_to(geometry::Size const& size);
+    void attrib_changed(MirSurfaceAttrib attrib, int value) override;
+    void resized_to(geometry::Size const& size) override;
 
 private:
     frontend::SurfaceId const id;

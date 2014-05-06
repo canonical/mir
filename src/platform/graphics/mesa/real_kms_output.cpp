@@ -24,6 +24,7 @@
 
 #include <stdexcept>
 #include <vector>
+#include <string.h> // strcmp
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;

@@ -37,7 +37,7 @@ public:
     {
         return this;
     }
-    std::shared_ptr<graphics::Buffer> buffer(void const*) const override
+    std::shared_ptr<graphics::Buffer> buffer() const override
     {
         return std::make_shared<StubBuffer>();
     }

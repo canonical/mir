@@ -7,4 +7,5 @@ add_library(
   spin_wait.cpp
   signal.cpp
   fake_clock.cpp
+  popen.cpp
 )

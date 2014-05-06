@@ -44,10 +44,10 @@ public:
     {
     }
 
-    void render(graphics::Renderable const& r) const override
+    void render(graphics::RenderableList const& renderables) const override
     {
-        auto buffer = r.buffer(this);  // We need to consume a buffer to
-                                       // unblock tests with clients.
+        for (auto const& r : renderables)
+            r->buffer(); // We need to consume a buffer to unblock client tests
     }
 
     void end() const override

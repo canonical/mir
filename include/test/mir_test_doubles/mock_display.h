@@ -46,7 +46,7 @@ public:
                                                       graphics::DisplayResumeHandler const&));
     MOCK_METHOD0(pause, void());
     MOCK_METHOD0(resume, void());
-    MOCK_METHOD0(the_cursor, std::weak_ptr<graphics::Cursor>());
+    MOCK_METHOD1(create_hardware_cursor, std::shared_ptr<graphics::Cursor>(std::shared_ptr<graphics::CursorImage> const&));
     MOCK_METHOD0(create_gl_context, std::unique_ptr<graphics::GLContext>());
 };
 

@@ -55,7 +55,8 @@ mgm::NativePlatform::~NativePlatform()
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, buffer_initializer);
+    return std::make_shared<mgm::BufferAllocator>(
+        gbm.device, buffer_initializer, mgm::BypassOption::prohibited);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
