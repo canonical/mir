@@ -289,29 +289,34 @@ TEST_F(BufferQueueTest, client_can_acquire_buffers)
     }
 }
 
-TEST_F(BufferQueueTest, throws_if_client_acquire_has_pending_completion)
+/* Regression test for LP: #1315302 */
+TEST_F(BufferQueueTest, clients_can_have_multiple_pending_completions)
 {
-    mc::BufferQueue q(2, allocator, basic_properties);
-    ASSERT_THAT(q.framedropping_allowed(), Eq(false));
+    int const nbuffers = 3;
+    mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
-    auto handle = client_acquire_async(q);
-    ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
-
-    handle->release_buffer();
-
-    auto fail_if_called = [&](mg::Buffer* client_buffer)
+    for (int i = 0; i < nbuffers - 1; ++i)
     {
-        q.client_release(client_buffer);
-        FAIL();
-    };
+        auto handle = client_acquire_async(q);
+        ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
+        handle->release_buffer();
+    }
 
-    /* All buffers have been exhausted,
-     * hence the callback should not be invoked
-     */
-    q.client_acquire(fail_if_called);
+    auto handle1 = client_acquire_async(q);
+    ASSERT_THAT(handle1->has_acquired_buffer(), Eq(false));
 
-    /* Now there is a pending completion */
-    EXPECT_THROW(q.client_acquire(fail_if_called), std::logic_error);
+    auto handle2 = client_acquire_async(q);
+    ASSERT_THAT(handle1->has_acquired_buffer(), Eq(false));
+
+    for (int i = 0; i < nbuffers + 1; ++i)
+        q.compositor_release(q.compositor_acquire(this));
+
+    EXPECT_THAT(handle1->has_acquired_buffer(), Eq(true));
+    EXPECT_THAT(handle2->has_acquired_buffer(), Eq(true));
+    EXPECT_THAT(handle1->buffer(), Ne(handle2->buffer()));
+
+    handle1->release_buffer();
+    handle2->release_buffer();
 }
 
 TEST_F(BufferQueueTest, compositor_acquires_frames_in_order_for_synchronous_client)
