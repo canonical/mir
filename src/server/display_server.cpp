@@ -77,9 +77,7 @@ struct mir::DisplayServer::Private
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()},
           server_status_listener{config.the_server_status_listener()},
-          display_changer{config.the_display_changer()},
-          paused{false},
-          configure_display_on_resume{false}
+          display_changer{config.the_display_changer()}
     {
         display->register_configuration_change_handler(
             *main_loop,
@@ -99,6 +97,10 @@ struct mir::DisplayServer::Private
                 [this] { input_manager->stop(); },
                 [this] { input_manager->start(); }};
 
+            TryButRevertIfUnwinding display_config_processing{
+                [this] { main_loop->stop_processing(ServerActionType::display_config); },
+                [this] { main_loop->resume_processing(ServerActionType::display_config); }};
+
             TryButRevertIfUnwinding comp{
                 [this] { compositor->stop(); },
                 [this] { compositor->start(); }};
@@ -108,8 +110,6 @@ struct mir::DisplayServer::Private
                 [this] { connector->start(); }};
 
             display->pause();
-
-            paused = true;
         }
         catch(std::runtime_error const&)
         {
@@ -133,22 +133,15 @@ struct mir::DisplayServer::Private
                 [this] { connector->start(); },
                 [this] { connector->stop(); }};
 
-            if (configure_display_on_resume)
-            {
-                std::shared_ptr<graphics::DisplayConfiguration> conf =
-                    display->configuration();
-                display_changer->configure_for_hardware_change(
-                    conf, DisplayChanger::RetainSystemState);
-                configure_display_on_resume = false;
-            }
+            TryButRevertIfUnwinding display_config_processing{
+                [this] { main_loop->resume_processing(ServerActionType::display_config); },
+                [this] { main_loop->stop_processing(ServerActionType::display_config); }};
 
             TryButRevertIfUnwinding input{
                 [this] { input_manager->start(); },
                 [this] { input_manager->stop(); }};
 
             compositor->start();
-
-            paused = false;
         }
         catch(std::runtime_error const&)
         {
@@ -162,17 +155,16 @@ struct mir::DisplayServer::Private
 
     void configure_display()
     {
-        if (!paused)
-        {
-            std::shared_ptr<graphics::DisplayConfiguration> conf =
-                display->configuration();
-            display_changer->configure_for_hardware_change(
-                conf, DisplayChanger::PauseResumeSystem);
-        }
-        else
-        {
-            configure_display_on_resume = true;
-        }
+        main_loop->post(
+            ServerActionType::display_config,
+            [this]
+            {
+                std::shared_ptr<graphics::DisplayConfiguration> conf =
+                    display->configuration();
+
+                display_changer->configure_for_hardware_change(
+                    conf, DisplayChanger::PauseResumeSystem);
+            });
     }
 
     std::shared_ptr<mg::Platform> const graphics_platform; // Hold this so the platform is loaded once
@@ -184,8 +176,6 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::shared_ptr<mir::ServerStatusListener> const server_status_listener;
     std::shared_ptr<mir::DisplayChanger> const display_changer;
-    bool paused;
-    bool configure_display_on_resume;
 };
 
 mir::DisplayServer::DisplayServer(ServerConfiguration& config) :

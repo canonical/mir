@@ -584,13 +584,12 @@ TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
         /* Resume and reconfigure event */
         EXPECT_CALL(*mock_display, resume()).Times(1);
         EXPECT_CALL(*mock_connector, start()).Times(1);
-
-        EXPECT_CALL(*mock_display_changer,
-                    configure_for_hardware_change(_, mir::DisplayChanger::RetainSystemState))
-            .Times(1);
-
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
+
+        EXPECT_CALL(*mock_display_changer,
+                    configure_for_hardware_change(_, mir::DisplayChanger::PauseResumeSystem))
+            .Times(1);
 
         /* Stop */
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);

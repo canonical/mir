@@ -20,6 +20,7 @@
 #include "mir_test/pipe.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include <thread>
 #include <atomic>
@@ -291,4 +292,134 @@ TEST(AsioMainLoopTest, multiple_fd_handlers_are_called)
     EXPECT_EQ(elems_to_send[0], elems_read[0]);
     EXPECT_EQ(elems_to_send[1], elems_read[1]);
     EXPECT_EQ(elems_to_send[2], elems_read[2]);
+}
+
+TEST(AsioMainLoopTest, dispatches_action)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    int num_actions{0};
+
+    ml.post(
+        mir::ServerActionType::undefined,
+        [&]
+        {
+            ++num_actions;
+            ml.stop();
+        });
+
+    ml.run();
+
+    EXPECT_THAT(num_actions, Eq(1));
+}
+
+TEST(AsioMainLoopTest, dispatches_multiple_actions_in_order)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    int const num_actions{5};
+    std::vector<int> actions;
+
+    for (int i = 0; i < num_actions; ++i)
+    {
+        ml.post(
+            mir::ServerActionType::undefined,
+            [&,i]
+            {
+                actions.push_back(i);
+                if (i == num_actions)
+                    ml.stop();
+            });
+    }
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(num_actions));
+    for (int i = 0; i < num_actions; ++i)
+        EXPECT_THAT(actions[i], Eq(i)) << "i = " << i;
+}
+
+TEST(AsioMainLoopTest, does_not_dispatch_stopped_actions)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    std::vector<int> actions;
+
+    ml.post(
+        mir::ServerActionType::display_config,
+        [&]
+        {
+            int const id = 0;
+            actions.push_back(id);
+        });
+
+    ml.post(
+        mir::ServerActionType::undefined,
+        [&]
+        {
+            int const id = 1;
+            actions.push_back(id);
+        });
+
+    ml.post(
+        mir::ServerActionType::display_config,
+        [&]
+        {
+            int const id = 2;
+            actions.push_back(id);
+        });
+
+    ml.post(
+        mir::ServerActionType::undefined,
+        [&]
+        {
+            int const id = 3;
+            actions.push_back(id);
+            ml.stop();
+        });
+
+    ml.stop_processing(mir::ServerActionType::display_config);
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(2));
+    EXPECT_THAT(actions[0], Eq(1));
+    EXPECT_THAT(actions[1], Eq(3));
+}
+
+TEST(AsioMainLoopTest, dispatches_resumed_actions)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    std::vector<int> actions;
+
+    ml.post(
+        mir::ServerActionType::display_config,
+        [&]
+        {
+            int const id = 0;
+            actions.push_back(id);
+            ml.stop();
+        });
+
+    ml.post(
+        mir::ServerActionType::undefined,
+        [&]
+        {
+            int const id = 1;
+            actions.push_back(id);
+            ml.resume_processing(mir::ServerActionType::display_config);
+        });
+
+    ml.stop_processing(mir::ServerActionType::display_config);
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(2));
+    EXPECT_THAT(actions[0], Eq(1));
+    EXPECT_THAT(actions[1], Eq(0));
 }
