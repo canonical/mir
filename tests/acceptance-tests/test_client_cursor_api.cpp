@@ -83,24 +83,22 @@ struct StubCursorImages : public mg::CursorImages
    }
 };
 
+bool cursor_is_named(mg::CursorImage const& i, std::string const& name)
+{
+    auto image = dynamic_cast<NamedCursorImage const*>(&i);
+    assert(image);
+    
+    return image->cursor_name == name;
+}
+
 MATCHER(DefaultCursorImage, "")
 {
-    auto image = dynamic_cast<NamedCursorImage const*>(&arg);
-    assert(image);
-
-    if (image->cursor_name != "default")
-        return false;
-    return true;
+    return cursor_is_named(arg, "default");
 }
 
 MATCHER_P(CursorNamed, name, "")
 {
-   auto image = dynamic_cast<NamedCursorImage const*>(&arg);
-   assert(image);
-
-   if (image->cursor_name != name)
-       return false;
-   return true;
+    return cursor_is_named(arg, name);
 }
 
 struct CursorSettingClient : mtf::TestingClientConfiguration
