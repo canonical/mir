@@ -16,34 +16,14 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SCENE_SURFACE_EVENT_SOURCE_H_
-#define MIR_SCENE_SURFACE_EVENT_SOURCE_H_
-
 #include "mir/scene/null_surface_observer.h"
-#include "mir/frontend/surface_id.h"
-#include "mir/frontend/event_sink.h"
 
-#include <memory>
+namespace ms = mir::scene;
 
-namespace mir
-{
-namespace scene
-{
-class SurfaceEventSource : public NullSurfaceObserver
-{
-public:
-    SurfaceEventSource(
-        frontend::SurfaceId id,
-        std::shared_ptr<frontend::EventSink> const& event_sink);
-
-    void attrib_changed(MirSurfaceAttrib attrib, int value) override;
-    void resized_to(geometry::Size const& size) override;
-
-private:
-    frontend::SurfaceId const id;
-    std::shared_ptr<frontend::EventSink> const event_sink;
-};
-}
-}
-
-#endif // MIR_SCENE_SURFACE_EVENT_SOURCE_H_
+void ms::NullSurfaceObserver::attrib_changed(MirSurfaceAttrib /*attrib*/, int /*value*/) {}
+void ms::NullSurfaceObserver::resized_to(geometry::Size const& /*size*/) {}
+void ms::NullSurfaceObserver::moved_to(geometry::Point const& /*top_left*/) {}
+void ms::NullSurfaceObserver::hidden_set_to(bool /*hide*/) {}
+void ms::NullSurfaceObserver::frame_posted() {}
+void ms::NullSurfaceObserver::alpha_set_to(float /*alpha*/) {}
+void ms::NullSurfaceObserver::transformation_set_to(glm::mat4 const& /*t*/) {}
