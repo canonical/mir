@@ -38,11 +38,13 @@ namespace compositor
 class BufferQueue : public BufferBundle
 {
 public:
+    typedef std::function<void(graphics::Buffer* buffer)> Callback;
+
     BufferQueue(int nbuffers,
                 std::shared_ptr<graphics::GraphicBufferAllocator> const& alloc,
                 graphics::BufferProperties const& props);
 
-    void client_acquire(std::function<void(graphics::Buffer* buffer)> complete) override;
+    void client_acquire(Callback complete) override;
     void client_release(graphics::Buffer* buffer) override;
     std::shared_ptr<graphics::Buffer> compositor_acquire(void const* user_id) override;
     void compositor_release(std::shared_ptr<graphics::Buffer> const& buffer) override;
@@ -75,7 +77,7 @@ private:
     std::vector<void const*> current_buffer_users;
     graphics::Buffer* current_compositor_buffer;
 
-    std::function<void(graphics::Buffer* buffer)> give_to_client;
+    std::deque<Callback> pending_client_notifications;
 
     int nbuffers;
     bool frame_dropping_enabled;

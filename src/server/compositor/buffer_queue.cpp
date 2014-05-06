@@ -129,17 +129,11 @@ mc::BufferQueue::BufferQueue(
         free_buffers.push_back(current_compositor_buffer);
 }
 
-void mc::BufferQueue::client_acquire(std::function<void(graphics::Buffer* buffer)> complete)
+void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
 {
     std::unique_lock<decltype(guard)> lock(guard);
 
-    if (give_to_client)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::logic_error("unexpected acquire: there is a pending completion"));
-    }
-
-    give_to_client = std::move(complete);
+    pending_client_notifications.push_back(std::move(complete));
 
     if (!free_buffers.empty())
     {
@@ -284,7 +278,8 @@ bool mc::BufferQueue::framedropping_allowed() const
 void mc::BufferQueue::force_requests_to_complete()
 {
     std::unique_lock<std::mutex> lock(guard);
-    if (give_to_client && !ready_to_composite_queue.empty())
+    if (!pending_client_notifications.empty() &&
+        !ready_to_composite_queue.empty())
     {
         auto const buffer = pop(ready_to_composite_queue);
         while (!ready_to_composite_queue.empty())
@@ -317,7 +312,8 @@ void mc::BufferQueue::give_buffer_to_client(
     std::unique_lock<std::mutex> lock)
 {
     /* Clears callback */
-    auto give_to_client_cb = std::move(give_to_client);
+    auto give_to_client_cb = std::move(pending_client_notifications.front());
+    pending_client_notifications.pop_front();
 
     bool const resize_buffer = buffer->size() != the_properties.size;
     if (resize_buffer)
@@ -381,7 +377,7 @@ void mc::BufferQueue::release(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
-    if (give_to_client)
+    if (!pending_client_notifications.empty())
         give_buffer_to_client(buffer, std::move(lock));
     else
         free_buffers.push_back(buffer);
