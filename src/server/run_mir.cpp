@@ -23,6 +23,8 @@
 #include "mir/frontend/connector.h"
 #include "mir/raii.h"
 
+#include <exception>
+#include <mutex>
 #include <csignal>
 #include <cstdlib>
 #include <cassert>
@@ -32,6 +34,8 @@ namespace
 auto const intercepted = { SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS };
 
 std::weak_ptr<mir::frontend::Connector> weak_connector;
+std::exception_ptr termination_exception;
+std::mutex termination_exception_mutex;
 
 extern "C" void delete_endpoint()
 {
@@ -58,6 +62,10 @@ extern "C" void fatal_signal_cleanup(int sig)
 void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
 {
     DisplayServer* server_ptr{nullptr};
+    {
+        std::lock_guard<std::mutex> lock{termination_exception_mutex};
+        termination_exception = nullptr;
+    }
     auto main_loop = config.the_main_loop();
 
     main_loop->register_signal_handler(
@@ -88,4 +96,18 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
 
     init(server);
     server.run();
+
+    std::lock_guard<std::mutex> lock{termination_exception_mutex};
+    if (termination_exception)
+        std::rethrow_exception(termination_exception);
+}
+
+void mir::terminate_with_current_exception()
+{
+    std::lock_guard<std::mutex> lock{termination_exception_mutex};
+    if (!termination_exception)
+    {
+        termination_exception = std::current_exception();
+        raise(SIGTERM);
+    }
 }
