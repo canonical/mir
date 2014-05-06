@@ -218,6 +218,8 @@ struct CursorTestServerConfiguration : mtf::InputTestingServerConfiguration
 
 }
 
+// TODO: A lot of common code setup in these tests could be moved to 
+// a fixture.
 using TestClientCursorAPI = BespokeDisplayServerTestFixture;
 
 // In this set we create a 1x1 client surface at the point (1,0). The client requests to disable the cursor
