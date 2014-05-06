@@ -94,6 +94,7 @@ public:
     void set_hidden(bool is_hidden);
 
     geometry::Size size() const override;
+    geometry::Size client_size() const override;
 
     MirPixelFormat pixel_format() const;
 

@@ -186,6 +186,12 @@ mir::geometry::Size ms::BasicSurface::size() const
     return surface_rect.size;
 }
 
+mir::geometry::Size ms::BasicSurface::client_size() const
+{
+    // TODO: when frame measurements are known this will be different...
+    return size();
+}
+
 MirPixelFormat ms::BasicSurface::pixel_format() const
 {
     return surface_buffer_stream->get_stream_pixel_format();
