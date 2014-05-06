@@ -1,4 +1,6 @@
 #include "mir/default_server_configuration.h"
+#include "mir/options/default_configuration.h"
+
 #include "mir_test/popen.h"
 #include "mir_test_framework/in_process_server.h"
 
@@ -12,14 +14,24 @@
 #include <fstream>
 #include <string>
 
+namespace mo = mir::options;
+
+namespace
+{
+char const* dummy[] = {0};
+int argc = 0;
+char const** argv = dummy;
+
 class GLMark2Test : public mir_test_framework::InProcessServer
 {
 public:
-    char const* argv[1] = {""}; 
-    int argc = sizeof(argv) / sizeof(argv[0]);
-    mir::DefaultServerConfiguration config{argc, argv};
+ GLMark2Test()
+        : config(argc, argv)
+    {
+    }
 
     mir::DefaultServerConfiguration& server_config() override {return config;};
+
 protected:
     enum ResultFileType {raw, json};
     virtual void RunGLMark2(char const* output_filename, ResultFileType file_type)
@@ -53,10 +65,15 @@ protected:
             }
         }
     }
+
+private:
+    mir::DefaultServerConfiguration config;
+
 };
 
 TEST_F(GLMark2Test, benchmark_fullscreen_default)
 {
     unsetenv("MIR_SERVER_NO_FILE");
     RunGLMark2("glmark2_fullscreen_default.json", json);
+}
 }
