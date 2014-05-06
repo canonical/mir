@@ -417,7 +417,8 @@ void mf::SessionMediator::configure_cursor(
     mir::protobuf::Void* /* void_response */,
     google::protobuf::Closure* /* done */)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Cursor API not yet implemented"));
+    // TODO: Pass cursor settings down to surface.
+    BOOST_THROW_EXCEPTION(std::logic_error("Cursor API not yet implemented"));
 }
 
 void mf::SessionMediator::drm_auth_magic(
