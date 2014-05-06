@@ -118,11 +118,8 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
         renderer->set_rotation(display_buffer.orientation());
         renderer->set_viewport(viewport);
-        renderer->begin();
-
-        for(auto const& renderable : renderable_list)
-            renderer->render(*renderable);
-
+        renderer->begin();  // TODO deprecatable now?
+        renderer->render(renderable_list);
         display_buffer.post_update();
         renderer->end();
 
