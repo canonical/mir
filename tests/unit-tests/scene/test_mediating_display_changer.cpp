@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/shell/mediating_display_changer.h"
-#include "src/server/shell/session_container.h"
+#include "src/server/scene/mediating_display_changer.h"
+#include "src/server/scene/session_container.h"
 #include "mir/graphics/display_configuration_policy.h"
-#include "src/server/shell/broadcasting_session_event_sink.h"
+#include "src/server/scene/broadcasting_session_event_sink.h"
 
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_compositor.h"
@@ -36,7 +36,7 @@
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
-namespace msh = mir::shell;
+namespace ms = mir::scene;
 namespace mg = mir::graphics;
 
 class MockDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
@@ -46,26 +46,42 @@ public:
     MOCK_METHOD1(apply_to, void(mg::DisplayConfiguration&));
 };
 
-class StubSessionContainer : public msh::SessionContainer
+class StubSessionContainer : public ms::SessionContainer
 {
 public:
-    void insert_session(std::shared_ptr<msh::Session> const& session)
+    void insert_session(std::shared_ptr<ms::Session> const& session)
     {
         sessions.push_back(session);
     }
 
-    void remove_session(std::shared_ptr<msh::Session> const&)
+    void remove_session(std::shared_ptr<ms::Session> const&)
     {
     }
 
-    void for_each(std::function<void(std::shared_ptr<msh::Session> const&)> f) const
+    void for_each(std::function<void(std::shared_ptr<ms::Session> const&)> f) const
     {
         for (auto const& session : sessions)
             f(session);
     }
 
+    std::shared_ptr<ms::Session> successor_of(std::shared_ptr<ms::Session> const&) const
+    {
+        return {};
+    }
+
 private:
-    std::vector<std::shared_ptr<msh::Session>> sessions;
+    std::vector<std::shared_ptr<ms::Session>> sessions;
+};
+
+struct MockDisplay : public mtd::MockDisplay
+{
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
+    {
+        conf_ptr = new mtd::StubDisplayConfig{};
+        return std::unique_ptr<mg::DisplayConfiguration>(conf_ptr);
+    }
+
+    mutable mg::DisplayConfiguration* conf_ptr;
 };
 
 struct MediatingDisplayChangerTest : public ::testing::Test
@@ -74,10 +90,7 @@ struct MediatingDisplayChangerTest : public ::testing::Test
     {
         using namespace testing;
 
-        ON_CALL(mock_display, configuration())
-            .WillByDefault(Return(mt::fake_shared(base_config)));
-
-        changer = std::make_shared<msh::MediatingDisplayChanger>(
+        changer = std::make_shared<ms::MediatingDisplayChanger>(
                       mt::fake_shared(mock_display),
                       mt::fake_shared(mock_compositor),
                       mt::fake_shared(mock_conf_policy),
@@ -85,26 +98,21 @@ struct MediatingDisplayChangerTest : public ::testing::Test
                       mt::fake_shared(session_event_sink));
     }
 
-    testing::NiceMock<mtd::MockDisplay> mock_display;
+    testing::NiceMock<MockDisplay> mock_display;
     testing::NiceMock<mtd::MockCompositor> mock_compositor;
     testing::NiceMock<MockDisplayConfigurationPolicy> mock_conf_policy;
     StubSessionContainer stub_session_container;
-    msh::BroadcastingSessionEventSink session_event_sink;
+    ms::BroadcastingSessionEventSink session_event_sink;
     mtd::StubDisplayConfig base_config;
-    std::shared_ptr<msh::MediatingDisplayChanger> changer;
+    std::shared_ptr<ms::MediatingDisplayChanger> changer;
 };
 
 TEST_F(MediatingDisplayChangerTest, returns_active_configuration_from_display)
 {
     using namespace testing;
-    mtd::NullDisplayConfiguration conf;
-
-    EXPECT_CALL(mock_display, configuration())
-        .Times(1)
-        .WillOnce(Return(mt::fake_shared(conf)));
 
     auto returned_conf = changer->active_configuration();
-    EXPECT_EQ(&conf, returned_conf.get());
+    EXPECT_EQ(mock_display.conf_ptr, returned_conf.get());
 }
 
 TEST_F(MediatingDisplayChangerTest, pauses_system_when_applying_new_configuration_for_focused_session)
