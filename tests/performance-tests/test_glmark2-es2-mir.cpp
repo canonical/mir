@@ -14,10 +14,10 @@
 #include <fstream>
 #include <string>
 
-namespace mo = mir::options;
-
 namespace
 {
+// FIXME remove this when support for passing cli options to 
+// DefaultServerConfiguration is implemented
 char const* dummy[] = {0};
 int argc = 0;
 char const** argv = dummy;
@@ -34,13 +34,13 @@ public:
 
 protected:
     enum ResultFileType {raw, json};
-    virtual void RunGLMark2(char const* output_filename, ResultFileType file_type)
+    virtual void run_glmark2(char const* output_filename, ResultFileType file_type)
     {
-        std::string const cmd = "glmark2-es2-mir --fullscreen";
+        auto const cmd = "MIR_SERVER=" + new_connection() + " glmark2-es2-mir --fullscreen";
         mir::test::Popen p(cmd);
        
         boost::cmatch matches;
-        boost::regex re_glmark2_score(".*glmark2\\s+Score:\\s+(\\d+).*"); 
+        boost::regex re_glmark2_score(".*glmark2\\s+Score:\\s+(\\d+).*");
         std::string line;
         std::ofstream glmark2_output;
         glmark2_output.open(output_filename);        
@@ -73,11 +73,6 @@ private:
 
 TEST_F(GLMark2Test, benchmark_fullscreen_default)
 {
-    char const* origenv = getenv("MIR_SERVER_NO_FILE");
-    unsetenv("MIR_SERVER_NO_FILE");
-
-    RunGLMark2("glmark2_fullscreen_default.json", json);
-
-    setenv("MIR_SERVER_NO_FILE", origenv, true);
+    run_glmark2("glmark2_fullscreen_default.json", json);
 }
 }
