@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,7 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "src/server/compositor/switching_bundle.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer_basic.h"
@@ -33,6 +32,8 @@
 
 #include <thread>
 #include <atomic>
+#include <mutex>
+#include <condition_variable>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
@@ -249,6 +250,7 @@ struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
 
         std::shared_ptr<mg::Display> create_display(
             std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
+            std::shared_ptr<mg::GLProgramFactory> const&,
             std::shared_ptr<mg::GLConfig> const&) override
         {
             return std::make_shared<StubDisplay>();
@@ -365,6 +367,7 @@ struct BufferCounterConfig : TestingServerConfiguration
 
         std::shared_ptr<mg::Display> create_display(
             std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
+            std::shared_ptr<mg::GLProgramFactory> const&,
             std::shared_ptr<mg::GLConfig> const&) override
         {
             return std::make_shared<StubDisplay>();

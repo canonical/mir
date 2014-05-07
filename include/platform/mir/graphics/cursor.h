@@ -23,14 +23,17 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
 
+#include <memory>
+
 namespace mir
 {
 namespace graphics
 {
+class CursorImage;
 class Cursor
 {
 public:
-    virtual void set_image(void const* raw_argb, geometry::Size size) = 0;
+    virtual void set_image(CursorImage const& cursor_image) = 0;
     virtual void move_to(geometry::Point position) = 0;
 
 protected:

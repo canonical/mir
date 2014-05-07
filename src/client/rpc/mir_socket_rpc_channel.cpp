@@ -141,7 +141,26 @@ mclr::MirSocketRpcChannel::~MirSocketRpcChannel()
     }
 }
 
-// TODO: This function needs some work.
+template<class MessageType>
+void mclr::MirSocketRpcChannel::receive_any_file_descriptors_for(MessageType* response)
+{
+    if (response)
+    {
+        response->clear_fd();
+
+        if (response->fds_on_side_channel() > 0)
+        {
+            std::vector<int32_t> fds(response->fds_on_side_channel());
+            receive_file_descriptors(fds);
+            for (auto &fd: fds)
+                response->add_fd(fd);
+
+            rpc_report->file_descriptors_received(*response, fds);
+        }
+        response->clear_fds_on_side_channel();
+    }
+}
+
 void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
@@ -152,6 +171,7 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
         mir::protobuf::Surface* surface = nullptr;
         mir::protobuf::Buffer* buffer = nullptr;
         mir::protobuf::Platform* platform = nullptr;
+        mir::protobuf::SocketFD* socket_fd = nullptr;
 
         if (message_type == "mir.protobuf.Buffer")
         {
@@ -179,51 +199,15 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
             if (connection && connection->has_platform())
                 platform = connection->mutable_platform();
         }
-
-        if (surface)
+        else if (message_type == "mir.protobuf.SocketFD")
         {
-            surface->clear_fd();
-
-            if (surface->fds_on_side_channel() > 0)
-            {
-                std::vector<int32_t> fds(surface->fds_on_side_channel());
-                receive_file_descriptors(fds);
-                for (auto &fd: fds)
-                    surface->add_fd(fd);
-
-                rpc_report->file_descriptors_received(*response, fds);
-            }
+            socket_fd = static_cast<mir::protobuf::SocketFD*>(response);
         }
 
-        if (buffer)
-        {
-            buffer->clear_fd();
-
-            if (buffer->fds_on_side_channel() > 0)
-            {
-                std::vector<int32_t> fds(buffer->fds_on_side_channel());
-                receive_file_descriptors(fds);
-                for (auto &fd: fds)
-                    buffer->add_fd(fd);
-
-                rpc_report->file_descriptors_received(*response, fds);
-            }
-        }
-
-        if (platform)
-        {
-            platform->clear_fd();
-
-            if (platform->fds_on_side_channel() > 0)
-            {
-                std::vector<int32_t> fds(platform->fds_on_side_channel());
-                receive_file_descriptors(fds);
-                for (auto &fd: fds)
-                    platform->add_fd(fd);
-
-                rpc_report->file_descriptors_received(*response, fds);
-            }
-        }
+        receive_any_file_descriptors_for(surface);
+        receive_any_file_descriptors_for(buffer);
+        receive_any_file_descriptors_for(platform);
+        receive_any_file_descriptors_for(socket_fd);
     }
 
     complete->Run();

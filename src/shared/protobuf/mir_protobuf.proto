@@ -175,6 +175,17 @@ message Screencast {
   optional string error = 127;
 }
 
+message SocketFDRequest {
+  required int32 number = 1;
+}
+
+message SocketFD {
+  repeated sint32 fd = 1;
+  optional int32  fds_on_side_channel = 2;
+
+  optional string error = 127;
+}
+
 message TrustedSession {
   required int32 pid = 1;
 }
@@ -212,9 +223,9 @@ service DisplayServer {
   rpc create_screencast(ScreencastParameters) returns (Screencast);
   rpc screencast_buffer(ScreencastId) returns (Buffer);
   rpc release_screencast(ScreencastId) returns (Void);
+  rpc new_fds_for_trusted_clients(SocketFDRequest) returns (SocketFD);
 
   rpc start_trust_session(TrustSessionParameters) returns (TrustSession);
   rpc add_trusted_session(TrustedSession) returns (TrustSessionAddResult);
   rpc stop_trust_session(Void) returns (Void);
 }
-

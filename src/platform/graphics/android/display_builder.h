@@ -27,6 +27,7 @@ namespace mir
 {
 namespace graphics
 {
+class GLProgramFactory;
 namespace android
 {
 class GLContext;
@@ -38,7 +39,7 @@ public:
 
     virtual MirPixelFormat display_format() = 0;
     virtual std::unique_ptr<ConfigurableDisplayBuffer> create_display_buffer(
-        GLContext const& gl_context) = 0;
+        GLProgramFactory const& gl_program_factory, GLContext const& gl_context) = 0;
 
 protected:
     DisplayBuilder() = default;

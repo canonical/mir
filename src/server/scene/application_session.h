@@ -21,7 +21,9 @@
 
 #include "mir/scene/session.h"
 
+#include <atomic>
 #include <map>
+#include <mutex>
 
 namespace mir
 {

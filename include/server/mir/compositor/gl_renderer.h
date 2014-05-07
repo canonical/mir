@@ -47,7 +47,7 @@ public:
     void set_viewport(geometry::Rectangle const& rect) override;
     void set_rotation(float degrees) override;
     void begin() const override;
-    void render(graphics::Renderable const& renderable) const override;
+    void render(graphics::RenderableList const&) const override;
     void end() const override;
 
     // This is called _without_ a GL context:
@@ -99,6 +99,8 @@ public:
      */
     virtual GLuint load_texture(graphics::Renderable const& renderable,
                                 graphics::Buffer& buffer) const;
+
+    virtual void render(graphics::Renderable const& renderable) const;
 
 private:
     std::unique_ptr<graphics::GLProgram> program;

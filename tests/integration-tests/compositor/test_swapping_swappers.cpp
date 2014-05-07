@@ -19,7 +19,7 @@
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "multithread_harness.h"
 
-#include "src/server/compositor/switching_bundle.h"
+#include "src/server/compositor/buffer_queue.h"
 #include "src/server/compositor/buffer_stream_surfaces.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
@@ -47,14 +47,14 @@ struct SwapperSwappingStress : public ::testing::Test
         auto properties = mg::BufferProperties{geom::Size{380, 210},
                                           mir_pixel_format_abgr_8888,
                                           mg::BufferUsage::hardware};
-        switching_bundle = std::make_shared<mc::SwitchingBundle>(3, allocator, properties);
+        switching_bundle = std::make_shared<mc::BufferQueue>(3, allocator, properties);
     }
 
-    std::shared_ptr<mc::SwitchingBundle> switching_bundle;
+    std::shared_ptr<mc::BufferQueue> switching_bundle;
     std::mutex acquire_mutex;  // must live longer than our callback/lambda
 
     mg::Buffer* client_acquire_blocking(
-        std::shared_ptr<mc::SwitchingBundle> const& switching_bundle)
+        std::shared_ptr<mc::BufferQueue> const& switching_bundle)
     {
         std::condition_variable cv;
         bool acquired = false;

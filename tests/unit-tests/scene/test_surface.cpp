@@ -495,7 +495,7 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
         report);
 
     surf.set_alpha(alpha);
-    EXPECT_FLOAT_EQ(alpha, surf.alpha());
+    EXPECT_FLOAT_EQ(alpha, surf.compositor_snapshot(nullptr)->alpha());
 }
 
 TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)

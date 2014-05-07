@@ -40,7 +40,7 @@ namespace mir
 {
 namespace frontend
 {
-class SessionCreator;
+class ConnectionCreator;
 class ConnectorReport;
 
 /// provides a client-side socket fd for each connection
@@ -48,7 +48,7 @@ class BasicConnector : public Connector
 {
 public:
     explicit BasicConnector(
-        std::shared_ptr<SessionCreator> const& session_creator,
+        std::shared_ptr<ConnectionCreator> const& connection_creator,
         int threads,
         std::shared_ptr<ConnectorReport> const& report);
     ~BasicConnector() noexcept;
@@ -56,17 +56,20 @@ public:
     void stop() override;
     int client_socket_fd() const override;
     void remove_endpoint() const override;
-
+    int client_socket_fd(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const override;
 
 protected:
-    void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const;
+    void create_session_for(
+        std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket,
+        std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const;
+
     boost::asio::io_service mutable io_service;
     boost::asio::io_service::work work;
     std::shared_ptr<ConnectorReport> const report;
 
 private:
     std::vector<std::thread> io_service_threads;
-    std::shared_ptr<SessionCreator> const session_creator;
+    std::shared_ptr<ConnectionCreator> const connection_creator;
 };
 
 /// Accept connections over a published socket
@@ -75,7 +78,7 @@ class PublishedSocketConnector : public BasicConnector
 public:
     explicit PublishedSocketConnector(
         const std::string& socket_file,
-        std::shared_ptr<SessionCreator> const& session_creator,
+        std::shared_ptr<ConnectionCreator> const& connection_creator,
         int threads,
         std::shared_ptr<ConnectorReport> const& report);
     ~PublishedSocketConnector() noexcept;

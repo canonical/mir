@@ -23,7 +23,7 @@
 #include "src/server/frontend/resource_cache.h"
 #include "src/server/frontend/published_socket_connector.h"
 
-#include "mir/frontend/protobuf_session_creator.h"
+#include "mir/frontend/protobuf_connection_creator.h"
 #include "mir/frontend/connector_report.h"
 
 #include "mir_protobuf.pb.h"

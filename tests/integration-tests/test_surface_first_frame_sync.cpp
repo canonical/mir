@@ -24,6 +24,7 @@
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/scene.h"
+#include "mir/scene/legacy_scene_change_notification.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/null_display.h"
@@ -54,10 +55,10 @@ char const* const mir_test_socket = mtf::test_socket_file().c_str();
 class SynchronousCompositor : public mc::Compositor
 {
 public:
-    SynchronousCompositor(std::shared_ptr<mg::Display> const& display,
+    SynchronousCompositor(std::shared_ptr<mg::Display> const& display_,
                           std::shared_ptr<mc::Scene> const& scene,
                           std::shared_ptr<mc::DisplayBufferCompositorFactory> const& db_compositor_factory)
-        : display{display},
+        : display{display_},
           scene{scene}
     {
         display->for_each_display_buffer(
@@ -65,28 +66,31 @@ public:
             {
                 display_buffer_compositor_map[&display_buffer] = db_compositor_factory->create_compositor_for(display_buffer);
             });
-}
+        
+        observer = std::make_shared<ms::LegacySceneChangeNotification>([this]() {
+                display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
+                    {  
+                        display_buffer_compositor_map[&display_buffer]->composite();
+                    });
+            });
+    }
 
     void start()
     {
-        scene->set_change_callback([this]()
-        {
-            display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
-            {
-                display_buffer_compositor_map[&display_buffer]->composite();
-            });
-        });
+        scene->add_observer(observer);
     }
 
     void stop()
     {
-        scene->set_change_callback([]{});
+        scene->remove_observer(observer);
     }
 
 private:
     std::shared_ptr<mg::Display> const display;
     std::shared_ptr<mc::Scene> const scene;
     std::unordered_map<mg::DisplayBuffer*,std::unique_ptr<mc::DisplayBufferCompositor>> display_buffer_compositor_map;
+    
+    std::shared_ptr<ms::Observer> observer;
 };
 
 class StubRenderer : public mtd::StubRenderer
@@ -97,9 +101,13 @@ public:
     {
     }
 
-    void render(mg::Renderable const&) const override
+    void render(mg::RenderableList const& renderables) const override
     {
-        while (write(render_operations_fd, "a", 1) != 1) continue;
+        for (auto const& r : renderables)
+        {
+            (void)r;
+            while (write(render_operations_fd, "a", 1) != 1) continue;
+        }
     }
 
 private:

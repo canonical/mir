@@ -105,6 +105,17 @@ typedef void (*mir_display_config_callback)(
     MirConnection* connection, void* context);
 
 /**
+ * Callback called when a request for client file descriptors completes
+ *   \param [in] connection     The connection associated with the display change
+ *   \param [in] count          The number of FDs allocated
+ *   \param [in] fds            Array of FDs
+ *   \param [in,out] context    The context provided by client
+ */
+
+typedef void (*mir_client_fd_callback)(
+    MirConnection* connection, size_t count, int const* fds, void* context);
+
+/**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
  * surface can be used for OpenGL accelerated rendering. A "software" surface
  * is one that can be addressed in main memory and blitted to directly.

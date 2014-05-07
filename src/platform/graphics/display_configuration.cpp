@@ -183,8 +183,17 @@ bool mg::operator!=(mg::DisplayConfigurationOutput const& val1,
     return !(val1 == val2);
 }
 
-mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
+namespace
 {
+mir::geometry::Rectangle extents_of(
+    std::vector<mg::DisplayConfigurationMode> const& modes,
+    size_t current_mode_index,
+    MirOrientation orientation,
+    mir::geometry::Point top_left)
+{
+    if (current_mode_index > modes.size())
+        return mir::geometry::Rectangle();
+
     auto const& size = modes[current_mode_index].size;
 
     if (orientation == mir_orientation_normal ||
@@ -196,6 +205,13 @@ mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
     {
         return {top_left, {size.height.as_int(), size.width.as_int()}};
     }
+}
+
+}
+
+mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
+{
+    return extents_of(modes, current_mode_index, orientation, top_left);
 }
 
 bool mg::DisplayConfigurationOutput::valid() const
@@ -246,3 +262,10 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
         orientation(master.orientation)
 {
 }
+
+mir::geometry::Rectangle mg::UserDisplayConfigurationOutput::extents() const
+{
+    return extents_of(modes, current_mode_index, orientation, top_left);
+}
+
+

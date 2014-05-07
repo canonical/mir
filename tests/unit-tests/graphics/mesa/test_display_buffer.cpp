@@ -85,7 +85,8 @@ public:
     {
         return make_shared<graphics::mesa::Platform>(
                       null_display_report(),
-                      make_shared<NullVirtualTerminal>());
+                      make_shared<NullVirtualTerminal>(),
+                      graphics::mesa::BypassOption::allowed);
     }
 
 protected:

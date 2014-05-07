@@ -26,6 +26,10 @@
 
 namespace mir
 {
+namespace frontend
+{
+class SessionCredentials;
+}
 namespace test
 {
 namespace doubles
@@ -41,7 +45,9 @@ public:
     }
 
     std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
-        pid_t, std::shared_ptr<frontend::EventSink> const&) override
+        mir::frontend::SessionCredentials const& /*creds*/,
+        std::shared_ptr<mir::frontend::EventSink> const& /*sink*/,
+        mir::frontend::ConnectionContext const& /*connection_context*/) override
     {
         return server;
     }
@@ -52,7 +58,7 @@ private:
         return cache;
     }
 
-    std::shared_ptr<protobuf::DisplayServer> server;
+    std::shared_ptr<protobuf::DisplayServer> const server;
     std::shared_ptr<frontend::ResourceCache> const cache;
 };
 
