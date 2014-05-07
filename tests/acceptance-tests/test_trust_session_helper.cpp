@@ -41,7 +41,6 @@ struct TrustSessionHelper : mir_test_framework::InProcessServer
     void SetUp()
     {
         mir_test_framework::InProcessServer::SetUp();
-
         connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     }
 
@@ -86,7 +85,7 @@ using namespace testing;
 TEST_F(TrustSessionHelper, gets_fds_for_trusted_clients)
 {
     mir_connection_new_fds_for_trusted_clients(connection, arbritary_fd_request_count, &client_fd_callback, this);
-    wait_for_callback(std::chrono::milliseconds(500));
+    EXPECT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
 
     EXPECT_THAT(actual_fd_count, Eq(arbritary_fd_request_count));
 }

@@ -172,12 +172,11 @@ void mir_connection_get_available_surface_formats(
 /**
  * Allocate some FDs for trusted clients to connect on
  *
- * The display configuration is applied to this connection only (per-connection
- * configuration) and is invalidated when a hardware change occurs. Clients should
- * register a callback with mir_connection_set_display_config_change_callback()
- * to get notified about hardware changes, so that the can apply a new configuration.
+ * Trust session helpers need to allocate connection FDs it will pass to
+ * trusted clients to use when connecting to the server. The server can
+ * then associate them with the trust session.
  *
- *   \warning This request may be denied. Check that the request succeeded with mir_connection_get_error_message.
+ *   \warning This API is tentative until the implementation of trust sessions is complete
  *   \param [in] connection     The connection
  *   \param [in] no_of_fds      The number of fds to allocate
  *   \param [in] callback       Callback invoked when request completes
