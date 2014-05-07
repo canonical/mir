@@ -53,9 +53,7 @@ compile and run code, and is well suited for a development workflow.
 
 Initial setup of a desktop machine for cross-compiling to armhf is simple:
 
-    $ sudo apt-get install g++-arm-linux-gnueabihf/trusty debootstrap
-      # Note: This should say "utopic" in place of "trusty" in future, but
-      # there is no "utopic" release of gcc-defaults-armhf-cross just yet.
+    $ sudo apt-get install g++-arm-linux-gnueabihf debootstrap
     $ sudo sh -c 'echo "deb [arch=armhf] http://ports.ubuntu.com/ubuntu-ports/ utopic main restricted universe multiverse" > /etc/apt/sources.list.d/armhf-xcompile.list'
     $ sudo apt-get update
 
