@@ -203,7 +203,7 @@ TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clie
             {
                 input_configuration =
                     std::make_shared<mtd::FakeEventHubInputConfiguration>(
-                        the_composite_event_filter(),
+                        the_input_dispatcher_configuration(),
                         the_input_region(),
                         std::shared_ptr<mi::CursorListener>(),
                         the_input_report());
