@@ -188,7 +188,7 @@ mir::geometry::Size ms::BasicSurface::size() const
 
 mir::geometry::Size ms::BasicSurface::client_size() const
 {
-    // TODO: when frame measurements are known this will be different...
+    // TODO: In future when decorated, client_size() would be smaller than size
     return size();
 }
 
@@ -282,7 +282,9 @@ geom::Point ms::BasicSurface::top_left() const
 geom::Rectangle ms::BasicSurface::input_bounds() const
 {
     std::unique_lock<std::mutex> lk(guard);
-    // This is historically correct but inconsistent if you look at contains()
+
+    // This is historically unchanged, but if you look at contains() it seems
+    // a bit inconsistent...
     return surface_rect;
 }
 
