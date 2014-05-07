@@ -237,6 +237,10 @@ public:
 
         display_buffer_compositor.reset();
     }
+    catch (...)
+    {
+        mir::terminate_with_current_exception();
+    }
 
     void on_cursor_movement_unlocked(geometry::Point const& p) override
     {
@@ -258,10 +262,6 @@ public:
                 schedule_compositing_unlocked();
         }
         zoom_mag = magnification;
-    }
-    catch (...)
-    {
-        mir::terminate_with_current_exception();
     }
 
 private:
