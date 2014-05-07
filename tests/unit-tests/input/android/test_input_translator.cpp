@@ -200,6 +200,26 @@ TEST_F(InputTranslator, ignores_motion_with_invalid_pointerids)
     translator.notifyMotion(&motion);
 }
 
+TEST_F(InputTranslator, forwards_pointer_positions)
+{
+    using namespace ::testing;
+
+    float x_pos = 12.0f;
+    float y_pos = 30.0f;
+    EXPECT_CALL(dispatcher, dispatch(mt::MotionEventWithPosition(x_pos, y_pos))).Times(1);
+
+    uint32_t one_pointer = 1;
+
+    properties[0].id = 23;
+    coords[0].setAxisValue(AMOTION_EVENT_AXIS_X, x_pos);
+    coords[0].setAxisValue(AMOTION_EVENT_AXIS_Y, y_pos);
+
+    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, motion_action, no_flags,
+                                        meta_state, button_state, edge_flags, one_pointer, properties, coords,
+                                        x_precision, y_precision, later_time);
+    translator.notifyMotion(&motion);
+}
+
 TEST_F(InputTranslator, forwards_and_convertes_up_down_key_notifications)
 {
     using namespace ::testing;
