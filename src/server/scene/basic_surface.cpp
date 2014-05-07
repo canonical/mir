@@ -244,14 +244,12 @@ void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& inpu
 
 void ms::BasicSurface::resize(geom::Size const& desired_size)
 {
-    if (desired_size == size())
-        return;
-
     geom::Size new_size = desired_size;
-    if (new_size.width <= geom::Width{0})
-        new_size.width = geom::Width{1};
-    if (new_size.height <= geom::Height{0})
-        new_size.height = geom::Height{1};
+    if (new_size.width <= geom::Width{0})   new_size.width = geom::Width{1};
+    if (new_size.height <= geom::Height{0}) new_size.height = geom::Height{1};
+
+    if (new_size == size())
+        return;
 
     /*
      * Other combinations may still be invalid (like dimensions too big or
