@@ -32,7 +32,7 @@ namespace
 {
 using DemoServerConfiguration = mir_test_framework::StubbedServerConfiguration;
 
-struct DemoSocketFDServer : mir_test_framework::InProcessServer
+struct TrustSessionHelper : mir_test_framework::InProcessServer
 {
     DemoServerConfiguration my_server_config;
 
@@ -70,7 +70,7 @@ struct DemoSocketFDServer : mir_test_framework::InProcessServer
 
 void client_fd_callback(MirConnection*, size_t count, int const* fds, void* context)
 {
-    auto const self = static_cast<DemoSocketFDServer*>(context);
+    auto const self = static_cast<TrustSessionHelper*>(context);
 
     std::unique_lock<decltype(self->mutex)> lock(self->mutex);
     self->actual_fd_count = count;
@@ -83,7 +83,7 @@ void client_fd_callback(MirConnection*, size_t count, int const* fds, void* cont
 
 using namespace testing;
 
-TEST_F(DemoSocketFDServer, client_gets_fd)
+TEST_F(TrustSessionHelper, gets_fds_for_trusted_clients)
 {
     mir_connection_new_fds_for_trusted_clients(connection, arbritary_fd_request_count, &client_fd_callback, this);
     wait_for_callback(std::chrono::milliseconds(500));
