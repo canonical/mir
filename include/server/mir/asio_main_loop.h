@@ -26,6 +26,7 @@
 #include <vector>
 #include <mutex>
 #include <utility>
+#include <deque>
 #include <set>
 
 namespace mir
@@ -62,7 +63,7 @@ private:
     std::vector<std::unique_ptr<SignalHandler>> signal_handlers;
     std::vector<std::unique_ptr<FDHandler>> fd_handlers;
     std::mutex server_actions_mutex;
-    std::vector<std::pair<ServerActionType,ServerAction>> server_actions;
+    std::deque<std::pair<ServerActionType,ServerAction>> server_actions;
     std::set<ServerActionType> do_not_process;
 };
 

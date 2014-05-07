@@ -329,7 +329,7 @@ TEST(AsioMainLoopTest, dispatches_multiple_actions_in_order)
             [&,i]
             {
                 actions.push_back(i);
-                if (i == num_actions)
+                if (i == num_actions - 1)
                     ml.stop();
             });
     }
@@ -422,4 +422,39 @@ TEST(AsioMainLoopTest, dispatches_resumed_actions)
     ASSERT_THAT(actions.size(), Eq(2));
     EXPECT_THAT(actions[0], Eq(1));
     EXPECT_THAT(actions[1], Eq(0));
+}
+
+TEST(AsioMainLoopTest, handles_posts_from_within_action)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    std::vector<int> actions;
+    int const num_actions{10};
+
+    ml.post(
+        mir::ServerActionType::display_config,
+        [&]
+        {
+            int const id = 0;
+            actions.push_back(id);
+            
+            for (int i = 1; i < num_actions; ++i)
+            {
+                ml.post(
+                    mir::ServerActionType::display_config,
+                    [&,i]
+                    {
+                        actions.push_back(i);
+                        if (i == num_actions - 1)
+                            ml.stop();
+                    });
+            }
+        });
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(num_actions));
+    for (int i = 0; i < num_actions; ++i)
+        EXPECT_THAT(actions[i], Eq(i)) << "i = " << i;
 }

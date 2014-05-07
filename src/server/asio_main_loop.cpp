@@ -188,6 +188,12 @@ void mir::AsioMainLoop::process_server_actions()
 
     while (i < server_actions.size())
     {
+        /* 
+         * It's safe to use references to elements, since std::deque<>
+         * guarantees that references remain valid after appends, which is
+         * the only operation that can be performed on server_actions outside
+         * this function (in AsioMainLoop::post()).
+         */
         auto const& type = server_actions[i].first;
         auto const& action = server_actions[i].second;
 
