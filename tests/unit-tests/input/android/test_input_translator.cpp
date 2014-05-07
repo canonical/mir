@@ -60,6 +60,7 @@ public:
     int32_t meta_state = 0;
     int32_t edge_flags = 0;
     int32_t button_state = 0;
+    int32_t motion_action = mir_motion_action_move;
     droidinput::PointerCoords coords[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
     droidinput::PointerProperties properties[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
 };
@@ -107,7 +108,8 @@ TEST_F(InputTranslator, ignores_invalid_key_events)
     translator.notifyKey(nullptr);
 
     int32_t invalid_action = 5;
-    droidinput::NotifyKeyArgs key(some_time, device_id, source_id, default_policy_flags, invalid_action, no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
+    droidinput::NotifyKeyArgs key(some_time, device_id, source_id, default_policy_flags, invalid_action, no_flags,
+                                  arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
 
     translator.notifyKey(&key);
 }
@@ -120,7 +122,9 @@ TEST_F(InputTranslator, ignores_invalid_motion_action)
 
     int32_t invalid_motion_action = 20;
 
-    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, invalid_motion_action, no_flags, meta_state, button_state, edge_flags, pointer_count, properties, coords, x_precision, y_precision, later_time);
+    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, invalid_motion_action,
+                                        no_flags, meta_state, button_state, edge_flags, pointer_count, properties,
+                                        coords, x_precision, y_precision, later_time);
 
     translator.notifyMotion(&motion);
 }
@@ -133,7 +137,9 @@ TEST_F(InputTranslator, ignores_motion_action_with_wrong_index)
 
     int32_t invalid_motion_action = mir_motion_action_pointer_up | (3 << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
 
-    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, invalid_motion_action, no_flags, meta_state, button_state, edge_flags, pointer_count, properties, coords, x_precision, y_precision, later_time);
+    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, invalid_motion_action,
+                                        no_flags, meta_state, button_state, edge_flags, pointer_count, properties,
+                                        coords, x_precision, y_precision, later_time);
 
     translator.notifyMotion(&motion);
 }
@@ -146,13 +152,51 @@ TEST_F(InputTranslator, accepts_motion_action_with_existing_index)
 
     int32_t valid_motion_action = mir_motion_action_pointer_up | (2 << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
     uint32_t three_pointers = 3;
-    
+
     properties[0].id = 1;
     properties[1].id = 2;
     properties[2].id = 3;
 
-    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, valid_motion_action, no_flags, meta_state, button_state, edge_flags, three_pointers, properties, coords, x_precision, y_precision, later_time);
+    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, valid_motion_action,
+                                        no_flags, meta_state, button_state, edge_flags, three_pointers, properties,
+                                        coords, x_precision, y_precision, later_time);
 
+    translator.notifyMotion(&motion);
+}
+
+TEST_F(InputTranslator, ignores_motion_with_duplicated_pointerids)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(dispatcher, dispatch(_)).Times(0);
+
+    uint32_t three_pointers = 3;
+
+    properties[0].id = 1;
+    properties[1].id = 1;
+    properties[2].id = 3;
+
+    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, motion_action, no_flags,
+                                        meta_state, button_state, edge_flags, three_pointers, properties, coords,
+                                        x_precision, y_precision, later_time);
+    translator.notifyMotion(&motion);
+}
+
+TEST_F(InputTranslator, ignores_motion_with_invalid_pointerids)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(dispatcher, dispatch(_)).Times(0);
+
+    uint32_t three_pointers = 3;
+
+    properties[0].id = MAX_POINTER_ID + 1;
+    properties[1].id = 1;
+    properties[2].id = 3;
+
+    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, motion_action, no_flags,
+                                        meta_state, button_state, edge_flags, three_pointers, properties, coords,
+                                        x_precision, y_precision, later_time);
     translator.notifyMotion(&motion);
 }
 
