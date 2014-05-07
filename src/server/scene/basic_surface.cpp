@@ -242,29 +242,31 @@ void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& inpu
     this->input_rectangles = input_rectangles;
 }
 
-void ms::BasicSurface::resize(geom::Size const& size)
+void ms::BasicSurface::resize(geom::Size const& desired_size)
 {
-    if (size == this->size())
+    if (desired_size == size())
         return;
 
-    if (size.width <= geom::Width{0} || size.height <= geom::Height{0})
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Impossible resize requested"));
-    }
+    geom::Size new_size = desired_size;
+    if (new_size.width <= geom::Width{0})
+        new_size.width = geom::Width{1};
+    if (new_size.height <= geom::Height{0})
+        new_size.height = geom::Height{1};
+
     /*
      * Other combinations may still be invalid (like dimensions too big or
      * insufficient resources), but those are runtime and platform-specific, so
      * not predictable here. Such critical exceptions would arise from
      * the platform buffer allocator as a runtime_error via:
      */
-    surface_buffer_stream->resize(size);
+    surface_buffer_stream->resize(new_size);
 
     // Now the buffer stream has successfully resized, update the state second;
     {
         std::unique_lock<std::mutex> lock(guard);
-        surface_rect.size = size;
+        surface_rect.size = new_size;
     }
-    observers.resized_to(size);
+    observers.resized_to(new_size);
 }
 
 geom::Point ms::BasicSurface::top_left() const

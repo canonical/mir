@@ -264,8 +264,6 @@ bool me::WindowManager::handle(MirEvent const& event)
                                     drag.dx.as_int();
                         int height = old_size.height.as_int() +
                                      drag.dy.as_int();
-                        if (width <= 0) width = 1;
-                        if (height <= 0) height = 1; 
                         surf->resize({width, height});
                     }
                     else
@@ -296,8 +294,6 @@ bool me::WindowManager::handle(MirEvent const& event)
 
                         int width = old_size.width.as_int() + dx;
                         int height = old_size.height.as_int() + dy;
-                        if (width <= 0) width = 1; 
-                        if (height <= 0) height = 1; 
                         surf->resize({width, height});
                     }
 
