@@ -32,7 +32,7 @@ bool valid_key_event(MirKeyEvent const& key)
 }
 inline int32_t get_index_from_motion_action(int action)
 {
-    // FIXME: https://bugs.launchpad.net/mir/+bug/1197108
+    // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
     return int32_t(action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK)
         >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
 }
@@ -42,7 +42,7 @@ bool valid_motion_event(MirMotionEvent const& motion)
     if (motion.pointer_count > MIR_INPUT_EVENT_MAX_POINTER_COUNT)
         return false;
 
-    // FIXME: https://bugs.launchpad.net/mir/+bug/1197108
+    // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
     switch (motion.action & AMOTION_EVENT_ACTION_MASK)
     {
     case mir_motion_action_down:
