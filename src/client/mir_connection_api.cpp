@@ -272,6 +272,16 @@ MirWaitHandle* mir_connection_apply_display_config(
     }
 }
 
+MirWaitHandle* mir_connection_new_fds_for_trusted_clients(
+    MirConnection* /*connection*/,
+    unsigned int /*no_of_fds*/,
+    mir_client_fd_callback /*callback*/,
+    void * /*context*/)
+{
+    // TODO implement this
+    return nullptr;
+}
+
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(
     MirConnection* connection)
 {

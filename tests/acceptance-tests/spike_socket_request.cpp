@@ -16,16 +16,17 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_protobuf.pb.h"
-
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/client/private.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <algorithm>
+#include <condition_variable>
+#include <mutex>
 
 namespace
 {
@@ -36,36 +37,56 @@ struct DemoSocketFDServer : mir_test_framework::InProcessServer
     DemoServerConfiguration my_server_config;
 
     mir::DefaultServerConfiguration& server_config() override { return my_server_config; }
+
+    void SetUp()
+    {
+        mir_test_framework::InProcessServer::SetUp();
+
+        connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    }
+
+    void TearDown()
+    {
+        mir_connection_release(connection);
+        mir_test_framework::InProcessServer::TearDown();
+    }
+
+    MirConnection* connection = nullptr;
+
+    static std::size_t const arbritary_fd_request_count = 3;
+
+    std::mutex mutex;
+    std::size_t actual_fd_count = 0;
+    int actual_fds[arbritary_fd_request_count] = {};
+    std::condition_variable cv;
+    bool called_back = false;
+
+    bool wait_for_callback(std::chrono::milliseconds timeout)
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        return cv.wait_for(lock, timeout, [this]{ return called_back; });
+    }
 };
+
+void client_fd_callback(MirConnection*, size_t count, int const* fds, void* context)
+{
+    auto const self = static_cast<DemoSocketFDServer*>(context);
+
+    std::unique_lock<decltype(self->mutex)> lock(self->mutex);
+    self->actual_fd_count = count;
+
+    std::copy(fds, fds+count, self->actual_fds);
+    self->called_back = true;
+    self->cv.notify_one();
 }
+}
+
+using namespace testing;
 
 TEST_F(DemoSocketFDServer, client_gets_fd)
 {
-    using namespace testing;
+    mir_connection_new_fds_for_trusted_clients(connection, arbritary_fd_request_count, &client_fd_callback, this);
+    wait_for_callback(std::chrono::milliseconds(500));
 
-    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    ASSERT_TRUE(mir_connection_is_valid(connection));
-
-    auto const rpc_channel = mir::client::the_rpc_channel(connection);
-
-    using namespace mir::protobuf;
-    using namespace google::protobuf;
-
-    DisplayServer::Stub server(rpc_channel.get());
-
-    SocketFDRequest parameters;
-    parameters.set_number(1);
-
-    SocketFD result;
-
-    server.new_fds_for_trusted_clients(
-        nullptr,
-        &parameters,
-        &result,
-        NewCallback([]{}));
-
-    mir_connection_release(connection);
-
-    EXPECT_THAT(result.fd_size(), Eq(1));
-    EXPECT_THAT(result.fds_on_side_channel(), Eq(0));
+    EXPECT_THAT(actual_fd_count, Eq(arbritary_fd_request_count));
 }
