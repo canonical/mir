@@ -286,7 +286,7 @@ static const MirDisplayOutput *find_active_output(
 
 int main(int argc, char *argv[])
 {
-    static const Color background = {0x40, 0x40, 0x40, 0xff};
+    static const Color background = {180, 180, 150, 255};
     MirConnection *conn;
     MirSurfaceParameters parm;
     MirSurface *surf;
