@@ -70,7 +70,7 @@ private:
     std::shared_ptr<mf::Screencast> const screencast;
     std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
 
-    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
+    virtual std::shared_ptr<mf::detail::DisplayServer> make_ipc_server(
         mf::SessionCredentials const& creds,
         std::shared_ptr<mf::EventSink> const& sink) override
     {
