@@ -283,12 +283,12 @@ geom::Rectangle ms::BasicSurface::input_bounds() const
 {
     std::unique_lock<std::mutex> lk(guard);
 
-    // This is historically unchanged, but if you look at contains() it seems
-    // a bit inconsistent...
+    // This is historically unchanged, but if you look at input_area_contains()
+    // it seems a bit inconsistent...
     return surface_rect;
 }
 
-bool ms::BasicSurface::contains(geom::Point const& point) const
+bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 {
     std::unique_lock<std::mutex> lock(guard);
     if (hidden)

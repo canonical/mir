@@ -45,9 +45,9 @@ public:
             .WillByDefault(Return(c));
     }
     ~MockInputSurface() noexcept {}
-    MOCK_CONST_METHOD0(input_bounds, geometry::Rectangle());
     MOCK_CONST_METHOD0(name, std::string());
-    MOCK_CONST_METHOD1(contains, bool(geometry::Point const&));
+    MOCK_CONST_METHOD0(input_bounds, geometry::Rectangle());
+    MOCK_CONST_METHOD1(input_area_contains, bool(geometry::Point const&));
     MOCK_CONST_METHOD0(input_channel, std::shared_ptr<input::InputChannel>());
 };
 
