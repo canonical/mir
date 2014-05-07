@@ -22,6 +22,9 @@
 #include "mir_test/client_event_matchers.h"
 
 #include "InputListener.h"
+#include "androidfw/Input.h"
+
+#include <cstring>
 
 namespace droidinput = android;
 namespace mt = mir::test;
@@ -38,6 +41,8 @@ public:
     InputTranslator()
         : translator(mt::fake_shared(dispatcher))
     {
+        std::memset(coords, 0, sizeof(coords));
+        std::memset(properties, 0, sizeof(properties));
     }
     const nsecs_t some_time = 13;
     const nsecs_t later_time = 14;
@@ -49,6 +54,14 @@ public:
     const int32_t no_modifiers = 0;
     int32_t arbitrary_key_code = 17;
     int32_t arbitrary_scan_code = 17;
+    uint32_t pointer_count = 0;
+    float x_precision = 2.0f;
+    float y_precision = 2.0f;
+    int32_t meta_state = 0;
+    int32_t edge_flags = 0;
+    int32_t button_state = 0;
+    droidinput::PointerCoords coords[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+    droidinput::PointerProperties properties[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
 };
 
 struct PolicyFlagTestParameter
@@ -97,6 +110,50 @@ TEST_F(InputTranslator, ignores_invalid_key_events)
     droidinput::NotifyKeyArgs key(some_time, device_id, source_id, default_policy_flags, invalid_action, no_flags, arbitrary_key_code, arbitrary_scan_code, no_modifiers, later_time);
 
     translator.notifyKey(&key);
+}
+
+TEST_F(InputTranslator, ignores_invalid_motion_action)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(dispatcher, dispatch(_)).Times(0);
+
+    int32_t invalid_motion_action = 20;
+
+    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, invalid_motion_action, no_flags, meta_state, button_state, edge_flags, pointer_count, properties, coords, x_precision, y_precision, later_time);
+
+    translator.notifyMotion(&motion);
+}
+
+TEST_F(InputTranslator, ignores_motion_action_with_wrong_index)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(dispatcher, dispatch(_)).Times(0);
+
+    int32_t invalid_motion_action = mir_motion_action_pointer_up | (3 << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+
+    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, invalid_motion_action, no_flags, meta_state, button_state, edge_flags, pointer_count, properties, coords, x_precision, y_precision, later_time);
+
+    translator.notifyMotion(&motion);
+}
+
+TEST_F(InputTranslator, accepts_motion_action_with_existing_index)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(dispatcher, dispatch(_)).Times(1);
+
+    int32_t valid_motion_action = mir_motion_action_pointer_up | (2 << AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT);
+    uint32_t three_pointers = 3;
+    
+    properties[0].id = 1;
+    properties[1].id = 2;
+    properties[2].id = 3;
+
+    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, valid_motion_action, no_flags, meta_state, button_state, edge_flags, three_pointers, properties, coords, x_precision, y_precision, later_time);
+
+    translator.notifyMotion(&motion);
 }
 
 TEST_F(InputTranslator, forwards_and_convertes_up_down_key_notifications)

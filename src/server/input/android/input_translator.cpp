@@ -56,11 +56,13 @@ bool valid_motion_event(MirMotionEvent const& motion)
     case mir_motion_action_scroll:
         break;
     case mir_motion_action_pointer_down:
-    case mir_motion_action_pointer_up: {
-        int32_t index = get_index_from_motion_action(motion.action);
-        if (index < 0 || size_t(index) >= motion.pointer_count)
-            return false;
-    }
+    case mir_motion_action_pointer_up:
+        {
+            int32_t index = get_index_from_motion_action(motion.action);
+            if (index < 0 || size_t(index) >= motion.pointer_count)
+                return false;
+            break;
+        }
     default:
         return false;
     }
