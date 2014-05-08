@@ -35,7 +35,7 @@ protected:
     enum ResultFileType {raw, json};
     virtual void run_glmark2(char const* output_filename, ResultFileType file_type)
     {
-        auto const cmd = "MIR_SERVER=" + new_connection() + " glmark2-es2-mir -b texture --fullscreen";
+        auto const cmd = "MIR_SERVER=" + new_connection() + " glmark2-es2-mir --fullscreen";
         mir::test::Popen p(cmd);
        
         boost::cmatch matches;
