@@ -38,6 +38,7 @@
 #include "mir_test_doubles/stub_scene_surface.h"
 #include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/stub_input_targets.h"
+#include "mir_test_doubles/stub_scene.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
 #include "mir_test/event_matchers.h"
@@ -56,6 +57,7 @@ namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
 namespace ms = mir::scene;
+namespace mc = mir::compositor;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
@@ -90,7 +92,7 @@ public:
     {
         event_filter = std::make_shared<MockEventFilter>();
 
-        dispatcher_conf = std::make_shared<mia::InputDispatcherConfiguration>(event_filter, mr::null_input_report());
+        dispatcher_conf = std::make_shared<mia::InputDispatcherConfiguration>(event_filter, mr::null_input_report(), mt::fake_shared(stub_scene), mt::fake_shared(stub_targets));
         dispatcher = dispatcher_conf->the_input_dispatcher();
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
                 dispatcher,
@@ -101,9 +103,6 @@ public:
         fake_event_hub = configuration->the_fake_event_hub();
 
         input_manager = configuration->the_input_manager();
-
-        stub_targets = std::make_shared<mtd::StubInputTargets>();
-        dispatcher_conf->set_input_targets(stub_targets);
 
         input_manager->start();
         dispatcher->start();
@@ -123,7 +122,8 @@ public:
     std::shared_ptr<mi::InputDispatcher> dispatcher;
     std::shared_ptr<MockEventFilter> event_filter;
     StubInputRegion input_region;
-    std::shared_ptr<mtd::StubInputTargets> stub_targets;
+    mtd::StubInputTargets stub_targets;
+    mtd::StubScene stub_scene;
 };
 
 }
@@ -247,8 +247,10 @@ struct TestingInputDispatcherConfiguration : public mia::InputDispatcherConfigur
 {
 public:
     TestingInputDispatcherConfiguration(std::shared_ptr<mi::EventFilter> const& filter,
-                                        std::shared_ptr<mi::InputReport> const& input_report)
-        : InputDispatcherConfiguration({}, input_report),
+                                        std::shared_ptr<mi::InputReport> const& input_report,
+                                        std::shared_ptr<mc::Scene> const& scene,
+                                        std::shared_ptr<mi::InputTargets> const& input_targets)
+        : InputDispatcherConfiguration({}, input_report, scene, input_targets),
         dispatcher_policy(new MockDispatcherPolicy(filter))
     {}
     droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy() override
@@ -270,7 +272,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     {
         event_filter = std::make_shared<MockEventFilter>();
         dispatcher_conf =
-            std::make_shared<TestingInputDispatcherConfiguration>(event_filter, mr::null_input_report());
+            std::make_shared<TestingInputDispatcherConfiguration>(event_filter, mr::null_input_report(), mt::fake_shared(stub_scene), mt::fake_shared(stub_targets));
         dispatcher = dispatcher_conf->the_input_dispatcher();
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
             dispatcher, mt::fake_shared(input_region), null_cursor_listener, mr::null_input_report());
@@ -282,9 +284,6 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
         input_targeter = dispatcher_conf->the_input_targeter();
 
         dispatcher_policy = dispatcher_conf->the_mock_dispatcher_policy();
-
-        stub_targets = std::make_shared<mtd::StubInputTargets>();
-        dispatcher_conf->set_input_targets(stub_targets);
     }
 
     ~AndroidInputManagerDispatcherInterceptSetup()
@@ -317,12 +316,12 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     mia::FakeEventHub* fake_event_hub;
     droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
 
-    std::shared_ptr<mtd::StubInputTargets> stub_targets;
-
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<mi::InputDispatcher> dispatcher;
     std::shared_ptr<mia::InputRegistrar> input_registrar;
     std::shared_ptr<msh::InputTargeter> input_targeter;
+    mtd::StubInputTargets stub_targets;
+    mtd::StubScene stub_scene;
 };
 
 MATCHER_P(WindowHandleWithInputFd, input_fd, "")

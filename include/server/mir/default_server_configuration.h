@@ -101,6 +101,7 @@ namespace nested { class HostConnection; }
 namespace input
 {
 class InputReport;
+class InputTargets;
 class InputManager;
 class CompositeEventFilter;
 class InputChannelFactory;
@@ -241,6 +242,7 @@ public:
     virtual std::shared_ptr<input::InputReport> the_input_report();
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
+    virtual std::shared_ptr<input::InputTargets>  the_input_targets();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     /** @} */

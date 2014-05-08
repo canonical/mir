@@ -20,8 +20,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/input/input_configuration.h"
-#include "mir/input/input_dispatcher_configuration.h"
+#include "mir/input/input_targets.h"
 #include "mir/abnormal_exit.h"
 #include "mir/scene/session.h"
 
@@ -39,6 +38,7 @@
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
+namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
@@ -52,9 +52,6 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
 
             auto const ss = std::make_shared<ms::SurfaceStack>(
                 scene_report);
-
-            the_input_dispatcher_configuration()->set_scene(ss);
-            the_input_dispatcher_configuration()->set_input_targets(ss);
 
             return ss;
         });
@@ -71,8 +68,20 @@ mir::DefaultServerConfiguration::the_scene()
             auto const ss = std::make_shared<ms::SurfaceStack>(
                 scene_report);
 
-            the_input_dispatcher_configuration()->set_scene(ss);
-            the_input_dispatcher_configuration()->set_input_targets(ss);
+            return ss;
+        });
+}
+
+std::shared_ptr<mi::InputTargets>
+mir::DefaultServerConfiguration::the_input_targets()
+{
+    return surface_stack(
+        [this]()
+        {
+            auto const scene_report = the_scene_report();
+
+            auto const ss = std::make_shared<ms::SurfaceStack>(
+                scene_report);
 
             return ss;
         });

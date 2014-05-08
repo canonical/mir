@@ -24,6 +24,7 @@
 
 #include "mir/shell/input_targeter.h"
 #include "mir/scene/observer.h"
+#include "mir/compositor/scene.h"
 
 #include "mir_toolkit/event.h"
 
@@ -41,7 +42,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 namespace mi = mir::input;
@@ -72,25 +72,25 @@ public:
 class CustomInputDispatcherConfiguration : public mi::InputDispatcherConfiguration
 {
 public:
-    std::shared_ptr<msh::InputTargeter> the_input_targeter() override
-    {
-        return mt::fake_shared<msh::InputTargeter>(dispatcher);
-    }
-    std::shared_ptr<mi::InputDispatcher> the_input_dispatcher()  override
-    {
-        return mt::fake_shared<mi::InputDispatcher>(dispatcher);
-    }
-
-    bool is_key_repeat_enabled() const override { return false; }
-
-    void set_input_targets(std::shared_ptr<mi::InputTargets> const& /*targets*/) override
-    {}
-
-    void set_scene(std::shared_ptr<mc::Scene> const& scene) override
+    CustomInputDispatcherConfiguration(std::shared_ptr<mc::Scene> const& scene)
+        : scene(scene)
     {
         scene->add_observer(mt::fake_shared(dispatcher));
     }
 
+    std::shared_ptr<msh::InputTargeter> the_input_targeter() override
+    {
+        return mt::fake_shared<msh::InputTargeter>(dispatcher);
+    }
+
+    std::shared_ptr<mi::InputDispatcher> the_input_dispatcher()  override
+    {
+        return mt::fake_shared(dispatcher);
+    }
+
+    bool is_key_repeat_enabled() const override { return false; }
+
+    std::shared_ptr<mc::Scene> scene;
     ::testing::NiceMock<CustomInputDispatcher> dispatcher;
 };
 
@@ -104,9 +104,9 @@ TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_receives_input)
         the_input_dispatcher_configuration() override
         {
             return input_dispatcher_configuration(
-            []
+            [this]
             {
-                auto dispatcher_conf = std::make_shared<CustomInputDispatcherConfiguration>();
+                auto dispatcher_conf = std::make_shared<CustomInputDispatcherConfiguration>(the_scene());
                 {
                     using namespace ::testing;
                     InSequence seq;
@@ -135,9 +135,9 @@ TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_gets_started_and_st
         the_input_dispatcher_configuration() override
         {
             return input_dispatcher_configuration(
-            []
+            [this]
             {
-                auto dispatcher_conf = std::make_shared<CustomInputDispatcherConfiguration>();
+                auto dispatcher_conf = std::make_shared<CustomInputDispatcherConfiguration>(the_scene());
                 {
                     using namespace ::testing;
                     InSequence seq;
@@ -164,9 +164,9 @@ TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_receives_opened_ses
         the_input_dispatcher_configuration() override
         {
             return input_dispatcher_configuration(
-            []
+            [this]
             {
-                auto dispatcher_conf = std::make_shared<CustomInputDispatcherConfiguration>();
+                auto dispatcher_conf = std::make_shared<CustomInputDispatcherConfiguration>(the_scene());
                 {
                     using namespace ::testing;
                     InSequence seq;
@@ -196,9 +196,9 @@ TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_receives_focus_chan
         the_input_dispatcher_configuration() override
         {
             return input_dispatcher_configuration(
-            []
+            [this]
             {
-                auto dispatcher_conf = std::make_shared<CustomInputDispatcherConfiguration>();
+                auto dispatcher_conf = std::make_shared<CustomInputDispatcherConfiguration>(the_scene());
                 {
                     using namespace ::testing;
                     InSequence seq;
