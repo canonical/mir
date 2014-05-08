@@ -133,3 +133,8 @@ std::unique_ptr<mir::time::Alarm> mtd::MockTimer::notify_at(time::Timestamp time
     alarm->reschedule_for(time_point);
     return std::move(alarm);
 }
+
+std::unique_ptr<mir::time::Alarm> mir::test::doubles::MockTimer::create_alarm(std::function<void(void)> callback)
+{
+    return std::unique_ptr<mir::time::Alarm>{new MockAlarm{callback, clock}};
+}

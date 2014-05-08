@@ -25,6 +25,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "mir_test/gmock_fixes.h"
 
 #include <stdexcept>
 
@@ -104,6 +105,8 @@ public:
     {
         return std::unique_ptr<mir::time::Alarm>{notify_at_delegate(time_point, callback)};
     }
+
+    MOCK_METHOD1(create_alarm, std::unique_ptr<mir::time::Alarm>(std::function<void(void)>));
 };
 
 ACTION_TEMPLATE(SetIoctlPointee,

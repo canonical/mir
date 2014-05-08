@@ -39,6 +39,7 @@ public:
                                            std::function<void(void)> callback) override;
     std::unique_ptr<time::Alarm> notify_at(time::Timestamp time_point,
                                            std::function<void(void)> callback) override;
+    std::unique_ptr<time::Alarm> create_alarm(std::function<void ()> callback) override;
 
 private:
     std::shared_ptr<FakeClock> const clock;
