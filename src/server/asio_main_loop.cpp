@@ -221,6 +221,7 @@ AlarmImpl::AlarmImpl(boost::asio::io_service& io,
     : timer{io},
       data{std::make_shared<InternalState>(callback)}
 {
+    data->state = Triggered;
 }
 
 AlarmImpl::~AlarmImpl() noexcept
