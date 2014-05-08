@@ -29,6 +29,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/input/input_manager.h"
+#include "mir/input/input_dispatcher.h"
 
 #include <stdexcept>
 
@@ -71,6 +72,8 @@ struct mir::DisplayServer::Private
     Private(ServerConfiguration& config)
         : graphics_platform{config.the_graphics_platform()},
           display{config.the_display()},
+          input_dispatcher_configuration{config.the_input_dispatcher_configuration()},
+          input_dispatcher{config.the_input_dispatcher()},
           input_configuration{config.the_input_configuration()},
           compositor{config.the_compositor()},
           connector{config.the_connector()},
@@ -95,6 +98,10 @@ struct mir::DisplayServer::Private
     {
         try
         {
+            TryButRevertIfUnwinding dispatcher{
+                [this] { input_dispatcher->stop(); },
+                [this] { input_dispatcher->start(); }};
+
             TryButRevertIfUnwinding input{
                 [this] { input_manager->stop(); },
                 [this] { input_manager->start(); }};
@@ -146,6 +153,10 @@ struct mir::DisplayServer::Private
                 [this] { input_manager->start(); },
                 [this] { input_manager->stop(); }};
 
+            TryButRevertIfUnwinding dispatcher{
+                [this] { input_dispatcher->start(); },
+                [this] { input_dispatcher->stop(); }};
+
             compositor->start();
 
             paused = false;
@@ -177,6 +188,8 @@ struct mir::DisplayServer::Private
 
     std::shared_ptr<mg::Platform> const graphics_platform; // Hold this so the platform is loaded once
     std::shared_ptr<mg::Display> const display;
+    std::shared_ptr<input::InputDispatcherConfiguration> const input_dispatcher_configuration;
+    std::shared_ptr<mi::InputDispatcher> const input_dispatcher;
     std::shared_ptr<input::InputConfiguration> const input_configuration;
     std::shared_ptr<mc::Compositor> const compositor;
     std::shared_ptr<mf::Connector> const connector;
@@ -207,11 +220,13 @@ void mir::DisplayServer::run()
     p->connector->start();
     p->compositor->start();
     p->input_manager->start();
+    p->input_dispatcher->start();
 
     p->server_status_listener->started();
 
     p->main_loop->run();
 
+    p->input_dispatcher->stop();
     p->input_manager->stop();
     p->compositor->stop();
     p->connector->stop();

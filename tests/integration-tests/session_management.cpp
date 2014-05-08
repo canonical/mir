@@ -88,7 +88,7 @@ struct TestConfiguration : public mir_test_framework::StubbedServerConfiguration
                     the_input_registrar(),
                     scene_report);
 
-                the_input_configuration()->the_input_dispatcher_configuration()->set_input_targets(test_surface_stack);
+                the_input_dispatcher_configuration()->set_input_targets(test_surface_stack);
 
                 return test_surface_stack;
             });
