@@ -72,11 +72,3 @@ bool mi::NullInputDispatcherConfiguration::is_key_repeat_enabled() const
     return true;
 }
 
-void mi::NullInputDispatcherConfiguration::set_input_targets(std::shared_ptr<mi::InputTargets> const& /*targets*/)
-{
-}
-
-void mi::NullInputDispatcherConfiguration::set_scene(std::shared_ptr<mc::Scene> const& /*scene*/)
-{
-}
-

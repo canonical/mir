@@ -70,7 +70,9 @@ mir::DefaultServerConfiguration::the_input_dispatcher_configuration()
         else
             return std::make_shared<mia::InputDispatcherConfiguration>(
                 the_composite_event_filter(),
-                the_input_report()
+                the_input_report(),
+                the_scene(),
+                the_input_targets()
                 );
     });
 }

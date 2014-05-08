@@ -47,9 +47,6 @@ public:
 
     virtual bool is_key_repeat_enabled() const = 0;
 
-    virtual void set_input_targets(std::shared_ptr<input::InputTargets> const& targets) = 0;
-    virtual void set_scene(std::shared_ptr<compositor::Scene> const& scene) = 0;
-
 protected:
     InputDispatcherConfiguration() = default;
     InputDispatcherConfiguration(InputDispatcherConfiguration const&) = delete;
