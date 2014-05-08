@@ -254,7 +254,7 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfig
         if (surface)
             surface->configure_cursor(cursor);
     }
-    catch (std::exception const&)
+    catch (...)
     {
     }
 

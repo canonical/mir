@@ -37,7 +37,7 @@ MirCursorConfiguration* mir_cursor_configuration_from_name(char const* name)
     
         return c;
     }
-    catch (std::exception const&)
+    catch (...)
     {
         return nullptr;
     }
