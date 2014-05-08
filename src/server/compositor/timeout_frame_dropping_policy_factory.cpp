@@ -51,7 +51,7 @@ TimeoutFrameDroppingPolicy::TimeoutFrameDroppingPolicy(std::shared_ptr<mir::time
     : timeout{timeout},
       pending_swaps{0}
 {
-    alarm = timer->notify_at(mir::time::Timestamp::max(), [this, drop_frame]
+    alarm = timer->create_alarm([this, drop_frame]
     {
        assert(pending_swaps.load() > 0);
        drop_frame();
