@@ -47,7 +47,6 @@ public:
         ON_CALL(*this, name()).WillByDefault(Return("stub_surface"));
         ON_CALL(*this, size()).WillByDefault(Return(mir::geometry::Size{60,90}));
         ON_CALL(*this, top_left()).WillByDefault(Return(mir::geometry::Point{0,0}));
-
     }
 };
 
@@ -56,5 +55,3 @@ public:
 }
 
 #endif
-
-

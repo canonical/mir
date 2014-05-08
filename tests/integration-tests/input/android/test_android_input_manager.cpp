@@ -265,7 +265,6 @@ public:
     droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
 };
 
-
 struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
 {
     AndroidInputManagerDispatcherInterceptSetup()
@@ -331,7 +330,6 @@ MATCHER_P(WindowHandleWithInputFd, input_fd, "")
         return true;
     return false;
 }
-
 
 }
 

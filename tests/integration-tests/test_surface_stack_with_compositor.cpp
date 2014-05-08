@@ -150,27 +150,26 @@ struct SurfaceStackCompositor : public testing::Test
             .WillByDefault(Return(mt::fake_shared(stubbuf)));
     }
     std::shared_ptr<ms::SceneReport> null_scene_report{mr::null_scene_report()};
+    ms::SurfaceStack stack{null_scene_report};
     std::shared_ptr<mc::CompositorReport> null_comp_report{mr::null_compositor_report()};
     StubRendererFactory renderer_factory;
     std::chrono::system_clock::time_point timeout;
     std::shared_ptr<mtd::MockBufferStream> mock_buffer_stream;
-    std::shared_ptr<ms::BasicSurface> stub_surface; 
+    std::shared_ptr<ms::BasicSurface> stub_surface;
     ms::SurfaceCreationParameters default_params;
     BypassStubBuffer stubbuf;
+    CountingDisplayBuffer stub_primary_db;
+    CountingDisplayBuffer stub_secondary_db;
+    StubDisplay stub_display{stub_primary_db, stub_secondary_db};
+    mc::DefaultDisplayBufferCompositorFactory dbc_factory{
+        mt::fake_shared(stack),
+        mt::fake_shared(renderer_factory),
+        null_comp_report};
 };
 }
 
 TEST_F(SurfaceStackCompositor, composes_on_start_if_told_to_in_constructor)
 {
-    CountingDisplayBuffer stub_primary_db;
-    CountingDisplayBuffer stub_secondary_db;
-    StubDisplay stub_display{stub_primary_db, stub_secondary_db};
-    ms::SurfaceStack stack(null_scene_report);
-    mc::DefaultDisplayBufferCompositorFactory dbc_factory{
-        mt::fake_shared(stack),
-        mt::fake_shared(renderer_factory),
-        null_comp_report};
-
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
@@ -184,15 +183,6 @@ TEST_F(SurfaceStackCompositor, composes_on_start_if_told_to_in_constructor)
 
 TEST_F(SurfaceStackCompositor, does_not_composes_on_start_if_told_not_to_in_constructor)
 {
-    CountingDisplayBuffer stub_primary_db;
-    CountingDisplayBuffer stub_secondary_db;
-    StubDisplay stub_display{stub_primary_db, stub_secondary_db};
-    ms::SurfaceStack stack(null_scene_report);
-    mc::DefaultDisplayBufferCompositorFactory dbc_factory{
-        mt::fake_shared(stack),
-        mt::fake_shared(renderer_factory),
-        null_comp_report};
-
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
@@ -206,15 +196,6 @@ TEST_F(SurfaceStackCompositor, does_not_composes_on_start_if_told_not_to_in_cons
 
 TEST_F(SurfaceStackCompositor, adding_a_surface_that_has_been_swapped_triggers_a_composition)
 {
-    CountingDisplayBuffer stub_primary_db;
-    CountingDisplayBuffer stub_secondary_db;
-    StubDisplay stub_display{stub_primary_db, stub_secondary_db};
-    ms::SurfaceStack stack(null_scene_report);
-    mc::DefaultDisplayBufferCompositorFactory dbc_factory{
-        mt::fake_shared(stack),
-        mt::fake_shared(renderer_factory),
-        null_comp_report};
-
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
@@ -245,15 +226,6 @@ TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_co
     ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor())
         .WillByDefault(Invoke(thread_distinguishing_buffers_ready_for_compositor));
 
-    CountingDisplayBuffer stub_primary_db;
-    CountingDisplayBuffer stub_secondary_db;
-    StubDisplay stub_display{stub_primary_db, stub_secondary_db};
-    ms::SurfaceStack stack(null_scene_report);
-    mc::DefaultDisplayBufferCompositorFactory dbc_factory{
-        mt::fake_shared(stack),
-        mt::fake_shared(renderer_factory),
-        null_comp_report};
-
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
         mt::fake_shared(stack),
@@ -273,15 +245,6 @@ TEST_F(SurfaceStackCompositor, bypassed_compositor_runs_until_all_surfaces_buffe
     using namespace testing;
     ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor())
         .WillByDefault(Invoke(thread_distinguishing_buffers_ready_for_compositor));
-
-    CountingDisplayBuffer stub_primary_db;
-    CountingDisplayBuffer stub_secondary_db;
-    StubDisplay stub_display{stub_primary_db, stub_secondary_db};
-    ms::SurfaceStack stack(null_scene_report);
-    mc::DefaultDisplayBufferCompositorFactory dbc_factory{
-        mt::fake_shared(stack),
-        mt::fake_shared(renderer_factory),
-        null_comp_report};
 
     stub_surface->resize(geom::Size{10,10});
     stub_surface->move_to(geom::Point{0,0});
@@ -304,15 +267,6 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
     using namespace testing;
     ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor())
         .WillByDefault(Return(1));
-
-    CountingDisplayBuffer stub_primary_db;
-    CountingDisplayBuffer stub_secondary_db;
-    StubDisplay stub_display{stub_primary_db, stub_secondary_db};
-    ms::SurfaceStack stack(null_scene_report);
-    mc::DefaultDisplayBufferCompositorFactory dbc_factory{
-        mt::fake_shared(stack),
-        mt::fake_shared(renderer_factory),
-        null_comp_report};
 
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
@@ -337,15 +291,6 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
 
 TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
 {
-    CountingDisplayBuffer stub_primary_db;
-    CountingDisplayBuffer stub_secondary_db;
-    StubDisplay stub_display{stub_primary_db, stub_secondary_db};
-    ms::SurfaceStack stack(null_scene_report);
-    mc::DefaultDisplayBufferCompositorFactory dbc_factory{
-        mt::fake_shared(stack),
-        mt::fake_shared(renderer_factory),
-        null_comp_report};
-
     stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
 
@@ -364,15 +309,6 @@ TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
 
 TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
 {
-    CountingDisplayBuffer stub_primary_db;
-    CountingDisplayBuffer stub_secondary_db;
-    StubDisplay stub_display{stub_primary_db, stub_secondary_db};
-    ms::SurfaceStack stack(null_scene_report);
-    mc::DefaultDisplayBufferCompositorFactory dbc_factory{
-        mt::fake_shared(stack),
-        mt::fake_shared(renderer_factory),
-        null_comp_report};
-
     stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
 
@@ -391,15 +327,6 @@ TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
 
 TEST_F(SurfaceStackCompositor, buffer_updates_trigger_composition)
 {
-    CountingDisplayBuffer stub_primary_db;
-    CountingDisplayBuffer stub_secondary_db;
-    StubDisplay stub_display{stub_primary_db, stub_secondary_db};
-    ms::SurfaceStack stack(null_scene_report);
-    mc::DefaultDisplayBufferCompositorFactory dbc_factory{
-        mt::fake_shared(stack),
-        mt::fake_shared(renderer_factory),
-        null_comp_report};
-
     stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
 
