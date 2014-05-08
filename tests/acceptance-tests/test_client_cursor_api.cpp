@@ -48,11 +48,6 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-    char const* const mir_test_socket = mtf::test_socket_file().c_str();
-}
-
-namespace
-{
 
 struct MockCursor : public mg::Cursor
 {
@@ -103,6 +98,8 @@ MATCHER_P(CursorNamed, name, "")
 
 struct CursorSettingClient : mtf::TestingClientConfiguration
 {
+    static char const* const mir_test_socket = mtf::test_socket_file().c_str();
+
     std::string const client_name;
 
     mtf::CrossProcessSync set_cursor_complete;

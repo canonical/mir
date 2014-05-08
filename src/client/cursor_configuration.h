@@ -22,7 +22,8 @@
 #include <string>
 
 // Cursor parameterization. May grow to include RGBA cursors, etc...
-struct MirCursorConfiguration {
+struct MirCursorConfiguration 
+{
     std::string name;
 };
 
