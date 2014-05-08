@@ -23,7 +23,6 @@
 #include "src/server/input/null_input_dispatcher.h"
 
 #include "mir_test_doubles/stub_host_connection.h"
-#include "mir_test_doubles/null_event_filter.h"
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
