@@ -32,6 +32,7 @@
 #include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test/client_event_matchers.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -61,21 +62,6 @@ struct NullCursorListener : mi::CursorListener
     void cursor_moved_to(float, float) override {}
 };
 
-MATCHER_P(MirKeyEventMatches, event, "")
-{
-    return event->type == arg.type &&
-           event->key.device_id == arg.key.device_id &&
-           event->key.source_id == arg.key.source_id &&
-           event->key.action == arg.key.action &&
-           event->key.flags == arg.key.flags &&
-           event->key.modifiers == arg.key.modifiers &&
-           event->key.key_code == arg.key.key_code &&
-           event->key.scan_code == arg.key.scan_code &&
-           event->key.repeat_count == arg.key.repeat_count &&
-           event->key.down_time == arg.key.down_time &&
-           event->key.event_time == arg.key.event_time &&
-           event->key.is_system_key == arg.key.is_system_key;
-}
 }
 
 TEST(NestedInputTest, applies_event_filter_on_relayed_event)
@@ -118,7 +104,7 @@ TEST(NestedInputTest, applies_event_filter_on_relayed_event)
     e.key.event_time = 12345;
     e.key.is_system_key = 0;
 
-    EXPECT_CALL(mock_event_filter, handle(MirKeyEventMatches(&e)))
+    EXPECT_CALL(mock_event_filter, handle(mt::MirKeyEventMatches(&e)))
         .WillOnce(Return(true));
 
     mi::EventFilter& nested_input_relay_as_filter = nested_input_relay;
