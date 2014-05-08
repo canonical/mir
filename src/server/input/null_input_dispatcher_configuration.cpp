@@ -25,7 +25,6 @@
 
 
 namespace mi = mir::input;
-namespace mc = mir::compositor;
 namespace msh = mir::shell;
 
 namespace
