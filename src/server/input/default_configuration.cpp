@@ -22,7 +22,6 @@
 #include "display_input_region.h"
 #include "event_filter_chain.h"
 #include "nested_input_configuration.h"
-#include "nested_input_relay.h"
 #include "null_input_configuration.h"
 #include "null_input_dispatcher_configuration.h"
 
@@ -90,7 +89,7 @@ mir::DefaultServerConfiguration::the_input_configuration()
         {
             // fallback to standalone if host socket is unset
             return std::make_shared<mia::DefaultInputConfiguration>(
-                the_input_dispatcher_configuration(),
+                the_input_dispatcher(),
                 the_input_region(),
                 the_cursor_listener(),
                 the_input_report()
@@ -98,9 +97,7 @@ mir::DefaultServerConfiguration::the_input_configuration()
         }
         else
         {
-            return std::make_shared<mi::NestedInputConfiguration>(
-                the_nested_input_relay(),
-                the_input_dispatcher_configuration());
+            return std::make_shared<mi::NestedInputConfiguration>();
         }
     });
 }
@@ -134,18 +131,6 @@ std::shared_ptr<msh::InputTargeter> mir::DefaultServerConfiguration::the_input_t
         {
             return the_input_dispatcher_configuration()->the_input_targeter();
         });
-}
-
-auto mir::DefaultServerConfiguration::the_nested_input_relay()
--> std::shared_ptr<mi::NestedInputRelay>
-{
-    return nested_input_relay([]{ return std::make_shared<mi::NestedInputRelay>(); });
-}
-
-auto mir::DefaultServerConfiguration::the_nested_event_filter()
--> std::shared_ptr<mi::EventFilter>
-{
-    return the_nested_input_relay();
 }
 
 std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()

@@ -82,8 +82,9 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
     {
         event_filter = std::make_shared<MockEventFilter>();
         dispatcher_conf = std::make_shared<mia::InputDispatcherConfiguration>(event_filter, mr::null_input_report());
+        dispatcher = dispatcher_conf->the_input_dispatcher();
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
-            dispatcher_conf,
+            dispatcher,
             mt::fake_shared(input_region),
             mt::fake_shared(cursor_listener),
             mr::null_input_report());
@@ -91,7 +92,6 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
         fake_event_hub = configuration->the_fake_event_hub();
 
         input_manager = configuration->the_input_manager();
-        dispatcher = dispatcher_conf->the_input_dispatcher();
 
         stub_targets = std::make_shared<mtd::StubInputTargets>();
         dispatcher_conf->set_input_targets(stub_targets);

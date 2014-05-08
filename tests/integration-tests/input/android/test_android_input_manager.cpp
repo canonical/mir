@@ -93,7 +93,7 @@ public:
         dispatcher_conf = std::make_shared<mia::InputDispatcherConfiguration>(event_filter, mr::null_input_report());
         dispatcher = dispatcher_conf->the_input_dispatcher();
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
-                dispatcher_conf,
+                dispatcher,
                 mt::fake_shared(input_region),
                 null_cursor_listener,
                 mr::null_input_report());
@@ -273,8 +273,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
             std::make_shared<TestingInputDispatcherConfiguration>(event_filter, mr::null_input_report());
         dispatcher = dispatcher_conf->the_input_dispatcher();
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
-            dispatcher_conf,
-            mt::fake_shared(input_region), null_cursor_listener, mr::null_input_report());
+            dispatcher, mt::fake_shared(input_region), null_cursor_listener, mr::null_input_report());
         fake_event_hub = configuration->the_fake_event_hub();
 
         input_manager = configuration->the_input_manager();

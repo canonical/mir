@@ -26,11 +26,11 @@ namespace mia = mi::android;
 namespace mtd = mir::test::doubles;
 
 mtd::FakeEventHubInputConfiguration::FakeEventHubInputConfiguration(
-    std::shared_ptr<mir::input::InputDispatcherConfiguration> const& dispatcher_conf,
+    std::shared_ptr<mir::input::InputDispatcher> const& dispatcher,
     std::shared_ptr<input::InputRegion> const& input_region,
     std::shared_ptr<input::CursorListener> const& cursor_listener,
     std::shared_ptr<mi::InputReport> const& input_report)
-    : DefaultInputConfiguration(dispatcher_conf, input_region, cursor_listener, input_report)
+    : DefaultInputConfiguration(dispatcher, input_region, cursor_listener, input_report)
 {
     event_hub = new mia::FakeEventHub();
 }

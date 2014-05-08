@@ -17,7 +17,6 @@
  */
 
 #include "src/server/input/nested_input_configuration.h"
-#include "src/server/input/nested_input_relay.h"
 #include "src/server/report/null/input_report.h"
 #include "mir/input/input_region.h"
 #include "mir/input/cursor_listener.h"
@@ -81,16 +80,13 @@ TEST(NestedInputTest, applies_event_filter_on_relayed_event)
 {
     using namespace testing;
 
-    mi::NestedInputRelay nested_input_relay;
     mtd::MockEventFilter mock_event_filter;
     mia::InputDispatcherConfiguration input_dispatcher_conf{
         mt::fake_shared(mock_event_filter),
         mir::report::null_input_report()};
     auto const dispatcher = input_dispatcher_conf.the_input_dispatcher();
 
-    mi::NestedInputConfiguration input_conf{
-        mt::fake_shared(nested_input_relay),
-        mt::fake_shared(input_dispatcher_conf)};
+    mi::NestedInputConfiguration input_conf;
 
     input_dispatcher_conf.set_input_targets(std::make_shared<mtd::StubInputTargets>());
     auto const input_manager = input_conf.the_input_manager();
@@ -117,6 +113,5 @@ TEST(NestedInputTest, applies_event_filter_on_relayed_event)
     EXPECT_CALL(mock_event_filter, handle(MirKeyEventMatches(&e)))
         .WillOnce(Return(true));
 
-    mi::EventFilter& nested_input_relay_as_filter = nested_input_relay;
-    nested_input_relay_as_filter.handle(e);
+    dispatcher->dispatch(e);
 }

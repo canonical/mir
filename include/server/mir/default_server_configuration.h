@@ -157,7 +157,6 @@ public:
     virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
-    virtual std::shared_ptr<input::EventFilter> the_nested_event_filter();
     virtual std::shared_ptr<graphics::GLConfig> the_gl_config();
     /** @} */
 
@@ -331,11 +330,9 @@ private:
     // The following caches and factory functions are internal to the
     // default implementations of corresponding the Mir components
     CachedPtr<scene::BroadcastingSessionEventSink> broadcasting_session_event_sink;
-    CachedPtr<input::NestedInputRelay> nested_input_relay;
     CachedPtr<scene::SessionManager> session_manager;
 
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
-    std::shared_ptr<input::NestedInputRelay>        the_nested_input_relay();
     std::shared_ptr<scene::SessionManager>       the_session_manager();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;

@@ -20,6 +20,7 @@
 
 #include "mir/graphics/native_platform.h"
 #include "src/server/report/null/display_report.h"
+#include "src/server/input/null_input_dispatcher.h"
 
 #include "mir_test_doubles/stub_host_connection.h"
 #include "mir_test_doubles/null_event_filter.h"
@@ -76,7 +77,7 @@ TEST(NestedGraphicsPlatform, egl_native_display_is_host_connection_native_displa
 
     mgn::NestedPlatform nested_platform{
         mt::fake_shared(host_connection),
-        std::make_shared<mtd::NullEventFilter>(),
+        std::make_shared<mir::input::NullInputDispatcher>(),
         std::make_shared<mir::report::null::DisplayReport>(),
         std::make_shared<StubNativePlatform>()};
 

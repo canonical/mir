@@ -18,8 +18,11 @@
 
 #include "null_input_dispatcher_configuration.h"
 
+#include "null_input_dispatcher.h"
+
 #include "mir/input/input_dispatcher.h"
 #include "mir/shell/input_targeter.h"
+
 
 namespace mi = mir::input;
 namespace mc = mir::compositor;
@@ -42,19 +45,6 @@ struct NullInputTargeter : public msh::InputTargeter
     }
 };
 
-class NullInputDispatcher : public mi::InputDispatcher
-{
-    void dispatch(MirEvent const& /*event*/) override
-    {
-    }
-    void start() override
-    {
-    }
-    void stop() override
-    {
-    }
-};
-
 }
 
 std::shared_ptr<msh::InputTargeter> mi::NullInputDispatcherConfiguration::the_input_targeter()
@@ -64,7 +54,7 @@ std::shared_ptr<msh::InputTargeter> mi::NullInputDispatcherConfiguration::the_in
 
 std::shared_ptr<mi::InputDispatcher> mi::NullInputDispatcherConfiguration::the_input_dispatcher()
 {
-    return std::make_shared<NullInputDispatcher>();
+    return std::make_shared<mi::NullInputDispatcher>();
 }
 
 bool mi::NullInputDispatcherConfiguration::is_key_repeat_enabled() const

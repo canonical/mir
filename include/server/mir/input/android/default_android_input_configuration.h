@@ -44,7 +44,7 @@ namespace input
 class InputRegion;
 class CursorListener;
 class InputReport;
-class InputDispatcherConfiguration;
+class InputDispatcher;
 
 namespace android
 {
@@ -53,7 +53,7 @@ class InputThread;
 class DefaultInputConfiguration : public mir::input::InputConfiguration
 {
 public:
-    DefaultInputConfiguration(std::shared_ptr<input::InputDispatcherConfiguration> const& input_dispatcher_configuration,
+    DefaultInputConfiguration(std::shared_ptr<input::InputDispatcher> const& dispatcher,
                               std::shared_ptr<input::InputRegion> const& input_region,
                               std::shared_ptr<CursorListener> const& cursor_listener,
                               std::shared_ptr<input::InputReport> const& input_report);
@@ -79,7 +79,7 @@ private:
     CachedAndroidPtr<droidinput::InputReaderPolicyInterface> reader_policy;
     CachedAndroidPtr<droidinput::InputReaderInterface> reader;
 
-    std::shared_ptr<input::InputDispatcherConfiguration> const input_dispatcher_config;
+    std::shared_ptr<input::InputDispatcher> const input_dispatcher;
     std::shared_ptr<input::InputRegion> const input_region;
     std::shared_ptr<CursorListener> const cursor_listener;
     std::shared_ptr<input::InputReport> const input_report;
