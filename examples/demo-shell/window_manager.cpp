@@ -221,7 +221,7 @@ bool me::WindowManager::handle(MirEvent const& event)
     {
         geometry::Point cursor = average_pointer(event.motion);
 
-        // FIXME: https://bugs.launchpad.net/mir/+bug/1197108
+        // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
         MirMotionAction action = static_cast<MirMotionAction>(event.motion.action & ~0xff00);
 
         auto const app = focus_controller->focussed_application().lock();
