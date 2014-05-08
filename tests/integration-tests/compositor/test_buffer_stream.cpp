@@ -20,11 +20,11 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/time/timer.h"
 #include "src/server/compositor/buffer_queue.h"
+#include "src/server/compositor/timeout_frame_dropping_policy_factory.h"
 
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/mock_timer.h"
-#include "mir_test_framework/watchdog.h"
 #include "mir_test/signal.h"
 
 #include <gmock/gmock.h>
@@ -37,7 +37,6 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
-namespace mtf = mir_test_framework;
 namespace mt =mir::test;
 namespace geom = mir::geometry;
 
@@ -84,10 +83,13 @@ struct BufferStreamTest : public ::testing::Test
         mg::BufferProperties properties{geom::Size{380, 210},
                                         mir_pixel_format_abgr_8888,
                                         mg::BufferUsage::hardware};
+        mc::TimeoutFrameDroppingPolicyFactory policy_factory{timer,
+                                                             frame_drop_timeout};
 
         return std::make_shared<mc::BufferQueue>(nbuffers,
                                                  allocator,
-                                                 properties);
+                                                 properties,
+                                                 policy_factory);
     }
 
     std::shared_ptr<mt::FakeClock> clock;

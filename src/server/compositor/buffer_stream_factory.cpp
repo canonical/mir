@@ -35,12 +35,12 @@ namespace mg = mir::graphics;
 namespace ms = mir::scene;
 
 mc::BufferStreamFactory::BufferStreamFactory(std::shared_ptr<mg::GraphicBufferAllocator> const& gralloc,
-                                             std::shared_ptr<time::Timer> const& timer)
+                                             std::shared_ptr<mc::FrameDroppingPolicyFactory> const& policy_factory)
         : gralloc(gralloc),
-          timer{timer}
+          policy_factory{policy_factory}
 {
     assert(gralloc);
-    assert(timer);
+    assert(policy_factory);
 }
 
 
@@ -48,6 +48,6 @@ std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
     mg::BufferProperties const& buffer_properties)
 {
     // Note: Framedropping and bypass both require a minimum 3 buffers
-    auto switching_bundle = std::make_shared<mc::BufferQueue>(3, gralloc, buffer_properties);
+    auto switching_bundle = std::make_shared<mc::BufferQueue>(3, gralloc, buffer_properties, *policy_factory);
     return std::make_shared<mc::BufferStreamSurfaces>(switching_bundle);
 }

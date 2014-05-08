@@ -23,6 +23,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <algorithm>
+#include <cassert>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -93,7 +94,8 @@ void replace(mg::Buffer const* item, std::shared_ptr<mg::Buffer> const& new_buff
 mc::BufferQueue::BufferQueue(
     int nbuffers,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc,
-    graphics::BufferProperties const& props)
+    graphics::BufferProperties const& props,
+    mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
       frame_dropping_enabled{false},
       the_properties{props},
@@ -127,6 +129,19 @@ mc::BufferQueue::BufferQueue(
      */
     if (nbuffers == 1)
         free_buffers.push_back(current_compositor_buffer);
+
+    framedrop_policy = policy_provider.create_policy([this]
+    {
+       std::unique_lock<decltype(guard)> lock{guard};
+       assert(give_to_client);
+       if (ready_to_composite_queue.empty())
+       {
+           //TODO: We have to framedrop, but we can't.
+           //assert(), throw, or ignore?
+           return;
+       }
+       give_buffer_to_client(pop(ready_to_composite_queue), std::move(lock));
+    });
 }
 
 void mc::BufferQueue::client_acquire(std::function<void(graphics::Buffer* buffer)> complete)
@@ -167,7 +182,14 @@ void mc::BufferQueue::client_acquire(std::function<void(graphics::Buffer* buffer
     {
         auto const buffer = pop(ready_to_composite_queue);
         give_buffer_to_client(buffer, std::move(lock));
+        return;
     }
+
+    /* Can't give the client a buffer yet; they'll just have to wait
+     * until the compositor is done with an old frame, or the policy
+     * says they've waited long enough.
+     */
+    framedrop_policy->swap_now_blocking();
 }
 
 void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
@@ -382,7 +404,10 @@ void mc::BufferQueue::release(
     std::unique_lock<std::mutex> lock)
 {
     if (give_to_client)
+    {
+        framedrop_policy->swap_unblocked();
         give_buffer_to_client(buffer, std::move(lock));
+    }
     else
         free_buffers.push_back(buffer);
 }
