@@ -10,7 +10,6 @@
 #include <stdio.h>
 
 #include <boost/regex.hpp>
-#include <iostream>
 #include <fstream>
 #include <string>
 
@@ -36,34 +35,42 @@ protected:
     enum ResultFileType {raw, json};
     virtual void run_glmark2(char const* output_filename, ResultFileType file_type)
     {
-        auto const cmd = "MIR_SERVER=" + new_connection() + " glmark2-es2-mir --fullscreen";
+        auto const cmd = "MIR_SERVER=" + new_connection() + " glmark2-es2-mir -b texture --fullscreen";
         mir::test::Popen p(cmd);
        
         boost::cmatch matches;
         boost::regex re_glmark2_score(".*glmark2\\s+Score:\\s+(\\d+).*");
         std::string line;
         std::ofstream glmark2_output;
-        glmark2_output.open(output_filename);        
+        std::string score = "";
+        glmark2_output.open(output_filename);
         while (p.get_line(line))
         {
+            if(boost::regex_match(line.c_str(), matches, re_glmark2_score)
+                && score.length() == 0)
+            {
+                score = matches[1];
+            }
+
             if (file_type == raw)
             {
-                glmark2_output << line; 
-            }
-            else if (file_type == json)
-            {
-                if (boost::regex_match(line.c_str(), matches, re_glmark2_score))
-                {
-                    std::string json =  "{";
-                        json += "'benchmark_name':'glmark2-es2-mir'";
-                        json += ",";
-                        json += "'score':'" + matches[1] + "'";
-                        json += "}";
-                    glmark2_output << json;
-                    break;
-                }
+                glmark2_output << line;
             }
         }
+
+        ASSERT_GT(score.length(), 0);
+        EXPECT_GT(atoi(score.c_str()), 52);
+
+        if (file_type == json)
+        {
+            std::string json =  "{";
+                json += "'benchmark_name':'glmark2-es2-mir'";
+                json += ",";
+                json += "'score':'" + score + "'";
+                json += "}";
+            glmark2_output << json;
+        }
+
     }
 
 private:
