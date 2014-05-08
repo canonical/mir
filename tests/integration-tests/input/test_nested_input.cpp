@@ -18,21 +18,25 @@
 
 #include "src/server/input/nested_input_configuration.h"
 #include "src/server/input/nested_input_relay.h"
+#include "src/server/report/null/input_report.h"
 #include "mir/input/input_region.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_manager.h"
-#include "mir/input/input_targets.h"
-#include "src/server/report/null/input_report.h"
+#include "src/server/input/android/input_dispatcher_configuration.h"
+#include "src/server/report/null_report_factory.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/raii.h"
 
+#include "mir_test_doubles/stub_input_targets.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test/client_event_matchers.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mi = mir::input;
+namespace mia = mi::android;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
@@ -56,28 +60,6 @@ struct NullCursorListener : mi::CursorListener
     void cursor_moved_to(float, float) override {}
 };
 
-struct NullInputTargets : mi::InputTargets
-{
-    void for_each(std::function<void(std::shared_ptr<mi::InputChannel> const&)> const& ) override
-    {
-    }
-};
-
-MATCHER_P(MirKeyEventMatches, event, "")
-{
-    return event->type == arg.type &&
-           event->key.device_id == arg.key.device_id &&
-           event->key.source_id == arg.key.source_id &&
-           event->key.action == arg.key.action &&
-           event->key.flags == arg.key.flags &&
-           event->key.modifiers == arg.key.modifiers &&
-           event->key.key_code == arg.key.key_code &&
-           event->key.scan_code == arg.key.scan_code &&
-           event->key.repeat_count == arg.key.repeat_count &&
-           event->key.down_time == arg.key.down_time &&
-           event->key.event_time == arg.key.event_time &&
-           event->key.is_system_key == arg.key.is_system_key;
-}
 }
 
 TEST(NestedInputTest, applies_event_filter_on_relayed_event)
@@ -86,15 +68,15 @@ TEST(NestedInputTest, applies_event_filter_on_relayed_event)
 
     mi::NestedInputRelay nested_input_relay;
     mtd::MockEventFilter mock_event_filter;
+    mia::InputDispatcherConfiguration input_dispatcher_conf{
+        mt::fake_shared(mock_event_filter),
+        mir::report::null_input_report()};
 
     mi::NestedInputConfiguration input_conf{
         mt::fake_shared(nested_input_relay),
-        mt::fake_shared(mock_event_filter),
-        std::make_shared<NullInputRegion>(),
-        std::make_shared<NullCursorListener>(),
-        std::make_shared<mir::report::null::InputReport>()};
+        mt::fake_shared(input_dispatcher_conf)};
 
-    input_conf.set_input_targets(std::make_shared<NullInputTargets>());
+    input_dispatcher_conf.set_input_targets(std::make_shared<mtd::StubInputTargets>());
     auto const input_manager = input_conf.the_input_manager();
 
     auto const with_running_input_manager = mir::raii::paired_calls(
@@ -116,7 +98,7 @@ TEST(NestedInputTest, applies_event_filter_on_relayed_event)
     e.key.event_time = 12345;
     e.key.is_system_key = 0;
 
-    EXPECT_CALL(mock_event_filter, handle(MirKeyEventMatches(&e)))
+    EXPECT_CALL(mock_event_filter, handle(mt::MirKeyEventMatches(&e)))
         .WillOnce(Return(true));
 
     mi::EventFilter& nested_input_relay_as_filter = nested_input_relay;

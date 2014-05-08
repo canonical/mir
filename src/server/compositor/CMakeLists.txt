@@ -6,16 +6,15 @@ set(
   temporary_buffers.cpp
   buffer_stream_factory.cpp
   buffer_stream_surfaces.cpp
-  gl_program.cpp
   gl_renderer.cpp
   gl_renderer_factory.cpp
   multi_threaded_compositor.cpp
-  switching_bundle.cpp
   bypass.cpp
   occlusion.cpp
   default_configuration.cpp
   screencast_display_buffer.cpp
   compositing_screencast.cpp
+  buffer_queue.cpp
 )
 
 ADD_LIBRARY(

@@ -17,6 +17,7 @@
  */
 
 #include "nested_display_configuration.h"
+#include "host_connection.h"
 
 #include "mir/graphics/pixel_format_utils.h"
 
@@ -29,16 +30,14 @@
 namespace mg = mir::graphics;
 namespace mgn = mg::nested;
 
-mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(MirDisplayConfiguration* connection) :
-display_config{connection}
+mgn::NestedDisplayConfiguration::NestedDisplayConfiguration(
+    std::shared_ptr<MirDisplayConfiguration> const& display_config)
+    : display_config{display_config}
 {
 }
 
-mgn::NestedDisplayConfiguration::~NestedDisplayConfiguration() noexcept
-{
-}
-
-void mgn::NestedDisplayConfiguration::for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const
+void mgn::NestedDisplayConfiguration::for_each_card(
+    std::function<void(DisplayConfigurationCard const&)> f) const
 {
     std::for_each(
         display_config->cards,

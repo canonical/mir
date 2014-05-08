@@ -21,6 +21,8 @@
 #include "src/platform/graphics/mesa/kms_output_container.h"
 #include "src/platform/graphics/mesa/kms_display_configuration.h"
 
+#include "mir/graphics/cursor_image.h"
+
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test/fake_shared.h"
 #include "mock_kms_output.h"
@@ -31,11 +33,14 @@
 #include <unordered_map>
 #include <algorithm>
 
+#include <string.h>
+
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
-namespace mtd = mir::test::doubles;
-using mir::test::MockKMSOutput;
+namespace mt = mir::test;
+namespace mtd = mt::doubles;
+using mt::MockKMSOutput;
 
 namespace
 {
@@ -196,15 +201,31 @@ struct StubCurrentConfiguration : public mgm::CurrentConfiguration
     StubKMSDisplayConfiguration conf;
 };
 
+struct StubCursorImage : public mg::CursorImage
+{
+    void const* as_argb_8888() const
+    {
+        return image_data;
+    }
+    geom::Size size() const
+    {
+        return geom::Size{geom::Width{64}, geom::Height{64}};
+    }
+    static void const* image_data;
+};
+void const* StubCursorImage::image_data = reinterpret_cast<void*>(&StubCursorImage::image_data);
+
 struct MesaCursorTest : public ::testing::Test
 {
     MesaCursorTest()
         : cursor{mock_gbm.fake_gbm.device, output_container,
-            mir::test::fake_shared(current_configuration)}
+            mt::fake_shared(current_configuration),
+            mt::fake_shared(stub_image)}
     {
     }
 
     StubCurrentConfiguration current_configuration;
+    StubCursorImage stub_image;
     testing::NiceMock<mtd::MockGBM> mock_gbm;
     StubKMSOutputContainer output_container;
     mgm::Cursor cursor;
@@ -221,33 +242,40 @@ TEST_F(MesaCursorTest, creates_cursor_bo_image)
                                         GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE));
 
     mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
-                              std::make_shared<StubCurrentConfiguration>()};
+        std::make_shared<StubCurrentConfiguration>(),
+        std::make_shared<StubCursorImage>()};
 }
 
 TEST_F(MesaCursorTest, set_cursor_writes_to_bo)
 {
     using namespace testing;
 
-    void* const image{reinterpret_cast<void*>(0x5678)};
+    StubCursorImage image;
     size_t const cursor_side{64};
     geom::Size const cursor_size{cursor_side, cursor_side};
     size_t const cursor_size_bytes{cursor_side * cursor_side * sizeof(uint32_t)};
 
-    EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, image, cursor_size_bytes));
+    EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, StubCursorImage::image_data, cursor_size_bytes));
 
-    cursor.set_image(image, cursor_size);
+    cursor.set_image(image);
 }
 
 TEST_F(MesaCursorTest, set_cursor_throws_on_incorrect_size)
 {
     using namespace testing;
 
-    void* const image{reinterpret_cast<void*>(0x5678)};
-    size_t const cursor_side{48};
-    geom::Size const cursor_size{cursor_side, cursor_side};
+    struct InvalidlySizedCursorImage : public StubCursorImage
+    {
+        geom::Size size() const
+        {
+            return invalid_cursor_size;
+        }
+        size_t const cursor_side{48};
+        geom::Size const invalid_cursor_size{cursor_side, cursor_side};
+    };
 
     EXPECT_THROW(
-        cursor.set_image(image, cursor_size);
+        cursor.set_image(InvalidlySizedCursorImage());
     , std::logic_error);
 }
 
@@ -266,7 +294,8 @@ TEST_F(MesaCursorTest, forces_cursor_state_on_construction)
     EXPECT_CALL(*output_container.outputs[12], has_cursor()).Times(0);
 
     mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
-                              std::make_shared<StubCurrentConfiguration>()};
+       std::make_shared<StubCurrentConfiguration>(),
+       std::make_shared<StubCursorImage>()};
 
     output_container.verify_and_clear_expectations();
 }

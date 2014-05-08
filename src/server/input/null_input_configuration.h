@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
+ *              Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #ifndef MIR_INPUT_NULL_INPUT_CONFIGURATION_H_
@@ -32,11 +33,9 @@ public:
     NullInputConfiguration() = default;
     virtual ~NullInputConfiguration() = default;
 
-    std::shared_ptr<scene::InputRegistrar> the_input_registrar();
-    std::shared_ptr<shell::InputTargeter> the_input_targeter();
-    std::shared_ptr<InputManager> the_input_manager();
-
-    void set_input_targets(std::shared_ptr<InputTargets> const& /* targets */);
+    std::shared_ptr<input::InputDispatcherConfiguration> the_input_dispatcher_configuration() override;
+    std::shared_ptr<input::InputChannelFactory> the_input_channel_factory() override;
+    std::shared_ptr<input::InputManager> the_input_manager() override;
 
 protected:
     NullInputConfiguration(const NullInputConfiguration&) = delete;

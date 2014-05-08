@@ -74,11 +74,12 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
         .WillByDefault(Return(stride.as_uint32_t()));
 
+        auto bypass_option = mgm::BypassOption::allowed;
         platform = std::make_shared<mgm::Platform>(
             mr::null_display_report(),
-            std::make_shared<mtd::NullVirtualTerminal>());
+            std::make_shared<mtd::NullVirtualTerminal>(), bypass_option);
         null_init = std::make_shared<mg::NullBufferInitializer>();
-        allocator.reset(new mgm::BufferAllocator(platform->gbm.device, null_init));
+        allocator.reset(new mgm::BufferAllocator(platform->gbm.device, null_init, bypass_option));
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;

@@ -20,6 +20,7 @@
 #include "src/server/input/android/android_input_thread.h"
 #include "src/server/input/android/android_input_constants.h"
 #include "src/server/input/android/android_input_channel.h"
+#include "src/server/input/android/input_channel_factory.h"
 
 #include "mir/input/input_channel.h"
 
@@ -98,14 +99,12 @@ struct AndroidInputManagerSetup : public testing::Test
         using namespace ::testing;
 
         event_hub = new MockEventHub();
-        dispatcher = new mtd::MockInputDispatcher();
-        dispatcher_thread = std::make_shared<MockInputThread>();
+        dispatcher = std::make_shared<mtd::MockInputDispatcher>();
         reader_thread = std::make_shared<MockInputThread>();
     }
 
     droidinput::sp<MockEventHub> event_hub;
-    droidinput::sp<mtd::MockInputDispatcher> dispatcher;
-    std::shared_ptr<MockInputThread> dispatcher_thread;
+    std::shared_ptr<mtd::MockInputDispatcher> dispatcher;
     std::shared_ptr<MockInputThread> reader_thread;
 };
 
@@ -119,10 +118,8 @@ TEST_F(AndroidInputManagerSetup, start_and_stop)
     ExpectationSet reader_setup;
 
     dispatcher_setup += EXPECT_CALL(*dispatcher,
-                                    setInputDispatchMode(mia::DispatchEnabled,
-                                                         mia::DispatchUnfrozen))
+                                    start())
                             .Times(1);
-    dispatcher_setup += EXPECT_CALL(*dispatcher, setInputFilterEnabled(true)).Times(1);
 
     reader_setup += EXPECT_CALL(*event_hub, flush()).Times(1);
 
@@ -130,31 +127,25 @@ TEST_F(AndroidInputManagerSetup, start_and_stop)
         .Times(1)
         .After(reader_setup);
 
-    EXPECT_CALL(*dispatcher_thread, start())
-        .Times(1)
-        .After(dispatcher_setup);
-
     {
         InSequence seq;
 
-        EXPECT_CALL(*dispatcher_thread, request_stop());
-        EXPECT_CALL(*dispatcher, setInputDispatchMode(mia::DispatchDisabled, mia::DispatchFrozen)).Times(1);
-        EXPECT_CALL(*dispatcher_thread, join());
+        EXPECT_CALL(*dispatcher, stop());
         EXPECT_CALL(*reader_thread, request_stop());
         EXPECT_CALL(*event_hub, wake());
         EXPECT_CALL(*reader_thread, join());
     }
 
-    mia::InputManager manager(event_hub, dispatcher, reader_thread, dispatcher_thread);
+    mia::InputManager manager(event_hub, dispatcher, reader_thread);
 
     manager.start();
     manager.stop();
 }
 
-TEST_F(AndroidInputManagerSetup, manager_returns_input_channel_with_fds)
+TEST_F(AndroidInputManagerSetup, channel_factory_returns_input_channel_with_fds)
 {
-    mia::InputManager manager(event_hub, dispatcher, reader_thread, dispatcher_thread);
+    mia::InputChannelFactory factory;
 
-    auto package = manager.make_input_channel();
+    auto package = factory.make_input_channel();
     EXPECT_NE(nullptr, std::dynamic_pointer_cast<mia::AndroidInputChannel>(package));
 }

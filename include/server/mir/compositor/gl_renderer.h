@@ -20,10 +20,11 @@
 #define MIR_COMPOSITOR_GL_RENDERER_H_
 
 #include <mir/compositor/renderer.h>
-#include <mir/compositor/gl_program.h>
+#include <mir/graphics/gl_program.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
+#include <mir/graphics/gl_program_factory.h>
 #include <GLES2/gl2.h>
 #include <unordered_map>
 #include <unordered_set>
@@ -37,14 +38,16 @@ namespace compositor
 class GLRenderer : public Renderer
 {
 public:
-    GLRenderer(geometry::Rectangle const& display_area);
+    GLRenderer(
+        graphics::GLProgramFactory const& program_factory,
+        geometry::Rectangle const& display_area);
     virtual ~GLRenderer() noexcept;
 
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
     void set_rotation(float degrees) override;
     void begin() const override;
-    void render(graphics::Renderable const& renderable) const override;
+    void render(graphics::RenderableList const&) const override;
     void end() const override;
 
     // This is called _without_ a GL context:
@@ -97,8 +100,10 @@ public:
     virtual GLuint load_texture(graphics::Renderable const& renderable,
                                 graphics::Buffer& buffer) const;
 
+    virtual void render(graphics::Renderable const& renderable) const;
+
 private:
-    GLProgram program;
+    std::unique_ptr<graphics::GLProgram> program;
     GLuint position_attr_loc;
     GLuint texcoord_attr_loc;
     GLuint centre_uniform_loc;

@@ -17,7 +17,8 @@
  */
 
 #include "mir/default_server_configuration.h"
-#include "mir/frontend/protobuf_session_creator.h"
+#include "mir/frontend/protobuf_connection_creator.h"
+#include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
 
 #include "resource_cache.h"
@@ -60,7 +61,7 @@ public:
     }
 
 private:
-    std::shared_ptr<mf::Shell> shell;
+    std::shared_ptr<mf::Shell> const shell;
     std::shared_ptr<mf::SessionMediatorReport> const sm_report;
     std::shared_ptr<mf::ResourceCache> const cache;
     std::shared_ptr<mg::Platform> const graphics_platform;
@@ -70,13 +71,13 @@ private:
     std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
 
     virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
-        pid_t client_pid,
+        mf::SessionCredentials const& creds,
         std::shared_ptr<mf::EventSink> const& sink) override
     {
         std::shared_ptr<mf::DisplayChanger> changer;
         std::shared_ptr<mf::Screencast> effective_screencast;
 
-        if (session_authorizer->configure_display_is_allowed(client_pid))
+        if (session_authorizer->configure_display_is_allowed(creds))
         {
             changer = display_changer;
         }
@@ -85,7 +86,7 @@ private:
             changer = std::make_shared<mf::UnauthorizedDisplayChanger>(display_changer);
         }
 
-        if (session_authorizer->screencast_is_allowed(client_pid))
+        if (session_authorizer->screencast_is_allowed(creds))
         {
             effective_screencast = screencast;
         }
@@ -95,7 +96,7 @@ private:
         }
 
         return std::make_shared<mf::SessionMediator>(
-            client_pid,
+            creds.pid(),
             shell,
             graphics_platform,
             changer,
@@ -113,12 +114,12 @@ private:
 };
 }
 
-std::shared_ptr<mf::SessionCreator>
-mir::DefaultServerConfiguration::the_session_creator()
+std::shared_ptr<mf::ConnectionCreator>
+mir::DefaultServerConfiguration::the_connection_creator()
 {
-    return session_creator([this]
+    return connection_creator([this]
         {
-            return std::make_shared<mf::ProtobufSessionCreator>(
+            return std::make_shared<mf::ProtobufConnectionCreator>(
                 the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
                 the_session_authorizer(),
                 the_message_processor_report());
@@ -136,7 +137,7 @@ mir::DefaultServerConfiguration::the_connector()
             if (the_options()->is_set(options::no_server_socket_opt))
             {
                 return std::make_shared<mf::BasicConnector>(
-                    the_session_creator(),
+                    the_connection_creator(),
                     threads,
                     the_connector_report());
             }
@@ -144,7 +145,7 @@ mir::DefaultServerConfiguration::the_connector()
             {
                 return std::make_shared<mf::PublishedSocketConnector>(
                     the_socket_file(),
-                    the_session_creator(),
+                    the_connection_creator(),
                     threads,
                     the_connector_report());
             }
