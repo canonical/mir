@@ -125,7 +125,7 @@ struct FakeEventHubServerConfig : TestingServerConfiguration
         {
             input_configuration =
                 std::make_shared<mtd::FakeEventHubInputConfiguration>(
-                    the_composite_event_filter(),
+                    the_input_dispatcher_configuration(),
                     the_input_region(),
                     std::shared_ptr<mi::CursorListener>(),
                     the_input_report());

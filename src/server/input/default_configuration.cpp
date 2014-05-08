@@ -24,6 +24,7 @@
 #include "nested_input_configuration.h"
 #include "nested_input_relay.h"
 #include "null_input_configuration.h"
+#include "null_input_dispatcher_configuration.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/options/configuration.h"
@@ -63,10 +64,14 @@ mir::DefaultServerConfiguration::the_input_dispatcher_configuration()
     return input_dispatcher_configuration(
     [this]() -> std::shared_ptr<mi::InputDispatcherConfiguration>
     {
-        return std::make_shared<mia::InputDispatcherConfiguration>(
-            the_composite_event_filter(),
-            the_input_report()
-            );
+        auto const options = the_options();
+        if (!options->get<bool>(options::enable_input_opt))
+            return std::make_shared<mi::NullInputDispatcherConfiguration>();
+        else
+            return std::make_shared<mia::InputDispatcherConfiguration>(
+                the_composite_event_filter(),
+                the_input_report()
+                );
     });
 }
 
@@ -100,6 +105,16 @@ mir::DefaultServerConfiguration::the_input_configuration()
     });
 }
 
+std::shared_ptr<mi::InputDispatcher>
+mir::DefaultServerConfiguration::the_input_dispatcher()
+{
+    return input_dispatcher(
+        [this]() -> std::shared_ptr<mi::InputDispatcher>
+        {
+            return the_input_dispatcher_configuration()->the_input_dispatcher();
+        });
+}
+
 std::shared_ptr<mi::InputManager>
 mir::DefaultServerConfiguration::the_input_manager()
 {
@@ -117,7 +132,7 @@ std::shared_ptr<msh::InputTargeter> mir::DefaultServerConfiguration::the_input_t
     return input_targeter(
         [&]() -> std::shared_ptr<msh::InputTargeter>
         {
-            return the_input_configuration()->the_input_dispatcher_configuration()->the_input_targeter();
+            return the_input_dispatcher_configuration()->the_input_targeter();
         });
 }
 
@@ -126,7 +141,7 @@ std::shared_ptr<ms::InputRegistrar> mir::DefaultServerConfiguration::the_input_r
     return input_registrar(
         [&]() -> std::shared_ptr<ms::InputRegistrar>
         {
-            return the_input_configuration()->the_input_dispatcher_configuration()->the_input_registrar();
+            return the_input_dispatcher_configuration()->the_input_registrar();
         });
 }
 

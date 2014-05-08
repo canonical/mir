@@ -60,8 +60,8 @@ public:
     void exec();
     void on_exit();
 
-    std::shared_ptr<mir::input::InputDispatcherConfiguration> the_input_dispatcher_configuration() override;
     std::shared_ptr<mir::input::InputConfiguration> the_input_configuration() override;
+    std::shared_ptr<mir::input::InputDispatcherConfiguration> the_input_dispatcher_configuration() override;
 
     mir::input::android::FakeEventHub* fake_event_hub;
 

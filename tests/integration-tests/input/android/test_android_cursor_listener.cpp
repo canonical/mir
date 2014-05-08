@@ -18,6 +18,7 @@
  */
 
 #include "src/server/input/android/android_input_manager.h"
+#include "src/server/input/android/input_dispatcher_configuration.h"
 #include "src/server/report/null_report_factory.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
@@ -26,6 +27,7 @@
 #include "mir/input/input_targets.h"
 #include "mir/input/input_region.h"
 #include "mir/input/input_dispatcher_configuration.h"
+#include "mir/input/input_dispatcher.h"
 #include "mir/geometry/rectangle.h"
 
 #include "mir_test/fake_shared.h"
@@ -79,8 +81,9 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
     void SetUp()
     {
         event_filter = std::make_shared<MockEventFilter>();
+        dispatcher_conf = std::make_shared<mia::InputDispatcherConfiguration>(event_filter, mr::null_input_report());
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
-            event_filter,
+            dispatcher_conf,
             mt::fake_shared(input_region),
             mt::fake_shared(cursor_listener),
             mr::null_input_report());
@@ -88,22 +91,27 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
         fake_event_hub = configuration->the_fake_event_hub();
 
         input_manager = configuration->the_input_manager();
+        dispatcher = dispatcher_conf->the_input_dispatcher();
 
         stub_targets = std::make_shared<mtd::StubInputTargets>();
-        configuration->the_input_dispatcher_configuration()->set_input_targets(stub_targets);
+        dispatcher_conf->set_input_targets(stub_targets);
 
         input_manager->start();
+        dispatcher->start();
     }
 
     void TearDown()
     {
+        dispatcher->stop();
         input_manager->stop();
     }
 
+    std::shared_ptr<mia::InputDispatcherConfiguration> dispatcher_conf;
     std::shared_ptr<mtd::FakeEventHubInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
     std::shared_ptr<MockEventFilter> event_filter;
     std::shared_ptr<mi::InputManager> input_manager;
+    std::shared_ptr<mi::InputDispatcher> dispatcher;
     MockCursorListener cursor_listener;
     std::shared_ptr<mtd::StubInputTargets> stub_targets;
     StubInputRegion input_region;
