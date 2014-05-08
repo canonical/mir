@@ -716,8 +716,8 @@ TEST_F(SessionMediatorTest, partially_packs_buffer_for_screencast_buffer)
 
 TEST_F(SessionMediatorTest, client_socket_fd_calls_connector_client_socket_fd)
 {
-    const int fd_count = 1;
-    const int dummy_fd = __LINE__;
+    int const fd_count = 1;
+    int const dummy_fd = __LINE__;
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -741,8 +741,8 @@ TEST_F(SessionMediatorTest, client_socket_fd_calls_connector_client_socket_fd)
 
 TEST_F(SessionMediatorTest, client_socket_fd_allocates_requested_number_of_fds)
 {
-    const int fd_count = 11;
-    const int dummy_fd = __LINE__;
+    int const fd_count = 11;
+    int const dummy_fd = __LINE__;
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;

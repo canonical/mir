@@ -32,9 +32,6 @@ class Session;
 class ConnectionContext
 {
 public:
-    ConnectionContext() = delete;
-    ConnectionContext(const ConnectionContext&) = default;
-    ConnectionContext& operator=(const ConnectionContext&) = default;
     ConnectionContext(Connector const* connector) :
         ConnectionContext([](std::shared_ptr<Session> const&){}, connector) {}
     ConnectionContext(
