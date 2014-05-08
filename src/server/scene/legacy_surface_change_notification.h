@@ -42,6 +42,7 @@ public:
     void alpha_set_to(float /*alpha*/) override;
     void transformation_set_to(glm::mat4 const& /*t*/) override;
     void attrib_changed(MirSurfaceAttrib, int) override;
+    void reception_mode_set_to(input::InputReceptionMode mode) override;
 
 private:
     std::function<void()> const notify_change;

@@ -51,9 +51,9 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
             auto const scene_report = the_scene_report();
 
             auto const ss = std::make_shared<ms::SurfaceStack>(
-                the_input_registrar(),
                 scene_report);
 
+            the_input_dispatcher_configuration()->set_scene(ss);
             the_input_dispatcher_configuration()->set_input_targets(ss);
 
             return ss;
@@ -69,9 +69,9 @@ mir::DefaultServerConfiguration::the_scene()
             auto const scene_report = the_scene_report();
 
             auto const ss = std::make_shared<ms::SurfaceStack>(
-                the_input_registrar(),
                 scene_report);
 
+            the_input_dispatcher_configuration()->set_scene(ss);
             the_input_dispatcher_configuration()->set_input_targets(ss);
 
             return ss;

@@ -25,6 +25,7 @@
 #include "android_input_target_enumerator.h"
 #include "android_input_manager.h"
 #include "mir/input/event_filter.h"
+#include "mir/compositor/scene.h"
 
 #include <InputDispatcher.h>
 
@@ -35,6 +36,7 @@ namespace droidinput = android;
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace ms = mir::scene;
+namespace mc = mir::compositor;
 namespace msh = mir::shell;
 
 namespace
@@ -104,7 +106,7 @@ std::shared_ptr<mia::InputThread> mia::InputDispatcherConfiguration::the_dispatc
         });
 }
 
-std::shared_ptr<ms::InputRegistrar> mia::InputDispatcherConfiguration::the_input_registrar()
+std::shared_ptr<mia::InputRegistrar> mia::InputDispatcherConfiguration::the_input_registrar()
 {
     return input_registrar(
         [this]()
@@ -139,6 +141,11 @@ bool mia::InputDispatcherConfiguration::is_key_repeat_enabled() const
 void mia::InputDispatcherConfiguration::set_input_targets(std::shared_ptr<mi::InputTargets> const& targets)
 {
     the_dispatcher()->setInputEnumerator(new mia::InputTargetEnumerator(targets, the_window_handle_repository()));
+}
+
+void mia::InputDispatcherConfiguration::set_scene(std::shared_ptr<mc::Scene> const& scene)
+{
+    scene->add_observer(the_input_registrar());
 }
 
 droidinput::sp<droidinput::InputDispatcherInterface> mia::InputDispatcherConfiguration::the_dispatcher()

@@ -19,7 +19,6 @@
 #include "mir_test_framework/input_testing_server_configuration.h"
 
 #include "mir/input/input_channel.h"
-#include "mir/scene/input_registrar.h"
 #include "mir/input/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/frontend/shell.h"

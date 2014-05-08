@@ -96,6 +96,14 @@ void ms::SurfaceObservers::transformation_set_to(glm::mat4 const& t)
         p->transformation_set_to(t);
 }
 
+void ms::SurfaceObservers::reception_mode_set_to(mi::InputReceptionMode mode)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->reception_mode_set_to(mode);
+}
+
 void ms::SurfaceObservers::add(std::shared_ptr<SurfaceObserver> const& observer)
 {
     if (observer)
@@ -124,6 +132,7 @@ ms::BasicSurface::BasicSurface(
     surface_alpha(1.0f),
     first_frame_posted(false),
     hidden(false),
+    input_mode(mi::InputReceptionMode::normal),
     nonrectangular(nonrectangular),
     input_rectangles{surface_rect},
     surface_buffer_stream(buffer_stream),
@@ -317,7 +326,21 @@ bool ms::BasicSurface::visible() const
 bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
 {
     return !hidden && first_frame_posted;
-} 
+}
+
+mi::InputReceptionMode ms::BasicSurface::reception_mode() const
+{
+    return input_mode;
+}
+
+void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
+{
+    {
+        std::lock_guard<std::mutex> lk(guard);
+        input_mode = mode;
+    }
+    observers.reception_mode_set_to(mode);
+}
 
 void ms::BasicSurface::with_most_recent_buffer_do(
     std::function<void(mg::Buffer&)> const& exec)

@@ -136,15 +136,6 @@ std::shared_ptr<msh::InputTargeter> mir::DefaultServerConfiguration::the_input_t
         });
 }
 
-std::shared_ptr<ms::InputRegistrar> mir::DefaultServerConfiguration::the_input_registrar()
-{
-    return input_registrar(
-        [&]() -> std::shared_ptr<ms::InputRegistrar>
-        {
-            return the_input_dispatcher_configuration()->the_input_registrar();
-        });
-}
-
 auto mir::DefaultServerConfiguration::the_nested_input_relay()
 -> std::shared_ptr<mi::NestedInputRelay>
 {
