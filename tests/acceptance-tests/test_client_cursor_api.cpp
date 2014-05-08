@@ -98,7 +98,7 @@ MATCHER_P(CursorNamed, name, "")
 
 struct CursorSettingClient : mtf::TestingClientConfiguration
 {
-    static char const* const mir_test_socket = mtf::test_socket_file().c_str();
+    static char const* const mir_test_socket;
 
     std::string const client_name;
 
@@ -144,6 +144,9 @@ struct CursorSettingClient : mtf::TestingClientConfiguration
         mir_connection_release(connection);
     }
 };
+
+char const* const CursorSettingClient::mir_test_socket = mtf::test_socket_file().c_str();
+
 
 typedef unsigned ClientCount;
 struct CursorTestServerConfiguration : mtf::InputTestingServerConfiguration
