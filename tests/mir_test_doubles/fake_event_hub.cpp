@@ -221,6 +221,10 @@ size_t FakeEventHub::getEvents(int timeoutMillis, RawEvent* buffer, size_t buffe
     (void) timeoutMillis;
     {
         std::lock_guard<std::mutex> lg(guard);
+
+        if (throw_in_get_events)
+            throw std::runtime_error("FakeEventHub::getEvents() exception");
+
         for (size_t i = 0; i < bufferSize && events_available.size() > 0; ++i)
         {
             buffer[i] = events_available.front();
@@ -687,4 +691,10 @@ const FakeEventHub::FakeDevice* FakeEventHub::getDevice(int32_t deviceId) const
 size_t FakeEventHub::eventsQueueSize() const
 {
     return events_available.size();
+}
+
+void FakeEventHub::throw_exception_in_next_get_events()
+{
+    std::lock_guard<std::mutex> lg(guard);
+    throw_in_get_events = true;
 }
