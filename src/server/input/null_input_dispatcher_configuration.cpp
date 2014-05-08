@@ -22,7 +22,6 @@
 #include "mir/shell/input_targeter.h"
 
 namespace mi = mir::input;
-namespace mc = mir::compositor;
 namespace msh = mir::shell;
 
 namespace
@@ -47,11 +46,9 @@ class NullInputDispatcher : public mi::InputDispatcher
     void configuration_changed(nsecs_t /*when*/) override
     {
     }
-
     void device_reset(int32_t /*device_id*/, nsecs_t /*when*/) override
     {
     }
-    
     void dispatch(MirEvent const& /*event*/) override
     {
     }
