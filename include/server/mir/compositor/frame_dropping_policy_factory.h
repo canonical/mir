@@ -36,7 +36,7 @@ public:
      * \param drop_frame    Function to call when a frame needs to be dropped
      * \return              The policy object.
      */
-    virtual std::unique_ptr<FrameDroppingPolicy> create_policy(std::function<void(void)> drop_frame) = 0;
+    virtual std::unique_ptr<FrameDroppingPolicy> create_policy(std::function<void(void)> drop_frame) const = 0;
 };
 
 }
