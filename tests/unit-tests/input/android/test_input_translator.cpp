@@ -252,6 +252,7 @@ TEST_F(InputTranslator, forwards_all_key_event_paramters_correctly)
     expected.key.repeat_count = 0;
     expected.key.down_time = 6;
     expected.key.modifiers = 7;
+    expected.key.is_system_key = false;
 
     InSequence seq;
     EXPECT_CALL(dispatcher, dispatch(mt::MirKeyEventMatches(expected))).Times(1);
