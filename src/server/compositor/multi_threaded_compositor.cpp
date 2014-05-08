@@ -26,6 +26,7 @@
 #include "mir/scene/legacy_scene_change_notification.h"
 #include "mir/scene/surface_observer.h"
 #include "mir/scene/surface.h"
+#include "mir/run_mir.h"
 
 #include <thread>
 #include <condition_variable>
@@ -98,6 +99,7 @@ public:
     }
 
     void operator()() noexcept  // noexcept is important! (LP: #1237332)
+    try
     {
         std::unique_lock<std::mutex> lock{run_mutex};
 
@@ -143,6 +145,10 @@ public:
                 frames_scheduled |= more_frames_pending;
             }
         }
+    }
+    catch(...)
+    {
+        mir::terminate_with_current_exception();
     }
 
     void schedule_compositing()
