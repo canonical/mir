@@ -109,6 +109,8 @@ typedef void (*mir_display_config_callback)(
  *   \param [in] count          The number of FDs allocated
  *   \param [in] fds            Array of FDs
  *   \param [in,out] context    The context provided by client
+ *
+ *   \note Copy the FDs as the array will be invalidated after callback completes
  */
 
 typedef void (*mir_client_fd_callback)(
