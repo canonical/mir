@@ -154,27 +154,27 @@ void mir::AsioMainLoop::register_fd_handler(
     fd_handlers.push_back(std::move(fd_handler));
 }
 
-void mir::AsioMainLoop::post(ServerActionType type, ServerAction const& action)
+void mir::AsioMainLoop::enqueue(void const* owner, ServerAction const& action)
 {
     {
         std::lock_guard<std::mutex> lock{server_actions_mutex};
-        server_actions.push_back({type, action});
+        server_actions.push_back({owner, action});
     }
 
     io.post([this] { process_server_actions(); });
 }
 
-void mir::AsioMainLoop::stop_processing(ServerActionType type)
+void mir::AsioMainLoop::pause_processing_for(void const* owner)
 {
     std::lock_guard<std::mutex> lock{server_actions_mutex};
-    do_not_process.insert(type);
+    do_not_process.insert(owner);
 }
 
-void mir::AsioMainLoop::resume_processing(ServerActionType type)
+void mir::AsioMainLoop::resume_processing_for(void const* owner)
 {
     {
         std::lock_guard<std::mutex> lock{server_actions_mutex};
-        do_not_process.erase(type);
+        do_not_process.erase(owner);
     }
 
     io.post([this] { process_server_actions(); });
@@ -194,10 +194,10 @@ void mir::AsioMainLoop::process_server_actions()
          * the only operation that can be performed on server_actions outside
          * this function (in AsioMainLoop::post()).
          */
-        auto const& type = server_actions[i].first;
+        auto const& owner = server_actions[i].first;
         auto const& action = server_actions[i].second;
 
-        if (do_not_process.find(type) == do_not_process.end())
+        if (do_not_process.find(owner) == do_not_process.end())
         {
             lock.unlock();
             action();

@@ -24,7 +24,6 @@
 namespace mir
 {
 
-enum class ServerActionType { undefined, display_config };
 typedef std::function<void()> ServerAction;
 
 class ServerActionQueue
@@ -32,7 +31,9 @@ class ServerActionQueue
 public:
     virtual ~ServerActionQueue() = default;
 
-    virtual void post(ServerActionType type, ServerAction const& action) = 0;
+    virtual void enqueue(void const* owner, ServerAction const& action) = 0;
+    virtual void pause_processing_for(void const* owner) = 0;
+    virtual void resume_processing_for(void const* owner) = 0;
 
 protected:
     ServerActionQueue() = default;

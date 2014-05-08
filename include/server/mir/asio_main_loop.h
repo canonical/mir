@@ -49,22 +49,22 @@ public:
         std::initializer_list<int> fd,
         std::function<void(int)> const& handler);
 
-    void post(ServerActionType type, ServerAction const& action);
-    void stop_processing(ServerActionType type);
-    void resume_processing(ServerActionType type);
+    void enqueue(void const* owner, ServerAction const& action);
+    void pause_processing_for(void const* owner);
+    void resume_processing_for(void const* owner);
 
 private:
     class SignalHandler;
     class FDHandler;
-    bool should_process(ServerActionType type);
+    bool should_process(void const*);
     void process_server_actions();
 
     boost::asio::io_service io;
     std::vector<std::unique_ptr<SignalHandler>> signal_handlers;
     std::vector<std::unique_ptr<FDHandler>> fd_handlers;
     std::mutex server_actions_mutex;
-    std::deque<std::pair<ServerActionType,ServerAction>> server_actions;
-    std::set<ServerActionType> do_not_process;
+    std::deque<std::pair<void const*,ServerAction>> server_actions;
+    std::set<void const*> do_not_process;
 };
 
 }

@@ -31,9 +31,6 @@ class MainLoop : public graphics::EventHandlerRegister,
 public:
     virtual void run() = 0;
     virtual void stop() = 0;
-
-    virtual void stop_processing(ServerActionType type) = 0;
-    virtual void resume_processing(ServerActionType type) = 0;
 };
 
 }

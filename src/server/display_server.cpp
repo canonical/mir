@@ -98,8 +98,8 @@ struct mir::DisplayServer::Private
                 [this] { input_manager->start(); }};
 
             TryButRevertIfUnwinding display_config_processing{
-                [this] { main_loop->stop_processing(ServerActionType::display_config); },
-                [this] { main_loop->resume_processing(ServerActionType::display_config); }};
+                [this] { main_loop->pause_processing_for(this); },
+                [this] { main_loop->resume_processing_for(this); }};
 
             TryButRevertIfUnwinding comp{
                 [this] { compositor->stop(); },
@@ -134,8 +134,8 @@ struct mir::DisplayServer::Private
                 [this] { connector->stop(); }};
 
             TryButRevertIfUnwinding display_config_processing{
-                [this] { main_loop->resume_processing(ServerActionType::display_config); },
-                [this] { main_loop->stop_processing(ServerActionType::display_config); }};
+                [this] { main_loop->resume_processing_for(this); },
+                [this] { main_loop->pause_processing_for(this); }};
 
             TryButRevertIfUnwinding input{
                 [this] { input_manager->start(); },
@@ -155,8 +155,9 @@ struct mir::DisplayServer::Private
 
     void configure_display()
     {
-        main_loop->post(
-            ServerActionType::display_config,
+        /* This is temporary, we will eventually use DisplayChanger directly */
+        main_loop->enqueue(
+            this,
             [this]
             {
                 std::shared_ptr<graphics::DisplayConfiguration> conf =
