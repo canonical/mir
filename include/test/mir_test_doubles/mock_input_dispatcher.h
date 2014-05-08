@@ -31,7 +31,8 @@ namespace doubles
 
 struct MockInputDispatcher : public mir::input::InputDispatcher
 {
-    // droidinput::InputDispatcher interface
+    MOCK_METHOD1(configuration_changed, void(nsecs_t));
+    MOCK_METHOD2(device_reset, void(int32_t, nsecs_t));
     MOCK_METHOD1(dispatch, void(MirEvent const&));
     MOCK_METHOD0(start, void());
     MOCK_METHOD0(stop, void());

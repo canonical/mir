@@ -45,46 +45,21 @@ namespace msh = mir::shell;
 std::shared_ptr<ms::SurfaceStackModel>
 mir::DefaultServerConfiguration::the_surface_stack_model()
 {
-    return surface_stack(
-        [this]()
-        {
-            auto const scene_report = the_scene_report();
-
-            auto const ss = std::make_shared<ms::SurfaceStack>(
-                scene_report);
-
-            return ss;
-        });
+    return surface_stack([this]()
+                         { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
 }
 
 std::shared_ptr<mc::Scene>
 mir::DefaultServerConfiguration::the_scene()
 {
-    return surface_stack(
-        [this]()
-        {
-            auto const scene_report = the_scene_report();
-
-            auto const ss = std::make_shared<ms::SurfaceStack>(
-                scene_report);
-
-            return ss;
-        });
+    return surface_stack([this]()
+                         { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
 }
 
-std::shared_ptr<mi::InputTargets>
-mir::DefaultServerConfiguration::the_input_targets()
+std::shared_ptr<mi::InputTargets> mir::DefaultServerConfiguration::the_input_targets()
 {
-    return surface_stack(
-        [this]()
-        {
-            auto const scene_report = the_scene_report();
-
-            auto const ss = std::make_shared<ms::SurfaceStack>(
-                scene_report);
-
-            return ss;
-        });
+    return surface_stack([this]()
+                         { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
 }
 
 auto mir::DefaultServerConfiguration::the_surface_factory()

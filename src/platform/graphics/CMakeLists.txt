@@ -11,6 +11,7 @@ set(
   buffer_basic.cpp
   pixel_format_utils.cpp
   overlapping_output_grouping.cpp
+  gl_program.cpp
 )
 
 add_library(

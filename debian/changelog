@@ -35,6 +35,8 @@ mir (0.2.0-0ubuntu1) UNRELEASED; urgency=medium
     - Made InputDispatcher replaceable.
     - Progress made on new cursor interfaces with the end goal of client and
       toolkit control of the mouse cursor appearance. More work required.
+    - Updated cross-compile docs and scripts to support the latest utopic
+      devel images.
     - Bugs fixed:
       . <TODO: Fill in when proposing to archive>
 

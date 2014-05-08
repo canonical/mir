@@ -16,17 +16,10 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/input_dispatcher_configuration.h"
 
 #include "clients.h"
-
-#include "mir/shell/input_targeter.h"
-#include "mir/scene/observer.h"
-#include "mir/compositor/scene.h"
-
-#include "mir_toolkit/event.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
@@ -37,6 +30,10 @@
 #include "mir_test/client_event_matchers.h"
 
 #include "mir/compositor/scene.h"
+#include "mir/shell/input_targeter.h"
+#include "mir/scene/observer.h"
+
+#include "mir_toolkit/event.h"
 
 #include <linux/input.h>
 #include <gtest/gtest.h>

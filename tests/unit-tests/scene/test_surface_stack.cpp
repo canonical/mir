@@ -102,10 +102,6 @@ struct MockSceneObserver : public ms::Observer
 
 struct SurfaceStack : public ::testing::Test
 {
-    SurfaceStack()
-        : stack(report)
-    {}
-
     void SetUp()
     {
         using namespace testing;
@@ -145,7 +141,7 @@ struct SurfaceStack : public ::testing::Test
     std::shared_ptr<ms::BasicSurface> stub_surface3;
 
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
-    ms::SurfaceStack stack;
+    ms::SurfaceStack stack{report};
     void const* compositor_id{&default_params};
 };
 
