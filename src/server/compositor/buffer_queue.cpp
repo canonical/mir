@@ -210,7 +210,15 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     }
 
     buffers_sent_to_compositor.push_back(current_compositor_buffer);
-    current_buffer_users.push_back(user_id);
+
+    auto existing = std::find(current_buffer_users.begin(),
+                              current_buffer_users.end(),
+                              user_id);
+    if (existing == current_buffer_users.end())
+        current_buffer_users.push_back(user_id);
+
+    if (current_buffer_users.size() > 100)
+        BOOST_THROW_EXCEPTION(std::logic_error("more buffer users detected than reasonable"));
 
     auto const& acquired_buffer = buffer_for(current_compositor_buffer, buffers);
     if (buffer_to_release)
