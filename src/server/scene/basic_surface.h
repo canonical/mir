@@ -94,6 +94,7 @@ public:
     void set_hidden(bool is_hidden);
 
     geometry::Size size() const override;
+    geometry::Size client_size() const override;
 
     MirPixelFormat pixel_format() const;
 
@@ -112,7 +113,8 @@ public:
 
     void resize(geometry::Size const& size) override;
     geometry::Point top_left() const override;
-    bool contains(geometry::Point const& point) const override;
+    geometry::Rectangle input_bounds() const override;
+    bool input_area_contains(geometry::Point const& point) const override;
     void set_alpha(float alpha) override;
     void set_transformation(glm::mat4 const&) override;
 
