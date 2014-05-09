@@ -69,7 +69,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context) :
-    client_pid(client_pid),
+    client_pid_(client_pid),
     shell(shell),
     graphics_platform(graphics_platform),
     surface_pixel_formats(surface_pixel_formats),
@@ -91,6 +91,11 @@ mf::SessionMediator::~SessionMediator() noexcept
     }
 }
 
+void mf::SessionMediator::client_pid(int pid)
+{
+    client_pid_ = pid;
+}
+
 void mf::SessionMediator::connect(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::ConnectParameters* request,
@@ -99,7 +104,7 @@ void mf::SessionMediator::connect(
 {
     report->session_connect_called(request->application_name());
 
-    auto const session = shell->open_session(client_pid, request->application_name(), event_sink);
+    auto const session = shell->open_session(client_pid_, request->application_name(), event_sink);
     {
         std::lock_guard<std::mutex> lock(session_mutex);
         weak_session = session;
