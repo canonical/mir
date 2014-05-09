@@ -31,6 +31,7 @@ class DisplayServer;
 }
 namespace frontend
 {
+class ConnectionContext;
 class EventSink;
 class ResourceCache;
 class MessageProcessorReport;
@@ -41,7 +42,8 @@ class ProtobufIpcFactory
 public:
     virtual std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
         SessionCredentials const& creds,
-        std::shared_ptr<EventSink> const& sink) = 0;
+        std::shared_ptr<EventSink> const& sink,
+        ConnectionContext const& connection_context) = 0;
 
     virtual std::shared_ptr<ResourceCache> resource_cache() = 0;
 

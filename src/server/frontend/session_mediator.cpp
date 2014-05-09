@@ -67,7 +67,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache,
-    std::shared_ptr<Screencast> const& screencast) :
+    std::shared_ptr<Screencast> const& screencast,
+    ConnectionContext const& connection_context) :
     client_pid(client_pid),
     shell(shell),
     graphics_platform(graphics_platform),
@@ -76,7 +77,8 @@ mf::SessionMediator::SessionMediator(
     report(report),
     event_sink(sender),
     resource_cache(resource_cache),
-    screencast(screencast)
+    screencast(screencast),
+    connection_context(connection_context)
 {
 }
 
@@ -97,10 +99,12 @@ void mf::SessionMediator::connect(
 {
     report->session_connect_called(request->application_name());
 
+    auto const session = shell->open_session(client_pid, request->application_name(), event_sink);
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
-        weak_session = shell->open_session(client_pid, request->application_name(), event_sink);
+        std::lock_guard<std::mutex> lock(session_mutex);
+        weak_session = session;
     }
+    connection_context.handle_client_connect(session);
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -408,6 +412,38 @@ void mf::SessionMediator::screencast_buffer(
     pack_protobuf_buffer(*protobuf_buffer,
                          buffer.get(),
                          does_not_need_full_ipc);
+
+    done->Run();
+}
+
+void mf::SessionMediator::new_fds_for_trusted_clients(
+    ::google::protobuf::RpcController* ,
+    ::mir::protobuf::SocketFDRequest const* parameters,
+    ::mir::protobuf::SocketFD* response,
+    ::google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        // TODO write a handler that connects the new session to our trust session
+        auto const connect_handler = [](std::shared_ptr<frontend::Session> const&) {};
+
+        auto const fds_requested = parameters->number();
+
+        // < 1 is illogical, > 42 is unreasonable
+        if (fds_requested < 1 || fds_requested > 42)
+            BOOST_THROW_EXCEPTION(std::runtime_error("number of fds requested out of range"));
+
+        for (auto i  = 0; i != fds_requested; ++i)
+        {
+            auto const fd = connection_context.fd_for_new_client(connect_handler);
+            response->add_fd(fd);
+        }
+    }
 
     done->Run();
 }

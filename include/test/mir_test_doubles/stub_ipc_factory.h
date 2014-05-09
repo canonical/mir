@@ -45,8 +45,9 @@ public:
     }
 
     std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
-        mir::frontend::SessionCredentials const&,
-        std::shared_ptr<frontend::EventSink> const&) override
+        mir::frontend::SessionCredentials const& /*creds*/,
+        std::shared_ptr<mir::frontend::EventSink> const& /*sink*/,
+        mir::frontend::ConnectionContext const& /*connection_context*/) override
     {
         return server;
     }

@@ -22,8 +22,6 @@
 #include "mir_toolkit/common.h"
 #include "mir/frontend/surface_id.h"
 
-#include <mutex>
-#include <atomic>
 #include <memory>
 #include <string>
 
@@ -46,7 +44,7 @@ class Surface;
 class Session
 {
 public:
-    virtual ~Session() {}
+    virtual ~Session() = default;
 
     virtual SurfaceId create_surface(scene::SurfaceCreationParameters const& params) = 0;
     virtual void destroy_surface(SurfaceId surface) = 0;
