@@ -224,7 +224,7 @@ bool me::WindowManager::handle(MirEvent const& event)
     {
         geometry::Point cursor = average_pointer(event.motion);
 
-        // FIXME: https://bugs.launchpad.net/mir/+bug/1197108
+        // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
         MirMotionAction action = static_cast<MirMotionAction>(event.motion.action & ~0xff00);
 
         if (event.motion.modifiers & mir_key_modifier_meta &&

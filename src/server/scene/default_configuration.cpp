@@ -54,7 +54,7 @@ mir::DefaultServerConfiguration::the_surface_stack_model()
                 the_input_registrar(),
                 scene_report);
 
-            the_input_configuration()->the_input_dispatcher_configuration()->set_input_targets(ss);
+            the_input_dispatcher_configuration()->set_input_targets(ss);
 
             return ss;
         });
@@ -72,7 +72,7 @@ mir::DefaultServerConfiguration::the_scene()
                 the_input_registrar(),
                 scene_report);
 
-            the_input_configuration()->the_input_dispatcher_configuration()->set_input_targets(ss);
+            the_input_dispatcher_configuration()->set_input_targets(ss);
 
             return ss;
         });
