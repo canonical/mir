@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_FRAME_DROPPING_POLICY_H
-#define MIR_COMPOSITOR_FRAME_DROPPING_POLICY_H
+#ifndef MIR_COMPOSITOR_FRAME_DROPPING_POLICY_H_
+#define MIR_COMPOSITOR_FRAME_DROPPING_POLICY_H_
 
 #include <functional>
 
@@ -46,4 +46,4 @@ public:
 }
 }
 
-#endif // MIR_COMPOSITOR_FRAME_DROPPING_POLICY_H
+#endif // MIR_COMPOSITOR_FRAME_DROPPING_POLICY_H_
