@@ -19,8 +19,8 @@
 #ifndef MIR_FRONTEND_SESSION_MEDIATOR_H_
 #define MIR_FRONTEND_SESSION_MEDIATOR_H_
 
-#include "mir/frontend/connection_context.h"
 #include "display_server.h"
+#include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
 #include "mir_toolkit/common.h"
 
