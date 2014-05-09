@@ -21,7 +21,6 @@ set(
   using_stub_client_platform.cpp
   udev_environment.cpp
   declarative_placement_strategy.cpp
-  watchdog.cpp
 )
 
 list(APPEND TEST_FRAMEWORK_SRCS

@@ -19,7 +19,8 @@
 #include "mir/asio_main_loop.h"
 #include "mir/time/high_resolution_clock.h"
 #include "mir_test/pipe.h"
-#include "mir_test_framework/watchdog.h"
+#include "mir_test/auto_unblock_thread.h"
+#include "mir_test/signal.h"
 
 #include <gtest/gtest.h>
 
@@ -35,7 +36,6 @@
 #include <unistd.h>
 
 namespace mt = mir::test;
-namespace mtf = mir_test_framework;
 
 TEST(AsioMainLoopTest, signal_handled)
 {
@@ -305,89 +305,84 @@ TEST(AsioMainLoopTest, main_loop_runs_until_stop_called)
 {
     mir::AsioMainLoop ml;
 
-    mtf::WatchDog runner([&ml]() {ml.stop();});
 
-    std::mutex checkpoint_mutex;
-    std::condition_variable checkpoint;
-    bool hit_checkpoint{false};
+    auto mainloop_started = std::make_shared<mt::Signal>();
 
     auto fire_on_mainloop_start = ml.notify_in(std::chrono::milliseconds{0},
-                                               [&checkpoint_mutex, &checkpoint, &hit_checkpoint]()
+                                               [mainloop_started]()
     {
-        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
-        hit_checkpoint = true;
-        checkpoint.notify_all();
+        mainloop_started->raise();
     });
 
-    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
+    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
+                                 [&ml]() { ml.run(); });
 
-    {
-        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
-        ASSERT_TRUE(checkpoint.wait_for(lock, std::chrono::milliseconds{10}, [&hit_checkpoint]() { return hit_checkpoint; }));
-    }
+    ASSERT_TRUE(mainloop_started->wait_for(std::chrono::milliseconds{10}));
 
-    auto alarm = ml.notify_in(std::chrono::milliseconds{10}, [&runner]
+    auto timer_fired = std::make_shared<mt::Signal>();
+    auto alarm = ml.notify_in(std::chrono::milliseconds{10}, [timer_fired]
     {
-        runner.notify_done();
+        timer_fired->raise();
     });
 
-    EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{50}));
+    EXPECT_TRUE(timer_fired->wait_for(std::chrono::milliseconds{100}));
 
     ml.stop();
     // Main loop should be stopped now
 
-    hit_checkpoint = false;
+    timer_fired = std::make_shared<mt::Signal>();
     auto should_not_fire =  ml.notify_in(std::chrono::milliseconds{0},
-                                         [&checkpoint_mutex, &checkpoint, &hit_checkpoint]()
+                                         [timer_fired]()
     {
-        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
-        hit_checkpoint = true;
-        checkpoint.notify_all();
+        timer_fired->raise();
     });
 
-    std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
-    EXPECT_FALSE(checkpoint.wait_for(lock, std::chrono::milliseconds{50}, [&hit_checkpoint]() { return hit_checkpoint; }));
+    EXPECT_FALSE(timer_fired->wait_for(std::chrono::milliseconds{100}));
 }
 
 TEST(AsioMainLoopTest, alarm_fires_with_correct_delay)
 {
     mir::AsioMainLoop ml;
 
-    mtf::WatchDog runner([&ml]() {ml.stop();});
+    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
+                                 [&ml]() { ml.run(); });
 
-    auto alarm = ml.notify_in(std::chrono::milliseconds{50}, [&runner]()
+    auto timer_fired = std::make_shared<mt::Signal>();
+    auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [timer_fired]()
     {
-        runner.notify_done();
+        timer_fired->raise();
     });
 
-    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
+    // Shouldn't fire before timeout
+    EXPECT_FALSE(timer_fired->wait_for(std::chrono::milliseconds{50}));
 
-    EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{100}));
+    // Give a nice, long wait for our slow ARM valgrind friends
+    EXPECT_TRUE(timer_fired->wait_for(std::chrono::milliseconds{200}));
 }
 
 TEST(AsioMainLoopTest, multiple_alarms_fire)
 {
     mir::AsioMainLoop ml;
 
-    mtf::WatchDog runner([&ml]() {ml.stop();});
+    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
+                                 [&ml]() { ml.run(); });
 
     int const alarm_count{10};
     std::atomic<int> call_count{0};
     std::array<std::unique_ptr<mir::time::Alarm>, alarm_count> alarms;
+    auto alarms_fired = std::make_shared<mt::Signal>();
 
     for (auto& alarm : alarms)
     {
-        alarm = ml.notify_in(std::chrono::milliseconds{50}, [&runner, &call_count]()
+        alarm = ml.notify_in(std::chrono::milliseconds{5}, [alarms_fired, &call_count]()
         {
-            call_count.fetch_add(1);
+            call_count++;
             if (call_count == alarm_count)
-                runner.notify_done();
+                alarms_fired->raise();
         });
     }
 
-    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
-
-    EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{100}));
+    EXPECT_TRUE(alarms_fired->wait_for(std::chrono::milliseconds{100}));
     for (auto& alarm : alarms)
         EXPECT_EQ(mir::time::Alarm::Triggered, alarm->state());
 }
@@ -397,16 +392,16 @@ TEST(AsioMainLoopTest, alarm_changes_to_triggered_state)
 {
     mir::AsioMainLoop ml;
 
-    mtf::WatchDog runner([&ml]() {ml.stop();});
+    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
+                                 [&ml]() { ml.run(); });
 
-    auto alarm = ml.notify_in(std::chrono::milliseconds{50}, [&runner]()
+    auto alarm_fired = std::make_shared<mt::Signal>();
+    auto alarm = ml.notify_in(std::chrono::milliseconds{5}, [alarm_fired]()
     {
-        runner.notify_done();
+        alarm_fired->raise();
     });
 
-    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
-
-    ASSERT_TRUE(runner.wait_for(std::chrono::milliseconds{100}));
+    ASSERT_TRUE(alarm_fired->wait_for(std::chrono::milliseconds{100}));
 
     EXPECT_EQ(mir::time::Alarm::Triggered, alarm->state());
 }
@@ -415,14 +410,10 @@ TEST(AsioMainLoopTest, alarm_starts_in_pending_state)
 {
     mir::AsioMainLoop ml;
 
-    mtf::WatchDog runner([&ml]() {ml.stop();});
+    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
+                                 [&ml]() { ml.run(); });
 
-    auto alarm = ml.notify_in(std::chrono::milliseconds{50}, [&runner]()
-    {
-        runner.notify_done();
-    });
-
-    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
+    auto alarm = ml.notify_in(std::chrono::milliseconds{5000}, [](){});
 
     EXPECT_EQ(mir::time::Alarm::Pending, alarm->state());
 }
@@ -431,17 +422,17 @@ TEST(AsioMainLoopTest, cancelled_alarm_doesnt_fire)
 {
     mir::AsioMainLoop ml;
 
-    mtf::WatchDog runner([&ml]() {ml.stop();});
+    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
+                                 [&ml]() { ml.run(); });
+    auto alarm_fired = std::make_shared<mt::Signal>();
 
-    auto alarm = ml.notify_in(std::chrono::milliseconds{200}, [&runner]()
+    auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [alarm_fired]()
     {
-        runner.notify_done();
+        alarm_fired->raise();
     });
 
-    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
-
     EXPECT_TRUE(alarm->cancel());
-    EXPECT_FALSE(runner.wait_for(std::chrono::milliseconds{300}));
+    EXPECT_FALSE(alarm_fired->wait_for(std::chrono::milliseconds{300}));
     EXPECT_EQ(mir::time::Alarm::Cancelled, alarm->state());
 }
 
@@ -449,56 +440,50 @@ TEST(AsioMainLoopTest, destroyed_alarm_doesnt_fire)
 {
     mir::AsioMainLoop ml;
 
-    mtf::WatchDog runner([&ml]() {ml.stop();});
+    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
+                                 [&ml]() { ml.run(); });
+    auto alarm_fired = std::make_shared<mt::Signal>();
 
-    auto alarm = ml.notify_in(std::chrono::milliseconds{200}, [&runner]()
+    auto alarm = ml.notify_in(std::chrono::milliseconds{200}, [alarm_fired]()
     {
-        runner.notify_done();
+        alarm_fired->raise();
     });
-
-    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
 
     alarm.reset(nullptr);
 
-    EXPECT_FALSE(runner.wait_for(std::chrono::milliseconds{300}));
+    EXPECT_FALSE(alarm_fired->wait_for(std::chrono::milliseconds{300}));
 }
 
 TEST(AsioMainLoopTest, rescheduled_alarm_fires_again)
 {
     mir::AsioMainLoop ml;
 
-    // Somewhat counterintuitively we need some work on the mainloop to keep it running.
-    auto dummy_alarm = ml.notify_in(std::chrono::milliseconds{1000}, [](){});
+    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
+                                 [&ml]() { ml.run(); });
 
-    mtf::WatchDog runner([&ml]() {ml.stop();});
+    auto first_trigger = std::make_shared<mt::Signal>();
+    auto second_trigger = std::make_shared<mt::Signal>();
+    std::atomic<int> call_count{0};
 
-    std::mutex m;
-    std::condition_variable called;
-    int call_count{0};
-
-    auto alarm = ml.notify_in(std::chrono::milliseconds{0}, [&runner, &call_count, &m, &called]()
+    auto alarm = ml.notify_in(std::chrono::milliseconds{0}, [first_trigger, second_trigger, &call_count]()
     {
-        std::unique_lock<decltype(m)> lock(m);
-        call_count++;
-        if (call_count == 2)
-            runner.notify_done();
-        called.notify_all();
+        auto prev_call_count = call_count++;
+        if (prev_call_count == 0)
+            first_trigger->raise();
+        if (prev_call_count == 1)
+            second_trigger->raise();
+        if (prev_call_count > 1)
+            FAIL() << "Alarm called too many times";
     });
 
-    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
 
-    {
-        std::unique_lock<decltype(m)> lock(m);
-        ASSERT_TRUE(called.wait_for(lock,
-                                    std::chrono::milliseconds{50},
-                                    [&call_count](){ return call_count == 1; }));
-    }
+    ASSERT_TRUE(first_trigger->wait_for(std::chrono::milliseconds{50}));
 
     ASSERT_EQ(mir::time::Alarm::Triggered, alarm->state());
     alarm->reschedule_in(std::chrono::milliseconds{100});
     EXPECT_EQ(mir::time::Alarm::Pending, alarm->state());
 
-    EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{500}));
+    EXPECT_TRUE(second_trigger->wait_for(std::chrono::milliseconds{500}));
     EXPECT_EQ(mir::time::Alarm::Triggered, alarm->state());
 }
 
@@ -506,25 +491,22 @@ TEST(AsioMainLoopTest, rescheduled_alarm_cancels_previous_scheduling)
 {
     mir::AsioMainLoop ml;
 
-    // Somewhat counterintuitively we need some work on the mainloop to keep it running.
-    auto dummy_alarm = ml.notify_in(std::chrono::milliseconds{1000}, [](){});
+    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
+                                 [&ml]() { ml.run(); });
 
-    mtf::WatchDog runner([&ml]() {ml.stop();});
+    std::atomic<int> call_count{0};
+    auto alarm_fired = std::make_shared<mt::Signal>();
 
-    int call_count{0};
-
-    auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [&runner, &call_count]()
+    auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [alarm_fired, &call_count]()
     {
         call_count++;
-        runner.notify_done();
     });
 
-    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
-
-    EXPECT_TRUE(alarm->reschedule_in(std::chrono::milliseconds{150}));
+    EXPECT_TRUE(alarm->reschedule_in(std::chrono::milliseconds{10}));
     EXPECT_EQ(mir::time::Alarm::Pending, alarm->state());
 
-    EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{500}));
+    std::this_thread::sleep_for(std::chrono::milliseconds{500});
+
     EXPECT_EQ(mir::time::Alarm::Triggered, alarm->state());
     EXPECT_EQ(1, call_count);
 }
@@ -534,16 +516,17 @@ TEST(AsioMainLoopTest, alarm_fires_at_correct_time_point)
     mir::AsioMainLoop ml;
     mir::time::HighResolutionClock clock;
 
-    mtf::WatchDog runner([&ml]() {ml.stop();});
+    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
+                                 [&ml]() { ml.run(); });
 
-    mir::time::Timestamp real_soon = clock.sample() + std::chrono::microseconds{120};
+    mir::time::Timestamp real_soon = clock.sample() + std::chrono::milliseconds{120};
+    auto alarm_fired = std::make_shared<mt::Signal>();
 
-    auto alarm = ml.notify_at(real_soon, [&runner]()
+    auto alarm = ml.notify_at(real_soon, [alarm_fired]()
     {
-        runner.notify_done();
+        alarm_fired->raise();
     });
 
-    runner.run([&ml](mtf::WatchDog&) { ml.run(); });
-
-    EXPECT_TRUE(runner.wait_for(std::chrono::milliseconds{200}));
+    EXPECT_FALSE(alarm_fired->wait_for(std::chrono::milliseconds{50}));
+    EXPECT_TRUE(alarm_fired->wait_for(std::chrono::milliseconds{200}));
 }
