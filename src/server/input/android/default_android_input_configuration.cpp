@@ -103,11 +103,6 @@ mia::DefaultInputConfiguration::~DefaultInputConfiguration()
 {
 }
 
-std::shared_ptr<mi::InputDispatcherConfiguration> mia::DefaultInputConfiguration::the_input_dispatcher_configuration()
-{
-    return input_dispatcher_config;
-}
-
 std::shared_ptr<mi::InputChannelFactory> mia::DefaultInputConfiguration::the_input_channel_factory()
 {
     return std::make_shared<mia::InputChannelFactory>();
@@ -138,7 +133,7 @@ droidinput::sp<droidinput::InputReaderInterface> mia::DefaultInputConfiguration:
         [this]()
         {
             auto android_conf = std::dynamic_pointer_cast<mia::InputDispatcherConfiguration>(
-                the_input_dispatcher_configuration());
+                input_dispatcher_config);
 
             if (android_conf)
                 return new droidinput::InputReader(
@@ -161,7 +156,7 @@ std::shared_ptr<mia::InputThread> mia::DefaultInputConfiguration::the_reader_thr
 
 droidinput::sp<droidinput::InputListenerInterface> mia::DefaultInputConfiguration::the_input_translator()
 {
-    return new mia::InputTranslator(the_input_dispatcher_configuration()->the_input_dispatcher());
+    return new mia::InputTranslator(input_dispatcher_config->the_input_dispatcher());
 }
 
 std::shared_ptr<mi::InputManager> mia::DefaultInputConfiguration::the_input_manager()
@@ -170,7 +165,7 @@ std::shared_ptr<mi::InputManager> mia::DefaultInputConfiguration::the_input_mana
         [this]() -> std::shared_ptr<mi::InputManager>
         {
             return std::make_shared<mia::InputManager>(
-                the_event_hub(), the_input_dispatcher_configuration()->the_input_dispatcher(),
+                the_event_hub(),
                 the_reader_thread());
         });
 }

@@ -16,23 +16,27 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "nested_input_manager.h"
+#ifndef MIR_INPUT_NULL_INPUT_MANAGER_H_
+#define MIR_INPUT_NULL_INPUT_MANAGER_H_
 
-#include "mir/input/input_dispatcher.h"
+#include "mir/input/input_manager.h"
 
-namespace mi = mir::input;
-
-mi::NestedInputManager::NestedInputManager(std::shared_ptr<InputDispatcher> const& dispatcher)
-    : dispatcher(dispatcher)
+namespace mir
 {
+namespace input
+{
+class NullInputManager : public input::InputManager
+{
+    void start() override
+    {
+    }
+    void stop() override
+    {
+    }
+};
+
+}
 }
 
-void mi::NestedInputManager::start()
-{
-    dispatcher->start();
-}
+#endif
 
-void mi::NestedInputManager::stop()
-{
-    dispatcher->stop();
-}

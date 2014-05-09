@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -13,32 +13,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_INPUT_NESTED_INPUT_MANAGER_H_
-#define MIR_INPUT_NESTED_INPUT_MANAGER_H_
+#include "mir/scene/null_surface_observer.h"
 
-#include "mir/input/input_manager.h"
-#include <memory>
+namespace ms = mir::scene;
 
-namespace mir
-{
-namespace input
-{
-class InputDispatcher;
-
-class NestedInputManager : public InputManager
-{
-public:
-    NestedInputManager(std::shared_ptr<InputDispatcher> const& dispatcher);
-    void start() override;
-    void stop() override;
-private:
-    std::shared_ptr<InputDispatcher> const dispatcher;
-};
-
-}
-}
-
-#endif // MIR_INPUT_NESTED_INPUT_MANAGER
+void ms::NullSurfaceObserver::attrib_changed(MirSurfaceAttrib /*attrib*/, int /*value*/) {}
+void ms::NullSurfaceObserver::resized_to(geometry::Size const& /*size*/) {}
+void ms::NullSurfaceObserver::moved_to(geometry::Point const& /*top_left*/) {}
+void ms::NullSurfaceObserver::hidden_set_to(bool /*hide*/) {}
+void ms::NullSurfaceObserver::frame_posted() {}
+void ms::NullSurfaceObserver::alpha_set_to(float /*alpha*/) {}
+void ms::NullSurfaceObserver::transformation_set_to(glm::mat4 const& /*t*/) {}

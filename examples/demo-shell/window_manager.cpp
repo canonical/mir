@@ -221,7 +221,7 @@ bool me::WindowManager::handle(MirEvent const& event)
     {
         geometry::Point cursor = average_pointer(event.motion);
 
-        // FIXME: https://bugs.launchpad.net/mir/+bug/1197108
+        // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
         MirMotionAction action = static_cast<MirMotionAction>(event.motion.action & ~0xff00);
 
         auto const app = focus_controller->focussed_application().lock();
@@ -264,8 +264,6 @@ bool me::WindowManager::handle(MirEvent const& event)
                                     drag.dx.as_int();
                         int height = old_size.height.as_int() +
                                      drag.dy.as_int();
-                        if (width <= 0) width = 1;
-                        if (height <= 0) height = 1; 
                         surf->resize({width, height});
                     }
                     else
@@ -296,8 +294,6 @@ bool me::WindowManager::handle(MirEvent const& event)
 
                         int width = old_size.width.as_int() + dx;
                         int height = old_size.height.as_int() + dy;
-                        if (width <= 0) width = 1; 
-                        if (height <= 0) height = 1; 
                         surf->resize({width, height});
                     }
 

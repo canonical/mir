@@ -53,3 +53,8 @@ void ms::LegacySurfaceChangeNotification::transformation_set_to(glm::mat4 const&
 {
     notify_change();
 }
+
+// An attrib change alone is not enough to trigger recomposition.
+void ms::LegacySurfaceChangeNotification::attrib_changed(MirSurfaceAttrib /* attrib */, int /* value */)
+{
+}

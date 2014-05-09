@@ -147,6 +147,7 @@ public:
     virtual std::shared_ptr<graphics::Platform>     the_graphics_platform();
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
     virtual std::shared_ptr<input::InputDispatcherConfiguration> the_input_dispatcher_configuration();
+    virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher();
     /** @} */
 
     /** @name graphics configuration - customization
@@ -272,6 +273,7 @@ protected:
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
+    CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputRegion>     input_region;
     CachedPtr<scene::InputRegistrar> input_registrar;
     CachedPtr<shell::InputTargeter> input_targeter;
