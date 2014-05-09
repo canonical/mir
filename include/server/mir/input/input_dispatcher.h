@@ -36,6 +36,14 @@ namespace input
 class InputDispatcher
 {
 public:
+    /*!
+     * \brief Called when the device configuration changed.
+     */
+    virtual void configuration_changed(nsecs_t when) = 0;
+    /*!
+     * \brief Called when the device \a device_id was added removed or was reset
+     */
+    virtual void device_reset(int32_t device_id, nsecs_t when) = 0;
     virtual void dispatch(MirEvent const& event) = 0;
     virtual void start() = 0;
     virtual void stop() = 0;

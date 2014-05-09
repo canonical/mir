@@ -28,6 +28,7 @@
 #include "src/server/input/android/android_input_targeter.h"
 #include "src/server/input/android/android_input_registrar.h"
 #include "src/server/input/android/input_dispatcher_configuration.h"
+#include "mir/input/input_dispatcher.h"
 #include "src/server/input/android/event_filter_dispatcher_policy.h"
 
 #include "mir_test/fake_shared.h"
@@ -89,8 +90,10 @@ public:
     {
         event_filter = std::make_shared<MockEventFilter>();
 
+        dispatcher_conf = std::make_shared<mia::InputDispatcherConfiguration>(event_filter, mr::null_input_report());
+        dispatcher = dispatcher_conf->the_input_dispatcher();
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
-                event_filter,
+                dispatcher_conf,
                 mt::fake_shared(input_region),
                 null_cursor_listener,
                 mr::null_input_report());
@@ -100,20 +103,24 @@ public:
         input_manager = configuration->the_input_manager();
 
         stub_targets = std::make_shared<mtd::StubInputTargets>();
-        configuration->the_input_dispatcher_configuration()->set_input_targets(stub_targets);
+        dispatcher_conf->set_input_targets(stub_targets);
 
         input_manager->start();
+        dispatcher->start();
     }
 
     void TearDown()
     {
+        dispatcher->stop();
         input_manager->stop();
     }
 
   protected:
+    std::shared_ptr<mia::InputDispatcherConfiguration> dispatcher_conf;
     std::shared_ptr<mtd::FakeEventHubInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
     std::shared_ptr<mi::InputManager> input_manager;
+    std::shared_ptr<mi::InputDispatcher> dispatcher;
     std::shared_ptr<MockEventFilter> event_filter;
     StubInputRegion input_region;
     std::shared_ptr<mtd::StubInputTargets> stub_targets;
@@ -261,8 +268,9 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     AndroidInputManagerDispatcherInterceptSetup()
     {
         event_filter = std::make_shared<MockEventFilter>();
-        auto dispatcher_conf =
+        dispatcher_conf =
             std::make_shared<TestingInputDispatcherConfiguration>(event_filter, mr::null_input_report());
+        dispatcher = dispatcher_conf->the_input_dispatcher();
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
             dispatcher_conf,
             mt::fake_shared(input_region), null_cursor_listener, mr::null_input_report());
@@ -281,6 +289,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
 
     ~AndroidInputManagerDispatcherInterceptSetup()
     {
+        dispatcher->stop();
         input_manager->stop();
     }
 
@@ -290,6 +299,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     void SetUp()
     {
         input_manager->start();
+        dispatcher->start();
     }
 
     int test_fd()
@@ -302,6 +312,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
 
     std::shared_ptr<MockEventFilter> event_filter;
     StubInputRegion input_region;
+    std::shared_ptr<TestingInputDispatcherConfiguration> dispatcher_conf;
     std::shared_ptr<mtd::FakeEventHubInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
     droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
@@ -309,6 +320,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     std::shared_ptr<mtd::StubInputTargets> stub_targets;
 
     std::shared_ptr<mi::InputManager> input_manager;
+    std::shared_ptr<mi::InputDispatcher> dispatcher;
     std::shared_ptr<ms::InputRegistrar> input_registrar;
     std::shared_ptr<msh::InputTargeter> input_targeter;
 };

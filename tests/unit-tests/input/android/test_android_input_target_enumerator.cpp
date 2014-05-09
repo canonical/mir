@@ -74,9 +74,8 @@ struct StubInputSurface : public mi::Surface
     }
 
     std::string name() const { return {}; }
-    geom::Point top_left() const { return {}; }
-    geom::Size size() const { return {}; }
-    bool contains(geom::Point const&) const { return false; }
+    geom::Rectangle input_bounds() const override { return {{},{}}; }
+    bool input_area_contains(geom::Point const&) const override { return false; }
     void cursor_parameters(bool&, std::string&, std::string&) const { }
     
     std::shared_ptr<mi::InputChannel> const channel;
