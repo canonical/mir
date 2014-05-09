@@ -64,6 +64,7 @@ public:
      * to silence gmock warnings.
      */
     int client_socket_fd() const { return 0; }
+    int client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const override { return 0; }
     void remove_endpoint() const {}
 };
 

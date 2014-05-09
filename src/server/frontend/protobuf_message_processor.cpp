@@ -57,6 +57,7 @@ template<> struct result_ptr_t<::mir::protobuf::Buffer>     { typedef ::mir::pro
 template<> struct result_ptr_t<::mir::protobuf::Connection> { typedef ::mir::protobuf::Connection* type; };
 template<> struct result_ptr_t<::mir::protobuf::Surface>    { typedef ::mir::protobuf::Surface* type; };
 template<> struct result_ptr_t<::mir::protobuf::Screencast> { typedef ::mir::protobuf::Screencast* type; };
+template<> struct result_ptr_t<mir::protobuf::SocketFD>     { typedef ::mir::protobuf::SocketFD* type; };
 
 template<>
 void invoke(
@@ -173,6 +174,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::release_screencast, invocation);
         }
+        else if ("new_fds_for_trusted_clients" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::new_fds_for_trusted_clients, invocation);
+        }
         else if ("disconnect" == invocation.method_name())
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::disconnect, invocation);
@@ -238,4 +243,10 @@ void mfd::ProtobufMessageProcessor::send_response(
         std::vector<int32_t>();
 
     sender->send_response(id, response, {buffer_fd});
+}
+
+void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::SocketFD* response)
+{
+    const auto& fd = extract_fds_from(response);
+    sender->send_response(id, response, {fd});
 }
