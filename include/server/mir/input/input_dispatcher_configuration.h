@@ -24,9 +24,9 @@
 
 namespace mir
 {
-namespace scene
+namespace compositor
 {
-class InputRegistrar;
+class Scene;
 }
 namespace shell
 {
@@ -42,13 +42,10 @@ class InputDispatcherConfiguration
 public:
     virtual ~InputDispatcherConfiguration() = default;
 
-    virtual std::shared_ptr<scene::InputRegistrar> the_input_registrar() = 0;
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter() = 0;
     virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher() = 0;
 
     virtual bool is_key_repeat_enabled() const = 0;
-
-    virtual void set_input_targets(std::shared_ptr<input::InputTargets> const& targets) = 0;
 
 protected:
     InputDispatcherConfiguration() = default;

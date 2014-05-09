@@ -13,37 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_FRONTEND_SESSION_CREDENTIALS_ID_H_
-#define MIR_FRONTEND_SESSION_CREDENTIALS_ID_H_
+#include "mir/frontend/connection_context.h"
 
-#include <sys/types.h>
+#include "mir/frontend/connector.h"
 
-namespace mir
+namespace mf = mir::frontend;
+
+mf::ConnectionContext::ConnectionContext(
+    std::function<void(std::shared_ptr<Session> const& session)> const connect_handler,
+    Connector const* connector) :
+    connect_handler(connect_handler),
+    connector(connector)
 {
-namespace frontend
-{
-class SessionCredentials
-{
-public:
-    static SessionCredentials from_socket_fd(int socket_fd);
-
-    SessionCredentials(pid_t pid, uid_t uid, gid_t gid);
-
-    pid_t pid() const;
-    uid_t uid() const;
-    gid_t gid() const;
-
-private:
-    SessionCredentials() = delete;
-
-    pid_t the_pid;
-    uid_t the_uid;
-    gid_t the_gid;
-
-};
-}
 }
 
-#endif
+int mf::ConnectionContext::fd_for_new_client(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
+{
+    return connector->client_socket_fd(connect_handler);
+}

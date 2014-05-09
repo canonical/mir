@@ -166,6 +166,7 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
         mir::protobuf::Surface* surface = nullptr;
         mir::protobuf::Buffer* buffer = nullptr;
         mir::protobuf::Platform* platform = nullptr;
+        mir::protobuf::SocketFD* socket_fd = nullptr;
 
         if (message_type == "mir.protobuf.Buffer")
         {
@@ -193,9 +194,15 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
             if (connection && connection->has_platform())
                 platform = connection->mutable_platform();
         }
+        else if (message_type == "mir.protobuf.SocketFD")
+        {
+            socket_fd = static_cast<mir::protobuf::SocketFD*>(response);
+        }
+
         receive_any_file_descriptors_for(surface);
         receive_any_file_descriptors_for(buffer);
         receive_any_file_descriptors_for(platform);
+        receive_any_file_descriptors_for(socket_fd);
     }
 
     complete->Run();

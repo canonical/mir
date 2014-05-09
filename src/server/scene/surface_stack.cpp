@@ -22,7 +22,6 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "surface_stack.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/scene/input_registrar.h"
 #include "mir/input/input_channel_factory.h"
 #include "mir/scene/scene_report.h"
 
@@ -48,9 +47,7 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::SurfaceStack::SurfaceStack(
-    std::shared_ptr<InputRegistrar> const& input_registrar,
     std::shared_ptr<SceneReport> const& report) :
-    input_registrar{input_registrar},
     report{report}
 {
 }
@@ -74,7 +71,7 @@ void ms::SurfaceStack::add_surface(
         std::lock_guard<decltype(guard)> lg(guard);
         layers_by_depth[depth].push_back(surface);
     }
-    input_registrar->input_channel_opened(surface->input_channel(), surface, input_mode);
+    surface->set_reception_mode(input_mode);
     observers.surface_added(surface.get());
 
     report->surface_added(surface.get(), surface.get()->name());
@@ -105,7 +102,6 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 
     if (found_surface)
     {
-        input_registrar->input_channel_closed(keep_alive->input_channel());
         observers.surface_removed(keep_alive.get());
 
         report->surface_removed(keep_alive.get(), keep_alive.get()->name());

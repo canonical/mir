@@ -2,6 +2,7 @@ set(
   FRONTEND_SOURCES
 
   client_buffer_tracker.cpp
+  connection_context.cpp
   session_mediator.cpp
   protobuf_message_processor.cpp
   protobuf_responder.cpp

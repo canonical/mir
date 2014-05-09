@@ -34,23 +34,23 @@ namespace
 {
 struct WindowInfo : public droidinput::InputWindowInfo
 {
-    WindowInfo(std::shared_ptr<mi::Surface> const& surface)
+    WindowInfo(mi::Surface const* surface)
         : surface(surface)
     {
     }
 
     bool touchableRegionContainsPoint(int32_t x, int32_t y) const override
     {
-        return surface->contains(geom::Point{x, y});
+        return surface->input_area_contains({x, y});
     }
 
-    std::shared_ptr<mi::Surface> const surface;
+    mi::Surface const* surface;
 };
 }
 
 mia::InputWindowHandle::InputWindowHandle(droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
                                           std::shared_ptr<mi::InputChannel> const& channel,
-                                          std::shared_ptr<mi::Surface> const& surface)
+                                          mi::Surface const* surface)
   : droidinput::InputWindowHandle(input_app_handle),
     input_channel(channel),
     surface(surface)
@@ -69,13 +69,12 @@ bool mia::InputWindowHandle::updateInfo()
                                                            input_channel->server_fd());
     }
 
-    auto surface_size = surface->size();
-    auto surface_position = surface->top_left();
+    auto const& bounds = surface->input_bounds();
 
-    mInfo->frameLeft = surface_position.x.as_uint32_t();
-    mInfo->frameTop = surface_position.y.as_uint32_t();
-    mInfo->frameRight = mInfo->frameLeft + surface_size.width.as_uint32_t();
-    mInfo->frameBottom = mInfo->frameTop + surface_size.height.as_uint32_t();
+    mInfo->frameLeft = bounds.top_left.x.as_uint32_t();
+    mInfo->frameTop = bounds.top_left.y.as_uint32_t();
+    mInfo->frameRight = mInfo->frameLeft + bounds.size.width.as_uint32_t();
+    mInfo->frameBottom = mInfo->frameTop + bounds.size.height.as_uint32_t();
 
     mInfo->touchableRegionLeft = mInfo->frameLeft;
     mInfo->touchableRegionTop = mInfo->frameTop;
