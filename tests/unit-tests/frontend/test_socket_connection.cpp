@@ -169,3 +169,13 @@ TEST_F(SocketConnection, notifies_client_pid_before_message_dispatched)
 
     fake_receiving_message();
 }
+
+TEST_F(SocketConnection, notifies_client_pid_once_only)
+{
+    auto const arbitary_no_of_messages = 5;
+
+    EXPECT_CALL(mock_processor, client_pid(_)).Times(1);
+
+    for (int i = 0; i != arbitary_no_of_messages; ++i)
+        fake_receiving_message();
+}

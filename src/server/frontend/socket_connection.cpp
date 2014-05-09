@@ -101,8 +101,11 @@ try
     if (!invocation.has_protocol_version() || invocation.protocol_version() != 1)
         BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported protocol version"));
 
-    client_pid = message_receiver->client_creds().pid();
-    processor->client_pid(client_pid);
+    if (!client_pid)
+    {
+        client_pid = message_receiver->client_creds().pid();
+        processor->client_pid(client_pid);
+    }
 
     if (processor->dispatch(invocation))
     {
