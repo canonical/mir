@@ -20,6 +20,7 @@
 #include "src/server/frontend/socket_connection.h"
 #include "src/server/frontend/message_receiver.h"
 #include "mir/frontend/message_processor.h"
+#include "mir/frontend/session_credentials.h"
 
 #include "mir_test/fake_shared.h"
 

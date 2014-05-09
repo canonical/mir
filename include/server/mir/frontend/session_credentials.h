@@ -27,7 +27,8 @@ namespace frontend
 class SessionCredentials
 {
 public:
-    explicit SessionCredentials(int socket_fd);
+    static SessionCredentials from_socket_fd(int socket_fd);
+
     SessionCredentials(pid_t pid, uid_t uid, gid_t gid);
 
     pid_t pid() const;
