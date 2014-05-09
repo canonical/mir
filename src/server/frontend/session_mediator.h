@@ -60,7 +60,6 @@ class SessionMediator : public detail::DisplayServer
 public:
 
     SessionMediator(
-        pid_t client_pid,
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
