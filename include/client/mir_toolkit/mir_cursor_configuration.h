@@ -51,8 +51,9 @@ void mir_cursor_configuration_destroy(MirCursorConfiguration *parameters);
 
 /**
  * Returns a new MirCursorConfiguration representing a named cursor
- * from the system cursor theme. Currently only the default cursor 
- * and a disabled cursor are supported.
+ * from the system cursor theme. Currently only the symbolic values,
+ * mir_default_cursor_name and mir_disabled_cursor_name are supported
+ * as input.
  *    \param [in] name The cursor name
  *    \return A cursor parameters object which must be passed
  *            to_mir_cursor_configuration_destroy
