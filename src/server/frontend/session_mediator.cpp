@@ -175,9 +175,10 @@ void mf::SessionMediator::create_surface(
         .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id())));
 
     auto surface = session->get_surface(surf_id);
+    auto const& client_size = surface->client_size();
     response->mutable_id()->set_value(surf_id.as_value());
-    response->set_width(surface->size().width.as_uint32_t());
-    response->set_height(surface->size().height.as_uint32_t());
+    response->set_width(client_size.width.as_uint32_t());
+    response->set_height(client_size.height.as_uint32_t());
     response->set_pixel_format((int)surface->pixel_format());
     response->set_buffer_usage(request->buffer_usage());
 
@@ -434,7 +435,6 @@ void mf::SessionMediator::new_fds_for_trusted_clients(
         if (trust_session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
 
-        // TODO write a handler that connects the new session to our trust session
         auto const connect_handler = [this](std::shared_ptr<frontend::Session> const& session)
         {
             auto trust_session = weak_trust_session.lock();

@@ -73,7 +73,7 @@ void mf::ProtobufConnectionCreator::create_connection_for(
             ipc_factory->make_ipc_server(creds, event_sink, connection_context),
             report);
 
-        const auto& connection = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);
+        auto const& connection = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);
         connections->add(connection);
         connection->read_next_message();
     }

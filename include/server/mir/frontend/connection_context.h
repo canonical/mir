@@ -1,5 +1,5 @@
 /*
- * Copyright © 014 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -32,9 +32,6 @@ class Session;
 class ConnectionContext
 {
 public:
-    ConnectionContext() = delete;
-    ConnectionContext(const ConnectionContext&) = default;
-    ConnectionContext& operator=(const ConnectionContext&) = default;
     ConnectionContext(Connector const* connector) :
         ConnectionContext([](std::shared_ptr<Session> const&){}, connector) {}
     ConnectionContext(
