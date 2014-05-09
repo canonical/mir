@@ -256,10 +256,10 @@ bool AlarmImpl::reschedule_in(std::chrono::milliseconds delay)
 
 bool AlarmImpl::reschedule_for(mir::time::Timestamp time_point)
 {
+    auto boost_epoch = boost::posix_time::from_time_t(0);
+    auto microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(time_point.time_since_epoch()).count();
     bool cancelling =
-        timer.expires_at(boost::posix_time::from_time_t(
-                std::chrono::high_resolution_clock::to_time_t(time_point)
-                ));
+            timer.expires_at(boost_epoch + boost::posix_time::microseconds{microseconds_since_epoch});
     update_timer();
     return cancelling;
 }
