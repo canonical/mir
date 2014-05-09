@@ -430,8 +430,19 @@ void mf::SessionMediator::new_fds_for_trusted_clients(
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+        auto trust_session = weak_trust_session.lock();
+        if (trust_session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
+
         // TODO write a handler that connects the new session to our trust session
-        auto const connect_handler = [](std::shared_ptr<frontend::Session> const&) {};
+        auto const connect_handler = [this](std::shared_ptr<frontend::Session> const& session)
+        {
+            auto trust_session = weak_trust_session.lock();
+            if (trust_session.get() == nullptr)
+                BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
+
+            shell->add_trusted_session_for(trust_session, session->process_id());
+        };
 
         auto const fds_requested = parameters->number();
 

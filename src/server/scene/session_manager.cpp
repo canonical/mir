@@ -163,7 +163,6 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
             else
             {
                 scene_trust_session->remove_trusted_child(scene_session);
-                scene_session->end_trust_session();
 
                 trust_session_container->remove_process(scene_session->process_id());
             }
@@ -257,14 +256,18 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for_locked
 
     trust_session_container->insert(trust_session, session_pid);
 
+    bool added = false;
     app_container->for_each(
-        [this, session_pid, scene_trust_session](std::shared_ptr<ms::Session> const& container_session)
+        [&](std::shared_ptr<ms::Session> const& container_session)
         {
             if (container_session->process_id() == session_pid)
             {
-                scene_trust_session->add_trusted_child(container_session);
+                added |= scene_trust_session->add_trusted_child(container_session);
             }
         });
+
+    if (!added)
+        BOOST_THROW_EXCEPTION(std::runtime_error("failed to add trusted session"));
 
     return mir_trust_session_add_tust_succeeded;
 }

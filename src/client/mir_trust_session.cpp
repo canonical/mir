@@ -150,7 +150,13 @@ void MirTrustSession::done_stop(mir_trust_session_callback callback, void* conte
 
 void MirTrustSession::done_add_trusted_session(mir_trust_session_add_trusted_session_callback callback, void* context)
 {
-    callback(this, static_cast<MirTrustSessionAddTrustResult>(add_result.result()), context);
+    MirTrustSessionAddTrustResult result = static_cast<MirTrustSessionAddTrustResult>(add_result.result());
+    if (add_result.has_error())
+    {
+        set_error_message(add_result.error());
+        result = mir_trust_session_add_tust_failed;
+    }
+    callback(this, result, context);
     add_result_wait_handle.result_received();
 }
 
