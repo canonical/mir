@@ -24,7 +24,7 @@
 
 namespace mf = mir::frontend;
 
-mf::SessionCredentials::SessionCredentials(int socket_fd)
+mf::SessionCredentials mf::SessionCredentials::from_socket_fd(int socket_fd)
 {
     struct ucred cr;
     socklen_t cl = sizeof(cr);
@@ -34,9 +34,14 @@ mf::SessionCredentials::SessionCredentials(int socket_fd)
     if (status)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
 
-    the_pid = cr.pid;
-    the_uid = cr.uid;
-    the_gid = cr.gid;
+    return {cr.pid, cr.uid, cr.gid};
+}
+
+mf::SessionCredentials::SessionCredentials(pid_t pid, uid_t uid, gid_t gid) :
+    the_pid{pid},
+    the_uid{uid},
+    the_gid{gid}
+{
 }
 
 pid_t mf::SessionCredentials::pid() const
