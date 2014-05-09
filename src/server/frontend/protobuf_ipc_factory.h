@@ -33,7 +33,6 @@ class DisplayServer;
 }
 class EventSink;
 class ResourceCache;
-class MessageProcessorReport;
 class SessionCredentials;
 
 class ProtobufIpcFactory

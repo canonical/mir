@@ -72,6 +72,8 @@ public:
 
     ~SessionMediator() noexcept;
 
+    void client_pid(int pid) override;
+
     /* Platform independent requests */
     void connect(::google::protobuf::RpcController* controller,
                  const ::mir::protobuf::ConnectParameters* request,
@@ -136,7 +138,7 @@ private:
                               bool need_full_ipc);
 
     void advance_buffer(SurfaceId surf_id, Surface& surface, std::function<void(graphics::Buffer*, bool)> complete);
-    pid_t client_pid;
+    pid_t client_pid_;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 

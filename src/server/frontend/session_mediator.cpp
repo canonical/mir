@@ -68,7 +68,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast) :
-    client_pid(client_pid),
+    client_pid_(client_pid),
     shell(shell),
     graphics_platform(graphics_platform),
     surface_pixel_formats(surface_pixel_formats),
@@ -89,6 +89,11 @@ mf::SessionMediator::~SessionMediator() noexcept
     }
 }
 
+void mf::SessionMediator::client_pid(int pid)
+{
+    client_pid_ = pid;
+}
+
 void mf::SessionMediator::connect(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::ConnectParameters* request,
@@ -99,7 +104,7 @@ void mf::SessionMediator::connect(
 
     {
         std::unique_lock<std::mutex> lock(session_mutex);
-        weak_session = shell->open_session(client_pid, request->application_name(), event_sink);
+        weak_session = shell->open_session(client_pid_, request->application_name(), event_sink);
     }
 
     auto ipc_package = graphics_platform->get_ipc_package();
