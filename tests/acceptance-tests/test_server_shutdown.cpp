@@ -143,10 +143,6 @@ struct FakeEventHubServerConfig : TestingServerConfiguration
     {
         return DefaultServerConfiguration::the_input_targeter();
     }
-    std::shared_ptr<mir::scene::InputRegistrar> the_input_registrar() override
-    {
-        return DefaultServerConfiguration::the_input_registrar();
-    }
 
     mia::FakeEventHub* the_fake_event_hub()
     {

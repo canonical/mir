@@ -38,7 +38,6 @@
 #include "mir/input/input_channel_factory.h"
 #include "mir/options/program_option.h"
 
-#include "mir_test_doubles/stub_input_registrar.h"
 #include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/null_surface_configurator.h"
 
@@ -98,14 +97,13 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     params.buffer_usage = mg::BufferUsage::hardware;
 
     auto stub_input_factory = std::make_shared<StubInputFactory>();
-    auto stub_input_registrar = std::make_shared<mtd::StubInputRegistrar>();
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
     auto buffer_stream_factory = std::make_shared<mc::BufferStreamFactory>(allocator);
     auto scene_report = mr::null_scene_report();
     auto const surface_configurator = std::make_shared<mtd::NullSurfaceConfigurator>();
     auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory, surface_configurator, scene_report);
-    auto ss = std::make_shared<ms::SurfaceStack>(stub_input_registrar, scene_report);
+    auto ss = std::make_shared<ms::SurfaceStack>(scene_report);
     auto const surface_placement = std::make_shared<NullSurfacePlacementStrategy>();
     auto surface_controller = std::make_shared<ms::SurfaceController>(surface_allocator, surface_placement, ss);
     auto surface = surface_controller->add_surface(params, nullptr);
