@@ -111,7 +111,7 @@ TEST_F(AndroidInputRegistrarFdSetup, monitor_flag_is_passed_to_dispatcher)
 {
     using namespace ::testing;
 
-    ON_CALL(surface, reception_mode()).WillByDefault(Return(mi::InputReceptionMode::receives_all_input));
+    surface.set_reception_mode(mi::InputReceptionMode::receives_all_input);
 
     EXPECT_CALL(*dispatcher, registerInputChannel(_, _, true)).Times(1)
         .WillOnce(Return(droidinput::OK));

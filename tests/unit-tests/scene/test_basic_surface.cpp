@@ -200,6 +200,33 @@ TEST_F(BasicSurfaceTest, update_size)
     EXPECT_EQ(old_transformation, surface.compositor_snapshot(compositor_id)->transformation());
 }
 
+/*
+ * Until logic is implemented to separate size() from client_size(), verify
+ * they do return the same thing for backward compatibility.
+ */
+TEST_F(BasicSurfaceTest, size_equals_client_size)
+{
+    geom::Size const new_size{34, 56};
+
+    ms::BasicSurface surface{
+        name,
+        rect,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
+        report};
+
+    EXPECT_EQ(rect.size, surface.size());
+    EXPECT_EQ(rect.size, surface.client_size());
+    EXPECT_NE(new_size, surface.size());
+    EXPECT_NE(new_size, surface.client_size());
+
+    surface.resize(new_size);
+    EXPECT_EQ(new_size, surface.size());
+    EXPECT_EQ(new_size, surface.client_size());
+}
+
 TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
 {
     EXPECT_CALL(mock_callback, call())
@@ -383,7 +410,7 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         for(auto y = 0; y <= 3; y++)
         {
             auto test_pt = geom::Point{x, y};
-            auto contains = surface.contains(test_pt);
+            auto contains = surface.input_area_contains(test_pt);
             if (std::find(contained_pt.begin(), contained_pt.end(), test_pt) != contained_pt.end())
             {
                 EXPECT_TRUE(contains);
@@ -430,7 +457,7 @@ TEST_F(BasicSurfaceTest, set_input_region)
         for(auto y = 0; y <= 3; y++)
         {
             auto test_pt = geom::Point{x, y};
-            auto contains = surface.contains(test_pt);
+            auto contains = surface.input_area_contains(test_pt);
             if (std::find(contained_pt.begin(), contained_pt.end(), test_pt) != contained_pt.end())
             {
                 EXPECT_TRUE(contains);
