@@ -37,6 +37,18 @@ mia::AndroidInputDispatcher::AndroidInputDispatcher(
 {
 }
 
+void mia::AndroidInputDispatcher::configuration_changed(nsecs_t when)
+{
+    droidinput::NotifyConfigurationChangedArgs args(when);
+    dispatcher->notifyConfigurationChanged(&args);
+}
+
+void mia::AndroidInputDispatcher::device_reset(int32_t device_id, nsecs_t when)
+{
+    droidinput::NotifyDeviceResetArgs args(when, device_id);
+    dispatcher->notifyDeviceReset(&args);
+}
+
 void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
 {
     static auto const policy_flags = 0;

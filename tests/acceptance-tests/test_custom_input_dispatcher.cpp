@@ -85,7 +85,7 @@ public:
     void set_input_targets(std::shared_ptr<mi::InputTargets> const& /*targets*/) override
     {}
 
-    CustomInputDispatcher dispatcher;
+    ::testing::NiceMock<CustomInputDispatcher> dispatcher;
 };
 
 
@@ -168,6 +168,7 @@ TEST_F(BespokeDisplayServerTestFixture, custom_input_dispatcher_receives_focus_c
                     using namespace ::testing;
                     InSequence seq;
 
+                    EXPECT_CALL(dispatcher_conf->dispatcher, focus_cleared()).Times(1);
                     EXPECT_CALL(dispatcher_conf->dispatcher, focus_changed(_)).Times(1);
                     EXPECT_CALL(dispatcher_conf->dispatcher, focus_cleared()).Times(1);
                 }

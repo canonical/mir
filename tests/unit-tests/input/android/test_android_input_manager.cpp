@@ -25,7 +25,6 @@
 #include "mir/input/input_channel.h"
 
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_input_dispatcher.h"
 #include "mir_test_doubles/stub_input_channel.h"
 
 #include <EventHub.h>
@@ -99,12 +98,10 @@ struct AndroidInputManagerSetup : public testing::Test
         using namespace ::testing;
 
         event_hub = new MockEventHub();
-        dispatcher = std::make_shared<mtd::MockInputDispatcher>();
         reader_thread = std::make_shared<MockInputThread>();
     }
 
     droidinput::sp<MockEventHub> event_hub;
-    std::shared_ptr<mtd::MockInputDispatcher> dispatcher;
     std::shared_ptr<MockInputThread> reader_thread;
 };
 
@@ -114,12 +111,8 @@ TEST_F(AndroidInputManagerSetup, start_and_stop)
 {
     using namespace ::testing;
 
-    ExpectationSet dispatcher_setup;
     ExpectationSet reader_setup;
 
-    dispatcher_setup += EXPECT_CALL(*dispatcher,
-                                    start())
-                            .Times(1);
 
     reader_setup += EXPECT_CALL(*event_hub, flush()).Times(1);
 
@@ -130,13 +123,12 @@ TEST_F(AndroidInputManagerSetup, start_and_stop)
     {
         InSequence seq;
 
-        EXPECT_CALL(*dispatcher, stop());
         EXPECT_CALL(*reader_thread, request_stop());
         EXPECT_CALL(*event_hub, wake());
         EXPECT_CALL(*reader_thread, join());
     }
 
-    mia::InputManager manager(event_hub, dispatcher, reader_thread);
+    mia::InputManager manager(event_hub, reader_thread);
 
     manager.start();
     manager.stop();

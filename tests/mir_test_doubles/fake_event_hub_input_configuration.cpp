@@ -25,32 +25,6 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mtd = mir::test::doubles;
 
-class FakeEventHubInputDispatcherConfiguration : public mia::InputDispatcherConfiguration
-{
-public:
-    FakeEventHubInputDispatcherConfiguration(std::shared_ptr<mi::EventFilter> const& ev_filter,
-                                             std::shared_ptr<mi::InputReport> const& input_report)
-        : InputDispatcherConfiguration(ev_filter, input_report)
-    {
-    }
-    bool is_key_repeat_enabled() const override
-    {
-        return false;
-    }
-};
-
-mtd::FakeEventHubInputConfiguration::FakeEventHubInputConfiguration(
-    std::shared_ptr<mir::input::EventFilter> const& event_filter,
-    std::shared_ptr<mi::InputRegion> const& input_region,
-    std::shared_ptr<mi::CursorListener> const& cursor_listener,
-    std::shared_ptr<mi::InputReport> const& input_report)
-    : FakeEventHubInputConfiguration(
-          std::make_shared<FakeEventHubInputDispatcherConfiguration>(event_filter, input_report), input_region,
-          cursor_listener, input_report)
-{
-    event_hub = new mia::FakeEventHub();
-}
-
 mtd::FakeEventHubInputConfiguration::FakeEventHubInputConfiguration(
     std::shared_ptr<mir::input::InputDispatcherConfiguration> const& dispatcher_conf,
     std::shared_ptr<input::InputRegion> const& input_region,
