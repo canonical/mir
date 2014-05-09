@@ -50,6 +50,7 @@ public:
     virtual void destroy_surface(SurfaceId surface) = 0;
     virtual std::shared_ptr<Surface> get_surface(SurfaceId surface) const = 0;
 
+    virtual pid_t process_id() const = 0;
     virtual std::string name() const = 0;
 
     virtual void hide() = 0;
