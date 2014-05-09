@@ -39,6 +39,13 @@ mf::SessionCredentials::SessionCredentials(int socket_fd)
     the_gid = cr.gid;
 }
 
+mf::SessionCredentials::SessionCredentials(pid_t pid, uid_t uid, gid_t gid) :
+    the_pid{pid},
+    the_uid{uid},
+    the_gid{gid}
+{
+}
+
 pid_t mf::SessionCredentials::pid() const
 {
     return the_pid;
