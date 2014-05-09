@@ -54,4 +54,4 @@ private:
 }
 }
 
-#endif // MIR_TEST_SEMAPHORE_H_
+#endif // MIR_TEST_SIGNAL_H_
