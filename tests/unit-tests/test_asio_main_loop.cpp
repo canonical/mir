@@ -527,6 +527,6 @@ TEST(AsioMainLoopTest, alarm_fires_at_correct_time_point)
         alarm_fired->raise();
     });
 
-    EXPECT_FALSE(alarm_fired->wait_for(std::chrono::milliseconds{50}));
-    EXPECT_TRUE(alarm_fired->wait_for(std::chrono::milliseconds{200}));
+    EXPECT_FALSE(alarm_fired->wait_until(real_soon - std::chrono::milliseconds{50}));
+    EXPECT_TRUE(alarm_fired->wait_until(real_soon + std::chrono::milliseconds{50}));
 }

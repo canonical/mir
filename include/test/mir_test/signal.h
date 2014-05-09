@@ -45,6 +45,12 @@ public:
         std::unique_lock<decltype(mutex)> lock(mutex);
         return cv.wait_for(lock, delay, [this]() { return signalled; });
     }
+    template<class Clock, class Duration>
+    bool wait_until(std::chrono::time_point<Clock, Duration> const& time)
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        return cv.wait_until(lock, time, [this]() { return signalled; });
+    }
 
 private:
     std::mutex mutex;
