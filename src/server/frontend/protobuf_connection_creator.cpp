@@ -18,6 +18,7 @@
 
 #include "mir/frontend/protobuf_connection_creator.h"
 
+#include "mir/frontend/session_credentials.h"
 #include "event_sender.h"
 #include "protobuf_message_processor.h"
 #include "protobuf_responder.h"
