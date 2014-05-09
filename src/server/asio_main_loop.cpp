@@ -223,10 +223,10 @@ AlarmImpl::~AlarmImpl() noexcept
 bool AlarmImpl::cancel()
 {
     std::lock_guard<decltype(data->m)> lock(data->m);
-    if (data->state == Triggered)
+    if (data->state == triggered)
         return false;
 
-    data->state = Cancelled;
+    data->state = cancelled;
     timer.cancel();
     return true;
 }
@@ -269,14 +269,14 @@ void AlarmImpl::update_timer()
             return;
 
         std::unique_lock<decltype(data->m)> lock(data->m);
-        if (!ec && data->state == Pending)
+        if (!ec && data->state == pending)
         {
-            data->state = Triggered;
+            data->state = triggered;
             lock.unlock();
             data->callback();
         }
     });
-    data->state = Pending;
+    data->state = pending;
 }
 }
 

@@ -23,44 +23,17 @@
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/pipe.h"
+#include "mir_test/wait_object.h"
 
 #include <gtest/gtest.h>
 
 #include <thread>
-#include <mutex>
-#include <condition_variable>
-#include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
 namespace mt = mir::test;
 
 namespace
 {
-
-class WaitObject
-{
-public:
-    void notify_ready()
-    {
-        std::unique_lock<std::mutex> lock{mutex};
-        ready = true;
-        cv.notify_all();
-    }
-
-    void wait_until_ready()
-    {
-        std::unique_lock<std::mutex> lock{mutex};
-        if (!cv.wait_for(lock, std::chrono::seconds{10}, [this] { return ready; }))
-        {
-            BOOST_THROW_EXCEPTION(std::runtime_error("WaitObject timed out"));
-        }
-    }
-
-private:
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool ready = false;
-};
 
 struct StubScreencastServerTool : mt::StubServerTool
 {
@@ -129,13 +102,13 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_creating_screencast)
     protobuf_parameters.set_pixel_format(0);
     mir::protobuf::Screencast protobuf_screencast;
 
-    WaitObject wait_rpc;
+    mt::WaitObject wait_rpc;
 
     protobuf_server->create_screencast(
         nullptr,
         &protobuf_parameters,
         &protobuf_screencast,
-        google::protobuf::NewCallback(&wait_rpc, &WaitObject::notify_ready));
+        google::protobuf::NewCallback(&wait_rpc, &mt::WaitObject::notify_ready));
 
     wait_rpc.wait_until_ready();
 
@@ -167,13 +140,13 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_getting_screencast_buffer)
     protobuf_screencast_id.set_value(0);
     mir::protobuf::Buffer protobuf_buffer;
 
-    WaitObject wait_rpc;
+    mt::WaitObject wait_rpc;
 
     protobuf_server->screencast_buffer(
         nullptr,
         &protobuf_screencast_id,
         &protobuf_buffer,
-        google::protobuf::NewCallback(&wait_rpc, &WaitObject::notify_ready));
+        google::protobuf::NewCallback(&wait_rpc, &mt::WaitObject::notify_ready));
 
     wait_rpc.wait_until_ready();
 
