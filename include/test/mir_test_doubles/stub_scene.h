@@ -32,7 +32,6 @@ namespace doubles
 class StubScene : public compositor::Scene
 {
 public:
-    StubScene() = default;
     graphics::RenderableList renderable_list_for(void const*) const override
     {
           return {};
