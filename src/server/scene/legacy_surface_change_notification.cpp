@@ -19,6 +19,7 @@
 #include "legacy_surface_change_notification.h"
 
 namespace ms = mir::scene;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::LegacySurfaceChangeNotification::LegacySurfaceChangeNotification(std::function<void()> const& notify_change) :
@@ -57,4 +58,9 @@ void ms::LegacySurfaceChangeNotification::transformation_set_to(glm::mat4 const&
 // An attrib change alone is not enough to trigger recomposition.
 void ms::LegacySurfaceChangeNotification::attrib_changed(MirSurfaceAttrib /* attrib */, int /* value */)
 {
+}
+
+void ms::LegacySurfaceChangeNotification::reception_mode_set_to(mi::InputReceptionMode /*mode*/)
+{
+    notify_change();
 }

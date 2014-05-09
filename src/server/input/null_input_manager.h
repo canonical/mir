@@ -16,34 +16,27 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_CONFIGURATION_H_
-#define MIR_INPUT_INPUT_CONFIGURATION_H_
+#ifndef MIR_INPUT_NULL_INPUT_MANAGER_H_
+#define MIR_INPUT_NULL_INPUT_MANAGER_H_
 
-#include <memory>
+#include "mir/input/input_manager.h"
 
 namespace mir
 {
 namespace input
 {
-class InputDispatcherConfiguration;
-class InputManager;
-class InputChannelFactory;
-
-class InputConfiguration
+class NullInputManager : public input::InputManager
 {
-public:
-    virtual ~InputConfiguration() = default;
-
-    virtual std::shared_ptr<InputChannelFactory> the_input_channel_factory() = 0;
-    virtual std::shared_ptr<InputManager> the_input_manager() = 0;
-
-protected:
-    InputConfiguration() = default;
-    InputConfiguration(InputConfiguration const&) = delete;
-    InputConfiguration& operator=(InputConfiguration const&) = delete;
+    void start() override
+    {
+    }
+    void stop() override
+    {
+    }
 };
 
 }
 }
 
 #endif
+

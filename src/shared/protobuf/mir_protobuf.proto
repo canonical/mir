@@ -175,6 +175,18 @@ message Screencast {
   optional string error = 127;
 }
 
+message SocketFDRequest {
+  required int32 number = 1;
+}
+
+
+message SocketFD {
+  repeated sint32 fd = 1;
+  optional int32  fds_on_side_channel = 2;
+
+  optional string error = 127;
+}
+
 service DisplayServer {
   // Platform independent requests
   rpc connect(ConnectParameters) returns (Connection);
@@ -194,5 +206,5 @@ service DisplayServer {
   rpc create_screencast(ScreencastParameters) returns (Screencast);
   rpc screencast_buffer(ScreencastId) returns (Buffer);
   rpc release_screencast(ScreencastId) returns (Void);
+  rpc new_fds_for_trusted_clients(SocketFDRequest) returns (SocketFD);
 }
-
