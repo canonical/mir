@@ -120,6 +120,10 @@ google::protobuf::uint32 mfd::Invocation::id() const
     return invocation.id();
 }
 
+void mfd::ProtobufMessageProcessor::client_pid(int pid)
+{
+    display_server->client_pid(pid);
+}
 
 bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
 {

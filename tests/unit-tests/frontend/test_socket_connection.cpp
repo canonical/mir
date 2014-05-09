@@ -99,6 +99,7 @@ struct StubReceiver : mfd::MessageReceiver
 struct MockProcessor : public mfd::MessageProcessor
 {
     MOCK_METHOD1(dispatch, bool(mfd::Invocation const& invocation));
+    MOCK_METHOD1(client_pid, void(int pid));
 };
 }
 
@@ -156,6 +157,15 @@ TEST_F(SocketConnection, dispatches_messages_on_receipt)
 TEST_F(SocketConnection, checks_client_pid_when_message_received)
 {
     EXPECT_CALL(stub_receiver, client_creds()).Times(1);
+
+    fake_receiving_message();
+}
+
+TEST_F(SocketConnection, notifies_client_pid_before_message_dispatched)
+{
+    InSequence seq;
+    EXPECT_CALL(mock_processor, client_pid(_)).Times(1);
+    EXPECT_CALL(mock_processor, dispatch(_)).Times(1);
 
     fake_receiving_message();
 }
