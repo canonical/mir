@@ -39,6 +39,7 @@
 #include "mir/options/program_option.h"
 
 #include "mir_test_doubles/stub_input_registrar.h"
+#include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/null_surface_configurator.h"
 
 #include <EGL/egl.h>
@@ -73,7 +74,7 @@ struct StubInputFactory : public mi::InputChannelFactory
 {
     std::shared_ptr<mi::InputChannel> make_input_channel()
     {
-        return std::shared_ptr<mi::InputChannel>();
+        return std::make_shared<mtd::StubInputChannel>();
     }
 };
 

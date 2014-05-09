@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -16,29 +16,27 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_NESTED_INPUT_MANAGER_H_
-#define MIR_INPUT_NESTED_INPUT_MANAGER_H_
+#ifndef MIR_INPUT_NULL_INPUT_MANAGER_H_
+#define MIR_INPUT_NULL_INPUT_MANAGER_H_
 
 #include "mir/input/input_manager.h"
-#include <memory>
 
 namespace mir
 {
 namespace input
 {
-class InputDispatcher;
-
-class NestedInputManager : public InputManager
+class NullInputManager : public input::InputManager
 {
-public:
-    NestedInputManager(std::shared_ptr<InputDispatcher> const& dispatcher);
-    void start() override;
-    void stop() override;
-private:
-    std::shared_ptr<InputDispatcher> const dispatcher;
+    void start() override
+    {
+    }
+    void stop() override
+    {
+    }
 };
 
 }
 }
 
-#endif // MIR_INPUT_NESTED_INPUT_MANAGER
+#endif
+

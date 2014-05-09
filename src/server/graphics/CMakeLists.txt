@@ -6,7 +6,6 @@ add_library(
   default_configuration.cpp
   default_display_configuration_policy.cpp
   gl_extensions_base.cpp
-  gl_program.cpp
   program_factory.cpp
   surfaceless_egl_context.cpp
   builtin_cursor_images.cpp
