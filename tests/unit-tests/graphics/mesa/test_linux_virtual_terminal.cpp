@@ -85,28 +85,22 @@ public:
                  void(std::initializer_list<int>,
                       std::function<void(int)> const&));
 
-    MOCK_METHOD2(notify_in_delegate,
-                 mir::time::Alarm*(std::chrono::milliseconds,
-                                   std::function<void()>));
-
-    std::unique_ptr<mir::time::Alarm> notify_in(std::chrono::milliseconds delay,
-                                                std::function<void()> callback)
+    std::unique_ptr<mir::time::Alarm> notify_in(std::chrono::milliseconds /*delay*/,
+                                                std::function<void()> /*callback*/) override
     {
-        return std::unique_ptr<mir::time::Alarm>{notify_in_delegate(delay, callback)};
+        return std::unique_ptr<mir::time::Alarm>{};
     }
 
-
-    MOCK_METHOD2(notify_at_delegate,
-                 mir::time::Alarm*(mir::time::Timestamp,
-                                   std::function<void()>));
-
-    std::unique_ptr<mir::time::Alarm> notify_at(mir::time::Timestamp time_point,
-                                                std::function<void()> callback)
+    std::unique_ptr<mir::time::Alarm> notify_at(mir::time::Timestamp /*time_point*/,
+                                                std::function<void()> /*callback*/) override
     {
-        return std::unique_ptr<mir::time::Alarm>{notify_at_delegate(time_point, callback)};
+        return std::unique_ptr<mir::time::Alarm>{};
     }
 
-    MOCK_METHOD1(create_alarm, std::unique_ptr<mir::time::Alarm>(std::function<void(void)>));
+    std::unique_ptr<mir::time::Alarm> create_alarm(std::function<void(void)> /*callback*/) override
+    {
+        return std::unique_ptr<mir::time::Alarm>{};
+    }
 };
 
 ACTION_TEMPLATE(SetIoctlPointee,
