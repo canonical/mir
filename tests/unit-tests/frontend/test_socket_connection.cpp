@@ -110,6 +110,11 @@ struct SocketConnection : public Test
 
     mfd::SocketConnection connection{mt::fake_shared(stub_receiver), 0, null_sessions, mt::fake_shared(mock_processor)};
 
+    void SetUp()
+    {
+        connection.read_next_message();
+    }
+
     void fake_receiving_message()
     {
         int const header_size = 2;
@@ -132,6 +137,15 @@ TEST_F(SocketConnection, dispatches_message_on_receipt)
 {
     EXPECT_CALL(mock_processor, dispatch(_)).Times(1).WillOnce(Return(true));
 
-    connection.read_next_message();
     fake_receiving_message();
+}
+
+TEST_F(SocketConnection, dispatches_messages_on_receipt)
+{
+    auto const arbitary_no_of_messages = 5;
+
+    EXPECT_CALL(mock_processor, dispatch(_)).Times(arbitary_no_of_messages).WillRepeatedly(Return(true));
+
+    for (int i = 0; i != arbitary_no_of_messages; ++i)
+        fake_receiving_message();
 }
