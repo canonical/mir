@@ -101,7 +101,7 @@ public:
         mock_surfaces[mf::SurfaceId{1}] = mock_surface;
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(geom::Size(), geom::Stride(), MirPixelFormat());
 
-        EXPECT_CALL(*mock_surface, size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
+        EXPECT_CALL(*mock_surface, client_size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
         EXPECT_CALL(*mock_surface, pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(MirPixelFormat()));
         EXPECT_CALL(*mock_surface, swap_buffers(_, _)).Times(AnyNumber())
             .WillRepeatedly(InvokeArgument<1>(mock_buffer.get()));
@@ -122,7 +122,7 @@ public:
         if (last_surface_id != 1) {
             mock_surfaces[id] = std::make_shared<mtd::MockFrontendSurface>();
 
-            EXPECT_CALL(*mock_surfaces[id], size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
+            EXPECT_CALL(*mock_surfaces[id], client_size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
             EXPECT_CALL(*mock_surfaces[id], pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(MirPixelFormat()));
             EXPECT_CALL(*mock_surfaces[id], swap_buffers(_, _)).Times(AnyNumber())
                 .WillRepeatedly(InvokeArgument<1>(mock_buffer.get()));

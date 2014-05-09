@@ -20,7 +20,7 @@
 #define MIR_INPUT_SURFACE_H_
 
 #include "mir/geometry/size.h"
-#include "mir/geometry/point.h"
+#include "mir/geometry/rectangle.h"
 
 #include <string>
 #include <memory>
@@ -35,10 +35,8 @@ class Surface
 {
 public:
     virtual std::string name() const = 0;
-    virtual geometry::Point top_left() const = 0;
-    virtual geometry::Size size() const = 0;
-    virtual bool contains(geometry::Point const& point) const = 0;
-
+    virtual geometry::Rectangle input_bounds() const = 0;
+    virtual bool input_area_contains(geometry::Point const& point) const = 0;
     virtual std::shared_ptr<input::InputChannel> input_channel() const = 0;
 
 protected:

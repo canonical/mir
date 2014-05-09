@@ -19,7 +19,7 @@
 
 #include "nested_input_configuration.h"
 #include "nested_input_relay.h"
-#include "nested_input_manager.h"
+#include "null_input_manager.h"
 
 #include "mir/input/input_dispatcher_configuration.h"
 #include "android/input_channel_factory.h"
@@ -32,15 +32,9 @@ namespace mia = mir::input::android;
 mi::NestedInputConfiguration::NestedInputConfiguration(
     std::shared_ptr<NestedInputRelay> const& input_relay,
     std::shared_ptr<InputDispatcherConfiguration> const& input_dispatcher_conf) :
-    input_relay(input_relay), input_dispatcher_config(input_dispatcher_conf)
+    input_relay(input_relay)
 {
     input_relay->set_dispatcher(input_dispatcher_conf->the_input_dispatcher());
-}
-
-
-std::shared_ptr<mi::InputDispatcherConfiguration> mi::NestedInputConfiguration::the_input_dispatcher_configuration()
-{
-    return input_dispatcher_config;
 }
 
 std::shared_ptr<mi::InputChannelFactory> mi::NestedInputConfiguration::the_input_channel_factory()
@@ -53,6 +47,6 @@ std::shared_ptr<mi::InputManager> mi::NestedInputConfiguration::the_input_manage
     return input_manager(
         [this]()
         {
-            return std::make_shared<NestedInputManager>(the_input_dispatcher_configuration()->the_input_dispatcher());
+            return std::make_shared<NullInputManager>();
         });
 }

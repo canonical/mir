@@ -186,6 +186,12 @@ mir::geometry::Size ms::BasicSurface::size() const
     return surface_rect.size;
 }
 
+mir::geometry::Size ms::BasicSurface::client_size() const
+{
+    // TODO: In future when decorated, client_size() would be smaller than size
+    return size();
+}
+
 MirPixelFormat ms::BasicSurface::pixel_format() const
 {
     return surface_buffer_stream->get_stream_pixel_format();
@@ -273,7 +279,16 @@ geom::Point ms::BasicSurface::top_left() const
     return surface_rect.top_left;
 }
 
-bool ms::BasicSurface::contains(geom::Point const& point) const
+geom::Rectangle ms::BasicSurface::input_bounds() const
+{
+    std::unique_lock<std::mutex> lk(guard);
+
+    // This is historically unchanged, but if you look at input_area_contains()
+    // it seems a bit inconsistent...
+    return surface_rect;
+}
+
+bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 {
     std::unique_lock<std::mutex> lock(guard);
     if (hidden)
