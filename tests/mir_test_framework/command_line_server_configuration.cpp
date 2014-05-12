@@ -16,15 +16,31 @@
  * Authored by: Josh Arenson <joshua.arenson@canonical.com>
  */
 
-#ifndef COMMAND_LINE_SERVER_CONFIGURATION
-#define COMMAND_LINE_SERVER_CONFIGURATION
 
-#include "mir/options/default_configuration.h"
+#include "mir/default_server_configuration.h"
+#include "mir_test_framework/command_line_server_configuration.h"
+
+namespace mo = mir::options;
 
 namespace mir_test_framework
 {
-	std::shared_ptr<mir::options::Configuration> configuration_from_commandline();
-	int main(int argc, char** argv);
+
+auto configuration_from_commandline()
+-> shared_ptr<mo::Configuration>
+{
+  return std::make_shared<mo::DefaultConfiguration>(::argc, ::argv);
 }
 
-#endif /* COMMAND_LINE_SERVER_CONFIGURATION */
+int main(int argc, char** argv)
+{
+    ::argc = std::remove_if(
+        argv,
+        argv+argc,
+        [](char const* arg) { return !strncmp(arg, "--gtest_", 8); }) - argv;
+    ::argv = const_cast<char const**>(argv);
+
+  ::testing::InitGoogleTest(&argc, argv);
+
+  return RUN_ALL_TESTS();
+}
+}
