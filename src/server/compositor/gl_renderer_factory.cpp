@@ -19,11 +19,67 @@
 #include "gl_renderer_factory.h"
 #include "mir/compositor/gl_renderer.h"
 #include "mir/graphics/gl_program.h"
+#include "mir/graphics/texture_cache.h"
+#include "mir/graphics/buffer.h"
 #include "mir/geometry/rectangle.h"
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+
+namespace
+{
+class RenderableIndexedCache : public mg::TextureCache
+{
+    void access(mg::Renderable const& renderable, bool force_upload) override
+    {
+        auto const& buffer = renderable.buffer();
+        auto const& id = renderable.id();
+
+        auto& texture = textures[id];
+        texture.texture.gl_bind();
+
+        if ((texture.last_bound_buffer != buffer->id()) || force_upload)
+            buffer->bind_to_texture();
+
+        texture.resource = buffer;
+        texture.last_bound_buffer = buffer->id();
+        texture.used = true;
+    }
+
+    void invalidate() override
+    {
+        auto t = textures.begin();
+        while (t != textures.end())
+        {
+            auto& tex = t->second;
+            tex.resource.reset();
+            if (tex.used)
+            {
+                tex.used = false;
+                ++t;
+            }
+            else
+            {
+                t = textures.erase(t);
+            }
+        }
+    }
+
+private:
+    struct CountedTexture
+    {
+        mg::Texture texture;
+        mg::BufferID last_bound_buffer;
+        bool used{true};
+        std::shared_ptr<mg::Buffer> resource;
+    };
+
+    mutable std::unordered_map<mg::Renderable::ID, CountedTexture> textures;
+    mutable bool skipped = false;
+};
+
+}
 
 mc::GLRendererFactory::GLRendererFactory(std::shared_ptr<mg::GLProgramFactory> const& factory) :
     program_factory(factory)
@@ -33,6 +89,6 @@ mc::GLRendererFactory::GLRendererFactory(std::shared_ptr<mg::GLProgramFactory> c
 std::unique_ptr<mc::Renderer>
 mc::GLRendererFactory::create_renderer_for(geom::Rectangle const& rect)
 {
-    auto raw = new GLRenderer(*program_factory, rect);
+    auto raw = new GLRenderer(*program_factory, std::unique_ptr<mg::TextureCache>(new RenderableIndexedCache()), rect);
     return std::unique_ptr<mc::Renderer>(raw);
 }

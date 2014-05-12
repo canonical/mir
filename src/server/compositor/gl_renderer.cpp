@@ -19,6 +19,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/texture_cache.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
@@ -67,14 +68,17 @@ const GLchar* fragment_shader_src =
 
 mc::GLRenderer::GLRenderer(
     mg::GLProgramFactory const& program_factory,
+    std::unique_ptr<mg::TextureCache> && texture_cache, 
     geom::Rectangle const& display_area)
     : program(program_factory.create_gl_program(vertex_shader_src, fragment_shader_src)),
+      texture_cache(std::move(texture_cache)),
       position_attr_loc(0),
       texcoord_attr_loc(0),
       centre_uniform_loc(0),
       transform_uniform_loc(0),
       alpha_uniform_loc(0),
-      rotation(NAN) // ensure the first set_rotation succeeds
+      rotation(NAN), // ensure the first set_rotation succeeds
+      force_texture_upload{false}
 {
     glUseProgram(*program);
 
@@ -94,12 +98,6 @@ mc::GLRenderer::GLRenderer(
 
     set_viewport(display_area);
     set_rotation(0.0f);
-}
-
-mc::GLRenderer::~GLRenderer() noexcept
-{
-    for (auto& t : textures)
-        glDeleteTextures(1, &t.second.id);
 }
 
 void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
@@ -132,8 +130,6 @@ void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
 
 void mc::GLRenderer::render(mg::Renderable const& renderable) const
 {
-    auto buffer = renderable.buffer();
-    saved_resources.insert(buffer);
 
     glUseProgram(*program);
 
@@ -159,22 +155,22 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
                        glm::value_ptr(renderable.transformation()));
     glUniform1f(alpha_uniform_loc, renderable.alpha());
 
-    GLuint surface_tex = load_texture(renderable, *buffer);
-
     /* Draw */
     glEnableVertexAttribArray(position_attr_loc);
     glEnableVertexAttribArray(texcoord_attr_loc);
 
     std::vector<Primitive> primitives;
-    tessellate(primitives, renderable, buffer->size());
-   
+    tessellate(primitives, renderable, renderable.buffer()->size());
+
+    texture_cache->access(renderable, force_texture_upload);
+
     for (auto const& p : primitives)
     {
         // Note a primitive tex_id of zero means use the surface texture,
         // which is what you normally want. Other textures could be used
         // in decorations etc.
-
-        glBindTexture(GL_TEXTURE_2D, p.tex_id ? p.tex_id : surface_tex);
+        if (p.tex_id) //tessalate() can be overridden, and that code can set to nonzero  
+            glBindTexture(GL_TEXTURE_2D, p.tex_id);
 
         glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
                               GL_FALSE, sizeof(Vertex),
@@ -188,34 +184,6 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
 
     glDisableVertexAttribArray(texcoord_attr_loc);
     glDisableVertexAttribArray(position_attr_loc);
-}
-
-GLuint mc::GLRenderer::load_texture(mg::Renderable const& renderable,
-                                    mg::Buffer& buffer) const
-{
-    auto& tex = textures[renderable.id()];
-    bool changed = true;
-    auto const& buf_id = buffer.id();
-    if (!tex.id)
-    {
-        glGenTextures(1, &tex.id);
-        glBindTexture(GL_TEXTURE_2D, tex.id);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
-    else
-    {
-        glBindTexture(GL_TEXTURE_2D, tex.id);
-        changed = (tex.origin != buf_id) || skipped;
-    }
-    tex.origin = buf_id;
-    tex.used = true;
-    if (changed)  // Don't upload a new texture unless the surface has changed
-        buffer.bind_to_texture();
-
-    return tex.id;
 }
 
 void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
@@ -290,29 +258,14 @@ void mc::GLRenderer::begin() const
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 }
 
+//TODO: end/suspend seems a bit funny. perhaps once render works on a list we can get rid of these
 void mc::GLRenderer::end() const
 {
-    auto t = textures.begin();
-    while (t != textures.end())
-    {
-        auto& tex = t->second;
-        if (tex.used)
-        {
-            tex.used = false;
-            ++t;
-        }
-        else
-        {
-            glDeleteTextures(1, &tex.id);
-            t = textures.erase(t);
-        }
-    }
-    skipped = false;
-
-    saved_resources.clear();
+    texture_cache->invalidate();
+    force_texture_upload = false;
 }
 
 void mc::GLRenderer::suspend()
 {
-    skipped = true;
+    force_texture_upload = true;
 }
