@@ -305,5 +305,5 @@ TEST_F(SessionManagerTrustSessionListenerSetup, trust_session_listener_is_notifi
     ms::TrustSessionCreationParameters parameters;
 
     auto trust_session = session_manager.start_trust_session_for(helper, parameters);
-    session_manager.stop_trust_session(trust_session);
+    session_manager.stop_trust_session(trust_session.get());
 }

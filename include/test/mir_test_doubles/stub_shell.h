@@ -60,7 +60,7 @@ struct StubShell : public frontend::Shell
     {
         return mir_trust_session_add_tust_failed;
     }
-    void stop_trust_session(std::shared_ptr<frontend::TrustSession>  const& /* trust_session */)
+    void stop_trust_session(frontend::TrustSession* /* trust_session */)
     {
     }
 

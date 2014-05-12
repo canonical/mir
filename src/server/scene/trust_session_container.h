@@ -25,6 +25,7 @@
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/member.hpp>
+#include <boost/multi_index/mem_fun.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/composite_key.hpp>
@@ -56,7 +57,7 @@ public:
     void for_each_process_for_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session, std::function<void(ClientProcess const&)> f);
     void for_each_trust_session_for_process(ClientProcess const& process, std::function<void(std::shared_ptr<frontend::TrustSession> const&)> f);
 
-    void remove_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session);
+    void remove_trust_session(frontend::TrustSession* trust_session);
     void remove_process(ClientProcess const& process);
 
 private:
@@ -66,6 +67,8 @@ private:
         std::shared_ptr<frontend::TrustSession> trust_session;
         ClientProcess client_process;
         uint insert_order;
+
+        frontend::TrustSession* ts() const { return trust_session.get(); }
     } Object;
 
     typedef multi_index_container<
@@ -74,7 +77,7 @@ private:
             ordered_non_unique<
                 composite_key<
                     Object,
-                    member<Object, std::shared_ptr<frontend::TrustSession>, &Object::trust_session>,
+                    const_mem_fun<Object, frontend::TrustSession*, &Object::ts>,
                     member<Object, uint, &Object::insert_order>
                 >
             >,

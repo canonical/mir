@@ -31,11 +31,11 @@ class TrustSession;
 class TrustSessionListener
 {
 public:
-    virtual void starting(TrustSession const& trust_session) = 0;
-    virtual void stopping(TrustSession const& trust_session) = 0;
+    virtual void starting(TrustSession& trust_session) = 0;
+    virtual void stopping(TrustSession& trust_session) = 0;
 
-    virtual void trusted_session_beginning(TrustSession& trust_session, Session const& session) = 0;
-    virtual void trusted_session_ending(TrustSession& trust_session, Session const& session) = 0;
+    virtual void trusted_session_beginning(TrustSession const& trust_session, Session const& session) = 0;
+    virtual void trusted_session_ending(TrustSession const& trust_session, Session const& session) = 0;
 
 protected:
     TrustSessionListener() = default;

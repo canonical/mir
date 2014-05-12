@@ -579,7 +579,7 @@ void mf::SessionMediator::stop_trust_session(::google::protobuf::RpcController*,
 
         report->session_stop_trust_session_called(session->name());
 
-        shell->stop_trust_session(trust_session);
+        shell->stop_trust_session(trust_session.get());
     }
     done->Run();
 }

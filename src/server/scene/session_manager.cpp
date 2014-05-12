@@ -158,7 +158,7 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
 
             if (scene_trust_session->get_trusted_helper().lock() == scene_session)
             {
-                stop_trust_session_locked(lock, scene_trust_session);
+                stop_trust_session_locked(lock, scene_trust_session.get());
             }
             else
             {
@@ -272,7 +272,7 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for_locked
     return mir_trust_session_add_tust_succeeded;
 }
 
-void ms::SessionManager::stop_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
+void ms::SessionManager::stop_trust_session(mf::TrustSession* trust_session)
 {
     std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
@@ -280,14 +280,14 @@ void ms::SessionManager::stop_trust_session(std::shared_ptr<mf::TrustSession> co
 }
 
 void ms::SessionManager::stop_trust_session_locked(std::unique_lock<std::mutex> const&,
-    std::shared_ptr<mf::TrustSession> const& trust_session)
+    mf::TrustSession* trust_session)
 {
-    auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
+    auto scene_trust_session = dynamic_cast<ms::TrustSession*>(trust_session);
 
     trust_session->stop();
 
     trust_session_container->remove_trust_session(trust_session);
 
-    trust_session_listener->stopping(*(scene_trust_session).get());
+    trust_session_listener->stopping(*scene_trust_session);
 }
 
