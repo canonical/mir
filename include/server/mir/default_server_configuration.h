@@ -101,6 +101,7 @@ namespace nested { class HostConnection; }
 namespace input
 {
 class InputReport;
+class InputTargets;
 class InputManager;
 class CompositeEventFilter;
 class InputChannelFactory;
@@ -147,6 +148,7 @@ public:
     virtual std::shared_ptr<graphics::Platform>     the_graphics_platform();
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
     virtual std::shared_ptr<input::InputDispatcherConfiguration> the_input_dispatcher_configuration();
+    virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher();
     /** @} */
 
     /** @name graphics configuration - customization
@@ -240,8 +242,8 @@ public:
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
-    virtual std::shared_ptr<scene::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
+    virtual std::shared_ptr<input::InputTargets>  the_input_targets();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     /** @} */
@@ -272,6 +274,7 @@ protected:
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
+    CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputRegion>     input_region;
     CachedPtr<scene::InputRegistrar> input_registrar;
     CachedPtr<shell::InputTargeter> input_targeter;

@@ -65,6 +65,7 @@ public:
     void frame_posted() override;
     void alpha_set_to(float alpha) override;
     void transformation_set_to(glm::mat4 const& t) override;
+    void reception_mode_set_to(input::InputReceptionMode mode) override;
     void cursor_image_set_to(std::shared_ptr<graphics::CursorImage> const& image) override;
 
     void add(std::shared_ptr<SurfaceObserver> const& observer);
@@ -96,6 +97,7 @@ public:
     void set_hidden(bool is_hidden);
 
     geometry::Size size() const override;
+    geometry::Size client_size() const override;
 
     MirPixelFormat pixel_format() const;
 
@@ -107,6 +109,8 @@ public:
     int client_input_fd() const;
     void allow_framedropping(bool);
     std::shared_ptr<input::InputChannel> input_channel() const override;
+    input::InputReceptionMode reception_mode() const override;
+    void set_reception_mode(input::InputReceptionMode mode) override;
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
 
@@ -114,7 +118,8 @@ public:
 
     void resize(geometry::Size const& size) override;
     geometry::Point top_left() const override;
-    bool contains(geometry::Point const& point) const override;
+    geometry::Rectangle input_bounds() const override;
+    bool input_area_contains(geometry::Point const& point) const override;
     void set_alpha(float alpha) override;
     void set_transformation(glm::mat4 const&) override;
 
@@ -151,6 +156,7 @@ private:
     float surface_alpha;
     bool first_frame_posted;
     bool hidden;
+    input::InputReceptionMode input_mode;
     const bool nonrectangular;
     std::vector<geometry::Rectangle> input_rectangles;
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;

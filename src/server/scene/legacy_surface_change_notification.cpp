@@ -20,6 +20,7 @@
 
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 ms::LegacySurfaceChangeNotification::LegacySurfaceChangeNotification(std::function<void()> const& notify_change) :
@@ -63,4 +64,9 @@ void ms::LegacySurfaceChangeNotification::attrib_changed(MirSurfaceAttrib /* att
 // Cursor image change request is not enough to trigger recomposition.
 void ms::LegacySurfaceChangeNotification::cursor_image_set_to(std::shared_ptr<mg::CursorImage> const& /* image */)
 {
+}
+
+void ms::LegacySurfaceChangeNotification::reception_mode_set_to(mi::InputReceptionMode /*mode*/)
+{
+    notify_change();
 }

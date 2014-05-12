@@ -53,11 +53,6 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-    char const* const mir_test_socket = mtf::test_socket_file().c_str();
-}
-
-namespace
-{
 
 struct MockCursor : public mg::Cursor
 {
@@ -88,28 +83,28 @@ struct NamedCursorImages : public mg::CursorImages
    }
 };
 
+bool cursor_is_named(mg::CursorImage const& i, std::string const& name)
+{
+    auto image = dynamic_cast<NamedCursorImage const*>(&i);
+    assert(image);
+    
+    return image->cursor_name == name;
+}
+
 MATCHER(DefaultCursorImage, "")
 {
-    auto image = dynamic_cast<NamedCursorImage const*>(&arg);
-    assert(image);
-
-    if (image->cursor_name != "default")
-        return false;
-    return true;
+    return cursor_is_named(arg, "default");
 }
 
 MATCHER_P(CursorNamed, name, "")
 {
-   auto image = dynamic_cast<NamedCursorImage const*>(&arg);
-   assert(image);
-
-   if (image->cursor_name != name)
-       return false;
-   return true;
+    return cursor_is_named(arg, name);
 }
 
 struct CursorSettingClient : mtf::TestingClientConfiguration
 {
+    static char const* const mir_test_socket;
+
     std::string const client_name;
 
     mtf::CrossProcessSync set_cursor_complete;
@@ -154,6 +149,8 @@ struct CursorSettingClient : mtf::TestingClientConfiguration
         mir_connection_release(connection);
     }
 };
+
+char const* const CursorSettingClient::mir_test_socket = mtf::test_socket_file().c_str();
 
 struct MockSurfaceObserver : public ms::NullSurfaceObserver
 {
@@ -265,6 +262,8 @@ struct CursorTestServerConfiguration : mtf::InputTestingServerConfiguration
 
 }
 
+// TODO: A lot of common code setup in these tests could be moved to 
+// a fixture.
 using TestClientCursorAPI = BespokeDisplayServerTestFixture;
 
 TEST_F(TestClientCursorAPI, client_cursor_request_is_made_surface_data)
@@ -298,6 +297,7 @@ TEST_F(TestClientCursorAPI, client_cursor_request_is_made_surface_data)
 // In this set we create a 1x1 client surface at the point (1,0). The client requests to disable the cursor
 // over this surface. Since the cursor starts at (0,0) we when we move the cursor by (1,0) thus causing it
 // to enter the bounds of the first surface, we should observe it being disabled.
+// TODO: Enable
 TEST_F(TestClientCursorAPI, DISABLED_client_may_disable_cursor_over_surface)
 {
     using namespace ::testing;
@@ -334,6 +334,7 @@ TEST_F(TestClientCursorAPI, DISABLED_client_may_disable_cursor_over_surface)
     launch_client_process(client_conf);
 }
 
+// TODO: Enable
 TEST_F(TestClientCursorAPI, DISABLED_cursor_restored_when_leaving_surface)
 {
     using namespace ::testing;
@@ -373,6 +374,7 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_restored_when_leaving_surface)
     launch_client_process(client_conf);
 }
 
+// TODO: Enable
 TEST_F(TestClientCursorAPI, DISABLED_cursor_changed_when_crossing_surface_boundaries)
 {
     using namespace ::testing;
@@ -423,6 +425,7 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_changed_when_crossing_surface_bounda
     launch_client_process(client2_conf);
 }
 
+// TODO: Enable
 TEST_F(TestClientCursorAPI, DISABLED_cursor_request_taken_from_top_surface)
 {
     using namespace ::testing;
@@ -474,6 +477,7 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_request_taken_from_top_surface)
     launch_client_process(client2_conf);
 }
 
+// TODO: Enable
 TEST_F(TestClientCursorAPI, DISABLED_cursor_request_applied_without_cursor_motion)
 {
     using namespace ::testing;

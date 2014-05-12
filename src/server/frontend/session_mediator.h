@@ -16,11 +16,11 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-
 #ifndef MIR_FRONTEND_SESSION_MEDIATOR_H_
 #define MIR_FRONTEND_SESSION_MEDIATOR_H_
 
 #include "mir_protobuf.pb.h"
+#include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
 #include "mir_toolkit/common.h"
 
@@ -41,7 +41,6 @@ class GraphicBufferAllocator;
 class CursorImages;
 }
 
-
 /// Frontend interface. Mediates the interaction between client
 /// processes and the core of the mir system.
 namespace frontend
@@ -60,6 +59,7 @@ class Screencast;
 class SessionMediator : public mir::protobuf::DisplayServer
 {
 public:
+
     SessionMediator(
         pid_t client_pid,
         std::shared_ptr<Shell> const& shell,
@@ -70,6 +70,7 @@ public:
         std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache,
         std::shared_ptr<Screencast> const& screencast,
+        ConnectionContext const& connection_context,
         std::shared_ptr<graphics::CursorImages> const& cursor_images);
 
     ~SessionMediator() noexcept;
@@ -114,12 +115,12 @@ public:
     void create_screencast(google::protobuf::RpcController*,
                            const mir::protobuf::ScreencastParameters*,
                            mir::protobuf::Screencast*,
-                           google::protobuf::Closure* done);
+                           google::protobuf::Closure* done) override;
 
     void release_screencast(google::protobuf::RpcController*,
                             const mir::protobuf::ScreencastId*,
                             mir::protobuf::Void*,
-                            google::protobuf::Closure* done);
+                            google::protobuf::Closure* done) override;
 
     void screencast_buffer(google::protobuf::RpcController*,
                            const mir::protobuf::ScreencastId*,
@@ -136,6 +137,12 @@ public:
                         const mir::protobuf::DRMMagic* request,
                         mir::protobuf::DRMAuthMagicStatus* response,
                         google::protobuf::Closure* done) override;
+
+    void new_fds_for_trusted_clients(
+        ::google::protobuf::RpcController* controller,
+        ::mir::protobuf::SocketFDRequest const* parameters,
+        ::mir::protobuf::SocketFD* response,
+        ::google::protobuf::Closure* done) override;
 
 private:
     void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
@@ -154,6 +161,7 @@ private:
     std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<Screencast> const screencast;
+    ConnectionContext const connection_context;
     std::shared_ptr<graphics::CursorImages> const cursor_images;
 
     std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
@@ -165,6 +173,5 @@ private:
 
 }
 }
-
 
 #endif /* MIR_FRONTEND_SESSION_MEDIATOR_H_ */

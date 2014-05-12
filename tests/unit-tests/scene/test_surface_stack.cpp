@@ -24,9 +24,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/input/input_channel_factory.h"
-#include "mir_test_doubles/stub_input_registrar.h"
 #include "mir_test_doubles/stub_input_channel.h"
-#include "mir_test_doubles/mock_input_registrar.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -52,6 +50,11 @@ namespace mr = mir::report;
 
 namespace
 {
+
+MATCHER_P(SurfaceWithInputReceptionMode, mode, "")
+{
+    return arg->reception_mode() == mode;
+}
 
 struct StubInputChannelFactory : public mi::InputChannelFactory
 {
@@ -135,14 +138,14 @@ struct SurfaceStack : public ::testing::Test
             report);
     }
 
-    mtd::StubInputRegistrar input_registrar;
     ms::SurfaceCreationParameters default_params;
     std::shared_ptr<ms::BasicSurface> stub_surface1;
     std::shared_ptr<ms::BasicSurface> stub_surface2;
     std::shared_ptr<ms::BasicSurface> stub_surface3;
 
-    void const* compositor_id{&input_registrar};
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
+    ms::SurfaceStack stack{report};
+    void const* compositor_id{&default_params};
 };
 
 }
@@ -150,8 +153,6 @@ struct SurfaceStack : public ::testing::Test
 TEST_F(SurfaceStack, owns_surface_from_add_to_remove)
 {
     using namespace testing;
-
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
 
     auto const use_count = stub_surface1.use_count();
 
@@ -167,7 +168,6 @@ TEST_F(SurfaceStack, owns_surface_from_add_to_remove)
 TEST_F(SurfaceStack, stacking_order)
 {
     using namespace testing;
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
 
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
@@ -186,7 +186,6 @@ TEST_F(SurfaceStack, stacking_order)
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
 {
     using namespace testing;
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
 
     stack.add_surface(stub_surface1, ms::DepthId{0}, default_params.input_mode);
     stack.add_surface(stub_surface2, ms::DepthId{1}, default_params.input_mode);
@@ -202,34 +201,20 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
     EXPECT_THAT((*it)->id(), Eq(stub_surface2.get()));
 }
 
-TEST_F(SurfaceStack, input_registrar_is_notified_of_surfaces)
-{
-    using namespace ::testing;
-
-    mtd::MockInputRegistrar registrar;
-    ms::SurfaceStack stack(mt::fake_shared(registrar), report);
-
-    Sequence seq;
-    EXPECT_CALL(registrar, input_channel_opened(_,_,_))
-        .InSequence(seq);
-    EXPECT_CALL(registrar, input_channel_closed(_))
-        .InSequence(seq);
-
-    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
-    stack.remove_surface(stub_surface1);
-}
 
 TEST_F(SurfaceStack, input_registrar_is_notified_of_input_monitor_scene)
 {
     using namespace ::testing;
 
-    mtd::MockInputRegistrar registrar;
-    ms::SurfaceStack stack(mt::fake_shared(registrar), report);
+    MockSceneObserver observer;
+
+    stack.add_observer(mt::fake_shared(observer));
+
 
     Sequence seq;
-    EXPECT_CALL(registrar, input_channel_opened(_,_,mi::InputReceptionMode::receives_all_input))
+    EXPECT_CALL(observer, surface_added(SurfaceWithInputReceptionMode(mi::InputReceptionMode::receives_all_input)))
         .InSequence(seq);
-    EXPECT_CALL(registrar, input_channel_closed(_))
+    EXPECT_CALL(observer, surface_removed(_))
         .InSequence(seq);
 
     stack.add_surface(stub_surface1, default_params.depth, mi::InputReceptionMode::receives_all_input);
@@ -239,8 +224,6 @@ TEST_F(SurfaceStack, input_registrar_is_notified_of_input_monitor_scene)
 TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
 {
     using namespace ::testing;
-
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
 
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
@@ -271,8 +254,6 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
 {
     using namespace ::testing;
 
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
-
     stack.add_surface(stub_surface1, ms::DepthId{0}, default_params.input_mode);
     stack.add_surface(stub_surface2, ms::DepthId{0}, default_params.input_mode);
     stack.add_surface(stub_surface3, ms::DepthId{1}, default_params.input_mode);
@@ -302,8 +283,6 @@ TEST_F(SurfaceStack, raise_throw_behavior)
 {
     using namespace ::testing;
 
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
-
     std::shared_ptr<ms::BasicSurface> null_surface{nullptr};
     EXPECT_THROW({
             stack.raise(null_surface);
@@ -315,8 +294,6 @@ TEST_F(SurfaceStack, generate_renderlist)
     using namespace testing;
 
     size_t num_surfaces{3};
-    ms::SurfaceStack stack(
-        mt::fake_shared(input_registrar), report);
 
     std::list<std::shared_ptr<ms::Surface>> surfacelist;
     for(auto i = 0u; i < num_surfaces; i++)
@@ -353,10 +330,8 @@ TEST_F(SurfaceStack, scene_observer_notified_of_add_and_remove)
 {
     using namespace ::testing;
 
-    ms::SurfaceStack stack(
-        mt::fake_shared(input_registrar), report);
     MockSceneObserver observer;
-    
+
     InSequence seq;
     EXPECT_CALL(observer, surface_added(stub_surface1.get())).Times(1);
     EXPECT_CALL(observer, surface_removed(stub_surface1.get()))
@@ -372,10 +347,8 @@ TEST_F(SurfaceStack, multiple_observers)
 {
     using namespace ::testing;
 
-    ms::SurfaceStack stack(
-        mt::fake_shared(input_registrar), report);
     MockSceneObserver observer1, observer2;
-    
+
     InSequence seq;
     EXPECT_CALL(observer1, surface_added(stub_surface1.get())).Times(1);
     EXPECT_CALL(observer2, surface_added(stub_surface1.get())).Times(1);
@@ -390,10 +363,8 @@ TEST_F(SurfaceStack, remove_scene_observer)
 {
     using namespace ::testing;
 
-    ms::SurfaceStack stack(
-        mt::fake_shared(input_registrar), report);
     MockSceneObserver observer;
-    
+
     InSequence seq;
     EXPECT_CALL(observer, surface_added(stub_surface1.get())).Times(1);
     // We remove the scene observer before removing the surface, and thus
@@ -419,10 +390,8 @@ TEST_F(SurfaceStack, scene_observer_informed_of_existing_surfaces)
 
     using namespace ::testing;
 
-    ms::SurfaceStack stack(
-        mt::fake_shared(input_registrar), report);
     MockSceneObserver observer;
-    
+
     InSequence seq;
     EXPECT_CALL(observer, surface_exists(stub_surface1.get())).Times(1);
     EXPECT_CALL(observer, surface_exists(stub_surface2.get())).Times(1);
@@ -437,10 +406,8 @@ TEST_F(SurfaceStack, surfaces_reordered)
 {
     using namespace ::testing;
 
-    ms::SurfaceStack stack(
-        mt::fake_shared(input_registrar), report);
     MockSceneObserver observer;
-    
+
     EXPECT_CALL(observer, surface_added(_)).Times(AnyNumber());
     EXPECT_CALL(observer, surface_removed(_)).Times(AnyNumber());
 
@@ -456,8 +423,6 @@ TEST_F(SurfaceStack, surfaces_reordered)
 TEST_F(SurfaceStack, renderlist_is_snapshot_of_positioning_info)
 {
     size_t num_surfaces{3};
-    ms::SurfaceStack stack(
-        mt::fake_shared(input_registrar), report);
 
     std::list<std::shared_ptr<ms::Surface>> surfacelist;
     for(auto i = 0u; i < num_surfaces; i++)
@@ -490,7 +455,6 @@ TEST_F(SurfaceStack, renderlist_is_snapshot_of_positioning_info)
 TEST_F(SurfaceStack, generates_renderlist_that_delays_buffer_acquisition)
 {
     using namespace testing;
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
 
     auto mock_stream = std::make_shared<mtd::MockBufferStream>();
     EXPECT_CALL(*mock_stream, lock_compositor_buffer(_))
@@ -520,7 +484,6 @@ TEST_F(SurfaceStack, generates_renderlist_that_delays_buffer_acquisition)
 TEST_F(SurfaceStack, generates_renderlist_that_allows_only_one_buffer_acquisition)
 {
     using namespace testing;
-    ms::SurfaceStack stack(mt::fake_shared(input_registrar), report);
 
     auto mock_stream = std::make_shared<mtd::MockBufferStream>();
     EXPECT_CALL(*mock_stream, lock_compositor_buffer(_))

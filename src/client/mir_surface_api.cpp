@@ -247,14 +247,14 @@ int mir_surface_get_swapinterval(MirSurface* surf)
 
 MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)
 {
-    MirWaitHandle *result = NULL;
+    MirWaitHandle *result = nullptr;
     
     try
     {
         if (surface)
-            surface->configure_cursor(cursor);
+            result = surface->configure_cursor(cursor);
     }
-    catch (std::exception const&)
+    catch (...)
     {
     }
 

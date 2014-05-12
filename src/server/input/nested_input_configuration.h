@@ -36,7 +36,6 @@ public:
         std::shared_ptr<NestedInputRelay> const& input_relay,
         std::shared_ptr<InputDispatcherConfiguration> const& input_dispatcher_conf);
     virtual ~NestedInputConfiguration() = default;
-    std::shared_ptr<InputDispatcherConfiguration> the_input_dispatcher_configuration() override;
     std::shared_ptr<InputChannelFactory> the_input_channel_factory() override;
     std::shared_ptr<InputManager> the_input_manager() override;
 

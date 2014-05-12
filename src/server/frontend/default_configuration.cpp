@@ -73,9 +73,10 @@ private:
     std::shared_ptr<mg::CursorImages> const cursor_images;
     std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
 
-    virtual std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
+    std::shared_ptr<mir::protobuf::DisplayServer> make_ipc_server(
         mf::SessionCredentials const& creds,
-        std::shared_ptr<mf::EventSink> const& sink) override
+        std::shared_ptr<mf::EventSink> const& sink,
+        mf::ConnectionContext const& connection_context) override
     {
         std::shared_ptr<mf::DisplayChanger> changer;
         std::shared_ptr<mf::Screencast> effective_screencast;
@@ -108,6 +109,7 @@ private:
             sink,
             resource_cache(),
             effective_screencast,
+            connection_context,
             cursor_images);
     }
 

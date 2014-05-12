@@ -60,15 +60,15 @@ class InputDispatcherConfiguration : public input::InputDispatcherConfiguration
 {
 public:
     InputDispatcherConfiguration(std::shared_ptr<EventFilter> const& event_filter,
-                                 std::shared_ptr<input::InputReport> const& input_report);
+                                 std::shared_ptr<input::InputReport> const& input_report,
+                                 std::shared_ptr<compositor::Scene> const& scene,
+                                 std::shared_ptr<input::InputTargets> const& targets);
     virtual ~InputDispatcherConfiguration();
 
-    std::shared_ptr<scene::InputRegistrar> the_input_registrar() override;
+    std::shared_ptr<InputRegistrar> the_input_registrar();
     std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     virtual droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher();
-
-    void set_input_targets(std::shared_ptr<input::InputTargets> const& targets);
 
     bool is_key_repeat_enabled() const override;
 
@@ -77,10 +77,10 @@ protected:
 
     virtual droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
 
-    std::shared_ptr<WindowHandleRepository> the_window_handle_repository();
-
     std::shared_ptr<EventFilter> const event_filter;
     std::shared_ptr<input::InputReport> const input_report;
+    std::shared_ptr<compositor::Scene> const scene;
+    std::shared_ptr<input::InputTargets> const input_targets;
 
 private:
     CachedPtr<InputThread> dispatcher_thread;

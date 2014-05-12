@@ -20,7 +20,7 @@
 #include "cursor_configuration.h"
 
 char const *const mir_default_cursor_name = "default";
-char const *const mir_disabled_cursor_name = NULL;
+char const *const mir_disabled_cursor_name = nullptr;
 
 
 void mir_cursor_configuration_destroy(MirCursorConfiguration *cursor)
@@ -37,7 +37,7 @@ MirCursorConfiguration* mir_cursor_configuration_from_name(char const* name)
     
         return c;
     }
-    catch (std::exception const&)
+    catch (...)
     {
         return nullptr;
     }

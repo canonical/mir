@@ -304,6 +304,40 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
     return &drm_auth_magic_wait_handle;
 }
 
+MirWaitHandle* MirConnection::new_fds_for_trusted_clients(
+    unsigned int no_of_fds,
+    mir_client_fd_callback callback,
+    void * context)
+{
+    mir::protobuf::SocketFDRequest request;
+    request.set_number(no_of_fds);
+
+    server.new_fds_for_trusted_clients(
+        nullptr,
+        &request,
+        &socket_fd_response,
+        google::protobuf::NewCallback(this, &MirConnection::done_fds_for_trusted_clients,
+                                              callback, context));
+
+    return &fds_for_trusted_clients_wait_handle;
+}
+
+void MirConnection::done_fds_for_trusted_clients(
+    mir_client_fd_callback callback,
+    void* context)
+{
+    auto const size = socket_fd_response.fd_size();
+
+    std::vector<int> fds;
+    fds.reserve(size);
+
+    for (auto i = 0; i != size; ++i)
+        fds.push_back(socket_fd_response.fd(i));
+
+    callback(this, size, fds.data(), context);
+    fds_for_trusted_clients_wait_handle.result_received();
+}
+
 bool MirConnection::is_valid(MirConnection *connection)
 {
     {
