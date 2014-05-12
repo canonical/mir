@@ -469,3 +469,34 @@ TEST_F(BasicSurfaceTest, set_input_region)
         }
     }
 }
+
+
+TEST_F(BasicSurfaceTest, reception_mode_is_normal_by_default)
+{
+    ms::BasicSurface surface{
+        name,
+        rect,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
+        report};
+
+    EXPECT_EQ(mi::InputReceptionMode::normal, surface.reception_mode());
+}
+
+TEST_F(BasicSurfaceTest, reception_mode_can_be_changed)
+{
+    ms::BasicSurface surface{
+        name,
+        rect,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
+        report};
+
+    surface.set_reception_mode(mi::InputReceptionMode::receives_all_input);
+
+    EXPECT_EQ(mi::InputReceptionMode::receives_all_input, surface.reception_mode());
+}

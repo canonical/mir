@@ -31,6 +31,7 @@ set(
   test_protobuf.cpp
   test_client_screencast.cpp
   test_client_surface_swap_buffers.cpp
+  test_trust_session_helper.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )

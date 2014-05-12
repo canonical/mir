@@ -19,6 +19,7 @@
 #include "published_socket_connector.h"
 #include "mir/frontend/protobuf_connection_creator.h"
 
+#include "mir/frontend/connection_context.h"
 #include "mir/frontend/connector_report.h"
 
 #include <boost/signals2.hpp>
@@ -138,7 +139,7 @@ void mf::PublishedSocketConnector::on_new_connection(
 {
     if (!ec)
     {
-        create_session_for(socket);
+        create_session_for(socket, [](std::shared_ptr<mf::Session> const&) {});
     }
     start_accept();
 }
@@ -199,13 +200,20 @@ void mf::BasicConnector::stop()
     io_service.reset();
 }
 
-void mf::BasicConnector::create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const
+void mf::BasicConnector::create_session_for(
+    std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket,
+    std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
 {
     report->creating_session_for(server_socket->native_handle());
-    connection_creator->create_connection_for(server_socket);
+    connection_creator->create_connection_for(server_socket, {connect_handler, this});
 }
 
 int mf::BasicConnector::client_socket_fd() const
+{
+    return client_socket_fd([](std::shared_ptr<mf::Session> const&) {});
+}
+
+int mf::BasicConnector::client_socket_fd(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
 {
     enum { server, client, size };
     int socket_fd[size];
@@ -222,7 +230,7 @@ int mf::BasicConnector::client_socket_fd() const
 
     report->creating_socket_pair(socket_fd[server], socket_fd[client]);
 
-    create_session_for(server_socket);
+    create_session_for(server_socket, connect_handler);
 
     return socket_fd[client];
 }
