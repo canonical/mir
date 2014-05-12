@@ -433,7 +433,7 @@ void mf::SessionMediator::configure_cursor(
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        report->session_configure_surface_called(session->name());
+        report->session_configure_surface_cursor_called(session->name());
 
         auto const id = frontend::SurfaceId(cursor_request->surfaceid().value());
         auto const surface = session->get_surface(id);

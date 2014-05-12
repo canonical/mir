@@ -46,6 +46,8 @@ public:
 
     virtual void session_configure_surface_called(std::string const& app_name) = 0;
 
+    virtual void session_configure_surface_cursor_called(std::string const& app_name) = 0;
+
     virtual void session_configure_display_called(std::string const& app_name) = 0;
 
     virtual void session_error(
