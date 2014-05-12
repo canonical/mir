@@ -19,7 +19,6 @@
 #include "mir_test_framework/input_testing_server_configuration.h"
 
 #include "mir/input/input_channel.h"
-#include "mir/scene/input_registrar.h"
 #include "mir/input/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/frontend/shell.h"
@@ -59,7 +58,7 @@ void mtf::InputTestingServerConfiguration::on_exit()
 
 std::shared_ptr<mi::InputDispatcherConfiguration> mtf::InputTestingServerConfiguration::the_input_dispatcher_configuration()
 {
-    return the_input_configuration()->the_input_dispatcher_configuration();
+    return DefaultServerConfiguration::the_input_dispatcher_configuration();
 }
 
 std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::the_input_configuration()
@@ -69,7 +68,7 @@ std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::th
         std::shared_ptr<mi::CursorListener> null_cursor_listener{nullptr};
 
         input_configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
-            the_composite_event_filter(),
+            the_input_dispatcher_configuration(),
             the_input_region(),
             null_cursor_listener,
             the_input_report());

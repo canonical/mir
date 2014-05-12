@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -16,29 +16,30 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_NESTED_INPUT_MANAGER_H_
-#define MIR_INPUT_NESTED_INPUT_MANAGER_H_
+#ifndef MIR_INPUT_NULL_INPUT_DISPATCHER_CONFIGURATION_H_
+#define MIR_INPUT_NULL_INPUT_DISPATCHER_CONFIGURATION_H_
 
-#include "mir/input/input_manager.h"
-#include <memory>
+#include "mir/input/input_dispatcher_configuration.h"
 
 namespace mir
 {
 namespace input
 {
-class InputDispatcher;
 
-class NestedInputManager : public InputManager
+class NullInputDispatcherConfiguration : public InputDispatcherConfiguration
 {
 public:
-    NestedInputManager(std::shared_ptr<InputDispatcher> const& dispatcher);
-    void start() override;
-    void stop() override;
-private:
-    std::shared_ptr<InputDispatcher> const dispatcher;
+    NullInputDispatcherConfiguration() = default;
+    std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
+    std::shared_ptr<InputDispatcher> the_input_dispatcher() override;
+    bool is_key_repeat_enabled() const override;
+protected:
+    NullInputDispatcherConfiguration(const NullInputDispatcherConfiguration&) = delete;
+    NullInputDispatcherConfiguration& operator=(const NullInputDispatcherConfiguration&) = delete;
 };
 
 }
 }
 
-#endif // MIR_INPUT_NESTED_INPUT_MANAGER
+#endif
+

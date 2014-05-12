@@ -96,6 +96,14 @@ void ms::SurfaceObservers::transformation_set_to(glm::mat4 const& t)
         p->transformation_set_to(t);
 }
 
+void ms::SurfaceObservers::reception_mode_set_to(mi::InputReceptionMode mode)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->reception_mode_set_to(mode);
+}
+
 void ms::SurfaceObservers::add(std::shared_ptr<SurfaceObserver> const& observer)
 {
     if (observer)
@@ -124,6 +132,7 @@ ms::BasicSurface::BasicSurface(
     surface_alpha(1.0f),
     first_frame_posted(false),
     hidden(false),
+    input_mode(mi::InputReceptionMode::normal),
     nonrectangular(nonrectangular),
     input_rectangles{surface_rect},
     surface_buffer_stream(buffer_stream),
@@ -186,6 +195,12 @@ mir::geometry::Size ms::BasicSurface::size() const
     return surface_rect.size;
 }
 
+mir::geometry::Size ms::BasicSurface::client_size() const
+{
+    // TODO: In future when decorated, client_size() would be smaller than size
+    return size();
+}
+
 MirPixelFormat ms::BasicSurface::pixel_format() const
 {
     return surface_buffer_stream->get_stream_pixel_format();
@@ -242,29 +257,29 @@ void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& inpu
     this->input_rectangles = input_rectangles;
 }
 
-void ms::BasicSurface::resize(geom::Size const& size)
+void ms::BasicSurface::resize(geom::Size const& desired_size)
 {
-    if (size == this->size())
+    geom::Size new_size = desired_size;
+    if (new_size.width <= geom::Width{0})   new_size.width = geom::Width{1};
+    if (new_size.height <= geom::Height{0}) new_size.height = geom::Height{1};
+
+    if (new_size == size())
         return;
 
-    if (size.width <= geom::Width{0} || size.height <= geom::Height{0})
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Impossible resize requested"));
-    }
     /*
      * Other combinations may still be invalid (like dimensions too big or
      * insufficient resources), but those are runtime and platform-specific, so
      * not predictable here. Such critical exceptions would arise from
      * the platform buffer allocator as a runtime_error via:
      */
-    surface_buffer_stream->resize(size);
+    surface_buffer_stream->resize(new_size);
 
     // Now the buffer stream has successfully resized, update the state second;
     {
         std::unique_lock<std::mutex> lock(guard);
-        surface_rect.size = size;
+        surface_rect.size = new_size;
     }
-    observers.resized_to(size);
+    observers.resized_to(new_size);
 }
 
 geom::Point ms::BasicSurface::top_left() const
@@ -273,7 +288,16 @@ geom::Point ms::BasicSurface::top_left() const
     return surface_rect.top_left;
 }
 
-bool ms::BasicSurface::contains(geom::Point const& point) const
+geom::Rectangle ms::BasicSurface::input_bounds() const
+{
+    std::unique_lock<std::mutex> lk(guard);
+
+    // This is historically unchanged, but if you look at input_area_contains()
+    // it seems a bit inconsistent...
+    return surface_rect;
+}
+
+bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 {
     std::unique_lock<std::mutex> lock(guard);
     if (hidden)
@@ -317,7 +341,21 @@ bool ms::BasicSurface::visible() const
 bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
 {
     return !hidden && first_frame_posted;
-} 
+}
+
+mi::InputReceptionMode ms::BasicSurface::reception_mode() const
+{
+    return input_mode;
+}
+
+void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
+{
+    {
+        std::lock_guard<std::mutex> lk(guard);
+        input_mode = mode;
+    }
+    observers.reception_mode_set_to(mode);
+}
 
 void ms::BasicSurface::with_most_recent_buffer_do(
     std::function<void(mg::Buffer&)> const& exec)

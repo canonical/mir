@@ -27,8 +27,8 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 1)
-set(MIR_VERSION_PATCH 9)
+set(MIR_VERSION_MINOR 2) # This should change at least with every MIRSERVER_ABI
+set(MIR_VERSION_PATCH 0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 execute_process(
@@ -76,7 +76,7 @@ enable_testing()
 include_directories(include/shared)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread program_options regex REQUIRED)
+find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread program_options regex iostreams REQUIRED)
 include_directories (
   ${Boost_INCLUDE_DIRS}
 )
