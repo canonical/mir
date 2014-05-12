@@ -20,7 +20,7 @@
 #ifndef MIR_TEST_STUB_SERVER_TOOL_H_
 #define MIR_TEST_STUB_SERVER_TOOL_H_
 
-#include "mir_protobuf.pb.h"
+#include "src/server/frontend/display_server.h"
 #include <condition_variable>
 #include <mutex>
 
@@ -29,7 +29,7 @@ namespace mir
 namespace test
 {
 
-struct StubServerTool : mir::protobuf::DisplayServer
+struct StubServerTool : mir::frontend::detail::DisplayServer
 {
     StubServerTool()
         : drm_magic{0}
