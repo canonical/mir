@@ -19,30 +19,13 @@
 #include "null_input_dispatcher_configuration.h"
 
 #include "mir/input/input_dispatcher.h"
-#include "mir/scene/input_registrar.h"
 #include "mir/shell/input_targeter.h"
 
 namespace mi = mir::input;
-namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 namespace
 {
-struct NullInputRegistrar : public ms::InputRegistrar
-{
-    NullInputRegistrar() = default;
-    virtual ~NullInputRegistrar() noexcept(true) = default;
-
-    void input_channel_opened(std::shared_ptr<mi::InputChannel> const&,
-                              std::shared_ptr<mi::Surface> const&,
-                              mi::InputReceptionMode /* receives_all_input */) override
-    {
-    }
-
-    void input_channel_closed(std::shared_ptr<mi::InputChannel> const&) override
-    {
-    }
-};
 
 struct NullInputTargeter : public msh::InputTargeter
 {
@@ -79,11 +62,6 @@ class NullInputDispatcher : public mi::InputDispatcher
 
 }
 
-std::shared_ptr<ms::InputRegistrar> mi::NullInputDispatcherConfiguration::the_input_registrar()
-{
-    return std::make_shared<NullInputRegistrar>();
-}
-
 std::shared_ptr<msh::InputTargeter> mi::NullInputDispatcherConfiguration::the_input_targeter()
 {
     return std::make_shared<NullInputTargeter>();
@@ -97,9 +75,5 @@ std::shared_ptr<mi::InputDispatcher> mi::NullInputDispatcherConfiguration::the_i
 bool mi::NullInputDispatcherConfiguration::is_key_repeat_enabled() const
 {
     return true;
-}
-
-void mi::NullInputDispatcherConfiguration::set_input_targets(std::shared_ptr<mi::InputTargets> const& /*targets*/)
-{
 }
 

@@ -30,11 +30,9 @@ class NullInputDispatcherConfiguration : public InputDispatcherConfiguration
 {
 public:
     NullInputDispatcherConfiguration() = default;
-    std::shared_ptr<scene::InputRegistrar> the_input_registrar() override;
     std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
     std::shared_ptr<InputDispatcher> the_input_dispatcher() override;
     bool is_key_repeat_enabled() const override;
-    void set_input_targets(std::shared_ptr<InputTargets> const& /*targets*/) override;
 protected:
     NullInputDispatcherConfiguration(const NullInputDispatcherConfiguration&) = delete;
     NullInputDispatcherConfiguration& operator=(const NullInputDispatcherConfiguration&) = delete;
