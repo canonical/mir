@@ -28,7 +28,7 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-void mc::RenderableLRUCache::access(mg::Renderable const& renderable, bool force_upload)
+void mc::RenderableLRUCache::bind_texture_from(mg::Renderable const& renderable)
 {
     auto const& buffer = renderable.buffer();
     auto const& id = renderable.id();
@@ -37,7 +37,7 @@ void mc::RenderableLRUCache::access(mg::Renderable const& renderable, bool force
     auto& texture = textures[id];
     texture.texture.gl_bind();
 
-    if ((texture.last_bound_buffer != buffer_id) || force_upload)
+    if (texture.last_bound_buffer != buffer_id)
         buffer->bind_to_texture();
 
     texture.resource = buffer;
@@ -46,6 +46,13 @@ void mc::RenderableLRUCache::access(mg::Renderable const& renderable, bool force
 }
 
 void mc::RenderableLRUCache::invalidate()
+{
+    mg::BufferID invalid_id;
+    for(auto &t : textures)
+        t.second.last_bound_buffer = invalid_id;
+}
+
+void mc::RenderableLRUCache::release_live_texture_resources()
 {
     auto t = textures.begin();
     while (t != textures.end())

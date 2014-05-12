@@ -95,7 +95,7 @@ public:
     virtual void render(graphics::Renderable const& renderable) const;
 private:
     std::unique_ptr<graphics::GLProgram> program;
-    std::unique_ptr<graphics::TextureCache> texture_cache;
+    std::unique_ptr<graphics::TextureCache> mutable texture_cache;
     GLuint position_attr_loc;
     GLuint texcoord_attr_loc;
     GLuint centre_uniform_loc;
@@ -105,8 +105,6 @@ private:
     float rotation;
 
     geometry::Rectangle viewport;
-    //why mutable?
-    bool mutable force_texture_upload;
 };
 
 }

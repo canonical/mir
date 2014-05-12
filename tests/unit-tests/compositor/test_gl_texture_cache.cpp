@@ -1,0 +1,124 @@
+/*
+ * Copyright © 2014 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ */
+
+#include "src/server/compositor/renderable_lru_cache.h"
+#include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/mock_renderable.h"
+#include "mir_test_doubles/mock_gl.h"
+#include <gtest/gtest.h>
+
+namespace mtd=mir::test::doubles;
+namespace mc=mir::compositor;
+namespace mg=mir::graphics;
+
+namespace
+{
+class GLTextureCache : public testing::Test
+{
+public:
+    GLTextureCache()
+    {
+        using namespace testing;
+        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
+        renderable = std::make_shared<NiceMock<mtd::MockRenderable>>();
+        ON_CALL(*renderable, buffer())
+            .WillByDefault(Return(mock_buffer));
+        ON_CALL(*mock_buffer, id())
+            .WillByDefault(Return(mg::BufferID(123)));
+    }
+
+    testing::NiceMock<mtd::MockGL> mock_gl;
+    std::shared_ptr<mtd::MockBuffer> mock_buffer;
+    std::shared_ptr<testing::NiceMock<mtd::MockRenderable>> renderable;
+    GLuint const stub_texture{1};
+};
+}
+
+TEST_F(GLTextureCache, caches_and_uploads_texture_only_on_buffer_changes)
+{
+    using namespace testing;
+    InSequence seq;
+
+    //texture generated and uploaded
+    EXPECT_CALL(*mock_buffer, id())
+        .WillOnce(Return(mg::BufferID(123)));
+    EXPECT_CALL(mock_gl, glGenTextures(1, _))
+        .WillOnce(SetArgPointee<1>(stub_texture));
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
+    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _));
+    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _));
+    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, _));
+    EXPECT_CALL(mock_gl, glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _));
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
+    EXPECT_CALL(*mock_buffer, bind_to_texture());
+
+    //texture found in cache and not re-uploaded
+    EXPECT_CALL(*mock_buffer, id())
+        .WillOnce(Return(mg::BufferID(123)));
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
+    EXPECT_CALL(*mock_buffer, bind_to_texture())
+        .Times(0);
+
+    //texture found in cache but refreshed with new buffer
+    EXPECT_CALL(*mock_buffer, id())
+        .WillOnce(Return(mg::BufferID(456)));
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
+    EXPECT_CALL(*mock_buffer, bind_to_texture());
+
+    //stale texture reuploaded following bypass
+    EXPECT_CALL(*mock_buffer, id())
+        .WillOnce(Return(mg::BufferID(456)));
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
+    EXPECT_CALL(*mock_buffer, bind_to_texture());
+
+    //texture found in cache and not re-uploaded
+    EXPECT_CALL(*mock_buffer, id())
+        .WillOnce(Return(mg::BufferID(456)));
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
+
+    //clean up texture
+    EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
+
+    mc::RenderableLRUCache cache;
+    cache.bind_texture_from(*renderable);
+    cache.release_live_texture_resources();
+
+    cache.bind_texture_from(*renderable);
+    cache.release_live_texture_resources();
+
+    cache.bind_texture_from(*renderable);
+    cache.release_live_texture_resources();
+
+    cache.invalidate();
+
+    cache.bind_texture_from(*renderable);
+    cache.release_live_texture_resources();
+
+    cache.bind_texture_from(*renderable);
+    cache.release_live_texture_resources();
+}
+
+TEST_F(GLTextureCache, holds_buffers_till_the_end)
+{
+    auto old_use_count = mock_buffer.use_count();
+    mc::RenderableLRUCache cache;
+    cache.bind_texture_from(*renderable);
+    EXPECT_EQ(old_use_count+1, mock_buffer.use_count());
+    cache.release_live_texture_resources();
+    EXPECT_EQ(old_use_count, mock_buffer.use_count());
+}

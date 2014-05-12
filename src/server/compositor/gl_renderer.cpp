@@ -77,8 +77,7 @@ mc::GLRenderer::GLRenderer(
       centre_uniform_loc(0),
       transform_uniform_loc(0),
       alpha_uniform_loc(0),
-      rotation(NAN), // ensure the first set_rotation succeeds
-      force_texture_upload{false}
+      rotation(NAN) // ensure the first set_rotation succeeds
 {
     glUseProgram(*program);
 
@@ -168,7 +167,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     std::vector<Primitive> primitives;
     tessellate(primitives, renderable, renderable.buffer()->size());
 
-    texture_cache->access(renderable, force_texture_upload);
+    texture_cache->bind_texture_from(renderable);
     for (auto const& p : primitives)
     {
         // Note a primitive tex_id of zero means use the surface texture,
@@ -266,11 +265,10 @@ void mc::GLRenderer::begin() const
 //TODO: end/suspend seems a bit funny. perhaps once render works on a list we can get rid of these
 void mc::GLRenderer::end() const
 {
-    texture_cache->invalidate();
-    force_texture_upload = false;
+    texture_cache->release_live_texture_resources();
 }
 
 void mc::GLRenderer::suspend()
 {
-    force_texture_upload = true;
+    texture_cache->invalidate();
 }
