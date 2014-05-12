@@ -49,6 +49,23 @@ public:
         std::shared_ptr<Screencast> const& screencast,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer);
 
+    std::shared_ptr<detail::DisplayServer> make_ipc_server(
+        SessionCredentials const& creds,
+        std::shared_ptr<EventSink> const& sink,
+        ConnectionContext const& connection_context) override;
+
+    virtual std::shared_ptr<ResourceCache> resource_cache() override;
+
+    virtual std::shared_ptr<detail::DisplayServer> make_mediator(
+        std::shared_ptr<Shell> const& shell,
+        std::shared_ptr<graphics::Platform> const& graphics_platform,
+        std::shared_ptr<DisplayChanger> const& changer,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
+        std::shared_ptr<SessionMediatorReport> const& sm_report,
+        const std::shared_ptr<EventSink>& sink,
+        const std::shared_ptr<Screencast>& effective_screencast,
+        const ConnectionContext& connection_context);
+
 private:
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<SessionMediatorReport> const sm_report;
@@ -58,13 +75,6 @@ private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<Screencast> const screencast;
     std::shared_ptr<SessionAuthorizer> const session_authorizer;
-
-    std::shared_ptr<detail::DisplayServer> make_ipc_server(
-        SessionCredentials const& creds,
-        std::shared_ptr<EventSink> const& sink,
-        ConnectionContext const& connection_context) override;
-
-    virtual std::shared_ptr<ResourceCache> resource_cache() override;
 };
 }
 }

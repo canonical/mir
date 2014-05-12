@@ -73,6 +73,32 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
         effective_screencast = std::make_shared<UnauthorizedScreencast>();
     }
 
+    return make_mediator(
+        shell,
+        graphics_platform,
+        changer,
+        buffer_allocator,
+        sm_report,
+        sink,
+        effective_screencast,
+        connection_context);
+}
+
+std::shared_ptr<mf::ResourceCache> mf::DefaultIpcFactory::resource_cache()
+{
+    return cache;
+}
+
+std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
+    std::shared_ptr<Shell> const& shell,
+    std::shared_ptr<mg::Platform> const& graphics_platform,
+    std::shared_ptr<DisplayChanger> const& changer,
+    std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
+    std::shared_ptr<SessionMediatorReport> const& sm_report,
+    std::shared_ptr<EventSink> const& sink,
+    std::shared_ptr<Screencast> const& effective_screencast,
+    ConnectionContext const& connection_context)
+{
     return std::make_shared<SessionMediator>(
         shell,
         graphics_platform,
@@ -83,9 +109,4 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
         resource_cache(),
         effective_screencast,
         connection_context);
-}
-
-std::shared_ptr<mf::ResourceCache> mf::DefaultIpcFactory::resource_cache()
-{
-    return cache;
 }
