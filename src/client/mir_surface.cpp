@@ -20,6 +20,7 @@
 #include "mir/frontend/client_constants.h"
 #include "client_buffer.h"
 #include "mir_surface.h"
+#include "cursor_configuration.h"
 #include "mir_connection.h"
 #include "mir/input/input_receiver_thread.h"
 #include "mir/input/input_platform.h"
@@ -295,6 +296,24 @@ EGLNativeWindowType MirSurface::generate_native_window()
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     return *accelerated_window;
+}
+
+MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor)
+{
+    mp::CursorSetting setting;
+
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        setting.mutable_surfaceid()->CopyFrom(surface.id());
+        if (cursor->name != "")
+            setting.set_name(cursor->name.c_str());
+    }
+    
+    configure_cursor_wait_handle.expect_result();
+    server.configure_cursor(0, &setting, &void_response,
+        google::protobuf::NewCallback(this, &MirSurface::on_configured));
+    
+    return &configure_cursor_wait_handle;
 }
 
 MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)

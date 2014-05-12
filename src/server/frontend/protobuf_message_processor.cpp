@@ -175,6 +175,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         {
             invoke(this, display_server.get(), &DisplayServer::release_screencast, invocation);
         }
+        else if ("configure_cursor" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::configure_cursor, invocation);
+        }
         else if ("new_fds_for_trusted_clients" == invocation.method_name())
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::new_fds_for_trusted_clients, invocation);
