@@ -23,6 +23,7 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
+#include "mir_test_framework/cross_process_sync.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
@@ -108,7 +109,8 @@ TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_receives_input)
                     using namespace ::testing;
                     InSequence seq;
                     EXPECT_CALL(dispatcher_conf->dispatcher, dispatch(mt::MotionEventWithPosition(1, 1))).Times(1);
-                    EXPECT_CALL(dispatcher_conf->dispatcher, dispatch(mt::KeyDownEvent())).Times(1);
+                    EXPECT_CALL(dispatcher_conf->dispatcher, dispatch(mt::KeyDownEvent()))
+                        .WillOnce(InvokeWithoutArgs([this] { dispatching_done.signal_ready(); }));
                 }
 
                 return dispatcher_conf;
@@ -119,9 +121,19 @@ TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_receives_input)
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
             fake_event_hub->synthesize_event(mis::a_key_down_event().of_scancode(KEY_ENTER));
         }
+
+        mtf::CrossProcessSync dispatching_done;
     } server_config;
 
     launch_server_process(server_config);
+
+    // Since event handling happens asynchronously we need to allow some time
+    // for it to take place before we leave the test. Otherwise, the server
+    // may be stopped before events have been dispatched.
+    run_in_test_process([&]
+    {
+        server_config.dispatching_done.wait_for_signal_ready_for(std::chrono::seconds{5});
+    });
 }
 
 TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_gets_started_and_stopped)
