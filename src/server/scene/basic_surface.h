@@ -65,6 +65,7 @@ public:
     void frame_posted() override;
     void alpha_set_to(float alpha) override;
     void transformation_set_to(glm::mat4 const& t) override;
+    void reception_mode_set_to(input::InputReceptionMode mode) override;
 
     void add(std::shared_ptr<SurfaceObserver> const& observer);
     void remove(std::shared_ptr<SurfaceObserver> const& observer);
@@ -106,6 +107,8 @@ public:
     int client_input_fd() const;
     void allow_framedropping(bool);
     std::shared_ptr<input::InputChannel> input_channel() const override;
+    input::InputReceptionMode reception_mode() const override;
+    void set_reception_mode(input::InputReceptionMode mode) override;
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
 
@@ -148,6 +151,7 @@ private:
     float surface_alpha;
     bool first_frame_posted;
     bool hidden;
+    input::InputReceptionMode input_mode;
     const bool nonrectangular;
     std::vector<geometry::Rectangle> input_rectangles;
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;

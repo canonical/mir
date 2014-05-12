@@ -43,15 +43,17 @@ public:
         static std::shared_ptr<input::InputChannel> c{nullptr};
         ON_CALL(*this, input_channel())
             .WillByDefault(Return(c));
+        ON_CALL(*this, reception_mode())
+            .WillByDefault(Return(input::InputReceptionMode::normal));
     }
     ~MockInputSurface() noexcept {}
     MOCK_CONST_METHOD0(name, std::string());
     MOCK_CONST_METHOD0(input_bounds, geometry::Rectangle());
     MOCK_CONST_METHOD1(input_area_contains, bool(geometry::Point const&));
     MOCK_CONST_METHOD0(input_channel, std::shared_ptr<input::InputChannel>());
+    MOCK_CONST_METHOD0(reception_mode, input::InputReceptionMode());
 };
 
-typedef ::testing::NiceMock<MockInputSurface> StubInputSurface;
 }
 }
 }

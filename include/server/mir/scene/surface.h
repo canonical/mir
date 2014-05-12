@@ -77,6 +77,7 @@ public:
     // TODO input_channel() relates to adding and removing the surface
     // TODO from the scene and is probably not cleanest interface for this.
     virtual std::shared_ptr<input::InputChannel> input_channel() const = 0;
+    virtual void set_reception_mode(input::InputReceptionMode mode) = 0;
 };
 }
 }

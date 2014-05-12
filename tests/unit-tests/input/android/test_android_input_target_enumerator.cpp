@@ -25,6 +25,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/stub_input_handles.h"
+#include "mir_test_doubles/stub_input_surface.h"
 #include "mir_test_doubles/mock_window_handle_repository.h"
 
 #include <InputDispatcher.h>
@@ -62,35 +63,16 @@ struct StubInputTargets : public mi::InputTargets
     std::vector<std::shared_ptr<mi::Surface>> targets;
 };
 
-struct StubInputSurface : public mi::Surface
-{
-    StubInputSurface(std::shared_ptr<mi::InputChannel> const& channel)
-        : channel(channel)
-    {
-    }
-    std::shared_ptr<mi::InputChannel> input_channel() const 
-    {
-        return channel;
-    }
-
-    std::string name() const { return {}; }
-    geom::Rectangle input_bounds() const override { return {{},{}}; }
-    bool input_area_contains(geom::Point const&) const override { return false; }
-    void cursor_parameters(bool&, std::string&, std::string&) const { }
-    
-    std::shared_ptr<mi::InputChannel> const channel;
-};
-
 }
 
 TEST(AndroidInputTargetEnumerator, enumerates_registered_handles_for_surfaces)
 {
     using namespace ::testing;
-  
+
     std::shared_ptr<mi::InputChannel> channel1 = std::make_shared<mtd::StubInputChannel>();
     std::shared_ptr<mi::InputChannel> channel2 = std::make_shared<mtd::StubInputChannel>();
-    auto target1 = std::make_shared<StubInputSurface>(channel1);
-    auto target2 = std::make_shared<StubInputSurface>(channel2);
+    auto target1 = std::make_shared<mtd::StubInputSurface>(channel1);
+    auto target2 = std::make_shared<mtd::StubInputSurface>(channel2);
     mtd::MockWindowHandleRepository repository;
     droidinput::sp<droidinput::InputWindowHandle> stub_window_handle1 = new mtd::StubWindowHandle;
     droidinput::sp<droidinput::InputWindowHandle> stub_window_handle2 = new mtd::StubWindowHandle;

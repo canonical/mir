@@ -34,7 +34,7 @@ namespace
 {
 struct WindowInfo : public droidinput::InputWindowInfo
 {
-    WindowInfo(std::shared_ptr<mi::Surface> const& surface)
+    WindowInfo(mi::Surface const* surface)
         : surface(surface)
     {
     }
@@ -44,13 +44,13 @@ struct WindowInfo : public droidinput::InputWindowInfo
         return surface->input_area_contains({x, y});
     }
 
-    std::shared_ptr<mi::Surface> const surface;
+    mi::Surface const* surface;
 };
 }
 
 mia::InputWindowHandle::InputWindowHandle(droidinput::sp<droidinput::InputApplicationHandle> const& input_app_handle,
                                           std::shared_ptr<mi::InputChannel> const& channel,
-                                          std::shared_ptr<mi::Surface> const& surface)
+                                          mi::Surface const* surface)
   : droidinput::InputWindowHandle(input_app_handle),
     input_channel(channel),
     surface(surface)

@@ -34,6 +34,7 @@
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test_doubles/stub_input_targets.h"
+#include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
@@ -81,20 +82,16 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
     void SetUp()
     {
         event_filter = std::make_shared<MockEventFilter>();
-        dispatcher_conf = std::make_shared<mia::InputDispatcherConfiguration>(event_filter, mr::null_input_report());
+        dispatcher_conf = std::make_shared<mia::InputDispatcherConfiguration>(
+            event_filter, mr::null_input_report(), mt::fake_shared(stub_scene), mt::fake_shared(stub_targets));
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
-            dispatcher_conf,
-            mt::fake_shared(input_region),
-            mt::fake_shared(cursor_listener),
-            mr::null_input_report());
+            dispatcher_conf, mt::fake_shared(input_region), mt::fake_shared(cursor_listener), mr::null_input_report());
 
         fake_event_hub = configuration->the_fake_event_hub();
 
         input_manager = configuration->the_input_manager();
         dispatcher = dispatcher_conf->the_input_dispatcher();
 
-        stub_targets = std::make_shared<mtd::StubInputTargets>();
-        dispatcher_conf->set_input_targets(stub_targets);
 
         input_manager->start();
         dispatcher->start();
@@ -113,7 +110,8 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<mi::InputDispatcher> dispatcher;
     MockCursorListener cursor_listener;
-    std::shared_ptr<mtd::StubInputTargets> stub_targets;
+    mtd::StubInputTargets stub_targets;
+    mtd::StubScene stub_scene;
     StubInputRegion input_region;
 };
 

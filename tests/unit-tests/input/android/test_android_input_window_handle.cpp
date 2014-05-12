@@ -98,7 +98,7 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
         .WillOnce(Return(testing_surface_name));
 
     mia::InputWindowHandle handle(new StubInputApplicationHandle(),
-                                  mt::fake_shared(mock_channel), mt::fake_shared(mock_surface));
+                                  mt::fake_shared(mock_channel), &mock_surface);
 
     auto info = handle.getInfo();
 
