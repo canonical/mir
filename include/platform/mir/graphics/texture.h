@@ -19,9 +19,7 @@
 #ifndef MIR_GRAPHICS_TEXTURE_H_
 #define MIR_GRAPHICS_TEXTURE_H_
 
-#include "mir/graphics/gl_program.h"
-#include "mir/graphics/renderable.h"
-#include <memory>
+#include <GLES2/gl2.h>
 
 namespace mir
 {

@@ -15,6 +15,7 @@ set(
   screencast_display_buffer.cpp
   compositing_screencast.cpp
   buffer_queue.cpp
+  renderable_lru_cache.cpp
 )
 
 ADD_LIBRARY(

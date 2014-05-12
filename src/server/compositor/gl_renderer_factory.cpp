@@ -20,56 +20,11 @@
 #include "renderable_lru_cache.h"
 #include "mir/compositor/gl_renderer.h"
 #include "mir/graphics/gl_program.h"
-#include "mir/graphics/texture_cache.h"
-#include "mir/graphics/buffer.h"
 #include "mir/geometry/rectangle.h"
 
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
-
-void mc::RenderableLRUCache::bind_texture_from(mg::Renderable const& renderable)
-{
-    auto const& buffer = renderable.buffer();
-    auto const& id = renderable.id();
-
-    auto buffer_id = buffer->id();
-    auto& texture = textures[id];
-    texture.texture.gl_bind();
-
-    if (texture.last_bound_buffer != buffer_id)
-        buffer->bind_to_texture();
-
-    texture.resource = buffer;
-    texture.last_bound_buffer = buffer_id;
-    texture.used = true;
-}
-
-void mc::RenderableLRUCache::invalidate()
-{
-    mg::BufferID invalid_id;
-    for(auto &t : textures)
-        t.second.last_bound_buffer = invalid_id;
-}
-
-void mc::RenderableLRUCache::release_live_texture_resources()
-{
-    auto t = textures.begin();
-    while (t != textures.end())
-    {
-        auto& tex = t->second;
-        tex.resource.reset();
-        if (tex.used)
-        {
-            tex.used = false;
-            ++t;
-        }
-        else
-        {
-            t = textures.erase(t);
-        }
-    }
-}
 
 mc::GLRendererFactory::GLRendererFactory(std::shared_ptr<mg::GLProgramFactory> const& factory) :
     program_factory(factory)
