@@ -50,7 +50,7 @@ public:
 
     bool add_trusted_child(std::shared_ptr<Session> const& session);
     void remove_trusted_child(std::shared_ptr<Session> const& session);
-    void for_each_trusted_child(std::function<void(std::shared_ptr<Session> const&)> f, bool reverse) const;
+    void for_each_trusted_child(std::function<void(std::shared_ptr<Session> const&)> f) const;
 
 protected:
     TrustSessionImpl(const TrustSessionImpl&) = delete;

@@ -200,7 +200,7 @@ message TrustSession {
 }
 
 message TrustSessionAddResult {
-  required int32 result = 1;
+  optional int32 result = 1;
   optional string error = 127;
 }
 

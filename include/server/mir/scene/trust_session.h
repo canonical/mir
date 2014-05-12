@@ -34,7 +34,7 @@ public:
 
     virtual bool add_trusted_child(std::shared_ptr<Session> const& session) = 0;
     virtual void remove_trusted_child(std::shared_ptr<Session> const& session) = 0;
-    virtual void for_each_trusted_child(std::function<void(std::shared_ptr<Session> const&)> f, bool reverse) const = 0;
+    virtual void for_each_trusted_child(std::function<void(std::shared_ptr<Session> const&)> f) const = 0;
 };
 
 }

@@ -163,25 +163,13 @@ void ms::TrustSessionImpl::remove_trusted_child(std::shared_ptr<ms::Session> con
 }
 
 void ms::TrustSessionImpl::for_each_trusted_child(
-    std::function<void(std::shared_ptr<ms::Session> const&)> f,
-    bool reverse) const
+    std::function<void(std::shared_ptr<ms::Session> const&)> f) const
 {
     std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
 
-    if (reverse)
+    for (auto it = trusted_children.begin(); it != trusted_children.end(); ++it)
     {
-        for (auto rit = trusted_children.rbegin(); rit != trusted_children.rend(); ++rit)
-        {
-            if (auto trusted_child = (*rit).lock())
-                f(trusted_child);
-        }
-    }
-    else
-    {
-        for (auto it = trusted_children.begin(); it != trusted_children.end(); ++it)
-        {
-            if (auto trusted_child = (*it).lock())
-                f(trusted_child);
-        }
+        if (auto trusted_child = (*it).lock())
+            f(trusted_child);
     }
 }
