@@ -123,6 +123,11 @@ public:
 
     bool set_extra_platform_data(std::vector<int> const& extra_platform_data);
 
+    MirWaitHandle* new_fds_for_trusted_clients(
+        unsigned int no_of_fds,
+        mir_client_fd_callback callback,
+        void * context);
+
     std::shared_ptr<google::protobuf::RpcChannel> rpc_channel() const
     {
         return channel;
@@ -142,6 +147,7 @@ private:
     mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::DRMAuthMagicStatus drm_auth_magic_status;
     mir::protobuf::DisplayConfiguration display_configuration_response;
+    mir::protobuf::SocketFD socket_fd_response;
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;
@@ -155,6 +161,7 @@ private:
     MirWaitHandle disconnect_wait_handle;
     MirWaitHandle drm_auth_magic_wait_handle;
     MirWaitHandle configure_display_wait_handle;
+    MirWaitHandle fds_for_trusted_clients_wait_handle;
 
     std::mutex release_wait_handle_guard;
     std::vector<MirWaitHandle*> release_wait_handles;
@@ -174,6 +181,7 @@ private:
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );
     void done_drm_auth_magic(mir_drm_auth_magic_callback callback, void* context);
+    void done_fds_for_trusted_clients(mir_client_fd_callback callback, void* context);
     bool validate_user_display_config(MirDisplayConfiguration* config);
 };
 

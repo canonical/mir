@@ -207,7 +207,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         static size_t max_fingers = 0;
         static float max_pressure = 1.0f;
         
-        // FIXME: https://bugs.launchpad.net/mir/+bug/1197108
+        // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
         MirMotionAction masked_action = event->motion.action & ~0xff00;
 
         if (masked_action == mir_motion_action_up)
@@ -286,7 +286,7 @@ static const MirDisplayOutput *find_active_output(
 
 int main(int argc, char *argv[])
 {
-    static const Color background = {0x40, 0x40, 0x40, 0xff};
+    static const Color background = {180, 180, 150, 255};
     MirConnection *conn;
     MirSurfaceParameters parm;
     MirSurface *surf;

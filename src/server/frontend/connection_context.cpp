@@ -13,26 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "nested_input_manager.h"
+#include "mir/frontend/connection_context.h"
 
-#include "mir/input/input_dispatcher.h"
+#include "mir/frontend/connector.h"
 
-namespace mi = mir::input;
+namespace mf = mir::frontend;
 
-mi::NestedInputManager::NestedInputManager(std::shared_ptr<InputDispatcher> const& dispatcher)
-    : dispatcher(dispatcher)
+mf::ConnectionContext::ConnectionContext(
+    std::function<void(std::shared_ptr<Session> const& session)> const connect_handler,
+    Connector const* connector) :
+    connect_handler(connect_handler),
+    connector(connector)
 {
 }
 
-void mi::NestedInputManager::start()
+int mf::ConnectionContext::fd_for_new_client(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
 {
-    dispatcher->start();
-}
-
-void mi::NestedInputManager::stop()
-{
-    dispatcher->stop();
+    return connector->client_socket_fd(connect_handler);
 }

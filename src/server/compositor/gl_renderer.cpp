@@ -130,6 +130,12 @@ void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
     vertices[3] = {{right, bottom, 0.0f}, {tex_right, tex_bottom}};
 }
 
+void mc::GLRenderer::render(mg::RenderableList const& renderables) const
+{
+    for (auto const& r : renderables)
+        render(*r);
+}
+
 void mc::GLRenderer::render(mg::Renderable const& renderable) const
 {
     auto buffer = renderable.buffer();

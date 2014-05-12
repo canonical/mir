@@ -89,18 +89,16 @@ TEST(AndroidInputWindowHandle, update_info_uses_geometry_and_channel_from_surfac
 
     // For now since we are just doing keyboard input we only need surface size,
     // for touch/pointer events we will need a position
-    EXPECT_CALL(mock_surface, size())
+    EXPECT_CALL(mock_surface, input_bounds())
         .Times(1)
-        .WillOnce(Return(default_surface_size));
-    EXPECT_CALL(mock_surface, top_left())
-        .Times(1)
-        .WillOnce(Return(default_surface_top_left));
+        .WillOnce(Return(geom::Rectangle{default_surface_top_left,
+                                         default_surface_size}));
     EXPECT_CALL(mock_surface, name())
         .Times(1)
         .WillOnce(Return(testing_surface_name));
 
     mia::InputWindowHandle handle(new StubInputApplicationHandle(),
-                                  mt::fake_shared(mock_channel), mt::fake_shared(mock_surface));
+                                  mt::fake_shared(mock_channel), &mock_surface);
 
     auto info = handle.getInfo();
 
