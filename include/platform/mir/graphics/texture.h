@@ -16,37 +16,31 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_TEXTURE_CACHE_H_
-#define MIR_GRAPHICS_TEXTURE_CACHE_H_
+#ifndef MIR_GRAPHICS_TEXTURE_H_
+#define MIR_GRAPHICS_TEXTURE_H_
 
+#include "mir/graphics/gl_program.h"
 #include "mir/graphics/renderable.h"
+#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
-class TextureCache
+class Texture
 {
 public:
-    virtual ~TextureCache() = default;
+    Texture();
+    ~Texture();
+    void gl_bind() const;
 
-    /** Loads texture from the renderable and ensures that it is bound.
-     * \param [in] renderable
-     *     The Renderable that will be bound as the active texture of the GL context
-    **/ 
-    virtual void bind_texture_from(Renderable const&) = 0;
-
-    virtual void invalidate() = 0;
-
-    /** Release the resources associated with the bound textures in the cache **/
-    virtual void release_live_texture_resources() = 0;
-
-protected:
-    TextureCache() = default;
 private:
-    TextureCache(TextureCache const&) = delete;
-    TextureCache& operator=(TextureCache const&) = delete;
+    Texture(Texture const&) = delete;
+    Texture& operator=(Texture const&) = delete;
+    GLuint generate_id() const;
+    GLuint const id;
 };
 }
 }
-#endif /* MIR_GRAPHICS_TEXTURE_CACHE_H_ */
+
+#endif /* MIR_GRAPHICS_TEXTURE_H_ */

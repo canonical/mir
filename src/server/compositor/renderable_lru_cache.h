@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_RENDERABLE_LRU_CACHE_H_
 
 #include "mir/graphics/texture_cache.h"
+#include "mir/graphics/texture.h"
 #include "mir/graphics/buffer_id.h"
 #include <unordered_map>
 
@@ -27,7 +28,6 @@ namespace mir
 {
 namespace compositor 
 {
-
 class RenderableLRUCache : public graphics::TextureCache
 {
 public:
@@ -46,7 +46,6 @@ private:
 
     std::unordered_map<graphics::Renderable::ID, CountedTexture> textures;
 };
-
 }
 }
 
