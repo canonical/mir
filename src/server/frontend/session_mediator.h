@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_SESSION_MEDIATOR_H_
 #define MIR_FRONTEND_SESSION_MEDIATOR_H_
 
-#include "mir_protobuf.pb.h"
+#include "display_server.h"
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
 #include "mir_toolkit/common.h"
@@ -55,12 +55,11 @@ class DisplayChanger;
 class Screencast;
 
 // SessionMediator relays requests from the client process into the server.
-class SessionMediator : public mir::protobuf::DisplayServer
+class SessionMediator : public detail::DisplayServer
 {
 public:
 
     SessionMediator(
-        pid_t client_pid,
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
@@ -72,6 +71,8 @@ public:
         ConnectionContext const& connection_context);
 
     ~SessionMediator() noexcept;
+
+    void client_pid(int pid) override;
 
     /* Platform independent requests */
     void connect(::google::protobuf::RpcController* controller,
@@ -143,7 +144,7 @@ private:
                               bool need_full_ipc);
 
     void advance_buffer(SurfaceId surf_id, Surface& surface, std::function<void(graphics::Buffer*, bool)> complete);
-    pid_t client_pid;
+    pid_t client_pid_;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 

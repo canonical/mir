@@ -75,6 +75,8 @@ struct DemoMessageProcessor : mfd::MessageProcessor
         sender(sender),
         wrapped(wrapped) {}
 
+    void client_pid(int /*pid*/) override {}
+
     bool dispatch(mfd::Invocation const& invocation)
     {
         if ("function" == invocation.method_name())
@@ -106,12 +108,12 @@ struct DemoConnectionCreator : mf::ProtobufConnectionCreator
     MOCK_CONST_METHOD3(create_processor,
         std::shared_ptr<mfd::MessageProcessor>(
         std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
-        std::shared_ptr<mir::protobuf::DisplayServer> const& display_server,
+        std::shared_ptr<mfd::DisplayServer> const& display_server,
         std::shared_ptr<mf::MessageProcessorReport> const& report));
 
     std::shared_ptr<mfd::MessageProcessor> create_wrapped_processor(
         std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
-        std::shared_ptr<mir::protobuf::DisplayServer> const& display_server,
+        std::shared_ptr<mfd::DisplayServer> const& display_server,
         std::shared_ptr<mf::MessageProcessorReport> const& report) const
     {
         auto const wrapped = mf::ProtobufConnectionCreator::create_processor(
@@ -124,7 +126,7 @@ struct DemoConnectionCreator : mf::ProtobufConnectionCreator
 
     std::shared_ptr<mfd::MessageProcessor> create_unwrapped_processor(
         std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
-        std::shared_ptr<mir::protobuf::DisplayServer> const& display_server,
+        std::shared_ptr<mfd::DisplayServer> const& display_server,
         std::shared_ptr<mf::MessageProcessorReport> const& report) const
     {
         return mf::ProtobufConnectionCreator::create_processor(

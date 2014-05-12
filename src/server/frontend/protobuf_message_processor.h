@@ -28,14 +28,13 @@
 
 namespace mir
 {
-namespace protobuf { class DisplayServer; }
-
 namespace frontend
 {
 class MessageProcessorReport;
 
 namespace detail
 {
+class DisplayServer;
 class ProtobufMessageSender;
 
 class ProtobufMessageProcessor : public MessageProcessor
@@ -43,10 +42,12 @@ class ProtobufMessageProcessor : public MessageProcessor
 public:
     ProtobufMessageProcessor(
         std::shared_ptr<ProtobufMessageSender> const& sender,
-        std::shared_ptr<protobuf::DisplayServer> const& display_server,
+        std::shared_ptr<DisplayServer> const& display_server,
         std::shared_ptr<MessageProcessorReport> const& report);
 
     ~ProtobufMessageProcessor() noexcept {}
+
+    void client_pid(int pid) override;
 
     void send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response);
     void send_response(::google::protobuf::uint32 id, protobuf::Buffer* response);
@@ -60,7 +61,7 @@ private:
     bool dispatch(Invocation const& invocation);
 
     std::shared_ptr<ProtobufMessageSender> const sender;
-    std::shared_ptr<protobuf::DisplayServer> const display_server;
+    std::shared_ptr<DisplayServer> const display_server;
     std::shared_ptr<MessageProcessorReport> const report;
 };
 }

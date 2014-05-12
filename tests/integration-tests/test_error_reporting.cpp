@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -23,7 +23,7 @@
 #include "src/server/frontend/resource_cache.h"
 #include "mir/frontend/connector.h"
 
-#include "mir_protobuf.pb.h"
+#include "src/server/frontend/display_server.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_ipc_factory.h"
@@ -46,8 +46,10 @@ namespace
 {
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-struct ErrorServer : mir::protobuf::DisplayServer
+struct ErrorServer : mf::detail::DisplayServer
 {
+    void client_pid(int /*pid*/) override {}
+
     static std::string const test_exception_text;
 
     void create_surface(
