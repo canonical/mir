@@ -49,7 +49,9 @@ public:
         std::shared_ptr<MessageProcessorReport> const& report);
     ~ProtobufConnectionCreator() noexcept;
 
-    void create_connection_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket);
+    void create_connection_for(
+        std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
+        ConnectionContext const& connection_context) override;
 
     virtual std::shared_ptr<detail::MessageProcessor> create_processor(
         std::shared_ptr<detail::ProtobufMessageSender> const& sender,

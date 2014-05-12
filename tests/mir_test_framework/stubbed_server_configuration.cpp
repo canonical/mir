@@ -39,6 +39,7 @@
 #include "mir/compositor/renderer.h"
 #include "mir/compositor/renderer_factory.h"
 #include "src/server/input/null_input_configuration.h"
+#include "src/server/input/null_input_dispatcher_configuration.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -216,30 +217,6 @@ public:
     }
 };
 
-struct StubInputChannel : public mi::InputChannel
-{
-    int client_fd() const
-    {
-        return 0;
-    }
-
-    int server_fd() const
-    {
-        return 0;
-    }
-};
-
-class StubInputManager : public mi::InputManager
-{
-  public:
-    void start() {}
-    void stop() {}
-
-    std::shared_ptr<mi::InputChannel> make_input_channel()
-    {
-        return std::make_shared<StubInputChannel>();
-    }
-};
 }
 
 mtf::StubbedServerConfiguration::StubbedServerConfiguration() :
@@ -290,6 +267,16 @@ std::shared_ptr<mi::InputConfiguration> mtf::StubbedServerConfiguration::the_inp
         return DefaultServerConfiguration::the_input_configuration();
     else
         return std::make_shared<mi::NullInputConfiguration>();
+}
+
+std::shared_ptr<mi::InputDispatcherConfiguration> mtf::StubbedServerConfiguration::the_input_dispatcher_configuration()
+{
+    auto options = the_options();
+
+    if (options->get<bool>("tests-use-real-input"))
+        return DefaultServerConfiguration::the_input_dispatcher_configuration();
+    else
+        return std::make_shared<mi::NullInputDispatcherConfiguration>();
 }
 
 int main(int argc, char** argv)

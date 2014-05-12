@@ -37,7 +37,7 @@ namespace android
 class InputApplicationHandle : public droidinput::InputApplicationHandle
 {
 public:
-    InputApplicationHandle(std::shared_ptr<input::Surface> const& surface);
+    InputApplicationHandle(input::Surface const* surface);
     ~InputApplicationHandle() {}
 
     bool updateInfo();
@@ -47,7 +47,7 @@ protected:
     InputApplicationHandle& operator=(InputApplicationHandle const&) = delete;
 
 private:
-    std::shared_ptr<input::Surface> surface;
+    input::Surface const* surface;
 };
 
 }

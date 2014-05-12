@@ -35,28 +35,25 @@ public:
     MockInputSurface()
     {
         using namespace ::testing;
-        ON_CALL(*this, top_left())
-            .WillByDefault(
-                Return(geometry::Point{}));
-        ON_CALL(*this, size())
-            .WillByDefault(
-                Return(geometry::Size{}));
+        ON_CALL(*this, input_bounds())
+            .WillByDefault(Return(geometry::Rectangle()));
         static std::string n;
         ON_CALL(*this, name())
             .WillByDefault(Return(n));
         static std::shared_ptr<input::InputChannel> c{nullptr};
         ON_CALL(*this, input_channel())
             .WillByDefault(Return(c));
+        ON_CALL(*this, reception_mode())
+            .WillByDefault(Return(input::InputReceptionMode::normal));
     }
     ~MockInputSurface() noexcept {}
-    MOCK_CONST_METHOD0(top_left, geometry::Point());
-    MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(name, std::string());
-    MOCK_CONST_METHOD1(contains, bool(geometry::Point const&));
+    MOCK_CONST_METHOD0(input_bounds, geometry::Rectangle());
+    MOCK_CONST_METHOD1(input_area_contains, bool(geometry::Point const&));
     MOCK_CONST_METHOD0(input_channel, std::shared_ptr<input::InputChannel>());
+    MOCK_CONST_METHOD0(reception_mode, input::InputReceptionMode());
 };
 
-typedef ::testing::NiceMock<MockInputSurface> StubInputSurface;
 }
 }
 }

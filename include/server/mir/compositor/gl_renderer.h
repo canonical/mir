@@ -48,7 +48,7 @@ public:
     void set_viewport(geometry::Rectangle const& rect) override;
     void set_rotation(float degrees) override;
     void begin() const override;
-    void render(graphics::Renderable const& renderable) const override;
+    void render(graphics::RenderableList const&) const override;
     void end() const override;
 
     // This is called _without_ a GL context:
@@ -92,6 +92,7 @@ public:
                             graphics::Renderable const& renderable,
                             geometry::Size const& buf_size) const;
 
+    virtual void render(graphics::Renderable const& renderable) const;
 private:
     std::unique_ptr<graphics::GLProgram> program;
     std::unique_ptr<graphics::TextureCache> texture_cache;

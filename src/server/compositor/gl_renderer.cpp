@@ -128,6 +128,12 @@ void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
     vertices[3] = {{right, bottom, 0.0f}, {tex_right, tex_bottom}};
 }
 
+void mc::GLRenderer::render(mg::RenderableList const& renderables) const
+{
+    for (auto const& r : renderables)
+        render(*r);
+}
+
 void mc::GLRenderer::render(mg::Renderable const& renderable) const
 {
 
@@ -163,7 +169,6 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     tessellate(primitives, renderable, renderable.buffer()->size());
 
     texture_cache->access(renderable, force_texture_upload);
-
     for (auto const& p : primitives)
     {
         // Note a primitive tex_id of zero means use the surface texture,
