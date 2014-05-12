@@ -189,12 +189,26 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
 {
     std::unique_lock<decltype(guard)> lock(guard);
 
-    bool const use_current_buffer =
-        should_reuse_current_buffer(user_id) ||
-        ready_to_composite_queue.empty();
+    bool recycle = !current_buffer_users.empty();
+    if (recycle)
+    {
+        int const nusers = current_buffer_users.size();
+        int i = 0;
+        while (i < nusers && current_buffer_users[i] != user_id) ++i;
+        bool new_user = (i >= nusers);
+        if (new_user)
+        {
+            current_buffer_users.push_back(user_id);
+            if (current_buffer_users.size() > 100)
+                BOOST_THROW_EXCEPTION(
+                    std::logic_error("more buffer users detected than reasonable"));
+        }
+        recycle = new_user;
+    }
+    recycle |= ready_to_composite_queue.empty();
 
     mg::Buffer* buffer_to_release = nullptr;
-    if (!use_current_buffer)
+    if (!recycle)
     {
         /* No other compositors currently reference this
          * buffer so release it
@@ -206,19 +220,11 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
          * being changed, the new one has no users yet
          */
         current_buffer_users.clear();
+        current_buffer_users.push_back(user_id);
         current_compositor_buffer = pop(ready_to_composite_queue);
     }
 
     buffers_sent_to_compositor.push_back(current_compositor_buffer);
-
-    auto existing = std::find(current_buffer_users.begin(),
-                              current_buffer_users.end(),
-                              user_id);
-    if (existing == current_buffer_users.end())
-        current_buffer_users.push_back(user_id);
-
-    if (current_buffer_users.size() > 100)
-        BOOST_THROW_EXCEPTION(std::logic_error("more buffer users detected than reasonable"));
 
     auto const& acquired_buffer = buffer_for(current_compositor_buffer, buffers);
     if (buffer_to_release)
@@ -354,31 +360,6 @@ void mc::BufferQueue::give_buffer_to_client(
     {
         /* comms errors should not propagate to compositing threads */
     }
-}
-
-bool mc::BufferQueue::should_reuse_current_buffer(void const* user_id)
-{
-    if (!current_buffer_users.empty())
-    {
-        int size = current_buffer_users.size();
-        for (int i = 0; i < size; ++i)
-        {
-            /* The compositor calling had already acquired
-             * the latest buffer. So it should use the next
-             * buffer available and not reuse the one it already composited.
-             */
-            if (current_buffer_users[i] == user_id)
-                return false;
-        }
-        /* This is new compositor calling so share the latest buffer for
-         * multi-monitor sync
-         */
-        return true;
-    }
-    /* The id list is really only empty the very first time.
-     * False is returned so that the compositor buffer is advanced.
-     */
-    return false;
 }
 
 void mc::BufferQueue::release(
