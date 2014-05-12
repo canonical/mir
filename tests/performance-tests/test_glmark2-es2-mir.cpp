@@ -59,7 +59,7 @@ protected:
         }
 
         ASSERT_GT(score.length(), 0u);
-        EXPECT_GT(atoi(score.c_str()), 52);
+        EXPECT_GT(stoi(score), 52);
 
         if (file_type == json)
         {
