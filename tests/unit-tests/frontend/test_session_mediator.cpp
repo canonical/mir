@@ -278,7 +278,7 @@ TEST_F(SessionMediatorTest, connect_calls_connect_handler)
         std::make_shared<mtd::NullEventSink>(),
         resource_cache,
         stub_screencast,
-        nullptr, nullptr};
+        context, nullptr};
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
