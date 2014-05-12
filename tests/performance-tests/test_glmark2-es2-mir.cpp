@@ -58,7 +58,7 @@ protected:
             }
         }
 
-        ASSERT_GT(score.length(), 0);
+        ASSERT_GT(score.length(), 0u);
         EXPECT_GT(atoi(score.c_str()), 52);
 
         if (file_type == json)
@@ -70,12 +70,10 @@ protected:
                 json += "}";
             glmark2_output << json;
         }
-
     }
 
 private:
     mir::DefaultServerConfiguration config;
-
 };
 
 TEST_F(GLMark2Test, benchmark_fullscreen_default)
