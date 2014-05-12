@@ -191,7 +191,7 @@ TEST_F(Surface, dpi_is_initialized)
         null_configurator,
         report);
 
-    EXPECT_EQ(96, surf.dpi()); // The current default. It will change.
+    EXPECT_EQ(0, surf.dpi()); // The current default. It will change.
 }
 
 TEST_F(Surface, dpi_changes)
@@ -213,9 +213,7 @@ TEST_F(Surface, dpi_changes)
     EXPECT_EQ(456, surf.configure(mir_surface_attrib_dpi, 456));
     EXPECT_EQ(456, surf.dpi());
 
-    EXPECT_THROW({
-        surf.configure(mir_surface_attrib_dpi, -1);
-    }, std::logic_error);
+    surf.configure(mir_surface_attrib_dpi, -1);
     EXPECT_EQ(456, surf.dpi());
 
     EXPECT_EQ(789, surf.configure(mir_surface_attrib_dpi, 789));

@@ -65,7 +65,6 @@ MirSurface::MirSurface(
     attrib_cache[mir_surface_attrib_type] = mir_surface_type_normal;
     attrib_cache[mir_surface_attrib_state] = mir_surface_state_unknown;
     attrib_cache[mir_surface_attrib_swapinterval] = 1;
-    attrib_cache[mir_surface_attrib_dpi] = 0; // unknown on startup
 }
 
 MirSurface::~MirSurface()

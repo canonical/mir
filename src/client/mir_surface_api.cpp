@@ -254,11 +254,11 @@ int mir_surface_get_dpi(MirSurface* surf)
         if (surf)
         {
             dpi = surf->attrib(mir_surface_attrib_dpi);
-            if (!dpi)
+            if (dpi < 0)
             {
                 // Officially we don't support setting DPI from the client.
                 // But this is a convenient way to query it on startup...
-                surf->configure(mir_surface_attrib_dpi, 0)->wait_for_all();
+                surf->configure(mir_surface_attrib_dpi, -1)->wait_for_all();
                 dpi = surf->attrib(mir_surface_attrib_dpi);
             }
         }

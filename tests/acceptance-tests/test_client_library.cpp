@@ -490,7 +490,8 @@ TEST_F(DefaultDisplayServerTestFixture, client_receives_surface_dpi_value)
             ASSERT_TRUE(surface != NULL);
             ASSERT_TRUE(mir_surface_is_valid(surface));
 
-            EXPECT_EQ(96, mir_surface_get_dpi(surface));
+            // Expect zero (not wired up to detect the physical display yet)
+            EXPECT_EQ(0, mir_surface_get_dpi(surface));
 
             mir_surface_release_sync(surface);
             mir_connection_release(connection);

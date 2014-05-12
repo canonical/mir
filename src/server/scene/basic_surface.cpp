@@ -141,7 +141,7 @@ ms::BasicSurface::BasicSurface(
     report(report),
     type_value(mir_surface_type_normal),
     state_value(mir_surface_state_restored),
-    dpi_value(96)
+    dpi_value(0)
 {
     report->surface_created(this, surface_name);
 }
@@ -442,7 +442,7 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
         result = value;
         break;
     case mir_surface_attrib_dpi:
-        if (value && !set_dpi(value))  // Zero DPI means query only
+        if (value >= 0 && !set_dpi(value))  // Negative means query only
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid DPI value"));
         result = dpi();
         break;
@@ -476,7 +476,7 @@ bool ms::BasicSurface::set_dpi(int new_dpi)
 {
     bool valid = false;
 
-    if (new_dpi > 0)
+    if (new_dpi >= 0)
     {
         dpi_value = new_dpi;
         valid = true;
