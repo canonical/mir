@@ -18,8 +18,6 @@
 #ifndef MIR_FRONTEND_MESSAGE_RECEIVER_H_
 #define MIR_FRONTEND_MESSAGE_RECEIVER_H_
 
-#include "mir/frontend/session_credentials.h"
-
 #include <functional>
 #include <boost/asio.hpp>
 
@@ -27,6 +25,7 @@ namespace mir
 {
 namespace frontend
 {
+class SessionCredentials;
 namespace detail
 {
 class MessageReceiver
