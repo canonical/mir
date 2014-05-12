@@ -582,7 +582,7 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
             EXPECT_EQ(HWC_FRAMEBUFFER, contents.hwLayers[0].compositionType);
         }));
 
-    device.render_gl_and_overlays(stub_context, updated_list, [](mg::Renderable const&){});
-    device.render_gl_and_overlays(stub_context, updated_list, [](mg::Renderable const&){});
+    device.prepare_overlays(stub_context, updated_list, stub_compositor);
+    device.prepare_overlays(stub_context, updated_list, stub_compositor);
     device.post(mock_buffer);
 }
