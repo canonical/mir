@@ -244,9 +244,9 @@ void InputReaderConfiguration::setDisplayInfo(int32_t displayId, bool external,
 
 // --- InputReader ---
 
-InputReader::InputReader(const std::shared_ptr<EventHubInterface>& eventHub,
-        const std::shared_ptr<InputReaderPolicyInterface>& policy,
-        const std::shared_ptr<InputListenerInterface>& listener) :
+InputReader::InputReader(std::shared_ptr<EventHubInterface> const& eventHub,
+        std::shared_ptr<InputReaderPolicyInterface> const& policy,
+        std::shared_ptr<InputListenerInterface> const& listener) :
         mContext(this), mEventHub(eventHub), mPolicy(policy),
         mGlobalMetaState(0), mGeneration(1),
         mDisableVirtualKeysTimeout(LLONG_MIN), mNextTimeout(LLONG_MAX),
