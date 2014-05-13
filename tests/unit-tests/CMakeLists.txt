@@ -43,6 +43,7 @@ target_link_libraries(
   mirdraw
   mirtestdraw
   mirlogging
+  mirfatal
 
   mir-test
   mir-test-doubles
