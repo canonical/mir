@@ -1085,6 +1085,55 @@ TEST_F(BufferQueueTest, uncomposited_client_swaps_when_policy_triggered)
     }
 }
 
+TEST_F(BufferQueueTest, partially_composited_client_swaps_when_policy_triggered)
+{
+    for (int nbuffers = 2;
+         nbuffers < max_nbuffers_to_test;
+         nbuffers++)
+    {
+        mtd::MockFrameDroppingPolicyFactory policy_factory;
+        mc::BufferQueue q(nbuffers,
+                          allocator,
+                          basic_properties,
+                          policy_factory);
+
+        // TODO: Remove the magic “nbuffers - 1” constant
+        for (int i = 0; i < nbuffers - 1; i++)
+        {
+            auto client = client_acquire_sync(q);
+            q.client_release(client);
+        }
+
+        auto first_swap = std::make_shared<mt::Signal>();
+        auto second_swap = std::make_shared<mt::Signal>();
+
+        /* Queue up two pending swaps */
+        mg::Buffer* client_buf;
+        q.client_acquire([first_swap, &client_buf](mg::Buffer* buffer)
+        {
+            client_buf = buffer;
+            first_swap->raise();
+        });
+        q.client_acquire([second_swap](mg::Buffer*){ second_swap->raise(); });
+
+        ASSERT_FALSE(first_swap->raised());
+        ASSERT_FALSE(second_swap->raised());
+
+        q.compositor_acquire(nullptr);
+
+        EXPECT_TRUE(first_swap->wait_for(std::chrono::milliseconds{100}));
+        EXPECT_FALSE(second_swap->raised());
+
+        /* We have to release a client buffer here; framedropping or not,
+         * a client can't have 2 buffers outstanding in the nbuffers = 2 case.
+         */
+        q.client_release(client_buf);
+
+        policy_factory.trigger_policies();
+        EXPECT_TRUE(second_swap->wait_for(std::chrono::milliseconds{100}));
+    }
+}
+
 /* TODO: Rework this test so that it works with the fake clock */
 /*
 TEST_F(BufferQueueTest, compositor_swapping_at_min_rate_gets_oldest_buffer)
