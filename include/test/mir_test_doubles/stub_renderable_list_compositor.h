@@ -13,17 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/scene/surface_observer.h"
+#ifndef MIR_TEST_DOUBLES_STUB_RENDERABLE_LIST_COMPOSITOR_H_
+#define MIR_TEST_DOUBLES_STUB_RENDERABLE_LIST_COMPOSITOR_H_
 
-namespace ms = mir::scene;
+#include "src/platform/graphics/android/overlay_gl_compositor.h"
 
-void ms::SurfaceObserver::attrib_changed(MirSurfaceAttrib /*attrib*/, int /*value*/) {}
-void ms::SurfaceObserver::resized_to(geometry::Size const& /*size*/) {}
-void ms::SurfaceObserver::moved_to(geometry::Point const& /*top_left*/) {}
-void ms::SurfaceObserver::hidden_set_to(bool /*hide*/) {}
-void ms::SurfaceObserver::frame_posted() {}
-void ms::SurfaceObserver::alpha_set_to(float /*alpha*/) {}
-void ms::SurfaceObserver::transformation_set_to(glm::mat4 const& /*t*/) {}
+namespace mir
+{
+namespace test
+{
+namespace doubles
+{
+
+struct StubRenderableListCompositor : public graphics::android::RenderableListCompositor
+{
+    void render(graphics::RenderableList const&, graphics::android::SwappingGLContext const&) const
+    {
+    }
+};
+
+}
+}
+}
+#endif // MIR_TEST_DOUBLES_STUB_RENDERABLE_LIST_COMPOSITOR_H_

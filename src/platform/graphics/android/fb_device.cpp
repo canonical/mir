@@ -24,6 +24,7 @@
 #include "fb_device.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
+#include "overlay_gl_compositor.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -49,15 +50,12 @@ void mga::FBDevice::render_gl(SwappingGLContext const& context)
     context.swap_buffers();
 }
 
-void mga::FBDevice::render_gl_and_overlays(
+void mga::FBDevice::prepare_overlays(
     SwappingGLContext const& context,
-    RenderableList const& renderables,
-    std::function<void(Renderable const&)> const& render_fn) 
+    RenderableList const& list,
+    RenderableListCompositor const& compositor)
 {
-    for(auto const& renderable : renderables)
-        render_fn(*renderable);
-
-    context.swap_buffers();
+    compositor.render(list, context);
 }
 
 void mga::FBDevice::post(mg::Buffer const& buffer)

@@ -84,6 +84,12 @@ void glClear (GLbitfield mask)
     global_mock_gl->glClear(mask);
 }
 
+void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glClearColor(red, green, blue, alpha);
+}
+
 void glColorMask(GLboolean r, GLboolean g, GLboolean b, GLboolean a)
 {
     CHECK_GLOBAL_VOID_MOCK();

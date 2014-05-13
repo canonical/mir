@@ -18,6 +18,7 @@
 
 #include "mir/frontend/protobuf_connection_creator.h"
 
+#include "mir/frontend/session_credentials.h"
 #include "event_sender.h"
 #include "protobuf_message_processor.h"
 #include "protobuf_responder.h"
@@ -54,7 +55,9 @@ int mf::ProtobufConnectionCreator::next_id()
     return next_session_id.fetch_add(1);
 }
 
-void mf::ProtobufConnectionCreator::create_connection_for(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
+void mf::ProtobufConnectionCreator::create_connection_for(
+    std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
+    ConnectionContext const& connection_context)
 {
     auto const messenger = std::make_shared<detail::SocketMessenger>(socket);
     auto const creds = messenger->client_creds();
@@ -68,10 +71,10 @@ void mf::ProtobufConnectionCreator::create_connection_for(std::shared_ptr<ba::lo
         auto const event_sink = std::make_shared<detail::EventSender>(messenger);
         auto const msg_processor = create_processor(
             message_sender,
-            ipc_factory->make_ipc_server(creds, event_sink),
+            ipc_factory->make_ipc_server(creds, event_sink, connection_context),
             report);
 
-        const auto& connection = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);
+        auto const& connection = std::make_shared<mfd::SocketConnection>(messenger, next_id(), connections, msg_processor);
         connections->add(connection);
         connection->read_next_message();
     }
@@ -80,7 +83,7 @@ void mf::ProtobufConnectionCreator::create_connection_for(std::shared_ptr<ba::lo
 std::shared_ptr<mfd::MessageProcessor>
 mf::ProtobufConnectionCreator::create_processor(
     std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
-    std::shared_ptr<protobuf::DisplayServer> const& display_server,
+    std::shared_ptr<detail::DisplayServer> const& display_server,
     std::shared_ptr<mf::MessageProcessorReport> const& report) const
 {
     return std::make_shared<detail::ProtobufMessageProcessor>(
