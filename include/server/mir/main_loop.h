@@ -21,11 +21,13 @@
 
 #include "mir/graphics/event_handler_register.h"
 #include "mir/time/timer.h"
+#include "mir/server_action_queue.h"
 
 namespace mir
 {
 
-class MainLoop : public graphics::EventHandlerRegister, public time::Timer
+class MainLoop : public graphics::EventHandlerRegister, public time::Timer,
+                 public ServerActionQueue
 {
 public:
     virtual void run() = 0;

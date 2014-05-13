@@ -22,8 +22,10 @@
 #include "framebuffer_bundle.h"
 #include "android_format_conversion-inl.h"
 #include "hwc_wrapper.h"
+#include "overlay_gl_compositor.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
+#include "gl_context.h"
 
 #include <boost/throw_exception.hpp>
 #include <sstream>
@@ -32,6 +34,24 @@
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
+
+namespace 
+{
+class HWC10Context : public mga::SwappingGLContext
+{
+public:
+    HWC10Context(std::function<void()> const& swapping_fn)
+        : swapping_fn(std::move(swapping_fn))
+    {
+    }
+    void swap_buffers() const override
+    {
+        swapping_fn();
+    }
+private:
+    std::function<void()> const swapping_fn;
+};
+}
 
 mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HwcWrapper> const& hwc_wrapper,
@@ -84,16 +104,15 @@ void mga::HwcFbDevice::render_gl(SwappingGLContext const&)
     gpu_render();
 }
 
-void mga::HwcFbDevice::render_gl_and_overlays(
+void mga::HwcFbDevice::prepare_overlays(
     SwappingGLContext const&,
-    RenderableList const& renderables,
-    std::function<void(Renderable const&)> const& render_fn)
+    RenderableList const& list,
+    RenderableListCompositor const& compositor)
 {
     prepare();
-    //TODO: filter this list based on the results of the preparation
-    for(auto const& renderable : renderables)
-        render_fn(*renderable);
-    gpu_render();
+    //hwc 1.0 is weird in that the driver gets to call eglSwapBuffers.
+    HWC10Context context(std::bind(&HwcFbDevice::gpu_render, this));
+    compositor.render(list, context);
 }
 
 void mga::HwcFbDevice::post(mg::Buffer const& buffer)

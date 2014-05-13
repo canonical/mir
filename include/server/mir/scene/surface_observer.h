@@ -21,6 +21,8 @@
 
 #include "mir_toolkit/common.h"
 
+#include "mir/input/input_reception_mode.h"
+
 #include <glm/glm.hpp>
 
 namespace mir
@@ -43,6 +45,7 @@ public:
     virtual void frame_posted() = 0;
     virtual void alpha_set_to(float alpha) = 0;
     virtual void transformation_set_to(glm::mat4 const& t) = 0;
+    virtual void reception_mode_set_to(input::InputReceptionMode mode) = 0;
 
 protected:
     SurfaceObserver() = default;

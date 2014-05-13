@@ -23,6 +23,7 @@
 #include "mir_test/wait_object.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include <thread>
 #include <atomic>
@@ -322,7 +323,6 @@ TEST(AsioMainLoopTest, multiple_fd_handlers_are_called)
     EXPECT_EQ(elems_to_send[2], elems_read[2]);
 }
 
-
 TEST_F(AsioMainLoopAlarmTest, main_loop_runs_until_stop_called)
 {
     std::mutex checkpoint_mutex;
@@ -516,3 +516,174 @@ TEST_F(AsioMainLoopAlarmTest, alarm_fires_at_correct_time_point)
     EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{200}));
 }
 
+TEST(AsioMainLoopTest, dispatches_action)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    int num_actions{0};
+    int const owner{0};
+
+    ml.enqueue(
+        &owner,
+        [&]
+        {
+            ++num_actions;
+            ml.stop();
+        });
+
+    ml.run();
+
+    EXPECT_THAT(num_actions, Eq(1));
+}
+
+TEST(AsioMainLoopTest, dispatches_multiple_actions_in_order)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    int const num_actions{5};
+    std::vector<int> actions;
+    int const owner{0};
+
+    for (int i = 0; i < num_actions; ++i)
+    {
+        ml.enqueue(
+            &owner,
+            [&,i]
+            {
+                actions.push_back(i);
+                if (i == num_actions - 1)
+                    ml.stop();
+            });
+    }
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(num_actions));
+    for (int i = 0; i < num_actions; ++i)
+        EXPECT_THAT(actions[i], Eq(i)) << "i = " << i;
+}
+
+TEST(AsioMainLoopTest, does_not_dispatch_paused_actions)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    std::vector<int> actions;
+    int const owner1{0};
+    int const owner2{0};
+
+    ml.enqueue(
+        &owner1,
+        [&]
+        {
+            int const id = 0;
+            actions.push_back(id);
+        });
+
+    ml.enqueue(
+        &owner2,
+        [&]
+        {
+            int const id = 1;
+            actions.push_back(id);
+        });
+
+    ml.enqueue(
+        &owner1,
+        [&]
+        {
+            int const id = 2;
+            actions.push_back(id);
+        });
+
+    ml.enqueue(
+        &owner2,
+        [&]
+        {
+            int const id = 3;
+            actions.push_back(id);
+            ml.stop();
+        });
+
+    ml.pause_processing_for(&owner1);
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(2));
+    EXPECT_THAT(actions[0], Eq(1));
+    EXPECT_THAT(actions[1], Eq(3));
+}
+
+TEST(AsioMainLoopTest, dispatches_resumed_actions)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    std::vector<int> actions;
+    void const* const owner1_ptr{&actions};
+    int const owner2{0};
+
+    ml.enqueue(
+        owner1_ptr,
+        [&]
+        {
+            int const id = 0;
+            actions.push_back(id);
+            ml.stop();
+        });
+
+    ml.enqueue(
+        &owner2,
+        [&]
+        {
+            int const id = 1;
+            actions.push_back(id);
+            ml.resume_processing_for(owner1_ptr);
+        });
+
+    ml.pause_processing_for(owner1_ptr);
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(2));
+    EXPECT_THAT(actions[0], Eq(1));
+    EXPECT_THAT(actions[1], Eq(0));
+}
+
+TEST(AsioMainLoopTest, handles_enqueue_from_within_action)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    std::vector<int> actions;
+    int const num_actions{10};
+    void const* const owner{&num_actions};
+
+    ml.enqueue(
+        owner,
+        [&]
+        {
+            int const id = 0;
+            actions.push_back(id);
+            
+            for (int i = 1; i < num_actions; ++i)
+            {
+                ml.enqueue(
+                    owner,
+                    [&,i]
+                    {
+                        actions.push_back(i);
+                        if (i == num_actions - 1)
+                            ml.stop();
+                    });
+            }
+        });
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(num_actions));
+    for (int i = 0; i < num_actions; ++i)
+        EXPECT_THAT(actions[i], Eq(i)) << "i = " << i;
+}
