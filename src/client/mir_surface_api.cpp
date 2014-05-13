@@ -270,6 +270,22 @@ int mir_surface_get_dpi(MirSurface* surf)
     return dpi;
 }
 
+MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)
+{
+    MirWaitHandle *result = nullptr;
+    
+    try
+    {
+        if (surface)
+            result = surface->configure_cursor(cursor);
+    }
+    catch (...)
+    {
+    }
+
+    return result;
+}
+
 /* Debug functions */
 
 uint32_t mir_debug_surface_current_buffer_id(MirSurface* surface)
