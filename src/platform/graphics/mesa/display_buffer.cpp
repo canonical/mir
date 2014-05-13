@@ -21,9 +21,12 @@
 #include "kms_output.h"
 #include "mir/graphics/display_report.h"
 #include "gbm_buffer.h"
-
 #include "mir/fatal.h"
+
+#include <boost/throw_exception.hpp>
 #include <GLES2/gl2.h>
+
+#include <stdexcept>
 
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
@@ -78,7 +81,7 @@ void ensure_egl_image_extensions()
         ext_string = exts;
 
     if (ext_string.find("EGL_MESA_drm_image") == std::string::npos)
-        mir::abort("EGL implementation doesn't support EGL_MESA_drm_image extension");
+        BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGL_MESA_drm_image extension"));
 
     exts = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
     if (exts)
@@ -87,7 +90,7 @@ void ensure_egl_image_extensions()
         ext_string.clear();
 
     if (ext_string.find("GL_OES_EGL_image") == std::string::npos)
-        mir::abort("GLES2 implementation doesn't support GL_OES_EGL_image extension");
+        BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support GL_OES_EGL_image extension"));
 }
 
 }

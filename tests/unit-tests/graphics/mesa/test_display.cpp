@@ -597,13 +597,13 @@ TEST_F(MesaDisplayTest, constructor_throws_if_egl_mesa_drm_image_not_supported)
 
     const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base";
 
-    ON_CALL(mock_egl, eglQueryString(_,EGL_EXTENSIONS))
-        .WillByDefault(Return(egl_exts));
+    EXPECT_CALL(mock_egl, eglQueryString(_,EGL_EXTENSIONS))
+    .WillOnce(Return(egl_exts));
 
-    EXPECT_DEATH(
+    EXPECT_THROW(
     {
         auto display = create_display(create_platform());
-    }, "Mir fatal error: EGL implementation doesn't support EGL_MESA_drm_image extension");
+    }, std::runtime_error);
 }
 
 TEST_F(MesaDisplayTest, constructor_throws_if_gl_oes_image_not_supported)
