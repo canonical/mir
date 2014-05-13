@@ -78,6 +78,7 @@ mga::HWCFallbackGLRenderer::HWCFallbackGLRenderer(
 {
     context.make_current();
     program = factory.create_gl_program(vertex_shader, fragment_shader);
+    texture_cache = factory.create_texture_cache();
 
     glUseProgram(*program);
 
@@ -87,14 +88,6 @@ mga::HWCFallbackGLRenderer::HWCFallbackGLRenderer(
     position_attr = glGetAttribLocation(*program, "position");
     texcoord_attr = glGetAttribLocation(*program, "texcoord");
 
-    glGenTextures(1, &tex_id);
-    glBindTexture(GL_TEXTURE_2D, tex_id);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
     auto tex_loc = glGetUniformLocation(*program, "tex");
     glUniform1i(tex_loc, 0);
 
@@ -103,18 +96,6 @@ mga::HWCFallbackGLRenderer::HWCFallbackGLRenderer(
     glUseProgram(0);
     context.release_current();
 }
-
-//namespace
-//{
-//size_t const num_vertices{4};
-//size_t const vertex_order{2};
-//GLfloat const texcoords[]{
-//    0.0f, 0.0f,
-//    0.0f, 1.0f,
-//    1.0f, 0.0f,
-//    1.0f, 1.0f
-//};
-//}
 
 void mga::HWCFallbackGLRenderer::render(
     RenderableList const& renderlist, SwappingGLContext const& context) const
@@ -127,23 +108,23 @@ void mga::HWCFallbackGLRenderer::render(
     glEnableVertexAttribArray(position_attr);
     glEnableVertexAttribArray(texcoord_attr);
 
-    glBindTexture(GL_TEXTURE_2D, tex_id);
-
     for(auto const& renderable : renderlist)
     {
-        auto const primitive = mg::tessellate_renderable_into_quad(renderable);
-        glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT, GL_FALSE, sizeof(mg::Vertex),
+        auto const primitive = mg::tessellate_renderable_into_quad(*renderable);
+        glVertexAttribPointer(position_attr, 3, GL_FLOAT, GL_FALSE, sizeof(mg::Vertex),
                               &primitive.vertices[0].position);
         //TODO: (kdub) scaling or pi/2 rotation eventually. for now, all quads get same texcoords
-        glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, sizeof(mg::Vertex),
+        glVertexAttribPointer(texcoord_attr, 2, GL_FLOAT, GL_FALSE, sizeof(mg::Vertex),
                               &primitive.vertices[0].texcoord);
-        renderable->buffer()->bind_to_texture();
 
-        glDrawArrays(primitive.type, 0, num_vertices);
+        texture_cache->load_texture(*renderable);
+
+        glDrawArrays(primitive.type, 0, primitive.vertices.size());
     }
 
     glDisableVertexAttribArray(texcoord_attr);
     glDisableVertexAttribArray(position_attr);
     context.swap_buffers();
+    texture_cache->release_live_texture_resources();
     glUseProgram(0);
 }

@@ -21,6 +21,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/gl_program.h"
 #include "mir/graphics/renderable.h"
+#include "mir/graphics/texture_cache.h"
 #include <memory>
 
 namespace mir
@@ -46,7 +47,7 @@ private:
     RenderableListCompositor& operator=(RenderableListCompositor const&) = delete;
 };
 
-class OverlayGLProgram : public RenderableListCompositor
+class HWCFallbackGLRenderer : public RenderableListCompositor
 {
 public:
     HWCFallbackGLRenderer(
@@ -57,10 +58,10 @@ public:
     void render(RenderableList const&, SwappingGLContext const&) const;
 private:
     std::unique_ptr<graphics::GLProgram> program;
+    std::unique_ptr<graphics::TextureCache> texture_cache;
 
     GLint position_attr;
     GLint texcoord_attr;
-    GLuint tex_id;
 };
 
 }

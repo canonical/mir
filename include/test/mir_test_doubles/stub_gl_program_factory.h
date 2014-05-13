@@ -35,6 +35,11 @@ public:
     {
         return std::unique_ptr<graphics::GLProgram>(new StubGLProgram);
     }
+
+    std::unique_ptr<graphics::TextureCache> create_texture_cache() const
+    {
+        return nullptr;
+    }
 };
 
 }

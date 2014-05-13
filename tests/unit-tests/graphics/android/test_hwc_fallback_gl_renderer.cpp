@@ -46,6 +46,7 @@ class MockGLProgramFactory : public mg::GLProgramFactory
 public:
     MOCK_CONST_METHOD2(create_gl_program,
         std::unique_ptr<mg::GLProgram>(std::string const&, std::string const&));
+    MOCK_CONST_METHOD0(create_texture_cache, std::unique_ptr<mg::TextureCache>());
 };
 
 class MockContext : public mg::GLContext
