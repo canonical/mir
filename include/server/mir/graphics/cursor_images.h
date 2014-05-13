@@ -31,7 +31,7 @@ namespace graphics
 {
 class CursorImage;
 
-const geometry::Size default_cursor_size = geometry::Size{geometry::Width{64}, geometry::Height{64}};
+geometry::Size const default_cursor_size{geometry::Width{64}, geometry::Height{64}};
 
 /// CursorImages is used to lookup cursor images.
 class CursorImages
