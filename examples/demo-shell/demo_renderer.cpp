@@ -18,7 +18,7 @@
 
 #include "demo_renderer.h"
 #include <mir/graphics/renderable.h>
-#include <mir/compositor/renderable_lru_cache.h>
+#include <mir/compositor/recently_bound_cache.h>
 #include <cmath>
 
 using namespace mir;
@@ -139,7 +139,7 @@ DemoRenderer::DemoRenderer(
     graphics::GLProgramFactory const& program_factory,
     geometry::Rectangle const& display_area)
     : GLRenderer(program_factory,
-        std::unique_ptr<graphics::TextureCache>(new compositor::RenderableLRUCache()),
+        std::unique_ptr<graphics::TextureCache>(new compositor::RecentlyBoundCache()),
         display_area)
     , corner_radius(0.5f)
 {

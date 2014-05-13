@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/renderable_lru_cache.h"
+#include "mir/compositor/recently_bound_cache.h"
 #include "mir/graphics/buffer.h"
 #include "mir/geometry/rectangle.h"
 
@@ -24,7 +24,7 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-void mc::RenderableLRUCache::load_texture(mg::Renderable const& renderable)
+void mc::RecentlyBoundCache::load_texture(mg::Renderable const& renderable)
 {
     auto const& buffer = renderable.buffer();
     auto const& id = renderable.id();
@@ -41,14 +41,14 @@ void mc::RenderableLRUCache::load_texture(mg::Renderable const& renderable)
     texture.used = true;
 }
 
-void mc::RenderableLRUCache::invalidate()
+void mc::RecentlyBoundCache::invalidate()
 {
     mg::BufferID invalid_id;
     for(auto &t : textures)
         t.second.last_bound_buffer = invalid_id;
 }
 
-void mc::RenderableLRUCache::release_live_texture_resources()
+void mc::RecentlyBoundCache::release_live_texture_resources()
 {
     auto t = textures.begin();
     while (t != textures.end())

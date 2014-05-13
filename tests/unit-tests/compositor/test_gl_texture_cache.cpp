@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/renderable_lru_cache.h"
+#include "mir/compositor/recently_bound_cache.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_gl.h"
@@ -28,10 +28,10 @@ namespace mg=mir::graphics;
 
 namespace
 {
-class GLTextureCache : public testing::Test
+class RecentlyBoundCache : public testing::Test
 {
 public:
-    GLTextureCache()
+    RecentlyBoundCache()
     {
         using namespace testing;
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
@@ -49,7 +49,7 @@ public:
 };
 }
 
-TEST_F(GLTextureCache, caches_and_uploads_texture_only_on_buffer_changes)
+TEST_F(RecentlyBoundCache, caches_and_uploads_texture_only_on_buffer_changes)
 {
     using namespace testing;
     InSequence seq;
@@ -94,7 +94,7 @@ TEST_F(GLTextureCache, caches_and_uploads_texture_only_on_buffer_changes)
     //clean up texture
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
 
-    mc::RenderableLRUCache cache;
+    mc::RecentlyBoundCache cache;
     cache.load_texture(*renderable);
     cache.release_live_texture_resources();
 
@@ -113,10 +113,10 @@ TEST_F(GLTextureCache, caches_and_uploads_texture_only_on_buffer_changes)
     cache.release_live_texture_resources();
 }
 
-TEST_F(GLTextureCache, holds_buffers_till_the_end)
+TEST_F(RecentlyBoundCache, holds_buffers_till_the_end)
 {
     auto old_use_count = mock_buffer.use_count();
-    mc::RenderableLRUCache cache;
+    mc::RecentlyBoundCache cache;
     cache.load_texture(*renderable);
     EXPECT_EQ(old_use_count+1, mock_buffer.use_count());
     cache.release_live_texture_resources();

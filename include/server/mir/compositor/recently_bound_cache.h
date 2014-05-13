@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_RENDERABLE_LRU_CACHE_H_
-#define MIR_COMPOSITOR_RENDERABLE_LRU_CACHE_H_
+#ifndef MIR_COMPOSITOR_RECENTLY_BOUND_CACHE_H_
+#define MIR_COMPOSITOR_RECENTLY_BOUND_CACHE_H_
 
 #include "mir/graphics/texture_cache.h"
 #include "mir/graphics/texture.h"
@@ -28,7 +28,7 @@ namespace mir
 {
 namespace compositor 
 {
-class RenderableLRUCache : public graphics::TextureCache
+class RecentlyBoundCache : public graphics::TextureCache
 {
 public:
     void load_texture(graphics::Renderable const& renderable) override;
@@ -49,4 +49,4 @@ private:
 }
 }
 
-#endif /* MIR_COMPOSITOR_RENDERABLE_LRU_CACHE_H_ */
+#endif /* MIR_COMPOSITOR_RECENTLY_BOUND_CACHE_H_ */
