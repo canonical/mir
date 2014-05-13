@@ -29,8 +29,9 @@ namespace mir
  * Kill the program and dump core as cleanly as possible. Note this is why the
  * parameter is a C-style string; to avoid an possible side-effects of
  * constructing new objects or touching the heap after an error has occurred.
+ *  \param [in] reason  A printf-style format string.
  */
-void abort(char const* reason);
+void abort(char const* reason, ...);
 
 /**
  * Mir-specific assert() function that is NEVER optimized out, always tested

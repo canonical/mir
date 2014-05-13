@@ -19,12 +19,21 @@
 #include "mir/fatal.h"
 #include <cstdlib>
 #include <cstdio>
+#include <cstdarg>
 
-void mir::abort(char const* reason)
+void mir::abort(char const* reason, ...)
 {
-    // Note: Using simple C library functions to minimize the risk of
-    //       side-effects during stream operations and/or heap modification.
-    fprintf(stderr, "Mir fatal error: %s\n", reason);
+    va_list args;
+
+    // Keep this as simple as possible, avoiding any object construction and
+    // minimizing the potential for heap operations between the error location
+    // and the abort().
+    va_start(args, reason);
+    fprintf(stderr, "Mir fatal error: ");
+    vfprintf(stderr, reason, args);
+    fprintf(stderr, "\n");
+    va_end(args);
+
     std::abort();
 }
 
