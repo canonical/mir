@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_SESSION_MEDIATOR_H_
 #define MIR_FRONTEND_SESSION_MEDIATOR_H_
 
-#include "mir_protobuf.pb.h"
+#include "display_server.h"
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
 #include "mir_toolkit/common.h"
@@ -55,7 +55,7 @@ class DisplayChanger;
 class Screencast;
 
 // SessionMediator relays requests from the client process into the server.
-class SessionMediator : public mir::protobuf::DisplayServer
+class SessionMediator : public detail::DisplayServer
 {
 public:
 
@@ -123,7 +123,12 @@ public:
     void screencast_buffer(google::protobuf::RpcController*,
                            const mir::protobuf::ScreencastId*,
                            mir::protobuf::Buffer*,
-                           google::protobuf::Closure* done) override;
+                           google::protobuf::Closure* done);
+    
+    void configure_cursor(google::protobuf::RpcController*,
+                          mir::protobuf::CursorSetting const*,
+                          mir::protobuf::Void*,
+                          google::protobuf::Closure* done);
 
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,
