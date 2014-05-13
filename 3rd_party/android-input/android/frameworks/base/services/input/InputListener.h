@@ -20,6 +20,7 @@
 #include <androidfw/Input.h>
 #include <std/RefBase.h>
 #include <std/Vector.h>
+#include <memory>
 
 namespace android {
 
@@ -30,7 +31,7 @@ class InputListenerInterface;
 struct NotifyArgs {
     virtual ~NotifyArgs() { }
 
-    virtual void notify(const sp<InputListenerInterface>& listener) const = 0;
+    virtual void notify(InputListenerInterface& listener) const = 0;
 };
 
 
@@ -46,7 +47,7 @@ struct NotifyConfigurationChangedArgs : public NotifyArgs {
 
     virtual ~NotifyConfigurationChangedArgs() { }
 
-    virtual void notify(const sp<InputListenerInterface>& listener) const;
+    virtual void notify(InputListenerInterface& listener) const;
 };
 
 
@@ -73,7 +74,7 @@ struct NotifyKeyArgs : public NotifyArgs {
 
     virtual ~NotifyKeyArgs() { }
 
-    virtual void notify(const sp<InputListenerInterface>& listener) const;
+    virtual void notify(InputListenerInterface& listener) const;
 };
 
 
@@ -107,7 +108,7 @@ struct NotifyMotionArgs : public NotifyArgs {
 
     virtual ~NotifyMotionArgs() { }
 
-    virtual void notify(const sp<InputListenerInterface>& listener) const;
+    virtual void notify(InputListenerInterface& listener) const;
 };
 
 
@@ -127,7 +128,7 @@ struct NotifySwitchArgs : public NotifyArgs {
 
     virtual ~NotifySwitchArgs() { }
 
-    virtual void notify(const sp<InputListenerInterface>& listener) const;
+    virtual void notify(InputListenerInterface& listener) const;
 };
 
 
@@ -145,7 +146,7 @@ struct NotifyDeviceResetArgs : public NotifyArgs {
 
     virtual ~NotifyDeviceResetArgs() { }
 
-    virtual void notify(const sp<InputListenerInterface>& listener) const;
+    virtual void notify(InputListenerInterface& listener) const;
 };
 
 
@@ -175,7 +176,7 @@ protected:
     virtual ~QueuedInputListener();
 
 public:
-    QueuedInputListener(const sp<InputListenerInterface>& innerListener);
+    QueuedInputListener(const std::shared_ptr<InputListenerInterface>& innerListener);
 
     virtual void notifyConfigurationChanged(const NotifyConfigurationChangedArgs* args);
     virtual void notifyKey(const NotifyKeyArgs* args);
@@ -186,7 +187,7 @@ public:
     void flush();
 
 private:
-    sp<InputListenerInterface> mInnerListener;
+    std::shared_ptr<InputListenerInterface> mInnerListener;
     Vector<NotifyArgs*> mArgsQueue;
 };
 

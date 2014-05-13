@@ -21,8 +21,6 @@
 
 #include "mir/input/input_channel.h"
 
-#include <utils/StrongPointer.h>
-
 namespace android
 {
 class InputChannel;

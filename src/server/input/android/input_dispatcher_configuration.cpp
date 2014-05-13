@@ -91,12 +91,12 @@ mia::InputDispatcherConfiguration::~InputDispatcherConfiguration()
 {
 }
 
-droidinput::sp<droidinput::InputDispatcherPolicyInterface> mia::InputDispatcherConfiguration::the_dispatcher_policy()
+std::shared_ptr<droidinput::InputDispatcherPolicyInterface> mia::InputDispatcherConfiguration::the_dispatcher_policy()
 {
     return dispatcher_policy(
         [this]()
         {
-            return new mia::EventFilterDispatcherPolicy(event_filter, is_key_repeat_enabled());
+            return std::make_shared<mia::EventFilterDispatcherPolicy>(event_filter, is_key_repeat_enabled());
         });
 }
 
@@ -134,12 +134,12 @@ bool mia::InputDispatcherConfiguration::is_key_repeat_enabled() const
 }
 
 
-droidinput::sp<droidinput::InputDispatcherInterface> mia::InputDispatcherConfiguration::the_dispatcher()
+std::shared_ptr<droidinput::InputDispatcherInterface> mia::InputDispatcherConfiguration::the_dispatcher()
 {
     return dispatcher(
-        [this]() -> droidinput::sp<droidinput::InputDispatcherInterface>
+        [this]()
         {
-            return new droidinput::InputDispatcher(the_dispatcher_policy(), input_report);
+            return std::make_shared<droidinput::InputDispatcher>(the_dispatcher_policy(), input_report);
         });
 }
 
