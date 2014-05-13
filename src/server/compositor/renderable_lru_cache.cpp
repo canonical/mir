@@ -13,9 +13,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "renderable_lru_cache.h"
+#include "mir/compositor/renderable_lru_cache.h"
 #include "mir/graphics/buffer.h"
 #include "mir/geometry/rectangle.h"
 

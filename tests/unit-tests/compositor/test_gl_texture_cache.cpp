@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/server/compositor/renderable_lru_cache.h"
+#include "mir/compositor/renderable_lru_cache.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_gl.h"

@@ -262,7 +262,6 @@ void mc::GLRenderer::begin() const
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 }
 
-//TODO: end/suspend seems a bit funny. perhaps once render works on a list we can get rid of these
 void mc::GLRenderer::end() const
 {
     texture_cache->release_live_texture_resources();

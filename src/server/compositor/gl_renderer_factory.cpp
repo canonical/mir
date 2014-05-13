@@ -17,7 +17,7 @@
  */
 
 #include "gl_renderer_factory.h"
-#include "renderable_lru_cache.h"
+#include "mir/compositor/renderable_lru_cache.h"
 #include "mir/compositor/gl_renderer.h"
 #include "mir/graphics/gl_program.h"
 #include "mir/geometry/rectangle.h"
