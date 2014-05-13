@@ -26,6 +26,7 @@
 #include "mir/graphics/cursor.h"
 
 #include "mir_test/fake_shared.h"
+#include "mir_test_doubles/stub_scene_surface.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -41,6 +42,7 @@ namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
+namespace mtd = mt::doubles;
 
 namespace
 {
@@ -87,10 +89,12 @@ struct MockCursor : public mg::Cursor
 };
 
 // TODO: Override qualifier
-struct StubInputSurface : public mi::Surface
+// TODO: Comment about stub scene surface
+struct StubInputSurface : public mtd::StubSceneSurface
 {
     StubInputSurface(geom::Rectangle const& input_bounds, std::shared_ptr<mg::CursorImage> const& cursor_image)
-        : bounds(input_bounds),
+        : mtd::StubSceneSurface(0),
+          bounds(input_bounds),
           cursor_image_(cursor_image)
     {
     }
@@ -155,7 +159,7 @@ struct StubInputSurface : public mi::Surface
     }
 
     geom::Rectangle const bounds;
-    std::shared_ptr<mg::CursorImage> const cursor_image_;
+    std::shared_ptr<mg::CursorImage> cursor_image_;
     
     std::mutex observer_guard;
     std::vector<std::shared_ptr<ms::SurfaceObserver>> observers;
@@ -163,7 +167,7 @@ struct StubInputSurface : public mi::Surface
 
 struct StubInputTargets : public mi::InputTargets
 {
-    StubInputTargets(std::initializer_list<std::shared_ptr<mi::Surface>> const& targets)
+    StubInputTargets(std::initializer_list<std::shared_ptr<ms::Surface>> const& targets)
         : targets(targets.begin(), targets.end())
     {
     }
@@ -203,7 +207,8 @@ struct StubInputTargets : public mi::InputTargets
     
         // TODO: Probably needs mutex
     // TODO: Only needs one observer...
-    std::vector<std::shared_ptr<mi::Surface>> targets;
+    // TODO: Should be mi::Surface
+    std::vector<std::shared_ptr<ms::Surface>> targets;
 
     std::mutex observer_guard;
 

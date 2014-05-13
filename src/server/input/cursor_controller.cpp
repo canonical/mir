@@ -21,15 +21,136 @@
 #include "mir/input/input_targets.h"
 #include "mir/input/surface.h"
 #include "mir/graphics/cursor.h"
+#include "mir/scene/observer.h"
+#include "mir/scene/surface_observer.h"
+#include "mir/scene/surface.h"
+
+#include <functional>
+#include <mutex>
+#include <map>
 
 #include <assert.h>
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;
+namespace ms = mir::scene;
 namespace geom = mir::geometry;
 
 namespace
 {
+
+struct SurfaceObserver : ms::SurfaceObserver
+{
+    SurfaceObserver(std::function<void()> const& update_cursor)
+        : update_cursor(update_cursor)
+    {
+    }
+
+    void attrib_changed(MirSurfaceAttrib, int)
+    {
+        // Attribute changing alone wont trigger a cursor update
+    }
+    void resized_to(geom::Size const&)
+    {
+        update_cursor();
+    }
+    void moved_to(geom::Point const&)
+    {
+        update_cursor();
+    }
+    void hidden_set_to(bool)
+    {
+        update_cursor();
+    }
+    void frame_posted()
+    {
+        // Frame posting wont trigger a cursor update
+    }
+    void alpha_set_to(float)
+    {
+        update_cursor();
+    }
+    void transformation_set_to(glm::mat4 const&)
+    {
+        update_cursor();
+    }
+    void reception_mode_set_to(mi::InputReceptionMode)
+    {
+        update_cursor();
+    }
+    void cursor_image_set_to(std::shared_ptr<mg::CursorImage> const&)
+    {
+        update_cursor();
+    }
+
+    std::function<void()> const update_cursor;
+};
+
+// TODO: Comment about namespaces
+struct Observer : ms::Observer
+{
+    Observer(std::function<void()> const& update_cursor)
+        : update_cursor(update_cursor)
+    {
+    }
+    
+    void add_surface_observer(ms::Surface* surface)
+    {
+        auto observer = std::make_shared<SurfaceObserver>(update_cursor);
+        surface->add_observer(observer);
+
+        {
+            std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
+            surface_observers[surface] = observer;
+        }
+    }
+    
+    void surface_added(ms::Surface *surface)
+    {
+        add_surface_observer(surface);
+        update_cursor();
+    }
+    void surface_removed(ms::Surface *surface)
+    {
+        {
+            std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
+            auto it = surface_observers.find(surface);
+            if (it != surface_observers.end())
+            {
+                surface->remove_observer(it->second);
+                surface_observers.erase(it);
+            }
+        }
+        update_cursor();
+    }
+    void surfaces_reordered()
+    {
+        update_cursor();
+    }
+    
+    void surface_exists(ms::Surface *surface)
+    {
+        add_surface_observer(surface);
+        update_cursor();
+    }
+    
+    void end_observation()
+    {
+        std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
+        for (auto &kv : surface_observers)
+        {
+                auto surface = kv.first;
+                if (surface)
+                    surface->remove_observer(kv.second);
+        }
+        surface_observers.clear();
+    }
+    
+    std::function<void()> const update_cursor;
+
+    std::mutex surface_observers_guard;
+    std::map<ms::Surface*, std::weak_ptr<SurfaceObserver>> surface_observers;
+};
 
 std::shared_ptr<mi::Surface> topmost_surface_containing_point(
     std::shared_ptr<mi::InputTargets> const& targets, geom::Point const& point)
@@ -54,13 +175,15 @@ mi::CursorController::CursorController(std::shared_ptr<mg::Cursor> const& cursor
 {
 }
 
-void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
+mi::CursorController::~CursorController()
 {
     assert(input_targets);
+    input_targets->remove_observer(observer);
+}
 
-    auto new_position = geom::Point{geom::X{abs_x}, geom::Y{abs_y}};
-
-    auto surface = topmost_surface_containing_point(input_targets, new_position);
+void mi::CursorController::update_cursor_image()
+{
+    auto surface = topmost_surface_containing_point(input_targets, cursor_location);
     if (surface)
     {
         auto image = surface->cursor_image();
@@ -73,8 +196,17 @@ void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
     {
         cursor->show(*default_cursor_image);
     }
+}
 
-    cursor->move_to(new_position);
+void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
+{
+    assert(input_targets);
+
+    cursor_location = geom::Point{geom::X{abs_x}, geom::Y{abs_y}};
+    
+    update_cursor_image();
+
+    cursor->move_to(cursor_location);
 }
 
 void mi::CursorController::set_input_targets(std::shared_ptr<InputTargets> const& targets)
@@ -82,4 +214,13 @@ void mi::CursorController::set_input_targets(std::shared_ptr<InputTargets> const
     // TODO: May need a guard on input targets;
     assert(!input_targets);
     input_targets = targets;
+
+    // TODO: Add observer could return weak_ptr to eliminate this
+    // pattern
+    auto strong_observer = std::make_shared<Observer>([&]()
+    {
+        update_cursor_image();
+    });
+    input_targets->add_observer(strong_observer);
+    observer = strong_observer;
 }

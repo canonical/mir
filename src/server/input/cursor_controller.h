@@ -20,6 +20,7 @@
 #define MIR_INPUT_CURSOR_CONTROLLER_H_
 
 #include "mir/input/cursor_listener.h"
+#include "mir/geometry/point.h"
 
 #include <memory>
 
@@ -29,6 +30,10 @@ namespace graphics
 {
 class Cursor;
 class CursorImage;
+}
+namespace scene
+{
+class Observer;
 }
 
 namespace input
@@ -40,7 +45,7 @@ class CursorController : public CursorListener
 public:
     CursorController(std::shared_ptr<graphics::Cursor> const& cursor,
                      std::shared_ptr<graphics::CursorImage> const& default_cursor_image);
-    virtual ~CursorController() = default;
+    virtual ~CursorController();
 
     void cursor_moved_to(float abs_x, float abs_y);
     
@@ -51,6 +56,14 @@ private:
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<graphics::CursorImage> const default_cursor_image;
     std::shared_ptr<InputTargets> input_targets;
+    
+    // TODO: Mutex
+    geometry::Point cursor_location;
+
+    std::weak_ptr<scene::Observer> observer;
+    
+
+    void update_cursor_image();
 };
 
 }
