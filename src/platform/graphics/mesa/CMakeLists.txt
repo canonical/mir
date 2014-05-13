@@ -43,9 +43,9 @@ set_target_properties(
   LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/mesa
 )
 
-target_link_libraries(
-  mirplatformgraphicsmesa
+target_link_libraries(mirplatformgraphicsmesa
   mirplatform
+  mirfatal
 
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}

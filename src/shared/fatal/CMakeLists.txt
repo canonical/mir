@@ -1,3 +1,3 @@
-add_library(mirsharedfatal STATIC
+add_library(mirfatal STATIC
   fatal.cpp
 )
