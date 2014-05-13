@@ -22,10 +22,8 @@
 #include "mir/graphics/display_report.h"
 #include "gbm_buffer.h"
 
-#include <boost/throw_exception.hpp>
+#include "mir/fatal.h"
 #include <GLES2/gl2.h>
-
-#include <stdexcept>
 
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
@@ -80,7 +78,7 @@ void ensure_egl_image_extensions()
         ext_string = exts;
 
     if (ext_string.find("EGL_MESA_drm_image") == std::string::npos)
-        BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGL_MESA_drm_image extension"));
+        mir::abort("EGL implementation doesn't support EGL_MESA_drm_image extension");
 
     exts = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
     if (exts)
@@ -89,7 +87,7 @@ void ensure_egl_image_extensions()
         ext_string.clear();
 
     if (ext_string.find("GL_OES_EGL_image") == std::string::npos)
-        BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support GL_OES_EGL_image extension"));
+        mir::abort("GLES2 implementation doesn't support GL_OES_EGL_image extension");
 }
 
 }
@@ -142,18 +140,18 @@ mgm::DisplayBuffer::DisplayBuffer(
     glClear(GL_COLOR_BUFFER_BIT);
 
     if (!egl.swap_buffers())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
+        mir::abort("Failed to perform initial surface buffer swap");
 
     listener->report_successful_egl_buffer_swap_on_construction();
 
     scheduled_bufobj = get_front_buffer_object();
     if (!scheduled_bufobj)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get frontbuffer"));
+        mir::abort("Failed to get frontbuffer");
 
     for (auto& output : outputs)
     {
         if (!output->set_crtc(scheduled_bufobj->get_drm_fb_id()))
-            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
+            mir::abort("Failed to set DRM crtc");
     }
 
     egl.release_current();
@@ -242,7 +240,7 @@ void mgm::DisplayBuffer::post_update(
      * corresponding to the front buffer.
      */
     if (!bypass_buf && !egl.swap_buffers())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to perform initial surface buffer swap"));
+        mir::abort("Failed to perform initial surface buffer swap");
 
     mgm::BufferObject *bufobj;
     if (bypass_buf)
@@ -257,7 +255,7 @@ void mgm::DisplayBuffer::post_update(
     }
 
     if (!bufobj)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to get front buffer object"));
+        mir::abort("Failed to get front buffer object");
 
     /*
      * Schedule the current front buffer object for display, and wait
@@ -270,14 +268,14 @@ void mgm::DisplayBuffer::post_update(
     {
         if (!bypass_buf)
             bufobj->release();
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to schedule page flip"));
+        mir::abort("Failed to schedule page flip");
     }
     else if (needs_set_crtc)
     {
         for (auto& output : outputs)
         {
             if (!output->set_crtc(bufobj->get_drm_fb_id()))
-                BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set DRM crtc"));
+                mir::abort("Failed to set DRM crtc");
         }
         needs_set_crtc = false;
     }
@@ -383,7 +381,7 @@ void mgm::DisplayBuffer::make_current()
 {
     if (!egl.make_current())
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to make EGL surface current"));
+        mir::abort("Failed to make EGL surface current");
     }
 }
 

@@ -458,39 +458,39 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
 {
     using namespace testing;
 
-    auto const crtc_id = get_connected_crtc_id();
-
-    setup_post_update_expectations();
-
+    EXPECT_DEATH(
     {
-        InSequence s;
-
-        /* New FB flip failure */
-        EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
-                                              crtc_id,
-                                              fake.fb_id2,
-                                              _, _))
-            .Times(Exactly(1))
-            .WillOnce(Return(-1));
-
-        /* Release failed bufobj */
-        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo2))
-            .Times(Exactly(1));
-
-        /* Release scheduled_bufobj (at destruction time) */
-        EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
-            .Times(Exactly(1));
-    }
-
-    EXPECT_THROW(
-    {
+        auto const crtc_id = get_connected_crtc_id();
+    
+        setup_post_update_expectations();
+    
+        {
+            InSequence s;
+    
+            /* New FB flip failure */
+            EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
+                                                  crtc_id,
+                                                  fake.fb_id2,
+                                                  _, _))
+                .Times(Exactly(1))
+                .WillOnce(Return(-1));
+    
+            /* Release failed bufobj */
+            EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo2))
+                .Times(Exactly(1));
+    
+            /* Release scheduled_bufobj (at destruction time) */
+            EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
+                .Times(Exactly(1));
+        }
+    
         auto display = create_display(create_platform());
 
         display->for_each_display_buffer([](mg::DisplayBuffer& db)
         {
             db.post_update();
         });
-    }, std::runtime_error);
+    }, "Mir fatal error: Failed to schedule page flip");
 }
 
 TEST_F(MesaDisplayTest, successful_creation_of_display_reports_successful_setup_of_native_resources)
