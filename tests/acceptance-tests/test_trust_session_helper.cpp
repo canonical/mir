@@ -125,13 +125,13 @@ struct TrustSessionHelper : mir_test_framework::InProcessServer
 
     void SetUp()
     {
-        trusted_helper_mediator.reset();
         mir_test_framework::InProcessServer::SetUp();
         connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     }
 
     void TearDown()
     {
+        trusted_helper_mediator.reset();
         mir_connection_release(connection);
         mir_test_framework::InProcessServer::TearDown();
     }
