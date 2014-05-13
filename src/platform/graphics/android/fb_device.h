@@ -38,10 +38,10 @@ public:
     bool apply_orientation(MirOrientation orientation) const;
     void mode(MirPowerMode mode);
     virtual void render_gl(SwappingGLContext const& context);
-    virtual void render_gl_and_overlays(
+    virtual void prepare_overlays(
         SwappingGLContext const& context,
         RenderableList const& list,
-        std::function<void(Renderable const&)> const& render_fn);
+        RenderableListCompositor const& list_compositor);
     void post(Buffer const& buffer);
 
 private:

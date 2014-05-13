@@ -43,11 +43,11 @@ template<typename ResultType> struct result_ptr_t
 
 // Boiler plate for unpacking a parameter message, invoking a server function, and
 // sending the result message. Assumes the existence of Self::send_response().
-template<class Self, class Server, class ParameterMessage, class ResultMessage>
+template<class Self, class Server, class ServerX, class ParameterMessage, class ResultMessage>
 void invoke(
     Self* self,
     Server* server,
-    void (Server::*function)(
+    void (ServerX::*function)(
         ::google::protobuf::RpcController* controller,
         const ParameterMessage* request,
         ResultMessage* response,
