@@ -60,7 +60,6 @@ struct MockTextureCache : public mg::TextureCache
 const GLint stub_v_shader = 1;
 const GLint stub_f_shader = 2;
 const GLint stub_program = 1;
-const GLuint stub_texture = 1;
 const GLint transform_uniform_location = 1;
 const GLint alpha_uniform_location = 2;
 const GLint position_attr_location = 3;
