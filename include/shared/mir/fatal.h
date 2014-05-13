@@ -14,8 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * ---
- * Fatal error handling - Errors for which no run-time recovery exists and the
- * most useful thing you can do is dump core with a clean stack trace.
+ * Fatal error handling - Fatal errors are situations we don't expect to ever
+ * happen and don't have logic to gracefully recover from. The most useful
+ * thing you can do in that situation is abort to get a clean core file and
+ * stack trace to maximize the chances of it being readable.
  *
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
@@ -27,8 +29,10 @@ namespace mir
 {
 /**
  * Kill the program and dump core as cleanly as possible. Note this is why the
- * parameter is a C-style string; to avoid an possible side-effects of
+ * parameter is a C-style string; to avoid any possible side-effects of
  * constructing new objects or touching the heap after an error has occurred.
+ * mir::abort() is strictly for "this should never happen" situations that
+ * you cannot recover from.
  *  \param [in] reason  A printf-style format string.
  */
 void abort(char const* reason, ...);
