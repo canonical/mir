@@ -151,3 +151,36 @@ TEST(TimeoutFrameDroppingPolicy, newly_blocking_frame_doesnt_reset_timeout)
     clock->advance_time(std::chrono::milliseconds{2});
     EXPECT_TRUE(frame_dropped);
 }
+
+TEST(TimeoutFrameDroppingPolicy, interspersed_timeouts_and_unblocks)
+{
+    auto clock = std::make_shared<mt::FakeClock>();
+    auto timer = std::make_shared<mtd::MockTimer>(clock);
+    std::chrono::milliseconds const timeout{1000};
+
+    bool frame_dropped{false};
+    mc::TimeoutFrameDroppingPolicyFactory factory{timer, timeout};
+    auto policy = factory.create_policy([&frame_dropped]{ frame_dropped = true; });
+
+    policy->swap_now_blocking();
+    policy->swap_now_blocking();
+    policy->swap_now_blocking();
+
+    /* First frame gets dropped... */
+    clock->advance_time(timeout + std::chrono::milliseconds{1});
+    EXPECT_TRUE(frame_dropped);
+
+    /* ...Compositor gets its act in order and consumes a frame... */
+    frame_dropped = false;
+    policy->swap_unblocked();
+    clock->advance_time(timeout - std::chrono::milliseconds{1});
+    EXPECT_FALSE(frame_dropped);
+
+    /* ...but not a second frame, so third swap should trigger a timeout */
+    clock->advance_time(std::chrono::milliseconds{2});
+    EXPECT_TRUE(frame_dropped);
+
+    frame_dropped = false;
+    clock->advance_time(timeout + std::chrono::milliseconds{1});
+    EXPECT_FALSE(frame_dropped);
+}

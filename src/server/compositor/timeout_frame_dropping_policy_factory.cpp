@@ -69,7 +69,12 @@ void TimeoutFrameDroppingPolicy::swap_now_blocking()
 void TimeoutFrameDroppingPolicy::swap_unblocked()
 {
     if (alarm->state() != mir::time::Alarm::Cancelled && alarm->cancel())
-        pending_swaps--;
+    {
+        if (--pending_swaps > 0)
+        {
+            alarm->reschedule_in(timeout);
+        }
+    }
 }
 }
 
