@@ -39,6 +39,7 @@
 
 namespace mi = mir::input;
 namespace mia = mir::input::android;
+namespace ms = mir::scene;
 namespace geom = mir::geometry;
 
 namespace mt = mir::test;
@@ -58,6 +59,14 @@ struct StubInputTargets : public mi::InputTargets
     {
         for (auto target : targets)
             callback(target);
+    }
+
+    void add_observer(std::shared_ptr<ms::Observer> const& /* observer */)
+    {
+    }
+
+    void remove_observer(std::weak_ptr<ms::Observer> const& /* observer */)
+    {
     }
 
     std::vector<std::shared_ptr<mi::Surface>> targets;

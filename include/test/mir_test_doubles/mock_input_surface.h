@@ -43,6 +43,8 @@ public:
         static std::shared_ptr<input::InputChannel> c{nullptr};
         ON_CALL(*this, input_channel())
             .WillByDefault(Return(c));
+        ON_CALL(*this, cursor_image())
+            .WillByDefault(Return(nullptr));
         ON_CALL(*this, reception_mode())
             .WillByDefault(Return(input::InputReceptionMode::normal));
     }
@@ -51,7 +53,11 @@ public:
     MOCK_CONST_METHOD0(input_bounds, geometry::Rectangle());
     MOCK_CONST_METHOD1(input_area_contains, bool(geometry::Point const&));
     MOCK_CONST_METHOD0(input_channel, std::shared_ptr<input::InputChannel>());
+    MOCK_CONST_METHOD0(cursor_image, std::shared_ptr<graphics::CursorImage>());
     MOCK_CONST_METHOD0(reception_mode, input::InputReceptionMode());
+    
+    MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::SurfaceObserver> const&));
+    MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::SurfaceObserver> const&));
 };
 
 }

@@ -481,7 +481,7 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
     observers.cursor_image_set_to(image);
 }
 
-std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image()
+std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image() const
 {
     std::unique_lock<std::mutex> lock(guard);
     return cursor_image_;

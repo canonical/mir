@@ -50,6 +50,11 @@ struct StubInputSurface : public mir::input::Surface
     std::string name() const { return {}; }
     mir::geometry::Rectangle input_bounds() const override { return {{},{}}; }
     bool input_area_contains(mir::geometry::Point const&) const { return false; }
+    
+    std::shared_ptr<graphics::CursorImage> cursor_image() const { return nullptr; }
+
+    void add_observer(std::shared_ptr<scene::SurfaceObserver> const& /* observer */ ) {}
+    void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& /* observer */) {}
 
     std::shared_ptr<mir::input::InputChannel> const channel;
 };

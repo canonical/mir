@@ -26,6 +26,11 @@
 
 namespace mir
 {
+namespace scene
+{
+class Observer;
+}
+
 namespace input
 {
 class Surface;
@@ -36,6 +41,9 @@ public:
     virtual ~InputTargets() = default;
 
     virtual void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback) = 0;
+
+    virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
+    virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
 
 protected:
     InputTargets() = default;
