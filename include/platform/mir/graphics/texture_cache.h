@@ -34,7 +34,7 @@ public:
      * \param [in] renderable
      *     The Renderable that will be bound as the active texture of the GL context
     **/ 
-    virtual void bind_texture_from(Renderable const&) = 0;
+    virtual void load_texture(Renderable const&) = 0;
 
     virtual void invalidate() = 0;
 

@@ -24,7 +24,7 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-void mc::RenderableLRUCache::bind_texture_from(mg::Renderable const& renderable)
+void mc::RenderableLRUCache::load_texture(mg::Renderable const& renderable)
 {
     auto const& buffer = renderable.buffer();
     auto const& id = renderable.id();

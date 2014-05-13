@@ -31,7 +31,7 @@ namespace compositor
 class RenderableLRUCache : public graphics::TextureCache
 {
 public:
-    void bind_texture_from(graphics::Renderable const& renderable) override;
+    void load_texture(graphics::Renderable const& renderable) override;
     void invalidate() override;
     void release_live_texture_resources() override;
 

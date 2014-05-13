@@ -167,7 +167,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     std::vector<Primitive> primitives;
     tessellate(primitives, renderable, renderable.buffer()->size());
 
-    texture_cache->bind_texture_from(renderable);
+    texture_cache->load_texture(renderable);
     for (auto const& p : primitives)
     {
         // Note a primitive tex_id of zero means use the surface texture,

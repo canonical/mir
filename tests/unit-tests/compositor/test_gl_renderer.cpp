@@ -52,7 +52,7 @@ namespace
 
 struct MockTextureCache : public mg::TextureCache
 {
-    MOCK_METHOD1(bind_texture_from, void(mg::Renderable const&));
+    MOCK_METHOD1(load_texture, void(mg::Renderable const&));
     MOCK_METHOD0(invalidate, void());
     MOCK_METHOD0(release_live_texture_resources, void());
 };
@@ -190,7 +190,7 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_location));
-    EXPECT_CALL(*mock_texture_cache, bind_texture_from(_));
+    EXPECT_CALL(*mock_texture_cache, load_texture(_));
 
     EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3,
                                                GL_FLOAT, GL_FALSE, _, _));
