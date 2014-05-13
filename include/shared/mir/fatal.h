@@ -41,9 +41,12 @@ void abort(char const* reason, ...);
  * Mir-specific assert() function that is NEVER optimized out, always tested
  * even in release builds.
  */
-#define mir_assert(expr) { if (!(expr)) ::mir::abort(__FILE__ ":" __LINE__ \
-                                                     " Assertion failed: " \
-                                                     #expr); }
+#define mir_assert(expr) \
+{ \
+    if (!(expr)) \
+        ::mir::abort("Assertion failed at %s:%d: %s", \
+                     __FILE__, __LINE__, #expr); \
+}
 
 } // namespace mir
 

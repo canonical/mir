@@ -12,6 +12,7 @@ set(
   shared_library_test.cpp
   test_raii.cpp
   test_udev_wrapper.cpp
+  test_fatal.cpp
 )
 
 add_subdirectory(options/)
