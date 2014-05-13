@@ -37,3 +37,7 @@ void mir::abort(char const* reason, ...)
     std::abort();
 }
 
+void mir::_fail_assertion(char const* file, int line, char const* expr)
+{
+    mir::abort("Assertion failed at %s:%d: %s", file, line, expr);
+}

@@ -43,10 +43,9 @@ void abort(char const* reason, ...);
  */
 #define mir_assert(expr) \
 { \
-    if (!(expr)) \
-        ::mir::abort("Assertion failed at %s:%d: %s", \
-                     __FILE__, __LINE__, #expr); \
+    if (!(expr)) ::mir::_fail_assertion(__FILE__, __LINE__, #expr); \
 }
+void _fail_assertion(char const* file, int line, char const* expr);
 
 } // namespace mir
 
