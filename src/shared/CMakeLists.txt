@@ -13,6 +13,7 @@ add_subdirectory(report/lttng)
 add_subdirectory(env)
 add_subdirectory(sharedlibrary)
 add_subdirectory(testdraw)
+add_subdirectory(fatal)
 
 set(
   MIR_COMMON_PLATFORM_LIBRARIES
