@@ -34,7 +34,6 @@ class InputConfiguration
 public:
     virtual ~InputConfiguration() = default;
 
-    virtual std::shared_ptr<InputDispatcherConfiguration> the_input_dispatcher_configuration() = 0;
     virtual std::shared_ptr<InputChannelFactory> the_input_channel_factory() = 0;
     virtual std::shared_ptr<InputManager> the_input_manager() = 0;
 

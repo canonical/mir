@@ -88,7 +88,7 @@ void mga::DisplayBuffer::release_current()
 
 void mga::DisplayBuffer::render_and_post_update(
     RenderableList const& renderlist,
-    std::function<void(Renderable const&)> const& render_fn)
+    std::function<void(Renderable const&)> const&)
 {
     if (renderlist.empty())
     {
@@ -96,7 +96,7 @@ void mga::DisplayBuffer::render_and_post_update(
     }
     else
     {
-        display_device->render_gl_and_overlays(gl_context, renderlist, render_fn);
+        display_device->prepare_overlays(gl_context, renderlist, overlay_program);
     }
 
     post();

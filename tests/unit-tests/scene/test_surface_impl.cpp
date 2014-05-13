@@ -184,6 +184,26 @@ bool operator==(MirEvent const& a, MirEvent const& b)
     return !memcmp(&a, &b, sizeof(MirEvent));
 }
 
+TEST_F(Surface, clamps_undersized_resize)
+{
+    using namespace testing;
+
+    geom::Size const try_size{-123, -456};
+    geom::Size const expect_size{1, 1};
+
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        null_configurator,
+        report);
+
+    surf.resize(try_size);
+    EXPECT_EQ(expect_size, surf.size());
+}
+
 TEST_F(Surface, emits_resize_events)
 {
     using namespace testing;

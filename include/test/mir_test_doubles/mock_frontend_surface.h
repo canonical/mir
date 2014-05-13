@@ -41,7 +41,7 @@ struct MockFrontendSurface : public frontend::Surface
     MOCK_METHOD0(force_requests_to_complete, void());
     MOCK_METHOD2(swap_buffers, void(graphics::Buffer*, std::function<void(graphics::Buffer*)> complete));
 
-    MOCK_CONST_METHOD0(size, geometry::Size());
+    MOCK_CONST_METHOD0(client_size, geometry::Size());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
 
     MOCK_CONST_METHOD0(supports_input, bool());

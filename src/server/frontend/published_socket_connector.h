@@ -56,10 +56,13 @@ public:
     void stop() override;
     int client_socket_fd() const override;
     void remove_endpoint() const override;
-
+    int client_socket_fd(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const override;
 
 protected:
-    void create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const;
+    void create_session_for(
+        std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket,
+        std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const;
+
     boost::asio::io_service mutable io_service;
     boost::asio::io_service::work work;
     std::shared_ptr<ConnectorReport> const report;

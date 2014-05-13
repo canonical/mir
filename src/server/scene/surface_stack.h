@@ -80,13 +80,12 @@ class SurfaceStack : public compositor::Scene, public input::InputTargets, publi
 {
 public:
     explicit SurfaceStack(
-        std::shared_ptr<InputRegistrar> const& input_registrar,
         std::shared_ptr<SceneReport> const& report);
     virtual ~SurfaceStack() noexcept(true) {}
 
     // From Scene
     graphics::RenderableList renderable_list_for(CompositorID id) const;
-    
+
     // From InputTargets
     void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback);
 

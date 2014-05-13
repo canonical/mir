@@ -50,14 +50,14 @@ std::shared_ptr<mf::Connector> make_connector(
 
 mt::TestProtobufServer::TestProtobufServer(
     std::string const& socket_name,
-    const std::shared_ptr<protobuf::DisplayServer>& tool) :
+    const std::shared_ptr<mf::detail::DisplayServer>& tool) :
     TestProtobufServer(socket_name, tool, mr::null_connector_report())
 {
 }
 
 mt::TestProtobufServer::TestProtobufServer(
     std::string const& socket_name,
-    const std::shared_ptr<protobuf::DisplayServer>& tool,
+    const std::shared_ptr<mf::detail::DisplayServer>& tool,
     std::shared_ptr<frontend::ConnectorReport> const& report) :
     comm(make_connector(socket_name, std::make_shared<mtd::StubIpcFactory>(*tool), report))
 {

@@ -20,11 +20,13 @@
 #define MIR_MAIN_LOOP_H_
 
 #include "mir/graphics/event_handler_register.h"
+#include "mir/server_action_queue.h"
 
 namespace mir
 {
 
-class MainLoop : public graphics::EventHandlerRegister
+class MainLoop : public graphics::EventHandlerRegister,
+                 public ServerActionQueue
 {
 public:
     virtual void run() = 0;

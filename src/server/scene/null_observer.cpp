@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -13,32 +13,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_NESTED_INPUT_MANAGER_H_
-#define MIR_INPUT_NESTED_INPUT_MANAGER_H_
+#include "mir/scene/null_observer.h"
 
-#include "mir/input/input_manager.h"
-#include <memory>
+namespace ms = mir::scene;
 
-namespace mir
-{
-namespace input
-{
-class InputDispatcher;
-
-class NestedInputManager : public InputManager
-{
-public:
-    NestedInputManager(std::shared_ptr<InputDispatcher> const& dispatcher);
-    void start() override;
-    void stop() override;
-private:
-    std::shared_ptr<InputDispatcher> const dispatcher;
-};
-
-}
-}
-
-#endif // MIR_INPUT_NESTED_INPUT_MANAGER
+void ms::NullObserver::surface_added(ms::Surface* /* surface */) {}
+void ms::NullObserver::surface_removed(ms::Surface* /* surface */) {}
+void ms::NullObserver::surfaces_reordered() {}
+void ms::NullObserver::surface_exists(ms::Surface* /* surface */) {}
+void ms::NullObserver::end_observation() {}

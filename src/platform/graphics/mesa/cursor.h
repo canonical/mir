@@ -68,12 +68,12 @@ public:
 
     ~Cursor() noexcept;
 
-    void set_image(std::shared_ptr<CursorImage const> const& cursor_image);
+    void show(CursorImage const& cursor_image) override;
+    void hide() override;
 
     void move_to(geometry::Point position);
 
     void show_at_last_known_position();
-    void hide();
 
 private:
     enum ForceCursorState { UpdateState, ForceState };

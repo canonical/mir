@@ -116,7 +116,7 @@ GLfloat const texcoords[]{
 }
 
 void mga::HWCFallbackGLRenderer::render(
-    RenderableList const& renderlist, SwappingGLContext const& context)
+    RenderableList const& renderlist, SwappingGLContext const& context) const
 {
     glUseProgram(*program);
 

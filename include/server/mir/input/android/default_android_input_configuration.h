@@ -59,7 +59,6 @@ public:
                               std::shared_ptr<input::InputReport> const& input_report);
     virtual ~DefaultInputConfiguration();
 
-    std::shared_ptr<input::InputDispatcherConfiguration> the_input_dispatcher_configuration() override;
     std::shared_ptr<input::InputChannelFactory> the_input_channel_factory() override;
     std::shared_ptr<input::InputManager> the_input_manager() override;
 

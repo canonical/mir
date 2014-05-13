@@ -50,7 +50,6 @@ class InputManager : public input::InputManager
 {
 public:
     explicit InputManager(droidinput::sp<droidinput::EventHubInterface> const& event_hub,
-                          std::shared_ptr<mir::input::InputDispatcher> const& dispatcher,
                           std::shared_ptr<InputThread> const& reader_thread);
     virtual ~InputManager();
 
@@ -59,7 +58,6 @@ public:
 
 private:
     droidinput::sp<droidinput::EventHubInterface> const event_hub;
-    std::shared_ptr<mir::input::InputDispatcher> const dispatcher;
     std::shared_ptr<InputThread> const reader_thread;
 };
 }
