@@ -28,12 +28,12 @@
 namespace mir
 {
 /**
- * Kill the program and dump core as cleanly as possible. Note this is why the
- * parameter is a C-style string; to avoid any possible side-effects of
- * constructing new objects or touching the heap after an error has occurred.
+ * Kill the program and dump core as cleanly as possible. Note the reason
+ * parameter is a simple char* so its value is clearly visible in stack trace
+ * output.
  * mir::abort() is strictly for "this should never happen" situations that
  * you cannot recover from.
- *  \param [in] reason  A printf-style format string.
+ *   \param [in] reason  A printf-style format string.
  */
 void abort(char const* reason, ...);
 
