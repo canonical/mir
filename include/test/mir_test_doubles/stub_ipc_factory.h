@@ -38,13 +38,13 @@ namespace doubles
 class StubIpcFactory : public frontend::ProtobufIpcFactory
 {
 public:
-    StubIpcFactory(protobuf::DisplayServer& server) :
+    StubIpcFactory(frontend::detail::DisplayServer& server) :
         server(fake_shared(server)),
         cache(std::make_shared<frontend::ResourceCache>())
     {
     }
 
-    std::shared_ptr<protobuf::DisplayServer> make_ipc_server(
+    std::shared_ptr<frontend::detail::DisplayServer> make_ipc_server(
         mir::frontend::SessionCredentials const& /*creds*/,
         std::shared_ptr<mir::frontend::EventSink> const& /*sink*/,
         mir::frontend::ConnectionContext const& /*connection_context*/) override
@@ -58,7 +58,7 @@ private:
         return cache;
     }
 
-    std::shared_ptr<protobuf::DisplayServer> const server;
+    std::shared_ptr<frontend::detail::DisplayServer> const server;
     std::shared_ptr<frontend::ResourceCache> const cache;
 };
 

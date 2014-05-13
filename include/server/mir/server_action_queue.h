@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,23 +16,31 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_MAIN_LOOP_H_
-#define MIR_MAIN_LOOP_H_
+#ifndef MIR_SERVER_ACTION_QUEUE_H_
+#define MIR_SERVER_ACTION_QUEUE_H_
 
-#include "mir/graphics/event_handler_register.h"
-#include "mir/server_action_queue.h"
+#include <functional>
 
 namespace mir
 {
 
-class MainLoop : public graphics::EventHandlerRegister,
-                 public ServerActionQueue
+typedef std::function<void()> ServerAction;
+
+class ServerActionQueue
 {
 public:
-    virtual void run() = 0;
-    virtual void stop() = 0;
+    virtual ~ServerActionQueue() = default;
+
+    virtual void enqueue(void const* owner, ServerAction const& action) = 0;
+    virtual void pause_processing_for(void const* owner) = 0;
+    virtual void resume_processing_for(void const* owner) = 0;
+
+protected:
+    ServerActionQueue() = default;
+    ServerActionQueue(ServerActionQueue const&) = delete;
+    ServerActionQueue& operator=(ServerActionQueue const&) = delete;
 };
 
 }
 
-#endif /* MIR_MAIN_LOOP_H_ */
+#endif /* MIR_SERVER_ACTION_QUEUE_H_ */

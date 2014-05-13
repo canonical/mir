@@ -289,6 +289,10 @@ void mc::GLRenderer::set_rotation(float degrees)
 
 void mc::GLRenderer::begin() const
 {
+    // Ensure background is opaque otherwise alpha artifacts may occur
+    // when rendering a nested display buffer (LP: #1317260)
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Ensure we don't change the framebuffer's alpha components (if any)
