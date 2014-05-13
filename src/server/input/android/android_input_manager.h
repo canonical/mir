@@ -22,8 +22,6 @@
 
 #include "mir/input/input_manager.h"
 
-#include <utils/StrongPointer.h>
-
 #include <memory>
 
 namespace android
@@ -49,7 +47,7 @@ class InputThread;
 class InputManager : public input::InputManager
 {
 public:
-    explicit InputManager(droidinput::sp<droidinput::EventHubInterface> const& event_hub,
+    explicit InputManager(std::shared_ptr<droidinput::EventHubInterface> const& event_hub,
                           std::shared_ptr<InputThread> const& reader_thread);
     virtual ~InputManager();
 
@@ -57,7 +55,7 @@ public:
     void stop();
 
 private:
-    droidinput::sp<droidinput::EventHubInterface> const event_hub;
+    std::shared_ptr<droidinput::EventHubInterface> const event_hub;
     std::shared_ptr<InputThread> const reader_thread;
 };
 }
