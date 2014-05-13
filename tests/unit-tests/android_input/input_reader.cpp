@@ -558,9 +558,9 @@ protected:
 
 class InputReaderTest : public testing::Test {
 protected:
-    std::shared_ptr<FakeInputListener> mFakeListener = std::make_shared<FakeInputListener>();
-    std::shared_ptr<FakeInputReaderPolicy> mFakePolicy = std::make_shared<FakeInputReaderPolicy>();
-    std::shared_ptr<FakeEventHub> mFakeEventHub = std::make_shared<FakeEventHub>();
+    std::shared_ptr<FakeEventHub> const mFakeEventHub = std::make_shared<FakeEventHub>();
+    std::shared_ptr<FakeInputReaderPolicy> const mFakePolicy = std::make_shared<FakeInputReaderPolicy>();
+    std::shared_ptr<FakeInputListener> const mFakeListener = std::make_shared<FakeInputListener>();
     sp<InstrumentedInputReader> mReader;
 
     virtual void SetUp() {
