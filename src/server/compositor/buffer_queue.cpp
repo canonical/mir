@@ -212,7 +212,7 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     buffers_sent_to_compositor.push_back(current_compositor_buffer);
     current_buffer_users.push_back(user_id);
 
-    auto const& acquired_buffer = buffer_for(current_compositor_buffer, buffers);
+    auto const acquired_buffer = buffer_for(current_compositor_buffer, buffers);
     if (buffer_to_release)
         release(buffer_to_release, std::move(lock));
 
@@ -233,8 +233,13 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     if (contains(buffer.get(), buffers_sent_to_compositor))
         return;
 
-    /* This buffer is not owned by compositor anymore */
-    if (current_compositor_buffer != buffer.get())
+    /*
+     * This buffer is not owned by compositor anymore. If the queue is supposed
+     * to only own a single buffer (nbuffers == 1), then this is a buffer that
+     * is no longer used (i.e. replaced by a new resized buffer), so just
+     * discard it.
+     */
+    if (current_compositor_buffer != buffer.get() && nbuffers > 1)
         release(buffer.get(), std::move(lock));
 }
 
