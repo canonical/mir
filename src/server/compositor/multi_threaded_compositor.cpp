@@ -82,9 +82,13 @@ public:
     {
     }
 
-    void set_image(mg::CursorImage const&) override
+    void show(mg::CursorImage const&) override
     {
         // Maybe later if we want to implement software-rendered cursors
+    }
+
+    void hide() override
+    {
     }
 
     void move_to(geometry::Point position) override
