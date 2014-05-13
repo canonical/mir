@@ -227,12 +227,13 @@ TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
                               mt::fake_shared(mock_page_flipper)};
 
     EXPECT_FALSE(output.set_crtc(fb_id));
-    EXPECT_THROW({
-        output.schedule_page_flip(fb_id);
-    }, std::runtime_error);
-    EXPECT_THROW({
-        output.wait_for_page_flip();
-    }, std::runtime_error);
+
+    EXPECT_DEATH({output.schedule_page_flip(fb_id);},
+                 "Mir fatal error: Output VGA-0 has no associated CRTC to schedule page flips on");
+
+    // Yes, gtest is so awesome we can die multiple times...
+    EXPECT_DEATH({output.wait_for_page_flip();},
+                 "Mir fatal error: Output VGA-0 has no associated CRTC to wait on");
 }
 
 TEST_F(RealKMSOutputTest, clear_crtc_gets_crtc_if_none_is_current)
@@ -285,11 +286,9 @@ TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails)
     mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
                               mt::fake_shared(mock_page_flipper)};
 
-    EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))
-        .Times(1)
-        .WillOnce(Return(-1));
+    ON_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))
+        .WillByDefault(Return(-1));
 
-    EXPECT_THROW({
-        output.clear_crtc();
-    }, std::runtime_error);
+    EXPECT_DEATH({output.clear_crtc();},
+                 "Mir fatal error: Couldn't clear output VGA-0 \\(drmModeSetCrtc = -1\\)");
 }
