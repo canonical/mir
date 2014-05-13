@@ -39,7 +39,7 @@ using namespace testing;
 
 namespace
 {
-struct MySessionMediator : mir::frontend::SessionMediator
+struct TrustedHelperSessionMediator : mir::frontend::SessionMediator
 {
     using mir::frontend::SessionMediator::SessionMediator;
 
@@ -55,7 +55,7 @@ struct MySessionMediator : mir::frontend::SessionMediator
     int mutable client_pid = 0;
 };
 
-std::shared_ptr<MySessionMediator> trusted_helper_mediator;
+std::shared_ptr<TrustedHelperSessionMediator> trusted_helper_mediator;
 
 struct FakeIpcFactory : mir::test::doubles::FakeIpcFactory
 {
@@ -71,7 +71,7 @@ struct FakeIpcFactory : mir::test::doubles::FakeIpcFactory
         std::shared_ptr<mir::frontend::Screencast> const& effective_screencast,
         mir::frontend::ConnectionContext const& connection_context)
     {
-        trusted_helper_mediator = std::make_shared<MySessionMediator>(
+        trusted_helper_mediator = std::make_shared<TrustedHelperSessionMediator>(
             shell,
             graphics_platform,
             changer,
@@ -98,8 +98,7 @@ struct MyServerConfiguration : mir_test_framework::StubbedServerConfiguration
         return ipc_factory(
             [&]()
             {
-                mediator_factory = std::make_shared<
-                    NiceMock<FakeIpcFactory>>(
+                mediator_factory = std::make_shared<FakeIpcFactory>(
                     shell,
                     the_session_mediator_report(),
                     the_graphics_platform(),
@@ -111,7 +110,7 @@ struct MyServerConfiguration : mir_test_framework::StubbedServerConfiguration
                 EXPECT_CALL(*mediator_factory,
                     make_mediator(_, _, _, _, _, _, _, _)).Times(AnyNumber())
                     .WillOnce(Invoke(mediator_factory.get(), &FakeIpcFactory::make_helper_mediator))
-                    .WillRepeatedly(Invoke(mediator_factory.get(), &FakeIpcFactory::default_make_mediator));
+                    .WillRepeatedly(Invoke(mediator_factory.get(), &FakeIpcFactory::make_default_mediator));
 
                 return mediator_factory;
             });

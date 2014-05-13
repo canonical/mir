@@ -34,7 +34,7 @@ class FakeIpcFactory : public frontend::DefaultIpcFactory
 public:
     using frontend::DefaultIpcFactory::DefaultIpcFactory;
 
-    std::shared_ptr<frontend::detail::DisplayServer> default_make_mediator(
+    std::shared_ptr<frontend::detail::DisplayServer> make_default_mediator(
         std::shared_ptr<frontend::Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<frontend::DisplayChanger> const& changer,
