@@ -23,7 +23,7 @@
 
 #include "mir_test_doubles/mock_drm.h"
 
-#include <stdexcept>
+#include <csignal>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -229,12 +229,12 @@ TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
     EXPECT_FALSE(output.set_crtc(fb_id));
 
     EXPECT_EXIT({output.schedule_page_flip(fb_id);},
-                KilledBySignal(6),
+                KilledBySignal(SIGABRT),
                 "Mir fatal error: Output VGA-0 has no associated CRTC to schedule page flips on");
 
     // Yes, gtest is so awesome we can die multiple times...
     EXPECT_EXIT({output.wait_for_page_flip();},
-                KilledBySignal(6),
+                KilledBySignal(SIGABRT),
                 "Mir fatal error: Output VGA-0 has no associated CRTC to wait on");
 }
 
@@ -292,6 +292,6 @@ TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails)
         .WillByDefault(Return(-1));
 
     EXPECT_EXIT({output.clear_crtc();},
-                KilledBySignal(6),
+                KilledBySignal(SIGABRT),
                 "Mir fatal error: Couldn't clear output VGA-0 \\(drmModeSetCrtc = -1\\)");
 }
