@@ -515,9 +515,9 @@ class InstrumentedInputReader : public InputReader {
     InputDevice* mNextDevice;
 
 public:
-    InstrumentedInputReader(const std::shared_ptr<EventHubInterface>& eventHub,
-            const std::shared_ptr<InputReaderPolicyInterface>& policy,
-            const std::shared_ptr<InputListenerInterface>& listener) :
+    InstrumentedInputReader(std::shared_ptr<EventHubInterface> const& eventHub,
+            std::shared_ptr<InputReaderPolicyInterface> const& policy,
+            std::shared_ptr<InputListenerInterface> const& listener) :
             InputReader(eventHub, policy, listener),
             mNextDevice(NULL) {
     }
