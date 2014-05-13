@@ -21,6 +21,7 @@
 #include "src/server/frontend/session_mediator.h"
 
 #include "mir/frontend/connection_context.h"
+#include "mir/scene/session.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
@@ -41,13 +42,26 @@ namespace
 struct MySessionMediator : mir::frontend::SessionMediator
 {
     using mir::frontend::SessionMediator::SessionMediator;
+
+    std::function<void(std::shared_ptr<mir::frontend::Session> const&)> trusted_connect_handler() const override
+    {
+        return [this](std::shared_ptr<mir::frontend::Session> const& session)
+            {
+                auto const ss = std::dynamic_pointer_cast<mir::scene::Session>(session);
+                client_pid = ss->process_id();
+            };
+    }
+
+    int mutable client_pid = 0;
 };
+
+std::shared_ptr<MySessionMediator> trusted_helper_mediator;
 
 struct FakeIpcFactory : mir::test::doubles::FakeIpcFactory
 {
     using mir::test::doubles::FakeIpcFactory::FakeIpcFactory;
 
-    std::shared_ptr<mir::frontend::detail::DisplayServer> make_my_mediator(
+    std::shared_ptr<mir::frontend::detail::DisplayServer> make_helper_mediator(
         std::shared_ptr<mir::frontend::Shell> const& shell,
         std::shared_ptr<mir::graphics::Platform> const& graphics_platform,
         std::shared_ptr<mir::frontend::DisplayChanger> const& changer,
@@ -57,7 +71,7 @@ struct FakeIpcFactory : mir::test::doubles::FakeIpcFactory
         std::shared_ptr<mir::frontend::Screencast> const& effective_screencast,
         mir::frontend::ConnectionContext const& connection_context)
     {
-        return std::make_shared<MySessionMediator>(
+        trusted_helper_mediator = std::make_shared<MySessionMediator>(
             shell,
             graphics_platform,
             changer,
@@ -67,6 +81,8 @@ struct FakeIpcFactory : mir::test::doubles::FakeIpcFactory
             resource_cache(),
             effective_screencast,
             connection_context);
+
+        return trusted_helper_mediator;
     }
 };
 
@@ -92,8 +108,10 @@ struct MyServerConfiguration : mir_test_framework::StubbedServerConfiguration
                     the_screencast(),
                     the_session_authorizer());
 
-                ON_CALL(*mediator_factory, make_mediator(_, _, _, _, _, _, _, _))
-                    .WillByDefault(Invoke(mediator_factory.get(), &FakeIpcFactory::default_make_mediator));
+                EXPECT_CALL(*mediator_factory,
+                    make_mediator(_, _, _, _, _, _, _, _)).Times(AnyNumber())
+                    .WillOnce(Invoke(mediator_factory.get(), &FakeIpcFactory::make_helper_mediator))
+                    .WillRepeatedly(Invoke(mediator_factory.get(), &FakeIpcFactory::default_make_mediator));
 
                 return mediator_factory;
             });
@@ -108,6 +126,7 @@ struct TrustSessionHelper : mir_test_framework::InProcessServer
 
     void SetUp()
     {
+        trusted_helper_mediator.reset();
         mir_test_framework::InProcessServer::SetUp();
         connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     }
@@ -133,6 +152,14 @@ struct TrustSessionHelper : mir_test_framework::InProcessServer
         std::unique_lock<decltype(mutex)> lock(mutex);
         return cv.wait_for(lock, timeout, [this]{ return called_back; });
     }
+
+    char client_connect_string[128] = {0};
+
+    char const* fd_connect_string(int fd)
+    {
+        sprintf(client_connect_string, "fd://%d", fd);
+        return client_connect_string;
+    }
 };
 
 void client_fd_callback(MirConnection*, size_t count, int const* fds, void* context)
@@ -148,7 +175,7 @@ void client_fd_callback(MirConnection*, size_t count, int const* fds, void* cont
 }
 }
 
-TEST_F(TrustSessionHelper, gets_fds_for_trusted_clients)
+TEST_F(TrustSessionHelper, can_get_fds_for_trusted_clients)
 {
     mir_connection_new_fds_for_trusted_clients(connection, arbritary_fd_request_count, &client_fd_callback, this);
     EXPECT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
@@ -156,17 +183,12 @@ TEST_F(TrustSessionHelper, gets_fds_for_trusted_clients)
     EXPECT_THAT(actual_fd_count, Eq(arbritary_fd_request_count));
 }
 
-TEST_F(TrustSessionHelper, gets_pid_for_clients)
+TEST_F(TrustSessionHelper, gets_pid_when_trusted_client_connects_over_fd)
 {
-    EXPECT_CALL(*my_server_config.mediator_factory,
-        make_mediator(_, _, _, _, _, _, _, _)).Times(1)
-            .WillOnce(Invoke(my_server_config.mediator_factory.get(), &FakeIpcFactory::make_my_mediator));
-
     mir_connection_new_fds_for_trusted_clients(connection, 1, &client_fd_callback, this);
     wait_for_callback(std::chrono::milliseconds(500));
 
-    char buffer[128] = {0};
-    sprintf(buffer, "fd://%d", actual_fds[0]);
-
-    mir_connect_sync(buffer, __PRETTY_FUNCTION__);
+    EXPECT_THAT(trusted_helper_mediator->client_pid, Eq(0)); // Before the client connects we don't have a pid
+    mir_connect_sync(fd_connect_string(actual_fds[0]), __PRETTY_FUNCTION__);
+    EXPECT_THAT(trusted_helper_mediator->client_pid, Ne(0)); // After the client connects we do have a pid
 }
