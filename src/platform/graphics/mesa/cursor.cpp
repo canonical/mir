@@ -80,7 +80,7 @@ mgm::Cursor::Cursor(
         buffer(gbm),
         current_configuration(current_configuration)
 {
-    set_image(*initial_image);
+    show(*initial_image);
 
     show_at_last_known_position();
 }
@@ -90,7 +90,7 @@ mgm::Cursor::~Cursor() noexcept
     hide();
 }
 
-void mgm::Cursor::set_image(CursorImage const& cursor_image)
+void mgm::Cursor::show(CursorImage const& cursor_image)
 {
     auto const& size = cursor_image.size();
 

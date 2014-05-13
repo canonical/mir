@@ -22,7 +22,6 @@
 #include "mir/graphics/renderable.h"
 #include "mir_toolkit/common.h"
 #include <EGL/egl.h>
-#include <list>
 
 namespace mir
 {
@@ -33,6 +32,7 @@ class Renderable;
 
 namespace android
 {
+class RenderableListCompositor;
 class SwappingGLContext;
 
 class DisplayDevice
@@ -42,10 +42,10 @@ public:
 
     virtual void mode(MirPowerMode mode) = 0;
     virtual void render_gl(SwappingGLContext const& context) = 0;
-    virtual void render_gl_and_overlays(
+    virtual void prepare_overlays(
         SwappingGLContext const& context,
         RenderableList const& list,
-        std::function<void(Renderable const&)> const& render_fn) = 0;
+        RenderableListCompositor const& list_compositor) = 0;
     virtual void post(Buffer const& buffer) = 0;
     virtual bool apply_orientation(MirOrientation orientation) const = 0;
 

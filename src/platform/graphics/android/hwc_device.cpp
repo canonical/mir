@@ -24,7 +24,7 @@
 #include "hwc_wrapper.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
-#include "mir/graphics/buffer.h"
+#include "overlay_gl_compositor.h"
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
@@ -88,10 +88,10 @@ void mga::HwcDevice::render_gl(SwappingGLContext const& context)
     context.swap_buffers();
 }
 
-void mga::HwcDevice::render_gl_and_overlays(
+void mga::HwcDevice::prepare_overlays(
     SwappingGLContext const& context,
     RenderableList const& renderables,
-    std::function<void(Renderable const&)> const& render_fn)
+    RenderableListCompositor const& list_compositor)
 {
     if (!(list_needs_commit = hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size)))
         return;
@@ -99,25 +99,18 @@ void mga::HwcDevice::render_gl_and_overlays(
 
     hwc_wrapper->prepare(*hwc_list.native_list().lock());
 
-    //draw layers that the HWC did not accept for overlays here
-    bool needs_swapbuffers = false;
+    mg::RenderableList rejected_renderables;
+
     auto layers_it = hwc_list.begin();
     for(auto const& renderable : renderables)
     {
-        //prepare all layers for draw. 
         layers_it->prepare_for_draw();
-
-        //trigger GL on the layers that are not overlays
         if (layers_it->needs_gl_render())
-        {
-            render_fn(*renderable);
-            needs_swapbuffers = true;
-        }
+            rejected_renderables.push_back(renderable);
         layers_it++;
     }
 
-    if (needs_swapbuffers)
-        context.swap_buffers();
+    list_compositor.render(rejected_renderables, context);
 }
 
 void mga::HwcDevice::post(mg::Buffer const& buffer)
