@@ -18,6 +18,7 @@
 
 #include "mir/fatal.h"
 #include <gtest/gtest.h>
+#include <csignal>
 
 using namespace testing;
 
