@@ -13,6 +13,7 @@ set(
   overlapping_output_grouping.cpp
   gl_program.cpp
   tessellation_helpers.cpp
+  texture.cpp
 )
 
 add_library(
