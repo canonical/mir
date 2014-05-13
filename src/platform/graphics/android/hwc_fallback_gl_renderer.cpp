@@ -18,6 +18,7 @@
 
 #include "mir/graphics/gl_program_factory.h"
 #include "mir/graphics/gl_context.h"
+#include "mir/graphics/tessellation_helpers.h"
 #include "hwc_fallback_gl_renderer.h"
 #include "gl_context.h"
 #include "buffer.h"
@@ -36,12 +37,12 @@ namespace
 {
 std::string const vertex_shader
 {
-    "attribute vec2 position;\n"
+    "attribute vec3 position;\n"
     "attribute vec2 texcoord;\n"
     "uniform mat4 display_transform;\n"
     "varying vec2 v_texcoord;\n"
     "void main() {\n"
-    "   gl_Position = display_transform * vec4(position, 0.0, 1.0);\n"
+    "   gl_Position = display_transform * vec4(position, 1.0);\n"
     "   v_texcoord = texcoord;\n"
     "}\n"
 };
@@ -103,17 +104,17 @@ mga::HWCFallbackGLRenderer::HWCFallbackGLRenderer(
     context.release_current();
 }
 
-namespace
-{
-size_t const num_vertices{4};
-size_t const vertex_order{2};
-GLfloat const texcoords[]{
-    0.0f, 0.0f,
-    0.0f, 1.0f,
-    1.0f, 0.0f,
-    1.0f, 1.0f
-};
-}
+//namespace
+//{
+//size_t const num_vertices{4};
+//size_t const vertex_order{2};
+//GLfloat const texcoords[]{
+//    0.0f, 0.0f,
+//    0.0f, 1.0f,
+//    1.0f, 0.0f,
+//    1.0f, 1.0f
+//};
+//}
 
 void mga::HWCFallbackGLRenderer::render(
     RenderableList const& renderlist, SwappingGLContext const& context) const
@@ -126,24 +127,19 @@ void mga::HWCFallbackGLRenderer::render(
     glEnableVertexAttribArray(position_attr);
     glEnableVertexAttribArray(texcoord_attr);
 
-    //TODO: (kdub) scaling or pi/2 rotation eventually. for now, all quads get same texcoords
-    glVertexAttribPointer(texcoord_attr, vertex_order, GL_FLOAT, GL_FALSE, 0, texcoords);
     glBindTexture(GL_TEXTURE_2D, tex_id);
 
     for(auto const& renderable : renderlist)
     {
-        auto screen_pos = renderable->screen_position();
-        GLfloat vertices[num_vertices*vertex_order]{
-            screen_pos.top_left.x.as_float(), screen_pos.top_left.y.as_float(),
-            screen_pos.top_right().x.as_float(), screen_pos.top_right().y.as_float(),
-            screen_pos.bottom_left().x.as_float(), screen_pos.bottom_left().y.as_float(),
-            screen_pos.bottom_right().x.as_float(), screen_pos.bottom_right().y.as_float(),
-        };
-
+        auto const primitive = mg::tessellate_renderable_into_quad(renderable);
+        glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT, GL_FALSE, sizeof(mg::Vertex),
+                              &primitive.vertices[0].position);
+        //TODO: (kdub) scaling or pi/2 rotation eventually. for now, all quads get same texcoords
+        glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, sizeof(mg::Vertex),
+                              &primitive.vertices[0].texcoord);
         renderable->buffer()->bind_to_texture();
-        glVertexAttribPointer(position_attr, vertex_order, GL_FLOAT, GL_FALSE, 0, vertices);
 
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices);
+        glDrawArrays(primitive.type, 0, num_vertices);
     }
 
     glDisableVertexAttribArray(texcoord_attr);
