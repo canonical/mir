@@ -165,6 +165,7 @@ struct StubInputSurface : public mtd::StubSceneSurface
     std::vector<std::shared_ptr<ms::SurfaceObserver>> observers;
 };
 
+// TODO: Overrides
 struct StubInputTargets : public mi::InputTargets
 {
     StubInputTargets(std::initializer_list<std::shared_ptr<ms::Surface>> const& targets)
@@ -188,7 +189,6 @@ struct StubInputTargets : public mi::InputTargets
         {
             for (auto observer : observers)
             {
-                // TODO: :(
                 observer->surface_exists(target.get());
             }
         }
@@ -203,6 +203,15 @@ struct StubInputTargets : public mi::InputTargets
 
         auto it = std::find(observers.begin(), observers.end(), o);
         observers.erase(it);
+    }
+    
+    void add_surface(std::shared_ptr<StubInputSurface> const& surface)
+    {
+        targets.push_back(surface);
+        for (auto observer : observers)
+        {
+            observer->surface_added(surface.get());
+        }
     }
     
         // TODO: Probably needs mutex
@@ -357,7 +366,24 @@ TEST(CursorController, change_in_cursor_request_triggers_image_update_without_cu
 
 TEST(CursorController, change_in_scene_triggers_image_update)
 {
-    // use surface created to demonstrate 0.0 point
+    using namespace ::testing;
+
+    std::string const cursor_name = "test_cursor";
+
+    // Here we also demonstrate that the cursor begins at 0,0.
+    StubInputSurface surface{geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
+                                  geom::Size{geom::Width{1}, geom::Height{1}}},
+                             std::make_shared<NamedCursorImage>(cursor_name)};
+    StubInputTargets targets({});
+    MockCursor cursor;
+    
+    mi::CursorController controller(mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
+    controller.set_input_targets(mt::fake_shared(targets));
+
+    EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
+    EXPECT_CALL(cursor, show(CursorNamed(cursor_name))).Times(1);
+
+    targets.add_surface(mt::fake_shared(surface));
 }
 
 // TODO: Test does not re set cursor image
