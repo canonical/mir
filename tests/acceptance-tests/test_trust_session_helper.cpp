@@ -189,6 +189,8 @@ TEST_F(TrustSessionHelper, gets_pid_when_trusted_client_connects_over_fd)
     wait_for_callback(std::chrono::milliseconds(500));
 
     EXPECT_THAT(trusted_helper_mediator->client_pid, Eq(0)); // Before the client connects we don't have a pid
-    mir_connect_sync(fd_connect_string(actual_fds[0]), __PRETTY_FUNCTION__);
+    auto client_connection = mir_connect_sync(fd_connect_string(actual_fds[0]), __PRETTY_FUNCTION__);
     EXPECT_THAT(trusted_helper_mediator->client_pid, Ne(0)); // After the client connects we do have a pid
+
+    mir_connection_release(client_connection);
 }
