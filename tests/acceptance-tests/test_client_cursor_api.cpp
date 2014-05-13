@@ -289,7 +289,9 @@ TEST_F(TestClientCursorAPI, client_cursor_request_is_made_surface_data)
     CursorSettingClient client1_conf(test_client_name, client_ready_fence, client_may_exit_fence,
         [](MirSurface *surface)
         {
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
+            auto conf = mir_cursor_configuration_from_name(client_1_cursor.c_str());
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_cursor_configuration_destroy(conf);
         });
     launch_client_process(client1_conf);
 }
