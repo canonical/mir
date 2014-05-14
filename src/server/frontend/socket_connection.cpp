@@ -20,6 +20,7 @@
 #include "message_sender.h"
 #include "message_receiver.h"
 #include "mir/frontend/message_processor.h"
+#include "mir/frontend/session_credentials.h"
 
 #include "mir_protobuf_wire.pb.h"
 
@@ -99,6 +100,12 @@ try
 
     if (!invocation.has_protocol_version() || invocation.protocol_version() != 1)
         BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported protocol version"));
+
+    if (!client_pid)
+    {
+        client_pid = message_receiver->client_creds().pid();
+        processor->client_pid(client_pid);
+    }
 
     if (processor->dispatch(invocation))
     {

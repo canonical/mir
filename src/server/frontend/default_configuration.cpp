@@ -97,7 +97,6 @@ private:
         }
 
         return std::make_shared<mf::SessionMediator>(
-            creds.pid(),
             shell,
             graphics_platform,
             changer,
