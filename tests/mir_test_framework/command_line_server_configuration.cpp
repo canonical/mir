@@ -16,31 +16,46 @@
  * Authored by: Josh Arenson <joshua.arenson@canonical.com>
  */
 
-
+#include "mir/default_configuration.h"
+#include "mir/options/default_configuration.h"
 #include "mir/default_server_configuration.h"
 #include "mir_test_framework/command_line_server_configuration.h"
 
-namespace mo = mir::options;
+#include <boost/algorithm/string.hpp>
+#include <gtest/gtest.h>
+
+#include <algorithm>
+#include <memory>
+
+namespace mo=mir::options;
+
+int argc;
+char const** argv;
 
 namespace mir_test_framework
 {
-
-auto configuration_from_commandline()
--> shared_ptr<mo::Configuration>
-{
-  return std::make_shared<mo::DefaultConfiguration>(::argc, ::argv);
+	using namespace std;
+	auto configuration_from_commandline()
+	-> shared_ptr<mo::Configuration>
+	{
+	  return make_shared<mo::DefaultConfiguration>(::argc, ::argv);
+	}
 }
 
 int main(int argc, char** argv)
 {
-    ::argc = std::remove_if(
-        argv,
-        argv+argc,
-        [](char const* arg) { return !strncmp(arg, "--gtest_", 8); }) - argv;
-    ::argv = const_cast<char const**>(argv);
+	// Override this standard gtest message
+	std::cout << "Running main() from " << basename(__FILE__) << std::endl;
+	::argc = std::remove_if(
+	    argv,
+	    argv+argc,
+	    [](char const* arg) { return !strncmp(arg, "--gtest_", 8); }) - argv;
+	::argv = const_cast<char const**>(argv);
 
-  ::testing::InitGoogleTest(&argc, argv);
+	::testing::InitGoogleTest(&argc, argv);
 
-  return RUN_ALL_TESTS();
+	return RUN_ALL_TESTS();
 }
-}
+
+
+
