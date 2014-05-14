@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_OVERLAY_GL_PROGRAM_H_
 
 #include "mir/graphics/gl_program.h"
+#include "mir/graphics/renderable.h"
 #include <memory>
 
 namespace mir
@@ -31,11 +32,26 @@ class GLProgramFactory;
 
 namespace android
 {
+class SwappingGLContext;
 
-class OverlayGLProgram
+class RenderableListCompositor
+{
+public:
+    virtual ~RenderableListCompositor() = default;
+    virtual void render(RenderableList const&, SwappingGLContext const&) const = 0;
+protected:
+    RenderableListCompositor() = default;
+private:
+    RenderableListCompositor(RenderableListCompositor const&) = delete;
+    RenderableListCompositor& operator=(RenderableListCompositor const&) = delete;
+};
+
+class OverlayGLProgram : public RenderableListCompositor
 {
 public:
     OverlayGLProgram(GLProgramFactory const& program_factory, graphics::GLContext const& gl_context);
+
+    void render(RenderableList const&, SwappingGLContext const&) const;
 private:
     std::unique_ptr<graphics::GLProgram> overlay_program;
 };
