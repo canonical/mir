@@ -19,14 +19,14 @@
 #ifndef COMMAND_LINE_SERVER_CONFIGURATION
 #define COMMAND_LINE_SERVER_CONFIGURATION
 
-#include "mir/default_server_configuration.h"
+#include "mir/options/default_configuration.h"
 
 namespace mo=mir::options;
 
 namespace mir_test_framework
 {
 	auto configuration_from_commandline() 
-	-> std::shared_ptr<mo::Configuration>;
+	-> std::shared_ptr<mo::DefaultConfiguration>;
 }
 
 int main(int argc, char** argv);

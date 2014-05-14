@@ -36,7 +36,7 @@ namespace mir_test_framework
 {
 	using namespace std;
 	auto configuration_from_commandline()
-	-> shared_ptr<mo::Configuration>
+	-> shared_ptr<mo::DefaultConfiguration>
 	{
 	  return make_shared<mo::DefaultConfiguration>(::argc, ::argv);
 	}
