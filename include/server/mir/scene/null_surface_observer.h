@@ -38,7 +38,7 @@ public:
     void frame_posted();
     void alpha_set_to(float alpha);
     void transformation_set_to(glm::mat4 const& t);
-    void cursor_image_set_to(std::shared_ptr<graphics::CursorImage> const& image);
+    void cursor_image_set_to(graphics::CursorImage const& image);
     void reception_mode_set_to(input::InputReceptionMode mode);
 
 protected:

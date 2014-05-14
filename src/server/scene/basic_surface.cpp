@@ -96,7 +96,7 @@ void ms::SurfaceObservers::transformation_set_to(glm::mat4 const& t)
         p->transformation_set_to(t);
 }
 
-void ms::SurfaceObservers::cursor_image_set_to(std::shared_ptr<mg::CursorImage> const& image)
+void ms::SurfaceObservers::cursor_image_set_to(mg::CursorImage const& image)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     // TBD Maybe we should copy observers so we can release the lock?
@@ -474,11 +474,11 @@ void ms::BasicSurface::show()
 void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& image)
 {
     {
-    std::unique_lock<std::mutex> lock(guard);
-    cursor_image_ = image;
+        std::unique_lock<std::mutex> lock(guard);
+        cursor_image_ = image;
     }
     
-    observers.cursor_image_set_to(image);
+    observers.cursor_image_set_to(*image);
 }
 
 std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image()
