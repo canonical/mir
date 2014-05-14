@@ -224,40 +224,34 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
 
 TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
 {
-    int bind_count = 6;
     //'listening to the tests', it would be a bit easier to use a tessellator mock of some sort
     struct OverriddenTessellateRenderer : public mc::GLRenderer
     {
         OverriddenTessellateRenderer(
             mg::GLProgramFactory const& program_factory,
             std::unique_ptr<mg::TextureCache> && texture_cache, 
-            geom::Rectangle const& display_area, int num_primitives) :
+            mir::geometry::Rectangle const& display_area, unsigned int num_primitives) :
             GLRenderer(program_factory, std::move(texture_cache), display_area),
             num_primitives(num_primitives)
         {
         }
 
         void tessellate(std::vector<Primitive>& primitives,
-                        mg::Renderable const& renderable,
-                        geom::Size const& buf_size) override
+                        mg::Renderable const&,
+                        mir::geometry::Size const&) const override
         {
             primitives.clear();
-            for(auto i=0; i < num_primitives; i++)
-            {
-                if (i%2)
-                    primitives.push_back();
-                else
-                    primitives.push_back();
-            }
+            for(GLuint i=0; i < num_primitives; i++)
+                primitives.push_back({0,i%2,{}});
         }
-        int num_primitives; 
+        unsigned int num_primitives; 
     };
 
+    int bind_count = 6;
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, _))
         .Times(bind_count);
 
-    mc::OverriddeTessellateRenderer renderer(program_factory, std::move(mock_texture_cache), display_area);
-
+    OverriddenTessellateRenderer renderer(program_factory, std::move(mock_texture_cache), display_area, bind_count);
     renderer.begin();
     renderer.render(renderable_list);
     renderer.end();
