@@ -25,7 +25,6 @@ namespace mir
 {
 namespace input
 {
-class InputDispatcherConfiguration;
 class InputManager;
 class InputChannelFactory;
 
