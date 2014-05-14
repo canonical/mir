@@ -28,8 +28,8 @@ mtd::FakeEventHubInputConfiguration::FakeEventHubInputConfiguration(
     std::shared_ptr<mir::input::InputDispatcher> const& dispatcher,
     std::shared_ptr<input::InputRegion> const& input_region,
     std::shared_ptr<input::CursorListener> const& cursor_listener,
-    std::shared_ptr<mi::InputReport> const& input_report)
-    : DefaultInputConfiguration(dispatcher, input_region, cursor_listener, input_report),
+    std::shared_ptr<mi::InputReport> const& input_report) :
+    DefaultInputConfiguration(dispatcher, input_region, cursor_listener, input_report),
     event_hub(std::make_shared<mia::FakeEventHub>())
 {
 }

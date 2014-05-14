@@ -169,10 +169,9 @@ void QueuedInputListener::notifyDeviceReset(const NotifyDeviceResetArgs* args) {
 
 void QueuedInputListener::flush() {
     size_t count = mArgsQueue.size();
-    InputListenerInterface & listener = *mInnerListener;
     for (size_t i = 0; i < count; i++) {
         NotifyArgs* args = mArgsQueue[i];
-        args->notify(listener);
+        args->notify(*mInnerListener);
         delete args;
     }
     mArgsQueue.clear();
