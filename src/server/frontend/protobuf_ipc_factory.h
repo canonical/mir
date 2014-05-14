@@ -34,7 +34,6 @@ class DisplayServer;
 class ConnectionContext;
 class EventSink;
 class ResourceCache;
-class MessageProcessorReport;
 class SessionCredentials;
 
 class ProtobufIpcFactory

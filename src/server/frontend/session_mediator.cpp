@@ -60,9 +60,8 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 mf::SessionMediator::SessionMediator(
-    pid_t client_pid,
-    std::shared_ptr<mf::Shell> const& shell,
-    std::shared_ptr<mg::Platform> const & graphics_platform,
+    std::shared_ptr<frontend::Shell> const& shell,
+    std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
     std::vector<MirPixelFormat> const& surface_pixel_formats,
     std::shared_ptr<SessionMediatorReport> const& report,
@@ -71,7 +70,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context,
     std::shared_ptr<mg::CursorImages> const& cursor_images) :
-    client_pid(client_pid),
+    client_pid_(0),
     shell(shell),
     graphics_platform(graphics_platform),
     surface_pixel_formats(surface_pixel_formats),
@@ -94,6 +93,11 @@ mf::SessionMediator::~SessionMediator() noexcept
     }
 }
 
+void mf::SessionMediator::client_pid(int pid)
+{
+    client_pid_ = pid;
+}
+
 void mf::SessionMediator::connect(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::ConnectParameters* request,
@@ -102,7 +106,7 @@ void mf::SessionMediator::connect(
 {
     report->session_connect_called(request->application_name());
 
-    auto const session = shell->open_session(client_pid, request->application_name(), event_sink);
+    auto const session = shell->open_session(client_pid_, request->application_name(), event_sink);
     {
         std::lock_guard<std::mutex> lock(session_mutex);
         weak_session = session;
@@ -419,6 +423,11 @@ void mf::SessionMediator::screencast_buffer(
     done->Run();
 }
 
+std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::trusted_connect_handler() const
+{
+    return [](std::shared_ptr<frontend::Session> const&) {};
+}
+
 void mf::SessionMediator::configure_cursor(
     google::protobuf::RpcController*,
     mir::protobuf::CursorSetting const* cursor_request,
@@ -465,7 +474,7 @@ void mf::SessionMediator::new_fds_for_trusted_clients(
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
         // TODO write a handler that connects the new session to our trust session
-        auto const connect_handler = [](std::shared_ptr<frontend::Session> const&) {};
+        auto const connect_handler = trusted_connect_handler();
 
         auto const fds_requested = parameters->number();
 

@@ -35,8 +35,8 @@ NotifyConfigurationChangedArgs::NotifyConfigurationChangedArgs(
         eventTime(other.eventTime) {
 }
 
-void NotifyConfigurationChangedArgs::notify(const sp<InputListenerInterface>& listener) const {
-    listener->notifyConfigurationChanged(this);
+void NotifyConfigurationChangedArgs::notify(InputListenerInterface& listener) const {
+    listener.notifyConfigurationChanged(this);
 }
 
 
@@ -59,8 +59,8 @@ NotifyKeyArgs::NotifyKeyArgs(const NotifyKeyArgs& other) :
         metaState(other.metaState), downTime(other.downTime) {
 }
 
-void NotifyKeyArgs::notify(const sp<InputListenerInterface>& listener) const {
-    listener->notifyKey(this);
+void NotifyKeyArgs::notify(InputListenerInterface& listener) const {
+    listener.notifyKey(this);
 }
 
 
@@ -95,8 +95,8 @@ NotifyMotionArgs::NotifyMotionArgs(const NotifyMotionArgs& other) :
     }
 }
 
-void NotifyMotionArgs::notify(const sp<InputListenerInterface>& listener) const {
-    listener->notifyMotion(this);
+void NotifyMotionArgs::notify(InputListenerInterface& listener) const {
+    listener.notifyMotion(this);
 }
 
 
@@ -113,8 +113,8 @@ NotifySwitchArgs::NotifySwitchArgs(const NotifySwitchArgs& other) :
         switchCode(other.switchCode), switchValue(other.switchValue) {
 }
 
-void NotifySwitchArgs::notify(const sp<InputListenerInterface>& listener) const {
-    listener->notifySwitch(this);
+void NotifySwitchArgs::notify(InputListenerInterface& listener) const {
+    listener.notifySwitch(this);
 }
 
 
@@ -128,14 +128,14 @@ NotifyDeviceResetArgs::NotifyDeviceResetArgs(const NotifyDeviceResetArgs& other)
         eventTime(other.eventTime), deviceId(other.deviceId) {
 }
 
-void NotifyDeviceResetArgs::notify(const sp<InputListenerInterface>& listener) const {
-    listener->notifyDeviceReset(this);
+void NotifyDeviceResetArgs::notify(InputListenerInterface& listener) const {
+    listener.notifyDeviceReset(this);
 }
 
 
 // --- QueuedInputListener ---
 
-QueuedInputListener::QueuedInputListener(const sp<InputListenerInterface>& innerListener) :
+QueuedInputListener::QueuedInputListener(const std::shared_ptr<InputListenerInterface>& innerListener) :
         mInnerListener(innerListener) {
 }
 
@@ -171,7 +171,7 @@ void QueuedInputListener::flush() {
     size_t count = mArgsQueue.size();
     for (size_t i = 0; i < count; i++) {
         NotifyArgs* args = mArgsQueue[i];
-        args->notify(mInnerListener);
+        args->notify(*mInnerListener);
         delete args;
     }
     mArgsQueue.clear();

@@ -27,12 +27,12 @@ namespace frontend
 {
 namespace detail
 {
-// TODO We will need to extend the generated DisplayServer interface.
-// But that's in the next MP.
 class DisplayServer : public mir::protobuf::DisplayServer
 {
 public:
     using mir::protobuf::DisplayServer::DisplayServer;
+
+    virtual void client_pid(int pid) = 0;
 };
 }
 }
