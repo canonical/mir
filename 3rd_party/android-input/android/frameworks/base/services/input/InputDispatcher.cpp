@@ -171,7 +171,7 @@ static bool validateMotionEvent(int32_t action, size_t pointerCount,
 
 // --- InputDispatcher ---
 
-InputDispatcher::InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy, 
+InputDispatcher::InputDispatcher(std::shared_ptr<InputDispatcherPolicyInterface> const& policy,
     std::shared_ptr<mi::InputReport> const& input_report) :
         input_report(input_report),
         mPolicy(policy),
@@ -4284,7 +4284,7 @@ bool InputDispatcher::TouchState::isSlippery() const {
 
 // --- InputDispatcherThread ---
 
-InputDispatcherThread::InputDispatcherThread(const sp<InputDispatcherInterface>& dispatcher) :
+InputDispatcherThread::InputDispatcherThread(std::shared_ptr<InputDispatcherInterface> const& dispatcher) :
         Thread(/*canCallJava*/ true), mDispatcher(dispatcher) {
 }
 
