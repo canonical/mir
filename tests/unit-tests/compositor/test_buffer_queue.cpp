@@ -1074,14 +1074,12 @@ TEST_F(BufferQueueTest, uncomposited_client_swaps_when_policy_triggered)
             q.client_release(client);
         }
 
-        auto buffers_swapped = std::make_shared<mt::Signal>();
+        auto handle = client_acquire_async(q);
 
-        q.client_acquire([buffers_swapped](mg::Buffer*){ buffers_swapped->raise(); });
-
-        EXPECT_FALSE(buffers_swapped->wait_for(std::chrono::milliseconds{100}));
+        EXPECT_FALSE(handle->has_acquired_buffer());
 
         policy_factory.trigger_policies();
-        EXPECT_TRUE(buffers_swapped->wait_for(std::chrono::milliseconds{100}));
+        EXPECT_TRUE(handle->has_acquired_buffer());
     }
 }
 
@@ -1104,33 +1102,25 @@ TEST_F(BufferQueueTest, partially_composited_client_swaps_when_policy_triggered)
             q.client_release(client);
         }
 
-        auto first_swap = std::make_shared<mt::Signal>();
-        auto second_swap = std::make_shared<mt::Signal>();
-
         /* Queue up two pending swaps */
-        mg::Buffer* client_buf;
-        q.client_acquire([first_swap, &client_buf](mg::Buffer* buffer)
-        {
-            client_buf = buffer;
-            first_swap->raise();
-        });
-        q.client_acquire([second_swap](mg::Buffer*){ second_swap->raise(); });
+        auto first_swap = client_acquire_async(q);
+        auto second_swap = client_acquire_async(q);
 
-        ASSERT_FALSE(first_swap->raised());
-        ASSERT_FALSE(second_swap->raised());
+        ASSERT_FALSE(first_swap->has_acquired_buffer());
+        ASSERT_FALSE(second_swap->has_acquired_buffer());
 
         q.compositor_acquire(nullptr);
 
-        EXPECT_TRUE(first_swap->wait_for(std::chrono::milliseconds{100}));
-        EXPECT_FALSE(second_swap->raised());
+        EXPECT_TRUE(first_swap->has_acquired_buffer());
+        EXPECT_FALSE(second_swap->has_acquired_buffer());
 
         /* We have to release a client buffer here; framedropping or not,
          * a client can't have 2 buffers outstanding in the nbuffers = 2 case.
          */
-        q.client_release(client_buf);
+        first_swap->release_buffer();
 
         policy_factory.trigger_policies();
-        EXPECT_TRUE(second_swap->wait_for(std::chrono::milliseconds{100}));
+        EXPECT_TRUE(second_swap->has_acquired_buffer());
     }
 }
 
