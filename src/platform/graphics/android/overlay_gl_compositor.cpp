@@ -47,3 +47,7 @@ mga::OverlayGLProgram::OverlayGLProgram(
     overlay_program = factory.create_gl_program(vertex_shader, fragment_shader);
     context.release_current();
 }
+
+void mga::OverlayGLProgram::render(RenderableList const&, SwappingGLContext const&) const
+{
+}

@@ -28,7 +28,7 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> const& event_hub,
+mia::InputManager::InputManager(std::shared_ptr<droidinput::EventHubInterface> const& event_hub,
                                 std::shared_ptr<InputThread> const& reader_thread)
     : event_hub(event_hub), reader_thread(reader_thread)
 {

@@ -29,4 +29,4 @@ void ms::NullSurfaceObserver::frame_posted() {}
 void ms::NullSurfaceObserver::alpha_set_to(float /*alpha*/) {}
 void ms::NullSurfaceObserver::transformation_set_to(glm::mat4 const& /*t*/) {}
 void ms::NullSurfaceObserver::reception_mode_set_to(input::InputReceptionMode /*mode*/) {}
-void ms::NullSurfaceObserver::cursor_image_set_to(std::shared_ptr<mg::CursorImage> const& /*image*/) {}
+void ms::NullSurfaceObserver::cursor_image_set_to(mg::CursorImage const& /*image*/) {}

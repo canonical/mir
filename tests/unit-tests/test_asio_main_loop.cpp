@@ -17,17 +17,47 @@
  */
 
 #include "mir/asio_main_loop.h"
+#include "mir/time/high_resolution_clock.h"
 #include "mir_test/pipe.h"
+#include "mir_test/auto_unblock_thread.h"
+#include "mir_test/wait_object.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include <thread>
 #include <atomic>
+#include <functional>
+#include <mutex>
+#include <condition_variable>
+#include <array>
+#include <boost/throw_exception.hpp>
 
 #include <sys/types.h>
 #include <unistd.h>
 
 namespace mt = mir::test;
+
+namespace
+{
+
+class AsioMainLoopAlarmTest : public ::testing::Test
+{
+public:
+    mir::AsioMainLoop ml;
+    int call_count{0};
+    mt::WaitObject wait;
+
+    struct UnblockMainLoop : mt::AutoUnblockThread
+    {
+        UnblockMainLoop(mir::AsioMainLoop & loop)
+            : mt::AutoUnblockThread([&loop]() {loop.stop();},
+                                    [&loop]() {loop.run();})
+        {}
+    };
+};
+
+}
 
 TEST(AsioMainLoopTest, signal_handled)
 {
@@ -291,4 +321,369 @@ TEST(AsioMainLoopTest, multiple_fd_handlers_are_called)
     EXPECT_EQ(elems_to_send[0], elems_read[0]);
     EXPECT_EQ(elems_to_send[1], elems_read[1]);
     EXPECT_EQ(elems_to_send[2], elems_read[2]);
+}
+
+TEST_F(AsioMainLoopAlarmTest, main_loop_runs_until_stop_called)
+{
+    std::mutex checkpoint_mutex;
+    std::condition_variable checkpoint;
+    bool hit_checkpoint{false};
+
+    auto fire_on_mainloop_start = ml.notify_in(std::chrono::milliseconds{0},
+                                               [&checkpoint_mutex, &checkpoint, &hit_checkpoint]()
+    {
+        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
+        hit_checkpoint = true;
+        checkpoint.notify_all();
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    {
+        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
+        ASSERT_TRUE(checkpoint.wait_for(lock, std::chrono::milliseconds{10}, [&hit_checkpoint]() { return hit_checkpoint; }));
+    }
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{10}, [this]
+    {
+        wait.notify_ready();
+    });
+
+    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{50}));
+
+    ml.stop();
+    // Main loop should be stopped now
+
+    hit_checkpoint = false;
+    auto should_not_fire =  ml.notify_in(std::chrono::milliseconds{0},
+                                         [&checkpoint_mutex, &checkpoint, &hit_checkpoint]()
+    {
+        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
+        hit_checkpoint = true;
+        checkpoint.notify_all();
+    });
+
+    std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
+    EXPECT_FALSE(checkpoint.wait_for(lock, std::chrono::milliseconds{50}, [&hit_checkpoint]() { return hit_checkpoint; }));
+}
+
+TEST_F(AsioMainLoopAlarmTest, alarm_fires_with_correct_delay)
+{
+    auto alarm = ml.notify_in(std::chrono::milliseconds{50}, [this]()
+    {
+        wait.notify_ready();
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{100}));
+}
+
+TEST_F(AsioMainLoopAlarmTest, multiple_alarms_fire)
+{
+    int const alarm_count{10};
+    std::atomic<int> call_count{0};
+    std::array<std::unique_ptr<mir::time::Alarm>, alarm_count> alarms;
+
+    for (auto& alarm : alarms)
+    {
+        alarm = ml.notify_in(std::chrono::milliseconds{50}, [this, &call_count]()
+        {
+            call_count.fetch_add(1);
+            if (call_count == alarm_count)
+                wait.notify_ready();
+        });
+    }
+
+    UnblockMainLoop unblocker(ml);
+
+    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{100}));
+    for (auto& alarm : alarms)
+        EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+}
+
+
+TEST_F(AsioMainLoopAlarmTest, alarm_changes_to_triggered_state)
+{
+    auto alarm = ml.notify_in(std::chrono::milliseconds{50}, [this]()
+    {
+        wait.notify_ready();
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{100}));
+
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+}
+
+TEST_F(AsioMainLoopAlarmTest, alarm_starts_in_pending_state)
+{
+    auto alarm = ml.notify_in(std::chrono::milliseconds{50}, [this]() {});
+
+    UnblockMainLoop unblocker(ml);
+
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+}
+
+TEST_F(AsioMainLoopAlarmTest, cancelled_alarm_doesnt_fire)
+{
+    auto alarm = ml.notify_in(std::chrono::milliseconds{200}, [this]()
+    {
+        wait.notify_ready();
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    EXPECT_TRUE(alarm->cancel());
+    EXPECT_THROW(wait.wait_until_ready(std::chrono::milliseconds{300}), std::runtime_error);
+    EXPECT_EQ(mir::time::Alarm::cancelled, alarm->state());
+}
+
+TEST_F(AsioMainLoopAlarmTest, destroyed_alarm_doesnt_fire)
+{
+    auto alarm = ml.notify_in(std::chrono::milliseconds{200}, [this]()
+    {
+        wait.notify_ready();
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    alarm.reset(nullptr);
+
+    EXPECT_THROW(wait.wait_until_ready(std::chrono::milliseconds{300}), std::runtime_error);
+}
+
+TEST_F(AsioMainLoopAlarmTest, rescheduled_alarm_fires_again)
+{
+    std::mutex m;
+    std::condition_variable called;
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{0}, [this, &m, &called]()
+    {
+        std::unique_lock<decltype(m)> lock(m);
+        call_count++;
+        if (call_count == 2)
+            wait.notify_ready();
+        called.notify_all();
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    {
+        std::unique_lock<decltype(m)> lock(m);
+        ASSERT_TRUE(called.wait_for(lock,
+                                    std::chrono::milliseconds{50},
+                                    [this](){ return call_count == 1; }));
+    }
+
+    ASSERT_EQ(mir::time::Alarm::triggered, alarm->state());
+    alarm->reschedule_in(std::chrono::milliseconds{100});
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+
+    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{500}));
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+}
+
+TEST_F(AsioMainLoopAlarmTest, rescheduled_alarm_cancels_previous_scheduling)
+{
+    auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [this]()
+    {
+        call_count++;
+        wait.notify_ready();
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    EXPECT_TRUE(alarm->reschedule_in(std::chrono::milliseconds{150}));
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+
+    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{500}));
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+    EXPECT_EQ(1, call_count);
+}
+
+TEST_F(AsioMainLoopAlarmTest, alarm_fires_at_correct_time_point)
+{
+    mir::time::HighResolutionClock clock;
+
+    mir::time::Timestamp real_soon = clock.sample() + std::chrono::microseconds{120};
+
+    auto alarm = ml.notify_at(real_soon, [this]() { wait.notify_ready(); });
+
+    UnblockMainLoop unblocker(ml);
+
+    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{200}));
+}
+
+TEST(AsioMainLoopTest, dispatches_action)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    int num_actions{0};
+    int const owner{0};
+
+    ml.enqueue(
+        &owner,
+        [&]
+        {
+            ++num_actions;
+            ml.stop();
+        });
+
+    ml.run();
+
+    EXPECT_THAT(num_actions, Eq(1));
+}
+
+TEST(AsioMainLoopTest, dispatches_multiple_actions_in_order)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    int const num_actions{5};
+    std::vector<int> actions;
+    int const owner{0};
+
+    for (int i = 0; i < num_actions; ++i)
+    {
+        ml.enqueue(
+            &owner,
+            [&,i]
+            {
+                actions.push_back(i);
+                if (i == num_actions - 1)
+                    ml.stop();
+            });
+    }
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(num_actions));
+    for (int i = 0; i < num_actions; ++i)
+        EXPECT_THAT(actions[i], Eq(i)) << "i = " << i;
+}
+
+TEST(AsioMainLoopTest, does_not_dispatch_paused_actions)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    std::vector<int> actions;
+    int const owner1{0};
+    int const owner2{0};
+
+    ml.enqueue(
+        &owner1,
+        [&]
+        {
+            int const id = 0;
+            actions.push_back(id);
+        });
+
+    ml.enqueue(
+        &owner2,
+        [&]
+        {
+            int const id = 1;
+            actions.push_back(id);
+        });
+
+    ml.enqueue(
+        &owner1,
+        [&]
+        {
+            int const id = 2;
+            actions.push_back(id);
+        });
+
+    ml.enqueue(
+        &owner2,
+        [&]
+        {
+            int const id = 3;
+            actions.push_back(id);
+            ml.stop();
+        });
+
+    ml.pause_processing_for(&owner1);
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(2));
+    EXPECT_THAT(actions[0], Eq(1));
+    EXPECT_THAT(actions[1], Eq(3));
+}
+
+TEST(AsioMainLoopTest, dispatches_resumed_actions)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    std::vector<int> actions;
+    void const* const owner1_ptr{&actions};
+    int const owner2{0};
+
+    ml.enqueue(
+        owner1_ptr,
+        [&]
+        {
+            int const id = 0;
+            actions.push_back(id);
+            ml.stop();
+        });
+
+    ml.enqueue(
+        &owner2,
+        [&]
+        {
+            int const id = 1;
+            actions.push_back(id);
+            ml.resume_processing_for(owner1_ptr);
+        });
+
+    ml.pause_processing_for(owner1_ptr);
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(2));
+    EXPECT_THAT(actions[0], Eq(1));
+    EXPECT_THAT(actions[1], Eq(0));
+}
+
+TEST(AsioMainLoopTest, handles_enqueue_from_within_action)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    std::vector<int> actions;
+    int const num_actions{10};
+    void const* const owner{&num_actions};
+
+    ml.enqueue(
+        owner,
+        [&]
+        {
+            int const id = 0;
+            actions.push_back(id);
+            
+            for (int i = 1; i < num_actions; ++i)
+            {
+                ml.enqueue(
+                    owner,
+                    [&,i]
+                    {
+                        actions.push_back(i);
+                        if (i == num_actions - 1)
+                            ml.stop();
+                    });
+            }
+        });
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(num_actions));
+    for (int i = 0; i < num_actions; ++i)
+        EXPECT_THAT(actions[i], Eq(i)) << "i = " << i;
 }

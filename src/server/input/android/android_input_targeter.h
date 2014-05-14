@@ -21,8 +21,6 @@
 
 #include "mir/shell/input_targeter.h"
 
-#include <utils/StrongPointer.h>
-
 #include <mutex>
 
 namespace android
@@ -45,7 +43,7 @@ class WindowHandleRepository;
 class InputTargeter : public shell::InputTargeter
 {
 public:
-    explicit InputTargeter(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher,
+    explicit InputTargeter(std::shared_ptr<droidinput::InputDispatcherInterface> const& input_dispatcher,
                            std::shared_ptr<WindowHandleRepository> const& repository);
     virtual ~InputTargeter() noexcept(true);
 
@@ -57,7 +55,7 @@ protected:
     InputTargeter& operator=(const InputTargeter&) = delete;
 
 private:
-    droidinput::sp<droidinput::InputDispatcherInterface> input_dispatcher;
+    std::shared_ptr<droidinput::InputDispatcherInterface> input_dispatcher;
 
     std::shared_ptr<WindowHandleRepository> const repository;
 };

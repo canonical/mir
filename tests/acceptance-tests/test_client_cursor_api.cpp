@@ -154,7 +154,7 @@ char const* const CursorSettingClient::mir_test_socket = mtf::test_socket_file()
 
 struct MockSurfaceObserver : public ms::NullSurfaceObserver
 {
-    MOCK_METHOD1(cursor_image_set_to, void(std::shared_ptr<mg::CursorImage> const&));
+    MOCK_METHOD1(cursor_image_set_to, void(mg::CursorImage const&));
 };
 
 struct SurfaceObserverInstaller : public ms::NullObserver
@@ -284,7 +284,7 @@ TEST_F(TestClientCursorAPI, client_cursor_request_is_made_surface_data)
     SurfaceObservingServerConfiguration config([&](MockSurfaceObserver &observer)
     {
         EXPECT_CALL(observer, cursor_image_set_to(_)).WillOnce(Invoke(
-        [&](std::shared_ptr<mg::CursorImage> const&)
+        [&](mg::CursorImage const&)
         {
             client_may_exit_fence.signal_ready();
         }));

@@ -62,7 +62,7 @@ void ms::LegacySurfaceChangeNotification::attrib_changed(MirSurfaceAttrib /* att
 }
 
 // Cursor image change request is not enough to trigger recomposition.
-void ms::LegacySurfaceChangeNotification::cursor_image_set_to(std::shared_ptr<mg::CursorImage> const& /* image */)
+void ms::LegacySurfaceChangeNotification::cursor_image_set_to(mg::CursorImage const& /* image */)
 {
 }
 
