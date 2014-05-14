@@ -89,7 +89,8 @@ struct MockCursor : public mg::Cursor
 };
 
 // TODO: Override qualifier
-// TODO: Comment about stub scene surface
+// TODO: This should only inherit from mi::Surface but to use the Scene observer we need an
+// ms::Surface base class.
 struct StubInputSurface : public mtd::StubSceneSurface
 {
     StubInputSurface(geom::Rectangle const& input_bounds, std::shared_ptr<mg::CursorImage> const& cursor_image)
@@ -131,9 +132,8 @@ struct StubInputSurface : public mtd::StubSceneSurface
         return cursor_image_;
     }
 
-    void set_cursor_image(std::shared_ptr<mg::CursorImage> const& image)
+    void set_cursor_image(std::shared_ptr<mg::CursorImage> const& image) override
     {
-        // TODO: May need guard.
         cursor_image_ = image;
         
         {
@@ -143,13 +143,14 @@ struct StubInputSurface : public mtd::StubSceneSurface
         }
     }
 
-    void add_observer(std::shared_ptr<ms::SurfaceObserver> const& observer)
+    void add_observer(std::shared_ptr<ms::SurfaceObserver> const& observer) override
     {
         std::unique_lock<decltype(observer_guard)> lk(observer_guard);
 
         observers.push_back(observer);
     }
-    void remove_observer(std::weak_ptr<ms::SurfaceObserver> const& observer)
+
+    void remove_observer(std::weak_ptr<ms::SurfaceObserver> const& observer) override
     {
         auto o = observer.lock();
         assert(o);
@@ -165,7 +166,6 @@ struct StubInputSurface : public mtd::StubSceneSurface
     std::vector<std::shared_ptr<ms::SurfaceObserver>> observers;
 };
 
-// TODO: Overrides
 struct StubInputTargets : public mi::InputTargets
 {
     StubInputTargets(std::initializer_list<std::shared_ptr<ms::Surface>> const& targets)
@@ -173,13 +173,13 @@ struct StubInputTargets : public mi::InputTargets
     {
     }
     
-    void for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& callback)
+    void for_each(std::function<void(std::shared_ptr<mi::Surface> const&)> const& callback) override
     {
         for (auto const& target : targets)
             callback(target);
     }
     
-    void add_observer(std::shared_ptr<ms::Observer> const& observer)
+    void add_observer(std::shared_ptr<ms::Observer> const& observer) override
     {
         std::unique_lock<decltype(observer_guard)> lk(observer_guard);
 
@@ -194,7 +194,7 @@ struct StubInputTargets : public mi::InputTargets
         }
     }
 
-    void remove_observer(std::weak_ptr<ms::Observer> const& observer)
+    void remove_observer(std::weak_ptr<ms::Observer> const& observer) override
     {
         std::unique_lock<decltype(observer_guard)> lk(observer_guard);
         
@@ -214,9 +214,7 @@ struct StubInputTargets : public mi::InputTargets
         }
     }
     
-    // TODO: Probably needs mutex
-    // TODO: Only needs one observer...
-    // TODO: Should be mi::Surface
+    // TODO: Should be mi::Surface. See comment on StubInputSurface.
     std::vector<std::shared_ptr<ms::Surface>> targets;
 
     std::mutex observer_guard;
@@ -235,8 +233,6 @@ TEST(CursorController, moves_cursor)
     
     mi::CursorController controller(mt::fake_shared(targets),
         mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
-
-    // TODO: Ensure warnings dissapear
 
     InSequence seq;
     EXPECT_CALL(cursor, move_to(geom::Point{geom::X{1.0f}, geom::Y{1.0f}}));
