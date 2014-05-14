@@ -138,7 +138,7 @@ struct StubInputSurface : public mtd::StubSceneSurface
         {
             std::unique_lock<decltype(observer_guard)> lk(observer_guard);
             for (auto o : observers)
-                o->cursor_image_set_to(image);
+                o->cursor_image_set_to(*image);
         }
     }
 
