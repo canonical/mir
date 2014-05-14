@@ -52,7 +52,7 @@ struct TrustedHelperSessionMediator : mir::frontend::SessionMediator
             };
     }
 
-    int mutable client_pid = 0;
+    pid_t mutable client_pid = 0;
 };
 
 std::shared_ptr<TrustedHelperSessionMediator> trusted_helper_mediator;
@@ -187,9 +187,11 @@ TEST_F(TrustSessionHelper, gets_pid_when_trusted_client_connects_over_fd)
     mir_connection_new_fds_for_trusted_clients(connection, 1, &client_fd_callback, this);
     wait_for_callback(std::chrono::milliseconds(500));
 
+    auto const expected_pid = getpid();
+
     EXPECT_THAT(trusted_helper_mediator->client_pid, Eq(0)); // Before the client connects we don't have a pid
     auto client_connection = mir_connect_sync(fd_connect_string(actual_fds[0]), __PRETTY_FUNCTION__);
-    EXPECT_THAT(trusted_helper_mediator->client_pid, Ne(0)); // After the client connects we do have a pid
+    EXPECT_THAT(trusted_helper_mediator->client_pid, Eq(expected_pid)); // After the client connects we do have a pid
 
     mir_connection_release(client_connection);
 }
