@@ -20,6 +20,7 @@
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/texture_cache.h"
+#include "mir/graphics/texture.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
@@ -167,7 +168,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     std::vector<Primitive> primitives;
     tessellate(primitives, renderable, renderable.buffer()->size());
 
-    texture_cache->load_texture(renderable);
+    auto surface_tex = texture_cache->load_texture(renderable);
     for (auto const& p : primitives)
     {
         // Note a primitive tex_id of zero means use the surface texture,
@@ -175,6 +176,8 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
         // in decorations etc.
         if (p.tex_id) //tessalate() can be overridden, and that code can set to nonzero  
             glBindTexture(GL_TEXTURE_2D, p.tex_id);
+        else
+            surface_tex->gl_bind();
 
         glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
                               GL_FALSE, sizeof(Vertex),

@@ -31,14 +31,17 @@ namespace compositor
 class RecentlyBoundCache : public graphics::TextureCache
 {
 public:
-    void load_texture(graphics::Renderable const& renderable) override;
+    std::shared_ptr<graphics::Texture> load_texture(graphics::Renderable const& renderable) override;
     void invalidate() override;
     void release_live_texture_resources() override;
 
 private:
     struct CountedTexture
     {
-        graphics::Texture texture;
+        CountedTexture()
+         : texture(std::make_shared<graphics::Texture>())
+        {}
+        std::shared_ptr<graphics::Texture> texture;
         graphics::BufferID last_bound_buffer;
         bool used{true};
         std::shared_ptr<graphics::Buffer> resource;

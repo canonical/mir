@@ -25,6 +25,7 @@ namespace mir
 {
 namespace graphics
 {
+class Texture;
 class TextureCache
 {
 public:
@@ -34,7 +35,7 @@ public:
      * \param [in] renderable
      *     The Renderable that will be bound as the active texture of the GL context
     **/ 
-    virtual void load_texture(Renderable const&) = 0;
+    virtual std::shared_ptr<Texture> load_texture(Renderable const&) = 0;
 
     virtual void invalidate() = 0;
 

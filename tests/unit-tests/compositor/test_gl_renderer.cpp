@@ -24,6 +24,7 @@
 #include <gmock/gmock.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/texture_cache.h>
+#include <mir/graphics/texture.h>
 #include "mir/compositor/gl_renderer.h"
 #include "src/server/graphics/program_factory.h"
 #include <mir_test/fake_shared.h>
@@ -52,7 +53,12 @@ namespace
 
 struct MockTextureCache : public mg::TextureCache
 {
-    MOCK_METHOD1(load_texture, void(mg::Renderable const&));
+    MockTextureCache()
+    {
+        ON_CALL(*this, load_texture(testing::_))
+            .WillByDefault(testing::Return(std::make_shared<mg::Texture>())); 
+    }
+    MOCK_METHOD1(load_texture, std::shared_ptr<mg::Texture>(mg::Renderable const&));
     MOCK_METHOD0(invalidate, void());
     MOCK_METHOD0(release_live_texture_resources, void());
 };
