@@ -4,12 +4,12 @@
 #include "mir_test/popen.h"
 #include "mir_test_framework/in_process_server.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-
 #include <boost/regex.hpp>
+#include <cstdlib>
+#include <cstdio>
 #include <fstream>
 #include <string>
 
@@ -42,7 +42,7 @@ protected:
         boost::regex re_glmark2_score(".*glmark2\\s+Score:\\s+(\\d+).*");
         std::string line;
         std::ofstream glmark2_output;
-        std::string score = "";
+        std::string score;
         glmark2_output.open(output_filename);
         while (p.get_line(line))
         {
@@ -57,15 +57,11 @@ protected:
                 glmark2_output << line;
             }
         }
+        
+        ASSERT_THAT(score.length(), ::testing::Gt(0u));
 
-        ASSERT_GT(score.length(), 0u);
-
-        /**
-         * 52 is the lowest acceptable score on the device that
-         * performs the worst (manta). 
-         * TODO Make this value dynamically device specific.
-         */
-        EXPECT_GT(stoi(score), 52);
+        auto const minumum_acceptable_score = 52;
+        EXPECT_THAT(stoi(score), ::testing::Ge(minumum_acceptable_score));
 
         if (file_type == json)
         {
