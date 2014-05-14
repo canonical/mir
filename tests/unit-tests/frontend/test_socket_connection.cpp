@@ -40,7 +40,7 @@ using namespace testing;
 
 namespace
 {
-struct StubReceiver : public mfd::MessageReceiver
+struct StubReceiver : mfd::MessageReceiver
 {
     StubReceiver() : async_buffer{nullptr, 0} {}
 
@@ -89,7 +89,6 @@ struct StubReceiver : public mfd::MessageReceiver
         callback_function(code, size);
     }
 
-private:
     std::function<void(boost::system::error_code const&, size_t)> callback_function;
     boost::asio::mutable_buffers_1 async_buffer;
     std::vector<char> message;
@@ -100,19 +99,23 @@ private:
 struct MockProcessor : public mfd::MessageProcessor
 {
     MOCK_METHOD1(dispatch, bool(mfd::Invocation const& invocation));
+    MOCK_METHOD1(client_pid, void(int pid));
 };
 }
 
 struct SocketConnection : public Test
 {
     NiceMock<MockProcessor> mock_processor;
-    StubReceiver stub_receiver;
+    NiceMock<StubReceiver> stub_receiver;
     std::shared_ptr<mfd::Connections<mfd::SocketConnection>> null_sessions;
+    mf::SessionCredentials client_creds{1, 1, 1};
 
     mfd::SocketConnection connection{mt::fake_shared(stub_receiver), 0, null_sessions, mt::fake_shared(mock_processor)};
 
     void SetUp()
     {
+        ON_CALL(mock_processor, dispatch(_)).WillByDefault(Return(true));
+        ON_CALL(stub_receiver, client_creds()).WillByDefault(Return(client_creds));
         connection.read_next_message();
     }
 
@@ -136,7 +139,7 @@ struct SocketConnection : public Test
 
 TEST_F(SocketConnection, dispatches_message_on_receipt)
 {
-    EXPECT_CALL(mock_processor, dispatch(_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(mock_processor, dispatch(_)).Times(1);
 
     fake_receiving_message();
 }
@@ -145,7 +148,33 @@ TEST_F(SocketConnection, dispatches_messages_on_receipt)
 {
     auto const arbitary_no_of_messages = 5;
 
-    EXPECT_CALL(mock_processor, dispatch(_)).Times(arbitary_no_of_messages).WillRepeatedly(Return(true));
+    EXPECT_CALL(mock_processor, dispatch(_)).Times(arbitary_no_of_messages);
+
+    for (int i = 0; i != arbitary_no_of_messages; ++i)
+        fake_receiving_message();
+}
+
+TEST_F(SocketConnection, checks_client_pid_when_message_received)
+{
+    EXPECT_CALL(stub_receiver, client_creds()).Times(1);
+
+    fake_receiving_message();
+}
+
+TEST_F(SocketConnection, notifies_client_pid_before_message_dispatched)
+{
+    InSequence seq;
+    EXPECT_CALL(mock_processor, client_pid(_)).Times(1);
+    EXPECT_CALL(mock_processor, dispatch(_)).Times(1);
+
+    fake_receiving_message();
+}
+
+TEST_F(SocketConnection, notifies_client_pid_once_only)
+{
+    auto const arbitary_no_of_messages = 5;
+
+    EXPECT_CALL(mock_processor, client_pid(_)).Times(1);
 
     for (int i = 0; i != arbitary_no_of_messages; ++i)
         fake_receiving_message();
