@@ -51,13 +51,12 @@ struct AndroidInputRegistrarFdSetup : public testing::Test
     AndroidInputRegistrarFdSetup()
         : surface(socket(AF_UNIX, SOCK_SEQPACKET, 0))
     {
-        dispatcher = new mtd::MockAndroidInputDispatcher();
     }
     ~AndroidInputRegistrarFdSetup()
     {
         close(surface.fd);
     }
-    droidinput::sp<mtd::MockAndroidInputDispatcher> dispatcher;
+    std::shared_ptr<mtd::MockAndroidInputDispatcher> dispatcher = std::make_shared<mtd::MockAndroidInputDispatcher>();
     mtd::StubSceneSurface surface;
 };
 

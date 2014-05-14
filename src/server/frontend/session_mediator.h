@@ -61,7 +61,6 @@ class SessionMediator : public detail::DisplayServer
 public:
 
     SessionMediator(
-        pid_t client_pid,
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
@@ -73,6 +72,8 @@ public:
         ConnectionContext const& connection_context);
 
     ~SessionMediator() noexcept;
+
+    void client_pid(int pid) override;
 
     /* Platform independent requests */
     void connect(::google::protobuf::RpcController* controller,
@@ -164,7 +165,7 @@ private:
                               bool need_full_ipc);
 
     void advance_buffer(SurfaceId surf_id, Surface& surface, std::function<void(graphics::Buffer*, bool)> complete);
-    pid_t client_pid;
+    pid_t client_pid_;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
 
