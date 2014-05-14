@@ -102,7 +102,7 @@ void mga::HWCFallbackGLRenderer::render(
 {
     glUseProgram(*program);
 
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClearColor(1.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
     
     glEnableVertexAttribArray(position_attr);

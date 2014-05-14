@@ -20,6 +20,7 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/gl_program_factory.h"
 #include "mir/graphics/primitive.h"
+#include "mir/graphics/texture.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/stub_renderable.h"
@@ -59,8 +60,9 @@ public:
 
 class StubTextureCache : public mg::TextureCache
 {
-    void load_texture(mg::Renderable const&)
+    std::shared_ptr<mg::Texture> load_texture(mg::Renderable const&)
     {
+        return std::make_shared<mg::Texture>();
     }
     void invalidate()
     {
