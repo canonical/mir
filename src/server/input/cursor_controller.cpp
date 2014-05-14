@@ -86,7 +86,6 @@ struct SurfaceObserver : ms::SurfaceObserver
     std::function<void()> const update_cursor;
 };
 
-// TODO: Comment about namespaces
 struct Observer : ms::Observer
 {
     Observer(std::function<void()> const& update_cursor)

@@ -88,7 +88,6 @@ struct MockCursor : public mg::Cursor
     MOCK_METHOD1(move_to, void(geom::Point));
 };
 
-// TODO: Override qualifier
 // TODO: This should only inherit from mi::Surface but to use the Scene observer we need an
 // ms::Surface base class.
 struct StubInputSurface : public mtd::StubSceneSurface
