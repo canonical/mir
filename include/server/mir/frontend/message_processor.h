@@ -51,6 +51,7 @@ class MessageProcessor
 {
 public:
     virtual bool dispatch(Invocation const& invocation) = 0;
+    virtual void client_pid(int pid) = 0;
 
 protected:
     MessageProcessor() = default;

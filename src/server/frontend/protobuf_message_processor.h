@@ -47,6 +47,8 @@ public:
 
     ~ProtobufMessageProcessor() noexcept {}
 
+    void client_pid(int pid) override;
+
     void send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response);
     void send_response(::google::protobuf::uint32 id, protobuf::Buffer* response);
     void send_response(::google::protobuf::uint32 id, protobuf::Connection* response);

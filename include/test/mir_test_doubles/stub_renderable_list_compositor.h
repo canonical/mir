@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,27 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_MAIN_LOOP_H_
-#define MIR_MAIN_LOOP_H_
+#ifndef MIR_TEST_DOUBLES_STUB_RENDERABLE_LIST_COMPOSITOR_H_
+#define MIR_TEST_DOUBLES_STUB_RENDERABLE_LIST_COMPOSITOR_H_
 
-#include "mir/graphics/event_handler_register.h"
-#include "mir/time/timer.h"
-#include "mir/server_action_queue.h"
+#include "src/platform/graphics/android/overlay_gl_compositor.h"
 
 namespace mir
 {
-
-class MainLoop : public graphics::EventHandlerRegister, public time::Timer,
-                 public ServerActionQueue
+namespace test
 {
-public:
-    virtual void run() = 0;
-    virtual void stop() = 0;
+namespace doubles
+{
+
+struct StubRenderableListCompositor : public graphics::android::RenderableListCompositor
+{
+    void render(graphics::RenderableList const&, graphics::android::SwappingGLContext const&) const
+    {
+    }
 };
 
 }
-
-#endif /* MIR_MAIN_LOOP_H_ */
+}
+}
+#endif // MIR_TEST_DOUBLES_STUB_RENDERABLE_LIST_COMPOSITOR_H_

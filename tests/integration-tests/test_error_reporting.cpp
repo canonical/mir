@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -48,6 +48,8 @@ char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
 struct ErrorServer : mf::detail::DisplayServer
 {
+    void client_pid(int /*pid*/) override {}
+
     static std::string const test_exception_text;
 
     void create_surface(

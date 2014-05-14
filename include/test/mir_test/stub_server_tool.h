@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -35,6 +35,8 @@ struct StubServerTool : mir::frontend::detail::DisplayServer
         : drm_magic{0}
     {
     }
+
+    void client_pid(int /*pid*/) override {}
 
     virtual void create_surface(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::SurfaceParameters* request,

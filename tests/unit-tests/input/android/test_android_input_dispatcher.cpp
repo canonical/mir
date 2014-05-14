@@ -56,15 +56,9 @@ namespace
 
 struct AndroidInputDispatcherTest : public testing::Test
 {
-    AndroidInputDispatcherTest()
-    {
-        dispatcher = new mtd::MockAndroidInputDispatcher();
-        dispatcher_thread = std::make_shared<MockInputThread>();
-    }
-
-    droidinput::sp<mtd::MockAndroidInputDispatcher> dispatcher;
-    std::shared_ptr<mi::InputDispatcher> input_dispatcher;
-    std::shared_ptr<MockInputThread> dispatcher_thread;
+    std::shared_ptr<mtd::MockAndroidInputDispatcher> dispatcher = std::make_shared<mtd::MockAndroidInputDispatcher>();
+    std::shared_ptr<MockInputThread> dispatcher_thread = std::make_shared<MockInputThread>();
+    mia::AndroidInputDispatcher input_dispatcher{dispatcher,dispatcher_thread};
 };
 
 }
@@ -83,8 +77,6 @@ TEST_F(AndroidInputDispatcherTest, start_starts_dispathcer_and_thread)
     EXPECT_CALL(*dispatcher_thread, start())
         .Times(1);
 
-    mia::AndroidInputDispatcher input_dispatcher(dispatcher, dispatcher_thread);
-
     input_dispatcher.start();
 }
 
@@ -97,8 +89,6 @@ TEST_F(AndroidInputDispatcherTest, stop_stops_dispatcher_and_thread)
     EXPECT_CALL(*dispatcher_thread, request_stop());
     EXPECT_CALL(*dispatcher, setInputDispatchMode(mia::DispatchDisabled, mia::DispatchFrozen)).Times(1);
     EXPECT_CALL(*dispatcher_thread, join());
-
-    mia::AndroidInputDispatcher input_dispatcher(dispatcher, dispatcher_thread);
 
     input_dispatcher.stop();
 }
