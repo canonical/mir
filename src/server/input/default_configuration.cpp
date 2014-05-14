@@ -25,6 +25,7 @@
 #include "nested_input_relay.h"
 #include "null_input_configuration.h"
 #include "null_input_dispatcher_configuration.h"
+#include "cursor_controller.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/options/configuration.h"
@@ -155,4 +156,14 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
     return the_input_configuration()->the_input_channel_factory();
 }
 
+std::shared_ptr<mi::CursorListener>
+mir::DefaultServerConfiguration::the_cursor_listener()
+{
+    return cursor_listener(
+        [this]() -> std::shared_ptr<mi::CursorListener>
+        {
+            return std::make_shared<mi::CursorController>(the_input_targets(), 
+                the_cursor(), the_default_cursor_image());
+        });
 
+}

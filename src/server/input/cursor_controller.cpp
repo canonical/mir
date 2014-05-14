@@ -167,18 +167,27 @@ std::shared_ptr<mi::Surface> topmost_surface_containing_point(
 
 }
 
-mi::CursorController::CursorController(std::shared_ptr<mg::Cursor> const& cursor,
+mi::CursorController::CursorController(std::shared_ptr<mi::InputTargets> const& input_targets,
+    std::shared_ptr<mg::Cursor> const& cursor,
     std::shared_ptr<mg::CursorImage> const& default_cursor_image) :
+        input_targets(input_targets),
         cursor(cursor),
         default_cursor_image(default_cursor_image),
-        input_targets(nullptr),
         current_cursor(default_cursor_image)
 {
+    // TODO: Add observer could return weak_ptr to eliminate this
+    // pattern
+    auto strong_observer = std::make_shared<Observer>([&]()
+    {
+        std::lock_guard<std::mutex> lg(cursor_state_guard);
+        update_cursor_image_locked(lg);
+    });
+    input_targets->add_observer(strong_observer);
+    observer = strong_observer;
 }
 
 mi::CursorController::~CursorController()
 {
-    assert(input_targets);
     input_targets->remove_observer(observer);
 }
 
@@ -221,20 +230,4 @@ void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
     update_cursor_image_locked(lg);
 
     cursor->move_to(cursor_location);
-}
-
-void mi::CursorController::set_input_targets(std::shared_ptr<InputTargets> const& targets)
-{
-    assert(!input_targets);
-    input_targets = targets;
-    
-    // TODO: Add observer could return weak_ptr to eliminate this
-    // pattern
-    auto strong_observer = std::make_shared<Observer>([&]()
-    {
-        std::lock_guard<std::mutex> lg(cursor_state_guard);
-        update_cursor_image_locked(lg);
-    });
-    input_targets->add_observer(strong_observer);
-    observer = strong_observer;
 }

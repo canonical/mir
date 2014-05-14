@@ -34,8 +34,6 @@
 #include "mir/input/vt_filter.h"
 #include "mir/input/input_manager.h"
 
-// TODO: Remove
-#include "input/cursor_controller.h"
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
@@ -88,20 +86,6 @@ mir::DefaultServerConfiguration::the_session_listener()
         {
             return std::make_shared<ms::NullSessionListener>();
         });
-}
-
-// TODO: Move
-std::shared_ptr<mi::CursorListener>
-mir::DefaultServerConfiguration::the_cursor_listener()
-{
-    return cursor_listener(
-        [this]() -> std::shared_ptr<mi::CursorListener>
-        {
-            auto cc = std::make_shared<mi::CursorController>(the_cursor(), the_default_cursor_image());
-            cc->set_input_targets(the_input_targets());
-            return cc;
-        });
-
 }
 
 std::shared_ptr<ms::SurfaceConfigurator> mir::DefaultServerConfiguration::the_surface_configurator()

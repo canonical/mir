@@ -214,7 +214,7 @@ struct StubInputTargets : public mi::InputTargets
         }
     }
     
-        // TODO: Probably needs mutex
+    // TODO: Probably needs mutex
     // TODO: Only needs one observer...
     // TODO: Should be mi::Surface
     std::vector<std::shared_ptr<ms::Surface>> targets;
@@ -233,8 +233,8 @@ TEST(CursorController, moves_cursor)
     StubInputTargets targets({});
     MockCursor cursor;
     
-    mi::CursorController controller(mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
-    controller.set_input_targets(mt::fake_shared(targets));
+    mi::CursorController controller(mt::fake_shared(targets),
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
 
     // TODO: Ensure warnings dissapear
 
@@ -258,8 +258,8 @@ TEST(CursorController, updates_cursor_image_when_entering_surface)
     StubInputTargets targets({mt::fake_shared(surface)});
     MockCursor cursor;
     
-    mi::CursorController controller(mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
-    controller.set_input_targets(mt::fake_shared(targets));
+    mi::CursorController controller(mt::fake_shared(targets),
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
 
     EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name))).Times(1);
@@ -277,8 +277,8 @@ TEST(CursorController, surface_with_no_cursor_image_hides_cursor)
     StubInputTargets targets({mt::fake_shared(surface)});
     MockCursor cursor;
     
-    mi::CursorController controller(mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
-    controller.set_input_targets(mt::fake_shared(targets));
+    mi::CursorController controller(mt::fake_shared(targets),
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
 
     EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     EXPECT_CALL(cursor, hide()).Times(1);
@@ -301,8 +301,8 @@ TEST(CursorController, takes_cursor_image_from_topmost_surface)
     StubInputTargets targets({mt::fake_shared(surface_1), mt::fake_shared(surface_2)});
     MockCursor cursor;
     
-    mi::CursorController controller(mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
-    controller.set_input_targets(mt::fake_shared(targets));
+    mi::CursorController controller(mt::fake_shared(targets),
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
 
     EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     EXPECT_CALL(cursor, show(CursorNamed(surface_2_cursor_name))).Times(1);
@@ -322,8 +322,8 @@ TEST(CursorController, restores_cursor_when_leaving_surface)
     StubInputTargets targets({mt::fake_shared(surface)});
     MockCursor cursor;
     
-    mi::CursorController controller(mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
-    controller.set_input_targets(mt::fake_shared(targets));
+    mi::CursorController controller(mt::fake_shared(targets),
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
 
     EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
 
@@ -350,8 +350,8 @@ TEST(CursorController, change_in_cursor_request_triggers_image_update_without_cu
     StubInputTargets targets({mt::fake_shared(surface)});
     MockCursor cursor;
     
-    mi::CursorController controller(mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
-    controller.set_input_targets(mt::fake_shared(targets));
+    mi::CursorController controller(mt::fake_shared(targets),
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
 
     EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     {
@@ -377,8 +377,8 @@ TEST(CursorController, change_in_scene_triggers_image_update)
     StubInputTargets targets({});
     MockCursor cursor;
     
-    mi::CursorController controller(mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
-    controller.set_input_targets(mt::fake_shared(targets));
+    mi::CursorController controller(mt::fake_shared(targets),
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
 
     EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name))).Times(1);
@@ -403,8 +403,8 @@ TEST(CursorController, cursor_image_not_reset_needlessly)
     StubInputTargets targets({});
     MockCursor cursor;
     
-    mi::CursorController controller(mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
-    controller.set_input_targets(mt::fake_shared(targets));
+    mi::CursorController controller(mt::fake_shared(targets),
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
 
     EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name))).Times(1);

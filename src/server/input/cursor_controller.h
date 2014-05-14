@@ -44,20 +44,17 @@ class InputTargets;
 class CursorController : public CursorListener
 {
 public:
-    CursorController(std::shared_ptr<graphics::Cursor> const& cursor,
-                     std::shared_ptr<graphics::CursorImage> const& default_cursor_image);
+    CursorController(std::shared_ptr<InputTargets> const& input_targets,
+        std::shared_ptr<graphics::Cursor> const& cursor,
+        std::shared_ptr<graphics::CursorImage> const& default_cursor_image);
     virtual ~CursorController();
 
     void cursor_moved_to(float abs_x, float abs_y);
     
-    // TODO: Remove
-    // Needed to break initialization cycle in server configuration.
-    void set_input_targets(std::shared_ptr<InputTargets> const& targets);
-
 private:
+    std::shared_ptr<InputTargets> const input_targets;
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<graphics::CursorImage> const default_cursor_image;
-    std::shared_ptr<InputTargets> input_targets;
 
     std::mutex cursor_state_guard;
     geometry::Point cursor_location;
