@@ -59,6 +59,12 @@ protected:
         }
 
         ASSERT_GT(score.length(), 0u);
+
+        /**
+         * 52 is the lowest acceptable score on the device that
+         * performs the worst (manta). 
+         * TODO Make this value dynamically device specific.
+         */
         EXPECT_GT(stoi(score), 52);
 
         if (file_type == json)
