@@ -33,7 +33,7 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 namespace ms = mir::scene;
 
-mia::InputTargeter::InputTargeter(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher,
+mia::InputTargeter::InputTargeter(std::shared_ptr<droidinput::InputDispatcherInterface> const& input_dispatcher,
                                   std::shared_ptr<mia::WindowHandleRepository> const& repository) :
     input_dispatcher(input_dispatcher),
     repository(repository)

@@ -310,7 +310,6 @@ public:
     virtual void monitor();
     virtual void flush();
 
-protected:
     virtual ~EventHub();
 
 private:
