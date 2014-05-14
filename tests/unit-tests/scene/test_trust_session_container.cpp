@@ -124,7 +124,7 @@ TEST(TrustSessionContainer, test_remove_trust_sesion)
     container.for_each_process_for_trust_session(mt::fake_shared(trust_session1), for_each_fn);
     EXPECT_EQ(count, 3);
 
-    container.remove_trust_session(&trust_session1);
+    container.remove_trust_session(mt::fake_shared(trust_session1));
 
     count = 0;
     container.for_each_process_for_trust_session(mt::fake_shared(trust_session1), for_each_fn);

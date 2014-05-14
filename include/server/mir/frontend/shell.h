@@ -61,7 +61,7 @@ public:
                                                                   scene::TrustSessionCreationParameters const& params) = 0;
     virtual MirTrustSessionAddTrustResult add_trusted_session_for(std::shared_ptr<TrustSession> const& trust_session,
                                                                   pid_t session_pid) = 0;
-    virtual void stop_trust_session(TrustSession* trust_session) = 0;
+    virtual void stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) = 0;
 
 protected:
     Shell() = default;

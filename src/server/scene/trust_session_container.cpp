@@ -49,7 +49,7 @@ void ms::TrustSessionContainer::for_each_process_for_trust_session(
     std::unique_lock<std::mutex> lk(mutex);
 
     object_by_trust_session::iterator it,end;
-    boost::tie(it,end) = trust_session_index.equal_range(trust_session.get());
+    boost::tie(it,end) = trust_session_index.equal_range(trust_session);
 
     for (; it != end; ++it)
     {
@@ -74,9 +74,8 @@ void ms::TrustSessionContainer::for_each_trust_session_for_process(
     }
 }
 
-void ms::TrustSessionContainer::remove_trust_session(frontend::TrustSession* trust_session)
+void ms::TrustSessionContainer::remove_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session)
 {
-    (void)trust_session;
     std::unique_lock<std::mutex> lk(mutex);
 
     object_by_trust_session::iterator it,end;

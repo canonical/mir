@@ -31,11 +31,11 @@ class TrustSession;
 class TrustSessionListener
 {
 public:
-    virtual void starting(TrustSession& trust_session) = 0;
-    virtual void stopping(TrustSession& trust_session) = 0;
+    virtual void starting(std::shared_ptr<TrustSession> const& trust_session) = 0;
+    virtual void stopping(std::shared_ptr<TrustSession> const& trust_session) = 0;
 
-    virtual void trusted_session_beginning(TrustSession const& trust_session, Session const& session) = 0;
-    virtual void trusted_session_ending(TrustSession const& trust_session, Session const& session) = 0;
+    virtual void trusted_session_beginning(TrustSession const& trust_session, std::shared_ptr<Session> const& session) = 0;
+    virtual void trusted_session_ending(TrustSession const& trust_session, std::shared_ptr<Session> const& session) = 0;
 
 protected:
     TrustSessionListener() = default;

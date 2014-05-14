@@ -32,11 +32,11 @@ public:
     NullTrustSessionListener() = default;
     virtual ~NullTrustSessionListener() noexcept(true) = default;
 
-    void starting(TrustSession&) override {};
-    void stopping(TrustSession&) override {};
+    void starting(std::shared_ptr<TrustSession> const&) override {};
+    void stopping(std::shared_ptr<TrustSession> const&) override {};
 
-    void trusted_session_beginning(TrustSession const&, Session const&) override {};
-    void trusted_session_ending(TrustSession const&, Session const&) override {};
+    void trusted_session_beginning(TrustSession const&, std::shared_ptr<Session> const&) override {};
+    void trusted_session_ending(TrustSession const&, std::shared_ptr<Session> const&) override {};
 
 protected:
     NullTrustSessionListener(const NullTrustSessionListener&) = delete;

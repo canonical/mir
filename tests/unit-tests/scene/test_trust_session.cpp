@@ -44,6 +44,7 @@ struct TrustSession : public testing::Test
     testing::NiceMock<mtd::MockTrustSessionListener> trust_session_listener;
     testing::NiceMock<mtd::MockSceneSession> trusted_helper;
     testing::NiceMock<mtd::MockSceneSession> trusted_app1;
+    testing::NiceMock<mtd::MockSceneSession> trusted_app2;
 };
 }
 
@@ -51,23 +52,31 @@ TEST_F(TrustSession, start_and_stop)
 {
     using namespace testing;
 
+    auto shared_helper = mt::fake_shared(trusted_helper);
+    std::shared_ptr<ms::Session> shared_app1 = mt::fake_shared(trusted_app1);
+    std::shared_ptr<ms::Session> shared_app2 = mt::fake_shared(trusted_app2);
+
+    ms::TrustSessionImpl trust_session(shared_helper,
+                                   ms::a_trust_session(),
+                                   mt::fake_shared(trust_session_listener));
+
     EXPECT_CALL(trusted_helper, begin_trust_session()).Times(1);
     EXPECT_CALL(trusted_helper, end_trust_session()).Times(1);
 
     EXPECT_CALL(trusted_app1, begin_trust_session()).Times(0);
     EXPECT_CALL(trusted_app1, end_trust_session()).Times(0);
 
-    EXPECT_CALL(trust_session_listener, trusted_session_beginning(_,_)).Times(1);
-    EXPECT_CALL(trust_session_listener, trusted_session_ending(_,_)).Times(1);
+    EXPECT_CALL(trusted_app2, begin_trust_session()).Times(0);
+    EXPECT_CALL(trusted_app2, end_trust_session()).Times(0);
 
-    auto shared_helper = mt::fake_shared(trusted_helper);
-    auto shared_app1 = mt::fake_shared(trusted_app1);
+    EXPECT_CALL(trust_session_listener, trusted_session_beginning(_, shared_app1)).Times(1);
+    EXPECT_CALL(trust_session_listener, trusted_session_beginning(_, shared_app2)).Times(1);
 
-    ms::TrustSessionImpl trust_session(shared_helper,
-                                   ms::a_trust_session(),
-                                   mt::fake_shared(trust_session_listener));
+    EXPECT_CALL(trust_session_listener, trusted_session_ending(_, shared_app1)).Times(1);
+    EXPECT_CALL(trust_session_listener, trusted_session_ending(_, shared_app2)).Times(1);
 
     trust_session.start();
     trust_session.add_trusted_child(shared_app1);
+    trust_session.add_trusted_child(shared_app2);
     trust_session.stop();
 }

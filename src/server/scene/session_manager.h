@@ -79,7 +79,7 @@ public:
                                                   TrustSessionCreationParameters const& params) override;
     MirTrustSessionAddTrustResult add_trusted_session_for(std::shared_ptr<frontend::TrustSession> const& trust_session,
                                                           pid_t session_pid) override;
-    void stop_trust_session(frontend::TrustSession* trust_session) override;
+    void stop_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session) override;
 
 protected:
     SessionManager(const SessionManager&) = delete;
@@ -104,7 +104,7 @@ private:
                                                                  std::shared_ptr<frontend::TrustSession> const& trust_session,
                                                                  pid_t session_pid);
     void stop_trust_session_locked(std::unique_lock<std::mutex> const& lock,
-                                   frontend::TrustSession* trust_session);
+                                   std::shared_ptr<frontend::TrustSession> const& trust_session);
     std::mutex mutable trust_sessions_mutex;
 };
 
