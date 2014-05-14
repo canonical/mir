@@ -247,7 +247,6 @@ bool mgm::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
     if (!current_crtc)
     {
         mir::abort("Output %s has no associated CRTC to schedule page flips on",
-
                    connector_name(connector.get()).c_str());
     }
     return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id);
