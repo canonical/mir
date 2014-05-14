@@ -35,7 +35,7 @@ namespace ms = mir::scene;
 namespace mia = mi::android;
 namespace ms = mir::scene;
 
-mia::InputRegistrar::InputRegistrar(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher)
+mia::InputRegistrar::InputRegistrar(std::shared_ptr<droidinput::InputDispatcherInterface> const& input_dispatcher)
     : input_dispatcher(input_dispatcher)
 {
 }

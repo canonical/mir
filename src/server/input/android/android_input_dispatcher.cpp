@@ -31,7 +31,7 @@ namespace mia = mir::input::android;
 namespace droidinput = ::android;
 
 mia::AndroidInputDispatcher::AndroidInputDispatcher(
-    droidinput::sp<droidinput::InputDispatcherInterface> const& dispatcher,
+    std::shared_ptr<droidinput::InputDispatcherInterface> const& dispatcher,
     std::shared_ptr<mia::InputThread> const& thread)
     : dispatcher(dispatcher), dispatcher_thread(thread)
 {

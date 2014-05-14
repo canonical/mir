@@ -26,6 +26,7 @@
 #include <utils/StrongPointer.h>
 
 #include <map>
+#include <memory>
 #include <mutex>
 
 namespace android
@@ -52,7 +53,7 @@ class InputTargeter;
 class InputRegistrar : public scene::Observer, public WindowHandleRepository
 {
 public:
-    explicit InputRegistrar(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher);
+    explicit InputRegistrar(std::shared_ptr<droidinput::InputDispatcherInterface> const& input_dispatcher);
     virtual ~InputRegistrar() noexcept(true);
 
     void surface_added(scene::Surface* surface) override;
@@ -63,7 +64,7 @@ public:
 
     virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_channel(std::shared_ptr<input::InputChannel const> const& channel);
 private:
-    droidinput::sp<droidinput::InputDispatcherInterface> const input_dispatcher;
+    std::shared_ptr<droidinput::InputDispatcherInterface> const input_dispatcher;
 
     std::map<std::shared_ptr<input::InputChannel const>, droidinput::sp<droidinput::InputWindowHandle>> window_handles;
 
