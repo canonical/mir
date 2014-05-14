@@ -55,7 +55,7 @@ struct NamedCursorImage : public mg::CursorImage
         : cursor_name(name)
     {
     }
-
+    
     void const* as_argb_8888() const { return nullptr; }
     geom::Size size() const { return geom::Size{}; }
 
@@ -386,4 +386,29 @@ TEST(CursorController, change_in_scene_triggers_image_update)
     targets.add_surface(mt::fake_shared(surface));
 }
 
-// TODO: Test does not re set cursor image
+TEST(CursorController, cursor_image_not_reset_needlessly)
+{
+    using namespace ::testing;
+
+    std::string const cursor_name = "test_cursor";
+    auto image = std::make_shared<NamedCursorImage>(cursor_name);
+
+    // Here we also demonstrate that the cursor begins at 0,0.
+    StubInputSurface surface1{geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
+                                  geom::Size{geom::Width{1}, geom::Height{1}}},
+                              image};
+    StubInputSurface surface2{geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
+                                  geom::Size{geom::Width{1}, geom::Height{1}}},
+                              image};
+    StubInputTargets targets({});
+    MockCursor cursor;
+    
+    mi::CursorController controller(mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
+    controller.set_input_targets(mt::fake_shared(targets));
+
+    EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
+    EXPECT_CALL(cursor, show(CursorNamed(cursor_name))).Times(1);
+
+    targets.add_surface(mt::fake_shared(surface1));
+    targets.add_surface(mt::fake_shared(surface2));
+}

@@ -305,7 +305,7 @@ MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor
     {
         std::unique_lock<decltype(mutex)> lock(mutex);
         setting.mutable_surfaceid()->CopyFrom(surface.id());
-        if (cursor->name != "")
+        if (cursor && cursor->name != "")
             setting.set_name(cursor->name.c_str());
     }
     

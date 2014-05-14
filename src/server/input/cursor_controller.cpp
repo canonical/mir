@@ -171,7 +171,8 @@ mi::CursorController::CursorController(std::shared_ptr<mg::Cursor> const& cursor
     std::shared_ptr<mg::CursorImage> const& default_cursor_image) :
         cursor(cursor),
         default_cursor_image(default_cursor_image),
-        input_targets(nullptr)
+        input_targets(nullptr),
+        current_cursor(default_cursor_image)
 {
 }
 
@@ -181,20 +182,30 @@ mi::CursorController::~CursorController()
     input_targets->remove_observer(observer);
 }
 
+void mi::CursorController::set_cursor_image(std::shared_ptr<mg::CursorImage> const& image)
+{
+    if (current_cursor == image)
+    {
+            return;
+    }
+
+    current_cursor = image;
+    if (image)
+        cursor->show(*image);
+    else
+        cursor->hide();
+}
+
 void mi::CursorController::update_cursor_image()
 {
     auto surface = topmost_surface_containing_point(input_targets, cursor_location);
     if (surface)
     {
-        auto image = surface->cursor_image();
-        if(image)
-            cursor->show(*image);
-        else
-            cursor->hide();
+        set_cursor_image(surface->cursor_image());
     }
     else
     {
-        cursor->show(*default_cursor_image);
+        set_cursor_image(default_cursor_image);
     }
 }
 
@@ -214,7 +225,7 @@ void mi::CursorController::set_input_targets(std::shared_ptr<InputTargets> const
     // TODO: May need a guard on input targets;
     assert(!input_targets);
     input_targets = targets;
-
+    
     // TODO: Add observer could return weak_ptr to eliminate this
     // pattern
     auto strong_observer = std::make_shared<Observer>([&]()

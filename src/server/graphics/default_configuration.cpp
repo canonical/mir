@@ -137,7 +137,7 @@ mir::DefaultServerConfiguration::the_default_cursor_image()
     return default_cursor_image(
         [this]()
         {
-            return the_cursor_images()->image("arrow", default_cursor_size);
+            return the_cursor_images()->image("default", default_cursor_size);
         });
 }
 

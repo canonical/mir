@@ -33,6 +33,9 @@
 #include "mir/input/cursor_listener.h"
 #include "mir/input/vt_filter.h"
 #include "mir/input/input_manager.h"
+
+// TODO: Remove
+#include "input/cursor_controller.h"
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
@@ -87,28 +90,21 @@ mir::DefaultServerConfiguration::the_session_listener()
         });
 }
 
+// TODO: Move
+#include <stdio.h>
 std::shared_ptr<mi::CursorListener>
 mir::DefaultServerConfiguration::the_cursor_listener()
 {
-    struct DefaultCursorListener : mi::CursorListener
-    {
-        DefaultCursorListener(std::shared_ptr<mg::Cursor> const& cursor) :
-            cursor(cursor)
-        {
-        }
-
-        void cursor_moved_to(float abs_x, float abs_y)
-        {
-            cursor->move_to(geom::Point{abs_x, abs_y});
-        }
-
-        std::shared_ptr<mg::Cursor> const cursor;
-    };
     return cursor_listener(
         [this]() -> std::shared_ptr<mi::CursorListener>
         {
-            return std::make_shared<DefaultCursorListener>(the_cursor());
+            printf("lol \n");
+            auto cc = std::make_shared<mi::CursorController>(the_cursor(), the_default_cursor_image());
+            cc->set_input_targets(the_input_targets());
+            printf("lol 2\n");
+            return cc;
         });
+
 }
 
 std::shared_ptr<ms::SurfaceConfigurator> mir::DefaultServerConfiguration::the_surface_configurator()

@@ -59,11 +59,14 @@ private:
     
     // TODO: Mutex
     geometry::Point cursor_location;
+    // TODO: Mutex
+    std::shared_ptr<graphics::CursorImage> current_cursor;
 
     std::weak_ptr<scene::Observer> observer;
     
 
     void update_cursor_image();
+    void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image);
 };
 
 }

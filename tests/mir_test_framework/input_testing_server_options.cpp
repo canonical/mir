@@ -70,7 +70,7 @@ std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::th
         input_configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
             the_input_dispatcher_configuration(),
             the_input_region(),
-            null_cursor_listener,
+            the_cursor_listener(),
             the_input_report());
         fake_event_hub = input_configuration->the_fake_event_hub();
 

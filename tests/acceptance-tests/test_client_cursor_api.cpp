@@ -42,6 +42,8 @@
 
 #include <assert.h>
 
+// TODO: Clean up cursor conf leaks
+
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -253,6 +255,9 @@ struct CursorTestServerConfiguration : mtf::InputTestingServerConfiguration
 
         synthesize_cursor_motion(this);
         expectations_satisfied.wait_for_at_most_seconds(60);
+        
+        // TODO: Required?
+//        Mock::VerifyAndClearExpectations(&cursor);
 
         EXPECT_CALL(cursor, show(_)).Times(AnyNumber()); // Client shutdown
         for (int i = 0; i < number_of_clients; i++)
@@ -297,8 +302,7 @@ TEST_F(TestClientCursorAPI, client_cursor_request_is_made_surface_data)
 // In this set we create a 1x1 client surface at the point (1,0). The client requests to disable the cursor
 // over this surface. Since the cursor starts at (0,0) we when we move the cursor by (1,0) thus causing it
 // to enter the bounds of the first surface, we should observe it being disabled.
-// TODO: Enable
-TEST_F(TestClientCursorAPI, DISABLED_client_may_disable_cursor_over_surface)
+TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
 {
     using namespace ::testing;
 
@@ -334,8 +338,7 @@ TEST_F(TestClientCursorAPI, DISABLED_client_may_disable_cursor_over_surface)
     launch_client_process(client_conf);
 }
 
-// TODO: Enable
-TEST_F(TestClientCursorAPI, DISABLED_cursor_restored_when_leaving_surface)
+TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
 {
     using namespace ::testing;
 
@@ -374,8 +377,7 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_restored_when_leaving_surface)
     launch_client_process(client_conf);
 }
 
-// TODO: Enable
-TEST_F(TestClientCursorAPI, DISABLED_cursor_changed_when_crossing_surface_boundaries)
+TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
 {
     using namespace ::testing;
 
@@ -425,8 +427,7 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_changed_when_crossing_surface_bounda
     launch_client_process(client2_conf);
 }
 
-// TODO: Enable
-TEST_F(TestClientCursorAPI, DISABLED_cursor_request_taken_from_top_surface)
+TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
 {
     using namespace ::testing;
 
@@ -438,7 +439,7 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_request_taken_from_top_surface)
     mtf::SurfaceGeometries client_geometries;
     client_geometries[test_client_name_1] = geom::Rectangle{geom::Point{geom::X{1}, geom::Y{0}},
                                                           geom::Size{geom::Width{1}, geom::Height{1}}};
-    client_geometries[test_client_name_1] = geom::Rectangle{geom::Point{geom::X{1}, geom::Y{0}},
+    client_geometries[test_client_name_2] = geom::Rectangle{geom::Point{geom::X{1}, geom::Y{0}},
                                                           geom::Size{geom::Width{1}, geom::Height{1}}};
     mtf::SurfaceDepths client_depths;
     client_depths[test_client_name_1] = ms::DepthId{0};
@@ -471,14 +472,13 @@ TEST_F(TestClientCursorAPI, DISABLED_cursor_request_taken_from_top_surface)
     CursorSettingClient client2_conf(test_client_name_2, client_ready_fence, client_may_exit_fence,
         [](MirSurface *surface)
         {
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
+            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_2_cursor.c_str())));
         });
 
     launch_client_process(client2_conf);
 }
 
-// TODO: Enable
-TEST_F(TestClientCursorAPI, DISABLED_cursor_request_applied_without_cursor_motion)
+TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
 {
     using namespace ::testing;
     static std::string const test_client_name_1 = "1";
