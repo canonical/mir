@@ -78,7 +78,7 @@ struct SurfaceObserver : ms::SurfaceObserver
     {
         update_cursor();
     }
-    void cursor_image_set_to(std::shared_ptr<mg::CursorImage> const&)
+    void cursor_image_set_to(mg::CursorImage const&)
     {
         update_cursor();
     }
