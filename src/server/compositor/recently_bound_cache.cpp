@@ -24,14 +24,14 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-void mc::RecentlyBoundCache::load_texture(mg::Renderable const& renderable)
+std::shared_ptr<mg::Texture> mc::RecentlyBoundCache::load_texture(mg::Renderable const& renderable)
 {
     auto const& buffer = renderable.buffer();
     auto const& id = renderable.id();
 
     auto buffer_id = buffer->id();
     auto& texture = textures[id];
-    texture.texture.gl_bind();
+    texture.texture->gl_bind();
 
     if (texture.last_bound_buffer != buffer_id)
         buffer->bind_to_texture();
@@ -39,6 +39,8 @@ void mc::RecentlyBoundCache::load_texture(mg::Renderable const& renderable)
     texture.resource = buffer;
     texture.last_bound_buffer = buffer_id;
     texture.used = true;
+
+    return texture.texture;
 }
 
 void mc::RecentlyBoundCache::invalidate()

@@ -24,6 +24,7 @@
 #include <gmock/gmock.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/texture_cache.h>
+#include <mir/graphics/texture.h>
 #include "mir/compositor/gl_renderer.h"
 #include "src/server/graphics/program_factory.h"
 #include <mir_test/fake_shared.h>
@@ -52,7 +53,12 @@ namespace
 
 struct MockTextureCache : public mg::TextureCache
 {
-    MOCK_METHOD1(load_texture, void(mg::Renderable const&));
+    MockTextureCache()
+    {
+        ON_CALL(*this, load_texture(testing::_))
+            .WillByDefault(testing::Return(std::make_shared<mg::Texture>())); 
+    }
+    MOCK_METHOD1(load_texture, std::shared_ptr<mg::Texture>(mg::Renderable const&));
     MOCK_METHOD0(invalidate, void());
     MOCK_METHOD0(release_live_texture_resources, void());
 };
@@ -166,7 +172,7 @@ public:
 
 }
 
-TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
+TEST_F(GLRenderer, render_is_done_in_sequence)
 {
     InSequence seq;
 
@@ -219,6 +225,41 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
     EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
 
     mc::GLRenderer renderer(program_factory, std::move(mock_texture_cache), display_area);
+    renderer.begin();
+    renderer.render(renderable_list);
+    renderer.end();
+}
+
+TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
+{
+    //'listening to the tests', it would be a bit easier to use a tessellator mock of some sort
+    struct OverriddenTessellateRenderer : public mc::GLRenderer
+    {
+        OverriddenTessellateRenderer(
+            mg::GLProgramFactory const& program_factory,
+            std::unique_ptr<mg::TextureCache> && texture_cache, 
+            mir::geometry::Rectangle const& display_area, unsigned int num_primitives) :
+            GLRenderer(program_factory, std::move(texture_cache), display_area),
+            num_primitives(num_primitives)
+        {
+        }
+
+        void tessellate(std::vector<Primitive>& primitives,
+                        mg::Renderable const&,
+                        mir::geometry::Size const&) const override
+        {
+            primitives.clear();
+            for(GLuint i=0; i < num_primitives; i++)
+                primitives.push_back({0,i%2,{}});
+        }
+        unsigned int num_primitives; 
+    };
+
+    int bind_count = 6;
+    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, _))
+        .Times(bind_count);
+
+    OverriddenTessellateRenderer renderer(program_factory, std::move(mock_texture_cache), display_area, bind_count);
     renderer.begin();
     renderer.render(renderable_list);
     renderer.end();
