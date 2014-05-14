@@ -91,17 +91,14 @@ mir::DefaultServerConfiguration::the_session_listener()
 }
 
 // TODO: Move
-#include <stdio.h>
 std::shared_ptr<mi::CursorListener>
 mir::DefaultServerConfiguration::the_cursor_listener()
 {
     return cursor_listener(
         [this]() -> std::shared_ptr<mi::CursorListener>
         {
-            printf("lol \n");
             auto cc = std::make_shared<mi::CursorController>(the_cursor(), the_default_cursor_image());
             cc->set_input_targets(the_input_targets());
-            printf("lol 2\n");
             return cc;
         });
 

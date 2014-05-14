@@ -182,11 +182,12 @@ mi::CursorController::~CursorController()
     input_targets->remove_observer(observer);
 }
 
-void mi::CursorController::set_cursor_image(std::shared_ptr<mg::CursorImage> const& image)
+void mi::CursorController::set_cursor_image_locked(std::lock_guard<std::mutex> const&,
+    std::shared_ptr<mg::CursorImage> const& image)
 {
     if (current_cursor == image)
     {
-            return;
+        return;
     }
 
     current_cursor = image;
@@ -196,33 +197,34 @@ void mi::CursorController::set_cursor_image(std::shared_ptr<mg::CursorImage> con
         cursor->hide();
 }
 
-void mi::CursorController::update_cursor_image()
+void mi::CursorController::update_cursor_image_locked(std::lock_guard<std::mutex> const& lg)
 {
     auto surface = topmost_surface_containing_point(input_targets, cursor_location);
     if (surface)
     {
-        set_cursor_image(surface->cursor_image());
+        set_cursor_image_locked(lg, surface->cursor_image());
     }
     else
     {
-        set_cursor_image(default_cursor_image);
+        set_cursor_image_locked(lg, default_cursor_image);
     }
 }
 
 void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
 {
+    std::lock_guard<std::mutex> lg(cursor_state_guard);
+
     assert(input_targets);
 
     cursor_location = geom::Point{geom::X{abs_x}, geom::Y{abs_y}};
     
-    update_cursor_image();
+    update_cursor_image_locked(lg);
 
     cursor->move_to(cursor_location);
 }
 
 void mi::CursorController::set_input_targets(std::shared_ptr<InputTargets> const& targets)
 {
-    // TODO: May need a guard on input targets;
     assert(!input_targets);
     input_targets = targets;
     
@@ -230,7 +232,8 @@ void mi::CursorController::set_input_targets(std::shared_ptr<InputTargets> const
     // pattern
     auto strong_observer = std::make_shared<Observer>([&]()
     {
-        update_cursor_image();
+        std::lock_guard<std::mutex> lg(cursor_state_guard);
+        update_cursor_image_locked(lg);
     });
     input_targets->add_observer(strong_observer);
     observer = strong_observer;

@@ -23,6 +23,7 @@
 #include "mir/geometry/point.h"
 
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -49,6 +50,7 @@ public:
 
     void cursor_moved_to(float abs_x, float abs_y);
     
+    // TODO: Remove
     // Needed to break initialization cycle in server configuration.
     void set_input_targets(std::shared_ptr<InputTargets> const& targets);
 
@@ -56,17 +58,16 @@ private:
     std::shared_ptr<graphics::Cursor> const cursor;
     std::shared_ptr<graphics::CursorImage> const default_cursor_image;
     std::shared_ptr<InputTargets> input_targets;
-    
-    // TODO: Mutex
+
+    std::mutex cursor_state_guard;
     geometry::Point cursor_location;
-    // TODO: Mutex
     std::shared_ptr<graphics::CursorImage> current_cursor;
 
     std::weak_ptr<scene::Observer> observer;
     
 
-    void update_cursor_image();
-    void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image);
+    void update_cursor_image_locked(std::lock_guard<std::mutex> const&);
+    void set_cursor_image_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<graphics::CursorImage> const& image);
 };
 
 }
