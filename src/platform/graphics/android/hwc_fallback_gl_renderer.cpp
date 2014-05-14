@@ -118,7 +118,6 @@ void mga::HWCFallbackGLRenderer::render(
                               &primitive.vertices[0].texcoord);
 
         texture_cache->load_texture(*renderable);
-
         glDrawArrays(primitive.type, 0, primitive.vertices.size());
     }
 

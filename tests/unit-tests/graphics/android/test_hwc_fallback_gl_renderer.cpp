@@ -19,6 +19,7 @@
 #include "src/platform/graphics/android/hwc_fallback_gl_renderer.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/gl_program_factory.h"
+#include "mir/graphics/primitive.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/stub_renderable.h"
@@ -56,6 +57,19 @@ public:
     MOCK_CONST_METHOD0(release_current, void());
 };
 
+class StubTextureCache : public mg::TextureCache
+{
+    void load_texture(mg::Renderable const&)
+    {
+    }
+    void invalidate()
+    {
+    }
+    void release_live_texture_resources()
+    {
+    }
+};
+
 class HWCFallbackGLRenderer : public ::testing::Test
 {
 public:
@@ -65,6 +79,9 @@ public:
         ON_CALL(mock_gl_program_factory,create_gl_program(_,_))
             .WillByDefault(Invoke([](std::string const, std::string const)
                 { return std::unique_ptr<mg::GLProgram>(new mtd::StubGLProgram); }));
+        ON_CALL(mock_gl_program_factory,create_texture_cache())
+            .WillByDefault(Invoke([]()
+                { return std::unique_ptr<mg::TextureCache>(new StubTextureCache); }));
 
         ON_CALL(mock_gl, glGetShaderiv(_,_,_))
             .WillByDefault(SetArgPointee<2>(GL_TRUE));
@@ -87,6 +104,7 @@ public:
     GLint const texcoord_attr_loc{3};
     GLint const tex_uniform_loc{4};
     GLint const texid{5};
+    size_t const stride{sizeof(mg::Vertex)};
 
     testing::NiceMock<MockGLProgramFactory> mock_gl_program_factory;
     testing::NiceMock<MockContext> mock_context;
@@ -106,7 +124,7 @@ TEST_F(HWCFallbackGLRenderer, compiles_and_sets_up_gl_program)
     EXPECT_CALL(mock_gl, glGetUniformLocation(_, StrEq("display_transform")));
     EXPECT_CALL(mock_gl, glGetAttribLocation(_, StrEq("position")));
     EXPECT_CALL(mock_gl, glGetAttribLocation(_, StrEq("texcoord")));
-    EXPECT_CALL(mock_gl, glGenTextures(1,_));
+//    EXPECT_CALL(mock_gl, glGenTextures(1,_));
     EXPECT_CALL(mock_gl, glGetUniformLocation(_, StrEq("tex")));
     EXPECT_CALL(mock_gl, glUniform1i(tex_uniform_loc, 0));
     EXPECT_CALL(mock_gl, glUseProgram(0));
@@ -158,14 +176,18 @@ Vertex to_vertex(geom::Point const& pos)
     };
 }
 
-MATCHER_P(MatchesVertices, vertices, "matches vertices")
+MATCHER_P2(MatchesVertices, vertices, stride, "matches vertices")
 {
-    int i{0};
-    auto arg_vertices = static_cast<GLfloat const*>(arg);
+    auto arg_vertices = static_cast<char const*>(arg);
+//        arg_vertices+=4;//stride;
+
     for(auto const& vert : vertices)
-    { 
-        EXPECT_THAT(arg_vertices[i++], testing::FloatEq(vert.x));
-        EXPECT_THAT(arg_vertices[i++], testing::FloatEq(vert.y));
+    {
+        GLfloat *f = (GLfloat*) arg_vertices;
+        //(void) v; (void) arg_vertices; 
+        EXPECT_THAT(f[0], testing::FloatEq(vert.x));
+        EXPECT_THAT(f[1], testing::FloatEq(vert.y));
+        arg_vertices+=stride;
     } 
     return !(::testing::Test::HasFailure());
 }
@@ -178,29 +200,32 @@ TEST_F(HWCFallbackGLRenderer, computes_vertex_coordinates_correctly)
     geom::Rectangle rect2{{150,250},{150, 90}};
     
     mg::RenderableList renderlist{
-        std::make_shared<mtd::StubRenderable>(rect1), 
+        std::make_shared<mtd::StubRenderable>(rect1),
         std::make_shared<mtd::StubRenderable>(rect2)
     };
 
     std::vector<Vertex> expected_vertices1 {
         to_vertex(rect1.top_left),
-        to_vertex(rect1.top_right()),
         to_vertex(rect1.bottom_left()),
+        to_vertex(rect1.top_right()),
         to_vertex(rect1.bottom_right()),
     };
     std::vector<Vertex> expected_vertices2 {
         to_vertex(rect2.top_left),
-        to_vertex(rect2.top_right()),
         to_vertex(rect2.bottom_left()),
+        to_vertex(rect2.top_right()),
         to_vertex(rect2.bottom_right()),
     };
 
     InSequence seq;
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(_,_,_,_,_,_));
     EXPECT_CALL(mock_gl, glVertexAttribPointer(
-        position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, MatchesVertices(expected_vertices1)));
+        position_attr_loc, 3, GL_FLOAT, GL_FALSE, stride, MatchesVertices(expected_vertices1, stride)));
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(_,_,_,_,_,_))
+        .Times(1);
     EXPECT_CALL(mock_gl, glVertexAttribPointer(
-        position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, MatchesVertices(expected_vertices2)));
+        position_attr_loc, 3, GL_FLOAT, GL_FALSE, stride, MatchesVertices(expected_vertices2, stride)));
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(_,_,_,_,_,_))
+        .Times(1);
 
     mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
     glprogram.render(renderlist, mock_context_s);
@@ -227,8 +252,8 @@ TEST_F(HWCFallbackGLRenderer, computes_texture_coordinates_correctly)
 
     EXPECT_CALL(mock_gl, glVertexAttribPointer(_,_,_,_,_,_)).Times(AnyNumber());
     EXPECT_CALL(mock_gl, glVertexAttribPointer(
-        texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, MatchesVertices(expected_texcoord)))
-        .Times(1);
+        texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, stride, MatchesVertices(expected_texcoord, stride)))
+        .Times(2);
 
     mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
     glprogram.render(renderlist, mock_context_s);
@@ -251,18 +276,21 @@ TEST_F(HWCFallbackGLRenderer, executes_render_in_sequence)
     EXPECT_CALL(mock_gl, glClear(GL_COLOR_BUFFER_BIT));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_loc));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_loc));
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, _));
-    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, texid));
 
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, _));
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT, GL_FALSE, _, _));
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, _, _));
+    //bind
     EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
-    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_loc, 2, GL_FLOAT, GL_FALSE, 0, _));
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT, GL_FALSE, _, _));
+    EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, _, _));
+    //bind
     EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_loc));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_loc));
     EXPECT_CALL(mock_context_s, swap_buffers());
+    //invalidate
     EXPECT_CALL(mock_gl, glUseProgram(0));
 
     glprogram.render(renderlist, mock_context_s);
