@@ -438,7 +438,7 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_mir_abort)
         // Under valgrind the server process is reported as being terminated
         // by SIGKILL because of multithreading madness.
         // TODO: Investigate if we can do better than this workaround
-        EXPECT_TRUE(result.signal == SIGABRT);
+        EXPECT_TRUE(result.signal == SIGABRT || result.signal == SIGKILL);
 
         EXPECT_FALSE(file_exists(server_config.the_socket_file()));
     });
