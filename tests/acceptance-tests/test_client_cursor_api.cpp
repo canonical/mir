@@ -42,8 +42,6 @@
 
 #include <assert.h>
 
-// TODO: Clean up cursor conf leaks
-
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -252,12 +250,15 @@ struct CursorTestServerConfiguration : mtf::InputTestingServerConfiguration
         // Clear any states applied during server initialization.
         Mock::VerifyAndClearExpectations(&cursor);
         expect_cursor_states(cursor, expectations_satisfied);
+        
+        // We are only interested in the cursor image changes, not
+        // the synthetic motion.
+        EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
 
         synthesize_cursor_motion(this);
         expectations_satisfied.wait_for_at_most_seconds(60);
         
-        // TODO: Required?
-//        Mock::VerifyAndClearExpectations(&cursor);
+        Mock::VerifyAndClearExpectations(&cursor);
 
         EXPECT_CALL(cursor, show(_)).Times(AnyNumber()); // Client shutdown
         for (int i = 0; i < number_of_clients; i++)
@@ -294,7 +295,9 @@ TEST_F(TestClientCursorAPI, client_cursor_request_is_made_surface_data)
     CursorSettingClient client1_conf(test_client_name, client_ready_fence, client_may_exit_fence,
         [](MirSurface *surface)
         {
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
+            auto conf = mir_cursor_configuration_from_name(client_1_cursor.c_str());
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_cursor_configuration_destroy(conf);
         });
     launch_client_process(client1_conf);
 }
@@ -332,8 +335,9 @@ TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
         [](MirSurface *surface)
         {
             // Disable cursor
-            mir_wait_for(mir_surface_configure_cursor(surface, 
-                mir_cursor_configuration_from_name(mir_disabled_cursor_name)));
+            auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_cursor_configuration_destroy(conf);
         });
     launch_client_process(client_conf);
 }
@@ -371,8 +375,9 @@ TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
         [](MirSurface *surface)
         {
             // Disable cursor
-            mir_wait_for(mir_surface_configure_cursor(surface, 
-                mir_cursor_configuration_from_name(mir_disabled_cursor_name)));
+            auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_cursor_configuration_destroy(conf);
         });
     launch_client_process(client_conf);
 }
@@ -415,14 +420,17 @@ TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
     CursorSettingClient client1_conf(test_client_name_1, client_ready_fence, client_may_exit_fence,
         [](MirSurface *surface)
         {
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
+            auto conf = mir_cursor_configuration_from_name(client_1_cursor.c_str());
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_cursor_configuration_destroy(conf);
         });
     launch_client_process(client1_conf);
     CursorSettingClient client2_conf(test_client_name_2, client_ready_fence, client_may_exit_fence,
         [](MirSurface *surface)
         {
-            // Disable cursor
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_2_cursor.c_str())));
+            auto conf = mir_cursor_configuration_from_name(client_2_cursor.c_str());
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_cursor_configuration_destroy(conf);
         });
     launch_client_process(client2_conf);
 }
@@ -466,13 +474,17 @@ TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
     CursorSettingClient client1_conf(test_client_name_1, client_ready_fence, client_may_exit_fence,
         [](MirSurface *surface)
         {
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
+            auto conf = mir_cursor_configuration_from_name(client_1_cursor.c_str());
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_cursor_configuration_destroy(conf);
         });
     launch_client_process(client1_conf);
     CursorSettingClient client2_conf(test_client_name_2, client_ready_fence, client_may_exit_fence,
         [](MirSurface *surface)
         {
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_2_cursor.c_str())));
+            auto conf = mir_cursor_configuration_from_name(client_2_cursor.c_str());
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_cursor_configuration_destroy(conf);
         });
 
     launch_client_process(client2_conf);
@@ -513,9 +525,15 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
         {
             client_ready_fence.signal_ready();
             client_may_change_cursor.wait_for_signal_ready_for();
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
-            mir_wait_for(mir_surface_configure_cursor(surface, 
-                mir_cursor_configuration_from_name(mir_disabled_cursor_name)));
+            
+            auto conf1 = mir_cursor_configuration_from_name(client_1_cursor.c_str());
+            auto conf2 = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
+
+            mir_wait_for(mir_surface_configure_cursor(surface, conf1));
+            mir_wait_for(mir_surface_configure_cursor(surface, conf2));
+
+            mir_cursor_configuration_destroy(conf1);
+            mir_cursor_configuration_destroy(conf2);
         });
     launch_client_process(client1_conf);
 }
