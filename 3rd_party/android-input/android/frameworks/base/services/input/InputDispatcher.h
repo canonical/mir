@@ -387,11 +387,9 @@ public:
  *     A 'LockedInterruptible' method may called a 'Locked' method, but NOT vice-versa.
  */
 class InputDispatcher : public InputDispatcherInterface {
-protected:
-    virtual ~InputDispatcher();
-
 public:
-    explicit InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy, std::shared_ptr<mir::input::InputReport> const& input_report);
+    virtual ~InputDispatcher();
+    explicit InputDispatcher(std::shared_ptr<InputDispatcherPolicyInterface> const& policy, std::shared_ptr<mir::input::InputReport> const& input_report);
 
     virtual void setInputEnumerator(sp<InputEnumerator> const& enumerator);
 
@@ -862,7 +860,7 @@ private:
         DROP_REASON_STALE = 5
     };
 
-    sp<InputDispatcherPolicyInterface> mPolicy;
+    std::shared_ptr<InputDispatcherPolicyInterface> mPolicy;
     InputDispatcherConfiguration mConfig;
 
     Mutex mLock;
@@ -1122,13 +1120,13 @@ private:
 /* Enqueues and dispatches input events, endlessly. */
 class InputDispatcherThread : public Thread {
 public:
-    explicit InputDispatcherThread(const sp<InputDispatcherInterface>& dispatcher);
+    explicit InputDispatcherThread(std::shared_ptr<InputDispatcherInterface> const& dispatcher);
     ~InputDispatcherThread();
 
 private:
     virtual bool threadLoop();
 
-    sp<InputDispatcherInterface> mDispatcher;
+    std::shared_ptr<InputDispatcherInterface> mDispatcher;
 };
 
 } // namespace android

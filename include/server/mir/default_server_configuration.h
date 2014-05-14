@@ -24,6 +24,14 @@
 #include <memory>
 #include <string>
 
+namespace android
+{
+class InputDispatcherInterface;
+class InputDispatcherPolicyInterface;
+}
+
+namespace droidinput = android;
+
 namespace mir
 {
 namespace compositor
@@ -81,7 +89,6 @@ class SurfaceCoordinator;
 class SurfaceConfigurator;
 class SurfaceStackModel;
 class SurfaceStack;
-class InputRegistrar;
 class SceneReport;
 }
 namespace graphics
@@ -106,11 +113,15 @@ class InputManager;
 class CompositeEventFilter;
 class InputChannelFactory;
 class InputConfiguration;
-class InputDispatcherConfiguration;
 class CursorListener;
 class InputRegion;
 class NestedInputRelay;
 class EventHandler;
+namespace android
+{
+class InputRegistrar;
+class InputThread;
+}
 }
 
 namespace logging
@@ -147,7 +158,6 @@ public:
     virtual std::shared_ptr<DisplayChanger>         the_display_changer();
     virtual std::shared_ptr<graphics::Platform>     the_graphics_platform();
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
-    virtual std::shared_ptr<input::InputDispatcherConfiguration> the_input_dispatcher_configuration();
     virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher();
     /** @} */
 
@@ -265,17 +275,29 @@ protected:
         std::shared_ptr<frontend::Shell> const& shell,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
+    /** @name input dispatcher related configuration
+     *  @{ */
+    virtual std::shared_ptr<input::android::InputRegistrar> the_input_registrar();
+    virtual std::shared_ptr<droidinput::InputDispatcherInterface> the_android_input_dispatcher();
+    virtual std::shared_ptr<input::android::InputThread> the_dispatcher_thread();
+    virtual std::shared_ptr<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
+    virtual bool is_key_repeat_enabled() const;
+    /** @} */
+
+    CachedPtr<input::android::InputRegistrar> input_registrar;
+    CachedPtr<input::android::InputThread> dispatcher_thread;
+    CachedPtr<droidinput::InputDispatcherInterface> android_input_dispatcher;
+    CachedPtr<droidinput::InputDispatcherPolicyInterface> android_dispatcher_policy;
+
     CachedPtr<frontend::Connector>   connector;
 
     CachedPtr<input::InputConfiguration> input_configuration;
-    CachedPtr<input::InputDispatcherConfiguration> input_dispatcher_configuration;
 
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputRegion>     input_region;
-    CachedPtr<scene::InputRegistrar> input_registrar;
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<graphics::Platform>     graphics_platform;

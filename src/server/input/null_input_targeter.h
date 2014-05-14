@@ -16,26 +16,23 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "null_input_dispatcher_configuration.h"
+#ifndef MIR_INPUT_NULL_INPUT_TARGETER_H_
+#define MIR_INPUT_NULL_INPUT_TARGETER_H_
 
-#include "null_input_dispatcher.h"
-
-#include "mir/input/input_dispatcher.h"
 #include "mir/shell/input_targeter.h"
 
-
-namespace mi = mir::input;
-namespace msh = mir::shell;
-
-namespace
+namespace mir
 {
+namespace input
+{
+class InputChannel;
 
-struct NullInputTargeter : public msh::InputTargeter
+struct NullInputTargeter : public shell::InputTargeter
 {
     NullInputTargeter() = default;
     virtual ~NullInputTargeter() noexcept(true) = default;
 
-    void focus_changed(std::shared_ptr<mi::InputChannel const> const&) override
+    void focus_changed(std::shared_ptr<InputChannel const> const&) override
     {
     }
 
@@ -45,19 +42,6 @@ struct NullInputTargeter : public msh::InputTargeter
 };
 
 }
-
-std::shared_ptr<msh::InputTargeter> mi::NullInputDispatcherConfiguration::the_input_targeter()
-{
-    return std::make_shared<NullInputTargeter>();
 }
 
-std::shared_ptr<mi::InputDispatcher> mi::NullInputDispatcherConfiguration::the_input_dispatcher()
-{
-    return std::make_shared<mi::NullInputDispatcher>();
-}
-
-bool mi::NullInputDispatcherConfiguration::is_key_repeat_enabled() const
-{
-    return true;
-}
-
+#endif

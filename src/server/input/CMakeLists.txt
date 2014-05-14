@@ -7,7 +7,6 @@ set(
 
   null_input_configuration.cpp
   null_input_dispatcher.cpp
-  null_input_dispatcher_configuration.cpp
   nested_input_configuration.cpp
   display_input_region.cpp
   vt_filter.cpp

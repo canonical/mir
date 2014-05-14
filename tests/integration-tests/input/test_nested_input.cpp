@@ -18,20 +18,22 @@
 
 #include "src/server/input/nested_input_configuration.h"
 #include "src/server/report/null/input_report.h"
-#include "mir/input/input_region.h"
-#include "mir/input/cursor_listener.h"
 #include "mir/input/input_manager.h"
 #include "mir/input/input_dispatcher.h"
-#include "src/server/input/android/input_dispatcher_configuration.h"
+#include "src/server/input/android/android_input_dispatcher.h"
+#include "src/server/input/android/event_filter_dispatcher_policy.h"
+#include "src/server/input/android/common_input_thread.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/geometry/rectangle.h"
 #include "mir/raii.h"
 
 #include "mir_test_doubles/stub_input_targets.h"
-#include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/mock_event_filter.h"
+#include "mir_test_doubles/stub_input_enumerator.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/client_event_matchers.h"
+
+#include "InputEnumerator.h"
+#include "InputDispatcher.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -40,50 +42,30 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
-namespace geom = mir::geometry;
-
-namespace
-{
-struct NullInputRegion : mi::InputRegion
-{
-    geom::Rectangle bounding_rectangle() override
-    {
-        return geom::Rectangle();
-    }
-
-    void confine(geom::Point& /*point*/) override
-    {
-    }
-};
-
-struct NullCursorListener : mi::CursorListener
-{
-    void cursor_moved_to(float, float) override {}
-};
-
-}
 
 TEST(NestedInputTest, applies_event_filter_on_relayed_event)
 {
     using namespace testing;
 
     mtd::MockEventFilter mock_event_filter;
-    mtd::StubInputTargets targets;
-    mtd::StubScene stub_scene;
-    mia::InputDispatcherConfiguration input_dispatcher_conf{
-        mt::fake_shared(mock_event_filter),
-        mir::report::null_input_report(),
-        mt::fake_shared(stub_scene),
-        mt::fake_shared(targets)};
-    auto const dispatcher = input_dispatcher_conf.the_input_dispatcher();
+    bool repeat_is_disabled = false;
+    auto null_report = mir::report::null_input_report();
+    mia::EventFilterDispatcherPolicy policy(mt::fake_shared(mock_event_filter), repeat_is_disabled);
+    droidinput::InputDispatcher android_dispatcher(mt::fake_shared(policy), null_report);
+    mia::CommonInputThread input_thread("InputDispatcher",
+                                        new droidinput::InputDispatcherThread(
+                                            mt::fake_shared(android_dispatcher)));
+    android_dispatcher.setInputEnumerator(new mtd::StubInputEnumerator);
+
+    mia::AndroidInputDispatcher dispatcher(mt::fake_shared(android_dispatcher), mt::fake_shared(input_thread));
 
     mi::NestedInputConfiguration input_conf;
 
     auto const input_manager = input_conf.the_input_manager();
 
     auto const with_running_input_manager = mir::raii::paired_calls(
-        [&] { input_manager->start(); dispatcher->start();},
-        [&] { dispatcher->stop(); input_manager->stop(); });
+        [&] { input_manager->start(); dispatcher.start();},
+        [&] { dispatcher.stop(); input_manager->stop(); });
 
     MirEvent e;
     memset(&e, 0, sizeof(MirEvent));
@@ -103,5 +85,5 @@ TEST(NestedInputTest, applies_event_filter_on_relayed_event)
     EXPECT_CALL(mock_event_filter, handle(mt::MirKeyEventMatches(&e)))
         .WillOnce(Return(true));
 
-    dispatcher->dispatch(e);
+    dispatcher.dispatch(e);
 }

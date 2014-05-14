@@ -18,17 +18,26 @@
 
 #include "mir/default_server_configuration.h"
 
-#include "android/input_dispatcher_configuration.h"
+#include "android/android_input_dispatcher.h"
+#include "android/android_input_targeter.h"
+#include "android/common_input_thread.h"
+#include "android/android_input_registrar.h"
+#include "android/android_input_target_enumerator.h"
+#include "android/event_filter_dispatcher_policy.h"
 #include "display_input_region.h"
 #include "event_filter_chain.h"
 #include "nested_input_configuration.h"
 #include "null_input_configuration.h"
-#include "null_input_dispatcher_configuration.h"
+#include "null_input_dispatcher.h"
+#include "null_input_targeter.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
+#include "mir/compositor/scene.h"
 #include "mir/report/legacy_input_report.h"
+
+#include <InputDispatcher.h>
 
 
 namespace mi = mir::input;
@@ -55,25 +64,6 @@ mir::DefaultServerConfiguration::the_composite_event_filter()
             std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {default_filter};
             return std::make_shared<mi::EventFilterChain>(filter_list);
         });
-}
-
-std::shared_ptr<mi::InputDispatcherConfiguration>
-mir::DefaultServerConfiguration::the_input_dispatcher_configuration()
-{
-    return input_dispatcher_configuration(
-    [this]() -> std::shared_ptr<mi::InputDispatcherConfiguration>
-    {
-        auto const options = the_options();
-        if (!options->get<bool>(options::enable_input_opt))
-            return std::make_shared<mi::NullInputDispatcherConfiguration>();
-        else
-            return std::make_shared<mia::InputDispatcherConfiguration>(
-                the_composite_event_filter(),
-                the_input_report(),
-                the_scene(),
-                the_input_targets()
-                );
-    });
 }
 
 std::shared_ptr<mi::InputConfiguration>
@@ -104,13 +94,83 @@ mir::DefaultServerConfiguration::the_input_configuration()
     });
 }
 
+std::shared_ptr<droidinput::InputDispatcherInterface>
+mir::DefaultServerConfiguration::the_android_input_dispatcher()
+{
+    return android_input_dispatcher(
+        [this]()
+        {
+            return std::make_shared<droidinput::InputDispatcher>(the_dispatcher_policy(), the_input_report());
+        });
+}
+
+std::shared_ptr<mia::InputRegistrar>
+mir::DefaultServerConfiguration::the_input_registrar()
+{
+    return input_registrar(
+        [this]()
+        {
+            return std::make_shared<mia::InputRegistrar>(the_android_input_dispatcher(), the_scene());
+        });
+}
+
+std::shared_ptr<msh::InputTargeter>
+mir::DefaultServerConfiguration::the_input_targeter()
+{
+    return input_targeter(
+        [this]() -> std::shared_ptr<msh::InputTargeter>
+        {
+            auto const options = the_options();
+            if (!options->get<bool>(options::enable_input_opt))
+                return std::make_shared<mi::NullInputTargeter>();
+            else
+                return std::make_shared<mia::InputTargeter>(the_android_input_dispatcher(), the_input_registrar());
+        });
+}
+
+std::shared_ptr<mia::InputThread>
+mir::DefaultServerConfiguration::the_dispatcher_thread()
+{
+    return dispatcher_thread(
+        [this]()
+        {
+            return std::make_shared<mia::CommonInputThread>("InputDispatcher",
+                                                       new droidinput::InputDispatcherThread(the_android_input_dispatcher()));
+        });
+}
+
+std::shared_ptr<droidinput::InputDispatcherPolicyInterface>
+mir::DefaultServerConfiguration::the_dispatcher_policy()
+{
+    return android_dispatcher_policy(
+        [this]()
+        {
+            return std::make_shared<mia::EventFilterDispatcherPolicy>(the_composite_event_filter(), is_key_repeat_enabled());
+        });
+}
+
+bool mir::DefaultServerConfiguration::is_key_repeat_enabled() const
+{
+    return true;
+}
+
 std::shared_ptr<mi::InputDispatcher>
 mir::DefaultServerConfiguration::the_input_dispatcher()
 {
     return input_dispatcher(
         [this]() -> std::shared_ptr<mi::InputDispatcher>
         {
-            return the_input_dispatcher_configuration()->the_input_dispatcher();
+            auto const options = the_options();
+            if (!options->get<bool>(options::enable_input_opt))
+                return std::make_shared<mi::NullInputDispatcher>();
+            else
+            {
+                auto dispatcher = the_android_input_dispatcher();
+                auto input_targets = the_input_targets();
+                auto input_registrar = the_input_registrar();
+                dispatcher->setInputEnumerator(new mia::InputTargetEnumerator(input_targets, input_registrar));
+                return std::make_shared<mia::AndroidInputDispatcher>(dispatcher, the_dispatcher_thread());
+            }
         });
 }
 
@@ -123,15 +183,6 @@ mir::DefaultServerConfiguration::the_input_manager()
             if (the_options()->get<std::string>(options::legacy_input_report_opt) == options::log_opt_value)
                     mr::legacy_input::initialize(the_logger());
             return the_input_configuration()->the_input_manager();
-        });
-}
-
-std::shared_ptr<msh::InputTargeter> mir::DefaultServerConfiguration::the_input_targeter()
-{
-    return input_targeter(
-        [&]() -> std::shared_ptr<msh::InputTargeter>
-        {
-            return the_input_dispatcher_configuration()->the_input_targeter();
         });
 }
 

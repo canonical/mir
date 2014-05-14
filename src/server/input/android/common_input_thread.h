@@ -16,30 +16,42 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_NULL_INPUT_DISPATCHER_CONFIGURATION_H_
-#define MIR_INPUT_NULL_INPUT_DISPATCHER_CONFIGURATION_H_
+#ifndef MIR_INPUT_ANDROID_COMMON_INPUT_THREAD_H_
+#define MIR_INPUT_ANDROID_COMMON_INPUT_THREAD_H_
 
-#include "mir/input/input_dispatcher_configuration.h"
+#include "android_input_thread.h"
 
-namespace mir
+#include <utils/StrongPointer.h>
+#include <std/Thread.h>
+
+#include <string>
+
+namespace droidinput = android;
+
+namespace  mir
 {
 namespace input
 {
-
-class NullInputDispatcherConfiguration : public InputDispatcherConfiguration
+namespace android
+{
+class CommonInputThread : public InputThread
 {
 public:
-    NullInputDispatcherConfiguration() = default;
-    std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
-    std::shared_ptr<InputDispatcher> the_input_dispatcher() override;
-    bool is_key_repeat_enabled() const override;
-protected:
-    NullInputDispatcherConfiguration(const NullInputDispatcherConfiguration&) = delete;
-    NullInputDispatcherConfiguration& operator=(const NullInputDispatcherConfiguration&) = delete;
+    CommonInputThread(std::string const& name, droidinput::sp<droidinput::Thread> const& thread);
+    void start();
+    void request_stop();
+    void join();
+
+private:
+    CommonInputThread(const CommonInputThread&) = delete;
+    CommonInputThread& operator=(const CommonInputThread&) = delete;
+
+    std::string const name;
+    droidinput::sp<droidinput::Thread> const thread;
 };
 
 }
 }
+}
 
 #endif
-

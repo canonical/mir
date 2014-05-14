@@ -144,6 +144,11 @@ struct FakeEventHubServerConfig : TestingServerConfiguration
         return DefaultServerConfiguration::the_input_targeter();
     }
 
+    std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override
+    {
+        return DefaultServerConfiguration::the_input_dispatcher();
+    }
+
     mia::FakeEventHub* the_fake_event_hub()
     {
         the_input_configuration();
