@@ -212,7 +212,9 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
     buffers_sent_to_compositor.push_back(current_compositor_buffer);
     current_buffer_users.push_back(user_id);
 
-    auto const acquired_buffer = buffer_for(current_compositor_buffer, buffers);
+    std::shared_ptr<mg::Buffer> const acquired_buffer =
+        buffer_for(current_compositor_buffer, buffers);
+
     if (buffer_to_release)
         release(buffer_to_release, std::move(lock));
 
