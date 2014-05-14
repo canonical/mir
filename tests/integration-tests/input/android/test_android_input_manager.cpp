@@ -251,18 +251,18 @@ public:
                                         std::shared_ptr<mc::Scene> const& scene,
                                         std::shared_ptr<mi::InputTargets> const& input_targets)
         : InputDispatcherConfiguration({}, input_report, scene, input_targets),
-        dispatcher_policy(new MockDispatcherPolicy(filter))
+        dispatcher_policy(std::make_shared<MockDispatcherPolicy>(filter))
     {}
-    droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy() override
+    std::shared_ptr<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy() override
     {
         return dispatcher_policy;
     }
-    droidinput::sp<MockDispatcherPolicy> the_mock_dispatcher_policy()
+    std::shared_ptr<MockDispatcherPolicy> the_mock_dispatcher_policy()
     {
         return dispatcher_policy;
     }
 
-    droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
+    std::shared_ptr<MockDispatcherPolicy> dispatcher_policy;
 };
 
 struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
@@ -314,7 +314,7 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     std::shared_ptr<TestingInputDispatcherConfiguration> dispatcher_conf;
     std::shared_ptr<mtd::FakeEventHubInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
-    droidinput::sp<MockDispatcherPolicy> dispatcher_policy;
+    std::shared_ptr<MockDispatcherPolicy> dispatcher_policy;
 
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<mi::InputDispatcher> dispatcher;
