@@ -418,6 +418,16 @@ void mf::SessionMediator::screencast_buffer(
     done->Run();
 }
 
+void mf::SessionMediator::configure_cursor(
+    google::protobuf::RpcController*,
+    mir::protobuf::CursorSetting const* /* cursor_request */,
+    mir::protobuf::Void* /* void_response */,
+    google::protobuf::Closure* /* done */)
+{
+    // TODO: Pass cursor settings down to surface.
+    BOOST_THROW_EXCEPTION(std::logic_error("Cursor API not yet implemented"));
+}
+
 void mf::SessionMediator::new_fds_for_trusted_clients(
     ::google::protobuf::RpcController* ,
     ::mir::protobuf::SocketFDRequest const* parameters,

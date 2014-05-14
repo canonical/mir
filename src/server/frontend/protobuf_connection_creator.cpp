@@ -18,6 +18,7 @@
 
 #include "mir/frontend/protobuf_connection_creator.h"
 
+#include "mir/frontend/session_credentials.h"
 #include "event_sender.h"
 #include "protobuf_message_processor.h"
 #include "protobuf_responder.h"
@@ -82,7 +83,7 @@ void mf::ProtobufConnectionCreator::create_connection_for(
 std::shared_ptr<mfd::MessageProcessor>
 mf::ProtobufConnectionCreator::create_processor(
     std::shared_ptr<mfd::ProtobufMessageSender> const& sender,
-    std::shared_ptr<protobuf::DisplayServer> const& display_server,
+    std::shared_ptr<detail::DisplayServer> const& display_server,
     std::shared_ptr<mf::MessageProcessorReport> const& report) const
 {
     return std::make_shared<detail::ProtobufMessageProcessor>(

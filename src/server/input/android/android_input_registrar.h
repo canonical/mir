@@ -21,7 +21,7 @@
 
 #include "android_window_handle_repository.h"
 
-#include "mir/scene/input_registrar.h"
+#include "mir/scene/observer.h"
 
 #include <utils/StrongPointer.h>
 
@@ -38,29 +38,30 @@ namespace droidinput = android;
 
 namespace mir
 {
-namespace input
+namespace scene
 {
 class Surface;
+}
+namespace input
+{
 namespace android
 {
 class InputConfiguration;
 class InputTargeter;
 
-class InputRegistrar : public scene::InputRegistrar, public WindowHandleRepository
+class InputRegistrar : public scene::Observer, public WindowHandleRepository
 {
 public:
     explicit InputRegistrar(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher);
     virtual ~InputRegistrar() noexcept(true);
 
-    void input_channel_opened(std::shared_ptr<input::InputChannel> const& opened_channel,
-                              std::shared_ptr<input::Surface> const& surface,
-                              InputReceptionMode mode);
-
-    void input_channel_closed(std::shared_ptr<input::InputChannel> const& closed_channel);
-
+    void surface_added(scene::Surface* surface) override;
+    void surface_removed(scene::Surface* surface) override;
+    void surfaces_reordered() override;
+    void surface_exists(scene::Surface* surface) override;
+    void end_observation() override;
 
     virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_channel(std::shared_ptr<input::InputChannel const> const& channel);
-
 private:
     droidinput::sp<droidinput::InputDispatcherInterface> const input_dispatcher;
 

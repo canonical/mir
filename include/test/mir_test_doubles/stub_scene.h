@@ -16,30 +16,36 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_NULL_INPUT_DISPATCHER_CONFIGURATION_H_
-#define MIR_INPUT_NULL_INPUT_DISPATCHER_CONFIGURATION_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SCENE_H_
+#define MIR_TEST_DOUBLES_STUB_SCENE_H_
 
-#include "mir/input/input_dispatcher_configuration.h"
+#include "mir/compositor/scene.h"
+#include <gmock/gmock.h>
 
 namespace mir
 {
-namespace input
+namespace test
+{
+namespace doubles
 {
 
-class NullInputDispatcherConfiguration : public InputDispatcherConfiguration
+class StubScene : public compositor::Scene
 {
 public:
-    NullInputDispatcherConfiguration() = default;
-    std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
-    std::shared_ptr<InputDispatcher> the_input_dispatcher() override;
-    bool is_key_repeat_enabled() const override;
-protected:
-    NullInputDispatcherConfiguration(const NullInputDispatcherConfiguration&) = delete;
-    NullInputDispatcherConfiguration& operator=(const NullInputDispatcherConfiguration&) = delete;
+    graphics::RenderableList renderable_list_for(void const*) const override
+    {
+          return {};
+    }
+    void add_observer(std::shared_ptr<scene::Observer> const&) override
+    {
+    }
+    void remove_observer(std::weak_ptr<scene::Observer> const&) override
+    {
+    }
 };
 
-}
-}
+} // namespace doubles
+} // namespace test
+} // namespace mir
 
-#endif
-
+#endif /* MIR_TEST_DOUBLES_STUB_SCENE_H_ */

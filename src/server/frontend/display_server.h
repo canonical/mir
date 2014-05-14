@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,26 +13,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_MAIN_LOOP_H_
-#define MIR_MAIN_LOOP_H_
+#ifndef MIR_FRONTEND_DETAIL_DISPLAY_SERVER_H_
+#define MIR_FRONTEND_DETAIL_DISPLAY_SERVER_H_
 
-#include "mir/graphics/event_handler_register.h"
-#include "mir/server_action_queue.h"
+#include "mir_protobuf.pb.h"
 
 namespace mir
 {
-
-class MainLoop : public graphics::EventHandlerRegister,
-                 public ServerActionQueue
+namespace frontend
+{
+namespace detail
+{
+// TODO We will need to extend the generated DisplayServer interface.
+// But that's in the next MP.
+class DisplayServer : public mir::protobuf::DisplayServer
 {
 public:
-    virtual void run() = 0;
-    virtual void stop() = 0;
+    using mir::protobuf::DisplayServer::DisplayServer;
 };
-
+}
+}
 }
 
-#endif /* MIR_MAIN_LOOP_H_ */
+#endif /* MIR_FRONTEND_DETAIL_DISPLAY_SERVER_H_ */

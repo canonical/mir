@@ -18,6 +18,7 @@
 
 #include "socket_messenger.h"
 #include "mir/frontend/client_constants.h"
+#include "mir/frontend/session_credentials.h"
 
 #include <errno.h>
 #include <string.h>
@@ -37,7 +38,7 @@ mfd::SocketMessenger::SocketMessenger(std::shared_ptr<ba::local::stream_protocol
 
 mf::SessionCredentials mfd::SocketMessenger::client_creds()
 {
-    return mf::SessionCredentials{socket->native_handle()};
+    return mf::SessionCredentials::from_socket_fd(socket->native_handle());
 }
 
 void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& fd_set)

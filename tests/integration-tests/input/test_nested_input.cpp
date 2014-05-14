@@ -29,6 +29,7 @@
 #include "mir/raii.h"
 
 #include "mir_test_doubles/stub_input_targets.h"
+#include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/client_event_matchers.h"
@@ -69,16 +70,19 @@ TEST(NestedInputTest, applies_event_filter_on_relayed_event)
 
     mi::NestedInputRelay nested_input_relay;
     mtd::MockEventFilter mock_event_filter;
+    mtd::StubInputTargets targets;
+    mtd::StubScene stub_scene;
     mia::InputDispatcherConfiguration input_dispatcher_conf{
         mt::fake_shared(mock_event_filter),
-        mir::report::null_input_report()};
+        mir::report::null_input_report(),
+        mt::fake_shared(stub_scene),
+        mt::fake_shared(targets)};
     auto const dispatcher = input_dispatcher_conf.the_input_dispatcher();
 
     mi::NestedInputConfiguration input_conf{
         mt::fake_shared(nested_input_relay),
         mt::fake_shared(input_dispatcher_conf)};
 
-    input_dispatcher_conf.set_input_targets(std::make_shared<mtd::StubInputTargets>());
     auto const input_manager = input_conf.the_input_manager();
 
     auto const with_running_input_manager = mir::raii::paired_calls(

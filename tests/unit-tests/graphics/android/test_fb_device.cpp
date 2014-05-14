@@ -19,6 +19,7 @@
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "src/platform/graphics/android/fb_device.h"
+#include "src/platform/graphics/android/overlay_gl_compositor.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_egl.h"
@@ -27,6 +28,8 @@
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/mock_render_function.h"
 #include "mir_test_doubles/mock_swapping_gl_context.h"
+#include "mir_test_doubles/stub_renderable_list_compositor.h"
+#include "mir_test_doubles/mock_renderable_list_compositor.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -63,7 +66,7 @@ struct FBDevice : public ::testing::Test
     mtd::MockSwappingGLContext mock_context;
 };
 
-TEST_F(FBDevice, render_overlays_via_gl)
+TEST_F(FBDevice, prepares_overlays_by_rendering)
 {
     auto renderable1 = std::make_shared<mtd::StubRenderable>();
     auto renderable2 = std::make_shared<mtd::StubRenderable>();
@@ -73,20 +76,11 @@ TEST_F(FBDevice, render_overlays_via_gl)
         renderable2
     };
 
-    mtd::MockRenderFunction mock_call_counter;
-    testing::Sequence seq;
-    EXPECT_CALL(mock_call_counter, called(testing::Ref(*renderable1)))
-        .InSequence(seq);
-    EXPECT_CALL(mock_call_counter, called(testing::Ref(*renderable2)))
-        .InSequence(seq);
-    EXPECT_CALL(mock_context, swap_buffers())
-        .InSequence(seq);
-
+    mtd::MockRenderableListCompositor mock_compositor;
+    EXPECT_CALL(mock_compositor, render(testing::Ref(renderlist),testing::_))
+        .Times(1);
     mga::FBDevice fbdev(fb_hal_mock);
-    fbdev.render_gl_and_overlays(mock_context, renderlist, [&](mg::Renderable const& renderable)
-    {
-        mock_call_counter.called(renderable);
-    });
+    fbdev.prepare_overlays(mock_context, renderlist, mock_compositor);
 }
 
 TEST_F(FBDevice, commits_frame_via_post)

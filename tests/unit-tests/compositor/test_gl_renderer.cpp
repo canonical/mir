@@ -166,6 +166,8 @@ TEST_F(GLRenderer, TestSetUpRenderContextBeforeRendering)
 
     InSequence seq;
 
+    EXPECT_CALL(mock_gl, glClearColor(_, _, _, 1.0f));
+    EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     EXPECT_CALL(mock_gl, glClear(_));
     EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));

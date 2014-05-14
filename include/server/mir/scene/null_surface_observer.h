@@ -38,6 +38,7 @@ public:
     void frame_posted();
     void alpha_set_to(float alpha);
     void transformation_set_to(glm::mat4 const& t);
+    void reception_mode_set_to(input::InputReceptionMode mode);
 
 protected:
     NullSurfaceObserver(NullSurfaceObserver const&) = delete;

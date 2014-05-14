@@ -47,6 +47,7 @@ set(
   private.cpp
   mir_screencast.cpp
   mir_screencast_api.cpp
+  mir_cursor_api.cpp
   mir_trust_session.cpp
   mir_trust_session_api.cpp
   event_distributor.cpp

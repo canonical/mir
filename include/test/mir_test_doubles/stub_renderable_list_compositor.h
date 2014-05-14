@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,13 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
-#define MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
+#ifndef MIR_TEST_DOUBLES_STUB_RENDERABLE_LIST_COMPOSITOR_H_
+#define MIR_TEST_DOUBLES_STUB_RENDERABLE_LIST_COMPOSITOR_H_
 
-#include "mir/scene/input_registrar.h"
+#include "src/platform/graphics/android/overlay_gl_compositor.h"
 
 namespace mir
 {
@@ -28,20 +28,14 @@ namespace test
 namespace doubles
 {
 
-struct StubInputRegistrar : public scene::InputRegistrar
+struct StubRenderableListCompositor : public graphics::android::RenderableListCompositor
 {
-    void input_channel_opened(std::shared_ptr<input::InputChannel> const&,
-                              std::shared_ptr<input::Surface> const&,
-                              input::InputReceptionMode)
-    {
-    }
-    void input_channel_closed(std::shared_ptr<input::InputChannel> const&)
+    void render(graphics::RenderableList const&, graphics::android::SwappingGLContext const&) const
     {
     }
 };
 
 }
 }
-} // namespace mir
-
-#endif // MIR_TEST_DOUBLES_STUB_INPUT_REGISTRAR_H_
+}
+#endif // MIR_TEST_DOUBLES_STUB_RENDERABLE_LIST_COMPOSITOR_H_
