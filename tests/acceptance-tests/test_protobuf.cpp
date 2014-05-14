@@ -75,6 +75,8 @@ struct DemoMessageProcessor : mfd::MessageProcessor
         sender(sender),
         wrapped(wrapped) {}
 
+    void client_pid(int /*pid*/) override {}
+
     bool dispatch(mfd::Invocation const& invocation)
     {
         if ("function" == invocation.method_name())
