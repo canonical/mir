@@ -16,7 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test_framework/basic_client_server_fixture.h"
 #include "mir_toolkit/mir_client_library.h"
 
 #include "src/server/frontend/session_mediator.h"
@@ -26,6 +25,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/basic_client_server_fixture.h"
 #include "mir_test_doubles/fake_ipc_factory.h"
 
 #include <gtest/gtest.h>

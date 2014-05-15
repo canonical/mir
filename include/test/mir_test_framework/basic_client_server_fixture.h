@@ -23,10 +23,10 @@
 
 #include "mir_test_framework/in_process_server.h"
 
-// BasicClientServerFixture is likely reusable - need to put it in a header
 namespace mir_test_framework
 {
-// Test fixture to create a server in process and allocate a connection
+/// Test fixture to create a server in process and allocate a client connection.
+/// There are a lot of tests that could use this context.
 template<class TestServerConfiguration>
 struct BasicClientServerFixture : InProcessServer
 {
