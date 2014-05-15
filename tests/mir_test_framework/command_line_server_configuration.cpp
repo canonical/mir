@@ -13,24 +13,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Josh Arenson <joshua.arenson@canonical.com>
  */
 
 #include "mir/default_configuration.h"
 #include "mir/options/default_configuration.h"
-#include "mir/default_server_configuration.h"
 #include "mir_test_framework/command_line_server_configuration.h"
 
 #include <boost/algorithm/string.hpp>
 #include <gtest/gtest.h>
 
 #include <algorithm>
-#include <memory>
+#include <cstring>
 
 namespace mo=mir::options;
 
+namespace
+{
 int argc;
 char const** argv;
+}
 
 namespace mir_test_framework
 {
@@ -56,6 +57,3 @@ int main(int argc, char** argv)
 
 	return RUN_ALL_TESTS();
 }
-
-
-
