@@ -27,10 +27,10 @@ namespace mir
 namespace graphics
 {
 class GLTexture;
-class TextureCache
+class GLTextureCache
 {
 public:
-    virtual ~TextureCache() = default;
+    virtual ~GLTextureCache() = default;
 
     /** Loads texture from the renderable
      * \param [in] renderable
@@ -47,10 +47,10 @@ public:
     virtual void drop_old_textures() = 0;
 
 protected:
-    TextureCache() = default;
+    GLTextureCache() = default;
 private:
-    TextureCache(TextureCache const&) = delete;
-    TextureCache& operator=(TextureCache const&) = delete;
+    GLTextureCache(GLTextureCache const&) = delete;
+    GLTextureCache& operator=(GLTextureCache const&) = delete;
 };
 }
 }

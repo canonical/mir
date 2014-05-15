@@ -69,7 +69,7 @@ const GLchar* fragment_shader_src =
 
 mc::GLRenderer::GLRenderer(
     mg::GLProgramFactory const& program_factory,
-    std::unique_ptr<mg::TextureCache> && texture_cache, 
+    std::unique_ptr<mg::GLTextureCache> && texture_cache, 
     geom::Rectangle const& display_area)
     : program(program_factory.create_gl_program(vertex_shader_src, fragment_shader_src)),
       texture_cache(std::move(texture_cache)),

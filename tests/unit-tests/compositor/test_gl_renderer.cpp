@@ -51,9 +51,9 @@ namespace mg=mir::graphics;
 namespace
 {
 
-struct MockTextureCache : public mg::TextureCache
+struct MockGLTextureCache : public mg::GLTextureCache
 {
-    MockTextureCache()
+    MockGLTextureCache()
     {
         ON_CALL(*this, load_texture(testing::_))
             .WillByDefault(testing::Return(std::make_shared<mg::GLTexture>())); 
@@ -157,11 +157,11 @@ public:
             .WillOnce(Return(screen_to_gl_coords_uniform_location));
 
         display_area = {{1, 2}, {3, 4}};
-        mock_texture_cache.reset(new testing::NiceMock<MockTextureCache>());
+        mock_texture_cache.reset(new testing::NiceMock<MockGLTextureCache>());
     }
 
     mg::ProgramFactory program_factory;
-    std::unique_ptr<MockTextureCache> mock_texture_cache;
+    std::unique_ptr<MockGLTextureCache> mock_texture_cache;
     testing::NiceMock<mtd::MockGL> mock_gl;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     mir::geometry::Rectangle display_area;
@@ -237,7 +237,7 @@ TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
     {
         OverriddenTessellateRenderer(
             mg::GLProgramFactory const& program_factory,
-            std::unique_ptr<mg::TextureCache> && texture_cache, 
+            std::unique_ptr<mg::GLTextureCache> && texture_cache, 
             mir::geometry::Rectangle const& display_area, unsigned int num_primitives) :
             GLRenderer(program_factory, std::move(texture_cache), display_area),
             num_primitives(num_primitives)

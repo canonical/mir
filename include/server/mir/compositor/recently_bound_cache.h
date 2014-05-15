@@ -29,7 +29,7 @@ namespace mir
 {
 namespace compositor 
 {
-class RecentlyBoundCache : public graphics::TextureCache
+class RecentlyBoundCache : public graphics::GLTextureCache
 {
 public:
     std::shared_ptr<graphics::GLTexture> load_texture(graphics::Renderable const& renderable) override;
