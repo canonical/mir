@@ -189,26 +189,16 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
 {
     std::unique_lock<decltype(guard)> lock(guard);
 
-    bool recycle = !current_buffer_users.empty();
-    if (recycle)
+    bool use_current_buffer = false;
+    if (!current_buffer_users.empty() && !is_a_current_buffer_user(user_id))
     {
-        int const nusers = current_buffer_users.size();
-        int i = 0;
-        while (i < nusers && current_buffer_users[i] != user_id) ++i;
-        bool new_user = (i >= nusers);
-        if (new_user)
-        {
-            current_buffer_users.push_back(user_id);
-            if (current_buffer_users.size() > 100)
-                BOOST_THROW_EXCEPTION(
-                    std::logic_error("more buffer users detected than reasonable"));
-        }
-        recycle = new_user;
+        use_current_buffer = true;
+        current_buffer_users.push_back(user_id);
     }
-    recycle |= ready_to_composite_queue.empty();
+    use_current_buffer |= ready_to_composite_queue.empty();
 
     mg::Buffer* buffer_to_release = nullptr;
-    if (!recycle)
+    if (!use_current_buffer)
     {
         /* No other compositors currently reference this
          * buffer so release it
@@ -367,6 +357,14 @@ void mc::BufferQueue::give_buffer_to_client(
     {
         /* comms errors should not propagate to compositing threads */
     }
+}
+
+bool mc::BufferQueue::is_a_current_buffer_user(void const* user_id) const
+{
+    int const size = current_buffer_users.size();
+    int i = 0;
+    while (i < size && current_buffer_users[i] != user_id) ++i;
+    return i < size;
 }
 
 void mc::BufferQueue::release(
