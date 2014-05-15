@@ -18,14 +18,14 @@
 
 #ifndef MIR_GRAPHICS_TESSELLATION_HELPERS_H_
 #define MIR_GRAPHICS_TESSELLATION_HELPERS_H_
-#include "mir/graphics/primitive.h"
+#include "mir/graphics/gl_primitive.h"
 
 namespace mir
 {
 namespace graphics
 {
 class Renderable;
-Primitive tessellate_renderable_into_quad(Renderable const& renderable);
+GLPrimitive tessellate_renderable_into_rectangle(Renderable const& renderable);
 }
 }
 #endif /* MIR_GRAPHICS_TESSELLATION_HELPERS_H_ */
