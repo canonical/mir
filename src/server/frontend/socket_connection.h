@@ -63,6 +63,8 @@ private:
     static size_t const header_size = 2;
     char header[header_size];
     std::vector<char> body;
+
+    int client_pid = 0;
 };
 
 }

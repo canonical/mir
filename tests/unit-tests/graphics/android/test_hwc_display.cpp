@@ -133,7 +133,7 @@ TEST_F(AndroidDisplayBuffer, posts_overlay_list)
     std::function<void(mg::Renderable const&)> render_fn;
 
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, render_gl_and_overlays(_, Ref(renderlist), Ref(render_fn)))
+    EXPECT_CALL(*mock_display_device, prepare_overlays(_, Ref(renderlist), _))
         .Times(1);
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
         .Times(1)

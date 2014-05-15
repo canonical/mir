@@ -25,17 +25,14 @@
 
 #include "mir/cached_ptr.h"
 
-#include "mir/input/android/cached_android_ptr.h"
-
-
 namespace android
 {
-class InputReaderInterface;
 class InputReaderPolicyInterface;
 class InputDispatcherPolicyInterface;
 class InputDispatcherInterface;
 }
 
+namespace droidinput = android;
 
 namespace mir
 {
@@ -68,14 +65,14 @@ public:
     std::shared_ptr<InputRegistrar> the_input_registrar();
     std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
-    virtual droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher();
+    virtual std::shared_ptr<droidinput::InputDispatcherInterface> the_dispatcher();
 
     bool is_key_repeat_enabled() const override;
 
 protected:
     virtual std::shared_ptr<InputThread> the_dispatcher_thread();
 
-    virtual droidinput::sp<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
+    virtual std::shared_ptr<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
 
     std::shared_ptr<EventFilter> const event_filter;
     std::shared_ptr<input::InputReport> const input_report;
@@ -88,8 +85,8 @@ private:
 
     CachedPtr<shell::InputTargeter> input_targeter;
 
-    CachedAndroidPtr<droidinput::InputDispatcherPolicyInterface> dispatcher_policy;
-    CachedAndroidPtr<droidinput::InputDispatcherInterface> dispatcher;
+    CachedPtr<droidinput::InputDispatcherPolicyInterface> dispatcher_policy;
+    CachedPtr<droidinput::InputDispatcherInterface> dispatcher;
     CachedPtr<input::InputDispatcher> input_dispatcher;
 };
 }

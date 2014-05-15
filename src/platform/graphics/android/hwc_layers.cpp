@@ -127,8 +127,8 @@ void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alp
     {
         position.top_left.x.as_int(),
         position.top_left.y.as_int(),
-        position.size.width.as_int(),
-        position.size.height.as_int()
+        position.bottom_right().x.as_int(),
+        position.bottom_right().y.as_int()
     };
 
     visible_rect = hwc_layer->displayFrame;
