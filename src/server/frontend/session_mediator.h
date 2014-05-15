@@ -165,6 +165,9 @@ private:
                               bool need_full_ipc);
 
     void advance_buffer(SurfaceId surf_id, Surface& surface, std::function<void(graphics::Buffer*, bool)> complete);
+
+    virtual std::function<void(std::shared_ptr<Session> const&)> trusted_connect_handler() const;
+
     pid_t client_pid_;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;

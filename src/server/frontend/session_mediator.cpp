@@ -422,6 +422,18 @@ void mf::SessionMediator::screencast_buffer(
     done->Run();
 }
 
+std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::trusted_connect_handler() const
+{
+    return [this](std::shared_ptr<frontend::Session> const& session)
+    {
+        auto trust_session = weak_trust_session.lock();
+        if (trust_session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
+
+        shell->add_trusted_session_for(trust_session, session->process_id());
+    };
+}
+
 void mf::SessionMediator::configure_cursor(
     google::protobuf::RpcController*,
     mir::protobuf::CursorSetting const* /* cursor_request */,
@@ -445,14 +457,7 @@ void mf::SessionMediator::new_fds_for_trusted_clients(
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        auto const connect_handler = [this](std::shared_ptr<frontend::Session> const& session)
-        {
-            auto trust_session = weak_trust_session.lock();
-            if (trust_session.get() == nullptr)
-                BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
-
-            shell->add_trusted_session_for(trust_session, session->process_id());
-        };
+        auto const connect_handler = trusted_connect_handler();
 
         auto const fds_requested = parameters->number();
 
