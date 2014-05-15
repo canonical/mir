@@ -305,7 +305,6 @@ TEST_F(TestClientCursorAPI, client_cursor_request_is_made_surface_data)
 // In this set we create a 1x1 client surface at the point (1,0). The client requests to disable the cursor
 // over this surface. Since the cursor starts at (0,0) we when we move the cursor by (1,0) thus causing it
 // to enter the bounds of the first surface, we should observe it being disabled.
-#include <stdio.h>
 TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
 {
     using namespace ::testing;
@@ -323,7 +322,6 @@ TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
         ClientCount{1},
         [](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
         {
-            expectations_satisfied.wake_up_everyone();
             EXPECT_CALL(cursor, hide()).Times(1)
                 .WillOnce(mt::WakeUp(&expectations_satisfied));
         },
