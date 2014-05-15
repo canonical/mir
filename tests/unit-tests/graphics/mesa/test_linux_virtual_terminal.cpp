@@ -18,10 +18,11 @@
 
 #include "src/platform/graphics/mesa/linux_virtual_terminal.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/main_loop.h"
+#include "mir/graphics/event_handler_register.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_display_report.h"
+#include "mir_test/gmock_fixes.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -69,13 +70,10 @@ public:
 // Add a typedef to aid clarity.
 typedef testing::NiceMock<MockPosixProcessOperations> StubPosixProcessOperations;
 
-class MockMainLoop : public mir::MainLoop
+class MockEventHandlerRegister : public mg::EventHandlerRegister
 {
 public:
-    ~MockMainLoop() noexcept {}
-
-    void run() {}
-    void stop() {}
+    ~MockEventHandlerRegister() noexcept {}
 
     MOCK_METHOD2(register_signal_handler,
                  void(std::initializer_list<int>,
@@ -84,23 +82,6 @@ public:
     MOCK_METHOD2(register_fd_handler,
                  void(std::initializer_list<int>,
                       std::function<void(int)> const&));
-
-    std::unique_ptr<mir::time::Alarm> notify_in(std::chrono::milliseconds /*delay*/,
-                                                std::function<void()> /*callback*/) override
-    {
-        return std::unique_ptr<mir::time::Alarm>{};
-    }
-
-    std::unique_ptr<mir::time::Alarm> notify_at(mir::time::Timestamp /*time_point*/,
-                                                std::function<void()> /*callback*/) override
-    {
-        return std::unique_ptr<mir::time::Alarm>{};
-    }
-
-    std::unique_ptr<mir::time::Alarm> create_alarm(std::function<void(void)> /*callback*/) override
-    {
-        return std::unique_ptr<mir::time::Alarm>{};
-    }
 };
 
 ACTION_TEMPLATE(SetIoctlPointee,
@@ -220,7 +201,7 @@ public:
     {
         using namespace testing;
 
-        EXPECT_CALL(mock_main_loop, register_signal_handler(ElementsAre(sig), _))
+        EXPECT_CALL(mock_event_handler_register, register_signal_handler(ElementsAre(sig), _))
             .WillOnce(SaveArg<1>(&sig_handler));
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_SETMODE,
                                      MatcherCast<void*>(ModeUsesSignal(sig))));
@@ -266,7 +247,7 @@ public:
     struct termios fake_tc_attr;
     std::function<void(int)> sig_handler;
     MockVTFileOperations mock_fops;
-    MockMainLoop mock_main_loop;
+    MockEventHandlerRegister mock_event_handler_register;
 };
 
 
@@ -424,7 +405,7 @@ TEST_F(LinuxVirtualTerminalTest, uses_sigusr1_for_switch_handling)
     mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
 
     auto null_handler = [] { return true; };
-    vt.register_switch_handlers(mock_main_loop, null_handler, null_handler);
+    vt.register_switch_handlers(mock_event_handler_register, null_handler, null_handler);
 }
 
 TEST_F(LinuxVirtualTerminalTest, allows_vt_switch_on_switch_away_handler_success)
@@ -451,7 +432,7 @@ TEST_F(LinuxVirtualTerminalTest, allows_vt_switch_on_switch_away_handler_success
     mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
 
     auto succeeding_handler = [] { return true; };
-    vt.register_switch_handlers(mock_main_loop, succeeding_handler, succeeding_handler);
+    vt.register_switch_handlers(mock_event_handler_register, succeeding_handler, succeeding_handler);
 
     /* Fake a VT switch away request */
     sig_handler(SIGUSR1);
@@ -489,7 +470,7 @@ TEST_F(LinuxVirtualTerminalTest, disallows_vt_switch_on_switch_away_handler_fail
     mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, mt::fake_shared(mock_report));
 
     auto failing_handler = [] { return false; };
-    vt.register_switch_handlers(mock_main_loop, failing_handler, failing_handler);
+    vt.register_switch_handlers(mock_event_handler_register, failing_handler, failing_handler);
 
     /* Fake a VT switch away request */
     sig_handler(SIGUSR1);
@@ -527,7 +508,7 @@ TEST_F(LinuxVirtualTerminalTest, reports_failed_vt_switch_back_attempt)
 
     auto succeeding_handler = [] { return true; };
     auto failing_handler = [] { return false; };
-    vt.register_switch_handlers(mock_main_loop, succeeding_handler, failing_handler);
+    vt.register_switch_handlers(mock_event_handler_register, succeeding_handler, failing_handler);
 
     /* Fake a VT switch away request */
     sig_handler(SIGUSR1);

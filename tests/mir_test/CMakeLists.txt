@@ -8,4 +8,5 @@ add_library(
   signal.cpp
   fake_clock.cpp
   popen.cpp
+  wait_object.cpp
 )

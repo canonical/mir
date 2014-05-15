@@ -57,11 +57,101 @@ MATCHER(KeyDownEvent, "")
 
     return true;
 }
+MATCHER(KeyUpEvent, "")
+{
+    if (to_ref(arg).type != mir_event_type_key)
+        return false;
+
+    return to_ref(arg).key.action == mir_key_action_up;
+}
+
+MATCHER_P(KeyWithFlag, flag, "")
+{
+    if (to_ref(arg).type != mir_event_type_key)
+        return false;
+
+    return to_ref(arg).key.flags == flag;
+}
+
+MATCHER_P(KeyWithModifiers, modifiers, "")
+{
+    if (to_ref(arg).type != mir_event_type_key)
+        return false;
+
+    return to_ref(arg).key.modifiers == modifiers;
+}
+
 MATCHER_P(KeyOfSymbol, keysym, "")
 {
     if (static_cast<xkb_keysym_t>(to_ref(arg).key.key_code) == static_cast<uint32_t>(keysym))
         return true;
     return false;
+}
+
+MATCHER_P(MirKeyEventMatches, event, "")
+{
+    MirEvent const& expected = to_ref(event);
+    MirEvent const& actual = to_ref(arg);
+    return expected.type == actual.type &&
+           expected.key.device_id == actual.key.device_id &&
+           expected.key.source_id == actual.key.source_id &&
+           expected.key.action == actual.key.action &&
+           expected.key.flags == actual.key.flags &&
+           expected.key.modifiers == actual.key.modifiers &&
+           expected.key.key_code == actual.key.key_code &&
+           expected.key.scan_code == actual.key.scan_code &&
+           expected.key.repeat_count == actual.key.repeat_count &&
+           expected.key.down_time == actual.key.down_time &&
+           expected.key.event_time == actual.key.event_time &&
+           expected.key.is_system_key == actual.key.is_system_key;
+}
+
+MATCHER_P(MirMotionEventMatches, event, "")
+{
+    MirEvent const& expected = to_ref(event);
+    MirEvent const& actual = to_ref(arg);
+    bool scalar_members_match =
+        expected.type == actual.type &&
+        expected.motion.device_id == actual.motion.device_id &&
+        expected.motion.source_id == actual.motion.source_id &&
+        expected.motion.action == actual.motion.action &&
+        expected.motion.flags == actual.motion.flags &&
+        expected.motion.modifiers == actual.motion.modifiers &&
+        expected.motion.edge_flags == actual.motion.edge_flags &&
+        expected.motion.button_state == actual.motion.button_state &&
+        expected.motion.x_offset == actual.motion.x_offset &&
+        expected.motion.y_offset == actual.motion.y_offset &&
+        expected.motion.x_precision == actual.motion.x_precision &&
+        expected.motion.y_precision == actual.motion.y_precision &&
+        expected.motion.event_time == actual.motion.event_time &&
+        expected.motion.down_time == actual.motion.down_time &&
+        expected.motion.pointer_count == actual.motion.pointer_count;
+
+    if (!scalar_members_match)
+        return false;
+
+    for (size_t i = 0; i != actual.motion.pointer_count; ++i)
+    {
+        auto const& expected_coord = expected.motion.pointer_coordinates[i];
+        auto const& actual_coord = actual.motion.pointer_coordinates[i];
+        bool same_coord =
+           expected_coord.id == actual_coord.id &&
+           expected_coord.x == actual_coord.x &&
+           expected_coord.y == actual_coord.y &&
+           expected_coord.raw_x == actual_coord.raw_x &&
+           expected_coord.raw_y == actual_coord.raw_y &&
+           expected_coord.touch_major == actual_coord.touch_major &&
+           expected_coord.touch_minor == actual_coord.touch_minor &&
+           expected_coord.size == actual_coord.size &&
+           expected_coord.pressure == actual_coord.pressure &&
+           expected_coord.orientation == actual_coord.orientation &&
+           expected_coord.vscroll == actual_coord.vscroll &&
+           expected_coord.hscroll == actual_coord.hscroll &&
+           expected_coord.tool_type == actual_coord.tool_type;
+        if (!same_coord)
+            return false;
+    }
+    return true;
 }
 
 MATCHER(HoverEnterEvent, "")

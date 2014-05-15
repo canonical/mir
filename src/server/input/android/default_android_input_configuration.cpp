@@ -103,48 +103,43 @@ mia::DefaultInputConfiguration::~DefaultInputConfiguration()
 {
 }
 
-std::shared_ptr<mi::InputDispatcherConfiguration> mia::DefaultInputConfiguration::the_input_dispatcher_configuration()
-{
-    return input_dispatcher_config;
-}
-
 std::shared_ptr<mi::InputChannelFactory> mia::DefaultInputConfiguration::the_input_channel_factory()
 {
     return std::make_shared<mia::InputChannelFactory>();
 }
 
-droidinput::sp<droidinput::EventHubInterface> mia::DefaultInputConfiguration::the_event_hub()
+std::shared_ptr<droidinput::EventHubInterface> mia::DefaultInputConfiguration::the_event_hub()
 {
     return event_hub(
         [this]()
         {
-            return new droidinput::EventHub(input_report);
+            return std::make_shared<droidinput::EventHub>(input_report);
         });
 }
 
-droidinput::sp<droidinput::InputReaderPolicyInterface> mia::DefaultInputConfiguration::the_reader_policy()
+std::shared_ptr<droidinput::InputReaderPolicyInterface> mia::DefaultInputConfiguration::the_reader_policy()
 {
     return reader_policy(
         [this]()
         {
-            return new mia::InputReaderPolicy(input_region, cursor_listener);
+            return std::make_shared<mia::InputReaderPolicy>(input_region, cursor_listener);
         });
 }
 
 
-droidinput::sp<droidinput::InputReaderInterface> mia::DefaultInputConfiguration::the_reader()
+std::shared_ptr<droidinput::InputReaderInterface> mia::DefaultInputConfiguration::the_reader()
 {
     return reader(
         [this]()
         {
             auto android_conf = std::dynamic_pointer_cast<mia::InputDispatcherConfiguration>(
-                the_input_dispatcher_configuration());
+                input_dispatcher_config);
 
             if (android_conf)
-                return new droidinput::InputReader(
+                return std::make_shared<droidinput::InputReader>(
                     the_event_hub(), the_reader_policy(), android_conf->the_dispatcher());
             else
-                return new droidinput::InputReader(
+                return std::make_shared<droidinput::InputReader>(
                     the_event_hub(), the_reader_policy(), the_input_translator());
         });
 }
@@ -159,9 +154,9 @@ std::shared_ptr<mia::InputThread> mia::DefaultInputConfiguration::the_reader_thr
         });
 }
 
-droidinput::sp<droidinput::InputListenerInterface> mia::DefaultInputConfiguration::the_input_translator()
+std::shared_ptr<droidinput::InputListenerInterface> mia::DefaultInputConfiguration::the_input_translator()
 {
-    return new mia::InputTranslator(the_input_dispatcher_configuration()->the_input_dispatcher());
+    return std::make_shared<mia::InputTranslator>(input_dispatcher_config->the_input_dispatcher());
 }
 
 std::shared_ptr<mi::InputManager> mia::DefaultInputConfiguration::the_input_manager()
@@ -170,7 +165,7 @@ std::shared_ptr<mi::InputManager> mia::DefaultInputConfiguration::the_input_mana
         [this]() -> std::shared_ptr<mi::InputManager>
         {
             return std::make_shared<mia::InputManager>(
-                the_event_hub(), the_input_dispatcher_configuration()->the_input_dispatcher(),
+                the_event_hub(),
                 the_reader_thread());
         });
 }

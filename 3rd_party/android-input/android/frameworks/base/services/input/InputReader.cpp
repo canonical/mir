@@ -244,9 +244,9 @@ void InputReaderConfiguration::setDisplayInfo(int32_t displayId, bool external,
 
 // --- InputReader ---
 
-InputReader::InputReader(const sp<EventHubInterface>& eventHub,
-        const sp<InputReaderPolicyInterface>& policy,
-        const sp<InputListenerInterface>& listener) :
+InputReader::InputReader(std::shared_ptr<EventHubInterface> const& eventHub,
+        std::shared_ptr<InputReaderPolicyInterface> const& policy,
+        std::shared_ptr<InputListenerInterface> const& listener) :
         mContext(this), mEventHub(eventHub), mPolicy(policy),
         mGlobalMetaState(0), mGeneration(1),
         mDisableVirtualKeysTimeout(LLONG_MIN), mNextTimeout(LLONG_MAX),
@@ -851,7 +851,7 @@ EventHubInterface* InputReader::ContextImpl::getEventHub() {
 
 // --- InputReaderThread ---
 
-InputReaderThread::InputReaderThread(const sp<InputReaderInterface>& reader) :
+InputReaderThread::InputReaderThread(std::shared_ptr<InputReaderInterface> const& reader) :
         Thread(/*canCallJava*/ true), mReader(reader) {
 }
 

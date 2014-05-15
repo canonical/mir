@@ -21,8 +21,10 @@
 #include "mir_test/pipe.h"
 #include "mir_test/auto_unblock_thread.h"
 #include "mir_test/signal.h"
+#include "mir_test/wait_object.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include <thread>
 #include <atomic>
@@ -36,6 +38,27 @@
 #include <unistd.h>
 
 namespace mt = mir::test;
+
+namespace
+{
+
+class AsioMainLoopAlarmTest : public ::testing::Test
+{
+public:
+    mir::AsioMainLoop ml;
+    int call_count{0};
+    mt::WaitObject wait;
+
+    struct UnblockMainLoop : mt::AutoUnblockThread
+    {
+        UnblockMainLoop(mir::AsioMainLoop & loop)
+            : mt::AutoUnblockThread([&loop]() {loop.stop();},
+                                    [&loop]() {loop.run();})
+        {}
+    };
+};
+
+}
 
 TEST(AsioMainLoopTest, signal_handled)
 {
@@ -301,11 +324,8 @@ TEST(AsioMainLoopTest, multiple_fd_handlers_are_called)
     EXPECT_EQ(elems_to_send[2], elems_read[2]);
 }
 
-TEST(AsioMainLoopTest, main_loop_runs_until_stop_called)
+TEST_F(AsioMainLoopAlarmTest, main_loop_runs_until_stop_called)
 {
-    mir::AsioMainLoop ml;
-
-
     auto mainloop_started = std::make_shared<mt::Signal>();
 
     auto fire_on_mainloop_start = ml.notify_in(std::chrono::milliseconds{0},
@@ -314,8 +334,7 @@ TEST(AsioMainLoopTest, main_loop_runs_until_stop_called)
         mainloop_started->raise();
     });
 
-    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
-                                 [&ml]() { ml.run(); });
+    UnblockMainLoop unblocker(ml);
 
     ASSERT_TRUE(mainloop_started->wait_for(std::chrono::milliseconds{10}));
 
@@ -340,12 +359,9 @@ TEST(AsioMainLoopTest, main_loop_runs_until_stop_called)
     EXPECT_FALSE(timer_fired->wait_for(std::chrono::milliseconds{100}));
 }
 
-TEST(AsioMainLoopTest, alarm_fires_with_correct_delay)
+TEST_F(AsioMainLoopAlarmTest, alarm_fires_with_correct_delay)
 {
-    mir::AsioMainLoop ml;
-
-    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
-                                 [&ml]() { ml.run(); });
+    UnblockMainLoop unblocker(ml);
 
     auto timer_fired = std::make_shared<mt::Signal>();
     auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [timer_fired]()
@@ -360,16 +376,12 @@ TEST(AsioMainLoopTest, alarm_fires_with_correct_delay)
     EXPECT_TRUE(timer_fired->wait_for(std::chrono::milliseconds{200}));
 }
 
-TEST(AsioMainLoopTest, multiple_alarms_fire)
+TEST_F(AsioMainLoopAlarmTest, multiple_alarms_fire)
 {
-    mir::AsioMainLoop ml;
-
-    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
-                                 [&ml]() { ml.run(); });
-
     int const alarm_count{10};
     std::atomic<int> call_count{0};
     std::array<std::unique_ptr<mir::time::Alarm>, alarm_count> alarms;
+
     auto alarms_fired = std::make_shared<mt::Signal>();
 
     for (auto& alarm : alarms)
@@ -382,48 +394,41 @@ TEST(AsioMainLoopTest, multiple_alarms_fire)
         });
     }
 
+    UnblockMainLoop unblocker(ml);
+
     EXPECT_TRUE(alarms_fired->wait_for(std::chrono::milliseconds{100}));
+
     for (auto& alarm : alarms)
-        EXPECT_EQ(mir::time::Alarm::Triggered, alarm->state());
+        EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
 }
 
-
-TEST(AsioMainLoopTest, alarm_changes_to_triggered_state)
+TEST_F(AsioMainLoopAlarmTest, alarm_changes_to_triggered_state)
 {
-    mir::AsioMainLoop ml;
-
-    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
-                                 [&ml]() { ml.run(); });
-
     auto alarm_fired = std::make_shared<mt::Signal>();
     auto alarm = ml.notify_in(std::chrono::milliseconds{5}, [alarm_fired]()
     {
         alarm_fired->raise();
     });
 
+    UnblockMainLoop unblocker(ml);
+
     ASSERT_TRUE(alarm_fired->wait_for(std::chrono::milliseconds{100}));
 
-    EXPECT_EQ(mir::time::Alarm::Triggered, alarm->state());
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
 }
 
-TEST(AsioMainLoopTest, alarm_starts_in_pending_state)
+TEST_F(AsioMainLoopAlarmTest, alarm_starts_in_pending_state)
 {
-    mir::AsioMainLoop ml;
-
-    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
-                                 [&ml]() { ml.run(); });
+    UnblockMainLoop unblocker(ml);
 
     auto alarm = ml.notify_in(std::chrono::milliseconds{5000}, [](){});
 
-    EXPECT_EQ(mir::time::Alarm::Pending, alarm->state());
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
 }
 
-TEST(AsioMainLoopTest, cancelled_alarm_doesnt_fire)
+TEST_F(AsioMainLoopAlarmTest, cancelled_alarm_doesnt_fire)
 {
-    mir::AsioMainLoop ml;
-
-    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
-                                 [&ml]() { ml.run(); });
+    UnblockMainLoop unblocker(ml);
     auto alarm_fired = std::make_shared<mt::Signal>();
 
     auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [alarm_fired]()
@@ -432,16 +437,13 @@ TEST(AsioMainLoopTest, cancelled_alarm_doesnt_fire)
     });
 
     EXPECT_TRUE(alarm->cancel());
+
     EXPECT_FALSE(alarm_fired->wait_for(std::chrono::milliseconds{300}));
-    EXPECT_EQ(mir::time::Alarm::Cancelled, alarm->state());
+    EXPECT_EQ(mir::time::Alarm::cancelled, alarm->state());
 }
 
-TEST(AsioMainLoopTest, destroyed_alarm_doesnt_fire)
+TEST_F(AsioMainLoopAlarmTest, destroyed_alarm_doesnt_fire)
 {
-    mir::AsioMainLoop ml;
-
-    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
-                                 [&ml]() { ml.run(); });
     auto alarm_fired = std::make_shared<mt::Signal>();
 
     auto alarm = ml.notify_in(std::chrono::milliseconds{200}, [alarm_fired]()
@@ -449,18 +451,15 @@ TEST(AsioMainLoopTest, destroyed_alarm_doesnt_fire)
         alarm_fired->raise();
     });
 
+    UnblockMainLoop unblocker(ml);
+
     alarm.reset(nullptr);
 
     EXPECT_FALSE(alarm_fired->wait_for(std::chrono::milliseconds{300}));
 }
 
-TEST(AsioMainLoopTest, rescheduled_alarm_fires_again)
+TEST_F(AsioMainLoopAlarmTest, rescheduled_alarm_fires_again)
 {
-    mir::AsioMainLoop ml;
-
-    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
-                                 [&ml]() { ml.run(); });
-
     auto first_trigger = std::make_shared<mt::Signal>();
     auto second_trigger = std::make_shared<mt::Signal>();
     std::atomic<int> call_count{0};
@@ -476,57 +475,226 @@ TEST(AsioMainLoopTest, rescheduled_alarm_fires_again)
             FAIL() << "Alarm called too many times";
     });
 
+    UnblockMainLoop unblocker(ml);
 
     ASSERT_TRUE(first_trigger->wait_for(std::chrono::milliseconds{50}));
+    ASSERT_EQ(mir::time::Alarm::triggered, alarm->state());
 
-    ASSERT_EQ(mir::time::Alarm::Triggered, alarm->state());
+
     alarm->reschedule_in(std::chrono::milliseconds{100});
-    EXPECT_EQ(mir::time::Alarm::Pending, alarm->state());
+
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
 
     EXPECT_TRUE(second_trigger->wait_for(std::chrono::milliseconds{500}));
-    EXPECT_EQ(mir::time::Alarm::Triggered, alarm->state());
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
 }
 
-TEST(AsioMainLoopTest, rescheduled_alarm_cancels_previous_scheduling)
+TEST_F(AsioMainLoopAlarmTest, rescheduled_alarm_cancels_previous_scheduling)
 {
-    mir::AsioMainLoop ml;
-
-    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
-                                 [&ml]() { ml.run(); });
-
     std::atomic<int> call_count{0};
-    auto alarm_fired = std::make_shared<mt::Signal>();
 
-    auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [alarm_fired, &call_count]()
+    auto alarm = ml.notify_in(std::chrono::milliseconds{50}, [&call_count]()
     {
         call_count++;
     });
 
+    UnblockMainLoop unblocker(ml);
+
     EXPECT_TRUE(alarm->reschedule_in(std::chrono::milliseconds{10}));
-    EXPECT_EQ(mir::time::Alarm::Pending, alarm->state());
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
 
-    std::this_thread::sleep_for(std::chrono::milliseconds{500});
+    std::this_thread::sleep_for(std::chrono::milliseconds{200});
 
-    EXPECT_EQ(mir::time::Alarm::Triggered, alarm->state());
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
     EXPECT_EQ(1, call_count);
 }
 
-TEST(AsioMainLoopTest, alarm_fires_at_correct_time_point)
+TEST_F(AsioMainLoopAlarmTest, alarm_fires_at_correct_time_point)
 {
-    mir::AsioMainLoop ml;
     mir::time::HighResolutionClock clock;
-
-    mt::AutoUnblockThread runner([&ml]() { ml.stop(); },
-                                 [&ml]() { ml.run(); });
 
     mir::time::Timestamp real_soon = clock.sample() + std::chrono::milliseconds{120};
     auto alarm_fired = std::make_shared<mt::Signal>();
 
     auto alarm = ml.notify_at(real_soon, [alarm_fired]()
-    {
+    {			     
         alarm_fired->raise();
     });
 
+    UnblockMainLoop unblocker(ml);
+
     EXPECT_FALSE(alarm_fired->wait_until(real_soon - std::chrono::milliseconds{50}));
     EXPECT_TRUE(alarm_fired->wait_until(real_soon + std::chrono::milliseconds{50}));
+}
+
+TEST(AsioMainLoopTest, dispatches_action)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    int num_actions{0};
+    int const owner{0};
+
+    ml.enqueue(
+        &owner,
+        [&]
+        {
+            ++num_actions;
+            ml.stop();
+        });
+
+    ml.run();
+
+    EXPECT_THAT(num_actions, Eq(1));
+}
+
+TEST(AsioMainLoopTest, dispatches_multiple_actions_in_order)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    int const num_actions{5};
+    std::vector<int> actions;
+    int const owner{0};
+
+    for (int i = 0; i < num_actions; ++i)
+    {
+        ml.enqueue(
+            &owner,
+            [&,i]
+            {
+                actions.push_back(i);
+                if (i == num_actions - 1)
+                    ml.stop();
+            });
+    }
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(num_actions));
+    for (int i = 0; i < num_actions; ++i)
+        EXPECT_THAT(actions[i], Eq(i)) << "i = " << i;
+}
+
+TEST(AsioMainLoopTest, does_not_dispatch_paused_actions)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    std::vector<int> actions;
+    int const owner1{0};
+    int const owner2{0};
+
+    ml.enqueue(
+        &owner1,
+        [&]
+        {
+            int const id = 0;
+            actions.push_back(id);
+        });
+
+    ml.enqueue(
+        &owner2,
+        [&]
+        {
+            int const id = 1;
+            actions.push_back(id);
+        });
+
+    ml.enqueue(
+        &owner1,
+        [&]
+        {
+            int const id = 2;
+            actions.push_back(id);
+        });
+
+    ml.enqueue(
+        &owner2,
+        [&]
+        {
+            int const id = 3;
+            actions.push_back(id);
+            ml.stop();
+        });
+
+    ml.pause_processing_for(&owner1);
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(2));
+    EXPECT_THAT(actions[0], Eq(1));
+    EXPECT_THAT(actions[1], Eq(3));
+}
+
+TEST(AsioMainLoopTest, dispatches_resumed_actions)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    std::vector<int> actions;
+    void const* const owner1_ptr{&actions};
+    int const owner2{0};
+
+    ml.enqueue(
+        owner1_ptr,
+        [&]
+        {
+            int const id = 0;
+            actions.push_back(id);
+            ml.stop();
+        });
+
+    ml.enqueue(
+        &owner2,
+        [&]
+        {
+            int const id = 1;
+            actions.push_back(id);
+            ml.resume_processing_for(owner1_ptr);
+        });
+
+    ml.pause_processing_for(owner1_ptr);
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(2));
+    EXPECT_THAT(actions[0], Eq(1));
+    EXPECT_THAT(actions[1], Eq(0));
+}
+
+TEST(AsioMainLoopTest, handles_enqueue_from_within_action)
+{
+    using namespace testing;
+
+    mir::AsioMainLoop ml;
+    std::vector<int> actions;
+    int const num_actions{10};
+    void const* const owner{&num_actions};
+
+    ml.enqueue(
+        owner,
+        [&]
+        {
+            int const id = 0;
+            actions.push_back(id);
+            
+            for (int i = 1; i < num_actions; ++i)
+            {
+                ml.enqueue(
+                    owner,
+                    [&,i]
+                    {
+                        actions.push_back(i);
+                        if (i == num_actions - 1)
+                            ml.stop();
+                    });
+            }
+        });
+
+    ml.run();
+
+    ASSERT_THAT(actions.size(), Eq(num_actions));
+    for (int i = 0; i < num_actions; ++i)
+        EXPECT_THAT(actions[i], Eq(i)) << "i = " << i;
 }

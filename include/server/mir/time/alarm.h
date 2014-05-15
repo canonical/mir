@@ -35,9 +35,9 @@ class Alarm
 public:
     enum State
     {
-        Pending,    /**< Will trigger the callback at some point in the future */
-        Cancelled,  /**< The callback has been cancelled before being triggered */
-        Triggered   /**< The callback has been called */
+        pending,    /**< Will trigger the callback at some point in the future */
+        cancelled,  /**< The callback has been cancelled before being triggered */
+        triggered   /**< The callback has been called */
     };
 
 

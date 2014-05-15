@@ -21,7 +21,7 @@
 
 #include "mir/input/android/default_android_input_configuration.h"
 
-#include <utils/StrongPointer.h>
+#include <memory>
 
 namespace droidinput = android;
 
@@ -51,10 +51,6 @@ namespace doubles
 class FakeEventHubInputConfiguration : public input::android::DefaultInputConfiguration
 {
 public:
-    FakeEventHubInputConfiguration(std::shared_ptr<input::EventFilter> const& event_filter,
-                                   std::shared_ptr<input::InputRegion> const& input_region,
-                                   std::shared_ptr<input::CursorListener> const& cursor_listener,
-                                   std::shared_ptr<input::InputReport> const& input_report);
     FakeEventHubInputConfiguration(
         std::shared_ptr<input::InputDispatcherConfiguration> const& input_dispatcher_configuration,
         std::shared_ptr<input::InputRegion> const& input_region,
@@ -63,7 +59,7 @@ public:
 
     virtual ~FakeEventHubInputConfiguration();
 
-    droidinput::sp<droidinput::EventHubInterface> the_event_hub();
+    std::shared_ptr<droidinput::EventHubInterface> the_event_hub();
     input::android::FakeEventHub* the_fake_event_hub();
 
 protected:
@@ -71,7 +67,7 @@ protected:
     FakeEventHubInputConfiguration& operator=(FakeEventHubInputConfiguration const&) = delete;
 
 private:
-    droidinput::sp<input::android::FakeEventHub> event_hub;
+    std::shared_ptr<input::android::FakeEventHub> event_hub;
 };
 
 }

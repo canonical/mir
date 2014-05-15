@@ -36,7 +36,7 @@ public:
     bool reschedule_in(std::chrono::milliseconds delay) override;
     bool reschedule_for(mir::time::Timestamp timeout) override;
 
-private:
+private:    
     struct InternalState
     {
         explicit InternalState(std::function<void(void)> callback);
@@ -44,12 +44,15 @@ private:
         std::function<void(void)> const callback;
         mt::FakeClock::time_point threshold;
     };
+
+    bool handle_time_change(InternalState& state, mt::FakeClock::time_point now);
+
     std::shared_ptr<InternalState> const internal_state;
     std::shared_ptr<mt::FakeClock> const clock;
 };
 
 MockAlarm::InternalState::InternalState(std::function<void(void)> callback)
-    : state{mir::time::Alarm::Pending}, callback{callback}
+    : state{mir::time::Alarm::pending}, callback{callback}
 {
 }
 
@@ -65,10 +68,10 @@ MockAlarm::~MockAlarm()
 
 bool MockAlarm::cancel()
 {
-    if (internal_state->state == Triggered)
+    if (internal_state->state == triggered)
         return false;
 
-    internal_state->state = Cancelled;
+    internal_state->state = cancelled;
     return true;
 }
 
@@ -77,31 +80,37 @@ MockAlarm::State MockAlarm::state() const
     return internal_state->state;
 }
 
+bool MockAlarm::handle_time_change(InternalState& state,
+                                   mir::test::FakeClock::time_point now)
+{
+    if (state.state == pending)
+    {
+        if (now > state.threshold)
+        {
+            state.state = triggered;
+            state.callback();
+            return false;
+        }
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 bool MockAlarm::reschedule_in(std::chrono::milliseconds delay)
 {
-    bool rescheduled = internal_state->state == Pending;
+    bool rescheduled = internal_state->state == pending;
 
-    internal_state->state = Pending;
+    internal_state->state = pending;
     internal_state->threshold = clock->now() + delay;
 
     std::shared_ptr<InternalState> state_copy{internal_state};
-    clock->register_time_change_callback([state_copy](mt::FakeClock::time_point now)
-                                         {
-                                             if (state_copy->state == Pending)
-                                             {
-                                                 if (now > state_copy->threshold)
-                                                 {
-                                                     state_copy->state = Triggered;
-                                                     state_copy->callback();
-                                                     return false;
-                                                 }
-                                                 return true;
-                                             }
-                                             else
-                                             {
-                                                 return false;
-                                             }
-                                         });
+    clock->register_time_change_callback([this, state_copy](mt::FakeClock::time_point now)
+    {
+        return handle_time_change(*state_copy, now);
+    });
     return rescheduled;
 }
 

@@ -27,10 +27,14 @@ namespace mir
 {
 namespace frontend
 {
+class ConnectionContext;
+
 class ConnectionCreator
 {
 public:
-    virtual void create_connection_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket) = 0;
+    virtual void create_connection_for(
+        std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
+        ConnectionContext const& connection_context) = 0;
 
 protected:
     ConnectionCreator() = default;

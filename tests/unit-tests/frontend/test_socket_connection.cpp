@@ -20,6 +20,7 @@
 #include "src/server/frontend/socket_connection.h"
 #include "src/server/frontend/message_receiver.h"
 #include "mir/frontend/message_processor.h"
+#include "mir/frontend/session_credentials.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -35,9 +36,11 @@ namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 namespace mt = mir::test;
 
+using namespace testing;
+
 namespace
 {
-struct StubReceiver : public mfd::MessageReceiver
+struct StubReceiver : mfd::MessageReceiver
 {
     StubReceiver() : async_buffer{nullptr, 0} {}
 
@@ -51,8 +54,6 @@ struct StubReceiver : public mfd::MessageReceiver
 
     boost::system::error_code receive_msg(boost::asio::mutable_buffers_1 const& buffer) override
     {
-        using namespace testing;
-
         if (ba::buffer_cast<void*>(buffer) == nullptr)
             throw std::runtime_error("StubReceiver::receive_msg got null buffer");
         if (ba::buffer_size(buffer) != message.size())
@@ -71,8 +72,6 @@ struct StubReceiver : public mfd::MessageReceiver
 
     void fake_receive_msg(char* buffer, size_t size)
     {
-        using namespace testing;
-
         message.assign(buffer, buffer + size);
 
         ASSERT_NE(nullptr, callback_function);
@@ -90,7 +89,6 @@ struct StubReceiver : public mfd::MessageReceiver
         callback_function(code, size);
     }
 
-private:
     std::function<void(boost::system::error_code const&, size_t)> callback_function;
     boost::asio::mutable_buffers_1 async_buffer;
     std::vector<char> message;
@@ -101,39 +99,83 @@ private:
 struct MockProcessor : public mfd::MessageProcessor
 {
     MOCK_METHOD1(dispatch, bool(mfd::Invocation const& invocation));
+    MOCK_METHOD1(client_pid, void(int pid));
 };
 }
 
-struct SocketConnectionTest : public ::testing::Test
+struct SocketConnection : public Test
 {
-    testing::NiceMock<MockProcessor> mock_processor;
-    StubReceiver stub_receiver;
+    NiceMock<MockProcessor> mock_processor;
+    NiceMock<StubReceiver> stub_receiver;
+    std::shared_ptr<mfd::Connections<mfd::SocketConnection>> null_sessions;
+    mf::SessionCredentials client_creds{1, 1, 1};
+
+    mfd::SocketConnection connection{mt::fake_shared(stub_receiver), 0, null_sessions, mt::fake_shared(mock_processor)};
+
+    void SetUp()
+    {
+        ON_CALL(mock_processor, dispatch(_)).WillByDefault(Return(true));
+        ON_CALL(stub_receiver, client_creds()).WillByDefault(Return(client_creds));
+        connection.read_next_message();
+    }
+
+    void fake_receiving_message()
+    {
+        int const header_size = 2;
+        char buffer[512];
+        mir::protobuf::wire::Invocation invocation;
+        invocation.set_id(1);
+        invocation.set_method_name("");
+        invocation.set_parameters(buffer, 0);
+        invocation.set_protocol_version(1);
+        auto const body_size = invocation.ByteSize();
+        buffer[0] = body_size / 0x100;
+        buffer[1] = body_size % 0x100;
+        invocation.SerializeToArray(buffer + header_size, sizeof buffer - header_size);
+
+        stub_receiver.fake_receive_msg(buffer, header_size + body_size);
+    }
 };
 
-TEST_F(SocketConnectionTest, basic_msg_is_received_and_dispatched)
+TEST_F(SocketConnection, dispatches_message_on_receipt)
 {
-    int const header_size = 2;
-    char buffer[512];
-    mir::protobuf::wire::Invocation invocation;
-    invocation.set_id(1);
-    invocation.set_method_name("");
-    invocation.set_parameters(buffer, 0);
-    invocation.set_protocol_version(1);
-    auto const body_size = invocation.ByteSize();
+    EXPECT_CALL(mock_processor, dispatch(_)).Times(1);
 
-    using namespace testing;
+    fake_receiving_message();
+}
 
-    std::shared_ptr<mfd::Connections<mfd::SocketConnection>> null_sessions;
+TEST_F(SocketConnection, dispatches_messages_on_receipt)
+{
+    auto const arbitary_no_of_messages = 5;
 
-    mfd::SocketConnection session(mt::fake_shared(stub_receiver), 0, null_sessions, mt::fake_shared(mock_processor));
+    EXPECT_CALL(mock_processor, dispatch(_)).Times(arbitary_no_of_messages);
 
-    EXPECT_CALL(mock_processor, dispatch(_)).Times(1).WillOnce(Return(true));
+    for (int i = 0; i != arbitary_no_of_messages; ++i)
+        fake_receiving_message();
+}
 
-    session.read_next_message();
+TEST_F(SocketConnection, checks_client_pid_when_message_received)
+{
+    EXPECT_CALL(stub_receiver, client_creds()).Times(1);
 
-    buffer[0] = body_size / 0x100;
-    buffer[1] = body_size % 0x100;
-    invocation.SerializeToArray(buffer + header_size, sizeof buffer - header_size);
+    fake_receiving_message();
+}
 
-    stub_receiver.fake_receive_msg(buffer, header_size + body_size);
+TEST_F(SocketConnection, notifies_client_pid_before_message_dispatched)
+{
+    InSequence seq;
+    EXPECT_CALL(mock_processor, client_pid(_)).Times(1);
+    EXPECT_CALL(mock_processor, dispatch(_)).Times(1);
+
+    fake_receiving_message();
+}
+
+TEST_F(SocketConnection, notifies_client_pid_once_only)
+{
+    auto const arbitary_no_of_messages = 5;
+
+    EXPECT_CALL(mock_processor, client_pid(_)).Times(1);
+
+    for (int i = 0; i != arbitary_no_of_messages; ++i)
+        fake_receiving_message();
 }

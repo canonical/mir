@@ -31,10 +31,22 @@ namespace mia = mir::input::android;
 namespace droidinput = ::android;
 
 mia::AndroidInputDispatcher::AndroidInputDispatcher(
-    droidinput::sp<droidinput::InputDispatcherInterface> const& dispatcher,
+    std::shared_ptr<droidinput::InputDispatcherInterface> const& dispatcher,
     std::shared_ptr<mia::InputThread> const& thread)
     : dispatcher(dispatcher), dispatcher_thread(thread)
 {
+}
+
+void mia::AndroidInputDispatcher::configuration_changed(nsecs_t when)
+{
+    droidinput::NotifyConfigurationChangedArgs args(when);
+    dispatcher->notifyConfigurationChanged(&args);
+}
+
+void mia::AndroidInputDispatcher::device_reset(int32_t device_id, nsecs_t when)
+{
+    droidinput::NotifyDeviceResetArgs args(when, device_id);
+    dispatcher->notifyDeviceReset(&args);
 }
 
 void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)

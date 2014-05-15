@@ -21,8 +21,6 @@
 
 #include "mir/input/input_dispatcher.h"
 
-#include <utils/StrongPointer.h>
-
 #include <memory>
 
 namespace android
@@ -45,13 +43,15 @@ class InputThread;
 class AndroidInputDispatcher : public mir::input::InputDispatcher
 {
 public:
-    AndroidInputDispatcher(droidinput::sp<droidinput::InputDispatcherInterface> const& dispatcher,
+    AndroidInputDispatcher(std::shared_ptr<droidinput::InputDispatcherInterface> const& dispatcher,
                            std::shared_ptr<InputThread> const& thread);
+    void configuration_changed(nsecs_t when) override;
+    void device_reset(int32_t device_id, nsecs_t when) override;
     void dispatch(MirEvent const& event) override;
     void start() override;
     void stop() override;
 private:
-    droidinput::sp<droidinput::InputDispatcherInterface> const dispatcher;
+    std::shared_ptr<droidinput::InputDispatcherInterface> const dispatcher;
     std::shared_ptr<InputThread> const dispatcher_thread;
 
 };

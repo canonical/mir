@@ -334,9 +334,9 @@ public:
  */
 class InputReader : public InputReaderInterface {
 public:
-    InputReader(const sp<EventHubInterface>& eventHub,
-            const sp<InputReaderPolicyInterface>& policy,
-            const sp<InputListenerInterface>& listener);
+    InputReader(const std::shared_ptr<EventHubInterface>& eventHub,
+            const std::shared_ptr<InputReaderPolicyInterface>& policy,
+            const std::shared_ptr<InputListenerInterface>& listener);
     virtual ~InputReader();
 
     virtual void dump(String8& dump);
@@ -393,8 +393,8 @@ private:
 
     Condition mReaderIsAliveCondition;
 
-    sp<EventHubInterface> mEventHub;
-    sp<InputReaderPolicyInterface> mPolicy;
+    std::shared_ptr<EventHubInterface> mEventHub;
+    std::shared_ptr<InputReaderPolicyInterface> mPolicy;
     sp<QueuedInputListener> mQueuedListener;
 
     InputReaderConfiguration mConfig;
@@ -449,11 +449,11 @@ private:
 /* Reads raw events from the event hub and processes them, endlessly. */
 class InputReaderThread : public Thread {
 public:
-    InputReaderThread(const sp<InputReaderInterface>& reader);
+    InputReaderThread(std::shared_ptr<InputReaderInterface> const& reader);
     virtual ~InputReaderThread();
 
 private:
-    sp<InputReaderInterface> mReader;
+    std::shared_ptr<InputReaderInterface> mReader;
 
     virtual bool threadLoop();
 };

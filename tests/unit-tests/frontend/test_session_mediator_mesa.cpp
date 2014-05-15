@@ -72,10 +72,11 @@ struct SessionMediatorMesaTest : public ::testing::Test
           surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
           report{mr::null_session_mediator_report()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
-          mediator{__LINE__, shell, mock_platform, display_changer,
+          mediator{shell, mock_platform, display_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
-                   resource_cache, std::make_shared<mtd::NullScreencast>()},
+                   resource_cache, std::make_shared<mtd::NullScreencast>(),
+                   nullptr},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }

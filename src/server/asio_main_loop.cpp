@@ -221,7 +221,7 @@ AlarmImpl::AlarmImpl(boost::asio::io_service& io,
     : timer{io},
       data{std::make_shared<InternalState>(callback)}
 {
-    data->state = Triggered;
+    data->state = triggered;
 }
 
 AlarmImpl::~AlarmImpl() noexcept
@@ -232,10 +232,10 @@ AlarmImpl::~AlarmImpl() noexcept
 bool AlarmImpl::cancel()
 {
     std::lock_guard<decltype(data->m)> lock(data->m);
-    if (data->state == Triggered)
+    if (data->state == triggered)
         return false;
 
-    data->state = Cancelled;
+    data->state = cancelled;
     timer.cancel();
     return true;
 }
@@ -278,14 +278,14 @@ void AlarmImpl::update_timer()
             return;
 
         std::unique_lock<decltype(data->m)> lock(data->m);
-        if (!ec && data->state == Pending)
+        if (!ec && data->state == pending)
         {
-            data->state = Triggered;
+            data->state = triggered;
             lock.unlock();
             data->callback();
         }
     });
-    data->state = Pending;
+    data->state = pending;
 }
 }
 
@@ -304,4 +304,66 @@ std::unique_ptr<mir::time::Alarm> mir::AsioMainLoop::notify_at(mir::time::Timest
 std::unique_ptr<mir::time::Alarm> mir::AsioMainLoop::create_alarm(std::function<void()> callback)
 {
     return std::unique_ptr<mir::time::Alarm>{new AlarmImpl{io, callback}};
+}
+
+void mir::AsioMainLoop::enqueue(void const* owner, ServerAction const& action)
+{
+    {
+        std::lock_guard<std::mutex> lock{server_actions_mutex};
+        server_actions.push_back({owner, action});
+    }
+
+    io.post([this] { process_server_actions(); });
+}
+
+void mir::AsioMainLoop::pause_processing_for(void const* owner)
+{
+    std::lock_guard<std::mutex> lock{server_actions_mutex};
+    do_not_process.insert(owner);
+}
+
+void mir::AsioMainLoop::resume_processing_for(void const* owner)
+{
+    {
+        std::lock_guard<std::mutex> lock{server_actions_mutex};
+        do_not_process.erase(owner);
+    }
+
+    io.post([this] { process_server_actions(); });
+}
+
+void mir::AsioMainLoop::process_server_actions()
+{
+    std::unique_lock<std::mutex> lock{server_actions_mutex};
+
+    size_t i = 0;
+
+    while (i < server_actions.size())
+    {
+        /* 
+         * It's safe to use references to elements, since std::deque<>
+         * guarantees that references remain valid after appends, which is
+         * the only operation that can be performed on server_actions outside
+         * this function (in AsioMainLoop::post()).
+         */
+        auto const& owner = server_actions[i].first;
+        auto const& action = server_actions[i].second;
+
+        if (do_not_process.find(owner) == do_not_process.end())
+        {
+            lock.unlock();
+            action();
+            lock.lock();
+            /*
+             * This erase is always ok, since outside this function
+             * we only append to server_actions, i.e., our index i
+             * is guaranteed to remain valid and correct.
+             */
+            server_actions.erase(server_actions.begin() + i);
+        }
+        else
+        {
+            ++i;
+        }
+    }
 }
