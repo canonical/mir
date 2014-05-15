@@ -26,6 +26,8 @@
 
 namespace mir
 {
+class ServerActionQueue;
+
 namespace compositor
 {
 class Renderer;
@@ -257,6 +259,7 @@ public:
     /** @} */
 
     virtual std::shared_ptr<time::Clock> the_clock();
+    virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
