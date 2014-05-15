@@ -66,8 +66,8 @@ public:
         expected_layer.displayFrame = {
             screen_position.top_left.x.as_int(),
             screen_position.top_left.y.as_int(),
-            screen_position.size.width.as_int(),
-            screen_position.size.height.as_int()};
+            screen_position.bottom_right().x.as_int(),
+            screen_position.bottom_right().y.as_int()};
         expected_layer.visibleRegionScreen = {1, &region};
         expected_layer.acquireFenceFd = -1;
         expected_layer.releaseFenceFd = -1;
@@ -75,7 +75,7 @@ public:
 
     mga::LayerType type;
     geom::Size buffer_size{333, 444};
-    geom::Rectangle screen_position{{9,8},{245, 250}};
+    geom::Rectangle screen_position{{9,8},buffer_size};
     bool alpha_enabled{false};
     std::shared_ptr<mtd::StubAndroidNativeBuffer> native_handle_1;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
@@ -258,8 +258,8 @@ TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)
     {
         screen_position.top_left.x.as_int(),
         screen_position.top_left.y.as_int(),
-        screen_position.size.width.as_int(),
-        screen_position.size.height.as_int()
+        screen_position.bottom_right().x.as_int(),
+        screen_position.bottom_right().y.as_int()
     };
 
     hwc_region_t visible_region {1, &screen_pos};
