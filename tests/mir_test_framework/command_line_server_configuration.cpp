@@ -15,11 +15,10 @@
  *
  */
 
+#include "mir_test_framework/command_line_server_configuration.h"
 #include "mir/default_configuration.h"
 #include "mir/options/default_configuration.h"
-#include "mir_test_framework/command_line_server_configuration.h"
 
-#include <boost/algorithm/string.hpp>
 #include <gtest/gtest.h>
 
 #include <algorithm>
