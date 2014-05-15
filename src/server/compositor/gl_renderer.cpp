@@ -20,7 +20,7 @@
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/texture_cache.h"
-#include "mir/graphics/texture.h"
+#include "mir/graphics/gl_texture.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>

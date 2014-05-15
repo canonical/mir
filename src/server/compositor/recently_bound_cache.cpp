@@ -24,7 +24,7 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-std::shared_ptr<mg::Texture> mc::RecentlyBoundCache::load_texture(mg::Renderable const& renderable)
+std::shared_ptr<mg::GLTexture> mc::RecentlyBoundCache::load_texture(mg::Renderable const& renderable)
 {
     auto const& buffer = renderable.buffer();
     auto const& id = renderable.id();

@@ -16,11 +16,11 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/texture.h"
+#include "mir/graphics/gl_texture.h"
 
 namespace mg = mir::graphics;
 
-mg::Texture::Texture() :
+mg::GLTexture::GLTexture() :
     id(generate_id())
 {
     //If you need to tweak the TexParameters, best to do it within the class
@@ -32,17 +32,17 @@ mg::Texture::Texture() :
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
-void mg::Texture::gl_bind() const
+void mg::GLTexture::gl_bind() const
 {
     glBindTexture(GL_TEXTURE_2D, id);
 }
 
-mg::Texture::~Texture()
+mg::GLTexture::~GLTexture()
 {
     glDeleteTextures(1, &id);
 }
 
-GLuint mg::Texture::generate_id() const
+GLuint mg::GLTexture::generate_id() const
 {
     GLuint id;
     glGenTextures(1, &id);

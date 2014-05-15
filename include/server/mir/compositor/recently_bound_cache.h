@@ -20,7 +20,7 @@
 #define MIR_COMPOSITOR_RECENTLY_BOUND_CACHE_H_
 
 #include "mir/graphics/texture_cache.h"
-#include "mir/graphics/texture.h"
+#include "mir/graphics/gl_texture.h"
 #include "mir/graphics/buffer_id.h"
 #include <unordered_map>
 
@@ -31,7 +31,7 @@ namespace compositor
 class RecentlyBoundCache : public graphics::TextureCache
 {
 public:
-    std::shared_ptr<graphics::Texture> load_texture(graphics::Renderable const& renderable) override;
+    std::shared_ptr<graphics::GLTexture> load_texture(graphics::Renderable const& renderable) override;
     void invalidate() override;
     void release_live_texture_resources() override;
 
@@ -39,9 +39,9 @@ private:
     struct CountedTexture
     {
         CountedTexture()
-         : texture(std::make_shared<graphics::Texture>())
+         : texture(std::make_shared<graphics::GLTexture>())
         {}
-        std::shared_ptr<graphics::Texture> texture;
+        std::shared_ptr<graphics::GLTexture> texture;
         graphics::BufferID last_bound_buffer;
         bool used{true};
         std::shared_ptr<graphics::Buffer> resource;
