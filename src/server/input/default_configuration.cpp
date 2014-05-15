@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -100,7 +100,13 @@ mir::DefaultServerConfiguration::the_android_input_dispatcher()
     return android_input_dispatcher(
         [this]()
         {
-            return std::make_shared<droidinput::InputDispatcher>(the_dispatcher_policy(), the_input_report());
+            auto registrar = the_input_registrar();
+            auto dispatcher = std::make_shared<droidinput::InputDispatcher>(
+                the_dispatcher_policy(),
+                the_input_report(),
+                std::make_shared<mia::InputTargetEnumerator>(the_input_targets(), registrar));
+            registrar->set_dispatcher(dispatcher);
+            return dispatcher;
         });
 }
 
@@ -110,7 +116,7 @@ mir::DefaultServerConfiguration::the_input_registrar()
     return input_registrar(
         [this]()
         {
-            return std::make_shared<mia::InputRegistrar>(the_android_input_dispatcher(), the_scene());
+            return std::make_shared<mia::InputRegistrar>(the_scene());
         });
 }
 
@@ -165,11 +171,7 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
                 return std::make_shared<mi::NullInputDispatcher>();
             else
             {
-                auto dispatcher = the_android_input_dispatcher();
-                auto input_targets = the_input_targets();
-                auto input_registrar = the_input_registrar();
-                dispatcher->setInputEnumerator(new mia::InputTargetEnumerator(input_targets, input_registrar));
-                return std::make_shared<mia::AndroidInputDispatcher>(dispatcher, the_dispatcher_thread());
+                return std::make_shared<mia::AndroidInputDispatcher>(the_android_input_dispatcher(), the_dispatcher_thread());
             }
         });
 }

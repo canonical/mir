@@ -85,7 +85,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
     std::shared_ptr<mi::InputReport> null_report = mir::report::null_input_report();
     std::shared_ptr<MockEventFilter> event_filter = std::make_shared<MockEventFilter>();
     mia::EventFilterDispatcherPolicy policy{event_filter, repeat_is_disabled};
-    droidinput::InputDispatcher android_dispatcher{mt::fake_shared(policy), null_report};
+    droidinput::InputDispatcher android_dispatcher{mt::fake_shared(policy), null_report, std::make_shared<mtd::StubInputEnumerator>()};
     mia::CommonInputThread input_thread{"InputDispatcher",
                                         new droidinput::InputDispatcherThread(mt::fake_shared(android_dispatcher))};
 
@@ -93,8 +93,6 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
 
     void SetUp()
     {
-        android_dispatcher.setInputEnumerator(new mtd::StubInputEnumerator);
-
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
             mt::fake_shared(dispatcher),
             mt::fake_shared(input_region),

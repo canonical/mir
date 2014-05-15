@@ -50,6 +50,7 @@ struct AndroidInputRegistrarFdSetup : public testing::Test
     AndroidInputRegistrarFdSetup()
         : surface(socket(AF_UNIX, SOCK_SEQPACKET, 0))
     {
+        registrar.set_dispatcher(dispatcher);
     }
     ~AndroidInputRegistrarFdSetup()
     {
@@ -58,7 +59,7 @@ struct AndroidInputRegistrarFdSetup : public testing::Test
     std::shared_ptr<mtd::MockAndroidInputDispatcher> dispatcher = std::make_shared<mtd::MockAndroidInputDispatcher>();
     std::shared_ptr<mtd::StubScene> scene = std::make_shared<mtd::StubScene>();
     mtd::StubSceneSurface surface;
-    mia::InputRegistrar registrar{dispatcher, scene};
+    mia::InputRegistrar registrar{scene};
 };
 
 MATCHER_P(WindowHandleFor, channel, "")

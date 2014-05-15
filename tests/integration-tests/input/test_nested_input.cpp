@@ -51,13 +51,11 @@ TEST(NestedInputTest, applies_event_filter_on_relayed_event)
     bool repeat_is_disabled = false;
     auto null_report = mir::report::null_input_report();
     mia::EventFilterDispatcherPolicy policy(mt::fake_shared(mock_event_filter), repeat_is_disabled);
-    droidinput::InputDispatcher android_dispatcher(mt::fake_shared(policy), null_report);
+    auto  android_dispatcher = std::make_shared<droidinput::InputDispatcher>(mt::fake_shared(policy), null_report, std::make_shared<mtd::StubInputEnumerator>());
     mia::CommonInputThread input_thread("InputDispatcher",
-                                        new droidinput::InputDispatcherThread(
-                                            mt::fake_shared(android_dispatcher)));
-    android_dispatcher.setInputEnumerator(new mtd::StubInputEnumerator);
+                                        new droidinput::InputDispatcherThread(android_dispatcher));
 
-    mia::AndroidInputDispatcher dispatcher(mt::fake_shared(android_dispatcher), mt::fake_shared(input_thread));
+    mia::AndroidInputDispatcher dispatcher(android_dispatcher, mt::fake_shared(input_thread));
 
     mi::NestedInputConfiguration input_conf;
 

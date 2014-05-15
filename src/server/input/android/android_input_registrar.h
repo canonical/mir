@@ -57,11 +57,12 @@ class InputTargeter;
 class InputRegistrar : public WindowHandleRepository
 {
 public:
-    explicit InputRegistrar(std::shared_ptr<droidinput::InputDispatcherInterface> const& input_dispatcher, std::shared_ptr<mir::compositor::Scene> const& scene);
+    explicit InputRegistrar(std::shared_ptr<mir::compositor::Scene> const& scene);
     virtual ~InputRegistrar() noexcept(true);
 
     virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_channel(std::shared_ptr<input::InputChannel const> const& channel);
 
+    void set_dispatcher(std::shared_ptr<droidinput::InputDispatcherInterface> const& dispatcher);
     void add_window_handle_for_surface(mir::scene::Surface *);
     void remove_window_handle_for_surface(mir::scene::Surface *);
 private:
@@ -75,7 +76,8 @@ private:
 
         SurfaceCallback add, remove;
     };
-    std::shared_ptr<droidinput::InputDispatcherInterface> const input_dispatcher;
+    // weak ptr as input dispatcher already has a strong references to the registrar through the mir::input::android::InputTargetEnumerator
+    std::weak_ptr<droidinput::InputDispatcherInterface> input_dispatcher;
 
     std::map<std::shared_ptr<input::InputChannel const>, droidinput::sp<droidinput::InputWindowHandle>> window_handles;
 

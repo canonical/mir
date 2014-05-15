@@ -36,8 +36,7 @@ namespace ms = mir::scene;
 namespace mia = mi::android;
 namespace mc = mir::compositor;
 
-mia::InputRegistrar::InputRegistrar(std::shared_ptr<droidinput::InputDispatcherInterface> const& input_dispatcher, std::shared_ptr<mc::Scene> const& scene) :
-    input_dispatcher(input_dispatcher),
+mia::InputRegistrar::InputRegistrar(std::shared_ptr<mc::Scene> const& scene) :
     scene(scene),
     observer(std::make_shared<SceneObserver>(
             [this](ms::Surface *surface) { add_window_handle_for_surface(surface); },
@@ -45,6 +44,11 @@ mia::InputRegistrar::InputRegistrar(std::shared_ptr<droidinput::InputDispatcherI
             ))
 {
     scene->add_observer(observer);
+}
+
+void mia::InputRegistrar::set_dispatcher(std::shared_ptr<droidinput::InputDispatcherInterface> const& dispatcher)
+{
+    input_dispatcher = dispatcher;
 }
 
 mia::InputRegistrar::~InputRegistrar() noexcept(true)
@@ -73,8 +77,8 @@ void mia::InputRegistrar::add_window_handle_for_surface(ms::Surface* surface)
     }
 
     bool monitors_input = (surface->reception_mode() == mi::InputReceptionMode::receives_all_input);
-    input_dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, monitors_input);
-
+    auto dispatcher = input_dispatcher.lock();
+    dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, monitors_input);
 }
 
 void mia::InputRegistrar::remove_window_handle_for_surface(ms::Surface* surface)
@@ -88,8 +92,8 @@ void mia::InputRegistrar::remove_window_handle_for_surface(ms::Surface* surface)
         window_handle = it->second;
         window_handles.erase(it);
     }
-    input_dispatcher->unregisterInputChannel(window_handle->getInputChannel());
-
+    auto dispatcher = input_dispatcher.lock();
+    dispatcher->unregisterInputChannel(window_handle->getInputChannel());
 }
 
 droidinput::sp<droidinput::InputWindowHandle> mia::InputRegistrar::handle_for_channel(
