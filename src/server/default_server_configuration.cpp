@@ -175,6 +175,10 @@ std::shared_ptr<mir::MainLoop> mir::DefaultServerConfiguration::the_main_loop()
         });
 }
 
+std::shared_ptr<mir::ServerActionQueue> mir::DefaultServerConfiguration::the_server_action_queue()
+{
+    return the_main_loop();
+}
 
 std::shared_ptr<mir::ServerStatusListener> mir::DefaultServerConfiguration::the_server_status_listener()
 {
