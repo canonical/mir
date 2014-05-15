@@ -32,7 +32,7 @@ mg::GLTexture::GLTexture() :
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
-void mg::GLTexture::gl_bind() const
+void mg::GLTexture::bind() const
 {
     glBindTexture(GL_TEXTURE_2D, id);
 }

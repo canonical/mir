@@ -177,7 +177,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
         if (p.tex_id) //tessalate() can be overridden, and that code can set to nonzero  
             glBindTexture(GL_TEXTURE_2D, p.tex_id);
         else
-            surface_tex->gl_bind();
+            surface_tex->bind();
 
         glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
                               GL_FALSE, sizeof(Vertex),

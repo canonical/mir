@@ -31,7 +31,7 @@ std::shared_ptr<mg::GLTexture> mc::RecentlyBoundCache::load_texture(mg::Renderab
 
     auto buffer_id = buffer->id();
     auto& texture = textures[id];
-    texture.texture->gl_bind();
+    texture.texture->bind();
 
     if (texture.last_bound_buffer != buffer_id)
         buffer->bind_to_texture();

@@ -30,7 +30,7 @@ class GLTexture
 public:
     GLTexture();
     ~GLTexture();
-    void gl_bind() const;
+    void bind() const;
 
 private:
     GLTexture(GLTexture const&) = delete;
