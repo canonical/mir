@@ -43,7 +43,7 @@ std::shared_ptr<mg::GLTexture> mc::RecentlyBoundCache::load_texture(mg::Renderab
     return texture.texture;
 }
 
-void mc::RecentlyBoundCache::invalidate()
+void mc::RecentlyBoundCache::invalidate_bindings()
 {
     mg::BufferID invalid_id;
     for(auto &t : textures)

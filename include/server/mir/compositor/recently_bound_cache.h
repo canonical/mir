@@ -32,7 +32,7 @@ class RecentlyBoundCache : public graphics::TextureCache
 {
 public:
     std::shared_ptr<graphics::GLTexture> load_texture(graphics::Renderable const& renderable) override;
-    void invalidate() override;
+    void invalidate_bindings() override;
     void release_live_texture_resources() override;
 
 private:

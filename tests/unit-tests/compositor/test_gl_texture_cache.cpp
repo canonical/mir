@@ -104,7 +104,7 @@ TEST_F(RecentlyBoundCache, caches_and_uploads_texture_only_on_buffer_changes)
     cache.load_texture(*renderable);
     cache.release_live_texture_resources();
 
-    cache.invalidate();
+    cache.invalidate_bindings();
 
     cache.load_texture(*renderable);
     cache.release_live_texture_resources();

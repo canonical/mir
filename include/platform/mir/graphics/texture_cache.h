@@ -37,7 +37,8 @@ public:
     **/ 
     virtual std::shared_ptr<GLTexture> load_texture(Renderable const&) = 0;
 
-    virtual void invalidate() = 0;
+    /** mark the entries in the cache as having invalid bindings **/ 
+    virtual void invalidate_bindings() = 0;
 
     /** Release the resources associated with the bound textures in the cache **/
     virtual void release_live_texture_resources() = 0;

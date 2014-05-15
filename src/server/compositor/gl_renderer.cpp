@@ -272,5 +272,5 @@ void mc::GLRenderer::end() const
 
 void mc::GLRenderer::suspend()
 {
-    texture_cache->invalidate();
+    texture_cache->invalidate_bindings();
 }

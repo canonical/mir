@@ -59,7 +59,7 @@ struct MockTextureCache : public mg::TextureCache
             .WillByDefault(testing::Return(std::make_shared<mg::GLTexture>())); 
     }
     MOCK_METHOD1(load_texture, std::shared_ptr<mg::GLTexture>(mg::Renderable const&));
-    MOCK_METHOD0(invalidate, void());
+    MOCK_METHOD0(invalidate_bindings, void());
     MOCK_METHOD0(release_live_texture_resources, void());
 };
 
