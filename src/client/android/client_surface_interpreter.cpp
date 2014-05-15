@@ -80,7 +80,7 @@ int mcla::ClientSurfaceInterpreter::driver_requests_info(int key) const
     }
 }
 
-void mcla::ClientSurfaceInterpreter::sync_to_display(bool)
-{
-    
+void mcla::ClientSurfaceInterpreter::sync_to_display(bool should_sync)
+{ 
+    surface.request_and_wait_for_configure(mir_surface_attrib_swapinterval, should_sync);
 }
