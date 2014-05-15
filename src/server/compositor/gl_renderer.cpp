@@ -20,7 +20,7 @@
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/tessellation_helpers.h"
-#include "mir/graphics/gl_texture_cache.h"
+#include "mir/graphics/texture_cache.h"
 #include "mir/graphics/gl_texture.h"
 
 #define GLM_FORCE_RADIANS
@@ -70,7 +70,7 @@ const GLchar* fragment_shader_src =
 
 mc::GLRenderer::GLRenderer(
     mg::GLProgramFactory const& program_factory,
-    std::unique_ptr<mg::TextureCache> && texture_cache, 
+    std::unique_ptr<mg::GLTextureCache> && texture_cache, 
     geom::Rectangle const& display_area)
     : program(program_factory.create_gl_program(vertex_shader_src, fragment_shader_src)),
       texture_cache(std::move(texture_cache)),
@@ -158,7 +158,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
         if (p.tex_id) //tessalate() can be overridden, and that code can set to nonzero  
             glBindTexture(GL_TEXTURE_2D, p.tex_id);
         else
-            surface_tex->gl_bind();
+            surface_tex->bind();
 
         glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
                               GL_FALSE, sizeof(mg::GLVertex),
@@ -252,10 +252,10 @@ void mc::GLRenderer::begin() const
 
 void mc::GLRenderer::end() const
 {
-    texture_cache->release_live_texture_resources();
+    texture_cache->drop_old_textures();
 }
 
 void mc::GLRenderer::suspend()
 {
-    texture_cache->invalidate();
+    texture_cache->invalidate_bindings();
 }

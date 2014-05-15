@@ -36,7 +36,7 @@ public:
         return std::unique_ptr<graphics::GLProgram>(new StubGLProgram);
     }
 
-    std::unique_ptr<graphics::TextureCache> create_texture_cache() const
+    std::unique_ptr<graphics::GLTextureCache> create_texture_cache() const
     {
         return nullptr;
     }

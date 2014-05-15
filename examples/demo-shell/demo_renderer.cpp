@@ -139,7 +139,7 @@ DemoRenderer::DemoRenderer(
     graphics::GLProgramFactory const& program_factory,
     geometry::Rectangle const& display_area)
     : GLRenderer(program_factory,
-        std::unique_ptr<graphics::TextureCache>(new compositor::RecentlyBoundCache()),
+        std::unique_ptr<graphics::GLTextureCache>(new compositor::RecentlyBoundCache()),
         display_area)
     , corner_radius(0.5f)
 {

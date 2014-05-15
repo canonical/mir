@@ -24,7 +24,7 @@
 #include <gmock/gmock.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/texture_cache.h>
-#include <mir/graphics/texture.h>
+#include <mir/graphics/gl_texture.h>
 #include "mir/compositor/gl_renderer.h"
 #include "src/server/graphics/program_factory.h"
 #include <mir_test/fake_shared.h>
@@ -51,16 +51,16 @@ namespace mg=mir::graphics;
 namespace
 {
 
-struct MockTextureCache : public mg::TextureCache
+struct MockGLTextureCache : public mg::GLTextureCache
 {
-    MockTextureCache()
+    MockGLTextureCache()
     {
         ON_CALL(*this, load_texture(testing::_))
-            .WillByDefault(testing::Return(std::make_shared<mg::Texture>())); 
+            .WillByDefault(testing::Return(std::make_shared<mg::GLTexture>())); 
     }
-    MOCK_METHOD1(load_texture, std::shared_ptr<mg::Texture>(mg::Renderable const&));
-    MOCK_METHOD0(invalidate, void());
-    MOCK_METHOD0(release_live_texture_resources, void());
+    MOCK_METHOD1(load_texture, std::shared_ptr<mg::GLTexture>(mg::Renderable const&));
+    MOCK_METHOD0(invalidate_bindings, void());
+    MOCK_METHOD0(drop_old_textures, void());
 };
 
 const GLint stub_v_shader = 1;
@@ -157,11 +157,11 @@ public:
             .WillOnce(Return(screen_to_gl_coords_uniform_location));
 
         display_area = {{1, 2}, {3, 4}};
-        mock_texture_cache.reset(new testing::NiceMock<MockTextureCache>());
+        mock_texture_cache.reset(new testing::NiceMock<MockGLTextureCache>());
     }
 
     mg::ProgramFactory program_factory;
-    std::unique_ptr<MockTextureCache> mock_texture_cache;
+    std::unique_ptr<MockGLTextureCache> mock_texture_cache;
     testing::NiceMock<mtd::MockGL> mock_gl;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     mir::geometry::Rectangle display_area;
@@ -209,7 +209,7 @@ TEST_F(GLRenderer, render_is_done_in_sequence)
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
 
-    EXPECT_CALL(*mock_texture_cache, release_live_texture_resources());
+    EXPECT_CALL(*mock_texture_cache, drop_old_textures());
 
     mc::GLRenderer renderer(program_factory, std::move(mock_texture_cache), display_area);
     renderer.begin();
@@ -237,14 +237,14 @@ TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
     {
         OverriddenTessellateRenderer(
             mg::GLProgramFactory const& program_factory,
-            std::unique_ptr<mg::TextureCache> && texture_cache, 
+            std::unique_ptr<mg::GLTextureCache> && texture_cache, 
             mir::geometry::Rectangle const& display_area, unsigned int num_primitives) :
             GLRenderer(program_factory, std::move(texture_cache), display_area),
             num_primitives(num_primitives)
         {
         }
 
-        void tessellate(std::vector<mg::Primitive>& primitives,
+        void tessellate(std::vector<mg::GLPrimitive>& primitives,
                         mg::Renderable const&) const override
         {
             primitives.clear();

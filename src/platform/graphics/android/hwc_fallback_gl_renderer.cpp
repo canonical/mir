@@ -110,11 +110,11 @@ void mga::HWCFallbackGLRenderer::render(
 
     for(auto const& renderable : renderlist)
     {
-        auto const primitive = mg::tessellate_renderable_into_quad(*renderable);
-        glVertexAttribPointer(position_attr, 3, GL_FLOAT, GL_FALSE, sizeof(mg::Vertex),
+        auto const primitive = mg::tessellate_renderable_into_rectangle(*renderable);
+        glVertexAttribPointer(position_attr, 3, GL_FLOAT, GL_FALSE, sizeof(mg::GLVertex),
                               &primitive.vertices[0].position);
         //TODO: (kdub) scaling or pi/2 rotation eventually. for now, all quads get same texcoords
-        glVertexAttribPointer(texcoord_attr, 2, GL_FLOAT, GL_FALSE, sizeof(mg::Vertex),
+        glVertexAttribPointer(texcoord_attr, 2, GL_FLOAT, GL_FALSE, sizeof(mg::GLVertex),
                               &primitive.vertices[0].texcoord);
 
         texture_cache->load_texture(*renderable);
@@ -124,6 +124,6 @@ void mga::HWCFallbackGLRenderer::render(
     glDisableVertexAttribArray(texcoord_attr);
     glDisableVertexAttribArray(position_attr);
     context.swap_buffers();
-    texture_cache->release_live_texture_resources();
+    texture_cache->drop_old_textures();
     glUseProgram(0);
 }

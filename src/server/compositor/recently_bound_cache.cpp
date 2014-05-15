@@ -13,7 +13,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #include "mir/compositor/recently_bound_cache.h"
@@ -24,14 +25,14 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-std::shared_ptr<mg::Texture> mc::RecentlyBoundCache::load_texture(mg::Renderable const& renderable)
+std::shared_ptr<mg::GLTexture> mc::RecentlyBoundCache::load_texture(mg::Renderable const& renderable)
 {
     auto const& buffer = renderable.buffer();
     auto const& id = renderable.id();
 
     auto buffer_id = buffer->id();
     auto& texture = textures[id];
-    texture.texture->gl_bind();
+    texture.texture->bind();
 
     if (texture.last_bound_buffer != buffer_id)
         buffer->bind_to_texture();
@@ -43,14 +44,14 @@ std::shared_ptr<mg::Texture> mc::RecentlyBoundCache::load_texture(mg::Renderable
     return texture.texture;
 }
 
-void mc::RecentlyBoundCache::invalidate()
+void mc::RecentlyBoundCache::invalidate_bindings()
 {
     mg::BufferID invalid_id;
     for(auto &t : textures)
         t.second.last_bound_buffer = invalid_id;
 }
 
-void mc::RecentlyBoundCache::release_live_texture_resources()
+void mc::RecentlyBoundCache::drop_old_textures()
 {
     auto t = textures.begin();
     while (t != textures.end())

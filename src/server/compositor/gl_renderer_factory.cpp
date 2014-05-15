@@ -34,6 +34,6 @@ mc::GLRendererFactory::GLRendererFactory(std::shared_ptr<mg::GLProgramFactory> c
 std::unique_ptr<mc::Renderer>
 mc::GLRendererFactory::create_renderer_for(geom::Rectangle const& rect)
 {
-    auto raw = new GLRenderer(*program_factory, std::unique_ptr<mg::TextureCache>(new RecentlyBoundCache()), rect);
+    auto raw = new GLRenderer(*program_factory, std::unique_ptr<mg::GLTextureCache>(new RecentlyBoundCache()), rect);
     return std::unique_ptr<mc::Renderer>(raw);
 }

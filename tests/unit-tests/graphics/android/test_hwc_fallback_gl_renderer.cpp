@@ -19,8 +19,8 @@
 #include "src/platform/graphics/android/hwc_fallback_gl_renderer.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/gl_program_factory.h"
-#include "mir/graphics/primitive.h"
-#include "mir/graphics/texture.h"
+#include "mir/graphics/gl_primitive.h"
+#include "mir/graphics/gl_texture.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/stub_renderable.h"
@@ -48,7 +48,7 @@ class MockGLProgramFactory : public mg::GLProgramFactory
 public:
     MOCK_CONST_METHOD2(create_gl_program,
         std::unique_ptr<mg::GLProgram>(std::string const&, std::string const&));
-    MOCK_CONST_METHOD0(create_texture_cache, std::unique_ptr<mg::TextureCache>());
+    MOCK_CONST_METHOD0(create_texture_cache, std::unique_ptr<mg::GLTextureCache>());
 };
 
 class MockContext : public mg::GLContext
@@ -58,16 +58,16 @@ public:
     MOCK_CONST_METHOD0(release_current, void());
 };
 
-class StubTextureCache : public mg::TextureCache
+class StubTextureCache : public mg::GLTextureCache
 {
-    std::shared_ptr<mg::Texture> load_texture(mg::Renderable const&)
+    std::shared_ptr<mg::GLTexture> load_texture(mg::Renderable const&)
     {
-        return std::make_shared<mg::Texture>();
+        return std::make_shared<mg::GLTexture>();
     }
-    void invalidate()
+    void invalidate_bindings()
     {
     }
-    void release_live_texture_resources()
+    void drop_old_textures()
     {
     }
 };
@@ -83,7 +83,7 @@ public:
                 { return std::unique_ptr<mg::GLProgram>(new mtd::StubGLProgram); }));
         ON_CALL(mock_gl_program_factory,create_texture_cache())
             .WillByDefault(Invoke([]()
-                { return std::unique_ptr<mg::TextureCache>(new StubTextureCache); }));
+                { return std::unique_ptr<mg::GLTextureCache>(new StubTextureCache); }));
 
         ON_CALL(mock_gl, glGetShaderiv(_,_,_))
             .WillByDefault(SetArgPointee<2>(GL_TRUE));
@@ -106,7 +106,7 @@ public:
     GLint const texcoord_attr_loc{3};
     GLint const tex_uniform_loc{4};
     GLint const texid{5};
-    size_t const stride{sizeof(mg::Vertex)};
+    size_t const stride{sizeof(mg::GLVertex)};
 
     testing::NiceMock<MockGLProgramFactory> mock_gl_program_factory;
     testing::NiceMock<MockContext> mock_context;

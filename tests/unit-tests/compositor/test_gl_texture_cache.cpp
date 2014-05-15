@@ -96,21 +96,21 @@ TEST_F(RecentlyBoundCache, caches_and_uploads_texture_only_on_buffer_changes)
 
     mc::RecentlyBoundCache cache;
     cache.load_texture(*renderable);
-    cache.release_live_texture_resources();
+    cache.drop_old_textures();
 
     cache.load_texture(*renderable);
-    cache.release_live_texture_resources();
+    cache.drop_old_textures();
 
     cache.load_texture(*renderable);
-    cache.release_live_texture_resources();
+    cache.drop_old_textures();
 
-    cache.invalidate();
-
-    cache.load_texture(*renderable);
-    cache.release_live_texture_resources();
+    cache.invalidate_bindings();
 
     cache.load_texture(*renderable);
-    cache.release_live_texture_resources();
+    cache.drop_old_textures();
+
+    cache.load_texture(*renderable);
+    cache.drop_old_textures();
 }
 
 TEST_F(RecentlyBoundCache, holds_buffers_till_the_end)
@@ -119,6 +119,6 @@ TEST_F(RecentlyBoundCache, holds_buffers_till_the_end)
     mc::RecentlyBoundCache cache;
     cache.load_texture(*renderable);
     EXPECT_EQ(old_use_count+1, mock_buffer.use_count());
-    cache.release_live_texture_resources();
+    cache.drop_old_textures();
     EXPECT_EQ(old_use_count, mock_buffer.use_count());
 }

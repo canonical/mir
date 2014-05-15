@@ -33,8 +33,8 @@ mg::ProgramFactory::create_gl_program(
         new SimpleGLProgram(vertex_shader.c_str(), fragment_shader.c_str()));
 }
 
-std::unique_ptr<mg::TextureCache> mg::ProgramFactory::create_texture_cache() const
+std::unique_ptr<mg::GLTextureCache> mg::ProgramFactory::create_texture_cache() const
 {
-    return std::unique_ptr<mg::TextureCache>(
+    return std::unique_ptr<mg::GLTextureCache>(
         new mir::compositor::RecentlyBoundCache());
 }

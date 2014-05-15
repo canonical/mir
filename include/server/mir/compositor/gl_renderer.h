@@ -42,7 +42,7 @@ class GLRenderer : public Renderer
 public:
     GLRenderer(
         graphics::GLProgramFactory const& program_factory,
-        std::unique_ptr<graphics::TextureCache> && texture_cache, 
+        std::unique_ptr<graphics::GLTextureCache> && texture_cache, 
         geometry::Rectangle const& display_area);
 
     // These are called with a valid GL context:
@@ -77,7 +77,7 @@ public:
     virtual void render(graphics::Renderable const& renderable) const;
 private:
     std::unique_ptr<graphics::GLProgram> program;
-    std::unique_ptr<graphics::TextureCache> mutable texture_cache;
+    std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;
     GLuint position_attr_loc;
     GLuint texcoord_attr_loc;
     GLuint centre_uniform_loc;

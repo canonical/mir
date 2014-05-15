@@ -13,14 +13,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #ifndef MIR_COMPOSITOR_RECENTLY_BOUND_CACHE_H_
 #define MIR_COMPOSITOR_RECENTLY_BOUND_CACHE_H_
 
 #include "mir/graphics/texture_cache.h"
-#include "mir/graphics/texture.h"
+#include "mir/graphics/gl_texture.h"
 #include "mir/graphics/buffer_id.h"
 #include <unordered_map>
 
@@ -28,26 +29,26 @@ namespace mir
 {
 namespace compositor 
 {
-class RecentlyBoundCache : public graphics::TextureCache
+class RecentlyBoundCache : public graphics::GLTextureCache
 {
 public:
-    std::shared_ptr<graphics::Texture> load_texture(graphics::Renderable const& renderable) override;
-    void invalidate() override;
-    void release_live_texture_resources() override;
+    std::shared_ptr<graphics::GLTexture> load_texture(graphics::Renderable const& renderable) override;
+    void invalidate_bindings() override;
+    void drop_old_textures() override;
 
 private:
-    struct CountedTexture
+    struct Entry
     {
-        CountedTexture()
-         : texture(std::make_shared<graphics::Texture>())
+        Entry()
+         : texture(std::make_shared<graphics::GLTexture>())
         {}
-        std::shared_ptr<graphics::Texture> texture;
+        std::shared_ptr<graphics::GLTexture> texture;
         graphics::BufferID last_bound_buffer;
         bool used{true};
         std::shared_ptr<graphics::Buffer> resource;
     };
 
-    std::unordered_map<graphics::Renderable::ID, CountedTexture> textures;
+    std::unordered_map<graphics::Renderable::ID, Entry> textures;
 };
 }
 }

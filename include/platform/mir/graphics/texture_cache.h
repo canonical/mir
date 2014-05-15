@@ -13,7 +13,8 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
 #ifndef MIR_GRAPHICS_TEXTURE_CACHE_H_
@@ -25,28 +26,31 @@ namespace mir
 {
 namespace graphics
 {
-class Texture;
-class TextureCache
+class GLTexture;
+class GLTextureCache
 {
 public:
-    virtual ~TextureCache() = default;
+    virtual ~GLTextureCache() = default;
 
-    /** Loads texture from the renderable and ensures that it is bound.
+    /** Loads texture from the renderable
      * \param [in] renderable
-     *     The Renderable that will be bound as the active texture of the GL context
+     *     The Renderable that needs to be used as a texture
+     * \returns 
+     *     The texture that represents the renderable.
     **/ 
-    virtual std::shared_ptr<Texture> load_texture(Renderable const&) = 0;
+    virtual std::shared_ptr<GLTexture> load_texture(Renderable const&) = 0;
 
-    virtual void invalidate() = 0;
+    /** mark the entries in the cache as having invalid bindings **/ 
+    virtual void invalidate_bindings() = 0;
 
-    /** Release the resources associated with the bound textures in the cache **/
-    virtual void release_live_texture_resources() = 0;
+    /** cache selects textures to release **/
+    virtual void drop_old_textures() = 0;
 
 protected:
-    TextureCache() = default;
+    GLTextureCache() = default;
 private:
-    TextureCache(TextureCache const&) = delete;
-    TextureCache& operator=(TextureCache const&) = delete;
+    GLTextureCache(GLTextureCache const&) = delete;
+    GLTextureCache& operator=(GLTextureCache const&) = delete;
 };
 }
 }

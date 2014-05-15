@@ -58,7 +58,7 @@ public:
     void render(RenderableList const&, SwappingGLContext const&) const;
 private:
     std::unique_ptr<graphics::GLProgram> program;
-    std::unique_ptr<graphics::TextureCache> texture_cache;
+    std::unique_ptr<graphics::GLTextureCache> texture_cache;
 
     GLint position_attr;
     GLint texcoord_attr;
