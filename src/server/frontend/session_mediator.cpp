@@ -420,6 +420,11 @@ void mf::SessionMediator::screencast_buffer(
     done->Run();
 }
 
+std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::trusted_connect_handler() const
+{
+    return [](std::shared_ptr<frontend::Session> const&) {};
+}
+
 void mf::SessionMediator::configure_cursor(
     google::protobuf::RpcController*,
     mir::protobuf::CursorSetting const* /* cursor_request */,
@@ -444,7 +449,7 @@ void mf::SessionMediator::new_fds_for_trusted_clients(
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
         // TODO write a handler that connects the new session to our trust session
-        auto const connect_handler = [](std::shared_ptr<frontend::Session> const&) {};
+        auto const connect_handler = trusted_connect_handler();
 
         auto const fds_requested = parameters->number();
 

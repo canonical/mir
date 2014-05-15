@@ -27,6 +27,7 @@
 
 namespace mir
 {
+class ServerActionQueue;
 
 namespace graphics
 {
@@ -38,6 +39,7 @@ namespace scene
 {
 class SessionEventHandlerRegister;
 class SessionContainer;
+class Session;
 
 class MediatingDisplayChanger : public frontend::DisplayChanger,
                                 public mir::DisplayChanger
@@ -48,7 +50,8 @@ public:
         std::shared_ptr<compositor::Compositor> const& compositor,
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const& display_configuration_policy,
         std::shared_ptr<SessionContainer> const& session_container,
-        std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register);
+        std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
+        std::shared_ptr<ServerActionQueue> const& server_action_queue);
 
     /* From mir::frontend::DisplayChanger */
     std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
@@ -60,7 +63,14 @@ public:
         std::shared_ptr<graphics::DisplayConfiguration> const& conf,
         SystemStateHandling pause_resume_system);
 
+    void pause_display_config_processing() override;
+    void resume_display_config_processing() override;
+
 private:
+    void focus_change_handler(std::shared_ptr<Session> const& session);
+    void no_focus_handler();
+    void session_stopping_handler(std::shared_ptr<Session> const& session);
+
     void apply_config(std::shared_ptr<graphics::DisplayConfiguration> const& conf,
                       SystemStateHandling pause_resume_system);
     void apply_base_config(SystemStateHandling pause_resume_system);
@@ -72,6 +82,7 @@ private:
     std::shared_ptr<graphics::DisplayConfigurationPolicy> const display_configuration_policy;
     std::shared_ptr<SessionContainer> const session_container;
     std::shared_ptr<SessionEventHandlerRegister> const session_event_handler_register;
+    std::shared_ptr<ServerActionQueue> const server_action_queue;
     std::mutex configuration_mutex;
     std::map<std::weak_ptr<frontend::Session>,
              std::shared_ptr<graphics::DisplayConfiguration>,
