@@ -82,5 +82,5 @@ int mcla::ClientSurfaceInterpreter::driver_requests_info(int key) const
 
 void mcla::ClientSurfaceInterpreter::sync_to_display(bool)
 {
-    //note: clients run with the swapinterval of the display. ignore their request for now
+    
 }
