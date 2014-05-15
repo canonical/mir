@@ -17,6 +17,7 @@
  *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/server_action_queue.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/graphics/event_handler_register.h"
 #include "src/server/scene/global_event_sender.h"
@@ -35,6 +36,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test/pipe.h"
 #include "mir_test/cross_process_action.h"
+#include "mir_test/wait_condition.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -153,6 +155,16 @@ public:
 
     testing::NiceMock<MockDisplay> mock_display;
 };
+
+void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_queue)
+{
+    mt::WaitCondition last_action_done;
+    server_action_queue.enqueue(
+        &last_action_done,
+        [&] { last_action_done.wake_up_everyone(); });
+
+    last_action_done.wait_for_at_most_seconds(5);
+}
 
 }
 
@@ -481,12 +493,14 @@ TEST_F(DisplayConfigurationTest, changing_config_for_focused_client_configures_d
             t = std::thread([this](){
                 verify_connection_expectations.exec([&]
                 {
+                    wait_for_server_actions_to_finish(*the_server_action_queue());
                     testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
                     EXPECT_CALL(platform->mock_display, configure(testing::_)).Times(1);
                 });
 
                 verify_apply_config_expectations.exec([&]
                 {
+                    wait_for_server_actions_to_finish(*the_server_action_queue());
                     testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
                 });
             });
@@ -561,12 +575,14 @@ TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_
             t = std::thread([this](){
                 verify_apply_config_expectations.exec([&]
                 {
+                    wait_for_server_actions_to_finish(*the_server_action_queue());
                     testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
                     EXPECT_CALL(platform->mock_display, configure(testing::_)).Times(1);
                 });
 
                 verify_focus_change_expectations.exec([&]
                 {
+                    wait_for_server_actions_to_finish(*the_server_action_queue());
                     testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
                 });
             });
@@ -655,12 +671,14 @@ TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_clien
             t = std::thread([this](){
                 verify_apply_config_expectations.exec([&]
                 {
+                    wait_for_server_actions_to_finish(*the_server_action_queue());
                     testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
                     EXPECT_CALL(platform->mock_display, configure(testing::_)).Times(1);
                 });
 
                 verify_focus_change_expectations.exec([&]
                 {
+                    wait_for_server_actions_to_finish(*the_server_action_queue());
                     testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
                 });
             });
@@ -741,6 +759,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_doesnt_apply_base_config_if_p
                 {
                     using namespace testing;
 
+                    wait_for_server_actions_to_finish(*the_server_action_queue());
                     Mock::VerifyAndClearExpectations(&platform->mock_display);
                     /*
                      * A client with a per-session config is active, the base configuration
@@ -750,6 +769,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_doesnt_apply_base_config_if_p
                     platform->mock_display.emit_configuration_change_event(
                         mt::fake_shared(changed_stub_display_config));
                     platform->mock_display.wait_for_configuration_change_handler();
+                    wait_for_server_actions_to_finish(*the_server_action_queue());
                     Mock::VerifyAndClearExpectations(&platform->mock_display);
                 });
             });
