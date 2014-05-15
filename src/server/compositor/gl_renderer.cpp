@@ -20,8 +20,8 @@
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/tessellation_helpers.h"
-#include "mir/graphics/texture_cache.h"
-#include "mir/graphics/texture.h"
+#include "mir/graphics/gl_texture_cache.h"
+#include "mir/graphics/gl_texture.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
@@ -101,11 +101,11 @@ mc::GLRenderer::GLRenderer(
     set_rotation(0.0f);
 }
 
-void mc::GLRenderer::tessellate(std::vector<mg::Primitive>& primitives,
+void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
                                 mg::Renderable const& renderable) const
 {
     primitives.resize(1);
-    primitives[0] = mg::tessellate_renderable_into_quad(renderable);
+    primitives[0] = mg::tessellate_renderable_into_rectangle(renderable);
 }
 
 void mc::GLRenderer::render(mg::RenderableList const& renderables) const
@@ -145,7 +145,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     glEnableVertexAttribArray(position_attr_loc);
     glEnableVertexAttribArray(texcoord_attr_loc);
 
-    std::vector<mg::Primitive> primitives;
+    std::vector<mg::GLPrimitive> primitives;
     tessellate(primitives, renderable);
    
     auto surface_tex = texture_cache->load_texture(renderable);
@@ -161,10 +161,10 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
             surface_tex->gl_bind();
 
         glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
-                              GL_FALSE, sizeof(mg::Vertex),
+                              GL_FALSE, sizeof(mg::GLVertex),
                               &p.vertices[0].position);
         glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT,
-                              GL_FALSE, sizeof(mg::Vertex),
+                              GL_FALSE, sizeof(mg::GLVertex),
                               &p.vertices[0].texcoord);
 
         glDrawArrays(p.type, 0, p.vertices.size());

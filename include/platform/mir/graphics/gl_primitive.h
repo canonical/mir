@@ -13,11 +13,12 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_PRIMITIVE_H_
-#define MIR_GRAPHICS_PRIMITIVE_H_
+#ifndef MIR_GRAPHICS_GL_PRIMITIVE_H_
+#define MIR_GRAPHICS_GL_PRIMITIVE_H_
 
 #include <GLES2/gl2.h>
 #include <vector>
@@ -26,18 +27,18 @@ namespace mir
 {
 namespace graphics
 {
-struct Vertex
+struct GLVertex
 {
     GLfloat position[3];
     GLfloat texcoord[2];
 };
 
-struct Primitive
+struct GLPrimitive
 {
     GLenum type; // GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES etc
     GLuint tex_id;  // GL texture ID (or 0 to represent the surface itself)
-    std::vector<Vertex> vertices;
+    std::vector<GLVertex> vertices;
 };
 }
 }
-#endif /* MIR_GRAPHICS_PRIMITIVE_H_ */
+#endif /* MIR_GRAPHICS_GL_PRIMITIVE_H_ */

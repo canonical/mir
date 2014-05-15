@@ -24,7 +24,7 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
-#include <mir/graphics/primitive.h>
+#include <mir/graphics/gl_primitive.h>
 #include <mir/graphics/gl_program_factory.h>
 #include <mir/graphics/texture_cache.h>
 #include <GLES2/gl2.h>
@@ -71,7 +71,7 @@ public:
      *       the only OpenGL-specific class in the display server, and
      *       tessellation is very much OpenGL-specific.
      */
-    virtual void tessellate(std::vector<graphics::Primitive>& primitives,
+    virtual void tessellate(std::vector<graphics::GLPrimitive>& primitives,
                             graphics::Renderable const& renderable) const;
 
     virtual void render(graphics::Renderable const& renderable) const;
