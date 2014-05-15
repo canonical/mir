@@ -36,9 +36,9 @@ public:
     void release_live_texture_resources() override;
 
 private:
-    struct CountedTexture
+    struct Entry
     {
-        CountedTexture()
+        Entry()
          : texture(std::make_shared<graphics::GLTexture>())
         {}
         std::shared_ptr<graphics::GLTexture> texture;
@@ -47,7 +47,7 @@ private:
         std::shared_ptr<graphics::Buffer> resource;
     };
 
-    std::unordered_map<graphics::Renderable::ID, CountedTexture> textures;
+    std::unordered_map<graphics::Renderable::ID, Entry> textures;
 };
 }
 }
