@@ -60,7 +60,7 @@ struct MockTextureCache : public mg::TextureCache
     }
     MOCK_METHOD1(load_texture, std::shared_ptr<mg::GLTexture>(mg::Renderable const&));
     MOCK_METHOD0(invalidate_bindings, void());
-    MOCK_METHOD0(release_live_texture_resources, void());
+    MOCK_METHOD0(drop_old_textures, void());
 };
 
 const GLint stub_v_shader = 1;
@@ -207,7 +207,7 @@ TEST_F(GLRenderer, render_is_done_in_sequence)
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
 
-    EXPECT_CALL(*mock_texture_cache, release_live_texture_resources());
+    EXPECT_CALL(*mock_texture_cache, drop_old_textures());
 
     mc::GLRenderer renderer(program_factory, std::move(mock_texture_cache), display_area);
     renderer.begin();

@@ -267,7 +267,7 @@ void mc::GLRenderer::begin() const
 
 void mc::GLRenderer::end() const
 {
-    texture_cache->release_live_texture_resources();
+    texture_cache->drop_old_textures();
 }
 
 void mc::GLRenderer::suspend()

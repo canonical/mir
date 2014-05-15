@@ -41,7 +41,8 @@ std::shared_ptr<mg::GLTexture> mc::RecentlyBoundCache::load_texture(mg::Renderab
     texture.last_bound_buffer = buffer_id;
     texture.used = true;
 
-    return texture.texture;
+    return std::shared_ptr<mg::GLTexture>(texture.texture.get(),
+        [](mg::GLTexture*){});
 }
 
 void mc::RecentlyBoundCache::invalidate_bindings()
@@ -51,13 +52,12 @@ void mc::RecentlyBoundCache::invalidate_bindings()
         t.second.last_bound_buffer = invalid_id;
 }
 
-void mc::RecentlyBoundCache::release_live_texture_resources()
+void mc::RecentlyBoundCache::drop_old_textures()
 {
     auto t = textures.begin();
     while (t != textures.end())
     {
         auto& tex = t->second;
-        tex.resource.reset();
         if (tex.used)
         {
             tex.used = false;

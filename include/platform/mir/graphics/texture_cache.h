@@ -32,17 +32,19 @@ class TextureCache
 public:
     virtual ~TextureCache() = default;
 
-    /** Loads texture from the renderable and ensures that it is bound.
+    /** Loads texture from the renderable
      * \param [in] renderable
-     *     The Renderable that will be bound as the active texture of the GL context
+     *     The Renderable that needs to be used as a texture
+     * \returns 
+     *     The texture that represents the renderable.
     **/ 
     virtual std::shared_ptr<GLTexture> load_texture(Renderable const&) = 0;
 
     /** mark the entries in the cache as having invalid bindings **/ 
     virtual void invalidate_bindings() = 0;
 
-    /** Release the resources associated with the bound textures in the cache **/
-    virtual void release_live_texture_resources() = 0;
+    /** cache selects textures to release **/
+    virtual void drop_old_textures() = 0;
 
 protected:
     TextureCache() = default;
