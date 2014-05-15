@@ -20,7 +20,7 @@
 #include "cursor_configuration.h"
 
 char const *const mir_default_cursor_name = "default";
-char const *const mir_disabled_cursor_name = nullptr;
+char const *const mir_disabled_cursor_name = "disabled";
 
 
 void mir_cursor_configuration_destroy(MirCursorConfiguration *cursor)
@@ -33,7 +33,7 @@ MirCursorConfiguration* mir_cursor_configuration_from_name(char const* name)
     try 
     {
         auto c = new MirCursorConfiguration;
-        c->name = std::string(name);
+        c->name = name ? std::string(name) : std::string();
     
         return c;
     }
