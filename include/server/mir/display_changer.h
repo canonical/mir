@@ -39,6 +39,9 @@ public:
         std::shared_ptr<graphics::DisplayConfiguration> const& conf,
         SystemStateHandling pause_resume_system) = 0;
 
+    virtual void pause_display_config_processing() = 0;
+    virtual void resume_display_config_processing() = 0;
+
 protected:
     DisplayChanger() = default;
     DisplayChanger(DisplayChanger const&) = delete;
