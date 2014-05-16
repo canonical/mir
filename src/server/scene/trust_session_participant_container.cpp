@@ -32,58 +32,38 @@ ms::TrustSessionParticipantContainer::TrustSessionParticipantContainer()
 {
 }
 
-bool ms::TrustSessionParticipantContainer::insert_participant(std::shared_ptr<mf::TrustSession> const& trust_session, mf::Session* session)
+bool ms::TrustSessionParticipantContainer::insert_participant(std::shared_ptr<mf::TrustSession> const& trust_session, mf::Session* session, bool child)
 {
     std::unique_lock<std::mutex> lk(mutex);
 
     participant_by_trust_session::iterator it;
     bool valid = false;
 
-    Participant participant{trust_session, session, insertion_order++};
+    Participant participant{trust_session, session, child, insertion_order++};
     boost::tie(it,valid) = participant_map.insert(participant);
 
-    {
-        process_by_trust_session::iterator it,end;
-        boost::tie(it,end) = waiting_process_trust_session_index.equal_range(boost::make_tuple(trust_session, session->process_id()));
-        if (it != end)
-        {
-            waiting_process_trust_session_index.erase(it);
-        }
-    }
+    if (!valid)
+        return false;
 
-    return valid;
+    process_by_trust_session::iterator process_it,end;
+    boost::tie(process_it,end) = waiting_process_trust_session_index.equal_range(boost::make_tuple(trust_session, session->process_id()));
+    if (process_it != end)
+    {
+        waiting_process_trust_session_index.erase(process_it);
+    }
+    return true;
 }
 
-void ms::TrustSessionParticipantContainer::for_each_participant_for_trust_session(
-    std::shared_ptr<mf::TrustSession> const& trust_session,
-    std::function<void(mf::Session*)> f)
+bool ms::TrustSessionParticipantContainer::remove_participant(std::shared_ptr<mf::TrustSession> const& trust_session, mf::Session* session)
 {
     std::unique_lock<std::mutex> lk(mutex);
 
-    participant_by_trust_session::iterator it,end;
-    boost::tie(it,end) = trust_session_index.equal_range(trust_session);
+    participant_by_session::iterator it = participant_index.find(boost::make_tuple(session, trust_session));
+    if (it == participant_index.end())
+        return false;
 
-    for (; it != end; ++it)
-    {
-        Participant const& participant = *it;
-        f(participant.session);
-    }
-}
-
-void ms::TrustSessionParticipantContainer::for_each_trust_session_for_participant(
-    mf::Session* session,
-    std::function<void(std::shared_ptr<mf::TrustSession> const&)> f)
-{
-    std::unique_lock<std::mutex> lk(mutex);
-
-    participant_by_session::iterator it,end;
-    boost::tie(it,end) = participant_index.equal_range(session);
-
-    for (; it != end; ++it)
-    {
-        Participant const& participant = *it;
-        f(participant.trust_session);
-    }
+    participant_index.erase(it);
+    return true;
 }
 
 void ms::TrustSessionParticipantContainer::remove_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
@@ -102,14 +82,36 @@ void ms::TrustSessionParticipantContainer::remove_trust_session(std::shared_ptr<
     }
 }
 
-void ms::TrustSessionParticipantContainer::remove_participant(mf::Session* session)
+void ms::TrustSessionParticipantContainer::for_each_participant_for_trust_session(
+    std::shared_ptr<mf::TrustSession> const& trust_session,
+    std::function<void(mf::Session*, bool)> f)
+{
+    std::unique_lock<std::mutex> lk(mutex);
+
+    participant_by_trust_session::iterator it,end;
+    boost::tie(it,end) = trust_session_index.equal_range(trust_session);
+
+    for (; it != end; ++it)
+    {
+        Participant const& participant = *it;
+        f(participant.session, participant.child);
+    }
+}
+
+void ms::TrustSessionParticipantContainer::for_each_trust_session_for_participant(
+    mf::Session* session,
+    std::function<void(std::shared_ptr<mf::TrustSession> const&)> f)
 {
     std::unique_lock<std::mutex> lk(mutex);
 
     participant_by_session::iterator it,end;
     boost::tie(it,end) = participant_index.equal_range(session);
 
-    participant_index.erase(it, end);
+    for (; it != end; ++it)
+    {
+        Participant const& participant = *it;
+        f(participant.trust_session);
+    }
 }
 
 void ms::TrustSessionParticipantContainer::insert_waiting_process(

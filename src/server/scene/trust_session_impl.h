@@ -33,6 +33,7 @@ namespace scene
 class SessionContainer;
 class TrustSessionCreationParameters;
 class TrustSessionListener;
+class TrustSessionParticipants;
 
 class TrustSessionImpl : public TrustSession
 {
@@ -49,8 +50,8 @@ public:
     void stop() override;
 
     bool add_trusted_child(std::shared_ptr<Session> const& session);
-    void remove_trusted_child(std::shared_ptr<Session> const& session);
-    void for_each_trusted_child(std::function<void(std::shared_ptr<Session> const&)> f) const;
+    bool remove_trusted_child(std::shared_ptr<Session> const& session);
+    void for_each_trusted_child(std::function<void(Session*)> f) const;
 
 protected:
     TrustSessionImpl(const TrustSessionImpl&) = delete;
@@ -63,9 +64,7 @@ private:
     std::string cookie;
     std::mutex mutable mutex;
 
-    std::mutex mutable mutex_children;
-    std::vector<pid_t> client_processes;
-    std::vector<std::weak_ptr<Session>> trusted_children;
+    std::shared_ptr<TrustSessionParticipants> participants;
 };
 
 }

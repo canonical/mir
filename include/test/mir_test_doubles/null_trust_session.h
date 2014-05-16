@@ -53,11 +53,12 @@ class NullTrustSession : public scene::TrustSession
         return false;
     }
 
-    void remove_trusted_child(std::shared_ptr<scene::Session> const&) override
+    bool remove_trusted_child(std::shared_ptr<scene::Session> const&) override
     {
+        return false;
     }
 
-    void for_each_trusted_child(std::function<void(std::shared_ptr<scene::Session> const&)>) const override
+    void for_each_trusted_child(std::function<void(scene::Session*)>) const override
     {
     }
 };

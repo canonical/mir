@@ -21,11 +21,13 @@
 #include "mir/scene/trust_session_creation_parameters.h"
 #include "mir/scene/trust_session_listener.h"
 #include "session_container.h"
+#include "trust_session_participants.h"
 
 #include <sstream>
 #include <algorithm>
 
 namespace ms = mir::scene;
+namespace mf = mir::frontend;
 
 int next_unique_id = 0;
 
@@ -87,24 +89,17 @@ void ms::TrustSessionImpl::stop()
         helper->end_trust_session();
     }
 
-    std::vector<std::shared_ptr<ms::Session>> children;
-    {
-        std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
-
-        for (auto rit = trusted_children.rbegin(); rit != trusted_children.rend(); ++rit)
+    std::vector<mf::Session*> children;
+    participants->for_each_participant(
+        [&](mf::Session* session)
         {
-            auto session = (*rit).lock();
-            if (session)
-            {
-                children.push_back(session);
-            }
-        }
-        trusted_children.clear();
-    }
+            children.push_back(session);
+        });
 
     for (auto session : children)
     {
-        trust_session_listener->trusted_session_ending(*this, session);
+        participants->remove(session);
+        // trust_session_listener->trusted_session_ending(*this, std::dynamic_pointer_cast<ms::Session>(session));
     }
 }
 
@@ -115,61 +110,36 @@ bool ms::TrustSessionImpl::add_trusted_child(std::shared_ptr<ms::Session> const&
     if (state == mir_trust_session_state_stopped)
         return false;
 
-    {
-        std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
-
-        if (std::find_if(trusted_children.begin(), trusted_children.end(),
-                [session](std::weak_ptr<ms::Session> const& child)
-                {
-                    return child.lock() == session;
-                }) != trusted_children.end())
-        {
-            return false;
-        }
-
-        trusted_children.push_back(session);
-    }
+    if (!participants->insert(session.get()))
+        return false;
 
     trust_session_listener->trusted_session_beginning(*this, session);
     return true;
 }
 
-void ms::TrustSessionImpl::remove_trusted_child(std::shared_ptr<ms::Session> const& session)
+bool ms::TrustSessionImpl::remove_trusted_child(std::shared_ptr<ms::Session> const& session)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     if (state == mir_trust_session_state_stopped)
-        return;
+        return false;
 
-    bool found = false;
-    {
-        std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
-
-        for (auto it = trusted_children.begin(); it != trusted_children.end(); ++it)
-        {
-            auto trusted_child = (*it).lock();
-            if (trusted_child && trusted_child == session) {
-                found = true;
-                trusted_children.erase(it);
-                break;
-            }
-        }
-    }
-
-    if (found)
+    if (participants->remove(session.get()))
     {
         trust_session_listener->trusted_session_ending(*this, session);
+        return true;
     }
+    return false;
 }
 
 void ms::TrustSessionImpl::for_each_trusted_child(
-    std::function<void(std::shared_ptr<ms::Session> const&)> f) const
+    std::function<void(ms::Session*)> f) const
 {
-    std::lock_guard<decltype(mutex_children)> child_lock(mutex_children);
-
-    for (auto it = trusted_children.begin(); it != trusted_children.end(); ++it)
-    {
-        if (auto trusted_child = (*it).lock())
-            f(trusted_child);
-    }
+    participants->for_each_participant(
+        [f](mf::Session* session)
+        {
+            auto scene_session = dynamic_cast<ms::Session*>(session);
+            if (scene_session)
+                f(scene_session);
+        });
 }

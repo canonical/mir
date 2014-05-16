@@ -33,8 +33,8 @@ public:
     virtual std::weak_ptr<Session> get_trusted_helper() const = 0;
 
     virtual bool add_trusted_child(std::shared_ptr<Session> const& session) = 0;
-    virtual void remove_trusted_child(std::shared_ptr<Session> const& session) = 0;
-    virtual void for_each_trusted_child(std::function<void(std::shared_ptr<Session> const&)> f) const = 0;
+    virtual bool remove_trusted_child(std::shared_ptr<Session> const& session) = 0;
+    virtual void for_each_trusted_child(std::function<void(Session*)> f) const = 0;
 };
 
 }

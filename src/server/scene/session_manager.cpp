@@ -107,7 +107,7 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
         for(auto trust_session : trust_sessions)
         {
             auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
-            trust_session_container->insert_participant(trust_session, new_session.get());
+            trust_session_container->insert_participant(trust_session, new_session.get(), true);
             scene_trust_session->add_trusted_child(new_session);
         }
     }
@@ -153,9 +153,9 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
     {
         std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
-        std::vector<std::shared_ptr<frontend::TrustSession>> trust_sessions;
+        std::vector<std::shared_ptr<mf::TrustSession>> trust_sessions;
         trust_session_container->for_each_trust_session_for_participant(scene_session.get(),
-            [&](std::shared_ptr<frontend::TrustSession> const& trust_session)
+            [&](std::shared_ptr<mf::TrustSession> const& trust_session)
             {
                 trust_sessions.push_back(trust_session);
             });
@@ -171,7 +171,7 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
             else
             {
                 scene_trust_session->remove_trusted_child(scene_session);
-                trust_session_container->remove_participant(scene_session.get());
+                trust_session_container->remove_participant(trust_session, scene_session.get());
             }
         }
     }
@@ -238,7 +238,7 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
 
     auto const trust_session = std::make_shared<TrustSessionImpl>(shell_session, params, trust_session_listener);
 
-    trust_session_container->insert_participant(trust_session, shell_session.get());
+    trust_session_container->insert_participant(trust_session, shell_session.get(), false);
 
     trust_session->start();
     trust_session_listener->starting(trust_session);
@@ -268,7 +268,7 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_process_for_locked
         {
             if (container_session->process_id() == process_id)
             {
-                trust_session_container->insert_participant(trust_session, container_session.get());
+                trust_session_container->insert_participant(trust_session, container_session.get(), true);
                 scene_trust_session->add_trusted_child(container_session);
             }
         });
@@ -282,7 +282,7 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for(std::s
     auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
     auto scene_session = std::dynamic_pointer_cast<ms::Session>(session);
 
-    trust_session_container->insert_participant(trust_session, session.get());
+    trust_session_container->insert_participant(trust_session, session.get(), true);
     scene_trust_session->add_trusted_child(scene_session);
 
     return mir_trust_session_add_tust_succeeded;

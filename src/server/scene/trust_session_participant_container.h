@@ -49,13 +49,12 @@ public:
     TrustSessionParticipantContainer();
     virtual ~TrustSessionParticipantContainer() = default;
 
-    bool insert_participant(std::shared_ptr<frontend::TrustSession> const& trust_session, frontend::Session* session);
-
-    void for_each_participant_for_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session, std::function<void(frontend::Session*)> f);
-    void for_each_trust_session_for_participant(frontend::Session* session, std::function<void(std::shared_ptr<frontend::TrustSession> const&)> f);
-
+    bool insert_participant(std::shared_ptr<frontend::TrustSession> const& trust_session, frontend::Session* session, bool child);
+    bool remove_participant(std::shared_ptr<frontend::TrustSession> const& trust_session, frontend::Session* session);
     void remove_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session);
-    void remove_participant(frontend::Session* session);
+
+    void for_each_participant_for_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session, std::function<void(frontend::Session*, bool)> f);
+    void for_each_trust_session_for_participant(frontend::Session* session, std::function<void(std::shared_ptr<frontend::TrustSession> const&)> f);
 
     void insert_waiting_process(std::shared_ptr<frontend::TrustSession> const& trust_session, pid_t process_id);
     void for_each_trust_session_for_waiting_process(pid_t process_id, std::function<void(std::shared_ptr<frontend::TrustSession> const&)> f);
@@ -66,6 +65,7 @@ private:
     typedef struct {
         std::shared_ptr<frontend::TrustSession> trust_session;
         frontend::Session* session;
+        bool child;
         uint insert_order;
     } Participant;
 
@@ -84,6 +84,10 @@ private:
                     Participant,
                     member<Participant, frontend::Session*, &Participant::session>,
                     member<Participant, std::shared_ptr<frontend::TrustSession>, &Participant::trust_session>
+                >,
+                composite_key_compare<
+                    std::less<frontend::Session*>,
+                    std::less<std::shared_ptr<frontend::TrustSession>>
                 >
             >
         >
