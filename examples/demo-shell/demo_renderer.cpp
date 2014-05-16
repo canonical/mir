@@ -162,16 +162,15 @@ void DemoRenderer::begin() const
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 }
 
-void DemoRenderer::tessellate(std::vector<Primitive>& primitives,
-                              graphics::Renderable const& renderable,
-                              geometry::Size const& buf_size) const
+void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
+                              graphics::Renderable const& renderable) const
 {
-    GLRenderer::tessellate(primitives, renderable, buf_size);
+    GLRenderer::tessellate(primitives, renderable);
     tessellate_shadow(primitives, renderable, 80.0f);
     tessellate_frame(primitives, renderable, 30.0f);
 }
 
-void DemoRenderer::tessellate_shadow(std::vector<Primitive>& primitives,
+void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primitives,
                                      graphics::Renderable const& renderable,
                                      float radius) const
 {
@@ -266,7 +265,7 @@ void DemoRenderer::tessellate_shadow(std::vector<Primitive>& primitives,
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void DemoRenderer::tessellate_frame(std::vector<Primitive>& primitives,
+void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitives,
                                     graphics::Renderable const& renderable,
                                     float titlebar_height) const
 {
