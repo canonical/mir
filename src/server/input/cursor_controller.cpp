@@ -158,7 +158,9 @@ std::shared_ptr<mi::Surface> topmost_surface_containing_point(
     targets->for_each([&top_surface_at_point, &point]
         (std::shared_ptr<mi::Surface> const& surface) 
         {
-            if (surface->input_area_contains(point))
+            // TODO: Would be better if surface->input_region_contains
+            // worked in global coords.
+            if (surface->input_bounds().contains(point))
                 top_surface_at_point = surface;
         });
     return top_surface_at_point;
