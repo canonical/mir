@@ -43,7 +43,7 @@ class SessionEventSink;
 class SessionListener;
 class SnapshotStrategy;
 class SurfaceCoordinator;
-class TrustSessionContainer;
+class TrustSessionParticipantContainer;
 class TrustSessionListener;
 
 class SessionManager : public frontend::Shell, public shell::FocusController
@@ -95,7 +95,7 @@ private:
     std::shared_ptr<SessionEventSink> const session_event_sink;
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<TrustSessionListener> const trust_session_listener;
-    std::shared_ptr<TrustSessionContainer> trust_session_container;
+    std::shared_ptr<TrustSessionParticipantContainer> trust_session_container;
 
     std::mutex mutex;
     std::weak_ptr<Session> focus_application;
