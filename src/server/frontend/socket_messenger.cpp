@@ -154,6 +154,8 @@ bs::error_code mfd::SocketMessenger::receive_msg(
 
 size_t mfd::SocketMessenger::available_bytes()
 {
+    // We call available_bytes() once the client is talking to us
+    // so this is a pragmatic place to grab the session credentials
     if (session_creds.pid() == 0)
         update_session_creds();
 
@@ -169,7 +171,7 @@ void mfd::SocketMessenger::update_session_creds()
         char   control[CMSG_SPACE(sizeof(ucred))];
     } control_un;
 
-    control_un.cmh.cmsg_len = CMSG_LEN(sizeof(struct ucred));
+    control_un.cmh.cmsg_len = CMSG_LEN(sizeof(ucred));
     control_un.cmh.cmsg_level = SOL_SOCKET;
     control_un.cmh.cmsg_type = SCM_CREDENTIALS;
 
@@ -181,12 +183,9 @@ void mfd::SocketMessenger::update_session_creds()
     msgh.msg_control = control_un.control;
     msgh.msg_controllen = sizeof(control_un.control);
 
-    if (recvmsg(socket->native_handle(), &msgh, MSG_PEEK) == -1)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to recvmsg"));
-
-    auto const cmhp = CMSG_FIRSTHDR(&msgh);
-
-    auto const ucredp = (struct ucred *) CMSG_DATA(cmhp);
-
-    session_creds = {ucredp->pid, ucredp->uid, ucredp->gid};
+    if (recvmsg(socket->native_handle(), &msgh, MSG_PEEK) != -1)
+    {
+        auto const ucredp = (struct ucred *) CMSG_DATA(CMSG_FIRSTHDR(&msgh));
+        session_creds = {ucredp->pid, ucredp->uid, ucredp->gid};
+    }
 }
