@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,91 +16,50 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#include "mir_test_framework/display_server_test_fixture.h"
-
-#include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_trust_session.h"
 
+#include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/basic_client_server_fixture.h"
+
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mtf = mir_test_framework;
 
 namespace
 {
-    char const* const mir_test_socket = mtf::test_socket_file().c_str();
-}
-
-using MirClientTrustSessionAPITest = DefaultDisplayServerTestFixture;
-
-namespace mir
+struct TrustSessionClientAPI : mtf::BasicClientServerFixture<mtf::StubbedServerConfiguration>
 {
-namespace
-{
-struct ClientConfigCommon : TestingClientConfiguration
-{
-    ClientConfigCommon()
-        : connection(0)
-        , trust_session(0)
-        , started(0)
-        , stopped(0)
-    {
-    }
+    static constexpr int arbitrary_base_session_id = __LINE__;
+    static constexpr mir_trust_session_event_callback null_event_callback = nullptr;
 
-    static void connection_callback(MirConnection * connection, void * context)
-    {
-        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->connection = connection;
-    }
-
-    virtual void connected(MirConnection * new_connection)
-    {
-        connection = new_connection;
-    }
-
-    static void trust_session_start_callback(MirTrustSession * session, void * context)
-    {
-        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->trust_session = session;
-        config->started++;
-    }
-
-    static void trust_session_stop_callback(MirTrustSession * /* session */, void * context)
-    {
-        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->stopped++;
-    }
-
-    MirConnection* connection;
-    MirTrustSession* trust_session;
-    int started;
-    int stopped;
+    MirTrustSession* trust_session = nullptr;
+    int started = 0;
+    int stopped = 0;
 };
-}
 
-TEST_F(MirClientTrustSessionAPITest, client_trust_session_api)
+void trust_session_start_callback(MirTrustSession* session, void* context)
 {
-    struct ClientConfig : ClientConfigCommon
-    {
-        void exec()
-        {
-            mir_wait_for(mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this));
-
-            ASSERT_TRUE(connection != NULL);
-            EXPECT_TRUE(mir_connection_is_valid(connection));
-            EXPECT_STREQ("", mir_connection_get_error_message(connection));
-
-            mir_wait_for(mir_connection_start_trust_session(connection, __LINE__, trust_session_start_callback, NULL, this));
-            ASSERT_TRUE(trust_session != NULL);
-            EXPECT_EQ(started, 1);
-
-            mir_wait_for(mir_trust_session_stop(trust_session, trust_session_stop_callback, this));
-            EXPECT_EQ(stopped, 1);
-
-            mir_connection_release(connection);
-        }
-    } client_config;
-
-    launch_client_process(client_config);
+    TrustSessionClientAPI* self = static_cast<TrustSessionClientAPI*>(context);
+    self->trust_session = session;
+    self->started++;
 }
 
+void trust_session_stop_callback(MirTrustSession* /* session */, void* context)
+{
+    TrustSessionClientAPI* self = static_cast<TrustSessionClientAPI*>(context);
+    self->stopped++;
+}
+}
+
+using namespace testing;
+
+TEST_F(TrustSessionClientAPI, can_start_and_stop_a_trust_session)
+{
+    mir_wait_for(mir_connection_start_trust_session(connection, arbitrary_base_session_id, trust_session_start_callback, null_event_callback, this));
+    ASSERT_THAT(trust_session, Ne(nullptr));
+    EXPECT_THAT(started, Eq(1));
+
+    mir_wait_for(mir_trust_session_stop(trust_session, trust_session_stop_callback, this));
+    EXPECT_THAT(stopped, Eq(1));
 }
