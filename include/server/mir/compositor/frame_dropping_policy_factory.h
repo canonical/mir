@@ -30,7 +30,12 @@ class FrameDroppingPolicy;
 class FrameDroppingPolicyFactory
 {
 public:
+    FrameDroppingPolicyFactory() = default;
     virtual ~FrameDroppingPolicyFactory() = default;
+
+    FrameDroppingPolicyFactory(FrameDroppingPolicyFactory const&) = delete;
+    FrameDroppingPolicyFactory& operator=(FrameDroppingPolicyFactory const&) = delete;
+
     /**
      * \brief Create a FrameDroppingPolicy that will call \param{drop_frame} to drop frames
      * \param drop_frame    Function to call when a frame needs to be dropped
