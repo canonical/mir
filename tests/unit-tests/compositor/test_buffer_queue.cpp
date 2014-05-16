@@ -1068,6 +1068,25 @@ TEST_F(BufferQueueTest, with_single_buffer_compositor_acquires_resized_frames_ev
     q.compositor_release(buf);
 }
 
+TEST_F(BufferQueueTest, double_buffered_client_is_not_blocked_prematurely)
+{  // Regression test for LP: #1319765
+    using namespace testing;
+
+    mc::BufferQueue q{2, allocator, basic_properties};
+
+    q.client_release(client_acquire_sync(q));
+    auto a = q.compositor_acquire(this);
+    q.client_release(client_acquire_sync(q));
+    auto b = q.compositor_acquire(this);
+
+    ASSERT_NE(a.get(), b.get());
+
+    q.compositor_release(a);
+    q.client_release(client_acquire_sync(q));
+    q.compositor_release(b);
+    q.client_release(client_acquire_sync(q));
+}
+
 /* Regression test for LP: #1306464 */
 TEST_F(BufferQueueTest, framedropping_client_acquire_does_not_block_when_no_available_buffers)
 {
