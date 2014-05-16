@@ -59,8 +59,10 @@ public:
 
     virtual std::shared_ptr<TrustSession> start_trust_session_for(std::shared_ptr<Session> const& session,
                                                                   scene::TrustSessionCreationParameters const& params) = 0;
+    virtual MirTrustSessionAddTrustResult add_trusted_process_for(std::shared_ptr<TrustSession> const& trust_session,
+                                                                  pid_t process_id) = 0;
     virtual MirTrustSessionAddTrustResult add_trusted_session_for(std::shared_ptr<TrustSession> const& trust_session,
-                                                                  pid_t session_pid) = 0;
+                                                                  std::shared_ptr<Session> const& session) = 0;
     virtual void stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) = 0;
 
 protected:

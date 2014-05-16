@@ -54,9 +54,15 @@ struct StubShell : public frontend::Shell
     {
         return std::shared_ptr<frontend::TrustSession>();
     }
+    MirTrustSessionAddTrustResult add_trusted_process_for(
+        std::shared_ptr<frontend::TrustSession> const&  /* trust_session */,
+        pid_t /* process_id */)
+    {
+        return mir_trust_session_add_tust_failed;
+    }
     MirTrustSessionAddTrustResult add_trusted_session_for(
         std::shared_ptr<frontend::TrustSession> const&  /* trust_session */,
-        pid_t /* session_pid */)
+        std::shared_ptr<frontend::Session> const& /* session */)
     {
         return mir_trust_session_add_tust_failed;
     }

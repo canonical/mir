@@ -236,25 +236,25 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
     trust_session->start();
     trust_session_listener->starting(trust_session);
 
-    add_trusted_session_for_locked(lock, trust_session, params.base_process_id);
+    add_trusted_process_for_locked(lock, trust_session, params.base_process_id);
     return trust_session;
 }
 
-MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for(std::shared_ptr<mf::TrustSession> const& trust_session,
-    pid_t session_pid)
+MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_process_for(std::shared_ptr<mf::TrustSession> const& trust_session,
+    pid_t process_id)
 {
     std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
-    return add_trusted_session_for_locked(lock, trust_session, session_pid);
+    return add_trusted_process_for_locked(lock, trust_session, process_id);
 }
 
-MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for_locked(std::unique_lock<std::mutex> const&,
+MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_process_for_locked(std::unique_lock<std::mutex> const&,
     std::shared_ptr<mf::TrustSession> const& trust_session,
-    pid_t session_pid)
+    pid_t process_id)
 {
     auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
 
-    if (!trust_session_container->insert(trust_session, session_pid))
+    if (!trust_session_container->insert(trust_session, process_id))
     {
         // TODO - remove comment once we have pid update for child fd created sessions.
         // BOOST_THROW_EXCEPTION(std::runtime_error("failed to add trusted session"));
@@ -263,11 +263,28 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for_locked
     app_container->for_each(
         [&](std::shared_ptr<ms::Session> const& container_session)
         {
-            if (container_session->process_id() == session_pid)
+            if (container_session->process_id() == process_id)
             {
                 scene_trust_session->add_trusted_child(container_session);
             }
         });
+
+    return mir_trust_session_add_tust_succeeded;
+}
+
+MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for(std::shared_ptr<mf::TrustSession> const& trust_session,
+    std::shared_ptr<frontend::Session> const& session)
+{
+    auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
+    auto scene_session = std::dynamic_pointer_cast<ms::Session>(session);
+
+    if (!trust_session_container->insert(trust_session, session->process_id()))
+    {
+        // TODO - remove comment once we have pid update for child fd created sessions.
+        // BOOST_THROW_EXCEPTION(std::runtime_error("failed to add trusted session"));
+    }
+
+    scene_trust_session->add_trusted_child(scene_session);
 
     return mir_trust_session_add_tust_succeeded;
 }

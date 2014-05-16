@@ -77,8 +77,10 @@ public:
 
     std::shared_ptr<frontend::TrustSession> start_trust_session_for(std::shared_ptr<frontend::Session> const& session,
                                                   TrustSessionCreationParameters const& params) override;
+    MirTrustSessionAddTrustResult add_trusted_process_for(std::shared_ptr<frontend::TrustSession> const& trust_session,
+                                                          pid_t process_id) override;
     MirTrustSessionAddTrustResult add_trusted_session_for(std::shared_ptr<frontend::TrustSession> const& trust_session,
-                                                          pid_t session_pid) override;
+                                                          std::shared_ptr<frontend::Session> const& session) override;
     void stop_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session) override;
 
 protected:
@@ -100,7 +102,7 @@ private:
 
     void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<Session> const& next_focus);
 
-    MirTrustSessionAddTrustResult add_trusted_session_for_locked(std::unique_lock<std::mutex> const&,
+    MirTrustSessionAddTrustResult add_trusted_process_for_locked(std::unique_lock<std::mutex> const&,
                                                                  std::shared_ptr<frontend::TrustSession> const& trust_session,
                                                                  pid_t session_pid);
     void stop_trust_session_locked(std::unique_lock<std::mutex> const& lock,
