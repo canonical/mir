@@ -31,7 +31,11 @@ namespace compositor
 class FrameDroppingPolicy
 {
 public:
+    FrameDroppingPolicy() = default;
     virtual ~FrameDroppingPolicy() = default;
+
+    FrameDroppingPolicy(FrameDroppingPolicy const&) = delete;
+    FrameDroppingPolicy& operator=(FrameDroppingPolicy const&) = delete;
 
     /**
      * \brief Notify that a swap has blocked
