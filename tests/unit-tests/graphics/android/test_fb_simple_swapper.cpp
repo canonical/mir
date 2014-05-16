@@ -234,3 +234,18 @@ TEST_F(PostingFBBundleTest, last_rendered_returns_valid)
     first_buffer.reset();
     EXPECT_EQ(first_buffer_ptr, framebuffers.last_rendered_buffer().get());
 }
+
+TEST_F(PostingFBBundleTest, triple_buffers)
+{
+    mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
+
+    auto buffer1 = framebuffers.buffer_for_render().get();
+    EXPECT_EQ(buffer1, framebuffers.last_rendered_buffer().get());
+    auto buffer2 = framebuffers.buffer_for_render().get();
+    EXPECT_EQ(buffer2, framebuffers.last_rendered_buffer().get());
+
+    framebuffers.buffer_for_render().get();
+    auto buffer4 = framebuffers.buffer_for_render().get();
+    EXPECT_EQ(buffer4, framebuffers.last_rendered_buffer().get());
+    EXPECT_EQ(buffer4, framebuffers.last_rendered_buffer().get());
+}
