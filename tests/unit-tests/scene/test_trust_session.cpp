@@ -16,9 +16,8 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#include "mir/frontend/event_sink.h"
-#include "mir/scene/trust_session_creation_parameters.h"
 #include "src/server/scene/trust_session_impl.h"
+#include "mir/scene/trust_session_creation_parameters.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_scene_session.h"
 #include "mir_test_doubles/mock_trust_session_listener.h"
@@ -31,52 +30,49 @@ namespace ms = mir::scene;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
+using namespace testing;
 
 namespace
 {
-
 struct TrustSession : public testing::Test
 {
-    TrustSession()
-    {
-    }
-
     testing::NiceMock<mtd::MockTrustSessionListener> trust_session_listener;
-    testing::NiceMock<mtd::MockSceneSession> trusted_helper;
-    testing::NiceMock<mtd::MockSceneSession> trusted_app1;
-    testing::NiceMock<mtd::MockSceneSession> trusted_app2;
-};
-}
+    mtd::MockSceneSession trusted_helper;
+    mtd::MockSceneSession trusted_app1;
+    mtd::MockSceneSession trusted_app2;
 
-TEST_F(TrustSession, start_and_stop)
-{
-    using namespace testing;
-
-    auto shared_helper = mt::fake_shared(trusted_helper);
+    std::shared_ptr<ms::Session> shared_helper = mt::fake_shared(trusted_helper);
     std::shared_ptr<ms::Session> shared_app1 = mt::fake_shared(trusted_app1);
     std::shared_ptr<ms::Session> shared_app2 = mt::fake_shared(trusted_app2);
 
-    ms::TrustSessionImpl trust_session(shared_helper,
+    ms::TrustSessionImpl trust_session{shared_helper,
                                    ms::a_trust_session(),
-                                   mt::fake_shared(trust_session_listener));
+                                   mt::fake_shared(trust_session_listener)};
 
-    EXPECT_CALL(trusted_helper, begin_trust_session()).Times(1);
-    EXPECT_CALL(trusted_helper, end_trust_session()).Times(1);
+    void SetUp()
+    {
+        InSequence seq;
+        EXPECT_CALL(trusted_helper, begin_trust_session()).Times(1);
+        EXPECT_CALL(trusted_helper, end_trust_session()).Times(1);
 
-    EXPECT_CALL(trusted_app1, begin_trust_session()).Times(0);
-    EXPECT_CALL(trusted_app1, end_trust_session()).Times(0);
+        trust_session.start();
+    }
 
-    EXPECT_CALL(trusted_app2, begin_trust_session()).Times(0);
-    EXPECT_CALL(trusted_app2, end_trust_session()).Times(0);
+    void TearDown()
+    {
+        trust_session.stop();
+    }
+};
+}
 
+TEST_F(TrustSession, trusted_child_apps_get_start_and_stop_notifications)
+{
     EXPECT_CALL(trust_session_listener, trusted_session_beginning(_, shared_app1)).Times(1);
     EXPECT_CALL(trust_session_listener, trusted_session_beginning(_, shared_app2)).Times(1);
 
     EXPECT_CALL(trust_session_listener, trusted_session_ending(_, shared_app1)).Times(1);
     EXPECT_CALL(trust_session_listener, trusted_session_ending(_, shared_app2)).Times(1);
 
-    trust_session.start();
     trust_session.add_trusted_child(shared_app1);
     trust_session.add_trusted_child(shared_app2);
-    trust_session.stop();
 }
