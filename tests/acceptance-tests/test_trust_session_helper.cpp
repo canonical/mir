@@ -25,7 +25,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/basic_client_server_fixture.h"
 #include "mir_test_doubles/fake_ipc_factory.h"
 
 #include <gtest/gtest.h>
@@ -117,26 +117,16 @@ struct MyServerConfiguration : mir_test_framework::StubbedServerConfiguration
     }
 };
 
-struct TrustSessionHelper : mir_test_framework::InProcessServer
+using MyBasicClientServerFixture = mir_test_framework::BasicClientServerFixture<MyServerConfiguration>;
+
+struct TrustSessionHelper : MyBasicClientServerFixture
 {
-    MyServerConfiguration my_server_config;
-
-    mir::DefaultServerConfiguration& server_config() override { return my_server_config; }
-
-    void SetUp()
-    {
-        mir_test_framework::InProcessServer::SetUp();
-        connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    }
 
     void TearDown()
     {
         trusted_helper_mediator.reset();
-        mir_connection_release(connection);
-        mir_test_framework::InProcessServer::TearDown();
+        MyBasicClientServerFixture::TearDown();
     }
-
-    MirConnection* connection = nullptr;
 
     static std::size_t const arbritary_fd_request_count = 3;
 
