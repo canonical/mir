@@ -35,7 +35,7 @@ namespace mtd = mir::test::doubles;
 TEST(TimeoutFrameDroppingPolicy, does_not_fire_before_notified_of_block)
 {
     auto clock = std::make_shared<mt::FakeClock>();
-    auto timer = std::make_shared<mtd::MockTimer>(clock);
+    auto timer = std::make_shared<mtd::FakeTimer>(clock);
     std::chrono::milliseconds const timeout{1000};
     bool frame_dropped{false};
 
@@ -49,7 +49,7 @@ TEST(TimeoutFrameDroppingPolicy, does_not_fire_before_notified_of_block)
 TEST(TimeoutFrameDroppingPolicy, schedules_alarm_for_correct_timeout)
 {
     auto clock = std::make_shared<mt::FakeClock>();
-    auto timer = std::make_shared<mtd::MockTimer>(clock);
+    auto timer = std::make_shared<mtd::FakeTimer>(clock);
     std::chrono::milliseconds const timeout{1000};
     bool frame_dropped{false};
 
@@ -66,7 +66,7 @@ TEST(TimeoutFrameDroppingPolicy, schedules_alarm_for_correct_timeout)
 TEST(TimeoutFrameDroppingPolicy, framedrop_callback_cancelled_by_unblock)
 {
     auto clock = std::make_shared<mt::FakeClock>();
-    auto timer = std::make_shared<mtd::MockTimer>(clock);
+    auto timer = std::make_shared<mtd::FakeTimer>(clock);
     std::chrono::milliseconds const timeout{1000};
 
     bool frame_dropped{false};
@@ -84,7 +84,7 @@ TEST(TimeoutFrameDroppingPolicy, framedrop_callback_cancelled_by_unblock)
 TEST(TimeoutFrameDroppingPolicy, policy_drops_one_frame_per_blocking_swap)
 {
     auto clock = std::make_shared<mt::FakeClock>();
-    auto timer = std::make_shared<mtd::MockTimer>(clock);
+    auto timer = std::make_shared<mtd::FakeTimer>(clock);
     std::chrono::milliseconds const timeout{1000};
 
     bool frame_dropped{false};
@@ -114,7 +114,7 @@ TEST(TimeoutFrameDroppingPolicy, policy_drops_one_frame_per_blocking_swap)
 TEST(TimeoutFrameDroppingPolicy, policy_drops_frames_no_more_frequently_than_timeout)
 {
     auto clock = std::make_shared<mt::FakeClock>();
-    auto timer = std::make_shared<mtd::MockTimer>(clock);
+    auto timer = std::make_shared<mtd::FakeTimer>(clock);
     std::chrono::milliseconds const timeout{1000};
 
     bool frame_dropped{false};
@@ -137,7 +137,7 @@ TEST(TimeoutFrameDroppingPolicy, policy_drops_frames_no_more_frequently_than_tim
 TEST(TimeoutFrameDroppingPolicy, newly_blocking_frame_doesnt_reset_timeout)
 {
     auto clock = std::make_shared<mt::FakeClock>();
-    auto timer = std::make_shared<mtd::MockTimer>(clock);
+    auto timer = std::make_shared<mtd::FakeTimer>(clock);
     std::chrono::milliseconds const timeout{1000};
 
     bool frame_dropped{false};
@@ -155,7 +155,7 @@ TEST(TimeoutFrameDroppingPolicy, newly_blocking_frame_doesnt_reset_timeout)
 TEST(TimeoutFrameDroppingPolicy, interspersed_timeouts_and_unblocks)
 {
     auto clock = std::make_shared<mt::FakeClock>();
-    auto timer = std::make_shared<mtd::MockTimer>(clock);
+    auto timer = std::make_shared<mtd::FakeTimer>(clock);
     std::chrono::milliseconds const timeout{1000};
 
     bool frame_dropped{false};

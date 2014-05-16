@@ -30,10 +30,10 @@ namespace test
 namespace doubles
 {
 
-class MockTimer : public mir::time::Timer
+class FakeTimer : public mir::time::Timer
 {
 public:
-    MockTimer(std::shared_ptr<FakeClock> const& clock);
+    FakeTimer(std::shared_ptr<FakeClock> const& clock);
 
     std::unique_ptr<time::Alarm> notify_in(std::chrono::milliseconds delay,
                                            std::function<void(void)> callback) override;

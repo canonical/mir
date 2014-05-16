@@ -70,7 +70,7 @@ struct BufferStreamTest : public ::testing::Test
 {
     BufferStreamTest()
         : clock{std::make_shared<mt::FakeClock>()},
-          timer{std::make_shared<mtd::MockTimer>(clock)},
+          timer{std::make_shared<mtd::FakeTimer>(clock)},
           frame_drop_timeout{1000},
           nbuffers{3},
           buffer_stream{create_bundle()}
@@ -93,7 +93,7 @@ struct BufferStreamTest : public ::testing::Test
     }
 
     std::shared_ptr<mt::FakeClock> clock;
-    std::shared_ptr<mtd::MockTimer> timer;
+    std::shared_ptr<mtd::FakeTimer> timer;
     std::chrono::milliseconds const frame_drop_timeout;
     const int nbuffers;
     BufferStreamSurfaces buffer_stream;

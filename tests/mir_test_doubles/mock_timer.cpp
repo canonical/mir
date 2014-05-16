@@ -24,11 +24,11 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-class MockAlarm : public mir::time::Alarm
+class FakeAlarm : public mir::time::Alarm
 {
 public:
-    MockAlarm(std::function<void(void)> callback, std::shared_ptr<mt::FakeClock> const& clock);
-    ~MockAlarm() override;
+    FakeAlarm(std::function<void(void)> callback, std::shared_ptr<mt::FakeClock> const& clock);
+    ~FakeAlarm() override;
 
 
     bool cancel() override;
@@ -51,22 +51,22 @@ private:
     std::shared_ptr<mt::FakeClock> const clock;
 };
 
-MockAlarm::InternalState::InternalState(std::function<void(void)> callback)
+FakeAlarm::InternalState::InternalState(std::function<void(void)> callback)
     : state{mir::time::Alarm::pending}, callback{callback}
 {
 }
 
-MockAlarm::MockAlarm(std::function<void(void)> callback, std::shared_ptr<mt::FakeClock> const& clock)
+FakeAlarm::FakeAlarm(std::function<void(void)> callback, std::shared_ptr<mt::FakeClock> const& clock)
     : internal_state{std::make_shared<InternalState>(callback)}, clock{clock}
 {
 }
 
-MockAlarm::~MockAlarm()
+FakeAlarm::~FakeAlarm()
 {
     cancel();
 }
 
-bool MockAlarm::cancel()
+bool FakeAlarm::cancel()
 {
     if (internal_state->state == triggered)
         return false;
@@ -75,12 +75,12 @@ bool MockAlarm::cancel()
     return true;
 }
 
-MockAlarm::State MockAlarm::state() const
+FakeAlarm::State FakeAlarm::state() const
 {
     return internal_state->state;
 }
 
-bool MockAlarm::handle_time_change(InternalState& state,
+bool FakeAlarm::handle_time_change(InternalState& state,
                                    mir::test::FakeClock::time_point now)
 {
     if (state.state == pending)
@@ -99,7 +99,7 @@ bool MockAlarm::handle_time_change(InternalState& state,
     }
 }
 
-bool MockAlarm::reschedule_in(std::chrono::milliseconds delay)
+bool FakeAlarm::reschedule_in(std::chrono::milliseconds delay)
 {
     bool rescheduled = internal_state->state == pending;
 
@@ -114,7 +114,7 @@ bool MockAlarm::reschedule_in(std::chrono::milliseconds delay)
     return rescheduled;
 }
 
-bool MockAlarm::reschedule_for(mir::time::Timestamp timeout)
+bool FakeAlarm::reschedule_for(mir::time::Timestamp timeout)
 {
     // time::Timestamp is on a different clock, so not directly comparable
     auto delay = std::chrono::duration_cast<std::chrono::milliseconds>(timeout.time_since_epoch() -
@@ -123,27 +123,27 @@ bool MockAlarm::reschedule_for(mir::time::Timestamp timeout)
 }
 }
 
-mtd::MockTimer::MockTimer(std::shared_ptr<FakeClock> const& clock) : clock{clock}
+mtd::FakeTimer::FakeTimer(std::shared_ptr<FakeClock> const& clock) : clock{clock}
 {
 }
 
-std::unique_ptr<mir::time::Alarm> mtd::MockTimer::notify_in(std::chrono::milliseconds delay,
+std::unique_ptr<mir::time::Alarm> mtd::FakeTimer::notify_in(std::chrono::milliseconds delay,
                                                             std::function<void(void)> callback)
 {
-    auto alarm = std::unique_ptr<mir::time::Alarm>{new MockAlarm{callback, clock}};
+    auto alarm = std::unique_ptr<mir::time::Alarm>{new FakeAlarm{callback, clock}};
     alarm->reschedule_in(delay);
     return std::move(alarm);
 }
 
-std::unique_ptr<mir::time::Alarm> mtd::MockTimer::notify_at(time::Timestamp time_point,
+std::unique_ptr<mir::time::Alarm> mtd::FakeTimer::notify_at(time::Timestamp time_point,
                                                             std::function<void(void)> callback)
 {
-    auto alarm = std::unique_ptr<mir::time::Alarm>{new MockAlarm{callback, clock}};
+    auto alarm = std::unique_ptr<mir::time::Alarm>{new FakeAlarm{callback, clock}};
     alarm->reschedule_for(time_point);
     return std::move(alarm);
 }
 
-std::unique_ptr<mir::time::Alarm> mir::test::doubles::MockTimer::create_alarm(std::function<void(void)> callback)
+std::unique_ptr<mir::time::Alarm> mir::test::doubles::FakeTimer::create_alarm(std::function<void(void)> callback)
 {
-    return std::unique_ptr<mir::time::Alarm>{new MockAlarm{callback, clock}};
+    return std::unique_ptr<mir::time::Alarm>{new FakeAlarm{callback, clock}};
 }
