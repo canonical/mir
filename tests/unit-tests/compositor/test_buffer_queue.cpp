@@ -993,6 +993,14 @@ TEST_F(BufferQueueTest, resize_affects_client_acquires_immediately)
     }
 }
 
+namespace
+{
+int max_ownable_buffers(int nbuffers)
+{
+    return (nbuffers == 1) ? 1 : nbuffers - 1;
+}
+}
+
 TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
@@ -1006,9 +1014,8 @@ TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
         const int dy = -3;
         int width = width0;
         int height = height0;
-        int const nbuffers_to_use = nbuffers == 1 ? 1 : nbuffers - 1;
 
-        for (int produce = 0; produce < nbuffers_to_use; ++produce)
+        for (int produce = 0; produce < max_ownable_buffers(nbuffers); ++produce)
         {
             geom::Size new_size{width, height};
             width += dx;
@@ -1026,7 +1033,7 @@ TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
         width = width0;
         height = height0;
 
-        for (int consume = 0; consume < nbuffers_to_use; ++consume)
+        for (int consume = 0; consume < max_ownable_buffers(nbuffers); ++consume)
         {
             geom::Size expect_size{width, height};
             width += dx;
@@ -1067,8 +1074,7 @@ TEST_F(BufferQueueTest, uncomposited_client_swaps_when_policy_triggered)
                           basic_properties,
                           policy_factory);
 
-        // TODO: Remove the magic “nbuffers - 1” constant
-        for (int i = 0; i < nbuffers - 1; i++)
+        for (int i = 0; i < max_ownable_buffers(nbuffers); i++)
         {
             auto client = client_acquire_sync(q);
             q.client_release(client);
@@ -1095,8 +1101,7 @@ TEST_F(BufferQueueTest, partially_composited_client_swaps_when_policy_triggered)
                           basic_properties,
                           policy_factory);
 
-        // TODO: Remove the magic “nbuffers - 1” constant
-        for (int i = 0; i < nbuffers - 1; i++)
+        for (int i = 0; i < max_ownable_buffers(nbuffers); i++)
         {
             auto client = client_acquire_sync(q);
             q.client_release(client);
