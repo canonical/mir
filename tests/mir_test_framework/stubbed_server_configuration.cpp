@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test_framework/command_line_server_configuration.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/command_line_server_configuration.h"
 
 #include "mir/options/default_configuration.h"
 #include "mir/geometry/rectangle.h"

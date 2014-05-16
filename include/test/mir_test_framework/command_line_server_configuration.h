@@ -31,8 +31,8 @@ class DefaultConfiguration;
 
 namespace mir_test_framework
 {
-	auto configuration_from_commandline() 
-	-> std::shared_ptr<mir::options::DefaultConfiguration>;
+    auto configuration_from_commandline() 
+    -> std::shared_ptr<mir::options::DefaultConfiguration>;
 }
 
 #endif /* MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION */
