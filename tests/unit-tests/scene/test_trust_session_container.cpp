@@ -29,139 +29,153 @@ namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
+using namespace testing;
 
-TEST(TrustSessionContainer, test_insert)
+namespace
 {
-    using namespace testing;
+struct TrustSessionContainer : testing::Test
+{
+    static constexpr pid_t process1 = 1;
+    static constexpr pid_t process2 = 2;
+    static constexpr pid_t process3 = 3;
+    static constexpr pid_t process4 = 4;
 
-    testing::NiceMock<mtd::NullTrustSession> trust_session1;
-    testing::NiceMock<mtd::NullTrustSession> trust_session2;
-    testing::NiceMock<mtd::NullTrustSession> trust_session3;
+    mtd::NullTrustSession null_trust_session1;
+    mtd::NullTrustSession null_trust_session2;
+    mtd::NullTrustSession null_trust_session3;
+
+    std::shared_ptr<ms::TrustSession> const trust_session1 = mt::fake_shared(null_trust_session1);
+    std::shared_ptr<ms::TrustSession> const trust_session2 = mt::fake_shared(null_trust_session2);
+    std::shared_ptr<ms::TrustSession> const trust_session3 = mt::fake_shared(null_trust_session3);
 
     ms::TrustSessionContainer container;
-    EXPECT_EQ(container.insert(mt::fake_shared(trust_session1), 1), true);
-    EXPECT_EQ(container.insert(mt::fake_shared(trust_session1), 2), true);
-    EXPECT_EQ(container.insert(mt::fake_shared(trust_session1), 3), true);
-    EXPECT_EQ(container.insert(mt::fake_shared(trust_session1), 1), false);
 
-    EXPECT_EQ(container.insert(mt::fake_shared(trust_session2), 2), true);
-    EXPECT_EQ(container.insert(mt::fake_shared(trust_session2), 3), true);
-    EXPECT_EQ(container.insert(mt::fake_shared(trust_session2), 2), false);
-
-    EXPECT_EQ(container.insert(mt::fake_shared(trust_session3), 3), true);
-    EXPECT_EQ(container.insert(mt::fake_shared(trust_session3), 3), false);
-}
-
-TEST(TrustSessionContainer, for_each_process_for_trust_session)
-{
-    using namespace testing;
-
-    testing::NiceMock<mtd::NullTrustSession> trust_session1;
-    testing::NiceMock<mtd::NullTrustSession> trust_session2;
-    testing::NiceMock<mtd::NullTrustSession> trust_session3;
-
-    ms::TrustSessionContainer container;
-    container.insert(mt::fake_shared(trust_session1), 1);
-    container.insert(mt::fake_shared(trust_session1), 2);
-    container.insert(mt::fake_shared(trust_session2), 3);
-    container.insert(mt::fake_shared(trust_session2), 1);
-    container.insert(mt::fake_shared(trust_session3), 2);
-    container.insert(mt::fake_shared(trust_session2), 4);
-
-    std::vector<ms::TrustSessionContainer::ClientProcess> results;
-    auto for_each_fn = [&results](ms::TrustSessionContainer::ClientProcess const& process)
+    std::vector<ms::TrustSessionContainer::ClientProcess> list_processes_for(std::shared_ptr<ms::TrustSession> const& trust_session)
     {
-        results.push_back(process);
-    };
+        std::vector<ms::TrustSessionContainer::ClientProcess> results;
+        auto list_processes = [&results](ms::TrustSessionContainer::ClientProcess const& process)
+        {
+            results.push_back(process);
+        };
 
-    container.for_each_process_for_trust_session(mt::fake_shared(trust_session2), for_each_fn);
-    EXPECT_THAT(results, ElementsAre(3, 1, 4));
-}
+        container.for_each_process_for_trust_session(trust_session, list_processes);
 
-TEST(TrustSessionContainer, for_each_trust_session_for_process)
-{
-    using namespace testing;
+        return results;
+    }
 
-    testing::NiceMock<mtd::NullTrustSession> trust_session1;
-    testing::NiceMock<mtd::NullTrustSession> trust_session2;
-    testing::NiceMock<mtd::NullTrustSession> trust_session3;
-
-    ms::TrustSessionContainer container;
-    container.insert(mt::fake_shared(trust_session1), 1);
-    container.insert(mt::fake_shared(trust_session1), 2);
-    container.insert(mt::fake_shared(trust_session2), 3);
-    container.insert(mt::fake_shared(trust_session2), 1);
-    container.insert(mt::fake_shared(trust_session3), 2);
-    container.insert(mt::fake_shared(trust_session2), 4);
-
-    std::vector<std::shared_ptr<mf::TrustSession>> results;
-    auto for_each_fn = [&results](std::shared_ptr<mf::TrustSession> const& trust_session)
+    std::vector<std::shared_ptr<mf::TrustSession>> list_trust_sessions_for(pid_t process)
     {
-        results.push_back(trust_session);
-    };
+        std::vector<std::shared_ptr<mf::TrustSession>> results;
+        auto list_trust_sessions = [&results](std::shared_ptr<mf::TrustSession> const& trust_session)
+        {
+            results.push_back(trust_session);
+        };
 
-    container.for_each_trust_session_for_process(2, for_each_fn);
-    EXPECT_THAT(results, ElementsAre(mt::fake_shared(trust_session1), mt::fake_shared(trust_session3)));
-}
+        container.for_each_trust_session_for_process(process, list_trust_sessions);
 
-TEST(TrustSessionContainer, test_remove_trust_sesion)
-{
-    using namespace testing;
+        return results;
+    }
 
-    testing::NiceMock<mtd::NullTrustSession> trust_session1;
-
-    ms::TrustSessionContainer container;
-    container.insert(mt::fake_shared(trust_session1), 1);
-    container.insert(mt::fake_shared(trust_session1), 2);
-    container.insert(mt::fake_shared(trust_session1), 3);
-
-    int count = 0;
-    auto for_each_fn = [&count](ms::TrustSessionContainer::ClientProcess const&)
+    int count_processes_for(std::shared_ptr<ms::TrustSession> const& trust_session)
     {
-        count++;
-    };
+        int count = 0;
+        auto count_processes = [&count](ms::TrustSessionContainer::ClientProcess const&)
+        {
+            count++;
+        };
 
-    container.for_each_process_for_trust_session(mt::fake_shared(trust_session1), for_each_fn);
-    EXPECT_EQ(count, 3);
+        container.for_each_process_for_trust_session(trust_session, count_processes);
 
-    container.remove_trust_session(mt::fake_shared(trust_session1));
+        return count;
+    }
 
-    count = 0;
-    container.for_each_process_for_trust_session(mt::fake_shared(trust_session1), for_each_fn);
-    EXPECT_EQ(count, 0);
-}
-
-TEST(TrustSessionContainer, remove_process)
-{
-    using namespace testing;
-
-    testing::NiceMock<mtd::NullTrustSession> trust_session1;
-    testing::NiceMock<mtd::NullTrustSession> trust_session2;
-    testing::NiceMock<mtd::NullTrustSession> trust_session3;
-
-    ms::TrustSessionContainer container;
-    container.insert(mt::fake_shared(trust_session1), 1);
-    container.insert(mt::fake_shared(trust_session1), 2);
-
-    container.insert(mt::fake_shared(trust_session2), 1);
-    container.insert(mt::fake_shared(trust_session2), 3);
-
-    container.insert(mt::fake_shared(trust_session3), 1);
-    container.insert(mt::fake_shared(trust_session3), 4);
-
-    int count = 0;
-    auto for_each_fn = [&count](std::shared_ptr<mf::TrustSession> const&)
+    int count_trust_sessions_for(pid_t process)
     {
-        count++;
-    };
+        int count = 0;
+        auto count_trust_sessions = [&count](std::shared_ptr<mf::TrustSession> const&)
+        {
+            count++;
+        };
 
-    container.for_each_trust_session_for_process(1, for_each_fn);
-    EXPECT_EQ(count, 3);
+        container.for_each_trust_session_for_process(process, count_trust_sessions);
 
-    container.remove_process(1);
+        return count;
+    }
+};
 
-    count = 0;
-    container.for_each_trust_session_for_process(1, for_each_fn);
-    EXPECT_EQ(count, 0);
+// TODO only needed because ms::TrustSessionContainer::insert() wants a "pid_t const&" not a value
+constexpr pid_t TrustSessionContainer::process1;
+constexpr pid_t TrustSessionContainer::process2;
+constexpr pid_t TrustSessionContainer::process3;
+constexpr pid_t TrustSessionContainer::process4;
 }
 
+TEST_F(TrustSessionContainer, insert_true_iff_not_duplicate)
+{
+    EXPECT_TRUE(container.insert(trust_session1, process1));
+    EXPECT_TRUE(container.insert(trust_session1, process2));
+    EXPECT_TRUE(container.insert(trust_session1, process3));
+    EXPECT_FALSE(container.insert(trust_session1, process1));
+
+    EXPECT_TRUE(container.insert(trust_session2, process2));
+    EXPECT_TRUE(container.insert(trust_session2, process3));
+    EXPECT_FALSE(container.insert(trust_session2, process2));
+
+    EXPECT_TRUE(container.insert(trust_session3, process3));
+    EXPECT_FALSE(container.insert(trust_session3, process3));
+}
+
+TEST_F(TrustSessionContainer, lists_processes_in_a_trust_session)
+{
+    container.insert(trust_session1, process1);
+    container.insert(trust_session1, process2);
+    container.insert(trust_session2, process3);
+    container.insert(trust_session2, process1);
+    container.insert(trust_session3, process2);
+    container.insert(trust_session2, process4);
+
+    EXPECT_THAT(list_processes_for(trust_session2), ElementsAre(process3, process1, process4));
+}
+
+TEST_F(TrustSessionContainer, lists_trust_sessions_for_a_process)
+{
+    container.insert(trust_session1, process1);
+    container.insert(trust_session1, process2);
+    container.insert(trust_session2, process3);
+    container.insert(trust_session2, process1);
+    container.insert(trust_session3, process2);
+    container.insert(trust_session2, process4);
+
+    EXPECT_THAT(list_trust_sessions_for(process2), ElementsAre(trust_session1, trust_session3));
+}
+
+TEST_F(TrustSessionContainer, associates_processes_with_a_trust_session_until_it_is_removed)
+{
+    container.insert(trust_session1, process1);
+    container.insert(trust_session1, process2);
+    container.insert(trust_session1, process3);
+
+    EXPECT_THAT(count_processes_for(trust_session1), Eq(3));
+
+    container.remove_trust_session(trust_session1);
+
+    EXPECT_THAT(count_processes_for(trust_session1), Eq(0));
+}
+
+TEST_F(TrustSessionContainer, associates_trust_sessions_with_a_process_until_it_is_removed)
+{
+    container.insert(trust_session1, process1);
+    container.insert(trust_session1, process2);
+
+    container.insert(trust_session2, process1);
+    container.insert(trust_session2, process3);
+
+    container.insert(trust_session3, process1);
+    container.insert(trust_session3, process4);
+
+    EXPECT_THAT(count_trust_sessions_for(process1), Eq(3));
+
+    container.remove_process(process1);
+
+    EXPECT_THAT(count_trust_sessions_for(process1), Eq(0));
+}
