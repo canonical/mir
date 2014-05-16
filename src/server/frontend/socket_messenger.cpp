@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,7 +20,6 @@
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/session_credentials.h"
 
-#include <stdexcept>
 #include <boost/throw_exception.hpp>
 
 #include <errno.h>
@@ -51,7 +50,6 @@ mf::SessionCredentials mfd::SocketMessenger::creator_creds() const
 
     return {cr.pid, cr.uid, cr.gid};
 }
-
 
 mf::SessionCredentials mfd::SocketMessenger::client_creds()
 {
