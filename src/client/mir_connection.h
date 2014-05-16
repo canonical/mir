@@ -45,6 +45,7 @@ class ClientPlatformFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class LifecycleControl;
+class EventDistributor;
 
 namespace rpc
 {
@@ -85,6 +86,8 @@ public:
             MirSurface *surface,
             mir_surface_callback callback,
             void *context);
+
+    MirTrustSession* create_trust_session();
 
     char const * get_error_message();
 
@@ -171,6 +174,8 @@ private:
     std::shared_ptr<mir::client::LifecycleControl> const lifecycle_control;
 
     std::shared_ptr<mir::client::ConnectionSurfaceMap> const surface_map;
+
+    std::shared_ptr<mir::client::EventDistributor> const event_distributor;
 
     std::vector<int> extra_platform_data;
 

@@ -24,6 +24,12 @@
 #include "mir/scene/session.h"
 #include "mir/scene/session_listener.h"
 #include "session_event_sink.h"
+#include "mir/scene/trust_session_creation_parameters.h"
+#include "trust_session_impl.h"
+#include "trust_session_container.h"
+#include "mir/scene/trust_session_listener.h"
+
+#include <boost/throw_exception.hpp>
 
 #include <memory>
 #include <cassert>
@@ -38,13 +44,16 @@ ms::SessionManager::SessionManager(std::shared_ptr<SurfaceCoordinator> const& su
     std::shared_ptr<msh::FocusSetter> const& focus_setter,
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionEventSink> const& session_event_sink,
-    std::shared_ptr<SessionListener> const& session_listener) :
+    std::shared_ptr<SessionListener> const& session_listener,
+    std::shared_ptr<TrustSessionListener> const& trust_session_listener) :
     surface_coordinator(surface_factory),
     app_container(container),
     focus_setter(focus_setter),
     snapshot_strategy(snapshot_strategy),
     session_event_sink(session_event_sink),
-    session_listener(session_listener)
+    session_listener(session_listener),
+    trust_session_listener(trust_session_listener),
+    trust_session_container(std::make_shared<TrustSessionContainer>())
 {
     assert(surface_factory);
     assert(container);
@@ -85,6 +94,16 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
 
     session_listener->starting(new_session);
 
+    {
+        trust_session_container->for_each_trust_session_for_process(client_pid,
+            [client_pid, new_session](std::shared_ptr<frontend::TrustSession> const& trust_session)
+            {
+                auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
+
+                scene_trust_session->add_trusted_child(new_session);
+            });
+    }
+
     set_focus_to(new_session);
 
     return new_session;
@@ -122,12 +141,45 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
     scene_session->force_requests_to_complete();
 
     session_event_sink->handle_session_stopping(scene_session);
+
+    {
+        std::unique_lock<std::mutex> lock(trust_sessions_mutex);
+
+        std::vector<std::shared_ptr<frontend::TrustSession>> trust_sessions;
+        trust_session_container->for_each_trust_session_for_process(scene_session->process_id(),
+            [&](std::shared_ptr<frontend::TrustSession> const& trust_session)
+            {
+                trust_sessions.push_back(trust_session);
+            });
+
+        for(auto trust_session : trust_sessions)
+        {
+            auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
+
+            if (scene_trust_session->get_trusted_helper().lock() == scene_session)
+            {
+                stop_trust_session_locked(lock, scene_trust_session);
+            }
+            else
+            {
+                scene_trust_session->remove_trusted_child(scene_session);
+
+                trust_session_container->remove_process(scene_session->process_id());
+            }
+        }
+    }
+
     session_listener->stopping(scene_session);
 
     app_container->remove_session(scene_session);
 
     std::unique_lock<std::mutex> lock(mutex);
-    set_focus_to_locked(lock, app_container->successor_of(std::shared_ptr<Session>()));
+    auto old_focus = focus_application.lock();
+    if (old_focus == scene_session)
+    {
+        // only reset the focus if this session had focus
+        set_focus_to_locked(lock, app_container->successor_of(std::shared_ptr<ms::Session>()));
+    }
 }
 
 void ms::SessionManager::focus_next()
@@ -169,3 +221,73 @@ void ms::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> con
 {
     set_focus_to(std::dynamic_pointer_cast<Session>(session));
 }
+
+std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(std::shared_ptr<mf::Session> const& session,
+    TrustSessionCreationParameters const& params)
+{
+    std::unique_lock<std::mutex> lock(trust_sessions_mutex);
+
+    auto shell_session = std::dynamic_pointer_cast<ms::Session>(session);
+
+    auto const trust_session = std::make_shared<TrustSessionImpl>(shell_session, params, trust_session_listener);
+
+    trust_session_container->insert(trust_session, shell_session->process_id());
+
+    trust_session->start();
+    trust_session_listener->starting(trust_session);
+
+    add_trusted_session_for_locked(lock, trust_session, params.base_process_id);
+    return trust_session;
+}
+
+MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for(std::shared_ptr<mf::TrustSession> const& trust_session,
+    pid_t session_pid)
+{
+    std::unique_lock<std::mutex> lock(trust_sessions_mutex);
+
+    return add_trusted_session_for_locked(lock, trust_session, session_pid);
+}
+
+MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for_locked(std::unique_lock<std::mutex> const&,
+    std::shared_ptr<mf::TrustSession> const& trust_session,
+    pid_t session_pid)
+{
+    auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
+
+    if (!trust_session_container->insert(trust_session, session_pid))
+    {
+        // TODO - remove comment once we have pid update for child fd created sessions.
+        // BOOST_THROW_EXCEPTION(std::runtime_error("failed to add trusted session"));
+    }
+
+    app_container->for_each(
+        [&](std::shared_ptr<ms::Session> const& container_session)
+        {
+            if (container_session->process_id() == session_pid)
+            {
+                scene_trust_session->add_trusted_child(container_session);
+            }
+        });
+
+    return mir_trust_session_add_tust_succeeded;
+}
+
+void ms::SessionManager::stop_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
+{
+    std::unique_lock<std::mutex> lock(trust_sessions_mutex);
+
+    stop_trust_session_locked(lock, trust_session);
+}
+
+void ms::SessionManager::stop_trust_session_locked(std::unique_lock<std::mutex> const&,
+    std::shared_ptr<mf::TrustSession> const& trust_session)
+{
+    auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
+
+    trust_session->stop();
+
+    trust_session_container->remove_trust_session(trust_session);
+
+    trust_session_listener->stopping(scene_trust_session);
+}
+

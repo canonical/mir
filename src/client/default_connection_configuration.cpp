@@ -32,6 +32,7 @@
 #include "lifecycle_control.h"
 #include "mir/shared_library.h"
 #include "client_platform_factory.h"
+#include "event_distributor.h"
 
 namespace mcl = mir::client;
 
@@ -81,7 +82,7 @@ mcl::DefaultConnectionConfiguration::the_rpc_channel()
         [this]
         {
             return mcl::rpc::make_rpc_channel(
-                the_socket_file(), the_surface_map(), the_display_configuration(), the_rpc_report(), the_lifecycle_control());
+                the_socket_file(), the_surface_map(), the_display_configuration(), the_rpc_report(), the_lifecycle_control(), the_event_distributor());
         });
 }
 
@@ -180,5 +181,14 @@ std::shared_ptr<mcl::LifecycleControl> mcl::DefaultConnectionConfiguration::the_
         []
         {
             return std::make_shared<mcl::LifecycleControl>();
+        });
+}
+
+std::shared_ptr<mcl::EventDistributor> mcl::DefaultConnectionConfiguration::the_event_distributor()
+{
+    return event_distributor(
+        []
+        {
+            return std::make_shared<mcl::EventDistributor>();
         });
 }

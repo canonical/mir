@@ -24,6 +24,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/scene/surface_creation_parameters.h"
+#include "mir/scene/null_trust_session_listener.h"
 
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"
@@ -55,7 +56,8 @@ struct TestSessionManagerAndFocusSelectionStrategy : public testing::Test
               mt::fake_shared(focus_setter),
               std::make_shared<mtd::NullSnapshotStrategy>(),
               std::make_shared<mtd::NullSessionEventSink>(),
-              mt::fake_shared(session_listener))
+              mt::fake_shared(session_listener),
+              std::make_shared<ms::NullTrustSessionListener>())
     {
 
     }

@@ -47,6 +47,27 @@ MIR_SESSION_MEDIATOR_EVENT(session_disconnect_called)
 MIR_SESSION_MEDIATOR_EVENT(session_drm_auth_magic_called)
 MIR_SESSION_MEDIATOR_EVENT(session_configure_surface_called)
 MIR_SESSION_MEDIATOR_EVENT(session_configure_display_called)
+MIR_SESSION_MEDIATOR_EVENT(session_stop_trust_session_called)
+
+TRACEPOINT_EVENT(
+    mir_server_session_mediator,
+    session_start_trust_session_called,
+    TP_ARGS(char const*, application, char const*, trust_info),
+    TP_FIELDS(
+        ctf_string(application, application)
+        ctf_string(trust_info, trust_info)
+        )
+    )
+
+TRACEPOINT_EVENT(
+    mir_server_session_mediator,
+    session_add_trusted_session_called,
+    TP_ARGS(char const*, application, char const*, trust_info),
+    TP_FIELDS(
+        ctf_string(application, application)
+        ctf_string(trust_info, trust_info)
+        )
+    )
 
 TRACEPOINT_EVENT(
     mir_server_session_mediator,

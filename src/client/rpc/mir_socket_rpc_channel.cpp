@@ -24,6 +24,7 @@
 #include "../mir_surface.h"
 #include "../display_configuration.h"
 #include "../lifecycle_control.h"
+#include "../event_distributor.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
@@ -49,7 +50,8 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
     std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<RpcReport> const& rpc_report,
-    std::shared_ptr<LifecycleControl> const& lifecycle_control) :
+    std::shared_ptr<LifecycleControl> const& lifecycle_control,
+    std::shared_ptr<EventDistributor> const& event_distributor) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     work(io_service),
@@ -57,6 +59,7 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
+    event_distributor(event_distributor),
     disconnected(false)
 {
     socket.connect(endpoint);
@@ -68,7 +71,8 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
     std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<RpcReport> const& rpc_report,
-    std::shared_ptr<LifecycleControl> const& lifecycle_control) :
+    std::shared_ptr<LifecycleControl> const& lifecycle_control,
+    std::shared_ptr<EventDistributor> const& event_distributor) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     work(io_service),
@@ -76,6 +80,7 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
+    event_distributor(event_distributor),
     disconnected(false)
 {
     socket.assign(boost::asio::local::stream_protocol(), native_socket);
@@ -405,11 +410,25 @@ void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
 
                 rpc_report->event_parsing_succeeded(e);
 
-                surface_map->with_surface_do(e.surface.id,
-                    [&e](MirSurface* surface)
-                    {
-                        surface->handle_event(e);
-                    });
+                event_distributor->handle_event(e);
+
+                // todo - surfaces should register with the event distributor.
+                if (e.type == mir_event_type_surface)
+                {
+                    surface_map->with_surface_do(e.surface.id,
+                        [&e](MirSurface* surface)
+                        {
+                            surface->handle_event(e);
+                        });
+                }
+                else if (e.type == mir_event_type_resize)
+                {
+                    surface_map->with_surface_do(e.resize.surface_id,
+                        [&e](MirSurface* surface)
+                        {
+                            surface->handle_event(e);
+                        });
+                }
             }
             else
             {

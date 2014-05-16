@@ -100,7 +100,7 @@ message Surface {
   optional int32 pixel_format = 4;
   optional int32 buffer_usage = 5;
   optional Buffer buffer = 6;
-  
+
   repeated sint32 fd = 7;
   optional int32 fds_on_side_channel = 8;
 
@@ -185,11 +185,28 @@ message SocketFDRequest {
   required int32 number = 1;
 }
 
-
 message SocketFD {
   repeated sint32 fd = 1;
   optional int32  fds_on_side_channel = 2;
 
+  optional string error = 127;
+}
+
+message TrustedSession {
+  required int32 pid = 1;
+}
+
+message TrustSessionParameters {
+  required TrustedSession base_trusted_session = 1;
+}
+
+message TrustSession {
+  optional uint32 state = 1;
+  optional string error = 127;
+}
+
+message TrustSessionAddResult {
+  optional int32 result = 1;
   optional string error = 127;
 }
 
@@ -215,4 +232,8 @@ service DisplayServer {
   
   rpc configure_cursor(CursorSetting) returns (Void);
   rpc new_fds_for_trusted_clients(SocketFDRequest) returns (SocketFD);
+
+  rpc start_trust_session(TrustSessionParameters) returns (TrustSession);
+  rpc add_trusted_session(TrustedSession) returns (TrustSessionAddResult);
+  rpc stop_trust_session(Void) returns (Void);
 }

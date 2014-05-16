@@ -52,6 +52,9 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirSurfaceAttrib, int));
 
     MOCK_METHOD1(set_lifecycle_state, void(MirLifecycleState state));
+
+    MOCK_METHOD0(begin_trust_session, void());
+    MOCK_METHOD0(end_trust_session, void());
 };
 
 }

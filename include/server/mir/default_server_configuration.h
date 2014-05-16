@@ -85,6 +85,7 @@ class SurfaceStackModel;
 class SurfaceStack;
 class InputRegistrar;
 class SceneReport;
+class TrustSessionListener;
 }
 namespace graphics
 {
@@ -215,6 +216,7 @@ public:
     virtual std::shared_ptr<scene::PlacementStrategy>   the_placement_strategy();
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
+    virtual std::shared_ptr<scene::TrustSessionListener>     the_trust_session_listener();
     /** @} */
 
     /** @name internal scene configuration
@@ -326,6 +328,7 @@ protected:
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<graphics::GLProgramFactory> gl_program_factory;
     CachedPtr<graphics::GLConfig> gl_config;
+    CachedPtr<scene::TrustSessionListener> trust_session_listener;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

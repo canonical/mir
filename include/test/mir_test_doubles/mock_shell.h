@@ -22,6 +22,7 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/scene/trust_session_creation_parameters.h"
 
 #include <gmock/gmock.h>
 
@@ -43,6 +44,14 @@ struct MockShell : public frontend::Shell
 
     MOCK_METHOD2(create_surface_for, frontend::SurfaceId(std::shared_ptr<frontend::Session> const&, scene::SurfaceCreationParameters const&));
     MOCK_METHOD1(handle_surface_created, void(std::shared_ptr<frontend::Session> const&));
+
+    MOCK_METHOD2(start_trust_session_for, std::shared_ptr<frontend::TrustSession>(
+        std::shared_ptr<frontend::Session> const&,
+        scene::TrustSessionCreationParameters const&));
+    MOCK_METHOD2(add_trusted_session_for, MirTrustSessionAddTrustResult(
+        std::shared_ptr<frontend::TrustSession> const&,
+        pid_t));
+    MOCK_METHOD1(stop_trust_session, void(std::shared_ptr<frontend::TrustSession> const&));
 };
 
 }

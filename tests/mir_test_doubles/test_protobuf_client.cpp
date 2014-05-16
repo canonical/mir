@@ -22,6 +22,7 @@
 #include "src/client/connection_surface_map.h"
 #include "src/client/display_configuration.h"
 #include "src/client/lifecycle_control.h"
+#include "src/client/event_distributor.h"
 #include "src/client/rpc/make_rpc_channel.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 
@@ -38,7 +39,8 @@ mir::test::TestProtobufClient::TestProtobufClient(
         std::make_shared<mir::client::ConnectionSurfaceMap>(),
         std::make_shared<mir::client::DisplayConfiguration>(),
         rpc_report,
-        std::make_shared<mir::client::LifecycleControl>())),
+        std::make_shared<mir::client::LifecycleControl>(),
+        std::make_shared<mir::client::EventDistributor>())),
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),
@@ -59,6 +61,9 @@ mir::test::TestProtobufClient::TestProtobufClient(
     surface_parameters.set_buffer_usage(0);
     surface_parameters.set_output_id(mir_display_output_id_invalid);
 
+    trusted_session.set_pid(__LINE__);
+    trust_session_parameters.mutable_base_trusted_session()->set_pid(__LINE__);
+
     ON_CALL(*this, connect_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_connect_done));
     ON_CALL(*this, create_surface_done())
@@ -73,6 +78,12 @@ mir::test::TestProtobufClient::TestProtobufClient(
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_drm_auth_magic_done));
     ON_CALL(*this, display_configure_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_configure_display_done));
+    ON_CALL(*this, trust_session_start_done())
+        .WillByDefault(testing::Invoke(&wc_trust_session_start, &WaitCondition::wake_up_everyone));
+    ON_CALL(*this, trust_session_add_trusted_session_done())
+        .WillByDefault(testing::Invoke(&wc_trust_session_add, &WaitCondition::wake_up_everyone));
+    ON_CALL(*this, trust_session_stop_done())
+        .WillByDefault(testing::Invoke(&wc_trust_session_stop, &WaitCondition::wake_up_everyone));
 }
 
 void mir::test::TestProtobufClient::on_connect_done()
@@ -224,4 +235,19 @@ void mir::test::TestProtobufClient::wait_for_tfd_done()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     tfd_done_called.store(false);
+}
+
+void mir::test::TestProtobufClient::wait_for_trust_session_start_done()
+{
+    wc_trust_session_start.wait_for_at_most_seconds(maxwait);
+}
+
+void mir::test::TestProtobufClient::wait_for_trust_session_add_trusted_session_done()
+{
+    wc_trust_session_add.wait_for_at_most_seconds(maxwait);
+}
+
+void mir::test::TestProtobufClient::wait_for_trust_session_stop_done()
+{
+    wc_trust_session_stop.wait_for_at_most_seconds(maxwait);
 }

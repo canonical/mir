@@ -46,6 +46,7 @@ typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
 typedef struct MirSurface MirSurface;
 typedef struct MirScreencast MirScreencast;
+typedef struct MirTrustSession MirTrustSession;
 
 /**
  * Returned by asynchronous functions. Must not be free'd by
@@ -318,6 +319,31 @@ typedef struct MirScreencastParameters
  *   \param [in,out] client_context  context provided by the client
  */
 typedef void (*mir_screencast_callback)(MirScreencast *screencast, void *client_context);
+
+/**
+ * Callback member of MirTrustSession for handling of trust sessions.
+ *   \param [in] tps            The trust session associated with the callback
+ *   \param [in,out] context    The context provided by the client
+ */
+typedef void (*mir_trust_session_callback)(MirTrustSession* tps, void* context);
+
+/**
+ * Callback member of MirTrustSession for adding trusted sessions
+ *   \param [in] trusted_session  The trust session associated with the callback
+ *   \param [in] result           The result of adding a trusted session
+ *   \param [in,out] context      The context provided by the client
+ */
+typedef void (*mir_trust_session_add_trusted_session_callback)(
+    MirTrustSession* trusted_session, MirTrustSessionAddTrustResult result, void* context);
+
+/**
+ * Callback member of MirTrustSession for handling of trust sessions events.
+ *   \param [in] trusted_session  The trust session associated with the callback
+ *   \param [in] state            The state of the trust session
+ *   \param [in,out] context      The context provided by the client
+ */
+typedef void (*mir_trust_session_event_callback)(
+    MirTrustSession* trusted_session, MirTrustSessionState state, void* context);
 
 #ifdef __cplusplus
 }

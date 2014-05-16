@@ -76,6 +76,14 @@ struct StubSceneSession : public scene::Session
     void set_lifecycle_state(MirLifecycleState /*state*/)
     {
     }
+
+    void begin_trust_session() override
+    {
+    }
+
+    void end_trust_session() override
+    {
+    }
 };
 
 }

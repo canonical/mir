@@ -50,6 +50,18 @@ void mir::report::null::SessionMediatorReport::session_configure_display_called(
 {
 }
 
+void mir::report::null::SessionMediatorReport::session_start_trust_session_called(std::string const&, std::string const&)
+{
+}
+
+void mir::report::null::SessionMediatorReport::session_add_trusted_session_called(std::string const&, std::string const&)
+{
+}
+
+void mir::report::null::SessionMediatorReport::session_stop_trust_session_called(std::string const&)
+{
+}
+
 void mir::report::null::SessionMediatorReport::session_error(
         std::string const&,
         char const* ,

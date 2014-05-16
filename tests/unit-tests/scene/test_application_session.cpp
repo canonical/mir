@@ -27,6 +27,7 @@
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
+#include "mir_test_doubles/null_trust_session.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -69,6 +70,10 @@ MATCHER(IsNullSnapshot, "")
     return arg.size == mir::geometry::Size{} &&
            arg.stride == mir::geometry::Stride{} &&
            arg.pixels == nullptr;
+}
+
+MATCHER_P(EqTrustedEventState, state, "") {
+  return arg.type == mir_event_type_trust_session_state_change && arg.trust_session.new_state == state;
 }
 }
 
@@ -379,4 +384,44 @@ TEST(ApplicationSession, process_id)
         mt::fake_shared(sender));
 
     EXPECT_THAT(app_session.process_id(), Eq(pid));
+}
+
+TEST(ApplicationSession, begin_trust_session)
+{
+    using namespace ::testing;
+
+    mtd::MockSurfaceCoordinator surface_coordinator;
+    MockEventSink sender;
+
+    ms::ApplicationSession app_session(
+        mt::fake_shared(surface_coordinator),
+        __LINE__,
+        "Foo",
+        std::make_shared<mtd::NullSnapshotStrategy>(),
+        std::make_shared<ms::NullSessionListener>(),
+        mt::fake_shared(sender));
+
+    EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_state_started))).Times(1);
+
+    app_session.begin_trust_session();
+}
+
+TEST(ApplicationSession, end_trust_session)
+{
+    using namespace ::testing;
+
+    mtd::MockSurfaceCoordinator surface_coordinator;
+    MockEventSink sender;
+
+    ms::ApplicationSession app_session(
+        mt::fake_shared(surface_coordinator),
+        __LINE__,
+        "Foo",
+        std::make_shared<mtd::NullSnapshotStrategy>(),
+        std::make_shared<ms::NullSessionListener>(),
+        mt::fake_shared(sender));
+
+    EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_state_stopped))).Times(1);
+
+    app_session.end_trust_session();
 }

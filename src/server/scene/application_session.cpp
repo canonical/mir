@@ -23,6 +23,7 @@
 #include "snapshot_strategy.h"
 #include "mir/scene/session_listener.h"
 #include "mir/frontend/event_sink.h"
+#include "default_session_container.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -30,6 +31,7 @@
 #include <memory>
 #include <cassert>
 #include <algorithm>
+#include <cstring>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -180,4 +182,23 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
 void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
 {
     event_sink->handle_lifecycle_event(state);
+}
+
+void ms::ApplicationSession::begin_trust_session()
+{
+    // All sessions which are part of the trust session get this event.
+    MirEvent start_event;
+    memset(&start_event, 0, sizeof start_event);
+    start_event.type = mir_event_type_trust_session_state_change;
+    start_event.trust_session.new_state = mir_trust_session_state_started;
+    event_sink->handle_event(start_event);
+}
+
+void ms::ApplicationSession::end_trust_session()
+{
+    MirEvent stop_event;
+    memset(&stop_event, 0, sizeof stop_event);
+    stop_event.type = mir_event_type_trust_session_state_change;
+    stop_event.trust_session.new_state = mir_trust_session_state_stopped;
+    event_sink->handle_event(stop_event);
 }

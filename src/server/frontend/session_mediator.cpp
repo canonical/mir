@@ -40,6 +40,8 @@
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
+#include "mir/frontend/trust_session.h"
+#include "mir/scene/trust_session_creation_parameters.h"
 
 #include "mir/geometry/rectangles.h"
 #include "client_buffer_tracker.h"
@@ -422,7 +424,14 @@ void mf::SessionMediator::screencast_buffer(
 
 std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::trusted_connect_handler() const
 {
-    return [](std::shared_ptr<frontend::Session> const&) {};
+    return [this](std::shared_ptr<frontend::Session> const& session)
+    {
+        auto trust_session = weak_trust_session.lock();
+        if (trust_session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
+
+        shell->add_trusted_session_for(trust_session, session->process_id());
+    };
 }
 
 void mf::SessionMediator::configure_cursor(
@@ -448,7 +457,6 @@ void mf::SessionMediator::new_fds_for_trusted_clients(
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        // TODO write a handler that connects the new session to our trust session
         auto const connect_handler = trusted_connect_handler();
 
         auto const fds_requested = parameters->number();
@@ -503,6 +511,91 @@ void mf::SessionMediator::drm_auth_magic(
             throw;
     }
 
+    done->Run();
+}
+
+void mf::SessionMediator::start_trust_session(::google::protobuf::RpcController*,
+    const ::mir::protobuf::TrustSessionParameters* request,
+    ::mir::protobuf::TrustSession* response,
+    ::google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        ms::TrustSessionCreationParameters parameters;
+        parameters.set_base_process_id(request->base_trusted_session().pid());
+
+        std::ostringstream stream;
+        stream << "process id: " << parameters.base_process_id;
+        report->session_start_trust_session_called(session->name(), stream.str());
+
+        auto current_trust_session = weak_trust_session.lock();
+        if (current_trust_session.get() != nullptr)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Cannot start another trust session"));
+
+        auto trust_session = shell->start_trust_session_for(session, parameters);
+        weak_trust_session = trust_session;
+
+        if (trust_session)
+        {
+            response->set_state(trust_session->get_state());
+        }
+    }
+    done->Run();
+}
+
+void mf::SessionMediator::add_trusted_session(::google::protobuf::RpcController*,
+    const ::mir::protobuf::TrustedSession* request,
+    ::mir::protobuf::TrustSessionAddResult* response,
+    ::google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        auto trust_session = weak_trust_session.lock();
+
+        if (trust_session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
+
+        std::ostringstream stream;
+        stream << "process id: " << request->pid();
+        report->session_add_trusted_session_called(session->name(), stream.str());
+
+        response->set_result(shell->add_trusted_session_for(trust_session, request->pid()));
+    }
+    done->Run();
+}
+
+void mf::SessionMediator::stop_trust_session(::google::protobuf::RpcController*,
+    const ::mir::protobuf::Void*,
+    ::mir::protobuf::Void*,
+    ::google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        auto trust_session = weak_trust_session.lock();
+        weak_trust_session.reset();
+
+        if (trust_session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid trusted session"));
+
+        report->session_stop_trust_session_called(session->name());
+
+        shell->stop_trust_session(trust_session);
+    }
     done->Run();
 }
 

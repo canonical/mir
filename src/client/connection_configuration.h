@@ -47,6 +47,7 @@ class Logger;
 class ClientPlatformFactory;
 class DisplayConfiguration;
 class LifecycleControl;
+class EventDistributor;
 
 class ConnectionConfiguration
 {
@@ -60,6 +61,7 @@ public:
     virtual std::shared_ptr<input::receiver::InputPlatform> the_input_platform() = 0;
     virtual std::shared_ptr<DisplayConfiguration> the_display_configuration() = 0;
     virtual std::shared_ptr<LifecycleControl> the_lifecycle_control() = 0;
+    virtual std::shared_ptr<EventDistributor> the_event_distributor() = 0;
 
 protected:
     ConnectionConfiguration() = default;

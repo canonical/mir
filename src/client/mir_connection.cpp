@@ -18,6 +18,7 @@
 
 #include "mir_connection.h"
 #include "mir_surface.h"
+#include "mir_trust_session.h"
 #include "client_platform.h"
 #include "client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"
@@ -82,7 +83,8 @@ MirConnection::MirConnection(
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
         lifecycle_control(conf.the_lifecycle_control()),
-        surface_map(conf.the_surface_map())
+        surface_map(conf.the_surface_map()),
+        event_distributor(conf.the_event_distributor())
 {
     connect_result.set_error("connect not called");
     {
@@ -191,6 +193,11 @@ MirWaitHandle* MirConnection::release_surface(
 
 
     return new_wait_handle;
+}
+
+MirTrustSession* MirConnection::create_trust_session()
+{
+    return new MirTrustSession(display_server(), event_distributor);
 }
 
 namespace
@@ -522,6 +529,6 @@ bool MirConnection::set_extra_platform_data(
 }
 
 mir::protobuf::DisplayServer& MirConnection::display_server()
-{ 
+{
     return server;
 }

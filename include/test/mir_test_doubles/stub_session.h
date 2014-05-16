@@ -41,6 +41,10 @@ struct StubSession : public frontend::Session
     {
         return std::shared_ptr<frontend::Surface>();
     }
+    pid_t process_id() const override
+    {
+        return 0;
+    }
     std::string name() const override
     {
         return std::string();

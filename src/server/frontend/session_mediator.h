@@ -53,6 +53,7 @@ class SessionMediatorReport;
 class EventSink;
 class DisplayChanger;
 class Screencast;
+class TrustSession;
 
 // SessionMediator relays requests from the client process into the server.
 class SessionMediator : public detail::DisplayServer
@@ -131,6 +132,21 @@ public:
                           mir::protobuf::Void*,
                           google::protobuf::Closure* done);
 
+    void start_trust_session(::google::protobuf::RpcController* controller,
+                            const ::mir::protobuf::TrustSessionParameters* request,
+                            ::mir::protobuf::TrustSession* response,
+                            ::google::protobuf::Closure* done);
+
+    void add_trusted_session(::google::protobuf::RpcController* controller,
+                             const ::mir::protobuf::TrustedSession* request,
+                             ::mir::protobuf::TrustSessionAddResult* response,
+                             ::google::protobuf::Closure* done);
+
+    void stop_trust_session(::google::protobuf::RpcController* controller,
+                            const ::mir::protobuf::Void* request,
+                            ::mir::protobuf::Void* response,
+                            ::google::protobuf::Closure* done);
+
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,
                         const mir::protobuf::DRMMagic* request,
@@ -169,6 +185,7 @@ private:
 
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;
+    std::weak_ptr<TrustSession> weak_trust_session;
 
     ConnectionContext const connection_context;
 };

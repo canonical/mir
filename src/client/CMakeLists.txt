@@ -48,6 +48,9 @@ set(
   mir_screencast.cpp
   mir_screencast_api.cpp
   mir_cursor_api.cpp
+  mir_trust_session.cpp
+  mir_trust_session_api.cpp
+  event_distributor.cpp
 )
 
 add_library(
@@ -82,7 +85,7 @@ set(
   mirclientlttngstatic
 
   ${MIR_COMMON_PLATFORM_LIBRARIES}
- 
+
   3rd_party
 )
 

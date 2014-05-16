@@ -187,6 +187,18 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::new_fds_for_trusted_clients, invocation);
         }
+        else if ("start_trust_session" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::start_trust_session, invocation);
+        }
+        else if ("add_trusted_session" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::add_trusted_session, invocation);
+        }
+        else if ("stop_trust_session" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::stop_trust_session, invocation);
+        }
         else if ("disconnect" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::disconnect, invocation);
