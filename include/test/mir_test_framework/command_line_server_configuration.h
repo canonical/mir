@@ -16,8 +16,8 @@
  * Authored by: Josh Arenson <joshua.arenson@canonical.com>
  */
 
-#ifndef COMMAND_LINE_SERVER_CONFIGURATION
-#define COMMAND_LINE_SERVER_CONFIGURATION
+#ifndef MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION
+#define MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION
 
 #include <memory>
 
@@ -35,4 +35,4 @@ namespace mir_test_framework
 	-> std::shared_ptr<mir::options::DefaultConfiguration>;
 }
 
-#endif /* COMMAND_LINE_SERVER_CONFIGURATION */
+#endif /* MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION */
