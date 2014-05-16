@@ -57,10 +57,7 @@ class CustomInputDispatcher :
     public msh::InputTargeter
 {
 public:
-    CustomInputDispatcher()
-    {
-        std::cout << "created"<< std::endl;
-    };
+    CustomInputDispatcher() = default;
     // mocks for InputTargeter
     MOCK_METHOD1(focus_changed, void(std::shared_ptr<mi::InputChannel const> const& /*focus_channel*/));
     MOCK_METHOD0(focus_cleared, void());
