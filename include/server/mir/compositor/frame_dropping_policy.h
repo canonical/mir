@@ -27,6 +27,16 @@ namespace compositor
 {
 /**
  * \brief Policy to determine when to drop a frame from a client
+ *
+ * The FrameDroppingPolicy objects are constructed from a
+ * \ref FrameDroppingPolicyFactory
+ *
+ * The frame dropping mechanism is provided as the
+ * \a drop_frames argument of \ref FrameDroppingPolicyFactory::create_policy
+ *
+ * The policy may decide to drop a frame any time that there is an outstanding
+ * swap - namely, when there have been more calls to \ref swap_now_blocking
+ * than to \ref swap_unblocked
  */
 class FrameDroppingPolicy
 {
@@ -38,7 +48,7 @@ public:
     FrameDroppingPolicy& operator=(FrameDroppingPolicy const&) = delete;
 
     /**
-     * \brief Notify that a swap has blocked
+     * \brief Notify that a swap is now blocking
      */
     virtual void swap_now_blocking() = 0;
     /**

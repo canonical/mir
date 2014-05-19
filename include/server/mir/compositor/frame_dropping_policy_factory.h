@@ -27,6 +27,15 @@ namespace compositor
 {
 class FrameDroppingPolicy;
 
+/**
+ * \brief Creator of FrameDroppingPolicies
+ *
+ * The FrameDroppingPolicyFactory is how you go from a means of dropping frames -
+ * the \a drop_frames parameter of \ref FrameDroppingPolicyFactory::create_policy -
+ * to a \ref FrameDroppingPolicy object that may drop frames between calls to
+ * \ref FrameDroppingPolicy::swap_now_blocking and
+ * \ref FrameDroppingPolicy::swap_unblocked
+ */
 class FrameDroppingPolicyFactory
 {
 public:
