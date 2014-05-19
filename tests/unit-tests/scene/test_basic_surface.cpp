@@ -460,16 +460,16 @@ TEST_F(BasicSurfaceTest, set_input_region)
     std::vector<geom::Point> contained_pt
     {
         //region0 points
-        geom::Point{geom::X{0}, geom::Y{0}},
+        geom::Point{geom::X{4}, geom::Y{7}},
         //region1 points
-        geom::Point{geom::X{1}, geom::Y{1}},
+        geom::Point{geom::X{5}, geom::Y{8}},
     };
 
     for(auto x = 0; x <= 3; x++)
     {
         for(auto y = 0; y <= 3; y++)
         {
-            auto test_pt = geom::Point{x, y};
+            auto test_pt = geom::Point{rect.top_left.x.as_uint32_t() + x, rect.top_left.y.as_uint32_t() + y};
             auto contains = surface.input_area_contains(test_pt);
             if (std::find(contained_pt.begin(), contained_pt.end(), test_pt) != contained_pt.end())
             {
