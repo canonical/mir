@@ -54,7 +54,7 @@ void mir::report::null::SessionMediatorReport::session_start_trust_session_calle
 {
 }
 
-void mir::report::null::SessionMediatorReport::session_add_trusted_session_called(std::string const&, std::string const&)
+void mir::report::null::SessionMediatorReport::session_add_trusted_session_called(std::string const&, pid_t)
 {
 }
 

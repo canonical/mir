@@ -550,19 +550,17 @@ void mf::SessionMediator::add_trusted_session(::google::protobuf::RpcController*
 {
     {
         std::unique_lock<std::mutex> lock(session_mutex);
-        auto session = weak_session.lock();
+        auto const session = weak_session.lock();
 
-        if (session.get() == nullptr)
+        if (!session)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        auto trust_session = weak_trust_session.lock();
+        auto const trust_session = weak_trust_session.lock();
 
-        if (trust_session.get() == nullptr)
+        if (!trust_session)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
 
-        std::ostringstream stream;
-        stream << "process id: " << request->pid();
-        report->session_add_trusted_session_called(session->name(), stream.str());
+        report->session_add_trusted_session_called(session->name(), request->pid());
 
         response->set_result(shell->add_trusted_session_for(trust_session, request->pid()));
     }

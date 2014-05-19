@@ -53,7 +53,7 @@ class SessionMediatorReport : public frontend::SessionMediatorReport
 
     void session_start_trust_session_called(std::string const& app_name, pid_t base_process) override;
 
-    void session_add_trusted_session_called(std::string const& app_name, std::string const& trust_info) override;
+    void session_add_trusted_session_called(std::string const& app_name, pid_t process) override;
 
     void session_stop_trust_session_called(std::string const& app_name) override;
 

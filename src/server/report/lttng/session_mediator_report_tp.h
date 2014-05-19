@@ -62,10 +62,10 @@ TRACEPOINT_EVENT(
 TRACEPOINT_EVENT(
     mir_server_session_mediator,
     session_add_trusted_session_called,
-    TP_ARGS(char const*, application, char const*, trust_info),
+    TP_ARGS(char const*, application, pid_t, process),
     TP_FIELDS(
         ctf_string(application, application)
-        ctf_string(trust_info, trust_info)
+        ctf_integer(pid_t, process, process)
         )
     )
 
