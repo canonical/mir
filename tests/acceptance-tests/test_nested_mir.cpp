@@ -56,7 +56,7 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_release_surface_called, void (std::string const&));
     MOCK_METHOD1(session_disconnect_called, void (std::string const&));
-    MOCK_METHOD2(session_start_trust_session_called, void (std::string const&, std::string const&));
+    MOCK_METHOD2(session_start_trust_session_called, void (std::string const&, pid_t));
     MOCK_METHOD2(session_add_trusted_session_called, void (std::string const&, std::string const&));
     MOCK_METHOD1(session_stop_trust_session_called, void (std::string const&));
 

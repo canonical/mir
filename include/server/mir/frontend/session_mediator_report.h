@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -21,6 +21,8 @@
 #define MIR_FRONTEND_SESSION_MEDIATOR_REPORT_H_
 
 #include <string>
+
+#include <sys/types.h>
 
 namespace mir
 {
@@ -48,7 +50,7 @@ public:
 
     virtual void session_configure_display_called(std::string const& app_name) = 0;
 
-    virtual void session_start_trust_session_called(std::string const& app_name, std::string const& trust_info) = 0;
+    virtual void session_start_trust_session_called(std::string const& app_name, pid_t base_process) = 0;
 
     virtual void session_add_trusted_session_called(std::string const& app_name, std::string const& trust_info) = 0;
 
