@@ -242,7 +242,6 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     if (nbuffers <= 1)
         return;
 
-#if 0
     /*
      * We can't release the current_compositor_buffer because we need to keep
      * a compositor buffer always-available. But there might be a new
@@ -261,7 +260,6 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
         void const* const impossible_user_id = this;
         current_buffer_users.push_back(impossible_user_id);
     }
-#endif
 
     if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
