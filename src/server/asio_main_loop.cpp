@@ -30,10 +30,28 @@ struct MirClockTimerTraits
 {
     // TODO the clock used by the main loop is a global setting, this is a restriction
     // of boost::asio only allowing static methods inside the taits type.
-    static std::weak_ptr<mir::time::Clock const> timer_service_clock;
+    struct TimerServiceClockStorage
+    {
+        std::mutex timer_service_mutex;
+        std::weak_ptr<mir::time::Clock const> timer_service_clock;
+        void set_clock(std::shared_ptr<mir::time::Clock const> const& clock)
+        {
+            std::lock_guard<std::mutex> lock(timer_service_mutex);
+            timer_service_clock = clock;
+        }
+        mir::time::Timestamp now()
+        {
+            std::lock_guard<std::mutex> lock(timer_service_mutex);
+            assert(timer_service_clock.lock());
+            return timer_service_clock.lock()->sample();
+        }
+    };
+
+    static TimerServiceClockStorage clock_storage;
+
     static void set_clock(std::shared_ptr<mir::time::Clock const> const& clock)
     {
-        timer_service_clock = clock;
+        clock_storage.set_clock(clock);
     }
 
     // time_traits interface required by boost::asio::deadline_timer{_service}
@@ -43,8 +61,7 @@ struct MirClockTimerTraits
 
     static time_type now()
     {
-        assert(timer_service_clock.lock());
-        return timer_service_clock.lock()->sample();
+        return clock_storage.now();
     }
 
     static time_type add(const time_type& t, const duration_type& d)
@@ -69,7 +86,7 @@ struct MirClockTimerTraits
     }
 };
 
-std::weak_ptr<mir::time::Clock const> MirClockTimerTraits::timer_service_clock;
+MirClockTimerTraits::TimerServiceClockStorage MirClockTimerTraits::clock_storage;
 
 typedef boost::asio::basic_deadline_timer<mir::time::Timestamp, MirClockTimerTraits> deadline_timer;
 }
