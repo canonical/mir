@@ -32,19 +32,20 @@ namespace
 {
 unsigned int determine_num_framebuffers(mga::PropertiesWrapper const& properties)
 {
-    (void) properties;
-    return 0;
+    char const key[] = "ro.product.device"; 
+    char const default_value[] = "";
+    char value[PROP_VALUE_MAX] = "";
+    properties.property_get(key, value, default_value);
+    if (std::string{"mx3"} == std::string{value})
+        return 3;
+    else
+        return 2;
 }
 }
 
 mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties)
     : num_framebuffers_(determine_num_framebuffers(properties))
 {
-    char const key[] = "ro.product.device"; 
-    char const default_value[] = "";
-    char value[PROP_VALUE_MAX] = "";
-    properties.property_get(key, value, default_value);
-//    device_name_ = std::string{value};
 }
 
 unsigned int mga::DeviceQuirks::num_framebuffers() const
