@@ -142,8 +142,8 @@ protected:
         screen_pos = {
             screen_position.top_left.x.as_int(),
             screen_position.top_left.y.as_int(),
-            screen_position.size.width.as_int(),
-            screen_position.size.height.as_int()
+            screen_position.bottom_right().x.as_int(),
+            screen_position.bottom_right().y.as_int()
         };
 
         comp_layer.compositionType = HWC_FRAMEBUFFER;
