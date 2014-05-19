@@ -32,8 +32,8 @@ namespace compositor
 class RecentlyBoundCache : public graphics::GLTextureCache
 {
 public:
-    std::shared_ptr<graphics::GLTexture> load_texture(graphics::Renderable const& renderable) override;
-    void invalidate_bindings() override;
+    std::shared_ptr<graphics::GLTexture> upload_pixel_content_from(graphics::Renderable const& renderable) override;
+    void invalidate_pixel_content() override;
     void drop_old_textures() override;
 
 private:

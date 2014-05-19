@@ -95,21 +95,21 @@ TEST_F(RecentlyBoundCache, caches_and_uploads_texture_only_on_buffer_changes)
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
 
     mc::RecentlyBoundCache cache;
-    cache.load_texture(*renderable);
+    cache.upload_pixel_content_from(*renderable);
     cache.drop_old_textures();
 
-    cache.load_texture(*renderable);
+    cache.upload_pixel_content_from(*renderable);
     cache.drop_old_textures();
 
-    cache.load_texture(*renderable);
+    cache.upload_pixel_content_from(*renderable);
     cache.drop_old_textures();
 
-    cache.invalidate_bindings();
+    cache.invalidate_pixel_content();
 
-    cache.load_texture(*renderable);
+    cache.upload_pixel_content_from(*renderable);
     cache.drop_old_textures();
 
-    cache.load_texture(*renderable);
+    cache.upload_pixel_content_from(*renderable);
     cache.drop_old_textures();
 }
 
@@ -117,7 +117,7 @@ TEST_F(RecentlyBoundCache, holds_buffers_till_the_end)
 {
     auto old_use_count = mock_buffer.use_count();
     mc::RecentlyBoundCache cache;
-    cache.load_texture(*renderable);
+    cache.upload_pixel_content_from(*renderable);
     EXPECT_EQ(old_use_count+1, mock_buffer.use_count());
     cache.drop_old_textures();
     EXPECT_EQ(old_use_count, mock_buffer.use_count());

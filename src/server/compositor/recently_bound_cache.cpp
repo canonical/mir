@@ -25,7 +25,7 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-std::shared_ptr<mg::GLTexture> mc::RecentlyBoundCache::load_texture(mg::Renderable const& renderable)
+std::shared_ptr<mg::GLTexture> mc::RecentlyBoundCache::upload_pixel_content_from(mg::Renderable const& renderable)
 {
     auto const& buffer = renderable.buffer();
     auto const& id = renderable.id();
@@ -44,7 +44,7 @@ std::shared_ptr<mg::GLTexture> mc::RecentlyBoundCache::load_texture(mg::Renderab
     return texture.texture;
 }
 
-void mc::RecentlyBoundCache::invalidate_bindings()
+void mc::RecentlyBoundCache::invalidate_pixel_content()
 {
     mg::BufferID invalid_id;
     for(auto &t : textures)
