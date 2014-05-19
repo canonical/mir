@@ -1087,8 +1087,7 @@ TEST_F(BufferQueueTest, double_buffered_client_is_not_blocked_prematurely)
     q.compositor_release(b);
     auto handle = client_acquire_async(q);
     // With the fix, a buffer will be available instantaneously:
-    ASSERT_TRUE(handle->wait_for(std::chrono::seconds(5)));
-    ASSERT_NE(nullptr, handle->buffer());
+    ASSERT_TRUE(handle->has_acquired_buffer());
     handle->release_buffer();
 }
 
@@ -1101,15 +1100,13 @@ TEST_F(BufferQueueTest, composite_on_demand_never_deadlocks_with_2_buffers)
     for (int i = 0; i < 100; ++i)
     {
         auto x = client_acquire_async(q);
-        ASSERT_TRUE(x->wait_for(std::chrono::seconds(5)));
-        ASSERT_NE(nullptr, x->buffer());
+        ASSERT_TRUE(x->has_acquired_buffer());
         x->release_buffer();
 
         auto a = q.compositor_acquire(this);
 
         auto y = client_acquire_async(q);
-        ASSERT_TRUE(y->wait_for(std::chrono::seconds(5)));
-        ASSERT_NE(nullptr, y->buffer());
+        ASSERT_TRUE(y->has_acquired_buffer());
         y->release_buffer();
 
         auto b = q.compositor_acquire(this);
@@ -1119,15 +1116,13 @@ TEST_F(BufferQueueTest, composite_on_demand_never_deadlocks_with_2_buffers)
         q.compositor_release(a);
 
         auto w = client_acquire_async(q);
-        ASSERT_TRUE(w->wait_for(std::chrono::seconds(5)));
-        ASSERT_NE(nullptr, w->buffer());
+        ASSERT_TRUE(w->has_acquired_buffer());
         w->release_buffer();
     
         q.compositor_release(b);
 
         auto z = client_acquire_async(q);
-        ASSERT_TRUE(z->wait_for(std::chrono::seconds(5)));
-        ASSERT_NE(nullptr, z->buffer());
+        ASSERT_TRUE(z->has_acquired_buffer());
         z->release_buffer();
 
         q.compositor_release(q.compositor_acquire(this));
