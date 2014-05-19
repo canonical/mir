@@ -105,17 +105,22 @@ public:
     {
     }
 
-    std::shared_ptr<mg::Buffer> buffer(unsigned long) const override
+    ID id() const override
+    {
+        return this;
+    }
+
+    std::shared_ptr<mg::Buffer> buffer() const override
     {
         return client->last_rendered();
     }
 
-    bool alpha_enabled() const
+    bool alpha_enabled() const override
     {
         return false;
     }
 
-    geom::Rectangle screen_position() const
+    geom::Rectangle screen_position() const override
     {
         return position;
     }
@@ -130,14 +135,14 @@ public:
         return trans;
     }
 
-    bool shaped() const
+    bool shaped() const override
     {
         return false;
     }
 
-    bool should_be_rendered_in(geom::Rectangle const& rect) const override
+    bool visible() const override
     {
-        return rect.overlaps(position);
+        return true;
     }
 
     int buffers_ready_for_compositor() const override
@@ -168,7 +173,7 @@ try
     mir::DefaultServerConfiguration conf{argc, argv};
 
     auto platform = conf.the_graphics_platform();
-    auto display = platform->create_display(conf.the_display_configuration_policy());
+    auto display = conf.the_display();
     auto buffer_allocator = platform->create_buffer_allocator(conf.the_buffer_initializer());
 
      mg::BufferProperties buffer_properties{
@@ -182,8 +187,8 @@ try
 
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {
-        std::make_shared<DemoRenderable>(client1, geom::Rectangle{{0,0} , {512, 512}}),
-        std::make_shared<DemoRenderable>(client2, geom::Rectangle{{80,80} , {592,592}})
+        std::make_shared<DemoRenderable>(client1, geom::Rectangle{{0,0} , buffer_properties.size}),
+        std::make_shared<DemoRenderable>(client2, geom::Rectangle{{80,80} , buffer_properties.size})
     };
 
     while (running)

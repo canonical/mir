@@ -82,10 +82,15 @@ mtd::MockEGL::MockEGL()
                        Return(EGL_TRUE)));
 
     ON_CALL(*this, eglChooseConfig(_,_,_,_,_))
-    .WillByDefault(DoAll(
-                       SetArgPointee<2>(&fake_configs),
-                       SetArgPointee<4>(fake_configs_num),
-                       Return(EGL_TRUE)));
+    .WillByDefault(Invoke(
+        [&] (EGLDisplay, const EGLint *, EGLConfig *configs,
+             EGLint config_size, EGLint *num_config) -> EGLBoolean
+        {
+            EGLint const min_size = std::min(config_size, fake_configs_num);
+            std::copy(fake_configs, fake_configs + min_size, configs);
+            *num_config = min_size;
+            return EGL_TRUE;
+        }));
 
     ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
     .WillByDefault(Return(fake_egl_surface));

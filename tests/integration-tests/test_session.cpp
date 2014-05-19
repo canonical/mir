@@ -21,10 +21,10 @@
 #include "mir/compositor/compositor.h"
 #include "src/server/scene/application_session.h"
 #include "src/server/scene/pixel_buffer.h"
-#include "mir/shell/placement_strategy.h"
-#include "mir/shell/surface.h"
-#include "mir/shell/surface_creation_parameters.h"
-#include "mir/shell/null_session_listener.h"
+#include "mir/scene/placement_strategy.h"
+#include "mir/scene/surface.h"
+#include "mir/scene/surface_creation_parameters.h"
+#include "mir/scene/null_session_listener.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/compositor/renderer.h"
 #include "mir/compositor/renderer_factory.h"
@@ -69,6 +69,7 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
             void start() {}
             void stop() {}
             int client_socket_fd() const override { return 0; }
+            int client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const override { return 0; }
             void remove_endpoint() const override { }
         };
 
@@ -154,14 +155,14 @@ TEST(ApplicationSession, stress_test_take_snapshot)
     TestServerConfiguration conf;
 
     ms::ApplicationSession session{
-        conf.the_shell_surface_factory(),
+        conf.the_surface_coordinator(),
         __LINE__,
         "stress",
         conf.the_snapshot_strategy(),
-        std::make_shared<msh::NullSessionListener>(),
+        std::make_shared<ms::NullSessionListener>(),
         std::make_shared<mtd::NullEventSink>()
     };
-    session.create_surface(msh::a_surface());
+    session.create_surface(ms::a_surface());
 
     auto compositor = conf.the_compositor();
 
@@ -189,9 +190,9 @@ TEST(ApplicationSession, stress_test_take_snapshot)
                 bool snapshot_taken2 = false;
 
                 session.take_snapshot(
-                    [&](msh::Snapshot const&) { snapshot_taken1 = true; });
+                    [&](ms::Snapshot const&) { snapshot_taken1 = true; });
                 session.take_snapshot(
-                    [&](msh::Snapshot const&) { snapshot_taken2 = true; });
+                    [&](ms::Snapshot const&) { snapshot_taken2 = true; });
 
                 while (!snapshot_taken1 || !snapshot_taken2)
                     std::this_thread::sleep_for(std::chrono::microseconds{50});

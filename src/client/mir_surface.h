@@ -87,6 +87,8 @@ public:
 
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
     int attrib(MirSurfaceAttrib a) const;
+    
+    MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
     void set_event_handler(MirEventDelegate const* delegate);
     void handle_event(MirEvent const& e);
@@ -106,16 +108,16 @@ private:
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf);
     void release_cpu_region();
 
-    /* todo: race condition. protobuf does not guarantee that callbacks will be synchronized. potential
-             race in surface, last_buffer_id */
     mir::protobuf::DisplayServer::Stub & server;
     mir::protobuf::Surface surface;
     std::string error_message;
+    mir::protobuf::Void void_response;
 
     MirConnection* const connection;
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle configure_wait_handle;
+    MirWaitHandle configure_cursor_wait_handle;
 
     std::shared_ptr<mir::client::MemoryRegion> secured_region;
     std::shared_ptr<mir::client::ClientBufferDepository> buffer_depository;

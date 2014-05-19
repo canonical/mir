@@ -20,68 +20,42 @@
 #define MIR_COMPOSITOR_SCENE_H_
 
 #include "mir/geometry/forward.h"
+#include "mir/graphics/renderable.h"
 
 #include <memory>
 #include <functional>
 
 namespace mir
 {
-namespace graphics { class Renderable; }
+namespace scene
+{
+class Observer;
+}
+
 namespace compositor
 {
-
-class FilterForScene
-{
-public:
-    virtual ~FilterForScene() {}
-
-    virtual bool operator()(graphics::Renderable const&) = 0;
-
-protected:
-    FilterForScene() = default;
-    FilterForScene(const FilterForScene&) = delete;
-    FilterForScene& operator=(const FilterForScene&) = delete;
-};
-
-class OperatorForScene
-{
-public:
-    virtual ~OperatorForScene() {}
-
-    virtual void operator()(graphics::Renderable const&) = 0;
-
-protected:
-    OperatorForScene() = default;
-    OperatorForScene(const OperatorForScene&) = delete;
-    OperatorForScene& operator=(const OperatorForScene&) = delete;
-
-};
 
 class Scene
 {
 public:
     virtual ~Scene() {}
 
-    // Back to front; normal rendering order
-    virtual void for_each_if(FilterForScene& filter, OperatorForScene& op) = 0;
-
-    // Front to back; as used when scanning for occlusions
-    virtual void reverse_for_each_if(FilterForScene& filter,
-                                     OperatorForScene& op) = 0;
-
     /**
-     * Sets a callback to be called whenever the state of the
-     * Scene changes.
-     *
-     * The supplied callback should not directly or indirectly (e.g.,
-     * by changing a property of a surface) change the state of
-     * the Scene, otherwise a deadlock may occur.
+     * Generate a valid list of renderables based on the current state of the Scene.
+     * \param [in] id      An arbitrary unique identifier used to distinguish
+     *                     separate compositors which need to receive a list
+     *                     for rendering. Calling with the same id will return
+     *                     a new (different) list to that user each time. For
+     *                     consistency, all callers need to determine their id
+     *                     in the same way (e.g. always use "this" pointer).
+     * \returns a list of mg::Renderables for the compositor id. The list is in
+     *          stacking order from back to front.
      */
-    virtual void set_change_callback(std::function<void()> const& f) = 0;
+    typedef void const* CompositorID;
+    virtual graphics::RenderableList renderable_list_for(CompositorID id) const = 0;
 
-    // Implement BasicLockable, to temporarily lock scene state:
-    virtual void lock() = 0;
-    virtual void unlock() = 0;
+    virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
+    virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
 
 protected:
     Scene() = default;

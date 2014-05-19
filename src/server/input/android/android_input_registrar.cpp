@@ -21,6 +21,8 @@
 #include "android_input_window_handle.h"
 #include "android_input_application_handle.h"
 
+#include "mir/scene/surface.h"
+
 #include <InputDispatcher.h>
 
 #include <boost/throw_exception.hpp>
@@ -29,10 +31,11 @@
 #include <mutex>
 
 namespace mi = mir::input;
+namespace ms = mir::scene;
 namespace mia = mi::android;
 namespace ms = mir::scene;
 
-mia::InputRegistrar::InputRegistrar(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher)
+mia::InputRegistrar::InputRegistrar(std::shared_ptr<droidinput::InputDispatcherInterface> const& input_dispatcher)
     : input_dispatcher(input_dispatcher)
 {
 }
@@ -41,20 +44,18 @@ mia::InputRegistrar::~InputRegistrar() noexcept(true)
 {
 }
 
-// Be careful on the locking in these two functions.
-void mia::InputRegistrar::input_channel_opened(std::shared_ptr<input::InputChannel> const& channel,
-                                               std::shared_ptr<mi::Surface> const& surface,
-                                               mi::InputReceptionMode input_mode)
+void mia::InputRegistrar::surface_added(ms::Surface* surface)
 {
     droidinput::sp<droidinput::InputWindowHandle> window_handle;
     {
         std::unique_lock<std::mutex> lock(handles_mutex);
+        std::shared_ptr<InputChannel> channel = surface->input_channel();
 
         // TODO: We don't have much use for InputApplicationHandle so we simply use one per channel.
         // it is only used in droidinput for logging and determining application not responding (ANR),
         // we determine ANR on a per channel basis. When we have time we should factor InputApplicationHandle out
         // of the input stack (merging it's state with WindowHandle). ~racarr
-        if (window_handles.find(channel) != window_handles.end())
+        if (window_handles.find(surface->input_channel()) != window_handles.end())
             BOOST_THROW_EXCEPTION(std::logic_error("A channel was opened twice"));
 
         auto application_handle = new mia::InputApplicationHandle(surface);
@@ -63,22 +64,37 @@ void mia::InputRegistrar::input_channel_opened(std::shared_ptr<input::InputChann
         window_handles[channel] = window_handle;
     }
 
-    bool monitors_input = (input_mode == mi::InputReceptionMode::receives_all_input);
+    bool monitors_input = (surface->reception_mode() == mi::InputReceptionMode::receives_all_input);
     input_dispatcher->registerInputChannel(window_handle->getInfo()->inputChannel, window_handle, monitors_input);
+
 }
 
-void mia::InputRegistrar::input_channel_closed(std::shared_ptr<input::InputChannel> const& closed_channel)
+void mia::InputRegistrar::surface_removed(ms::Surface* surface)
 {
     droidinput::sp<droidinput::InputWindowHandle> window_handle;
     {
         std::unique_lock<std::mutex> lock(handles_mutex);
-        auto it = window_handles.find(closed_channel);
+        auto it = window_handles.find(surface->input_channel());
         if (it == window_handles.end())
             BOOST_THROW_EXCEPTION(std::logic_error("A channel was closed twice"));
         window_handle = it->second;
         window_handles.erase(it);
     }
     input_dispatcher->unregisterInputChannel(window_handle->getInputChannel());
+
+}
+
+void mia::InputRegistrar::surfaces_reordered()
+{
+}
+
+void mia::InputRegistrar::surface_exists(ms::Surface* surface)
+{
+    surface_added(surface);
+}
+
+void mia::InputRegistrar::end_observation()
+{
 }
 
 droidinput::sp<droidinput::InputWindowHandle> mia::InputRegistrar::handle_for_channel(

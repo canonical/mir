@@ -17,7 +17,7 @@
  */
 
 #include "consuming_placement_strategy.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/display_layout.h"
 #include "mir/geometry/rectangle.h"
 
@@ -25,6 +25,7 @@
 
 #include <algorithm>
 
+namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
@@ -34,9 +35,9 @@ msh::ConsumingPlacementStrategy::ConsumingPlacementStrategy(
 {
 }
 
-msh::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(
-    msh::Session const& /* session */,
-    msh::SurfaceCreationParameters const& request_parameters)
+ms::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(
+    ms::Session const& /* session */,
+    ms::SurfaceCreationParameters const& request_parameters)
 {
     mir::graphics::DisplayConfigurationOutputId const output_id_invalid{
         mir_display_output_id_invalid};

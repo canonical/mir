@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -25,6 +25,7 @@ namespace mir
 {
 namespace frontend
 {
+class SessionCredentials;
 namespace detail
 {
 class MessageReceiver
@@ -32,8 +33,10 @@ class MessageReceiver
 public:
     //receive message from the socket. 'handler' will be called when 'buffer' has been filled with exactly 'size'
     typedef std::function<void(boost::system::error_code const&, size_t)> MirReadHandler;
-    virtual void async_receive_msg(MirReadHandler const& handler, boost::asio::streambuf& buffer, size_t size) = 0;
-    virtual pid_t client_pid() = 0;
+    virtual void async_receive_msg(MirReadHandler const& handler, boost::asio::mutable_buffers_1 const& buffer) = 0;
+    virtual boost::system::error_code receive_msg(boost::asio::mutable_buffers_1 const& buffer) = 0;
+    virtual size_t available_bytes() = 0;
+    virtual SessionCredentials client_creds() = 0;
 
 protected:
     MessageReceiver() = default;

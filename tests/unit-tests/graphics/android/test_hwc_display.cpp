@@ -28,7 +28,9 @@
 #include "mir_test_doubles/stub_driver_interpreter.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
+#include "mir_test_doubles/stub_gl_program_factory.h"
 #include <memory>
 
 namespace geom=mir::geometry;
@@ -50,16 +52,23 @@ protected:
         dummy_config = mock_egl.fake_configs[0];
         dummy_context = mock_egl.fake_egl_context;
         testing::NiceMock<mtd::MockDisplayReport> report;
-        gl_context = std::make_shared<mga::GLContext>(mga::to_mir_format(mock_egl.fake_visual_id),report);
+        mtd::StubGLConfig stub_gl_config;
+
+        gl_context = std::make_shared<mga::GLContext>(
+            mga::to_mir_format(mock_egl.fake_visual_id), stub_gl_config, report);
+
         mock_fb_bundle = std::make_shared<testing::NiceMock<mtd::MockFBBundle>>();
 
         ON_CALL(*mock_fb_bundle, fb_format())
             .WillByDefault(testing::Return(mir_pixel_format_abgr_8888));
         ON_CALL(*mock_fb_bundle, fb_size())
             .WillByDefault(testing::Return(display_size));
+        ON_CALL(*mock_fb_bundle, fb_refresh_rate())
+            .WillByDefault(testing::Return(refresh_rate));
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
+    mtd::StubGLProgramFactory stub_program_factory;
 
     int visual_id;
     EGLConfig dummy_config;
@@ -72,6 +81,7 @@ protected:
     std::shared_ptr<mtd::MockDisplayDevice> mock_display_device;
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle;
     geom::Size const display_size{433,232};
+    double const refresh_rate{60.0};
 };
 
 TEST_F(AndroidDisplayBuffer, can_post_update_with_gl_only)
@@ -88,7 +98,8 @@ TEST_F(AndroidDisplayBuffer, can_post_update_with_gl_only)
         .Times(1);
 
     std::list<std::shared_ptr<mg::Renderable>> renderlist{};
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
     db.post_update();
 }
 
@@ -96,7 +107,8 @@ TEST_F(AndroidDisplayBuffer, performs_default_post_if_empty_list)
 {
     using namespace testing;
 
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
     InSequence seq;
     EXPECT_CALL(*mock_display_device, render_gl(_))
@@ -121,7 +133,7 @@ TEST_F(AndroidDisplayBuffer, posts_overlay_list)
     std::function<void(mg::Renderable const&)> render_fn;
 
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, render_gl_and_overlays(_, Ref(renderlist), Ref(render_fn)))
+    EXPECT_CALL(*mock_display_device, prepare_overlays(_, Ref(renderlist), _))
         .Times(1);
     EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
         .Times(1)
@@ -129,22 +141,23 @@ TEST_F(AndroidDisplayBuffer, posts_overlay_list)
     EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
         .Times(1);
 
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
     db.render_and_post_update(renderlist, render_fn); 
 }
 
 TEST_F(AndroidDisplayBuffer, defaults_to_normal_orientation)
 {
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
-                          *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
     EXPECT_EQ(mir_orientation_normal, db.orientation());
 }
 
 TEST_F(AndroidDisplayBuffer, orientation_is_passed_through)
 {
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
-                          *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
     for (auto const& ori : {mir_orientation_normal,
                             mir_orientation_left,
@@ -170,8 +183,8 @@ TEST_F(AndroidDisplayBuffer, rotation_transposes_dimensions)
     EXPECT_CALL(*mock_fb_bundle, fb_size())
         .WillRepeatedly(Return(normal));
 
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window,
-                          *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
     EXPECT_EQ(normal, db.view_area().size);
 
@@ -194,7 +207,8 @@ TEST_F(AndroidDisplayBuffer, reports_correct_size)
 {
     using namespace testing;
 
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
     auto view_area = db.view_area();
 
@@ -222,7 +236,8 @@ TEST_F(AndroidDisplayBuffer, creates_egl_context_from_shared_context)
     EXPECT_CALL(mock_egl, eglDestroyContext(dummy_display, mock_egl.fake_egl_context))
         .Times(AtLeast(1));
 
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
     testing::Mock::VerifyAndClearExpectations(&mock_egl);
 }
 
@@ -239,12 +254,14 @@ TEST_F(AndroidDisplayBuffer, fails_on_egl_resource_creation)
 
     EXPECT_THROW(
     {
-        mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+        mga::DisplayBuffer db(
+            mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
     }, std::runtime_error);
 
     EXPECT_THROW(
     {
-        mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+        mga::DisplayBuffer db(
+            mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
     }, std::runtime_error);
 }
 
@@ -253,20 +270,19 @@ TEST_F(AndroidDisplayBuffer, can_make_current)
     using namespace testing;
     EGLContext fake_ctxt = reinterpret_cast<EGLContext>(0x4422);
     EGLSurface fake_surf = reinterpret_cast<EGLSurface>(0x33984);
+    ON_CALL(mock_egl, eglCreateContext(_,_,_,_))
+        .WillByDefault(Return(fake_ctxt));
+    ON_CALL(mock_egl, eglCreateWindowSurface(_,_,_,_))
+        .WillByDefault(Return(fake_surf));
 
-    EXPECT_CALL(mock_egl, eglCreateContext(_,_,_,_))
-        .Times(1)
-        .WillOnce(Return(fake_ctxt));
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(_,_,_,_))
-        .Times(1)
-        .WillOnce(Return(fake_surf));
-
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
+    
     EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display, fake_surf, fake_surf, fake_ctxt))
         .Times(2)
         .WillOnce(Return(EGL_TRUE))
         .WillOnce(Return(EGL_FALSE));
 
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
     db.make_current();
     EXPECT_THROW(
     {
@@ -277,18 +293,19 @@ TEST_F(AndroidDisplayBuffer, can_make_current)
 TEST_F(AndroidDisplayBuffer, release_current)
 {
     using namespace testing;
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
     EXPECT_CALL(mock_egl, eglMakeCurrent(dummy_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
         .Times(1);
-
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
     db.release_current();
 }
 
 TEST_F(AndroidDisplayBuffer, sets_display_power_mode_to_on_at_start)
 {
     using namespace testing;
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
     auto config = db.configuration();
     EXPECT_EQ(mir_power_mode_on, config.power_mode);
 }
@@ -296,7 +313,8 @@ TEST_F(AndroidDisplayBuffer, sets_display_power_mode_to_on_at_start)
 TEST_F(AndroidDisplayBuffer, changes_display_power_mode)
 {
     using namespace testing;
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
     Sequence seq;
     EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off))
@@ -316,7 +334,8 @@ TEST_F(AndroidDisplayBuffer, changes_display_power_mode)
 TEST_F(AndroidDisplayBuffer, disregards_double_display_power_mode_request)
 {
     using namespace testing;
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
     EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off))
         .Times(1);
@@ -339,7 +358,8 @@ TEST_F(AndroidDisplayBuffer, display_orientation_supported)
         .Times(1)
         .WillOnce(Return(true));
 
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
     auto config = db.configuration();
     config.orientation = mir_orientation_left;
@@ -356,7 +376,8 @@ TEST_F(AndroidDisplayBuffer, display_orientation_not_supported)
         .Times(1)
         .WillOnce(Return(false));
 
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
     auto config = db.configuration();
     config.orientation = mir_orientation_left;
@@ -368,7 +389,8 @@ TEST_F(AndroidDisplayBuffer, display_orientation_not_supported)
 
 TEST_F(AndroidDisplayBuffer, incorrect_display_configure_throws)
 {
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
     auto config = db.configuration();
     //error
     config.current_format = mir_pixel_format_invalid;
@@ -379,7 +401,8 @@ TEST_F(AndroidDisplayBuffer, incorrect_display_configure_throws)
 
 TEST_F(AndroidDisplayBuffer, android_display_configuration_info)
 {
-    mga::DisplayBuffer db(mock_fb_bundle, mock_display_device, native_window, *gl_context);
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
     auto disp_conf = db.configuration();
 
     ASSERT_EQ(1u, disp_conf.modes.size());
@@ -394,6 +417,6 @@ TEST_F(AndroidDisplayBuffer, android_display_configuration_info)
     EXPECT_EQ(origin, disp_conf.top_left);
     EXPECT_EQ(0, disp_conf.current_mode_index);
 
-    //TODO fill refresh rate accordingly
+    EXPECT_EQ(refresh_rate, disp_mode.vrefresh_hz);
     //TODO fill physical_size_mm fields accordingly;
 }

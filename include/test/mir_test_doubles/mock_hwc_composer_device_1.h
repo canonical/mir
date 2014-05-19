@@ -21,8 +21,6 @@
 
 #include <hardware/hwcomposer.h>
 #include <gmock/gmock.h>
-#include <vector>
-#include <memory>
 
 namespace mir
 {
@@ -37,16 +35,6 @@ public:
     MockHWCComposerDevice1()
     {
         using namespace testing;
-
-        primary_prepare = false;
-        primary_set = false;
-        external_prepare = false;
-        external_set = false;
-        virtual_prepare = false;
-        virtual_set = false;
-        fb_fence = -1;
-        retire_fence = -1;
-
         common.version = HWC_DEVICE_API_VERSION_1_1;
 
         registerProcs = hook_registerProcs;
@@ -56,91 +44,6 @@ public:
         blank = hook_blank;
         getDisplayConfigs = hook_getDisplayConfigs;
         getDisplayAttributes = hook_getDisplayAttributes;
-
-        ON_CALL(*this, set_interface(_,_,_))
-            .WillByDefault(Invoke(this, &MockHWCComposerDevice1::save_last_set_arguments));
-        ON_CALL(*this, prepare_interface(_,_,_))
-            .WillByDefault(Invoke(this, &MockHWCComposerDevice1::save_last_prepare_arguments));
-    }
-
-    int save_args(hwc_display_contents_1_t* out, hwc_display_contents_1_t** in)
-    {
-        if ((nullptr == in) || (nullptr == *in))
-            return -1;
-
-        hwc_display_contents_1_t* primary_display = *in;
-        memcpy(out, primary_display, sizeof(hwc_display_contents_1_t));
-        return 0;
-    }
-
-    void hwc_set_return_fence(int fence)
-    {
-        fb_fence = fence;
-    }
-
-    void hwc_set_retire_fence(int fence)
-    {
-        retire_fence = fence;
-    }
-
-    int save_last_prepare_arguments(struct hwc_composer_device_1 *, size_t size, hwc_display_contents_1_t** displays)
-    {
-        if ((size == 0) || (!displays)) 
-            return -1;
-
-        switch (size)
-        {
-            case 3:
-                virtual_prepare = (!!displays[2]);
-            case 2:
-                external_prepare = (!!displays[1]);
-            case 1:
-                primary_prepare = (!!displays[0]);
-                for(auto i = 0u; i < displays[0]->numHwLayers; i++)
-                {
-                    prepare_layerlist.push_back(displays[0]->hwLayers[i]);
-                    prepare_layerlist.back().visibleRegionScreen = {0, nullptr};
-                }
-                save_args(&display0_prepare_content, displays);
-            default:
-                break;
-        }
-        return 0;
-    }
-
-    int save_last_set_arguments(
-        struct hwc_composer_device_1 *, size_t size, hwc_display_contents_1_t** displays)
-    {
-
-        if ((size == 0) || (!displays)) 
-            return -1;
-
-        switch (size)
-        {
-            case 3:
-                virtual_set = (!!displays[2]);
-            case 2:
-                external_set = (!!displays[1]);
-            case 1:
-                primary_set = (!!displays[0]);
-                for(auto i = 0u; i < displays[0]->numHwLayers; i++)
-                {
-                    set_layerlist.push_back(displays[0]->hwLayers[i]);
-                    set_layerlist.back().visibleRegionScreen = {0, nullptr};
-                }
-
-                save_args(&display0_set_content, displays);
-
-                if (displays[0]->numHwLayers >= 2)
-                {
-                    displays[0]->hwLayers[1].releaseFenceFd = fb_fence;
-                    displays[0]->retireFenceFd = retire_fence;
-                }
-
-            default:
-                break;
-        }
-        return 0;
     }
 
     static void hook_registerProcs(struct hwc_composer_device_1* mock_hwc, hwc_procs_t const* procs)
@@ -188,14 +91,6 @@ public:
     MOCK_METHOD3(blank_interface, int(struct hwc_composer_device_1 *, int, int));
     MOCK_METHOD4(getDisplayConfigs_interface, int(struct hwc_composer_device_1*, int, uint32_t*, size_t*));
     MOCK_METHOD5(getDisplayAttributes_interface, int(struct hwc_composer_device_1*, int, uint32_t, const uint32_t*, int32_t*));
-
-    bool primary_prepare, primary_set, external_prepare, external_set, virtual_prepare, virtual_set;
-    hwc_display_contents_1_t display0_set_content;
-    std::vector<hwc_layer_1> set_layerlist;
-    std::vector<hwc_layer_1> prepare_layerlist;
-    hwc_display_contents_1_t display0_prepare_content;
-    int fb_fence;
-    int retire_fence;
 };
 
 }

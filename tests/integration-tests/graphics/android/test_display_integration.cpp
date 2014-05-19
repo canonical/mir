@@ -22,10 +22,13 @@
 #include "src/platform/graphics/android/resource_factory.h"
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 #include "src/platform/graphics/android/output_builder.h"
+#include "src/server/graphics/program_factory.h"
+#include "src/server/report/null_report_factory.h"
 
 #include "examples/graphics.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test/android_device_detection.h"
+#include "mir_test_doubles/stub_gl_config.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -50,7 +53,7 @@ protected:
         /* note about fb_device: OMAP4 drivers seem to only be able to open fb once
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
            figure out why, we can remove fb_device in the test fixture */
-        display_resource_factory = std::make_shared<mga::ResourceFactory>();
+        display_resource_factory = std::make_shared<mga::ResourceFactory>(false);
     }
 
     static void TearDownTestCase()
@@ -71,14 +74,16 @@ std::shared_ptr<mga::ResourceFactory> AndroidDisplay::display_resource_factory;
 
 TEST_F(AndroidDisplay, display_can_post)
 {
-    SKIP_IF_NO_ANDROID_HARDWARE_PRESENT();
-    auto mock_display_report = std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>();
+    auto null_display_report = mir::report::null_display_report();
+    auto stub_gl_config = std::make_shared<mtd::StubGLConfig>();
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
     auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, mock_display_report);
+        fb_allocator, display_resource_factory, null_display_report);
 
-    mga::AndroidDisplay display(display_buffer_factory, mock_display_report);
+    auto program_factory = std::make_shared<mg::ProgramFactory>();
+    mga::AndroidDisplay display{display_buffer_factory, program_factory, stub_gl_config, null_display_report};
+
     display.for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
         buffer.make_current();

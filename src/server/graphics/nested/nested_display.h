@@ -43,6 +43,7 @@ namespace graphics
 class DisplayReport;
 class DisplayBuffer;
 class DisplayConfigurationPolicy;
+class GLConfig;
 
 namespace nested
 {
@@ -65,18 +66,19 @@ private:
 class EGLDisplayHandle
 {
 public:
-    explicit EGLDisplayHandle(MirConnection* connection);
+    EGLDisplayHandle(EGLNativeDisplayType native_display,
+                     std::shared_ptr<GLConfig> const& gl_config);
     ~EGLDisplayHandle() noexcept;
 
     void initialize(MirPixelFormat format);
     EGLConfig choose_windowed_es_config(MirPixelFormat format) const;
-    EGLNativeWindowType native_window(EGLConfig egl_config, MirSurface* mir_surface) const;
     EGLContext egl_context() const;
     operator EGLDisplay() const { return egl_display; }
 
 private:
     EGLDisplay egl_display;
     EGLContext egl_context_;
+    std::shared_ptr<GLConfig> const gl_config;
 
     EGLDisplayHandle(EGLDisplayHandle const&) = delete;
     EGLDisplayHandle operator=(EGLDisplayHandle const&) = delete;
@@ -96,7 +98,8 @@ public:
         std::shared_ptr<HostConnection> const& connection,
         std::shared_ptr<input::EventFilter> const& event_handler,
         std::shared_ptr<DisplayReport> const& display_report,
-        std::shared_ptr<DisplayConfigurationPolicy> const& conf_policy);
+        std::shared_ptr<DisplayConfigurationPolicy> const& conf_policy,
+        std::shared_ptr<GLConfig> const& gl_config);
 
     ~NestedDisplay() noexcept;
 
@@ -117,7 +120,7 @@ public:
     void pause() override;
     void resume() override;
 
-    std::weak_ptr<Cursor> the_cursor() override;
+    std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
@@ -129,6 +132,8 @@ private:
     std::mutex outputs_mutex;
     std::unordered_map<DisplayConfigurationOutputId, std::shared_ptr<detail::NestedOutput>> outputs;
     DisplayConfigurationChangeHandler my_conf_change_handler;
+    void create_surfaces(mir::graphics::DisplayConfiguration const& configuration);
+    void apply_to_connection(mir::graphics::DisplayConfiguration const& configuration);
     void complete_display_initialization(MirPixelFormat format);
 };
 

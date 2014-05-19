@@ -18,6 +18,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_fb_device.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_layers.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_layerlist.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_logger.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_server_interpreter.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_pixel_format.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_platform.cpp
@@ -26,6 +27,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_output_builder.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_device_detection.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_wrapper.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_overlay_compositor.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

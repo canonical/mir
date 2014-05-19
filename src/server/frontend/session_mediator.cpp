@@ -23,7 +23,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/frontend/display_changer.h"
 #include "resource_cache.h"
 #include "mir_toolkit/common.h"
@@ -52,14 +52,13 @@
 #include <mutex>
 #include <functional>
 
-namespace msh = mir::shell;
+namespace ms = mir::scene;
 namespace mf = mir::frontend;
 namespace mfd=mir::frontend::detail;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 mf::SessionMediator::SessionMediator(
-    pid_t client_pid,
     std::shared_ptr<frontend::Shell> const& shell,
     std::shared_ptr<graphics::Platform> const & graphics_platform,
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
@@ -67,8 +66,9 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache,
-    std::shared_ptr<Screencast> const& screencast) :
-    client_pid(client_pid),
+    std::shared_ptr<Screencast> const& screencast,
+    ConnectionContext const& connection_context) :
+    client_pid_(0),
     shell(shell),
     graphics_platform(graphics_platform),
     surface_pixel_formats(surface_pixel_formats),
@@ -76,7 +76,8 @@ mf::SessionMediator::SessionMediator(
     report(report),
     event_sink(sender),
     resource_cache(resource_cache),
-    screencast(screencast)
+    screencast(screencast),
+    connection_context(connection_context)
 {
 }
 
@@ -89,6 +90,11 @@ mf::SessionMediator::~SessionMediator() noexcept
     }
 }
 
+void mf::SessionMediator::client_pid(int pid)
+{
+    client_pid_ = pid;
+}
+
 void mf::SessionMediator::connect(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::ConnectParameters* request,
@@ -97,10 +103,12 @@ void mf::SessionMediator::connect(
 {
     report->session_connect_called(request->application_name());
 
+    auto const session = shell->open_session(client_pid_, request->application_name(), event_sink);
     {
-        std::unique_lock<std::mutex> lock(session_mutex);
-        weak_session = shell->open_session(client_pid, request->application_name(), event_sink);
+        std::lock_guard<std::mutex> lock(session_mutex);
+        weak_session = session;
     }
+    connection_context.handle_client_connect(session);
 
     auto ipc_package = graphics_platform->get_ipc_package();
     auto platform = response->mutable_platform();
@@ -161,7 +169,7 @@ void mf::SessionMediator::create_surface(
 
     report->session_create_surface_called(session->name());
 
-    auto const surf_id = session->create_surface(msh::SurfaceCreationParameters()
+    auto const surf_id = session->create_surface(ms::SurfaceCreationParameters()
         .of_name(request->surface_name())
         .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
@@ -169,9 +177,10 @@ void mf::SessionMediator::create_surface(
         .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id())));
 
     auto surface = session->get_surface(surf_id);
+    auto const& client_size = surface->client_size();
     response->mutable_id()->set_value(surf_id.as_value());
-    response->set_width(surface->size().width.as_uint32_t());
-    response->set_height(surface->size().height.as_uint32_t());
+    response->set_width(client_size.width.as_uint32_t());
+    response->set_height(client_size.height.as_uint32_t());
     response->set_pixel_format((int)surface->pixel_format());
     response->set_buffer_usage(request->buffer_usage());
 
@@ -211,12 +220,6 @@ void mf::SessionMediator::next_buffer(
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     report->session_next_buffer_called(session->name());
-
-    // We ensure the client has not powered down the outputs, so that
-    // swap_buffer will not block indefinitely, leaving the client
-    // in a position where it can not turn back on the
-    // outputs.
-    display_changer->ensure_display_powered(session);
 
     auto surface = session->get_surface(surf_id);
 
@@ -304,7 +307,8 @@ void mf::SessionMediator::configure_surface(
 
         auto const id = frontend::SurfaceId(request->surfaceid().value());
         int value = request->ivalue();
-        int newvalue = session->configure_surface(id, attrib, value);
+        auto const surface = session->get_surface(id);
+        int newvalue = surface->configure(attrib, value);
 
         response->set_ivalue(newvalue);
     }
@@ -412,6 +416,53 @@ void mf::SessionMediator::screencast_buffer(
     pack_protobuf_buffer(*protobuf_buffer,
                          buffer.get(),
                          does_not_need_full_ipc);
+
+    done->Run();
+}
+
+std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::trusted_connect_handler() const
+{
+    return [](std::shared_ptr<frontend::Session> const&) {};
+}
+
+void mf::SessionMediator::configure_cursor(
+    google::protobuf::RpcController*,
+    mir::protobuf::CursorSetting const* /* cursor_request */,
+    mir::protobuf::Void* /* void_response */,
+    google::protobuf::Closure* /* done */)
+{
+    // TODO: Pass cursor settings down to surface.
+    BOOST_THROW_EXCEPTION(std::logic_error("Cursor API not yet implemented"));
+}
+
+void mf::SessionMediator::new_fds_for_trusted_clients(
+    ::google::protobuf::RpcController* ,
+    ::mir::protobuf::SocketFDRequest const* parameters,
+    ::mir::protobuf::SocketFD* response,
+    ::google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        // TODO write a handler that connects the new session to our trust session
+        auto const connect_handler = trusted_connect_handler();
+
+        auto const fds_requested = parameters->number();
+
+        // < 1 is illogical, > 42 is unreasonable
+        if (fds_requested < 1 || fds_requested > 42)
+            BOOST_THROW_EXCEPTION(std::runtime_error("number of fds requested out of range"));
+
+        for (auto i  = 0; i != fds_requested; ++i)
+        {
+            auto const fd = connection_context.fd_for_new_client(connect_handler);
+            response->add_fd(fd);
+        }
+    }
 
     done->Run();
 }

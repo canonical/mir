@@ -17,29 +17,40 @@
  */
 
 #include "src/server/compositor/multi_threaded_compositor.h"
+#include "src/server/report/null_report_factory.h"
+
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/scene.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
-#include "src/server/report/null_report_factory.h"
+#include "mir/scene/observer.h"
+
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/mock_display_buffer.h"
 #include "mir_test_doubles/mock_compositor_report.h"
+#include "mir_test_doubles/mock_scene.h"
+#include "mir_test_doubles/stub_renderable.h"
+#include "mir_test_doubles/null_display_buffer_compositor_factory.h"
+#include "mir_test/spin_wait.h"
+
+#include <boost/throw_exception.hpp>
 
 #include <unordered_map>
 #include <unordered_set>
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <atomic>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace ms = mir::scene;
+namespace mr = mir::report;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
-namespace mr = mir::report;
 
 namespace
 {
@@ -83,47 +94,60 @@ private:
 class StubScene : public mc::Scene
 {
 public:
-    StubScene() : callback{[]{}} {}
-
-    void for_each_if(mc::FilterForScene&, mc::OperatorForScene&)
+    StubScene(mg::RenderableList const& list)
+        : renderable_list{list},
+          throw_on_add_observer_{false}
     {
     }
+    StubScene() : StubScene(mg::RenderableList{}) {}
 
-    void reverse_for_each_if(mc::FilterForScene&, mc::OperatorForScene&) {}
-
-    void set_change_callback(std::function<void()> const& f)
+    mg::RenderableList renderable_list_for(void const*) const
     {
-        std::lock_guard<std::mutex> lock{callback_mutex};
-        assert(f);
-        callback = f;
+        return renderable_list;
+    }
+
+    void add_observer(std::shared_ptr<ms::Observer> const& observer_)
+    {
+        std::lock_guard<std::mutex> lock{observer_mutex};
+
+        if (throw_on_add_observer_)
+            BOOST_THROW_EXCEPTION(std::runtime_error(""));
+
+        assert(!observer);
+        observer = observer_;
+    }
+
+    void remove_observer(std::weak_ptr<ms::Observer> const& /* observer */)
+    {
+        std::lock_guard<std::mutex> lock{observer_mutex};
+        observer.reset();
     }
 
     void emit_change_event()
     {
         {
-            std::lock_guard<std::mutex> lock{callback_mutex};
-            callback();
+            std::lock_guard<std::mutex> lock{observer_mutex};
+            
+            // Any old event will do.
+            if (observer)
+                observer->surfaces_reordered();
         }
         /* Reduce run-time under valgrind */
         std::this_thread::yield();
     }
 
-    void lock() {}
-    void unlock() {}
+    void throw_on_add_observer(bool flag)
+    {
+        throw_on_add_observer_ = flag;
+    }
 
 private:
-    std::function<void()> callback;
-    std::mutex callback_mutex;
-};
+    std::mutex observer_mutex;
+    mg::RenderableList renderable_list;
 
-class MockScene : public mc::Scene
-{
-public:
-    MOCK_METHOD2(for_each_if, void(mc::FilterForScene&, mc::OperatorForScene&));
-    MOCK_METHOD2(reverse_for_each_if, void(mc::FilterForScene&, mc::OperatorForScene&));
-    MOCK_METHOD1(set_change_callback, void(std::function<void()> const&));
-    MOCK_METHOD0(lock, void());
-    MOCK_METHOD0(unlock, void());
+    std::shared_ptr<ms::Observer> observer;
+    
+    bool throw_on_add_observer_;
 };
 
 class RecordingDisplayBufferCompositor : public mc::DisplayBufferCompositor
@@ -171,10 +195,8 @@ public:
         records[&display_buffer].second.insert(std::this_thread::get_id());
     }
 
-    bool enough_records_gathered(unsigned int nbuffers)
+    bool enough_records_gathered(unsigned int nbuffers, unsigned int min_record_count = 1000)
     {
-        static unsigned int const min_record_count{1000};
-
         std::lock_guard<std::mutex> lk{m};
 
         if (records.size() < nbuffers)
@@ -296,19 +318,35 @@ private:
     unsigned int render_count;
 };
 
-class NullDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
+enum class RenderableVisibility { hidden, visible };
+
+class BufferCountingRenderable : public mtd::StubRenderable
 {
 public:
-    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer&)
+    BufferCountingRenderable(RenderableVisibility visibility)
+        : buffers_requested_{0}, visibility{visibility}
     {
-        struct NullDisplayBufferCompositor : mc::DisplayBufferCompositor
-        {
-            bool composite() { return false; }
-        };
-
-        auto raw = new NullDisplayBufferCompositor{};
-        return std::unique_ptr<NullDisplayBufferCompositor>(raw);
     }
+
+    std::shared_ptr<mg::Buffer> buffer() const override
+    {
+        ++buffers_requested_;
+        return std::make_shared<mtd::StubBuffer>();
+    }
+
+    bool visible() const override
+    {
+        return visibility == RenderableVisibility::visible;
+    }
+
+    int buffers_requested() const
+    {
+        return buffers_requested_;
+    }
+
+private:
+    mutable std::atomic<int> buffers_requested_;
+    RenderableVisibility const visibility;
 };
 
 auto const null_report = mr::null_compositor_report();
@@ -535,7 +573,7 @@ TEST(MultiThreadedCompositor, makes_and_releases_display_buffer_current_target)
 
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
     auto scene = std::make_shared<StubScene>();
-    auto db_compositor_factory = std::make_shared<NullDisplayBufferCompositorFactory>();
+    auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
     mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_report, true};
 
     display->for_each_mock_buffer([](mtd::MockDisplayBuffer& mock_buf)
@@ -552,17 +590,25 @@ TEST(MultiThreadedCompositor, makes_and_releases_display_buffer_current_target)
 
 TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
 {
+    using namespace ::testing;
+
     unsigned int const nbuffers{3};
     auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
-    auto mock_scene = std::make_shared<MockScene>();
-    auto db_compositor_factory = std::make_shared<NullDisplayBufferCompositorFactory>();
+    auto mock_scene = std::make_shared<mtd::MockScene>();
+    auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
     auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
+
     EXPECT_CALL(*mock_report, started())
         .Times(1);
     EXPECT_CALL(*mock_report, stopped())
         .Times(1);
-    EXPECT_CALL(*mock_scene, set_change_callback(testing::_))
-        .Times(2);
+    EXPECT_CALL(*mock_scene, add_observer(_))
+        .Times(1);
+    EXPECT_CALL(*mock_scene, remove_observer(_))
+        .Times(1);
+    EXPECT_CALL(*mock_scene, renderable_list_for(_))
+        .Times(AtLeast(0))
+        .WillRepeatedly(Return(mg::RenderableList{}));
 
     mc::MultiThreadedCompositor compositor{display, mock_scene, db_compositor_factory, mock_report, true};
 
@@ -570,4 +616,95 @@ TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
     compositor.start();
     compositor.stop();
     compositor.stop();
+}
+
+namespace
+{
+struct BufferConsumption : ::testing::TestWithParam<RenderableVisibility> {};
+}
+
+TEST_P(BufferConsumption, consumes_buffers_for_renderables_that_are_not_rendered)
+{
+    using namespace testing;
+
+    unsigned int const nbuffers{2};
+    auto renderable = std::make_shared<BufferCountingRenderable>(GetParam());
+    auto display = std::make_shared<StubDisplay>(nbuffers);
+    auto stub_scene = std::make_shared<StubScene>(mg::RenderableList{renderable});
+    // We use NullDisplayBufferCompositors to simulate DisplayBufferCompositors
+    // not rendering a renderable.
+    auto db_compositor_factory = std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
+
+    mc::MultiThreadedCompositor compositor{
+        display, stub_scene, db_compositor_factory, null_report, true};
+
+    compositor.start();
+
+    mir::test::spin_wait_for_condition_or_timeout(
+        [&] { return renderable->buffers_requested() == 1; },
+        std::chrono::seconds{5});
+
+    EXPECT_THAT(renderable->buffers_requested(), Eq(1));
+
+    stub_scene->emit_change_event();
+
+    mir::test::spin_wait_for_condition_or_timeout(
+        [&] { return renderable->buffers_requested() == 2; },
+        std::chrono::seconds{5});
+
+    EXPECT_THAT(renderable->buffers_requested(), Eq(2));
+
+    compositor.stop();
+}
+
+INSTANTIATE_TEST_CASE_P(
+    MultiThreadedCompositor, BufferConsumption,
+    ::testing::Values(RenderableVisibility::hidden, RenderableVisibility::visible));
+
+TEST(MultiThreadedCompositor, cleans_up_after_throw_in_start)
+{
+    unsigned int const nbuffers{3};
+
+    auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
+    auto scene = std::make_shared<StubScene>();
+    auto db_compositor_factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
+    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_report, true};
+
+    scene->throw_on_add_observer(true);
+
+    EXPECT_THROW(compositor.start(), std::runtime_error);
+
+    scene->throw_on_add_observer(false);
+
+    /* No point in running the rest of the test if it throws again */
+    ASSERT_NO_THROW(compositor.start());
+
+    /* The minimum number of records here should be nbuffers *2, since we are checking for
+     * presence of at least one additional rogue compositor thread per display buffer
+     * However to avoid timing considerations like one good thread compositing the display buffer
+     * twice before the rogue thread gets a chance to, an arbitrary number of records are gathered
+     */
+    unsigned int min_number_of_records = 100;
+
+    /* Timeout here in case the exception from setting the scene callback put the compositor
+     * in a bad state that did not allow it to composite (hence no records gathered)
+     */
+    auto time_out = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+    while (!db_compositor_factory->enough_records_gathered(nbuffers, min_number_of_records) &&
+           std::chrono::steady_clock::now() <= time_out)
+    {
+        scene->emit_change_event();
+        std::this_thread::yield();
+    }
+
+    /* Check expectation in case a timeout happened */
+    EXPECT_TRUE(db_compositor_factory->enough_records_gathered(nbuffers, min_number_of_records));
+
+    compositor.stop();
+
+    /* Only one thread should be rendering each display buffer
+     * If the compositor failed to cleanup correctly more than one thread could be
+     * compositing the same display buffer
+     */
+    EXPECT_TRUE(db_compositor_factory->each_buffer_rendered_in_single_thread());
 }

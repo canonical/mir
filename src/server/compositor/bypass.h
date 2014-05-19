@@ -19,6 +19,7 @@
 #ifndef MIR_COMPOSITOR_BYPASS_H_
 #define MIR_COMPOSITOR_BYPASS_H_
 
+#include "mir/graphics/renderable.h"
 #include "mir/compositor/scene.h"
 
 namespace mir
@@ -30,28 +31,15 @@ class DisplayBuffer;
 namespace compositor
 {
 
-class BypassFilter : public FilterForScene
+class BypassMatch
 {
 public:
-    BypassFilter(const graphics::DisplayBuffer &display_buffer);
-    bool operator()(const graphics::Renderable &) override;
-    bool fullscreen_on_top() const;
-
+    BypassMatch(geometry::Rectangle const& rect);
+    bool operator()(std::shared_ptr<graphics::Renderable> const&);
 private:
-    bool all_orthogonal = true;
-    bool topmost_fits = false;
-    const graphics::DisplayBuffer &display_buffer;
-};
-
-class BypassMatch : public OperatorForScene
-{
-public:
-    void operator()(const graphics::Renderable &) override;
-    const graphics::Renderable *topmost_fullscreen() const;
-
-private:
-    // This has to be a pointer. We have no control over Renderable lifetime
-    const graphics::Renderable *latest = nullptr;
+    geometry::Rectangle const view_area;
+    bool bypass_is_feasible;
+    glm::mat4 const identity;
 };
 
 } // namespace compositor

@@ -19,8 +19,8 @@
 
 #include "default_display_buffer_compositor.h"
 
-#include "rendering_operator.h"
 #include "mir/compositor/scene.h"
+#include "mir/compositor/renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
@@ -29,42 +29,10 @@
 #include "occlusion.h"
 #include <mutex>
 #include <cstdlib>
-#include <vector>
+#include <algorithm>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-
-namespace
-{
-
-struct FilterForVisibleSceneInRegion : public mc::FilterForScene
-{
-    FilterForVisibleSceneInRegion(
-        mir::geometry::Rectangle const& enclosing_region,
-        mc::OcclusionMatch const& occlusions)
-        : enclosing_region(enclosing_region),
-          occlusions(occlusions)
-    {
-    }
-    bool operator()(mg::Renderable const& r)
-    {
-        return r.should_be_rendered_in(enclosing_region) &&
-               !occlusions.occluded(r);
-    }
-
-    mir::geometry::Rectangle const& enclosing_region;
-    mc::OcclusionMatch const& occlusions;
-};
-
-std::mutex global_frameno_lock;
-unsigned long global_frameno = 0;
-
-bool wrapped_greater_or_equal(unsigned long a, unsigned long b)
-{
-    return (a - b) < (~0UL / 2UL);
-}
-
-}
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
@@ -75,62 +43,36 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       scene{scene},
       renderer{renderer},
       report{report},
-      local_frameno{global_frameno}
+      last_pass_rendered_anything{false}
 {
 }
-
 
 bool mc::DefaultDisplayBufferCompositor::composite()
 {
     report->began_frame(this);
 
-    /*
-     * Increment frame counts for each tick of the fastest instance of
-     * DefaultDisplayBufferCompositor. This means for the fastest refresh
-     * rate of all attached outputs.
-     */
-    local_frameno++;
-    {
-        std::lock_guard<std::mutex> lock(global_frameno_lock);
-        if (wrapped_greater_or_equal(local_frameno, global_frameno))
-            global_frameno = local_frameno;
-        else
-            local_frameno = global_frameno;
-    }
-
-    static bool const bypass_env{[]
-    {
-        auto const env = getenv("MIR_BYPASS");
-        return !env || env[0] != '0';
-    }()};
     bool bypassed = false;
+
+    auto const& view_area = display_buffer.view_area();
+    auto renderable_list = scene->renderable_list_for(this);
+    mc::filter_occlusions_from(renderable_list, view_area);
+
+    //TODO: the DisplayBufferCompositor should not have to figure out if it has to force
+    //      a subsequent compositon. The MultiThreadedCompositor should be smart enough to 
+    //      schedule compositions when they're needed. 
     bool uncomposited_buffers{false};
+    for(auto const& renderable : renderable_list)
+        uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
 
-    if (bypass_env && display_buffer.can_bypass())
+    if (display_buffer.can_bypass())
     {
-        // It would be *really* nice not to lock the scene for a composite pass.
-        // (C.f. lp:1234018)
-        // A compositor shouldn't know anything about navigating the scene,
-        // it should be passed a collection of objects to render. (And any
-        // locks managed by the scene - which can just lock what is needed.)
-        std::unique_lock<Scene> lock(*scene);
-
-        mc::BypassFilter filter(display_buffer);
-        mc::BypassMatch match;
-
-        // It would be *really* nice if Scene had an iterator to simplify this
-        scene->for_each_if(filter, match);
-
-        if (filter.fullscreen_on_top())
+        mc::BypassMatch bypass_match(view_area);
+        auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);
+        if (bypass_it != renderable_list.rend())
         {
-            auto bypass_buf =
-                match.topmost_fullscreen()->buffer(local_frameno);
-
+            auto bypass_buf = (*bypass_it)->buffer();
             if (bypass_buf->can_bypass())
             {
-                uncomposited_buffers = match.topmost_fullscreen()->buffers_ready_for_compositor() > 1;
-
-                lock.unlock();
                 display_buffer.post_update(bypass_buf);
                 bypassed = true;
                 renderer->suspend();
@@ -140,41 +82,22 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
     if (!bypassed)
     {
-        // preserves buffers used in rendering until after post_update()
-        std::vector<std::shared_ptr<void>> saved_resources;
-        auto save_resource = [&](std::shared_ptr<void> const& r)
-        {
-            saved_resources.push_back(r);
-        };
-
         display_buffer.make_current();
 
-        auto const& view_area = display_buffer.view_area();
-
-        mc::OcclusionFilter occlusion_search(view_area);
-        mc::OcclusionMatch occlusion_match;
-        scene->reverse_for_each_if(occlusion_search, occlusion_match);
-
         renderer->set_rotation(display_buffer.orientation());
-        renderer->begin();
-        mc::RenderingOperator applicator(*renderer, save_resource, local_frameno, uncomposited_buffers);
-        FilterForVisibleSceneInRegion selector(view_area, occlusion_match);
-        scene->for_each_if(selector, applicator);
+        renderer->begin();  // TODO deprecatable now?
+        renderer->render(renderable_list);
+        display_buffer.post_update();
         renderer->end();
 
-        display_buffer.post_update();
-
         // This is a frig to avoid lp:1286190
-        if (size_of_last_pass)
-        {
-            uncomposited_buffers |= saved_resources.empty();
-        }
+        if (last_pass_rendered_anything && renderable_list.empty())
+            uncomposited_buffers = true;
 
-        size_of_last_pass = saved_resources.size();
+        last_pass_rendered_anything = !renderable_list.empty();
         // End of frig
     }
 
     report->finished_frame(bypassed, this);
     return uncomposited_buffers;
 }
-

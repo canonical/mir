@@ -22,7 +22,7 @@
 #include "src/server/scene/application_session.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/frontend/shell.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -43,7 +43,6 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mp = mir::protobuf;
-namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 namespace mr = mir::report;
 
@@ -59,10 +58,11 @@ struct SessionMediatorAndroidTest : public ::testing::Test
           surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
           report{mr::null_session_mediator_report()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
-          mediator{__LINE__, shell, graphics_platform, display_changer,
+          mediator{shell, graphics_platform, display_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
-                   resource_cache, std::make_shared<mtd::NullScreencast>()},
+                   resource_cache, std::make_shared<mtd::NullScreencast>(),
+                   nullptr},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }

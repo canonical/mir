@@ -150,7 +150,7 @@ bool mgo::DisplayBuffer::can_bypass() const
 }
 
 void mgo::DisplayBuffer::render_and_post_update(
-        std::list<std::shared_ptr<Renderable>> const&,
+        RenderableList const&,
         std::function<void(Renderable const&)> const&)
 {
 }

@@ -18,11 +18,13 @@
 
 #include "mir/default_server_configuration.h"
 
+#include "android/input_dispatcher_configuration.h"
 #include "display_input_region.h"
 #include "event_filter_chain.h"
 #include "nested_input_configuration.h"
 #include "nested_input_relay.h"
 #include "null_input_configuration.h"
+#include "null_input_dispatcher_configuration.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/options/configuration.h"
@@ -56,6 +58,25 @@ mir::DefaultServerConfiguration::the_composite_event_filter()
         });
 }
 
+std::shared_ptr<mi::InputDispatcherConfiguration>
+mir::DefaultServerConfiguration::the_input_dispatcher_configuration()
+{
+    return input_dispatcher_configuration(
+    [this]() -> std::shared_ptr<mi::InputDispatcherConfiguration>
+    {
+        auto const options = the_options();
+        if (!options->get<bool>(options::enable_input_opt))
+            return std::make_shared<mi::NullInputDispatcherConfiguration>();
+        else
+            return std::make_shared<mia::InputDispatcherConfiguration>(
+                the_composite_event_filter(),
+                the_input_report(),
+                the_scene(),
+                the_input_targets()
+                );
+    });
+}
+
 std::shared_ptr<mi::InputConfiguration>
 mir::DefaultServerConfiguration::the_input_configuration()
 {
@@ -71,21 +92,29 @@ mir::DefaultServerConfiguration::the_input_configuration()
         {
             // fallback to standalone if host socket is unset
             return std::make_shared<mia::DefaultInputConfiguration>(
-                the_composite_event_filter(),
+                the_input_dispatcher_configuration(),
                 the_input_region(),
                 the_cursor_listener(),
-                the_input_report());
+                the_input_report()
+                );
         }
         else
         {
             return std::make_shared<mi::NestedInputConfiguration>(
                 the_nested_input_relay(),
-                the_composite_event_filter(),
-                the_input_region(),
-                the_cursor_listener(),
-                the_input_report());
+                the_input_dispatcher_configuration());
         }
     });
+}
+
+std::shared_ptr<mi::InputDispatcher>
+mir::DefaultServerConfiguration::the_input_dispatcher()
+{
+    return input_dispatcher(
+        [this]() -> std::shared_ptr<mi::InputDispatcher>
+        {
+            return the_input_dispatcher_configuration()->the_input_dispatcher();
+        });
 }
 
 std::shared_ptr<mi::InputManager>
@@ -105,16 +134,7 @@ std::shared_ptr<msh::InputTargeter> mir::DefaultServerConfiguration::the_input_t
     return input_targeter(
         [&]() -> std::shared_ptr<msh::InputTargeter>
         {
-            return the_input_configuration()->the_input_targeter();
-        });
-}
-
-std::shared_ptr<ms::InputRegistrar> mir::DefaultServerConfiguration::the_input_registrar()
-{
-    return input_registrar(
-        [&]() -> std::shared_ptr<ms::InputRegistrar>
-        {
-            return the_input_configuration()->the_input_registrar();
+            return the_input_dispatcher_configuration()->the_input_targeter();
         });
 }
 
@@ -129,4 +149,10 @@ auto mir::DefaultServerConfiguration::the_nested_event_filter()
 {
     return the_nested_input_relay();
 }
+
+std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()
+{
+    return the_input_configuration()->the_input_channel_factory();
+}
+
 

@@ -19,6 +19,7 @@
 #include "display_helpers.h"
 #include "drm_close_threadsafe.h"
 
+#include "mir/graphics/gl_config.h"
 #include "mir/udev/wrapper.h"
 
 #include <boost/exception/errinfo_errno.hpp>
@@ -219,7 +220,7 @@ int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& 
         sv.drm_dd_major = -1;     /* Don't care */
         sv.drm_dd_minor = -1;     /* Don't care */
 
-        if ((error = drmSetInterfaceVersion(tmp_fd, &sv)))
+        if ((error = -drmSetInterfaceVersion(tmp_fd, &sv)))
         {
             close(tmp_fd);
             tmp_fd = -1;
@@ -238,7 +239,7 @@ int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& 
     {
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
-                std::runtime_error("Error opening DRM device")) << boost::errinfo_errno(-error));
+                std::runtime_error("Error opening DRM device")) << boost::errinfo_errno(error));
     }
 
     return tmp_fd;
@@ -294,6 +295,15 @@ mgmh::GBMHelper::~GBMHelper()
 /*************
  * EGLHelper *
  *************/
+
+mgmh::EGLHelper::EGLHelper(GLConfig const& gl_config)
+    : depth_buffer_bits{gl_config.depth_buffer_bits()},
+      stencil_buffer_bits{gl_config.stencil_buffer_bits()},
+      egl_display{EGL_NO_DISPLAY}, egl_config{0},
+      egl_context{EGL_NO_CONTEXT}, egl_surface{EGL_NO_SURFACE},
+      should_terminate_egl{false}
+{
+}
 
 void mgmh::EGLHelper::setup(GBMHelper const& gbm)
 {
@@ -378,12 +388,14 @@ bool mgmh::EGLHelper::release_current() const
 
 void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize)
 {
-    static const EGLint config_attr[] = {
+    EGLint const config_attr[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RED_SIZE, 8,
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 0,
+        EGL_DEPTH_SIZE, depth_buffer_bits,
+        EGL_STENCIL_SIZE, stencil_buffer_bits,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
         EGL_NONE
     };

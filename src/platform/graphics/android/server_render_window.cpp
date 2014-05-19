@@ -81,6 +81,8 @@ int mga::ServerRenderWindow::driver_requests_info(int key) const
             return 0;
         case NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS:
             return 1;
+        case NATIVE_WINDOW_CONCRETE_TYPE:
+            return NATIVE_WINDOW_FRAMEBUFFER;
         default:
             {
             std::stringstream sstream;

@@ -35,20 +35,7 @@ namespace android
 {
 class HWCVsyncCoordinator;
 class SyncFileOps;
-
-class HwcWrapper
-{
-public:
-    virtual ~HwcWrapper() = default;
-
-    virtual void prepare(hwc_display_contents_1_t&) const = 0;
-    virtual void set(hwc_display_contents_1_t&) const = 0;
-
-protected:
-    HwcWrapper() = default;
-    HwcWrapper& operator=(HwcWrapper const&) = delete;
-    HwcWrapper(HwcWrapper const&) = delete;
-};
+class HwcWrapper;
 
 class HwcDevice : public HWCCommonDevice
 {
@@ -61,10 +48,10 @@ public:
               std::shared_ptr<SyncFileOps> const& sync_ops);
 
     virtual void render_gl(SwappingGLContext const& context);
-    virtual void render_gl_and_overlays(
+    virtual void prepare_overlays(
         SwappingGLContext const& context,
-        std::list<std::shared_ptr<Renderable>> const& list,
-        std::function<void(Renderable const&)> const& render_fn);
+        RenderableList const& list,
+        RenderableListCompositor const& list_compositor);
     void post(Buffer const& buffer);
 
 private:

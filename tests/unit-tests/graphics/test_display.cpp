@@ -23,6 +23,8 @@
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
+#include "mir_test_doubles/stub_gl_config.h"
+#include "mir_test_doubles/stub_gl_program_factory.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
 #ifndef ANDROID
 #include "mir_test_doubles/mock_drm.h"
@@ -75,7 +77,6 @@ public:
 
     std::shared_ptr<mg::Display> create_display()
     {
-        auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
         auto report = mr::null_display_report();
 #ifdef ANDROID
         auto platform = mg::create_platform(
@@ -83,9 +84,13 @@ public:
             report);
 #else
         auto platform = std::make_shared<mg::mesa::Platform>(report,
-            std::make_shared<mir::test::doubles::NullVirtualTerminal>());
+            std::make_shared<mir::test::doubles::NullVirtualTerminal>(),
+            mg::mesa::BypassOption::allowed);
 #endif
-        return platform->create_display(conf_policy);
+        return platform->create_display(
+            std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+            std::make_shared<mtd::StubGLProgramFactory>(),
+            std::make_shared<mtd::StubGLConfig>());
     }
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -196,4 +201,27 @@ TEST_F(DisplayTest, gl_context_releases_context)
     /* Possible display shutdown sequence, depending on the platform */
     EXPECT_CALL(mock_egl, eglMakeCurrent(_,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT))
         .Times(AtLeast(0));
+}
+
+TEST_F(DisplayTest, does_not_expose_display_buffer_for_output_with_power_mode_off)
+{
+    using namespace testing;
+    auto display = create_display();
+    int db_count{0};
+
+    display->for_each_display_buffer([&] (mg::DisplayBuffer&) { ++db_count; });
+    EXPECT_THAT(db_count, Eq(1));
+
+    auto conf = display->configuration();
+    conf->for_each_output(
+        [] (mg::UserDisplayConfigurationOutput& output)
+        {
+            output.power_mode = mir_power_mode_off;
+        });
+
+    display->configure(*conf);
+
+    db_count = 0;
+    display->for_each_display_buffer([&] (mg::DisplayBuffer&) { ++db_count; });
+    EXPECT_THAT(db_count, Eq(0));
 }

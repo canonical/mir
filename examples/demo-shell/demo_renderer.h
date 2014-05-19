@@ -29,8 +29,23 @@ namespace examples
 class DemoRenderer : public compositor::GLRenderer
 {
 public:
-    DemoRenderer(geometry::Rectangle const& display_area);
+    DemoRenderer(graphics::GLProgramFactory const& factory, geometry::Rectangle const& display_area);
+    ~DemoRenderer();
+
     void begin() const override;
+    void tessellate(std::vector<graphics::GLPrimitive>& primitives,
+                    graphics::Renderable const& renderable) const override;
+    void tessellate_shadow(std::vector<graphics::GLPrimitive>& primitives,
+                    graphics::Renderable const& renderable,
+                    float radius) const;
+    void tessellate_frame(std::vector<graphics::GLPrimitive>& primitives,
+                    graphics::Renderable const& renderable,
+                    float titlebar_height) const;
+
+private:
+    float const corner_radius;
+    GLuint shadow_corner_tex;
+    GLuint titlebar_corner_tex;
 };
 
 } // namespace examples

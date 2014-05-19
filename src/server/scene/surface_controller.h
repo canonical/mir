@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,32 +20,36 @@
 #ifndef MIR_SCENE_SURFACE_CONTROLLER_H_
 #define MIR_SCENE_SURFACE_CONTROLLER_H_
 
-#include "surface_builder.h"
-#include "surface_ranker.h"
+#include "mir/scene/surface_coordinator.h"
 
 namespace mir
 {
-namespace shell
-{
-class Session;
-}
-
 namespace scene
 {
+class PlacementStrategy;
 class SurfaceStackModel;
+class SurfaceFactory;
 
 /// Will grow up to provide synchronization of model updates
-class SurfaceController : public SurfaceBuilder, public SurfaceRanker
+class SurfaceController : public SurfaceCoordinator
 {
 public:
-    explicit SurfaceController(std::shared_ptr<SurfaceStackModel> const& surface_stack);
+    SurfaceController(
+        std::shared_ptr<SurfaceFactory> const& surface_factory,
+        std::shared_ptr<PlacementStrategy> const& placement_strategy,
+        std::shared_ptr<SurfaceStackModel> const& surface_stack);
 
-    virtual std::weak_ptr<BasicSurface> create_surface(shell::SurfaceCreationParameters const& params);
-    virtual void destroy_surface(std::weak_ptr<BasicSurface> const& surface);
+    std::shared_ptr<Surface> add_surface(
+        SurfaceCreationParameters const& params,
+        Session* session) override;
 
-    virtual void raise(std::weak_ptr<BasicSurface> const& surface);
+    void remove_surface(std::weak_ptr<Surface> const& surface) override;
+
+    void raise(std::weak_ptr<Surface> const& surface) override;
 
 private:
+    std::shared_ptr<SurfaceFactory> const surface_factory;
+    std::shared_ptr<PlacementStrategy> const placement_strategy;
     std::shared_ptr<SurfaceStackModel> const surface_stack;
 };
 

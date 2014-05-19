@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_SURFACE_ALLOCATOR_H_
 #define MIR_SCENE_SURFACE_ALLOCATOR_H_
 
-#include "basic_surface_factory.h"
+#include "mir/scene/surface_factory.h"
 
 namespace mir
 {
@@ -31,19 +31,22 @@ namespace scene
 {
 class BufferStreamFactory;
 class SceneReport;
+class SurfaceConfigurator;
 
-class SurfaceAllocator : public BasicSurfaceFactory
+class SurfaceAllocator : public SurfaceFactory
 {
 public:
     SurfaceAllocator(std::shared_ptr<BufferStreamFactory> const& bb_factory,
                      std::shared_ptr<input::InputChannelFactory> const& input_factory,
+                     std::shared_ptr<SurfaceConfigurator> const& configurator,
                      std::shared_ptr<SceneReport> const& report);
 
-    std::shared_ptr<BasicSurface> create_surface(shell::SurfaceCreationParameters const&, std::function<void()> const&);
+    std::shared_ptr<Surface> create_surface(SurfaceCreationParameters const& params) override;
 
 private:
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<input::InputChannelFactory> const input_factory;
+    std::shared_ptr<SurfaceConfigurator> const configurator;
     std::shared_ptr<SceneReport> const report;
 };
 

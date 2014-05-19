@@ -18,6 +18,7 @@ Build-Depends: cmake,
                libboost-thread-dev,
                libboost-regex-dev,
                libboost-filesystem-dev,
+               libboost-iostreams-dev,
                protobuf-compiler,
                libdrm-dev,
                libegl1-mesa-dev,
@@ -32,7 +33,7 @@ Build-Depends: cmake,
                libgoogle-glog-dev,
                liblttng-ust-dev,
                libxkbcommon-dev,
-               libumockdev-dev,
+               libumockdev-dev (>= 0.6),
                umockdev,
                libudev-dev,
                google-mock (>= 1.6.0+svn437),
@@ -71,7 +72,7 @@ Description: Display server for Ubuntu - protocol definition
  .
  Contains the protocol's definition files.
 
-Package: libmirserver16
+Package: libmirserver20
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -149,7 +150,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver16 (= ${binary:Version}),
+Depends: libmirserver20 (= ${binary:Version}),
          libmirprotobuf-dev (= ${binary:Version}),
          mircommon-dev (= ${binary:Version}),
          libglm-dev,

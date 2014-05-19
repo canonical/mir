@@ -34,6 +34,8 @@ struct Rectangle;
 }
 namespace graphics
 {
+class CursorImage;
+
 namespace mesa
 {
 class KMSOutputContainer;
@@ -61,16 +63,17 @@ public:
     Cursor(
         gbm_device* device,
         KMSOutputContainer& output_container,
-        std::shared_ptr<CurrentConfiguration> const& current_configuration);
+        std::shared_ptr<CurrentConfiguration> const& current_configuration,
+        std::shared_ptr<CursorImage> const& cursor_image);
 
     ~Cursor() noexcept;
 
-    void set_image(const void* raw_argb, geometry::Size size);
+    void show(CursorImage const& cursor_image) override;
+    void hide() override;
 
     void move_to(geometry::Point position);
 
     void show_at_last_known_position();
-    void hide();
 
 private:
     enum ForceCursorState { UpdateState, ForceState };

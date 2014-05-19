@@ -17,8 +17,12 @@
  */
 
 #include "src/server/scene/basic_surface.h"
+#include "src/server/scene/legacy_surface_change_notification.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/shell/surface_creation_parameters.h"
+#include "mir/frontend/event_sink.h"
+#include "mir/scene/surface_creation_parameters.h"
+#include "mir/scene/surface_configurator.h"
+#include "mir/scene/surface_event_source.h"
 #include "mir/input/input_channel.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -32,6 +36,7 @@
 
 #include <stdexcept>
 
+namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
@@ -53,7 +58,7 @@ struct MockInputChannel : public mi::InputChannel
 TEST(SurfaceCreationParametersTest, default_creation_parameters)
 {
     using namespace geom;
-    msh::SurfaceCreationParameters params;
+    ms::SurfaceCreationParameters params;
 
     geom::Point const default_point{geom::X{0}, geom::Y{0}};
 
@@ -64,7 +69,7 @@ TEST(SurfaceCreationParametersTest, default_creation_parameters)
     EXPECT_EQ(mg::BufferUsage::undefined, params.buffer_usage);
     EXPECT_EQ(mir_pixel_format_invalid, params.pixel_format);
 
-    EXPECT_EQ(msh::a_surface(), params);
+    EXPECT_EQ(ms::a_surface(), params);
 }
 
 TEST(SurfaceCreationParametersTest, builder_mutators)
@@ -75,7 +80,7 @@ TEST(SurfaceCreationParametersTest, builder_mutators)
     MirPixelFormat const format{mir_pixel_format_abgr_8888};
     std::string name{"surface"};
 
-    auto params = msh::a_surface().of_name(name)
+    auto params = ms::a_surface().of_name(name)
                                  .of_size(size)
                                  .of_buffer_usage(usage)
                                  .of_pixel_format(format);
@@ -93,12 +98,12 @@ TEST(SurfaceCreationParametersTest, equality)
     mg::BufferUsage const usage{mg::BufferUsage::hardware};
     MirPixelFormat const format{mir_pixel_format_abgr_8888};
 
-    auto params0 = msh::a_surface().of_name("surface")
+    auto params0 = ms::a_surface().of_name("surface")
                                   .of_size(size)
                                   .of_buffer_usage(usage)
                                   .of_pixel_format(format);
 
-    auto params1 = msh::a_surface().of_name("surface")
+    auto params1 = ms::a_surface().of_name("surface")
                                   .of_size(size)
                                   .of_buffer_usage(usage)
                                   .of_pixel_format(format);
@@ -120,7 +125,7 @@ TEST(SurfaceCreationParametersTest, inequality)
     std::vector<MirPixelFormat> const formats{mir_pixel_format_abgr_8888,
                                                  mir_pixel_format_bgr_888};
 
-    std::vector<msh::SurfaceCreationParameters> params_vec;
+    std::vector<ms::SurfaceCreationParameters> params_vec;
 
     for (auto const& size : sizes)
     {
@@ -128,7 +133,7 @@ TEST(SurfaceCreationParametersTest, inequality)
         {
             for (auto const& format : formats)
             {
-                auto cur_params = msh::a_surface().of_name("surface0")
+                auto cur_params = ms::a_surface().of_name("surface0")
                                                  .of_size(size)
                                                  .of_buffer_usage(usage)
                                                  .of_pixel_format(format);
@@ -152,6 +157,26 @@ TEST(SurfaceCreationParametersTest, inequality)
 
 namespace
 {
+class StubEventSink : public mir::frontend::EventSink
+{
+public:
+    void handle_event(MirEvent const&) override {}
+    void handle_lifecycle_event(MirLifecycleState) override {}
+    void handle_display_config_change(mir::graphics::DisplayConfiguration const&) override {}
+};
+
+struct MockEventSink : StubEventSink
+{
+    MOCK_METHOD1(handle_event, void(MirEvent const&));
+};
+
+struct StubSurfaceConfigurator : ms::SurfaceConfigurator
+{
+    int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int) override { return 0; }
+
+    void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override { }
+};
+
 
 struct SurfaceCreation : public ::testing::Test
 {
@@ -186,6 +211,7 @@ struct SurfaceCreation : public ::testing::Test
     std::function<void()> change_notification;
     int notification_count;
     mtd::StubBuffer stub_buffer;
+    std::shared_ptr<StubSurfaceConfigurator> const stub_configurator = std::make_shared<StubSurfaceConfigurator>();
 };
 
 }
@@ -196,10 +222,10 @@ TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
 
     EXPECT_CALL(*mock_buffer_stream, get_stream_pixel_format())
@@ -216,10 +242,10 @@ TEST_F(SurfaceCreation, test_surface_gets_right_name)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
 
     EXPECT_EQ(surface_name, surf.name());
@@ -230,10 +256,10 @@ TEST_F(SurfaceCreation, test_surface_queries_state_for_size)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
 
     EXPECT_EQ(size, surf.size());
@@ -245,10 +271,10 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
 
     mtd::StubBuffer graphics_resource;
@@ -271,10 +297,10 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
 
     EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
@@ -291,10 +317,10 @@ TEST_F(SurfaceCreation, test_surface_gets_top_left)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
 
     auto ret_top_left = surf.top_left();
@@ -308,10 +334,10 @@ TEST_F(SurfaceCreation, test_surface_move_to)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
 
     surf.move_to(p);
@@ -326,44 +352,59 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
     EXPECT_CALL(*mock_buffer_stream, resize(new_size))
         .Times(1);
 
+    auto const mock_event_sink = std::make_shared<MockEventSink>();
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), mock_event_sink);
+
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
 
-    ASSERT_NE(new_size, surf.size());
-    EXPECT_TRUE(surf.resize(new_size));
-    EXPECT_EQ(new_size, surf.size());
+    surf.add_observer(observer);
+
+    ASSERT_THAT(surf.size(), Ne(new_size));
+
+    EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(1);
+    surf.resize(new_size);
+    EXPECT_THAT(surf.size(), Eq(new_size));
 }
 
 TEST_F(SurfaceCreation, duplicate_resize_ignored)
 {
     using namespace testing;
     geom::Size const new_size{123, 456};
-
-    EXPECT_CALL(*mock_buffer_stream, resize(new_size))
-        .Times(1);
+    auto const mock_event_sink = std::make_shared<MockEventSink>();
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), mock_event_sink);
 
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
 
-    ASSERT_NE(new_size, surf.size());
+    surf.add_observer(observer);
 
-    EXPECT_TRUE(surf.resize(new_size));
-    EXPECT_EQ(new_size, surf.size());
+    ASSERT_THAT(surf.size(), Ne(new_size));
 
-    EXPECT_FALSE(surf.resize(new_size));
-    EXPECT_EQ(new_size, surf.size());
+    EXPECT_CALL(*mock_buffer_stream, resize(new_size)).Times(1);
+    EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(1);
+    surf.resize(new_size);
+    EXPECT_THAT(surf.size(), Eq(new_size));
+
+    Mock::VerifyAndClearExpectations(mock_buffer_stream.get());
+    Mock::VerifyAndClearExpectations(mock_event_sink.get());
+
+    EXPECT_CALL(*mock_buffer_stream, resize(_)).Times(0);
+    EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(0);
+    surf.resize(new_size);
+    EXPECT_THAT(surf.size(), Eq(new_size));
 }
 
 TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
@@ -378,10 +419,10 @@ TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
 
     EXPECT_THROW({
@@ -391,7 +432,7 @@ TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
     EXPECT_EQ(size, surf.size());
 }
 
-TEST_F(SurfaceCreation, impossible_resize_throws)
+TEST_F(SurfaceCreation, impossible_resize_clamps)
 {
     using namespace testing;
 
@@ -407,20 +448,23 @@ TEST_F(SurfaceCreation, impossible_resize_throws)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
-
-    EXPECT_CALL(*mock_buffer_stream, resize(size))
-        .Times(0);
 
     for (auto &size : bad_sizes)
     {
-        EXPECT_THROW({
-            surf.resize(size);
-        }, std::logic_error);
+        geom::Size expect_size = size;
+        if (expect_size.width <= geom::Width{0})
+            expect_size.width = geom::Width{1};
+        if (expect_size.height <= geom::Height{0})
+            expect_size.height = geom::Height{1};
+
+        EXPECT_CALL(*mock_buffer_stream, resize(expect_size)).Times(1);
+        EXPECT_NO_THROW({ surf.resize(size); });
+        EXPECT_EQ(expect_size, surf.size());
     }
 }
 
@@ -430,10 +474,10 @@ TEST_F(SurfaceCreation, test_get_input_channel)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         mock_channel,
+        stub_configurator,
         report);
 
     EXPECT_EQ(mock_channel, surf.input_channel());
@@ -447,14 +491,14 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
 
     surf.set_alpha(alpha);
-    EXPECT_FLOAT_EQ(alpha, surf.alpha());
+    EXPECT_FLOAT_EQ(alpha, surf.compositor_snapshot(nullptr)->alpha());
 }
 
 TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
@@ -466,10 +510,10 @@ TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
 
     surf.force_requests_to_complete();
@@ -485,10 +529,10 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
 
     surf.allow_framedropping(true);
@@ -499,11 +543,14 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
+
+    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(change_notification);
+    surf.add_observer(observer);
 
     mg::Buffer* buffer{nullptr};
 
@@ -523,10 +570,10 @@ TEST_F(SurfaceCreation, input_fds)
     ms::BasicSurface surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_configurator,
         report);
 
     EXPECT_THROW({
@@ -540,9 +587,9 @@ TEST_F(SurfaceCreation, input_fds)
     ms::BasicSurface input_surf(
         surface_name,
         rect,
-        change_notification,
         false,
         mock_buffer_stream,mt::fake_shared(channel),
+        stub_configurator,
         report);
 
     EXPECT_EQ(client_fd, input_surf.client_input_fd());

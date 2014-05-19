@@ -21,6 +21,8 @@ override_dh_auto_configure:
 ifeq ($(DEB_HOST_ARCH),armhf)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
+	  -DMIR_RUN_ACCEPTANCE_TESTS=OFF \
+	  -DMIR_RUN_INTEGRATION_TESTS=OFF \
 	  -DMIR_PLATFORM=android\;mesa
 else
 ifeq ($(DEB_HOST_ARCH),arm64)
@@ -42,8 +44,9 @@ override_dh_install:
 	dh_install --fail-missing \
 	  -Xusr/lib/$(DEB_HOST_MULTIARCH)/libmirplatformgraphics.so \
 	  -Xusr/lib/$(DEB_HOST_MULTIARCH)/libmirclientplatform.so
-	sh debian/install_ld_so_conf.sh $(DEB_HOST_MULTIARCH)
+	sh debian/install_ld_so_conf.sh $(DEB_HOST_ARCH) $(DEB_HOST_MULTIARCH)
 
 override_dh_installdeb:
-	sh debian/create_postinst_prerm_scripts.sh $(DEB_HOST_MULTIARCH)
+	sh debian/create_postinst_prerm_scripts.sh \
+	  $(DEB_HOST_ARCH) $(DEB_HOST_MULTIARCH)
 	dh_installdeb

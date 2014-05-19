@@ -20,7 +20,7 @@
 #include "mir_test_doubles/stub_ipc_factory.h"
 #include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir/frontend/connector_report.h"
-#include "mir/frontend/protobuf_session_creator.h"
+#include "mir/frontend/protobuf_connection_creator.h"
 #include "src/server/frontend/published_socket_connector.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/report/null_report_factory.h"
@@ -39,7 +39,7 @@ std::shared_ptr<mf::Connector> make_connector(
 {
     return std::make_shared<mf::PublishedSocketConnector>(
         socket_name,
-        std::make_shared<mf::ProtobufSessionCreator>(
+        std::make_shared<mf::ProtobufConnectionCreator>(
             factory,
             std::make_shared<mtd::StubSessionAuthorizer>(),
             mr::null_message_processor_report()),
@@ -50,14 +50,14 @@ std::shared_ptr<mf::Connector> make_connector(
 
 mt::TestProtobufServer::TestProtobufServer(
     std::string const& socket_name,
-    const std::shared_ptr<protobuf::DisplayServer>& tool) :
+    const std::shared_ptr<mf::detail::DisplayServer>& tool) :
     TestProtobufServer(socket_name, tool, mr::null_connector_report())
 {
 }
 
 mt::TestProtobufServer::TestProtobufServer(
     std::string const& socket_name,
-    const std::shared_ptr<protobuf::DisplayServer>& tool,
+    const std::shared_ptr<mf::detail::DisplayServer>& tool,
     std::shared_ptr<frontend::ConnectorReport> const& report) :
     comm(make_connector(socket_name, std::make_shared<mtd::StubIpcFactory>(*tool), report))
 {

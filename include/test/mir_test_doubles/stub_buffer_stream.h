@@ -40,7 +40,7 @@ public:
     {
         complete(&stub_client_buffer);
     }
-    std::shared_ptr<graphics::Buffer> lock_compositor_buffer(unsigned long) override
+    std::shared_ptr<graphics::Buffer> lock_compositor_buffer(void const*) override
     {
         return stub_compositor_buffer;
     }

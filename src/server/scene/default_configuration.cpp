@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,9 +20,9 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/input/input_configuration.h"
+#include "mir/input/input_targets.h"
 #include "mir/abnormal_exit.h"
-#include "mir/shell/session.h"
+#include "mir/scene/session.h"
 
 #include "broadcasting_session_event_sink.h"
 #include "default_session_container.h"
@@ -33,94 +33,59 @@
 #include "session_manager.h"
 #include "surface_allocator.h"
 #include "surface_controller.h"
-#include "surface_source.h"
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
+namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
 std::shared_ptr<ms::SurfaceStackModel>
 mir::DefaultServerConfiguration::the_surface_stack_model()
 {
-    return surface_stack(
-        [this]()
-        {
-            auto const scene_report = the_scene_report();
-
-            auto const factory = std::make_shared<ms::SurfaceAllocator>(
-                the_buffer_stream_factory(),
-                the_input_channel_factory(),
-                scene_report);
-
-            auto const ss = std::make_shared<ms::SurfaceStack>(
-                factory,
-                the_input_registrar(),
-                scene_report);
-
-            the_input_configuration()->set_input_targets(ss);
-
-            return ss;
-        });
+    return surface_stack([this]()
+                         { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
 }
 
 std::shared_ptr<mc::Scene>
 mir::DefaultServerConfiguration::the_scene()
 {
-    return surface_stack(
+    return surface_stack([this]()
+                         { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
+}
+
+std::shared_ptr<mi::InputTargets> mir::DefaultServerConfiguration::the_input_targets()
+{
+    return surface_stack([this]()
+                         { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
+}
+
+auto mir::DefaultServerConfiguration::the_surface_factory()
+-> std::shared_ptr<ms::SurfaceFactory>
+{
+    return surface_factory(
         [this]()
         {
-            auto const scene_report = the_scene_report();
-
-            auto const factory = std::make_shared<ms::SurfaceAllocator>(
+            return std::make_shared<ms::SurfaceAllocator>(
                 the_buffer_stream_factory(),
                 the_input_channel_factory(),
-                scene_report);
-
-            auto const ss = std::make_shared<ms::SurfaceStack>(
-                factory,
-                the_input_registrar(),
-                scene_report);
-
-            the_input_configuration()->set_input_targets(ss);
-
-            return ss;
+                the_surface_configurator(),
+                the_scene_report());
         });
 }
 
-
-std::shared_ptr<ms::SurfaceBuilder>
-mir::DefaultServerConfiguration::the_surface_builder()
+std::shared_ptr<ms::SurfaceCoordinator>
+mir::DefaultServerConfiguration::the_surface_coordinator()
 {
-    return the_surface_controller();
-}
-
-std::shared_ptr<ms::SurfaceController>
-mir::DefaultServerConfiguration::the_surface_controller()
-{
-    return surface_controller(
+    return surface_coordinator(
         [this]()
         {
-            return std::make_shared<ms::SurfaceController>(the_surface_stack_model());
-        });
-}
-
-std::shared_ptr<ms::SurfaceRanker>
-mir::DefaultServerConfiguration::the_surface_ranker()
-{
-    return the_surface_controller();
-}
-
-std::shared_ptr<msh::SurfaceFactory>
-mir::DefaultServerConfiguration::the_scene_surface_factory()
-{
-    return scene_surface_factory(
-        [this]()
-        {
-            return std::make_shared<ms::SurfaceSource>(
-                the_surface_builder(), the_shell_surface_configurator());
+            return std::make_shared<ms::SurfaceController>(
+                the_surface_factory(),
+                the_placement_strategy(),
+                the_surface_stack_model());
         });
 }
 
@@ -164,7 +129,8 @@ mir::DefaultServerConfiguration::the_mediating_display_changer()
                 the_compositor(),
                 the_display_configuration_policy(),
                 the_session_container(),
-                the_session_event_handler_register());
+                the_session_event_handler_register(),
+                the_server_action_queue());
         });
 
 }
@@ -198,12 +164,12 @@ mir::DefaultServerConfiguration::the_session_manager()
         [this]() -> std::shared_ptr<ms::SessionManager>
         {
             return std::make_shared<ms::SessionManager>(
-                the_shell_surface_factory(),
+                the_surface_coordinator(),
                 the_session_container(),
                 the_shell_focus_setter(),
                 the_snapshot_strategy(),
                 the_session_event_sink(),
-                the_shell_session_listener());
+                the_session_listener());
         });
 }
 

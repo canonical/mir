@@ -17,6 +17,7 @@
  *              Daniel d'Andradra <daniel.dandrada@canonical.com>
  */
 
+#include "mir/input/input_dispatcher.h"
 #include "android_input_manager.h"
 #include "android_input_constants.h"
 #include "android_input_thread.h"
@@ -27,13 +28,9 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::InputManager::InputManager(droidinput::sp<droidinput::EventHubInterface> const& event_hub,
-    droidinput::sp<droidinput::InputDispatcherInterface> const& dispatcher,
-    std::shared_ptr<InputThread> const& reader_thread,
-    std::shared_ptr<InputThread> const& dispatcher_thread)
-  : InputDispatcherManager(dispatcher, dispatcher_thread),
-    event_hub(event_hub),
-    reader_thread(reader_thread)
+mia::InputManager::InputManager(std::shared_ptr<droidinput::EventHubInterface> const& event_hub,
+                                std::shared_ptr<InputThread> const& reader_thread)
+    : event_hub(event_hub), reader_thread(reader_thread)
 {
 }
 
@@ -43,8 +40,6 @@ mia::InputManager::~InputManager()
 
 void mia::InputManager::stop()
 {
-    InputDispatcherManager::stop();
-
     reader_thread->request_stop();
     event_hub->wake();
     reader_thread->join();
@@ -54,6 +49,4 @@ void mia::InputManager::start()
 {
     event_hub->flush();
     reader_thread->start();
-
-    InputDispatcherManager::start();
 }

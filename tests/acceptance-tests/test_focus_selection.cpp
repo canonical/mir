@@ -16,11 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir_toolkit/mir_client_library.h"
+#include "clients.h"
 
 #include "src/server/scene/session_container.h"
 #include "src/server/shell/consuming_placement_strategy.h"
-#include "src/server/shell/organising_surface_factory.h"
 #include "src/server/scene/session_manager.h"
 #include "mir/graphics/display.h"
 #include "mir/shell/input_targeter.h"
@@ -42,43 +41,9 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-    char const* const mir_test_socket = mtf::test_socket_file().c_str();
-}
-
-namespace
-{
-
-struct SurfaceCreatingClient : mtf::TestingClientConfiguration
-{
-    void exec()
-    {
-        connection = mir_connect_sync(
-            mir_test_socket,
-            __PRETTY_FUNCTION__);
-         ASSERT_TRUE(connection != NULL);
-         MirSurfaceParameters const request_params =
-         {
-            __PRETTY_FUNCTION__,
-            640, 480,
-            mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware,
-            mir_display_output_id_invalid
-         };
-         surface = mir_connection_create_surface_sync(connection, &request_params);
-         mir_connection_release(connection);
-    }
-
-    MirConnection* connection;
-    MirSurface* surface;
-};
-
-}
-
-namespace
-{
 MATCHER(NonNullSession, "")
 {
-    return arg != std::shared_ptr<msh::Session>();
+    return arg.operator bool();
 }
 }
 
@@ -111,7 +76,7 @@ TEST_F(BespokeDisplayServerTestFixture, sessions_creating_surface_receive_focus)
 
     launch_server_process(server_config);
 
-    SurfaceCreatingClient client;
+    mtf::SurfaceCreatingClient client;
 
     launch_client_process(client);
 }
@@ -153,7 +118,7 @@ TEST_F(BespokeDisplayServerTestFixture, surfaces_receive_input_focus_when_create
 
     launch_server_process(server_config);
 
-    SurfaceCreatingClient client;
+    mtf::SurfaceCreatingClient client;
 
     launch_client_process(client);
 }

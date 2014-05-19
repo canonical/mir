@@ -18,6 +18,8 @@
 #ifndef _RUNTIME_EVENT_HUB_H
 #define _RUNTIME_EVENT_HUB_H
 
+#include "mir/udev/wrapper.h"
+
 #include <androidfw/Input.h>
 #include <androidfw/InputDevice.h>
 #include <androidfw/Keyboard.h>
@@ -308,7 +310,6 @@ public:
     virtual void monitor();
     virtual void flush();
 
-protected:
     virtual ~EventHub();
 
 private:
@@ -366,9 +367,8 @@ private:
     void closeDeviceLocked(Device* device);
     void closeAllDevicesLocked();
 
-    status_t scanDirLocked(const char *dirname);
     void scanDevicesLocked();
-    status_t readNotifyLocked();
+    void handleUdevEventsLocked();
 
     Device* getDeviceLocked(int32_t deviceId) const;
     Device* getDeviceByPathLocked(const char* devicePath) const;
@@ -407,12 +407,12 @@ private:
     Vector<String8> mExcludedDevices;
 
     int mEpollFd;
-    int mINotifyFd;
+    mir::udev::Monitor device_listener;
     int mWakeReadPipeFd;
     int mWakeWritePipeFd;
 
     // Ids used for epoll notifications not associated with devices.
-    static const uint32_t EPOLL_ID_INOTIFY = 0x80000001;
+    static const uint32_t EPOLL_ID_UDEV = 0x80000001;
     static const uint32_t EPOLL_ID_WAKE = 0x80000002;
 
     // Epoll FD list size hint.
@@ -425,7 +425,7 @@ private:
     struct epoll_event mPendingEventItems[EPOLL_MAX_EVENTS];
     size_t mPendingEventCount;
     size_t mPendingEventIndex;
-    bool mPendingINotify;
+    bool mPendingUdevEvent;
 };
 
 // Made available to test

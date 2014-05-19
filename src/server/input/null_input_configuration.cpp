@@ -17,72 +17,41 @@
  */
 
 #include "null_input_configuration.h"
+#include "null_input_manager.h"
 
-#include "mir/scene/input_registrar.h"
-#include "mir/shell/input_targeter.h"
-#include "mir/input/input_manager.h"
+#include "mir/input/input_channel_factory.h"
+#include "mir/input/input_channel.h"
 
 namespace mi = mir::input;
-namespace ms = mir::scene;
-namespace msh = mir::shell;
 
 namespace
 {
 
-struct NullInputRegistrar : public ms::InputRegistrar
+class NullInputChannel : public mi::InputChannel
 {
-    NullInputRegistrar() = default;
-    virtual ~NullInputRegistrar() noexcept(true) = default;
-
-    void input_channel_opened(std::shared_ptr<mi::InputChannel> const&,
-                              std::shared_ptr<mi::Surface> const&,
-                              mi::InputReceptionMode /* receives_all_input */)
+    int client_fd() const override
     {
+        return 0;
     }
-
-    void input_channel_closed(std::shared_ptr<mi::InputChannel> const&)
+    int server_fd() const override
     {
+        return 0;
     }
 };
 
-struct NullInputTargeter : public msh::InputTargeter
+class NullInputChannelFactory : public mi::InputChannelFactory
 {
-    NullInputTargeter() = default;
-    virtual ~NullInputTargeter() noexcept(true) = default;
-
-    void focus_changed(std::shared_ptr<mi::InputChannel const> const&)
+    std::shared_ptr<mi::InputChannel> make_input_channel() override
     {
-    }
-
-    void focus_cleared()
-    {
-    }
-};
-
-struct NullInputManager : public mi::InputManager
-{
-    void start()
-    {
-    }
-    void stop()
-    {
-    }
-    std::shared_ptr<mi::InputChannel> make_input_channel()
-    {
-        return std::shared_ptr<mi::InputChannel>();
+        return std::make_shared<NullInputChannel>();
     }
 };
 
 }
 
-std::shared_ptr<ms::InputRegistrar> mi::NullInputConfiguration::the_input_registrar()
+std::shared_ptr<mi::InputChannelFactory> mi::NullInputConfiguration::the_input_channel_factory()
 {
-    return std::make_shared<NullInputRegistrar>();
-}
-
-std::shared_ptr<msh::InputTargeter> mi::NullInputConfiguration::the_input_targeter()
-{
-    return std::make_shared<NullInputTargeter>();
+    return std::make_shared<NullInputChannelFactory>();
 }
 
 std::shared_ptr<mi::InputManager> mi::NullInputConfiguration::the_input_manager()
@@ -90,6 +59,3 @@ std::shared_ptr<mi::InputManager> mi::NullInputConfiguration::the_input_manager(
     return std::make_shared<NullInputManager>();
 }
 
-void mi::NullInputConfiguration::set_input_targets(std::shared_ptr<mi::InputTargets> const&)
-{
-}

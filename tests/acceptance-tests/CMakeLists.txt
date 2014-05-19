@@ -13,7 +13,9 @@ protobuf_generate_cpp(
 set(
   SOURCES
 
+  clients.cpp
   test_client_library.cpp
+  test_custom_input_dispatcher.cpp
   test_surfaceloop.cpp
   test_test_framework.cpp
   test_focus_selection.cpp
@@ -28,6 +30,9 @@ set(
   test_client_library_drm.cpp
   test_protobuf.cpp
   test_client_screencast.cpp
+  test_client_surface_swap_buffers.cpp
+  test_client_cursor_api.cpp
+  test_trust_session_helper.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )

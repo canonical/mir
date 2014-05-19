@@ -23,6 +23,7 @@
 #include "gl_context.h"
 
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -30,6 +31,8 @@ namespace graphics
 {
 
 class DisplayReport;
+class GLConfig;
+class GLProgramFactory;
 
 namespace android
 {
@@ -41,6 +44,8 @@ class AndroidDisplay : public Display
 {
 public:
     explicit AndroidDisplay(std::shared_ptr<DisplayBuilder> const& display_builder,
+                            std::shared_ptr<GLProgramFactory> const& gl_program_factory,
+                            std::shared_ptr<GLConfig> const& gl_config,
                             std::shared_ptr<DisplayReport> const& display_report);
 
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f);
@@ -60,12 +65,13 @@ public:
     void pause();
     void resume();
 
-    std::weak_ptr<Cursor> the_cursor();
+    std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image);
     std::unique_ptr<graphics::GLContext> create_gl_context();
 
 private:
     std::shared_ptr<DisplayBuilder> const display_builder;
     GLContext gl_context;
+    mutable std::mutex configuration_mutex;
 
     //we only have a primary display at the moment
     std::unique_ptr<ConfigurableDisplayBuffer> const display_buffer;

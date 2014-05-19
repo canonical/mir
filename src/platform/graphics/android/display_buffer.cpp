@@ -34,11 +34,13 @@ mga::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<FramebufferBundle> const& fb_bundle,
     std::shared_ptr<DisplayDevice> const& display_device,
     std::shared_ptr<ANativeWindow> const& native_window,
-    mga::GLContext const& shared_gl_context)
+    mga::GLContext const& shared_gl_context,
+    mg::GLProgramFactory const& program_factory)
     : fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},
       gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())},
+      overlay_program{program_factory, gl_context},
       current_configuration{
           mg::DisplayConfigurationOutputId{1},
           mg::DisplayConfigurationCardId{0},
@@ -46,7 +48,7 @@ mga::DisplayBuffer::DisplayBuffer(
           {
               fb_bundle->fb_format()
           },
-          {mg::DisplayConfigurationMode{fb_bundle->fb_size(),0.0f}},
+          {mg::DisplayConfigurationMode{fb_bundle->fb_size(), fb_bundle->fb_refresh_rate()}},
           0,
           geom::Size{0,0}, //could use DPI information to fill this
           true,
@@ -85,8 +87,8 @@ void mga::DisplayBuffer::release_current()
 }
 
 void mga::DisplayBuffer::render_and_post_update(
-    std::list<std::shared_ptr<Renderable>> const& renderlist,
-    std::function<void(Renderable const&)> const& render_fn)
+    RenderableList const& renderlist,
+    std::function<void(Renderable const&)> const&)
 {
     if (renderlist.empty())
     {
@@ -94,7 +96,7 @@ void mga::DisplayBuffer::render_and_post_update(
     }
     else
     {
-        display_device->render_gl_and_overlays(gl_context, renderlist, render_fn);
+        display_device->prepare_overlays(gl_context, renderlist, overlay_program);
     }
 
     post();

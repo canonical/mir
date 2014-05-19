@@ -20,14 +20,12 @@
 #define MIR_COMPOSITOR_RENDERER_H_
 
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/renderable.h"
 
 namespace mir
 {
-namespace graphics
-{
-class Buffer;
-class Renderable;
-}
+namespace graphics { class Buffer; }
+
 namespace compositor
 {
 
@@ -39,11 +37,7 @@ public:
     virtual void set_viewport(geometry::Rectangle const& rect) = 0;
     virtual void set_rotation(float degrees) = 0;
     virtual void begin() const = 0;
-
-    // XXX The buffer parameter here could now be replaced with a "frameno"
-    //     instead, and use renderable.buffer(frameno). Is that better?
-    virtual void render(graphics::Renderable const& renderable,
-                        graphics::Buffer& buffer) const = 0;
+    virtual void render(graphics::RenderableList const&) const = 0;
     virtual void end() const = 0;
 
     virtual void suspend() = 0; // called when begin/render/end skipped

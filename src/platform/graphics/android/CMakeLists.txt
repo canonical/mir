@@ -21,6 +21,7 @@ add_library(
   hwc_layerlist.cpp
   hwc_layers.cpp
   hwc_fb_device.cpp
+  hwc_formatted_logger.cpp
   hwc_device.cpp
   hwc_common_device.cpp
   hwc_vsync.cpp
@@ -35,6 +36,7 @@ add_library(
   gl_context.cpp
   device_detector.cpp
   real_hwc_wrapper.cpp
+  overlay_gl_compositor.cpp
 )
 
 set_target_properties(
@@ -46,9 +48,12 @@ set_target_properties(
 target_link_libraries(
   mirplatformgraphicsandroid
 
+  miroptions
   mirplatform
   mirsharedandroid
+  mirsharedenv
 
+  ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${LIBHARDWARE_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}

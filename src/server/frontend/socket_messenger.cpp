@@ -18,6 +18,7 @@
 
 #include "socket_messenger.h"
 #include "mir/frontend/client_constants.h"
+#include "mir/frontend/session_credentials.h"
 
 #include <errno.h>
 #include <string.h>
@@ -35,37 +36,25 @@ mfd::SocketMessenger::SocketMessenger(std::shared_ptr<ba::local::stream_protocol
     whole_message.reserve(serialization_buffer_size);
 }
 
-pid_t mfd::SocketMessenger::client_pid()
+mf::SessionCredentials mfd::SocketMessenger::client_creds()
 {
-    struct ucred cr;
-    socklen_t cl = sizeof(cr);
-
-    auto status = getsockopt(socket->native_handle(), SOL_SOCKET, SO_PEERCRED, &cr, &cl);
-
-    if (status)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
-    return cr.pid;
+    return mf::SessionCredentials::from_socket_fd(socket->native_handle());
 }
 
-void mfd::SocketMessenger::send(std::string const& body)
+void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& fd_set)
 {
-    send(body, {});
-}
-
-void mfd::SocketMessenger::send(std::string const& body, FdSets const& fd_set)
-{
-    const size_t size = body.size();
     const unsigned char header_bytes[2] =
     {
-        static_cast<unsigned char>((size >> 8) & 0xff),
-        static_cast<unsigned char>((size >> 0) & 0xff)
+        static_cast<unsigned char>((length >> 8) & 0xff),
+        static_cast<unsigned char>((length >> 0) & 0xff)
     };
 
     std::unique_lock<std::mutex> lg(message_lock);
 
-    whole_message.resize(sizeof header_bytes + size);
+    whole_message.resize(sizeof header_bytes + length);
     std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
-    std::copy(body.begin(), body.end(), whole_message.begin() + sizeof header_bytes);
+    std::copy(data, data + length, whole_message.begin() + sizeof header_bytes);
+
 
     // TODO: This should be asynchronous, but we are not making sure
     // that a potential call to send_fds is executed _after_ this
@@ -119,11 +108,31 @@ void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, 
 }
 
 void mfd::SocketMessenger::async_receive_msg(
-    MirReadHandler const& handler, ba::streambuf& buffer, size_t size)
+    MirReadHandler const& handler,
+    ba::mutable_buffers_1 const& buffer)
 {
     boost::asio::async_read(
          *socket,
          buffer,
-         boost::asio::transfer_exactly(size),
+         boost::asio::transfer_exactly(ba::buffer_size(buffer)),
          handler);
+}
+
+bs::error_code mfd::SocketMessenger::receive_msg(
+    ba::mutable_buffers_1 const& buffer)
+{
+    bs::error_code e;
+    boost::asio::read(
+         *socket,
+         buffer,
+         boost::asio::transfer_exactly(ba::buffer_size(buffer)),
+         e);
+    return e;
+}
+
+size_t mfd::SocketMessenger::available_bytes()
+{
+    boost::asio::socket_base::bytes_readable command{true};
+    socket->io_control(command);
+    return command.get();
 }

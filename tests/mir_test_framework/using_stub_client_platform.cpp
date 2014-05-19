@@ -40,8 +40,17 @@ MirWaitHandle* mir_connect_override(
 
 void mir_connection_release_override(MirConnection *connection)
 {
-    auto wait_handle = connection->disconnect();
-    wait_handle->wait_for_all();
+    try
+    {
+        auto wait_handle = connection->disconnect();
+        wait_handle->wait_for_all();
+    }
+    catch (std::exception const&)
+    {
+        // Really, we want try/finally, but that's not C++11
+        delete connection;
+        throw;
+    }
     delete connection;
 }
 

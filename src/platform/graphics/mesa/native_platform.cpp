@@ -25,8 +25,13 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/nested_context.h"
 
+#include "internal_client.h"
+#include "internal_native_display.h"
+
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
+
+#include <mutex>
 #include <stdexcept>
 
 namespace mg = mir::graphics;
@@ -42,10 +47,16 @@ void mgm::NativePlatform::initialize(
     nested_context->drm_set_gbm_device(gbm.device);
 }
 
+mgm::NativePlatform::~NativePlatform()
+{
+    finish_internal_native_display();
+}
+
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, buffer_initializer);
+    return std::make_shared<mgm::BufferAllocator>(
+        gbm.device, buffer_initializer, mgm::BypassOption::prohibited);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
@@ -82,7 +93,8 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
 
 std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("MesaNativePlatform::create_internal_client is not implemented yet!"));
+    auto nd = ensure_internal_native_display(get_ipc_package());
+    return std::make_shared<mgm::InternalClient>(nd);
 }
 
 void mgm::NativePlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
@@ -106,3 +118,37 @@ extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::share
 {
     return std::make_shared<mgm::NativePlatform>();
 }
+
+namespace
+{
+std::shared_ptr<mgm::InternalNativeDisplay> native_display = nullptr;
+std::mutex native_display_guard;
+}
+
+bool mgm::NativePlatform::internal_native_display_in_use()
+{
+    std::unique_lock<std::mutex> lg(native_display_guard);
+    return native_display != nullptr;
+}
+
+std::shared_ptr<mgm::InternalNativeDisplay> mgm::NativePlatform::internal_native_display()
+{
+    std::unique_lock<std::mutex> lg(native_display_guard);
+    return native_display;
+}
+
+std::shared_ptr<mgm::InternalNativeDisplay> mgm::NativePlatform::ensure_internal_native_display(
+    std::shared_ptr<mg::PlatformIPCPackage> const& package)
+{
+    std::unique_lock<std::mutex> lg(native_display_guard);
+    if (!native_display)
+        native_display = std::make_shared<mgm::InternalNativeDisplay>(package);
+    return native_display;
+}
+
+void mgm::NativePlatform::finish_internal_native_display()
+{
+    std::unique_lock<std::mutex> lg(native_display_guard);
+    native_display.reset();
+}
+

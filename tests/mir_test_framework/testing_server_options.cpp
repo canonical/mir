@@ -23,8 +23,50 @@
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
+#include <random>
+#include <fstream>
+
 namespace mtf = mir_test_framework;
 
+namespace
+{
+
+bool socket_exists(std::string const& socket_name)
+{
+    std::string socket_path{socket_name};
+    socket_path.insert(std::begin(socket_path), ' ');
+
+    std::ifstream socket_names_file("/proc/net/unix");
+    std::string line;
+    while (std::getline(socket_names_file, line))
+    {
+       if (line.find(socket_path) != std::string::npos)
+           return true;
+    }
+    return false;
+}
+
+std::string create_random_socket_name()
+{
+    std::random_device random_device;
+    std::mt19937 generator(random_device());
+    int max_concurrent_test_instances = 99999;
+    std::uniform_int_distribution<> dist(1, max_concurrent_test_instances);
+    std::string const suffix{"-mir_socket_test"};
+
+    /* check for name collisions against other test instances
+     * running concurrently
+     */
+    for (int i = 0; i < max_concurrent_test_instances; i++)
+    {
+        std::string name{std::to_string(dist(generator))};
+        name.append(suffix);
+        if (!socket_exists(name))
+            return name;
+    }
+    throw std::runtime_error("Too many test socket instances exist!");
+}
+}
 
 mtf::TestingServerConfiguration::TestingServerConfiguration() :
     using_server_started_sync(false)
@@ -99,6 +141,6 @@ void mtf::TestingServerConfiguration::wait_for_server_start()
 
 std::string const& mtf::test_socket_file()
 {
-    static const std::string socket_file{"./mir_socket_test"};
+    static const std::string socket_file{create_random_socket_name()};
     return socket_file;
 }

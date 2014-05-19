@@ -58,6 +58,7 @@ public:
     void tear_down_server();
     void tear_down_all();
     Result shutdown_server_process();
+    Result kill_server_process();
     Result wait_for_shutdown_server_process();
     void kill_client_processes();
     void terminate_client_processes();
