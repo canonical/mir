@@ -31,9 +31,16 @@ namespace mir
 namespace compositor
 {
 
+/**
+ * \brief Creator of timeout-based FrameDroppingPolicies
+ */
 class TimeoutFrameDroppingPolicyFactory : public FrameDroppingPolicyFactory
 {
 public:
+    /**
+     * \param timer     Timer that the policies constructed will schedule alarms on
+     * \param timeout   Milliseconds that the policies will wait before dropping a frame
+     */
     TimeoutFrameDroppingPolicyFactory(std::shared_ptr<mir::time::Timer> const& timer,
                                       std::chrono::milliseconds timeout);
 

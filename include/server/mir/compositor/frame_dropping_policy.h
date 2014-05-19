@@ -41,7 +41,6 @@ namespace compositor
 class FrameDroppingPolicy
 {
 public:
-    FrameDroppingPolicy() = default;
     virtual ~FrameDroppingPolicy() = default;
 
     FrameDroppingPolicy(FrameDroppingPolicy const&) = delete;
@@ -55,6 +54,13 @@ public:
      * \brief Notify that previous swap is no longer blocking
      */
     virtual void swap_unblocked() = 0;
+
+protected:
+    /**
+     * \note FrameDroppingPolicies should not be constructed directly;
+     *       use a \ref FrameDroppingPolicyFactory
+     */
+    FrameDroppingPolicy() = default;
 };
 
 }

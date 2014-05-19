@@ -31,10 +31,8 @@ class FrameDroppingPolicy;
  * \brief Creator of FrameDroppingPolicies
  *
  * The FrameDroppingPolicyFactory is how you go from a means of dropping frames -
- * the \a drop_frames parameter of \ref FrameDroppingPolicyFactory::create_policy -
- * to a \ref FrameDroppingPolicy object that may drop frames between calls to
- * \ref FrameDroppingPolicy::swap_now_blocking and
- * \ref FrameDroppingPolicy::swap_unblocked
+ * the \a drop_frames parameter of \ref create_policy -
+ * to a \ref FrameDroppingPolicy
  */
 class FrameDroppingPolicyFactory
 {
@@ -46,7 +44,7 @@ public:
     FrameDroppingPolicyFactory& operator=(FrameDroppingPolicyFactory const&) = delete;
 
     /**
-     * \brief Create a FrameDroppingPolicy that will call \param{drop_frame} to drop frames
+     * \brief Create a FrameDroppingPolicy that will call \a drop_frame when it decides to drop a frame
      * \param drop_frame    Function to call when a frame needs to be dropped
      * \return              The policy object.
      */
