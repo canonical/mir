@@ -31,11 +31,11 @@ struct MockOps : mga::PropertiesWrapper
 };
 }
 
-TEST(DeviceDetection, detects_device)
+TEST(DeviceDetection, two_buffers_by_default)
 {
     using namespace testing;
     char const default_str[] = "";
-    char const name_str[] = "tunafish";
+    char const name_str[] = "anydevice";
 
     MockOps mock_ops;
     EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
@@ -48,5 +48,25 @@ TEST(DeviceDetection, detects_device)
         }));
 
     mga::DeviceDetector detector(mock_ops);
-    EXPECT_EQ(std::string{name_str}, detector.device_name());
+    EXPECT_EQ(2u, detector.num_framebuffers());
+}
+
+TEST(DeviceDetection, three_buffers_reported_for_mx3)
+{
+    using namespace testing;
+    char const default_str[] = "";
+    char const name_str[] = "mx3";
+
+    MockOps mock_ops;
+    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
+        .Times(1)
+        .WillOnce(Invoke([&]
+        (char const*, char* value, char const*)
+        {
+            strncpy(value, name_str, PROP_VALUE_MAX);
+            return 0;
+        }));
+
+    mga::DeviceDetector detector(mock_ops);
+    EXPECT_EQ(3u, detector.num_framebuffers());
 }
