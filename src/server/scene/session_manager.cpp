@@ -142,8 +142,9 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
 
     session_event_sink->handle_session_stopping(scene_session);
 
+    // TODO {arg} The logic in the following block belongs in TrustSessionContainer
     {
-        std::unique_lock<std::mutex> lock(trust_sessions_mutex);
+        std::lock_guard<std::mutex> lock(trust_sessions_mutex);
 
         std::vector<std::shared_ptr<frontend::TrustSession>> trust_sessions;
         trust_session_container->for_each_trust_session_for_process(scene_session->process_id(),
@@ -256,8 +257,7 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for_locked
 
     if (!trust_session_container->insert(trust_session, session_pid))
     {
-        // TODO - remove comment once we have pid update for child fd created sessions.
-        // BOOST_THROW_EXCEPTION(std::runtime_error("failed to add trusted session"));
+         BOOST_THROW_EXCEPTION(std::runtime_error("failed to add trusted session"));
     }
 
     app_container->for_each(
@@ -274,12 +274,13 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for_locked
 
 void ms::SessionManager::stop_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
 {
-    std::unique_lock<std::mutex> lock(trust_sessions_mutex);
+    std::lock_guard<std::mutex> lock(trust_sessions_mutex);
 
     stop_trust_session_locked(lock, trust_session);
 }
 
-void ms::SessionManager::stop_trust_session_locked(std::unique_lock<std::mutex> const&,
+// TODO {arg} The logic in the following function belongs in TrustSessionContainer
+void ms::SessionManager::stop_trust_session_locked(std::lock_guard<std::mutex> const&,
     std::shared_ptr<mf::TrustSession> const& trust_session)
 {
     auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
