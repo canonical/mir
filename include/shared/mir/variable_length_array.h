@@ -52,7 +52,7 @@ private:
     typedef std::unique_ptr<unsigned char,void (*)(unsigned char*)> BufferUPtr;
 
     static void null_deleter(unsigned char*) {}
-    static void heap_deleter(unsigned char* b) { if (b != nullptr) delete[] b; }
+    static void heap_deleter(unsigned char* b) { delete[] b; }
 
     unsigned char builtin_buffer[BuiltInBufferSize];
     BufferUPtr effective_buffer{builtin_buffer, null_deleter};
