@@ -39,9 +39,10 @@ struct WindowInfo : public droidinput::InputWindowInfo
     {
     }
 
+    // Awkwardly the input stack hands us local coordinates here.
     bool touchableRegionContainsPoint(int32_t x, int32_t y) const override
     {
-        return surface->input_area_contains({x, y});
+        return surface->input_area_contains({x,y});
     }
 
     mi::Surface const* surface;
