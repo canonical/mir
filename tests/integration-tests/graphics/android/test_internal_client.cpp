@@ -40,7 +40,6 @@
 
 #include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/null_surface_configurator.h"
-#include "mir_test/android_device_detection.h"
 
 #include <EGL/egl.h>
 #include <gtest/gtest.h>
@@ -89,7 +88,6 @@ struct NullSurfacePlacementStrategy : ms::PlacementStrategy
 
 TEST_F(AndroidInternalClient, internal_client_creation_and_use)
 {
-    SKIP_IF_NO_ANDROID_HARDWARE_PRESENT();
     auto size = geom::Size{334, 122};
     auto pf  = mir_pixel_format_abgr_8888;
     ms::SurfaceCreationParameters params;

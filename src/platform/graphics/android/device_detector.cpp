@@ -35,12 +35,6 @@ mga::DeviceDetector::DeviceDetector(PropertiesWrapper const& properties)
     char value[PROP_VALUE_MAX] = "";
     properties.property_get(key, value, default_value);
     device_name_ = std::string{value};
-    android_device_present_ = !(device_name_ == std::string{default_value});
-}
-
-bool mga::DeviceDetector::android_device_present() const
-{
-    return android_device_present_;
 }
 
 std::string mga::DeviceDetector::device_name() const

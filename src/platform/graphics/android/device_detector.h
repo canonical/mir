@@ -56,11 +56,9 @@ class DeviceDetector
 public:
     DeviceDetector(PropertiesWrapper const& properties);
 
-    bool android_device_present() const;
     std::string device_name() const;
 private:
     std::string device_name_;
-    bool android_device_present_; 
 };
 }
 }

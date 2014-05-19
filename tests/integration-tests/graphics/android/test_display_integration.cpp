@@ -27,7 +27,6 @@
 
 #include "examples/graphics.h"
 #include "mir_test_doubles/mock_display_report.h"
-#include "mir_test/android_device_detection.h"
 #include "mir_test_doubles/stub_gl_config.h"
 
 #include <gtest/gtest.h>

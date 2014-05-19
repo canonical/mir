@@ -48,26 +48,5 @@ TEST(DeviceDetection, detects_device)
         }));
 
     mga::DeviceDetector detector(mock_ops);
-    EXPECT_TRUE(detector.android_device_present());
     EXPECT_EQ(std::string{name_str}, detector.device_name());
-}
-
-TEST(DeviceDetection, does_not_detect_device)
-{
-    using namespace testing;
-    char const default_str[] = "";
-
-    MockOps mock_ops;
-    EXPECT_CALL(mock_ops, property_get(StrEq("ro.product.device"), _, StrEq(default_str)))
-        .Times(1)
-        .WillOnce(Invoke([&]
-        (char const*, char* value, char const* default_value)
-        {
-            strncpy(value, default_value, PROP_VALUE_MAX);
-            return 0;
-        }));
-
-    mga::DeviceDetector detector(mock_ops);
-    EXPECT_FALSE(detector.android_device_present());
-    EXPECT_EQ(std::string{}, detector.device_name());
 }
