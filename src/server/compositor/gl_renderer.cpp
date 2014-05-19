@@ -19,6 +19,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/tessellation_helpers.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
@@ -102,32 +103,11 @@ mc::GLRenderer::~GLRenderer() noexcept
         glDeleteTextures(1, &t.second.id);
 }
 
-void mc::GLRenderer::tessellate(std::vector<Primitive>& primitives,
-                                graphics::Renderable const& renderable,
-                                geometry::Size const& buf_size) const
+void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
+                                mg::Renderable const& renderable) const
 {
-    auto const& rect = renderable.screen_position();
-    GLfloat left = rect.top_left.x.as_int();
-    GLfloat right = left + rect.size.width.as_int();
-    GLfloat top = rect.top_left.y.as_int();
-    GLfloat bottom = top + rect.size.height.as_int();
-
     primitives.resize(1);
-    auto& client = primitives[0];
-    client.tex_id = 0;
-    client.type = GL_TRIANGLE_STRIP;
-
-    GLfloat tex_right = static_cast<GLfloat>(rect.size.width.as_int()) /
-                        buf_size.width.as_int();
-    GLfloat tex_bottom = static_cast<GLfloat>(rect.size.height.as_int()) /
-                         buf_size.height.as_int();
-
-    auto& vertices = client.vertices;
-    vertices.resize(4);
-    vertices[0] = {{left,  top,    0.0f}, {0.0f,      0.0f}};
-    vertices[1] = {{left,  bottom, 0.0f}, {0.0f,      tex_bottom}};
-    vertices[2] = {{right, top,    0.0f}, {tex_right, 0.0f}};
-    vertices[3] = {{right, bottom, 0.0f}, {tex_right, tex_bottom}};
+    primitives[0] = mg::tessellate_renderable_into_rectangle(renderable);
 }
 
 void mc::GLRenderer::render(mg::RenderableList const& renderables) const
@@ -171,8 +151,8 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     glEnableVertexAttribArray(position_attr_loc);
     glEnableVertexAttribArray(texcoord_attr_loc);
 
-    std::vector<Primitive> primitives;
-    tessellate(primitives, renderable, buffer->size());
+    std::vector<mg::GLPrimitive> primitives;
+    tessellate(primitives, renderable);
    
     for (auto const& p : primitives)
     {
@@ -183,10 +163,10 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
         glBindTexture(GL_TEXTURE_2D, p.tex_id ? p.tex_id : surface_tex);
 
         glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT,
-                              GL_FALSE, sizeof(Vertex),
+                              GL_FALSE, sizeof(mg::GLVertex),
                               &p.vertices[0].position);
         glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT,
-                              GL_FALSE, sizeof(Vertex),
+                              GL_FALSE, sizeof(mg::GLVertex),
                               &p.vertices[0].texcoord);
 
         glDrawArrays(p.type, 0, p.vertices.size());
