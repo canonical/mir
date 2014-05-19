@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "device_detector.h"
+#include "device_quirks.h"
 #include "output_builder.h"
 #include "display_resource_factory.h"
 #include "display_buffer.h"

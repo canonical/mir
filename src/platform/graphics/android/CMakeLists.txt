@@ -34,7 +34,7 @@ add_library(
   interpreter_cache.cpp
   internal_client.cpp
   gl_context.cpp
-  device_detector.cpp
+  device_quirks.cpp
   real_hwc_wrapper.cpp
   overlay_gl_compositor.cpp
 )

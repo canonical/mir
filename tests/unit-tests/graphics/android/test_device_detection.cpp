@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/android/device_detector.h"
+#include "src/platform/graphics/android/device_quirks.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -47,8 +47,8 @@ TEST(DeviceDetection, two_buffers_by_default)
             return 0;
         }));
 
-    mga::DeviceQuirks detector(mock_ops);
-    EXPECT_EQ(2u, detector.num_framebuffers());
+    mga::DeviceQuirks quirks(mock_ops);
+    EXPECT_EQ(2u, quirks.num_framebuffers());
 }
 
 TEST(DeviceDetection, three_buffers_reported_for_mx3)
@@ -67,6 +67,6 @@ TEST(DeviceDetection, three_buffers_reported_for_mx3)
             return 0;
         }));
 
-    mga::DeviceQuirks detector(mock_ops);
-    EXPECT_EQ(3u, detector.num_framebuffers());
+    mga::DeviceQuirks quirks(mock_ops);
+    EXPECT_EQ(3u, quirks.num_framebuffers());
 }

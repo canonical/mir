@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "device_detector.h"
+#include "device_quirks.h"
 
 namespace mga=mir::graphics::android;
 
