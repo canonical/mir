@@ -20,6 +20,7 @@
 #define MIR_SCENE_TRUST_SESSION_IMPL_H_
 
 #include "mir/scene/trust_session.h"
+#include "mir/cached_ptr.h"
 
 #include <vector>
 #include <atomic>
@@ -33,6 +34,7 @@ namespace scene
 class SessionContainer;
 class TrustSessionCreationParameters;
 class TrustSessionListener;
+class TrustSessionContainer;
 class TrustSessionParticipants;
 
 class TrustSessionImpl : public TrustSession
@@ -40,7 +42,8 @@ class TrustSessionImpl : public TrustSession
 public:
     TrustSessionImpl(std::weak_ptr<Session> const& session,
                  TrustSessionCreationParameters const& parameters,
-                 std::shared_ptr<TrustSessionListener> const& trust_session_listener);
+                 std::shared_ptr<TrustSessionListener> const& trust_session_listener,
+                 std::shared_ptr<TrustSessionContainer> const& container);
     ~TrustSessionImpl();
 
     MirTrustSessionState get_state() const override;
@@ -51,7 +54,7 @@ public:
 
     bool add_trusted_child(std::shared_ptr<Session> const& session);
     bool remove_trusted_child(std::shared_ptr<Session> const& session);
-    void for_each_trusted_child(std::function<void(Session*)> f) const;
+    void for_each_trusted_child(std::function<void(std::shared_ptr<Session> const&)> f) const;
 
 protected:
     TrustSessionImpl(const TrustSessionImpl&) = delete;
@@ -60,11 +63,11 @@ protected:
 private:
     std::weak_ptr<Session> const trusted_helper;
     std::shared_ptr<TrustSessionListener> const trust_session_listener;
+    std::shared_ptr<TrustSessionParticipants> participants;
     MirTrustSessionState state;
     std::string cookie;
-    std::mutex mutable mutex;
+    std::recursive_mutex mutable mutex;
 
-    std::shared_ptr<TrustSessionParticipants> participants;
 };
 
 }

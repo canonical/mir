@@ -17,43 +17,35 @@
  */
 
  #include "trust_session_participants.h"
- #include "trust_session_participant_container.h"
+ #include "trust_session_container.h"
 
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
 
 ms::TrustSessionParticipants::TrustSessionParticipants(
-    std::weak_ptr<mf::TrustSession> const& trust_session,
-    std::shared_ptr<TrustSessionParticipantContainer> const& container) :
+    frontend::TrustSession* trust_session,
+    std::shared_ptr<TrustSessionContainer> const& container) :
     trust_session(trust_session),
     container(container)
 {
 }
 
-bool ms::TrustSessionParticipants::insert(mf::Session* session)
+bool ms::TrustSessionParticipants::insert(std::weak_ptr<mf::Session> const& session)
 {
-    if (auto locked_session = trust_session.lock())
-    {
-        return container->insert_participant(locked_session, session, true);
-    }
-    return false;
+    return container->insert_participant(trust_session, session, true);
 }
 
-bool ms::TrustSessionParticipants::remove(mf::Session* session)
+bool ms::TrustSessionParticipants::remove(std::weak_ptr<mf::Session> const& session)
 {
-    if (auto locked_session = trust_session.lock())
-    {
-        return container->remove_participant(locked_session, session);
-    }
-    return false;
+    return container->remove_participant(trust_session, session);
 }
 
-bool ms::TrustSessionParticipants::contains(mf::Session* session) const
+bool ms::TrustSessionParticipants::contains(std::weak_ptr<mf::Session> const& session) const
 {
     bool found = false;
-    for_each_participant([&](mf::Session* participant)
+    for_each_participant([&](std::weak_ptr<mf::Session> const& participant)
         {
-            if (session == participant)
+            if (session.lock() == participant.lock())
             {
                 found |= true;
             }
@@ -61,15 +53,12 @@ bool ms::TrustSessionParticipants::contains(mf::Session* session) const
     return found;
 }
 
-void ms::TrustSessionParticipants::for_each_participant(std::function<void(mf::Session*)> f) const
+void ms::TrustSessionParticipants::for_each_participant(std::function<void(std::weak_ptr<mf::Session> const&)> f) const
 {
-    if (auto locked_session = trust_session.lock())
-    {
-        container->for_each_participant_for_trust_session(locked_session,
-            [f](mf::Session* session, bool is_child)
-            {
-                if (is_child)
-                    f(session);
-            });
-    }
+    container->for_each_participant_for_trust_session(trust_session,
+        [&](std::weak_ptr<mf::Session> const& session, bool is_child)
+        {
+            if (is_child)
+                f(session);
+        });
 }

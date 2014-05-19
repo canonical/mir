@@ -21,6 +21,7 @@
 #include "mir/scene/trust_session_creation_parameters.h"
 #include "mir/scene/trust_session_listener.h"
 #include "session_container.h"
+#include "trust_session_container.h"
 #include "trust_session_participants.h"
 
 #include <sstream>
@@ -34,9 +35,11 @@ int next_unique_id = 0;
 ms::TrustSessionImpl::TrustSessionImpl(
     std::weak_ptr<ms::Session> const& session,
     TrustSessionCreationParameters const&,
-    std::shared_ptr<TrustSessionListener> const& trust_session_listener) :
+    std::shared_ptr<TrustSessionListener> const& trust_session_listener,
+    std::shared_ptr<TrustSessionContainer> const& container) :
     trusted_helper(session),
     trust_session_listener(trust_session_listener),
+    participants(std::make_shared<TrustSessionParticipants>(this, container)),
     state(mir_trust_session_state_stopped)
 {
 }
@@ -89,17 +92,17 @@ void ms::TrustSessionImpl::stop()
         helper->end_trust_session();
     }
 
-    std::vector<mf::Session*> children;
-    participants->for_each_participant(
-        [&](mf::Session* session)
+    std::vector<std::shared_ptr<mf::Session>> children;
+    participants->for_each_participant([&](std::weak_ptr<mf::Session> const& session)
         {
-            children.push_back(session);
+            if (auto locked_session = session.lock())
+                children.push_back(locked_session);
         });
 
     for (auto session : children)
     {
         participants->remove(session);
-        // trust_session_listener->trusted_session_ending(*this, std::dynamic_pointer_cast<ms::Session>(session));
+        trust_session_listener->trusted_session_ending(*this, std::dynamic_pointer_cast<ms::Session>(session));
     }
 }
 
@@ -110,7 +113,7 @@ bool ms::TrustSessionImpl::add_trusted_child(std::shared_ptr<ms::Session> const&
     if (state == mir_trust_session_state_stopped)
         return false;
 
-    if (!participants->insert(session.get()))
+    if (!participants->insert(session))
         return false;
 
     trust_session_listener->trusted_session_beginning(*this, session);
@@ -124,7 +127,7 @@ bool ms::TrustSessionImpl::remove_trusted_child(std::shared_ptr<ms::Session> con
     if (state == mir_trust_session_state_stopped)
         return false;
 
-    if (participants->remove(session.get()))
+    if (participants->remove(session))
     {
         trust_session_listener->trusted_session_ending(*this, session);
         return true;
@@ -133,13 +136,11 @@ bool ms::TrustSessionImpl::remove_trusted_child(std::shared_ptr<ms::Session> con
 }
 
 void ms::TrustSessionImpl::for_each_trusted_child(
-    std::function<void(ms::Session*)> f) const
+    std::function<void(std::shared_ptr<Session> const&)> f) const
 {
-    participants->for_each_participant(
-        [f](mf::Session* session)
+    participants->for_each_participant([f](std::weak_ptr<mf::Session> const& session)
         {
-            auto scene_session = dynamic_cast<ms::Session*>(session);
-            if (scene_session)
-                f(scene_session);
+            if (auto locked_scene_session = std::dynamic_pointer_cast<ms::Session>(session.lock()))
+                f(locked_scene_session);
         });
 }

@@ -32,7 +32,6 @@ void ms::DefaultSessionContainer::insert_session(std::shared_ptr<Session> const&
     std::unique_lock<std::mutex> lk(guard);
 
     apps.push_back(session);
-    printf("DefaultSessionContainer::insert_session - count:%d\n", (int)apps.size());
 }
 
 void ms::DefaultSessionContainer::remove_session(std::shared_ptr<Session> const& session)
@@ -43,7 +42,6 @@ void ms::DefaultSessionContainer::remove_session(std::shared_ptr<Session> const&
     if (it != apps.end())
     {
         apps.erase(it);
-        printf("DefaultSessionContainer::remove_session - count:%d\n", (int)apps.size());
     }
     else
     {

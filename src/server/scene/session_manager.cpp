@@ -26,8 +26,9 @@
 #include "session_event_sink.h"
 #include "mir/scene/trust_session_creation_parameters.h"
 #include "trust_session_impl.h"
-#include "trust_session_participant_container.h"
+#include "trust_session_container.h"
 #include "mir/scene/trust_session_listener.h"
+#include "trust_session_participants.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -53,7 +54,7 @@ ms::SessionManager::SessionManager(std::shared_ptr<SurfaceCoordinator> const& su
     session_event_sink(session_event_sink),
     session_listener(session_listener),
     trust_session_listener(trust_session_listener),
-    trust_session_container(std::make_shared<TrustSessionParticipantContainer>())
+    trust_session_container(std::make_shared<TrustSessionContainer>())
 {
     assert(surface_factory);
     assert(container);
@@ -107,7 +108,6 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
         for(auto trust_session : trust_sessions)
         {
             auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
-            trust_session_container->insert_participant(trust_session, new_session.get(), true);
             scene_trust_session->add_trusted_child(new_session);
         }
     }
@@ -154,7 +154,7 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
         std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
         std::vector<std::shared_ptr<mf::TrustSession>> trust_sessions;
-        trust_session_container->for_each_trust_session_for_participant(scene_session.get(),
+        trust_session_container->for_each_trust_session_for_participant(scene_session,
             [&](std::shared_ptr<mf::TrustSession> const& trust_session)
             {
                 trust_sessions.push_back(trust_session);
@@ -171,7 +171,6 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
             else
             {
                 scene_trust_session->remove_trusted_child(scene_session);
-                trust_session_container->remove_participant(trust_session, scene_session.get());
             }
         }
     }
@@ -236,9 +235,9 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
 
     auto shell_session = std::dynamic_pointer_cast<ms::Session>(session);
 
-    auto const trust_session = std::make_shared<TrustSessionImpl>(shell_session, params, trust_session_listener);
-
-    trust_session_container->insert_participant(trust_session, shell_session.get(), false);
+    auto trust_session = std::make_shared<TrustSessionImpl>(shell_session, params, trust_session_listener, trust_session_container);
+    trust_session_container->insert_trust_session(trust_session);
+    trust_session_container->insert_participant(trust_session.get(), session, false);
 
     trust_session->start();
     trust_session_listener->starting(trust_session);
@@ -261,14 +260,13 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_process_for_locked
 {
     auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
 
-    trust_session_container->insert_waiting_process(trust_session, process_id);
+    trust_session_container->insert_waiting_process(trust_session.get(), process_id);
 
     app_container->for_each(
         [&](std::shared_ptr<ms::Session> const& container_session)
         {
             if (container_session->process_id() == process_id)
             {
-                trust_session_container->insert_participant(trust_session, container_session.get(), true);
                 scene_trust_session->add_trusted_child(container_session);
             }
         });
@@ -282,9 +280,7 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for(std::s
     auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
     auto scene_session = std::dynamic_pointer_cast<ms::Session>(session);
 
-    trust_session_container->insert_participant(trust_session, session.get(), true);
     scene_trust_session->add_trusted_child(scene_session);
-
     return mir_trust_session_add_tust_succeeded;
 }
 

@@ -31,23 +31,25 @@ class Session;
 
 namespace scene
 {
-class TrustSessionParticipantContainer;
+class TrustSessionContainer;
 
 class TrustSessionParticipants
 {
 public:
-    TrustSessionParticipants(std::weak_ptr<frontend::TrustSession> const& trust_session, std::shared_ptr<TrustSessionParticipantContainer> const& container);
+    TrustSessionParticipants(frontend::TrustSession* trust_session, std::shared_ptr<TrustSessionContainer> const& container);
+    virtual ~TrustSessionParticipants() = default;
 
-    bool insert(frontend::Session* session);
-    bool remove(frontend::Session* session);
+    bool insert(std::weak_ptr<frontend::Session> const& session);
+    bool remove(std::weak_ptr<frontend::Session> const& session);
+    void clear();
 
-    bool contains(frontend::Session* session) const;
+    bool contains(std::weak_ptr<frontend::Session> const& session) const;
 
-    void for_each_participant(std::function<void(frontend::Session*)> f) const;
+    void for_each_participant(std::function<void(std::weak_ptr<frontend::Session> const&)> f) const;
 
 private:
-    std::weak_ptr<frontend::TrustSession> trust_session;
-    std::shared_ptr<TrustSessionParticipantContainer> container;
+    frontend::TrustSession* trust_session;
+    std::shared_ptr<TrustSessionContainer> container;
 };
 
 }
