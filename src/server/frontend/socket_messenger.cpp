@@ -116,7 +116,7 @@ void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, 
         message->cmsg_len = header.msg_controllen;
         message->cmsg_level = SOL_SOCKET;
         message->cmsg_type = SCM_RIGHTS;
-        int *data = (int *)CMSG_DATA(message);
+        int *data = reinterpret_cast<int*>(CMSG_DATA(message));
         int i = 0;
         for (auto &fd: fds)
             data[i++] = fd;
@@ -183,7 +183,7 @@ void mfd::SocketMessenger::update_session_creds()
 
     if (recvmsg(socket->native_handle(), &msgh, MSG_PEEK) != -1)
     {
-        auto const ucredp = (struct ucred *) CMSG_DATA(CMSG_FIRSTHDR(&msgh));
+        auto const ucredp = reinterpret_cast<ucred*>(CMSG_DATA(CMSG_FIRSTHDR(&msgh)));
         session_creds = {ucredp->pid, ucredp->uid, ucredp->gid};
     }
 }
