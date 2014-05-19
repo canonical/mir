@@ -1092,6 +1092,49 @@ TEST_F(BufferQueueTest, double_buffered_client_is_not_blocked_prematurely)
     handle->release_buffer();
 }
 
+TEST_F(BufferQueueTest, composite_on_demand_never_deadlocks_with_2_buffers)
+{  // Extended regression test for LP: #1319765
+    using namespace testing;
+
+    mc::BufferQueue q{2, allocator, basic_properties};
+
+    for (int i = 0; i < 100; ++i)
+    {
+        auto x = client_acquire_async(q);
+        ASSERT_TRUE(x->wait_for(std::chrono::seconds(5)));
+        ASSERT_NE(nullptr, x->buffer());
+        x->release_buffer();
+
+        auto a = q.compositor_acquire(this);
+
+        auto y = client_acquire_async(q);
+        ASSERT_TRUE(y->wait_for(std::chrono::seconds(5)));
+        ASSERT_NE(nullptr, y->buffer());
+        y->release_buffer();
+
+        auto b = q.compositor_acquire(this);
+    
+        ASSERT_NE(a.get(), b.get());
+    
+        q.compositor_release(a);
+
+        auto w = client_acquire_async(q);
+        ASSERT_TRUE(w->wait_for(std::chrono::seconds(5)));
+        ASSERT_NE(nullptr, w->buffer());
+        w->release_buffer();
+    
+        q.compositor_release(b);
+
+        auto z = client_acquire_async(q);
+        ASSERT_TRUE(z->wait_for(std::chrono::seconds(5)));
+        ASSERT_NE(nullptr, z->buffer());
+        z->release_buffer();
+
+        q.compositor_release(q.compositor_acquire(this));
+        q.compositor_release(q.compositor_acquire(this));
+    }
+}
+
 /* Regression test for LP: #1306464 */
 TEST_F(BufferQueueTest, framedropping_client_acquire_does_not_block_when_no_available_buffers)
 {
