@@ -13,10 +13,10 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Authored by: Andreas POkorny <andreas.pokorny@canonical.com>
+* Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
 */
 
-#ifndef  MIR_TEST_DOUBLES_STUB_INPUT_ENUMERATOR_H_
+#ifndef MIR_TEST_DOUBLES_STUB_INPUT_ENUMERATOR_H_
 #define MIR_TEST_DOUBLES_STUB_INPUT_ENUMERATOR_H_
 
 #include "InputEnumerator.h"
