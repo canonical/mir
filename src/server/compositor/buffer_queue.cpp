@@ -136,8 +136,19 @@ mc::BufferQueue::BufferQueue(
        assert(!pending_client_notifications.empty());
        if (ready_to_composite_queue.empty())
        {
-           //TODO: We have to framedrop, but we can't.
-           //assert(), throw, or ignore?
+           /*
+            * NOTE: This can only happen under two circumstances:
+            * 1) Client is single buffered. Don't do that, it's a bad idea.
+            * 2) Client already has a buffer, and is asking for a new one
+            *    without submitting the old one.
+            *
+            *    This shouldn't be exposed to the client as swap_buffers
+            *    blocking, as the client already has something to render to.
+            *
+            *    Our current implementation will never hit this case. If we
+            *    later want clients to be able to own multiple buffers simultaneously
+            *    then we might want to add an entry to the CompositorReport here.
+            */
            return;
        }
        give_buffer_to_client(pop(ready_to_composite_queue), std::move(lock));
