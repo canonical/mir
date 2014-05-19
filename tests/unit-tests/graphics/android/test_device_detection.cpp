@@ -47,7 +47,7 @@ TEST(DeviceDetection, two_buffers_by_default)
             return 0;
         }));
 
-    mga::DeviceDetector detector(mock_ops);
+    mga::DeviceQuirks detector(mock_ops);
     EXPECT_EQ(2u, detector.num_framebuffers());
 }
 
@@ -67,6 +67,6 @@ TEST(DeviceDetection, three_buffers_reported_for_mx3)
             return 0;
         }));
 
-    mga::DeviceDetector detector(mock_ops);
+    mga::DeviceQuirks detector(mock_ops);
     EXPECT_EQ(3u, detector.num_framebuffers());
 }

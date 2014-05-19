@@ -28,16 +28,26 @@ int mga::PropertiesOps::property_get(
     return ::property_get(key, value, default_value);
 }
 
-mga::DeviceDetector::DeviceDetector(PropertiesWrapper const& properties)
+namespace
+{
+unsigned int determine_num_framebuffers(mga::PropertiesWrapper const& properties)
+{
+    (void) properties;
+    return 0;
+}
+}
+
+mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties)
+    : num_framebuffers_(determine_num_framebuffers(properties))
 {
     char const key[] = "ro.product.device"; 
     char const default_value[] = "";
     char value[PROP_VALUE_MAX] = "";
     properties.property_get(key, value, default_value);
-    device_name_ = std::string{value};
+//    device_name_ = std::string{value};
 }
 
-std::string mga::DeviceDetector::device_name() const
+unsigned int mga::DeviceQuirks::num_framebuffers() const
 {
-    return device_name_;
+    return num_framebuffers_;
 }

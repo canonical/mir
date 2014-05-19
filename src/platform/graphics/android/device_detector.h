@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_
-#define MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_
+#ifndef MIR_GRAPHICS_ANDROID_DEVICE_QUIRKS_H_
+#define MIR_GRAPHICS_ANDROID_DEVICE_QUIRKS_H_
 
 #include <hybris/properties/properties.h>
 #include <string>
@@ -51,16 +51,18 @@ public:
         char const* default_value) const;
 };
 
-class DeviceDetector
+class DeviceQuirks
 {
 public:
-    DeviceDetector(PropertiesWrapper const& properties);
+    DeviceQuirks(PropertiesWrapper const& properties);
 
-    std::string device_name() const;
+    unsigned int num_framebuffers() const;
 private:
-    std::string device_name_;
+    DeviceQuirks(DeviceQuirks const&) = delete;
+    DeviceQuirks & operator=(DeviceQuirks const&) = delete;
+    unsigned int const num_framebuffers_;
 };
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_DEVICE_DETECTOR_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_DEVICE_QUIRKS_H_ */
