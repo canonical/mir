@@ -179,6 +179,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     EGLBoolean ok;
     EGLint swapinterval = 1;
     char *mir_socket = NULL;
+    char const* cursor_name = mir_default_cursor_name;
 
     if (argc > 1)
     {
@@ -263,6 +264,9 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                 case 'm':
                     mir_socket = argv[++i];
                     break;
+                case 'c':
+                    cursor_name = argv[++i];
+                    break;
                 case 'q':
                     {
                         FILE *unused = freopen("/dev/null", "a", stdout);
@@ -290,6 +294,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                        "  -n               Don't sync to vblank\n"
                        "  -m socket        Mir server socket\n"
                        "  -s WIDTHxHEIGHT  Force surface size\n"
+                       "  -c name          Request cursor image by name\n"
                        "  -q               Quiet mode (no messages output)\n"
                        , argv[0]);
                 return 0;
@@ -361,6 +366,10 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     CHECK(mir_surface_is_valid(surface), "Can't create a surface");
 
     mir_surface_set_event_handler(surface, &delegate);
+    
+    MirCursorConfiguration *conf = mir_cursor_configuration_from_name(cursor_name);
+    mir_surface_configure_cursor(surface, conf);
+    mir_cursor_configuration_destroy(conf);
 
     egldisplay = eglGetDisplay(
                     mir_connection_get_egl_native_display(connection));
