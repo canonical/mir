@@ -341,7 +341,7 @@ TEST_F(AsioMainLoopAlarmTest, main_loop_runs_until_stop_called)
 
     {
         std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
-        ASSERT_TRUE(checkpoint.wait_for(lock, std::chrono::milliseconds{10}, [&hit_checkpoint]() { return hit_checkpoint; }));
+        ASSERT_TRUE(checkpoint.wait_for(lock, std::chrono::milliseconds{100}, [&hit_checkpoint]() { return hit_checkpoint; }));
     }
 
     auto alarm = ml.notify_in(std::chrono::milliseconds{10}, [this]
@@ -349,7 +349,7 @@ TEST_F(AsioMainLoopAlarmTest, main_loop_runs_until_stop_called)
         wait.notify_ready();
     });
 
-    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{50}));
+    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{500}));
 
     ml.stop();
     // Main loop should be stopped now
