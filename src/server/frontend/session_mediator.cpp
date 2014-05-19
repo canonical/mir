@@ -514,7 +514,8 @@ void mf::SessionMediator::drm_auth_magic(
     done->Run();
 }
 
-void mf::SessionMediator::start_trust_session(::google::protobuf::RpcController*,
+void mf::SessionMediator::start_trust_session(
+    ::google::protobuf::RpcController*,
     const ::mir::protobuf::TrustSessionParameters* request,
     ::mir::protobuf::TrustSession* response,
     ::google::protobuf::Closure* done)
@@ -543,7 +544,8 @@ void mf::SessionMediator::start_trust_session(::google::protobuf::RpcController*
     done->Run();
 }
 
-void mf::SessionMediator::add_trusted_session(::google::protobuf::RpcController*,
+void mf::SessionMediator::add_trusted_session(
+    ::google::protobuf::RpcController*,
     const ::mir::protobuf::TrustedSession* request,
     ::mir::protobuf::TrustSessionAddResult* response,
     ::google::protobuf::Closure* done)
@@ -567,7 +569,8 @@ void mf::SessionMediator::add_trusted_session(::google::protobuf::RpcController*
     done->Run();
 }
 
-void mf::SessionMediator::stop_trust_session(::google::protobuf::RpcController*,
+void mf::SessionMediator::stop_trust_session(
+    ::google::protobuf::RpcController*,
     const ::mir::protobuf::Void*,
     ::mir::protobuf::Void*,
     ::google::protobuf::Closure* done)
