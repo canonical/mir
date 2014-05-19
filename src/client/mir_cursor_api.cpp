@@ -19,6 +19,8 @@
 #include "mir_toolkit/mir_cursor_configuration.h"
 #include "cursor_configuration.h"
 
+#include <memory>
+
 char const *const mir_default_cursor_name = "default";
 char const *const mir_disabled_cursor_name = "disabled";
 
@@ -32,10 +34,10 @@ MirCursorConfiguration* mir_cursor_configuration_from_name(char const* name)
 {
     try 
     {
-        auto c = new MirCursorConfiguration;
+        std::unique_ptr<MirCursorConfiguration> c(new MirCursorConfiguration);
         c->name = name ? std::string(name) : std::string();
     
-        return c;
+        return c.release();
     }
     catch (...)
     {

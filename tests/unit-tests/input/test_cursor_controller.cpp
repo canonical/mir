@@ -106,8 +106,8 @@ struct StubInputSurface : public mtd::StubSceneSurface
     
     geom::Rectangle input_bounds() const override
     {
-        // We could return the bounds here but the cursor controller
-        // should only use the input_area_contains method.
+        // We could return bounds here but lets make sure the cursor controller
+        // is only using input_area_contains.
         return geom::Rectangle();
     }
     

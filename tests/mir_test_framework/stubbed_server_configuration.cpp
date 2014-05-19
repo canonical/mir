@@ -21,6 +21,7 @@
 #include "mir/options/default_configuration.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/cursor.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
 
@@ -165,6 +166,23 @@ public:
         return std::unique_ptr<mg::DisplayConfiguration>(
             new StubDisplayConfiguration(rect)
         );
+    }
+    
+    std::shared_ptr<mg::Cursor> create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /* Initial image */)
+    {
+        struct NullCursor : public mg::Cursor
+        {
+            void show(mg::CursorImage const&)
+            {
+            }
+            void hide()
+            {
+            }
+            void move_to(geom::Point)
+            {
+            }
+        };
+        return std::make_shared<NullCursor>();
     }
 
 private:
