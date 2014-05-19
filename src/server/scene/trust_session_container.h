@@ -34,7 +34,6 @@ namespace mir
 namespace frontend
 {
 class TrustSession;
-class Session;
 }
 
 using boost::multi_index_container;
@@ -43,12 +42,15 @@ using namespace boost::multi_index;
 namespace scene
 {
 
+// TODO {arg} TrustSessionContainer is internal to scene and should work in
+// TODO {arg} terms of scene::TrustSession
 class TrustSessionContainer
 {
 public:
     TrustSessionContainer();
     virtual ~TrustSessionContainer() = default;
 
+    // {arg} I'm unconvinced this typedef is useful. Certainly "ClientProcess const&" is a pointless ref
     typedef pid_t ClientProcess;
 
     bool insert(std::shared_ptr<frontend::TrustSession> const& trust_session, ClientProcess const& process);

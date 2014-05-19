@@ -61,7 +61,7 @@ ms::SessionManager::SessionManager(std::shared_ptr<SurfaceCoordinator> const& su
     assert(session_listener);
 }
 
-ms::SessionManager::~SessionManager()
+ms::SessionManager::~SessionManager() noexcept
 {
     /*
      * Close all open sessions. We need to do this manually here
