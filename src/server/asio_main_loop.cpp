@@ -47,30 +47,26 @@ struct MirClockTimerTraits
         return timer_service_clock.lock()->sample();
     }
 
-    /// Add a duration to a time.
     static time_type add(const time_type& t, const duration_type& d)
     {
         return t + d;
     }
 
-    /// Subtract one time from another.
     static duration_type subtract(const time_type& t1, const time_type& t2)
     {
         return std::chrono::duration_cast<duration_type>(t1 - t2);
     }
 
-  /// Test whether one time is less than another.
-  static bool less_than(const time_type& t1, const time_type& t2)
-  {
-    return t1 < t2;
-  }
+    static bool less_than(const time_type& t1, const time_type& t2)
+    {
+        return t1 < t2;
+    }
 
-  /// Convert to POSIX duration type.
-  static boost::posix_time::time_duration to_posix_duration(
-      const duration_type& d)
-  {
-    return boost::posix_time::millisec(d.count());
-  }
+    static boost::posix_time::time_duration to_posix_duration(
+        const duration_type& d)
+    {
+        return boost::posix_time::millisec(d.count());
+    }
 };
 
 std::weak_ptr<mir::time::Clock const> MirClockTimerTraits::timer_service_clock;
