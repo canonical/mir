@@ -160,10 +160,11 @@ private:
 };
 
 /*
- * We need to define an empty destructor in the .cpp file, so that we can
- * use unique_ptr to hold SignalHandler. Otherwise, users of AsioMainLoop
- * end up creating destructors that don't have complete type information
- * for SignalHandler and fail to compile.
+ * We need to define the constructor and destructor in the .cpp file,
+ * so that we can use unique_ptr to hold SignalHandler. Otherwise, users
+ * of AsioMainLoop end up creating constructors and destructors that
+ * don't have complete type information for SignalHandler and fail
+ * to compile.
  */
 mir::AsioMainLoop::AsioMainLoop(std::shared_ptr<time::Clock> const& clock)
     : work{io}, clock(clock)
@@ -295,7 +296,6 @@ mir::time::Alarm::State AlarmImpl::state() const
 bool AlarmImpl::reschedule_in(std::chrono::milliseconds delay)
 {
     bool cancelling = timer.expires_from_now(delay);
-    //bool cancelling = timer.expires_from_now(boost::posix_time::milliseconds{delay.count()});
     update_timer();
     return cancelling;
 }
