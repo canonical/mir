@@ -1083,8 +1083,13 @@ TEST_F(BufferQueueTest, double_buffered_client_is_not_blocked_prematurely)
 
     q.compositor_release(a);
     q.client_release(client_acquire_sync(q));
+
     q.compositor_release(b);
-    q.client_release(client_acquire_sync(q));
+    auto handle = client_acquire_async(q);
+    // With the fix, a buffer will be available instantaneously:
+    ASSERT_TRUE(handle->wait_for(std::chrono::seconds(5)));
+    ASSERT_NE(nullptr, handle->buffer());
+    handle->release_buffer();
 }
 
 /* Regression test for LP: #1306464 */
