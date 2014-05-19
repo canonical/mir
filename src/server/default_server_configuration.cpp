@@ -169,9 +169,9 @@ std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()
 std::shared_ptr<mir::MainLoop> mir::DefaultServerConfiguration::the_main_loop()
 {
     return main_loop(
-        []()
+        [this]()
         {
-            return std::make_shared<mir::AsioMainLoop>();
+            return std::make_shared<mir::AsioMainLoop>(the_clock());
         });
 }
 

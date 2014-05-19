@@ -24,6 +24,60 @@
 #include <mutex>
 #include <condition_variable>
 
+namespace
+{
+struct MirClockTimerTraits
+{
+    // TODO the clock used by the main loop is a global setting, this is a restriction
+    // of boost::asio only allowing static methods inside the taits type.
+    static std::weak_ptr<mir::time::Clock const> timer_service_clock;
+    static void set_clock(std::shared_ptr<mir::time::Clock const> const& clock)
+    {
+        timer_service_clock = clock;
+    }
+
+    // time_traits interface required by boost::asio::deadline_timer{_service}
+    typedef mir::time::Timestamp time_type;
+    typedef std::chrono::milliseconds duration_type;
+
+
+    static time_type now()
+    {
+        assert(timer_service_clock.lock());
+        return timer_service_clock.lock()->sample();
+    }
+
+    /// Add a duration to a time.
+    static time_type add(const time_type& t, const duration_type& d)
+    {
+        return t + d;
+    }
+
+    /// Subtract one time from another.
+    static duration_type subtract(const time_type& t1, const time_type& t2)
+    {
+        return std::chrono::duration_cast<duration_type>(t1 - t2);
+    }
+
+  /// Test whether one time is less than another.
+  static bool less_than(const time_type& t1, const time_type& t2)
+  {
+    return t1 < t2;
+  }
+
+  /// Convert to POSIX duration type.
+  static boost::posix_time::time_duration to_posix_duration(
+      const duration_type& d)
+  {
+    return boost::posix_time::millisec(d.count());
+  }
+};
+
+std::weak_ptr<mir::time::Clock const> MirClockTimerTraits::timer_service_clock;
+
+typedef boost::asio::basic_deadline_timer<mir::time::Timestamp, MirClockTimerTraits> deadline_timer;
+}
+
 class mir::AsioMainLoop::SignalHandler
 {
 public:
@@ -106,15 +160,15 @@ private:
 };
 
 /*
- * We need to define an empty constructor and destructor in the .cpp file,
- * so that we can use unique_ptr to hold SignalHandler. Otherwise, users
- * of AsioMainLoop end up creating default constructors and destructors
- * that don't have complete type information for SignalHandler and fail
- * to compile.
+ * We need to define an empty destructor in the .cpp file, so that we can
+ * use unique_ptr to hold SignalHandler. Otherwise, users of AsioMainLoop
+ * end up creating destructors that don't have complete type information
+ * for SignalHandler and fail to compile.
  */
-mir::AsioMainLoop::AsioMainLoop()
-    : work{io}
+mir::AsioMainLoop::AsioMainLoop(std::shared_ptr<time::Clock> const& clock)
+    : work{io}, clock(clock)
 {
+    MirClockTimerTraits::set_clock(clock);
 }
 
 mir::AsioMainLoop::~AsioMainLoop() noexcept(true)
@@ -193,7 +247,7 @@ private:
         State state;
     };
 
-    boost::asio::deadline_timer timer;
+    ::deadline_timer timer;
     std::shared_ptr<InternalState> data;
 };
 
@@ -240,17 +294,15 @@ mir::time::Alarm::State AlarmImpl::state() const
 
 bool AlarmImpl::reschedule_in(std::chrono::milliseconds delay)
 {
-    bool cancelling = timer.expires_from_now(boost::posix_time::milliseconds{delay.count()});
+    bool cancelling = timer.expires_from_now(delay);
+    //bool cancelling = timer.expires_from_now(boost::posix_time::milliseconds{delay.count()});
     update_timer();
     return cancelling;
 }
 
 bool AlarmImpl::reschedule_for(mir::time::Timestamp time_point)
 {
-    bool cancelling =
-        timer.expires_at(boost::posix_time::from_time_t(
-                std::chrono::high_resolution_clock::to_time_t(time_point)
-                ));
+    bool cancelling = timer.expires_at(time_point);
     update_timer();
     return cancelling;
 }
