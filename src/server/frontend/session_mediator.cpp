@@ -574,16 +574,17 @@ void mf::SessionMediator::stop_trust_session(::google::protobuf::RpcController*,
 {
     {
         std::unique_lock<std::mutex> lock(session_mutex);
-        auto session = weak_session.lock();
+        auto const session = weak_session.lock();
 
-        if (session.get() == nullptr)
+        if (!session)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        auto trust_session = weak_trust_session.lock();
-        weak_trust_session.reset();
+        auto const trust_session = weak_trust_session.lock();
 
-        if (trust_session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid trusted session"));
+        if (!trust_session)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
+
+        weak_trust_session.reset();
 
         report->session_stop_trust_session_called(session->name());
 
