@@ -40,14 +40,14 @@ MIR_SESSION_MEDIATOR_EVENT_METHOD(session_configure_surface_called)
 MIR_SESSION_MEDIATOR_EVENT_METHOD(session_configure_display_called)
 MIR_SESSION_MEDIATOR_EVENT_METHOD(session_stop_trust_session_called)
 
-void mir::report::lttng::SessionMediatorReport::session_start_trust_session_called(std::string const& app_name, std::string const& trust_info)
+void mir::report::lttng::SessionMediatorReport::session_start_trust_session_called(std::string const& app_name, pid_t base_process)
 {
-    mir_tracepoint(mir_server_session_mediator, session_start_trust_session_called, app_name.c_str(), trust_info.c_str());
+    mir_tracepoint(mir_server_session_mediator, session_start_trust_session_called, app_name.c_str(), base_process);
 }
 
-void mir::report::lttng::SessionMediatorReport::session_add_trusted_session_called(std::string const& app_name, std::string const& trust_info)
+void mir::report::lttng::SessionMediatorReport::session_add_trusted_session_called(std::string const& app_name, pid_t process)
 {
-    mir_tracepoint(mir_server_session_mediator, session_add_trusted_session_called, app_name.c_str(), trust_info.c_str());
+    mir_tracepoint(mir_server_session_mediator, session_add_trusted_session_called, app_name.c_str(), process);
 }
 
 void mir::report::lttng::SessionMediatorReport::session_error(std::string const& app_name, char const* method, std::string const& what)

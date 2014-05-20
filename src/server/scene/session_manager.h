@@ -26,7 +26,6 @@
 #include <mutex>
 #include <memory>
 #include <vector>
-#include <map>
 
 namespace mir
 {
@@ -55,8 +54,9 @@ public:
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
                             std::shared_ptr<SessionEventSink> const& session_event_sink,
                             std::shared_ptr<SessionListener> const& session_listener,
+                            // TODO {arg} TrustSessionContainer is the real dependency - the listener belongs there
                             std::shared_ptr<TrustSessionListener> const& trust_session_listener);
-    virtual ~SessionManager();
+    virtual ~SessionManager() noexcept;
 
     virtual std::shared_ptr<frontend::Session> open_session(
         pid_t client_pid,
@@ -94,8 +94,10 @@ private:
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionEventSink> const session_event_sink;
     std::shared_ptr<SessionListener> const session_listener;
+
+    // TODO {arg} trust_session_listener belongs in TrustSessionContainer
     std::shared_ptr<TrustSessionListener> const trust_session_listener;
-    std::shared_ptr<TrustSessionContainer> trust_session_container;
+    std::shared_ptr<TrustSessionContainer> const trust_session_container;
 
     std::mutex mutex;
     std::weak_ptr<Session> focus_application;
@@ -105,8 +107,9 @@ private:
     MirTrustSessionAddTrustResult add_trusted_process_for_locked(std::unique_lock<std::mutex> const&,
                                                                  std::shared_ptr<frontend::TrustSession> const& trust_session,
                                                                  pid_t session_pid);
-    void stop_trust_session_locked(std::unique_lock<std::mutex> const& lock,
+    void stop_trust_session_locked(std::lock_guard<std::mutex> const& lock,
                                    std::shared_ptr<frontend::TrustSession> const& trust_session);
+    // TODO {arg} This mutex and the logic guarded by it belongs in TrustSessionContainer
     std::mutex mutable trust_sessions_mutex;
 };
 
