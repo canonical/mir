@@ -17,7 +17,6 @@
  */
 
 #include "mir/input/input_dispatcher.h"
-#include "mir/input/input_dispatcher_configuration.h"
 
 #include "clients.h"
 
@@ -50,80 +49,66 @@ namespace mt = mir::test;
 namespace mc = mir::compositor;
 namespace mtf = mir_test_framework;
 
+namespace
+{
+
 class CustomInputDispatcher :
     public mtd::MockInputDispatcher,
-    public ms::Observer,
     public msh::InputTargeter
 {
 public:
-    // mocks for observer
-    MOCK_METHOD1(surface_added, void(ms::Surface *));
-    MOCK_METHOD1(surface_removed, void(ms::Surface *));
-    MOCK_METHOD1(surface_exists, void(ms::Surface *));
-    MOCK_METHOD0(surfaces_reordered, void());
-    MOCK_METHOD0(end_observation, void());
+    CustomInputDispatcher() = default;
     // mocks for InputTargeter
     MOCK_METHOD1(focus_changed, void(std::shared_ptr<mi::InputChannel const> const& /*focus_channel*/));
     MOCK_METHOD0(focus_cleared, void());
 };
 
-class CustomInputDispatcherConfiguration : public mi::InputDispatcherConfiguration
+struct CustomDispatcherServerConfig : mtf::InputTestingServerConfiguration
 {
-public:
-    CustomInputDispatcherConfiguration(std::shared_ptr<mc::Scene> const& scene)
-        : scene(scene)
+    std::shared_ptr<mi::InputDispatcher> the_input_dispatcher() override
     {
-        scene->add_observer(mt::fake_shared(dispatcher));
+        return the_input_dispatcher_mock();
     }
-
     std::shared_ptr<msh::InputTargeter> the_input_targeter() override
     {
-        return mt::fake_shared<msh::InputTargeter>(dispatcher);
+        return the_input_dispatcher_mock();
     }
-
-    std::shared_ptr<mi::InputDispatcher> the_input_dispatcher()  override
+    std::shared_ptr<::testing::NiceMock<CustomInputDispatcher>> the_input_dispatcher_mock()
     {
-        return mt::fake_shared(dispatcher);
+        return dispatcher(
+            [this]
+            {
+                return std::make_shared<::testing::NiceMock<CustomInputDispatcher>>();
+            });
     }
 
-    bool is_key_repeat_enabled() const override { return false; }
-
-    std::shared_ptr<mc::Scene> scene;
-    ::testing::NiceMock<CustomInputDispatcher> dispatcher;
+    mir::CachedPtr<::testing::NiceMock<CustomInputDispatcher>> dispatcher;
+    mtf::CrossProcessSync dispatching_done;
 };
+
+}
 
 using CustomInputDispatcherFixture = BespokeDisplayServerTestFixture;
 
 TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_receives_input)
 {
-    struct ServerConfig : mtf::InputTestingServerConfiguration
+    struct ServerConfig : CustomDispatcherServerConfig
     {
-        std::shared_ptr<mi::InputDispatcherConfiguration>
-        the_input_dispatcher_configuration() override
-        {
-            return input_dispatcher_configuration(
-            [this]
-            {
-                auto dispatcher_conf = std::make_shared<CustomInputDispatcherConfiguration>(the_scene());
-                {
-                    using namespace ::testing;
-                    InSequence seq;
-                    EXPECT_CALL(dispatcher_conf->dispatcher, dispatch(mt::MotionEventWithPosition(1, 1))).Times(1);
-                    EXPECT_CALL(dispatcher_conf->dispatcher, dispatch(mt::KeyDownEvent()))
-                        .WillOnce(InvokeWithoutArgs([this] { dispatching_done.signal_ready(); }));
-                }
-
-                return dispatcher_conf;
-            });
-        }
         void inject_input() override
         {
+            auto dispatcher = the_input_dispatcher_mock();
+            {
+                using namespace ::testing;
+                InSequence seq;
+                EXPECT_CALL(*dispatcher, dispatch(mt::MotionEventWithPosition(1, 1))).Times(1);
+                EXPECT_CALL(*dispatcher, dispatch(mt::KeyDownEvent()))
+                    .WillOnce(InvokeWithoutArgs([this]{ dispatching_done.signal_ready(); }));
+            }
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
             fake_event_hub->synthesize_event(mis::a_key_down_event().of_scancode(KEY_ENTER));
         }
-
-        mtf::CrossProcessSync dispatching_done;
     } server_config;
+
 
     launch_server_process(server_config);
 
@@ -138,89 +123,38 @@ TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_receives_input)
 
 TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_gets_started_and_stopped)
 {
-    struct ServerConfig : mtf::InputTestingServerConfiguration
+    struct ServecConfig : CustomDispatcherServerConfig
     {
-        std::shared_ptr<mi::InputDispatcherConfiguration>
-        the_input_dispatcher_configuration() override
-        {
-            return input_dispatcher_configuration(
-            [this]
-            {
-                auto dispatcher_conf = std::make_shared<CustomInputDispatcherConfiguration>(the_scene());
-                {
-                    using namespace ::testing;
-                    InSequence seq;
-                    EXPECT_CALL(dispatcher_conf->dispatcher, start());
-                    EXPECT_CALL(dispatcher_conf->dispatcher, stop());
-                }
-
-                return dispatcher_conf;
-            });
-        }
         void inject_input() override
         {
-        }
-    } server_config;
-
-    launch_server_process(server_config);
-}
-
-TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_receives_opened_sessions)
-{
-    struct ServerConfig : mtf::InputTestingServerConfiguration
-    {
-        std::shared_ptr<mi::InputDispatcherConfiguration>
-        the_input_dispatcher_configuration() override
-        {
-            return input_dispatcher_configuration(
-            [this]
+            auto dispatcher = the_input_dispatcher_mock();
             {
-                auto dispatcher_conf = std::make_shared<CustomInputDispatcherConfiguration>(the_scene());
-                {
-                    using namespace ::testing;
-                    InSequence seq;
-
-                    EXPECT_CALL(dispatcher_conf->dispatcher, surface_added(_)).Times(1);
-                    EXPECT_CALL(dispatcher_conf->dispatcher, surface_removed(_)).Times(1);
-                }
-
-                return dispatcher_conf;
-            });
+                using namespace ::testing;
+                InSequence seq;
+                EXPECT_CALL(*dispatcher, start());
+                EXPECT_CALL(*dispatcher, stop());
+            }
         }
-        void inject_input() override {}
     } server_config;
 
     launch_server_process(server_config);
-
-    mtf::SurfaceCreatingClient client;
-
-    launch_client_process(client);
 }
 
 TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_receives_focus_changes)
 {
-    struct ServerConfig : mtf::InputTestingServerConfiguration
+    struct ServecConfig : CustomDispatcherServerConfig
     {
-        std::shared_ptr<mi::InputDispatcherConfiguration>
-        the_input_dispatcher_configuration() override
+        void inject_input() override
         {
-            return input_dispatcher_configuration(
-            [this]
-            {
-                auto dispatcher_conf = std::make_shared<CustomInputDispatcherConfiguration>(the_scene());
-                {
-                    using namespace ::testing;
-                    InSequence seq;
+            auto dispatcher = the_input_dispatcher_mock();
+            using namespace ::testing;
+            InSequence seq;
 
-                    EXPECT_CALL(dispatcher_conf->dispatcher, focus_cleared()).Times(1);
-                    EXPECT_CALL(dispatcher_conf->dispatcher, focus_changed(_)).Times(1);
-                    EXPECT_CALL(dispatcher_conf->dispatcher, focus_cleared()).Times(1);
-                }
-
-                return dispatcher_conf;
-            });
+            EXPECT_CALL(*dispatcher, focus_cleared()).Times(1);
+            EXPECT_CALL(*dispatcher, focus_changed(_)).Times(1);
+            EXPECT_CALL(*dispatcher, focus_cleared()).Times(1)
+                .WillOnce(InvokeWithoutArgs([this] { dispatching_done.signal_ready(); }));
         }
-        void inject_input() override {}
     } server_config;
 
     launch_server_process(server_config);
@@ -228,4 +162,8 @@ TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_receives_focus_chan
     mtf::SurfaceCreatingClient client;
 
     launch_client_process(client);
+    run_in_test_process([&]
+    {
+        server_config.dispatching_done.wait_for_signal_ready_for(std::chrono::seconds{5});
+    });
 }
