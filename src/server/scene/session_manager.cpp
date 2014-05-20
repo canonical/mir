@@ -95,21 +95,7 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
 
     session_listener->starting(new_session);
 
-    {
-        std::unique_lock<std::mutex> lock(trust_sessions_mutex);
-        std::vector<std::shared_ptr<TrustSession>> trust_sessions;
-
-        trust_session_container->for_each_trust_session_for_waiting_process(client_pid,
-            [&](std::shared_ptr<TrustSession> const& trust_session)
-            {
-                trust_sessions.push_back(trust_session);
-            });
-
-        for(auto trust_session : trust_sessions)
-        {
-            trust_session->add_trusted_participant(new_session);
-        }
-    }
+    add_to_waiting_trust_sessions(new_session);
 
     set_focus_to(new_session);
 
@@ -149,29 +135,7 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
 
     session_event_sink->handle_session_stopping(scene_session);
 
-    // TODO {arg} The logic in the following block belongs in TrustSessionContainer
-    {
-        std::lock_guard<std::mutex> lock(trust_sessions_mutex);
-
-        std::vector<std::shared_ptr<TrustSession>> trust_sessions;
-        trust_session_container->for_each_trust_session_for_participant(scene_session,
-            [&](std::shared_ptr<TrustSession> const& trust_session)
-            {
-                trust_sessions.push_back(trust_session);
-            });
-
-        for(auto trust_session : trust_sessions)
-        {
-            if (trust_session->get_trusted_helper().lock() == scene_session)
-            {
-                stop_trust_session_locked(lock, trust_session);
-            }
-            else
-            {
-                trust_session->remove_trusted_participant(scene_session);
-            }
-        }
-    }
+    remove_from_trust_sessions(scene_session);
 
     session_listener->stopping(scene_session);
 
@@ -229,35 +193,30 @@ void ms::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> con
 std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(std::shared_ptr<mf::Session> const& session,
     TrustSessionCreationParameters const& params)
 {
-    std::unique_lock<std::mutex> lock(trust_sessions_mutex);
-
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
 
     auto trust_session = std::make_shared<TrustSessionImpl>(shell_session, params, trust_session_listener, trust_session_container);
-    trust_session_container->insert_trust_session(trust_session);
-    trust_session_container->insert_participant(trust_session.get(), shell_session, TrustSessionContainer::HelperSession);
 
-    trust_session->start();
-    trust_session_listener->starting(trust_session);
+    start_trust_session_for(trust_session, shell_session, params.base_process_id);
 
-    add_trusted_process_for_locked(lock, trust_session, params.base_process_id);
     return trust_session;
 }
 
-MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_process_for(std::shared_ptr<mf::TrustSession> const& trust_session,
-    pid_t process_id)
-{
-    std::unique_lock<std::mutex> lock(trust_sessions_mutex);
-
-    return add_trusted_process_for_locked(lock, trust_session, process_id);
-}
-
-MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_process_for_locked(std::unique_lock<std::mutex> const&,
+MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_process_for(
     std::shared_ptr<mf::TrustSession> const& trust_session,
     pid_t process_id)
 {
     auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
 
+    std::lock_guard<std::mutex> lock(trust_sessions_mutex);
+
+    return add_trusted_process_for_locked(lock, scene_trust_session, process_id);
+}
+
+MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_process_for_locked(std::lock_guard<std::mutex> const&,
+    std::shared_ptr<TrustSession> const& scene_trust_session,
+    pid_t process_id) const
+{
     trust_session_container->insert_waiting_process(scene_trust_session.get(), process_id);
 
     app_container->for_each(
@@ -272,7 +231,8 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_process_for_locked
     return mir_trust_session_add_tust_succeeded;
 }
 
-MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for(std::shared_ptr<mf::TrustSession> const& trust_session,
+MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for(
+    std::shared_ptr<mf::TrustSession> const& trust_session,
     std::shared_ptr<frontend::Session> const& session)
 {
     auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
@@ -284,21 +244,73 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for(std::s
 
 void ms::SessionManager::stop_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
 {
+    auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
     std::lock_guard<std::mutex> lock(trust_sessions_mutex);
 
-    stop_trust_session_locked(lock, trust_session);
+    stop_trust_session_locked(lock, scene_trust_session);
+}
+
+// TODO {arg} The logic in the following function belongs in TrustSessionContainer
+void ms::SessionManager::remove_from_trust_sessions(std::shared_ptr<Session> const& session) const
+{
+    std::lock_guard<std::mutex> lock(trust_sessions_mutex);
+
+    std::vector<std::shared_ptr<TrustSession>> trust_sessions;
+    trust_session_container->for_each_trust_session_for_participant(session,
+        [&](std::shared_ptr<TrustSession> const& trust_session)
+        {
+            trust_sessions.push_back(trust_session);
+        });
+
+    for(auto trust_session : trust_sessions)
+    {
+        if (trust_session->get_trusted_helper().lock() == session)
+        {
+            stop_trust_session_locked(lock, trust_session);
+        }
+        else
+        {
+            trust_session->remove_trusted_participant(session);
+        }
+    }
 }
 
 // TODO {arg} The logic in the following function belongs in TrustSessionContainer
 void ms::SessionManager::stop_trust_session_locked(std::lock_guard<std::mutex> const&,
-    std::shared_ptr<mf::TrustSession> const& trust_session)
+    std::shared_ptr<TrustSession> const& trust_session) const
 {
-    auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
-
     trust_session->stop();
 
-    trust_session_container->remove_trust_session(scene_trust_session);
+    trust_session_container->remove_trust_session(trust_session);
 
-    trust_session_listener->stopping(scene_trust_session);
+    trust_session_listener->stopping(trust_session);
 }
 
+// TODO {arg} This logic belongs in TrustSessionContainer
+void ms::SessionManager::add_to_waiting_trust_sessions(std::shared_ptr<Session> const& new_session) const
+{
+    std::unique_lock<std::mutex> lock(trust_sessions_mutex);
+
+    trust_session_container->for_each_trust_session_for_waiting_process(new_session->process_id(),
+        [&](std::shared_ptr<TrustSession> const& trust_session)
+        {
+            trust_session->add_trusted_participant(new_session);
+        });
+}
+
+// TODO {arg} This logic belongs in TrustSessionContainer
+void ms::SessionManager::start_trust_session_for(
+    std::shared_ptr<TrustSession> const& trust_session,
+    std::shared_ptr<Session> const& session,
+    pid_t base_process) const
+{
+    std::lock_guard<std::mutex> lock(trust_sessions_mutex);
+
+    trust_session_container->insert_trust_session(trust_session);
+    trust_session_container->insert_participant(trust_session.get(), session, TrustSessionContainer::HelperSession);
+
+    trust_session->start();
+    trust_session_listener->starting(trust_session);
+
+    add_trusted_process_for_locked(lock, trust_session, base_process);
+}

@@ -42,6 +42,7 @@ class SessionEventSink;
 class SessionListener;
 class SnapshotStrategy;
 class SurfaceCoordinator;
+class TrustSession;
 class TrustSessionContainer;
 class TrustSessionListener;
 
@@ -102,13 +103,26 @@ private:
 
     void set_focus_to_locked(std::unique_lock<std::mutex> const& lock, std::shared_ptr<Session> const& next_focus);
 
-    MirTrustSessionAddTrustResult add_trusted_process_for_locked(std::unique_lock<std::mutex> const&,
-                                                                 std::shared_ptr<frontend::TrustSession> const& trust_session,
-                                                                 pid_t session_pid);
-    void stop_trust_session_locked(std::lock_guard<std::mutex> const& lock,
-                                   std::shared_ptr<frontend::TrustSession> const& trust_session);
     // TODO {arg} This mutex and the logic guarded by it belongs in TrustSessionContainer
     std::mutex mutable trust_sessions_mutex;
+
+    // TODO {arg} This logic belongs in TrustSessionContainer
+    void remove_from_trust_sessions(std::shared_ptr<Session> const& session) const;
+    // TODO {arg} This logic belongs in TrustSessionContainer
+    void stop_trust_session_locked(std::lock_guard<std::mutex> const& lock,
+                                   std::shared_ptr<TrustSession> const& trust_session) const;
+    // TODO {arg} This logic belongs in TrustSessionContainer
+    MirTrustSessionAddTrustResult add_trusted_process_for_locked(std::lock_guard<std::mutex> const&,
+                                                                 std::shared_ptr<TrustSession> const& trust_session,
+                                                                 pid_t session_pid) const;
+    // TODO {arg} This logic belongs in TrustSessionContainer
+    void add_to_waiting_trust_sessions(std::shared_ptr<Session> const& new_session) const;
+
+    // TODO {arg} This logic belongs in TrustSessionContainer
+    void start_trust_session_for(
+        std::shared_ptr<TrustSession> const& trust_session,
+        std::shared_ptr<Session> const& session,
+        pid_t base_process) const;
 };
 
 }
