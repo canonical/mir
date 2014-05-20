@@ -17,8 +17,8 @@
  *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_RECENTLY_BOUND_CACHE_H_
-#define MIR_COMPOSITOR_RECENTLY_BOUND_CACHE_H_
+#ifndef MIR_COMPOSITOR_RECENTLY_USED_CACHE_H_
+#define MIR_COMPOSITOR_RECENTLY_USED_CACHE_H_
 
 #include "mir/graphics/gl_texture_cache.h"
 #include "mir/graphics/gl_texture.h"
@@ -29,7 +29,7 @@ namespace mir
 {
 namespace compositor 
 {
-class RecentlyBoundCache : public graphics::GLTextureCache
+class RecentlyUsedCache : public graphics::GLTextureCache
 {
 public:
     std::shared_ptr<graphics::GLTexture> upload_pixel_content_from(graphics::Renderable const& renderable) override;
@@ -53,4 +53,4 @@ private:
 }
 }
 
-#endif /* MIR_COMPOSITOR_RECENTLY_BOUND_CACHE_H_ */
+#endif /* MIR_COMPOSITOR_RECENTLY_USED_CACHE_H_ */
