@@ -53,9 +53,7 @@ ms::SessionManager::SessionManager(std::shared_ptr<SurfaceCoordinator> const& su
     snapshot_strategy(snapshot_strategy),
     session_event_sink(session_event_sink),
     session_listener(session_listener),
-    trust_session_listener(trust_session_listener),
-    trust_session_container(std::make_shared<TrustSessionContainer>()),
-    trust_session_manager(trust_session_container, trust_session_listener)
+    trust_session_manager(trust_session_listener)
 {
     assert(surface_factory);
     assert(container);
@@ -196,11 +194,9 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
 {
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
 
-    auto trust_session = std::make_shared<TrustSessionImpl>(shell_session, params, trust_session_listener, trust_session_container);
+    return trust_session_manager.start_trust_session_for(
+        shell_session, params, *app_container);
 
-    trust_session_manager.start_trust_session_for(trust_session, shell_session, params.base_process_id, app_container);
-
-    return trust_session;
 }
 
 MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_process_for(
@@ -209,7 +205,7 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_process_for(
 {
     auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
 
-    return trust_session_manager.add_trusted_process_for(scene_trust_session, process_id, app_container);
+    return trust_session_manager.add_trusted_process_for(scene_trust_session, process_id, *app_container);
 }
 
 MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for(
@@ -230,9 +226,8 @@ void ms::SessionManager::stop_trust_session(std::shared_ptr<mf::TrustSession> co
 }
 
 ms::TrustSessionManager::TrustSessionManager(
-    std::shared_ptr<TrustSessionContainer> const& trust_session_container,
     std::shared_ptr<TrustSessionListener> const& trust_session_listener) :
-    trust_session_container(trust_session_container),
+    trust_session_container(std::make_shared<TrustSessionContainer>()),
     trust_session_listener(trust_session_listener)
 {
 }
@@ -282,11 +277,11 @@ void ms::TrustSessionManager::stop_trust_session(std::shared_ptr<TrustSession> c
 MirTrustSessionAddTrustResult ms::TrustSessionManager::add_trusted_process_for_locked(std::lock_guard<std::mutex> const&,
     std::shared_ptr<TrustSession> const& trust_session,
     pid_t process_id,
-    std::shared_ptr<SessionContainer> const& existing_session) const
+    SessionContainer const& existing_session) const
 {
     trust_session_container->insert_waiting_process(trust_session.get(), process_id);
 
-    existing_session->for_each(
+    existing_session.for_each(
         [&](std::shared_ptr<Session> const& container_session)
         {
             if (container_session->process_id() == process_id)
@@ -301,19 +296,20 @@ MirTrustSessionAddTrustResult ms::TrustSessionManager::add_trusted_process_for_l
 MirTrustSessionAddTrustResult ms::TrustSessionManager::add_trusted_process_for(
     std::shared_ptr<TrustSession> const& trust_session,
     pid_t process_id,
-    std::shared_ptr<SessionContainer> const& existing_session) const
+    SessionContainer const& existing_session) const
 {
     std::lock_guard<std::mutex> lock(trust_sessions_mutex);
 
     return add_trusted_process_for_locked(lock, trust_session, process_id, existing_session);
 }
 
-void ms::TrustSessionManager::start_trust_session_for(
-    std::shared_ptr<TrustSession> const& trust_session,
+std::shared_ptr<ms::TrustSession> ms::TrustSessionManager::start_trust_session_for(
     std::shared_ptr<Session> const& session,
-    pid_t base_process,
-    std::shared_ptr<SessionContainer> const& existing_session) const
+    TrustSessionCreationParameters const& params,
+    SessionContainer const& existing_session) const
 {
+    auto trust_session = std::make_shared<TrustSessionImpl>(session, params, trust_session_listener, trust_session_container);
+
     std::lock_guard<std::mutex> lock(trust_sessions_mutex);
 
     trust_session_container->insert_trust_session(trust_session);
@@ -322,7 +318,9 @@ void ms::TrustSessionManager::start_trust_session_for(
     trust_session->start();
     trust_session_listener->starting(trust_session);
 
-    add_trusted_process_for_locked(lock, trust_session, base_process, existing_session);
+    add_trusted_process_for_locked(lock, trust_session, params.base_process_id, existing_session);
+
+    return trust_session;
 }
 
 void ms::TrustSessionManager::add_to_waiting_trust_sessions(std::shared_ptr<Session> const& new_session) const

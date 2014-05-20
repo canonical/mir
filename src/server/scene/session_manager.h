@@ -49,22 +49,20 @@ class TrustSessionListener;
 class TrustSessionManager
 {
 public:
-    TrustSessionManager(
-        std::shared_ptr<TrustSessionContainer> const& trust_session_container,
+    explicit TrustSessionManager(
         std::shared_ptr<TrustSessionListener> const& trust_session_listener);
 
-    void start_trust_session_for(
-        std::shared_ptr<TrustSession> const& trust_session,
+    std::shared_ptr<TrustSession> start_trust_session_for(
         std::shared_ptr<Session> const& session,
-        pid_t base_process,
-        std::shared_ptr<SessionContainer> const& existing_session) const;
+        TrustSessionCreationParameters const& params,
+        SessionContainer const& existing_session) const;
 
     void add_to_waiting_trust_sessions(std::shared_ptr<Session> const& new_session) const;
 
     MirTrustSessionAddTrustResult add_trusted_process_for(
         std::shared_ptr<TrustSession> const& trust_session,
         pid_t process_id,
-        std::shared_ptr<SessionContainer> const& existing_session) const;
+        SessionContainer const& existing_session) const;
 
     void stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) const;
     void remove_from_trust_sessions(std::shared_ptr<Session> const& session) const;
@@ -79,7 +77,7 @@ private:
         std::lock_guard<std::mutex> const&,
         std::shared_ptr<TrustSession> const& trust_session,
         pid_t process_id,
-        std::shared_ptr<SessionContainer> const& existing_session) const;
+        SessionContainer const& existing_session) const;
 
     void stop_trust_session_locked(
         std::lock_guard<std::mutex> const&,
@@ -135,8 +133,6 @@ private:
     std::shared_ptr<SessionEventSink> const session_event_sink;
     std::shared_ptr<SessionListener> const session_listener;
 
-    std::shared_ptr<TrustSessionListener> const trust_session_listener;
-    std::shared_ptr<TrustSessionContainer> const trust_session_container;
     TrustSessionManager trust_session_manager;
 
     std::mutex mutex;
