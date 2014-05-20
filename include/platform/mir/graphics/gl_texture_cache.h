@@ -32,7 +32,7 @@ class GLTextureCache
 public:
     virtual ~GLTextureCache() = default;
 
-    /** Loads texture from the renderable
+    /** Loads texture from the renderable. Should be called with a current gl context
      * \param [in] renderable
      *     The Renderable that needs to be used as a texture
      * \returns 
@@ -43,7 +43,7 @@ public:
     /** mark the entries in the cache as having invalid bindings **/ 
     virtual void invalidate_pixel_content() = 0;
 
-    /** cache selects textures to release **/
+    /** cache selects textures to release. Should be called with a current gl context **/
     virtual void drop_old_textures() = 0;
 
 protected:
