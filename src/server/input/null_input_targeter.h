@@ -16,30 +16,32 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_NULL_INPUT_DISPATCHER_CONFIGURATION_H_
-#define MIR_INPUT_NULL_INPUT_DISPATCHER_CONFIGURATION_H_
+#ifndef MIR_INPUT_NULL_INPUT_TARGETER_H_
+#define MIR_INPUT_NULL_INPUT_TARGETER_H_
 
-#include "mir/input/input_dispatcher_configuration.h"
+#include "mir/shell/input_targeter.h"
 
 namespace mir
 {
 namespace input
 {
+class InputChannel;
 
-class NullInputDispatcherConfiguration : public InputDispatcherConfiguration
+struct NullInputTargeter : public shell::InputTargeter
 {
-public:
-    NullInputDispatcherConfiguration() = default;
-    std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
-    std::shared_ptr<InputDispatcher> the_input_dispatcher() override;
-    bool is_key_repeat_enabled() const override;
-protected:
-    NullInputDispatcherConfiguration(const NullInputDispatcherConfiguration&) = delete;
-    NullInputDispatcherConfiguration& operator=(const NullInputDispatcherConfiguration&) = delete;
+    NullInputTargeter() = default;
+    virtual ~NullInputTargeter() noexcept(true) = default;
+
+    void focus_changed(std::shared_ptr<InputChannel const> const&) override
+    {
+    }
+
+    void focus_cleared() override
+    {
+    }
 };
 
 }
 }
 
 #endif
-

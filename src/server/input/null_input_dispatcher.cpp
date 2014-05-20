@@ -13,28 +13,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_EVENT_FILTER_H_
-#define MIR_TEST_DOUBLES_NULL_EVENT_FILTER_H_
+#include "null_input_dispatcher.h"
 
-#include "mir/input/event_filter.h"
+namespace mi = mir::input;
 
-namespace mir
+void mi::NullInputDispatcher::configuration_changed(nsecs_t /*when*/)
 {
-namespace test
-{
-namespace doubles
-{
-
-struct NullEventFilter : public mir::input::EventFilter
-{
-    bool handle(MirEvent const&) override { return true; }
-};
-
-}
-}
 }
 
-#endif /* MIR_TEST_DOUBLES_NULL_EVENT_FILTER_H_ */
+void mi::NullInputDispatcher::device_reset(int32_t /*device_id*/, nsecs_t /*when*/)
+{
+}
+
+void mi::NullInputDispatcher::dispatch(MirEvent const& /*event*/)
+{
+}
+
+void mi::NullInputDispatcher::start()
+{
+}
+
+void mi::NullInputDispatcher::stop()
+{
+}
+
