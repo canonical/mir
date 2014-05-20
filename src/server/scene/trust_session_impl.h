@@ -63,7 +63,7 @@ protected:
 private:
     std::weak_ptr<Session> const trusted_helper;
     std::shared_ptr<TrustSessionListener> const trust_session_listener;
-    std::shared_ptr<TrustSessionTrustedParticipants> participants;
+    std::shared_ptr<TrustSessionTrustedParticipants> const participants;
     MirTrustSessionState state;
     std::string cookie;
     std::recursive_mutex mutable mutex;
