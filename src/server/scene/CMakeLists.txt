@@ -21,7 +21,7 @@ ADD_LIBRARY(
   legacy_scene_change_notification.cpp
   legacy_surface_change_notification.cpp
   trust_session_impl.cpp
-  trust_session_creation_parameters.cpp
   trust_session_container.cpp
+  trust_session_creation_parameters.cpp
   trust_session_trusted_participants.cpp
 )
