@@ -97,18 +97,17 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
 
     {
         std::unique_lock<std::mutex> lock(trust_sessions_mutex);
-        std::vector<std::shared_ptr<frontend::TrustSession>> trust_sessions;
+        std::vector<std::shared_ptr<TrustSession>> trust_sessions;
 
         trust_session_container->for_each_trust_session_for_waiting_process(client_pid,
-            [&](std::shared_ptr<frontend::TrustSession> const& trust_session)
+            [&](std::shared_ptr<TrustSession> const& trust_session)
             {
                 trust_sessions.push_back(trust_session);
             });
 
         for(auto trust_session : trust_sessions)
         {
-            auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
-            scene_trust_session->add_trusted_participant(new_session);
+            trust_session->add_trusted_participant(new_session);
         }
     }
 
