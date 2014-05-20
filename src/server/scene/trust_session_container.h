@@ -33,7 +33,6 @@ namespace mir
 {
 namespace frontend
 {
-class TrustSession;
 class Session;
 }
 
@@ -42,6 +41,7 @@ using namespace boost::multi_index;
 
 namespace scene
 {
+class TrustSession;
 
 class TrustSessionContainer
 {
@@ -54,26 +54,26 @@ public:
         TrustedSession,
     } TrustType;
 
-    void insert_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session);
-    void remove_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session);
+    void insert_trust_session(std::shared_ptr<TrustSession> const& trust_session);
+    void remove_trust_session(std::shared_ptr<TrustSession> const& trust_session);
 
-    bool insert_participant(frontend::TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, TrustType trust_type);
-    bool remove_participant(frontend::TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, TrustType trust_type);
+    bool insert_participant(TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, TrustType trust_type);
+    bool remove_participant(TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, TrustType trust_type);
 
-    void for_each_participant_for_trust_session(frontend::TrustSession* trust_session, std::function<void(std::weak_ptr<frontend::Session> const&, TrustType)> f) const;
-    void for_each_trust_session_for_participant(std::weak_ptr<frontend::Session> const& session, TrustType trust_type, std::function<void(std::shared_ptr<frontend::TrustSession> const&)> f) const;
-    void for_each_trust_session_for_participant(std::weak_ptr<frontend::Session> const& session, std::function<void(std::shared_ptr<frontend::TrustSession> const&)> f) const;
+    void for_each_participant_for_trust_session(TrustSession* trust_session, std::function<void(std::weak_ptr<frontend::Session> const&, TrustType)> f) const;
+    void for_each_trust_session_for_participant(std::weak_ptr<frontend::Session> const& session, TrustType trust_type, std::function<void(std::shared_ptr<TrustSession> const&)> f) const;
+    void for_each_trust_session_for_participant(std::weak_ptr<frontend::Session> const& session, std::function<void(std::shared_ptr<TrustSession> const&)> f) const;
 
-    bool insert_waiting_process(frontend::TrustSession* trust_session, pid_t process_id);
-    void for_each_trust_session_for_waiting_process(pid_t process_id, std::function<void(std::shared_ptr<frontend::TrustSession> const&)> f) const;
+    bool insert_waiting_process(TrustSession* trust_session, pid_t process_id);
+    void for_each_trust_session_for_waiting_process(pid_t process_id, std::function<void(std::shared_ptr<TrustSession> const&)> f) const;
 
 private:
     std::mutex mutable mutex;
 
-    std::unordered_map<frontend::TrustSession*, std::shared_ptr<frontend::TrustSession>> trust_sessions;
+    std::unordered_map<TrustSession*, std::shared_ptr<TrustSession>> trust_sessions;
 
     typedef struct {
-        frontend::TrustSession* trust_session;
+        TrustSession* trust_session;
         std::weak_ptr<frontend::Session> session;
         TrustType trust_type;
         uint insert_order;
@@ -87,7 +87,7 @@ private:
             ordered_non_unique<
                 composite_key<
                     Participant,
-                    member<Participant, frontend::TrustSession*, &Participant::trust_session>,
+                    member<Participant, TrustSession*, &Participant::trust_session>,
                     member<Participant, uint, &Participant::insert_order>
                 >
             >,
@@ -96,7 +96,7 @@ private:
                     Participant,
                     const_mem_fun<Participant, frontend::Session*, &Participant::session_fun>,
                     member<Participant, TrustType, &Participant::trust_type>,
-                    member<Participant, frontend::TrustSession*, &Participant::trust_session>
+                    member<Participant, TrustSession*, &Participant::trust_session>
                 >
             >
         >
@@ -111,7 +111,7 @@ private:
     static uint insertion_order;
 
     typedef struct {
-        frontend::TrustSession* trust_session;
+        TrustSession* trust_session;
         pid_t process_id;
     } WaitingProcess;
 
@@ -121,7 +121,7 @@ private:
             ordered_non_unique<
                 composite_key<
                     WaitingProcess,
-                    member<WaitingProcess, frontend::TrustSession*, &WaitingProcess::trust_session>,
+                    member<WaitingProcess, TrustSession*, &WaitingProcess::trust_session>,
                     member<WaitingProcess, pid_t, &WaitingProcess::process_id>
                 >
             >,

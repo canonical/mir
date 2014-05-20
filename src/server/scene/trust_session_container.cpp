@@ -32,12 +32,12 @@ ms::TrustSessionContainer::TrustSessionContainer()
 {
 }
 
-void ms::TrustSessionContainer::insert_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
+void ms::TrustSessionContainer::insert_trust_session(std::shared_ptr<TrustSession> const& trust_session)
 {
     trust_sessions[trust_session.get()] = trust_session;
 }
 
-void ms::TrustSessionContainer::remove_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
+void ms::TrustSessionContainer::remove_trust_session(std::shared_ptr<TrustSession> const& trust_session)
 {
     std::unique_lock<std::mutex> lk(mutex);
 
@@ -55,7 +55,7 @@ void ms::TrustSessionContainer::remove_trust_session(std::shared_ptr<mf::TrustSe
     trust_sessions.erase(trust_session.get());
 }
 
-bool ms::TrustSessionContainer::insert_participant(frontend::TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, TrustType trust_type)
+bool ms::TrustSessionContainer::insert_participant(TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, TrustType trust_type)
 {
     std::unique_lock<std::mutex> lk(mutex);
 
@@ -83,7 +83,7 @@ bool ms::TrustSessionContainer::insert_participant(frontend::TrustSession* trust
     return false;
 }
 
-bool ms::TrustSessionContainer::remove_participant(frontend::TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, TrustType trust_type)
+bool ms::TrustSessionContainer::remove_participant(TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, TrustType trust_type)
 {
     std::unique_lock<std::mutex> lk(mutex);
     if (auto locked_session = session.lock())
@@ -99,7 +99,7 @@ bool ms::TrustSessionContainer::remove_participant(frontend::TrustSession* trust
 }
 
 void ms::TrustSessionContainer::for_each_participant_for_trust_session(
-    frontend::TrustSession* trust_session,
+    TrustSession* trust_session,
     std::function<void(std::weak_ptr<frontend::Session> const&, ms::TrustSessionContainer::TrustType trust_type)> f) const
 {
     std::unique_lock<std::mutex> lk(mutex);
@@ -117,7 +117,7 @@ void ms::TrustSessionContainer::for_each_participant_for_trust_session(
 void ms::TrustSessionContainer::for_each_trust_session_for_participant(
     std::weak_ptr<frontend::Session> const& session,
     TrustType trust_type,
-    std::function<void(std::shared_ptr<mf::TrustSession> const&)> f) const
+    std::function<void(std::shared_ptr<TrustSession> const&)> f) const
 {
     std::unique_lock<std::mutex> lk(mutex);
     if (auto locked_session = session.lock())
@@ -138,7 +138,7 @@ void ms::TrustSessionContainer::for_each_trust_session_for_participant(
 
 void ms::TrustSessionContainer::for_each_trust_session_for_participant(
     std::weak_ptr<frontend::Session> const& session,
-    std::function<void(std::shared_ptr<mf::TrustSession> const&)> f) const
+    std::function<void(std::shared_ptr<TrustSession> const&)> f) const
 {
     std::unique_lock<std::mutex> lk(mutex);
     if (auto locked_session = session.lock())
@@ -158,7 +158,7 @@ void ms::TrustSessionContainer::for_each_trust_session_for_participant(
 }
 
 bool ms::TrustSessionContainer::insert_waiting_process(
-    frontend::TrustSession* trust_session,
+    TrustSession* trust_session,
     pid_t process_id)
 {
     std::unique_lock<std::mutex> lk(mutex);
@@ -173,7 +173,7 @@ bool ms::TrustSessionContainer::insert_waiting_process(
 
 void ms::TrustSessionContainer::for_each_trust_session_for_waiting_process(
     pid_t process_id,
-    std::function<void(std::shared_ptr<mf::TrustSession> const&)> f) const
+    std::function<void(std::shared_ptr<TrustSession> const&)> f) const
 {
     std::unique_lock<std::mutex> lk(mutex);
 

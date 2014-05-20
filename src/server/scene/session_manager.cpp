@@ -261,7 +261,7 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_process_for_locked
 {
     auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
 
-    trust_session_container->insert_waiting_process(trust_session.get(), process_id);
+    trust_session_container->insert_waiting_process(scene_trust_session.get(), process_id);
 
     app_container->for_each(
         [&](std::shared_ptr<ms::Session> const& container_session)
@@ -300,7 +300,7 @@ void ms::SessionManager::stop_trust_session_locked(std::lock_guard<std::mutex> c
 
     trust_session->stop();
 
-    trust_session_container->remove_trust_session(trust_session);
+    trust_session_container->remove_trust_session(scene_trust_session);
 
     trust_session_listener->stopping(scene_trust_session);
 }
