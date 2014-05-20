@@ -69,7 +69,7 @@ public:
 
     MirOrientation orientation() const override;
 
-    bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
+    bool post_renderables_if_optimizable(RenderableList const& renderlist) override; 
 
 private:
     SurfacelessEGLContext const egl_context;

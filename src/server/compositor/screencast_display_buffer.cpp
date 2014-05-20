@@ -85,8 +85,7 @@ void mc::ScreencastDisplayBuffer::release_current()
                old_viewport[2], old_viewport[3]);
 }
 
-bool mc::ScreencastDisplayBuffer::post_renderables_if_optimizable(
-    mg::RenderableList const&)
+bool mc::ScreencastDisplayBuffer::post_renderables_if_optimizable(mg::RenderableList const&)
 {
     //no optimizations possible
     return false;

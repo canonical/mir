@@ -51,7 +51,8 @@ public:
 
     virtual ~Surface() {}
 
-    virtual geometry::Size size() const = 0;
+    /// Size of the client area of the surface (excluding any decorations)
+    virtual geometry::Size client_size() const = 0;
     virtual MirPixelFormat pixel_format() const = 0;
 
     virtual void swap_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) = 0;

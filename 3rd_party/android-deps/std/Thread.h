@@ -32,6 +32,11 @@
 #include <pthread.h>
 #endif
 
+namespace mir
+{
+void terminate_with_current_exception();
+}
+
 namespace mir_input
 {
 class Thread : virtual public RefBase
@@ -56,8 +61,15 @@ public:
 
         thread = std::thread([this]() -> void
             {
-                if (auto result = readyToRun()) status.store(result);
-                else while (!exitPending() && threadLoop());
+                try
+                {
+                    if (auto result = readyToRun()) status.store(result);
+                    else while (!exitPending() && threadLoop());
+                }
+                catch (...)
+                {
+                    mir::terminate_with_current_exception();
+                }
             });
 
 #ifdef HAVE_PTHREADS

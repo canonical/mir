@@ -50,11 +50,20 @@ public:
     /** This will trigger OpenGL rendering and post the result to the screen. */
     virtual void post_update() = 0;
 
-    /** This will render renderlist to the screen and post the result to the screen.
-     *  \return true if the hardware can optimize the rendering of the list. The list
-     *          will be posted to the screen at the completion of this call.
-     *          false if the hardware platform cannot optimize the list. The caller should
-     *          render the list another way, and call post_update()
+    /** This will render renderlist to the screen and post the result to the 
+     *  screen if there is a hardware optimization that can be done.
+     *  \param [in] renderlist 
+     *      The renderables that should appear on the screen if the hardware
+     *      is capable of optmizing that list somehow. If what you want
+     *      displayed on the screen cannot be represented by a RenderableList,
+     *      then you should draw using OpenGL and use post_update()
+     *  \returns
+     *      true if the hardware can optimize the rendering of the list.
+     *      When this call completes, the renderlist will have been posted
+     *      to the screen.
+     *      false if the hardware platform cannot optimize the list. The screen
+     *      will not be updated. The caller should render the list another way,
+     *      and post using post_update()
     **/
     virtual bool post_renderables_if_optimizable(RenderableList const& renderlist) = 0;
 

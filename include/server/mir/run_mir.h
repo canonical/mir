@@ -39,6 +39,8 @@ void run_mir(
     std::function<void(DisplayServer&)> init);
 
 void report_exception(std::ostream& out);
+
+void terminate_with_current_exception();
 }
 
 

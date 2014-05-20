@@ -142,6 +142,8 @@ public:
     FakeDevice* getDevice(int32_t deviceId);
     size_t eventsQueueSize() const;
 
+    void throw_exception_in_next_get_events();
+
     // list of RawEvents available for consumption via getEvents
     std::mutex guard;
     std::list<droidinput::RawEvent> events_available;
@@ -155,6 +157,7 @@ public:
 
 private:
     const KeyInfo* getKey(const FakeDevice* device, int32_t scanCode, int32_t usageCode) const;
+    bool throw_in_get_events = false;
 
 };
 }

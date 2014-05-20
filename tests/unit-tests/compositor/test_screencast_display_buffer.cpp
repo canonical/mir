@@ -34,16 +34,6 @@ namespace mg = mir::graphics;
 namespace
 {
 
-struct MockRenderFunctor
-{
-    void operator()(mg::Renderable const& r)
-    {
-        operator_call(&r);
-    }
-
-    MOCK_METHOD1(operator_call, void(mg::Renderable const*));
-};
-
 struct ScreencastDisplayBufferTest : testing::Test
 {
     testing::NiceMock<mtd::MockGL> mock_gl;
@@ -158,10 +148,8 @@ TEST_F(ScreencastDisplayBufferTest, forces_rendering_to_complete_on_post_update)
     db.post_update();
 }
 
-TEST_F(ScreencastDisplayBufferTest, reports_no_optimizations_possible)
+TEST_F(ScreencastDisplayBufferTest, rejects_attempt_to_optimize)
 {
-    using namespace testing;
-
     geom::Rectangle const rect{{100,100}, {800,600}};
     mtd::StubBuffer stub_buffer;
 
@@ -171,5 +159,6 @@ TEST_F(ScreencastDisplayBufferTest, reports_no_optimizations_possible)
         std::make_shared<mtd::StubRenderable>()};
 
     mc::ScreencastDisplayBuffer db{rect, stub_buffer};
+
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderables));
 }

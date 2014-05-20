@@ -30,6 +30,28 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
+namespace
+{
+bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
+{
+    if (list.empty())
+        return true;
+
+    for(auto const& renderable : list)
+    {
+        //TODO: enable alpha, 90 deg rotation
+        static glm::mat4 const identity;
+        if (renderable->shaped() ||
+            renderable->alpha_enabled() ||
+            (renderable->transformation() != identity))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+}
+
 mga::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<FramebufferBundle> const& fb_bundle,
     std::shared_ptr<DisplayDevice> const& display_device,
@@ -88,15 +110,10 @@ void mga::DisplayBuffer::release_current()
 
 bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderlist)
 {
-    //TODO: remove this once 1) the android gl program can handle the fallback, and
-    //      2) the renderlist is scanned for transforms the HWC api does not support
-    return false;
-
-    if (renderlist.empty())
+    if (renderable_list_is_hwc_incompatible(renderlist))
         return false;
 
-    display_device->render_gl_and_overlays(gl_context, renderlist, 
-        [](mg::Renderable const&){}); //TODO: remove this lambda
+    display_device->prepare_overlays(gl_context, renderlist, overlay_program);
     post();
     return true;
 }

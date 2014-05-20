@@ -26,7 +26,7 @@
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 
-mia::InputApplicationHandle::InputApplicationHandle(std::shared_ptr<mi::Surface> const& surface)
+mia::InputApplicationHandle::InputApplicationHandle(mi::Surface const* surface)
   : surface(surface)
 {
     updateInfo();
