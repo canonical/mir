@@ -40,7 +40,7 @@ TEST(TrustSessionContainer, test_insert_participant_non_existing)
     auto session1 = std::make_shared<NiceMockSceneSession>();
 
     ms::TrustSessionContainer container;
-    EXPECT_EQ(container.insert_participant(&trust_session1, session1, true), false);
+    EXPECT_EQ(container.insert_participant(&trust_session1, session1), false);
 }
 
 TEST(TrustSessionContainer, test_insert_participant)
@@ -62,17 +62,17 @@ TEST(TrustSessionContainer, test_insert_participant)
     container.insert_trust_session(mt::fake_shared(trust_session2));
     container.insert_trust_session(mt::fake_shared(trust_session3));
 
-    EXPECT_EQ(container.insert_participant(&trust_session1, session1, true), true);
-    EXPECT_EQ(container.insert_participant(&trust_session1, session2, true), true);
-    EXPECT_EQ(container.insert_participant(&trust_session1, session3, true), true);
-    EXPECT_EQ(container.insert_participant(&trust_session1, session1, true), false);
+    EXPECT_EQ(container.insert_participant(&trust_session1, session1), true);
+    EXPECT_EQ(container.insert_participant(&trust_session1, session2), true);
+    EXPECT_EQ(container.insert_participant(&trust_session1, session3), true);
+    EXPECT_EQ(container.insert_participant(&trust_session1, session1), false);
 
-    EXPECT_EQ(container.insert_participant(&trust_session2, session2, true), true);
-    EXPECT_EQ(container.insert_participant(&trust_session2, session3, true), true);
-    EXPECT_EQ(container.insert_participant(&trust_session2, session2, true), false);
+    EXPECT_EQ(container.insert_participant(&trust_session2, session2), true);
+    EXPECT_EQ(container.insert_participant(&trust_session2, session3), true);
+    EXPECT_EQ(container.insert_participant(&trust_session2, session2), false);
 
-    EXPECT_EQ(container.insert_participant(&trust_session3, session3, true), true);
-    EXPECT_EQ(container.insert_participant(&trust_session3, session3, true), false);
+    EXPECT_EQ(container.insert_participant(&trust_session3, session3), true);
+    EXPECT_EQ(container.insert_participant(&trust_session3, session3), false);
 }
 
 TEST(TrustSessionContainer, for_each_participant_for_trust_session)
@@ -94,15 +94,15 @@ TEST(TrustSessionContainer, for_each_participant_for_trust_session)
     container.insert_trust_session(mt::fake_shared(trust_session2));
     container.insert_trust_session(mt::fake_shared(trust_session3));
 
-    container.insert_participant(&trust_session1, session1, true);
-    container.insert_participant(&trust_session1, session2, true);
-    container.insert_participant(&trust_session2, session3, true);
-    container.insert_participant(&trust_session2, session1, true);
-    container.insert_participant(&trust_session3, session2, true);
-    container.insert_participant(&trust_session2, session4, true);
+    container.insert_participant(&trust_session1, session1);
+    container.insert_participant(&trust_session1, session2);
+    container.insert_participant(&trust_session2, session3);
+    container.insert_participant(&trust_session2, session1);
+    container.insert_participant(&trust_session3, session2);
+    container.insert_participant(&trust_session2, session4);
 
     std::vector<std::shared_ptr<mf::Session>> results;
-    auto for_each_fn = [&results](std::weak_ptr<mf::Session> const& session, bool)
+    auto for_each_fn = [&results](std::weak_ptr<mf::Session> const& session)
     {
         results.push_back(session.lock());
     };
@@ -138,12 +138,12 @@ TEST(TrustSessionContainer, for_each_trust_session_for_participant)
     container.insert_trust_session(mt::fake_shared(trust_session2));
     container.insert_trust_session(mt::fake_shared(trust_session3));
 
-    container.insert_participant(&trust_session1, session1, true);
-    container.insert_participant(&trust_session1, session2, true);
-    container.insert_participant(&trust_session2, session3, true);
-    container.insert_participant(&trust_session2, session1, true);
-    container.insert_participant(&trust_session3, session2, true);
-    container.insert_participant(&trust_session2, session4, true);
+    container.insert_participant(&trust_session1, session1);
+    container.insert_participant(&trust_session1, session2);
+    container.insert_participant(&trust_session2, session3);
+    container.insert_participant(&trust_session2, session1);
+    container.insert_participant(&trust_session3, session2);
+    container.insert_participant(&trust_session2, session4);
 
     std::vector<std::shared_ptr<mf::TrustSession>> results;
     auto for_each_fn = [&results](std::shared_ptr<mf::TrustSession> const& trust_session)
@@ -169,12 +169,12 @@ TEST(TrustSessionContainer, test_remove_trust_sesion)
     ms::TrustSessionContainer container;
     container.insert_trust_session(mt::fake_shared(trust_session1));
 
-    container.insert_participant(&trust_session1, session1, true);
-    container.insert_participant(&trust_session1, session2, true);
-    container.insert_participant(&trust_session1, session3, true);
+    container.insert_participant(&trust_session1, session1);
+    container.insert_participant(&trust_session1, session2);
+    container.insert_participant(&trust_session1, session3);
 
     std::vector<std::shared_ptr<mf::Session>> results;
-    auto for_each_fn = [&results](std::weak_ptr<mf::Session> const& session, bool)
+    auto for_each_fn = [&results](std::weak_ptr<mf::Session> const& session)
     {
         results.push_back(session.lock());
     };
@@ -205,16 +205,16 @@ TEST(TrustSessionContainer, test_remove_partcicipant)
     container.insert_trust_session(mt::fake_shared(trust_session1));
     container.insert_trust_session(mt::fake_shared(trust_session2));
 
-    container.insert_participant(&trust_session1, session1, true);
-    container.insert_participant(&trust_session1, session2, true);
-    container.insert_participant(&trust_session1, session3, true);
+    container.insert_participant(&trust_session1, session1);
+    container.insert_participant(&trust_session1, session2);
+    container.insert_participant(&trust_session1, session3);
 
-    container.insert_participant(&trust_session2, session1, true);
-    container.insert_participant(&trust_session2, session2, true);
-    container.insert_participant(&trust_session2, session3, true);
+    container.insert_participant(&trust_session2, session1);
+    container.insert_participant(&trust_session2, session2);
+    container.insert_participant(&trust_session2, session3);
 
     std::vector<std::shared_ptr<mf::Session>> results;
-    auto for_each_fn = [&results](std::weak_ptr<mf::Session> const& session, bool)
+    auto for_each_fn = [&results](std::weak_ptr<mf::Session> const& session)
     {
         results.push_back(session.lock());
     };
@@ -267,28 +267,28 @@ TEST(TrustSessionContainer, waiting_process_removed_on_insert_matching_session)
     container.for_each_trust_session_for_waiting_process(1, for_each_fn);
     EXPECT_THAT(results, ElementsAre(mt::fake_shared(trust_session1), mt::fake_shared(trust_session1), mt::fake_shared(trust_session2)));
 
-    container.insert_participant(&trust_session1, session3, true);
+    container.insert_participant(&trust_session1, session3);
     // inserted session3 into trust_session1 (pid=2) - wasn't waiting for it. no change.
 
     results.clear();
     container.for_each_trust_session_for_waiting_process(1, for_each_fn);
     EXPECT_THAT(results, ElementsAre(mt::fake_shared(trust_session1), mt::fake_shared(trust_session1), mt::fake_shared(trust_session2)));
 
-    container.insert_participant(&trust_session1, session1, true);
+    container.insert_participant(&trust_session1, session1);
     // inserted session1 into trust_session1 (pid=1) - was waiting for it. should be 1 left for trust_session1 & 1 for trust_session2
 
     results.clear();
     container.for_each_trust_session_for_waiting_process(1, for_each_fn);
     EXPECT_THAT(results, ElementsAre(mt::fake_shared(trust_session1), mt::fake_shared(trust_session2)));
 
-    container.insert_participant(&trust_session2, session1, true);
+    container.insert_participant(&trust_session2, session1);
     // inserted session2 into trust_session2 (pid=1) - was waiting for it. should be 1 left for trust_session1
 
     results.clear();
     container.for_each_trust_session_for_waiting_process(1, for_each_fn);
     EXPECT_THAT(results, ElementsAre(mt::fake_shared(trust_session1)));
 
-    container.insert_participant(&trust_session1, session2, true);
+    container.insert_participant(&trust_session1, session2);
     // inserted session2 into trust_session1 (pid=1) - was waiting for it. none left
 
     results.clear();
@@ -313,10 +313,10 @@ TEST(TrustSessionParticipants, test_insert)
     container.insert_trust_session(mt::fake_shared(trust_session1));
     container.insert_trust_session(mt::fake_shared(trust_session2));
 
-    container.insert_participant(&trust_session1, session1, true);
-    container.insert_participant(&trust_session1, session2, false);
-    container.insert_participant(&trust_session1, session3, true);
-    container.insert_participant(&trust_session2, session2, true);
+    container.insert_participant(&trust_session1, session1);
+    container.insert_participant(&trust_session1, session2);
+    container.insert_participant(&trust_session1, session3);
+    container.insert_participant(&trust_session2, session2);
 
     ms::TrustSessionParticipants trust_session1_participants(&trust_session1, mt::fake_shared(container));
     ms::TrustSessionParticipants trust_session2_participants(&trust_session2, mt::fake_shared(container));

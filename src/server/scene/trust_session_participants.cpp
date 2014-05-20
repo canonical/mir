@@ -18,12 +18,14 @@
 
  #include "trust_session_participants.h"
  #include "trust_session_container.h"
+ #include "mir/scene/trust_session.h"
+ #include "mir/scene/session.h"
 
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
 
 ms::TrustSessionParticipants::TrustSessionParticipants(
-    frontend::TrustSession* trust_session,
+    ms::TrustSession* trust_session,
     std::shared_ptr<TrustSessionContainer> const& container) :
     trust_session(trust_session),
     container(container)
@@ -32,7 +34,7 @@ ms::TrustSessionParticipants::TrustSessionParticipants(
 
 bool ms::TrustSessionParticipants::insert(std::weak_ptr<mf::Session> const& session)
 {
-    return container->insert_participant(trust_session, session, true);
+    return container->insert_participant(trust_session, session);
 }
 
 bool ms::TrustSessionParticipants::remove(std::weak_ptr<mf::Session> const& session)
@@ -56,9 +58,10 @@ bool ms::TrustSessionParticipants::contains(std::weak_ptr<mf::Session> const& se
 void ms::TrustSessionParticipants::for_each_participant(std::function<void(std::weak_ptr<mf::Session> const&)> f) const
 {
     container->for_each_participant_for_trust_session(trust_session,
-        [&](std::weak_ptr<mf::Session> const& session, bool is_child)
+        [&](std::weak_ptr<mf::Session> const& session)
         {
-            if (is_child)
+            auto trusted_helper = trust_session->get_trusted_helper().lock();
+            if (trusted_helper != session.lock())
                 f(session);
         });
 }

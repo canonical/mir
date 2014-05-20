@@ -52,10 +52,10 @@ public:
     void insert_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session);
     void remove_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session);
 
-    bool insert_participant(frontend::TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, bool child);
+    bool insert_participant(frontend::TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session);
     bool remove_participant(frontend::TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session);
 
-    void for_each_participant_for_trust_session(frontend::TrustSession* trust_session, std::function<void(std::weak_ptr<frontend::Session> const&, bool)> f) const;
+    void for_each_participant_for_trust_session(frontend::TrustSession* trust_session, std::function<void(std::weak_ptr<frontend::Session> const&)> f) const;
     void for_each_trust_session_for_participant(std::weak_ptr<frontend::Session> const& session, std::function<void(std::shared_ptr<frontend::TrustSession> const&)> f) const;
 
     bool insert_waiting_process(frontend::TrustSession* trust_session, pid_t process_id);
@@ -69,7 +69,6 @@ private:
     typedef struct {
         frontend::TrustSession* trust_session;
         std::weak_ptr<frontend::Session> session;
-        bool child;
         uint insert_order;
 
         frontend::Session* session_fun() const { return session.lock().get(); }

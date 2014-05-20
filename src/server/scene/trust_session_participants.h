@@ -25,18 +25,18 @@ namespace mir
 {
 namespace frontend
 {
-class TrustSession;
 class Session;
 }
 
 namespace scene
 {
+class TrustSession;
 class TrustSessionContainer;
 
 class TrustSessionParticipants
 {
 public:
-    TrustSessionParticipants(frontend::TrustSession* trust_session, std::shared_ptr<TrustSessionContainer> const& container);
+    TrustSessionParticipants(TrustSession* trust_session, std::shared_ptr<TrustSessionContainer> const& container);
     virtual ~TrustSessionParticipants() = default;
 
     bool insert(std::weak_ptr<frontend::Session> const& session);
@@ -48,7 +48,7 @@ public:
     void for_each_participant(std::function<void(std::weak_ptr<frontend::Session> const&)> f) const;
 
 private:
-    frontend::TrustSession* trust_session;
+    TrustSession* trust_session;
     std::shared_ptr<TrustSessionContainer> container;
 };
 
