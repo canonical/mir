@@ -31,16 +31,12 @@
 
 namespace mir
 {
-namespace frontend
-{
-class Session;
-}
-
 using boost::multi_index_container;
 using namespace boost::multi_index;
 
 namespace scene
 {
+class Session;
 class TrustSession;
 
 class TrustSessionContainer
@@ -57,12 +53,12 @@ public:
     void insert_trust_session(std::shared_ptr<TrustSession> const& trust_session);
     void remove_trust_session(std::shared_ptr<TrustSession> const& trust_session);
 
-    bool insert_participant(TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, TrustType trust_type);
-    bool remove_participant(TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, TrustType trust_type);
+    bool insert_participant(TrustSession* trust_session, std::weak_ptr<Session> const& session, TrustType trust_type);
+    bool remove_participant(TrustSession* trust_session, std::weak_ptr<Session> const& session, TrustType trust_type);
 
-    void for_each_participant_for_trust_session(TrustSession* trust_session, std::function<void(std::weak_ptr<frontend::Session> const&, TrustType)> f) const;
-    void for_each_trust_session_for_participant(std::weak_ptr<frontend::Session> const& session, TrustType trust_type, std::function<void(std::shared_ptr<TrustSession> const&)> f) const;
-    void for_each_trust_session_for_participant(std::weak_ptr<frontend::Session> const& session, std::function<void(std::shared_ptr<TrustSession> const&)> f) const;
+    void for_each_participant_for_trust_session(TrustSession* trust_session, std::function<void(std::weak_ptr<Session> const&, TrustType)> f) const;
+    void for_each_trust_session_for_participant(std::weak_ptr<Session> const& session, TrustType trust_type, std::function<void(std::shared_ptr<TrustSession> const&)> f) const;
+    void for_each_trust_session_for_participant(std::weak_ptr<Session> const& session, std::function<void(std::shared_ptr<TrustSession> const&)> f) const;
 
     bool insert_waiting_process(TrustSession* trust_session, pid_t process_id);
     void for_each_trust_session_for_waiting_process(pid_t process_id, std::function<void(std::shared_ptr<TrustSession> const&)> f) const;
@@ -74,11 +70,11 @@ private:
 
     typedef struct {
         TrustSession* trust_session;
-        std::weak_ptr<frontend::Session> session;
+        std::weak_ptr<Session> session;
         TrustType trust_type;
         uint insert_order;
 
-        frontend::Session* session_fun() const { return session.lock().get(); }
+        Session* session_fun() const { return session.lock().get(); }
     } Participant;
 
     typedef multi_index_container<
@@ -94,7 +90,7 @@ private:
             ordered_unique<
                 composite_key<
                     Participant,
-                    const_mem_fun<Participant, frontend::Session*, &Participant::session_fun>,
+                    const_mem_fun<Participant, Session*, &Participant::session_fun>,
                     member<Participant, TrustType, &Participant::trust_type>,
                     member<Participant, TrustSession*, &Participant::trust_session>
                 >

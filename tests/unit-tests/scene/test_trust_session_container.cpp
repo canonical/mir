@@ -67,10 +67,10 @@ struct TrustSessionContainer : testing::Test
         ON_CALL(mock_scene_session4, process_id()).WillByDefault(Return(process2));
     }
 
-    std::vector<std::shared_ptr<mf::Session>> list_participants_for(std::shared_ptr<ms::TrustSession> const& trust_session)
+    std::vector<std::shared_ptr<ms::Session>> list_participants_for(std::shared_ptr<ms::TrustSession> const& trust_session)
     {
-        std::vector<std::shared_ptr<mf::Session>> results;
-        auto list_participants = [&results](std::weak_ptr<mf::Session> const& session, ms::TrustSessionContainer::TrustType)
+        std::vector<std::shared_ptr<ms::Session>> results;
+        auto list_participants = [&results](std::weak_ptr<ms::Session> const& session, ms::TrustSessionContainer::TrustType)
         {
             results.push_back(session.lock());
         };
@@ -85,10 +85,10 @@ struct TrustSessionContainer : testing::Test
         return list_participants_for(trust_session).size();
     }
 
-    std::vector<std::shared_ptr<mf::TrustSession>> list_trust_sessions_for(std::shared_ptr<mf::Session> const& session)
+    std::vector<std::shared_ptr<ms::TrustSession>> list_trust_sessions_for(std::shared_ptr<ms::Session> const& session)
     {
-        std::vector<std::shared_ptr<mf::TrustSession>> results;
-        auto list_trust_sessions = [&results](std::shared_ptr<mf::TrustSession> const& trust_session)
+        std::vector<std::shared_ptr<ms::TrustSession>> results;
+        auto list_trust_sessions = [&results](std::shared_ptr<ms::TrustSession> const& trust_session)
         {
             results.push_back(trust_session);
         };
@@ -98,10 +98,10 @@ struct TrustSessionContainer : testing::Test
         return results;
     }
 
-    std::vector<std::shared_ptr<mf::TrustSession>> list_trust_sessions_for(std::shared_ptr<mf::Session> const& session, ms::TrustSessionContainer::TrustType trust_type)
+    std::vector<std::shared_ptr<ms::TrustSession>> list_trust_sessions_for(std::shared_ptr<ms::Session> const& session, ms::TrustSessionContainer::TrustType trust_type)
     {
-        std::vector<std::shared_ptr<mf::TrustSession>> results;
-        auto list_trust_sessions = [&results](std::shared_ptr<mf::TrustSession> const& trust_session)
+        std::vector<std::shared_ptr<ms::TrustSession>> results;
+        auto list_trust_sessions = [&results](std::shared_ptr<ms::TrustSession> const& trust_session)
         {
             results.push_back(trust_session);
         };
@@ -111,15 +111,15 @@ struct TrustSessionContainer : testing::Test
         return results;
     }
 
-    int count_trust_sessions_for(std::shared_ptr<mf::Session> const& session)
+    int count_trust_sessions_for(std::shared_ptr<ms::Session> const& session)
     {
         return list_trust_sessions_for(session).size();
     }
 
-    std::vector<std::shared_ptr<mf::TrustSession>> list_trust_sessions_for(pid_t process)
+    std::vector<std::shared_ptr<ms::TrustSession>> list_trust_sessions_for(pid_t process)
     {
-        std::vector<std::shared_ptr<mf::TrustSession>> results;
-        auto list_trust_sessions = [&results](std::shared_ptr<mf::TrustSession> const& trust_session)
+        std::vector<std::shared_ptr<ms::TrustSession>> results;
+        auto list_trust_sessions = [&results](std::shared_ptr<ms::TrustSession> const& trust_session)
         {
             results.push_back(trust_session);
         };
@@ -286,10 +286,10 @@ struct TrustSessionTrustedParticipants : TrustSessionContainer
         container.insert_trust_session(trust_session2);
     }
 
-    static std::vector<std::shared_ptr<mf::Session>> list_trusted_participants_for(ms::TrustSessionTrustedParticipants const& participants)
+    static std::vector<std::shared_ptr<ms::Session>> list_trusted_participants_for(ms::TrustSessionTrustedParticipants const& participants)
     {
-        std::vector<std::shared_ptr<mf::Session>> results;
-        auto list_participants = [&results](std::weak_ptr<mf::Session> const& session)
+        std::vector<std::shared_ptr<ms::Session>> results;
+        auto list_participants = [&results](std::weak_ptr<ms::Session> const& session)
         {
             results.push_back(session.lock());
         };

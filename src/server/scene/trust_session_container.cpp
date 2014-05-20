@@ -17,7 +17,7 @@
  */
 
 #include "trust_session_container.h"
-#include "mir/frontend/session.h"
+#include "mir/scene/session.h"
 
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
@@ -55,7 +55,7 @@ void ms::TrustSessionContainer::remove_trust_session(std::shared_ptr<TrustSessio
     trust_sessions.erase(trust_session.get());
 }
 
-bool ms::TrustSessionContainer::insert_participant(TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, TrustType trust_type)
+bool ms::TrustSessionContainer::insert_participant(TrustSession* trust_session, std::weak_ptr<Session> const& session, TrustType trust_type)
 {
     std::unique_lock<std::mutex> lk(mutex);
 
@@ -83,7 +83,7 @@ bool ms::TrustSessionContainer::insert_participant(TrustSession* trust_session, 
     return false;
 }
 
-bool ms::TrustSessionContainer::remove_participant(TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, TrustType trust_type)
+bool ms::TrustSessionContainer::remove_participant(TrustSession* trust_session, std::weak_ptr<Session> const& session, TrustType trust_type)
 {
     std::unique_lock<std::mutex> lk(mutex);
     if (auto locked_session = session.lock())
@@ -100,7 +100,7 @@ bool ms::TrustSessionContainer::remove_participant(TrustSession* trust_session, 
 
 void ms::TrustSessionContainer::for_each_participant_for_trust_session(
     TrustSession* trust_session,
-    std::function<void(std::weak_ptr<frontend::Session> const&, ms::TrustSessionContainer::TrustType trust_type)> f) const
+    std::function<void(std::weak_ptr<Session> const&, ms::TrustSessionContainer::TrustType trust_type)> f) const
 {
     std::unique_lock<std::mutex> lk(mutex);
 
@@ -115,7 +115,7 @@ void ms::TrustSessionContainer::for_each_participant_for_trust_session(
 }
 
 void ms::TrustSessionContainer::for_each_trust_session_for_participant(
-    std::weak_ptr<frontend::Session> const& session,
+    std::weak_ptr<Session> const& session,
     TrustType trust_type,
     std::function<void(std::shared_ptr<TrustSession> const&)> f) const
 {
@@ -137,7 +137,7 @@ void ms::TrustSessionContainer::for_each_trust_session_for_participant(
 }
 
 void ms::TrustSessionContainer::for_each_trust_session_for_participant(
-    std::weak_ptr<frontend::Session> const& session,
+    std::weak_ptr<Session> const& session,
     std::function<void(std::shared_ptr<TrustSession> const&)> f) const
 {
     std::unique_lock<std::mutex> lk(mutex);

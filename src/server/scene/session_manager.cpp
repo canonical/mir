@@ -238,7 +238,7 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
 
     auto trust_session = std::make_shared<TrustSessionImpl>(shell_session, params, trust_session_listener, trust_session_container);
     trust_session_container->insert_trust_session(trust_session);
-    trust_session_container->insert_participant(trust_session.get(), session, TrustSessionContainer::HelperSession);
+    trust_session_container->insert_participant(trust_session.get(), shell_session, TrustSessionContainer::HelperSession);
 
     trust_session->start();
     trust_session_listener->starting(trust_session);

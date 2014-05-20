@@ -32,20 +32,20 @@ ms::TrustSessionTrustedParticipants::TrustSessionTrustedParticipants(
 {
 }
 
-bool ms::TrustSessionTrustedParticipants::insert(std::weak_ptr<mf::Session> const& session)
+bool ms::TrustSessionTrustedParticipants::insert(std::weak_ptr<Session> const& session)
 {
     return container->insert_participant(trust_session, session, TrustSessionContainer::TrustedSession);
 }
 
-bool ms::TrustSessionTrustedParticipants::remove(std::weak_ptr<mf::Session> const& session)
+bool ms::TrustSessionTrustedParticipants::remove(std::weak_ptr<Session> const& session)
 {
     return container->remove_participant(trust_session, session, TrustSessionContainer::TrustedSession);
 }
 
-bool ms::TrustSessionTrustedParticipants::contains(std::weak_ptr<mf::Session> const& session) const
+bool ms::TrustSessionTrustedParticipants::contains(std::weak_ptr<Session> const& session) const
 {
     bool found = false;
-    for_each_trusted_participant([&](std::weak_ptr<mf::Session> const& participant)
+    for_each_trusted_participant([&](std::weak_ptr<Session> const& participant)
         {
             if (session.lock() == participant.lock())
             {
@@ -55,10 +55,10 @@ bool ms::TrustSessionTrustedParticipants::contains(std::weak_ptr<mf::Session> co
     return found;
 }
 
-void ms::TrustSessionTrustedParticipants::for_each_trusted_participant(std::function<void(std::weak_ptr<mf::Session> const&)> f) const
+void ms::TrustSessionTrustedParticipants::for_each_trusted_participant(std::function<void(std::weak_ptr<Session> const&)> f) const
 {
     container->for_each_participant_for_trust_session(trust_session,
-        [&](std::weak_ptr<mf::Session> const& session, ms::TrustSessionContainer::TrustType trust_type)
+        [&](std::weak_ptr<Session> const& session, ms::TrustSessionContainer::TrustType trust_type)
         {
             if (trust_type == TrustSessionContainer::TrustedSession)
                 f(session);
