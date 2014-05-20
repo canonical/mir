@@ -129,11 +129,6 @@ struct TrustSessionContainer : testing::Test
         return results;
     }
 };
-
-// TODO only needed because ms::TrustSessionContainer::insert() wants a "pid_t const&" not a value
-constexpr pid_t TrustSessionContainer::process1;
-constexpr pid_t TrustSessionContainer::process2;
-constexpr pid_t TrustSessionContainer::process3;
 }
 
 TEST_F(TrustSessionContainer, insert_false_if_no_trust_session)
