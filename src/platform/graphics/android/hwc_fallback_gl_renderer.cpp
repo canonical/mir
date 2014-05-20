@@ -117,13 +117,13 @@ void mga::HWCFallbackGLRenderer::render(
         glVertexAttribPointer(texcoord_attr, 2, GL_FLOAT, GL_FALSE, sizeof(mg::GLVertex),
                               &primitive.vertices[0].texcoord);
 
-        texture_cache->load_texture(*renderable);
+        texture_cache->load(*renderable);
         glDrawArrays(primitive.type, 0, primitive.vertices.size());
     }
 
     glDisableVertexAttribArray(texcoord_attr);
     glDisableVertexAttribArray(position_attr);
     context.swap_buffers();
-    texture_cache->drop_old_textures();
+    texture_cache->drop_unused();
     glUseProgram(0);
 }

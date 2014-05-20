@@ -17,7 +17,7 @@
  *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/recently_bound_cache.h"
+#include "mir/compositor/recently_used_cache.h"
 #include "mir/graphics/buffer.h"
 #include "mir/geometry/rectangle.h"
 
@@ -25,7 +25,7 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 
-std::shared_ptr<mg::GLTexture> mc::RecentlyBoundCache::load_texture(mg::Renderable const& renderable)
+std::shared_ptr<mg::GLTexture> mc::RecentlyUsedCache::load(mg::Renderable const& renderable)
 {
     auto const& buffer = renderable.buffer();
     auto const& id = renderable.id();
@@ -44,14 +44,14 @@ std::shared_ptr<mg::GLTexture> mc::RecentlyBoundCache::load_texture(mg::Renderab
     return texture.texture;
 }
 
-void mc::RecentlyBoundCache::invalidate_bindings()
+void mc::RecentlyUsedCache::invalidate()
 {
     mg::BufferID invalid_id;
     for(auto &t : textures)
         t.second.last_bound_buffer = invalid_id;
 }
 
-void mc::RecentlyBoundCache::drop_old_textures()
+void mc::RecentlyUsedCache::drop_unused()
 {
     auto t = textures.begin();
     while (t != textures.end())

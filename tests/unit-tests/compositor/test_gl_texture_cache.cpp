@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/compositor/recently_bound_cache.h"
+#include "mir/compositor/recently_used_cache.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_renderable.h"
 #include "mir_test_doubles/mock_gl.h"
@@ -28,10 +28,10 @@ namespace mg=mir::graphics;
 
 namespace
 {
-class RecentlyBoundCache : public testing::Test
+class RecentlyUsedCache : public testing::Test
 {
 public:
-    RecentlyBoundCache()
+    RecentlyUsedCache()
     {
         using namespace testing;
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
@@ -49,7 +49,7 @@ public:
 };
 }
 
-TEST_F(RecentlyBoundCache, caches_and_uploads_texture_only_on_buffer_changes)
+TEST_F(RecentlyUsedCache, caches_and_uploads_texture_only_on_buffer_changes)
 {
     using namespace testing;
     InSequence seq;
@@ -94,31 +94,31 @@ TEST_F(RecentlyBoundCache, caches_and_uploads_texture_only_on_buffer_changes)
     //clean up texture
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
 
-    mc::RecentlyBoundCache cache;
-    cache.load_texture(*renderable);
-    cache.drop_old_textures();
+    mc::RecentlyUsedCache cache;
+    cache.load(*renderable);
+    cache.drop_unused();
 
-    cache.load_texture(*renderable);
-    cache.drop_old_textures();
+    cache.load(*renderable);
+    cache.drop_unused();
 
-    cache.load_texture(*renderable);
-    cache.drop_old_textures();
+    cache.load(*renderable);
+    cache.drop_unused();
 
-    cache.invalidate_bindings();
+    cache.invalidate();
 
-    cache.load_texture(*renderable);
-    cache.drop_old_textures();
+    cache.load(*renderable);
+    cache.drop_unused();
 
-    cache.load_texture(*renderable);
-    cache.drop_old_textures();
+    cache.load(*renderable);
+    cache.drop_unused();
 }
 
-TEST_F(RecentlyBoundCache, holds_buffers_till_the_end)
+TEST_F(RecentlyUsedCache, holds_buffers_till_the_end)
 {
     auto old_use_count = mock_buffer.use_count();
-    mc::RecentlyBoundCache cache;
-    cache.load_texture(*renderable);
+    mc::RecentlyUsedCache cache;
+    cache.load(*renderable);
     EXPECT_EQ(old_use_count+1, mock_buffer.use_count());
-    cache.drop_old_textures();
+    cache.drop_unused();
     EXPECT_EQ(old_use_count, mock_buffer.use_count());
 }

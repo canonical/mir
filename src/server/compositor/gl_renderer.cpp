@@ -19,9 +19,9 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
-#include "mir/graphics/tessellation_helpers.h"
-#include "mir/graphics/texture_cache.h"
+#include "mir/graphics/gl_texture_cache.h"
 #include "mir/graphics/gl_texture.h"
+#include "mir/graphics/tessellation_helpers.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
@@ -147,8 +147,8 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
 
     std::vector<mg::GLPrimitive> primitives;
     tessellate(primitives, renderable);
-   
-    auto surface_tex = texture_cache->load_texture(renderable);
+
+    auto surface_tex = texture_cache->load(renderable);
 
     for (auto const& p : primitives)
     {
@@ -252,10 +252,10 @@ void mc::GLRenderer::begin() const
 
 void mc::GLRenderer::end() const
 {
-    texture_cache->drop_old_textures();
+    texture_cache->drop_unused();
 }
 
 void mc::GLRenderer::suspend()
 {
-    texture_cache->invalidate_bindings();
+    texture_cache->invalidate();
 }

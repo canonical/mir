@@ -21,7 +21,7 @@
 
 #include "mir/graphics/gl_program_factory.h"
 #include "mir/graphics/gl_program.h"
-#include "mir/graphics/texture_cache.h"
+#include "mir/graphics/gl_texture_cache.h"
 #include <mutex>
 
 namespace mir

@@ -17,10 +17,10 @@
  *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_RECENTLY_BOUND_CACHE_H_
-#define MIR_COMPOSITOR_RECENTLY_BOUND_CACHE_H_
+#ifndef MIR_COMPOSITOR_RECENTLY_USED_CACHE_H_
+#define MIR_COMPOSITOR_RECENTLY_USED_CACHE_H_
 
-#include "mir/graphics/texture_cache.h"
+#include "mir/graphics/gl_texture_cache.h"
 #include "mir/graphics/gl_texture.h"
 #include "mir/graphics/buffer_id.h"
 #include <unordered_map>
@@ -29,12 +29,12 @@ namespace mir
 {
 namespace compositor 
 {
-class RecentlyBoundCache : public graphics::GLTextureCache
+class RecentlyUsedCache : public graphics::GLTextureCache
 {
 public:
-    std::shared_ptr<graphics::GLTexture> load_texture(graphics::Renderable const& renderable) override;
-    void invalidate_bindings() override;
-    void drop_old_textures() override;
+    std::shared_ptr<graphics::GLTexture> load(graphics::Renderable const& renderable) override;
+    void invalidate() override;
+    void drop_unused() override;
 
 private:
     struct Entry
@@ -53,4 +53,4 @@ private:
 }
 }
 
-#endif /* MIR_COMPOSITOR_RECENTLY_BOUND_CACHE_H_ */
+#endif /* MIR_COMPOSITOR_RECENTLY_USED_CACHE_H_ */

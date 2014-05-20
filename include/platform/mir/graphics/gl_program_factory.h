@@ -20,7 +20,7 @@
 #define MIR_COMPOSITOR_GL_PROGRAM_FACTORY_H_
 
 #include "mir/graphics/gl_program.h"
-#include "mir/graphics/texture_cache.h"
+#include "mir/graphics/gl_texture_cache.h"
 #include <memory>
 
 namespace mir

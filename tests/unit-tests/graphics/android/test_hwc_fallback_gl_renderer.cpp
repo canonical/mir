@@ -60,14 +60,14 @@ public:
 
 class StubTextureCache : public mg::GLTextureCache
 {
-    std::shared_ptr<mg::GLTexture> load_texture(mg::Renderable const&)
+    std::shared_ptr<mg::GLTexture> load(mg::Renderable const&)
     {
         return std::make_shared<mg::GLTexture>();
     }
-    void invalidate_bindings()
+    void invalidate()
     {
     }
-    void drop_old_textures()
+    void drop_unused()
     {
     }
 };

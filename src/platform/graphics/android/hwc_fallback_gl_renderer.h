@@ -21,7 +21,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/gl_program.h"
 #include "mir/graphics/renderable.h"
-#include "mir/graphics/texture_cache.h"
+#include "mir/graphics/gl_texture_cache.h"
 #include <memory>
 
 namespace mir
