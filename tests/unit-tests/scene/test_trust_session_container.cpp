@@ -38,7 +38,6 @@ struct TrustSessionContainer : testing::Test
 {
     static constexpr pid_t process1 = 1;
     static constexpr pid_t process2 = 2;
-    static constexpr pid_t process3 = 3;
 
     mtd::NullTrustSession null_trust_session1;
     mtd::NullTrustSession null_trust_session2;
