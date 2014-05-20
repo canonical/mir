@@ -256,22 +256,23 @@ void ms::SessionManager::remove_from_trust_sessions(std::shared_ptr<Session> con
     std::lock_guard<std::mutex> lock(trust_sessions_mutex);
 
     std::vector<std::shared_ptr<TrustSession>> trust_sessions;
+
     trust_session_container->for_each_trust_session_for_participant(session,
         [&](std::shared_ptr<TrustSession> const& trust_session)
         {
-            trust_sessions.push_back(trust_session);
+            if (trust_session->get_trusted_helper().lock() == session)
+            {
+                trust_sessions.push_back(trust_session);
+            }
+            else
+            {
+                trust_session->remove_trusted_participant(session);
+            }
         });
 
     for(auto trust_session : trust_sessions)
     {
-        if (trust_session->get_trusted_helper().lock() == session)
-        {
-            stop_trust_session_locked(lock, trust_session);
-        }
-        else
-        {
-            trust_session->remove_trusted_participant(session);
-        }
+        stop_trust_session_locked(lock, trust_session);
     }
 }
 
