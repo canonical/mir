@@ -54,7 +54,6 @@ public:
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
                             std::shared_ptr<SessionEventSink> const& session_event_sink,
                             std::shared_ptr<SessionListener> const& session_listener,
-                            // TODO {arg} TrustSessionContainer is the real dependency - the listener belongs there
                             std::shared_ptr<TrustSessionListener> const& trust_session_listener);
     virtual ~SessionManager() noexcept;
 
@@ -95,7 +94,6 @@ private:
     std::shared_ptr<SessionEventSink> const session_event_sink;
     std::shared_ptr<SessionListener> const session_listener;
 
-    // TODO {arg} trust_session_listener belongs in TrustSessionContainer
     std::shared_ptr<TrustSessionListener> const trust_session_listener;
     std::shared_ptr<TrustSessionContainer> const trust_session_container;
 
