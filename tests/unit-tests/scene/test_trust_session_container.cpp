@@ -17,6 +17,7 @@
  */
 
 #include "src/server/scene/trust_session_container.h"
+#include "src/server/scene/trust_session_participants.h"
 #include "mir_test_doubles/mock_scene_session.h"
 #include "mir_test_doubles/null_trust_session.h"
 #include "mir_test/fake_shared.h"
@@ -253,4 +254,42 @@ TEST_F(TrustSessionContainer, waiting_process_removed_on_insert_matching_session
     container.insert_participant(trust_session1.get(), session2);
     // inserted session2 into trust_session1 (pid=1) - was waiting for it. none left
     EXPECT_THAT(list_trust_sessions_for(process1), ElementsAre());
+}
+
+namespace
+{
+struct TrustSessionParticipants : TrustSessionContainer
+{
+    ms::TrustSessionParticipants trust_session1_participants{trust_session1.get(), mt::fake_shared(container)};
+    ms::TrustSessionParticipants trust_session2_participants{trust_session2.get(), mt::fake_shared(container)};
+
+    void SetUp() {
+        container.insert_trust_session(trust_session1);
+        container.insert_trust_session(trust_session2);
+    }
+
+    static std::vector<std::shared_ptr<mf::Session>> list_participants_for(ms::TrustSessionParticipants const& participants)
+    {
+        std::vector<std::shared_ptr<mf::Session>> results;
+        auto list_participants = [&results](std::weak_ptr<mf::Session> const& session)
+        {
+            results.push_back(session.lock());
+        };
+
+        participants.for_each_participant(list_participants);
+
+        return results;
+    }
+};
+}
+
+TEST_F(TrustSessionParticipants, test_mapping)
+{
+    container.insert_participant(trust_session1.get(), session1);
+    container.insert_participant(trust_session1.get(), session2);
+    container.insert_participant(trust_session1.get(), session3);
+    container.insert_participant(trust_session2.get(), session2);
+
+    EXPECT_THAT(list_participants_for(trust_session1_participants), ElementsAre(session1, session2, session3));
+    EXPECT_THAT(list_participants_for(trust_session2_participants), ElementsAre(session2));
 }
