@@ -47,7 +47,6 @@ class InputManager;
 class InputDispatcher;
 class EventFilter;
 class InputConfiguration;
-class InputDispatcherConfiguration;
 }
 
 class MainLoop;
@@ -69,7 +68,6 @@ public:
     virtual std::shared_ptr<DisplayChanger> the_display_changer() = 0;
     virtual std::shared_ptr<graphics::Platform>  the_graphics_platform() = 0;
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration() = 0;
-    virtual std::shared_ptr<input::InputDispatcherConfiguration> the_input_dispatcher_configuration() = 0;
 
 protected:
     ServerConfiguration() = default;

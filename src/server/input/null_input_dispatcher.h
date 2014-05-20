@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,36 +13,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_NESTED_INPUT_RELAY_H_
-#define MIR_INPUT_NESTED_INPUT_RELAY_H_
+#ifndef MIR_INPUT_NULL_INPUT_DISPATCHER_H_
+#define MIR_INPUT_NULL_INPUT_DISPATCHER_H_
 
-#include "mir/input/event_filter.h"
-
-#include <memory>
+#include "mir/input/input_dispatcher.h"
 
 namespace mir
 {
 namespace input
 {
-class InputDispatcher;
-class NestedInputRelay : public EventFilter
+
+class NullInputDispatcher : public mir::input::InputDispatcher
 {
 public:
-    NestedInputRelay();
-    ~NestedInputRelay() noexcept;
-
-    void set_dispatcher(std::shared_ptr<InputDispatcher> const& dispatcher);
-
-private:
-    bool handle(MirEvent const& event);
-
-    std::shared_ptr<InputDispatcher> dispatcher;
+    void configuration_changed(nsecs_t when) override;
+    void device_reset(int32_t device_id, nsecs_t when) override;
+    void dispatch(MirEvent const& event) override;
+    void start() override;
+    void stop() override;
 };
+
 }
 }
 
-
-#endif /* MIR_INPUT_NESTED_INPUT_RELAY_H_ */
+#endif

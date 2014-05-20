@@ -189,6 +189,7 @@ TEST_F(TrustSessionHelper, gets_pid_when_trusted_client_connects_over_fd)
     mir_connection_release(client_connection);
 }
 
+// TODO we need a nice way to run this (and similar tests that require a separate client process) in CI
 // Disabled as we can't be sure the mir_demo_client_basic is about
 TEST_F(TrustSessionHelper, DISABLED_client_pid_is_associated_with_session)
 {

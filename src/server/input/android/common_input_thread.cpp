@@ -16,33 +16,29 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_CONFIGURATION_H_
-#define MIR_INPUT_INPUT_CONFIGURATION_H_
+#include "common_input_thread.h"
 
-#include <memory>
+#include <std/Thread.h>
 
-namespace mir
+namespace mia = mir::input::android;
+
+mia::CommonInputThread::CommonInputThread(std::string const& name, droidinput::sp<droidinput::Thread> const& thread)
+      : name(name),
+        thread(thread)
 {
-namespace input
-{
-class InputManager;
-class InputChannelFactory;
-
-class InputConfiguration
-{
-public:
-    virtual ~InputConfiguration() = default;
-
-    virtual std::shared_ptr<InputChannelFactory> the_input_channel_factory() = 0;
-    virtual std::shared_ptr<InputManager> the_input_manager() = 0;
-
-protected:
-    InputConfiguration() = default;
-    InputConfiguration(InputConfiguration const&) = delete;
-    InputConfiguration& operator=(InputConfiguration const&) = delete;
-};
-
-}
 }
 
-#endif
+void mia::CommonInputThread::start()
+{
+    thread->run(name.c_str(), droidinput::PRIORITY_URGENT_DISPLAY);
+}
+void mia::CommonInputThread::request_stop()
+{
+    thread->requestExit();
+}
+
+void mia::CommonInputThread::join()
+{
+    thread->join();
+}
+
