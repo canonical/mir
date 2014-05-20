@@ -32,9 +32,9 @@ namespace compositor
 class RecentlyUsedCache : public graphics::GLTextureCache
 {
 public:
-    std::shared_ptr<graphics::GLTexture> upload_pixel_content_from(graphics::Renderable const& renderable) override;
-    void invalidate_pixel_content() override;
-    void drop_old_textures() override;
+    std::shared_ptr<graphics::GLTexture> load(graphics::Renderable const& renderable) override;
+    void invalidate() override;
+    void drop_unused() override;
 
 private:
     struct Entry

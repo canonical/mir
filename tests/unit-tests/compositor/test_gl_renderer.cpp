@@ -55,12 +55,12 @@ struct MockGLTextureCache : public mg::GLTextureCache
 {
     MockGLTextureCache()
     {
-        ON_CALL(*this, upload_pixel_content_from(testing::_))
+        ON_CALL(*this, load(testing::_))
             .WillByDefault(testing::Return(std::make_shared<mg::GLTexture>())); 
     }
-    MOCK_METHOD1(upload_pixel_content_from, std::shared_ptr<mg::GLTexture>(mg::Renderable const&));
-    MOCK_METHOD0(invalidate_pixel_content, void());
-    MOCK_METHOD0(drop_old_textures, void());
+    MOCK_METHOD1(load, std::shared_ptr<mg::GLTexture>(mg::Renderable const&));
+    MOCK_METHOD0(invalidate, void());
+    MOCK_METHOD0(drop_unused, void());
 };
 
 const GLint stub_v_shader = 1;
@@ -197,7 +197,7 @@ TEST_F(GLRenderer, render_is_done_in_sequence)
 
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_location));
-    EXPECT_CALL(*mock_texture_cache, upload_pixel_content_from(_));
+    EXPECT_CALL(*mock_texture_cache, load(_));
 
     EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_location, 3,
                                                GL_FLOAT, GL_FALSE, _, _));
@@ -209,7 +209,7 @@ TEST_F(GLRenderer, render_is_done_in_sequence)
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_location));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_location));
 
-    EXPECT_CALL(*mock_texture_cache, drop_old_textures());
+    EXPECT_CALL(*mock_texture_cache, drop_unused());
 
     mc::GLRenderer renderer(program_factory, std::move(mock_texture_cache), display_area);
     renderer.begin();

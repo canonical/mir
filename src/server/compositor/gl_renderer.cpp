@@ -148,7 +148,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     std::vector<mg::GLPrimitive> primitives;
     tessellate(primitives, renderable);
 
-    auto surface_tex = texture_cache->upload_pixel_content_from(renderable);
+    auto surface_tex = texture_cache->load(renderable);
    
     for (auto const& p : primitives)
     {
@@ -252,10 +252,10 @@ void mc::GLRenderer::begin() const
 
 void mc::GLRenderer::end() const
 {
-    texture_cache->drop_old_textures();
+    texture_cache->drop_unused();
 }
 
 void mc::GLRenderer::suspend()
 {
-    texture_cache->invalidate_pixel_content();
+    texture_cache->invalidate();
 }

@@ -38,13 +38,13 @@ public:
      * \returns 
      *     The texture that represents the renderable.
     **/ 
-    virtual std::shared_ptr<GLTexture> upload_pixel_content_from(Renderable const&) = 0;
+    virtual std::shared_ptr<GLTexture> load(Renderable const&) = 0;
 
     /** mark the entries in the cache as having invalid bindings **/ 
-    virtual void invalidate_pixel_content() = 0;
+    virtual void invalidate() = 0;
 
     /** cache selects textures to release. Should be called with a current gl context **/
-    virtual void drop_old_textures() = 0;
+    virtual void drop_unused() = 0;
 
 protected:
     GLTextureCache() = default;
