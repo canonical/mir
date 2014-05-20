@@ -16,8 +16,8 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SCENE_TRUST_SESSION_PARTICIPANT_CONTAINER_H_
-#define MIR_SCENE_TRUST_SESSION_PARTICIPANT_CONTAINER_H_
+#ifndef MIR_SCENE_TRUST_SESSION_CONTAINER_H_
+#define MIR_SCENE_TRUST_SESSION_CONTAINER_H_
 
 #include <sys/types.h>
 #include <mutex>
@@ -142,4 +142,4 @@ private:
 }
 }
 
-#endif // MIR_SCENE_TRUST_SESSION_PARTICIPANT_CONTAINER_H_
+#endif // MIR_SCENE_TRUST_SESSION_CONTAINER_H_
