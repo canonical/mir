@@ -28,7 +28,7 @@
 #include "trust_session_impl.h"
 #include "trust_session_container.h"
 #include "mir/scene/trust_session_listener.h"
-#include "trust_session_participants.h"
+#include "trust_session_trusted_participants.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -108,7 +108,7 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
         for(auto trust_session : trust_sessions)
         {
             auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
-            scene_trust_session->add_trusted_child(new_session);
+            scene_trust_session->add_trusted_participant(new_session);
         }
     }
 
@@ -170,7 +170,7 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
             }
             else
             {
-                scene_trust_session->remove_trusted_child(scene_session);
+                scene_trust_session->remove_trusted_participant(scene_session);
             }
         }
     }
@@ -237,7 +237,7 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
 
     auto trust_session = std::make_shared<TrustSessionImpl>(shell_session, params, trust_session_listener, trust_session_container);
     trust_session_container->insert_trust_session(trust_session);
-    trust_session_container->insert_participant(trust_session.get(), session);
+    trust_session_container->insert_participant(trust_session.get(), session, TrustSessionContainer::HelperSession);
 
     trust_session->start();
     trust_session_listener->starting(trust_session);
@@ -267,7 +267,7 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_process_for_locked
         {
             if (container_session->process_id() == process_id)
             {
-                scene_trust_session->add_trusted_child(container_session);
+                scene_trust_session->add_trusted_participant(container_session);
             }
         });
 
@@ -280,7 +280,7 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for(std::s
     auto scene_trust_session = std::dynamic_pointer_cast<ms::TrustSession>(trust_session);
     auto scene_session = std::dynamic_pointer_cast<ms::Session>(session);
 
-    scene_trust_session->add_trusted_child(scene_session);
+    scene_trust_session->add_trusted_participant(scene_session);
     return mir_trust_session_add_tust_succeeded;
 }
 

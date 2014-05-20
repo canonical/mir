@@ -49,13 +49,19 @@ public:
     TrustSessionContainer();
     virtual ~TrustSessionContainer() = default;
 
+    typedef enum {
+        HelperSession,
+        TrustedSession,
+    } TrustType;
+
     void insert_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session);
     void remove_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session);
 
-    bool insert_participant(frontend::TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session);
-    bool remove_participant(frontend::TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session);
+    bool insert_participant(frontend::TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, TrustType trust_type);
+    bool remove_participant(frontend::TrustSession* trust_session, std::weak_ptr<frontend::Session> const& session, TrustType trust_type);
 
-    void for_each_participant_for_trust_session(frontend::TrustSession* trust_session, std::function<void(std::weak_ptr<frontend::Session> const&)> f) const;
+    void for_each_participant_for_trust_session(frontend::TrustSession* trust_session, std::function<void(std::weak_ptr<frontend::Session> const&, TrustType)> f) const;
+    void for_each_trust_session_for_participant(std::weak_ptr<frontend::Session> const& session, TrustType trust_type, std::function<void(std::shared_ptr<frontend::TrustSession> const&)> f) const;
     void for_each_trust_session_for_participant(std::weak_ptr<frontend::Session> const& session, std::function<void(std::shared_ptr<frontend::TrustSession> const&)> f) const;
 
     bool insert_waiting_process(frontend::TrustSession* trust_session, pid_t process_id);
@@ -69,6 +75,7 @@ private:
     typedef struct {
         frontend::TrustSession* trust_session;
         std::weak_ptr<frontend::Session> session;
+        TrustType trust_type;
         uint insert_order;
 
         frontend::Session* session_fun() const { return session.lock().get(); }
@@ -88,16 +95,17 @@ private:
                 composite_key<
                     Participant,
                     const_mem_fun<Participant, frontend::Session*, &Participant::session_fun>,
+                    member<Participant, TrustType, &Participant::trust_type>,
                     member<Participant, frontend::TrustSession*, &Participant::trust_session>
                 >
             >
         >
-    > TrustSessionParticipants;
+    > TrustSessionTrustedParticipants;
 
-    typedef nth_index<TrustSessionParticipants,0>::type participant_by_trust_session;
-    typedef nth_index<TrustSessionParticipants,1>::type participant_by_session;
+    typedef nth_index<TrustSessionTrustedParticipants,0>::type participant_by_trust_session;
+    typedef nth_index<TrustSessionTrustedParticipants,1>::type participant_by_session;
 
-    TrustSessionParticipants participant_map;
+    TrustSessionTrustedParticipants participant_map;
     participant_by_trust_session& trust_session_index;
     participant_by_session& participant_index;
     static uint insertion_order;

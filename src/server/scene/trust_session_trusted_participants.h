@@ -16,8 +16,8 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SCENE_TRUST_SESSION_PARTICIPANTS_H_
-#define MIR_SCENE_TRUST_SESSION_PARTICIPANTS_H_
+#ifndef MIR_SCENE_TRUST_SESSION_TRUSTED_PARTICIPANTS_H_
+#define MIR_SCENE_TRUST_SESSION_TRUSTED_PARTICIPANTS_H_
 
 #include <memory>
 
@@ -33,11 +33,11 @@ namespace scene
 class TrustSession;
 class TrustSessionContainer;
 
-class TrustSessionParticipants
+class TrustSessionTrustedParticipants
 {
 public:
-    TrustSessionParticipants(TrustSession* trust_session, std::shared_ptr<TrustSessionContainer> const& container);
-    virtual ~TrustSessionParticipants() = default;
+    TrustSessionTrustedParticipants(TrustSession* trust_session, std::shared_ptr<TrustSessionContainer> const& container);
+    virtual ~TrustSessionTrustedParticipants() = default;
 
     bool insert(std::weak_ptr<frontend::Session> const& session);
     bool remove(std::weak_ptr<frontend::Session> const& session);
@@ -45,7 +45,7 @@ public:
 
     bool contains(std::weak_ptr<frontend::Session> const& session) const;
 
-    void for_each_participant(std::function<void(std::weak_ptr<frontend::Session> const&)> f) const;
+    void for_each_trusted_participant(std::function<void(std::weak_ptr<frontend::Session> const&)> f) const;
 
 private:
     TrustSession* trust_session;
@@ -55,4 +55,4 @@ private:
 }
 }
 
-#endif // MIR_SCENE_TRUST_SESSION_PARTICIPANTS_H_
+#endif // MIR_SCENE_TRUST_SESSION_TRUSTED_PARTICIPANTS_H_

@@ -77,6 +77,6 @@ TEST_F(TrustSession, trusted_child_apps_get_start_and_stop_notifications)
     EXPECT_CALL(trust_session_listener, trusted_session_ending(_, shared_app1)).Times(1);
     EXPECT_CALL(trust_session_listener, trusted_session_ending(_, shared_app2)).Times(1);
 
-    trust_session.add_trusted_child(shared_app1);
-    trust_session.add_trusted_child(shared_app2);
+    trust_session.add_trusted_participant(shared_app1);
+    trust_session.add_trusted_participant(shared_app2);
 }

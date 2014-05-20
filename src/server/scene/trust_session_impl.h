@@ -35,7 +35,7 @@ class SessionContainer;
 class TrustSessionCreationParameters;
 class TrustSessionListener;
 class TrustSessionContainer;
-class TrustSessionParticipants;
+class TrustSessionTrustedParticipants;
 
 class TrustSessionImpl : public TrustSession
 {
@@ -52,9 +52,9 @@ public:
     void start() override;
     void stop() override;
 
-    bool add_trusted_child(std::shared_ptr<Session> const& session);
-    bool remove_trusted_child(std::shared_ptr<Session> const& session);
-    void for_each_trusted_child(std::function<void(std::shared_ptr<Session> const&)> f) const;
+    bool add_trusted_participant(std::shared_ptr<Session> const& session);
+    bool remove_trusted_participant(std::shared_ptr<Session> const& session);
+    void for_each_trusted_participant(std::function<void(std::shared_ptr<Session> const&)> f) const;
 
 protected:
     TrustSessionImpl(const TrustSessionImpl&) = delete;
@@ -63,7 +63,7 @@ protected:
 private:
     std::weak_ptr<Session> const trusted_helper;
     std::shared_ptr<TrustSessionListener> const trust_session_listener;
-    std::shared_ptr<TrustSessionParticipants> participants;
+    std::shared_ptr<TrustSessionTrustedParticipants> participants;
     MirTrustSessionState state;
     std::string cookie;
     std::recursive_mutex mutable mutex;

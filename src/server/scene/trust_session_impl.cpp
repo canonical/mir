@@ -22,7 +22,7 @@
 #include "mir/scene/trust_session_listener.h"
 #include "session_container.h"
 #include "trust_session_container.h"
-#include "trust_session_participants.h"
+#include "trust_session_trusted_participants.h"
 
 #include <sstream>
 #include <algorithm>
@@ -39,7 +39,7 @@ ms::TrustSessionImpl::TrustSessionImpl(
     std::shared_ptr<TrustSessionContainer> const& container) :
     trusted_helper(session),
     trust_session_listener(trust_session_listener),
-    participants(std::make_shared<TrustSessionParticipants>(this, container)),
+    participants(std::make_shared<TrustSessionTrustedParticipants>(this, container)),
     state(mir_trust_session_state_stopped)
 {
 }
@@ -93,7 +93,7 @@ void ms::TrustSessionImpl::stop()
     }
 
     std::vector<std::shared_ptr<mf::Session>> children;
-    participants->for_each_participant([&](std::weak_ptr<mf::Session> const& session)
+    participants->for_each_trusted_participant([&](std::weak_ptr<mf::Session> const& session)
         {
             if (auto locked_session = session.lock())
                 children.push_back(locked_session);
@@ -106,7 +106,7 @@ void ms::TrustSessionImpl::stop()
     }
 }
 
-bool ms::TrustSessionImpl::add_trusted_child(std::shared_ptr<ms::Session> const& session)
+bool ms::TrustSessionImpl::add_trusted_participant(std::shared_ptr<ms::Session> const& session)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -120,7 +120,7 @@ bool ms::TrustSessionImpl::add_trusted_child(std::shared_ptr<ms::Session> const&
     return true;
 }
 
-bool ms::TrustSessionImpl::remove_trusted_child(std::shared_ptr<ms::Session> const& session)
+bool ms::TrustSessionImpl::remove_trusted_participant(std::shared_ptr<ms::Session> const& session)
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -135,10 +135,10 @@ bool ms::TrustSessionImpl::remove_trusted_child(std::shared_ptr<ms::Session> con
     return false;
 }
 
-void ms::TrustSessionImpl::for_each_trusted_child(
+void ms::TrustSessionImpl::for_each_trusted_participant(
     std::function<void(std::shared_ptr<Session> const&)> f) const
 {
-    participants->for_each_participant([f](std::weak_ptr<mf::Session> const& session)
+    participants->for_each_trusted_participant([f](std::weak_ptr<mf::Session> const& session)
         {
             if (auto locked_scene_session = std::dynamic_pointer_cast<ms::Session>(session.lock()))
                 f(locked_scene_session);
