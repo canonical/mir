@@ -29,6 +29,7 @@
 #include <gmock/gmock.h>
 
 #include <initializer_list>
+#include <cstring>
 
 namespace droidinput = android;
 
@@ -153,6 +154,9 @@ TEST_F(AndroidInputDispatcherTest, axis_values_are_properly_converted)
     using namespace ::testing;
     droidinput::PointerCoords expected_coords[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
     droidinput::PointerProperties expected_properties[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+
+    std::memset(expected_coords, 0, sizeof(expected_coords));
+    std::memset(expected_properties, 0, sizeof(expected_properties));
     MirEvent event;
     event.type = mir_event_type_motion;
     event.motion.pointer_count = 1;
