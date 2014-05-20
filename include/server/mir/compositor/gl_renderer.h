@@ -26,7 +26,7 @@
 #include <mir/graphics/renderable.h>
 #include <mir/graphics/gl_primitive.h>
 #include <mir/graphics/gl_program_factory.h>
-#include <mir/graphics/texture_cache.h>
+#include <mir/graphics/gl_texture_cache.h>
 #include <GLES2/gl2.h>
 #include <unordered_map>
 #include <unordered_set>

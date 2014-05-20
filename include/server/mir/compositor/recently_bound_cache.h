@@ -20,7 +20,7 @@
 #ifndef MIR_COMPOSITOR_RECENTLY_BOUND_CACHE_H_
 #define MIR_COMPOSITOR_RECENTLY_BOUND_CACHE_H_
 
-#include "mir/graphics/texture_cache.h"
+#include "mir/graphics/gl_texture_cache.h"
 #include "mir/graphics/gl_texture.h"
 #include "mir/graphics/buffer_id.h"
 #include <unordered_map>

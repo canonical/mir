@@ -19,7 +19,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
-#include "mir/graphics/texture_cache.h"
+#include "mir/graphics/gl_texture_cache.h"
 #include "mir/graphics/gl_texture.h"
 #include "mir/graphics/tessellation_helpers.h"
 

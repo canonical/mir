@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/geometry/rectangle.h>
-#include <mir/graphics/texture_cache.h>
+#include <mir/graphics/gl_texture_cache.h>
 #include <mir/graphics/gl_texture.h>
 #include "mir/compositor/gl_renderer.h"
 #include "src/server/graphics/program_factory.h"
