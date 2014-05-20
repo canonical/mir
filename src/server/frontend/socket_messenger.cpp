@@ -19,6 +19,7 @@
 #include "socket_messenger.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/session_credentials.h"
+#include "mir/variable_length_array.h"
 
 #include <errno.h>
 #include <string.h>
@@ -33,7 +34,6 @@ namespace ba = boost::asio;
 mfd::SocketMessenger::SocketMessenger(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
     : socket(socket)
 {
-    whole_message.reserve(serialization_buffer_size);
 }
 
 mf::SessionCredentials mfd::SocketMessenger::client_creds()
@@ -43,25 +43,21 @@ mf::SessionCredentials mfd::SocketMessenger::client_creds()
 
 void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& fd_set)
 {
-    const unsigned char header_bytes[2] =
-    {
-        static_cast<unsigned char>((length >> 8) & 0xff),
-        static_cast<unsigned char>((length >> 0) & 0xff)
-    };
+    static size_t const header_size{2};
+    mir::VariableLengthArray<mf::serialization_buffer_size> whole_message{header_size + length};
+
+    whole_message.data()[0] = static_cast<unsigned char>((length >> 8) & 0xff);
+    whole_message.data()[1] = static_cast<unsigned char>((length >> 0) & 0xff);
+    std::copy(data, data + length, whole_message.data() + header_size);
 
     std::unique_lock<std::mutex> lg(message_lock);
-
-    whole_message.resize(sizeof header_bytes + length);
-    std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
-    std::copy(data, data + length, whole_message.begin() + sizeof header_bytes);
-
 
     // TODO: This should be asynchronous, but we are not making sure
     // that a potential call to send_fds is executed _after_ this
     // function has completed (if it would be executed asynchronously.
     // NOTE: we rely on this synchronous behavior as per the comment in
     // mf::SessionMediator::create_surface
-    ba::write(*socket, ba::buffer(whole_message));
+    ba::write(*socket, ba::buffer(whole_message.data(), whole_message.size()));
 
     for (auto const& fds : fd_set)
         send_fds_locked(lg, fds);
