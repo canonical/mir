@@ -78,6 +78,8 @@ void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, 
         static auto const builtin_cmsg_space = CMSG_SPACE(builtin_n_fds * sizeof(int));
         auto const fds_bytes = fds.size() * sizeof(int);
         mir::VariableLengthArray<builtin_cmsg_space> control{CMSG_SPACE(fds_bytes)};
+        // Silence valgrind uninitialized memory complaint
+        memset(control.data(), 0, control.size());
 
         // Message to send
         struct msghdr header;
