@@ -45,8 +45,6 @@ private:
     std::shared_ptr<boost::asio::local::stream_protocol::socket> socket;
 
     std::mutex message_lock;
-    std::vector<char> whole_message;
-
     void send_fds_locked(std::unique_lock<std::mutex> const& lock, std::vector<int32_t> const& fds);
 };
 }

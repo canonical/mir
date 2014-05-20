@@ -39,7 +39,8 @@
 #include "mir/compositor/renderer.h"
 #include "mir/compositor/renderer_factory.h"
 #include "src/server/input/null_input_configuration.h"
-#include "src/server/input/null_input_dispatcher_configuration.h"
+#include "src/server/input/null_input_dispatcher.h"
+#include "src/server/input/null_input_targeter.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -50,6 +51,7 @@
 
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
+namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mo = mir::options;
@@ -269,14 +271,24 @@ std::shared_ptr<mi::InputConfiguration> mtf::StubbedServerConfiguration::the_inp
         return std::make_shared<mi::NullInputConfiguration>();
 }
 
-std::shared_ptr<mi::InputDispatcherConfiguration> mtf::StubbedServerConfiguration::the_input_dispatcher_configuration()
+std::shared_ptr<msh::InputTargeter> mtf::StubbedServerConfiguration::the_input_targeter()
 {
     auto options = the_options();
 
     if (options->get<bool>("tests-use-real-input"))
-        return DefaultServerConfiguration::the_input_dispatcher_configuration();
+        return DefaultServerConfiguration::the_input_targeter();
     else
-        return std::make_shared<mi::NullInputDispatcherConfiguration>();
+        return std::make_shared<mi::NullInputTargeter>();
+}
+
+std::shared_ptr<mi::InputDispatcher> mtf::StubbedServerConfiguration::the_input_dispatcher()
+{
+    auto options = the_options();
+
+    if (options->get<bool>("tests-use-real-input"))
+        return DefaultServerConfiguration::the_input_dispatcher();
+    else
+        return std::make_shared<mi::NullInputDispatcher>();
 }
 
 int main(int argc, char** argv)

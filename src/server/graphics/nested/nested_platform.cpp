@@ -59,11 +59,11 @@ private:
 
 mgn::NestedPlatform::NestedPlatform(
     std::shared_ptr<HostConnection> const& connection,
-    std::shared_ptr<input::EventFilter> const& event_handler,
+    std::shared_ptr<input::InputDispatcher> const& dispatcher,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::NativePlatform> const& native_platform) :
 native_platform{native_platform},
-event_handler{event_handler},
+dispatcher{dispatcher},
 display_report{display_report},
 connection{connection}
 {
@@ -86,7 +86,7 @@ std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(
     std::shared_ptr<mg::GLConfig> const& gl_config)
 {
     return std::make_shared<mgn::NestedDisplay>(
-        connection, event_handler, display_report, conf_policy, gl_config);
+        connection, dispatcher, display_report, conf_policy, gl_config);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgn::NestedPlatform::get_ipc_package()

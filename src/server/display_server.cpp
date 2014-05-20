@@ -72,7 +72,6 @@ struct mir::DisplayServer::Private
     Private(ServerConfiguration& config)
         : graphics_platform{config.the_graphics_platform()},
           display{config.the_display()},
-          input_dispatcher_configuration{config.the_input_dispatcher_configuration()},
           input_dispatcher{config.the_input_dispatcher()},
           input_configuration{config.the_input_configuration()},
           compositor{config.the_compositor()},
@@ -175,7 +174,6 @@ struct mir::DisplayServer::Private
 
     std::shared_ptr<mg::Platform> const graphics_platform; // Hold this so the platform is loaded once
     std::shared_ptr<mg::Display> const display;
-    std::shared_ptr<input::InputDispatcherConfiguration> const input_dispatcher_configuration;
     std::shared_ptr<mi::InputDispatcher> const input_dispatcher;
     std::shared_ptr<input::InputConfiguration> const input_configuration;
     std::shared_ptr<mc::Compositor> const compositor;

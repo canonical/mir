@@ -32,16 +32,12 @@ class NestedInputRelay;
 class NestedInputConfiguration : public InputConfiguration
 {
 public:
-    NestedInputConfiguration(
-        std::shared_ptr<NestedInputRelay> const& input_relay,
-        std::shared_ptr<InputDispatcherConfiguration> const& input_dispatcher_conf);
+    NestedInputConfiguration();
     virtual ~NestedInputConfiguration() = default;
     std::shared_ptr<InputChannelFactory> the_input_channel_factory() override;
     std::shared_ptr<InputManager> the_input_manager() override;
 
 private:
-    std::shared_ptr<NestedInputRelay> const input_relay;
-    std::shared_ptr<InputDispatcherConfiguration> const input_dispatcher_config;
     CachedPtr<InputManager> input_manager;
 };
 }

@@ -33,6 +33,7 @@ set(
   test_client_surface_swap_buffers.cpp
   test_client_cursor_api.cpp
   test_trust_session_helper.cpp
+  test_large_messages.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )
