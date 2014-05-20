@@ -17,6 +17,7 @@
  */
 
 #include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/command_line_server_configuration.h"
 
 #include "mir/options/default_configuration.h"
 #include "mir/geometry/rectangle.h"
@@ -60,10 +61,6 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-char const* dummy[] = {0};
-int argc = 0;
-char const** argv = dummy;
-
 class StubFDBuffer : public mtd::StubBuffer
 {
 public:
@@ -224,7 +221,7 @@ public:
 mtf::StubbedServerConfiguration::StubbedServerConfiguration() :
     DefaultServerConfiguration([]
     {
-        auto result = std::make_shared<mo::DefaultConfiguration>(::argc, ::argv);
+        auto result = mtf::configuration_from_commandline();
 
         namespace po = boost::program_options;
 
@@ -289,17 +286,4 @@ std::shared_ptr<mi::InputDispatcher> mtf::StubbedServerConfiguration::the_input_
         return DefaultServerConfiguration::the_input_dispatcher();
     else
         return std::make_shared<mi::NullInputDispatcher>();
-}
-
-int main(int argc, char** argv)
-{
-    ::argc = std::remove_if(
-        argv,
-        argv+argc,
-        [](char const* arg) { return !strncmp(arg, "--gtest_", 8); }) - argv;
-    ::argv = const_cast<char const**>(argv);
-
-  ::testing::InitGoogleTest(&argc, argv);
-
-  return RUN_ALL_TESTS();
 }

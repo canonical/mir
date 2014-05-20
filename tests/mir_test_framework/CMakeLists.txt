@@ -8,6 +8,7 @@ include_directories(
 set(
   TEST_FRAMEWORK_SRCS
 
+  command_line_server_configuration.cpp
   cross_process_sync.cpp
   in_process_server.cpp
   testing_server_options.cpp
