@@ -115,7 +115,7 @@ MATCHER_P(MotionArgsMatches, expected, "")
     int relevant_axis[] = {AMOTION_EVENT_AXIS_ORIENTATION, AMOTION_EVENT_AXIS_TOUCH_MAJOR, AMOTION_EVENT_AXIS_PRESSURE,
                            AMOTION_EVENT_AXIS_X,           AMOTION_EVENT_AXIS_Y,           AMOTION_EVENT_AXIS_SIZE,
                            AMOTION_EVENT_AXIS_HSCROLL,     AMOTION_EVENT_AXIS_VSCROLL};
-    for (int i = 0; i != arg->pointerCount; ++i)
+    for (uint32_t i = 0; i != arg->pointerCount; ++i)
     {
         for (int j = 0; j != sizeof(relevant_axis)/sizeof(relevant_axis[0]); ++j)
         {
