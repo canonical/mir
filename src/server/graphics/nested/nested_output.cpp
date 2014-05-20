@@ -18,7 +18,7 @@
 
 #include "nested_output.h"
 #include "host_connection.h"
-#include "mir/input/event_filter.h"
+#include "mir/input/input_dispatcher.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -30,14 +30,14 @@ mgn::detail::NestedOutput::NestedOutput(
     EGLDisplayHandle const& egl_display,
     std::shared_ptr<HostSurface> const& host_surface,
     geometry::Rectangle const& area,
-    std::shared_ptr<input::EventFilter> const& event_handler,
+    std::shared_ptr<input::InputDispatcher> const& dispatcher,
     MirPixelFormat preferred_format) :
     egl_display(egl_display),
     host_surface{host_surface},
     egl_config{egl_display.choose_windowed_es_config(preferred_format)},
     egl_context{egl_display, eglCreateContext(egl_display, egl_config, egl_display.egl_context(), nested_egl_context_attribs)},
     area{area.top_left, area.size},
-    event_handler{event_handler},
+    dispatcher{dispatcher},
     egl_surface{egl_display, host_surface->egl_native_window(), egl_config}
 {
     MirEventDelegate ed = {event_thunk, this};
@@ -110,10 +110,10 @@ void mgn::detail::NestedOutput::mir_event(MirEvent const& event)
         auto my_event = event;
         my_event.motion.x_offset += area.top_left.x.as_float();
         my_event.motion.y_offset += area.top_left.y.as_float();
-        event_handler->handle(my_event);
+        dispatcher->dispatch(my_event);
     }
     else
     {
-        event_handler->handle(event);
+        dispatcher->dispatch(event);
     }
 }

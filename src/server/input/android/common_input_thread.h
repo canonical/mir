@@ -16,32 +16,41 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_CONFIGURATION_H_
-#define MIR_INPUT_INPUT_CONFIGURATION_H_
+#ifndef MIR_INPUT_ANDROID_COMMON_INPUT_THREAD_H_
+#define MIR_INPUT_ANDROID_COMMON_INPUT_THREAD_H_
 
-#include <memory>
+#include "android_input_thread.h"
 
-namespace mir
+#include <utils/StrongPointer.h>
+#include <std/Thread.h>
+
+#include <string>
+
+namespace droidinput = android;
+
+namespace  mir
 {
 namespace input
 {
-class InputManager;
-class InputChannelFactory;
-
-class InputConfiguration
+namespace android
+{
+class CommonInputThread : public InputThread
 {
 public:
-    virtual ~InputConfiguration() = default;
+    CommonInputThread(std::string const& name, droidinput::sp<droidinput::Thread> const& thread);
+    void start();
+    void request_stop();
+    void join();
 
-    virtual std::shared_ptr<InputChannelFactory> the_input_channel_factory() = 0;
-    virtual std::shared_ptr<InputManager> the_input_manager() = 0;
+private:
+    CommonInputThread(const CommonInputThread&) = delete;
+    CommonInputThread& operator=(const CommonInputThread&) = delete;
 
-protected:
-    InputConfiguration() = default;
-    InputConfiguration(InputConfiguration const&) = delete;
-    InputConfiguration& operator=(InputConfiguration const&) = delete;
+    std::string const name;
+    droidinput::sp<droidinput::Thread> const thread;
 };
 
+}
 }
 }
 

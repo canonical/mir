@@ -232,3 +232,15 @@ TEST_F(AndroidInterpreter, returns_2_for_min_undequeued_query)
     auto num_buffers = interpreter.driver_requests_info(NATIVE_WINDOW_MIN_UNDEQUEUED_BUFFERS);
     EXPECT_EQ(2, num_buffers);
 }
+
+TEST_F(AndroidInterpreter, requests_swapinterval_change)
+{
+    testing::NiceMock<MockMirSurface> mock_surface{surf_params};
+    testing::InSequence seq;
+    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval, 1));
+    EXPECT_CALL(mock_surface, request_and_wait_for_configure(mir_surface_attrib_swapinterval, 0));
+
+    mcla::ClientSurfaceInterpreter interpreter(mock_surface);
+    interpreter.sync_to_display(true); 
+    interpreter.sync_to_display(false); 
+}

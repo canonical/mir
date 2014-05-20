@@ -41,10 +41,10 @@ mia::InputTargetEnumerator::~InputTargetEnumerator() noexcept(true)
 
 void mia::InputTargetEnumerator::for_each(std::function<void(droidinput::sp<droidinput::InputWindowHandle> const&)> const& callback)
 {
-    auto t = targets.lock();
-    auto r = repository.lock();
-    t->for_each([&callback, &r, this](std::shared_ptr<mi::Surface> const& target){
-            auto handle = r->handle_for_channel(target->input_channel());
+    targets->for_each(
+        [&callback, this](std::shared_ptr<mi::Surface> const& target)
+        {
+            auto handle = repository->handle_for_channel(target->input_channel());
             callback(handle);
-    });
+        });
 }

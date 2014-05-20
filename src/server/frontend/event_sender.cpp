@@ -18,6 +18,7 @@
 
 #include "mir/frontend/client_constants.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/variable_length_array.h"
 #include "event_sender.h"
 #include "message_sender.h"
 #include "protobuf_buffer_packer.h"
@@ -73,17 +74,19 @@ void mfd::EventSender::handle_lifecycle_event(
 
 void mfd::EventSender::send_event_sequence(mp::EventSequence& seq)
 {
-    std::string send_buffer;
-    send_buffer.reserve(serialization_buffer_size);
-    seq.SerializeToString(&send_buffer);
+    mir::VariableLengthArray<frontend::serialization_buffer_size>
+        send_buffer{static_cast<size_t>(seq.ByteSize())};
+
+    seq.SerializeWithCachedSizesToArray(send_buffer.data());
 
     mir::protobuf::wire::Result result;
-    result.add_events(send_buffer);
-    result.SerializeToString(&send_buffer);
+    result.add_events(send_buffer.data(), send_buffer.size());
+    send_buffer.resize(result.ByteSize());
+    result.SerializeWithCachedSizesToArray(send_buffer.data());
 
     try
     {
-        sender->send(send_buffer.data(), send_buffer.length(), {});
+        sender->send(reinterpret_cast<char*>(send_buffer.data()), send_buffer.size(), {});
     }
     catch (std::exception const& error)
     {

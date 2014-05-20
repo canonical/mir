@@ -284,13 +284,6 @@ protected:
     virtual ~InputDispatcherInterface() { }
 
 public:
-    /* 
-     * Sets the enumerator of input targets. This must be called prior to enabling input dispatch.
-     *
-     * This method may be called by any thread.
-     */
-    virtual void setInputEnumerator(sp<InputEnumerator> const& enumerator) = 0;
-
     /* Dumps the state of the input dispatcher.
      *
      * This method may be called on any thread (usually by the input manager). */
@@ -389,9 +382,7 @@ public:
 class InputDispatcher : public InputDispatcherInterface {
 public:
     virtual ~InputDispatcher();
-    explicit InputDispatcher(std::shared_ptr<InputDispatcherPolicyInterface> const& policy, std::shared_ptr<mir::input::InputReport> const& input_report);
-
-    virtual void setInputEnumerator(sp<InputEnumerator> const& enumerator);
+    explicit InputDispatcher(std::shared_ptr<InputDispatcherPolicyInterface> const& policy, std::shared_ptr<mir::input::InputReport> const& input_report, std::shared_ptr<InputEnumerator> const& enumerator);
 
     virtual void dump(String8& dump);
     virtual void monitor();
@@ -939,7 +930,7 @@ private:
     bool mDispatchFrozen;
     bool mInputFilterEnabled;
 
-    sp<InputEnumerator> mEnumerator;
+    std::shared_ptr<InputEnumerator> mEnumerator;
 
     sp<InputWindowHandle> getWindowHandleLocked(const sp<InputChannel>& inputChannel) const;
     bool hasWindowHandleLocked(const sp<InputWindowHandle>& windowHandle) const;

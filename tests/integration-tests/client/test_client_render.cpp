@@ -251,6 +251,18 @@ struct StubServerGenerator : public mt::StubServerTool
         done->Run();
     }
 
+    void configure_surface(
+        google::protobuf::RpcController*,
+        const mir::protobuf::SurfaceSetting* request,
+        mir::protobuf::SurfaceSetting* response,
+        google::protobuf::Closure* done)
+    {
+        response->mutable_surfaceid()->CopyFrom(request->surfaceid());
+        response->set_attrib(request->attrib());
+        response->set_ivalue(request->ivalue());
+        done->Run();
+    }
+
     uint32_t red_value_for_surface()
     {
         if ((surface_pf == mir_pixel_format_abgr_8888) || (surface_pf == mir_pixel_format_xbgr_8888))

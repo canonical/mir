@@ -60,8 +60,8 @@ protected:
         
         ASSERT_THAT(score.length(), ::testing::Gt(0u));
 
-        auto const minumum_acceptable_score = 52;
-        EXPECT_THAT(stoi(score), ::testing::Ge(minumum_acceptable_score));
+        auto const minimum_acceptable_score = 52;
+        EXPECT_THAT(stoi(score), ::testing::Ge(minimum_acceptable_score));
 
         if (file_type == json)
         {
