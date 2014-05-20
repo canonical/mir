@@ -172,24 +172,20 @@ static bool validateMotionEvent(int32_t action, size_t pointerCount,
 // --- InputDispatcher ---
 
 InputDispatcher::InputDispatcher(std::shared_ptr<InputDispatcherPolicyInterface> const& policy,
-    std::shared_ptr<mi::InputReport> const& input_report) :
+    std::shared_ptr<mi::InputReport> const& input_report,
+    std::shared_ptr<InputEnumerator> const& enumerator) :
         input_report(input_report),
         mPolicy(policy),
         mPendingEvent(NULL), mAppSwitchSawKeyDown(false), mAppSwitchDueTime(LONG_LONG_MAX),
         mNextUnblockedEvent(NULL),
         mDispatchEnabled(false), mDispatchFrozen(false), mInputFilterEnabled(false),
+        mEnumerator(enumerator),
         mInputTargetWaitCause(INPUT_TARGET_WAIT_CAUSE_NONE) {
     mLooper = new Looper(false);
 
     mKeyRepeatState.lastKeyEntry = NULL;
 
     policy->getDispatcherConfiguration(&mConfig);
-}
-
-void InputDispatcher::setInputEnumerator(sp<InputEnumerator> const& enumerator)
-{
-    AutoMutex _l(mLock);
-    mEnumerator = enumerator;
 }
 
 InputDispatcher::~InputDispatcher() {

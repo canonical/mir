@@ -1150,6 +1150,68 @@ TEST_F(BufferQueueTest, with_single_buffer_compositor_acquires_resized_frames_ev
     q.compositor_release(buf);
 }
 
+TEST_F(BufferQueueTest, double_buffered_client_is_not_blocked_prematurely)
+{  // Regression test for LP: #1319765
+    using namespace testing;
+
+    mc::BufferQueue q{2, allocator, basic_properties, policy_factory};
+
+    q.client_release(client_acquire_sync(q));
+    auto a = q.compositor_acquire(this);
+    q.client_release(client_acquire_sync(q));
+    auto b = q.compositor_acquire(this);
+
+    ASSERT_NE(a.get(), b.get());
+
+    q.compositor_release(a);
+    q.client_release(client_acquire_sync(q));
+
+    q.compositor_release(b);
+    auto handle = client_acquire_async(q);
+    // With the fix, a buffer will be available instantaneously:
+    ASSERT_TRUE(handle->has_acquired_buffer());
+    handle->release_buffer();
+}
+
+TEST_F(BufferQueueTest, composite_on_demand_never_deadlocks_with_2_buffers)
+{  // Extended regression test for LP: #1319765
+    using namespace testing;
+
+    mc::BufferQueue q{2, allocator, basic_properties, policy_factory};
+
+    for (int i = 0; i < 100; ++i)
+    {
+        auto x = client_acquire_async(q);
+        ASSERT_TRUE(x->has_acquired_buffer());
+        x->release_buffer();
+
+        auto a = q.compositor_acquire(this);
+
+        auto y = client_acquire_async(q);
+        ASSERT_TRUE(y->has_acquired_buffer());
+        y->release_buffer();
+
+        auto b = q.compositor_acquire(this);
+    
+        ASSERT_NE(a.get(), b.get());
+    
+        q.compositor_release(a);
+
+        auto w = client_acquire_async(q);
+        ASSERT_TRUE(w->has_acquired_buffer());
+        w->release_buffer();
+    
+        q.compositor_release(b);
+
+        auto z = client_acquire_async(q);
+        ASSERT_TRUE(z->has_acquired_buffer());
+        z->release_buffer();
+
+        q.compositor_release(q.compositor_acquire(this));
+        q.compositor_release(q.compositor_acquire(this));
+    }
+}
+
 /* Regression test for LP: #1306464 */
 TEST_F(BufferQueueTest, framedropping_client_acquire_does_not_block_when_no_available_buffers)
 {

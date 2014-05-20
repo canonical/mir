@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,6 +19,9 @@
 #include "socket_messenger.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/session_credentials.h"
+#include "mir/variable_length_array.h"
+
+#include <boost/throw_exception.hpp>
 
 #include <errno.h>
 #include <string.h>
@@ -33,35 +36,48 @@ namespace ba = boost::asio;
 mfd::SocketMessenger::SocketMessenger(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
     : socket(socket)
 {
-    whole_message.reserve(serialization_buffer_size);
+}
+
+mf::SessionCredentials mfd::SocketMessenger::creator_creds() const
+{
+    struct ucred cr;
+    socklen_t cl = sizeof(cr);
+
+    auto status = getsockopt(socket->native_handle(), SOL_SOCKET, SO_PEERCRED, &cr, &cl);
+
+    if (status)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
+
+    return {cr.pid, cr.uid, cr.gid};
 }
 
 mf::SessionCredentials mfd::SocketMessenger::client_creds()
 {
-    return mf::SessionCredentials::from_socket_fd(socket->native_handle());
+    if (session_creds.pid() != 0)
+        return session_creds;
+
+    // We've not got the credentials from client yet.
+    // Return the credentials that created the socket instead.
+    return creator_creds();
 }
 
 void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& fd_set)
 {
-    const unsigned char header_bytes[2] =
-    {
-        static_cast<unsigned char>((length >> 8) & 0xff),
-        static_cast<unsigned char>((length >> 0) & 0xff)
-    };
+    static size_t const header_size{2};
+    mir::VariableLengthArray<mf::serialization_buffer_size> whole_message{header_size + length};
+
+    whole_message.data()[0] = static_cast<unsigned char>((length >> 8) & 0xff);
+    whole_message.data()[1] = static_cast<unsigned char>((length >> 0) & 0xff);
+    std::copy(data, data + length, whole_message.data() + header_size);
 
     std::unique_lock<std::mutex> lg(message_lock);
-
-    whole_message.resize(sizeof header_bytes + length);
-    std::copy(header_bytes, header_bytes + sizeof header_bytes, whole_message.begin());
-    std::copy(data, data + length, whole_message.begin() + sizeof header_bytes);
-
 
     // TODO: This should be asynchronous, but we are not making sure
     // that a potential call to send_fds is executed _after_ this
     // function has completed (if it would be executed asynchronously.
     // NOTE: we rely on this synchronous behavior as per the comment in
     // mf::SessionMediator::create_surface
-    ba::write(*socket, ba::buffer(whole_message));
+    ba::write(*socket, ba::buffer(whole_message.data(), whole_message.size()));
 
     for (auto const& fds : fd_set)
         send_fds_locked(lg, fds);
@@ -96,7 +112,7 @@ void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, 
         message->cmsg_len = header.msg_controllen;
         message->cmsg_level = SOL_SOCKET;
         message->cmsg_type = SCM_RIGHTS;
-        int *data = (int *)CMSG_DATA(message);
+        int *data = reinterpret_cast<int*>(CMSG_DATA(message));
         int i = 0;
         for (auto &fd: fds)
             data[i++] = fd;
@@ -132,7 +148,38 @@ bs::error_code mfd::SocketMessenger::receive_msg(
 
 size_t mfd::SocketMessenger::available_bytes()
 {
+    // We call available_bytes() once the client is talking to us
+    // so this is a pragmatic place to grab the session credentials
+    if (session_creds.pid() == 0)
+        update_session_creds();
+
     boost::asio::socket_base::bytes_readable command{true};
     socket->io_control(command);
     return command.get();
+}
+
+void mfd::SocketMessenger::update_session_creds()
+{
+    union {
+        struct cmsghdr cmh;
+        char   control[CMSG_SPACE(sizeof(ucred))];
+    } control_un;
+
+    control_un.cmh.cmsg_len = CMSG_LEN(sizeof(ucred));
+    control_un.cmh.cmsg_level = SOL_SOCKET;
+    control_un.cmh.cmsg_type = SCM_CREDENTIALS;
+
+    msghdr msgh;
+    msgh.msg_name = nullptr;
+    msgh.msg_namelen = 0;
+    msgh.msg_iov = nullptr;
+    msgh.msg_iovlen = 0;
+    msgh.msg_control = control_un.control;
+    msgh.msg_controllen = sizeof(control_un.control);
+
+    if (recvmsg(socket->native_handle(), &msgh, MSG_PEEK) != -1)
+    {
+        auto const ucredp = reinterpret_cast<ucred*>(CMSG_DATA(CMSG_FIRSTHDR(&msgh)));
+        session_creds = {ucredp->pid, ucredp->uid, ucredp->gid};
+    }
 }

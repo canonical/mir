@@ -336,7 +336,7 @@ TEST_F(AsioMainLoopAlarmTest, main_loop_runs_until_stop_called)
 
     UnblockMainLoop unblocker(ml);
 
-    ASSERT_TRUE(mainloop_started->wait_for(std::chrono::milliseconds{10}));
+    ASSERT_TRUE(mainloop_started->wait_for(std::chrono::milliseconds{100}));
 
     auto timer_fired = std::make_shared<mt::Signal>();
     auto alarm = ml.notify_in(std::chrono::milliseconds{10}, [timer_fired]
@@ -344,7 +344,7 @@ TEST_F(AsioMainLoopAlarmTest, main_loop_runs_until_stop_called)
         timer_fired->raise();
     });
 
-    EXPECT_TRUE(timer_fired->wait_for(std::chrono::milliseconds{100}));
+    EXPECT_TRUE(timer_fired->wait_for(std::chrono::milliseconds{500}));
 
     ml.stop();
     // Main loop should be stopped now
