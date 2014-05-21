@@ -24,6 +24,7 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
+#include <mir/graphics/gl_primitive.h>
 #include <mir/graphics/gl_program_factory.h>
 #include <GLES2/gl2.h>
 #include <unordered_map>
@@ -53,19 +54,6 @@ public:
     // This is called _without_ a GL context:
     void suspend() override;
 
-    struct Vertex
-    {
-        GLfloat position[3];
-        GLfloat texcoord[2];
-    };
-
-    struct Primitive
-    {
-        GLenum type; // GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES etc
-        GLuint tex_id;  // GL texture ID (or 0 to represent the surface itself)
-        std::vector<Vertex> vertices;
-    };
-
     /**
      * tessellate defines the list of triangles that will be used to render
      * the surface. By default it just returns 4 vertices for a rectangle.
@@ -75,11 +63,6 @@ public:
      * \param [in,out] primitives The list of rendering primitives to be
      *                            grown and/or modified.
      * \param [in]     renderable The renderable surface being tessellated.
-     * \param [in]     buf_size   The dimensions of the buffer being rendered,
-     *                            which can be particularly useful in
-     *                            calculating texcoords for a surface being
-     *                            actively resized (as the buf_size doesn't
-     *                            yet match renderable.size()).
      *
      * \note The cohesion of this function to GLRenderer is quite loose and it
      *       does not strictly need to reside here.
@@ -87,9 +70,8 @@ public:
      *       the only OpenGL-specific class in the display server, and
      *       tessellation is very much OpenGL-specific.
      */
-    virtual void tessellate(std::vector<Primitive>& primitives,
-                            graphics::Renderable const& renderable,
-                            geometry::Size const& buf_size) const;
+    virtual void tessellate(std::vector<graphics::GLPrimitive>& primitives,
+                            graphics::Renderable const& renderable) const;
 
     /**
      * Load the texture for a surface any which way you like. The default

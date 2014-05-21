@@ -17,25 +17,7 @@
 
 #include "mir/frontend/session_credentials.h"
 
-#include <sys/socket.h>
-
-#include <stdexcept>
-#include <boost/throw_exception.hpp>
-
 namespace mf = mir::frontend;
-
-mf::SessionCredentials mf::SessionCredentials::from_socket_fd(int socket_fd)
-{
-    struct ucred cr;
-    socklen_t cl = sizeof(cr);
-
-    auto status = getsockopt(socket_fd, SOL_SOCKET, SO_PEERCRED, &cr, &cl);
-
-    if (status)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
-
-    return {cr.pid, cr.uid, cr.gid};
-}
 
 mf::SessionCredentials::SessionCredentials(pid_t pid, uid_t uid, gid_t gid) :
     the_pid{pid},

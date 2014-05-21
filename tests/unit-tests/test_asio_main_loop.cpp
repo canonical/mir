@@ -611,6 +611,7 @@ TEST_F(AsioMainLoopTest, does_not_dispatch_paused_actions)
 
     ml.enqueue(
         &owner1,
+
         [&]
         {
             int const id = 0;

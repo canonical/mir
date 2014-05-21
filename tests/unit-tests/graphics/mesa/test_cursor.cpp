@@ -453,6 +453,23 @@ TEST_F(MesaCursorTest, hides_cursor_in_all_outputs)
     output_container.verify_and_clear_expectations();
 }
 
+TEST_F(MesaCursorTest, hidden_cursor_is_not_shown_on_display_when_moved)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*output_container.outputs[10], clear_cursor());
+    EXPECT_CALL(*output_container.outputs[11], clear_cursor());
+    EXPECT_CALL(*output_container.outputs[12], clear_cursor());
+    EXPECT_CALL(*output_container.outputs[10], move_cursor(_)).Times(0);
+    EXPECT_CALL(*output_container.outputs[11], move_cursor(_)).Times(0);
+    EXPECT_CALL(*output_container.outputs[12], move_cursor(_)).Times(0);
+
+    cursor.hide();
+    cursor.move_to({17, 29});
+    
+    output_container.verify_and_clear_expectations();
+}
+
 TEST_F(MesaCursorTest, clears_cursor_on_exit)
 {
     using namespace testing;
