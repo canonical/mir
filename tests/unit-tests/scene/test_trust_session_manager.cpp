@@ -109,16 +109,15 @@ TEST_F(TrustSessionManager, when_session_added_listener_is_notified_of_session_b
     session_manager.add_to_waiting_trust_sessions(session);
 }
 
-// TODO {arg} I may have misunderstood correct behaviour
-TEST_F(TrustSessionManager, DISABLED_when_session_exists_listener_is_notified_of_session_beginning)
+TEST_F(TrustSessionManager, when_session_exists_listener_is_notified_of_session_beginning)
 {
     auto const trust_session = session_manager.start_trust_session_for(helper, parameters, existing_sessions);
     std::shared_ptr<ms::Session> const session{std::make_shared<StubSceneSession>(arbitrary_pid)};
     existing_sessions.insert_session(session);
 
-    session_manager.add_trusted_process_for(trust_session, arbitrary_pid, existing_sessions);
-
     EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(session))).Times(1);
+
+    session_manager.add_trusted_process_for(trust_session, arbitrary_pid, existing_sessions);
 }
 
 TEST_F(TrustSessionManager, when_session_added_listener_is_notified_of_session_beginning_and_ending)
