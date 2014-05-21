@@ -34,6 +34,7 @@ ms::TrustSessionContainer::TrustSessionContainer()
 
 void ms::TrustSessionContainer::insert_trust_session(std::shared_ptr<TrustSession> const& trust_session)
 {
+    std::unique_lock<std::mutex> lk(mutex);
     trust_sessions[trust_session.get()] = trust_session;
 }
 
