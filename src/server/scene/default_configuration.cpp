@@ -24,12 +24,12 @@
 #include "mir/abnormal_exit.h"
 #include "mir/scene/session.h"
 
-#include "session_container.h"
 #include "broadcasting_session_event_sink.h"
 #include "default_session_container.h"
 #include "gl_pixel_buffer.h"
 #include "global_event_sender.h"
 #include "mediating_display_changer.h"
+#include "session_container.h"
 #include "session_manager.h"
 #include "surface_allocator.h"
 #include "surface_controller.h"
