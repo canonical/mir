@@ -32,8 +32,7 @@ struct MirClockTimerTraits
     // of boost::asio only allowing static methods inside the taits type.
     struct TimerServiceClockStorage
     {
-        std::mutex timer_service_mutex;
-        std::weak_ptr<mir::time::Clock const> timer_service_clock;
+    public:
         void set_clock(std::shared_ptr<mir::time::Clock const> const& clock)
         {
             std::lock_guard<std::mutex> lock(timer_service_mutex);
@@ -42,9 +41,14 @@ struct MirClockTimerTraits
         mir::time::Timestamp now()
         {
             std::lock_guard<std::mutex> lock(timer_service_mutex);
-            assert(timer_service_clock.lock());
-            return timer_service_clock.lock()->sample();
+            auto clock = timer_service_clock.lock();
+            if (!clock)
+                BOOST_THROW_EXCEPTION(std::logic_error("no clock available to create time stamp"));
+            return clock->sample();
         }
+    private:
+        std::mutex timer_service_mutex;
+        std::weak_ptr<mir::time::Clock const> timer_service_clock;
     };
 
     static TimerServiceClockStorage clock_storage;

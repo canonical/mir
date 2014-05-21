@@ -49,15 +49,6 @@ public:
 
 class AdvanceableClock : public mir::time::Clock
 {
-private:
-    mutable std::mutex time_mutex;
-    mir::time::Timestamp current_time{
-        []
-        {
-           mir::time::HighResolutionClock clock;
-           return clock.sample();
-        }()
-        };
 public:
     mir::time::Timestamp sample() const override
     {
@@ -72,6 +63,15 @@ public:
         }
         ml.enqueue(this, []{});
     }
+private:
+    mutable std::mutex time_mutex;
+    mir::time::Timestamp current_time{
+        []
+        {
+           mir::time::HighResolutionClock clock;
+           return clock.sample();
+        }()
+        };
 };
 
 
@@ -518,9 +518,10 @@ TEST_F(AsioMainLoopAlarmTest, rescheduled_alarm_fires_again)
 
 TEST_F(AsioMainLoopAlarmTest, rescheduled_alarm_cancels_previous_scheduling)
 {
-    int some_time = 90;
-    int second_delay = 150;
-    int some_time_later = some_time + second_delay;
+    const int some_time{90};
+    const int second_delay{150};
+    const int some_time_later{some_time + second_delay};
+
     auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [this]()
     {
         call_count++;
