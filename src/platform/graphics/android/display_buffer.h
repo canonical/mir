@@ -52,9 +52,7 @@ public:
     void post_update();
     bool can_bypass() const override;
 
-    void render_and_post_update(
-        RenderableList const& renderlist,
-        std::function<void(Renderable const&)> const& render_fn);
+    bool post_renderables_if_optimizable(RenderableList const& renderlist);
     MirOrientation orientation() const override;
 
     DisplayConfigurationOutput configuration() const;
