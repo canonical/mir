@@ -19,6 +19,8 @@
 #ifndef MIR_SCENE_APPLICATION_MANAGER_H_
 #define MIR_SCENE_APPLICATION_MANAGER_H_
 
+#include "trust_session_manager.h"
+
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/shell.h"
 #include "mir/shell/focus_controller.h"
@@ -42,47 +44,6 @@ class SessionEventSink;
 class SessionListener;
 class SnapshotStrategy;
 class SurfaceCoordinator;
-class TrustSession;
-class TrustSessionContainer;
-class TrustSessionListener;
-
-class TrustSessionManager
-{
-public:
-    explicit TrustSessionManager(
-        std::shared_ptr<TrustSessionListener> const& trust_session_listener);
-
-    std::shared_ptr<TrustSession> start_trust_session_for(
-        std::shared_ptr<Session> const& session,
-        TrustSessionCreationParameters const& params,
-        SessionContainer const& existing_session) const;
-
-    void add_to_waiting_trust_sessions(std::shared_ptr<Session> const& new_session) const;
-
-    MirTrustSessionAddTrustResult add_trusted_process_for(
-        std::shared_ptr<TrustSession> const& trust_session,
-        pid_t process_id,
-        SessionContainer const& existing_session) const;
-
-    void stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) const;
-    void remove_from_trust_sessions(std::shared_ptr<Session> const& session) const;
-
-private:
-    std::shared_ptr<TrustSessionContainer> const trust_session_container;
-    std::shared_ptr<TrustSessionListener> const trust_session_listener;
-
-    std::mutex mutable trust_sessions_mutex;
-
-    MirTrustSessionAddTrustResult add_trusted_process_for_locked(
-        std::lock_guard<std::mutex> const&,
-        std::shared_ptr<TrustSession> const& trust_session,
-        pid_t process_id,
-        SessionContainer const& existing_session) const;
-
-    void stop_trust_session_locked(
-        std::lock_guard<std::mutex> const&,
-        std::shared_ptr<TrustSession> const& trust_session) const;
-};
 
 class SessionManager : public frontend::Shell, public shell::FocusController
 {
