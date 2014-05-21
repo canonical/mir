@@ -88,7 +88,7 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
 
     session_listener->starting(new_session);
 
-    trust_session_manager.add_to_waiting_trust_sessions(new_session);
+    trust_session_manager.add_expected_session(new_session);
 
     set_focus_to(new_session);
 
@@ -128,7 +128,7 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
 
     session_event_sink->handle_session_stopping(scene_session);
 
-    trust_session_manager.remove_from_trust_sessions(scene_session);
+    trust_session_manager.remove_session(scene_session);
 
     session_listener->stopping(scene_session);
 

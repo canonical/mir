@@ -109,7 +109,7 @@ TEST_F(TrustSessionManager, notifies_session_beginning_when_session_is_not_in_ex
 
     EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(trusted_session))).Times(1);
 
-    session_manager.add_to_waiting_trust_sessions(trusted_session);
+    session_manager.add_expected_session(trusted_session);
 }
 
 TEST_F(TrustSessionManager, notifies_session_beginning_when_session_is_in_existing_sessions)
@@ -129,6 +129,6 @@ TEST_F(TrustSessionManager, notifies_session_beginning_and_ending)
     EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(trusted_session))).Times(1);
     EXPECT_CALL(trust_session_listener, trusted_session_ending(Ref(*trust_session), Eq(trusted_session))).Times(1);
 
-    session_manager.add_to_waiting_trust_sessions(trusted_session);
+    session_manager.add_expected_session(trusted_session);
     session_manager.stop_trust_session(trust_session);
 }

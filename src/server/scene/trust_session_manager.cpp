@@ -68,7 +68,7 @@ void ms::TrustSessionManager::stop_trust_session_locked(
     trust_session_listener->stopping(trust_session);
 }
 
-void ms::TrustSessionManager::remove_from_trust_sessions(std::shared_ptr<Session> const& session) const
+void ms::TrustSessionManager::remove_session(std::shared_ptr<Session> const& session) const
 {
     std::lock_guard<std::mutex> lock(trust_sessions_mutex);
 
@@ -148,7 +148,7 @@ std::shared_ptr<ms::TrustSession> ms::TrustSessionManager::start_trust_session_f
     return trust_session;
 }
 
-void ms::TrustSessionManager::add_to_waiting_trust_sessions(std::shared_ptr<Session> const& new_session) const
+void ms::TrustSessionManager::add_expected_session(std::shared_ptr<Session> const& new_session) const
 {
     std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
