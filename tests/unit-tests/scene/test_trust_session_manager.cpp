@@ -114,6 +114,15 @@ TEST_F(TrustSessionManager, successfully_adds_a_trusted_process_twice)
     EXPECT_NO_THROW(session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions));
 }
 
+TEST_F(TrustSessionManager, fails_to_add_a_trusted_process_when_trust_session_is_stopped)
+{
+    session_manager.stop_trust_session(trust_session);
+
+    EXPECT_THROW(
+        session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions),
+        std::runtime_error);
+}
+
 TEST_F(TrustSessionManager, notifies_session_beginning_when_session_is_not_in_existing_sessions)
 {
     session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);

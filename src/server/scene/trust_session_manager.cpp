@@ -104,8 +104,6 @@ void ms::TrustSessionManager::add_trusted_process_for_locked(std::lock_guard<std
     pid_t process_id,
     SessionContainer const& existing_session) const
 {
-    // TODO {arg} we're ignoring a possible failure return here:
-    // TODO {arg} maybe insert_waiting_process() should throw?
     trust_session_container->insert_waiting_process(trust_session.get(), process_id);
 
     existing_session.for_each(
