@@ -26,6 +26,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "mir_test/gmock_fixes.h"
 
 #include <stdexcept>
 

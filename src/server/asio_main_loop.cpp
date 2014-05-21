@@ -172,6 +172,9 @@ public:
               mir::time::Timestamp time_point,
               std::function<void(void)> callback);
 
+    AlarmImpl(boost::asio::io_service& io,
+              std::function<void(void)> callback);
+
     ~AlarmImpl() noexcept override;
 
     bool cancel() override;
@@ -200,8 +203,7 @@ private:
 AlarmImpl::AlarmImpl(boost::asio::io_service& io,
                      std::chrono::milliseconds delay,
                      std::function<void ()> callback)
-    : timer{io},
-      data{std::make_shared<InternalState>(callback)}
+    : AlarmImpl(io, callback)
 {
     reschedule_in(delay);
 }
@@ -209,10 +211,17 @@ AlarmImpl::AlarmImpl(boost::asio::io_service& io,
 AlarmImpl::AlarmImpl(boost::asio::io_service& io,
                      mir::time::Timestamp time_point,
                      std::function<void ()> callback)
+    : AlarmImpl(io, callback)
+{
+    reschedule_for(time_point);
+}
+
+AlarmImpl::AlarmImpl(boost::asio::io_service& io,
+                     std::function<void(void)> callback)
     : timer{io},
       data{std::make_shared<InternalState>(callback)}
 {
-    reschedule_for(time_point);
+    data->state = triggered;
 }
 
 AlarmImpl::~AlarmImpl() noexcept
@@ -247,10 +256,10 @@ bool AlarmImpl::reschedule_in(std::chrono::milliseconds delay)
 
 bool AlarmImpl::reschedule_for(mir::time::Timestamp time_point)
 {
+    auto boost_epoch = boost::posix_time::from_time_t(0);
+    auto microseconds_since_epoch = std::chrono::duration_cast<std::chrono::microseconds>(time_point.time_since_epoch()).count();
     bool cancelling =
-        timer.expires_at(boost::posix_time::from_time_t(
-                std::chrono::high_resolution_clock::to_time_t(time_point)
-                ));
+            timer.expires_at(boost_epoch + boost::posix_time::microseconds{microseconds_since_epoch});
     update_timer();
     return cancelling;
 }
@@ -290,8 +299,13 @@ std::unique_ptr<mir::time::Alarm> mir::AsioMainLoop::notify_at(mir::time::Timest
                                                                std::function<void()> callback)
 {
     return std::unique_ptr<mir::time::Alarm>{new AlarmImpl{io, time_point, callback}};
-
 }
+
+std::unique_ptr<mir::time::Alarm> mir::AsioMainLoop::create_alarm(std::function<void()> callback)
+{
+    return std::unique_ptr<mir::time::Alarm>{new AlarmImpl{io, callback}};
+}
+
 void mir::AsioMainLoop::enqueue(void const* owner, ServerAction const& action)
 {
     {
