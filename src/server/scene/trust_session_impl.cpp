@@ -102,7 +102,7 @@ void ms::TrustSessionImpl::stop()
     for (auto session : children)
     {
         participants.remove(session);
-        trust_session_listener->trusted_session_ending(*this, std::dynamic_pointer_cast<ms::Session>(session));
+        trust_session_listener->trusted_session_ending(*this, session);
     }
 }
 
