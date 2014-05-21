@@ -129,9 +129,16 @@ void ms::TrustSessionManager::add_to_waiting_trust_sessions(std::shared_ptr<Sess
 {
     std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
+    std::vector<std::shared_ptr<TrustSession>> trust_sessions;
+
     trust_session_container->for_each_trust_session_for_waiting_process(new_session->process_id(),
         [&](std::shared_ptr<TrustSession> const& trust_session)
         {
-            trust_session->add_trusted_participant(new_session);
+            trust_sessions.push_back(trust_session);
         });
+
+    for(auto trust_session : trust_sessions)
+    {
+        trust_session->add_trusted_participant(new_session);
+    }
 }
