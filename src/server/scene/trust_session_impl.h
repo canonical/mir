@@ -52,8 +52,8 @@ public:
     void start() override;
     void stop() override;
 
-    bool add_trusted_participant(std::shared_ptr<Session> const& session);
-    bool remove_trusted_participant(std::shared_ptr<Session> const& session);
+    void add_trusted_participant(std::shared_ptr<Session> const& session);
+    void remove_trusted_participant(std::shared_ptr<Session> const& session);
     void for_each_trusted_participant(std::function<void(std::shared_ptr<Session> const&)> f) const;
 
 protected:

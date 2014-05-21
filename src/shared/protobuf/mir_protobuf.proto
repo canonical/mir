@@ -229,11 +229,11 @@ service DisplayServer {
   rpc create_screencast(ScreencastParameters) returns (Screencast);
   rpc screencast_buffer(ScreencastId) returns (Buffer);
   rpc release_screencast(ScreencastId) returns (Void);
-  
+
   rpc configure_cursor(CursorSetting) returns (Void);
   rpc new_fds_for_trusted_clients(SocketFDRequest) returns (SocketFD);
 
   rpc start_trust_session(TrustSessionParameters) returns (TrustSession);
-  rpc add_trusted_session(TrustedSession) returns (TrustSessionAddResult);
+  rpc add_trusted_session(TrustedSession) returns (Void);
   rpc stop_trust_session(Void) returns (Void);
 }

@@ -66,7 +66,7 @@ private:
 
     mir::protobuf::DisplayServer& server;
     mir::protobuf::TrustSession session;
-    mir::protobuf::TrustSessionAddResult add_result;
+    mir::protobuf::Void add_result;
     mir::protobuf::Void protobuf_void;
     std::string error_message;
 

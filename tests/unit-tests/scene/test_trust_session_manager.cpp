@@ -105,19 +105,13 @@ TEST_F(TrustSessionManager, notifies_trust_session_start_and_stop)
 
 TEST_F(TrustSessionManager, successfully_adds_a_trusted_process)
 {
-    EXPECT_THAT(
-        session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions),
-        Eq(mir_trust_session_add_tust_succeeded));
+    EXPECT_NO_THROW(session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions));
 }
 
-// TODO {arg} Confirm test is correct and fix code
-TEST_F(TrustSessionManager, DISABLED_fails_to_add_a_trusted_process_twice)
+TEST_F(TrustSessionManager, successfully_adds_a_trusted_process_twice)
 {
     session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);
-
-    EXPECT_THAT(
-        session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions),
-        Eq(mir_trust_session_add_tust_duplicate));
+    EXPECT_NO_THROW(session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions));
 }
 
 TEST_F(TrustSessionManager, notifies_session_beginning_when_session_is_not_in_existing_sessions)

@@ -50,7 +50,7 @@ public:
 
     void stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) const;
 
-    MirTrustSessionAddTrustResult add_trusted_process_for(
+    void add_trusted_process_for(
         std::shared_ptr<TrustSession> const& trust_session,
         pid_t process_id,
         SessionContainer const& existing_session) const;
@@ -65,7 +65,7 @@ private:
 
     std::mutex mutable trust_sessions_mutex;
 
-    MirTrustSessionAddTrustResult add_trusted_process_for_locked(
+    void add_trusted_process_for_locked(
         std::lock_guard<std::mutex> const&,
         std::shared_ptr<TrustSession> const& trust_session,
         pid_t process_id,
