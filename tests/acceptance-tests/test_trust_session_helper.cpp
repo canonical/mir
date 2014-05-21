@@ -27,6 +27,7 @@
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
 #include "mir_test_doubles/fake_ipc_factory.h"
+#include "mir_test/popen.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -149,6 +150,8 @@ struct TrustSessionHelper : MyBasicClientServerFixture
         sprintf(client_connect_string, "fd://%d", fd);
         return client_connect_string;
     }
+
+    MOCK_METHOD1(process_line, void(std::string const&));
 };
 
 void client_fd_callback(MirConnection*, size_t count, int const* fds, void* context)
@@ -184,4 +187,29 @@ TEST_F(TrustSessionHelper, gets_pid_when_trusted_client_connects_over_fd)
     EXPECT_THAT(trusted_helper_mediator->client_pid, Eq(expected_pid)); // After the client connects we do have a pid
 
     mir_connection_release(client_connection);
+}
+
+// TODO we need a nice way to run this (and similar tests that require a separate client process) in CI
+// Disabled as we can't be sure the mir_demo_client_basic is about
+TEST_F(TrustSessionHelper, DISABLED_client_pid_is_associated_with_session)
+{
+    auto const server_pid = getpid();
+
+    mir_connection_new_fds_for_trusted_clients(connection, 1, &client_fd_callback, this);
+    wait_for_callback(std::chrono::milliseconds(500));
+
+    InSequence seq;
+    EXPECT_CALL(*this, process_line(StrEq("Starting")));
+    EXPECT_CALL(*this, process_line(StrEq("Connected")));
+    EXPECT_CALL(*this, process_line(StrEq("Surface created")));
+    EXPECT_CALL(*this, process_line(StrEq("Surface released")));
+    EXPECT_CALL(*this, process_line(StrEq("Connection released")));
+
+    mir::test::Popen output(std::string("bin/mir_demo_client_basic -m ") + fd_connect_string(actual_fds[0]));
+
+    std::string line;
+    while (output.get_line(line)) process_line(line);
+
+    EXPECT_THAT(trusted_helper_mediator->client_pid, Ne(0));
+    EXPECT_THAT(trusted_helper_mediator->client_pid, Ne(server_pid));
 }

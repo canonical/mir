@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,6 +21,8 @@
 #include "mir/frontend/session_credentials.h"
 #include "mir/variable_length_array.h"
 
+#include <boost/throw_exception.hpp>
+
 #include <errno.h>
 #include <string.h>
 
@@ -36,9 +38,27 @@ mfd::SocketMessenger::SocketMessenger(std::shared_ptr<ba::local::stream_protocol
 {
 }
 
+mf::SessionCredentials mfd::SocketMessenger::creator_creds() const
+{
+    struct ucred cr;
+    socklen_t cl = sizeof(cr);
+
+    auto status = getsockopt(socket->native_handle(), SOL_SOCKET, SO_PEERCRED, &cr, &cl);
+
+    if (status)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
+
+    return {cr.pid, cr.uid, cr.gid};
+}
+
 mf::SessionCredentials mfd::SocketMessenger::client_creds()
 {
-    return mf::SessionCredentials::from_socket_fd(socket->native_handle());
+    if (session_creds.pid() != 0)
+        return session_creds;
+
+    // We've not got the credentials from client yet.
+    // Return the credentials that created the socket instead.
+    return creator_creds();
 }
 
 void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& fd_set)
@@ -92,7 +112,7 @@ void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, 
         message->cmsg_len = header.msg_controllen;
         message->cmsg_level = SOL_SOCKET;
         message->cmsg_type = SCM_RIGHTS;
-        int *data = (int *)CMSG_DATA(message);
+        int *data = reinterpret_cast<int*>(CMSG_DATA(message));
         int i = 0;
         for (auto &fd: fds)
             data[i++] = fd;
@@ -128,7 +148,38 @@ bs::error_code mfd::SocketMessenger::receive_msg(
 
 size_t mfd::SocketMessenger::available_bytes()
 {
+    // We call available_bytes() once the client is talking to us
+    // so this is a pragmatic place to grab the session credentials
+    if (session_creds.pid() == 0)
+        update_session_creds();
+
     boost::asio::socket_base::bytes_readable command{true};
     socket->io_control(command);
     return command.get();
+}
+
+void mfd::SocketMessenger::update_session_creds()
+{
+    union {
+        struct cmsghdr cmh;
+        char   control[CMSG_SPACE(sizeof(ucred))];
+    } control_un;
+
+    control_un.cmh.cmsg_len = CMSG_LEN(sizeof(ucred));
+    control_un.cmh.cmsg_level = SOL_SOCKET;
+    control_un.cmh.cmsg_type = SCM_CREDENTIALS;
+
+    msghdr msgh;
+    msgh.msg_name = nullptr;
+    msgh.msg_namelen = 0;
+    msgh.msg_iov = nullptr;
+    msgh.msg_iovlen = 0;
+    msgh.msg_control = control_un.control;
+    msgh.msg_controllen = sizeof(control_un.control);
+
+    if (recvmsg(socket->native_handle(), &msgh, MSG_PEEK) != -1)
+    {
+        auto const ucredp = reinterpret_cast<ucred*>(CMSG_DATA(CMSG_FIRSTHDR(&msgh)));
+        session_creds = {ucredp->pid, ucredp->uid, ucredp->gid};
+    }
 }
