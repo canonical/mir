@@ -157,19 +157,17 @@ TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
     mg::Buffer* client_buffer{nullptr};
     buffer_stream.swap_client_buffers_blocking(client_buffer);
 
-    if (nbuffers > 1)
-    {
-        buffer_stream.swap_client_buffers_blocking(client_buffer);
-        auto comp1 = buffer_stream.lock_compositor_buffer(nullptr);
+    ASSERT_THAT(nbuffers, Gt(1));
+    buffer_stream.swap_client_buffers_blocking(client_buffer);
+    auto comp1 = buffer_stream.lock_compositor_buffer(nullptr);
 
-        buffer_stream.swap_client_buffers_blocking(client_buffer);
-        auto comp2 = buffer_stream.lock_compositor_buffer(nullptr);
+    buffer_stream.swap_client_buffers_blocking(client_buffer);
+    auto comp2 = buffer_stream.lock_compositor_buffer(nullptr);
 
-        EXPECT_NE(comp1->id(), comp2->id());
+    EXPECT_NE(comp1->id(), comp2->id());
 
-        comp1.reset();
-        comp2.reset();
-    }
+    comp1.reset();
+    comp2.reset();
 }
 
 TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
