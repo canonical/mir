@@ -20,9 +20,9 @@
 #define MIR_SCENE_TRUST_SESSION_IMPL_H_
 
 #include "mir/scene/trust_session.h"
-#include "mir/cached_ptr.h"
 
-#include <vector>
+#include "trust_session_trusted_participants.h"
+
 #include <atomic>
 #include <mutex>
 
@@ -63,7 +63,7 @@ protected:
 private:
     std::weak_ptr<Session> const trusted_helper;
     std::shared_ptr<TrustSessionListener> const trust_session_listener;
-    std::shared_ptr<TrustSessionTrustedParticipants> const participants;
+    TrustSessionTrustedParticipants participants;
     MirTrustSessionState state;
     std::string cookie;
     std::recursive_mutex mutable mutex;
