@@ -58,6 +58,18 @@ public:
     MOCK_CONST_METHOD0(release_current, void());
 };
 
+struct MockTextureCache : public mg::GLTextureCache
+{
+    MockTextureCache()
+    {
+        ON_CALL(*this, load(testing::_))
+            .WillByDefault(testing::Return(std::make_shared<mg::GLTexture>()));
+    }
+    MOCK_METHOD1(load, std::shared_ptr<mg::GLTexture>(mg::Renderable const&));
+    MOCK_METHOD0(invalidate, void());
+    MOCK_METHOD0(drop_unused, void());
+};
+
 class StubTextureCache : public mg::GLTextureCache
 {
     std::shared_ptr<mg::GLTexture> load(mg::Renderable const&)
@@ -181,12 +193,9 @@ Vertex to_vertex(geom::Point const& pos)
 MATCHER_P2(MatchesVertices, vertices, stride, "matches vertices")
 {
     auto arg_vertices = static_cast<char const*>(arg);
-//        arg_vertices+=4;//stride;
-
     for(auto const& vert : vertices)
     {
         GLfloat *f = (GLfloat*) arg_vertices;
-        //(void) v; (void) arg_vertices; 
         EXPECT_THAT(f[0], testing::FloatEq(vert.x));
         EXPECT_THAT(f[1], testing::FloatEq(vert.y));
         arg_vertices+=stride;
@@ -265,10 +274,21 @@ TEST_F(HWCFallbackGLRenderer, executes_render_in_sequence)
 {
     using namespace testing;
     NiceMock<mtd::MockSwappingGLContext> mock_context_s;
-    mg::RenderableList renderlist{
-        std::make_shared<mtd::StubRenderable>(), 
-        std::make_shared<mtd::StubRenderable>()
-    };
+    auto renderable1 = std::make_shared<mtd::StubRenderable>();
+    auto renderable2 = std::make_shared<mtd::StubRenderable>();
+    mg::RenderableList renderlist{ renderable1, renderable2 };
+
+    std::unique_ptr<MockTextureCache> mock_texture_cache(new MockTextureCache);
+    {
+        InSequence seq;
+        EXPECT_CALL(*mock_texture_cache, load(Ref(*renderable1))); 
+        EXPECT_CALL(*mock_texture_cache, load(Ref(*renderable2))); 
+        EXPECT_CALL(*mock_texture_cache, drop_unused());
+    }
+    ON_CALL(mock_gl_program_factory,create_texture_cache())
+        .WillByDefault(Invoke([&](){
+                return std::move(mock_texture_cache);
+            }));
 
     mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
 
@@ -281,18 +301,15 @@ TEST_F(HWCFallbackGLRenderer, executes_render_in_sequence)
 
     EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT, GL_FALSE, _, _));
     EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, _, _));
-    //bind
     EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
     EXPECT_CALL(mock_gl, glVertexAttribPointer(position_attr_loc, 3, GL_FLOAT, GL_FALSE, _, _));
     EXPECT_CALL(mock_gl, glVertexAttribPointer(texcoord_attr_loc, 2, GL_FLOAT, GL_FALSE, _, _));
-    //bind
     EXPECT_CALL(mock_gl, glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_loc));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_loc));
     EXPECT_CALL(mock_context_s, swap_buffers());
-    //invalidate
     EXPECT_CALL(mock_gl, glUseProgram(0));
 
     glprogram.render(renderlist, mock_context_s);

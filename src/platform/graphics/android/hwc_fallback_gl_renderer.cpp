@@ -18,6 +18,7 @@
 
 #include "mir/graphics/gl_program_factory.h"
 #include "mir/graphics/gl_context.h"
+#include "mir/graphics/gl_texture.h"
 #include "mir/graphics/tessellation_helpers.h"
 #include "hwc_fallback_gl_renderer.h"
 #include "gl_context.h"
@@ -117,7 +118,7 @@ void mga::HWCFallbackGLRenderer::render(
         glVertexAttribPointer(texcoord_attr, 2, GL_FLOAT, GL_FALSE, sizeof(mg::GLVertex),
                               &primitive.vertices[0].texcoord);
 
-        texture_cache->load(*renderable);
+        texture_cache->load(*renderable)->bind();
         glDrawArrays(primitive.type, 0, primitive.vertices.size());
     }
 
