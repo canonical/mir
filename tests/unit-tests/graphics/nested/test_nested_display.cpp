@@ -20,10 +20,10 @@
 #include "src/server/graphics/nested/host_connection.h"
 #include "src/server/report/null/display_report.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
+#include "src/server/input/null_input_dispatcher.h"
 #include "mir_display_configuration_builder.h"
 
 #include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/null_event_filter.h"
 #include "mir_test_doubles/mock_gl_config.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_host_connection.h"
@@ -35,6 +35,7 @@
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mt = mir::test;
+namespace mi = mir::input;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -58,7 +59,7 @@ public:
 struct NestedDisplay : testing::Test
 {
     testing::NiceMock<mtd::MockEGL> mock_egl;
-    mtd::NullEventFilter null_event_filter;
+    mi::NullInputDispatcher null_input_dispatcher;
     mir::report::null::DisplayReport null_display_report;
     mg::DefaultDisplayConfigurationPolicy default_conf_policy;
     mtd::StubGLConfig stub_gl_config;
@@ -94,7 +95,7 @@ TEST_F(NestedDisplay, respects_gl_config)
 
     mgn::NestedDisplay nested_display{
         std::make_shared<SingleDisplayHostConnection>(),
-        mt::fake_shared(null_event_filter),
+        mt::fake_shared(null_input_dispatcher),
         mt::fake_shared(null_display_report),
         mt::fake_shared(default_conf_policy),
         mt::fake_shared(mock_gl_config)};
@@ -111,7 +112,7 @@ TEST_F(NestedDisplay, does_not_change_host_display_configuration_at_construction
 
     mgn::NestedDisplay nested_display{
         mt::fake_shared(host_connection),
-        mt::fake_shared(null_event_filter),
+        mt::fake_shared(null_input_dispatcher),
         mt::fake_shared(null_display_report),
         mt::fake_shared(default_conf_policy),
         mt::fake_shared(stub_gl_config)};

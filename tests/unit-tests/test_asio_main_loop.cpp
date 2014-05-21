@@ -17,18 +17,48 @@
  */
 
 #include "mir/asio_main_loop.h"
+#include "mir/time/high_resolution_clock.h"
 #include "mir_test/pipe.h"
+#include "mir_test/auto_unblock_thread.h"
+#include "mir_test/signal.h"
+#include "mir_test/wait_object.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include <thread>
 #include <atomic>
+#include <functional>
+#include <mutex>
+#include <condition_variable>
+#include <array>
+#include <boost/throw_exception.hpp>
 
 #include <sys/types.h>
 #include <unistd.h>
 
 namespace mt = mir::test;
+
+namespace
+{
+
+class AsioMainLoopAlarmTest : public ::testing::Test
+{
+public:
+    mir::AsioMainLoop ml;
+    int call_count{0};
+    mt::WaitObject wait;
+
+    struct UnblockMainLoop : mt::AutoUnblockThread
+    {
+        UnblockMainLoop(mir::AsioMainLoop & loop)
+            : mt::AutoUnblockThread([&loop]() {loop.stop();},
+                                    [&loop]() {loop.run();})
+        {}
+    };
+};
+
+}
 
 TEST(AsioMainLoopTest, signal_handled)
 {
@@ -292,6 +322,209 @@ TEST(AsioMainLoopTest, multiple_fd_handlers_are_called)
     EXPECT_EQ(elems_to_send[0], elems_read[0]);
     EXPECT_EQ(elems_to_send[1], elems_read[1]);
     EXPECT_EQ(elems_to_send[2], elems_read[2]);
+}
+
+TEST_F(AsioMainLoopAlarmTest, main_loop_runs_until_stop_called)
+{
+    auto mainloop_started = std::make_shared<mt::Signal>();
+
+    auto fire_on_mainloop_start = ml.notify_in(std::chrono::milliseconds{0},
+                                               [mainloop_started]()
+    {
+        mainloop_started->raise();
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    ASSERT_TRUE(mainloop_started->wait_for(std::chrono::milliseconds{100}));
+
+    auto timer_fired = std::make_shared<mt::Signal>();
+    auto alarm = ml.notify_in(std::chrono::milliseconds{10}, [timer_fired]
+    {
+        timer_fired->raise();
+    });
+
+    EXPECT_TRUE(timer_fired->wait_for(std::chrono::milliseconds{500}));
+
+    ml.stop();
+    // Main loop should be stopped now
+
+    timer_fired = std::make_shared<mt::Signal>();
+    auto should_not_fire =  ml.notify_in(std::chrono::milliseconds{0},
+                                         [timer_fired]()
+    {
+        timer_fired->raise();
+    });
+
+    EXPECT_FALSE(timer_fired->wait_for(std::chrono::milliseconds{100}));
+}
+
+TEST_F(AsioMainLoopAlarmTest, alarm_fires_with_correct_delay)
+{
+    UnblockMainLoop unblocker(ml);
+
+    auto timer_fired = std::make_shared<mt::Signal>();
+    auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [timer_fired]()
+    {
+        timer_fired->raise();
+    });
+
+    // Shouldn't fire before timeout
+    EXPECT_FALSE(timer_fired->wait_for(std::chrono::milliseconds{50}));
+
+    // Give a nice, long wait for our slow ARM valgrind friends
+    EXPECT_TRUE(timer_fired->wait_for(std::chrono::milliseconds{200}));
+}
+
+TEST_F(AsioMainLoopAlarmTest, multiple_alarms_fire)
+{
+    int const alarm_count{10};
+    std::atomic<int> call_count{0};
+    std::array<std::unique_ptr<mir::time::Alarm>, alarm_count> alarms;
+
+    auto alarms_fired = std::make_shared<mt::Signal>();
+
+    for (auto& alarm : alarms)
+    {
+        alarm = ml.notify_in(std::chrono::milliseconds{5}, [alarms_fired, &call_count]()
+        {
+            call_count++;
+            if (call_count == alarm_count)
+                alarms_fired->raise();
+        });
+    }
+
+    UnblockMainLoop unblocker(ml);
+
+    EXPECT_TRUE(alarms_fired->wait_for(std::chrono::milliseconds{100}));
+
+    for (auto& alarm : alarms)
+        EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+}
+
+TEST_F(AsioMainLoopAlarmTest, alarm_changes_to_triggered_state)
+{
+    auto alarm_fired = std::make_shared<mt::Signal>();
+    auto alarm = ml.notify_in(std::chrono::milliseconds{5}, [alarm_fired]()
+    {
+        alarm_fired->raise();
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    ASSERT_TRUE(alarm_fired->wait_for(std::chrono::milliseconds{100}));
+
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+}
+
+TEST_F(AsioMainLoopAlarmTest, alarm_starts_in_pending_state)
+{
+    UnblockMainLoop unblocker(ml);
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{5000}, [](){});
+
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+}
+
+TEST_F(AsioMainLoopAlarmTest, cancelled_alarm_doesnt_fire)
+{
+    UnblockMainLoop unblocker(ml);
+    auto alarm_fired = std::make_shared<mt::Signal>();
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [alarm_fired]()
+    {
+        alarm_fired->raise();
+    });
+
+    EXPECT_TRUE(alarm->cancel());
+
+    EXPECT_FALSE(alarm_fired->wait_for(std::chrono::milliseconds{300}));
+    EXPECT_EQ(mir::time::Alarm::cancelled, alarm->state());
+}
+
+TEST_F(AsioMainLoopAlarmTest, destroyed_alarm_doesnt_fire)
+{
+    auto alarm_fired = std::make_shared<mt::Signal>();
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{200}, [alarm_fired]()
+    {
+        alarm_fired->raise();
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    alarm.reset(nullptr);
+
+    EXPECT_FALSE(alarm_fired->wait_for(std::chrono::milliseconds{300}));
+}
+
+TEST_F(AsioMainLoopAlarmTest, rescheduled_alarm_fires_again)
+{
+    auto first_trigger = std::make_shared<mt::Signal>();
+    auto second_trigger = std::make_shared<mt::Signal>();
+    std::atomic<int> call_count{0};
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{0}, [first_trigger, second_trigger, &call_count]()
+    {
+        auto prev_call_count = call_count++;
+        if (prev_call_count == 0)
+            first_trigger->raise();
+        if (prev_call_count == 1)
+            second_trigger->raise();
+        if (prev_call_count > 1)
+            FAIL() << "Alarm called too many times";
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    ASSERT_TRUE(first_trigger->wait_for(std::chrono::milliseconds{50}));
+    ASSERT_EQ(mir::time::Alarm::triggered, alarm->state());
+
+
+    alarm->reschedule_in(std::chrono::milliseconds{100});
+
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+
+    EXPECT_TRUE(second_trigger->wait_for(std::chrono::milliseconds{500}));
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+}
+
+TEST_F(AsioMainLoopAlarmTest, rescheduled_alarm_cancels_previous_scheduling)
+{
+    std::atomic<int> call_count{0};
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{50}, [&call_count]()
+    {
+        call_count++;
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    EXPECT_TRUE(alarm->reschedule_in(std::chrono::milliseconds{10}));
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+
+    std::this_thread::sleep_for(std::chrono::milliseconds{200});
+
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+    EXPECT_EQ(1, call_count);
+}
+
+TEST_F(AsioMainLoopAlarmTest, alarm_fires_at_correct_time_point)
+{
+    mir::time::HighResolutionClock clock;
+
+    mir::time::Timestamp real_soon = clock.sample() + std::chrono::milliseconds{120};
+    auto alarm_fired = std::make_shared<mt::Signal>();
+
+    auto alarm = ml.notify_at(real_soon, [alarm_fired]()
+    {			     
+        alarm_fired->raise();
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    EXPECT_FALSE(alarm_fired->wait_until(real_soon - std::chrono::milliseconds{50}));
+    EXPECT_TRUE(alarm_fired->wait_until(real_soon + std::chrono::milliseconds{50}));
 }
 
 TEST(AsioMainLoopTest, dispatches_action)

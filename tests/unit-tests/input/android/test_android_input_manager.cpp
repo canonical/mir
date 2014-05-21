@@ -93,16 +93,8 @@ namespace
 
 struct AndroidInputManagerSetup : public testing::Test
 {
-    AndroidInputManagerSetup()
-    {
-        using namespace ::testing;
-
-        event_hub = new MockEventHub();
-        reader_thread = std::make_shared<MockInputThread>();
-    }
-
-    droidinput::sp<MockEventHub> event_hub;
-    std::shared_ptr<MockInputThread> reader_thread;
+    std::shared_ptr<MockEventHub> event_hub = std::make_shared<MockEventHub>();
+    std::shared_ptr<MockInputThread> reader_thread = std::make_shared<MockInputThread>();
 };
 
 }

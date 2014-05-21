@@ -22,9 +22,11 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_display_report.h"
+#include "mir_test/gmock_fixes.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "mir_test/gmock_fixes.h"
 
 #include <stdexcept>
 

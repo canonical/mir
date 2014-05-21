@@ -50,7 +50,6 @@ private:
     std::shared_ptr<MessageSender> const sender;
     std::shared_ptr<ResourceCache> const resource_cache;
 
-    std::vector<char> send_response_buffer;
     mir::protobuf::wire::Result send_response_result;
 };
 }

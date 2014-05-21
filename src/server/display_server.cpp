@@ -72,7 +72,6 @@ struct mir::DisplayServer::Private
     Private(ServerConfiguration& config)
         : graphics_platform{config.the_graphics_platform()},
           display{config.the_display()},
-          input_dispatcher_configuration{config.the_input_dispatcher_configuration()},
           input_dispatcher{config.the_input_dispatcher()},
           input_configuration{config.the_input_configuration()},
           compositor{config.the_compositor()},
@@ -105,8 +104,8 @@ struct mir::DisplayServer::Private
                 [this] { input_manager->start(); }};
 
             TryButRevertIfUnwinding display_config_processing{
-                [this] { main_loop->pause_processing_for(this); },
-                [this] { main_loop->resume_processing_for(this); }};
+                [this] { display_changer->pause_display_config_processing(); },
+                [this] { display_changer->resume_display_config_processing(); }};
 
             TryButRevertIfUnwinding comp{
                 [this] { compositor->stop(); },
@@ -141,8 +140,8 @@ struct mir::DisplayServer::Private
                 [this] { connector->stop(); }};
 
             TryButRevertIfUnwinding display_config_processing{
-                [this] { main_loop->resume_processing_for(this); },
-                [this] { main_loop->pause_processing_for(this); }};
+                [this] { display_changer->resume_display_config_processing(); },
+                [this] { display_changer->pause_display_config_processing(); }};
 
             TryButRevertIfUnwinding input{
                 [this] { input_manager->start(); },
@@ -166,22 +165,15 @@ struct mir::DisplayServer::Private
 
     void configure_display()
     {
-        /* This is temporary, we will eventually use DisplayChanger directly */
-        main_loop->enqueue(
-            this,
-            [this]
-            {
-                std::shared_ptr<graphics::DisplayConfiguration> conf =
-                    display->configuration();
+        std::shared_ptr<graphics::DisplayConfiguration> conf =
+            display->configuration();
 
-                display_changer->configure_for_hardware_change(
-                    conf, DisplayChanger::PauseResumeSystem);
-            });
+        display_changer->configure_for_hardware_change(
+            conf, DisplayChanger::PauseResumeSystem);
     }
 
     std::shared_ptr<mg::Platform> const graphics_platform; // Hold this so the platform is loaded once
     std::shared_ptr<mg::Display> const display;
-    std::shared_ptr<input::InputDispatcherConfiguration> const input_dispatcher_configuration;
     std::shared_ptr<mi::InputDispatcher> const input_dispatcher;
     std::shared_ptr<input::InputConfiguration> const input_configuration;
     std::shared_ptr<mc::Compositor> const compositor;

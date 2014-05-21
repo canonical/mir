@@ -129,7 +129,9 @@ TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
     EXPECT_CALL(mock_compositor, render(Ref(renderlist),_))
         .InSequence(seq)
         .WillOnce(Invoke([](mg::RenderableList const&, mga::SwappingGLContext const& cont)
-        {cont.swap_buffers();}));
+        {
+            cont.swap_buffers();
+        }));
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
         .InSequence(seq)
         .WillOnce(Return(dpy));

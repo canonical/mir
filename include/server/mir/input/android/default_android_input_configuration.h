@@ -23,14 +23,11 @@
 #include "mir/input/input_configuration.h"
 
 #include "mir/cached_ptr.h"
-#include "mir/input/android/cached_android_ptr.h"
 
 namespace android
 {
 class InputReaderInterface;
 class InputReaderPolicyInterface;
-class InputDispatcherPolicyInterface;
-class InputDispatcherInterface;
 class InputListenerInterface;
 class EventHubInterface;
 }
@@ -44,7 +41,7 @@ namespace input
 class InputRegion;
 class CursorListener;
 class InputReport;
-class InputDispatcherConfiguration;
+class InputDispatcher;
 
 namespace android
 {
@@ -53,7 +50,7 @@ class InputThread;
 class DefaultInputConfiguration : public mir::input::InputConfiguration
 {
 public:
-    DefaultInputConfiguration(std::shared_ptr<input::InputDispatcherConfiguration> const& input_dispatcher_configuration,
+    DefaultInputConfiguration(std::shared_ptr<input::InputDispatcher> const& dispatcher,
                               std::shared_ptr<input::InputRegion> const& input_region,
                               std::shared_ptr<CursorListener> const& cursor_listener,
                               std::shared_ptr<input::InputReport> const& input_report);
@@ -63,23 +60,23 @@ public:
     std::shared_ptr<input::InputManager> the_input_manager() override;
 
 protected:
-    virtual droidinput::sp<droidinput::EventHubInterface> the_event_hub();
-    virtual droidinput::sp<droidinput::InputReaderInterface> the_reader();
-    virtual droidinput::sp<droidinput::InputListenerInterface> the_input_translator();
+    virtual std::shared_ptr<droidinput::EventHubInterface> the_event_hub();
+    virtual std::shared_ptr<droidinput::InputReaderInterface> the_reader();
+    virtual std::shared_ptr<droidinput::InputListenerInterface> the_input_translator();
 
     virtual std::shared_ptr<InputThread> the_reader_thread();
 
-    virtual droidinput::sp<droidinput::InputReaderPolicyInterface> the_reader_policy();
+    virtual std::shared_ptr<droidinput::InputReaderPolicyInterface> the_reader_policy();
 
 private:
     CachedPtr<input::InputManager> input_manager;
     CachedPtr<InputThread> reader_thread;
 
-    CachedAndroidPtr<droidinput::EventHubInterface> event_hub;
-    CachedAndroidPtr<droidinput::InputReaderPolicyInterface> reader_policy;
-    CachedAndroidPtr<droidinput::InputReaderInterface> reader;
+    CachedPtr<droidinput::EventHubInterface> event_hub;
+    CachedPtr<droidinput::InputReaderPolicyInterface> reader_policy;
+    CachedPtr<droidinput::InputReaderInterface> reader;
 
-    std::shared_ptr<input::InputDispatcherConfiguration> const input_dispatcher_config;
+    std::shared_ptr<input::InputDispatcher> const input_dispatcher;
     std::shared_ptr<input::InputRegion> const input_region;
     std::shared_ptr<CursorListener> const cursor_listener;
     std::shared_ptr<input::InputReport> const input_report;

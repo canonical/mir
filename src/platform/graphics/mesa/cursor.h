@@ -24,7 +24,9 @@
 #include "mir_toolkit/common.h"
 
 #include <gbm.h>
+
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -68,20 +70,23 @@ public:
 
     ~Cursor() noexcept;
 
-    void set_image(CursorImage const& cursor_image) override;
+    void show(CursorImage const& cursor_image) override;
+    void hide() override;
 
     void move_to(geometry::Point position);
 
     void show_at_last_known_position();
-    void hide();
 
 private:
     enum ForceCursorState { UpdateState, ForceState };
     void for_each_used_output(std::function<void(KMSOutput&, geometry::Rectangle const&, MirOrientation orientation)> const& f);
     void place_cursor_at(geometry::Point position, ForceCursorState force_state);
+    
+    std::mutex guard;
 
     KMSOutputContainer& output_container;
     geometry::Point current_position;
+    bool visible;
 
     struct GBMBOWrapper
     {

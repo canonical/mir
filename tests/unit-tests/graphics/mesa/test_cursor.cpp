@@ -246,7 +246,7 @@ TEST_F(MesaCursorTest, creates_cursor_bo_image)
         std::make_shared<StubCursorImage>()};
 }
 
-TEST_F(MesaCursorTest, set_cursor_writes_to_bo)
+TEST_F(MesaCursorTest, show_cursor_writes_to_bo)
 {
     using namespace testing;
 
@@ -257,10 +257,10 @@ TEST_F(MesaCursorTest, set_cursor_writes_to_bo)
 
     EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, StubCursorImage::image_data, cursor_size_bytes));
 
-    cursor.set_image(image);
+    cursor.show(image);
 }
 
-TEST_F(MesaCursorTest, set_cursor_throws_on_incorrect_size)
+TEST_F(MesaCursorTest, show_cursor_throws_on_incorrect_size)
 {
     using namespace testing;
 
@@ -275,7 +275,7 @@ TEST_F(MesaCursorTest, set_cursor_throws_on_incorrect_size)
     };
 
     EXPECT_THROW(
-        cursor.set_image(InvalidlySizedCursorImage());
+        cursor.show(InvalidlySizedCursorImage());
     , std::logic_error);
 }
 
@@ -450,6 +450,23 @@ TEST_F(MesaCursorTest, hides_cursor_in_all_outputs)
 
     cursor.hide();
 
+    output_container.verify_and_clear_expectations();
+}
+
+TEST_F(MesaCursorTest, hidden_cursor_is_not_shown_on_display_when_moved)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*output_container.outputs[10], clear_cursor());
+    EXPECT_CALL(*output_container.outputs[11], clear_cursor());
+    EXPECT_CALL(*output_container.outputs[12], clear_cursor());
+    EXPECT_CALL(*output_container.outputs[10], move_cursor(_)).Times(0);
+    EXPECT_CALL(*output_container.outputs[11], move_cursor(_)).Times(0);
+    EXPECT_CALL(*output_container.outputs[12], move_cursor(_)).Times(0);
+
+    cursor.hide();
+    cursor.move_to({17, 29});
+    
     output_container.verify_and_clear_expectations();
 }
 

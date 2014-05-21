@@ -23,6 +23,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <algorithm>
+#include <cassert>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -93,7 +94,8 @@ void replace(mg::Buffer const* item, std::shared_ptr<mg::Buffer> const& new_buff
 mc::BufferQueue::BufferQueue(
     int nbuffers,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc,
-    graphics::BufferProperties const& props)
+    graphics::BufferProperties const& props,
+    mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
       frame_dropping_enabled{false},
       the_properties{props},
@@ -127,6 +129,30 @@ mc::BufferQueue::BufferQueue(
      */
     if (nbuffers == 1)
         free_buffers.push_back(current_compositor_buffer);
+
+    framedrop_policy = policy_provider.create_policy([this]
+    {
+       std::unique_lock<decltype(guard)> lock{guard};
+       assert(!pending_client_notifications.empty());
+       if (ready_to_composite_queue.empty())
+       {
+           /*
+            * NOTE: This can only happen under two circumstances:
+            * 1) Client is single buffered. Don't do that, it's a bad idea.
+            * 2) Client already has a buffer, and is asking for a new one
+            *    without submitting the old one.
+            *
+            *    This shouldn't be exposed to the client as swap_buffers
+            *    blocking, as the client already has something to render to.
+            *
+            *    Our current implementation will never hit this case. If we
+            *    later want clients to be able to own multiple buffers simultaneously
+            *    then we might want to add an entry to the CompositorReport here.
+            */
+           return;
+       }
+       give_buffer_to_client(pop(ready_to_composite_queue), std::move(lock));
+    });
 }
 
 void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
@@ -161,7 +187,14 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
     {
         auto const buffer = pop(ready_to_composite_queue);
         give_buffer_to_client(buffer, std::move(lock));
+        return;
     }
+
+    /* Can't give the client a buffer yet; they'll just have to wait
+     * until the compositor is done with an old frame, or the policy
+     * says they've waited long enough.
+     */
+    framedrop_policy->swap_now_blocking();
 }
 
 void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
@@ -189,9 +222,13 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
 {
     std::unique_lock<decltype(guard)> lock(guard);
 
-    bool const use_current_buffer =
-        should_reuse_current_buffer(user_id) ||
-        ready_to_composite_queue.empty();
+    bool use_current_buffer = false;
+    if (!current_buffer_users.empty() && !is_a_current_buffer_user(user_id))
+    {
+        use_current_buffer = true;
+        current_buffer_users.push_back(user_id);
+    }
+    use_current_buffer |= ready_to_composite_queue.empty();
 
     mg::Buffer* buffer_to_release = nullptr;
     if (!use_current_buffer)
@@ -206,13 +243,15 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
          * being changed, the new one has no users yet
          */
         current_buffer_users.clear();
+        current_buffer_users.push_back(user_id);
         current_compositor_buffer = pop(ready_to_composite_queue);
     }
 
     buffers_sent_to_compositor.push_back(current_compositor_buffer);
-    current_buffer_users.push_back(user_id);
 
-    auto const& acquired_buffer = buffer_for(current_compositor_buffer, buffers);
+    std::shared_ptr<mg::Buffer> const acquired_buffer =
+        buffer_for(current_compositor_buffer, buffers);
+
     if (buffer_to_release)
         release(buffer_to_release, std::move(lock));
 
@@ -233,7 +272,28 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     if (contains(buffer.get(), buffers_sent_to_compositor))
         return;
 
-    /* This buffer is not owned by compositor anymore */
+    if (nbuffers <= 1)
+        return;
+
+    /*
+     * We can't release the current_compositor_buffer because we need to keep
+     * a compositor buffer always-available. But there might be a new
+     * compositor buffer available to take its place immediately. Moving to
+     * that one immediately will free up the old compositor buffer, allowing
+     * us to call back the client with a buffer where otherwise we couldn't.
+     */
+    if (current_compositor_buffer == buffer.get() &&
+        !ready_to_composite_queue.empty())
+    {
+        current_compositor_buffer = pop(ready_to_composite_queue);
+
+        // Ensure current_compositor_buffer gets reused by the next
+        // compositor_acquire:
+        current_buffer_users.clear();
+        void const* const impossible_user_id = this;
+        current_buffer_users.push_back(impossible_user_id);
+    }
+
     if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
 }
@@ -348,29 +408,12 @@ void mc::BufferQueue::give_buffer_to_client(
     }
 }
 
-bool mc::BufferQueue::should_reuse_current_buffer(void const* user_id)
+bool mc::BufferQueue::is_a_current_buffer_user(void const* user_id) const
 {
-    if (!current_buffer_users.empty())
-    {
-        int size = current_buffer_users.size();
-        for (int i = 0; i < size; ++i)
-        {
-            /* The compositor calling had already acquired
-             * the latest buffer. So it should use the next
-             * buffer available and not reuse the one it already composited.
-             */
-            if (current_buffer_users[i] == user_id)
-                return false;
-        }
-        /* This is new compositor calling so share the latest buffer for
-         * multi-monitor sync
-         */
-        return true;
-    }
-    /* The id list is really only empty the very first time.
-     * False is returned so that the compositor buffer is advanced.
-     */
-    return false;
+    int const size = current_buffer_users.size();
+    int i = 0;
+    while (i < size && current_buffer_users[i] != user_id) ++i;
+    return i < size;
 }
 
 void mc::BufferQueue::release(
@@ -378,7 +421,10 @@ void mc::BufferQueue::release(
     std::unique_lock<std::mutex> lock)
 {
     if (!pending_client_notifications.empty())
+    {
+        framedrop_policy->swap_unblocked();
         give_buffer_to_client(buffer, std::move(lock));
+    }
     else
         free_buffers.push_back(buffer);
 }
