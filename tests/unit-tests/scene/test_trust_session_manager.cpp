@@ -75,9 +75,9 @@ struct StubSessionContainer : ms::SessionContainer
 struct TrustSessionManager : public testing::Test
 {
     pid_t const helper_pid = __LINE__;
-    pid_t const arbitrary_pid = __LINE__;
+    pid_t const trusted_pid = __LINE__;
     std::shared_ptr<ms::Session> const helper{std::make_shared<StubSceneSession>(helper_pid)};
-    std::shared_ptr<ms::Session> const arbitrary_session{std::make_shared<StubSceneSession>(arbitrary_pid)};
+    std::shared_ptr<ms::Session> const trusted_session{std::make_shared<StubSceneSession>(trusted_pid)};
     ms::TrustSessionCreationParameters parameters;
     StubSessionContainer existing_sessions;
 
@@ -89,7 +89,7 @@ struct TrustSessionManager : public testing::Test
 };
 }
 
-TEST_F(TrustSessionManager, listener_is_notified_of_trust_session_start_and_stop)
+TEST_F(TrustSessionManager, notifies_trust_session_start_and_stop)
 {
     InSequence seq;
     EXPECT_CALL(trust_session_listener, starting(_)).Times(1);
@@ -99,36 +99,36 @@ TEST_F(TrustSessionManager, listener_is_notified_of_trust_session_start_and_stop
     EXPECT_CALL(trust_session_listener, stopping(Eq(trust_session))).Times(1);
     session_manager.stop_trust_session(trust_session);
 
-    // Need to verify explicitly as we see unmatched callbacks during teardown
+    // Need to verify explicitly as we see unmatched callbacks during teardown of fixture
     Mock::VerifyAndClearExpectations(&trust_session_listener);
 }
 
-TEST_F(TrustSessionManager, when_session_is_not_in_existing_sessions_listener_is_notified_of_session_beginning)
+TEST_F(TrustSessionManager, notifies_session_beginning_when_session_is_not_in_existing_sessions)
 {
-    session_manager.add_trusted_process_for(trust_session, arbitrary_pid, existing_sessions);
+    session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);
 
-    EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(arbitrary_session))).Times(1);
+    EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(trusted_session))).Times(1);
 
-    session_manager.add_to_waiting_trust_sessions(arbitrary_session);
+    session_manager.add_to_waiting_trust_sessions(trusted_session);
 }
 
-TEST_F(TrustSessionManager, when_session_is_in_existing_sessions_listener_is_notified_of_session_beginning)
+TEST_F(TrustSessionManager, notifies_session_beginning_when_session_is_in_existing_sessions)
 {
-    existing_sessions.insert_session(arbitrary_session);
+    existing_sessions.insert_session(trusted_session);
 
-    EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(arbitrary_session))).Times(1);
+    EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(trusted_session))).Times(1);
 
-    session_manager.add_trusted_process_for(trust_session, arbitrary_pid, existing_sessions);
+    session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);
 }
 
-TEST_F(TrustSessionManager, listener_is_notified_of_session_beginning_and_ending)
+TEST_F(TrustSessionManager, notifies_session_beginning_and_ending)
 {
-    session_manager.add_trusted_process_for(trust_session, arbitrary_pid, existing_sessions);
+    session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);
 
     InSequence seq;
-    EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(arbitrary_session))).Times(1);
-    EXPECT_CALL(trust_session_listener, trusted_session_ending(Ref(*trust_session), Eq(arbitrary_session))).Times(1);
+    EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(trusted_session))).Times(1);
+    EXPECT_CALL(trust_session_listener, trusted_session_ending(Ref(*trust_session), Eq(trusted_session))).Times(1);
 
-    session_manager.add_to_waiting_trust_sessions(arbitrary_session);
+    session_manager.add_to_waiting_trust_sessions(trusted_session);
     session_manager.stop_trust_session(trust_session);
 }
