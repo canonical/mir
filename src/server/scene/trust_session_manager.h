@@ -48,14 +48,15 @@ public:
         TrustSessionCreationParameters const& params,
         SessionContainer const& existing_session) const;
 
-    void add_expected_session(std::shared_ptr<Session> const& new_session) const;
+    void stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) const;
 
     MirTrustSessionAddTrustResult add_trusted_process_for(
         std::shared_ptr<TrustSession> const& trust_session,
         pid_t process_id,
         SessionContainer const& existing_session) const;
 
-    void stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) const;
+    void add_expected_session(std::shared_ptr<Session> const& new_session) const;
+
     void remove_session(std::shared_ptr<Session> const& session) const;
 
 private:
