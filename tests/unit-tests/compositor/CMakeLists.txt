@@ -5,6 +5,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_multi_threaded_compositor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_queue.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gl_renderer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_gl_texture_cache.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_bypass.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_occlusion.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_screencast_display_buffer.cpp
