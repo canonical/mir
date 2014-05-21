@@ -25,8 +25,12 @@
 
 namespace ms = mir::scene;
 
-ms::LegacySceneChangeNotification::LegacySceneChangeNotification(std::function<void()> const& notify_change)
-    : notify_change(notify_change)
+ms::LegacySceneChangeNotification::LegacySceneChangeNotification(
+    std::function<void()> const& scene_notify_change,
+    std::function<void()> const& buffer_notify_change)
+    : scene_notify_change(scene_notify_change),
+      buffer_notify_change(buffer_notify_change)
+      
 {
 }
 
@@ -37,7 +41,7 @@ ms::LegacySceneChangeNotification::~LegacySceneChangeNotification()
 
 void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surface)
 {
-    auto observer = std::make_shared<ms::LegacySurfaceChangeNotification>(notify_change);
+    auto observer = std::make_shared<ms::LegacySurfaceChangeNotification>(scene_notify_change);
     surface->add_observer(observer);
     
     {
@@ -45,7 +49,7 @@ void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surfac
         surface_observers[surface] = observer;
     }
     
-    notify_change();
+    scene_notify_change();
 }
 
 void ms::LegacySceneChangeNotification::surface_added(ms::Surface* surface)
@@ -69,12 +73,12 @@ void ms::LegacySceneChangeNotification::surface_removed(ms::Surface* surface)
             surface_observers.erase(it);
         }
     }
-    notify_change();
+    scene_notify_change();
 }
 
 void ms::LegacySceneChangeNotification::surfaces_reordered()
 {
-    notify_change();
+    scene_notify_change();
 }
 
 void ms::LegacySceneChangeNotification::end_observation()

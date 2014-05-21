@@ -192,10 +192,14 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       state{CompositorState::stopped},
       compose_on_start{compose_on_start}
 {
-    observer = std::make_shared<ms::LegacySceneChangeNotification>([this]()
+    observer = std::make_shared<ms::LegacySceneChangeNotification>(
+        [this]()
         {
-            /* Recomposite whenever the scene changes */
             schedule_compositing();
+        },
+        [this]()
+        {
+        //    schedule_compositing();
         });
 }
 

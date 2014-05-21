@@ -66,13 +66,15 @@ public:
             {
                 display_buffer_compositor_map[&display_buffer] = db_compositor_factory->create_compositor_for(display_buffer);
             });
-        
-        observer = std::make_shared<ms::LegacySceneChangeNotification>([this]() {
-                display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
-                    {  
-                        display_buffer_compositor_map[&display_buffer]->composite();
-                    });
+       
+        auto notify = [this]()
+        {
+            display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
+            {  
+                display_buffer_compositor_map[&display_buffer]->composite();
             });
+        };
+        observer = std::make_shared<ms::LegacySceneChangeNotification>(notify, notify);
     }
 
     void start()
