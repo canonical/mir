@@ -161,6 +161,7 @@ public:
     virtual std::shared_ptr<graphics::Platform>     the_graphics_platform();
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
     virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher();
+    virtual std::shared_ptr<EmergencyCleanup>  the_emergency_cleanup();
     /** @} */
 
     /** @name graphics configuration - customization
@@ -347,6 +348,7 @@ protected:
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<graphics::GLProgramFactory> gl_program_factory;
     CachedPtr<graphics::GLConfig> gl_config;
+    CachedPtr<EmergencyCleanup> emergency_cleanup;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
