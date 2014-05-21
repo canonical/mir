@@ -296,6 +296,7 @@ TEST_F(BufferQueueTest, clients_can_have_multiple_pending_completions)
     mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
     int const prefill = q.buffers_free_for_client();
+    ASSERT_THAT(prefill, Gt(0));
     for (int i = 0; i < prefill; ++i)
     {
         auto handle = client_acquire_async(q);
@@ -829,6 +830,7 @@ TEST_F(BufferQueueTest, waiting_clients_unblock_on_shutdown)
         q.allow_framedropping(false);
 
         int const max_ownable_buffers = q.buffers_free_for_client();
+        ASSERT_THAT(max_ownable_buffers, Gt(0));
 
         for (int b = 0; b < max_ownable_buffers; b++)
         {
@@ -1001,6 +1003,7 @@ TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
         int width = width0;
         int height = height0;
         int const nbuffers_to_use = q.buffers_free_for_client();
+        ASSERT_THAT(nbuffers_to_use, Gt(0));
 
         for (int produce = 0; produce < nbuffers_to_use; ++produce)
         {
@@ -1278,6 +1281,7 @@ TEST_F(BufferQueueTest, buffers_are_not_lost)
         auto comp_buffer1 = q.compositor_acquire(main_compositor);
 
         int const prefill = q.buffers_free_for_client();
+        ASSERT_THAT(prefill, Gt(0));
         for (int acquires = 0; acquires < prefill; ++acquires)
         {
             auto handle = client_acquire_async(q);
