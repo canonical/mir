@@ -13,36 +13,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Josh Arenson <joshua.arenson@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_CONFIGURATION_H_
-#define MIR_INPUT_INPUT_CONFIGURATION_H_
+#ifndef MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION
+#define MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION
 
 #include <memory>
 
 namespace mir
 {
-namespace input
+namespace options
 {
-class InputManager;
-class InputChannelFactory;
-
-class InputConfiguration
-{
-public:
-    virtual ~InputConfiguration() = default;
-
-    virtual std::shared_ptr<InputChannelFactory> the_input_channel_factory() = 0;
-    virtual std::shared_ptr<InputManager> the_input_manager() = 0;
-
-protected:
-    InputConfiguration() = default;
-    InputConfiguration(InputConfiguration const&) = delete;
-    InputConfiguration& operator=(InputConfiguration const&) = delete;
-};
-
+class DefaultConfiguration;
 }
 }
 
-#endif
+namespace mir_test_framework
+{
+    auto configuration_from_commandline() 
+    -> std::shared_ptr<mir::options::DefaultConfiguration>;
+}
+
+#endif /* MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION */

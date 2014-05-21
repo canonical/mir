@@ -6,9 +6,8 @@ set(
   event_filter_chain.cpp
 
   null_input_configuration.cpp
-  null_input_dispatcher_configuration.cpp
+  null_input_dispatcher.cpp
   nested_input_configuration.cpp
-  nested_input_relay.cpp
   display_input_region.cpp
   vt_filter.cpp
   default_configuration.cpp
