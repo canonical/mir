@@ -103,6 +103,23 @@ TEST_F(TrustSessionManager, notifies_trust_session_start_and_stop)
     Mock::VerifyAndClearExpectations(&trust_session_listener);
 }
 
+TEST_F(TrustSessionManager, successfully_adds_a_trusted_process)
+{
+    EXPECT_THAT(
+        session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions),
+        Eq(mir_trust_session_add_tust_succeeded));
+}
+
+// TODO {arg} Confirm test is correct and fix code
+TEST_F(TrustSessionManager, DISABLED_fails_to_add_a_trusted_process_twice)
+{
+    session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);
+
+    EXPECT_THAT(
+        session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions),
+        Eq(mir_trust_session_add_tust_duplicate));
+}
+
 TEST_F(TrustSessionManager, notifies_session_beginning_when_session_is_not_in_existing_sessions)
 {
     session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);
