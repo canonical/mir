@@ -39,7 +39,7 @@ ms::TrustSessionImpl::TrustSessionImpl(
     std::shared_ptr<TrustSessionContainer> const& container) :
     trusted_helper(session),
     trust_session_listener(trust_session_listener),
-    participants(std::make_shared<TrustSessionTrustedParticipants>(this, container)),
+    participants{this, container},
     state(mir_trust_session_state_stopped)
 {
 }
@@ -93,7 +93,7 @@ void ms::TrustSessionImpl::stop()
     }
 
     std::vector<std::shared_ptr<Session>> children;
-    participants->for_each_trusted_participant([&](std::weak_ptr<Session> const& session)
+    participants.for_each_trusted_participant([&](std::weak_ptr<Session> const& session)
         {
             if (auto locked_session = session.lock())
                 children.push_back(locked_session);
@@ -101,7 +101,7 @@ void ms::TrustSessionImpl::stop()
 
     for (auto session : children)
     {
-        participants->remove(session);
+        participants.remove(session);
         trust_session_listener->trusted_session_ending(*this, std::dynamic_pointer_cast<ms::Session>(session));
     }
 }
@@ -113,7 +113,7 @@ bool ms::TrustSessionImpl::add_trusted_participant(std::shared_ptr<ms::Session> 
     if (state == mir_trust_session_state_stopped)
         return false;
 
-    if (!participants->insert(session))
+    if (!participants.insert(session))
         return false;
 
     trust_session_listener->trusted_session_beginning(*this, session);
@@ -127,7 +127,7 @@ bool ms::TrustSessionImpl::remove_trusted_participant(std::shared_ptr<ms::Sessio
     if (state == mir_trust_session_state_stopped)
         return false;
 
-    if (participants->remove(session))
+    if (participants.remove(session))
     {
         trust_session_listener->trusted_session_ending(*this, session);
         return true;
@@ -138,7 +138,7 @@ bool ms::TrustSessionImpl::remove_trusted_participant(std::shared_ptr<ms::Sessio
 void ms::TrustSessionImpl::for_each_trusted_participant(
     std::function<void(std::shared_ptr<Session> const&)> f) const
 {
-    participants->for_each_trusted_participant([f](std::weak_ptr<Session> const& session)
+    participants.for_each_trusted_participant([f](std::weak_ptr<Session> const& session)
         {
             if (auto locked_scene_session = std::dynamic_pointer_cast<ms::Session>(session.lock()))
                 f(locked_scene_session);
