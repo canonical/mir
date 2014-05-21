@@ -74,7 +74,7 @@ struct TrustSessionContainer : testing::Test
             results.push_back(session.lock());
         };
 
-        container.for_each_participant_for_trust_session(trust_session.get(), list_participants);
+        container.for_each_participant_in_trust_session(trust_session.get(), list_participants);
 
         return results;
     }
@@ -92,7 +92,7 @@ struct TrustSessionContainer : testing::Test
             results.push_back(trust_session);
         };
 
-        container.for_each_trust_session_for_participant(session, list_trust_sessions);
+        container.for_each_trust_session_with_participant(session, list_trust_sessions);
 
         return results;
     }
@@ -105,7 +105,7 @@ struct TrustSessionContainer : testing::Test
             results.push_back(trust_session);
         };
 
-        container.for_each_trust_session_for_participant(session, trust_type, list_trust_sessions);
+        container.for_each_trust_session_with_participant(session, trust_type, list_trust_sessions);
 
         return results;
     }
@@ -123,7 +123,7 @@ struct TrustSessionContainer : testing::Test
             results.push_back(trust_session);
         };
 
-        container.for_each_trust_session_for_waiting_process(process, list_trust_sessions);
+        container.for_each_trust_session_expecting_process(process, list_trust_sessions);
 
         return results;
     }
