@@ -32,11 +32,11 @@ void assign_result(void *result, void **context)
 }
 
 void add_trusted_session_callback(MirTrustSession*,
-                                  MirTrustSessionAddTrustResult result,
+                                  MirBool added,
                                   void* context)
 {
     if (context)
-        *(MirTrustSessionAddTrustResult*)context = result;
+        *(MirBool*)context = added;
 }
 
 }
@@ -89,9 +89,9 @@ MirWaitHandle *mir_trust_session_add_trusted_session(MirTrustSession *trust_sess
     }
 }
 
-MirTrustSessionAddTrustResult mir_trust_session_add_trusted_session_sync(MirTrustSession *trust_session, pid_t base_session_pid)
+MirBool mir_trust_session_add_trusted_session_sync(MirTrustSession *trust_session, pid_t base_session_pid)
 {
-    MirTrustSessionAddTrustResult result;
+    MirBool result;
     mir_wait_for(mir_trust_session_add_trusted_session(trust_session,
         base_session_pid,
         add_trusted_session_callback,
