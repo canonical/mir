@@ -11,6 +11,7 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_mediating_display_changer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_trust_session.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_trust_session_container.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_trust_session_manager.cpp
 
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_impl.cpp
