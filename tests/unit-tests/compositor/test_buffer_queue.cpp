@@ -294,7 +294,8 @@ TEST_F(BufferQueueTest, clients_can_have_multiple_pending_completions)
     int const nbuffers = 3;
     mc::BufferQueue q(nbuffers, allocator, basic_properties);
 
-    for (int i = 0; i < nbuffers - 1; ++i)
+    int const prefill = q.buffers_free_for_client();
+    for (int i = 0; i < prefill; ++i)
     {
         auto handle = client_acquire_async(q);
         ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -826,7 +827,7 @@ TEST_F(BufferQueueTest, waiting_clients_unblock_on_shutdown)
         mc::BufferQueue q(nbuffers, allocator, basic_properties);
         q.allow_framedropping(false);
 
-        int const max_ownable_buffers = nbuffers - 1;
+        int const max_ownable_buffers = q.buffers_free_for_client();
 
         for (int b = 0; b < max_ownable_buffers; b++)
         {
@@ -1275,9 +1276,8 @@ TEST_F(BufferQueueTest, buffers_are_not_lost)
         /* Hold a reference to current compositor buffer*/
         auto comp_buffer1 = q.compositor_acquire(main_compositor);
 
-        /* Make nbuffers -1 ready to composite */
-        int const max_ownable_buffers = nbuffers - 1;
-        for (int acquires = 0; acquires < max_ownable_buffers; ++acquires)
+        int const prefill = q.buffers_free_for_client();
+        for (int acquires = 0; acquires < prefill; ++acquires)
         {
             auto handle = client_acquire_async(q);
             ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -1299,6 +1299,7 @@ TEST_F(BufferQueueTest, buffers_are_not_lost)
            compositor_thread, std::ref(q), std::ref(done));
 
         std::unordered_set<mg::Buffer *> unique_buffers_acquired;
+        int const max_ownable_buffers = nbuffers - 1;
         for (int frame = 0; frame < max_ownable_buffers*2; frame++)
         {
             std::vector<mg::Buffer *> client_buffers;

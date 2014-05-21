@@ -37,6 +37,8 @@ namespace mt = mir::testing;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 
+using namespace ::testing;
+
 namespace
 {
 struct BufferStreamSurfaces : mc::BufferStreamSurfaces
@@ -73,6 +75,11 @@ struct BufferStreamTest : public ::testing::Test
     {
     }
 
+    int buffers_free_for_client() const
+    {
+        return buffer_queue->buffers_free_for_client();
+    }
+
     std::shared_ptr<mc::BufferBundle> create_bundle()
     {
         auto allocator = std::make_shared<mtd::StubBufferAllocator>();
@@ -80,12 +87,15 @@ struct BufferStreamTest : public ::testing::Test
                                         mir_pixel_format_abgr_8888,
                                         mg::BufferUsage::hardware};
 
-        return std::make_shared<mc::BufferQueue>(nbuffers,
-                                                     allocator,
-                                                     properties);
+        buffer_queue = std::make_shared<mc::BufferQueue>(nbuffers,
+                                                         allocator,
+                                                         properties);
+
+        return buffer_queue;
     }
 
     const int nbuffers;
+    std::shared_ptr<mc::BufferQueue> buffer_queue;
     BufferStreamSurfaces buffer_stream;
 };
 
@@ -93,6 +103,8 @@ struct BufferStreamTest : public ::testing::Test
 
 TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 {
+    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // Else we will hang
+
     mg::Buffer* client1{nullptr};
     buffer_stream.swap_client_buffers_blocking(client1);
     auto client1_id = client1->id();
@@ -122,7 +134,8 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
 {
     mg::Buffer* client_buffer{nullptr};
-    for (int i = 0; i !=  nbuffers - 1; i++)
+    int const prefill = buffers_free_for_client();
+    for (int i = 0; i < prefill; ++i)
         buffer_stream.swap_client_buffers_blocking(client_buffer);
 
     auto first_monitor = buffer_stream.lock_compositor_buffer(0);
@@ -139,6 +152,8 @@ TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
 
 TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
 {
+    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // Else we will hang
+
     mg::Buffer* client_buffer{nullptr};
     buffer_stream.swap_client_buffers_blocking(client_buffer);
 
