@@ -18,22 +18,13 @@
 
 #include "trust_session_impl.h"
 #include "mir/scene/session.h"
-#include "mir/scene/trust_session_creation_parameters.h"
 #include "mir/scene/trust_session_listener.h"
-#include "session_container.h"
-#include "trust_session_container.h"
 #include "trust_session_trusted_participants.h"
 
-#include <sstream>
-#include <algorithm>
-
 namespace ms = mir::scene;
-namespace mf = mir::frontend;
-
-int next_unique_id = 0;
 
 ms::TrustSessionImpl::TrustSessionImpl(
-    std::weak_ptr<ms::Session> const& session,
+    std::weak_ptr<Session> const& session,
     TrustSessionCreationParameters const&,
     std::shared_ptr<TrustSessionListener> const& trust_session_listener,
     std::shared_ptr<TrustSessionContainer> const& container) :
