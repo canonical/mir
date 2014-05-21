@@ -116,12 +116,12 @@ void ms::TrustSessionContainer::for_each_participant_in_trust_session(
 }
 
 void ms::TrustSessionContainer::for_each_trust_session_with_participant(
-    std::weak_ptr<Session> const& session,
+    std::weak_ptr<Session> const& participant,
     TrustType trust_type,
     std::function<void(std::shared_ptr<TrustSession> const&)> f) const
 {
     std::unique_lock<std::mutex> lk(mutex);
-    if (auto locked_session = session.lock())
+    if (auto locked_session = participant.lock())
     {
         participant_by_session::iterator it,end;
         boost::tie(it,end) = participant_index.equal_range(boost::make_tuple(locked_session.get(), trust_type));
@@ -138,11 +138,11 @@ void ms::TrustSessionContainer::for_each_trust_session_with_participant(
 }
 
 void ms::TrustSessionContainer::for_each_trust_session_with_participant(
-    std::weak_ptr<Session> const& session,
+    std::weak_ptr<Session> const& participant,
     std::function<void(std::shared_ptr<TrustSession> const&)> f) const
 {
     std::unique_lock<std::mutex> lk(mutex);
-    if (auto locked_session = session.lock())
+    if (auto locked_session = participant.lock())
     {
         participant_by_session::iterator it,end;
         boost::tie(it,end) = participant_index.equal_range(locked_session.get());
