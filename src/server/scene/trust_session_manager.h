@@ -41,6 +41,8 @@ public:
     explicit TrustSessionManager(
         std::shared_ptr<TrustSessionListener> const& trust_session_listener);
 
+    ~TrustSessionManager() noexcept;
+
     std::shared_ptr<TrustSession> start_trust_session_for(
         std::shared_ptr<Session> const& session,
         TrustSessionCreationParameters const& params,

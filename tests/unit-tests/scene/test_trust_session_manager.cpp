@@ -98,6 +98,9 @@ TEST_F(TrustSessionManager, listener_is_notified_of_trust_session_start_and_stop
 
     EXPECT_CALL(trust_session_listener, stopping(Eq(trust_session))).Times(1);
     session_manager.stop_trust_session(trust_session);
+
+    // Need to verify explicitly as we see unmatched callbacks during teardown
+    Mock::VerifyAndClearExpectations(&trust_session_listener);
 }
 
 TEST_F(TrustSessionManager, when_session_is_not_in_existing_sessions_listener_is_notified_of_session_beginning)
@@ -118,7 +121,7 @@ TEST_F(TrustSessionManager, when_session_is_in_existing_sessions_listener_is_not
     session_manager.add_trusted_process_for(trust_session, arbitrary_pid, existing_sessions);
 }
 
-TEST_F(TrustSessionManager, when_session_added_listener_is_notified_of_session_beginning_and_ending)
+TEST_F(TrustSessionManager, listener_is_notified_of_session_beginning_and_ending)
 {
     session_manager.add_trusted_process_for(trust_session, arbitrary_pid, existing_sessions);
 

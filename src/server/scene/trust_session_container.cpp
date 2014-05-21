@@ -189,3 +189,8 @@ void ms::TrustSessionContainer::for_each_trust_session_for_waiting_process(
             f((*tsit).second);
     }
 }
+
+void ms::TrustSessionContainer::for_each_trust_session(std::function<void(std::shared_ptr<TrustSession> const&)> f) const
+{
+    for (auto const& ts : trust_sessions) f(ts.second);
+}
