@@ -13,34 +13,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * Authored by: Josh Arenson <joshua.arenson@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_SESSION_CREDENTIALS_ID_H_
-#define MIR_FRONTEND_SESSION_CREDENTIALS_ID_H_
+#ifndef MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION
+#define MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION
 
-#include <sys/types.h>
+#include <memory>
 
 namespace mir
 {
-namespace frontend
+namespace options
 {
-class SessionCredentials
-{
-public:
-    SessionCredentials(pid_t pid, uid_t uid, gid_t gid);
-
-    pid_t pid() const;
-    uid_t uid() const;
-    gid_t gid() const;
-
-private:
-    SessionCredentials() = delete;
-
-    pid_t the_pid;
-    uid_t the_uid;
-    gid_t the_gid;
-};
+class DefaultConfiguration;
 }
 }
 
-#endif
+namespace mir_test_framework
+{
+    auto configuration_from_commandline() 
+    -> std::shared_ptr<mir::options::DefaultConfiguration>;
+}
+
+#endif /* MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION */
