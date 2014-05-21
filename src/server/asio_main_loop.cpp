@@ -36,6 +36,9 @@ struct MirClockTimerTraits
         void set_clock(std::shared_ptr<mir::time::Clock const> const& clock)
         {
             std::lock_guard<std::mutex> lock(timer_service_mutex);
+            auto stored_clock = timer_service_clock.lock();
+            if (stored_clock && stored_clock != clock)
+                BOOST_THROW_EXCEPTION(std::logic_error("A clock is already in use as time source for mir::AsioMainLoop"));
             timer_service_clock = clock;
         }
         mir::time::Timestamp now()
@@ -43,7 +46,7 @@ struct MirClockTimerTraits
             std::lock_guard<std::mutex> lock(timer_service_mutex);
             auto clock = timer_service_clock.lock();
             if (!clock)
-                BOOST_THROW_EXCEPTION(std::logic_error("no clock available to create time stamp"));
+                BOOST_THROW_EXCEPTION(std::logic_error("No clock available to create time stamp"));
             return clock->sample();
         }
     private:
