@@ -1,0 +1,68 @@
+/*
+ * Copyright © 2014 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ */
+
+#ifndef MIR_GRAPHICS_ANDROID_DEVICE_QUIRKS_H_
+#define MIR_GRAPHICS_ANDROID_DEVICE_QUIRKS_H_
+
+#include <hybris/properties/properties.h>
+#include <string>
+
+namespace mir
+{
+namespace graphics
+{
+namespace android
+{
+class PropertiesWrapper
+{
+public:
+    PropertiesWrapper() = default;
+    virtual ~PropertiesWrapper() = default;
+    virtual int property_get(
+        char const* key,
+        char* value,
+        char const* default_value) const = 0;
+private:
+    PropertiesWrapper(PropertiesWrapper const&) = delete;
+    PropertiesWrapper& operator=(PropertiesWrapper const&) = delete;
+};
+
+class PropertiesOps : public PropertiesWrapper
+{
+public:
+    int property_get(
+        char const* key,
+        char* value,
+        char const* default_value) const;
+};
+
+class DeviceQuirks
+{
+public:
+    DeviceQuirks(PropertiesWrapper const& properties);
+
+    unsigned int num_framebuffers() const;
+private:
+    DeviceQuirks(DeviceQuirks const&) = delete;
+    DeviceQuirks & operator=(DeviceQuirks const&) = delete;
+    unsigned int const num_framebuffers_;
+};
+}
+}
+}
+#endif /* MIR_GRAPHICS_ANDROID_DEVICE_QUIRKS_H_ */

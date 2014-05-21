@@ -42,7 +42,7 @@ class Framebuffers : public FramebufferBundle
 {
 public:
     Framebuffers(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
-                 std::shared_ptr<hwc_composer_device_1> const& hwc);
+                 std::shared_ptr<hwc_composer_device_1> const& hwc, unsigned int num_framebuffers);
     Framebuffers(std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
                  std::shared_ptr<framebuffer_device_t> const& fb);
 
