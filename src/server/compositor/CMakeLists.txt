@@ -16,6 +16,7 @@ set(
   compositing_screencast.cpp
   timeout_frame_dropping_policy_factory.cpp
   buffer_queue.cpp
+  recently_used_cache.cpp
 )
 
 ADD_LIBRARY(
