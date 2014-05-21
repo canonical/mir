@@ -61,8 +61,9 @@ public:
     virtual int buffers_ready_for_compositor() const = 0;
 
     /**
-     * Return the number of client_acquires that can be completed without
-     * blocking. This is used for pre-filling the queue in tests.
+     * Return the number of client acquisitions that can be completed without
+     * blocking before a compositor consumes them. This is used for pre-filling
+     * the queue in tests. Don't assume it's always nbuffers-1.
      */
     virtual int buffers_free_for_client() const = 0;
 

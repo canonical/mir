@@ -337,7 +337,7 @@ int mc::BufferQueue::buffers_ready_for_compositor() const
 int mc::BufferQueue::buffers_free_for_client() const
 {
     std::lock_guard<decltype(guard)> lock(guard);
-    return nbuffers - 1;
+    return nbuffers > 1 ? nbuffers - 1 : 1;
 }
 
 void mc::BufferQueue::give_buffer_to_client(

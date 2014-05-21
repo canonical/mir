@@ -103,7 +103,7 @@ struct BufferStreamTest : public ::testing::Test
 
 TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 {
-    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // Else we will hang
+    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
 
     mg::Buffer* client1{nullptr};
     buffer_stream.swap_client_buffers_blocking(client1);
@@ -152,7 +152,7 @@ TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
 
 TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
 {
-    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // Else we will hang
+    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
 
     mg::Buffer* client_buffer{nullptr};
     buffer_stream.swap_client_buffers_blocking(client_buffer);
@@ -174,6 +174,8 @@ TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
 
 TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
 {
+    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
+
     auto old_size = buffer_stream.stream_size();
 
     mg::Buffer* client{nullptr};
@@ -204,6 +206,8 @@ TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
 
 TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
 {
+    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
+
     auto old_size = buffer_stream.stream_size();
 
     mg::Buffer* client{nullptr};
@@ -253,6 +257,8 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
 
 TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
 {
+    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
+
     mg::Buffer* client{nullptr};
     buffer_stream.swap_client_buffers_blocking(client);
     buffer_stream.swap_client_buffers_blocking(client);
