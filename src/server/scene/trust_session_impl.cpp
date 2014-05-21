@@ -140,7 +140,7 @@ void ms::TrustSessionImpl::for_each_trusted_participant(
 {
     participants.for_each_trusted_participant([f](std::weak_ptr<Session> const& session)
         {
-            if (auto locked_scene_session = std::dynamic_pointer_cast<ms::Session>(session.lock()))
+            if (auto locked_scene_session = session.lock())
                 f(locked_scene_session);
         });
 }
