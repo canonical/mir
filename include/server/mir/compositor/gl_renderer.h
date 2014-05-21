@@ -26,6 +26,7 @@
 #include <mir/graphics/renderable.h>
 #include <mir/graphics/gl_primitive.h>
 #include <mir/graphics/gl_program_factory.h>
+#include <mir/graphics/gl_texture_cache.h>
 #include <GLES2/gl2.h>
 #include <unordered_map>
 #include <unordered_set>
@@ -41,8 +42,8 @@ class GLRenderer : public Renderer
 public:
     GLRenderer(
         graphics::GLProgramFactory const& program_factory,
+        std::unique_ptr<graphics::GLTextureCache> && texture_cache, 
         geometry::Rectangle const& display_area);
-    virtual ~GLRenderer() noexcept;
 
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
@@ -73,19 +74,10 @@ public:
     virtual void tessellate(std::vector<graphics::GLPrimitive>& primitives,
                             graphics::Renderable const& renderable) const;
 
-    /**
-     * Load the texture for a surface any which way you like. The default
-     * implementation does so with efficient GPU-side caching built in.
-     *
-     * \returns The OpenGL texture name for the surface.
-     */
-    virtual GLuint load_texture(graphics::Renderable const& renderable,
-                                graphics::Buffer& buffer) const;
-
     virtual void render(graphics::Renderable const& renderable) const;
-
 private:
     std::unique_ptr<graphics::GLProgram> program;
+    std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;
     GLuint position_attr_loc;
     GLuint texcoord_attr_loc;
     GLuint centre_uniform_loc;
@@ -95,17 +87,6 @@ private:
     float rotation;
 
     geometry::Rectangle viewport;
-
-    struct Texture
-    {
-        GLuint id = 0;
-        graphics::BufferID origin;
-        bool used;
-    };
-    mutable std::unordered_map<graphics::Renderable::ID, Texture> textures;
-    mutable std::unordered_set<std::shared_ptr<graphics::Buffer>> saved_resources;
-    mutable bool skipped = false;
-
 };
 
 }
