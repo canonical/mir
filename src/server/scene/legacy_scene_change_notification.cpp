@@ -41,7 +41,8 @@ ms::LegacySceneChangeNotification::~LegacySceneChangeNotification()
 
 void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surface)
 {
-    auto observer = std::make_shared<ms::LegacySurfaceChangeNotification>(scene_notify_change);
+    auto observer = std::make_shared<ms::LegacySurfaceChangeNotification>(
+        scene_notify_change, buffer_notify_change);
     surface->add_observer(observer);
     
     {

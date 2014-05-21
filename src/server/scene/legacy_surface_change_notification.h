@@ -33,7 +33,9 @@ namespace scene
 class LegacySurfaceChangeNotification : public ms::SurfaceObserver
 {
 public:
-    LegacySurfaceChangeNotification(std::function<void()> const& notify_change);
+    LegacySurfaceChangeNotification(
+        std::function<void()> const& notify_scene_change,
+        std::function<void()> const& notify_buffer_change);
 
     void resized_to(geometry::Size const& /*size*/) override;
     void moved_to(geometry::Point const& /*top_left*/) override;
@@ -45,7 +47,8 @@ public:
     void reception_mode_set_to(input::InputReceptionMode mode) override;
 
 private:
-    std::function<void()> const notify_change;
+    std::function<void()> const notify_scene_change;
+    std::function<void()> const notify_buffer_change;
 };
 }
 }
