@@ -11,8 +11,6 @@ set(
   fake_event_hub.cpp
   fake_event_hub_input_configuration.cpp
   test_protobuf_socket_server.cpp
-  mock_timer.cpp
-  mock_frame_dropping_policy_factory.cpp
 )
 
 set(

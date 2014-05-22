@@ -17,7 +17,6 @@
  */
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/stub_frame_dropping_policy_factory.h"
 #include "multithread_harness.h"
 
 #include "src/server/compositor/buffer_queue.h"
@@ -48,8 +47,7 @@ struct SwapperSwappingStress : public ::testing::Test
         auto properties = mg::BufferProperties{geom::Size{380, 210},
                                           mir_pixel_format_abgr_8888,
                                           mg::BufferUsage::hardware};
-        mtd::StubFrameDroppingPolicyFactory policy_factory;
-        switching_bundle = std::make_shared<mc::BufferQueue>(3, allocator, properties, policy_factory);
+        switching_bundle = std::make_shared<mc::BufferQueue>(3, allocator, properties);
     }
 
     std::shared_ptr<mc::BufferQueue> switching_bundle;
