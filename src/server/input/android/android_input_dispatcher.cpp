@@ -82,7 +82,7 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
         for(auto i = 0U; i != event.motion.pointer_count; ++i)
         {
             pointer_properties[i].id = event.motion.pointer_coordinates[i].id;
-            pointer_properties[i].toolType = 0;
+            pointer_properties[i].toolType = event.motion.pointer_coordinates[i].tool_type;
 
             pointer_coords[i].setAxisValue(AMOTION_EVENT_AXIS_X, event.motion.pointer_coordinates[i].x);
             pointer_coords[i].setAxisValue(AMOTION_EVENT_AXIS_Y, event.motion.pointer_coordinates[i].y);
@@ -90,6 +90,8 @@ void mia::AndroidInputDispatcher::dispatch(MirEvent const& event)
             pointer_coords[i].setAxisValue(AMOTION_EVENT_AXIS_SIZE, event.motion.pointer_coordinates[i].size);
             pointer_coords[i].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR, event.motion.pointer_coordinates[i].touch_major);
             pointer_coords[i].setAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR, event.motion.pointer_coordinates[i].touch_minor);
+            pointer_coords[i].setAxisValue(AMOTION_EVENT_AXIS_VSCROLL, event.motion.pointer_coordinates[i].vscroll);
+            pointer_coords[i].setAxisValue(AMOTION_EVENT_AXIS_HSCROLL, event.motion.pointer_coordinates[i].hscroll);
             pointer_coords[i].setAxisValue(AMOTION_EVENT_AXIS_ORIENTATION, event.motion.pointer_coordinates[i].orientation);
         }
 

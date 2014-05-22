@@ -20,6 +20,9 @@
 #include "src/server/compositor/buffer_queue.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_frame_dropping_policy_factory.h"
+#include "mir_test_doubles/mock_frame_dropping_policy_factory.h"
+#include "mir_test/signal.h"
 #include "mir_test/auto_unblock_thread.h"
 
 #include <gtest/gtest.h>
@@ -28,6 +31,8 @@
 #include <atomic>
 #include <mutex>
 #include <chrono>
+#include <algorithm>
+#include <map>
 #include <deque>
 #include <unordered_set>
 
@@ -36,11 +41,13 @@ namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
 namespace mc=mir::compositor;
 namespace mg = mir::graphics;
+namespace mt=mir::test;
 
 using namespace testing;
 
 namespace
 {
+
 class BufferQueueTest : public ::testing::Test
 {
 public:
@@ -62,6 +69,7 @@ protected:
     int max_nbuffers_to_test;
     std::shared_ptr<mtd::StubBufferAllocator> allocator;
     mg::BufferProperties basic_properties;
+    mtd::StubFrameDroppingPolicyFactory policy_factory;
 };
 
 class AcquireWaitHandle
@@ -191,7 +199,7 @@ TEST_F(BufferQueueTest, buffer_queue_of_one_is_supported)
     std::unique_ptr<mc::BufferQueue> q;
     ASSERT_NO_THROW(q = std::move(
         std::unique_ptr<mc::BufferQueue>(
-            new mc::BufferQueue(1, allocator, basic_properties))));
+            new mc::BufferQueue(1, allocator, basic_properties, policy_factory))));
     ASSERT_THAT(q, Ne(nullptr));
 
     auto handle = client_acquire_async(*q);
@@ -226,7 +234,7 @@ TEST_F(BufferQueueTest, buffer_queue_of_one_is_supported)
 
 TEST_F(BufferQueueTest, buffer_queue_of_one_supports_resizing)
 {
-    mc::BufferQueue q(1, allocator, basic_properties);
+    mc::BufferQueue q(1, allocator, basic_properties, policy_factory);
 
     const geom::Size expect_size{10, 20};
     q.resize(expect_size);
@@ -251,22 +259,22 @@ TEST_F(BufferQueueTest, buffer_queue_of_one_supports_resizing)
 
 TEST_F(BufferQueueTest, framedropping_is_disabled_by_default)
 {
-    mc::BufferQueue bundle(2, allocator, basic_properties);
+    mc::BufferQueue bundle(2, allocator, basic_properties, policy_factory);
     EXPECT_THAT(bundle.framedropping_allowed(), Eq(false));
 }
 
 TEST_F(BufferQueueTest, throws_when_creating_with_invalid_num_buffers)
 {
-    EXPECT_THROW(mc::BufferQueue a(0, allocator, basic_properties), std::logic_error);
-    EXPECT_THROW(mc::BufferQueue a(-1, allocator, basic_properties), std::logic_error);
-    EXPECT_THROW(mc::BufferQueue a(-10, allocator, basic_properties), std::logic_error);
+    EXPECT_THROW(mc::BufferQueue a(0, allocator, basic_properties, policy_factory), std::logic_error);
+    EXPECT_THROW(mc::BufferQueue a(-1, allocator, basic_properties, policy_factory), std::logic_error);
+    EXPECT_THROW(mc::BufferQueue a(-10, allocator, basic_properties, policy_factory), std::logic_error);
 }
 
 TEST_F(BufferQueueTest, client_can_acquire_and_release_buffer)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         auto handle = client_acquire_async(q);
         ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -278,7 +286,7 @@ TEST_F(BufferQueueTest, client_can_acquire_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         int const max_ownable_buffers = nbuffers - 1;
         for (int acquires = 0; acquires < max_ownable_buffers; ++acquires)
         {
@@ -292,7 +300,7 @@ TEST_F(BufferQueueTest, client_can_acquire_buffers)
 TEST_F(BufferQueueTest, clients_can_have_multiple_pending_completions)
 {
     int const nbuffers = 3;
-    mc::BufferQueue q(nbuffers, allocator, basic_properties);
+    mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
     for (int i = 0; i < nbuffers - 1; ++i)
     {
@@ -322,7 +330,7 @@ TEST_F(BufferQueueTest, compositor_acquires_frames_in_order_for_synchronous_clie
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         ASSERT_THAT(q.framedropping_allowed(), Eq(false));
 
         void const* main_compositor = reinterpret_cast<void const*>(0);
@@ -351,7 +359,7 @@ TEST_F(BufferQueueTest, framedropping_clients_never_block)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         q.allow_framedropping(true);
 
         for (int i = 0; i < 1000; i++)
@@ -366,7 +374,7 @@ TEST_F(BufferQueueTest, framedropping_clients_never_block)
 /* Regression test for LP: #1210042 */
 TEST_F(BufferQueueTest, clients_dont_recycle_startup_buffer)
 {
-    mc::BufferQueue q(3, allocator, basic_properties);
+    mc::BufferQueue q(3, allocator, basic_properties, policy_factory);
 
     auto handle = client_acquire_async(q);
     ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -386,7 +394,7 @@ TEST_F(BufferQueueTest, throws_on_out_of_order_client_release)
 {
     for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         auto handle1 = client_acquire_async(q);
         ASSERT_THAT(handle1->has_acquired_buffer(), Eq(true));
@@ -406,7 +414,7 @@ TEST_F(BufferQueueTest, async_client_cycles_through_all_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         std::atomic<bool> done(false);
         auto unblock = [&done] { done = true; };
@@ -441,7 +449,7 @@ TEST_F(BufferQueueTest, compositor_can_acquire_and_release)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         auto handle = client_acquire_async(q);
         ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -459,7 +467,7 @@ TEST_F(BufferQueueTest, multiple_compositors_are_in_sync)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         auto handle = client_acquire_async(q);
         ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -481,7 +489,7 @@ TEST_F(BufferQueueTest, compositor_acquires_frames_in_order)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         for (int i = 0; i < 10; ++i)
         {
@@ -515,7 +523,7 @@ TEST_F(BufferQueueTest, compositor_acquire_never_blocks_when_there_are_no_ready_
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         for (int i = 0; i < 100; i++)
         {
@@ -529,7 +537,7 @@ TEST_F(BufferQueueTest, compositor_can_always_acquire_buffer)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         q.allow_framedropping(false);
 
         std::atomic<bool> done(false);
@@ -567,7 +575,7 @@ TEST_F(BufferQueueTest, compositor_acquire_recycles_latest_ready_buffer)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         mg::BufferID client_id;
 
@@ -596,7 +604,7 @@ TEST_F(BufferQueueTest, compositor_release_verifies_parameter)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         auto handle = client_acquire_async(q);
         ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -611,7 +619,7 @@ TEST_F(BufferQueueTest, compositor_release_verifies_parameter)
 /* Regression test for LP#1270964 */
 TEST_F(BufferQueueTest, compositor_client_interleaved)
 {
-    mc::BufferQueue q(3, allocator, basic_properties);
+    mc::BufferQueue q(3, allocator, basic_properties, policy_factory);
 
     auto handle = client_acquire_async(q);
     ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -636,7 +644,7 @@ TEST_F(BufferQueueTest, overlapping_compositors_get_different_frames)
     // This test simulates bypass behaviour
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         std::shared_ptr<mg::Buffer> compositor[2];
 
@@ -673,7 +681,7 @@ TEST_F(BufferQueueTest, snapshot_acquire_basic)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         auto comp_buffer = q.compositor_acquire(this);
         auto snapshot = q.snapshot_acquire();
@@ -687,7 +695,7 @@ TEST_F(BufferQueueTest, snapshot_acquire_never_blocks)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         int const num_snapshots = 100;
 
         std::shared_ptr<mg::Buffer> buf[num_snapshots];
@@ -703,7 +711,7 @@ TEST_F(BufferQueueTest, snapshot_release_verifies_parameter)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         auto handle = client_acquire_async(q);
         ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
@@ -727,7 +735,7 @@ TEST_F(BufferQueueTest, stress)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         std::atomic<bool> done(false);
 
@@ -760,7 +768,7 @@ TEST_F(BufferQueueTest, bypass_clients_get_more_than_two_buffers)
 {
     for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         std::shared_ptr<mg::Buffer> compositor[2];
 
@@ -801,7 +809,7 @@ TEST_F(BufferQueueTest, framedropping_clients_get_all_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         q.allow_framedropping(true);
 
         int const nframes = 100;
@@ -823,7 +831,7 @@ TEST_F(BufferQueueTest, waiting_clients_unblock_on_shutdown)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         q.allow_framedropping(false);
 
         int const max_ownable_buffers = nbuffers - 1;
@@ -848,7 +856,7 @@ TEST_F(BufferQueueTest, client_framerate_matches_compositor)
 {
     for (int nbuffers = 2; nbuffers <= 3; nbuffers++)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         unsigned long client_frames = 0;
         const unsigned long compose_frames = 20;
 
@@ -904,7 +912,7 @@ TEST_F(BufferQueueTest, slow_client_framerate_matches_compositor)
      */
     for (int nbuffers = 3; nbuffers <= 3; nbuffers++)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         unsigned long client_frames = 0;
         unsigned long const compose_frames = 100;
         auto const frame_time = std::chrono::milliseconds(16);
@@ -962,7 +970,7 @@ TEST_F(BufferQueueTest, resize_affects_client_acquires_immediately)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         for (int width = 1; width < 100; ++width)
         {
@@ -985,11 +993,19 @@ TEST_F(BufferQueueTest, resize_affects_client_acquires_immediately)
     }
 }
 
+namespace
+{
+int max_ownable_buffers(int nbuffers)
+{
+    return (nbuffers == 1) ? 1 : nbuffers - 1;
+}
+}
+
 TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         mg::BufferID history[5];
 
         const int width0 = 123;
@@ -998,9 +1014,8 @@ TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
         const int dy = -3;
         int width = width0;
         int height = height0;
-        int const nbuffers_to_use = nbuffers == 1 ? 1 : nbuffers - 1;
 
-        for (int produce = 0; produce < nbuffers_to_use; ++produce)
+        for (int produce = 0; produce < max_ownable_buffers(nbuffers); ++produce)
         {
             geom::Size new_size{width, height};
             width += dx;
@@ -1018,7 +1033,7 @@ TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
         width = width0;
         height = height0;
 
-        for (int consume = 0; consume < nbuffers_to_use; ++consume)
+        for (int consume = 0; consume < max_ownable_buffers(nbuffers); ++consume)
         {
             geom::Size expect_size{width, height};
             width += dx;
@@ -1047,12 +1062,79 @@ TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
     }
 }
 
+TEST_F(BufferQueueTest, uncomposited_client_swaps_when_policy_triggered)
+{
+    for (int nbuffers = 2;
+         nbuffers < max_nbuffers_to_test;
+         nbuffers++)
+    {
+        mtd::MockFrameDroppingPolicyFactory policy_factory;
+        mc::BufferQueue q(nbuffers,
+                          allocator,
+                          basic_properties,
+                          policy_factory);
+
+        for (int i = 0; i < max_ownable_buffers(nbuffers); i++)
+        {
+            auto client = client_acquire_sync(q);
+            q.client_release(client);
+        }
+
+        auto handle = client_acquire_async(q);
+
+        EXPECT_FALSE(handle->has_acquired_buffer());
+
+        policy_factory.trigger_policies();
+        EXPECT_TRUE(handle->has_acquired_buffer());
+    }
+}
+
+TEST_F(BufferQueueTest, partially_composited_client_swaps_when_policy_triggered)
+{
+    for (int nbuffers = 2;
+         nbuffers < max_nbuffers_to_test;
+         nbuffers++)
+    {
+        mtd::MockFrameDroppingPolicyFactory policy_factory;
+        mc::BufferQueue q(nbuffers,
+                          allocator,
+                          basic_properties,
+                          policy_factory);
+
+        for (int i = 0; i < max_ownable_buffers(nbuffers); i++)
+        {
+            auto client = client_acquire_sync(q);
+            q.client_release(client);
+        }
+
+        /* Queue up two pending swaps */
+        auto first_swap = client_acquire_async(q);
+        auto second_swap = client_acquire_async(q);
+
+        ASSERT_FALSE(first_swap->has_acquired_buffer());
+        ASSERT_FALSE(second_swap->has_acquired_buffer());
+
+        q.compositor_acquire(nullptr);
+
+        EXPECT_TRUE(first_swap->has_acquired_buffer());
+        EXPECT_FALSE(second_swap->has_acquired_buffer());
+
+        /* We have to release a client buffer here; framedropping or not,
+         * a client can't have 2 buffers outstanding in the nbuffers = 2 case.
+         */
+        first_swap->release_buffer();
+
+        policy_factory.trigger_policies();
+        EXPECT_TRUE(second_swap->has_acquired_buffer());
+    }
+}
+
 TEST_F(BufferQueueTest, with_single_buffer_compositor_acquires_resized_frames_eventually)
 {
     int const nbuffers{1};
     geom::Size const new_size{123,456};
 
-    mc::BufferQueue q(nbuffers, allocator, basic_properties);
+    mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
     q.client_release(client_acquire_sync(q));
     q.resize(new_size);
@@ -1072,7 +1154,7 @@ TEST_F(BufferQueueTest, double_buffered_client_is_not_blocked_prematurely)
 {  // Regression test for LP: #1319765
     using namespace testing;
 
-    mc::BufferQueue q{2, allocator, basic_properties};
+    mc::BufferQueue q{2, allocator, basic_properties, policy_factory};
 
     q.client_release(client_acquire_sync(q));
     auto a = q.compositor_acquire(this);
@@ -1095,7 +1177,7 @@ TEST_F(BufferQueueTest, composite_on_demand_never_deadlocks_with_2_buffers)
 {  // Extended regression test for LP: #1319765
     using namespace testing;
 
-    mc::BufferQueue q{2, allocator, basic_properties};
+    mc::BufferQueue q{2, allocator, basic_properties, policy_factory};
 
     for (int i = 0; i < 100; ++i)
     {
@@ -1137,7 +1219,7 @@ TEST_F(BufferQueueTest, framedropping_client_acquire_does_not_block_when_no_avai
 
     int const nbuffers{3};
 
-    mc::BufferQueue q{nbuffers, allocator, basic_properties};
+    mc::BufferQueue q{nbuffers, allocator, basic_properties, policy_factory};
     q.allow_framedropping(true);
 
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
@@ -1183,7 +1265,7 @@ TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         std::mutex client_buffer_guard;
         mg::Buffer* client_buffer = nullptr;
@@ -1231,7 +1313,7 @@ TEST_F(BufferQueueTest, client_never_owns_compositor_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         for (int i = 0; i < 100; ++i)
         {
             auto handle = client_acquire_async(q);
@@ -1267,7 +1349,7 @@ TEST_F(BufferQueueTest, buffers_are_not_lost)
 {
     for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         void const* main_compositor = reinterpret_cast<void const*>(0);
         void const* second_compositor = reinterpret_cast<void const*>(1);
@@ -1327,7 +1409,7 @@ TEST_F(BufferQueueTest, DISABLED_synchronous_clients_only_get_two_real_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties);
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
         q.allow_framedropping(false);
 
         std::atomic<bool> done(false);
@@ -1368,7 +1450,7 @@ TEST_F(BufferQueueTest, DISABLED_synchronous_clients_only_get_two_real_buffers)
 TEST_F(BufferQueueTest, DISABLED_lp_1317801_regression_test)
 {
     int const nbuffers = 3;
-    mc::BufferQueue q(nbuffers, allocator, basic_properties);
+    mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
     q.client_release(client_acquire_sync(q));
 
