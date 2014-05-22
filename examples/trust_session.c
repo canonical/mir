@@ -142,8 +142,8 @@ void trusted_helper(const char* server, pid_t child_pid)
     assert(mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_state_started);
     puts("trusted_helper: Started trust session");
 
-    MirTrustSessionAddTrustResult add_result = mir_trust_session_add_trusted_session_sync(mcd.trust_session, child_pid);
-    assert(add_result == mir_trust_session_add_tust_succeeded);
+    MirBool add_result = mir_trust_session_add_trusted_session_sync(mcd.trust_session, child_pid);
+    assert(add_result == mir_true);
     printf("trusted_helper: added trusted session pid: %d\n", child_pid);
 
     int status;

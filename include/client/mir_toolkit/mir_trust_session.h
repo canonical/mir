@@ -79,7 +79,7 @@ MirWaitHandle *mir_trust_session_add_trusted_session(MirTrustSession *trust_sess
  *   \param [in] pid            The process id of the application to add
  *   \return                    A MirTrustSessionAddTrustResult result of the call
  */
-MirTrustSessionAddTrustResult mir_trust_session_add_trusted_session_sync(MirTrustSession *trust_session,
+MirBool mir_trust_session_add_trusted_session_sync(MirTrustSession *trust_session,
     pid_t pid);
 
 /**

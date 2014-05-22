@@ -330,11 +330,11 @@ typedef void (*mir_trust_session_callback)(MirTrustSession* tps, void* context);
 /**
  * Callback member of MirTrustSession for adding trusted sessions
  *   \param [in] trusted_session  The trust session associated with the callback
- *   \param [in] result           The result of adding a trusted session
+ *   \param [in] added            True if the session was added, false otherwise
  *   \param [in,out] context      The context provided by the client
  */
 typedef void (*mir_trust_session_add_trusted_session_callback)(
-    MirTrustSession* trusted_session, MirTrustSessionAddTrustResult result, void* context);
+    MirTrustSession* trusted_session, MirBool added, void* context);
 
 /**
  * Callback member of MirTrustSession for handling of trust sessions events.

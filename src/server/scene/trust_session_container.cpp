@@ -19,6 +19,8 @@
 #include "trust_session_container.h"
 #include "mir/scene/session.h"
 
+#include <boost/throw_exception.hpp>
+
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
 
@@ -62,7 +64,7 @@ bool ms::TrustSessionContainer::insert_participant(TrustSession* trust_session, 
 
     // the trust session must have first been added by insert_trust_session.
     if (trust_sessions.find(trust_session) == trust_sessions.end())
-        return false;
+        BOOST_THROW_EXCEPTION(std::runtime_error("Trust Session does not exist"));
 
     if (auto locked_session = session.lock())
     {
@@ -158,7 +160,7 @@ void ms::TrustSessionContainer::for_each_trust_session_with_participant(
     }
 }
 
-bool ms::TrustSessionContainer::insert_waiting_process(
+void ms::TrustSessionContainer::insert_waiting_process(
     TrustSession* trust_session,
     pid_t process_id)
 {
@@ -166,10 +168,9 @@ bool ms::TrustSessionContainer::insert_waiting_process(
 
     // the trust session must have first been added by insert_trust_session.
     if (trust_sessions.find(trust_session) == trust_sessions.end())
-        return false;
+        BOOST_THROW_EXCEPTION(std::runtime_error("Trust Session does not exist"));
 
     waiting_process_map.insert(WaitingProcess{trust_session, process_id});
-    return true;
 }
 
 void ms::TrustSessionContainer::for_each_trust_session_expecting_process(

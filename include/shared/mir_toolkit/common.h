@@ -94,16 +94,6 @@ typedef enum MirTrustSessionState
 } MirTrustSessionState;
 
 /**
- * MirTrustSessionAddTrustResult specifies the result of a
- * call to add an app id to a trust session
- */
-typedef enum
-{
-    mir_trust_session_add_tust_failed,
-    mir_trust_session_add_tust_succeeded
-} MirTrustSessionAddTrustResult;
-
-/**
  * The order of components in a format enum matches the
  * order of the components as they would be written in an
  *  integer representing a pixel value of that format.
