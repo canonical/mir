@@ -517,7 +517,7 @@ void mf::SessionMediator::drm_auth_magic(
 void mf::SessionMediator::start_trust_session(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::TrustSessionParameters* request,
-    ::mir::protobuf::TrustSession* response,
+    ::mir::protobuf::TrustSession* /*response*/,
     ::google::protobuf::Closure* done)
 {
     {
@@ -535,11 +535,7 @@ void mf::SessionMediator::start_trust_session(
 
         report->session_start_trust_session_called(session->name(), parameters.base_process_id);
 
-        if (auto trust_session = shell->start_trust_session_for(session, parameters))
-        {
-            weak_trust_session = trust_session;
-            response->set_state(mir_trust_session_state_started);
-        }
+        weak_trust_session = shell->start_trust_session_for(session, parameters);
     }
     done->Run();
 }

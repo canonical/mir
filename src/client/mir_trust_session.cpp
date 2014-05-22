@@ -124,17 +124,15 @@ void MirTrustSession::register_trust_session_event_callback(
 void MirTrustSession::done_start(mir_trust_session_callback callback, void* context)
 {
     std::string error;
-    MirTrustSessionState new_state = mir_trust_session_state_stopped;
+    MirTrustSessionState new_state = mir_trust_session_state_started;
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
 
-        if (session.has_state())
-            new_state = (MirTrustSessionState)session.state();
+        if (session.has_error())
+            new_state = mir_trust_session_state_stopped;
 
-        error = session.error();
+        state = new_state;
     }
-    set_error_message(error);
-    set_state(new_state);
 
     callback(this, context);
     start_wait_handle.result_received();
@@ -153,7 +151,6 @@ void MirTrustSession::done_add_trusted_session(mir_trust_session_add_trusted_ses
     MirTrustSessionAddTrustResult result = static_cast<MirTrustSessionAddTrustResult>(add_result.result());
     if (add_result.has_error())
     {
-        set_error_message(add_result.error());
         result = mir_trust_session_add_tust_failed;
     }
     callback(this, result, context);
@@ -172,11 +169,4 @@ char const* MirTrustSession::get_error_message()
     {
         return error_message.c_str();
     }
-}
-
-void MirTrustSession::set_error_message(std::string const& error)
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    error_message = error;
 }

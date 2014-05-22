@@ -55,10 +55,8 @@ public:
     void register_trust_session_event_callback(mir_trust_session_event_callback callback, void* context);
 
     char const* get_error_message();
-    void set_error_message(std::string const& error);
 
     MirTrustSessionState get_state() const;
-    void set_state(MirTrustSessionState new_state);
 
 private:
     mutable std::mutex mutex; // Protects members of *this
@@ -79,6 +77,7 @@ private:
     MirWaitHandle add_result_wait_handle;
     MirTrustSessionState state;
 
+    void set_state(MirTrustSessionState new_state);
     void done_start(mir_trust_session_callback callback, void* context);
     void done_stop(mir_trust_session_callback callback, void* context);
     void done_add_trusted_session(mir_trust_session_add_trusted_session_callback callback, void* context);
