@@ -153,7 +153,7 @@ std::shared_ptr<ms::TrustSession> ms::TrustSessionManager::start_trust_session_f
     TrustSessionCreationParameters const& params,
     SessionContainer const& existing_session) const
 {
-    auto trust_session = std::make_shared<TrustSessionImpl>(session, params, trust_session_listener, trust_session_container);
+    auto trust_session = std::make_shared<TrustSessionImpl>(session, params, trust_session_listener);
 
     std::lock_guard<std::mutex> lock(trust_sessions_mutex);
 

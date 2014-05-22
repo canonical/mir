@@ -19,18 +19,15 @@
 #include "trust_session_impl.h"
 #include "mir/scene/session.h"
 #include "mir/scene/trust_session_listener.h"
-#include "trust_session_trusted_participants.h"
 
 namespace ms = mir::scene;
 
 ms::TrustSessionImpl::TrustSessionImpl(
     std::weak_ptr<Session> const& session,
     TrustSessionCreationParameters const&,
-    std::shared_ptr<TrustSessionListener> const& trust_session_listener,
-    std::shared_ptr<TrustSessionContainer> const& container) :
+    std::shared_ptr<TrustSessionListener> const& trust_session_listener) :
     trusted_helper(session),
     trust_session_listener(trust_session_listener),
-    participants{this, container},
     state(mir_trust_session_state_started)
 {
     if (auto helper = trusted_helper.lock())

@@ -17,7 +17,6 @@
  */
 
 #include "src/server/scene/trust_session_container.h"
-#include "src/server/scene/trust_session_trusted_participants.h"
 #include "mir_test_doubles/mock_scene_session.h"
 #include "mir_test_doubles/null_trust_session.h"
 #include "mir_test/fake_shared.h"
