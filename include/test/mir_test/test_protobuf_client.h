@@ -53,7 +53,6 @@ struct TestProtobufClient
     mir::protobuf::TrustSessionParameters trust_session_parameters;
     mir::protobuf::TrustedSession trusted_session;
     mir::protobuf::TrustSession trust_session;
-    mir::protobuf::TrustSessionAddResult add_trust_result;
 
     MOCK_METHOD0(connect_done, void());
     MOCK_METHOD0(create_surface_done, void());

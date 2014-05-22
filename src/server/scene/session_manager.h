@@ -76,10 +76,10 @@ public:
 
     std::shared_ptr<frontend::TrustSession> start_trust_session_for(std::shared_ptr<frontend::Session> const& session,
                                                   TrustSessionCreationParameters const& params) override;
-    MirTrustSessionAddTrustResult add_trusted_process_for(std::shared_ptr<frontend::TrustSession> const& trust_session,
-                                                          pid_t process_id) override;
-    MirTrustSessionAddTrustResult add_trusted_session_for(std::shared_ptr<frontend::TrustSession> const& trust_session,
-                                                          std::shared_ptr<frontend::Session> const& session) override;
+    void add_trusted_process_for(std::shared_ptr<frontend::TrustSession> const& trust_session,
+                                 pid_t process_id) override;
+    void add_trusted_session_for(std::shared_ptr<frontend::TrustSession> const& trust_session,
+                                 std::shared_ptr<frontend::Session> const& session) override;
     void stop_trust_session(std::shared_ptr<frontend::TrustSession> const& trust_session) override;
 
 protected:

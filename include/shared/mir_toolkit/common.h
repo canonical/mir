@@ -100,7 +100,6 @@ typedef enum MirTrustSessionState
 typedef enum
 {
     mir_trust_session_add_tust_failed,
-    mir_trust_session_add_tust_duplicate,
     mir_trust_session_add_tust_succeeded
 } MirTrustSessionAddTrustResult;
 

@@ -543,7 +543,7 @@ void mf::SessionMediator::start_trust_session(
 void mf::SessionMediator::add_trusted_session(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::TrustedSession* request,
-    ::mir::protobuf::TrustSessionAddResult* response,
+    ::mir::protobuf::Void*,
     ::google::protobuf::Closure* done)
 {
     {
@@ -559,8 +559,7 @@ void mf::SessionMediator::add_trusted_session(
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
 
         report->session_add_trusted_session_called(session->name(), request->pid());
-
-        response->set_result(shell->add_trusted_process_for(trust_session, request->pid()));
+        shell->add_trusted_process_for(trust_session, request->pid());
     }
     done->Run();
 }

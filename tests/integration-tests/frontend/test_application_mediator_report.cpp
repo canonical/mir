@@ -469,7 +469,7 @@ TEST_F(ApplicationMediatorReport, trust_session_add_trusted_session_called)
             client.display_server.add_trusted_session(
                 0,
                 &client.trusted_session,
-                &client.add_trust_result,
+                &client.ignored,
                 google::protobuf::NewCallback(&client, &mt::TestProtobufClient::trust_session_add_trusted_session_done));
             client.wait_for_trust_session_add_trusted_session_done();
 

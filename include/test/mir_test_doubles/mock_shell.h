@@ -48,10 +48,10 @@ struct MockShell : public frontend::Shell
     MOCK_METHOD2(start_trust_session_for, std::shared_ptr<frontend::TrustSession>(
         std::shared_ptr<frontend::Session> const&,
         scene::TrustSessionCreationParameters const&));
-    MOCK_METHOD2(add_trusted_process_for, MirTrustSessionAddTrustResult(
+    MOCK_METHOD2(add_trusted_process_for, void(
         std::shared_ptr<frontend::TrustSession> const&,
         pid_t));
-    MOCK_METHOD2(add_trusted_session_for, MirTrustSessionAddTrustResult(
+    MOCK_METHOD2(add_trusted_session_for, void(
         std::shared_ptr<frontend::TrustSession> const&,
         std::shared_ptr<frontend::Session> const&));
     MOCK_METHOD1(stop_trust_session, void(std::shared_ptr<frontend::TrustSession> const&));

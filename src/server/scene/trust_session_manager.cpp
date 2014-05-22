@@ -97,7 +97,7 @@ void ms::TrustSessionManager::stop_trust_session(std::shared_ptr<TrustSession> c
     stop_trust_session_locked(lock, trust_session);
 }
 
-MirTrustSessionAddTrustResult ms::TrustSessionManager::add_trusted_process_for_locked(std::lock_guard<std::mutex> const&,
+void ms::TrustSessionManager::add_trusted_process_for_locked(std::lock_guard<std::mutex> const&,
     std::shared_ptr<TrustSession> const& trust_session,
     pid_t process_id,
     SessionContainer const& existing_sessions) const
@@ -115,18 +115,16 @@ MirTrustSessionAddTrustResult ms::TrustSessionManager::add_trusted_process_for_l
                     trust_session_listener->trusted_session_beginning(*trust_session, session);
             }
         });
-
-    return mir_trust_session_add_tust_succeeded;
 }
 
-MirTrustSessionAddTrustResult ms::TrustSessionManager::add_trusted_process_for(
+void ms::TrustSessionManager::add_trusted_process_for(
     std::shared_ptr<TrustSession> const& trust_session,
     pid_t process_id,
     SessionContainer const& existing_session) const
 {
     std::lock_guard<std::mutex> lock(trust_sessions_mutex);
 
-    return add_trusted_process_for_locked(lock, trust_session, process_id, existing_session);
+    add_trusted_process_for_locked(lock, trust_session, process_id, existing_session);
 }
 
 std::shared_ptr<ms::TrustSession> ms::TrustSessionManager::start_trust_session_for(
@@ -143,8 +141,6 @@ std::shared_ptr<ms::TrustSession> ms::TrustSessionManager::start_trust_session_f
 
     trust_session_listener->starting(trust_session);
 
-    // TODO {arg} we're ignoring an advertised failure return here:
-    // TODO {arg} but add_trusted_process_for_locked() can't fail.
     add_trusted_process_for_locked(lock, trust_session, params.base_process_id, existing_session);
 
     return trust_session;
@@ -169,7 +165,7 @@ void ms::TrustSessionManager::add_expected_session(std::shared_ptr<Session> cons
     }
 }
 
-MirTrustSessionAddTrustResult ms::TrustSessionManager::add_trusted_session_for(
+void ms::TrustSessionManager::add_trusted_session_for(
     std::shared_ptr<TrustSession> const& trust_session,
     std::shared_ptr<Session> const& session)
 {
@@ -177,6 +173,4 @@ MirTrustSessionAddTrustResult ms::TrustSessionManager::add_trusted_session_for(
 
     if (trust_session_container->insert_participant(trust_session.get(), session, TrustSessionContainer::TrustedSession))
         trust_session_listener->trusted_session_beginning(*trust_session, session);
-
-    return mir_trust_session_add_tust_succeeded;
 }

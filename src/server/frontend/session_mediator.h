@@ -126,7 +126,7 @@ public:
                            const mir::protobuf::ScreencastId*,
                            mir::protobuf::Buffer*,
                            google::protobuf::Closure* done);
-    
+
     void configure_cursor(google::protobuf::RpcController*,
                           mir::protobuf::CursorSetting const*,
                           mir::protobuf::Void*,
@@ -139,7 +139,7 @@ public:
 
     void add_trusted_session(::google::protobuf::RpcController* controller,
                              const ::mir::protobuf::TrustedSession* request,
-                             ::mir::protobuf::TrustSessionAddResult* response,
+                             ::mir::protobuf::Void*,
                              ::google::protobuf::Closure* done);
 
     void stop_trust_session(::google::protobuf::RpcController* controller,

@@ -193,23 +193,23 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
 
 }
 
-MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_process_for(
+void ms::SessionManager::add_trusted_process_for(
     std::shared_ptr<mf::TrustSession> const& trust_session,
     pid_t process_id)
 {
     auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
 
-    return trust_session_manager.add_trusted_process_for(scene_trust_session, process_id, *app_container);
+    trust_session_manager.add_trusted_process_for(scene_trust_session, process_id, *app_container);
 }
 
-MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for(
+void ms::SessionManager::add_trusted_session_for(
     std::shared_ptr<mf::TrustSession> const& trust_session,
     std::shared_ptr<frontend::Session> const& session)
 {
     auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
     auto scene_session = std::dynamic_pointer_cast<Session>(session);
 
-    return trust_session_manager.add_trusted_session_for(scene_trust_session, scene_session);
+    trust_session_manager.add_trusted_session_for(scene_trust_session, scene_session);
 }
 
 void ms::SessionManager::stop_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
