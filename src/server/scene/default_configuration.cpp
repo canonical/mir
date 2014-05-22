@@ -35,6 +35,7 @@
 #include "surface_controller.h"
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
+#include "trust_session_manager_impl.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -205,5 +206,17 @@ mir::DefaultServerConfiguration::the_snapshot_strategy()
         {
             return std::make_shared<ms::ThreadedSnapshotStrategy>(
                 the_pixel_buffer());
+        });
+}
+
+std::shared_ptr<ms::TrustSessionManager>
+mir::DefaultServerConfiguration::the_trust_session_manager()
+{
+    return trust_session_manager(
+        [this]()
+        {
+            return std::make_shared<ms::TrustSessionManagerImpl>(
+                the_session_container(),
+                the_trust_session_listener());
         });
 }
