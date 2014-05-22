@@ -53,7 +53,7 @@ mir::DefaultServerConfiguration::the_frame_dropping_policy_factory()
         [this]()
         {
             return std::make_shared<mc::TimeoutFrameDroppingPolicyFactory>(the_main_loop(),
-                                                                           std::chrono::milliseconds{1000});
+                                                                           std::chrono::milliseconds{100});
         });
 }
 
