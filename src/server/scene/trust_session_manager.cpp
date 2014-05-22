@@ -142,7 +142,6 @@ std::shared_ptr<ms::TrustSession> ms::TrustSessionManager::start_trust_session_f
     trust_session_container->insert_trust_session(trust_session);
     trust_session_container->insert_participant(trust_session.get(), session, TrustSessionContainer::HelperSession);
 
-    trust_session->start();
     trust_session_listener->starting(trust_session);
 
     // TODO {arg} we're ignoring an advertised failure return here:

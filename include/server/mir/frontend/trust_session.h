@@ -36,11 +36,6 @@ class TrustSession
 public:
     virtual ~TrustSession() = default;
 
-    virtual MirTrustSessionState get_state() const = 0;
-
-    virtual void start() = 0;
-    virtual void stop() = 0;
-
 protected:
     TrustSession() = default;
     TrustSession(const TrustSession&) = delete;

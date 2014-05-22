@@ -538,7 +538,7 @@ void mf::SessionMediator::start_trust_session(
         if (auto trust_session = shell->start_trust_session_for(session, parameters))
         {
             weak_trust_session = trust_session;
-            response->set_state(trust_session->get_state());
+            response->set_state(mir_trust_session_state_started);
         }
     }
     done->Run();

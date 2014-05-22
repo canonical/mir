@@ -31,8 +31,12 @@ ms::TrustSessionImpl::TrustSessionImpl(
     trusted_helper(session),
     trust_session_listener(trust_session_listener),
     participants{this, container},
-    state(mir_trust_session_state_stopped)
+    state(mir_trust_session_state_started)
 {
+    if (auto helper = trusted_helper.lock())
+    {
+        helper->begin_trust_session();
+    }
 }
 
 ms::TrustSessionImpl::~TrustSessionImpl()
@@ -40,33 +44,11 @@ ms::TrustSessionImpl::~TrustSessionImpl()
     TrustSessionImpl::stop();
 }
 
-MirTrustSessionState ms::TrustSessionImpl::get_state() const
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    return state;
-}
-
 std::weak_ptr<ms::Session> ms::TrustSessionImpl::get_trusted_helper() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     return trusted_helper;
-}
-
-void ms::TrustSessionImpl::start()
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    if (state == mir_trust_session_state_started)
-        return;
-
-    state = mir_trust_session_state_started;
-
-    auto helper = trusted_helper.lock();
-    if (helper) {
-        helper->begin_trust_session();
-    }
 }
 
 void ms::TrustSessionImpl::stop()

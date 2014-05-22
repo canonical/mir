@@ -20,7 +20,7 @@
 #include "src/server/scene/trust_session_container.h"
 #include "mir/scene/trust_session_creation_parameters.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test_doubles/mock_scene_session.h"
+#include "mir_test_doubles/stub_scene_session.h"
 #include "mir_test_doubles/mock_trust_session_listener.h"
 
 #include <gmock/gmock.h>
@@ -39,9 +39,9 @@ struct TrustSession : public testing::Test
 {
     testing::NiceMock<mtd::MockTrustSessionListener> trust_session_listener;
     ms::TrustSessionContainer container;
-    mtd::MockSceneSession trusted_helper;
-    testing::NiceMock<mtd::MockSceneSession> trusted_app1;
-    testing::NiceMock<mtd::MockSceneSession> trusted_app2;
+    mtd::StubSceneSession trusted_helper;
+    mtd::StubSceneSession trusted_app1;
+    mtd::StubSceneSession trusted_app2;
 
     std::shared_ptr<ms::Session> shared_helper = mt::fake_shared(trusted_helper);
     std::shared_ptr<ms::Session> shared_app1 = mt::fake_shared(trusted_app1);
@@ -54,12 +54,7 @@ struct TrustSession : public testing::Test
 
     void SetUp()
     {
-        InSequence seq;
-        EXPECT_CALL(trusted_helper, begin_trust_session()).Times(1);
-        EXPECT_CALL(trusted_helper, end_trust_session()).Times(1);
-
         container.insert_trust_session(mt::fake_shared(trust_session));
-        trust_session.start();
     }
 
     void TearDown()

@@ -46,10 +46,8 @@ public:
                  std::shared_ptr<TrustSessionContainer> const& container);
     ~TrustSessionImpl();
 
-    MirTrustSessionState get_state() const override;
     std::weak_ptr<Session> get_trusted_helper() const override;
 
-    void start() override;
     void stop() override;
 
     bool add_trusted_participant(std::shared_ptr<Session> const& session);
