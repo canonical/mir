@@ -2,6 +2,7 @@ include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 include_directories(
     ${EGL_INCLUDE_DIRS}
     ${GLESv2_INCLUDE_DIRS}
+    ${ANDROID_PROPERTIES_INCLUDE_DIRS}
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
@@ -33,6 +34,7 @@ add_library(
   interpreter_cache.cpp
   internal_client.cpp
   gl_context.cpp
+  device_quirks.cpp
   real_hwc_wrapper.cpp
   overlay_gl_compositor.cpp
 )
@@ -55,6 +57,7 @@ target_link_libraries(
   ${LIBHARDWARE_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
+  ${ANDROID_PROPERTIES_LIBRARIES}
 )
 
 install(TARGETS mirplatformgraphicsandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/platformgraphics/android)
