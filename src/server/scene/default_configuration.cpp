@@ -171,7 +171,7 @@ mir::DefaultServerConfiguration::the_session_manager()
                 the_snapshot_strategy(),
                 the_session_event_sink(),
                 the_session_listener(),
-                the_trust_session_listener());
+                the_trust_session_manager());
         });
 }
 

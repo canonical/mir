@@ -24,7 +24,6 @@
 #include "mir/compositor/buffer_stream.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir/scene/surface_creation_parameters.h"
-#include "mir/scene/null_trust_session_listener.h"
 
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"
@@ -33,6 +32,7 @@
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/null_session_event_sink.h"
+#include "mir_test_doubles/null_trust_session_manager.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -57,7 +57,7 @@ struct TestSessionManagerAndFocusSelectionStrategy : public testing::Test
               std::make_shared<mtd::NullSnapshotStrategy>(),
               std::make_shared<mtd::NullSessionEventSink>(),
               mt::fake_shared(session_listener),
-              std::make_shared<ms::NullTrustSessionListener>())
+              std::make_shared<mtd::NullTrustSessionManager>())
     {
 
     }

@@ -24,6 +24,7 @@
 #include "mir/scene/session.h"
 #include "mir/scene/session_listener.h"
 #include "mir/scene/trust_session.h"
+#include "mir/scene/trust_session_manager.h"
 #include "session_event_sink.h"
 
 #include <memory>
@@ -40,14 +41,14 @@ ms::SessionManager::SessionManager(std::shared_ptr<SurfaceCoordinator> const& su
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionEventSink> const& session_event_sink,
     std::shared_ptr<SessionListener> const& session_listener,
-    std::shared_ptr<TrustSessionListener> const& trust_session_listener) :
+    std::shared_ptr<TrustSessionManager> const& trust_session_manager) :
     surface_coordinator(surface_factory),
     app_container(container),
     focus_setter(focus_setter),
     snapshot_strategy(snapshot_strategy),
     session_event_sink(session_event_sink),
     session_listener(session_listener),
-    trust_session_manager(container, trust_session_listener)
+    trust_session_manager(trust_session_manager)
 {
     assert(surface_factory);
     assert(container);
@@ -88,7 +89,7 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
 
     session_listener->starting(new_session);
 
-    trust_session_manager.add_expected_session(new_session);
+    trust_session_manager->add_expected_session(new_session);
 
     set_focus_to(new_session);
 
@@ -128,7 +129,7 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
 
     session_event_sink->handle_session_stopping(scene_session);
 
-    trust_session_manager.remove_session(scene_session);
+    trust_session_manager->remove_session(scene_session);
 
     session_listener->stopping(scene_session);
 
@@ -188,7 +189,7 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
 {
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
 
-    return trust_session_manager.start_trust_session_for(
+    return trust_session_manager->start_trust_session_for(
         shell_session, params);
 
 }
@@ -199,7 +200,7 @@ void ms::SessionManager::add_trusted_process_for(
 {
     auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
 
-    trust_session_manager.add_trusted_process_for(scene_trust_session, process_id);
+    trust_session_manager->add_trusted_process_for(scene_trust_session, process_id);
 }
 
 void ms::SessionManager::add_trusted_session_for(
@@ -209,11 +210,11 @@ void ms::SessionManager::add_trusted_session_for(
     auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
     auto scene_session = std::dynamic_pointer_cast<Session>(session);
 
-    trust_session_manager.add_trusted_session_for(scene_trust_session, scene_session);
+    trust_session_manager->add_trusted_session_for(scene_trust_session, scene_session);
 }
 
 void ms::SessionManager::stop_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
 {
     auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
-    trust_session_manager.stop_trust_session(scene_trust_session);
+    trust_session_manager->stop_trust_session(scene_trust_session);
 }

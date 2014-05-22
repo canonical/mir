@@ -19,7 +19,6 @@
 #ifndef MIR_SCENE_APPLICATION_MANAGER_H_
 #define MIR_SCENE_APPLICATION_MANAGER_H_
 
-#include "trust_session_manager_impl.h"
 
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/shell.h"
@@ -44,6 +43,8 @@ class SessionEventSink;
 class SessionListener;
 class SnapshotStrategy;
 class SurfaceCoordinator;
+class TrustSessionManager;
+
 
 class SessionManager : public frontend::Shell, public shell::FocusController
 {
@@ -54,7 +55,7 @@ public:
                             std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
                             std::shared_ptr<SessionEventSink> const& session_event_sink,
                             std::shared_ptr<SessionListener> const& session_listener,
-                            std::shared_ptr<TrustSessionListener> const& trust_session_listener);
+                            std::shared_ptr<TrustSessionManager> const& trust_session_manager);
     virtual ~SessionManager() noexcept;
 
     virtual std::shared_ptr<frontend::Session> open_session(
@@ -93,8 +94,7 @@ private:
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionEventSink> const session_event_sink;
     std::shared_ptr<SessionListener> const session_listener;
-
-    TrustSessionManagerImpl trust_session_manager;
+    std::shared_ptr<TrustSessionManager> const trust_session_manager;
 
     std::mutex mutex;
     std::weak_ptr<Session> focus_application;
