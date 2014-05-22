@@ -197,11 +197,9 @@ MirOrientation mgm::DisplayBuffer::orientation() const
     return rotation;
 }
 
-void mgm::DisplayBuffer::render_and_post_update(
-    RenderableList const&,
-    std::function<void(Renderable const&)> const&)
+bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const&)
 {
-    post_update(nullptr); 
+    return false;
 }
 
 void mgm::DisplayBuffer::post_update()

@@ -198,8 +198,7 @@ try
             buffer.make_current();
             client1->update_green_channel();
             client2->update_green_channel();
-            auto render_fn = [](mg::Renderable const&) {};
-            buffer.render_and_post_update(renderlist, render_fn);
+            buffer.post_renderables_if_optimizable(renderlist);
         });
     }
    return 0;
