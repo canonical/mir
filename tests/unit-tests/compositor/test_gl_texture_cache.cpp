@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Originally by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #include "mir/compositor/recently_used_cache.h"
@@ -54,7 +55,7 @@ TEST_F(RecentlyUsedCache, caches_and_uploads_texture_only_on_buffer_changes)
     using namespace testing;
     InSequence seq;
 
-    //texture generated and uploaded
+    // Frame 1: Texture generated and uploaded
     EXPECT_CALL(*mock_buffer, id())
         .WillOnce(Return(mg::BufferID(123)));
     EXPECT_CALL(mock_gl, glGenTextures(1, _))
@@ -67,31 +68,30 @@ TEST_F(RecentlyUsedCache, caches_and_uploads_texture_only_on_buffer_changes)
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(*mock_buffer, bind_to_texture());
 
-    //texture found in cache and not re-uploaded
+    // Frame 2: Texture found in cache and not re-uploaded
     EXPECT_CALL(*mock_buffer, id())
         .WillOnce(Return(mg::BufferID(123)));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(*mock_buffer, bind_to_texture())
         .Times(0);
 
-    //texture found in cache but refreshed with new buffer
+    // Frame 3: Texture found in cache but refreshed with new buffer
     EXPECT_CALL(*mock_buffer, id())
         .WillOnce(Return(mg::BufferID(456)));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(*mock_buffer, bind_to_texture());
 
-    //stale texture reuploaded following bypass
+    // Frame 4: Stale texture reuploaded following bypass
     EXPECT_CALL(*mock_buffer, id())
         .WillOnce(Return(mg::BufferID(456)));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
     EXPECT_CALL(*mock_buffer, bind_to_texture());
 
-    //texture found in cache and not re-uploaded
+    // Frame 5: Texture found in cache and not re-uploaded
     EXPECT_CALL(*mock_buffer, id())
         .WillOnce(Return(mg::BufferID(456)));
     EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, stub_texture));
 
-    //clean up texture
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(stub_texture)));
 
     mc::RecentlyUsedCache cache;
