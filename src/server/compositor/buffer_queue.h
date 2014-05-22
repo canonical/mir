@@ -18,6 +18,8 @@
 #ifndef MIR_BUFFER_QUEUE_H_
 #define MIR_BUFFER_QUEUE_H_
 
+#include "mir/compositor/frame_dropping_policy_factory.h"
+#include "mir/compositor/frame_dropping_policy.h"
 #include "buffer_bundle.h"
 
 #include <mutex>
@@ -42,7 +44,8 @@ public:
 
     BufferQueue(int nbuffers,
                 std::shared_ptr<graphics::GraphicBufferAllocator> const& alloc,
-                graphics::BufferProperties const& props);
+                graphics::BufferProperties const& props,
+                FrameDroppingPolicyFactory const& policy_provider);
 
     void client_acquire(Callback complete) override;
     void client_release(graphics::Buffer* buffer) override;
@@ -81,6 +84,7 @@ private:
 
     int nbuffers;
     bool frame_dropping_enabled;
+    std::unique_ptr<FrameDroppingPolicy> framedrop_policy;
     graphics::BufferProperties the_properties;
 
     std::condition_variable snapshot_released;
