@@ -97,7 +97,7 @@ void ms::TrustSessionManager::stop_trust_session(std::shared_ptr<TrustSession> c
     stop_trust_session_locked(lock, trust_session);
 }
 
-void ms::TrustSessionManager::add_trusted_process_for_locked(std::lock_guard<std::mutex> const&,
+void ms::TrustSessionManager::add_add_participant_by_pid_locked(std::lock_guard<std::mutex> const&,
     std::shared_ptr<TrustSession> const& trust_session,
     pid_t process_id,
     SessionContainer const& existing_sessions) const
@@ -115,14 +115,14 @@ void ms::TrustSessionManager::add_trusted_process_for_locked(std::lock_guard<std
         });
 }
 
-void ms::TrustSessionManager::add_trusted_process_for(
+void ms::TrustSessionManager::add_participant_by_pid(
     std::shared_ptr<TrustSession> const& trust_session,
     pid_t process_id,
-    SessionContainer const& existing_session) const
+    SessionContainer const& existing_sessions) const
 {
     std::lock_guard<std::mutex> lock(trust_sessions_mutex);
 
-    add_trusted_process_for_locked(lock, trust_session, process_id, existing_session);
+    add_add_participant_by_pid_locked(lock, trust_session, process_id, existing_sessions);
 }
 
 std::shared_ptr<ms::TrustSession> ms::TrustSessionManager::start_trust_session_for(
@@ -139,7 +139,7 @@ std::shared_ptr<ms::TrustSession> ms::TrustSessionManager::start_trust_session_f
 
     trust_session_listener->starting(trust_session);
 
-    add_trusted_process_for_locked(lock, trust_session, params.base_process_id, existing_session);
+    add_add_participant_by_pid_locked(lock, trust_session, params.base_process_id, existing_session);
 
     return trust_session;
 }
@@ -163,7 +163,7 @@ void ms::TrustSessionManager::add_expected_session(std::shared_ptr<Session> cons
     }
 }
 
-void ms::TrustSessionManager::add_trusted_session_for(
+void ms::TrustSessionManager::add_participant(
     std::shared_ptr<TrustSession> const& trust_session,
     std::shared_ptr<Session> const& session)
 {

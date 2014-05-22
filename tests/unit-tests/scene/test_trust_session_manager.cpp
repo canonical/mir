@@ -66,10 +66,10 @@ struct StubSessionContainer : ms::SessionContainer
 struct TrustSessionManager : public testing::Test
 {
     pid_t const helper_pid = __LINE__;
-    pid_t const trusted_pid = __LINE__;
+    pid_t const participant_pid = __LINE__;
     std::shared_ptr<ms::Session> const helper{std::make_shared<mtd::StubSceneSession>(helper_pid)};
-    std::shared_ptr<ms::Session> const trusted_session{std::make_shared<mtd::StubSceneSession>(trusted_pid)};
-    std::shared_ptr<ms::Session> const another_session{std::make_shared<mtd::StubSceneSession>(__LINE__)};
+    std::shared_ptr<ms::Session> const participant_session{std::make_shared<mtd::StubSceneSession>(participant_pid)};
+    std::shared_ptr<ms::Session> const another_participant{std::make_shared<mtd::StubSceneSession>(__LINE__)};
     ms::TrustSessionCreationParameters parameters;
     StubSessionContainer existing_sessions;
 
@@ -81,7 +81,7 @@ struct TrustSessionManager : public testing::Test
 };
 }
 
-TEST_F(TrustSessionManager, notifies_trust_session_start_and_stop)
+TEST_F(TrustSessionManager, notifies_participant_of_start_and_stop)
 {
     InSequence seq;
     EXPECT_CALL(trust_session_listener, starting(_)).Times(1);
@@ -95,68 +95,76 @@ TEST_F(TrustSessionManager, notifies_trust_session_start_and_stop)
     Mock::VerifyAndClearExpectations(&trust_session_listener);
 }
 
-TEST_F(TrustSessionManager, successfully_adds_a_trusted_process)
+TEST_F(TrustSessionManager, successfully_adds_a_participant_by_pid)
 {
-    EXPECT_NO_THROW(session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions));
+    EXPECT_NO_THROW(session_manager.add_participant_by_pid(trust_session, participant_pid, existing_sessions));
 }
 
-TEST_F(TrustSessionManager, successfully_adds_a_trusted_process_twice)
+TEST_F(TrustSessionManager, successfully_adds_a_participant)
 {
-    session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);
-    EXPECT_NO_THROW(session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions));
+    EXPECT_NO_THROW(session_manager.add_participant(trust_session, participant_session));
 }
 
-TEST_F(TrustSessionManager, fails_to_add_a_trusted_process_when_trust_session_is_stopped)
+TEST_F(TrustSessionManager, successfully_adds_a_participant_by_pid_twice)
+{
+    session_manager.add_participant_by_pid(trust_session, participant_pid, existing_sessions);
+    EXPECT_NO_THROW(session_manager.add_participant_by_pid(trust_session, participant_pid, existing_sessions));
+}
+
+TEST_F(TrustSessionManager, successfully_adds_a_participant_twice)
+{
+    session_manager.add_participant(trust_session, participant_session);
+    EXPECT_NO_THROW(session_manager.add_participant(trust_session, participant_session));
+}
+
+TEST_F(TrustSessionManager, fails_to_add_a_participant_by_pid_when_trust_session_is_stopped)
 {
     session_manager.stop_trust_session(trust_session);
 
     EXPECT_THROW(
-        session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions),
+        session_manager.add_participant_by_pid(trust_session, participant_pid, existing_sessions),
         std::runtime_error);
 }
 
-TEST_F(TrustSessionManager, notifies_session_beginning_when_session_is_not_in_existing_sessions)
+TEST_F(TrustSessionManager, notifies_session_beginning_when_participant_is_not_in_existing_sessions)
 {
-    session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);
+    session_manager.add_participant_by_pid(trust_session, participant_pid, existing_sessions);
 
-    EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(trusted_session))).Times(1);
+    EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(participant_session))).Times(1);
 
-    session_manager.add_expected_session(trusted_session);
+    session_manager.add_expected_session(participant_session);
 }
 
-TEST_F(TrustSessionManager, notifies_session_beginning_when_session_is_in_existing_sessions)
+TEST_F(TrustSessionManager, notifies_session_beginning_when_participant_is_in_existing_sessions)
 {
-    existing_sessions.insert_session(trusted_session);
+    existing_sessions.insert_session(participant_session);
 
-    EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(trusted_session))).Times(1);
+    EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(participant_session))).Times(1);
 
-    session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);
+    session_manager.add_participant_by_pid(trust_session, participant_pid, existing_sessions);
 }
 
 TEST_F(TrustSessionManager, notifies_session_beginning_and_ending)
 {
-    session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);
+    session_manager.add_participant_by_pid(trust_session, participant_pid, existing_sessions);
 
     InSequence seq;
-    EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(trusted_session))).Times(1);
-    EXPECT_CALL(trust_session_listener, trusted_session_ending(Ref(*trust_session), Eq(trusted_session))).Times(1);
+    EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(participant_session))).Times(1);
+    EXPECT_CALL(trust_session_listener, trusted_session_ending(Ref(*trust_session), Eq(participant_session))).Times(1);
 
-    session_manager.add_expected_session(trusted_session);
+    session_manager.add_expected_session(participant_session);
     session_manager.stop_trust_session(trust_session);
 }
 
 TEST_F(TrustSessionManager, can_iterate_over_participants_in_a_trust_session)
 {
-    existing_sessions.insert_session(trusted_session);
-    existing_sessions.insert_session(another_session);
-
-    session_manager.add_trusted_process_for(trust_session, trusted_session->process_id(), existing_sessions);
-    session_manager.add_trusted_process_for(trust_session, another_session->process_id(), existing_sessions);
+    session_manager.add_participant(trust_session, participant_session);
+    session_manager.add_participant(trust_session, another_participant);
 
     struct { MOCK_METHOD1(enumerate, void(std::shared_ptr<ms::Session> const& participant)); } mock;
 
-    EXPECT_CALL(mock, enumerate(trusted_session));
-    EXPECT_CALL(mock, enumerate(another_session));
+    EXPECT_CALL(mock, enumerate(participant_session));
+    EXPECT_CALL(mock, enumerate(another_participant));
 
     session_manager.for_each_participant_in_trust_session(
         trust_session,

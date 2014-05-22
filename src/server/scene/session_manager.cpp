@@ -199,7 +199,7 @@ void ms::SessionManager::add_trusted_process_for(
 {
     auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
 
-    trust_session_manager.add_trusted_process_for(scene_trust_session, process_id, *app_container);
+    trust_session_manager.add_participant_by_pid(scene_trust_session, process_id, *app_container);
 }
 
 void ms::SessionManager::add_trusted_session_for(
@@ -209,7 +209,7 @@ void ms::SessionManager::add_trusted_session_for(
     auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
     auto scene_session = std::dynamic_pointer_cast<Session>(session);
 
-    trust_session_manager.add_trusted_session_for(scene_trust_session, scene_session);
+    trust_session_manager.add_participant(scene_trust_session, scene_session);
 }
 
 void ms::SessionManager::stop_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
