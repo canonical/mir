@@ -32,19 +32,6 @@ ms::TrustSessionTrustedParticipants::TrustSessionTrustedParticipants(
 {
 }
 
-bool ms::TrustSessionTrustedParticipants::contains(std::weak_ptr<Session> const& session) const
-{
-    bool found = false;
-    for_each_trusted_participant([&](std::weak_ptr<Session> const& participant)
-        {
-            if (session.lock() == participant.lock())
-            {
-                found |= true;
-            }
-        });
-    return found;
-}
-
 void ms::TrustSessionTrustedParticipants::for_each_trusted_participant(std::function<void(std::weak_ptr<Session> const&)> f) const
 {
     container->for_each_participant_in_trust_session(trust_session,
