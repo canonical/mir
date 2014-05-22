@@ -54,7 +54,6 @@ public:
 
     bool add_trusted_participant(std::shared_ptr<Session> const& session);
     bool remove_trusted_participant(std::shared_ptr<Session> const& session);
-    void for_each_trusted_participant(std::function<void(std::shared_ptr<Session> const&)> f) const;
 
 protected:
     TrustSessionImpl(const TrustSessionImpl&) = delete;

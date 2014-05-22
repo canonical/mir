@@ -125,13 +125,3 @@ bool ms::TrustSessionImpl::remove_trusted_participant(std::shared_ptr<ms::Sessio
     }
     return false;
 }
-
-void ms::TrustSessionImpl::for_each_trusted_participant(
-    std::function<void(std::shared_ptr<Session> const&)> f) const
-{
-    participants.for_each_trusted_participant([f](std::weak_ptr<Session> const& session)
-        {
-            if (auto locked_scene_session = session.lock())
-                f(locked_scene_session);
-        });
-}

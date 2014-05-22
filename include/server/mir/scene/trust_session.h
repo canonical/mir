@@ -34,7 +34,6 @@ public:
 
     virtual bool add_trusted_participant(std::shared_ptr<Session> const& session) = 0;
     virtual bool remove_trusted_participant(std::shared_ptr<Session> const& session) = 0;
-    virtual void for_each_trusted_participant(std::function<void(std::shared_ptr<Session> const&)> f) const = 0;
 };
 
 }

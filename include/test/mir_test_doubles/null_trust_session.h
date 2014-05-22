@@ -57,10 +57,6 @@ class NullTrustSession : public scene::TrustSession
     {
         return false;
     }
-
-    void for_each_trusted_participant(std::function<void(std::shared_ptr<scene::Session> const&)>) const override
-    {
-    }
 };
 
 }
