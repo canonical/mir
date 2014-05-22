@@ -138,7 +138,6 @@ TEST_F(HWCFallbackGLRenderer, compiles_and_sets_up_gl_program)
     EXPECT_CALL(mock_gl, glGetUniformLocation(_, StrEq("display_transform")));
     EXPECT_CALL(mock_gl, glGetAttribLocation(_, StrEq("position")));
     EXPECT_CALL(mock_gl, glGetAttribLocation(_, StrEq("texcoord")));
-//    EXPECT_CALL(mock_gl, glGenTextures(1,_));
     EXPECT_CALL(mock_gl, glGetUniformLocation(_, StrEq("tex")));
     EXPECT_CALL(mock_gl, glUniform1i(tex_uniform_loc, 0));
     EXPECT_CALL(mock_gl, glUseProgram(0));
