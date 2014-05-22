@@ -67,6 +67,7 @@ private:
     bool is_a_current_buffer_user(void const* user_id) const;
     void release(graphics::Buffer* buffer,
         std::unique_lock<std::mutex> lock);
+    void drop_frame(std::unique_lock<std::mutex> lock);
 
     mutable std::mutex guard;
 

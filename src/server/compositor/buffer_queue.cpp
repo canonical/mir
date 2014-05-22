@@ -151,7 +151,7 @@ mc::BufferQueue::BufferQueue(
             */
            return;
        }
-       give_buffer_to_client(pop(ready_to_composite_queue), std::move(lock));
+       drop_frame(std::move(lock));
     });
 }
 
@@ -185,8 +185,7 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
     /* Last resort, drop oldest buffer from the ready queue */
     if (frame_dropping_enabled && !ready_to_composite_queue.empty())
     {
-        auto const buffer = pop(ready_to_composite_queue);
-        give_buffer_to_client(buffer, std::move(lock));
+        drop_frame(std::move(lock));
         return;
     }
 
@@ -427,4 +426,20 @@ void mc::BufferQueue::release(
     }
     else
         free_buffers.push_back(buffer);
+}
+
+void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
+{
+    auto buffer_to_give = pop(ready_to_composite_queue);
+    /* Advance compositor buffer so it always points to the most recent
+     * client content
+     */
+    if (!contains(current_compositor_buffer, buffers_sent_to_compositor))
+    {
+       current_buffer_users.clear();
+       void const* const impossible_user_id = this;
+       current_buffer_users.push_back(impossible_user_id);
+       std::swap(buffer_to_give, current_compositor_buffer);
+    }
+    give_buffer_to_client(buffer_to_give, std::move(lock));
 }
