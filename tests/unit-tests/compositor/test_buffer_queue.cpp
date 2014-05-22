@@ -813,7 +813,6 @@ TEST_F(BufferQueueTest, framedropping_clients_get_all_buffers)
         q.allow_framedropping(true);
 
         int const nframes = 100;
-        int max_ownable_buffers = nbuffers - 1;
         std::unordered_set<uint32_t> ids_acquired;
         for (int i = 0; i < nframes; ++i)
         {
@@ -823,7 +822,7 @@ TEST_F(BufferQueueTest, framedropping_clients_get_all_buffers)
             handle->release_buffer();
         }
 
-        EXPECT_THAT(ids_acquired.size(), Eq(max_ownable_buffers));
+        EXPECT_THAT(ids_acquired.size(), Eq(nbuffers));
     }
 }
 
