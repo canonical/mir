@@ -74,7 +74,11 @@ public:
                 display_buffer_compositor_map[&display_buffer]->composite();
             });
         };
-        observer = std::make_shared<ms::LegacySceneChangeNotification>(notify, notify);
+        observer = std::make_shared<ms::LegacySceneChangeNotification>(notify,
+        [&](int)
+        {
+            notify();
+        });
     }
 
     void start()

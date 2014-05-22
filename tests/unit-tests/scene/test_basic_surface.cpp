@@ -76,7 +76,8 @@ struct BasicSurfaceTest : public testing::Test
         rect = geom::Rectangle{top_left, size};
         null_change_cb = []{};
         mock_change_cb = std::bind(&MockCallback::call, &mock_callback);
-        observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb, mock_change_cb);
+        observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb,
+        [this](int){mock_change_cb();});
     }
     std::string name;
     geom::Point top_left;

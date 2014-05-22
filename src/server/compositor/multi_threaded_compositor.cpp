@@ -192,11 +192,17 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       state{CompositorState::stopped},
       compose_on_start{compose_on_start}
 {
-    auto change_cb = [this]()
+    observer = std::make_shared<ms::LegacySceneChangeNotification>(
+    [this]()
     {
         schedule_compositing();
-    };
-    observer = std::make_shared<ms::LegacySceneChangeNotification>(change_cb, change_cb);
+    },
+    [this](int)
+    {
+        //TODO: make use of number of buffer schedules to provide more intelligent
+        //      composition scheduling.
+        schedule_compositing();
+    });
 }
 
 mc::MultiThreadedCompositor::~MultiThreadedCompositor()

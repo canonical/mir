@@ -40,7 +40,7 @@ struct LegacySceneChangeNotificationTest : public testing::Test
 {
     testing::NiceMock<MockCallback> scene_callback;
     testing::NiceMock<MockCallback> buffer_callback;
-    std::function<void()> buffer_change_callback{[this](){buffer_callback.invoke();}};
+    std::function<void(int)> buffer_change_callback{[this](int){buffer_callback.invoke();}};
     std::function<void()> scene_change_callback{[this](){scene_callback.invoke();}};
     testing::NiceMock<mtd::MockSurface> surface;
 }; 

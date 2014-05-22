@@ -27,7 +27,7 @@ namespace ms = mir::scene;
 
 ms::LegacySceneChangeNotification::LegacySceneChangeNotification(
     std::function<void()> const& scene_notify_change,
-    std::function<void()> const& buffer_notify_change)
+    std::function<void(int)> const& buffer_notify_change)
     : scene_notify_change(scene_notify_change),
       buffer_notify_change(buffer_notify_change)
       

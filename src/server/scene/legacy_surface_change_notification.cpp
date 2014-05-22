@@ -24,7 +24,7 @@ namespace geom = mir::geometry;
 
 ms::LegacySurfaceChangeNotification::LegacySurfaceChangeNotification(
     std::function<void()> const& notify_scene_change,
-    std::function<void()> const& notify_buffer_change) :
+    std::function<void(int)> const& notify_buffer_change) :
     notify_scene_change(notify_scene_change),
     notify_buffer_change(notify_buffer_change)
 {
@@ -47,7 +47,7 @@ void ms::LegacySurfaceChangeNotification::hidden_set_to(bool /*hide*/)
 
 void ms::LegacySurfaceChangeNotification::frame_posted()
 {
-    notify_buffer_change();
+    notify_buffer_change(1);
 }
 
 void ms::LegacySurfaceChangeNotification::alpha_set_to(float /*alpha*/)
