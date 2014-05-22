@@ -24,7 +24,7 @@ void ms::NullSurfaceObserver::attrib_changed(MirSurfaceAttrib /*attrib*/, int /*
 void ms::NullSurfaceObserver::resized_to(geometry::Size const& /*size*/) {}
 void ms::NullSurfaceObserver::moved_to(geometry::Point const& /*top_left*/) {}
 void ms::NullSurfaceObserver::hidden_set_to(bool /*hide*/) {}
-void ms::NullSurfaceObserver::frame_posted() {}
+void ms::NullSurfaceObserver::frame_posted(int /*frames_available*/) {}
 void ms::NullSurfaceObserver::alpha_set_to(float /*alpha*/) {}
 void ms::NullSurfaceObserver::transformation_set_to(glm::mat4 const& /*t*/) {}
 void ms::NullSurfaceObserver::reception_mode_set_to(input::InputReceptionMode /*mode*/) {}

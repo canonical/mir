@@ -45,9 +45,9 @@ void ms::LegacySurfaceChangeNotification::hidden_set_to(bool /*hide*/)
     notify_scene_change();
 }
 
-void ms::LegacySurfaceChangeNotification::frame_posted()
+void ms::LegacySurfaceChangeNotification::frame_posted(int frames_available)
 {
-    notify_buffer_change(1);
+    notify_buffer_change(frames_available);
 }
 
 void ms::LegacySurfaceChangeNotification::alpha_set_to(float /*alpha*/)
