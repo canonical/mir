@@ -27,7 +27,7 @@ namespace graphics
 class BufferID
 {
 public:
-    BufferID() : value(id_invalid){}
+    BufferID() noexcept: value(id_invalid){}
     explicit BufferID(uint32_t val) : value(val) {}
     bool is_valid() const { return (id_invalid != value); }
     uint32_t as_uint32_t() const { return value; };

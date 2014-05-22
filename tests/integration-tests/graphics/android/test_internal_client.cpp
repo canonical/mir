@@ -40,6 +40,7 @@
 
 #include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/null_surface_configurator.h"
+#include "mir_test_doubles/stub_frame_dropping_policy_factory.h"
 
 #include <EGL/egl.h>
 #include <gtest/gtest.h>
@@ -99,7 +100,7 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
     auto stub_input_factory = std::make_shared<StubInputFactory>();
     auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
-    auto buffer_stream_factory = std::make_shared<mc::BufferStreamFactory>(allocator);
+    auto buffer_stream_factory = std::make_shared<mc::BufferStreamFactory>(allocator, std::make_shared<mtd::StubFrameDroppingPolicyFactory>());
     auto scene_report = mr::null_scene_report();
     auto const surface_configurator = std::make_shared<mtd::NullSurfaceConfigurator>();
     auto surface_allocator = std::make_shared<ms::SurfaceAllocator>(buffer_stream_factory, stub_input_factory, surface_configurator, scene_report);

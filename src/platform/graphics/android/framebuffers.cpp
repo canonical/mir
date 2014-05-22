@@ -106,11 +106,12 @@ std::pair<geom::Size, double> determine_hwc11_size_and_rate(
 
 mga::Framebuffers::Framebuffers(
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<hwc_composer_device_1> const& hwc)
+    std::shared_ptr<hwc_composer_device_1> const& hwc,
+    unsigned int num_framebuffers)
     : format(determine_hwc11_fb_format())
 {
     std::tie(size, refresh_rate_hz) = determine_hwc11_size_and_rate(hwc);
-    for(auto i = 0u; i < 2; i++)
+    for(auto i = 0u; i < num_framebuffers; i++)
     {
         queue.push(buffer_allocator->alloc_buffer_platform(size, format, mga::BufferUsage::use_framebuffer_gles));
     }

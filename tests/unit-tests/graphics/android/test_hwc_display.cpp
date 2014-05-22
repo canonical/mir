@@ -31,12 +31,47 @@
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/stub_gl_program_factory.h"
+#define GLM_FORCE_RADIANS
+#define GLM_PRECISION_MEDIUMP_FLOAT
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <memory>
 
 namespace geom=mir::geometry;
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
+
+namespace
+{
+struct TransformedRenderable : public mtd::StubRenderable
+{
+    glm::mat4 transformation() const override
+    {
+        glm::mat4 transform(1.0);
+        glm::vec3 vec(1.0, 0.0, 0.0);
+        transform = glm::rotate(transform, 33.0f, vec);
+        return transform;
+    }
+};
+
+//hopefully the alpha representation gets condensed at some point
+struct ShapedRenderable : public mtd::StubRenderable
+{
+    bool shaped() const override
+    {
+        return true;
+    }
+};
+
+struct TranslucentRenderable : public mtd::StubRenderable
+{
+    bool alpha_enabled() const override
+    {
+        return true;
+    }
+};
 
 class AndroidDisplayBuffer : public ::testing::Test
 {
@@ -83,7 +118,7 @@ protected:
     geom::Size const display_size{433,232};
     double const refresh_rate{60.0};
 };
-
+}
 TEST_F(AndroidDisplayBuffer, can_post_update_with_gl_only)
 {
     using namespace testing;
@@ -97,40 +132,57 @@ TEST_F(AndroidDisplayBuffer, can_post_update_with_gl_only)
     EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
         .Times(1);
 
-    std::list<std::shared_ptr<mg::Renderable>> renderlist{};
+    mg::RenderableList renderlist{};
     mga::DisplayBuffer db(
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
     db.post_update();
 }
 
-TEST_F(AndroidDisplayBuffer, performs_default_post_if_empty_list)
+TEST_F(AndroidDisplayBuffer, rejects_empty_list)
 {
     using namespace testing;
 
     mga::DisplayBuffer db(
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
-    InSequence seq;
-    EXPECT_CALL(*mock_display_device, render_gl(_))
-        .Times(1);
-    EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
-        .Times(1)
-        .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
-        .Times(1);
+    mg::RenderableList renderlist{};
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
+}
 
-    std::list<std::shared_ptr<mg::Renderable>> renderlist{};
-    auto render_fn = [] (mg::Renderable const&) {};
-    db.render_and_post_update(renderlist, render_fn);
+//TODO: we could accept a 90 degree transform
+TEST_F(AndroidDisplayBuffer, rejects_list_containing_transformed)
+{
+    using namespace testing;
+
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
+
+    auto renderable = std::make_shared<TransformedRenderable>();
+    mg::RenderableList renderlist{renderable};
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
+}
+
+//TODO: remove once alpha+HWC is turned on
+TEST_F(AndroidDisplayBuffer, rejects_list_containing_alpha)
+{
+    using namespace testing;
+
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
+
+    mg::RenderableList renderlist{std::make_shared<TranslucentRenderable>()};
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
+
+    mg::RenderableList renderlist2{std::make_shared<ShapedRenderable>()};
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist2));
 }
 
 TEST_F(AndroidDisplayBuffer, posts_overlay_list)
 {
     using namespace testing;
-    std::list<std::shared_ptr<mg::Renderable>> renderlist{
+    mg::RenderableList renderlist{
         std::make_shared<mtd::StubRenderable>(),
         std::make_shared<mtd::StubRenderable>()};
-    std::function<void(mg::Renderable const&)> render_fn;
 
     InSequence seq;
     EXPECT_CALL(*mock_display_device, prepare_overlays(_, Ref(renderlist), _))
@@ -143,7 +195,7 @@ TEST_F(AndroidDisplayBuffer, posts_overlay_list)
 
     mga::DisplayBuffer db(
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
-    db.render_and_post_update(renderlist, render_fn); 
+    EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist)); 
 }
 
 TEST_F(AndroidDisplayBuffer, defaults_to_normal_orientation)

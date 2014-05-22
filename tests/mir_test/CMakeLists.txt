@@ -5,6 +5,8 @@ add_library(
   display_config_matchers.cpp
   cross_process_action.cpp
   spin_wait.cpp
+  signal.cpp
+  fake_clock.cpp
   popen.cpp
   wait_object.cpp
 )

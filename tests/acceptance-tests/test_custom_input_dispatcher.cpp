@@ -52,12 +52,12 @@ namespace mtf = mir_test_framework;
 namespace
 {
 
-class CustomInputDispatcher :
+class CustomMockInputDispatcher :
     public mtd::MockInputDispatcher,
     public msh::InputTargeter
 {
 public:
-    CustomInputDispatcher() = default;
+    CustomMockInputDispatcher() = default;
     // mocks for InputTargeter
     MOCK_METHOD1(focus_changed, void(std::shared_ptr<mi::InputChannel const> const& /*focus_channel*/));
     MOCK_METHOD0(focus_cleared, void());
@@ -67,48 +67,64 @@ struct CustomDispatcherServerConfig : mtf::InputTestingServerConfiguration
 {
     std::shared_ptr<mi::InputDispatcher> the_input_dispatcher() override
     {
-        return the_input_dispatcher_mock();
+        auto const dispatcher = the_input_dispatcher_mock();
+
+        if (!expectations_set)
+        {
+            input_dispatcher_expectations();
+            expectations_set = true;
+        }
+
+        return dispatcher;
     }
+
     std::shared_ptr<msh::InputTargeter> the_input_targeter() override
     {
         return the_input_dispatcher_mock();
     }
-    std::shared_ptr<::testing::NiceMock<CustomInputDispatcher>> the_input_dispatcher_mock()
+
+    std::shared_ptr<::testing::NiceMock<CustomMockInputDispatcher>> the_input_dispatcher_mock()
     {
         return dispatcher(
             [this]
             {
-                return std::make_shared<::testing::NiceMock<CustomInputDispatcher>>();
+                return std::make_shared<::testing::NiceMock<CustomMockInputDispatcher>>();
             });
     }
 
-    mir::CachedPtr<::testing::NiceMock<CustomInputDispatcher>> dispatcher;
+    void inject_input() override {}
+    virtual void input_dispatcher_expectations() {}
+
+    mir::CachedPtr<::testing::NiceMock<CustomMockInputDispatcher>> dispatcher;
     mtf::CrossProcessSync dispatching_done;
+    bool expectations_set{false};
 };
 
 }
 
-using CustomInputDispatcherFixture = BespokeDisplayServerTestFixture;
+using CustomInputDispatcher = BespokeDisplayServerTestFixture;
 
-TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_receives_input)
+TEST_F(CustomInputDispatcher, receives_input)
 {
     struct ServerConfig : CustomDispatcherServerConfig
     {
         void inject_input() override
         {
-            auto dispatcher = the_input_dispatcher_mock();
-            {
-                using namespace ::testing;
-                InSequence seq;
-                EXPECT_CALL(*dispatcher, dispatch(mt::MotionEventWithPosition(1, 1))).Times(1);
-                EXPECT_CALL(*dispatcher, dispatch(mt::KeyDownEvent()))
-                    .WillOnce(InvokeWithoutArgs([this]{ dispatching_done.signal_ready(); }));
-            }
             fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
             fake_event_hub->synthesize_event(mis::a_key_down_event().of_scancode(KEY_ENTER));
         }
-    } server_config;
 
+        void input_dispatcher_expectations() override
+        {
+            using namespace ::testing;
+            auto const dispatcher = the_input_dispatcher_mock();
+
+            InSequence seq;
+            EXPECT_CALL(*dispatcher, dispatch(mt::MotionEventWithPosition(1, 1))).Times(1);
+            EXPECT_CALL(*dispatcher, dispatch(mt::KeyDownEvent()))
+                .WillOnce(InvokeWithoutArgs([this]{ dispatching_done.signal_ready(); }));
+        }
+    } server_config;
 
     launch_server_process(server_config);
 
@@ -121,35 +137,34 @@ TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_receives_input)
     });
 }
 
-TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_gets_started_and_stopped)
+TEST_F(CustomInputDispatcher, gets_started_and_stopped)
 {
-    struct ServecConfig : CustomDispatcherServerConfig
+    struct ServerConfig : CustomDispatcherServerConfig
     {
-        void inject_input() override
+        void input_dispatcher_expectations() override
         {
-            auto dispatcher = the_input_dispatcher_mock();
-            {
-                using namespace ::testing;
-                InSequence seq;
-                EXPECT_CALL(*dispatcher, start());
-                EXPECT_CALL(*dispatcher, stop());
-            }
+            using namespace ::testing;
+            auto const dispatcher = the_input_dispatcher_mock();
+
+            InSequence seq;
+            EXPECT_CALL(*dispatcher, start());
+            EXPECT_CALL(*dispatcher, stop());
         }
     } server_config;
 
     launch_server_process(server_config);
 }
 
-TEST_F(CustomInputDispatcherFixture, custom_input_dispatcher_receives_focus_changes)
+TEST_F(CustomInputDispatcher, receives_focus_changes)
 {
-    struct ServecConfig : CustomDispatcherServerConfig
+    struct ServerConfig : CustomDispatcherServerConfig
     {
-        void inject_input() override
+        void input_dispatcher_expectations() override
         {
-            auto dispatcher = the_input_dispatcher_mock();
             using namespace ::testing;
-            InSequence seq;
+            auto const dispatcher = the_input_dispatcher_mock();
 
+            InSequence seq;
             EXPECT_CALL(*dispatcher, focus_cleared()).Times(1);
             EXPECT_CALL(*dispatcher, focus_changed(_)).Times(1);
             EXPECT_CALL(*dispatcher, focus_cleared()).Times(1)
