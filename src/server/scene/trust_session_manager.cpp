@@ -36,25 +36,6 @@ ms::TrustSessionManager::TrustSessionManager(
 
 ms::TrustSessionManager::~TrustSessionManager() noexcept
 {
-    // TODO this seems unsatisfactory but:
-    // TODO TrustSessionImpl has an owning pointer to trust_session_container; and,
-    // TODO trust_session_container has an own to TrustSession.
-    // TODO Hence we need to clear things to avoid a memory leak
-
-    std::lock_guard<std::mutex> lock(trust_sessions_mutex);
-
-    std::vector<std::shared_ptr<TrustSession>> trust_sessions;
-
-    trust_session_container->for_each_trust_session(
-        [&](std::shared_ptr<TrustSession> const& trust_session)
-        {
-            trust_sessions.push_back(trust_session);
-        });
-
-    for(auto trust_session : trust_sessions)
-    {
-        stop_trust_session_locked(lock, trust_session);
-    }
 }
 
 void ms::TrustSessionManager::stop_trust_session_locked(

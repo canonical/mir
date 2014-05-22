@@ -62,7 +62,6 @@ public:
 
     bool insert_waiting_process(TrustSession* trust_session, pid_t process_id);
     void for_each_trust_session_expecting_process(pid_t process_id, std::function<void(std::shared_ptr<TrustSession> const&)> f) const;
-    void for_each_trust_session(std::function<void(std::shared_ptr<TrustSession> const&)> f) const;
 
 private:
     std::mutex mutable mutex;
