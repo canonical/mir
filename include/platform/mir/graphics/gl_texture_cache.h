@@ -32,18 +32,28 @@ class GLTextureCache
 public:
     virtual ~GLTextureCache() = default;
 
-    /** Loads texture from the renderable. Should be called with a current gl context
-     * \param [in] renderable
-     *     The Renderable that needs to be used as a texture
-     * \returns 
-     *     The texture that represents the renderable.
-    **/ 
+    /**
+     * Loads texture from the renderable. Must be called with a current GL
+     * context.
+     *   \param [in] renderable
+     *       The Renderable that needs to be used as a texture
+     *   \returns 
+     *       The texture that represents the renderable.
+     */ 
     virtual std::shared_ptr<GLTexture> load(Renderable const&) = 0;
 
-    /** mark the entries in the cache as having invalid bindings **/ 
+    /**
+     * Mark all entries in the cache as out-of-date to ensure fresh textures
+     * are loaded next time. This function _must_ be implemented in a way that
+     * does not require a GL context, as it will typically be called without
+     * one.
+     */ 
     virtual void invalidate() = 0;
 
-    /** cache selects textures to release. Should be called with a current gl context **/
+    /**
+     * Free textures that were not used (loaded) since the last
+     * drop/invalidate. Must be called with a current GL context.
+     */
     virtual void drop_unused() = 0;
 
 protected:

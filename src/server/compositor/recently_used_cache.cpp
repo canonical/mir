@@ -28,17 +28,16 @@ namespace geom = mir::geometry;
 std::shared_ptr<mg::GLTexture> mc::RecentlyUsedCache::load(mg::Renderable const& renderable)
 {
     auto const& buffer = renderable.buffer();
-    auto const& id = renderable.id();
-
     auto buffer_id = buffer->id();
-    auto& texture = textures[id];
+    auto& texture = textures[renderable.id()];
     texture.texture->bind();
 
     if (texture.last_bound_buffer != buffer_id)
+    {
         buffer->bind_to_texture();
-
-    texture.resource = buffer;
-    texture.last_bound_buffer = buffer_id;
+        texture.resource = buffer;
+        texture.last_bound_buffer = buffer_id;
+    }
     texture.used = true;
 
     return texture.texture;
@@ -47,7 +46,7 @@ std::shared_ptr<mg::GLTexture> mc::RecentlyUsedCache::load(mg::Renderable const&
 void mc::RecentlyUsedCache::invalidate()
 {
     mg::BufferID invalid_id;
-    for(auto &t : textures)
+    for (auto &t : textures)
         t.second.last_bound_buffer = invalid_id;
 }
 
