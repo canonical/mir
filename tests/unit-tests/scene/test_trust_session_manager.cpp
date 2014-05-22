@@ -78,6 +78,7 @@ struct TrustSessionManager : public testing::Test
     pid_t const trusted_pid = __LINE__;
     std::shared_ptr<ms::Session> const helper{std::make_shared<StubSceneSession>(helper_pid)};
     std::shared_ptr<ms::Session> const trusted_session{std::make_shared<StubSceneSession>(trusted_pid)};
+    std::shared_ptr<ms::Session> const another_session{std::make_shared<StubSceneSession>(__LINE__)};
     ms::TrustSessionCreationParameters parameters;
     StubSessionContainer existing_sessions;
 
@@ -151,4 +152,23 @@ TEST_F(TrustSessionManager, notifies_session_beginning_and_ending)
 
     session_manager.add_expected_session(trusted_session);
     session_manager.stop_trust_session(trust_session);
+}
+
+TEST_F(TrustSessionManager, can_iterate_over_participants_in_a_trust_session)
+{
+    existing_sessions.insert_session(trusted_session);
+    existing_sessions.insert_session(another_session);
+
+    session_manager.add_trusted_process_for(trust_session, trusted_session->process_id(), existing_sessions);
+    session_manager.add_trusted_process_for(trust_session, another_session->process_id(), existing_sessions);
+
+    struct { MOCK_METHOD1(enumerate, void(std::shared_ptr<ms::Session> const& participant)); } mock;
+
+    EXPECT_CALL(mock, enumerate(trusted_session));
+    EXPECT_CALL(mock, enumerate(another_session));
+
+    session_manager.for_each_participant_in_trust_session(
+        trust_session,
+        [&](std::shared_ptr<ms::Session> const& participant)
+            { mock.enumerate(participant); });
 }

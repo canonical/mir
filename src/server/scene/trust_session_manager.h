@@ -63,6 +63,10 @@ public:
 
     void remove_session(std::shared_ptr<Session> const& session) const;
 
+    void for_each_participant_in_trust_session(
+        std::shared_ptr<TrustSession> const& trust_session,
+        std::function<void(std::shared_ptr<Session> const& participant)> const& f) const;
+
 private:
     std::shared_ptr<TrustSessionContainer> const trust_session_container;
     std::shared_ptr<TrustSessionListener> const trust_session_listener;

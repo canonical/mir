@@ -172,3 +172,18 @@ void ms::TrustSessionManager::add_trusted_session_for(
     if (trust_session_container->insert_participant(trust_session.get(), session, TrustSessionContainer::TrustedSession))
         trust_session_listener->trusted_session_beginning(*trust_session, session);
 }
+
+void ms::TrustSessionManager::for_each_participant_in_trust_session(
+    std::shared_ptr<TrustSession> const& trust_session,
+    std::function<void(std::shared_ptr<Session> const& participant)> const& f) const
+{
+    std::unique_lock<std::mutex> lock(trust_sessions_mutex);
+
+    trust_session_container->for_each_participant_in_trust_session(trust_session.get(),
+        [&](std::weak_ptr<Session> const& session, TrustSessionContainer::TrustType type)
+        {
+            if (type == TrustSessionContainer::TrustedSession)
+                if (auto locked_session = session.lock())
+                    f(locked_session);
+        });
+}
