@@ -63,17 +63,17 @@ void ms::TrustSessionManager::stop_trust_session_locked(
 {
     trust_session->stop();
 
-    std::vector<std::shared_ptr<Session>> children;
+    std::vector<std::shared_ptr<Session>> participants;
 
     trust_session_container->for_each_participant_in_trust_session(trust_session.get(),
         [&](std::weak_ptr<Session> const& session, TrustSessionContainer::TrustType type)
         {
             if (type == TrustSessionContainer::TrustedSession)
-            if (auto locked_session = session.lock())
-                children.push_back(locked_session);
+                if (auto locked_session = session.lock())
+                    participants.push_back(locked_session);
         });
 
-    for (auto session : children)
+    for (auto session : participants)
     {
         if (trust_session_container->remove_participant(trust_session.get(), session, TrustSessionContainer::TrustedSession))
             trust_session_listener->trusted_session_ending(*trust_session, session);
