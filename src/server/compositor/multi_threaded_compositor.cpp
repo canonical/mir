@@ -133,7 +133,7 @@ public:
                 frames_scheduled--;
                 lock.unlock();
                 display_buffer_compositor->composite();
-
+                printf("Composite.\n");
                 /*
                  * Each surface could have a number of frames ready in its buffer
                  * queue. And we need to ensure that we render all of them so that
