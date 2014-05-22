@@ -38,15 +38,6 @@ using namespace ::testing;
 
 namespace
 {
-struct StubSceneSession : mtd::StubSceneSession
-{
-    StubSceneSession(pid_t pid) : pid(pid) {}
-
-    pid_t process_id() const override { return pid; }
-
-    pid_t const pid;
-};
-
 struct StubSessionContainer : ms::SessionContainer
 {
     void insert_session(std::shared_ptr<ms::Session> const& session)
@@ -76,9 +67,9 @@ struct TrustSessionManager : public testing::Test
 {
     pid_t const helper_pid = __LINE__;
     pid_t const trusted_pid = __LINE__;
-    std::shared_ptr<ms::Session> const helper{std::make_shared<StubSceneSession>(helper_pid)};
-    std::shared_ptr<ms::Session> const trusted_session{std::make_shared<StubSceneSession>(trusted_pid)};
-    std::shared_ptr<ms::Session> const another_session{std::make_shared<StubSceneSession>(__LINE__)};
+    std::shared_ptr<ms::Session> const helper{std::make_shared<mtd::StubSceneSession>(helper_pid)};
+    std::shared_ptr<ms::Session> const trusted_session{std::make_shared<mtd::StubSceneSession>(trusted_pid)};
+    std::shared_ptr<ms::Session> const another_session{std::make_shared<mtd::StubSceneSession>(__LINE__)};
     ms::TrustSessionCreationParameters parameters;
     StubSessionContainer existing_sessions;
 
