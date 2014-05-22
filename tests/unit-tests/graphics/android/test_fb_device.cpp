@@ -26,7 +26,6 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
-#include "mir_test_doubles/mock_render_function.h"
 #include "mir_test_doubles/mock_swapping_gl_context.h"
 #include "mir_test_doubles/stub_renderable_list_compositor.h"
 #include "mir_test_doubles/mock_renderable_list_compositor.h"

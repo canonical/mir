@@ -26,8 +26,6 @@
 #include "testdraw/graphics_region_factory.h"
 #include "testdraw/patterns.h"
 
-#include "mir_test_doubles/stub_frame_dropping_policy_factory.h"
-
 #include <gtest/gtest.h>
 
 namespace mc=mir::compositor;
@@ -56,7 +54,6 @@ protected:
     MirPixelFormat pf;
     mg::BufferProperties buffer_properties;
     std::shared_ptr<mtd::GraphicsRegionFactory> graphics_region_factory;
-    mir::test::doubles::StubFrameDroppingPolicyFactory policy_factory;
 };
 
 auto client_acquire_blocking(mc::BufferQueue& switching_bundle)
@@ -119,7 +116,7 @@ TEST_F(AndroidBufferIntegration, swapper_creation_is_sane)
 
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
 
-    mc::BufferQueue swapper(2, allocator, buffer_properties, policy_factory);
+    mc::BufferQueue swapper(2, allocator, buffer_properties);
 
     auto returned_buffer = client_acquire_blocking(swapper);
 

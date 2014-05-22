@@ -31,7 +31,6 @@
 #include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include "mir_test/fake_shared.h"
 #include "hwc_struct_helpers.h"
-#include "mir_test_doubles/mock_render_function.h"
 #include "mir_test_doubles/mock_swapping_gl_context.h"
 #include "mir_test_doubles/stub_swapping_gl_context.h"
 #include "mir_test_doubles/stub_renderable_list_compositor.h"
@@ -252,36 +251,16 @@ TEST_F(HwcDevice, prepares_a_skip_and_target_layer_by_default)
     device.render_gl(stub_context);
 }
 
-namespace
-{
-MATCHER_P(MatchesRenderableList, value, std::string(""))
-{
-    if (value.size() != arg.size())
-        return false;
-
-    bool match{true};
-    auto it = value.begin();
-    for(auto const& a : arg)
-    {
-        if (a != *it)
-            match = false;
-        it++;
-    }
-    return match; 
-}
-
-}
-
 TEST_F(HwcDevice, calls_render_with_list_of_rejected_overlays)
 {
     using namespace testing;
     mtd::MockRenderableListCompositor mock_compositor;
 
-    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+    mg::RenderableList updated_list({
         stub_renderable1,
         stub_renderable2
     });
-    std::list<std::shared_ptr<mg::Renderable>> expected_renderable_list({
+    mg::RenderableList expected_renderable_list({
         stub_renderable2
     });
 
@@ -303,7 +282,7 @@ TEST_F(HwcDevice, calls_render_with_list_of_rejected_overlays)
             contents.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
         }));
 
-    EXPECT_CALL(mock_compositor, render(MatchesRenderableList(expected_renderable_list),Ref(mock_context)))
+    EXPECT_CALL(mock_compositor, render(expected_renderable_list,Ref(mock_context)))
         .InSequence(seq);
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
@@ -333,7 +312,7 @@ TEST_F(HwcDevice, resets_layers_when_prepare_gl_called)
         .InSequence(seq);
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
-    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+    mg::RenderableList updated_list({
         stub_renderable1,
         stub_renderable2
     });
@@ -408,7 +387,7 @@ TEST_F(HwcDevice, sets_proper_list_with_overlays)
     };
 
     /* set non-default renderlist */
-    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+    mg::RenderableList updated_list({
         stub_renderable1,
         stub_renderable1
     });
@@ -491,7 +470,7 @@ TEST_F(HwcDevice, sets_proper_list_with_overlays)
 TEST_F(HwcDevice, discards_second_set_if_all_overlays_and_nothing_has_changed)
 {
     using namespace testing;
-    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+    mg::RenderableList updated_list({
         stub_renderable1,
         stub_renderable2
     });
@@ -519,7 +498,7 @@ TEST_F(HwcDevice, discards_second_set_if_all_overlays_and_nothing_has_changed)
 TEST_F(HwcDevice, submits_every_time_if_at_least_one_layer_is_gl_rendered)
 {
     using namespace testing;
-    std::list<std::shared_ptr<mg::Renderable>> updated_list({
+    mg::RenderableList updated_list({
         stub_renderable1,
         stub_renderable2
     });
@@ -562,7 +541,7 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
         .WillOnce(Return(native_handle_2))
         .WillOnce(Return(native_handle_3));
 
-    std::list<std::shared_ptr<mg::Renderable>> updated_list({stub_renderable1});
+    mg::RenderableList updated_list({stub_renderable1});
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 

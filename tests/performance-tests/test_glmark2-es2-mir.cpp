@@ -1,3 +1,4 @@
+#include "mir_test_framework/command_line_server_configuration.h"
 #include "mir/default_server_configuration.h"
 #include "mir/options/default_configuration.h"
 
@@ -13,19 +14,16 @@
 #include <fstream>
 #include <string>
 
+namespace mo = mir::options;
+namespace mtf = mir_test_framework;
+
 namespace
 {
-// FIXME remove this when support for passing cli options to 
-// DefaultServerConfiguration is implemented
-char const* dummy[] = {0};
-int argc = 0;
-char const** argv = dummy;
-
 class GLMark2Test : public mir_test_framework::InProcessServer
 {
 public:
  GLMark2Test()
-        : config(argc, argv)
+        : config(mtf::configuration_from_commandline())
     {
     }
 

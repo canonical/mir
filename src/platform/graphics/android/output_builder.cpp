@@ -16,6 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "device_quirks.h"
 #include "output_builder.h"
 #include "display_resource_factory.h"
 #include "display_buffer.h"
@@ -54,7 +55,10 @@ mga::OutputBuilder::OutputBuilder(
     }
     else
     {
-        framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, hwc_native);
+        mga::PropertiesOps ops;
+        mga::DeviceQuirks quirks(ops);
+        framebuffers = std::make_shared<mga::Framebuffers>(
+            buffer_allocator, hwc_native, quirks.num_framebuffers());
     }
 }
 
