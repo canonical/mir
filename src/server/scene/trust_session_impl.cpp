@@ -64,19 +64,6 @@ void ms::TrustSessionImpl::stop()
     if (helper) {
         helper->end_trust_session();
     }
-
-    std::vector<std::shared_ptr<Session>> children;
-    participants.for_each_trusted_participant([&](std::weak_ptr<Session> const& session)
-        {
-            if (auto locked_session = session.lock())
-                children.push_back(locked_session);
-        });
-
-    for (auto session : children)
-    {
-        participants.remove(session);
-        trust_session_listener->trusted_session_ending(*this, session);
-    }
 }
 
 bool ms::TrustSessionImpl::add_trusted_participant(std::shared_ptr<ms::Session> const& session)
@@ -91,19 +78,4 @@ bool ms::TrustSessionImpl::add_trusted_participant(std::shared_ptr<ms::Session> 
 
     trust_session_listener->trusted_session_beginning(*this, session);
     return true;
-}
-
-bool ms::TrustSessionImpl::remove_trusted_participant(std::shared_ptr<ms::Session> const& session)
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    if (state == mir_trust_session_state_stopped)
-        return false;
-
-    if (participants.remove(session))
-    {
-        trust_session_listener->trusted_session_ending(*this, session);
-        return true;
-    }
-    return false;
 }

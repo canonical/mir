@@ -43,11 +43,6 @@ class NullTrustSession : public scene::TrustSession
     {
         return false;
     }
-
-    bool remove_trusted_participant(std::shared_ptr<scene::Session> const&) override
-    {
-        return false;
-    }
 };
 
 }

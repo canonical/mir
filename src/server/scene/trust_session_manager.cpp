@@ -63,6 +63,22 @@ void ms::TrustSessionManager::stop_trust_session_locked(
 {
     trust_session->stop();
 
+    std::vector<std::shared_ptr<Session>> children;
+
+    trust_session_container->for_each_participant_in_trust_session(trust_session.get(),
+        [&](std::weak_ptr<Session> const& session, TrustSessionContainer::TrustType type)
+        {
+            if (type == TrustSessionContainer::TrustedSession)
+            if (auto locked_session = session.lock())
+                children.push_back(locked_session);
+        });
+
+    for (auto session : children)
+    {
+        if (trust_session_container->remove_participant(trust_session.get(), session, TrustSessionContainer::TrustedSession))
+            trust_session_listener->trusted_session_ending(*trust_session, session);
+    }
+
     trust_session_container->remove_trust_session(trust_session);
 
     trust_session_listener->stopping(trust_session);
@@ -77,19 +93,20 @@ void ms::TrustSessionManager::remove_session(std::shared_ptr<Session> const& ses
     trust_session_container->for_each_trust_session_with_participant(session,
         [&](std::shared_ptr<TrustSession> const& trust_session)
         {
-            if (trust_session->get_trusted_helper().lock() == session)
-            {
-                trust_sessions.push_back(trust_session);
-            }
-            else
-            {
-                trust_session->remove_trusted_participant(session);
-            }
+            trust_sessions.push_back(trust_session);
         });
 
     for(auto trust_session : trust_sessions)
     {
-        stop_trust_session_locked(lock, trust_session);
+        if (trust_session->get_trusted_helper().lock() == session)
+        {
+            stop_trust_session_locked(lock, trust_session);
+        }
+        else
+        {
+            if (trust_session_container->remove_participant(trust_session.get(), session, TrustSessionContainer::TrustedSession))
+                trust_session_listener->trusted_session_ending(*trust_session, session);
+        }
     }
 }
 

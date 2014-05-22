@@ -37,11 +37,6 @@ bool ms::TrustSessionTrustedParticipants::insert(std::weak_ptr<Session> const& s
     return container->insert_participant(trust_session, session, TrustSessionContainer::TrustedSession);
 }
 
-bool ms::TrustSessionTrustedParticipants::remove(std::weak_ptr<Session> const& session)
-{
-    return container->remove_participant(trust_session, session, TrustSessionContainer::TrustedSession);
-}
-
 bool ms::TrustSessionTrustedParticipants::contains(std::weak_ptr<Session> const& session) const
 {
     bool found = false;
