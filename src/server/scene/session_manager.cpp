@@ -47,7 +47,7 @@ ms::SessionManager::SessionManager(std::shared_ptr<SurfaceCoordinator> const& su
     snapshot_strategy(snapshot_strategy),
     session_event_sink(session_event_sink),
     session_listener(session_listener),
-    trust_session_manager(trust_session_listener)
+    trust_session_manager(container, trust_session_listener)
 {
     assert(surface_factory);
     assert(container);
@@ -189,7 +189,7 @@ std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(st
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
 
     return trust_session_manager.start_trust_session_for(
-        shell_session, params, *app_container);
+        shell_session, params);
 
 }
 
@@ -199,7 +199,7 @@ void ms::SessionManager::add_trusted_process_for(
 {
     auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
 
-    trust_session_manager.add_trusted_process_for(scene_trust_session, process_id, *app_container);
+    trust_session_manager.add_trusted_process_for(scene_trust_session, process_id);
 }
 
 void ms::SessionManager::add_trusted_session_for(

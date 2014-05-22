@@ -62,4 +62,4 @@ private:
 }
 }
 
-#endif // MIR_SCENE_TRUST_SESSION_H_
+#endif // MIR_SCENE_TRUST_SESSION_IMPL_H_

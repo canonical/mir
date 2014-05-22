@@ -23,5 +23,5 @@ ADD_LIBRARY(
   trust_session_impl.cpp
   trust_session_container.cpp
   trust_session_creation_parameters.cpp
-  trust_session_manager.cpp
+  trust_session_manager_impl.cpp
 )

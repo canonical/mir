@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,10 +13,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "trust_session_manager.h"
+#include "trust_session_manager_impl.h"
 
 #include "mir/scene/trust_session_creation_parameters.h"
 #include "mir/scene/trust_session_listener.h"
@@ -27,18 +27,20 @@
 
 namespace ms = mir::scene;
 
-ms::TrustSessionManager::TrustSessionManager(
+ms::TrustSessionManagerImpl::TrustSessionManagerImpl(
+    std::shared_ptr<SessionContainer> const& app_container,
     std::shared_ptr<TrustSessionListener> const& trust_session_listener) :
     trust_session_container(std::make_shared<TrustSessionContainer>()),
-    trust_session_listener(trust_session_listener)
+    trust_session_listener(trust_session_listener),
+    app_container(app_container)
 {
 }
 
-ms::TrustSessionManager::~TrustSessionManager() noexcept
+ms::TrustSessionManagerImpl::~TrustSessionManagerImpl() noexcept
 {
 }
 
-void ms::TrustSessionManager::stop_trust_session_locked(
+void ms::TrustSessionManagerImpl::stop_trust_session_locked(
     std::lock_guard<std::mutex> const&,
     std::shared_ptr<TrustSession> const& trust_session) const
 {
@@ -65,7 +67,7 @@ void ms::TrustSessionManager::stop_trust_session_locked(
     trust_session_listener->stopping(trust_session);
 }
 
-void ms::TrustSessionManager::remove_session(std::shared_ptr<Session> const& session) const
+void ms::TrustSessionManagerImpl::remove_session(std::shared_ptr<Session> const& session) const
 {
     std::lock_guard<std::mutex> lock(trust_sessions_mutex);
 
@@ -91,20 +93,20 @@ void ms::TrustSessionManager::remove_session(std::shared_ptr<Session> const& ses
     }
 }
 
-void ms::TrustSessionManager::stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) const
+void ms::TrustSessionManagerImpl::stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) const
 {
     std::lock_guard<std::mutex> lock(trust_sessions_mutex);
+
     stop_trust_session_locked(lock, trust_session);
 }
 
-void ms::TrustSessionManager::add_trusted_process_for_locked(std::lock_guard<std::mutex> const&,
+void ms::TrustSessionManagerImpl::add_trusted_process_for_locked(std::lock_guard<std::mutex> const&,
     std::shared_ptr<TrustSession> const& trust_session,
-    pid_t process_id,
-    SessionContainer const& existing_sessions) const
+    pid_t process_id) const
 {
     trust_session_container->insert_waiting_process(trust_session.get(), process_id);
 
-    existing_sessions.for_each(
+    app_container->for_each(
         [&](std::shared_ptr<Session> const& session)
         {
             if (session->process_id() == process_id)
@@ -115,20 +117,18 @@ void ms::TrustSessionManager::add_trusted_process_for_locked(std::lock_guard<std
         });
 }
 
-void ms::TrustSessionManager::add_trusted_process_for(
+void ms::TrustSessionManagerImpl::add_trusted_process_for(
     std::shared_ptr<TrustSession> const& trust_session,
-    pid_t process_id,
-    SessionContainer const& existing_session) const
+    pid_t process_id) const
 {
     std::lock_guard<std::mutex> lock(trust_sessions_mutex);
 
-    add_trusted_process_for_locked(lock, trust_session, process_id, existing_session);
+    add_trusted_process_for_locked(lock, trust_session, process_id);
 }
 
-std::shared_ptr<ms::TrustSession> ms::TrustSessionManager::start_trust_session_for(
+std::shared_ptr<ms::TrustSession> ms::TrustSessionManagerImpl::start_trust_session_for(
     std::shared_ptr<Session> const& session,
-    TrustSessionCreationParameters const& params,
-    SessionContainer const& existing_session) const
+    TrustSessionCreationParameters const& params) const
 {
     auto trust_session = std::make_shared<TrustSessionImpl>(session, params, trust_session_listener);
 
@@ -139,12 +139,12 @@ std::shared_ptr<ms::TrustSession> ms::TrustSessionManager::start_trust_session_f
 
     trust_session_listener->starting(trust_session);
 
-    add_trusted_process_for_locked(lock, trust_session, params.base_process_id, existing_session);
+    add_trusted_process_for_locked(lock, trust_session, params.base_process_id);
 
     return trust_session;
 }
 
-void ms::TrustSessionManager::add_expected_session(std::shared_ptr<Session> const& session) const
+void ms::TrustSessionManagerImpl::add_expected_session(std::shared_ptr<Session> const& session) const
 {
     std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
@@ -163,9 +163,9 @@ void ms::TrustSessionManager::add_expected_session(std::shared_ptr<Session> cons
     }
 }
 
-void ms::TrustSessionManager::add_trusted_session_for(
+void ms::TrustSessionManagerImpl::add_trusted_session_for(
     std::shared_ptr<TrustSession> const& trust_session,
-    std::shared_ptr<Session> const& session)
+    std::shared_ptr<Session> const& session) const
 {
     std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
@@ -173,7 +173,7 @@ void ms::TrustSessionManager::add_trusted_session_for(
         trust_session_listener->trusted_session_beginning(*trust_session, session);
 }
 
-void ms::TrustSessionManager::for_each_participant_in_trust_session(
+void ms::TrustSessionManagerImpl::for_each_participant_in_trust_session(
     std::shared_ptr<TrustSession> const& trust_session,
     std::function<void(std::shared_ptr<Session> const& participant)> const& f) const
 {

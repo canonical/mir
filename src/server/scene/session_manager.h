@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_APPLICATION_MANAGER_H_
 #define MIR_SCENE_APPLICATION_MANAGER_H_
 
-#include "trust_session_manager.h"
+#include "trust_session_manager_impl.h"
 
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/shell.h"
@@ -94,7 +94,7 @@ private:
     std::shared_ptr<SessionEventSink> const session_event_sink;
     std::shared_ptr<SessionListener> const session_listener;
 
-    TrustSessionManager trust_session_manager;
+    TrustSessionManagerImpl trust_session_manager;
 
     std::mutex mutex;
     std::weak_ptr<Session> focus_application;

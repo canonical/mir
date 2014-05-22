@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "src/server/scene/trust_session_manager.h"
+#include "src/server/scene/trust_session_manager_impl.h"
 
 #include "src/server/scene/session_container.h"
 
@@ -84,9 +84,9 @@ struct TrustSessionManager : public testing::Test
 
     NiceMock<mtd::MockTrustSessionListener> trust_session_listener;
 
-    ms::TrustSessionManager session_manager{mt::fake_shared(trust_session_listener)};
+    ms::TrustSessionManagerImpl session_manager{mt::fake_shared(existing_sessions), mt::fake_shared(trust_session_listener)};
 
-    std::shared_ptr<ms::TrustSession> const trust_session{session_manager.start_trust_session_for(helper, parameters, existing_sessions)};
+    std::shared_ptr<ms::TrustSession> const trust_session{std::dynamic_pointer_cast<ms::TrustSession>(session_manager.start_trust_session_for(helper, parameters))};
 };
 }
 
@@ -95,7 +95,7 @@ TEST_F(TrustSessionManager, notifies_trust_session_start_and_stop)
     InSequence seq;
     EXPECT_CALL(trust_session_listener, starting(_)).Times(1);
 
-    auto const trust_session = session_manager.start_trust_session_for(helper, parameters, existing_sessions);
+    auto const trust_session = session_manager.start_trust_session_for(helper, parameters);
 
     EXPECT_CALL(trust_session_listener, stopping(Eq(trust_session))).Times(1);
     session_manager.stop_trust_session(trust_session);
@@ -106,13 +106,13 @@ TEST_F(TrustSessionManager, notifies_trust_session_start_and_stop)
 
 TEST_F(TrustSessionManager, successfully_adds_a_trusted_process)
 {
-    EXPECT_NO_THROW(session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions));
+    EXPECT_NO_THROW(session_manager.add_trusted_process_for(trust_session, trusted_pid));
 }
 
 TEST_F(TrustSessionManager, successfully_adds_a_trusted_process_twice)
 {
-    session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);
-    EXPECT_NO_THROW(session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions));
+    session_manager.add_trusted_process_for(trust_session, trusted_pid);
+    EXPECT_NO_THROW(session_manager.add_trusted_process_for(trust_session, trusted_pid));
 }
 
 TEST_F(TrustSessionManager, fails_to_add_a_trusted_process_when_trust_session_is_stopped)
@@ -120,13 +120,13 @@ TEST_F(TrustSessionManager, fails_to_add_a_trusted_process_when_trust_session_is
     session_manager.stop_trust_session(trust_session);
 
     EXPECT_THROW(
-        session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions),
+        session_manager.add_trusted_process_for(trust_session, trusted_pid),
         std::runtime_error);
 }
 
 TEST_F(TrustSessionManager, notifies_session_beginning_when_session_is_not_in_existing_sessions)
 {
-    session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);
+    session_manager.add_trusted_process_for(trust_session, trusted_pid);
 
     EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(trusted_session))).Times(1);
 
@@ -139,12 +139,12 @@ TEST_F(TrustSessionManager, notifies_session_beginning_when_session_is_in_existi
 
     EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(trusted_session))).Times(1);
 
-    session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);
+    session_manager.add_trusted_process_for(trust_session, trusted_pid);
 }
 
 TEST_F(TrustSessionManager, notifies_session_beginning_and_ending)
 {
-    session_manager.add_trusted_process_for(trust_session, trusted_pid, existing_sessions);
+    session_manager.add_trusted_process_for(trust_session, trusted_pid);
 
     InSequence seq;
     EXPECT_CALL(trust_session_listener, trusted_session_beginning(Ref(*trust_session), Eq(trusted_session))).Times(1);
@@ -159,8 +159,8 @@ TEST_F(TrustSessionManager, can_iterate_over_participants_in_a_trust_session)
     existing_sessions.insert_session(trusted_session);
     existing_sessions.insert_session(another_session);
 
-    session_manager.add_trusted_process_for(trust_session, trusted_session->process_id(), existing_sessions);
-    session_manager.add_trusted_process_for(trust_session, another_session->process_id(), existing_sessions);
+    session_manager.add_trusted_process_for(trust_session, trusted_session->process_id());
+    session_manager.add_trusted_process_for(trust_session, another_session->process_id());
 
     struct { MOCK_METHOD1(enumerate, void(std::shared_ptr<ms::Session> const& participant)); } mock;
 

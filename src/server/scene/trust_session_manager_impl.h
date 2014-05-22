@@ -16,9 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SCENE_TRUST_SESSION_MANAGER_H_
-#define MIR_SCENE_TRUST_SESSION_MANAGER_H_
+#ifndef MIR_SCENE_TRUST_SESSION_MANAGERIMPL_H_
+#define MIR_SCENE_TRUST_SESSION_MANAGERIMPL_H_
 
+#include "mir/scene/trust_session_manager.h"
 #include "mir_toolkit/common.h"
 
 #include <mutex>
@@ -35,49 +36,51 @@ class TrustSessionContainer;
 class TrustSessionCreationParameters;
 class TrustSessionListener;
 
-class TrustSessionManager
+class TrustSessionManagerImpl : public scene::TrustSessionManager
 {
 public:
-    explicit TrustSessionManager(
+    explicit TrustSessionManagerImpl(
+        std::shared_ptr<SessionContainer> const& app_container,
         std::shared_ptr<TrustSessionListener> const& trust_session_listener);
 
-    ~TrustSessionManager() noexcept;
+    ~TrustSessionManagerImpl() noexcept;
 
     std::shared_ptr<TrustSession> start_trust_session_for(
         std::shared_ptr<Session> const& session,
-        TrustSessionCreationParameters const& params,
-        SessionContainer const& existing_session) const;
+        TrustSessionCreationParameters const& params) const override;
 
-    void stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) const;
+    void stop_trust_session(
+        std::shared_ptr<TrustSession> const& trust_session) const override;
 
     void add_trusted_session_for(
         std::shared_ptr<TrustSession> const& trust_session,
-        std::shared_ptr<Session> const& session);
+        std::shared_ptr<Session> const& session) const override;
 
     void add_trusted_process_for(
         std::shared_ptr<TrustSession> const& trust_session,
-        pid_t process_id,
-        SessionContainer const& existing_session) const;
+        pid_t process_id) const override;
 
-    void add_expected_session(std::shared_ptr<Session> const& new_session) const;
+    void add_expected_session(
+        std::shared_ptr<Session> const& new_session) const override;
 
-    void remove_session(std::shared_ptr<Session> const& session) const;
+    void remove_session(
+        std::shared_ptr<Session> const& session) const override;
 
     void for_each_participant_in_trust_session(
         std::shared_ptr<TrustSession> const& trust_session,
-        std::function<void(std::shared_ptr<Session> const& participant)> const& f) const;
+        std::function<void(std::shared_ptr<Session> const& participant)> const& f) const override;
 
 private:
     std::shared_ptr<TrustSessionContainer> const trust_session_container;
     std::shared_ptr<TrustSessionListener> const trust_session_listener;
+    std::shared_ptr<SessionContainer> const app_container;
 
     std::mutex mutable trust_sessions_mutex;
 
     void add_trusted_process_for_locked(
         std::lock_guard<std::mutex> const&,
         std::shared_ptr<TrustSession> const& trust_session,
-        pid_t process_id,
-        SessionContainer const& existing_session) const;
+        pid_t process_id) const;
 
     void stop_trust_session_locked(
         std::lock_guard<std::mutex> const&,
@@ -86,4 +89,4 @@ private:
 }
 }
 
-#endif // MIR_SCENE_TRUST_SESSION_MANAGER_H_
+#endif // MIR_SCENE_TRUST_SESSION_MANAGERIMPL_H_
