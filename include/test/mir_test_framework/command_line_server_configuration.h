@@ -13,28 +13,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Josh Arenson <joshua.arenson@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_RENDER_FUNCTION_H_
-#define MIR_TEST_DOUBLES_MOCK_RENDER_FUNCTION_H_
+#ifndef MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION
+#define MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION
 
-#include <mir/graphics/renderable.h>
+#include <memory>
 
 namespace mir
 {
-namespace test
+namespace options
 {
-namespace doubles
-{
-
-struct MockRenderFunction
-{
-    MOCK_METHOD1(called, void(graphics::Renderable const&));
-};
-
-}
+class DefaultConfiguration;
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_RENDER_FUNCTION_H_ */
+namespace mir_test_framework
+{
+    auto configuration_from_commandline() 
+    -> std::shared_ptr<mir::options::DefaultConfiguration>;
+}
+
+#endif /* MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION */

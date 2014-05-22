@@ -20,6 +20,7 @@
 #define MIR_FRONTEND_SOCKET_MESSENGER_H_
 #include "message_sender.h"
 #include "message_receiver.h"
+#include "mir/frontend/session_credentials.h"
 #include <mutex>
 
 namespace mir
@@ -42,9 +43,14 @@ public:
     SessionCredentials client_creds() override;
 
 private:
+    void update_session_creds();
+    SessionCredentials creator_creds() const;
+
     std::shared_ptr<boost::asio::local::stream_protocol::socket> socket;
 
     std::mutex message_lock;
+    SessionCredentials session_creds{0, 0, 0};
+
     void send_fds_locked(std::unique_lock<std::mutex> const& lock, std::vector<int32_t> const& fds);
 };
 }
