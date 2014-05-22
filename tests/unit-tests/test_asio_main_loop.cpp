@@ -20,6 +20,7 @@
 #include "mir/time/high_resolution_clock.h"
 #include "mir_test/pipe.h"
 #include "mir_test/auto_unblock_thread.h"
+#include "mir_test/signal.h"
 #include "mir_test/wait_object.h"
 
 #include <gtest/gtest.h>
@@ -57,11 +58,26 @@ public:
     }
     void advance_by(std::chrono::milliseconds const step, mir::AsioMainLoop & ml)
     {
+        bool done = false;
+        std::mutex checkpoint_mutex;
+        std::condition_variable checkpoint;
+
         {
             std::lock_guard<std::mutex> lock(time_mutex);
             current_time += step;
         }
-        ml.enqueue(this, []{});
+        auto evaluate_clock_alarm = ml.notify_in(
+            std::chrono::milliseconds{0},
+            [&done, &checkpoint_mutex, &checkpoint]
+            {
+                std::unique_lock<std::mutex> lock(checkpoint_mutex);
+                done = true;
+                checkpoint.notify_one();
+            });
+
+        std::unique_lock<std::mutex> lock(checkpoint_mutex);
+        while(!done) checkpoint.wait(lock);
+
     }
 private:
     mutable std::mutex time_mutex;
@@ -349,101 +365,39 @@ TEST_F(AsioMainLoopTest, multiple_fd_handlers_are_called)
 
 TEST_F(AsioMainLoopAlarmTest, main_loop_runs_until_stop_called)
 {
-    std::mutex checkpoint_mutex;
-    std::condition_variable checkpoint;
-    bool hit_checkpoint{false};
+    auto mainloop_started = std::make_shared<mt::Signal>();
 
     auto fire_on_mainloop_start = ml.notify_in(std::chrono::milliseconds{0},
-                                               [&checkpoint_mutex, &checkpoint, &hit_checkpoint]()
+                                               [mainloop_started]()
     {
-        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
-        hit_checkpoint = true;
-        checkpoint.notify_all();
+        mainloop_started->raise();
     });
 
     UnblockMainLoop unblocker(ml);
 
-    {
-        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
-        // TODO time dependency: thread creation and wakeup:
-        ASSERT_TRUE(checkpoint.wait_for(lock, std::chrono::milliseconds{500}, [&hit_checkpoint]() { return hit_checkpoint; }));
-    }
+    // TODO time dependency: thread creation and wakeup:
+    ASSERT_TRUE(mainloop_started->wait_for(std::chrono::milliseconds{500}));
 
-    auto alarm = ml.notify_in(std::chrono::milliseconds{10}, [this]
+    auto timer_fired = std::make_shared<mt::Signal>();
+    auto alarm = ml.notify_in(std::chrono::milliseconds{10}, [timer_fired]
     {
-        wait.notify_ready();
+        timer_fired->raise();
     });
 
     clock->advance_by(std::chrono::milliseconds{10}, ml);
-    EXPECT_NO_THROW(wait.wait_until_ready(delay));
+    EXPECT_TRUE(timer_fired->wait_for(std::chrono::milliseconds{500}));
 
     ml.stop();
     // Main loop should be stopped now
 
-    hit_checkpoint = false;
+    timer_fired = std::make_shared<mt::Signal>();
     auto should_not_fire =  ml.notify_in(std::chrono::milliseconds{0},
-                                         [&checkpoint_mutex, &checkpoint, &hit_checkpoint]()
+                                         [timer_fired]()
     {
-        std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
-        hit_checkpoint = true;
-        checkpoint.notify_all();
+        timer_fired->raise();
     });
 
-    std::unique_lock<decltype(checkpoint_mutex)> lock(checkpoint_mutex);
-    EXPECT_FALSE(checkpoint.wait_for(lock, delay, [&hit_checkpoint]() { return hit_checkpoint; }));
-}
-
-TEST_F(AsioMainLoopAlarmTest, alarm_fires_with_correct_delay)
-{
-    auto alarm = ml.notify_in(delay, [this]()
-    {
-        wait.notify_ready();
-    });
-
-    UnblockMainLoop unblocker(ml);
-    clock->advance_by(delay, ml);
-
-    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{100}));
-}
-
-TEST_F(AsioMainLoopAlarmTest, multiple_alarms_fire)
-{
-    int const alarm_count{10};
-    std::atomic<int> call_count{0};
-    std::array<std::unique_ptr<mir::time::Alarm>, alarm_count> alarms;
-
-    for (auto& alarm : alarms)
-    {
-        alarm = ml.notify_in(delay, [this, &call_count]()
-        {
-            call_count.fetch_add(1);
-            if (call_count == alarm_count)
-                wait.notify_ready();
-        });
-    }
-
-    UnblockMainLoop unblocker(ml);
-    clock->advance_by(delay, ml);
-
-    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{100}));
-    for (auto& alarm : alarms)
-        EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
-}
-
-
-TEST_F(AsioMainLoopAlarmTest, alarm_changes_to_triggered_state)
-{
-    auto alarm = ml.notify_in(delay, [this]()
-    {
-        wait.notify_ready();
-    });
-
-    UnblockMainLoop unblocker(ml);
-
-    clock->advance_by(delay, ml);
-    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{100}));
-
-    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+    EXPECT_FALSE(timer_fired->wait_for(std::chrono::milliseconds{100}));
 }
 
 TEST_F(AsioMainLoopAlarmTest, alarm_starts_in_pending_state)
@@ -455,103 +409,115 @@ TEST_F(AsioMainLoopAlarmTest, alarm_starts_in_pending_state)
     EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
 }
 
-TEST_F(AsioMainLoopAlarmTest, cancelled_alarm_doesnt_fire)
+TEST_F(AsioMainLoopAlarmTest, alarm_fires_with_correct_delay)
 {
-    auto alarm = ml.notify_in(delay, [this]()
-    {
-        wait.notify_ready();
-    });
-
     UnblockMainLoop unblocker(ml);
 
+    auto alarm = ml.notify_in(delay, [](){});
+
+    clock->advance_by(delay - std::chrono::milliseconds{1}, ml);
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+
+    clock->advance_by(delay, ml);
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+}
+
+TEST_F(AsioMainLoopAlarmTest, multiple_alarms_fire)
+{
+    int const alarm_count{10};
+    std::atomic<int> call_count{0};
+    std::array<std::unique_ptr<mir::time::Alarm>, alarm_count> alarms;
+
+    for (auto& alarm : alarms)
+        alarm = ml.notify_in(delay, [&call_count](){++call_count;});
+
+    UnblockMainLoop unblocker(ml);
+    clock->advance_by(delay, ml);
+
+    for (auto const& alarm : alarms)
+        EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+}
+
+TEST_F(AsioMainLoopAlarmTest, cancelled_alarm_doesnt_fire)
+{
+    UnblockMainLoop unblocker(ml);
+    auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [](){});
+
     EXPECT_TRUE(alarm->cancel());
-    EXPECT_THROW(wait.wait_until_ready(std::chrono::milliseconds{300}), std::runtime_error);
+    clock->advance_by(std::chrono::milliseconds{100}, ml);
+
     EXPECT_EQ(mir::time::Alarm::cancelled, alarm->state());
 }
 
 TEST_F(AsioMainLoopAlarmTest, destroyed_alarm_doesnt_fire)
 {
-    auto alarm = ml.notify_in(std::chrono::milliseconds{200}, [this]()
-    {
-        wait.notify_ready();
-    });
+    auto alarm = ml.notify_in(std::chrono::milliseconds{200},
+                              [](){ FAIL() << "Alarm handler of destroyed alarm called"; });
 
     UnblockMainLoop unblocker(ml);
 
-    clock->advance_by(std::chrono::milliseconds{190}, ml);
     alarm.reset(nullptr);
-
-    EXPECT_THROW(wait.wait_until_ready(std::chrono::milliseconds{300}), std::runtime_error);
+    clock->advance_by(std::chrono::milliseconds{200}, ml);
 }
 
 TEST_F(AsioMainLoopAlarmTest, rescheduled_alarm_fires_again)
 {
-    std::mutex m;
-    std::condition_variable called;
+    std::atomic<int> call_count{0};
 
-    auto alarm = ml.notify_in(std::chrono::milliseconds{0}, [this, &m, &called]()
+    auto alarm = ml.notify_in(std::chrono::milliseconds{0}, [&call_count]()
     {
-        std::unique_lock<decltype(m)> lock(m);
-        call_count++;
-        if (call_count == 2)
-            wait.notify_ready();
-        called.notify_all();
+        if (call_count++ > 1)
+            FAIL() << "Alarm called too many times";
     });
 
     UnblockMainLoop unblocker(ml);
 
-    {
-        std::unique_lock<decltype(m)> lock(m);
-        ASSERT_TRUE(called.wait_for(lock,
-                                    delay,
-                                    [this](){ return call_count == 1; }));
-    }
-
+    clock->advance_by(std::chrono::milliseconds{0}, ml);
     ASSERT_EQ(mir::time::Alarm::triggered, alarm->state());
+
     alarm->reschedule_in(std::chrono::milliseconds{100});
-    clock->advance_by(std::chrono::milliseconds{100}, ml);
     EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
 
-    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{500}));
+    clock->advance_by(std::chrono::milliseconds{100}, ml);
     EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
 }
 
 TEST_F(AsioMainLoopAlarmTest, rescheduled_alarm_cancels_previous_scheduling)
 {
-    const int some_time{90};
-    const int second_delay{150};
-    const int some_time_later{some_time + second_delay};
+    std::atomic<int> call_count{0};
 
-    auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [this]()
+    auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [&call_count]()
     {
         call_count++;
-        wait.notify_ready();
     });
 
     UnblockMainLoop unblocker(ml);
-    clock->advance_by(std::chrono::milliseconds{some_time}, ml);
+    clock->advance_by(std::chrono::milliseconds{90}, ml);
 
-    EXPECT_TRUE(alarm->reschedule_in(std::chrono::milliseconds{second_delay}));
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+    EXPECT_EQ(0, call_count);
+    EXPECT_TRUE(alarm->reschedule_in(std::chrono::milliseconds{100}));
     EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
 
-    clock->advance_by(std::chrono::milliseconds{some_time_later}, ml);
-    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{500}));
+    clock->advance_by(std::chrono::milliseconds{110}, ml);
+
     EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
     EXPECT_EQ(1, call_count);
 }
 
 TEST_F(AsioMainLoopAlarmTest, alarm_fires_at_correct_time_point)
 {
-    mir::time::HighResolutionClock real_clock;
+    mir::time::Timestamp real_soon = clock->sample() + std::chrono::milliseconds{120};
 
-    mir::time::Timestamp real_soon = real_clock.sample() + std::chrono::microseconds{120};
-
-    auto alarm = ml.notify_at(real_soon, [this]() { wait.notify_ready(); });
+    auto alarm = ml.notify_at(real_soon, []{});
 
     UnblockMainLoop unblocker(ml);
-    clock->advance_by(std::chrono::milliseconds{120}, ml);
 
-    EXPECT_NO_THROW(wait.wait_until_ready(std::chrono::milliseconds{200}));
+    clock->advance_by(std::chrono::milliseconds{119}, ml);
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+
+    clock->advance_by(std::chrono::milliseconds{1}, ml);
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
 }
 
 TEST_F(AsioMainLoopTest, dispatches_action)
