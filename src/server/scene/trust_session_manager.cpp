@@ -119,18 +119,19 @@ void ms::TrustSessionManager::stop_trust_session(std::shared_ptr<TrustSession> c
 MirTrustSessionAddTrustResult ms::TrustSessionManager::add_trusted_process_for_locked(std::lock_guard<std::mutex> const&,
     std::shared_ptr<TrustSession> const& trust_session,
     pid_t process_id,
-    SessionContainer const& existing_session) const
+    SessionContainer const& existing_sessions) const
 {
     // TODO {arg} we're ignoring a possible failure return here:
     // TODO {arg} maybe insert_waiting_process() should throw?
     trust_session_container->insert_waiting_process(trust_session.get(), process_id);
 
-    existing_session.for_each(
-        [&](std::shared_ptr<Session> const& container_session)
+    existing_sessions.for_each(
+        [&](std::shared_ptr<Session> const& session)
         {
-            if (container_session->process_id() == process_id)
+            if (session->process_id() == process_id)
             {
-                trust_session->add_trusted_participant(container_session);
+                if (trust_session_container->insert_participant(trust_session.get(), session, TrustSessionContainer::TrustedSession))
+                    trust_session_listener->trusted_session_beginning(*trust_session, session);
             }
         });
 
@@ -168,13 +169,13 @@ std::shared_ptr<ms::TrustSession> ms::TrustSessionManager::start_trust_session_f
     return trust_session;
 }
 
-void ms::TrustSessionManager::add_expected_session(std::shared_ptr<Session> const& new_session) const
+void ms::TrustSessionManager::add_expected_session(std::shared_ptr<Session> const& session) const
 {
     std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
     std::vector<std::shared_ptr<TrustSession>> trust_sessions;
 
-    trust_session_container->for_each_trust_session_expecting_process(new_session->process_id(),
+    trust_session_container->for_each_trust_session_expecting_process(session->process_id(),
         [&](std::shared_ptr<TrustSession> const& trust_session)
         {
             trust_sessions.push_back(trust_session);
@@ -182,6 +183,19 @@ void ms::TrustSessionManager::add_expected_session(std::shared_ptr<Session> cons
 
     for(auto trust_session : trust_sessions)
     {
-        trust_session->add_trusted_participant(new_session);
+        if (trust_session_container->insert_participant(trust_session.get(), session, TrustSessionContainer::TrustedSession))
+            trust_session_listener->trusted_session_beginning(*trust_session, session);
     }
+}
+
+MirTrustSessionAddTrustResult ms::TrustSessionManager::add_trusted_session_for(
+    std::shared_ptr<TrustSession> const& trust_session,
+    std::shared_ptr<Session> const& session)
+{
+    std::unique_lock<std::mutex> lock(trust_sessions_mutex);
+
+    if (trust_session_container->insert_participant(trust_session.get(), session, TrustSessionContainer::TrustedSession))
+        trust_session_listener->trusted_session_beginning(*trust_session, session);
+
+    return mir_trust_session_add_tust_succeeded;
 }

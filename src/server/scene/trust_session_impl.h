@@ -50,8 +50,6 @@ public:
 
     void stop() override;
 
-    bool add_trusted_participant(std::shared_ptr<Session> const& session) override;
-
 protected:
     TrustSessionImpl(const TrustSessionImpl&) = delete;
     TrustSessionImpl& operator=(const TrustSessionImpl&) = delete;

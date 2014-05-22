@@ -50,6 +50,10 @@ public:
 
     void stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) const;
 
+    MirTrustSessionAddTrustResult add_trusted_session_for(
+        std::shared_ptr<TrustSession> const& trust_session,
+        std::shared_ptr<Session> const& session);
+
     MirTrustSessionAddTrustResult add_trusted_process_for(
         std::shared_ptr<TrustSession> const& trust_session,
         pid_t process_id,

@@ -33,8 +33,6 @@ public:
     virtual void stop() = 0;
 
     virtual std::weak_ptr<Session> get_trusted_helper() const = 0;
-
-    virtual bool add_trusted_participant(std::shared_ptr<Session> const& session) = 0;
 };
 
 }

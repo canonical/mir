@@ -65,17 +65,3 @@ void ms::TrustSessionImpl::stop()
         helper->end_trust_session();
     }
 }
-
-bool ms::TrustSessionImpl::add_trusted_participant(std::shared_ptr<ms::Session> const& session)
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    if (state == mir_trust_session_state_stopped)
-        return false;
-
-    if (!participants.insert(session))
-        return false;
-
-    trust_session_listener->trusted_session_beginning(*this, session);
-    return true;
-}

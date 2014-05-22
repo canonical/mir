@@ -35,10 +35,6 @@ public:
     TrustSessionTrustedParticipants(TrustSession* trust_session, std::shared_ptr<TrustSessionContainer> const& container);
     virtual ~TrustSessionTrustedParticipants() = default;
 
-    bool insert(std::weak_ptr<Session> const& session);
-    bool remove(std::weak_ptr<Session> const& session);
-    void clear();
-
     bool contains(std::weak_ptr<Session> const& session) const;
 
     void for_each_trusted_participant(std::function<void(std::weak_ptr<Session> const&)> f) const;

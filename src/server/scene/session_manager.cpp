@@ -209,8 +209,7 @@ MirTrustSessionAddTrustResult ms::SessionManager::add_trusted_session_for(
     auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
     auto scene_session = std::dynamic_pointer_cast<Session>(session);
 
-    scene_trust_session->add_trusted_participant(scene_session);
-    return mir_trust_session_add_tust_succeeded;
+    return trust_session_manager.add_trusted_session_for(scene_trust_session, scene_session);
 }
 
 void ms::SessionManager::stop_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
