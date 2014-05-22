@@ -72,12 +72,12 @@ void ms::SurfaceObservers::hidden_set_to(bool hide)
         p->hidden_set_to(hide);
 }
 
-void ms::SurfaceObservers::frame_posted()
+void ms::SurfaceObservers::frame_posted(int num_frames)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     // TBD Maybe we should copy observers so we can release the lock?
     for (auto const& p : observers)
-        p->frame_posted();
+        p->frame_posted(num_frames);
 }
 
 void ms::SurfaceObservers::alpha_set_to(float alpha)
@@ -218,7 +218,7 @@ void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(m
             std::unique_lock<std::mutex> lk(guard);
             first_frame_posted = true;
         }
-        observers.frame_posted();
+        observers.frame_posted(surface_buffer_stream->buffers_ready_for_compositor());
     }
 }
 
@@ -509,7 +509,10 @@ public:
     }
  
     int buffers_ready_for_compositor() const override
-    { return underlying_buffer_stream->buffers_ready_for_compositor(); }
+    {
+        return 0;
+    //    BOOST_THROW_EXCEPTION(std::runtime_error("just don't call this.\n"));
+    }// return underlying_buffer_stream->buffers_ready_for_compositor(); }
 
     std::shared_ptr<mg::Buffer> buffer() const override
     {

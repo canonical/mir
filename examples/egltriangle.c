@@ -19,6 +19,7 @@
 #include "eglapp.h"
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <GLES2/gl2.h>
 
 static GLuint load_shader(const char *src, GLenum type)
@@ -118,13 +119,28 @@ int main(int argc, char *argv[])
     glVertexAttribPointer(vpos, 2, GL_FLOAT, GL_FALSE, 0, vertices);
     glEnableVertexAttribArray(0);
 
+    int z = 0;
     while (mir_eglapp_running())
     {
-        glClear(GL_COLOR_BUFFER_BIT);
-        glUniform1f(theta, angle);
-        angle += 0.02f;
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        mir_eglapp_swap_buffers();
+        char c = getchar();
+        printf("frames %c\n", c);
+        int run = atoi(&c);
+        while(run >= 0)
+        {
+            printf("iter %i\n", run);
+            glClear(GL_COLOR_BUFFER_BIT);
+            if (z++ %2)
+                glClearColor(1.0, 1.0, 1.0, 1.0);
+            else
+                glClearColor(0.0, 0.0, 0.0, 1.0);
+                
+            
+            glUniform1f(theta, angle);
+            angle += 0.02f;
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+            mir_eglapp_swap_buffers();
+            run--;
+        }
     }
 
     mir_eglapp_shutdown();

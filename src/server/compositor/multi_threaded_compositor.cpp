@@ -122,7 +122,7 @@ public:
         while (running)
         {
             /* Wait until compositing has been scheduled or we are stopped */
-            run_cv.wait(lock, [&]{ return frames_scheduled || !running; });
+            run_cv.wait(lock, [&]{ return (frames_scheduled > 0) || !running; });
 
             /*
              * Check if we are running before compositing, since we may have
@@ -130,9 +130,9 @@ public:
              */
             if (running)
             {
-                frames_scheduled = false;
+                frames_scheduled--;
                 lock.unlock();
-                auto more_frames_pending = display_buffer_compositor->composite();
+                display_buffer_compositor->composite();
 
                 /*
                  * Each surface could have a number of frames ready in its buffer
@@ -142,7 +142,6 @@ public:
                  * more frames to ensure all surfaces' queues are fully drained.
                  */
                 lock.lock();
-                frames_scheduled |= more_frames_pending;
             }
         }
     }
@@ -151,12 +150,16 @@ public:
         mir::terminate_with_current_exception();
     }
 
-    void schedule_compositing()
+    void schedule_compositing(int num_frames)
     {
         std::lock_guard<std::mutex> lock{run_mutex};
 
-        frames_scheduled = true;
-        run_cv.notify_one();
+        printf("SCHEDULE\n");
+        if(num_frames > frames_scheduled)
+        {
+            frames_scheduled = num_frames;
+            run_cv.notify_one();
+        }
     }
 
     void stop()
@@ -170,7 +173,7 @@ private:
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const display_buffer_compositor_factory;
     mg::DisplayBuffer& buffer;
     bool running;
-    bool frames_scheduled;
+    int frames_scheduled;
     std::mutex run_mutex;
     std::condition_variable run_cv;
     std::shared_ptr<CompositorReport> const report;
@@ -195,13 +198,11 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
     observer = std::make_shared<ms::LegacySceneChangeNotification>(
     [this]()
     {
-        schedule_compositing();
+        schedule_compositing(1);
     },
-    [this](int)
+    [this](int num)
     {
-        //TODO: make use of number of buffer schedules to provide more intelligent
-        //      composition scheduling.
-        schedule_compositing();
+        schedule_compositing(num);
     });
 }
 
@@ -210,13 +211,13 @@ mc::MultiThreadedCompositor::~MultiThreadedCompositor()
     stop();
 }
 
-void mc::MultiThreadedCompositor::schedule_compositing()
+void mc::MultiThreadedCompositor::schedule_compositing(int num)
 {
     std::unique_lock<std::mutex> lk(state_guard);
 
     report->scheduled();
     for (auto& f : thread_functors)
-        f->schedule_compositing();
+        f->schedule_compositing(num);
 }
 
 void mc::MultiThreadedCompositor::start()
@@ -246,7 +247,7 @@ void mc::MultiThreadedCompositor::start()
     if (compose_on_start)
     {
         lk.unlock();
-        schedule_compositing();
+        schedule_compositing(1);
     }
 }
 

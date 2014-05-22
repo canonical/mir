@@ -89,7 +89,7 @@ TEST_F(LegacySceneChangeNotificationTest, observes_surface_changes)
 
     ms::LegacySceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_added(&surface);
-    surface_observer->frame_posted();
+    surface_observer->frame_posted(1);
 }
 
 TEST_F(LegacySceneChangeNotificationTest, destroying_observer_unregisters_surface_observers)

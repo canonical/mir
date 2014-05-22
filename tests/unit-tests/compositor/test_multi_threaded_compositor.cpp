@@ -468,6 +468,62 @@ TEST(MultiThreadedCompositor, composites_only_on_demand)
     compositor.stop();
 }
 
+namespace
+{
+struct CountingDisplayBuffer : public mtd::NullDisplayBuffer 
+{
+    void post_update() override
+    {
+        count++;
+    }
+    bool post_renderables_if_optimizable(mg::RenderableList const&) override
+    {
+        return false;
+    }
+    bool can_bypass()
+    {
+        return false;
+    }
+    void post_update(std::shared_ptr<mg::Buffer>) override
+    {
+        count++;
+    }
+
+    unsigned int count{0};
+};
+class StubCountingDisplay : public mtd::NullDisplay
+{
+ public:
+    StubCountingDisplay(unsigned int nbuffers) : buffers{nbuffers} {}
+
+    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
+    {
+        for (auto& db : buffers)
+            f(db);
+    }
+
+private:
+    std::vector<CountingDisplayBuffer> buffers;
+};
+}
+TEST(MultiThreadedCompositor, composition_scheduling)
+{
+    using namespace testing;
+
+    unsigned int const nbuffers = 3;
+    auto display = std::make_shared<StubCountingDisplay>(nbuffers);
+    auto scene = std::make_shared<StubScene>();
+    auto db_compositor_factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
+    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_report, true};
+
+    compositor.start();
+//    scene.buffers_scheduled(2);
+
+//    EXPECT_TRUE(rr);
+
+    compositor.stop();
+}
+
 TEST(MultiThreadedCompositor, when_no_initial_composite_is_needed_there_is_none)
 {
     using namespace testing;

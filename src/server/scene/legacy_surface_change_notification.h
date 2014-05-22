@@ -40,7 +40,7 @@ public:
     void resized_to(geometry::Size const& /*size*/) override;
     void moved_to(geometry::Point const& /*top_left*/) override;
     void hidden_set_to(bool /*hide*/) override;
-    void frame_posted() override;
+    void frame_posted(int) override;
     void alpha_set_to(float /*alpha*/) override;
     void transformation_set_to(glm::mat4 const& /*t*/) override;
     void attrib_changed(MirSurfaceAttrib, int) override;
