@@ -466,6 +466,41 @@ TEST_F(DefaultDisplayServerTestFixture, client_receives_surface_state_events)
     launch_client_process(client_config);
 }
 
+TEST_F(DefaultDisplayServerTestFixture, client_receives_surface_dpi_value)
+{
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            ASSERT_TRUE(connection != NULL);
+            ASSERT_TRUE(mir_connection_is_valid(connection));
+
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
+            };
+
+            surface =
+                mir_connection_create_surface_sync(connection, &request_params);
+            ASSERT_TRUE(surface != NULL);
+            ASSERT_TRUE(mir_surface_is_valid(surface));
+
+            // Expect zero (not wired up to detect the physical display yet)
+            EXPECT_EQ(0, mir_surface_get_dpi(surface));
+
+            mir_surface_release_sync(surface);
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
 #ifndef ANDROID
 TEST_F(DefaultDisplayServerTestFixture, surface_scanout_flag_toggles)
 {
