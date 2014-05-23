@@ -157,10 +157,10 @@ mir::DefaultServerConfiguration::the_global_event_sink()
         });
 }
 
-std::shared_ptr<ms::SessionManager>
-mir::DefaultServerConfiguration::the_session_manager()
+std::shared_ptr<ms::SessionCoordinator>
+mir::DefaultServerConfiguration::the_session_coordinator()
 {
-    return session_manager(
+    return session_coordinator(
         [this]() -> std::shared_ptr<ms::SessionManager>
         {
             return std::make_shared<ms::SessionManager>(
@@ -176,13 +176,13 @@ mir::DefaultServerConfiguration::the_session_manager()
 std::shared_ptr<mf::Shell>
 mir::DefaultServerConfiguration::the_frontend_shell()
 {
-    return the_session_manager();
+    return the_session_coordinator();
 }
 
 std::shared_ptr<msh::FocusController>
 mir::DefaultServerConfiguration::the_focus_controller()
 {
-    return the_session_manager();
+    return the_session_coordinator();
 }
 
 std::shared_ptr<ms::PixelBuffer>
