@@ -85,8 +85,7 @@ void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& f
 
 void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, std::vector<int32_t> const& fds)
 {
-    auto n_fds = fds.size();
-    if (n_fds > 0)
+    if (fds.size() > 0)
     {
         // We send dummy data
         struct iovec iov;
@@ -95,7 +94,12 @@ void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, 
         iov.iov_len = 1;
 
         // Allocate space for control message
-        std::vector<char> control(sizeof(struct cmsghdr) + sizeof(int) * n_fds);
+        static auto const builtin_n_fds = 5;
+        static auto const builtin_cmsg_space = CMSG_SPACE(builtin_n_fds * sizeof(int));
+        auto const fds_bytes = fds.size() * sizeof(int);
+        mir::VariableLengthArray<builtin_cmsg_space> control{CMSG_SPACE(fds_bytes)};
+        // Silence valgrind uninitialized memory complaint
+        memset(control.data(), 0, control.size());
 
         // Message to send
         struct msghdr header;
@@ -109,15 +113,16 @@ void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, 
 
         // Control message contains file descriptors
         struct cmsghdr *message = CMSG_FIRSTHDR(&header);
-        message->cmsg_len = header.msg_controllen;
+        message->cmsg_len = CMSG_LEN(fds_bytes);
         message->cmsg_level = SOL_SOCKET;
         message->cmsg_type = SCM_RIGHTS;
-        int *data = reinterpret_cast<int*>(CMSG_DATA(message));
+
+        int* const data = reinterpret_cast<int*>(CMSG_DATA(message));
         int i = 0;
-        for (auto &fd: fds)
+        for (auto fd : fds)
             data[i++] = fd;
 
-        auto sent = sendmsg(socket->native_handle(), &header, 0);
+        auto const sent = sendmsg(socket->native_handle(), &header, 0);
         if (sent < 0)
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send fds: " + std::string(strerror(errno))));
     }
