@@ -18,6 +18,7 @@
 
 #include "demo_renderer.h"
 #include <mir/graphics/renderable.h>
+#include <mir/compositor/recently_used_cache.h>
 #include <cmath>
 
 using namespace mir;
@@ -137,7 +138,9 @@ GLuint generate_frame_corner_texture(float corner_radius,
 DemoRenderer::DemoRenderer(
     graphics::GLProgramFactory const& program_factory,
     geometry::Rectangle const& display_area)
-    : GLRenderer(program_factory, display_area)
+    : GLRenderer(program_factory,
+        std::unique_ptr<graphics::GLTextureCache>(new compositor::RecentlyUsedCache()),
+        display_area)
     , corner_radius(0.5f)
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
