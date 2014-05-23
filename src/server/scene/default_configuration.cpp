@@ -169,16 +169,24 @@ std::shared_ptr<ms::SessionCoordinator>
 mir::DefaultServerConfiguration::the_session_coordinator()
 {
     return session_coordinator(
-        [this]() -> std::shared_ptr<ms::SessionManager>
+        [this]()
         {
-            return std::make_shared<ms::SessionManager>(
-                the_surface_coordinator(),
-                the_session_container(),
-                the_shell_focus_setter(),
-                the_snapshot_strategy(),
-                the_session_event_sink(),
-                the_session_listener());
+            return wrap_session_coordinator(
+                std::make_shared<ms::SessionManager>(
+                    the_surface_coordinator(),
+                    the_session_container(),
+                    the_shell_focus_setter(),
+                    the_snapshot_strategy(),
+                    the_session_event_sink(),
+                    the_session_listener()));
         });
+}
+
+std::shared_ptr<ms::SessionCoordinator>
+mir::DefaultServerConfiguration::wrap_session_coordinator(
+    std::shared_ptr<ms::SessionCoordinator> const& wrapped)
+{
+    return wrapped;
 }
 
 std::shared_ptr<mf::Shell>
