@@ -292,6 +292,12 @@ protected:
     virtual bool is_key_repeat_enabled() const;
     /** @} */
 
+    /** @Convenience wrapper functions
+     *  @{ */
+    virtual std::shared_ptr<scene::SurfaceCoordinator>  wrap_surface_coordinator(
+        std::shared_ptr<scene::SurfaceCoordinator> const& wrapped);
+    /** @} */
+
     CachedPtr<input::android::InputRegistrar> input_registrar;
     CachedPtr<input::android::InputThread> dispatcher_thread;
     CachedPtr<droidinput::InputDispatcherInterface> android_input_dispatcher;
