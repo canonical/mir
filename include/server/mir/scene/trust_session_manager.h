@@ -38,13 +38,13 @@ public:
     virtual std::shared_ptr<TrustSession> start_trust_session_for(std::shared_ptr<Session> const& session,
                                                                   TrustSessionCreationParameters const& params) const = 0;
 
-    virtual void add_trusted_process_for(std::shared_ptr<TrustSession> const& trust_session,
-                                                                  pid_t process_id) const = 0;
-
-    virtual void add_trusted_session_for(std::shared_ptr<TrustSession> const& trust_session,
-                                                                  std::shared_ptr<Session> const& session) const = 0;
-
     virtual void stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) const = 0;
+
+    virtual void add_participant(std::shared_ptr<TrustSession> const& trust_session,
+                                 std::shared_ptr<Session> const& session) const = 0;
+
+    virtual void add_participant_by_pid(std::shared_ptr<TrustSession> const& trust_session,
+                                        pid_t process_id) const = 0;
 
     virtual void add_expected_session(std::shared_ptr<Session> const& new_session) const = 0;
 

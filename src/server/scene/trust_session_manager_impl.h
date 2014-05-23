@@ -52,11 +52,11 @@ public:
     void stop_trust_session(
         std::shared_ptr<TrustSession> const& trust_session) const override;
 
-    void add_trusted_session_for(
+    void add_participant(
         std::shared_ptr<TrustSession> const& trust_session,
         std::shared_ptr<Session> const& session) const override;
 
-    void add_trusted_process_for(
+    void add_participant_by_pid(
         std::shared_ptr<TrustSession> const& trust_session,
         pid_t process_id) const override;
 
@@ -77,7 +77,7 @@ private:
 
     std::mutex mutable trust_sessions_mutex;
 
-    void add_trusted_process_for_locked(
+    void add_add_participant_by_pid_locked(
         std::lock_guard<std::mutex> const&,
         std::shared_ptr<TrustSession> const& trust_session,
         pid_t process_id) const;

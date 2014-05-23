@@ -37,17 +37,17 @@ public:
       return std::shared_ptr<scene::TrustSession>();
     }
 
-    void add_trusted_process_for(std::shared_ptr<scene::TrustSession> const&,
-                                 pid_t) const
-    {
-    }
-
-    void add_trusted_session_for(std::shared_ptr<scene::TrustSession> const&,
-                                 std::shared_ptr<scene::Session> const&) const
-    {
-    }
-
     void stop_trust_session(std::shared_ptr<scene::TrustSession> const&) const
+    {
+    }
+
+    void add_participant(std::shared_ptr<scene::TrustSession> const&,
+                         std::shared_ptr<scene::Session> const&) const
+    {
+    }
+
+    void add_participant_by_pid(std::shared_ptr<scene::TrustSession> const&,
+                                pid_t) const
     {
     }
 
