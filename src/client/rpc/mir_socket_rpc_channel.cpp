@@ -418,24 +418,24 @@ void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
 
                 rpc_report->event_parsing_succeeded(e);
 
-                event_distributor->handle_event(e);
-
-                // todo - surfaces should register with the event distributor.
-                if (e.type == mir_event_type_surface)
+                // TODO surfaces should register with the event distributor.
+                switch (e.type)
                 {
+                case mir_event_type_key:
+                case mir_event_type_motion:
+                case mir_event_type_surface:
+                case mir_event_type_resize:
                     surface_map->with_surface_do(e.surface.id,
                         [&e](MirSurface* surface)
                         {
                             surface->handle_event(e);
                         });
-                }
-                else if (e.type == mir_event_type_resize)
-                {
-                    surface_map->with_surface_do(e.resize.surface_id,
-                        [&e](MirSurface* surface)
-                        {
-                            surface->handle_event(e);
-                        });
+                    break;
+
+                case mir_event_type_trust_session_state_change:
+                default:
+                    event_distributor->handle_event(e);
+                    break;
                 }
             }
             else
