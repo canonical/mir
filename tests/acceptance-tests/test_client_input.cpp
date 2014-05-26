@@ -299,14 +299,8 @@ struct RegionApplyingSurfaceCoordinator : public ms::SurfaceCoordinator
 
 TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
 {
-    static std::string const test_client_name = "1";
-    mtf::CrossProcessSync fence;
-
     static int const screen_width = 100;
     static int const screen_height = 100;
-
-    static geom::Rectangle const screen_geometry{geom::Point{0, 0},
-        geom::Size{screen_width, screen_height}};
 
     static std::initializer_list<geom::Rectangle> client_input_regions = {
         {geom::Point{0, 0}, {screen_width-80, screen_height}},
@@ -317,20 +311,12 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
     {
         using ServerConfiguration::ServerConfiguration;
 
-        std::shared_ptr<ms::PlacementStrategy> the_placement_strategy() override
-        {
-            static mtf::SurfaceGeometries positions;
-
-            return std::make_shared<mtf::DeclarativePlacementStrategy>(
-                ServerConfiguration::the_placement_strategy(), positions, mtf::SurfaceDepths());
-        }
         std::shared_ptr<ms::SurfaceCoordinator> the_surface_coordinator() override
         {
             return std::make_shared<RegionApplyingSurfaceCoordinator>(ServerConfiguration::the_surface_coordinator(), client_input_regions);
         }
     } server_config{fence};
 
-    server_config.client_geometries[test_client_name] = screen_geometry;
     server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
             // First we will move the cursor in to the input region on the left side of the window. We should see a click here
@@ -348,7 +334,6 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
         };
     launch_server_process(server_config);
 
-    ClientConfig client_config(test_client_name, fence);
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
