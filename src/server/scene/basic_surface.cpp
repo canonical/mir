@@ -72,12 +72,12 @@ void ms::SurfaceObservers::hidden_set_to(bool hide)
         p->hidden_set_to(hide);
 }
 
-void ms::SurfaceObservers::frame_posted(int num_frames)
+void ms::SurfaceObservers::frame_posted(int frames_available)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     // TBD Maybe we should copy observers so we can release the lock?
     for (auto const& p : observers)
-        p->frame_posted(num_frames);
+        p->frame_posted(frames_available);
 }
 
 void ms::SurfaceObservers::alpha_set_to(float alpha)
@@ -140,7 +140,8 @@ ms::BasicSurface::BasicSurface(
     configurator(configurator),
     report(report),
     type_value(mir_surface_type_normal),
-    state_value(mir_surface_state_restored)
+    state_value(mir_surface_state_restored),
+    dpi_value(0)
 {
     report->surface_created(this, surface_name);
 }
@@ -218,7 +219,8 @@ void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(m
             std::unique_lock<std::mutex> lk(guard);
             first_frame_posted = true;
         }
-        observers.frame_posted(surface_buffer_stream->buffers_ready_for_compositor());
+
+        observers.frame_posted(1);
     }
 }
 
@@ -440,6 +442,11 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
         allow_framedropping(allow_dropping);
         result = value;
         break;
+    case mir_surface_attrib_dpi:
+        if (value >= 0 && !set_dpi(value))  // Negative means query only
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid DPI value"));
+        result = dpi();
+        break;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                "attribute."));
@@ -461,6 +468,24 @@ void ms::BasicSurface::show()
     set_hidden(false);
 }
 
+int ms::BasicSurface::dpi() const
+{
+    return dpi_value;
+}
+
+bool ms::BasicSurface::set_dpi(int new_dpi)
+{
+    bool valid = false;
+
+    if (new_dpi >= 0)
+    {
+        dpi_value = new_dpi;
+        valid = true;
+        observers.attrib_changed(mir_surface_attrib_dpi, dpi_value);
+    }
+
+    return valid;
+}
 
 void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
 {
@@ -509,10 +534,7 @@ public:
     }
  
     int buffers_ready_for_compositor() const override
-    {
-        return 0;
-    //    BOOST_THROW_EXCEPTION(std::runtime_error("just don't call this.\n"));
-    }// return underlying_buffer_stream->buffers_ready_for_compositor(); }
+    { return underlying_buffer_stream->buffers_ready_for_compositor(); }
 
     std::shared_ptr<mg::Buffer> buffer() const override
     {

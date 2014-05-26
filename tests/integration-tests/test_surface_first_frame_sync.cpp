@@ -70,15 +70,18 @@ public:
         auto notify = [this]()
         {
             display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
-            {  
+            {
                 display_buffer_compositor_map[&display_buffer]->composite();
             });
         };
-        observer = std::make_shared<ms::LegacySceneChangeNotification>(notify,
-        [&](int)
+        auto notify2 = [this](int)
         {
-            notify();
-        });
+            display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
+            {
+                display_buffer_compositor_map[&display_buffer]->composite();
+            });
+        };
+        observer = std::make_shared<ms::LegacySceneChangeNotification>(notify, notify2);
     }
 
     void start()

@@ -31,16 +31,20 @@ namespace mtd = mt::doubles;
 
 namespace
 {
-struct MockCallback
+struct MockSceneCallback
 {
     MOCK_METHOD0(invoke, void());
+};
+struct MockBufferCallback
+{
+    MOCK_METHOD1(invoke, void(int));
 };
 
 struct LegacySceneChangeNotificationTest : public testing::Test
 {
-    testing::NiceMock<MockCallback> scene_callback;
-    testing::NiceMock<MockCallback> buffer_callback;
-    std::function<void(int)> buffer_change_callback{[this](int){buffer_callback.invoke();}};
+    testing::NiceMock<MockSceneCallback> scene_callback;
+    testing::NiceMock<MockBufferCallback> buffer_callback;
+    std::function<void(int)> buffer_change_callback{[this](int arg){buffer_callback.invoke(arg);}};
     std::function<void()> scene_change_callback{[this](){scene_callback.invoke();}};
     testing::NiceMock<mtd::MockSurface> surface;
 }; 
@@ -81,15 +85,16 @@ TEST_F(LegacySceneChangeNotificationTest, observes_surface_changes)
     std::shared_ptr<ms::SurfaceObserver> surface_observer;
     EXPECT_CALL(surface, add_observer(_)).Times(1)
         .WillOnce(SaveArg<0>(&surface_observer));
-    
+   
+    int buffer_num{3}; 
     EXPECT_CALL(scene_callback, invoke())
         .Times(1);
-    EXPECT_CALL(buffer_callback, invoke())
+    EXPECT_CALL(buffer_callback, invoke(buffer_num))
         .Times(1);
 
     ms::LegacySceneChangeNotification observer(scene_change_callback, buffer_change_callback);
     observer.surface_added(&surface);
-    surface_observer->frame_posted(1);
+    surface_observer->frame_posted(buffer_num);
 }
 
 TEST_F(LegacySceneChangeNotificationTest, destroying_observer_unregisters_surface_observers)
