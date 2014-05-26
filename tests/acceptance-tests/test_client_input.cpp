@@ -109,10 +109,16 @@ struct ClientConfig : mtf::InputTestingClientConfiguration
 
 struct TestClientInput : BespokeDisplayServerTestFixture
 {
-    std::string const arbitrary_client_name{"input-test-client"};
     mtf::CrossProcessSync fence;
     ServerConfiguration server_config{fence};
+
+    std::string const arbitrary_client_name{"input-test-client"};
+    std::string const test_client_name_1 = "1";
+    std::string const test_client_name_2 = "2";
+
     ClientConfig client_config{arbitrary_client_name, fence};
+    ClientConfig client_config_1{test_client_name_1, fence};
+    ClientConfig client_config_2{test_client_name_2, fence};
 };
 }
 
@@ -218,14 +224,6 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     static int const screen_height = 800;
     static int const client_height = screen_height/2;
     static int const client_width = screen_width/2;
-    static std::string const test_client_1 = "1";
-    static std::string const test_client_2 = "2";
-
-    static mtf::SurfaceGeometries positions;
-    positions[test_client_1] = geom::Rectangle{geom::Point{0, 0},
-                                               geom::Size{client_width, client_height}};
-    positions[test_client_2] = geom::Rectangle{geom::Point{screen_width/2, screen_height/2},
-                                               geom::Size{client_width, client_height}};
 
     server_config.number_of_clients = 2;
     server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
@@ -235,11 +233,11 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             // In the bounds of the second surface
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2, screen_height/2));
         };
-    server_config.client_geometries = positions;
+    server_config.client_geometries[test_client_name_1] = {{0, 0}, {client_width, client_height}};
+    server_config.client_geometries[test_client_name_2] = {{screen_width/2, screen_height/2}, {client_width, client_height}};
     launch_server_process(server_config);
 
-    ClientConfig client_1(test_client_1, fence);
-    client_1.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
+    client_config_1.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
             InSequence seq;
             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(1);
@@ -247,8 +245,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             EXPECT_CALL(handler, handle_input(mt::HoverExitEvent())).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         };
-    ClientConfig client_2(test_client_2, fence);
-    client_2.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
+    client_config_2.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
              InSequence seq;
              EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(1);
@@ -256,8 +253,8 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
                  .WillOnce(mt::WakeUp(&events_received));
         };
 
-    launch_client_process(client_1);
-    launch_client_process(client_2);
+    launch_client_process(client_config_1);
+    launch_client_process(client_config_2);
 }
 
 namespace
@@ -355,25 +352,15 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
 
 TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
 {
-    static std::string const test_client_name_1 = "1";
-    static std::string const test_client_name_2 = "2";
-
     static int const screen_width = 100;
     static int const screen_height = 100;
 
     static geom::Rectangle const screen_geometry{geom::Point{0, 0},
         geom::Size{screen_width, screen_height}};
 
-    static mtf::SurfaceGeometries positions;
-    positions[test_client_name_1] = screen_geometry;
 
     auto smaller_geometry = screen_geometry;
     smaller_geometry.size.width = geom::Width{screen_width/2};
-    positions[test_client_name_2] = smaller_geometry;
-
-    static mtf::SurfaceDepths depths;
-    depths[test_client_name_1] = ms::DepthId{0};
-    depths[test_client_name_2] = ms::DepthId{1};
 
     server_config.number_of_clients = 2;
     server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
@@ -387,11 +374,13 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
             server.fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
             server.fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
         };
-    server_config.client_geometries = positions;
-    server_config.client_depths = depths;
+    server_config.client_geometries[test_client_name_1] = screen_geometry;
+    server_config.client_geometries[test_client_name_2] = smaller_geometry;
+    server_config.client_depths[test_client_name_1] = ms::DepthId{0};
+    server_config.client_depths[test_client_name_2] = ms::DepthId{1};
+
     launch_server_process(server_config);
 
-    ClientConfig client_config_1(test_client_name_1, fence);
     client_config_1.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
@@ -405,7 +394,7 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
                     .WillOnce(mt::WakeUp(&events_received));
             }
         };
-    ClientConfig client_config_2(test_client_name_2, fence);
+
     client_config_2.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
@@ -436,13 +425,8 @@ ACTION_P(SignalFence, fence)
 
 TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
 {
-    static std::string const test_client_name = "1";
-    static std::string const test_client_2_name = "2";
     mtf::CrossProcessSync first_client_ready_fence, second_client_done_fence;
 
-    static mtf::SurfaceDepths depths;
-    depths[test_client_name] = ms::DepthId{0};
-    depths[test_client_2_name] = ms::DepthId{1};
 
     server_config.number_of_clients = 2;
     server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
@@ -456,16 +440,16 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
 
             server.the_session_container()->for_each([&](std::shared_ptr<ms::Session> const& session) -> void
             {
-                if (session->name() == test_client_2_name)
+                if (session->name() == test_client_name_2)
                     session->hide();
             });
 
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
         };
-    server_config.client_depths = depths;
+    server_config.client_depths[test_client_name_1] = ms::DepthId{0};
+    server_config.client_depths[test_client_name_2] = ms::DepthId{1};
     launch_server_process(server_config);
 
-    ClientConfig client_config_1(test_client_name, fence);
     client_config_1.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
@@ -473,7 +457,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
             EXPECT_CALL(handler, handle_input(mt::MotionEventWithPosition(2, 2))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         };
-    ClientConfig client_config_2(test_client_2_name, fence);
+
     client_config_2.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
