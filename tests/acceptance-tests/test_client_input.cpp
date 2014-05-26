@@ -16,23 +16,14 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/graphics/display.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/placement_strategy.h"
 #include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface.h"
 #include "src/server/scene/session_container.h"
 #include "mir/scene/session.h"
-#include "src/server/scene/surface_stack_model.h"
 
-#include "src/server/input/android/android_input_manager.h"
-#include "src/server/input/android/android_input_targeter.h"
-
-#include "mir_toolkit/mir_client_library.h"
-
-#include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
-#include "mir_test/event_factory.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/client_event_matchers.h"
 #include "mir_test_framework/cross_process_sync.h"
@@ -44,19 +35,10 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <thread>
-#include <functional>
-#include <map>
-
-#include <poll.h>
-
 namespace mi = mir::input;
-namespace mia = mi::android;
 namespace mis = mi::synthesis;
-namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
-namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
@@ -425,8 +407,7 @@ ACTION_P(SignalFence, fence)
 
 TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
 {
-    mtf::CrossProcessSync first_client_ready_fence, second_client_done_fence;
-
+    mtf::CrossProcessSync second_client_done_fence;
 
     server_config.number_of_clients = 2;
     server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
