@@ -115,7 +115,6 @@ struct TestClientInput : BespokeDisplayServerTestFixture
 };
 }
 
-
 using namespace ::testing;
 using MockHandler = mtf::InputTestingClientConfiguration::MockInputHandler;
 
@@ -137,7 +136,6 @@ TEST_F(TestClientInput, clients_receive_key_input)
 
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
-            using namespace ::testing;
             InSequence seq;
 
             EXPECT_CALL(handler, handle_input(mt::KeyDownEvent())).Times(2);
@@ -162,7 +160,6 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
     ClientConfig client_config(arbitrary_client_name, fence);
     client_config.expect_cb =  [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
-            using namespace ::testing;
             InSequence seq;
 
             EXPECT_CALL(handler, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_Shift_L)))).Times(1);
@@ -185,7 +182,6 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
     ClientConfig client_config(arbitrary_client_name, fence);
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
-            using namespace ::testing;
             InSequence seq;
 
             // We should see the cursor enter
@@ -211,7 +207,6 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
     ClientConfig client_config(arbitrary_client_name, fence);
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
-            using namespace ::testing;
             InSequence seq;
 
             // The cursor starts at (0, 0).
@@ -387,8 +382,6 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
 
 TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
 {
-    using namespace ::testing;
-
     static std::string const test_client_name_1 = "1";
     static std::string const test_client_name_2 = "2";
 
