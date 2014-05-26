@@ -515,7 +515,6 @@ TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_wind
     static int const screen_height = 800;
     static int const client_height = screen_height/2;
     static int const client_width = screen_width/2;
-    static std::string const test_client = "tc";
 
     server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
@@ -525,10 +524,9 @@ TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_wind
             });
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2+40, screen_height/2+90));
         };
-    server_config.client_geometries[test_client] ={{screen_width/2, screen_height/2}, {client_width, client_height}};
+    server_config.client_geometries[arbitrary_client_name] ={{screen_width/2, screen_height/2}, {client_width, client_height}};
     launch_server_process(server_config);
 
-    ClientConfig client_config(test_client, fence);
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
              InSequence seq;
