@@ -126,18 +126,18 @@ protected:
              */
             if (running)
             {
+                /*
+                 * Each surface could have a number of frames ready in its buffer
+                 * queue. And we need to ensure that we render all of them so that
+                 * none linger in the queue indefinitely (seen as input lag).
+                 * frames_scheduled indicates the number of frames that are scheduled
+                 * to ensure all surfaces' queues are fully drained.
+                 */
                 frames_scheduled--;
                 lock.unlock();
 
                 composite();
 
-                /*
-                 * Each surface could have a number of frames ready in its buffer
-                 * queue. And we need to ensure that we render all of them so that
-                 * none linger in the queue indefinitely (seen as input lag).
-                 * more_frames_pending indicates that there are we need to schedule
-                 * more frames to ensure all surfaces' queues are fully drained.
-                 */
                 lock.lock();
             }
         }

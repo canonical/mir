@@ -272,10 +272,8 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
 
     stack.remove_surface(stub_surface);
     
-    //The second render would be the removal of the surface. The 3rd is the frig
-    //implemented to avoid lp:1286190
-    EXPECT_TRUE(stub_primary_db.has_posted_at_least(3, timeout));
-    EXPECT_TRUE(stub_secondary_db.has_posted_at_least(3, timeout));
+    EXPECT_TRUE(stub_primary_db.has_posted_at_least(2, timeout));
+    EXPECT_TRUE(stub_secondary_db.has_posted_at_least(2, timeout));
 }
 
 TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
