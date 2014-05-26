@@ -73,6 +73,15 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
             EXPECT_EQ(i, input_cb_setup_fence.wait_for_signal_ready_for());
         produce_events(*this);
     }
+
+    std::function<std::shared_ptr<ms::SurfaceCoordinator>(std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)> scwrapper
+        = [](std::shared_ptr<ms::SurfaceCoordinator> const& wrapped) { return wrapped; };
+
+    std::shared_ptr<ms::SurfaceCoordinator>
+    wrap_surface_coordinator(std::shared_ptr<ms::SurfaceCoordinator> const& wrapped) override
+    {
+        return scwrapper(wrapped);
+    }
 };
 
 struct ClientConfig : mtf::InputTestingClientConfiguration
@@ -329,17 +338,13 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
         {geom::Point{screen_width-20, 0}, {screen_width-80, screen_height}}
     };
 
-    static struct LocalServerConfiguration : ::ServerConfiguration
-    {
-        using ServerConfiguration::ServerConfiguration;
-
-        std::shared_ptr<ms::SurfaceCoordinator> the_surface_coordinator() override
+    server_configuration.scwrapper = [&](std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
+        -> std::shared_ptr<ms::SurfaceCoordinator>
         {
-            return std::make_shared<RegionApplyingSurfaceCoordinator>(ServerConfiguration::the_surface_coordinator(), client_input_regions);
-        }
-    } server_config{fence};
+            return std::make_shared<RegionApplyingSurfaceCoordinator>(wrapped, client_input_regions);
+        };
 
-    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+    server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
             // First we will move the cursor in to the input region on the left side of the window. We should see a click here
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
@@ -354,7 +359,7 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
             server.fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
             server.fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
         };
-    start_server(server_config);
+    start_server(server_configuration);
 
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
