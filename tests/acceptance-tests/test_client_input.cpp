@@ -112,6 +112,7 @@ struct TestClientInput : BespokeDisplayServerTestFixture
     std::string const arbitrary_client_name{"input-test-client"};
     mtf::CrossProcessSync fence;
     ServerConfiguration server_config{fence};
+    ClientConfig client_config{arbitrary_client_name, fence};
 };
 }
 
@@ -131,8 +132,6 @@ TEST_F(TestClientInput, clients_receive_key_input)
          };
 
     launch_server_process(server_config);
-
-    ClientConfig client_config(arbitrary_client_name, fence);
 
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
@@ -157,7 +156,6 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
         };
     launch_server_process(server_config);
 
-    ClientConfig client_config(arbitrary_client_name, fence);
     client_config.expect_cb =  [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
             InSequence seq;
@@ -179,7 +177,6 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
         };
     launch_server_process(server_config);
 
-    ClientConfig client_config(arbitrary_client_name, fence);
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
             InSequence seq;
@@ -204,7 +201,6 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
         };
     launch_server_process(server_config);
 
-    ClientConfig client_config(arbitrary_client_name, fence);
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
             InSequence seq;
