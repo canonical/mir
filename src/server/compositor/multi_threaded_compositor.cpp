@@ -92,19 +92,10 @@ public:
     CompositingFunctor() : running{true}, frames_scheduled{false} {}
     virtual ~CompositingFunctor() = default;
 
-    void schedule_compositing()
-    {
-        std::lock_guard<std::mutex> lock{run_mutex};
-
-        frames_scheduled = true;
-        run_cv.notify_one();
-    }
-
     void schedule_compositing(int num_frames)
     {
         std::lock_guard<std::mutex> lock{run_mutex};
 
-        printf("SCHEDULE\n");
         if(num_frames > frames_scheduled)
         {
             frames_scheduled = num_frames;
@@ -138,7 +129,6 @@ protected:
                 frames_scheduled--;
                 lock.unlock();
 
-                printf("composite.\n");
                 composite();
 
                 /*
