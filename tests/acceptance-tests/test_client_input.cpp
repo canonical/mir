@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -40,7 +40,6 @@
 #include "mir_test_framework/input_testing_server_configuration.h"
 #include "mir_test_framework/input_testing_client_configuration.h"
 #include "mir_test_framework/declarative_placement_strategy.h"
-#include "mir_test_framework/basic_client_server_fixture.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -68,28 +67,15 @@ namespace
 struct ServerConfiguration : mtf::InputTestingServerConfiguration
 {
     mtf::CrossProcessSync input_cb_setup_fence;
-    int const number_of_clients;
-    std::function<void(mtf::InputTestingServerConfiguration& server)> const produce_events;
-    mtf::SurfaceGeometries const client_geometries;
-    mtf::SurfaceDepths const client_depths;
+    int number_of_clients = 1;
+    std::function<void(mtf::InputTestingServerConfiguration& server)> produce_events;
+    mtf::SurfaceGeometries client_geometries;
+    mtf::SurfaceDepths client_depths;
 
-    ServerConfiguration(mtf::CrossProcessSync const& input_cb_setup_fence, int number_of_clients,
-                        std::function<void(mtf::InputTestingServerConfiguration& server)> const& produce_events,
-                        mtf::SurfaceGeometries const& client_geometries, mtf::SurfaceDepths const& client_depths)
-            : input_cb_setup_fence(input_cb_setup_fence),
-              number_of_clients(number_of_clients),
-              produce_events(produce_events),
-              client_geometries(client_geometries),
-              client_depths(client_depths)
+    ServerConfiguration(mtf::CrossProcessSync const& input_cb_setup_fence)
+            : input_cb_setup_fence(input_cb_setup_fence)
     {
     }
-
-    ServerConfiguration(mtf::CrossProcessSync const& input_cb_setup_fence, int number_of_clients,
-                            std::function<void(mtf::InputTestingServerConfiguration& server)> const& produce_events) :
-        input_cb_setup_fence(input_cb_setup_fence),
-        number_of_clients(number_of_clients),
-        produce_events(produce_events)
-    {}
 
     std::shared_ptr<ms::PlacementStrategy> the_placement_strategy() override
     {
@@ -138,6 +124,7 @@ make_event_expecting_client(mtf::CrossProcessSync const& client_ready_fence,
 struct TestClientInput : BespokeDisplayServerTestFixture
 {
     mtf::CrossProcessSync fence;
+    ServerConfiguration server_config{fence};
 };
 }
 
@@ -148,15 +135,15 @@ using MockHandler = mtf::InputTestingClientConfiguration::MockInputHandler;
 
 TEST_F(TestClientInput, clients_receive_key_input)
 {
-    ServerConfiguration server_config{fence, 1,
-         [&](mtf::InputTestingServerConfiguration& server)
+    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
          {
              int const num_events_produced = 3;
 
              for (int i = 0; i < num_events_produced; i++)
                  server.fake_event_hub->synthesize_event(mis::a_key_down_event()
                                                          .of_scancode(KEY_ENTER));
-         }};
+         };
+
     launch_server_process(server_config);
 
     auto client_config = make_event_expecting_client(fence,
@@ -175,19 +162,18 @@ TEST_F(TestClientInput, clients_receive_key_input)
 
 TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
 {
-    ServerConfiguration server_config{fence, 1,
-         [&](mtf::InputTestingServerConfiguration& server)
-         {
+    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+        {
             server.fake_event_hub->synthesize_event(mis::a_key_down_event()
                 .of_scancode(KEY_LEFTSHIFT));
             server.fake_event_hub->synthesize_event(mis::a_key_down_event()
                 .of_scancode(KEY_4));
-        }};
+        };
     launch_server_process(server_config);
 
     auto client_config = make_event_expecting_client(fence,
-         [&](MockHandler& handler, mt::WaitCondition& events_received)
-         {
+        [&](MockHandler& handler, mt::WaitCondition& events_received)
+        {
             using namespace ::testing;
             InSequence seq;
 
@@ -200,13 +186,12 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
 
 TEST_F(TestClientInput, clients_receive_motion_inside_window)
 {
-    ServerConfiguration server_config{fence, 1,
-         [&](mtf::InputTestingServerConfiguration& server)
-         {
+    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+        {
              server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(mtf::InputTestingClientConfiguration::surface_width - 1,
                  mtf::InputTestingClientConfiguration::surface_height - 1));
              server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(2,2));
-        }};
+        };
     launch_server_process(server_config);
 
     auto client_config = make_event_expecting_client(fence,
@@ -228,12 +213,11 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
 
 TEST_F(TestClientInput, clients_receive_button_events_inside_window)
 {
-    ServerConfiguration server_config{fence, 1,
-         [&](mtf::InputTestingServerConfiguration& server)
-         {
+    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+        {
              server.fake_event_hub->synthesize_event(mis::a_button_down_event()
                  .of_button(BTN_LEFT).with_action(mis::EventAction::Down));
-         }};
+        };
     launch_server_process(server_config);
 
     auto client_config = make_event_expecting_client(fence,
@@ -264,14 +248,15 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     positions[test_client_2] = geom::Rectangle{geom::Point{screen_width/2, screen_height/2},
                                                geom::Size{client_width, client_height}};
 
-    ServerConfiguration server_config{fence, 2,
-         [&](mtf::InputTestingServerConfiguration& server)
-         {
+    server_config.number_of_clients = 2;
+    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+        {
             // In the bounds of the first surface
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2-1, screen_height/2-1));
             // In the bounds of the second surface
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2, screen_height/2));
-        }, positions, mtf::SurfaceDepths()};
+        };
+    server_config.client_geometries = positions;
     launch_server_process(server_config);
 
     auto client_1 = make_event_expecting_client(test_client_1, fence,
@@ -436,8 +421,8 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
     depths[test_client_name_1] = ms::DepthId{0};
     depths[test_client_name_2] = ms::DepthId{1};
 
-    ServerConfiguration server_config{fence, 2,
-        [&](mtf::InputTestingServerConfiguration& server)
+    server_config.number_of_clients = 2;
+    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
             // First we will move the cursor in to the region where client 2 obscures client 1
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
@@ -447,7 +432,9 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(50, 0));
             server.fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
             server.fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
-        }, positions, depths};
+        };
+    server_config.client_geometries = positions;
+    server_config.client_depths = depths;
     launch_server_process(server_config);
 
     auto client_config_1 = make_event_expecting_client(test_client_name_1, fence,
@@ -503,8 +490,8 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
     depths[test_client_name] = ms::DepthId{0};
     depths[test_client_2_name] = ms::DepthId{1};
 
-    ServerConfiguration server_config{fence, 2,
-        [&](mtf::InputTestingServerConfiguration& server)
+    server_config.number_of_clients = 2;
+    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
             // We send one event and then hide the surface on top before sending the next.
             // So we expect each of the two surfaces to receive one even
@@ -520,7 +507,8 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
             });
 
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
-        }, mtf::SurfaceGeometries(), depths};
+        };
+    server_config.client_depths = depths;
     launch_server_process(server_config);
 
     auto client_config_1 = make_event_expecting_client(test_client_name, fence,
@@ -551,21 +539,16 @@ TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_wind
     static int const client_height = screen_height/2;
     static int const client_width = screen_width/2;
     static std::string const test_client = "tc";
-    mtf::CrossProcessSync fence;
 
-    static mtf::SurfaceGeometries positions;
-    positions[test_client] = geom::Rectangle{geom::Point{screen_width/2, screen_height/2},
-                                             geom::Size{client_width, client_height}};
-
-    ServerConfiguration server_config{fence, 1,
-         [&](mtf::InputTestingServerConfiguration& server)
-         {
+    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+        {
             server.the_session_container()->for_each([&](std::shared_ptr<ms::Session> const& session) -> void
             {
                 session->default_surface()->move_to(geom::Point{screen_width/2-40, screen_height/2-80});
             });
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2+40, screen_height/2+90));
-        }, positions, mtf::SurfaceDepths()};
+        };
+    server_config.client_geometries[test_client] ={{screen_width/2, screen_height/2}, {client_width, client_height}};
     launch_server_process(server_config);
 
     auto client = make_event_expecting_client(test_client, fence,
