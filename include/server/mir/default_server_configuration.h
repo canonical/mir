@@ -85,7 +85,7 @@ class SessionContainer;
 class SessionEventSink;
 class SessionEventHandlerRegister;
 class SessionListener;
-class SessionManager;
+class SessionCoordinator;
 class SnapshotStrategy;
 class SurfaceCoordinator;
 class SurfaceConfigurator;
@@ -205,6 +205,8 @@ public:
     virtual std::shared_ptr<frontend::SessionMediatorReport>  the_session_mediator_report();
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
+    // TODO clients should customize the_session_coordinator() instead of the_frontend_shell();
+    // TODO once the_session_coordinator() has landed and clients updated this should become non-virtual
     virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
     virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
@@ -217,6 +219,8 @@ public:
     /** @} */
     /** @} */
 
+    // TODO clients should customize the_session_coordinator() instead of the_focus_controller();
+    // TODO once the_session_coordinator() has landed and clients updated this should become non-virtual
     virtual std::shared_ptr<shell::FocusController> the_focus_controller();
 
     /** @name shell configuration - customization
@@ -250,6 +254,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<scene::BufferStreamFactory> the_buffer_stream_factory();
     virtual std::shared_ptr<scene::SceneReport>      the_scene_report();
+    virtual std::shared_ptr<scene::SessionCoordinator>  the_session_coordinator();
     /** @} */
 
 
@@ -290,6 +295,15 @@ protected:
     virtual std::shared_ptr<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
     virtual bool is_key_repeat_enabled() const;
     /** @} */
+
+    /** @Convenience wrapper functions
+     *  @{ */
+    virtual std::shared_ptr<scene::SurfaceCoordinator>  wrap_surface_coordinator(
+        std::shared_ptr<scene::SurfaceCoordinator> const& wrapped);
+
+    virtual std::shared_ptr<scene::SessionCoordinator>  wrap_session_coordinator(
+        std::shared_ptr<scene::SessionCoordinator> const& wrapped);
+/** @} */
 
     CachedPtr<input::android::InputRegistrar> input_registrar;
     CachedPtr<input::android::InputThread> dispatcher_thread;
@@ -353,6 +367,7 @@ protected:
     CachedPtr<graphics::GLConfig> gl_config;
     CachedPtr<scene::TrustSessionListener> trust_session_listener;
     CachedPtr<scene::TrustSessionManager> trust_session_manager;
+    CachedPtr<scene::SessionCoordinator> session_coordinator;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
@@ -363,10 +378,8 @@ private:
     // The following caches and factory functions are internal to the
     // default implementations of corresponding the Mir components
     CachedPtr<scene::BroadcastingSessionEventSink> broadcasting_session_event_sink;
-    CachedPtr<scene::SessionManager> session_manager;
 
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
-    std::shared_ptr<scene::SessionManager>       the_session_manager();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
 };
