@@ -18,10 +18,10 @@
 
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/placement_strategy.h"
-#include "mir/scene/surface_coordinator.h"
 #include "mir/scene/surface.h"
 #include "src/server/scene/session_container.h"
 #include "mir/scene/session.h"
+#include "mir/shell/surface_coordinator_wrapper.h"
 
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/wait_condition.h"
@@ -293,11 +293,11 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
 
 namespace
 {
-struct RegionApplyingSurfaceCoordinator : public ms::SurfaceCoordinator
+struct RegionApplyingSurfaceCoordinator : msh::SurfaceCoordinatorWrapper
 {
     RegionApplyingSurfaceCoordinator(std::shared_ptr<ms::SurfaceCoordinator> wrapped_coordinator,
         std::initializer_list<geom::Rectangle> const& input_rectangles)
-        : wrapped_coordinator(wrapped_coordinator),
+        : msh::SurfaceCoordinatorWrapper(wrapped_coordinator),
           input_rectangles(input_rectangles)
     {
     }
@@ -306,24 +306,13 @@ struct RegionApplyingSurfaceCoordinator : public ms::SurfaceCoordinator
         ms::SurfaceCreationParameters const& params,
         ms::Session* session) override
     {
-        auto surface = wrapped_coordinator->add_surface(params, session);
+        auto surface = wrapped->add_surface(params, session);
 
         surface->set_input_region(input_rectangles);
 
         return surface;
     }
 
-    void remove_surface(std::weak_ptr<ms::Surface> const& surface) override
-    {
-        wrapped_coordinator->remove_surface(surface);
-    }
-
-    void raise(std::weak_ptr<ms::Surface> const& surface) override
-    {
-        wrapped_coordinator->raise(surface);
-    }
-
-    std::shared_ptr<ms::SurfaceCoordinator> const wrapped_coordinator;
     std::vector<geom::Rectangle> const input_rectangles;
 };
 }
