@@ -27,7 +27,7 @@
 #include "mir_test/wait_condition.h"
 #include "mir_test/client_event_matchers.h"
 #include "mir_test_framework/cross_process_sync.h"
-#include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
 #include "mir_test_framework/input_testing_client_configuration.h"
 #include "mir_test_framework/declarative_placement_strategy.h"
@@ -83,16 +83,33 @@ struct ClientConfig : mtf::InputTestingClientConfiguration
     {
     }
 
+    void tear_down() { if (thread.joinable()) thread.join(); }
+
     void expect_input(MockInputHandler &handler, mt::WaitCondition& events_received) override
     {
         expect_cb(handler, events_received);
     }
+
+    void exec() { thread = std::thread([this]{ mtf::InputTestingClientConfiguration::exec(); }); }
+
+private:
+    std::thread thread;
 };
 
-struct TestClientInput : BespokeDisplayServerTestFixture
+
+struct DeferredInProcessServer : mtf::InProcessServer
+{
+    void SetUp() override { /* TODO this is a nasty frig around the unfortunate coupling in InProcessServer */ }
+    void start_server() { mtf::InProcessServer::SetUp(); }
+};
+
+struct TestClientInput : DeferredInProcessServer
 {
     mtf::CrossProcessSync fence;
-    ServerConfiguration server_config{fence};
+    ServerConfiguration server_configuration{fence};
+
+    mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
+
 
     std::string const arbitrary_client_name{"input-test-client"};
     std::string const test_client_name_1 = "1";
@@ -101,6 +118,30 @@ struct TestClientInput : BespokeDisplayServerTestFixture
     ClientConfig client_config{arbitrary_client_name, fence};
     ClientConfig client_config_1{test_client_name_1, fence};
     ClientConfig client_config_2{test_client_name_2, fence};
+
+    void launch_server_process(mir::ServerConfiguration& /*TODO - remove parameter*/)
+    {
+        start_server();
+        server_configuration.exec();
+    }
+
+    void launch_client_process(mtf::InputTestingClientConfiguration& config)
+    {
+        config.connect_string = new_connection();
+        config.exec();
+    }
+
+    void TearDown()
+    {
+        client_config.tear_down();
+        client_config_1.tear_down();
+        client_config_2.tear_down();
+        std::cerr << "DEBUG: TearDown()\n";
+        server_configuration.on_exit();
+        std::cerr << "DEBUG: on_exit() called\n";
+        DeferredInProcessServer::TearDown();
+        std::cerr << "DEBUG: TearDown() OK\n";
+    }
 };
 }
 
@@ -110,7 +151,7 @@ using MockHandler = mtf::InputTestingClientConfiguration::MockInputHandler;
 
 TEST_F(TestClientInput, clients_receive_key_input)
 {
-    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+    server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
          {
              int const num_events_produced = 3;
 
@@ -119,7 +160,7 @@ TEST_F(TestClientInput, clients_receive_key_input)
                                                          .of_scancode(KEY_ENTER));
          };
 
-    launch_server_process(server_config);
+    launch_server_process(server_configuration);
 
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
@@ -135,14 +176,14 @@ TEST_F(TestClientInput, clients_receive_key_input)
 
 TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
 {
-    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+    server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
             server.fake_event_hub->synthesize_event(mis::a_key_down_event()
                 .of_scancode(KEY_LEFTSHIFT));
             server.fake_event_hub->synthesize_event(mis::a_key_down_event()
                 .of_scancode(KEY_4));
         };
-    launch_server_process(server_config);
+    launch_server_process(server_configuration);
 
     client_config.expect_cb =  [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
@@ -157,13 +198,13 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
 
 TEST_F(TestClientInput, clients_receive_motion_inside_window)
 {
-    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+    server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
              server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(mtf::InputTestingClientConfiguration::surface_width - 1,
                  mtf::InputTestingClientConfiguration::surface_height - 1));
              server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(2,2));
         };
-    launch_server_process(server_config);
+    launch_server_process(server_configuration);
 
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
@@ -182,12 +223,12 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
 
 TEST_F(TestClientInput, clients_receive_button_events_inside_window)
 {
-    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+    server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
              server.fake_event_hub->synthesize_event(mis::a_button_down_event()
                  .of_button(BTN_LEFT).with_action(mis::EventAction::Down));
         };
-    launch_server_process(server_config);
+    launch_server_process(server_configuration);
 
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
@@ -207,17 +248,17 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     static int const client_height = screen_height/2;
     static int const client_width = screen_width/2;
 
-    server_config.number_of_clients = 2;
-    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+    server_configuration.number_of_clients = 2;
+    server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
             // In the bounds of the first surface
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2-1, screen_height/2-1));
             // In the bounds of the second surface
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2, screen_height/2));
         };
-    server_config.client_geometries[test_client_name_1] = {{0, 0}, {client_width, client_height}};
-    server_config.client_geometries[test_client_name_2] = {{screen_width/2, screen_height/2}, {client_width, client_height}};
-    launch_server_process(server_config);
+    server_configuration.client_geometries[test_client_name_1] = {{0, 0}, {client_width, client_height}};
+    server_configuration.client_geometries[test_client_name_2] = {{screen_width/2, screen_height/2}, {client_width, client_height}};
+    launch_server_process(server_configuration);
 
     client_config_1.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
@@ -344,8 +385,8 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
     auto smaller_geometry = screen_geometry;
     smaller_geometry.size.width = geom::Width{screen_width/2};
 
-    server_config.number_of_clients = 2;
-    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+    server_configuration.number_of_clients = 2;
+    server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
             // First we will move the cursor in to the region where client 2 obscures client 1
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
@@ -356,12 +397,12 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
             server.fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
             server.fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
         };
-    server_config.client_geometries[test_client_name_1] = screen_geometry;
-    server_config.client_geometries[test_client_name_2] = smaller_geometry;
-    server_config.client_depths[test_client_name_1] = ms::DepthId{0};
-    server_config.client_depths[test_client_name_2] = ms::DepthId{1};
+    server_configuration.client_geometries[test_client_name_1] = screen_geometry;
+    server_configuration.client_geometries[test_client_name_2] = smaller_geometry;
+    server_configuration.client_depths[test_client_name_1] = ms::DepthId{0};
+    server_configuration.client_depths[test_client_name_2] = ms::DepthId{1};
 
-    launch_server_process(server_config);
+    launch_server_process(server_configuration);
 
     client_config_1.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
@@ -409,8 +450,8 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
 {
     mtf::CrossProcessSync second_client_done_fence;
 
-    server_config.number_of_clients = 2;
-    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+    server_configuration.number_of_clients = 2;
+    server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
             // We send one event and then hide the surface on top before sending the next.
             // So we expect each of the two surfaces to receive one even
@@ -427,9 +468,9 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
 
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
         };
-    server_config.client_depths[test_client_name_1] = ms::DepthId{0};
-    server_config.client_depths[test_client_name_2] = ms::DepthId{1};
-    launch_server_process(server_config);
+    server_configuration.client_depths[test_client_name_1] = ms::DepthId{0};
+    server_configuration.client_depths[test_client_name_2] = ms::DepthId{1};
+    launch_server_process(server_configuration);
 
     client_config_1.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
@@ -458,7 +499,7 @@ TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_wind
     static int const client_height = screen_height/2;
     static int const client_width = screen_width/2;
 
-    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+    server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
             server.the_session_container()->for_each([&](std::shared_ptr<ms::Session> const& session) -> void
             {
@@ -466,8 +507,8 @@ TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_wind
             });
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(screen_width/2+40, screen_height/2+90));
         };
-    server_config.client_geometries[arbitrary_client_name] ={{screen_width/2, screen_height/2}, {client_width, client_height}};
-    launch_server_process(server_config);
+    server_configuration.client_geometries[arbitrary_client_name] ={{screen_width/2, screen_height/2}, {client_width, client_height}};
+    launch_server_process(server_configuration);
 
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
