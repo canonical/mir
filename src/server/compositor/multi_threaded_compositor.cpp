@@ -142,10 +142,6 @@ protected:
             }
         }
     }
-    catch(...)
-    {
-        mir::terminate_with_current_exception();
-    }
 
 private:
     bool running;
