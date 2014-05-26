@@ -313,47 +313,39 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
         {geom::Point{screen_width-20, 0}, {screen_width-80, screen_height}}
     };
 
-    struct ServerConfiguration : mtf::InputTestingServerConfiguration
+    struct LocalServerConfiguration : ::ServerConfiguration
     {
-        mtf::CrossProcessSync input_cb_setup_fence;
-
-        ServerConfiguration(const mtf::CrossProcessSync& input_cb_setup_fence)
-                : input_cb_setup_fence(input_cb_setup_fence)
-        {
-        }
+        using ServerConfiguration::ServerConfiguration;
 
         std::shared_ptr<ms::PlacementStrategy> the_placement_strategy() override
         {
             static mtf::SurfaceGeometries positions;
-            positions[test_client_name] = screen_geometry;
 
             return std::make_shared<mtf::DeclarativePlacementStrategy>(
-                InputTestingServerConfiguration::the_placement_strategy(), positions, mtf::SurfaceDepths());
+                ServerConfiguration::the_placement_strategy(), positions, mtf::SurfaceDepths());
         }
         std::shared_ptr<ms::SurfaceCoordinator> the_surface_coordinator() override
         {
-            return std::make_shared<RegionApplyingSurfaceCoordinator>(InputTestingServerConfiguration::the_surface_coordinator(),
-                client_input_regions);
-        }
-
-        void inject_input() override
-        {
-            input_cb_setup_fence.wait_for_signal_ready_for();
-
-            // First we will move the cursor in to the input region on the left side of the window. We should see a click here
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
-            fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
-            fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
-            // Now in to the dead zone in the center of the window. We should not see a click here.
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(49, 49));
-            fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
-            fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
-            // Now in to the right edge of the window, in the right input region. Again we should see a click
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(49, 49));
-            fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
-            fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
+            return std::make_shared<RegionApplyingSurfaceCoordinator>(ServerConfiguration::the_surface_coordinator(), client_input_regions);
         }
     } server_config{fence};
+
+    server_config.client_geometries[test_client_name] = screen_geometry;
+    server_config.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+        {
+            // First we will move the cursor in to the input region on the left side of the window. We should see a click here
+            server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
+            server.fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+            server.fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
+            // Now in to the dead zone in the center of the window. We should not see a click here.
+            server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(49, 49));
+            server.fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+            server.fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
+            // Now in to the right edge of the window, in the right input region. Again we should see a click
+            server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(49, 49));
+            server.fake_event_hub->synthesize_event(mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
+            server.fake_event_hub->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
+        };
     launch_server_process(server_config);
 
     ClientConfig client_config(test_client_name, fence);
