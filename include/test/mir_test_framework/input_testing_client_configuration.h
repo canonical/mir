@@ -58,6 +58,8 @@ public:
     // input-testing shell.
     static int const surface_width = 100;
     static int const surface_height = 100;
+
+    std::string connect_string;
 private:
     std::string const client_name;
     CrossProcessSync input_cb_setup_fence;
