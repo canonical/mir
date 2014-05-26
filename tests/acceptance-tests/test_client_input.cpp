@@ -108,7 +108,7 @@ struct TestClientInput : DeferredInProcessServer
     mtf::CrossProcessSync fence;
     ServerConfiguration server_configuration{fence};
 
-    mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
+    mir::DefaultServerConfiguration& server_config() override { return *server_configuration_ptr; }
 
 
     std::string const arbitrary_client_name{"input-test-client"};
@@ -119,10 +119,11 @@ struct TestClientInput : DeferredInProcessServer
     ClientConfig client_config_1{test_client_name_1, fence};
     ClientConfig client_config_2{test_client_name_2, fence};
 
-    void launch_server_process(mir::ServerConfiguration& /*TODO - remove parameter*/)
+    void launch_server_process(ServerConfiguration& server_configuration)
     {
+        server_configuration_ptr = &server_configuration;
         start_server();
-        server_configuration.exec();
+        server_configuration_ptr->exec();
     }
 
     void launch_client_process(mtf::InputTestingClientConfiguration& config)
@@ -136,12 +137,12 @@ struct TestClientInput : DeferredInProcessServer
         client_config.tear_down();
         client_config_1.tear_down();
         client_config_2.tear_down();
-        std::cerr << "DEBUG: TearDown()\n";
-        server_configuration.on_exit();
-        std::cerr << "DEBUG: on_exit() called\n";
+        server_configuration_ptr->on_exit();
         DeferredInProcessServer::TearDown();
-        std::cerr << "DEBUG: TearDown() OK\n";
     }
+
+private:
+    ServerConfiguration* server_configuration_ptr = nullptr;
 };
 }
 
@@ -327,7 +328,7 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
         {geom::Point{screen_width-20, 0}, {screen_width-80, screen_height}}
     };
 
-    struct LocalServerConfiguration : ::ServerConfiguration
+    static struct LocalServerConfiguration : ::ServerConfiguration
     {
         using ServerConfiguration::ServerConfiguration;
 
@@ -448,7 +449,7 @@ ACTION_P(SignalFence, fence)
 
 TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
 {
-    mtf::CrossProcessSync second_client_done_fence;
+    static mtf::CrossProcessSync second_client_done_fence;
 
     server_configuration.number_of_clients = 2;
     server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
