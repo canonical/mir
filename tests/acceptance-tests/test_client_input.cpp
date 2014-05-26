@@ -92,34 +92,28 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
     }
 };
 
-std::shared_ptr<mtf::InputTestingClientConfiguration>
-make_event_expecting_client(std::string const& client_name, mtf::CrossProcessSync const& client_ready_fence,
-                            std::function<void(mtf::InputTestingClientConfiguration::MockInputHandler &, mt::WaitCondition&)> const& expect_input)
+struct ClientConfig : mtf::InputTestingClientConfiguration
 {
-    struct EventReceivingClient : mtf::InputTestingClientConfiguration
+    std::function<void(MockInputHandler&, mt::WaitCondition&)> const expect_cb;
+
+    ClientConfig(std::string const& client_name, mtf::CrossProcessSync const& client_ready_fence,
+                         std::function<void(MockInputHandler&, mt::WaitCondition&)> const& expect_cb)
+        : InputTestingClientConfiguration(client_name, client_ready_fence),
+          expect_cb(expect_cb)
     {
-        std::function<void(MockInputHandler&, mt::WaitCondition&)> const expect_cb;
+    }
 
-        EventReceivingClient(std::string const& client_name, mtf::CrossProcessSync const& client_ready_fence,
-                             std::function<void(MockInputHandler&, mt::WaitCondition&)> const& expect_cb)
-            : InputTestingClientConfiguration(client_name, client_ready_fence),
-              expect_cb(expect_cb)
-        {
-        }
-        void expect_input(MockInputHandler &handler, mt::WaitCondition& events_received) override
-        {
-            expect_cb(handler, events_received);
-        }
-    };
-    return std::make_shared<EventReceivingClient>(client_name, client_ready_fence, expect_input);
-}
+    ClientConfig(mtf::CrossProcessSync const& client_ready_fence,
+        std::function<void(mtf::InputTestingClientConfiguration::MockInputHandler &, mt::WaitCondition&)> const& expect_input) :
+            ClientConfig("input-test-client", client_ready_fence, expect_input)
+    {
+    }
 
-std::shared_ptr<mtf::InputTestingClientConfiguration>
-make_event_expecting_client(mtf::CrossProcessSync const& client_ready_fence,
-                            std::function<void(mtf::InputTestingClientConfiguration::MockInputHandler &, mt::WaitCondition&)> const& expect_input)
-{
-    return make_event_expecting_client("input-test-client", client_ready_fence, expect_input);
-}
+    void expect_input(MockInputHandler &handler, mt::WaitCondition& events_received) override
+    {
+        expect_cb(handler, events_received);
+    }
+};
 
 struct TestClientInput : BespokeDisplayServerTestFixture
 {
@@ -146,7 +140,7 @@ TEST_F(TestClientInput, clients_receive_key_input)
 
     launch_server_process(server_config);
 
-    auto client_config = make_event_expecting_client(fence,
+    ClientConfig client_config(fence,
          [&](MockHandler& handler, mt::WaitCondition& events_received)
          {
             using namespace ::testing;
@@ -157,7 +151,7 @@ TEST_F(TestClientInput, clients_receive_key_input)
                 .WillOnce(mt::WakeUp(&events_received));
 
          });
-    launch_client_process(*client_config);
+    launch_client_process(client_config);
 }
 
 TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
@@ -171,7 +165,7 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
         };
     launch_server_process(server_config);
 
-    auto client_config = make_event_expecting_client(fence,
+    ClientConfig client_config(fence,
         [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
             using namespace ::testing;
@@ -181,7 +175,7 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
             EXPECT_CALL(handler, handle_input(AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_dollar)))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         });
-    launch_client_process(*client_config);
+    launch_client_process(client_config);
 }
 
 TEST_F(TestClientInput, clients_receive_motion_inside_window)
@@ -194,7 +188,7 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
         };
     launch_server_process(server_config);
 
-    auto client_config = make_event_expecting_client(fence,
+    ClientConfig client_config(fence,
          [&](MockHandler& handler, mt::WaitCondition& events_received)
          {
             using namespace ::testing;
@@ -208,7 +202,7 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
                 .WillOnce(mt::WakeUp(&events_received));
             // But we should not receive an event for the second movement outside of our surface!
          });
-    launch_client_process(*client_config);
+    launch_client_process(client_config);
 }
 
 TEST_F(TestClientInput, clients_receive_button_events_inside_window)
@@ -220,7 +214,7 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
         };
     launch_server_process(server_config);
 
-    auto client_config = make_event_expecting_client(fence,
+    ClientConfig client_config(fence,
          [&](MockHandler& handler, mt::WaitCondition& events_received)
          {
             using namespace ::testing;
@@ -230,7 +224,7 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
             EXPECT_CALL(handler, handle_input(mt::ButtonDownEvent(0, 0))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         });
-    launch_client_process(*client_config);
+    launch_client_process(client_config);
 }
 
 TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
@@ -259,16 +253,16 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     server_config.client_geometries = positions;
     launch_server_process(server_config);
 
-    auto client_1 = make_event_expecting_client(test_client_1, fence,
-         [&](MockHandler& handler, mt::WaitCondition& events_received)
-         {
+    ClientConfig client_1(test_client_1, fence,
+        [&](MockHandler& handler, mt::WaitCondition& events_received)
+        {
             InSequence seq;
             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(1);
             EXPECT_CALL(handler, handle_input(mt::MotionEventWithPosition(client_width - 1, client_height - 1))).Times(1);
             EXPECT_CALL(handler, handle_input(mt::HoverExitEvent())).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         });
-    auto client_2 = make_event_expecting_client(test_client_2, fence,
+    ClientConfig client_2(test_client_2, fence,
          [&](MockHandler& handler, mt::WaitCondition& events_received)
          {
              InSequence seq;
@@ -277,8 +271,8 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
                  .WillOnce(mt::WakeUp(&events_received));
         });
 
-    launch_client_process(*client_1);
-    launch_client_process(*client_2);
+    launch_client_process(client_1);
+    launch_client_process(client_2);
 }
 
 namespace
@@ -377,7 +371,7 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
     } server_config{fence};
     launch_server_process(server_config);
 
-    auto client_config = make_event_expecting_client(test_client_name, fence,
+    ClientConfig client_config(test_client_name, fence,
          [&](MockHandler& handler, mt::WaitCondition& events_received)
          {
             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
@@ -393,8 +387,8 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
                 EXPECT_CALL(handler, handle_input(mt::ButtonUpEvent(99, 99))).Times(1)
                     .WillOnce(mt::WakeUp(&events_received));
             }
-        });
-    launch_client_process(*client_config);
+         });
+    launch_client_process(client_config);
 }
 
 TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
@@ -437,7 +431,7 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
     server_config.client_depths = depths;
     launch_server_process(server_config);
 
-    auto client_config_1 = make_event_expecting_client(test_client_name_1, fence,
+    ClientConfig client_config_1(test_client_name_1, fence,
          [&](MockHandler& handler, mt::WaitCondition& events_received)
          {
             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
@@ -450,8 +444,8 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
                 EXPECT_CALL(handler, handle_input(mt::ButtonUpEvent(51, 1))).Times(1)
                     .WillOnce(mt::WakeUp(&events_received));
             }
-        });
-    auto client_config_2 = make_event_expecting_client(test_client_name_2, fence,
+         });
+    ClientConfig client_config_2(test_client_name_2, fence,
          [&](MockHandler& handler, mt::WaitCondition& events_received)
          {
             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
@@ -464,10 +458,10 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
               EXPECT_CALL(handler, handle_input(mt::ButtonUpEvent(1, 1))).Times(1)
                   .WillOnce(mt::WakeUp(&events_received));
             }
-        });
+         });
 
-    launch_client_process(*client_config_1);
-    launch_client_process(*client_config_2);
+    launch_client_process(client_config_1);
+    launch_client_process(client_config_2);
 }
 
 namespace
@@ -511,7 +505,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
     server_config.client_depths = depths;
     launch_server_process(server_config);
 
-    auto client_config_1 = make_event_expecting_client(test_client_name, fence,
+    ClientConfig client_config_1(test_client_name, fence,
          [&](MockHandler& handler, mt::WaitCondition& events_received)
          {
             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
@@ -519,7 +513,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
             EXPECT_CALL(handler, handle_input(mt::MotionEventWithPosition(2, 2))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         });
-    auto client_config_2 = make_event_expecting_client(test_client_2_name, fence,
+    ClientConfig client_config_2(test_client_2_name, fence,
          [&](MockHandler& handler, mt::WaitCondition& events_received)
          {
             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
@@ -528,8 +522,8 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
                 .WillOnce(DoAll(SignalFence(&second_client_done_fence), mt::WakeUp(&events_received)));
         });
 
-    launch_client_process(*client_config_1);
-    launch_client_process(*client_config_2);
+    launch_client_process(client_config_1);
+    launch_client_process(client_config_2);
 }
 
 TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_window)
@@ -551,7 +545,7 @@ TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_wind
     server_config.client_geometries[test_client] ={{screen_width/2, screen_height/2}, {client_width, client_height}};
     launch_server_process(server_config);
 
-    auto client = make_event_expecting_client(test_client, fence,
+    ClientConfig client(test_client, fence,
          [&](MockHandler& handler, mt::WaitCondition& events_received)
          {
              InSequence seq;
@@ -560,5 +554,5 @@ TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_wind
                  .WillOnce(mt::WakeUp(&events_received));
         });
 
-    launch_client_process(*client);
+    launch_client_process(client);
 }
