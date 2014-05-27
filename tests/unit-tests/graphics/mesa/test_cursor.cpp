@@ -460,7 +460,7 @@ TEST_F(MesaCursorTest, clears_cursor_on_exit)
     EXPECT_CALL(*output_container.outputs[12], clear_cursor());
 }
 
-TEST_F(MesaCursorTest, cursor_is_shown_at_correct_locaiton_after_suspend_resume)
+TEST_F(MesaCursorTest, cursor_is_shown_at_correct_location_after_suspend_resume)
 {
     using namespace testing;
 
