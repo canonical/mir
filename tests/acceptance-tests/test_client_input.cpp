@@ -26,7 +26,7 @@
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/client_event_matchers.h"
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test/barrier.h"
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
 #include "mir_test_framework/input_testing_client_configuration.h"
@@ -48,14 +48,13 @@ namespace
 {
 struct ServerConfiguration : mtf::InputTestingServerConfiguration
 {
-    mtf::CrossProcessSync input_cb_setup_fence;
+    mt::Barrier& input_cb_setup_fence;
 
-    int number_of_clients = 1;
     std::function<void(mtf::InputTestingServerConfiguration& server)> produce_events;
     mtf::SurfaceGeometries client_geometries;
     mtf::SurfaceDepths client_depths;
 
-    ServerConfiguration(mtf::CrossProcessSync const& input_cb_setup_fence)
+    ServerConfiguration(mt::Barrier& input_cb_setup_fence)
             : input_cb_setup_fence(input_cb_setup_fence)
     {
     }
@@ -69,8 +68,7 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
 
     void inject_input()
     {
-        for (int i = 1; i < number_of_clients + 1; i++)
-            EXPECT_EQ(i, input_cb_setup_fence.wait_for_signal_ready_for());
+        input_cb_setup_fence.ready();
         produce_events(*this);
     }
 
@@ -88,7 +86,7 @@ struct ClientConfig : mtf::InputTestingClientConfiguration
 {
     std::function<void(MockInputHandler&, mt::WaitCondition&)> expect_cb;
 
-    ClientConfig(std::string const& client_name, mtf::CrossProcessSync const& client_ready_fence)
+    ClientConfig(std::string const& client_name, mt::Barrier& client_ready_fence)
         : InputTestingClientConfiguration(client_name, client_ready_fence)
     {
     }
@@ -119,7 +117,7 @@ struct TestClientInput : DeferredInProcessServer
     std::string const test_client_name_1 = "1";
     std::string const test_client_name_2 = "2";
 
-    mtf::CrossProcessSync fence;
+    mt::Barrier fence{2};
     mt::WaitCondition second_client_done;
     ServerConfiguration server_configuration{fence};
 
@@ -255,7 +253,7 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
     static int const client_height = screen_height/2;
     static int const client_width = screen_width/2;
 
-    server_configuration.number_of_clients = 2;
+    fence.reset(3);
     server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
             // In the bounds of the first surface
@@ -377,7 +375,7 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
     auto smaller_geometry = screen_geometry;
     smaller_geometry.size.width = geom::Width{screen_width/2};
 
-    server_configuration.number_of_clients = 2;
+    fence.reset(3);
     server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
             // First we will move the cursor in to the region where client 2 obscures client 1
@@ -440,7 +438,7 @@ ACTION_P(SignalFence, fence)
 
 TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
 {
-    server_configuration.number_of_clients = 2;
+    fence.reset(3);
     server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
             // We send one event and then hide the surface on top before sending the next.
