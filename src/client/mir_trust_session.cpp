@@ -35,7 +35,7 @@ MirTrustSession::MirTrustSession(
             if (event.type != mir_event_type_trust_session_state_change)
                 return;
 
-            std::lock_guard<decltype(mutex_event_handler)> lock(mutex_event_handler);
+            std::lock_guard<decltype(event_handler_mutex)> lock(event_handler_mutex);
 
             set_state(event.trust_session.new_state);
             if (handle_trust_session_event)
@@ -53,15 +53,11 @@ MirTrustSession::~MirTrustSession()
 
 MirTrustSessionState MirTrustSession::get_state() const
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
     return state;
 }
 
 void MirTrustSession::set_state(MirTrustSessionState new_state)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
     state = new_state;
 }
 
@@ -113,7 +109,7 @@ void MirTrustSession::register_trust_session_event_callback(
     mir_trust_session_event_callback callback,
     void* context)
 {
-    std::lock_guard<decltype(mutex_event_handler)> lock(mutex_event_handler);
+    std::lock_guard<decltype(event_handler_mutex)> lock(event_handler_mutex);
 
     handle_trust_session_event =
         [this, callback, context](MirTrustSessionState new_state)
@@ -126,7 +122,7 @@ void MirTrustSession::done_start(mir_trust_session_callback callback, void* cont
 {
     MirTrustSessionState new_state = mir_trust_session_state_started;
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
+        std::lock_guard<decltype(session_mutex)> lock(session_mutex);
 
         if (session.has_error())
             new_state = mir_trust_session_state_stopped;
@@ -159,14 +155,10 @@ void MirTrustSession::done_add_trusted_session(mir_trust_session_add_trusted_ses
 
 char const* MirTrustSession::get_error_message()
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard<decltype(session_mutex)> lock(session_mutex);
 
-    if (session.has_error())
-    {
-        return session.error().c_str();
-    }
-    else
-    {
-        return error_message.c_str();
-    }
+    if (!session.has_error())
+        session.set_error(std::string{});
+
+    return session.error().c_str();
 }

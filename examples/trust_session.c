@@ -21,6 +21,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_trust_session.h"
 
+#undef NDEBUG
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
