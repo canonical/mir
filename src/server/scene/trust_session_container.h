@@ -45,10 +45,11 @@ public:
     TrustSessionContainer();
     virtual ~TrustSessionContainer() = default;
 
-    typedef enum {
-        HelperSession,
-        TrustedSession,
-    } TrustType;
+    enum class TrustType
+    {
+        helper_session,
+        trusted_session,
+    };
 
     void insert_trust_session(std::shared_ptr<TrustSession> const& trust_session);
     void remove_trust_session(std::shared_ptr<TrustSession> const& trust_session);

@@ -132,14 +132,14 @@ struct TrustSessionContainer : testing::Test
 TEST_F(TrustSessionContainer, throws_if_no_trust_session)
 {
     EXPECT_THROW(
-        container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustedSession),
+        container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session),
         std::runtime_error);
 }
 
 TEST_F(TrustSessionContainer, insert_true_if_trust_session_exists)
 {
     container.insert_trust_session(trust_session1);
-    EXPECT_TRUE(container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustedSession));
+    EXPECT_TRUE(container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session));
 }
 
 TEST_F(TrustSessionContainer, insert_true_if_not_duplicate)
@@ -148,18 +148,18 @@ TEST_F(TrustSessionContainer, insert_true_if_not_duplicate)
     container.insert_trust_session(trust_session2);
     container.insert_trust_session(trust_session3);
 
-    EXPECT_TRUE(container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustedSession));
-    EXPECT_TRUE(container.insert_participant(trust_session1.get(), session2, ms::TrustSessionContainer::TrustedSession));
-    EXPECT_TRUE(container.insert_participant(trust_session1.get(), session3, ms::TrustSessionContainer::TrustedSession));
-    EXPECT_FALSE(container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustedSession));
-    EXPECT_TRUE(container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::HelperSession));
+    EXPECT_TRUE(container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session));
+    EXPECT_TRUE(container.insert_participant(trust_session1.get(), session2, ms::TrustSessionContainer::TrustType::trusted_session));
+    EXPECT_TRUE(container.insert_participant(trust_session1.get(), session3, ms::TrustSessionContainer::TrustType::trusted_session));
+    EXPECT_FALSE(container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session));
+    EXPECT_TRUE(container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustType::helper_session));
 
-    EXPECT_TRUE(container.insert_participant(trust_session2.get(), session2, ms::TrustSessionContainer::TrustedSession));
-    EXPECT_TRUE(container.insert_participant(trust_session2.get(), session3, ms::TrustSessionContainer::TrustedSession));
-    EXPECT_FALSE(container.insert_participant(trust_session2.get(), session2, ms::TrustSessionContainer::TrustedSession));
+    EXPECT_TRUE(container.insert_participant(trust_session2.get(), session2, ms::TrustSessionContainer::TrustType::trusted_session));
+    EXPECT_TRUE(container.insert_participant(trust_session2.get(), session3, ms::TrustSessionContainer::TrustType::trusted_session));
+    EXPECT_FALSE(container.insert_participant(trust_session2.get(), session2, ms::TrustSessionContainer::TrustType::trusted_session));
 
-    EXPECT_TRUE(container.insert_participant(trust_session3.get(), session3, ms::TrustSessionContainer::TrustedSession));
-    EXPECT_FALSE(container.insert_participant(trust_session3.get(), session3, ms::TrustSessionContainer::TrustedSession));
+    EXPECT_TRUE(container.insert_participant(trust_session3.get(), session3, ms::TrustSessionContainer::TrustType::trusted_session));
+    EXPECT_FALSE(container.insert_participant(trust_session3.get(), session3, ms::TrustSessionContainer::TrustType::trusted_session));
 }
 
 TEST_F(TrustSessionContainer, lists_participants_in_a_trust_session)
@@ -168,12 +168,12 @@ TEST_F(TrustSessionContainer, lists_participants_in_a_trust_session)
     container.insert_trust_session(trust_session2);
     container.insert_trust_session(trust_session3);
 
-    container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustedSession);
-    container.insert_participant(trust_session1.get(), session2, ms::TrustSessionContainer::TrustedSession);
-    container.insert_participant(trust_session2.get(), session3, ms::TrustSessionContainer::TrustedSession);
-    container.insert_participant(trust_session2.get(), session1, ms::TrustSessionContainer::TrustedSession);
-    container.insert_participant(trust_session3.get(), session2, ms::TrustSessionContainer::TrustedSession);
-    container.insert_participant(trust_session2.get(), session4, ms::TrustSessionContainer::TrustedSession);
+    container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session);
+    container.insert_participant(trust_session1.get(), session2, ms::TrustSessionContainer::TrustType::trusted_session);
+    container.insert_participant(trust_session2.get(), session3, ms::TrustSessionContainer::TrustType::trusted_session);
+    container.insert_participant(trust_session2.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session);
+    container.insert_participant(trust_session3.get(), session2, ms::TrustSessionContainer::TrustType::trusted_session);
+    container.insert_participant(trust_session2.get(), session4, ms::TrustSessionContainer::TrustType::trusted_session);
 
     EXPECT_THAT(list_participants_for(trust_session1), ElementsAre(session1, session2));
     EXPECT_THAT(list_participants_for(trust_session2), ElementsAre(session3, session1, session4));
@@ -186,17 +186,17 @@ TEST_F(TrustSessionContainer, lists_trust_sessions_for_a_participant)
     container.insert_trust_session(trust_session2);
     container.insert_trust_session(trust_session3);
 
-    container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::HelperSession);
-    container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustedSession);
-    container.insert_participant(trust_session1.get(), session2, ms::TrustSessionContainer::TrustedSession);
-    container.insert_participant(trust_session2.get(), session3, ms::TrustSessionContainer::TrustedSession);
-    container.insert_participant(trust_session2.get(), session1, ms::TrustSessionContainer::TrustedSession);
-    container.insert_participant(trust_session3.get(), session2, ms::TrustSessionContainer::TrustedSession);
-    container.insert_participant(trust_session2.get(), session4, ms::TrustSessionContainer::TrustedSession);
+    container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustType::helper_session);
+    container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session);
+    container.insert_participant(trust_session1.get(), session2, ms::TrustSessionContainer::TrustType::trusted_session);
+    container.insert_participant(trust_session2.get(), session3, ms::TrustSessionContainer::TrustType::trusted_session);
+    container.insert_participant(trust_session2.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session);
+    container.insert_participant(trust_session3.get(), session2, ms::TrustSessionContainer::TrustType::trusted_session);
+    container.insert_participant(trust_session2.get(), session4, ms::TrustSessionContainer::TrustType::trusted_session);
 
     EXPECT_THAT(list_trust_sessions_for(session1), ElementsAre(trust_session1, trust_session1, trust_session2));
-    EXPECT_THAT(list_trust_sessions_for(session1, ms::TrustSessionContainer::HelperSession), ElementsAre(trust_session1));
-    EXPECT_THAT(list_trust_sessions_for(session1, ms::TrustSessionContainer::TrustedSession), ElementsAre(trust_session1, trust_session2));
+    EXPECT_THAT(list_trust_sessions_for(session1, ms::TrustSessionContainer::TrustType::helper_session), ElementsAre(trust_session1));
+    EXPECT_THAT(list_trust_sessions_for(session1, ms::TrustSessionContainer::TrustType::trusted_session), ElementsAre(trust_session1, trust_session2));
 
     EXPECT_THAT(list_trust_sessions_for(session2), ElementsAre(trust_session1, trust_session3));
     EXPECT_THAT(list_trust_sessions_for(session3), ElementsAre(trust_session2));
@@ -207,9 +207,9 @@ TEST_F(TrustSessionContainer, associates_processes_with_a_trust_session_until_it
 {
     container.insert_trust_session(trust_session1);
 
-    container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustedSession);
-    container.insert_participant(trust_session1.get(), session2, ms::TrustSessionContainer::TrustedSession);
-    container.insert_participant(trust_session1.get(), session3, ms::TrustSessionContainer::TrustedSession);
+    container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session);
+    container.insert_participant(trust_session1.get(), session2, ms::TrustSessionContainer::TrustType::trusted_session);
+    container.insert_participant(trust_session1.get(), session3, ms::TrustSessionContainer::TrustType::trusted_session);
 
     EXPECT_THAT(count_participants_for(trust_session1), Eq(3));
 
@@ -223,16 +223,16 @@ TEST_F(TrustSessionContainer, associates_trust_sessions_with_a_participant_until
     container.insert_trust_session(trust_session1);
     container.insert_trust_session(trust_session2);
 
-    container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustedSession);
-    container.insert_participant(trust_session1.get(), session2, ms::TrustSessionContainer::TrustedSession);
+    container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session);
+    container.insert_participant(trust_session1.get(), session2, ms::TrustSessionContainer::TrustType::trusted_session);
 
-    container.insert_participant(trust_session2.get(), session1, ms::TrustSessionContainer::TrustedSession);
-    container.insert_participant(trust_session2.get(), session2, ms::TrustSessionContainer::TrustedSession);
+    container.insert_participant(trust_session2.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session);
+    container.insert_participant(trust_session2.get(), session2, ms::TrustSessionContainer::TrustType::trusted_session);
 
     EXPECT_THAT(list_participants_for(trust_session1), ElementsAre(session1, session2));
     EXPECT_THAT(list_participants_for(trust_session2), ElementsAre(session1, session2));
 
-    container.remove_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustedSession);
+    container.remove_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session);
 
     EXPECT_THAT(list_participants_for(trust_session1), ElementsAre(session2));
     EXPECT_THAT(list_participants_for(trust_session2), ElementsAre(session1, session2));
@@ -252,19 +252,19 @@ TEST_F(TrustSessionContainer, waiting_process_removed_on_insert_matching_session
 
     EXPECT_THAT(list_trust_sessions_for(process1), ElementsAre(trust_session1, trust_session1, trust_session2));
 
-    container.insert_participant(trust_session1.get(), session3, ms::TrustSessionContainer::TrustedSession);
+    container.insert_participant(trust_session1.get(), session3, ms::TrustSessionContainer::TrustType::trusted_session);
     // inserted session3 into trust_session1 (pid=2) - wasn't waiting for it. no change.
     EXPECT_THAT(list_trust_sessions_for(process1), ElementsAre(trust_session1, trust_session1, trust_session2));
 
-    container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustedSession);
+    container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session);
     // inserted session1 into trust_session1 (pid=1) - was waiting for it. should be 1 left for trust_session1 & 1 for trust_session2
     EXPECT_THAT(list_trust_sessions_for(process1), ElementsAre(trust_session1, trust_session2));
 
-    container.insert_participant(trust_session2.get(), session1, ms::TrustSessionContainer::TrustedSession);
+    container.insert_participant(trust_session2.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session);
     // inserted session2 into trust_session2 (pid=1) - was waiting for it. should be 1 left for trust_session1
     EXPECT_THAT(list_trust_sessions_for(process1), ElementsAre(trust_session1));
 
-    container.insert_participant(trust_session1.get(), session2, ms::TrustSessionContainer::TrustedSession);
+    container.insert_participant(trust_session1.get(), session2, ms::TrustSessionContainer::TrustType::trusted_session);
     // inserted session2 into trust_session1 (pid=1) - was waiting for it. none left
     EXPECT_THAT(list_trust_sessions_for(process1), ElementsAre());
 }
