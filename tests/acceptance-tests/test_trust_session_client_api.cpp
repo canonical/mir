@@ -62,6 +62,8 @@ TEST_F(TrustSessionClientAPI, can_start_and_stop_a_trust_session)
 
     mir_wait_for(mir_trust_session_stop(trust_session, trust_session_stop_callback, this));
     EXPECT_THAT(stopped, Eq(1));
+
+    mir_trust_session_release(trust_session);
 }
 
 // TODO there should be testing with a non-null mir_trust_session_event_callback
