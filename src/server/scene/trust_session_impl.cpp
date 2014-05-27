@@ -38,7 +38,7 @@ ms::TrustSessionImpl::TrustSessionImpl(
 
 ms::TrustSessionImpl::~TrustSessionImpl()
 {
-    TrustSessionImpl::stop();
+    stop();
 }
 
 std::weak_ptr<ms::Session> ms::TrustSessionImpl::get_trusted_helper() const
@@ -57,8 +57,6 @@ void ms::TrustSessionImpl::stop()
 
     state = mir_trust_session_state_stopped;
 
-    auto helper = trusted_helper.lock();
-    if (helper) {
+    if (auto helper = trusted_helper.lock())
         helper->end_trust_session();
-    }
 }

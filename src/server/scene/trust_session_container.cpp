@@ -20,11 +20,15 @@
 #include "mir/scene/session.h"
 
 #include <boost/throw_exception.hpp>
+#include <atomic>
 
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
 
-uint ms::TrustSessionContainer::insertion_order = 0;
+namespace
+{
+std::atomic<unsigned> insertion_order{0};
+}
 
 ms::TrustSessionContainer::TrustSessionContainer()
     : trust_session_index(participant_map)
@@ -44,15 +48,16 @@ void ms::TrustSessionContainer::remove_trust_session(std::shared_ptr<TrustSessio
 {
     std::unique_lock<std::mutex> lk(mutex);
 
-    participant_by_trust_session::iterator it,end;
-    boost::tie(it,end) = trust_session_index.equal_range(trust_session.get());
-
-    trust_session_index.erase(it, end);
+    {
+        participant_by_trust_session::iterator it, end;
+        boost::tie(it, end) = trust_session_index.equal_range(trust_session.get());
+        trust_session_index.erase(it, end);
+    }
 
     {
-        process_by_trust_session::iterator it,end;
-        boost::tie(it,end) = waiting_process_trust_session_index.equal_range(trust_session.get());
-        waiting_process_trust_session_index.erase(it,end);
+        process_by_trust_session::iterator it, end;
+        boost::tie(it, end) = waiting_process_trust_session_index.equal_range(trust_session.get());
+        waiting_process_trust_session_index.erase(it, end);
     }
 
     trust_sessions.erase(trust_session.get());
@@ -134,7 +139,7 @@ void ms::TrustSessionContainer::for_each_trust_session_with_participant(
 
             auto tsit = trust_sessions.find(participant.trust_session);
             if (tsit != trust_sessions.end())
-                f((*tsit).second);
+                f(tsit->second);
         }
     }
 }
@@ -155,7 +160,7 @@ void ms::TrustSessionContainer::for_each_trust_session_with_participant(
 
             auto tsit = trust_sessions.find(participant.trust_session);
             if (tsit != trust_sessions.end())
-                f((*tsit).second);
+                f(tsit->second);
         }
     }
 }
@@ -187,6 +192,6 @@ void ms::TrustSessionContainer::for_each_trust_session_expecting_process(
         WaitingProcess const& waiting_process = *it;
         auto tsit = trust_sessions.find(waiting_process.trust_session);
         if (tsit != trust_sessions.end())
-            f((*tsit).second);
+            f(tsit->second);
     }
 }

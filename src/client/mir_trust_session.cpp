@@ -38,7 +38,8 @@ MirTrustSession::MirTrustSession(
             std::lock_guard<decltype(mutex_event_handler)> lock(mutex_event_handler);
 
             set_state(event.trust_session.new_state);
-            if (handle_trust_session_event) {
+            if (handle_trust_session_event)
+            {
                 handle_trust_session_event(event.trust_session.new_state);
             }
         }
@@ -123,7 +124,6 @@ void MirTrustSession::register_trust_session_event_callback(
 
 void MirTrustSession::done_start(mir_trust_session_callback callback, void* context)
 {
-    std::string error;
     MirTrustSessionState new_state = mir_trust_session_state_started;
     {
         std::lock_guard<decltype(mutex)> lock(mutex);

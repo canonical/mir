@@ -77,7 +77,7 @@ private:
 
     std::mutex mutable trust_sessions_mutex;
 
-    void add_add_participant_by_pid_locked(
+    void add_participant_by_pid_locked(
         std::lock_guard<std::mutex> const&,
         std::shared_ptr<TrustSession> const& trust_session,
         pid_t process_id) const;

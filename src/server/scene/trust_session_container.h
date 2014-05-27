@@ -68,14 +68,15 @@ private:
 
     std::unordered_map<TrustSession*, std::shared_ptr<TrustSession>> trust_sessions;
 
-    typedef struct {
+    struct Participant
+    {
         TrustSession* trust_session;
         std::weak_ptr<Session> session;
         TrustType trust_type;
         uint insert_order;
 
         Session* session_fun() const { return session.lock().get(); }
-    } Participant;
+    };
 
     typedef multi_index_container<
         Participant,
@@ -104,12 +105,12 @@ private:
     TrustSessionTrustedParticipants participant_map;
     participant_by_trust_session& trust_session_index;
     participant_by_session& participant_index;
-    static uint insertion_order;
 
-    typedef struct {
+    struct WaitingProcess
+    {
         TrustSession* trust_session;
         pid_t process_id;
-    } WaitingProcess;
+    };
 
     typedef multi_index_container<
         WaitingProcess,
