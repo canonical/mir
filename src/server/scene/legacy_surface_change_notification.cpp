@@ -22,37 +22,42 @@ namespace ms = mir::scene;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-ms::LegacySurfaceChangeNotification::LegacySurfaceChangeNotification(std::function<void()> const& notify_change) :
-        notify_change(notify_change) {}
+ms::LegacySurfaceChangeNotification::LegacySurfaceChangeNotification(
+    std::function<void()> const& notify_scene_change,
+    std::function<void(int)> const& notify_buffer_change) :
+    notify_scene_change(notify_scene_change),
+    notify_buffer_change(notify_buffer_change)
+{
+}
 
 void ms::LegacySurfaceChangeNotification::resized_to(geom::Size const& /*size*/)
 {
-    notify_change();
+    notify_scene_change();
 }
 
 void ms::LegacySurfaceChangeNotification::moved_to(geom::Point const& /*top_left*/)
 {
-    notify_change();
+    notify_scene_change();
 }
 
 void ms::LegacySurfaceChangeNotification::hidden_set_to(bool /*hide*/)
 {
-    notify_change();
+    notify_scene_change();
 }
 
-void ms::LegacySurfaceChangeNotification::frame_posted()
+void ms::LegacySurfaceChangeNotification::frame_posted(int frames_available)
 {
-    notify_change();
+    notify_buffer_change(frames_available);
 }
 
 void ms::LegacySurfaceChangeNotification::alpha_set_to(float /*alpha*/)
 {
-    notify_change();
+    notify_scene_change();
 }
 
 void ms::LegacySurfaceChangeNotification::transformation_set_to(glm::mat4 const& /*t*/)
 {
-    notify_change();
+    notify_scene_change();
 }
 
 // An attrib change alone is not enough to trigger recomposition.
@@ -62,5 +67,5 @@ void ms::LegacySurfaceChangeNotification::attrib_changed(MirSurfaceAttrib /* att
 
 void ms::LegacySurfaceChangeNotification::reception_mode_set_to(mi::InputReceptionMode /*mode*/)
 {
-    notify_change();
+    notify_scene_change();
 }
