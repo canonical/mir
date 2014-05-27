@@ -38,8 +38,6 @@ struct TrustSessionCreationParameters
 
 bool operator==(const TrustSessionCreationParameters& lhs, const TrustSessionCreationParameters& rhs);
 bool operator!=(const TrustSessionCreationParameters& lhs, const TrustSessionCreationParameters& rhs);
-
-TrustSessionCreationParameters a_trust_session();
 }
 }
 

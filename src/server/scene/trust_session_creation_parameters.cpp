@@ -44,8 +44,3 @@ bool ms::operator!=(
 {
     return !(lhs == rhs);
 }
-
-ms::TrustSessionCreationParameters ms::a_trust_session()
-{
-    return TrustSessionCreationParameters();
-}
