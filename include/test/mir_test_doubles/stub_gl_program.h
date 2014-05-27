@@ -15,12 +15,10 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#ifndef MIR_TEST_DOUBLES_STUB_GL_PROGRAM_H_
+#define MIR_TEST_DOUBLES_STUB_GL_PROGRAM_H_
 
-#ifndef MIR_TEST_DOUBLES_MOCK_RENDERABLE_LIST_COMPOSITOR_H_
-#define MIR_TEST_DOUBLES_MOCK_RENDERABLE_LIST_COMPOSITOR_H_
-
-#include "src/platform/graphics/android/hwc_fallback_gl_renderer.h"
-#include <gmock/gmock.h>
+#include "mir/graphics/gl_program_factory.h"
 
 namespace mir
 {
@@ -29,13 +27,16 @@ namespace test
 namespace doubles
 {
 
-struct MockRenderableListCompositor : public graphics::android::RenderableListCompositor
+struct StubGLProgram : public graphics::GLProgram
 {
-    MOCK_CONST_METHOD2(render,
-        void(graphics::RenderableList const&, graphics::android::SwappingGLContext const&));
+    operator GLuint() const override
+    {
+        return 7;
+    }
 };
 
 }
 }
-}
-#endif // MIR_TEST_DOUBLES_MOCK_RENDERABLE_LIST_COMPOSITOR_H_
+} // namespace mir
+
+#endif /* MIR_TEST_DOUBLES_STUB_GL_PROGRAM_H_ */

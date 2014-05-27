@@ -24,6 +24,7 @@
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_gl.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir_test_doubles/stub_driver_interpreter.h"
 #include "mir_test_doubles/stub_display_buffer.h"
@@ -103,6 +104,7 @@ protected:
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
+    testing::NiceMock<mtd::MockGL> mock_gl;
     mtd::StubGLProgramFactory stub_program_factory;
 
     int visual_id;

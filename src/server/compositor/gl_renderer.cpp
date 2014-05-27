@@ -149,7 +149,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     tessellate(primitives, renderable);
 
     auto surface_tex = texture_cache->load(renderable);
-   
+
     for (auto const& p : primitives)
     {
         // Note a primitive tex_id of zero means use the surface texture,
