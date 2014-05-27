@@ -118,6 +118,8 @@ void mgm::Cursor::move_to(geometry::Point position)
 
 void mir::graphics::mesa::Cursor::suspend()
 {
+    std::lock_guard<std::mutex> lg(guard);
+
     output_container.for_each_output(
         [&](KMSOutput& output) { output.clear_cursor(); });
 }
