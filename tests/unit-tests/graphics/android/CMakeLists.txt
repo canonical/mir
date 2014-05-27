@@ -27,7 +27,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_output_builder.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_device_detection.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_wrapper.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_overlay_compositor.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_fallback_gl_renderer.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

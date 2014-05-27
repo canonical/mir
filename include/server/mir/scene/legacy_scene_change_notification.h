@@ -37,7 +37,9 @@ class SurfaceObserver;
 class LegacySceneChangeNotification : public Observer
 {
 public:
-    LegacySceneChangeNotification(std::function<void()> const& notify_change);
+    LegacySceneChangeNotification(
+        std::function<void()> const& scene_notify_change,
+        std::function<void(int)> const& buffer_notify_change);
     ~LegacySceneChangeNotification();
 
     void surface_added(Surface* surface) override;
@@ -48,7 +50,8 @@ public:
     void end_observation() override;
 
 private:
-    std::function<void()> const notify_change;
+    std::function<void()> const scene_notify_change;
+    std::function<void(int)> const buffer_notify_change;
     
     std::mutex surface_observers_guard;
     std::map<Surface*, std::weak_ptr<SurfaceObserver>> surface_observers;

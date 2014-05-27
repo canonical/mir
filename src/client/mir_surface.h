@@ -32,6 +32,7 @@
 #include <memory>
 #include <functional>
 #include <mutex>
+#include <unordered_set>
 
 namespace mir
 {
@@ -74,7 +75,6 @@ public:
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
     int id() const;
-    bool is_valid() const;
     MirWaitHandle* next_buffer(mir_surface_callback callback, void * context);
     MirWaitHandle* get_create_wait_handle();
 
@@ -97,6 +97,7 @@ public:
     void request_and_wait_for_next_buffer();
     void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
 
+    static bool is_valid(MirSurface* query);
 private:
     mutable std::mutex mutex; // Protects all members of *this
 

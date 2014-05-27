@@ -549,7 +549,9 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
         stub_configurator,
         report);
 
-    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(change_notification);
+    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(
+        change_notification,
+        [this](int){change_notification();});
     surf.add_observer(observer);
 
     mg::Buffer* buffer{nullptr};
