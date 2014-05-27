@@ -120,7 +120,7 @@ struct TestClientInput : DeferredInProcessServer
     std::string const test_client_name_2 = "2";
 
     mtf::CrossProcessSync fence;
-    mtf::CrossProcessSync second_client_done_fence;
+    mt::WaitCondition second_client_done;
     ServerConfiguration server_configuration{fence};
 
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
@@ -433,7 +433,7 @@ namespace
 
 ACTION_P(SignalFence, fence)
 {
-    fence->try_signal_ready_for();
+    fence->wake_up_everyone();
 }
 
 }
@@ -448,7 +448,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
             server.fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1,1));
             // We use a fence to ensure we do not hide the client
             // before event dispatch occurs
-            second_client_done_fence.wait_for_signal_ready_for();
+            second_client_done.wait_for_at_most_seconds(60);
 
             server.the_session_container()->for_each([&](std::shared_ptr<ms::Session> const& session) -> void
             {
@@ -475,7 +475,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
             EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(AnyNumber());
             EXPECT_CALL(handler, handle_input(mt::HoverExitEvent())).Times(AnyNumber());
             EXPECT_CALL(handler, handle_input(mt::MotionEventWithPosition(1, 1))).Times(1)
-                .WillOnce(DoAll(SignalFence(&second_client_done_fence), mt::WakeUp(&events_received)));
+                .WillOnce(DoAll(SignalFence(&second_client_done), mt::WakeUp(&events_received)));
         };
 
     start_client(client_config_1);
