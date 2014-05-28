@@ -83,7 +83,7 @@ mgm::Cursor::Cursor(
 {
     show(*initial_image);
 
-    show_at_last_known_position();
+    resume();
 }
 
 mgm::Cursor::~Cursor() noexcept
@@ -116,7 +116,15 @@ void mgm::Cursor::move_to(geometry::Point position)
     place_cursor_at(position, UpdateState);
 }
 
-void mgm::Cursor::show_at_last_known_position()
+void mir::graphics::mesa::Cursor::suspend()
+{
+    std::lock_guard<std::mutex> lg(guard);
+
+    output_container.for_each_output(
+        [&](KMSOutput& output) { output.clear_cursor(); });
+}
+
+void mgm::Cursor::resume()
 {
     place_cursor_at(current_position, ForceState);
 }
