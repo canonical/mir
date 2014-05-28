@@ -70,7 +70,8 @@ private:
 struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
-        : graphics_platform{config.the_graphics_platform()},
+        : emergency_cleanup{config.the_emergency_cleanup()},
+          graphics_platform{config.the_graphics_platform()},
           display{config.the_display()},
           input_dispatcher{config.the_input_dispatcher()},
           input_configuration{config.the_input_configuration()},
@@ -172,6 +173,7 @@ struct mir::DisplayServer::Private
             conf, DisplayChanger::PauseResumeSystem);
     }
 
+    std::shared_ptr<EmergencyCleanup> const emergency_cleanup; // Hold this so it does not get freed prematurely
     std::shared_ptr<mg::Platform> const graphics_platform; // Hold this so the platform is loaded once
     std::shared_ptr<mg::Display> const display;
     std::shared_ptr<mi::InputDispatcher> const input_dispatcher;
