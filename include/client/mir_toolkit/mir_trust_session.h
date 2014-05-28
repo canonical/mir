@@ -49,10 +49,8 @@ MirWaitHandle *mir_connection_start_trust_session(MirConnection* connection,
  * Create an new trust session
  *   \param [in] connection  The connection
  *   \param [in] base_session_pid The process id of the initiating application
- *   \param [in] callback         Callback function to be invoked when request
- *                                completes
+ *   \param [in] event_callback   The function to be called when a trust session event occurs
  *   \param [in,out] context      User data passed to the callback function
- *   \param [in] callback         The function to be called when the trust session event occurs
  *   \return                      A handle that can be passed to mir_wait_for
  */
 MirTrustSession *mir_connection_start_trust_session_sync(MirConnection* connection,

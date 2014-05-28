@@ -25,26 +25,16 @@ namespace mir
 {
 namespace scene
 {
-
 class NullTrustSessionListener : public TrustSessionListener
 {
 public:
-    NullTrustSessionListener() = default;
-    virtual ~NullTrustSessionListener() noexcept(true) = default;
+    void starting(std::shared_ptr<TrustSession> const&) override {}
+    void stopping(std::shared_ptr<TrustSession> const&) override {}
 
-    void starting(std::shared_ptr<TrustSession> const&) override {};
-    void stopping(std::shared_ptr<TrustSession> const&) override {};
-
-    void trusted_session_beginning(TrustSession const&, std::shared_ptr<Session> const&) override {};
-    void trusted_session_ending(TrustSession const&, std::shared_ptr<Session> const&) override {};
-
-protected:
-    NullTrustSessionListener(const NullTrustSessionListener&) = delete;
-    NullTrustSessionListener& operator=(const NullTrustSessionListener&) = delete;
+    void trusted_session_beginning(TrustSession const&, std::shared_ptr<Session> const&) override {}
+    void trusted_session_ending(TrustSession const&, std::shared_ptr<Session> const&) override {}
 };
-
 }
 }
-
 
 #endif // MIR_SHELL_NULL_TRUST_SESSION_LISTENER_H_

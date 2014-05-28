@@ -322,10 +322,10 @@ typedef void (*mir_screencast_callback)(MirScreencast *screencast, void *client_
 
 /**
  * Callback member of MirTrustSession for handling of trust sessions.
- *   \param [in] tps            The trust session associated with the callback
- *   \param [in,out] context    The context provided by the client
+ *   \param [in] trusted_session  The trust session associated with the callback
+ *   \param [in,out] context      The context provided by the client
  */
-typedef void (*mir_trust_session_callback)(MirTrustSession* tps, void* context);
+typedef void (*mir_trust_session_callback)(MirTrustSession* trusted_session, void* context);
 
 /**
  * Callback member of MirTrustSession for adding trusted sessions
