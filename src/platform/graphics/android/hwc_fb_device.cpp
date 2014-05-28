@@ -22,7 +22,7 @@
 #include "framebuffer_bundle.h"
 #include "android_format_conversion-inl.h"
 #include "hwc_wrapper.h"
-#include "overlay_gl_compositor.h"
+#include "hwc_fallback_gl_renderer.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "gl_context.h"

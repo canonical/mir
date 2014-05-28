@@ -36,3 +36,16 @@ TEST(MirClientTest, mir_connection_is_valid_handles_invalid_pointers)
     ASSERT_FALSE(mir_connection_is_valid(not_a_mir_connection_on_the_stack));
     ASSERT_FALSE(mir_connection_is_valid(not_a_mir_connection_on_the_heap));
 }
+
+TEST(MirClientTest, mir_surface_is_valid_handles_invalid_pointers)
+{
+    MirSurface* null_pointer = NULL;
+    double stack_variable;
+    MirSurface* not_a_mir_surface_on_the_stack = reinterpret_cast<MirSurface*>(&stack_variable);
+    auto heap_variable = std::make_shared<int>();
+    MirSurface* not_a_mir_surface_on_the_heap = reinterpret_cast<MirSurface*>(heap_variable.get());
+
+    ASSERT_FALSE(mir_surface_is_valid(null_pointer));
+    ASSERT_FALSE(mir_surface_is_valid(not_a_mir_surface_on_the_stack));
+    ASSERT_FALSE(mir_surface_is_valid(not_a_mir_surface_on_the_heap));
+}

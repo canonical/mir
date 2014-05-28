@@ -40,6 +40,8 @@ namespace mtd = mir::test::doubles;
 namespace mt =mir::test;
 namespace geom = mir::geometry;
 
+using namespace ::testing;
+
 namespace
 {
 
@@ -77,6 +79,11 @@ struct BufferStreamTest : public ::testing::Test
     {
     }
 
+    int buffers_free_for_client() const
+    {
+        return buffer_queue->buffers_free_for_client();
+    }
+
     std::shared_ptr<mc::BufferBundle> create_bundle()
     {
         auto allocator = std::make_shared<mtd::StubBufferAllocator>();
@@ -86,16 +93,19 @@ struct BufferStreamTest : public ::testing::Test
         mc::TimeoutFrameDroppingPolicyFactory policy_factory{timer,
                                                              frame_drop_timeout};
 
-        return std::make_shared<mc::BufferQueue>(nbuffers,
-                                                 allocator,
-                                                 properties,
-                                                 policy_factory);
+        buffer_queue = std::make_shared<mc::BufferQueue>(nbuffers,
+                                                         allocator,
+                                                         properties,
+                                                         policy_factory);
+
+        return buffer_queue;
     }
 
     std::shared_ptr<mt::FakeClock> clock;
     std::shared_ptr<mtd::FakeTimer> timer;
     std::chrono::milliseconds const frame_drop_timeout;
     const int nbuffers;
+    std::shared_ptr<mc::BufferQueue> buffer_queue;
     BufferStreamSurfaces buffer_stream;
 };
 
@@ -103,6 +113,8 @@ struct BufferStreamTest : public ::testing::Test
 
 TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 {
+    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
+
     mg::Buffer* client1{nullptr};
     buffer_stream.swap_client_buffers_blocking(client1);
     auto client1_id = client1->id();
@@ -132,7 +144,8 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
 {
     mg::Buffer* client_buffer{nullptr};
-    for (int i = 0; i !=  nbuffers - 1; i++)
+    int const prefill = buffers_free_for_client();
+    for (int i = 0; i < prefill; ++i)
         buffer_stream.swap_client_buffers_blocking(client_buffer);
 
     auto first_monitor = buffer_stream.lock_compositor_buffer(0);
@@ -149,26 +162,28 @@ TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
 
 TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
 {
+    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
+
     mg::Buffer* client_buffer{nullptr};
     buffer_stream.swap_client_buffers_blocking(client_buffer);
 
-    if (nbuffers > 1)
-    {
-        buffer_stream.swap_client_buffers_blocking(client_buffer);
-        auto comp1 = buffer_stream.lock_compositor_buffer(nullptr);
+    ASSERT_THAT(nbuffers, Gt(1));
+    buffer_stream.swap_client_buffers_blocking(client_buffer);
+    auto comp1 = buffer_stream.lock_compositor_buffer(nullptr);
 
-        buffer_stream.swap_client_buffers_blocking(client_buffer);
-        auto comp2 = buffer_stream.lock_compositor_buffer(nullptr);
+    buffer_stream.swap_client_buffers_blocking(client_buffer);
+    auto comp2 = buffer_stream.lock_compositor_buffer(nullptr);
 
-        EXPECT_NE(comp1->id(), comp2->id());
+    EXPECT_NE(comp1->id(), comp2->id());
 
-        comp1.reset();
-        comp2.reset();
-    }
+    comp1.reset();
+    comp2.reset();
 }
 
 TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
 {
+    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
+
     auto old_size = buffer_stream.stream_size();
 
     mg::Buffer* client{nullptr};
@@ -199,6 +214,8 @@ TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
 
 TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
 {
+    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
+
     auto old_size = buffer_stream.stream_size();
 
     mg::Buffer* client{nullptr};
@@ -248,6 +265,8 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
 
 TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
 {
+    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
+
     mg::Buffer* client{nullptr};
     buffer_stream.swap_client_buffers_blocking(client);
     buffer_stream.swap_client_buffers_blocking(client);

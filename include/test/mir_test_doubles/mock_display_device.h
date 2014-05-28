@@ -22,7 +22,7 @@
 #include "mir/graphics/buffer.h"
 #include "src/platform/graphics/android/display_device.h"
 #include "src/platform/graphics/android/gl_context.h"
-#include "src/platform/graphics/android/overlay_gl_compositor.h"
+#include "src/platform/graphics/android/hwc_fallback_gl_renderer.h"
 #include <gmock/gmock.h>
 
 namespace mir

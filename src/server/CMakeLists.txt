@@ -49,6 +49,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsharedlogging
   mirsharedenv
   mirsharedsharedlibrary
+  mirshell
   mirscene
   mirtime
   mirlttng
