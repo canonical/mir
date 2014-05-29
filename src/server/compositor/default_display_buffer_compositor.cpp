@@ -57,6 +57,11 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     auto renderable_list = scene->renderable_list_for(this);
     mc::filter_occlusions_from(renderable_list, view_area);
 
+    //TODO: the DisplayBufferCompositor should not have to figure out if it has to force
+    //      a subsequent compositon. The MultiThreadedCompositor should be smart enough to 
+    //      schedule compositions when they're needed. 
+    bool uncomposited_buffers{false};
+
     if (display_buffer.can_bypass())
     {
         mc::BypassMatch bypass_match(view_area);
@@ -82,8 +87,17 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         renderer->render(renderable_list);
         display_buffer.post_update();
         renderer->end();
+
+        // This is a frig to avoid lp:1286190
+        if (last_pass_rendered_anything && renderable_list.empty())
+            uncomposited_buffers = true;
+
+        last_pass_rendered_anything = !renderable_list.empty();
+        // End of frig
     }
 
     report->finished_frame(bypassed, this);
-    return false;
+    for(auto const& renderable : renderable_list)
+        uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 0);
+    return uncomposited_buffers;
 }
