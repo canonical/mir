@@ -24,7 +24,7 @@
 #include "fb_device.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
-#include "overlay_gl_compositor.h"
+#include "hwc_fallback_gl_renderer.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

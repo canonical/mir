@@ -29,6 +29,7 @@ namespace mtf = mir_test_framework;
 mtf::InputTestingClientConfiguration::InputTestingClientConfiguration(
     std::string const& client_name,
     mtf::CrossProcessSync const& input_cb_setup_fence) :
+    connect_string{mtf::test_socket_file()},
     client_name(client_name),
     input_cb_setup_fence(input_cb_setup_fence)
 {
@@ -53,8 +54,7 @@ void mtf::InputTestingClientConfiguration::exec()
     
     expect_input(handler, events_received);
 
-    auto connection = mir_connect_sync(
-        mtf::test_socket_file().c_str(), client_name.c_str());
+    auto connection = mir_connect_sync(connect_string.c_str(), client_name.c_str());
     ASSERT_TRUE(connection != NULL);
 
     MirSurfaceParameters const request_params =

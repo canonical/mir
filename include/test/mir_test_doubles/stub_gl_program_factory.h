@@ -19,6 +19,7 @@
 #define MIR_TEST_DOUBLES_STUB_GL_PROGRAM_FACTORY_H_
 
 #include "mir/graphics/gl_program_factory.h"
+#include "stub_gl_program.h"
 
 namespace mir
 {
@@ -31,6 +32,11 @@ class StubGLProgramFactory : public graphics::GLProgramFactory
 {
 public:
     std::unique_ptr<graphics::GLProgram> create_gl_program(std::string const&, std::string const&) const
+    {
+        return std::unique_ptr<graphics::GLProgram>(new StubGLProgram);
+    }
+
+    std::unique_ptr<graphics::GLTextureCache> create_texture_cache() const
     {
         return nullptr;
     }

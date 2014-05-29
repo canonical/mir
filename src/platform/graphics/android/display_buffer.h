@@ -24,7 +24,7 @@
 #include "mir/graphics/gl_program_factory.h"
 #include "android_display_configuration.h"
 #include "gl_context.h"
-#include "overlay_gl_compositor.h"
+#include "hwc_fallback_gl_renderer.h"
 #include <system/window.h>
 
 namespace mir
@@ -65,7 +65,7 @@ private:
     std::shared_ptr<DisplayDevice> const display_device;
     std::shared_ptr<ANativeWindow> const native_window;
     GLContext gl_context;
-    OverlayGLProgram overlay_program;
+    HWCFallbackGLRenderer overlay_program;
     bool prepared;
     DisplayConfigurationOutput current_configuration;
     MirOrientation rotation;

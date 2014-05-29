@@ -481,7 +481,7 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
 }
 
 //test associated with lp:1290306, 1293896, 1294048, 1294051, 1294053
-TEST_F(DefaultDisplayBufferCompositor, decides_whether_to_recomposite_before_rendering)
+TEST_F(DefaultDisplayBufferCompositor, decides_whether_to_recomposite_after_rendering)
 {
     using namespace testing;
     ON_CALL(display_buffer, view_area())
@@ -495,10 +495,10 @@ TEST_F(DefaultDisplayBufferCompositor, decides_whether_to_recomposite_before_ren
     ON_CALL(*mock_renderable, screen_position())
         .WillByDefault(Return(geom::Rectangle{{0,0},{200,200}})); 
 
-    //check for how many buffers should come before accessing the buffers.
     EXPECT_CALL(*mock_renderable, buffers_ready_for_compositor())
         .WillOnce(Return(2))
-        .WillOnce(Return(1));
+        .WillOnce(Return(1))
+        .WillOnce(Return(0));
 
     mg::RenderableList list({mock_renderable});
     FakeScene scene(list);
@@ -509,6 +509,7 @@ TEST_F(DefaultDisplayBufferCompositor, decides_whether_to_recomposite_before_ren
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
 
+    EXPECT_TRUE(compositor.composite());
     EXPECT_TRUE(compositor.composite());
     EXPECT_FALSE(compositor.composite());
 }

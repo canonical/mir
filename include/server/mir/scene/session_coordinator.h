@@ -13,29 +13,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_RENDERABLE_LIST_COMPOSITOR_H_
-#define MIR_TEST_DOUBLES_MOCK_RENDERABLE_LIST_COMPOSITOR_H_
+#ifndef MIR_SCENE_SESSION_COORDINATOR_H_
+#define MIR_SCENE_SESSION_COORDINATOR_H_
 
-#include "src/platform/graphics/android/hwc_fallback_gl_renderer.h"
-#include <gmock/gmock.h>
+
+#include "mir/frontend/shell.h"
+#include "mir/shell/focus_controller.h"
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
+namespace scene
 {
 
-struct MockRenderableListCompositor : public graphics::android::RenderableListCompositor
+class SessionCoordinator : public frontend::Shell, public shell::FocusController
 {
-    MOCK_CONST_METHOD2(render,
-        void(graphics::RenderableList const&, graphics::android::SwappingGLContext const&));
 };
 
 }
 }
-}
-#endif // MIR_TEST_DOUBLES_MOCK_RENDERABLE_LIST_COMPOSITOR_H_
+
+#endif /* MIR_SCENE_SESSION_COORDINATOR_H_ */

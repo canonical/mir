@@ -28,6 +28,7 @@
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_gl_program_factory.h"
@@ -98,6 +99,7 @@ public:
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
+    testing::NiceMock<mtd::MockGL> mock_gl;
     testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
     testing::NiceMock<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<MockResourceFactory> mock_resource_factory;
