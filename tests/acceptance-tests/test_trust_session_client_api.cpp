@@ -68,7 +68,8 @@ struct TrustSessionListenerConfiguration : mtf::StubbedServerConfiguration
     {
         return mock_trust_session_listener([this]
             {
-                return std::make_shared<MockTrustSessionListener>(mtf::StubbedServerConfiguration::the_trust_session_listener());
+                return std::make_shared<NiceMock<MockTrustSessionListener>>(
+                    mtf::StubbedServerConfiguration::the_trust_session_listener());
             });
     }
 
@@ -83,6 +84,8 @@ struct TrustSessionClientAPI : mtf::BasicClientServerFixture<TrustSessionListene
     MirTrustSession* trust_session = nullptr;
     int started = 0;
     int stopped = 0;
+
+    MOCK_METHOD2(trust_session_event, void(MirTrustSession* trusted_session, MirTrustSessionState state));
 };
 
 void trust_session_start_callback(MirTrustSession* session, void* context)
@@ -97,6 +100,13 @@ void trust_session_stop_callback(MirTrustSession* /* session */, void* context)
     TrustSessionClientAPI* self = static_cast<TrustSessionClientAPI*>(context);
     self->stopped++;
 }
+
+extern "C" void trust_session_event_callback(MirTrustSession* trusted_session, MirTrustSessionState state, void* context)
+{
+    TrustSessionClientAPI* self = static_cast<TrustSessionClientAPI*>(context);
+    self->trust_session_event(trusted_session, state);
+}
+
 }
 
 TEST_F(TrustSessionClientAPI, can_start_and_stop_a_trust_session)
@@ -107,12 +117,27 @@ TEST_F(TrustSessionClientAPI, can_start_and_stop_a_trust_session)
         EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), stopping(_));
     }
 
-    mir_wait_for(mir_connection_start_trust_session(connection, arbitrary_base_session_id, trust_session_start_callback, null_event_callback, this));
+    mir_wait_for(mir_connection_start_trust_session(
+        connection, arbitrary_base_session_id, trust_session_start_callback, null_event_callback, this));
     ASSERT_THAT(trust_session, Ne(nullptr));
     EXPECT_THAT(started, Eq(1));
 
     mir_wait_for(mir_trust_session_stop(trust_session, trust_session_stop_callback, this));
     EXPECT_THAT(stopped, Eq(1));
+
+    mir_trust_session_release(trust_session);
+}
+
+TEST_F(TrustSessionClientAPI, notifies_start_and_stop)
+{
+    InSequence server_seq;
+    EXPECT_CALL(*this, trust_session_event(_, mir_trust_session_state_started));
+    EXPECT_CALL(*this, trust_session_event(_, mir_trust_session_state_stopped));
+
+    mir_wait_for(mir_connection_start_trust_session(
+        connection, arbitrary_base_session_id, trust_session_start_callback, trust_session_event_callback, this));
+
+    mir_wait_for(mir_trust_session_stop(trust_session, trust_session_stop_callback, this));
 
     mir_trust_session_release(trust_session);
 }
