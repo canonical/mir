@@ -78,6 +78,19 @@ struct TrustSessionManager : public testing::Test
     ms::TrustSessionManagerImpl session_manager{mt::fake_shared(existing_sessions), mt::fake_shared(trust_session_listener)};
 
     std::shared_ptr<ms::TrustSession> const trust_session{session_manager.start_trust_session_for(helper, parameters)};
+
+    std::vector<std::shared_ptr<ms::Session>> list_participants_for(std::shared_ptr<ms::TrustSession> const& trust_session)
+    {
+        std::vector<std::shared_ptr<ms::Session>> results;
+        auto list_participants = [&results](std::weak_ptr<ms::Session> const& session)
+        {
+            results.push_back(session.lock());
+        };
+
+        session_manager.for_each_participant_in_trust_session(trust_session, list_participants);
+
+        return results;
+    }
 };
 }
 
@@ -95,29 +108,40 @@ TEST_F(TrustSessionManager, notifies_participant_of_start_and_stop)
     Mock::VerifyAndClearExpectations(&trust_session_listener);
 }
 
-TEST_F(TrustSessionManager, successfully_adds_a_participant_by_pid)
-{
-    EXPECT_NO_THROW(session_manager.add_participant_by_pid(trust_session, participant_pid));
-}
-
 TEST_F(TrustSessionManager, successfully_adds_a_participant)
 {
-    EXPECT_NO_THROW(session_manager.add_participant(trust_session, participant_session));
+    session_manager.add_participant(trust_session, participant_session);
+
+    EXPECT_THAT(list_participants_for(trust_session), ElementsAre(participant_session));
 }
 
-TEST_F(TrustSessionManager, successfully_adds_a_participant_by_pid_twice)
-{
-    session_manager.add_participant_by_pid(trust_session, participant_pid);
-    EXPECT_NO_THROW(session_manager.add_participant_by_pid(trust_session, participant_pid));
-}
-
-TEST_F(TrustSessionManager, successfully_adds_a_participant_twice)
+TEST_F(TrustSessionManager, no_exception_when_adding_a_participant_twice)
 {
     session_manager.add_participant(trust_session, participant_session);
     EXPECT_NO_THROW(session_manager.add_participant(trust_session, participant_session));
 }
 
-TEST_F(TrustSessionManager, fails_to_add_a_participant_by_pid_when_trust_session_is_stopped)
+TEST_F(TrustSessionManager, thows_exception_when_adding_a_participant_with_stopped_trust_session)
+{
+    session_manager.stop_trust_session(trust_session);
+
+    EXPECT_THROW(
+        session_manager.add_participant(trust_session, participant_session),
+        std::runtime_error);
+}
+
+TEST_F(TrustSessionManager, no_exception_when_adding_a_participant_by_pid)
+{
+    EXPECT_NO_THROW(session_manager.add_participant_by_pid(trust_session, participant_pid));
+}
+
+TEST_F(TrustSessionManager, no_exception_on_adding_a_participant_by_pid_twice)
+{
+    session_manager.add_participant_by_pid(trust_session, participant_pid);
+    EXPECT_NO_THROW(session_manager.add_participant_by_pid(trust_session, participant_pid));
+}
+
+TEST_F(TrustSessionManager, thows_exception_when_adding_a_participant_by_pid_with_stopped_trust_session)
 {
     session_manager.stop_trust_session(trust_session);
 

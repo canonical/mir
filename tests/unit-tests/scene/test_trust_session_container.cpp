@@ -129,7 +129,7 @@ struct TrustSessionContainer : testing::Test
 };
 }
 
-TEST_F(TrustSessionContainer, throws_if_no_trust_session)
+TEST_F(TrustSessionContainer, throws_exception_if_no_trust_session)
 {
     EXPECT_THROW(
         container.insert_participant(trust_session1.get(), session1, ms::TrustSessionContainer::TrustType::trusted_session),
