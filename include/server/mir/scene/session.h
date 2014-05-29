@@ -41,8 +41,8 @@ public:
     virtual void set_lifecycle_state(MirLifecycleState state) = 0;
     virtual void send_display_config(graphics::DisplayConfiguration const&) = 0;
 
-    virtual void begin_trust_session() = 0;
-    virtual void end_trust_session() = 0;
+    virtual void start_trust_session() = 0;
+    virtual void stop_trust_session() = 0;
 };
 }
 }

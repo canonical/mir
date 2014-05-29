@@ -42,15 +42,15 @@ struct MockTrustSessionListener : ms::TrustSessionListener
     {
         ON_CALL(*this, starting(_)).WillByDefault(Invoke(wrapped.get(), &ms::TrustSessionListener::starting));
         ON_CALL(*this, stopping(_)).WillByDefault(Invoke(wrapped.get(), &ms::TrustSessionListener::stopping));
-        ON_CALL(*this, trusted_session_beginning(_, _)).WillByDefault(Invoke(wrapped.get(), &ms::TrustSessionListener::trusted_session_beginning));
-        ON_CALL(*this, trusted_session_ending(_, _)).WillByDefault(Invoke(wrapped.get(), &ms::TrustSessionListener::trusted_session_ending));
+        ON_CALL(*this, trusted_participant_starting(_, _)).WillByDefault(Invoke(wrapped.get(), &ms::TrustSessionListener::trusted_participant_starting));
+        ON_CALL(*this, trusted_participant_stopping(_, _)).WillByDefault(Invoke(wrapped.get(), &ms::TrustSessionListener::trusted_participant_stopping));
     }
 
     MOCK_METHOD1(starting, void(std::shared_ptr<ms::TrustSession> const& trust_session));
     MOCK_METHOD1(stopping, void(std::shared_ptr<ms::TrustSession> const& trust_session));
 
-    MOCK_METHOD2(trusted_session_beginning, void(ms::TrustSession const& trust_session, std::shared_ptr<ms::Session> const& session));
-    MOCK_METHOD2(trusted_session_ending, void(ms::TrustSession const& trust_session, std::shared_ptr<ms::Session> const& session));
+    MOCK_METHOD2(trusted_participant_starting, void(ms::TrustSession const& trust_session, std::shared_ptr<ms::Session> const& participant));
+    MOCK_METHOD2(trusted_participant_stopping, void(ms::TrustSession const& trust_session, std::shared_ptr<ms::Session> const& participant));
 
     std::shared_ptr<ms::TrustSessionListener> const wrapped;
 };
@@ -124,8 +124,8 @@ TEST_F(TrustSessionClientAPI, can_add_trusted_session)
 {
     {
         InSequence server_seq;
-        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), trusted_session_beginning(_,_));
-        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), trusted_session_ending(_,_));
+        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), trusted_participant_starting(_,_));
+        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), trusted_participant_stopping(_,_));
     }
 
     pid_t session_pid = __LINE__;

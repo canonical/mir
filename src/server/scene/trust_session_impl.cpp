@@ -32,7 +32,7 @@ ms::TrustSessionImpl::TrustSessionImpl(
 {
     if (auto helper = trusted_helper.lock())
     {
-        helper->begin_trust_session();
+        helper->start_trust_session();
     }
 }
 
@@ -58,5 +58,5 @@ void ms::TrustSessionImpl::stop()
     state = mir_trust_session_state_stopped;
 
     if (auto helper = trusted_helper.lock())
-        helper->end_trust_session();
+        helper->stop_trust_session();
 }

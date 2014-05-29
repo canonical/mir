@@ -386,7 +386,7 @@ TEST(ApplicationSession, process_id)
     EXPECT_THAT(app_session.process_id(), Eq(pid));
 }
 
-TEST(ApplicationSession, begin_trust_session)
+TEST(ApplicationSession, start_trust_session)
 {
     using namespace ::testing;
 
@@ -403,10 +403,10 @@ TEST(ApplicationSession, begin_trust_session)
 
     EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_state_started))).Times(1);
 
-    app_session.begin_trust_session();
+    app_session.start_trust_session();
 }
 
-TEST(ApplicationSession, end_trust_session)
+TEST(ApplicationSession, stop_trust_session)
 {
     using namespace ::testing;
 
@@ -423,5 +423,5 @@ TEST(ApplicationSession, end_trust_session)
 
     EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_state_stopped))).Times(1);
 
-    app_session.end_trust_session();
+    app_session.stop_trust_session();
 }

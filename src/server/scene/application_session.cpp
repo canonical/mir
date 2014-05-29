@@ -184,7 +184,7 @@ void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
     event_sink->handle_lifecycle_event(state);
 }
 
-void ms::ApplicationSession::begin_trust_session()
+void ms::ApplicationSession::start_trust_session()
 {
     // All sessions which are part of the trust session get this event.
     MirEvent start_event;
@@ -194,7 +194,7 @@ void ms::ApplicationSession::begin_trust_session()
     event_sink->handle_event(start_event);
 }
 
-void ms::ApplicationSession::end_trust_session()
+void ms::ApplicationSession::stop_trust_session()
 {
     MirEvent stop_event;
     memset(&stop_event, 0, sizeof stop_event);

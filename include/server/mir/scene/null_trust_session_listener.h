@@ -31,8 +31,8 @@ public:
     void starting(std::shared_ptr<TrustSession> const&) override {}
     void stopping(std::shared_ptr<TrustSession> const&) override {}
 
-    void trusted_session_beginning(TrustSession const&, std::shared_ptr<Session> const&) override {}
-    void trusted_session_ending(TrustSession const&, std::shared_ptr<Session> const&) override {}
+    void trusted_participant_starting(TrustSession const&, std::shared_ptr<Session> const&) override {}
+    void trusted_participant_stopping(TrustSession const&, std::shared_ptr<Session> const&) override {}
 };
 }
 }

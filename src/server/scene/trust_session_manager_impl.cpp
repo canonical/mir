@@ -59,7 +59,7 @@ void ms::TrustSessionManagerImpl::stop_trust_session_locked(
     for (auto session : participants)
     {
         if (trust_session_container->remove_participant(trust_session.get(), session, TrustSessionContainer::TrustType::trusted_session))
-            trust_session_listener->trusted_session_ending(*trust_session, session);
+            trust_session_listener->trusted_participant_stopping(*trust_session, session);
     }
 
     trust_session_container->remove_trust_session(trust_session);
@@ -88,7 +88,7 @@ void ms::TrustSessionManagerImpl::remove_session(std::shared_ptr<Session> const&
         else
         {
             if (trust_session_container->remove_participant(trust_session.get(), session, TrustSessionContainer::TrustType::trusted_session))
-                trust_session_listener->trusted_session_ending(*trust_session, session);
+                trust_session_listener->trusted_participant_stopping(*trust_session, session);
         }
     }
 }
@@ -112,7 +112,7 @@ void ms::TrustSessionManagerImpl::add_participant_by_pid_locked(std::lock_guard<
             if (session->process_id() == process_id)
             {
                 if (trust_session_container->insert_participant(trust_session.get(), session, TrustSessionContainer::TrustType::trusted_session))
-                    trust_session_listener->trusted_session_beginning(*trust_session, session);
+                    trust_session_listener->trusted_participant_starting(*trust_session, session);
             }
         });
 }
@@ -159,7 +159,7 @@ void ms::TrustSessionManagerImpl::add_expected_session(std::shared_ptr<Session> 
     for(auto trust_session : trust_sessions)
     {
         if (trust_session_container->insert_participant(trust_session.get(), session, TrustSessionContainer::TrustType::trusted_session))
-            trust_session_listener->trusted_session_beginning(*trust_session, session);
+            trust_session_listener->trusted_participant_starting(*trust_session, session);
     }
 }
 
@@ -170,7 +170,7 @@ void ms::TrustSessionManagerImpl::add_participant(
     std::unique_lock<std::mutex> lock(trust_sessions_mutex);
 
     if (trust_session_container->insert_participant(trust_session.get(), session, TrustSessionContainer::TrustType::trusted_session))
-        trust_session_listener->trusted_session_beginning(*trust_session, session);
+        trust_session_listener->trusted_participant_starting(*trust_session, session);
 }
 
 void ms::TrustSessionManagerImpl::for_each_participant_in_trust_session(

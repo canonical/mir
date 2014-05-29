@@ -34,8 +34,8 @@ public:
     virtual void starting(std::shared_ptr<TrustSession> const& trust_session) = 0;
     virtual void stopping(std::shared_ptr<TrustSession> const& trust_session) = 0;
 
-    virtual void trusted_session_beginning(TrustSession const& trust_session, std::shared_ptr<Session> const& session) = 0;
-    virtual void trusted_session_ending(TrustSession const& trust_session, std::shared_ptr<Session> const& session) = 0;
+    virtual void trusted_participant_starting(TrustSession const& trust_session, std::shared_ptr<Session> const& participant) = 0;
+    virtual void trusted_participant_stopping(TrustSession const& trust_session, std::shared_ptr<Session> const& participant) = 0;
 
 protected:
     TrustSessionListener() = default;
