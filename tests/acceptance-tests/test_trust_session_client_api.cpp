@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_trust_session.h"
 #include "mir/scene/trust_session_listener.h"
 #include "mir/scene/trust_session.h"
+#include "mir/frontend/shell.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
@@ -28,6 +29,7 @@
 
 namespace mtf = mir_test_framework;
 namespace ms = mir::scene;
+namespace mf = mir::frontend;
 
 using namespace testing;
 
@@ -118,4 +120,21 @@ TEST_F(TrustSessionClientAPI, notifies_start)
     mir_trust_session_release_sync(trust_session);
 }
 
-// TODO there should be test that clients can be added to a trust session
+TEST_F(TrustSessionClientAPI, can_add_trusted_session)
+{
+    {
+        InSequence server_seq;
+        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), trusted_session_beginning(_,_));
+        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), trusted_session_ending(_,_));
+    }
+
+    pid_t session_pid = __LINE__;
+    auto session = server_config().the_frontend_shell()->open_session(session_pid, __PRETTY_FUNCTION__,  std::shared_ptr<mf::EventSink>());
+
+    MirTrustSession* trust_session = mir_connection_start_trust_session_sync(
+        connection, arbitrary_base_session_id, null_event_callback, this);
+
+    EXPECT_TRUE(mir_trust_session_add_trusted_session_sync(trust_session, session_pid));
+
+    mir_trust_session_release_sync(trust_session);
+}
