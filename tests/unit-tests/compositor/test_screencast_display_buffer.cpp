@@ -121,7 +121,7 @@ TEST_F(ScreencastDisplayBufferTest, renders_to_supplied_buffer)
 
     InSequence s;
     /* Set the buffer as rendering target */
-    EXPECT_CALL(mock_buffer, bind_to_texture());
+    EXPECT_CALL(mock_buffer, gl_bind_to_texture());
     EXPECT_CALL(mock_gl,
                 glViewport(0, 0,
                            mock_buffer.size().width.as_int(),
