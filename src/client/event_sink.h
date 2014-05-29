@@ -16,22 +16,29 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_CLIENT_EVENT_DISTRIBUTOR_H_
-#define MIR_CLIENT_EVENT_DISTRIBUTOR_H_
+#ifndef MIR_CLIENT_EVENT_SINK_H_
+#define MIR_CLIENT_EVENT_SINK_H_
 
-#include "event_sink.h"
-#include "event_handler_register.h"
+#include "mir_toolkit/event.h"
 
 namespace mir
 {
 namespace client
 {
 
-class EventDistributor : public mir::client::EventHandlerRegister, public mir::client::EventSink
+class EventSink
 {
-};
+public:
+    virtual ~EventSink() = default;
 
+    virtual void handle_event(MirEvent const& e) = 0;
+
+protected:
+    EventSink() = default;
+    EventSink(EventSink const&) = delete;
+    EventSink& operator=(EventSink const&) = delete;
+};
 } // namespace client
 } // namespace mir
 
-#endif // MIR_CLIENT_EVENT_DISTRIBUTOR_H_
+#endif // MIR_CLIENT_EVENT_SINK_H_

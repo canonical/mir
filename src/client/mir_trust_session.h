@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Nick Dedekind <nick.dedekind@gmail.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
 #ifndef MIR_CLIENT_MIR_TRUST_SESSION_H_
@@ -33,7 +33,7 @@ namespace mir
 /// The client-side library implementation namespace
 namespace client
 {
-class EventDistributor;
+class EventHandlerRegister;
 }
 }
 
@@ -41,7 +41,7 @@ struct MirTrustSession
 {
 public:
     MirTrustSession(mir::protobuf::DisplayServer& server,
-                    std::shared_ptr<mir::client::EventDistributor> const& event_distributor);
+                    std::shared_ptr<mir::client::EventHandlerRegister> const& event_handler_register);
 
     ~MirTrustSession();
 
@@ -59,8 +59,8 @@ private:
     mir::protobuf::DisplayServer& server;
     mir::protobuf::Void add_result;
     mir::protobuf::Void protobuf_void;
-    std::shared_ptr<mir::client::EventDistributor> const event_distributor;
-    int event_distributor_fn_id;
+    std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
+    int event_handler_register_id;
 
     MirWaitHandle start_wait_handle;
     MirWaitHandle stop_wait_handle;

@@ -13,23 +13,23 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Nick Dedekind <nick.dedekind@gmail.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
 #include "mir_trust_session.h"
-#include "event_distributor.h"
+#include "event_handler_register.h"
 
 namespace mp = mir::protobuf;
 namespace mcl = mir::client;
 
 MirTrustSession::MirTrustSession(
     mp::DisplayServer& server,
-    std::shared_ptr<mcl::EventDistributor> const& event_distributor)
+    std::shared_ptr<mcl::EventHandlerRegister> const& event_handler_register)
     : server(server),
-      event_distributor(event_distributor),
+      event_handler_register(event_handler_register),
       state(mir_trust_session_state_stopped)
 {
-    event_distributor_fn_id = event_distributor->register_event_handler(
+    event_handler_register_id = event_handler_register->register_event_handler(
         [this](MirEvent const& event)
         {
             if (event.type != mir_event_type_trust_session_state_change)
@@ -51,7 +51,7 @@ MirTrustSession::MirTrustSession(
 
 MirTrustSession::~MirTrustSession()
 {
-    event_distributor->unregister_event_handler(event_distributor_fn_id);
+    event_handler_register->unregister_event_handler(event_handler_register_id);
 }
 
 MirTrustSessionState MirTrustSession::get_state() const

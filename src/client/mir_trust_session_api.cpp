@@ -12,7 +12,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
+
 
 #include "mir_toolkit/mir_trust_session.h"
 #include "mir_trust_session.h"

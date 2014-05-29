@@ -84,7 +84,7 @@ MirConnection::MirConnection(
         display_configuration(conf.the_display_configuration()),
         lifecycle_control(conf.the_lifecycle_control()),
         surface_map(conf.the_surface_map()),
-        event_distributor(conf.the_event_distributor())
+        event_handler_register(conf.the_event_handler_register())
 {
     connect_result.set_error("connect not called");
     {
@@ -197,7 +197,7 @@ MirWaitHandle* MirConnection::release_surface(
 
 MirTrustSession* MirConnection::create_trust_session()
 {
-    return new MirTrustSession(display_server(), event_distributor);
+    return new MirTrustSession(display_server(), event_handler_register);
 }
 
 namespace

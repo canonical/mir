@@ -24,7 +24,7 @@
 #include "../mir_surface.h"
 #include "../display_configuration.h"
 #include "../lifecycle_control.h"
-#include "../event_distributor.h"
+#include "../event_sink.h"
 #include "mir/variable_length_array.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
@@ -52,7 +52,7 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<RpcReport> const& rpc_report,
     std::shared_ptr<LifecycleControl> const& lifecycle_control,
-    std::shared_ptr<EventDistributor> const& event_distributor) :
+    std::shared_ptr<EventSink> const& event_sink) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     work(io_service),
@@ -60,7 +60,7 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
-    event_distributor(event_distributor),
+    event_sink(event_sink),
     disconnected(false)
 {
     socket.connect(endpoint);
@@ -73,7 +73,7 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<RpcReport> const& rpc_report,
     std::shared_ptr<LifecycleControl> const& lifecycle_control,
-    std::shared_ptr<EventDistributor> const& event_distributor) :
+    std::shared_ptr<EventSink> const& event_sink) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
     work(io_service),
@@ -81,7 +81,7 @@ mclr::MirSocketRpcChannel::MirSocketRpcChannel(
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
-    event_distributor(event_distributor),
+    event_sink(event_sink),
     disconnected(false)
 {
     socket.assign(boost::asio::local::stream_protocol(), native_socket);
@@ -418,9 +418,9 @@ void mclr::MirSocketRpcChannel::process_event_sequence(std::string const& event)
 
                 rpc_report->event_parsing_succeeded(e);
 
-                event_distributor->handle_event(e);
+                event_sink->handle_event(e);
 
-                // todo - surfaces should register with the event distributor.
+                // todo - surfaces should register with the event handler register.
                 if (e.type == mir_event_type_surface)
                 {
                     surface_map->with_surface_do(e.surface.id,

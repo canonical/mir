@@ -16,7 +16,7 @@
  * Authored by: Nick Dedekind <nick.dedekind <nick.dedekind@canonical.com>
  */
 
-#include "src/client/event_distributor.h"
+#include "src/client/mir_event_distributor.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -36,7 +36,7 @@ public:
     MOCK_METHOD1(event_handled1, void(MirEvent const&));
     MOCK_METHOD1(event_handled2, void(MirEvent const&));
 
-    mcl::EventDistributor event_distributor;
+    MirEventDistributor event_distributor;
 };
 
 MATCHER_P(MirEventTypeIs, type, "")

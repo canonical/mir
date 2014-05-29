@@ -13,20 +13,18 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Nick Dedekind <nick.dedekind@gmail.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#include "event_distributor.h"
+#include "mir_event_distributor.h"
 
-namespace mcl = mir::client;
-
-mcl::EventDistributor::EventDistributor() :
+MirEventDistributor::MirEventDistributor() :
     next_fn_id{0},
     in_event{false}
 {
 }
 
-int mcl::EventDistributor::register_event_handler(std::function<void(MirEvent const&)> const& fn)
+int MirEventDistributor::register_event_handler(std::function<void(MirEvent const&)> const& fn)
 {
     std::unique_lock<std::mutex> lock(mutex);
 
@@ -35,7 +33,7 @@ int mcl::EventDistributor::register_event_handler(std::function<void(MirEvent co
     return id;
 }
 
-void mcl::EventDistributor::unregister_event_handler(int id)
+void MirEventDistributor::unregister_event_handler(int id)
 {
     std::lock_guard<std::recursive_mutex> thread_lock(thread_mutex);
     std::unique_lock<std::mutex> lock(mutex);
@@ -46,7 +44,7 @@ void mcl::EventDistributor::unregister_event_handler(int id)
         event_handlers.erase(id);
 }
 
-void mcl::EventDistributor::handle_event(MirEvent const& event)
+void MirEventDistributor::handle_event(MirEvent const& event)
 {
     std::lock_guard<std::recursive_mutex> thread_lock(thread_mutex);
     std::unique_lock<std::mutex> lock(mutex);
@@ -71,7 +69,7 @@ void mcl::EventDistributor::handle_event(MirEvent const& event)
         event_handlers.erase(id);
 }
 
-int mcl::EventDistributor::next_id()
+int MirEventDistributor::next_id()
 {
     return ++next_fn_id;
 }

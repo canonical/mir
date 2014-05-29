@@ -50,7 +50,7 @@ set(
   mir_cursor_api.cpp
   mir_trust_session.cpp
   mir_trust_session_api.cpp
-  event_distributor.cpp
+  mir_event_distributor.cpp
 )
 
 add_library(

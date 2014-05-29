@@ -17,14 +17,16 @@
  */
 
 #include "src/client/mir_trust_session.h"
-#include "src/client/event_distributor.h"
+#include "src/client/mir_event_distributor.h"
+
+#include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
 #include <thread>
 
 namespace mcl = mir::client;
+namespace mt = mir::test;
 
 namespace google
 {
@@ -115,7 +117,6 @@ class MirTrustSessionTest : public testing::Test
 {
 public:
     MirTrustSessionTest()
-        : event_distributor{std::make_shared<mcl::EventDistributor>()}
     {
     }
 
@@ -129,7 +130,7 @@ public:
 
     testing::NiceMock<MockProtobufServer> mock_server;
     StubProtobufServer stub_server;
-    std::shared_ptr<mcl::EventDistributor> event_distributor;
+    MirEventDistributor event_distributor;
 };
 
 struct MockCallback
@@ -164,7 +165,7 @@ TEST_F(MirTrustSessionTest, start_trust_session)
 
     MirTrustSession trust_session{
         mock_server,
-        event_distributor};
+        mt::fake_shared(event_distributor)};
     trust_session.start(__LINE__, null_callback_func, nullptr);
 }
 
@@ -178,7 +179,7 @@ TEST_F(MirTrustSessionTest, stop_trust_session)
 
     MirTrustSession trust_session{
         mock_server,
-        event_distributor};
+        mt::fake_shared(event_distributor)};
     trust_session.stop(null_callback_func, nullptr);
 }
 
@@ -191,7 +192,7 @@ TEST_F(MirTrustSessionTest, executes_callback_on_start)
 
     MirTrustSession trust_session{
         stub_server,
-        event_distributor};
+        mt::fake_shared(event_distributor)};
     trust_session.start(__LINE__, mock_callback_func, &mock_cb)->wait_for_all();
 }
 
@@ -204,7 +205,7 @@ TEST_F(MirTrustSessionTest, executes_callback_on_stop)
 
     MirTrustSession trust_session{
         stub_server,
-        event_distributor};
+        mt::fake_shared(event_distributor)};
     trust_session.stop(mock_callback_func, &mock_cb)->wait_for_all();
 }
 
@@ -214,7 +215,7 @@ TEST_F(MirTrustSessionTest, state_change_event_handler)
 
     MirTrustSession trust_session{
         mock_server,
-        event_distributor};
+        mt::fake_shared(event_distributor)};
     trust_session.register_trust_session_event_callback(&MirTrustSessionTest::trust_session_event, this);
 
     EXPECT_CALL(*this, state_updated(mir_trust_session_state_started)).Times(1);
@@ -222,6 +223,6 @@ TEST_F(MirTrustSessionTest, state_change_event_handler)
     MirEvent e;
     e.type = mir_event_type_trust_session_state_change;
     e.trust_session.new_state = mir_trust_session_state_started;
-    event_distributor->handle_event(e);
+    event_distributor.handle_event(e);
 }
 

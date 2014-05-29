@@ -45,7 +45,7 @@ class ClientPlatformFactory;
 class ConnectionSurfaceMap;
 class DisplayConfiguration;
 class LifecycleControl;
-class EventDistributor;
+class EventHandlerRegister;
 
 namespace rpc
 {
@@ -175,7 +175,7 @@ private:
 
     std::shared_ptr<mir::client::ConnectionSurfaceMap> const surface_map;
 
-    std::shared_ptr<mir::client::EventDistributor> const event_distributor;
+    std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
 
     std::vector<int> extra_platform_data;
 
