@@ -35,44 +35,27 @@ void add_trusted_session_callback(MirTrustSession*,
 
 }
 
-MirWaitHandle *mir_connection_start_trust_session(MirConnection* connection,
-                                                  pid_t base_session_pid,
-                                                  mir_trust_session_callback start_callback,
-                                                  mir_trust_session_event_callback event_callback,
-                                                  void* context)
+MirTrustSession *mir_connection_start_trust_session_sync(MirConnection* connection,
+                                                         pid_t base_session_pid,
+                                                         mir_trust_session_event_callback event_callback,
+                                                         void* context)
 {
     try
     {
-      auto trust_session = connection->create_trust_session();
-      if (event_callback)
-          trust_session->register_trust_session_event_callback(event_callback, context);
-      return trust_session->start(base_session_pid, start_callback, context);
+        auto trust_session = connection->create_trust_session();
+        if (event_callback)
+            trust_session->register_trust_session_event_callback(event_callback, context);
+
+        mir_wait_for(trust_session->start(base_session_pid,
+                     null_callback,
+                     nullptr));
+        return trust_session;
     }
     catch (std::exception const&)
     {
         // TODO callback with an error
         return nullptr;
     }
-}
-
-MirTrustSession *mir_connection_start_trust_session_sync(MirConnection* connection,
-                                                         pid_t base_session_pid,
-                                                         mir_trust_session_event_callback event_callback,
-                                                         void* context)
-{
-    auto trust_session = connection->create_trust_session();
-    if (event_callback)
-        trust_session->register_trust_session_event_callback(event_callback, context);
-
-    mir_wait_for(trust_session->start(base_session_pid,
-                         null_callback,
-                         nullptr));
-    return trust_session;
-}
-
-MirTrustSession* mir_connection_create_trust_session(MirConnection* connection)
-{
-    return connection->create_trust_session();
 }
 
 MirWaitHandle *mir_trust_session_add_trusted_session(MirTrustSession *trust_session,
