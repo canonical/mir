@@ -23,6 +23,8 @@
 #include <functional>
 #include <mutex>
 #include <map>
+#include <unordered_set>
+#include <atomic>
 
 namespace mir
 {
@@ -43,8 +45,11 @@ private:
     int next_id();
 
     mutable std::mutex mutex;
+    mutable std::recursive_mutex thread_mutex;
     std::map<int, std::function<void(MirEvent const&)>> event_handlers;
-    int next_fn_id;
+    std::atomic<int> next_fn_id;
+    std::unordered_set<int> delete_later_ids;
+    std::atomic<bool> in_event;
 };
 }
 }

@@ -21,13 +21,14 @@
 namespace mcl = mir::client;
 
 mcl::EventDistributor::EventDistributor() :
-    next_fn_id(0)
+    next_fn_id{0},
+    in_event{false}
 {
 }
 
 int mcl::EventDistributor::register_event_handler(std::function<void(MirEvent const&)> const& fn)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::unique_lock<std::mutex> lock(mutex);
 
     int id = next_id();
     event_handlers[id] = fn;
@@ -36,19 +37,38 @@ int mcl::EventDistributor::register_event_handler(std::function<void(MirEvent co
 
 void mcl::EventDistributor::unregister_event_handler(int id)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard<std::recursive_mutex> thread_lock(thread_mutex);
+    std::unique_lock<std::mutex> lock(mutex);
 
-    event_handlers.erase(id);
+    if (in_event)
+        delete_later_ids.insert(id);
+    else
+        event_handlers.erase(id);
 }
 
 void mcl::EventDistributor::handle_event(MirEvent const& event)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard<std::recursive_mutex> thread_lock(thread_mutex);
+    std::unique_lock<std::mutex> lock(mutex);
 
-    for (auto const& fn : event_handlers)
+    auto event_handlers_copy(event_handlers);
+
+    for (auto const& handler : event_handlers_copy)
     {
-        fn.second(event);
+        if (delete_later_ids.find(handler.first) == delete_later_ids.end())
+        {
+            in_event = true;
+
+            lock.unlock();
+            handler.second(event);
+            lock.lock();
+
+            in_event = false;
+        }
     }
+
+    for (int id : delete_later_ids)
+        event_handlers.erase(id);
 }
 
 int mcl::EventDistributor::next_id()
