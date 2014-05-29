@@ -23,13 +23,7 @@
 
 namespace
 {
-
-// assign_result is compatible with all 2-parameter callbacks
-void assign_result(void *result, void **context)
-{
-    if (context)
-        *context = result;
-}
+void null_callback(MirTrustSession*, void*) {}
 
 void add_trusted_session_callback(MirTrustSession*,
                                   MirBool added,
@@ -47,10 +41,18 @@ MirWaitHandle *mir_connection_start_trust_session(MirConnection* connection,
                                                   mir_trust_session_event_callback event_callback,
                                                   void* context)
 {
-    auto trust_session = connection->create_trust_session();
-    if (event_callback)
-        trust_session->register_trust_session_event_callback(event_callback, context);
-    return trust_session->start(base_session_pid, start_callback, context);
+    try
+    {
+      auto trust_session = connection->create_trust_session();
+      if (event_callback)
+          trust_session->register_trust_session_event_callback(event_callback, context);
+      return trust_session->start(base_session_pid, start_callback, context);
+    }
+    catch (std::exception const&)
+    {
+        // TODO callback with an error
+        return nullptr;
+    }
 }
 
 MirTrustSession *mir_connection_start_trust_session_sync(MirConnection* connection,
@@ -63,8 +65,8 @@ MirTrustSession *mir_connection_start_trust_session_sync(MirConnection* connecti
         trust_session->register_trust_session_event_callback(event_callback, context);
 
     mir_wait_for(trust_session->start(base_session_pid,
-                                      reinterpret_cast<mir_trust_session_callback>(assign_result),
-                                      nullptr));
+                         null_callback,
+                         nullptr));
     return trust_session;
 }
 
@@ -99,35 +101,14 @@ MirBool mir_trust_session_add_trusted_session_sync(MirTrustSession *trust_sessio
     return result;
 }
 
-MirWaitHandle *mir_trust_session_stop(MirTrustSession *trust_session,
-                                      mir_trust_session_callback callback,
-                                      void* context)
+void mir_trust_session_release_sync(MirTrustSession *trust_session)
 {
-    try
-    {
-        return trust_session->stop(callback, context);
-    }
-    catch (std::exception const&)
-    {
-        // TODO callback with an error
-        return nullptr;
-    }
-}
-
-MirBool mir_trust_session_stop_sync(MirTrustSession *trust_session)
-{
-    mir_wait_for(mir_trust_session_stop(trust_session,
-        reinterpret_cast<mir_trust_session_callback>(assign_result),
-        NULL));
-    return trust_session->get_state() == mir_trust_session_state_stopped ? mir_true : mir_false;
+    if (trust_session->get_state() == mir_trust_session_state_stopped)
+        mir_wait_for(trust_session->stop(null_callback, nullptr));
+    delete trust_session;
 }
 
 MirTrustSessionState mir_trust_session_get_state(MirTrustSession *trust_session)
 {
     return trust_session->get_state();
-}
-
-void mir_trust_session_release(MirTrustSession* trust_session)
-{
-    delete trust_session;
 }

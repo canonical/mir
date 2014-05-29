@@ -30,28 +30,12 @@ extern "C" {
 #endif
 
 /**
- * Create an new trust session
+ * Create and start a new trust session
  *   \param [in] connection        The connection
  *   \param [in] base_session_pid  The process id of the initiating application
- *   \param [in] start_callback    Callback function to be invoked when request
- *                                 completes
  *   \param [in] event_callback    The function to be called when a trust session event occurs
  *   \param [in,out] context       User data passed to the callback functions
  *   \return                       A handle that can be passed to mir_wait_for
- */
-MirWaitHandle *mir_connection_start_trust_session(MirConnection* connection,
-    pid_t base_session_pid,
-    mir_trust_session_callback start_callback,
-    mir_trust_session_event_callback event_callback,
-    void *context);
-
-/**
- * Create an new trust session
- *   \param [in] connection  The connection
- *   \param [in] base_session_pid The process id of the initiating application
- *   \param [in] event_callback   The function to be called when a trust session event occurs
- *   \param [in,out] context      User data passed to the callback function
- *   \return                      A handle that can be passed to mir_wait_for
  */
 MirTrustSession *mir_connection_start_trust_session_sync(MirConnection* connection,
     pid_t base_session_pid,
@@ -62,42 +46,16 @@ MirTrustSession *mir_connection_start_trust_session_sync(MirConnection* connecti
  * Add a process id to the trust session relationship
  *   \param [in] trust_session  The trust session
  *   \param [in] session_pid    The process id of the application to add
- *   \param [in] callback       Callback function to be invoked when request
- *                              completes
- *   \param [in,out] context      User data passed to the callback function
- *   \return                    Wait handle
- */
-MirWaitHandle *mir_trust_session_add_trusted_session(MirTrustSession *trust_session,
-    pid_t session_pid,
-    mir_trust_session_add_trusted_session_callback callback,
-    void *context);
-
-/**
- * Perform a mir_trust_session_add_trusted_pid() but also wait for and return the result.
- *   \param [in] trust_session  The trust session
- *   \param [in] pid            The process id of the application to add
- *   \return                    A MirTrustSessionAddTrustResult result of the call
+ *   \return                    True if the process id was added, false otherwise
  */
 MirBool mir_trust_session_add_trusted_session_sync(MirTrustSession *trust_session,
     pid_t pid);
 
 /**
- * Request the cancellation of a trust session
+ * Stop and release the specified trust session
  *   \param [in] trust_session  The trust session
- *   \param [in] callback       Callback function to be invoked when request
- *                              completes
- *   \param [in,out] context      User data passed to the callback function
- *   \return                    Wait handle
  */
-MirWaitHandle *mir_trust_session_stop(MirTrustSession *trust_session, mir_trust_session_callback callback, void *context);
-
-/**
- * Perform a mir_trust_session_stop() but also wait for and return the result.
- *   \param [in] trust_session  The trust session
- *   \return                    True if the request was made successfully,
- *                              false otherwise
- */
-MirBool mir_trust_session_stop_sync(MirTrustSession *trust_session);
+void mir_trust_session_release_sync(MirTrustSession *trust_session);
 
 /**
  * Return the state of trust session
@@ -105,12 +63,6 @@ MirBool mir_trust_session_stop_sync(MirTrustSession *trust_session);
  * \return                    The state of the trust session
  */
 MirTrustSessionState mir_trust_session_get_state(MirTrustSession *trust_session);
-
-/**
- * Release a trust session
- *   \param [in] trust_session  The trust session to release
- */
-void mir_trust_session_release(MirTrustSession* trust_session);
 
 #ifdef __cplusplus
 }

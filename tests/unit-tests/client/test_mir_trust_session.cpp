@@ -208,7 +208,7 @@ TEST_F(MirTrustSessionTest, executes_callback_on_stop)
     trust_session.stop(mock_callback_func, &mock_cb)->wait_for_all();
 }
 
-TEST_F(MirTrustSessionTest, state_change_event_handler_started)
+TEST_F(MirTrustSessionTest, state_change_event_handler)
 {
     using namespace testing;
 
@@ -222,23 +222,6 @@ TEST_F(MirTrustSessionTest, state_change_event_handler_started)
     MirEvent e;
     e.type = mir_event_type_trust_session_state_change;
     e.trust_session.new_state = mir_trust_session_state_started;
-    event_distributor->handle_event(e);
-}
-
-TEST_F(MirTrustSessionTest, state_change_event_handler_stopped)
-{
-    using namespace testing;
-
-    MirTrustSession trust_session{
-        mock_server,
-        event_distributor};
-    trust_session.register_trust_session_event_callback(&MirTrustSessionTest::trust_session_event, this);
-
-    EXPECT_CALL(*this, state_updated(mir_trust_session_state_stopped)).Times(1);
-
-    MirEvent e;
-    e.type = mir_event_type_trust_session_state_change;
-    e.trust_session.new_state = mir_trust_session_state_stopped;
     event_distributor->handle_event(e);
 }
 

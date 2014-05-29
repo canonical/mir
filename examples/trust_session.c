@@ -107,13 +107,6 @@ void start_session(const char* server, const char* name, MirDemoState* mcd)
 
 void stop_session(MirDemoState* mcd, const char* name)
 {
-    if (mcd->trust_session)
-    {
-        mir_trust_session_release(mcd->trust_session);
-        mcd->trust_session = 0;
-        printf("%s: Trust session released \n", name);
-    }
-
     if (mcd->surface)
     {
         // We should release our surface
@@ -153,8 +146,8 @@ void trusted_helper(const char* server, pid_t child_pid)
 
     if (mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_state_started)
     {
-        mir_trust_session_stop_sync(mcd.trust_session);
-        assert(mir_trust_session_get_state(mcd.trust_session) == mir_trust_session_state_stopped);
+        mir_trust_session_release_sync(mcd.trust_session);
+        mcd.trust_session = NULL;
         puts("trusted_helper: Stopped trust session");
     }
     else

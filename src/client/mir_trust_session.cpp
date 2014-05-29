@@ -42,6 +42,9 @@ MirTrustSession::MirTrustSession(
             {
                 handle_trust_session_event(event.trust_session.new_state);
             }
+
+            if (event.trust_session.new_state == mir_trust_session_state_stopped)
+                delete this;
         }
     );
 }
@@ -120,14 +123,10 @@ void MirTrustSession::register_trust_session_event_callback(
 
 void MirTrustSession::done_start(mir_trust_session_callback callback, void* context)
 {
-    MirTrustSessionState new_state = mir_trust_session_state_started;
     {
         std::lock_guard<decltype(session_mutex)> lock(session_mutex);
 
-        if (session.has_error())
-            new_state = mir_trust_session_state_stopped;
-
-        state = new_state;
+        state = session.has_error() ? mir_trust_session_state_stopped : mir_trust_session_state_started;
     }
 
     callback(this, context);
