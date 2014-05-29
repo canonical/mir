@@ -119,6 +119,16 @@ TEST_F(TrustSessionClientAPI, can_start_and_stop_a_trust_session)
 
     mir_wait_for(mir_connection_start_trust_session(
         connection, arbitrary_base_session_id, trust_session_start_callback, null_event_callback, this));
+
+    mir_wait_for(mir_trust_session_stop(trust_session, trust_session_stop_callback, this));
+
+    mir_trust_session_release(trust_session);
+}
+
+TEST_F(TrustSessionClientAPI, start_and_stop_invoke_callbacks)
+{
+    mir_wait_for(mir_connection_start_trust_session(
+        connection, arbitrary_base_session_id, trust_session_start_callback, null_event_callback, this));
     ASSERT_THAT(trust_session, Ne(nullptr));
     EXPECT_THAT(started, Eq(1));
 
@@ -142,5 +152,4 @@ TEST_F(TrustSessionClientAPI, notifies_start_and_stop)
     mir_trust_session_release(trust_session);
 }
 
-// TODO there should be testing with a non-null mir_trust_session_event_callback
 // TODO there should be test that clients can be added to a trust session
