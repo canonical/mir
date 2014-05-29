@@ -13,29 +13,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_RENDERABLE_LIST_COMPOSITOR_H_
-#define MIR_TEST_DOUBLES_MOCK_RENDERABLE_LIST_COMPOSITOR_H_
+#ifndef MIR_EMERGENCY_CLEANUP_H_
+#define MIR_EMERGENCY_CLEANUP_H_
 
-#include "src/platform/graphics/android/hwc_fallback_gl_renderer.h"
-#include <gmock/gmock.h>
+#include "mir/emergency_cleanup_registry.h"
 
 namespace mir
 {
-namespace test
-{
-namespace doubles
-{
 
-struct MockRenderableListCompositor : public graphics::android::RenderableListCompositor
+class EmergencyCleanup : public EmergencyCleanupRegistry
 {
-    MOCK_CONST_METHOD2(render,
-        void(graphics::RenderableList const&, graphics::android::SwappingGLContext const&));
+public:
+    virtual void operator()() const = 0;
 };
 
 }
-}
-}
-#endif // MIR_TEST_DOUBLES_MOCK_RENDERABLE_LIST_COMPOSITOR_H_
+
+#endif /* MIR_EMERGENCY_CLEANUP_H_ */

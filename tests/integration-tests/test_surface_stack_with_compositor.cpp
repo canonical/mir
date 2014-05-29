@@ -255,7 +255,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
 {
     using namespace testing;
     ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor())
-        .WillByDefault(Return(1));
+        .WillByDefault(Return(0));
 
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),

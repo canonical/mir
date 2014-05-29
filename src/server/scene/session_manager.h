@@ -19,9 +19,7 @@
 #ifndef MIR_SCENE_APPLICATION_MANAGER_H_
 #define MIR_SCENE_APPLICATION_MANAGER_H_
 
-#include "mir/frontend/surface_id.h"
-#include "mir/frontend/shell.h"
-#include "mir/shell/focus_controller.h"
+#include "mir/scene/session_coordinator.h"
 
 #include <mutex>
 #include <memory>
@@ -43,7 +41,7 @@ class SessionListener;
 class SnapshotStrategy;
 class SurfaceCoordinator;
 
-class SessionManager : public frontend::Shell, public shell::FocusController
+class SessionManager : public SessionCoordinator
 {
 public:
     explicit SessionManager(std::shared_ptr<SurfaceCoordinator> const& surface_coordinator,

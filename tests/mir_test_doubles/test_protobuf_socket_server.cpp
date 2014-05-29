@@ -23,7 +23,7 @@
 #include "mir/frontend/protobuf_connection_creator.h"
 #include "src/server/frontend/published_socket_connector.h"
 #include "src/server/report/null_report_factory.h"
-#include "src/server/report/null_report_factory.h"
+#include "mir_test_doubles/null_emergency_cleanup.h"
 
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -37,6 +37,8 @@ std::shared_ptr<mf::Connector> make_connector(
     std::shared_ptr<mf::ProtobufIpcFactory> const& factory,
     std::shared_ptr<mf::ConnectorReport> const& report)
 {
+    mtd::NullEmergencyCleanup null_emergency_cleanup;
+
     return std::make_shared<mf::PublishedSocketConnector>(
         socket_name,
         std::make_shared<mf::ProtobufConnectionCreator>(
@@ -44,6 +46,7 @@ std::shared_ptr<mf::Connector> make_connector(
             std::make_shared<mtd::StubSessionAuthorizer>(),
             mr::null_message_processor_report()),
         10,
+        null_emergency_cleanup,
         report);
 }
 }

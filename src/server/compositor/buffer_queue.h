@@ -56,6 +56,7 @@ public:
     void force_requests_to_complete() override;
     void resize(const geometry::Size &newsize) override;
     int buffers_ready_for_compositor() const override;
+    int buffers_free_for_client() const override;
     bool framedropping_allowed() const;
 
 private:

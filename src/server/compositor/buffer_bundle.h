@@ -59,6 +59,15 @@ public:
     virtual void force_requests_to_complete() = 0;
     virtual void resize(const geometry::Size &newsize) = 0;
     virtual int buffers_ready_for_compositor() const = 0;
+
+    /**
+     * Return the number of client acquisitions that can be completed
+     * synchronously without blocking, before a compositor consumes one. This
+     * is used for pre-filling the queue in tests. Don't assume it's always
+     * nbuffers-1 as it might be less.
+     */
+    virtual int buffers_free_for_client() const = 0;
+
 protected:
     BufferBundle() = default;
     BufferBundle(BufferBundle const&) = delete;
