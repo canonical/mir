@@ -52,7 +52,7 @@ protected:
 
             if (file_type == raw)
             {
-                glmark2_output << line;
+                glmark2_output << line << std::endl;
             }
         }
         
