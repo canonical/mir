@@ -78,6 +78,6 @@ private:
 
 TEST_F(GLMark2Test, benchmark_fullscreen_default)
 {
-    run_glmark2("glmark2_fullscreen_default.json", json);
+    run_glmark2("/tmp/glmark2_fullscreen_default.results", raw);
 }
 }
