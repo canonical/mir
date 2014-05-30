@@ -64,9 +64,9 @@ protected:
         if (file_type == json)
         {
             std::string json =  "{";
-                json += "'benchmark_name':'glmark2-es2-mir'";
+                json += "\"benchmark_name\":\"glmark2-es2-mir\"";
                 json += ",";
-                json += "'score':'" + score + "'";
+                json += "\"score\":\"" + score + "\"";
                 json += "}";
             glmark2_output << json;
         }
