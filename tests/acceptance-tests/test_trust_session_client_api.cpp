@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_trust_session.h"
 #include "mir/scene/trust_session_listener.h"
 #include "mir/scene/trust_session.h"
+#include "mir/scene/session.h"
 #include "mir/frontend/shell.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
@@ -122,19 +123,27 @@ TEST_F(TrustSessionClientAPI, notifies_start)
 
 TEST_F(TrustSessionClientAPI, can_add_trusted_session)
 {
-    {
-        InSequence server_seq;
-        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), trusted_participant_starting(_,_));
-        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), trusted_participant_stopping(_,_));
-    }
+    pid_t participant_pid = __LINE__;
+    auto const participant_session = server_config().the_frontend_shell()->open_session(participant_pid, __PRETTY_FUNCTION__,  std::shared_ptr<mf::EventSink>());
 
-    pid_t session_pid = __LINE__;
-    auto session = server_config().the_frontend_shell()->open_session(session_pid, __PRETTY_FUNCTION__,  std::shared_ptr<mf::EventSink>());
+    {
+        auto const participant = std::dynamic_pointer_cast<ms::Session>(participant_session);
+        InSequence server_seq;
+        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), trusted_participant_starting(_, Eq(participant)));
+        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), trusted_participant_stopping(_, Eq(participant)));
+    }
 
     MirTrustSession* trust_session = mir_connection_start_trust_session_sync(
         connection, arbitrary_base_session_id, null_event_callback, this);
 
-    EXPECT_TRUE(mir_trust_session_add_trusted_session_sync(trust_session, session_pid));
+    EXPECT_TRUE(mir_trust_session_add_trusted_session_sync(trust_session, participant_pid));
 
     mir_trust_session_release_sync(trust_session);
+
+    // TODO It really shouldn't be necessary to close the participant session.
+    // TODO But the MediatingDisplayChanger id destroyed without deregistering
+    // TODO callbacks from the BroadcastingSessionEventSink which gets called in
+    // TODO SessionManager::~SessionManager() in code that the comments claim
+    // TODO works around broken ownership.
+    server_config().the_frontend_shell()->close_session(participant_session);
 }
