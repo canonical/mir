@@ -31,7 +31,6 @@
 #include "hwc_vsync.h"
 #include "android_display.h"
 #include "real_hwc_wrapper.h"
-#include "hwc_formatted_logger.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>

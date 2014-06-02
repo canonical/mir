@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "hwc_formatted_logger.h"
+#include "hwc_loggers.h"
 #include <iostream>
 #include <iomanip>
 

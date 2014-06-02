@@ -24,7 +24,7 @@
 #include "android_display.h"
 #include "internal_client.h"
 #include "output_builder.h"
-#include "hwc_formatted_logger.h"
+#include "hwc_loggers.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_initializer.h"

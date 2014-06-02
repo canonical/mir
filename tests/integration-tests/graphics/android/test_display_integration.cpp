@@ -19,7 +19,7 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/display_buffer.h"
 #include "src/platform/graphics/android/android_display.h"
-#include "src/platform/graphics/android/hwc_formatted_logger.h"
+#include "src/platform/graphics/android/hwc_loggers.h"
 #include "src/platform/graphics/android/resource_factory.h"
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 #include "src/platform/graphics/android/output_builder.h"
