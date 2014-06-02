@@ -137,5 +137,4 @@ TEST_F(TrustSessionClientAPI, can_add_trusted_session)
     EXPECT_TRUE(mir_trust_session_add_trusted_session_sync(trust_session, session_pid));
 
     mir_trust_session_release_sync(trust_session);
-    server_config().the_frontend_shell()->close_session(session);
 }
