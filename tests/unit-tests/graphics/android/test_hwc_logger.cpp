@@ -141,8 +141,8 @@ TEST_F(HwcLogger, log_optimization)
     mga::HwcFormattedLogger logger;
     logger.log_overlay_optimization(mga::OverlayOptimization::enabled);
     EXPECT_EQ(enabled_str.str(), test_stream.str()); 
+    test_stream.str("");
     test_stream.clear();
-
     logger.log_overlay_optimization(mga::OverlayOptimization::disabled);
     EXPECT_EQ(disabled_str.str(), test_stream.str()); 
 }
