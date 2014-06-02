@@ -150,7 +150,7 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
 {
     auto logger = make_logger(*options);
     auto overlay_option = should_use_overlay_optimization(*options);
-//    logger->log_overlay_optimization(overlay_option);
+    logger->log_overlay_optimization(overlay_option);
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto display_resource_factory = std::make_shared<mga::ResourceFactory>(logger);
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);

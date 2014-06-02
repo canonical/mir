@@ -73,8 +73,8 @@ struct Surface : testing::Test
 
         ON_CALL(*buffer_stream, stream_size()).WillByDefault(Return(geom::Size()));
         ON_CALL(*buffer_stream, get_stream_pixel_format()).WillByDefault(Return(mir_pixel_format_abgr_8888));
-        ON_CALL(*buffer_stream, swap_client_buffers(_, _))
-            .WillByDefault(InvokeArgument<1>(nullptr));
+        ON_CALL(*buffer_stream, acquire_client_buffer(_))
+            .WillByDefault(InvokeArgument<0>(nullptr));
     }
     mf::SurfaceId stub_id;
     std::shared_ptr<ms::SurfaceConfigurator> null_configurator;

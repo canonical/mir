@@ -209,12 +209,9 @@ MirPixelFormat ms::BasicSurface::pixel_format() const
 
 void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(mg::Buffer* new_buffer)> complete)
 {
-    bool const posting{!!old_buffer};
-
-    surface_buffer_stream->swap_client_buffers(old_buffer, complete);
-
-    if (posting)
+    if (old_buffer)
     {
+        surface_buffer_stream->release_client_buffer(old_buffer);
         {
             std::unique_lock<std::mutex> lk(guard);
             first_frame_posted = true;
@@ -222,6 +219,8 @@ void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(m
 
         observers.frame_posted(1);
     }
+
+    surface_buffer_stream->acquire_client_buffer(complete);
 }
 
 void ms::BasicSurface::allow_framedropping(bool allow)
