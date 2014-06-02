@@ -58,13 +58,13 @@ mga::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<ANativeWindow> const& native_window,
     mga::GLContext const& shared_gl_context,
     mg::GLProgramFactory const& program_factory,
-    mga::OverlayOptimization /*overlay_option*/)
+    mga::OverlayOptimization overlay_option)
     : fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},
       gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())},
       overlay_program{program_factory, gl_context, geom::Rectangle{{0,0},fb_bundle->fb_size()}},
-      overlay_enabled{true},//overlay_option == mga::OverlayOptimization::enabled},
+      overlay_enabled{overlay_option == mga::OverlayOptimization::enabled},
       current_configuration{
           mg::DisplayConfigurationOutputId{1},
           mg::DisplayConfigurationCardId{0},
