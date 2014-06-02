@@ -45,6 +45,7 @@ namespace mo = mir::options;
 namespace
 {
 char const* const hwc_log_opt = "hwc-report";
+char const* const hwc_overlay_opt = "disable-overlays";
 bool should_log_hwc(mo::Option const& options)
 {
     if (!options.is_set(hwc_log_opt))
@@ -60,6 +61,19 @@ bool should_log_hwc(mo::Option const& options)
             std::string("Invalid hwc-report option: " + opt + " (valid options are: \"" +
             mo::off_opt_value + "\" and \"" + mo::log_opt_value + "\")"));
 }
+
+mga::OverlayOptimization should_use_overlay_optimization(mo::Option const& options)
+{
+    if (!options.is_set(hwc_overlay_opt))
+        return mga::OverlayOptimization::disabled;
+
+    auto opt = options.get<bool>(hwc_overlay_opt);
+    if (opt)
+        return mga::OverlayOptimization::disabled;
+    else
+        return mga::OverlayOptimization::enabled;
+}
+
 }
 
 mga::AndroidPlatform::AndroidPlatform(
@@ -136,7 +150,7 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
     auto display_resource_factory = std::make_shared<mga::ResourceFactory>(should_log_hwc(*options));
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
     auto display_builder = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, display_report);
+        fb_allocator, display_resource_factory, display_report, should_use_overlay_optimization(*options));
     return std::make_shared<mga::AndroidPlatform>(display_builder, display_report);
 }
 
@@ -153,5 +167,8 @@ extern "C" void add_platform_options(
     config.add_options()
         (hwc_log_opt,
          boost::program_options::value<std::string>()->default_value(std::string{mo::off_opt_value}),
-         "[platform-specific] How to handle the HWC logging report. [{log,off}]");
+         "[platform-specific] How to handle the HWC logging report. [{log,off}]")
+        (hwc_overlay_opt,
+         boost::program_options::value<bool>()->default_value(true), //TODO: switch default to false 
+         "[platform-specific] Whether to disable overlay optimizations [{on,off}]");
 }

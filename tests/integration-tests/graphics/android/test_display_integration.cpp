@@ -78,7 +78,7 @@ TEST_F(AndroidDisplay, display_can_post)
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
     auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, null_display_report);
+        fb_allocator, display_resource_factory, null_display_report, mga::OverlayOptimization::disabled);
 
     auto program_factory = std::make_shared<mg::ProgramFactory>();
     mga::AndroidDisplay display{display_buffer_factory, program_factory, stub_gl_config, null_display_report};
