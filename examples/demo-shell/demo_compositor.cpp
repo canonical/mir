@@ -39,7 +39,6 @@ me::DemoCompositor::DemoCompositor(
 
 bool me::DemoCompositor::composite()
 {
-
 #if 0
     if (display_buffer.can_bypass())
     {
