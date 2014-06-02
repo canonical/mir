@@ -195,7 +195,7 @@ TEST_F(GBMBufferTest, buffer_creation_throws_on_prime_fd_failure)
     }, std::runtime_error);
 }
 
-TEST_F(GBMBufferTest, bind_to_texture_egl_image_creation_failed)
+TEST_F(GBMBufferTest, gl_bind_to_texture_egl_image_creation_failed)
 {
     using namespace testing;
 
@@ -204,11 +204,11 @@ TEST_F(GBMBufferTest, bind_to_texture_egl_image_creation_failed)
 
     EXPECT_THROW({
         auto buffer = allocator->alloc_buffer(buffer_properties);
-        buffer->bind_to_texture();
+        buffer->gl_bind_to_texture();
     }, std::runtime_error);
 }
 
-TEST_F(GBMBufferTest, bind_to_texture_uses_egl_image)
+TEST_F(GBMBufferTest, gl_bind_to_texture_uses_egl_image)
 {
     using namespace testing;
 
@@ -227,6 +227,6 @@ TEST_F(GBMBufferTest, bind_to_texture_uses_egl_image)
 
     EXPECT_NO_THROW({
         auto buffer = allocator->alloc_buffer(buffer_properties);
-        buffer->bind_to_texture();
+        buffer->gl_bind_to_texture();
     });
 }
