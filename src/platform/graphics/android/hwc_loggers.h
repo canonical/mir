@@ -34,6 +34,7 @@ public:
     void log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const override;
     void log_prepare_done(hwc_display_contents_1_t const& list) const override;
     void log_set_list(hwc_display_contents_1_t const& list) const override;
+    void log_overlay_optimization(OverlayOptimization optimization_option) const override;
 };
 
 class NullHwcLogger : public HwcLogger
@@ -43,6 +44,7 @@ public:
     void log_list_submitted_to_prepare(hwc_display_contents_1_t const&) const override;
     void log_prepare_done(hwc_display_contents_1_t const&) const override;
     void log_set_list(hwc_display_contents_1_t const&) const override;
+    void log_overlay_optimization(OverlayOptimization optimization_option) const override;
 };
 }
 }

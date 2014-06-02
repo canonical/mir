@@ -176,6 +176,11 @@ void mga::HwcFormattedLogger::log_set_list(hwc_display_contents_1_t const& list)
                   << std::endl;
 }
 
+void mga::HwcFormattedLogger::log_overlay_optimization(OverlayOptimization overlay_optimization) const
+{
+    (void) overlay_optimization;
+}
+
 void mga::NullHwcLogger::log_list_submitted_to_prepare(hwc_display_contents_1_t const&) const
 {
 }
@@ -185,5 +190,9 @@ void mga::NullHwcLogger::log_prepare_done(hwc_display_contents_1_t const&) const
 }
 
 void mga::NullHwcLogger::log_set_list(hwc_display_contents_1_t const&) const
+{
+}
+
+void mga::NullHwcLogger::log_overlay_optimization(OverlayOptimization) const
 {
 }
