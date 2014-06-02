@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_OUTPUT_BUILDER_H_
 
 #include "display_builder.h"
+#include "overlay_optimization.h"
 #include "hardware/hwcomposer.h"
 #include "hardware/fb.h"
 
@@ -41,7 +42,8 @@ public:
     OutputBuilder(
         std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<DisplayResourceFactory> const& res_factory,
-        std::shared_ptr<DisplayReport> const& display_report);
+        std::shared_ptr<DisplayReport> const& display_report,
+        OverlayOptimization overlay_option);
 
     MirPixelFormat display_format();
     std::unique_ptr<ConfigurableDisplayBuffer> create_display_buffer(
@@ -58,6 +60,7 @@ private:
 
     std::shared_ptr<hwc_composer_device_1> hwc_native;
     std::shared_ptr<framebuffer_device_t> fb_native;
+    OverlayOptimization overlay_optimization;
 };
 
 }

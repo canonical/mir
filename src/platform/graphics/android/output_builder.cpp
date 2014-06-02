@@ -34,11 +34,13 @@ namespace geom = mir::geometry;
 mga::OutputBuilder::OutputBuilder(
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mga::DisplayResourceFactory> const& res_factory,
-    std::shared_ptr<mg::DisplayReport> const& display_report)
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    mga::OverlayOptimization overlay_optimization)
     : buffer_allocator(buffer_allocator),
       res_factory(res_factory),
       display_report(display_report),
-      force_backup_display(false)
+      force_backup_display(false),
+      overlay_optimization(overlay_optimization)
 {
     try
     {
@@ -105,6 +107,11 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
     }
 
     auto native_window = res_factory->create_native_window(framebuffers);
-    return std::unique_ptr<mga::DisplayBuffer>(
-        new DisplayBuffer(framebuffers, device, native_window, gl_context, gl_program_factory));
+    return std::unique_ptr<mga::DisplayBuffer>(new DisplayBuffer(
+        framebuffers,
+        device,
+        native_window,
+        gl_context,
+        gl_program_factory,
+        overlay_optimization));
 }
