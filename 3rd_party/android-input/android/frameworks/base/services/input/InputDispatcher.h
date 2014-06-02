@@ -284,13 +284,6 @@ protected:
     virtual ~InputDispatcherInterface() { }
 
 public:
-    /* 
-     * Sets the enumerator of input targets. This must be called prior to enabling input dispatch.
-     *
-     * This method may be called by any thread.
-     */
-    virtual void setInputEnumerator(sp<InputEnumerator> const& enumerator) = 0;
-
     /* Dumps the state of the input dispatcher.
      *
      * This method may be called on any thread (usually by the input manager). */
@@ -387,13 +380,9 @@ public:
  *     A 'LockedInterruptible' method may called a 'Locked' method, but NOT vice-versa.
  */
 class InputDispatcher : public InputDispatcherInterface {
-protected:
-    virtual ~InputDispatcher();
-
 public:
-    explicit InputDispatcher(const sp<InputDispatcherPolicyInterface>& policy, std::shared_ptr<mir::input::InputReport> const& input_report);
-
-    virtual void setInputEnumerator(sp<InputEnumerator> const& enumerator);
+    virtual ~InputDispatcher();
+    explicit InputDispatcher(std::shared_ptr<InputDispatcherPolicyInterface> const& policy, std::shared_ptr<mir::input::InputReport> const& input_report, std::shared_ptr<InputEnumerator> const& enumerator);
 
     virtual void dump(String8& dump);
     virtual void monitor();
@@ -862,7 +851,7 @@ private:
         DROP_REASON_STALE = 5
     };
 
-    sp<InputDispatcherPolicyInterface> mPolicy;
+    std::shared_ptr<InputDispatcherPolicyInterface> mPolicy;
     InputDispatcherConfiguration mConfig;
 
     Mutex mLock;
@@ -941,7 +930,7 @@ private:
     bool mDispatchFrozen;
     bool mInputFilterEnabled;
 
-    sp<InputEnumerator> mEnumerator;
+    std::shared_ptr<InputEnumerator> mEnumerator;
 
     sp<InputWindowHandle> getWindowHandleLocked(const sp<InputChannel>& inputChannel) const;
     bool hasWindowHandleLocked(const sp<InputWindowHandle>& windowHandle) const;
@@ -1122,13 +1111,13 @@ private:
 /* Enqueues and dispatches input events, endlessly. */
 class InputDispatcherThread : public Thread {
 public:
-    explicit InputDispatcherThread(const sp<InputDispatcherInterface>& dispatcher);
+    explicit InputDispatcherThread(std::shared_ptr<InputDispatcherInterface> const& dispatcher);
     ~InputDispatcherThread();
 
 private:
     virtual bool threadLoop();
 
-    sp<InputDispatcherInterface> mDispatcher;
+    std::shared_ptr<InputDispatcherInterface> mDispatcher;
 };
 
 } // namespace android

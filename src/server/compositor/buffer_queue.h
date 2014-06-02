@@ -56,12 +56,13 @@ public:
     void force_requests_to_complete() override;
     void resize(const geometry::Size &newsize) override;
     int buffers_ready_for_compositor() const override;
+    int buffers_free_for_client() const override;
     bool framedropping_allowed() const;
 
 private:
     void give_buffer_to_client(graphics::Buffer* buffer,
         std::unique_lock<std::mutex> lock);
-    bool should_reuse_current_buffer(void const* user_id);
+    bool is_a_current_buffer_user(void const* user_id) const;
     void release(graphics::Buffer* buffer,
         std::unique_lock<std::mutex> lock);
 

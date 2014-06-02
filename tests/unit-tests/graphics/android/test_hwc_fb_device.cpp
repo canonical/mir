@@ -30,7 +30,7 @@
 #include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include "mir_test_doubles/stub_renderable_list_compositor.h"
 #include "mir_test_doubles/mock_renderable_list_compositor.h"
-#include "src/platform/graphics/android/overlay_gl_compositor.h"
+#include "src/platform/graphics/android/hwc_fallback_gl_renderer.h"
 #include "hwc_struct_helpers.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -129,7 +129,9 @@ TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
     EXPECT_CALL(mock_compositor, render(Ref(renderlist),_))
         .InSequence(seq)
         .WillOnce(Invoke([](mg::RenderableList const&, mga::SwappingGLContext const& cont)
-        {cont.swap_buffers();}));
+        {
+            cont.swap_buffers();
+        }));
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
         .InSequence(seq)
         .WillOnce(Return(dpy));

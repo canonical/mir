@@ -33,19 +33,22 @@ namespace scene
 class LegacySurfaceChangeNotification : public ms::SurfaceObserver
 {
 public:
-    LegacySurfaceChangeNotification(std::function<void()> const& notify_change);
+    LegacySurfaceChangeNotification(
+        std::function<void()> const& notify_scene_change,
+        std::function<void(int)> const& notify_buffer_change);
 
     void resized_to(geometry::Size const& /*size*/) override;
     void moved_to(geometry::Point const& /*top_left*/) override;
     void hidden_set_to(bool /*hide*/) override;
-    void frame_posted() override;
+    void frame_posted(int frames_available) override;
     void alpha_set_to(float /*alpha*/) override;
     void transformation_set_to(glm::mat4 const& /*t*/) override;
     void attrib_changed(MirSurfaceAttrib, int) override;
     void reception_mode_set_to(input::InputReceptionMode mode) override;
 
 private:
-    std::function<void()> const notify_change;
+    std::function<void()> const notify_scene_change;
+    std::function<void(int)> const notify_buffer_change;
 };
 }
 }

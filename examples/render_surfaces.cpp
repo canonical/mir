@@ -242,7 +242,6 @@ public:
             void stop() {}
             int client_socket_fd() const override { return 0; }
             int client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const override { return 0; }
-            void remove_endpoint() const override { }
         };
 
         return std::make_shared<NullConnector>();

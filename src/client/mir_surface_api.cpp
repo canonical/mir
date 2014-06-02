@@ -83,7 +83,7 @@ MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface* surface)
 
 MirBool mir_surface_is_valid(MirSurface* surface)
 {
-    return surface->is_valid() ? mir_true : mir_false;
+    return MirSurface::is_valid(surface) ? mir_true : mir_false;
 }
 
 char const* mir_surface_get_error_message(MirSurface* surface)
@@ -243,6 +243,47 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
 int mir_surface_get_swapinterval(MirSurface* surf)
 {
     return surf ? surf->attrib(mir_surface_attrib_swapinterval) : -1;
+}
+
+int mir_surface_get_dpi(MirSurface* surf)
+{
+    int dpi = 0;
+
+    try
+    {
+        if (surf)
+        {
+            dpi = surf->attrib(mir_surface_attrib_dpi);
+            if (dpi < 0)
+            {
+                // Officially we don't support setting DPI from the client.
+                // But this is a convenient way to query it on startup...
+                surf->configure(mir_surface_attrib_dpi, -1)->wait_for_all();
+                dpi = surf->attrib(mir_surface_attrib_dpi);
+            }
+        }
+    }
+    catch (std::exception const&)
+    {
+    }
+
+    return dpi;
+}
+
+MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)
+{
+    MirWaitHandle *result = nullptr;
+    
+    try
+    {
+        if (surface)
+            result = surface->configure_cursor(cursor);
+    }
+    catch (...)
+    {
+    }
+
+    return result;
 }
 
 /* Debug functions */

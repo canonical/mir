@@ -21,6 +21,7 @@
 #include <mir_toolkit/mir_native_buffer.h>
 #include <mir_toolkit/client_types.h>
 #include <mir_toolkit/common.h>
+#include <mir_toolkit/mir_cursor_configuration.h>
 
 #ifdef __cplusplus
 /**
@@ -245,6 +246,25 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surface, int interval);
  *                        Returns -1 if surface is invalid.
  */
 int mir_surface_get_swapinterval(MirSurface* surface);
+
+/**
+ * Query the DPI value of the surface (dots per inch). This will vary depending
+ * on the physical display configuration and where the surface is within it.
+ *   \return  The DPI of the surface, or zero if unknown.
+ */
+int mir_surface_get_dpi(MirSurface* surface);
+
+/**
+ * Choose the cursor state for a surface: whether a cursor is shown, 
+ * and which cursor if so.
+ *    \param [in] surface    The surface to operate on
+ *    \param [in] parameters The configuration parameters obtained
+ *                           from mir_cursor* family of functions.
+ *    \return                A wait handle that can be passed to mir_wait_for,
+ *                           or NULL if parameters is invalid.
+ *
+ */
+MirWaitHandle* mir_surface_configure_cursor(MirSurface *surface, MirCursorConfiguration const* parameters);
 
 #ifdef __cplusplus
 }

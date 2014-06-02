@@ -35,7 +35,7 @@ public:
     void resized_to(geometry::Size const& size);
     void moved_to(geometry::Point const& top_left);
     void hidden_set_to(bool hide);
-    void frame_posted();
+    void frame_posted(int frames_available);
     void alpha_set_to(float alpha);
     void transformation_set_to(glm::mat4 const& t);
     void reception_mode_set_to(input::InputReceptionMode mode);

@@ -62,7 +62,7 @@ public:
     void resized_to(geometry::Size const& size) override;
     void moved_to(geometry::Point const& top_left) override;
     void hidden_set_to(bool hide) override;
-    void frame_posted() override;
+    void frame_posted(int frames_available) override;
     void alpha_set_to(float alpha) override;
     void transformation_set_to(glm::mat4 const& t) override;
     void reception_mode_set_to(input::InputReceptionMode mode) override;
@@ -138,10 +138,13 @@ public:
     void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override;
 
+    int dpi() const;
+
 private:
     bool visible(std::unique_lock<std::mutex>&) const;
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
+    bool set_dpi(int);
 
     SurfaceObservers observers;
     std::mutex mutable guard;
@@ -161,6 +164,7 @@ private:
 
     MirSurfaceType type_value;
     MirSurfaceState state_value;
+    int dpi_value;
 };
 
 }

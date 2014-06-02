@@ -24,6 +24,7 @@
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_gl.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir_test_doubles/stub_driver_interpreter.h"
 #include "mir_test_doubles/stub_display_buffer.h"
@@ -103,6 +104,7 @@ protected:
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
+    testing::NiceMock<mtd::MockGL> mock_gl;
     mtd::StubGLProgramFactory stub_program_factory;
 
     int visual_id;
@@ -132,7 +134,7 @@ TEST_F(AndroidDisplayBuffer, can_post_update_with_gl_only)
     EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
         .Times(1);
 
-    std::list<std::shared_ptr<mg::Renderable>> renderlist{};
+    mg::RenderableList renderlist{};
     mga::DisplayBuffer db(
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
     db.post_update();
@@ -166,7 +168,7 @@ TEST_F(AndroidDisplayBuffer, rejects_list_containing_transformed)
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
     auto renderable = std::make_shared<TransformedRenderable>();
-    std::list<std::shared_ptr<mg::Renderable>> renderlist{renderable};
+    mg::RenderableList renderlist{renderable};
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 }
 
@@ -178,10 +180,10 @@ TEST_F(AndroidDisplayBuffer, rejects_list_containing_alpha)
     mga::DisplayBuffer db(
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
 
-    std::list<std::shared_ptr<mg::Renderable>> renderlist{std::make_shared<TranslucentRenderable>()};
+    mg::RenderableList renderlist{std::make_shared<TranslucentRenderable>()};
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 
-    std::list<std::shared_ptr<mg::Renderable>> renderlist2{std::make_shared<ShapedRenderable>()};
+    mg::RenderableList renderlist2{std::make_shared<ShapedRenderable>()};
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist2));
 }
 
@@ -189,7 +191,7 @@ TEST_F(AndroidDisplayBuffer, rejects_list_containing_alpha)
 TEST_F(AndroidDisplayBuffer, DISABLED_posts_overlay_list)
 {
     using namespace testing;
-    std::list<std::shared_ptr<mg::Renderable>> renderlist{
+    mg::RenderableList renderlist{
         std::make_shared<mtd::StubRenderable>(),
         std::make_shared<mtd::StubRenderable>()};
 

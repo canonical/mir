@@ -58,13 +58,9 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     //      a subsequent compositon. The MultiThreadedCompositor should be smart enough to 
     //      schedule compositions when they're needed. 
     bool uncomposited_buffers{false};
-    for(auto const& renderable : renderable_list)
-        uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
 
-    printf("yag.\n");
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
-        printf("hhh\n");
         renderer->suspend();
         report->finished_frame(true, this);
     }
@@ -89,5 +85,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         report->finished_frame(false, this);
     }
 
+    for(auto const& renderable : renderable_list)
+        uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 0);
     return uncomposited_buffers;
 }

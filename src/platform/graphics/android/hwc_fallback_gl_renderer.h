@@ -16,11 +16,12 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_OVERLAY_GL_PROGRAM_H_
-#define MIR_GRAPHICS_ANDROID_OVERLAY_GL_PROGRAM_H_
-
+#ifndef MIR_GRAPHICS_ANDROID_HWC_FALLBACK_GL_RENDERER_H_
+#define MIR_GRAPHICS_ANDROID_HWC_FALLBACK_GL_RENDERER_H_
+#include "mir/geometry/rectangle.h"
 #include "mir/graphics/gl_program.h"
 #include "mir/graphics/renderable.h"
+#include "mir/graphics/gl_texture_cache.h"
 #include <memory>
 
 namespace mir
@@ -46,18 +47,25 @@ private:
     RenderableListCompositor& operator=(RenderableListCompositor const&) = delete;
 };
 
-class OverlayGLProgram : public RenderableListCompositor
+class HWCFallbackGLRenderer : public RenderableListCompositor
 {
 public:
-    OverlayGLProgram(GLProgramFactory const& program_factory, graphics::GLContext const& gl_context);
+    HWCFallbackGLRenderer(
+        GLProgramFactory const& program_factory,
+        graphics::GLContext const& gl_context,
+        geometry::Rectangle const& screen_position);
 
     void render(RenderableList const&, SwappingGLContext const&) const;
 private:
-    std::unique_ptr<graphics::GLProgram> overlay_program;
+    std::unique_ptr<graphics::GLProgram> program;
+    std::unique_ptr<graphics::GLTextureCache> texture_cache;
+
+    GLint position_attr;
+    GLint texcoord_attr;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_OVERLAY_GL_PROGRAM_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HWC_FALLBACK_GL_RENDERER_H_ */

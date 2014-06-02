@@ -73,8 +73,8 @@ struct Surface : testing::Test
 
         ON_CALL(*buffer_stream, stream_size()).WillByDefault(Return(geom::Size()));
         ON_CALL(*buffer_stream, get_stream_pixel_format()).WillByDefault(Return(mir_pixel_format_abgr_8888));
-        ON_CALL(*buffer_stream, swap_client_buffers(_, _))
-            .WillByDefault(InvokeArgument<1>(nullptr));
+        ON_CALL(*buffer_stream, acquire_client_buffer(_))
+            .WillByDefault(InvokeArgument<0>(nullptr));
     }
     mf::SurfaceId stub_id;
     std::shared_ptr<ms::SurfaceConfigurator> null_configurator;
@@ -176,6 +176,48 @@ TEST_F(Surface, states)
               surf.configure(mir_surface_attrib_state,
                              mir_surface_state_fullscreen));
     EXPECT_EQ(mir_surface_state_fullscreen, surf.state());
+}
+
+TEST_F(Surface, dpi_is_initialized)
+{
+    using namespace testing;
+
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        null_configurator,
+        report);
+
+    EXPECT_EQ(0, surf.dpi()); // The current default. It will change.
+}
+
+TEST_F(Surface, dpi_changes)
+{
+    using namespace testing;
+
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        null_configurator,
+        report);
+
+    EXPECT_EQ(123, surf.configure(mir_surface_attrib_dpi, 123));
+    EXPECT_EQ(123, surf.dpi());
+
+    EXPECT_EQ(456, surf.configure(mir_surface_attrib_dpi, 456));
+    EXPECT_EQ(456, surf.dpi());
+
+    surf.configure(mir_surface_attrib_dpi, -1);
+    EXPECT_EQ(456, surf.dpi());
+
+    EXPECT_EQ(789, surf.configure(mir_surface_attrib_dpi, 789));
+    EXPECT_EQ(789, surf.dpi());
 }
 
 bool operator==(MirEvent const& a, MirEvent const& b)

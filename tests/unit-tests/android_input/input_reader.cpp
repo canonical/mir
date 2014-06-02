@@ -150,12 +150,10 @@ class FakeInputReaderPolicy : public InputReaderPolicyInterface {
     KeyedVector<int32_t, sp<FakePointerController> > mPointerControllers;
     Vector<InputDeviceInfo> mInputDevices;
 
-protected:
-    virtual ~FakeInputReaderPolicy() { }
-
 public:
     FakeInputReaderPolicy() {
     }
+    virtual ~FakeInputReaderPolicy() { }
 
     void setDisplayInfo(int32_t displayId, int32_t width, int32_t height, int32_t orientation) {
         // Set the size of both the internal and external display at the same time.
@@ -214,12 +212,10 @@ private:
     List<NotifyMotionArgs> mNotifyMotionArgsQueue;
     List<NotifySwitchArgs> mNotifySwitchArgsQueue;
 
-protected:
-    virtual ~FakeInputListener() { }
-
 public:
     FakeInputListener() {
     }
+    virtual ~FakeInputListener() { }
 
     void assertNotifyConfigurationChangedWasCalled(
             NotifyConfigurationChangedArgs* outEventArgs = NULL) {
@@ -519,9 +515,9 @@ class InstrumentedInputReader : public InputReader {
     InputDevice* mNextDevice;
 
 public:
-    InstrumentedInputReader(const sp<EventHubInterface>& eventHub,
-            const sp<InputReaderPolicyInterface>& policy,
-            const sp<InputListenerInterface>& listener) :
+    InstrumentedInputReader(std::shared_ptr<EventHubInterface> const& eventHub,
+            std::shared_ptr<InputReaderPolicyInterface> const& policy,
+            std::shared_ptr<InputListenerInterface> const& listener) :
             InputReader(eventHub, policy, listener),
             mNextDevice(NULL) {
     }
@@ -562,26 +558,18 @@ protected:
 
 class InputReaderTest : public testing::Test {
 protected:
-    sp<FakeInputListener> mFakeListener;
-    sp<FakeInputReaderPolicy> mFakePolicy;
-    sp<FakeEventHub> mFakeEventHub;
+    std::shared_ptr<FakeEventHub> const mFakeEventHub = std::make_shared<FakeEventHub>();
+    std::shared_ptr<FakeInputReaderPolicy> const mFakePolicy = std::make_shared<FakeInputReaderPolicy>();
+    std::shared_ptr<FakeInputListener> const mFakeListener = std::make_shared<FakeInputListener>();
     sp<InstrumentedInputReader> mReader;
 
     virtual void SetUp() {
         mir::report::legacy_input::initialize(std::make_shared<TestLogger>());
-        mFakeEventHub = new FakeEventHub();
-        mFakePolicy = new FakeInputReaderPolicy();
-        mFakeListener = new FakeInputListener();
-
         mReader = new InstrumentedInputReader(mFakeEventHub, mFakePolicy, mFakeListener);
     }
 
     virtual void TearDown() {
         mReader.clear();
-
-        mFakeListener.clear();
-        mFakePolicy.clear();
-        mFakeEventHub.clear();
     }
 
     void addDevice(int32_t deviceId, const String8& name, uint32_t classes,

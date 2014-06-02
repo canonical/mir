@@ -75,7 +75,7 @@ public:
         return std::make_shared<StubAndroidNativeBuffer>();
 #endif
     }
-    virtual void bind_to_texture() {}
+    virtual void gl_bind_to_texture() override {}
 
     virtual bool can_bypass() const override { return false; }
 

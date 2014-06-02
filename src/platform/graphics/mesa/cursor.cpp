@@ -77,12 +77,13 @@ mgm::Cursor::Cursor(
     std::shared_ptr<mg::CursorImage> const& initial_image) :
         output_container(output_container),
         current_position(),
+        visible(true),
         buffer(gbm),
         current_configuration(current_configuration)
 {
-    set_image(*initial_image);
+    show(*initial_image);
 
-    show_at_last_known_position();
+    resume();
 }
 
 mgm::Cursor::~Cursor() noexcept
@@ -90,8 +91,11 @@ mgm::Cursor::~Cursor() noexcept
     hide();
 }
 
-void mgm::Cursor::set_image(CursorImage const& cursor_image)
+void mgm::Cursor::show(CursorImage const& cursor_image)
 {
+    std::lock_guard<std::mutex> lg(guard);
+    visible = true;
+
     auto const& size = cursor_image.size();
 
     if (size != geometry::Size{width, height})
@@ -112,13 +116,24 @@ void mgm::Cursor::move_to(geometry::Point position)
     place_cursor_at(position, UpdateState);
 }
 
-void mgm::Cursor::show_at_last_known_position()
+void mir::graphics::mesa::Cursor::suspend()
+{
+    std::lock_guard<std::mutex> lg(guard);
+
+    output_container.for_each_output(
+        [&](KMSOutput& output) { output.clear_cursor(); });
+}
+
+void mgm::Cursor::resume()
 {
     place_cursor_at(current_position, ForceState);
 }
 
 void mgm::Cursor::hide()
 {
+    std::lock_guard<std::mutex> lg(guard);
+    visible = false;
+
     output_container.for_each_output(
         [&](KMSOutput& output) { output.clear_cursor(); });
 }
@@ -146,6 +161,13 @@ void mgm::Cursor::place_cursor_at(
     geometry::Point position,
     ForceCursorState force_state)
 {
+    std::lock_guard<std::mutex> lg(guard);
+
+    current_position = position;
+
+    if (!visible)
+        return;
+
     for_each_used_output([&](KMSOutput& output, geom::Rectangle const& output_rect, MirOrientation orientation)
     {
         if (output_rect.contains(position))
@@ -165,6 +187,4 @@ void mgm::Cursor::place_cursor_at(
             }
         }
     });
-
-    current_position = position;
 }

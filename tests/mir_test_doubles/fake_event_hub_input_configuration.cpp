@@ -19,27 +19,26 @@
 
 #include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test/fake_event_hub.h"
-#include "src/server/input/android/input_dispatcher_configuration.h"
 
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mtd = mir::test::doubles;
 
 mtd::FakeEventHubInputConfiguration::FakeEventHubInputConfiguration(
-    std::shared_ptr<mir::input::InputDispatcherConfiguration> const& dispatcher_conf,
+    std::shared_ptr<mir::input::InputDispatcher> const& dispatcher,
     std::shared_ptr<input::InputRegion> const& input_region,
     std::shared_ptr<input::CursorListener> const& cursor_listener,
-    std::shared_ptr<mi::InputReport> const& input_report)
-    : DefaultInputConfiguration(dispatcher_conf, input_region, cursor_listener, input_report)
+    std::shared_ptr<mi::InputReport> const& input_report) :
+    DefaultInputConfiguration(dispatcher, input_region, cursor_listener, input_report),
+    event_hub(std::make_shared<mia::FakeEventHub>())
 {
-    event_hub = new mia::FakeEventHub();
 }
 
 mtd::FakeEventHubInputConfiguration::~FakeEventHubInputConfiguration()
 {
 }
 
-droidinput::sp<droidinput::EventHubInterface> mtd::FakeEventHubInputConfiguration::the_event_hub()
+std::shared_ptr<droidinput::EventHubInterface> mtd::FakeEventHubInputConfiguration::the_event_hub()
 {
     return event_hub;
 }

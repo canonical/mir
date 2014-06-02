@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,44 +13,41 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_ANDROID_CACHED_ANDROID_PTR_H
-#define MIR_INPUT_ANDROID_CACHED_ANDROID_PTR_H
+#ifndef MIR_INPUT_ANDROID_COMMON_INPUT_THREAD_H_
+#define MIR_INPUT_ANDROID_COMMON_INPUT_THREAD_H_
 
-#include <utils/RefBase.h>
+#include "android_input_thread.h"
+
 #include <utils/StrongPointer.h>
+#include <std/Thread.h>
 
-#include <functional>
+#include <string>
 
 namespace droidinput = android;
-namespace mir
+
+namespace  mir
 {
 namespace input
 {
 namespace android
 {
-template <typename Type>
-class CachedAndroidPtr
+class CommonInputThread : public InputThread
 {
-    droidinput::wp<Type> cache;
-
-    CachedAndroidPtr(CachedAndroidPtr const&) = delete;
-    CachedAndroidPtr& operator=(CachedAndroidPtr const&) = delete;
-
 public:
-    CachedAndroidPtr() = default;
+    CommonInputThread(std::string const& name, droidinput::sp<droidinput::Thread> const& thread);
+    void start();
+    void request_stop();
+    void join();
 
-    droidinput::sp<Type> operator()(std::function<droidinput::sp<Type>()> make)
-    {
-        auto result = cache.promote();
-        if (!result.get())
-        {
-            cache = result = make();
-        }
-        return result;
-    }
+private:
+    CommonInputThread(const CommonInputThread&) = delete;
+    CommonInputThread& operator=(const CommonInputThread&) = delete;
+
+    std::string const name;
+    droidinput::sp<droidinput::Thread> const thread;
 };
 
 }
@@ -58,4 +55,3 @@ public:
 }
 
 #endif
-
