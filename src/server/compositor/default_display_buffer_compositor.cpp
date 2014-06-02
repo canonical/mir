@@ -61,8 +61,10 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     for(auto const& renderable : renderable_list)
         uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
 
+    printf("yag.\n");
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
+        printf("hhh\n");
         renderer->suspend();
         report->finished_frame(true, this);
     }

@@ -198,7 +198,8 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_skips_composition)
     FakeScene scene(list);
 
     EXPECT_CALL(display_buffer, post_renderables_if_optimizable(Ref(list)))
-        .Times(1);
+        .Times(1)
+        .WillOnce(Return(true));
     EXPECT_CALL(mock_renderer, suspend())
         .Times(1);
     EXPECT_CALL(mock_renderer, begin())
@@ -211,7 +212,6 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_skips_composition)
     auto report = std::make_shared<mtd::MockCompositorReport>();
     EXPECT_CALL(*report, began_frame(_));
     EXPECT_CALL(*report, finished_frame(true,_));
-
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         mt::fake_shared(scene),

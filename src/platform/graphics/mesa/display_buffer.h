@@ -58,14 +58,8 @@ public:
     void make_current();
     void release_current();
     void post_update();
-<<<<<<< TREE
     bool post_renderables_if_optimizable(RenderableList const& renderlist);
-=======
 
-    bool can_bypass() const override;
-    void post_update(std::shared_ptr<graphics::Buffer> bypass_buf) override;
-    bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
->>>>>>> MERGE-SOURCE
     MirOrientation orientation() const override;
     void schedule_set_crtc();
     void wait_for_page_flip();
