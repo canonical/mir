@@ -52,7 +52,10 @@ struct BufferStreamSurfaces : mc::BufferStreamSurfaces
         std::condition_variable cv;
         bool done = false;
 
-        swap_client_buffers(buffer,
+        if (buffer)
+            release_client_buffer(buffer);
+
+        acquire_client_buffer(
             [&](mg::Buffer* new_buffer)
              {
                 std::unique_lock<decltype(mutex)> lock(mutex);

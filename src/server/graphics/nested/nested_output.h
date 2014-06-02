@@ -48,7 +48,6 @@ public:
     void make_current() override;
     void release_current() override;
     void post_update() override;
-    virtual bool can_bypass() const override;
     MirOrientation orientation() const override;
 
     bool post_renderables_if_optimizable(RenderableList const& renderlist);

@@ -90,7 +90,7 @@ struct DefaultDisplayBufferCompositor : public testing::Test
             .WillByDefault(Return(mir_orientation_normal));
         ON_CALL(display_buffer, view_area())
             .WillByDefault(Return(screen));
-        ON_CALL(display_buffer, can_bypass())
+        ON_CALL(display_buffer, post_renderables_if_optimizable(_))
             .WillByDefault(Return(false));
     }
 
@@ -188,18 +188,18 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
     compositor.composite();
 }
 
-TEST_F(DefaultDisplayBufferCompositor, bypass_skips_composition)
+TEST_F(DefaultDisplayBufferCompositor, optimization_skips_composition)
 {
     using namespace testing;
-    ON_CALL(display_buffer, can_bypass())
-        .WillByDefault(Return(true));
-
     mg::RenderableList list{
         small,
         fullscreen
     };
     FakeScene scene(list);
 
+    EXPECT_CALL(display_buffer, post_renderables_if_optimizable(Ref(list)))
+        .Times(1)
+        .WillOnce(Return(true));
     EXPECT_CALL(mock_renderer, suspend())
         .Times(1);
     EXPECT_CALL(mock_renderer, begin())
@@ -209,15 +209,9 @@ TEST_F(DefaultDisplayBufferCompositor, bypass_skips_composition)
     EXPECT_CALL(mock_renderer, end())
         .Times(0);
 
-    auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
-    fullscreen->set_buffer(compositor_buffer);
-    EXPECT_CALL(*compositor_buffer, can_bypass())
-        .WillOnce(Return(true));
-
     auto report = std::make_shared<mtd::MockCompositorReport>();
     EXPECT_CALL(*report, began_frame(_));
     EXPECT_CALL(*report, finished_frame(true,_));
-
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         mt::fake_shared(scene),
@@ -265,7 +259,7 @@ TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
 TEST_F(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
 {
     using namespace testing;
-    ON_CALL(display_buffer, can_bypass())
+    ON_CALL(display_buffer, post_renderables_if_optimizable(_))
         .WillByDefault(Return(true));
 
     mg::RenderableList list{
@@ -295,6 +289,9 @@ TEST_F(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
     compositor.composite();
 }
 
+#if 0
+MOVE TO MESA TEST
+=======
 TEST_F(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
 {
     using namespace testing;
@@ -327,6 +324,7 @@ TEST_F(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
     compositor.composite();
 }
 
+>>>>>>> MERGE-SOURCE
 TEST_F(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
 {
     using namespace testing;
@@ -364,28 +362,26 @@ TEST_F(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
         mr::null_compositor_report());
     compositor.composite();
 }
+#endif
 
-TEST_F(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
+
+TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
 {
     mg::RenderableList const first_list{fullscreen, small};
     mg::RenderableList const second_list{small, fullscreen};
     mg::RenderableList const third_list{small};
 
     using namespace testing;
-    auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
-    fullscreen->set_buffer(compositor_buffer);
-
-    ON_CALL(display_buffer, can_bypass())
-        .WillByDefault(Return(true));
     ON_CALL(display_buffer, view_area())
         .WillByDefault(Return(screen));
     ON_CALL(display_buffer, orientation())
         .WillByDefault(Return(mir_orientation_normal));
-    ON_CALL(*compositor_buffer, can_bypass())
-        .WillByDefault(Return(true));
 
     Sequence seq;
-    // Frame 1: small window over fullscreen = no bypass
+    EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
+        .InSequence(seq)
+        .WillOnce(Return(false));
+
     EXPECT_CALL(display_buffer, make_current())
         .InSequence(seq);
     EXPECT_CALL(display_buffer, orientation())
@@ -399,13 +395,14 @@ TEST_F(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
     EXPECT_CALL(display_buffer, post_update())
         .InSequence(seq);
 
-    // Frame 2: fullscreen over small window = bypass
+    EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
+        .InSequence(seq)
+        .WillOnce(Return(true));
     //we should be testing that post_buffer is called, not just that
     //we check the bits on the compositor buffer
-    EXPECT_CALL(*compositor_buffer, can_bypass())
-        .InSequence(seq);
-
-    // Frame 3: only a small window = no bypass
+    EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
+        .InSequence(seq)
+        .WillOnce(Return(false));
     EXPECT_CALL(display_buffer, make_current())
         .InSequence(seq);
     EXPECT_CALL(display_buffer, orientation())
@@ -427,11 +424,7 @@ TEST_F(DefaultDisplayBufferCompositor, bypass_toggles_seamlessly)
         mr::null_compositor_report());
 
     compositor.composite();
-
-    scene.change(second_list);
     compositor.composite();
-
-    scene.change(third_list);
     compositor.composite();
 
     fullscreen->set_buffer({});  // Avoid GMock complaining about false leaks
@@ -444,7 +437,7 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
         .WillRepeatedly(Return(screen));
     EXPECT_CALL(display_buffer, orientation())
         .WillOnce(Return(mir_orientation_normal));
-    EXPECT_CALL(display_buffer, can_bypass())
+    EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
         .WillRepeatedly(Return(false));
 
     auto window0 = std::make_shared<mtd::FakeRenderable>(99, 99, 2, 2);
@@ -488,7 +481,7 @@ TEST_F(DefaultDisplayBufferCompositor, decides_whether_to_recomposite_after_rend
         .WillByDefault(Return(screen));
     ON_CALL(display_buffer, orientation())
         .WillByDefault(Return(mir_orientation_normal));
-    ON_CALL(display_buffer, can_bypass())
+    ON_CALL(display_buffer, post_renderables_if_optimizable(_))
         .WillByDefault(Return(false));
 
     auto mock_renderable = std::make_shared<NiceMock<mtd::MockRenderable>>();
@@ -551,4 +544,3 @@ TEST_F(DefaultDisplayBufferCompositor, renderer_ends_after_post_update)
         mr::null_compositor_report());
     compositor.composite();
 }
-

@@ -65,12 +65,6 @@ void mgn::detail::NestedOutput::post_update()
     eglSwapBuffers(egl_display, egl_surface);
 }
 
-bool mgn::detail::NestedOutput::can_bypass() const
-{
-    // TODO we really should return "true" - but we need to support bypass properly then
-    return false;
-}
-
 bool mgn::detail::NestedOutput::post_renderables_if_optimizable(RenderableList const&)
 {
     return false;

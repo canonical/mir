@@ -9,7 +9,6 @@ set(
   gl_renderer.cpp
   gl_renderer_factory.cpp
   multi_threaded_compositor.cpp
-  bypass.cpp
   occlusion.cpp
   default_configuration.cpp
   screencast_display_buffer.cpp

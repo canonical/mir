@@ -144,11 +144,6 @@ void mgo::DisplayBuffer::post_update()
     glFinish();
 }
 
-bool mgo::DisplayBuffer::can_bypass() const
-{
-    return false;
-}
-
 bool mgo::DisplayBuffer::post_renderables_if_optimizable(RenderableList const&)
 {
     return false;
