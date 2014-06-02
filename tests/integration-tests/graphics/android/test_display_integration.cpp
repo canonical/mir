@@ -19,6 +19,7 @@
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/display_buffer.h"
 #include "src/platform/graphics/android/android_display.h"
+#include "src/platform/graphics/android/hwc_formatted_logger.h"
 #include "src/platform/graphics/android/resource_factory.h"
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 #include "src/platform/graphics/android/output_builder.h"
@@ -52,7 +53,8 @@ protected:
         /* note about fb_device: OMAP4 drivers seem to only be able to open fb once
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
            figure out why, we can remove fb_device in the test fixture */
-        display_resource_factory = std::make_shared<mga::ResourceFactory>(false);
+        auto logger = std::make_shared<mga::NullHwcLogger>();
+        display_resource_factory = std::make_shared<mga::ResourceFactory>(logger);
     }
 
     static void TearDownTestCase()

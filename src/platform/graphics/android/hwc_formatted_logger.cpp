@@ -175,3 +175,15 @@ void mga::HwcFormattedLogger::log_set_list(hwc_display_contents_1_t const& list)
                   << list.hwLayers[i].handle
                   << std::endl;
 }
+
+void mga::NullHwcLogger::log_list_submitted_to_prepare(hwc_display_contents_1_t const&) const
+{
+}
+
+void mga::NullHwcLogger::log_prepare_done(hwc_display_contents_1_t const&) const
+{
+}
+
+void mga::NullHwcLogger::log_set_list(hwc_display_contents_1_t const&) const
+{
+}
