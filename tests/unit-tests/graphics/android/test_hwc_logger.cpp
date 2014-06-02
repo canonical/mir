@@ -130,3 +130,19 @@ TEST_F(HwcLogger, log_set)
     logger.log_set_list(*display_list);
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
+
+TEST_F(HwcLogger, log_optimization)
+{
+    std::stringstream enabled_str;
+    std::stringstream disabled_str;
+    enabled_str << "HWC overlay optimizations are ON" << std::endl;
+    disabled_str << "HWC overlay optimizations are OFF" << std::endl;
+
+    mga::HwcFormattedLogger logger;
+    logger.log_overlay_optimization(mga::OverlayOptimization::enabled);
+    EXPECT_EQ(enabled_str.str(), test_stream.str()); 
+    test_stream.clear();
+
+    logger.log_overlay_optimization(mga::OverlayOptimization::disabled);
+    EXPECT_EQ(disabled_str.str(), test_stream.str()); 
+}
