@@ -37,6 +37,12 @@ namespace android
 class DisplayDevice;
 class FramebufferBundle;
 
+enum class OverlayOptimization
+{
+    disabled,
+    enabled
+};
+
 class DisplayBuffer : public ConfigurableDisplayBuffer
 {
 public:
@@ -44,7 +50,8 @@ public:
                   std::shared_ptr<DisplayDevice> const& display_device,
                   std::shared_ptr<ANativeWindow> const& native_window,
                   GLContext const& shared_gl_context,
-                  GLProgramFactory const& program_factory);
+                  GLProgramFactory const& program_factory,
+                  OverlayOptimization overlay_option);
 
     geometry::Rectangle view_area() const;
     void make_current();
@@ -67,6 +74,7 @@ private:
     GLContext gl_context;
     HWCFallbackGLRenderer overlay_program;
     bool prepared;
+    bool overlay_enabled;
     DisplayConfigurationOutput current_configuration;
     MirOrientation rotation;
 };
