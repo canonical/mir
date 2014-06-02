@@ -298,8 +298,8 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
 {
     using namespace testing;
     mtd::StubBuffer mock_buffer;
-    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_,_)).Times(2)
-        .WillRepeatedly(InvokeArgument<1>(&mock_buffer));
+    EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_)).Times(2)
+        .WillRepeatedly(InvokeArgument<0>(&mock_buffer));
 
     mir::graphics::Buffer* buffer = nullptr;
     auto const callback = [&](mir::graphics::Buffer* new_buffer) { buffer = new_buffer; };
@@ -356,8 +356,8 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
 {
     using namespace testing;
     mtd::StubBuffer mock_buffer;
-    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_,_)).Times(2)
-        .WillRepeatedly(InvokeArgument<1>(&mock_buffer));
+    EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_)).Times(2)
+        .WillRepeatedly(InvokeArgument<0>(&mock_buffer));
 
     ms::BasicSurface surface{
         name,
