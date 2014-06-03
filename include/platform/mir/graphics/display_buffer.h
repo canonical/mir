@@ -81,6 +81,8 @@ public:
      */
     virtual MirOrientation orientation() const = 0;
 
+    virtual bool is_opaque() const = 0;
+
 protected:
     DisplayBuffer() = default;
     DisplayBuffer(DisplayBuffer const& c) = delete;

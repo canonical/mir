@@ -104,3 +104,8 @@ MirOrientation mc::ScreencastDisplayBuffer::orientation() const
 {
     return mir_orientation_normal;
 }
+
+bool mc::ScreencastDisplayBuffer::is_opaque() const
+{
+    return true;
+}

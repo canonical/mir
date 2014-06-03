@@ -48,6 +48,7 @@ public:
     MOCK_CONST_METHOD0(can_bypass, bool());
     MOCK_METHOD1(post_renderables_if_optimizable, bool(graphics::RenderableList const&)); 
     MOCK_CONST_METHOD0(orientation, MirOrientation());
+    MOCK_CONST_METHOD0(is_opaque, bool());
 };
 
 }
