@@ -80,7 +80,7 @@ mc::GLRenderer::GLRenderer(
       transform_uniform_loc(0),
       alpha_uniform_loc(0),
       rotation(NAN), // ensure the first set_rotation succeeds
-      opaque_background(false)
+      opaque_background(true)
 {
     glUseProgram(*program);
 
