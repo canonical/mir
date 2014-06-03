@@ -146,15 +146,6 @@ TEST_F(AndroidDisplayBuffer, rejects_empty_list)
     mga::DisplayBuffer db(
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
 
-    InSequence seq;
-    EXPECT_CALL(*mock_display_device, render_gl(_))
-        .Times(1);
-    EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
-        .Times(1)
-        .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
-        .Times(1);
-
     std::list<std::shared_ptr<mg::Renderable>> renderlist{};
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 }
@@ -198,8 +189,7 @@ TEST_F(AndroidDisplayBuffer, rejects_list_containing_alpha)
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist2));
 }
 
-//disable this test until the GL fallback is in place
-TEST_F(AndroidDisplayBuffer, DISABLED_posts_overlay_list)
+TEST_F(AndroidDisplayBuffer, posts_overlay_list)
 {
     using namespace testing;
     mg::RenderableList renderlist{
