@@ -77,7 +77,7 @@ public:
     }
     virtual void gl_bind_to_texture() override {}
 
-    virtual bool can_bypass() const override { return false; }
+    virtual bool can_bypass() const override { return true; }
 
     geometry::Size const buf_size;
     MirPixelFormat const buf_pixel_format;

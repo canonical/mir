@@ -67,7 +67,7 @@ TEST_F(BypassMatchTest, translucent_fullscreen_window_not_bypassed)
 {
     mgm::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{
-        std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 0.5f)
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 0}, {1920, 1200}}, 0.5f)
     };
 
     EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
@@ -77,7 +77,7 @@ TEST_F(BypassMatchTest, hidden_fullscreen_window_not_bypassed)
 {
     mgm::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{
-        std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, true, false)
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 0}, {1920, 1200}}, 1.0f, true, false)
     };
 
     EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
@@ -87,7 +87,7 @@ TEST_F(BypassMatchTest, unposted_fullscreen_window_not_bypassed)
 {
     mgm::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{
-        std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, true, true, false)
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 0}, {1920, 1200}}, 1.0f, true, true, false)
     };
 
     EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
@@ -98,7 +98,7 @@ TEST_F(BypassMatchTest, shaped_fullscreen_window_not_bypassed)
     mgm::BypassMatch matcher(primary_monitor);
 
     mg::RenderableList list{
-        std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, false)
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 0}, {1920, 1200}}, 1.0f, false, true)
     };
 
     EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
@@ -133,7 +133,7 @@ TEST_F(BypassMatchTest, translucently_obscured_fullscreen_window_not_bypassed)
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200),
-        std::make_shared<mtd::FakeRenderable>(20, 30, 40, 50, 0.5f)
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{20, 30}, {40, 50}}, 0.5f)
     };
 
     EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
@@ -160,7 +160,7 @@ TEST_F(BypassMatchTest, unobscured_fullscreen_alpha_window_not_bypassed)
 
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(20, 30, 40, 50),
-        std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 0.9f)
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 0}, {1920, 1200}}, 0.9f)
     };
 
     EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
@@ -193,13 +193,13 @@ TEST_F(BypassMatchTest, many_fullscreen_windows_only_bypass_top_rectangular)
 
     auto bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
     mg::RenderableList list{
-        std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 0.5f, false),
-        std::make_shared<mtd::FakeRenderable>(9, 10, 11, 12),
-        std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, true),
-        std::make_shared<mtd::FakeRenderable>(5, 6, 7, 8),
-        std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200),
-        std::make_shared<mtd::FakeRenderable>(1, 2, 3, 4),
-        std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, false),
+        std::make_shared<mtd::FakeRenderable>(primary_monitor, 0.5f, false, true),
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{9, 10}, {11, 12}}),
+        std::make_shared<mtd::FakeRenderable>(primary_monitor, 1.0f, true, true),
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{5, 6}, {7, 8}}),
+        std::make_shared<mtd::FakeRenderable>(primary_monitor),
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{1, 2}, {3, 4}}),
+        std::make_shared<mtd::FakeRenderable>(primary_monitor, 1.0f, false, true),
         bypassed
     };
 
@@ -216,7 +216,7 @@ TEST_F(BypassMatchTest, nonrectangular_not_bypassable)
     auto fullscreen_not_bypassed = std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200);
     mg::RenderableList list{
         std::make_shared<mtd::FakeRenderable>(1, 2, 3, 4),
-        std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, false)
+        std::make_shared<mtd::FakeRenderable>(primary_monitor, 1.0f, false, true)
     };
 
     EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
@@ -226,7 +226,7 @@ TEST_F(BypassMatchTest, nonvisible_not_bypassble)
 {
     mgm::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{
-        std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, true, false, true)
+        std::make_shared<mtd::FakeRenderable>(primary_monitor, 1.0f, true, false, true)
     };
 
     EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
@@ -236,7 +236,7 @@ TEST_F(BypassMatchTest, offscreen_not_bypassable)
 {
     mgm::BypassMatch matcher(primary_monitor);
     mg::RenderableList list{
-        std::make_shared<mtd::FakeRenderable>(0, 0, 1920, 1200, 1.0f, true, true, false)
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 0}, {1920, 1200}}, 1.0f, true, true, false)
     };
     EXPECT_EQ(list.rend(), std::find_if(list.rbegin(), list.rend(), matcher));
 }
