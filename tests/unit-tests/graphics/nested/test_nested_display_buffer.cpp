@@ -19,27 +19,19 @@
 
 #include "src/server/graphics/nested/nested_output.h"
 #include "src/server/graphics/nested/host_connection.h"
-#include "src/server/report/null/display_report.h"
-#include "src/server/graphics/default_display_configuration_policy.h"
 #include "src/server/input/null_input_dispatcher.h"
-#include "mir_display_configuration_builder.h"
 
 #include "mir_test_doubles/mock_egl.h"
-#include "mir_test_doubles/mock_gl_config.h"
 #include "mir_test_doubles/stub_gl_config.h"
-#include "mir_test_doubles/stub_host_connection.h"
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace geom = mir::geometry;
-namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace mgnd = mir::graphics::nested::detail;
-namespace mt = mir::test;
 namespace mi = mir::input;
-
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
