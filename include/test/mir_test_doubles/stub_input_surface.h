@@ -53,9 +53,6 @@ struct StubInputSurface : public mir::input::Surface
     
     std::shared_ptr<graphics::CursorImage> cursor_image() const { return nullptr; }
 
-    void add_observer(std::shared_ptr<scene::SurfaceObserver> const& /* observer */ ) {}
-    void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& /* observer */) {}
-
     std::shared_ptr<mir::input::InputChannel> const channel;
 };
 
