@@ -58,6 +58,8 @@ public:
                                            std::function<void()> callback) override;
     std::unique_ptr<time::Alarm> notify_at(mir::time::Timestamp time_point,
                                            std::function<void()> callback) override;
+    std::unique_ptr<time::Alarm> create_alarm(std::function<void()> callback) override;
+
     void enqueue(void const* owner, ServerAction const& action);
     void pause_processing_for(void const* owner);
     void resume_processing_for(void const* owner);
