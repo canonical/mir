@@ -133,7 +133,7 @@ public:
         EXPECT_CALL(mock_gl, glDisableVertexAttribArray(_)).Times(AnyNumber());
 
         mock_buffer = std::make_shared<mtd::MockBuffer>();
-        EXPECT_CALL(*mock_buffer, bind_to_texture()).Times(AnyNumber());
+        EXPECT_CALL(*mock_buffer, gl_bind_to_texture()).Times(AnyNumber());
         EXPECT_CALL(*mock_buffer, size())
             .WillRepeatedly(Return(mir::geometry::Size{123, 456}));
 
