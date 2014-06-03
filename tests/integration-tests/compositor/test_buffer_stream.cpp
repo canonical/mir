@@ -57,7 +57,10 @@ struct BufferStreamSurfaces : mc::BufferStreamSurfaces
 
     void swap_client_buffers_cancellable(mg::Buffer*& buffer, std::shared_ptr<mt::Signal> const& signal)
     {
-        swap_client_buffers(buffer,
+        if (buffer)
+            release_client_buffer(buffer);
+
+        acquire_client_buffer(
             [signal, &buffer](mg::Buffer* new_buffer)
              {
                 buffer = new_buffer;
@@ -380,7 +383,7 @@ TEST_F(BufferStreamTest, blocked_client_is_released_on_timeout)
         buffer_stream.swap_client_buffers_blocking(placeholder);
 
     auto swap_completed = std::make_shared<mt::Signal>();
-    buffer_stream.swap_client_buffers(placeholder, [swap_completed](mg::Buffer*) {swap_completed->raise();});
+    buffer_stream.acquire_client_buffer([swap_completed](mg::Buffer*) {swap_completed->raise();});
 
     EXPECT_FALSE(swap_completed->raised());
     clock->advance_time(frame_drop_timeout + std::chrono::milliseconds{1});

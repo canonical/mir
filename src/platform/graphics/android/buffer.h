@@ -50,7 +50,7 @@ public:
     geometry::Size size() const;
     geometry::Stride stride() const;
     MirPixelFormat pixel_format() const;
-    void bind_to_texture();
+    void gl_bind_to_texture() override;
     bool can_bypass() const override;
 
     //note, you will get the native representation of an android buffer, including
