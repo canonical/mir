@@ -97,5 +97,5 @@ TEST_F(ShmBufferTest, uploads_pixels_to_texture)
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, _,
                                      size.width.as_int(), size.height.as_int(),
                                      0, _, _, stub_shm_file->fake_mapping));
-    shm_buffer.bind_to_texture();
+    shm_buffer.gl_bind_to_texture();
 }

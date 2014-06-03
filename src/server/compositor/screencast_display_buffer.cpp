@@ -68,7 +68,7 @@ geom::Rectangle mc::ScreencastDisplayBuffer::view_area() const
 void mc::ScreencastDisplayBuffer::make_current()
 {
     glBindTexture(GL_TEXTURE_2D, color_tex);
-    buffer.bind_to_texture();
+    buffer.gl_bind_to_texture();
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                            GL_TEXTURE_2D, color_tex, 0);
 
@@ -85,14 +85,9 @@ void mc::ScreencastDisplayBuffer::release_current()
                old_viewport[2], old_viewport[3]);
 }
 
-void mc::ScreencastDisplayBuffer::render_and_post_update(
-    mg::RenderableList const& renderables,
-    std::function<void(mg::Renderable const&)> const& render)
+bool mc::ScreencastDisplayBuffer::post_renderables_if_optimizable(mg::RenderableList const&)
 {
-    for (auto const& renderable : renderables)
-        render(*renderable);
-
-    post_update();
+    return false;
 }
 
 void mc::ScreencastDisplayBuffer::post_update()

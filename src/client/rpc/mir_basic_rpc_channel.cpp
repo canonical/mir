@@ -21,6 +21,7 @@
 
 #include "mir_protobuf_wire.pb.h"
 #include "mir/frontend/client_constants.h"
+#include "mir/variable_length_array.h"
 
 #include <sstream>
 
@@ -105,19 +106,16 @@ mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     google::protobuf::MethodDescriptor const* method,
     google::protobuf::Message const* request)
 {
-    char buffer[mir::frontend::serialization_buffer_size];
+    mir::VariableLengthArray<mir::frontend::serialization_buffer_size>
+        buffer{static_cast<size_t>(request->ByteSize())};
 
-    auto const size = request->ByteSize();
-    // In practice size will be 10s of bytes - but have a test to detect problems
-    assert(size < static_cast<decltype(size)>(sizeof buffer));
-
-    request->SerializeToArray(buffer, sizeof buffer);
+    request->SerializeWithCachedSizesToArray(buffer.data());
 
     mir::protobuf::wire::Invocation invoke;
 
     invoke.set_id(next_id());
     invoke.set_method_name(method->name());
-    invoke.set_parameters(buffer, size);
+    invoke.set_parameters(buffer.data(), buffer.size());
     invoke.set_protocol_version(1);
 
     return invoke;

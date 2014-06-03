@@ -731,3 +731,17 @@ TEST_F(MirClientSurfaceTest, get_cpu_region_returns_correct_data)
         EXPECT_EQ(mock_server_tool->pf_sent, region.pixel_format);
     }
 }
+
+TEST_F(MirClientSurfaceTest, valid_surface_is_valid)
+{
+    auto surface = std::make_shared<MirSurface> (connection.get(),
+                                                 *client_comm_channel,
+                                                 mock_buffer_factory,
+                                                 input_platform,
+                                                 params,
+                                                 &empty_callback,
+                                                 nullptr);
+    surface->get_create_wait_handle()->wait_for_all();
+
+    EXPECT_TRUE(surface->is_valid(surface.get()));
+}

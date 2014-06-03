@@ -224,7 +224,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
         clear_connected_unused_outputs();
     }
 
-    if (auto c = cursor.lock()) c->show_at_last_known_position();
+    if (auto c = cursor.lock()) c->resume();
 }
 
 void mgm::Display::register_configuration_change_handler(
@@ -255,7 +255,7 @@ void mgm::Display::pause()
 {
     try
     {
-        if (auto c = cursor.lock()) c->hide();
+        if (auto c = cursor.lock()) c->suspend();
         platform->drm.drop_master();
     }
     catch(std::runtime_error const& e)
@@ -291,7 +291,7 @@ void mgm::Display::resume()
         clear_connected_unused_outputs();
     }
 
-    if (auto c = cursor.lock()) c->show_at_last_known_position();
+    if (auto c = cursor.lock()) c->resume();
 }
 
 auto mgm::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& initial_image) -> std::shared_ptr<graphics::Cursor>

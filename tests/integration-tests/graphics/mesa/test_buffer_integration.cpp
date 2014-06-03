@@ -53,7 +53,7 @@ public:
         creation_thread_id{std::this_thread::get_id()}
     {}
 
-    void bind_to_texture()
+    void gl_bind_to_texture() override
     {
         /*
          * If we are trying to bind the texture from a different thread from
@@ -174,7 +174,7 @@ struct BufferTextureInstantiatorThread
 
         try
         {
-            buffer->bind_to_texture();
+            buffer->gl_bind_to_texture();
         }
         catch(std::runtime_error const&)
         {
@@ -206,7 +206,7 @@ TEST_F(MesaBufferIntegration, buffer_destruction_from_arbitrary_thread_works)
 
     EXPECT_NO_THROW({
         auto buffer = allocator->alloc_buffer(buffer_properties);
-        buffer->bind_to_texture();
+        buffer->gl_bind_to_texture();
         ASSERT_EQ(EGL_SUCCESS, eglGetError());
 
         BufferDestructorThread destructor{std::move(buffer)};

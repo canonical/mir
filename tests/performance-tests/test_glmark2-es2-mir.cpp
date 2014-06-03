@@ -1,3 +1,4 @@
+#include "mir_test_framework/command_line_server_configuration.h"
 #include "mir/default_server_configuration.h"
 #include "mir/options/default_configuration.h"
 
@@ -13,19 +14,16 @@
 #include <fstream>
 #include <string>
 
+namespace mo = mir::options;
+namespace mtf = mir_test_framework;
+
 namespace
 {
-// FIXME remove this when support for passing cli options to 
-// DefaultServerConfiguration is implemented
-char const* dummy[] = {0};
-int argc = 0;
-char const** argv = dummy;
-
 class GLMark2Test : public mir_test_framework::InProcessServer
 {
 public:
  GLMark2Test()
-        : config(argc, argv)
+        : config(mtf::configuration_from_commandline())
     {
     }
 
@@ -54,7 +52,7 @@ protected:
 
             if (file_type == raw)
             {
-                glmark2_output << line;
+                glmark2_output << line << std::endl;
             }
         }
         
@@ -66,9 +64,9 @@ protected:
         if (file_type == json)
         {
             std::string json =  "{";
-                json += "'benchmark_name':'glmark2-es2-mir'";
+                json += "\"benchmark_name\":\"glmark2-es2-mir\"";
                 json += ",";
-                json += "'score':'" + score + "'";
+                json += "\"score\":\"" + score + "\"";
                 json += "}";
             glmark2_output << json;
         }
@@ -80,6 +78,6 @@ private:
 
 TEST_F(GLMark2Test, benchmark_fullscreen_default)
 {
-    run_glmark2("glmark2_fullscreen_default.json", json);
+    run_glmark2("/tmp/glmark2_fullscreen_default.results", raw);
 }
 }

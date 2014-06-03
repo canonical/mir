@@ -79,7 +79,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
 
             return std::make_shared<mir::graphics::nested::NestedPlatform>(
                 the_host_connection(),
-                the_nested_event_filter(),
+                the_input_dispatcher(),
                 the_display_report(),
                 create_native_platform(the_display_report()));
         });

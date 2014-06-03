@@ -24,7 +24,7 @@
 #include "hwc_wrapper.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
-#include "overlay_gl_compositor.h"
+#include "hwc_fallback_gl_renderer.h"
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;

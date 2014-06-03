@@ -37,6 +37,7 @@ typedef enum MirSurfaceAttrib
     mir_surface_attrib_state,
     mir_surface_attrib_swapinterval,
     mir_surface_attrib_focus,
+    mir_surface_attrib_dpi,
     mir_surface_attribs
 } MirSurfaceAttrib;
 
