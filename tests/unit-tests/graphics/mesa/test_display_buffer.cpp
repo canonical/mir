@@ -23,9 +23,11 @@
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "mir_test_doubles/mock_drm.h"
+#include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_framework/udev_environment.h"
+#include "mir_test_doubles/fake_renderable.h"
 #include "mock_kms_output.h"
 
 #include <gtest/gtest.h>
@@ -312,3 +314,47 @@ TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_post)
     db.post_update();
 }
 
+TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_list)
+{
+    geometry::Rectangle const display_area{{12,34}, {56,78}};
+    graphics::RenderableList list{
+        std::make_shared<FakeRenderable>(12,34,56,78),
+        std::make_shared<FakeRenderable>(12,34,1,1)
+    };
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    EXPECT_FALSE(db.post_renderables_if_optimizable(list));
+}
+
+TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer)
+{
+    geometry::Rectangle const display_area{{12,34}, {56,78}};
+
+    auto fullscreen = std::make_shared<FakeRenderable>(12,34,56,78);
+    auto nonbypassable = std::make_shared<MockBuffer>();
+    ON_CALL(*nonbypassable, can_bypass())
+        .WillByDefault(Return(false));
+    fullscreen->set_buffer(nonbypassable);
+    graphics::RenderableList list{fullscreen};
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    EXPECT_FALSE(db.post_renderables_if_optimizable(list));
+}
