@@ -474,3 +474,11 @@ TEST_F(AndroidDisplayBuffer, android_display_configuration_info)
     EXPECT_EQ(refresh_rate, disp_mode.vrefresh_hz);
     //TODO fill physical_size_mm fields accordingly;
 }
+
+TEST_F(AndroidDisplayBuffer, always_opaque)
+{
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
+
+    EXPECT_TRUE(db.is_opaque());
+}
