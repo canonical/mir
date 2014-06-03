@@ -463,7 +463,7 @@ TEST_F(AsioMainLoopAlarmTest, multiple_alarms_fire)
 
     int const alarm_count{10};
     Counter call_count;
-    std::array<std::shared_ptr<mir::time::Alarm>, alarm_count> alarms;
+    std::array<std::unique_ptr<mir::time::Alarm>, alarm_count> alarms;
 
     for (auto& alarm : alarms)
         alarm = ml.notify_in(delay, [&call_count](){++call_count;});
