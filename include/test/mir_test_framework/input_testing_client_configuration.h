@@ -20,8 +20,7 @@
 #define MIR_TEST_FRAMEWORK_INPUT_TESTING_CLIENT_CONFIGURATION
 
 #include "mir_test_framework/testing_client_configuration.h"
-#include "mir_test_framework/cross_process_sync.h"
-#include "mir_test/wait_condition.h"
+#include "mir_test/barrier.h"
 
 #include <mir_toolkit/event.h>
 
@@ -29,6 +28,7 @@
 
 #include <string>
 
+namespace mir { namespace test  { class WaitCondition; } }
 namespace mir_test_framework
 {
 
@@ -38,7 +38,7 @@ namespace mir_test_framework
 class InputTestingClientConfiguration : public TestingClientConfiguration
 {
 public:
-    InputTestingClientConfiguration(std::string const& client_name, CrossProcessSync const& input_cb_setup_fence);
+    InputTestingClientConfiguration(std::string const& client_name, mir::test::Barrier& input_cb_setup_fence);
     virtual ~InputTestingClientConfiguration() = default;
 
     void exec();
@@ -58,9 +58,11 @@ public:
     // input-testing shell.
     static int const surface_width = 100;
     static int const surface_height = 100;
+
+    std::string connect_string;
 private:
     std::string const client_name;
-    CrossProcessSync input_cb_setup_fence;
+    mir::test::Barrier& input_cb_setup_fence;
 };
 
 }

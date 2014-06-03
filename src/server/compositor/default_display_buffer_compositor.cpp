@@ -61,8 +61,6 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     //      a subsequent compositon. The MultiThreadedCompositor should be smart enough to 
     //      schedule compositions when they're needed. 
     bool uncomposited_buffers{false};
-    for(auto const& renderable : renderable_list)
-        uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
 
     if (display_buffer.can_bypass())
     {
@@ -99,5 +97,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     }
 
     report->finished_frame(bypassed, this);
+    for(auto const& renderable : renderable_list)
+        uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 0);
     return uncomposited_buffers;
 }

@@ -46,39 +46,39 @@ struct SurfaceObserver : ms::SurfaceObserver
     {
     }
 
-    void attrib_changed(MirSurfaceAttrib, int)
+    void attrib_changed(MirSurfaceAttrib, int) override
     {
         // Attribute changing alone wont trigger a cursor update
     }
-    void resized_to(geom::Size const&)
+    void resized_to(geom::Size const&) override
     {
         update_cursor();
     }
-    void moved_to(geom::Point const&)
+    void moved_to(geom::Point const&) override
     {
         update_cursor();
     }
-    void hidden_set_to(bool)
+    void hidden_set_to(bool) override
     {
         update_cursor();
     }
-    void frame_posted()
+    void frame_posted(int) override
     {
         // Frame posting wont trigger a cursor update
     }
-    void alpha_set_to(float)
+    void alpha_set_to(float) override
     {
         update_cursor();
     }
-    void transformation_set_to(glm::mat4 const&)
+    void transformation_set_to(glm::mat4 const&) override
     {
         update_cursor();
     }
-    void reception_mode_set_to(mi::InputReceptionMode)
+    void reception_mode_set_to(mi::InputReceptionMode) override
     {
         update_cursor();
     }
-    void cursor_image_set_to(mg::CursorImage const&)
+    void cursor_image_set_to(mg::CursorImage const&) override
     {
         update_cursor();
     }

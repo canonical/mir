@@ -33,7 +33,7 @@
 
 namespace mir
 {
-namespace input { class EventFilter; }
+namespace input { class InputDispatcher; }
 namespace geometry
 {
 struct Rectangle;
@@ -96,7 +96,7 @@ class NestedDisplay : public Display
 public:
     NestedDisplay(
         std::shared_ptr<HostConnection> const& connection,
-        std::shared_ptr<input::EventFilter> const& event_handler,
+        std::shared_ptr<input::InputDispatcher> const& dispatcher,
         std::shared_ptr<DisplayReport> const& display_report,
         std::shared_ptr<DisplayConfigurationPolicy> const& conf_policy,
         std::shared_ptr<GLConfig> const& gl_config);
@@ -125,7 +125,7 @@ public:
 
 private:
     std::shared_ptr<HostConnection> const connection;
-    std::shared_ptr<input::EventFilter> const event_handler;
+    std::shared_ptr<input::InputDispatcher> const dispatcher;
     std::shared_ptr<DisplayReport> const display_report;
     detail::EGLDisplayHandle egl_display;
 

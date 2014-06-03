@@ -66,11 +66,10 @@ struct CountingDisplayBuffer : public mtd::StubDisplayBuffer
         return true;
     }
 
-    void render_and_post_update(
-        mg::RenderableList const&,
-        std::function<void(mg::Renderable const&)> const&) override
+    bool post_renderables_if_optimizable(mg::RenderableList const&)
     {
         increment_post_count();
+        return true;
     }
 
     void post_update() override
@@ -216,7 +215,7 @@ namespace
 int thread_distinguishing_buffers_ready_for_compositor()
 {
     //could use c++14 integer_sequence one day
-    std::vector<int> sequence{5,4,3,2,1};
+    std::vector<int> sequence{5,4,3,2,1,0};
     thread_local size_t sequence_idx{0};
     return sequence[sequence_idx++];
 }
@@ -267,7 +266,7 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
 {
     using namespace testing;
     ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor())
-        .WillByDefault(Return(1));
+        .WillByDefault(Return(0));
 
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),

@@ -22,6 +22,7 @@
 
 #include "mir_test_doubles/mock_android_input_dispatcher.h"
 #include "mir_test_doubles/stub_scene_surface.h"
+#include "mir_test_doubles/stub_scene.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -35,10 +36,8 @@
 
 namespace mi = mir::input;
 namespace mia = mi::android;
-namespace ms = mir::scene;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
-namespace geom = mir::geometry;
 
 namespace
 {
@@ -51,13 +50,16 @@ struct AndroidInputRegistrarFdSetup : public testing::Test
     AndroidInputRegistrarFdSetup()
         : surface(socket(AF_UNIX, SOCK_SEQPACKET, 0))
     {
+        registrar.set_dispatcher(dispatcher);
     }
     ~AndroidInputRegistrarFdSetup()
     {
         close(surface.fd);
     }
     std::shared_ptr<mtd::MockAndroidInputDispatcher> dispatcher = std::make_shared<mtd::MockAndroidInputDispatcher>();
+    std::shared_ptr<mtd::StubScene> scene = std::make_shared<mtd::StubScene>();
     mtd::StubSceneSurface surface;
+    mia::InputRegistrar registrar{scene};
 };
 
 MATCHER_P(WindowHandleFor, channel, "")
@@ -76,12 +78,10 @@ TEST_F(AndroidInputRegistrarFdSetup, input_channel_opened_behavior)
     EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(surface.input_channel()), _)).Times(1)
         .WillOnce(Return(droidinput::OK));
 
-    mia::InputRegistrar registrar(dispatcher);
-
-    registrar.surface_added(&surface);
+    registrar.add_window_handle_for_surface(&surface);
     EXPECT_THROW({
             // We can't open a surface twice
-            registrar.surface_added(&surface);
+            registrar.add_window_handle_for_surface(&surface);
     }, std::logic_error);
 }
 
@@ -92,17 +92,16 @@ TEST_F(AndroidInputRegistrarFdSetup, input_channel_closed_behavior)
     EXPECT_CALL(*dispatcher, registerInputChannel(_, WindowHandleFor(surface.input_channel()), _)).Times(1)
         .WillOnce(Return(droidinput::OK));
     EXPECT_CALL(*dispatcher, unregisterInputChannel(_)).Times(1);
-    mia::InputRegistrar registrar(dispatcher);
 
     EXPECT_THROW({
             // We can't close a surface which hasn't been opened
-            registrar.surface_removed(&surface);
+            registrar.remove_window_handle_for_surface(&surface);
     }, std::logic_error);
-    registrar.surface_added(&surface);
-    registrar.surface_removed(&surface);
+    registrar.add_window_handle_for_surface(&surface);
+    registrar.remove_window_handle_for_surface(&surface);
     EXPECT_THROW({
             // Nor can we close a surface twice
-            registrar.surface_removed(&surface);
+            registrar.remove_window_handle_for_surface(&surface);
     }, std::logic_error);
 }
 
@@ -115,7 +114,5 @@ TEST_F(AndroidInputRegistrarFdSetup, monitor_flag_is_passed_to_dispatcher)
     EXPECT_CALL(*dispatcher, registerInputChannel(_, _, true)).Times(1)
         .WillOnce(Return(droidinput::OK));
 
-    mia::InputRegistrar registrar(dispatcher);
-
-    registrar.surface_added(&surface);
+    registrar.add_window_handle_for_surface(&surface);
 }

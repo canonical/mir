@@ -197,8 +197,8 @@ struct SurfaceCreation : public ::testing::Test
         stride = geom::Stride{4 * size.width.as_uint32_t()};
         mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
 
-        ON_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
-            .WillByDefault(InvokeArgument<1>(&stub_buffer));
+        ON_CALL(*mock_buffer_stream, acquire_client_buffer(_))
+            .WillByDefault(InvokeArgument<0>(&stub_buffer));
     }
 
     std::string surface_name;
@@ -283,9 +283,9 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
 
     mtd::StubBuffer graphics_resource;
 
-    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
+    EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_))
         .Times(1)
-        .WillOnce(InvokeArgument<1>(&graphics_resource));
+        .WillOnce(InvokeArgument<0>(&graphics_resource));
 
     surf.swap_buffers(
         nullptr,
@@ -308,9 +308,9 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
         std::shared_ptr<mg::CursorImage>(),
         report);
 
-    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
+    EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_))
         .Times(1)
-        .WillOnce(InvokeArgument<1>(&stub_buffer));
+        .WillOnce(InvokeArgument<0>(&stub_buffer));
 
     surf.swap_buffers(
         nullptr,
@@ -565,7 +565,9 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
         std::shared_ptr<mg::CursorImage>(),
         report);
 
-    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(change_notification);
+    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(
+        change_notification,
+        [this](int){change_notification();});
     surf.add_observer(observer);
 
     mg::Buffer* buffer{nullptr};

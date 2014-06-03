@@ -21,8 +21,8 @@
 
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/connector_report.h"
+#include "mir/emergency_cleanup_registry.h"
 
-#include <boost/signals2.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -100,17 +100,20 @@ mf::PublishedSocketConnector::PublishedSocketConnector(
     const std::string& socket_file,
     std::shared_ptr<ConnectionCreator> const& connection_creator,
     int threads,
+    EmergencyCleanupRegistry& emergency_cleanup_registry,
     std::shared_ptr<ConnectorReport> const& report)
 :   BasicConnector(connection_creator, threads, report),
     socket_file(remove_if_stale(socket_file)),
     acceptor(io_service, socket_file)
 {
+    emergency_cleanup_registry.add(
+        [socket_file] { std::remove(socket_file.c_str()); });
     start_accept();
 }
 
 mf::PublishedSocketConnector::~PublishedSocketConnector() noexcept
 {
-    remove_endpoint();
+    std::remove(socket_file.c_str());
 }
 
 void mf::PublishedSocketConnector::start_accept()
@@ -121,16 +124,10 @@ void mf::PublishedSocketConnector::start_accept()
 
     acceptor.async_accept(
         *socket,
-        boost::bind(
-            &PublishedSocketConnector::on_new_connection,
-            this,
-            socket,
-            ba::placeholders::error));
-}
-
-void mf::PublishedSocketConnector::remove_endpoint() const
-{
-    std::remove(socket_file.c_str());
+        [this,socket](boost::system::error_code const& ec)
+        {
+            on_new_connection(socket, ec);
+        });
 }
 
 void mf::PublishedSocketConnector::on_new_connection(
@@ -205,6 +202,12 @@ void mf::BasicConnector::create_session_for(
     std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
 {
     report->creating_session_for(server_socket->native_handle());
+
+    /* We set the SO_PASSCRED socket option in order to receive credentials */
+    auto const optval = 1;
+    if (setsockopt(server_socket->native_handle(), SOL_SOCKET, SO_PASSCRED, &optval, sizeof(optval)) == -1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set SO_PASSCRED"));
+
     connection_creator->create_connection_for(server_socket, {connect_handler, this});
 }
 
@@ -233,10 +236,6 @@ int mf::BasicConnector::client_socket_fd(std::function<void(std::shared_ptr<Sess
     create_session_for(server_socket, connect_handler);
 
     return socket_fd[client];
-}
-
-void mf::BasicConnector::remove_endpoint() const
-{
 }
 
 mf::BasicConnector::~BasicConnector() noexcept

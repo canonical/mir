@@ -121,12 +121,12 @@ mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
 
 mgn::NestedDisplay::NestedDisplay(
     std::shared_ptr<HostConnection> const& connection,
-    std::shared_ptr<input::EventFilter> const& event_handler,
+    std::shared_ptr<input::InputDispatcher> const& dispatcher,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<mg::GLConfig> const& gl_config) :
     connection{connection},
-    event_handler{event_handler},
+    dispatcher{dispatcher},
     display_report{display_report},
     egl_display{connection->egl_native_display(), gl_config},
     outputs{}
@@ -208,7 +208,7 @@ void mgn::NestedDisplay::create_surfaces(mg::DisplayConfiguration const& configu
                             egl_display,
                             host_surface,
                             area,
-                            event_handler,
+                            dispatcher,
                             output.current_format);
                         have_output_for_group = true;
                     }

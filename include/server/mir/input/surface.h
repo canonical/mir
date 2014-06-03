@@ -52,9 +52,6 @@ public:
     virtual std::shared_ptr<graphics::CursorImage> cursor_image() const = 0;
     virtual InputReceptionMode reception_mode() const = 0;
 
-    virtual void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) = 0;
-    virtual void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) = 0;
-
 protected:
     Surface() = default;
     virtual ~Surface() = default;

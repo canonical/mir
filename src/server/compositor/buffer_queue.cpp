@@ -239,13 +239,29 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     if (contains(buffer.get(), buffers_sent_to_compositor))
         return;
 
+    if (nbuffers <= 1)
+        return;
+
     /*
-     * This buffer is not owned by compositor anymore. If the queue is supposed
-     * to only own a single buffer (nbuffers == 1), then this is a buffer that
-     * is no longer used (i.e. replaced by a new resized buffer), so just
-     * discard it.
+     * We can't release the current_compositor_buffer because we need to keep
+     * a compositor buffer always-available. But there might be a new
+     * compositor buffer available to take its place immediately. Moving to
+     * that one immediately will free up the old compositor buffer, allowing
+     * us to call back the client with a buffer where otherwise we couldn't.
      */
-    if (current_compositor_buffer != buffer.get() && nbuffers > 1)
+    if (current_compositor_buffer == buffer.get() &&
+        !ready_to_composite_queue.empty())
+    {
+        current_compositor_buffer = pop(ready_to_composite_queue);
+
+        // Ensure current_compositor_buffer gets reused by the next
+        // compositor_acquire:
+        current_buffer_users.clear();
+        void const* const impossible_user_id = this;
+        current_buffer_users.push_back(impossible_user_id);
+    }
+
+    if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
 }
 
@@ -316,6 +332,19 @@ int mc::BufferQueue::buffers_ready_for_compositor() const
      * vary depending on concurrent compositors.
      */
     return ready_to_composite_queue.size();
+}
+
+int mc::BufferQueue::buffers_free_for_client() const
+{
+    std::lock_guard<decltype(guard)> lock(guard);
+    int ret = 1;
+    if (nbuffers > 1)
+    {
+        int nfree = free_buffers.size();
+        int future_growth = nbuffers - buffers.size();
+        ret = nfree + future_growth;
+    }
+    return ret;
 }
 
 void mc::BufferQueue::give_buffer_to_client(

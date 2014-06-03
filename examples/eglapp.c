@@ -400,6 +400,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     *width = surfaceparm.width;
     *height = surfaceparm.height;
 
+    printf("Surface %d DPI\n", mir_surface_get_dpi(surface));
     eglSwapInterval(egldisplay, swapinterval);
 
     running = 1;
