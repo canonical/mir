@@ -176,10 +176,8 @@ TEST_F(GLRenderer, render_is_done_in_sequence)
 {
     InSequence seq;
 
-    EXPECT_CALL(mock_gl, glClearColor(_, _, _, 1.0f));
-    EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
+    EXPECT_CALL(mock_gl, glClearColor(_, _, _, _));
     EXPECT_CALL(mock_gl, glClear(_));
-    EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE));
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(*renderable, shaped())
         .WillOnce(Return(true));
@@ -259,6 +257,37 @@ TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
         .Times(bind_count);
 
     OverriddenTessellateRenderer renderer(program_factory, std::move(mock_texture_cache), display_area, bind_count);
+    renderer.begin();
+    renderer.render(renderable_list);
+    renderer.end();
+}
+
+TEST_F(GLRenderer, renders_opaque_background)
+{
+    InSequence seq;
+    EXPECT_CALL(mock_gl, glClearColor(_, _, _, 1.0f));
+    EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
+    EXPECT_CALL(mock_gl, glClear(_));
+    EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE));
+
+    mc::GLRenderer renderer(program_factory, std::move(mock_texture_cache), display_area);
+    renderer.set_opaque_background(true);
+
+    renderer.begin();
+    renderer.render(renderable_list);
+    renderer.end();
+}
+
+TEST_F(GLRenderer, renders_transparent_background)
+{
+    InSequence seq;
+    EXPECT_CALL(mock_gl, glClearColor(_, _, _, 0.0f));
+    EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
+    EXPECT_CALL(mock_gl, glClear(_));
+
+    mc::GLRenderer renderer(program_factory, std::move(mock_texture_cache), display_area);
+    renderer.set_opaque_background(false);
+
     renderer.begin();
     renderer.render(renderable_list);
     renderer.end();
