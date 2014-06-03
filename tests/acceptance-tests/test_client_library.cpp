@@ -64,36 +64,36 @@ struct ClientLibrary : mir_test_framework::InProcessServer
     MirSurface* surface  = nullptr;
     int buffers = 0;
 
-    static void connection_callback(MirConnection * connection, void * context)
+    static void connection_callback(MirConnection* connection, void* context)
     {
-        ClientLibrary * config = reinterpret_cast<ClientLibrary *>(context);
+        ClientLibrary* config = reinterpret_cast<ClientLibrary*>(context);
         config->connected(connection);
     }
 
-    static void create_surface_callback(MirSurface * surface, void * context)
+    static void create_surface_callback(MirSurface* surface, void* context)
     {
-        ClientLibrary * config = reinterpret_cast<ClientLibrary *>(context);
+        ClientLibrary* config = reinterpret_cast<ClientLibrary*>(context);
         config->surface_created(surface);
     }
 
-    static void next_buffer_callback(MirSurface * surface, void * context)
+    static void next_buffer_callback(MirSurface* surface, void* context)
     {
-        ClientLibrary * config = reinterpret_cast<ClientLibrary *>(context);
+        ClientLibrary* config = reinterpret_cast<ClientLibrary*>(context);
         config->next_buffer(surface);
     }
 
-    static void release_surface_callback(MirSurface * surface, void * context)
+    static void release_surface_callback(MirSurface* surface, void* context)
     {
-        ClientLibrary * config = reinterpret_cast<ClientLibrary *>(context);
+        ClientLibrary* config = reinterpret_cast<ClientLibrary*>(context);
         config->surface_released(surface);
     }
 
-    virtual void connected(MirConnection * new_connection)
+    virtual void connected(MirConnection* new_connection)
     {
         connection = new_connection;
     }
 
-    virtual void surface_created(MirSurface * new_surface)
+    virtual void surface_created(MirSurface* new_surface)
     {
         surfaces.insert(new_surface);
         surface = new_surface;
@@ -104,7 +104,7 @@ struct ClientLibrary : mir_test_framework::InProcessServer
         ++buffers;
     }
 
-    void surface_released(MirSurface * old_surface)
+    void surface_released(MirSurface* old_surface)
     {
         surfaces.erase(old_surface);
         surface = NULL;
