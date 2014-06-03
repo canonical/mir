@@ -32,22 +32,6 @@ namespace doubles
 class MockInputSurface : public input::Surface
 {
 public:
-    MockInputSurface()
-    {
-        using namespace ::testing;
-        ON_CALL(*this, input_bounds())
-            .WillByDefault(Return(geometry::Rectangle()));
-        static std::string n;
-        ON_CALL(*this, name())
-            .WillByDefault(Return(n));
-        static std::shared_ptr<input::InputChannel> c{nullptr};
-        ON_CALL(*this, input_channel())
-            .WillByDefault(Return(c));
-        ON_CALL(*this, cursor_image())
-            .WillByDefault(Return(nullptr));
-        ON_CALL(*this, reception_mode())
-            .WillByDefault(Return(input::InputReceptionMode::normal));
-    }
     ~MockInputSurface() noexcept {}
     MOCK_CONST_METHOD0(name, std::string());
     MOCK_CONST_METHOD0(input_bounds, geometry::Rectangle());
