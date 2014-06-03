@@ -54,6 +54,7 @@ public:
 
     bool post_renderables_if_optimizable(RenderableList const& renderlist);
     MirOrientation orientation() const override;
+    bool is_opaque() const;
 
     DisplayConfigurationOutput configuration() const;
     void configure(DisplayConfigurationOutput const&);

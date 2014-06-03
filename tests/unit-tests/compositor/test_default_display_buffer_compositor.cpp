@@ -552,3 +552,43 @@ TEST_F(DefaultDisplayBufferCompositor, renderer_ends_after_post_update)
     compositor.composite();
 }
 
+TEST_F(DefaultDisplayBufferCompositor, queries_display_buffer_opaqueness)
+{
+    using namespace testing;
+    mtd::MockScene scene;
+
+    mg::RenderableList const empty;
+    EXPECT_CALL(display_buffer, is_opaque())
+        .Times(1);
+    EXPECT_CALL(scene, renderable_list_for(_))
+        .Times(1);
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(scene),
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+    compositor.composite();
+}
+
+TEST_F(DefaultDisplayBufferCompositor, tells_renderer_about_display_buffer_opaqueness)
+{
+    using namespace testing;
+    mtd::MockScene scene;
+
+    mg::RenderableList const empty;
+    ON_CALL(display_buffer, is_opaque())
+        .WillByDefault(Return(false));
+    EXPECT_CALL(mock_renderer, set_opaque_background(false))
+        .Times(1);
+    EXPECT_CALL(scene, renderable_list_for(_))
+        .Times(1);
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(scene),
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+    compositor.composite();
+}
+

@@ -162,3 +162,8 @@ MirOrientation mgo::DisplayBuffer::orientation() const
      */
     return mir_orientation_normal;
 }
+
+bool mgo::DisplayBuffer::is_opaque() const
+{
+    return true;
+}

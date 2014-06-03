@@ -40,6 +40,10 @@ public:
     {
     }
 
+    void set_opaque_background(bool) override
+    {
+    }
+
     void begin() const override
     {
     }

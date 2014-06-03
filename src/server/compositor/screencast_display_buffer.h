@@ -67,6 +67,8 @@ public:
 
     MirOrientation orientation() const;
 
+    bool is_opaque() const;
+
 private:
     geometry::Rectangle const rect;
     graphics::Buffer& buffer;

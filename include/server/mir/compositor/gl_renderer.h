@@ -48,6 +48,7 @@ public:
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
     void set_rotation(float degrees) override;
+    void set_opaque_background(bool opaque) override;
     void begin() const override;
     void render(graphics::RenderableList const&) const override;
     void end() const override;

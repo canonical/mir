@@ -237,6 +237,11 @@ void mc::GLRenderer::set_rotation(float degrees)
     rotation = degrees;
 }
 
+void mc::GLRenderer::set_opaque_background(bool /*opaque*/)
+{
+
+}
+
 void mc::GLRenderer::begin() const
 {
     // Ensure background is opaque otherwise alpha artifacts may occur

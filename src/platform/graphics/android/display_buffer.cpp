@@ -146,6 +146,11 @@ MirOrientation mga::DisplayBuffer::orientation() const
     return current_configuration.orientation;
 }
 
+bool mga::DisplayBuffer::is_opaque() const
+{
+    return true;
+}
+
 mg::DisplayConfigurationOutput mga::DisplayBuffer::configuration() const
 {
     return mg::DisplayConfigurationOutput(current_configuration);
