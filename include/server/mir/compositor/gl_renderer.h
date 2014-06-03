@@ -86,7 +86,7 @@ private:
     GLuint transform_uniform_loc;
     GLuint alpha_uniform_loc;
     float rotation;
-
+    bool opaque_background;
     geometry::Rectangle viewport;
 };
 

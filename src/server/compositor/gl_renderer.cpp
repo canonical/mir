@@ -79,7 +79,8 @@ mc::GLRenderer::GLRenderer(
       centre_uniform_loc(0),
       transform_uniform_loc(0),
       alpha_uniform_loc(0),
-      rotation(NAN) // ensure the first set_rotation succeeds
+      rotation(NAN), // ensure the first set_rotation succeeds
+      opaque_background(false)
 {
     glUseProgram(*program);
 
@@ -237,22 +238,25 @@ void mc::GLRenderer::set_rotation(float degrees)
     rotation = degrees;
 }
 
-void mc::GLRenderer::set_opaque_background(bool /*opaque*/)
+void mc::GLRenderer::set_opaque_background(bool opaque)
 {
-
+    opaque_background = opaque;
 }
 
 void mc::GLRenderer::begin() const
 {
-    // Ensure background is opaque otherwise alpha artifacts may occur
-    // when rendering a nested display buffer (LP: #1317260)
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    if (opaque_background)
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    else
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Ensure we don't change the framebuffer's alpha components (if any)
     // as that would ruin the appearance of screengrabs. (LP: #1301210)
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+    if (opaque_background)
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 }
 
 void mc::GLRenderer::end() const
