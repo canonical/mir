@@ -47,7 +47,6 @@ public:
                  void(GLenum, GLsizeiptr, const GLvoid *, GLenum));
     MOCK_METHOD1(glCheckFramebufferStatus, GLenum(GLenum));
     MOCK_METHOD1(glClear, void(GLbitfield));
-    MOCK_METHOD4(glColorMask, void(GLboolean, GLboolean, GLboolean, GLboolean));
     MOCK_METHOD1(glCompileShader, void(GLuint));
     MOCK_METHOD0(glCreateProgram, GLuint());
     MOCK_METHOD1(glCreateShader, GLuint(GLenum));

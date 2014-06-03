@@ -240,10 +240,6 @@ void mc::GLRenderer::set_rotation(float degrees)
 void mc::GLRenderer::begin() const
 {
     glClear(GL_COLOR_BUFFER_BIT);
-
-    // Ensure we don't change the framebuffer's alpha components (if any)
-    // as that would ruin the appearance of screengrabs. (LP: #1301210)
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 }
 
 void mc::GLRenderer::end() const
