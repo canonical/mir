@@ -21,6 +21,7 @@
 
 #include "mir/frontend/event_sink.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/geometry/displacement.h"
 #include "mir/scene/surface_configurator.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
