@@ -32,10 +32,15 @@
 namespace mir
 {
 
+namespace time
+{
+class Clock;
+}
+
 class AsioMainLoop : public MainLoop
 {
 public:
-    AsioMainLoop();
+    explicit AsioMainLoop(std::shared_ptr<time::Clock> const& clock);
     ~AsioMainLoop() noexcept(true);
 
     void run();
@@ -70,6 +75,7 @@ private:
     std::mutex server_actions_mutex;
     std::deque<std::pair<void const*,ServerAction>> server_actions;
     std::set<void const*> do_not_process;
+    std::shared_ptr<time::Clock> const clock;
 };
 
 }

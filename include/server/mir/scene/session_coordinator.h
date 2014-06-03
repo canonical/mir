@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,36 +13,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_INPUT_NESTED_INPUT_RELAY_H_
-#define MIR_INPUT_NESTED_INPUT_RELAY_H_
+#ifndef MIR_SCENE_SESSION_COORDINATOR_H_
+#define MIR_SCENE_SESSION_COORDINATOR_H_
 
-#include "mir/input/event_filter.h"
 
-#include <memory>
+#include "mir/frontend/shell.h"
+#include "mir/shell/focus_controller.h"
 
 namespace mir
 {
-namespace input
+namespace scene
 {
-class InputDispatcher;
-class NestedInputRelay : public EventFilter
+
+class SessionCoordinator : public frontend::Shell, public shell::FocusController
 {
-public:
-    NestedInputRelay();
-    ~NestedInputRelay() noexcept;
-
-    void set_dispatcher(std::shared_ptr<InputDispatcher> const& dispatcher);
-
-private:
-    bool handle(MirEvent const& event);
-
-    std::shared_ptr<InputDispatcher> dispatcher;
 };
+
 }
 }
 
-
-#endif /* MIR_INPUT_NESTED_INPUT_RELAY_H_ */
+#endif /* MIR_SCENE_SESSION_COORDINATOR_H_ */

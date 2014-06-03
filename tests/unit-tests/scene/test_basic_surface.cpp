@@ -77,6 +77,8 @@ struct BasicSurfaceTest : public testing::Test
         rect = geom::Rectangle{top_left, size};
         null_change_cb = []{};
         mock_change_cb = std::bind(&MockCallback::call, &mock_callback);
+        observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb,
+        [this](int){mock_change_cb();});
     }
     std::string name;
     geom::Point top_left;
@@ -91,6 +93,7 @@ struct BasicSurfaceTest : public testing::Test
     std::shared_ptr<StubSurfaceConfigurator> const stub_configurator = std::make_shared<StubSurfaceConfigurator>();
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     void const* compositor_id{nullptr};
+    std::shared_ptr<ms::LegacySurfaceChangeNotification> observer;
 };
 
 }
@@ -163,7 +166,6 @@ TEST_F(BasicSurfaceTest, update_top_left)
         std::shared_ptr<mg::CursorImage>(),
         report};
 
-    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb);
     surface.add_observer(observer);
 
     EXPECT_EQ(rect.top_left, surface.top_left());
@@ -190,7 +192,6 @@ TEST_F(BasicSurfaceTest, update_size)
         std::shared_ptr<mg::CursorImage>(),
         report};
 
-    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb);
     surface.add_observer(observer);
 
     EXPECT_EQ(rect.size, surface.size());
@@ -247,7 +248,6 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
         std::shared_ptr<mg::CursorImage>(),
         report};
 
-    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb);
     surface.add_observer(observer);
 
     auto original_transformation = surface.compositor_snapshot(compositor_id)->transformation();
@@ -278,7 +278,6 @@ TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
         std::shared_ptr<mg::CursorImage>(),
         report};
 
-    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb);
     surface.add_observer(observer);
 
     float alpha = 0.5f;
@@ -307,8 +306,8 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
 {
     using namespace testing;
     mtd::StubBuffer mock_buffer;
-    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_,_)).Times(2)
-        .WillRepeatedly(InvokeArgument<1>(&mock_buffer));
+    EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_)).Times(2)
+        .WillRepeatedly(InvokeArgument<0>(&mock_buffer));
 
     mir::graphics::Buffer* buffer = nullptr;
     auto const callback = [&](mir::graphics::Buffer* new_buffer) { buffer = new_buffer; };
@@ -358,7 +357,6 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
         std::shared_ptr<mg::CursorImage>(),
         report};
 
-    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb);
     surface.add_observer(observer);
 
     surface.set_hidden(true);
@@ -368,8 +366,8 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
 {
     using namespace testing;
     mtd::StubBuffer mock_buffer;
-    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_,_)).Times(2)
-        .WillRepeatedly(InvokeArgument<1>(&mock_buffer));
+    EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_)).Times(2)
+        .WillRepeatedly(InvokeArgument<0>(&mock_buffer));
 
     ms::BasicSurface surface{
         name,
@@ -381,7 +379,6 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
         std::shared_ptr<mg::CursorImage>(),
         report};
 
-    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb);
     surface.add_observer(observer);
 
     mir::graphics::Buffer* buffer = nullptr;
@@ -409,7 +406,6 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         std::shared_ptr<mg::CursorImage>(),
         report};
 
-    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb);
     surface.add_observer(observer);
 
     std::vector<geom::Point> contained_pt
@@ -452,7 +448,6 @@ TEST_F(BasicSurfaceTest, set_input_region)
         std::shared_ptr<mg::CursorImage>(),
         report};
 
-    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb);
     surface.add_observer(observer);
 
     surface.set_input_region(rectangles);

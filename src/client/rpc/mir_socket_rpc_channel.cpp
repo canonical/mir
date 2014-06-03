@@ -24,6 +24,7 @@
 #include "../mir_surface.h"
 #include "../display_configuration.h"
 #include "../lifecycle_control.h"
+#include "mir/variable_length_array.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
@@ -208,7 +209,7 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(google::protobuf::Messa
     complete->Run();
 }
 
-void mclr::MirSocketRpcChannel::receive_file_descriptors(std::vector<int> &fds)
+void mclr::MirSocketRpcChannel::receive_file_descriptors(std::vector<int>& fds)
 {
     // We send dummy data
     struct iovec iov;
@@ -217,8 +218,10 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(std::vector<int> &fds)
     iov.iov_len = 1;
 
     // Allocate space for control message
-    auto n_fds = fds.size();
-    std::vector<char> control(sizeof(struct cmsghdr) + sizeof(int) * n_fds);
+    static auto const builtin_n_fds = 5;
+    static auto const builtin_cmsg_space = CMSG_SPACE(builtin_n_fds * sizeof(int));
+    auto const fds_bytes = fds.size() * sizeof(int);
+    mir::VariableLengthArray<builtin_cmsg_space> control{CMSG_SPACE(fds_bytes)};
 
     // Message to send
     struct msghdr header;
@@ -230,14 +233,8 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(std::vector<int> &fds)
     header.msg_control = control.data();
     header.msg_flags = 0;
 
-    // Control message contains file descriptors
-    struct cmsghdr *message = CMSG_FIRSTHDR(&header);
-    message->cmsg_len = header.msg_controllen;
-    message->cmsg_level = SOL_SOCKET;
-    message->cmsg_type = SCM_RIGHTS;
-
     using std::chrono::steady_clock;
-    auto time_limit = steady_clock::now() + timeout;
+    auto const time_limit = steady_clock::now() + timeout;
 
     while (recvmsg(socket.native_handle(), &header, 0) < 0)
     {
@@ -245,12 +242,23 @@ void mclr::MirSocketRpcChannel::receive_file_descriptors(std::vector<int> &fds)
             return;
     }
 
-    // Copy file descriptors back to caller
-    n_fds = (message->cmsg_len - sizeof(struct cmsghdr)) / sizeof(int);
-    fds.resize(n_fds);
-    int *data = (int *)CMSG_DATA(message);
-    for (std::vector<int>::size_type i = 0; i < n_fds; i++)
-        fds[i] = data[i];
+    // If we get a proper control message, copy the received
+    // file descriptors back to the caller
+    struct cmsghdr const* const cmsg = CMSG_FIRSTHDR(&header);
+
+    if (cmsg && cmsg->cmsg_len == CMSG_LEN(fds_bytes) &&
+        cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS)
+    {
+        int const* const data = reinterpret_cast<int const*>CMSG_DATA(cmsg);
+        int i = 0;
+        for (auto& fd : fds)
+            fd = data[i++];
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Invalid control message for receiving file descriptors"));
+    }
 }
 
 void mclr::MirSocketRpcChannel::CallMethod(

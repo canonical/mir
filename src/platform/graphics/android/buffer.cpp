@@ -73,7 +73,7 @@ bool mga::Buffer::can_bypass() const
     return false;
 }
 
-void mga::Buffer::bind_to_texture()
+void mga::Buffer::gl_bind_to_texture()
 {
     std::unique_lock<std::mutex> lk(content_lock);
     native_buffer->wait_for_content();

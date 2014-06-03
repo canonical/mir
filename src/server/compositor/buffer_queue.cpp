@@ -189,9 +189,13 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
 {
     std::unique_lock<decltype(guard)> lock(guard);
 
-    bool const use_current_buffer =
-        should_reuse_current_buffer(user_id) ||
-        ready_to_composite_queue.empty();
+    bool use_current_buffer = false;
+    if (!current_buffer_users.empty() && !is_a_current_buffer_user(user_id))
+    {
+        use_current_buffer = true;
+        current_buffer_users.push_back(user_id);
+    }
+    use_current_buffer |= ready_to_composite_queue.empty();
 
     mg::Buffer* buffer_to_release = nullptr;
     if (!use_current_buffer)
@@ -206,11 +210,11 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
          * being changed, the new one has no users yet
          */
         current_buffer_users.clear();
+        current_buffer_users.push_back(user_id);
         current_compositor_buffer = pop(ready_to_composite_queue);
     }
 
     buffers_sent_to_compositor.push_back(current_compositor_buffer);
-    current_buffer_users.push_back(user_id);
 
     std::shared_ptr<mg::Buffer> const acquired_buffer =
         buffer_for(current_compositor_buffer, buffers);
@@ -235,13 +239,29 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
     if (contains(buffer.get(), buffers_sent_to_compositor))
         return;
 
+    if (nbuffers <= 1)
+        return;
+
     /*
-     * This buffer is not owned by compositor anymore. If the queue is supposed
-     * to only own a single buffer (nbuffers == 1), then this is a buffer that
-     * is no longer used (i.e. replaced by a new resized buffer), so just
-     * discard it.
+     * We can't release the current_compositor_buffer because we need to keep
+     * a compositor buffer always-available. But there might be a new
+     * compositor buffer available to take its place immediately. Moving to
+     * that one immediately will free up the old compositor buffer, allowing
+     * us to call back the client with a buffer where otherwise we couldn't.
      */
-    if (current_compositor_buffer != buffer.get() && nbuffers > 1)
+    if (current_compositor_buffer == buffer.get() &&
+        !ready_to_composite_queue.empty())
+    {
+        current_compositor_buffer = pop(ready_to_composite_queue);
+
+        // Ensure current_compositor_buffer gets reused by the next
+        // compositor_acquire:
+        current_buffer_users.clear();
+        void const* const impossible_user_id = this;
+        current_buffer_users.push_back(impossible_user_id);
+    }
+
+    if (current_compositor_buffer != buffer.get())
         release(buffer.get(), std::move(lock));
 }
 
@@ -314,6 +334,19 @@ int mc::BufferQueue::buffers_ready_for_compositor() const
     return ready_to_composite_queue.size();
 }
 
+int mc::BufferQueue::buffers_free_for_client() const
+{
+    std::lock_guard<decltype(guard)> lock(guard);
+    int ret = 1;
+    if (nbuffers > 1)
+    {
+        int nfree = free_buffers.size();
+        int future_growth = nbuffers - buffers.size();
+        ret = nfree + future_growth;
+    }
+    return ret;
+}
+
 void mc::BufferQueue::give_buffer_to_client(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
@@ -355,29 +388,12 @@ void mc::BufferQueue::give_buffer_to_client(
     }
 }
 
-bool mc::BufferQueue::should_reuse_current_buffer(void const* user_id)
+bool mc::BufferQueue::is_a_current_buffer_user(void const* user_id) const
 {
-    if (!current_buffer_users.empty())
-    {
-        int size = current_buffer_users.size();
-        for (int i = 0; i < size; ++i)
-        {
-            /* The compositor calling had already acquired
-             * the latest buffer. So it should use the next
-             * buffer available and not reuse the one it already composited.
-             */
-            if (current_buffer_users[i] == user_id)
-                return false;
-        }
-        /* This is new compositor calling so share the latest buffer for
-         * multi-monitor sync
-         */
-        return true;
-    }
-    /* The id list is really only empty the very first time.
-     * False is returned so that the compositor buffer is advanced.
-     */
-    return false;
+    int const size = current_buffer_users.size();
+    int i = 0;
+    while (i < size && current_buffer_users[i] != user_id) ++i;
+    return i < size;
 }
 
 void mc::BufferQueue::release(
