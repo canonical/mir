@@ -43,15 +43,15 @@ struct MockTrustSessionListener : ms::TrustSessionListener
     {
         ON_CALL(*this, starting(_)).WillByDefault(Invoke(wrapped.get(), &ms::TrustSessionListener::starting));
         ON_CALL(*this, stopping(_)).WillByDefault(Invoke(wrapped.get(), &ms::TrustSessionListener::stopping));
-        ON_CALL(*this, trusted_participant_starting(_, _)).WillByDefault(Invoke(wrapped.get(), &ms::TrustSessionListener::trusted_participant_starting));
-        ON_CALL(*this, trusted_participant_stopping(_, _)).WillByDefault(Invoke(wrapped.get(), &ms::TrustSessionListener::trusted_participant_stopping));
+        ON_CALL(*this, participant_added(_, _)).WillByDefault(Invoke(wrapped.get(), &ms::TrustSessionListener::participant_added));
+        ON_CALL(*this, participant_removed(_, _)).WillByDefault(Invoke(wrapped.get(), &ms::TrustSessionListener::participant_removed));
     }
 
     MOCK_METHOD1(starting, void(std::shared_ptr<ms::TrustSession> const& trust_session));
     MOCK_METHOD1(stopping, void(std::shared_ptr<ms::TrustSession> const& trust_session));
 
-    MOCK_METHOD2(trusted_participant_starting, void(ms::TrustSession const& trust_session, std::shared_ptr<ms::Session> const& participant));
-    MOCK_METHOD2(trusted_participant_stopping, void(ms::TrustSession const& trust_session, std::shared_ptr<ms::Session> const& participant));
+    MOCK_METHOD2(participant_added, void(ms::TrustSession const& trust_session, std::shared_ptr<ms::Session> const& participant));
+    MOCK_METHOD2(participant_removed, void(ms::TrustSession const& trust_session, std::shared_ptr<ms::Session> const& participant));
 
     std::shared_ptr<ms::TrustSessionListener> const wrapped;
 };
@@ -129,8 +129,8 @@ TEST_F(TrustSessionClientAPI, can_add_trusted_session)
     {
         auto const participant = std::dynamic_pointer_cast<ms::Session>(participant_session);
         InSequence server_seq;
-        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), trusted_participant_starting(_, Eq(participant)));
-        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), trusted_participant_stopping(_, Eq(participant)));
+        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), participant_added(_, Eq(participant)));
+        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), participant_removed(_, Eq(participant)));
     }
 
     MirTrustSession* trust_session = mir_connection_start_trust_session_sync(

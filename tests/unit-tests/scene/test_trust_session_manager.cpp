@@ -154,7 +154,7 @@ TEST_F(TrustSessionManager, notifies_session_beginning_when_participant_is_not_i
 {
     session_manager.add_participant_by_pid(trust_session, participant_pid);
 
-    EXPECT_CALL(trust_session_listener, trusted_participant_starting(Ref(*trust_session), Eq(participant_session))).Times(1);
+    EXPECT_CALL(trust_session_listener, participant_added(Ref(*trust_session), Eq(participant_session))).Times(1);
 
     session_manager.add_expected_session(participant_session);
 }
@@ -163,18 +163,18 @@ TEST_F(TrustSessionManager, notifies_session_beginning_when_participant_is_in_ex
 {
     existing_sessions.insert_session(participant_session);
 
-    EXPECT_CALL(trust_session_listener, trusted_participant_starting(Ref(*trust_session), Eq(participant_session))).Times(1);
+    EXPECT_CALL(trust_session_listener, participant_added(Ref(*trust_session), Eq(participant_session))).Times(1);
 
     session_manager.add_participant_by_pid(trust_session, participant_pid);
 }
 
-TEST_F(TrustSessionManager, notifies_session_beginning_and_ending)
+TEST_F(TrustSessionManager, notifies_session_added_and_removed)
 {
     session_manager.add_participant_by_pid(trust_session, participant_pid);
 
     InSequence seq;
-    EXPECT_CALL(trust_session_listener, trusted_participant_starting(Ref(*trust_session), Eq(participant_session))).Times(1);
-    EXPECT_CALL(trust_session_listener, trusted_participant_stopping(Ref(*trust_session), Eq(participant_session))).Times(1);
+    EXPECT_CALL(trust_session_listener, participant_added(Ref(*trust_session), Eq(participant_session))).Times(1);
+    EXPECT_CALL(trust_session_listener, participant_removed(Ref(*trust_session), Eq(participant_session))).Times(1);
 
     session_manager.add_expected_session(participant_session);
     session_manager.stop_trust_session(trust_session);
