@@ -50,8 +50,6 @@ mir (0.2.0-0ubuntu1) UNRELEASED; urgency=medium
     - Expand credentials to include uid/gid for session authorizer.
     - Bypass control is now Mesa-specific and tied to the command line options.
       So the environment variable MIR_BYPASS has changed to MIR_SERVER_BYPASS.
-    - mirscreencast screenshots now produce images with correct color instead
-      of transparency.
     - Ongoing architectural changes in the compositor/renderer logic to
       prepare for overlay support, and to reduce locking overhead.
     - Made InputDispatcher replaceable.
@@ -105,8 +103,6 @@ mir (0.2.0-0ubuntu1) UNRELEASED; urgency=medium
         swapinterval=0. (LP: #1206400)
       . mir_surface_is_valid(NULL) crashes instead of returning false.
         (LP: #1248474)
-      . Mirscreencast outputs translucency instead of shadows, producing
-        incorrect images. (LP: #1301210)
       . [regression] tests/unit-tests/shell/test_mediating_display_changer.cpp
         is not compiled and executed. (LP: #1312832)
       . Android platform does not reset the compositionType to HWC_FRAMEBUFFER
