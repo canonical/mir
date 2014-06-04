@@ -19,7 +19,6 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_debug.h"
 
 #include <gtest/gtest.h>
 
@@ -33,60 +32,8 @@ namespace
 
 struct ClientConfigCommon : TestingClientConfiguration
 {
-    ClientConfigCommon()
-        : connection(0)
-        , surface(0),
-        buffers(0)
-    {
-    }
-
-    static void connection_callback(MirConnection * connection, void * context)
-    {
-        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->connection = connection;
-    }
-
-    static void create_surface_callback(MirSurface * surface, void * context)
-    {
-        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->surface_created(surface);
-    }
-
-    static void next_buffer_callback(MirSurface * surface, void * context)
-    {
-        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->next_buffer(surface);
-    }
-
-    static void release_surface_callback(MirSurface * surface, void * context)
-    {
-        ClientConfigCommon * config = reinterpret_cast<ClientConfigCommon *>(context);
-        config->surface_released(surface);
-    }
-
-    virtual void connected(MirConnection * new_connection)
-    {
-        connection = new_connection;
-    }
-
-    virtual void surface_created(MirSurface * new_surface)
-    {
-        surface = new_surface;
-    }
-
-    virtual void next_buffer(MirSurface*)
-    {
-        ++buffers;
-    }
-
-    virtual void surface_released(MirSurface * /*released_surface*/)
-    {
-        surface = NULL;
-    }
-
-    MirConnection* connection;
-    MirSurface* surface;
-    int buffers;
+    MirConnection* connection{nullptr};
+    MirSurface* surface{nullptr};
 };
 }
 
