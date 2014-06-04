@@ -66,6 +66,7 @@ public:
     void alpha_set_to(float alpha) override;
     void transformation_set_to(glm::mat4 const& t) override;
     void reception_mode_set_to(input::InputReceptionMode mode) override;
+    void cursor_image_set_to(graphics::CursorImage const& image) override;
 
     void add(std::shared_ptr<SurfaceObserver> const& observer);
     void remove(std::shared_ptr<SurfaceObserver> const& observer);
@@ -85,6 +86,7 @@ public:
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
         std::shared_ptr<SurfaceConfigurator> const& configurator,
+        std::shared_ptr<graphics::CursorImage> const& cursor_image,
         std::shared_ptr<SceneReport> const& report);
 
     ~BasicSurface() noexcept;
@@ -134,6 +136,9 @@ public:
     int configure(MirSurfaceAttrib attrib, int value) override;
     void hide() override;
     void show() override;
+    
+    void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image);
+    std::shared_ptr<graphics::CursorImage> cursor_image();
 
     void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override;
@@ -160,6 +165,7 @@ private:
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
     std::shared_ptr<SurfaceConfigurator> const configurator;
+    std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
 
     MirSurfaceType type_value;
