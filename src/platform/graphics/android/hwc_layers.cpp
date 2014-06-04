@@ -140,8 +140,6 @@ void mga::HWCLayer::set_buffer(Buffer const& buffer)
     associated_buffer = buffer.native_buffer_handle();
     updated = (hwc_layer->handle != associated_buffer->handle());
 
-    printf("%i 0x%X 0x%X\n", updated, (int)hwc_layer->handle, (int)associated_buffer->handle());
-
     hwc_layer->handle = associated_buffer->handle();
     hwc_layer->sourceCrop = 
     {

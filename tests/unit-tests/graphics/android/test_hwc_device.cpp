@@ -607,14 +607,11 @@ TEST_F(HwcDevice, overlay_buffers_are_owned_until_next_set)
             ASSERT_THAT(contents.numHwLayers, Ge(1));
             contents.hwLayers[0].compositionType = HWC_OVERLAY;
             contents.hwLayers[1].compositionType = HWC_FRAMEBUFFER_TARGET;
-            printf("OTNRHUONT\n");
         }));
-    //second save
     EXPECT_CALL(*mock_renderable, buffer())
         .InSequence(seq)
         .WillOnce(Return(stub_buffer1));
 
-    /////second set
     EXPECT_CALL(*mock_renderable, buffer())
         .InSequence(seq)
         .WillOnce(Return(stub_buffer2));
@@ -625,18 +622,11 @@ TEST_F(HwcDevice, overlay_buffers_are_owned_until_next_set)
             ASSERT_THAT(contents.numHwLayers, Ge(1));
             contents.hwLayers[0].compositionType = HWC_FRAMEBUFFER;
             contents.hwLayers[1].compositionType = HWC_FRAMEBUFFER_TARGET;
-            printf("OTNRHUONT\n");
         }));
-//    EXPECT_CALL(*mock_renderable, buffer())
-//        .InSequence(seq)
-//        .WillOnce(Return(stub_buffer2));
 
     auto use_count_before = stub_buffer1.use_count();
-    printf("USE COUNT0 %i\n", (int)stub_buffer1.use_count());
     device.prepare_overlays(stub_context, updated_list, stub_compositor);
-    printf("USE COUNT1 %i\n", (int)stub_buffer1.use_count());
     device.post(*stub_buffer3);
-    printf("USE COUNT2 %i\n", (int)stub_buffer1.use_count());
     EXPECT_THAT(stub_buffer1.use_count(), Gt(use_count_before));
 
     device.prepare_overlays(stub_context, updated_list, stub_compositor);
@@ -645,7 +635,7 @@ TEST_F(HwcDevice, overlay_buffers_are_owned_until_next_set)
     EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
 }
 
-TEST_F(HwcDevice, framebuffer_buffers_are_owned_until_set)
+TEST_F(HwcDevice, framebuffer_buffers_are_not_owned_past_set)
 {
 #if 0
     using namespace testing;
