@@ -20,45 +20,17 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_debug.h"
-#include "src/client/client_buffer.h"
-
-#include "mir/frontend/connector.h"
-
-#include "mir_protobuf.pb.h"
-
-#ifdef ANDROID
-/*
- * MirNativeBuffer for Android is defined opaquely, but we now depend on
- * it having width and height fields, for all platforms. So need definition...
- */
-#include <system/window.h>  // for ANativeWindowBuffer AKA MirNativeBuffer
-#endif
 
 #include <gtest/gtest.h>
-#include <chrono>
-#include <thread>
-#include <cstring>
 
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
-#include <errno.h>
-
-namespace mf = mir::frontend;
-namespace mc = mir::compositor;
-namespace mcl = mir::client;
 namespace mtf = mir_test_framework;
 
 namespace
 {
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
-}
 
-namespace mir
-{
-namespace
-{
 struct ClientConfigCommon : TestingClientConfiguration
 {
     ClientConfigCommon()
@@ -205,6 +177,4 @@ TEST_F(DefaultDisplayServerTestFixture, ClientLibraryDoesNotInterfereWithClientS
     } client_config;
 
     launch_client_process(client_config);
-}
-
 }
