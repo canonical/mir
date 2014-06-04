@@ -22,13 +22,8 @@
 
 namespace ms = mir::scene;
 
-ms::TrustSessionImpl::TrustSessionImpl(
-    std::weak_ptr<Session> const& session,
-    TrustSessionCreationParameters const&,
-    std::shared_ptr<TrustSessionListener> const& trust_session_listener) :
-    trusted_helper(session),
-    trust_session_listener(trust_session_listener),
-    state(mir_trust_session_state_started)
+ms::TrustSessionImpl::TrustSessionImpl(std::weak_ptr<Session> const& session) :
+    trusted_helper(session)
 {
     if (auto const& helper = trusted_helper.lock())
     {
@@ -36,27 +31,7 @@ ms::TrustSessionImpl::TrustSessionImpl(
     }
 }
 
-ms::TrustSessionImpl::~TrustSessionImpl()
-{
-    stop();
-}
-
 std::weak_ptr<ms::Session> ms::TrustSessionImpl::get_trusted_helper() const
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
     return trusted_helper;
-}
-
-void ms::TrustSessionImpl::stop()
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    if (state == mir_trust_session_state_stopped)
-        return;
-
-    state = mir_trust_session_state_stopped;
-
-    if (auto const& helper = trusted_helper.lock())
-        helper->stop_trust_session();
 }

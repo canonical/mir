@@ -40,7 +40,8 @@ void ms::TrustSessionManagerImpl::stop_trust_session_locked(
     std::lock_guard<std::mutex> const&,
     std::shared_ptr<TrustSession> const& trust_session) const
 {
-    trust_session->stop();
+    if (auto const& helper = trust_session->get_trusted_helper().lock())
+        helper->stop_trust_session();
 
     std::vector<std::shared_ptr<Session>> participants;
 
@@ -126,7 +127,7 @@ std::shared_ptr<ms::TrustSession> ms::TrustSessionManagerImpl::start_trust_sessi
     std::shared_ptr<Session> const& session,
     TrustSessionCreationParameters const& params) const
 {
-    auto trust_session = std::make_shared<TrustSessionImpl>(session, params, trust_session_listener);
+    auto trust_session = std::make_shared<TrustSessionImpl>(session);
 
     std::lock_guard<std::mutex> lock(trust_sessions_mutex);
 

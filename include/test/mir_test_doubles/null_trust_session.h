@@ -27,19 +27,13 @@ namespace test
 {
 namespace doubles
 {
-
 class NullTrustSession : public scene::TrustSession
 {
-    void stop() override
-    {
-    }
-
     std::weak_ptr<scene::Session> get_trusted_helper() const override
     {
       return std::weak_ptr<scene::Session>();
     }
 };
-
 }
 }
 }

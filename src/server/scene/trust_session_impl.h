@@ -21,31 +21,16 @@
 
 #include "mir/scene/trust_session.h"
 
-#include <atomic>
-#include <mutex>
-
 namespace mir
 {
-
 namespace scene
 {
-class SessionContainer;
-class TrustSessionCreationParameters;
-class TrustSessionListener;
-class TrustSessionContainer;
-class TrustSessionTrustedParticipants;
-
 class TrustSessionImpl : public TrustSession
 {
 public:
-    TrustSessionImpl(std::weak_ptr<Session> const& session,
-                 TrustSessionCreationParameters const& parameters,
-                 std::shared_ptr<TrustSessionListener> const& trust_session_listener);
-    ~TrustSessionImpl();
+    TrustSessionImpl(std::weak_ptr<Session> const& session);
 
     std::weak_ptr<Session> get_trusted_helper() const override;
-
-    void stop() override;
 
 protected:
     TrustSessionImpl(const TrustSessionImpl&) = delete;
@@ -53,11 +38,6 @@ protected:
 
 private:
     std::weak_ptr<Session> const trusted_helper;
-    std::shared_ptr<TrustSessionListener> const trust_session_listener;
-
-    MirTrustSessionState state;
-    std::string cookie;
-    std::recursive_mutex mutable mutex;
 };
 }
 }
