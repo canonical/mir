@@ -35,6 +35,7 @@
 #include "mir_test_doubles/stub_swapping_gl_context.h"
 #include "mir_test_doubles/stub_renderable_list_compositor.h"
 #include "mir_test_doubles/mock_renderable_list_compositor.h"
+#include "mir_test_doubles/mock_renderable.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -565,4 +566,94 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
     device.prepare_overlays(stub_context, updated_list, stub_compositor);
     device.prepare_overlays(stub_context, updated_list, stub_compositor);
     device.post(mock_buffer);
+}
+
+TEST_F(HwcDevice, overlay_buffers_are_owned_until_next_set)
+{
+    using namespace testing;
+    auto native_handle = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    native_handle->anwb()->width = buffer_size.width.as_int();
+    native_handle->anwb()->height = buffer_size.height.as_int();
+    EXPECT_CALL(mock_buffer, native_buffer_handle())
+        .WillRepeatedly(Return(native_handle))
+
+    auto stub_buffer = std::make_shared<mtd::StubBuffer>();
+
+    auto mock_renderable = std::make_shared<mtd::MockRenderable>();
+
+    mg::RenderableList updated_list({mock_renderable1});
+
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+
+    Sequence seq; 
+    EXPECT_CALL(*mock_renderable, buffer())
+        .InSequence(seq)
+        .WillOnce(Return(mock_buffer));
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(_))
+        .InSequence(seq)
+        .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
+        {
+            ASSERT_THAT(contents.numHwLayers, Ge(1));
+            contents.hwLayers[0].compositionType = HWC_OVERLAY;
+            contents.hwLayers[1].compositionType = HWC_FRAMEBUFFER_TARGET;
+        }));
+    EXPECT_CALL(*mock_renderable, buffer())
+        .InSequence(seq)
+        .WillOnce(Return(stub_buffer));
+
+    auto use_count_before = mock_buffer.use_count();
+    device.prepare_overlays(stub_context, updated_list, stub_compositor);
+    device.post(stub_buffer);
+    EXPECT_THAT(mock_buffer.use_count, Gt(use_count_before));
+
+    device.prepare_overlays(stub_context, updated_list, stub_compositor);
+    device.post(stub_buffer);
+
+    EXPECT_THAT(mock_buffer.use_count, Eq(use_count_before));
+}
+
+TEST_F(HwcDevice, framebuffer_buffers_are_owned_until_set)
+{
+#if 0
+    using namespace testing;
+    auto native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    auto native_handle_2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    auto native_handle_3 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    native_handle_1->anwb()->width = buffer_size.width.as_int();
+    native_handle_1->anwb()->height = buffer_size.height.as_int();
+    native_handle_2->anwb()->width = buffer_size.width.as_int();
+    native_handle_2->anwb()->height = buffer_size.height.as_int();
+    native_handle_3->anwb()->width = buffer_size.width.as_int();
+    native_handle_3->anwb()->height = buffer_size.height.as_int();
+
+    EXPECT_CALL(mock_buffer, native_buffer_handle())
+        .WillOnce(Return(native_handle_1))
+        .WillOnce(Return(native_handle_2))
+        .WillOnce(Return(native_handle_3));
+
+    mg::RenderableList updated_list({stub_renderable1});
+
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+
+    Sequence seq; 
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(_))
+        .InSequence(seq)
+        .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
+        {
+            ASSERT_THAT(contents.numHwLayers, Ge(1));
+            contents.hwLayers[0].compositionType = HWC_OVERLAY;
+            contents.hwLayers[1].compositionType = HWC_FRAMEBUFFER_TARGET;
+        }));
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(_))
+        .InSequence(seq)
+        .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
+        {
+            ASSERT_THAT(contents.numHwLayers, Ge(1));
+            EXPECT_EQ(HWC_FRAMEBUFFER, contents.hwLayers[0].compositionType);
+        }));
+
+    device.prepare_overlays(stub_context, updated_list, stub_compositor);
+    device.prepare_overlays(stub_context, updated_list, stub_compositor);
+    device.post(mock_buffer);
+#endif
 }
