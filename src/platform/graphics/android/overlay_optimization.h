@@ -16,33 +16,22 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_HWC_LOGGER_H_
-#define MIR_GRAPHICS_ANDROID_HWC_LOGGER_H_
-
-#include "overlay_optimization.h"
-#include <hardware/hwcomposer.h>
-
+#ifndef MIR_GRAPHICS_ANDROID_OVERLAY_OPTIMIZATION_H_
+#define MIR_GRAPHICS_ANDROID_OVERLAY_OPTIMIZATION_H_
 namespace mir
 {
 namespace graphics
 {
 namespace android
 {
-class HwcLogger
-{
-public:
-    virtual ~HwcLogger() = default;
 
-    virtual void log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const = 0;
-    virtual void log_prepare_done(hwc_display_contents_1_t const& list) const = 0;
-    virtual void log_set_list(hwc_display_contents_1_t const& list) const = 0;
-    virtual void log_overlay_optimization(OverlayOptimization optimization_option) const = 0;
-protected:
-    HwcLogger() = default;
-    HwcLogger& operator=(HwcLogger const&) = delete;
-    HwcLogger(HwcLogger const&) = delete;
+enum class OverlayOptimization
+{
+    disabled,
+    enabled
 };
+
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_HWC_LOGGER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_OVERLAY_OPTIMIZATION_H_ */
