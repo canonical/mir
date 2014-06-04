@@ -571,8 +571,24 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
 TEST_F(HwcDevice, overlay_buffers_are_owned_until_next_set)
 {
     using namespace testing;
-    auto stub_buffer1 = std::make_shared<mtd::StubBuffer>();
-    auto stub_buffer2 = std::make_shared<mtd::StubBuffer>();
+    auto native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    auto native_handle_2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    auto native_handle_3 = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    native_handle_1->anwb()->width = buffer_size.width.as_int();
+    native_handle_1->anwb()->height = buffer_size.height.as_int();
+    native_handle_2->anwb()->width = buffer_size.width.as_int();
+    native_handle_2->anwb()->height = buffer_size.height.as_int();
+    native_handle_3->anwb()->width = buffer_size.width.as_int();
+    native_handle_3->anwb()->height = buffer_size.height.as_int();
+    auto stub_buffer1 = std::make_shared<mtd::MockBuffer>();
+    auto stub_buffer2 = std::make_shared<mtd::MockBuffer>();
+    auto stub_buffer3 = std::make_shared<mtd::MockBuffer>();
+    ON_CALL(*stub_buffer1, native_buffer_handle())
+        .WillByDefault(Return(native_handle_1));
+    ON_CALL(*stub_buffer2, native_buffer_handle())
+        .WillByDefault(Return(native_handle_2));
+    ON_CALL(*stub_buffer3, native_buffer_handle())
+        .WillByDefault(Return(native_handle_3));
 
     auto mock_renderable = std::make_shared<mtd::MockRenderable>();
 
@@ -591,14 +607,36 @@ TEST_F(HwcDevice, overlay_buffers_are_owned_until_next_set)
             ASSERT_THAT(contents.numHwLayers, Ge(1));
             contents.hwLayers[0].compositionType = HWC_OVERLAY;
             contents.hwLayers[1].compositionType = HWC_FRAMEBUFFER_TARGET;
+            printf("OTNRHUONT\n");
         }));
+    //second save
+    EXPECT_CALL(*mock_renderable, buffer())
+        .InSequence(seq)
+        .WillOnce(Return(stub_buffer1));
+
+    /////second set
     EXPECT_CALL(*mock_renderable, buffer())
         .InSequence(seq)
         .WillOnce(Return(stub_buffer2));
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(_))
+        .InSequence(seq)
+        .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
+        {
+            ASSERT_THAT(contents.numHwLayers, Ge(1));
+            contents.hwLayers[0].compositionType = HWC_FRAMEBUFFER;
+            contents.hwLayers[1].compositionType = HWC_FRAMEBUFFER_TARGET;
+            printf("OTNRHUONT\n");
+        }));
+//    EXPECT_CALL(*mock_renderable, buffer())
+//        .InSequence(seq)
+//        .WillOnce(Return(stub_buffer2));
 
     auto use_count_before = stub_buffer1.use_count();
+    printf("USE COUNT0 %i\n", (int)stub_buffer1.use_count());
     device.prepare_overlays(stub_context, updated_list, stub_compositor);
-    device.post(*stub_buffer2);
+    printf("USE COUNT1 %i\n", (int)stub_buffer1.use_count());
+    device.post(*stub_buffer3);
+    printf("USE COUNT2 %i\n", (int)stub_buffer1.use_count());
     EXPECT_THAT(stub_buffer1.use_count(), Gt(use_count_before));
 
     device.prepare_overlays(stub_context, updated_list, stub_compositor);

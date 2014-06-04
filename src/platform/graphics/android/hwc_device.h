@@ -24,6 +24,7 @@
 #include "hwc_common_device.h"
 #include "hwc_layerlist.h"
 #include <memory>
+#include <vector>
 
 namespace mir
 {
@@ -56,6 +57,9 @@ public:
 
 private:
     LayerList hwc_list;
+    std::vector<std::shared_ptr<Buffer>> next_onscreen_overlay_buffers;
+    std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
+
     void set_list_framebuffer(Buffer const&);
     void setup_layer_types();
 

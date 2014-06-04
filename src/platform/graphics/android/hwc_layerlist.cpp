@@ -70,7 +70,10 @@ bool mga::LayerList::update_list_and_check_if_changed(
         {
             layers_it->set_render_parameters(
                 renderable->screen_position(), renderable->alpha_enabled());
-            layers_it->set_buffer(*renderable->buffer());
+
+            auto b=renderable->buffer();
+            printf("BUFFER ACCESS REPROGR 0x%X\n", (int) b.get());
+            layers_it->set_buffer(*b);
             any_buffer_updated |= layers_it->needs_hwc_commit(); 
             layers_it->set_layer_type(mga::LayerType::gl_rendered);
             layers_it++;
@@ -83,6 +86,7 @@ bool mga::LayerList::update_list_and_check_if_changed(
         auto i = 0u;
         for(auto const& renderable : renderlist)
         {
+            printf("BUFFER ACCESS NEW\n");
             new_layers.emplace_back(
                 mga::HWCLayer(
                     mga::LayerType::gl_rendered,

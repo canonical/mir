@@ -36,7 +36,8 @@ namespace doubles
 struct MockBuffer : public graphics::Buffer
 {
  public:
-    MockBuffer()
+    MockBuffer() :
+        MockBuffer(geometry::Size{}, geometry::Stride{}, mir_pixel_format_argb_8888)
     {
     }
 

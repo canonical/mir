@@ -93,8 +93,12 @@ void mga::HwcDevice::prepare_overlays(
     RenderableList const& renderables,
     RenderableListCompositor const& list_compositor)
 {
+printf("prepare\n");
     if (!(list_needs_commit = hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size)))
+    {
+        printf("LIST DIDNT CHANGE.\n");
         return;
+    }
     setup_layer_types();
 
     hwc_wrapper->prepare(*hwc_list.native_list().lock());
@@ -106,7 +110,15 @@ void mga::HwcDevice::prepare_overlays(
     {
         layers_it->prepare_for_draw();
         if (layers_it->needs_gl_render())
+        {
+            printf("NOT OVERLAY\n");
             rejected_renderables.push_back(renderable);
+        }
+        else
+        {
+            printf("BUFFER ACCESS SAVED.\n");
+            next_onscreen_overlay_buffers.push_back(renderable->buffer());
+        }
         layers_it++;
     }
 
@@ -121,6 +133,10 @@ void mga::HwcDevice::post(mg::Buffer const& buffer)
     auto lg = lock_unblanked();
     set_list_framebuffer(buffer);
     hwc_wrapper->set(*hwc_list.native_list().lock());
+
+    printf("NEXTSIZE %i\n", next_onscreen_overlay_buffers.size());
+    onscreen_overlay_buffers.clear();
+    std::swap(next_onscreen_overlay_buffers, onscreen_overlay_buffers);
 
     for(auto& layer : hwc_list)
     {
