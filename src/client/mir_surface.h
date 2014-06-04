@@ -102,6 +102,7 @@ private:
     mutable std::mutex mutex; // Protects all members of *this
 
     void on_configured();
+    void on_cursor_configured();
     void process_incoming_buffer();
     void populate(MirBufferPackage& buffer_package);
     void created(mir_surface_callback callback, void * context);

@@ -34,6 +34,7 @@ namespace graphics
 {
 class Buffer;
 class InternalSurface;
+class CursorImage;
 }
 namespace input
 {
@@ -61,6 +62,8 @@ public:
     virtual int client_input_fd() const = 0;
 
     virtual int configure(MirSurfaceAttrib attrib, int value) = 0;
+
+    virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
 
     /**
      *  swap_buffers_blocking() is a convenience wrapper around swap_buffers()

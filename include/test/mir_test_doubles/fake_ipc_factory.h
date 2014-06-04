@@ -40,24 +40,26 @@ public:
         std::shared_ptr<frontend::DisplayChanger> const& changer,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<frontend::SessionMediatorReport> const& sm_report,
-        const std::shared_ptr<frontend::EventSink>& sink,
-        const std::shared_ptr<frontend::Screencast>& effective_screencast,
-        const frontend::ConnectionContext& connection_context)
+        std::shared_ptr<frontend::EventSink> const& sink,
+        std::shared_ptr<frontend::Screencast> const& effective_screencast,
+        frontend::ConnectionContext const& connection_context,
+        std::shared_ptr<graphics::CursorImages> const& cursor_images)
     {
         return frontend::DefaultIpcFactory::make_mediator(
             shell, graphics_platform, changer, buffer_allocator,
-            sm_report, sink, effective_screencast, connection_context);
+            sm_report, sink, effective_screencast, connection_context, cursor_images);
     }
 
-    MOCK_METHOD8(make_mediator, std::shared_ptr<frontend::detail::DisplayServer>(
+    MOCK_METHOD9(make_mediator, std::shared_ptr<frontend::detail::DisplayServer>(
         std::shared_ptr<frontend::Shell> const& shell,
         std::shared_ptr<graphics::Platform> const& graphics_platform,
         std::shared_ptr<frontend::DisplayChanger> const& changer,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<frontend::SessionMediatorReport> const& sm_report,
-        const std::shared_ptr<frontend::EventSink>& sink,
-        const std::shared_ptr<frontend::Screencast>& effective_screencast,
-        const frontend::ConnectionContext& connection_context));
+        std::shared_ptr<frontend::EventSink> const& sink,
+        std::shared_ptr<frontend::Screencast> const& effective_screencast,
+        frontend::ConnectionContext const& connection_context,
+        std::shared_ptr<graphics::CursorImages> const& cursor_images));
 };
 }
 }
