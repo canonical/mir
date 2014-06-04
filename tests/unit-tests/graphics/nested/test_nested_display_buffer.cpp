@@ -57,7 +57,7 @@ struct NestedDisplayBufferTest : testing::Test
     geom::Rectangle const default_rect;
 };
 
-TEST_F(NestedDisplayBufferTest, alpha_enabled_pixel_format_disables_opaqueness)
+TEST_F(NestedDisplayBufferTest, alpha_enabled_pixel_format_enables_destination_alpha)
 {
     mgnd::NestedOutput db{
         egl_disp_handle,
@@ -66,10 +66,10 @@ TEST_F(NestedDisplayBufferTest, alpha_enabled_pixel_format_disables_opaqueness)
         mt::fake_shared(null_input_dispatcher),
         mir_pixel_format_abgr_8888};
 
-    EXPECT_FALSE(db.is_opaque());
+    EXPECT_TRUE(db.uses_alpha());
 }
 
-TEST_F(NestedDisplayBufferTest, non_alpha_enabled_pixel_format_enables_opaqueness)
+TEST_F(NestedDisplayBufferTest, non_alpha_pixel_format_disables_destination_alpha)
 {
     mgnd::NestedOutput db{
         egl_disp_handle,
@@ -78,5 +78,5 @@ TEST_F(NestedDisplayBufferTest, non_alpha_enabled_pixel_format_enables_opaquenes
         mt::fake_shared(null_input_dispatcher),
         mir_pixel_format_xbgr_8888};
 
-    EXPECT_TRUE(db.is_opaque());
+    EXPECT_FALSE(db.uses_alpha());
 }

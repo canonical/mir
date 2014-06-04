@@ -69,7 +69,7 @@ public:
 
     bool can_bypass() const;
     MirOrientation orientation() const override;
-    bool is_opaque() const;
+    bool uses_alpha() const override;
 
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override; 
 

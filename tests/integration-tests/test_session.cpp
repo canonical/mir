@@ -88,7 +88,8 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     {
         struct StubRendererFactory : public mc::RendererFactory
         {
-            std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
+            std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&,
+                mc::DestinationAlpha)
             {
                 auto raw = new mtd::StubRenderer{};
                 return std::unique_ptr<mtd::StubRenderer>(raw);

@@ -38,7 +38,7 @@ public:
     bool can_bypass() const override { return false; }
     bool post_renderables_if_optimizable(graphics::RenderableList const&) { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal; }
-    bool is_opaque() const override { return true; }
+    bool uses_alpha() const override { return false; }
 };
 
 }

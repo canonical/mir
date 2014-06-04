@@ -310,7 +310,7 @@ TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_post)
     db.post_update();
 }
 
-TEST_F(MesaDisplayBufferTest, always_opaque)
+TEST_F(MesaDisplayBufferTest, does_not_use_alpha)
 {
     geometry::Rectangle const area{{12,34}, {56,78}};
 
@@ -324,6 +324,6 @@ TEST_F(MesaDisplayBufferTest, always_opaque)
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_TRUE(db.is_opaque());
+    EXPECT_FALSE(db.uses_alpha());
 }
 

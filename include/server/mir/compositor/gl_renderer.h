@@ -37,18 +37,20 @@ namespace mir
 namespace compositor
 {
 
+enum class DestinationAlpha;
+
 class GLRenderer : public Renderer
 {
 public:
     GLRenderer(
         graphics::GLProgramFactory const& program_factory,
         std::unique_ptr<graphics::GLTextureCache> && texture_cache, 
-        geometry::Rectangle const& display_area);
+        geometry::Rectangle const& display_area,
+        DestinationAlpha dest_alpha);
 
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
     void set_rotation(float degrees) override;
-    void set_opaque_background(bool opaque) override;
     void begin() const override;
     void render(graphics::RenderableList const&) const override;
     void end() const override;
@@ -76,6 +78,9 @@ public:
                             graphics::Renderable const& renderable) const;
 
     virtual void render(graphics::Renderable const& renderable) const;
+
+    DestinationAlpha destination_alpha() const;
+
 private:
     std::unique_ptr<graphics::GLProgram> program;
     std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;
@@ -86,7 +91,7 @@ private:
     GLuint transform_uniform_loc;
     GLuint alpha_uniform_loc;
     float rotation;
-    bool opaque_background;
+    DestinationAlpha const dest_alpha;
     geometry::Rectangle viewport;
 };
 

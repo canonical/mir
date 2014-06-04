@@ -36,7 +36,6 @@ public:
 
     virtual void set_viewport(geometry::Rectangle const& rect) = 0;
     virtual void set_rotation(float degrees) = 0;
-    virtual void set_opaque_background(bool opaque) = 0;
     virtual void begin() const = 0;
     virtual void render(graphics::RenderableList const&) const = 0;
     virtual void end() const = 0;

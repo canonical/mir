@@ -33,7 +33,7 @@ mgn::detail::NestedOutput::NestedOutput(
     geometry::Rectangle const& area,
     std::shared_ptr<input::InputDispatcher> const& dispatcher,
     MirPixelFormat preferred_format) :
-    opaque{!mg::contains_alpha(preferred_format)},
+    uses_alpha_{mg::contains_alpha(preferred_format)},
     egl_display(egl_display),
     host_surface{host_surface},
     egl_config{egl_display.choose_windowed_es_config(preferred_format)},
@@ -87,9 +87,9 @@ MirOrientation mgn::detail::NestedOutput::orientation() const
     return mir_orientation_normal;
 }
 
-bool mgn::detail::NestedOutput::is_opaque() const
+bool mgn::detail::NestedOutput::uses_alpha() const
 {
-    return opaque;
+    return uses_alpha_;
 }
 
 mgn::detail::NestedOutput::~NestedOutput() noexcept

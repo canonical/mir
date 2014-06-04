@@ -33,7 +33,6 @@ struct MockRenderer : public compositor::Renderer
 {
     MOCK_METHOD1(set_viewport, void(geometry::Rectangle const&));
     MOCK_METHOD1(set_rotation, void(float));
-    MOCK_METHOD1(set_opaque_background, void(bool));
     MOCK_CONST_METHOD0(begin, void());
     MOCK_CONST_METHOD1(render, void(graphics::RenderableList const&));
     MOCK_CONST_METHOD0(end, void());

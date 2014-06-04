@@ -197,9 +197,9 @@ MirOrientation mgm::DisplayBuffer::orientation() const
     return rotation;
 }
 
-bool mgm::DisplayBuffer::is_opaque() const
+bool mgm::DisplayBuffer::uses_alpha() const
 {
-    return true;
+    return false;
 }
 
 bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const&)
