@@ -58,7 +58,14 @@ public:
      */
     virtual std::unique_ptr<Alarm> notify_at(Timestamp time_point,
                                              std::function<void()> callback) = 0;
-
+    /**
+     * \brief Create an Alarm that will not fire until scheduled
+     *
+     * \param callback  Function to call when the Alarm signals
+     *
+     * \return A handle to an Alarm that can later be scheduled
+     */
+    virtual std::unique_ptr<Alarm> create_alarm(std::function<void()> callback) = 0;
 
     Timer(Timer const&) = delete;
     Timer& operator=(Timer const&) = delete;
