@@ -30,9 +30,6 @@ struct TrustSessionCreationParameters
 {
     pid_t base_process_id = 0;
 };
-
-bool operator==(const TrustSessionCreationParameters& lhs, const TrustSessionCreationParameters& rhs);
-bool operator!=(const TrustSessionCreationParameters& lhs, const TrustSessionCreationParameters& rhs);
 }
 }
 
