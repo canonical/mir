@@ -571,24 +571,19 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
 TEST_F(HwcDevice, overlay_buffers_are_owned_until_next_set)
 {
     using namespace testing;
-    auto native_handle = std::make_shared<mtd::StubAndroidNativeBuffer>();
-    native_handle->anwb()->width = buffer_size.width.as_int();
-    native_handle->anwb()->height = buffer_size.height.as_int();
-    EXPECT_CALL(mock_buffer, native_buffer_handle())
-        .WillRepeatedly(Return(native_handle))
-
-    auto stub_buffer = std::make_shared<mtd::StubBuffer>();
+    auto stub_buffer1 = std::make_shared<mtd::StubBuffer>();
+    auto stub_buffer2 = std::make_shared<mtd::StubBuffer>();
 
     auto mock_renderable = std::make_shared<mtd::MockRenderable>();
 
-    mg::RenderableList updated_list({mock_renderable1});
+    mg::RenderableList updated_list({mock_renderable});
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
     Sequence seq; 
     EXPECT_CALL(*mock_renderable, buffer())
         .InSequence(seq)
-        .WillOnce(Return(mock_buffer));
+        .WillOnce(Return(stub_buffer1));
     EXPECT_CALL(*mock_hwc_device_wrapper, prepare(_))
         .InSequence(seq)
         .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
@@ -599,17 +594,17 @@ TEST_F(HwcDevice, overlay_buffers_are_owned_until_next_set)
         }));
     EXPECT_CALL(*mock_renderable, buffer())
         .InSequence(seq)
-        .WillOnce(Return(stub_buffer));
+        .WillOnce(Return(stub_buffer2));
 
-    auto use_count_before = mock_buffer.use_count();
+    auto use_count_before = stub_buffer1.use_count();
     device.prepare_overlays(stub_context, updated_list, stub_compositor);
-    device.post(stub_buffer);
-    EXPECT_THAT(mock_buffer.use_count, Gt(use_count_before));
+    device.post(*stub_buffer2);
+    EXPECT_THAT(stub_buffer1.use_count(), Gt(use_count_before));
 
     device.prepare_overlays(stub_context, updated_list, stub_compositor);
-    device.post(stub_buffer);
+    device.post(*stub_buffer2);
 
-    EXPECT_THAT(mock_buffer.use_count, Eq(use_count_before));
+    EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
 }
 
 TEST_F(HwcDevice, framebuffer_buffers_are_owned_until_set)
