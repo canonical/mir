@@ -134,7 +134,7 @@ ms::BasicSurface::BasicSurface(
     hidden(false),
     input_mode(mi::InputReceptionMode::normal),
     nonrectangular(nonrectangular),
-    input_rectangles{surface_rect},
+    input_rectangles{geom::Rectangle{geom::Point{0, 0}, surface_rect.size}},
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
     configurator(configurator),
@@ -293,20 +293,27 @@ geom::Rectangle ms::BasicSurface::input_bounds() const
 {
     std::unique_lock<std::mutex> lk(guard);
 
-    // This is historically unchanged, but if you look at input_area_contains()
-    // it seems a bit inconsistent...
     return surface_rect;
 }
 
 bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 {
     std::unique_lock<std::mutex> lock(guard);
+
     if (hidden)
         return false;
+    
+    // Restrict to bounding rectangle
+    if (!surface_rect.contains(point))
+        return false;
+
+    // TODO: Perhaps creates some issues with transformation.
+    auto local_point = geom::Point{geom::X{point.x.as_uint32_t()-surface_rect.top_left.x.as_uint32_t()},
+                                   geom::Y{point.y.as_uint32_t()-surface_rect.top_left.y.as_uint32_t()}};
 
     for (auto const& rectangle : input_rectangles)
     {
-        if (rectangle.contains(point))
+        if (rectangle.contains(local_point))
         {
             return true;
         }
