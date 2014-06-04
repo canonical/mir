@@ -53,10 +53,10 @@ void ms::TrustSessionManagerImpl::stop_trust_session_locked(
                     participants.push_back(locked_session);
         });
 
-    for (auto session : participants)
+    for (auto const& participant : participants)
     {
-        if (trust_session_container->remove_participant(trust_session.get(), session, TrustSessionContainer::TrustType::trusted_session))
-            trust_session_listener->participant_removed(*trust_session, session);
+        if (trust_session_container->remove_participant(trust_session.get(), participant, TrustSessionContainer::TrustType::trusted_session))
+            trust_session_listener->participant_removed(*trust_session, participant);
     }
 
     trust_session_container->remove_trust_session(trust_session);
@@ -76,7 +76,7 @@ void ms::TrustSessionManagerImpl::remove_session(std::shared_ptr<Session> const&
             trust_sessions.push_back(trust_session);
         });
 
-    for(auto trust_session : trust_sessions)
+    for(auto const& trust_session : trust_sessions)
     {
         if (trust_session->get_trusted_helper().lock() == session)
         {
@@ -153,7 +153,7 @@ void ms::TrustSessionManagerImpl::add_expected_session(std::shared_ptr<Session> 
             trust_sessions.push_back(trust_session);
         });
 
-    for(auto trust_session : trust_sessions)
+    for(auto const& trust_session : trust_sessions)
     {
         if (trust_session_container->insert_participant(trust_session.get(), session, TrustSessionContainer::TrustType::trusted_session))
             trust_session_listener->participant_added(*trust_session, session);
