@@ -41,7 +41,7 @@ public:
     virtual ~DisplayDevice() = default;
 
     virtual void mode(MirPowerMode mode) = 0;
-    //TODO: (kdub) I think the distinction between prepare and set in this class is not helpful 
+    //TODO: (kdub) I think the distinction between prepare and set in this interface is not helpful 
     virtual void render_gl(SwappingGLContext const& context) = 0;
     virtual void prepare_overlays(
         SwappingGLContext const& context,

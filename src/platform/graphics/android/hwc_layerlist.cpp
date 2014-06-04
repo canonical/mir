@@ -70,7 +70,6 @@ bool mga::LayerList::update_list_and_check_if_changed(
         {
             layers_it->set_render_parameters(
                 renderable->screen_position(), renderable->alpha_enabled());
-
             layers_it->set_buffer(*renderable->buffer());
             any_buffer_updated |= layers_it->needs_hwc_commit(); 
             layers_it->set_layer_type(mga::LayerType::gl_rendered);
