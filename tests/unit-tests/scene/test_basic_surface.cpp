@@ -21,6 +21,7 @@
 
 #include "mir/frontend/event_sink.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/geometry/displacement.h"
 #include "mir/scene/surface_configurator.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -442,16 +443,16 @@ TEST_F(BasicSurfaceTest, set_input_region)
     std::vector<geom::Point> contained_pt
     {
         //region0 points
-        geom::Point{geom::X{0}, geom::Y{0}},
+        geom::Point{geom::X{4}, geom::Y{7}},
         //region1 points
-        geom::Point{geom::X{1}, geom::Y{1}},
+        geom::Point{geom::X{5}, geom::Y{8}},
     };
 
     for(auto x = 0; x <= 3; x++)
     {
         for(auto y = 0; y <= 3; y++)
         {
-            auto test_pt = geom::Point{x, y};
+            auto test_pt = rect.top_left + geom::Displacement{x, y};
             auto contains = surface.input_area_contains(test_pt);
             if (std::find(contained_pt.begin(), contained_pt.end(), test_pt) != contained_pt.end())
             {
