@@ -81,8 +81,8 @@ public:
      */
     virtual MirOrientation orientation() const = 0;
 
-    /** Returns true if the display buffer has an alpha channel and the alpha channel
-     *  will be read from at some point - in which case the renderer
+    /** Returns true if the display buffer has an alpha channel and the alpha 
+     *  channel will be read from at some point - in which case the renderer
      *  must produce valid alpha channel content
      */
     virtual bool uses_alpha() const = 0;

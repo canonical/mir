@@ -242,7 +242,11 @@ void mc::GLRenderer::set_rotation(float degrees)
 
 void mc::GLRenderer::begin() const
 {
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    if (dest_alpha == DestinationAlpha::opaque)
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    else
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
 

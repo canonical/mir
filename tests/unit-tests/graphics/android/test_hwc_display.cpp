@@ -489,7 +489,7 @@ TEST_F(AndroidDisplayBuffer, android_display_configuration_info)
 TEST_F(AndroidDisplayBuffer, does_not_use_alpha)
 {
     mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory);
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
 
     EXPECT_FALSE(db.uses_alpha());
 }
