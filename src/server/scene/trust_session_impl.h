@@ -28,7 +28,7 @@ namespace scene
 class TrustSessionImpl : public TrustSession
 {
 public:
-    TrustSessionImpl(std::weak_ptr<Session> const& session);
+    explicit TrustSessionImpl(std::weak_ptr<Session> const& session);
 
     std::weak_ptr<Session> get_trusted_helper() const override;
 
