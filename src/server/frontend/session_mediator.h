@@ -134,7 +134,7 @@ public:
 
     void start_trust_session(::google::protobuf::RpcController* controller,
                             const ::mir::protobuf::TrustSessionParameters* request,
-                            ::mir::protobuf::TrustSession* response,
+                            ::mir::protobuf::Void* response,
                             ::google::protobuf::Closure* done);
 
     void add_trusted_session(::google::protobuf::RpcController* controller,

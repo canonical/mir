@@ -20,17 +20,6 @@
 
 namespace ms = mir::scene;
 
-ms::TrustSessionCreationParameters::TrustSessionCreationParameters()
-    : base_process_id(0)
-{
-}
-
-ms::TrustSessionCreationParameters& ms::TrustSessionCreationParameters::set_base_process_id(pid_t process_id)
-{
-    base_process_id = process_id;
-    return *this;
-}
-
 bool ms::operator==(
     const TrustSessionCreationParameters& lhs,
     const TrustSessionCreationParameters& rhs)

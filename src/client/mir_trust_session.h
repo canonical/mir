@@ -68,7 +68,7 @@ private:
     std::atomic<MirTrustSessionState> state;
 
     mutable std::mutex session_mutex; // Protects session
-    mir::protobuf::TrustSession session;
+    mir::protobuf::Void session;
 
     mutable std::mutex event_handler_mutex; // Need another mutex for callback access to members
     std::function<void(MirTrustSessionState)> handle_trust_session_event;

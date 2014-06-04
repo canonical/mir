@@ -517,7 +517,7 @@ void mf::SessionMediator::drm_auth_magic(
 void mf::SessionMediator::start_trust_session(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::TrustSessionParameters* request,
-    ::mir::protobuf::TrustSession* /*response*/,
+    ::mir::protobuf::Void* /*response*/,
     ::google::protobuf::Closure* done)
 {
     {
@@ -531,7 +531,7 @@ void mf::SessionMediator::start_trust_session(
             BOOST_THROW_EXCEPTION(std::runtime_error("Cannot start another trust session"));
 
         ms::TrustSessionCreationParameters parameters;
-        parameters.set_base_process_id(request->base_trusted_session().pid());
+        parameters.base_process_id = request->base_trusted_session().pid();
 
         report->session_start_trust_session_called(session->name(), parameters.base_process_id);
 

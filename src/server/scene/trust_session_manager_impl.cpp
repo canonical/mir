@@ -36,10 +36,6 @@ ms::TrustSessionManagerImpl::TrustSessionManagerImpl(
 {
 }
 
-ms::TrustSessionManagerImpl::~TrustSessionManagerImpl() noexcept
-{
-}
-
 void ms::TrustSessionManagerImpl::stop_trust_session_locked(
     std::lock_guard<std::mutex> const&,
     std::shared_ptr<TrustSession> const& trust_session) const

@@ -20,7 +20,6 @@
 #define MIR_SCENE_TRUSTED_SESSION_CREATION_PARAMETERS_H_
 
 #include <sys/types.h>
-#include <vector>
 
 namespace mir
 {
@@ -29,11 +28,7 @@ namespace scene
 
 struct TrustSessionCreationParameters
 {
-    TrustSessionCreationParameters();
-
-    TrustSessionCreationParameters& set_base_process_id(pid_t process_id);
-
-    pid_t base_process_id;
+    pid_t base_process_id = 0;
 };
 
 bool operator==(const TrustSessionCreationParameters& lhs, const TrustSessionCreationParameters& rhs);

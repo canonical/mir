@@ -200,10 +200,6 @@ message TrustSessionParameters {
   required TrustedSession base_trusted_session = 1;
 }
 
-message TrustSession {
-  optional string error = 127;
-}
-
 message TrustSessionAddResult {
   optional int32 result = 1;
   optional string error = 127;
@@ -232,7 +228,7 @@ service DisplayServer {
   rpc configure_cursor(CursorSetting) returns (Void);
   rpc new_fds_for_trusted_clients(SocketFDRequest) returns (SocketFD);
 
-  rpc start_trust_session(TrustSessionParameters) returns (TrustSession);
+  rpc start_trust_session(TrustSessionParameters) returns (Void);
   rpc add_trusted_session(TrustedSession) returns (Void);
   rpc stop_trust_session(Void) returns (Void);
 }
