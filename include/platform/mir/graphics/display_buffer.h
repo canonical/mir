@@ -67,10 +67,6 @@ public:
     **/
     virtual bool post_renderables_if_optimizable(RenderableList const& renderlist) = 0;
 
-    /** to be deprecated */
-    virtual bool can_bypass() const = 0;
-    virtual void post_update(std::shared_ptr<Buffer> /* bypass_buf */) {}
-
     /** Returns the orientation of the display buffer relative to how the
      *  user should see it (the orientation of the output).
      *  This tells us how much (if any) rotation the renderer needs to do.

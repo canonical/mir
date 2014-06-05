@@ -124,11 +124,6 @@ void mga::DisplayBuffer::post_update()
     display_device->post_gl(gl_context);
 }
 
-bool mga::DisplayBuffer::can_bypass() const
-{
-    return false;
-}
-
 MirOrientation mga::DisplayBuffer::orientation() const
 {
     /*

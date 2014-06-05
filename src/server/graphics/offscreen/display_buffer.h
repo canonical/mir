@@ -67,7 +67,6 @@ public:
     void release_current();
     void post_update();
 
-    bool can_bypass() const;
     MirOrientation orientation() const override;
     bool uses_alpha() const override;
 
