@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -21,15 +21,14 @@
 
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
+#include "swapping_gl_context.h"
 #include "mir_toolkit/common.h"
 #include <functional>
-#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
-class Buffer;
 class DisplayReport;
 class GLConfig;
 namespace android
@@ -37,19 +36,7 @@ namespace android
 
 class FramebufferBundle;
 
-class SwappingGLContext
-{
-public:
-    virtual ~SwappingGLContext() = default;
-    virtual void swap_buffers() const = 0;
-    virtual std::shared_ptr<Buffer> last_rendered_buffer() const = 0;
-
-protected:
-    SwappingGLContext() = default;
-    SwappingGLContext(SwappingGLContext const&) = delete;
-    SwappingGLContext& operator=(SwappingGLContext const&) = delete;
-};
-
+//helper base class that doesn't have an egl surface.
 class GLContext : public graphics::GLContext
 {
 public:
@@ -73,7 +60,7 @@ private:
     bool const own_display;
 };
 
-class PbufferGLContext : public graphics::android::GLContext
+class PbufferGLContext : public GLContext
 {
 public:
     PbufferGLContext(MirPixelFormat display_format,

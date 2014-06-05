@@ -17,7 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "gl_context.h"
+#include "swapping_gl_context.h"
 #include "hwc_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"

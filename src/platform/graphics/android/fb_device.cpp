@@ -19,7 +19,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
-#include "gl_context.h"
+#include "swapping_gl_context.h"
 #include "android_format_conversion-inl.h"
 #include "fb_device.h"
 #include "framebuffer_bundle.h"
