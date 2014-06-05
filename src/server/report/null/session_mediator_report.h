@@ -49,6 +49,8 @@ class SessionMediatorReport : public frontend::SessionMediatorReport
 
     void session_configure_surface_called(std::string const& app_name) override;
 
+    void session_configure_surface_cursor_called(std::string const& app_name) override;
+
     void session_configure_display_called(std::string const& app_name) override;
 
     void session_start_trust_session_called(std::string const& app_name, pid_t base_process) override;

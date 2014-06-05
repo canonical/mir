@@ -39,6 +39,7 @@ namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace mr = mir::report;
 namespace ms = mir::scene;
+namespace mg = mir::graphics;
 namespace msh = mir::shell;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
@@ -107,6 +108,7 @@ TEST_F(BasicSurfaceTest, basics)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report};
 
     EXPECT_EQ(name, surface.name());
@@ -124,7 +126,7 @@ TEST_F(BasicSurfaceTest, id_always_unique)
     {
         surfaces[i].reset(new ms::BasicSurface(
                 name, rect, false, mock_buffer_stream,
-                std::shared_ptr<mi::InputChannel>(), stub_configurator, report)
+                std::shared_ptr<mi::InputChannel>(), stub_configurator, std::shared_ptr<mg::CursorImage>(), report)
             );
 
         for (int j = 0; j < i; ++j)
@@ -143,7 +145,7 @@ TEST_F(BasicSurfaceTest, id_never_invalid)
     {
         surfaces[i].reset(new ms::BasicSurface(
                 name, rect, false, mock_buffer_stream,
-                std::shared_ptr<mi::InputChannel>(), stub_configurator, report)
+                std::shared_ptr<mi::InputChannel>(), stub_configurator, std::shared_ptr<mg::CursorImage>(), report)
             );
 
         ASSERT_TRUE(surfaces[i]->compositor_snapshot(compositor_id)->id());
@@ -162,6 +164,7 @@ TEST_F(BasicSurfaceTest, update_top_left)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report};
 
     surface.add_observer(observer);
@@ -187,6 +190,7 @@ TEST_F(BasicSurfaceTest, update_size)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report};
 
     surface.add_observer(observer);
@@ -217,6 +221,7 @@ TEST_F(BasicSurfaceTest, size_equals_client_size)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
+        nullptr,
         report};
 
     EXPECT_EQ(rect.size, surface.size());
@@ -241,6 +246,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report};
 
     surface.add_observer(observer);
@@ -270,6 +276,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report};
 
     surface.add_observer(observer);
@@ -289,6 +296,7 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report};
 
     EXPECT_THAT(1.0f, FloatEq(surface.alpha()));
@@ -312,6 +320,7 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report};
 
     //not visible by default
@@ -346,6 +355,7 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report};
 
     surface.add_observer(observer);
@@ -367,6 +377,7 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report};
 
     surface.add_observer(observer);
@@ -393,6 +404,7 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report};
 
     surface.add_observer(observer);
@@ -434,6 +446,7 @@ TEST_F(BasicSurfaceTest, set_input_region)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report};
 
     surface.add_observer(observer);
@@ -476,6 +489,7 @@ TEST_F(BasicSurfaceTest, reception_mode_is_normal_by_default)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
+        nullptr,
         report};
 
     EXPECT_EQ(mi::InputReceptionMode::normal, surface.reception_mode());
@@ -490,6 +504,7 @@ TEST_F(BasicSurfaceTest, reception_mode_can_be_changed)
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
         stub_configurator,
+        nullptr,
         report};
 
     surface.set_reception_mode(mi::InputReceptionMode::receives_all_input);

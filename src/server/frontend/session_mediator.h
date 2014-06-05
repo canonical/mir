@@ -38,6 +38,7 @@ class Buffer;
 class Platform;
 class Display;
 class GraphicBufferAllocator;
+class CursorImages;
 }
 
 /// Frontend interface. Mediates the interaction between client
@@ -69,7 +70,8 @@ public:
         std::shared_ptr<EventSink> const& event_sink,
         std::shared_ptr<ResourceCache> const& resource_cache,
         std::shared_ptr<Screencast> const& screencast,
-        ConnectionContext const& connection_context);
+        ConnectionContext const& connection_context,
+        std::shared_ptr<graphics::CursorImages> const& cursor_images);
 
     ~SessionMediator() noexcept;
 
@@ -179,6 +181,8 @@ private:
     std::shared_ptr<EventSink> const event_sink;
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<Screencast> const screencast;
+    ConnectionContext const connection_context;
+    std::shared_ptr<graphics::CursorImages> const cursor_images;
 
     std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
     std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
@@ -186,8 +190,6 @@ private:
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;
     std::weak_ptr<TrustSession> weak_trust_session;
-
-    ConnectionContext const connection_context;
 };
 
 }

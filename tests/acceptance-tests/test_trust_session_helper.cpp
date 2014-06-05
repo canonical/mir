@@ -70,7 +70,8 @@ struct FakeIpcFactory : mir::test::doubles::FakeIpcFactory
         std::shared_ptr<mir::frontend::SessionMediatorReport> const& sm_report,
         std::shared_ptr<mir::frontend::EventSink> const& sink,
         std::shared_ptr<mir::frontend::Screencast> const& effective_screencast,
-        mir::frontend::ConnectionContext const& connection_context)
+        mir::frontend::ConnectionContext const& connection_context,
+        std::shared_ptr<mir::graphics::CursorImages> const& cursor_images)
     {
         trusted_helper_mediator = std::make_shared<TrustedHelperSessionMediator>(
             shell,
@@ -81,7 +82,8 @@ struct FakeIpcFactory : mir::test::doubles::FakeIpcFactory
             sink,
             resource_cache(),
             effective_screencast,
-            connection_context);
+            connection_context,
+            cursor_images);
 
         return trusted_helper_mediator;
     }
@@ -106,10 +108,11 @@ struct MyServerConfiguration : mir_test_framework::StubbedServerConfiguration
                     the_frontend_display_changer(),
                     allocator,
                     the_screencast(),
-                    the_session_authorizer());
+                    the_session_authorizer(),
+                    the_cursor_images());
 
                 EXPECT_CALL(*mediator_factory,
-                    make_mediator(_, _, _, _, _, _, _, _)).Times(AnyNumber())
+                    make_mediator(_, _, _, _, _, _, _, _, _)).Times(AnyNumber())
                     .WillOnce(Invoke(mediator_factory.get(), &FakeIpcFactory::make_helper_mediator))
                     .WillRepeatedly(Invoke(mediator_factory.get(), &FakeIpcFactory::make_default_mediator));
 
