@@ -1,5 +1,6 @@
-mir (0.2.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.2.0+14.10.20140605-0ubuntu1) utopic; urgency=medium
 
+  [ Daniel van Vugt ]
   * New upstream release 0.2.0 (https://launchpad.net/mir/+milestone/0.2.0)
     - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
     - mirserver ABI bumped to 20. Shells need rebuilding.
@@ -122,7 +123,10 @@ mir (0.2.0-0ubuntu1) UNRELEASED; urgency=medium
         DefaultConfiguration initialized from the command line (LP: #1316987)
       . ci train blocked due to missing arm64 libandroid-properties-dev.
         (LP: #1323504)
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 01 May 2014 15:15:39 +0800
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 05 Jun 2014 14:02:57 +0000
 
 mir (0.1.9+14.10.20140430.1-0ubuntu1) utopic; urgency=medium
 
