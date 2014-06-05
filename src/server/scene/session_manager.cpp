@@ -136,12 +136,7 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
     app_container->remove_session(scene_session);
 
     std::unique_lock<std::mutex> lock(mutex);
-    auto old_focus = focus_application.lock();
-    if (old_focus == scene_session)
-    {
-        // only reset the focus if this session had focus
-        set_focus_to_locked(lock, app_container->successor_of(std::shared_ptr<Session>()));
-    }
+    set_focus_to_locked(lock, app_container->successor_of(std::shared_ptr<Session>()));
 }
 
 void ms::SessionManager::focus_next()
