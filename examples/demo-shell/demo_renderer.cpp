@@ -18,6 +18,7 @@
 
 #include "demo_renderer.h"
 #include <mir/graphics/renderable.h>
+#include <mir/compositor/destination_alpha.h>
 #include <mir/compositor/recently_used_cache.h>
 #include <cmath>
 
@@ -137,10 +138,12 @@ GLuint generate_frame_corner_texture(float corner_radius,
 
 DemoRenderer::DemoRenderer(
     graphics::GLProgramFactory const& program_factory,
-    geometry::Rectangle const& display_area)
+    geometry::Rectangle const& display_area,
+    compositor::DestinationAlpha dest_alpha)
     : GLRenderer(program_factory,
         std::unique_ptr<graphics::GLTextureCache>(new compositor::RecentlyUsedCache()),
-        display_area)
+        display_area,
+        dest_alpha)
     , corner_radius(0.5f)
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
@@ -157,12 +160,17 @@ DemoRenderer::~DemoRenderer()
 
 void DemoRenderer::begin() const
 {
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    bool const opaque = destination_alpha() == compositor::DestinationAlpha::opaque;
+    if (opaque)
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    else
+        glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
+
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Ensure we don't change the framebuffer's alpha components (if any)
-    // as that would ruin the appearance of screengrabs. (LP: #1301210)
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+    if (opaque)
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 }
 
 void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
