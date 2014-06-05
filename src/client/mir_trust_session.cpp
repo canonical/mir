@@ -66,8 +66,11 @@ void MirTrustSession::set_state(MirTrustSessionState new_state)
 
 MirWaitHandle* MirTrustSession::start(pid_t pid, mir_trust_session_callback callback, void* context)
 {
-    mir::protobuf::TrustSessionParameters parameters;
-    parameters.mutable_base_trusted_session()->set_pid(pid);
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        parameters.mutable_base_trusted_session()->set_pid(pid);
+        start_wait_handle.expect_result();
+    }
 
     server.start_trust_session(
         0,
@@ -81,6 +84,11 @@ MirWaitHandle* MirTrustSession::start(pid_t pid, mir_trust_session_callback call
 
 MirWaitHandle* MirTrustSession::stop(mir_trust_session_callback callback, void* context)
 {
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        stop_wait_handle.expect_result();
+    }
+
     server.stop_trust_session(
         0,
         &protobuf_void,
@@ -95,8 +103,11 @@ MirWaitHandle* MirTrustSession::add_trusted_session(pid_t pid,
     mir_trust_session_add_trusted_session_callback callback,
     void* context)
 {
-    mir::protobuf::TrustedSession trusted_session;
-    trusted_session.set_pid(pid);
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        trusted_session.set_pid(pid);
+        add_result_wait_handle.expect_result();
+    }
 
     server.add_trusted_session(
         0,

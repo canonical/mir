@@ -56,7 +56,10 @@ public:
     MirTrustSessionState get_state() const;
 
 private:
+    std::mutex mutable mutex; // Protects parameters, wait_handles & results
     mir::protobuf::DisplayServer& server;
+    mir::protobuf::TrustedSession trusted_session;
+    mir::protobuf::TrustSessionParameters parameters;
     mir::protobuf::Void add_result;
     mir::protobuf::Void protobuf_void;
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
@@ -67,10 +70,10 @@ private:
     MirWaitHandle add_result_wait_handle;
     std::atomic<MirTrustSessionState> state;
 
-    mutable std::mutex session_mutex; // Protects session
+    std::mutex mutable session_mutex; // Protects session
     mir::protobuf::Void session;
 
-    mutable std::mutex event_handler_mutex; // Need another mutex for callback access to members
+    std::mutex mutable event_handler_mutex; // Need another mutex for callback access to members
     std::function<void(MirTrustSessionState)> handle_trust_session_event;
 
     void set_state(MirTrustSessionState new_state);
