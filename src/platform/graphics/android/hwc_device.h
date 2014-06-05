@@ -58,7 +58,6 @@ private:
     void post(SwappingGLContext const& context);
 
     LayerList hwc_list;
-    std::vector<std::shared_ptr<Buffer>> next_onscreen_overlay_buffers;
     std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
 
     void set_list_framebuffer(Buffer const&);
@@ -66,7 +65,6 @@ private:
 
     std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<SyncFileOps> const sync_ops;
-    bool list_needs_commit{false};
 };
 
 }

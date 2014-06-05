@@ -586,13 +586,10 @@ TEST_F(HwcDevice, overlay_buffers_are_owned_until_next_set)
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
     auto use_count_before = stub_buffer1.use_count();
-    device.prepare_overlays(stub_context, {mock_renderable1}, stub_compositor);
-    device.post(mock_buffer);
+    device.post_overlays(stub_context, {mock_renderable1}, stub_compositor);
     EXPECT_THAT(stub_buffer1.use_count(), Gt(use_count_before));
 
-    device.prepare_overlays(stub_context, {mock_renderable2}, stub_compositor);
-    device.post(mock_buffer);
-
+    device.post_overlays(stub_context, {mock_renderable2}, stub_compositor);
     EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
 }
 
@@ -615,7 +612,6 @@ TEST_F(HwcDevice, framebuffer_buffers_are_not_owned_past_set)
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
     auto use_count_before = stub_buffer1.use_count();
-    device.prepare_overlays(stub_context, {mock_renderable1}, stub_compositor);
-    device.post(mock_buffer);
+    device.post_overlays(stub_context, {mock_renderable1}, stub_compositor);
     EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
 }
