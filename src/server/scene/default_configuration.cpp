@@ -175,13 +175,13 @@ mir::DefaultServerConfiguration::the_session_coordinator()
         {
             return wrap_session_coordinator(
                 std::make_shared<ms::SessionManager>(
-                the_surface_coordinator(),
-                the_session_container(),
-                the_shell_focus_setter(),
-                the_snapshot_strategy(),
-                the_session_event_sink(),
-                the_session_listener(),
-                the_trust_session_manager()));
+                    the_surface_coordinator(),
+                    the_session_container(),
+                    the_shell_focus_setter(),
+                    the_snapshot_strategy(),
+                    the_session_event_sink(),
+                    the_session_listener(),
+                    the_trust_session_manager()));
         });
 }
 
