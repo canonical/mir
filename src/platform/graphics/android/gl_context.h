@@ -61,8 +61,8 @@ protected:
               DisplayReport& report);
 
     GLContext(GLContext const& shared_gl_context);
-    void release_current() const override;
 
+    void release_current() const override;
     void make_current(EGLSurface) const;
 
     EGLDisplay const egl_display;

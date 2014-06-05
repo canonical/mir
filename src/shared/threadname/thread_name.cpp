@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,29 +16,17 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_GL_CONTEXT_H_
-#define MIR_GRAPHICS_GL_CONTEXT_H_
+#include "mir/thread_name.h"
 
-namespace mir
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <pthread.h>
+
+void mir::set_thread_name(std::string const& name)
 {
-namespace graphics
-{
+    static size_t const max_name_len = 15;
+    auto const proper_name = name.substr(0, max_name_len);
 
-class GLContext
-{
-public:
-    virtual ~GLContext() = default;
-
-    virtual void make_current() const = 0;
-    virtual void release_current() const = 0;
-
-protected:
-    GLContext() = default;
-    GLContext(GLContext const&) = delete;
-    GLContext& operator=(GLContext const&) = delete;
-};
-
+    pthread_setname_np(pthread_self(), proper_name.c_str());
 }
-}
-
-#endif /* MIR_GRAPHICS_GL_CONTEXT_H_ */

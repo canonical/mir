@@ -126,9 +126,6 @@ mga::GLContext::~GLContext()
         eglTerminate(egl_display);
 }
 
-
-
-
 mga::GLContext::GLContext(
     MirPixelFormat display_format, mg::GLConfig const& gl_config, mg::DisplayReport& report) :
     egl_display(create_and_initialize_display()),
@@ -141,6 +138,7 @@ mga::GLContext::GLContext(
 }
 
 mga::GLContext::GLContext(GLContext const& shared_gl_context) :
+    mg::GLContext(),
     egl_display(shared_gl_context.egl_display),
     egl_config(shared_gl_context.egl_config),
     egl_context{egl_display,
@@ -149,8 +147,6 @@ mga::GLContext::GLContext(GLContext const& shared_gl_context) :
     own_display(false)
 {
 }
-
-
 
 mga::PbufferGLContext::PbufferGLContext(
     MirPixelFormat display_format, mg::GLConfig const& gl_config, mg::DisplayReport& report) :
@@ -176,24 +172,6 @@ void mga::PbufferGLContext::release_current() const
 {
     GLContext::release_current();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 mga::FramebufferGLContext::FramebufferGLContext(
     GLContext const& shared_gl_context,

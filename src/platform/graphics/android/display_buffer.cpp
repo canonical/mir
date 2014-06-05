@@ -63,7 +63,6 @@ mga::DisplayBuffer::DisplayBuffer(
       display_device{display_device},
       native_window{native_window},
       gl_context{shared_gl_context, fb_bundle, native_window},
-//std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())},
       overlay_program{program_factory, gl_context, geom::Rectangle{{0,0},fb_bundle->fb_size()}},
       overlay_enabled{overlay_option == mga::OverlayOptimization::enabled},
       current_configuration{

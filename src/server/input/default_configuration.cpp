@@ -140,7 +140,7 @@ mir::DefaultServerConfiguration::the_dispatcher_thread()
     return dispatcher_thread(
         [this]()
         {
-            return std::make_shared<mia::CommonInputThread>("InputDispatcher",
+            return std::make_shared<mia::CommonInputThread>("Mir/InputDisp",
                                                        new droidinput::InputDispatcherThread(the_android_input_dispatcher()));
         });
 }
