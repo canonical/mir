@@ -27,6 +27,7 @@
 #include "mir/scene/surface_observer.h"
 #include "mir/scene/surface.h"
 #include "mir/run_mir.h"
+#include "mir/thread_name.h"
 
 #include <thread>
 #include <condition_variable>
@@ -101,6 +102,8 @@ public:
     void operator()() noexcept  // noexcept is important! (LP: #1237332)
     try
     {
+        mir::set_thread_name("Mir/Comp");
+
         std::unique_lock<std::mutex> lock{run_mutex};
 
         /*

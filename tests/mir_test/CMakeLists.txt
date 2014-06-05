@@ -9,4 +9,5 @@ add_library(
   fake_clock.cpp
   popen.cpp
   wait_object.cpp
+  current_thread_name.cpp
 )
