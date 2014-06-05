@@ -380,7 +380,7 @@ void InputReader::addDeviceLocked(nsecs_t when, int32_t deviceId) {
     uint32_t classes = mEventHub->getDeviceClasses(deviceId);
 
     InputDevice* device = createDeviceLocked(deviceId, identifier, classes);
-    device->configure(when, &mConfig, 0);
+    device->configure(when, mPolicy.get(), &mConfig, 0);
     device->reset(when);
 
     if (device->isIgnored()) {
@@ -527,7 +527,7 @@ void InputReader::refreshConfigurationLocked(uint32_t changes) {
         } else {
             for (size_t i = 0; i < mDevices.size(); i++) {
                 InputDevice* device = mDevices.valueAt(i);
-                device->configure(now, &mConfig, changes);
+                device->configure(now, mPolicy.get(), &mConfig, changes);
             }
         }
     }
@@ -922,7 +922,7 @@ void InputDevice::addMapper(InputMapper* mapper) {
     mMappers.add(mapper);
 }
 
-void InputDevice::configure(nsecs_t when, const InputReaderConfiguration* config, uint32_t changes) {
+void InputDevice::configure(nsecs_t when, InputReaderPolicyInterface const* policy, InputReaderConfiguration const* config, uint32_t changes) {
     mSources = 0;
 
     if (!isIgnored()) {
@@ -953,7 +953,7 @@ void InputDevice::configure(nsecs_t when, const InputReaderConfiguration* config
         size_t numMappers = mMappers.size();
         for (size_t i = 0; i < numMappers; i++) {
             InputMapper* mapper = mMappers[i];
-            mapper->configure(when, config, changes);
+            mapper->configure(when, policy, config, changes);
             mSources |= mapper->getSources();
         }
     }
@@ -1760,7 +1760,7 @@ void InputMapper::populateDeviceInfo(InputDeviceInfo* info) {
 void InputMapper::dump(String8& dump) {
 }
 
-void InputMapper::configure(nsecs_t when,
+void InputMapper::configure(nsecs_t when, InputReaderPolicyInterface const* /* policy */, 
         const InputReaderConfiguration* config, uint32_t changes) {
 }
 
@@ -1998,9 +1998,9 @@ void KeyboardInputMapper::dump(String8& dump) {
 }
 
 
-void KeyboardInputMapper::configure(nsecs_t when,
+void KeyboardInputMapper::configure(nsecs_t when, InputReaderPolicyInterface const* policy,
         const InputReaderConfiguration* config, uint32_t changes) {
-    InputMapper::configure(when, config, changes);
+    InputMapper::configure(when, policy, config, changes);
 
     if (!changes) { // first time only
         // Configure basic parameters.
@@ -2284,9 +2284,9 @@ void CursorInputMapper::dump(String8& dump) {
     appendFormat(dump, INDENT3 "DownTime: %lld\n", mDownTime);
 }
 
-void CursorInputMapper::configure(nsecs_t when,
+void CursorInputMapper::configure(nsecs_t when, InputReaderPolicyInterface const* policy,
         const InputReaderConfiguration* config, uint32_t changes) {
-    InputMapper::configure(when, config, changes);
+    InputMapper::configure(when, policy, config, changes);
 
     if (!changes) { // first time only
         mCursorScrollAccumulator.configure(getDevice());
@@ -2694,9 +2694,9 @@ void TouchInputMapper::dump(String8& dump) {
     }
 }
 
-void TouchInputMapper::configure(nsecs_t when,
+void TouchInputMapper::configure(nsecs_t when, InputReaderPolicyInterface const* policy,
         const InputReaderConfiguration* config, uint32_t changes) {
-    InputMapper::configure(when, config, changes);
+    InputMapper::configure(when, policy, config, changes);
 
     mConfig = *config;
 
@@ -6055,9 +6055,9 @@ void JoystickInputMapper::dump(String8& dump) {
     }
 }
 
-void JoystickInputMapper::configure(nsecs_t when,
+void JoystickInputMapper::configure(nsecs_t when, InputReaderPolicyInterface const* policy,
         const InputReaderConfiguration* config, uint32_t changes) {
-    InputMapper::configure(when, config, changes);
+    InputMapper::configure(when, policy, config, changes);
 
     if (!changes) { // first time only
         // Collect all axes.

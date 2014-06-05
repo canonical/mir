@@ -452,7 +452,7 @@ private:
         }
     }
 
-    void configure(nsecs_t when,
+    void configure(nsecs_t when, InputReaderPolicyInterface const* /* policy */,
             const InputReaderConfiguration* config, uint32_t changes) override {
         (void)when;
         (void)config;
@@ -823,7 +823,7 @@ TEST_F(InputDeviceTest, ImmutableProperties) {
 TEST_F(InputDeviceTest, WhenNoMappersAreRegistered_DeviceIsIgnored) {
     // Configuration.
     InputReaderConfiguration config;
-    mDevice->configure(ARBITRARY_TIME, &config, 0);
+    mDevice->configure(ARBITRARY_TIME, mFakePolicy.get(), &config, 0);
 
     // Reset.
     mDevice->reset(ARBITRARY_TIME);
@@ -883,7 +883,7 @@ TEST_F(InputDeviceTest, WhenMappersAreRegistered_DeviceIsNotIgnoredAndForwardsRe
     mDevice->addMapper(mapper2);
 
     InputReaderConfiguration config;
-    mDevice->configure(ARBITRARY_TIME, &config, 0);
+    mDevice->configure(ARBITRARY_TIME, mFakePolicy.get(), &config, 0);
 
     String8 propertyValue;
     ASSERT_TRUE(mDevice->getConfiguration().tryGetProperty(String8("key"), propertyValue))
@@ -1002,15 +1002,17 @@ protected:
 
     void addMapperAndConfigure(InputMapper* mapper) {
         mDevice->addMapper(mapper);
-        mDevice->configure(ARBITRARY_TIME, mFakePolicy->getReaderConfiguration(), 0);
+        mDevice->configure(ARBITRARY_TIME, mFakePolicy.get(), 
+                           mFakePolicy->getReaderConfiguration(), 0);
         mDevice->reset(ARBITRARY_TIME);
     }
 
     void setDisplayInfoAndReconfigure(int32_t displayId, int32_t width, int32_t height,
             int32_t orientation) {
         mFakePolicy->setDisplayInfo(displayId, width, height, orientation);
-        mDevice->configure(ARBITRARY_TIME, mFakePolicy->getReaderConfiguration(),
-                InputReaderConfiguration::CHANGE_DISPLAY_INFO);
+        mDevice->configure(ARBITRARY_TIME, mFakePolicy.get(), 
+                           mFakePolicy->getReaderConfiguration(),
+                           InputReaderConfiguration::CHANGE_DISPLAY_INFO);
     }
 
     static void process(InputMapper* mapper, nsecs_t when, int32_t deviceId, int32_t type,
