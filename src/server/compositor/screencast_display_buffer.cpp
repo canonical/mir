@@ -99,3 +99,8 @@ MirOrientation mc::ScreencastDisplayBuffer::orientation() const
 {
     return mir_orientation_normal;
 }
+
+bool mc::ScreencastDisplayBuffer::uses_alpha() const
+{
+    return false;
+}

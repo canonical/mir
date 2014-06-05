@@ -22,6 +22,7 @@
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/connector_report.h"
 #include "mir/emergency_cleanup_registry.h"
+#include "mir/thread_name.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -156,6 +157,7 @@ void mf::BasicConnector::start()
 {
     auto run_io_service = [this]
     {
+        mir::set_thread_name("Mir/IPC");
         while (true)
         try
         {

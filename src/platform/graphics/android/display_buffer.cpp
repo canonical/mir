@@ -143,6 +143,11 @@ MirOrientation mga::DisplayBuffer::orientation() const
     return current_configuration.orientation;
 }
 
+bool mga::DisplayBuffer::uses_alpha() const
+{
+    return false;
+}
+
 mg::DisplayConfigurationOutput mga::DisplayBuffer::configuration() const
 {
     return mg::DisplayConfigurationOutput(current_configuration);

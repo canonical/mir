@@ -48,7 +48,8 @@ namespace
 class StubRendererFactory : public mc::RendererFactory
 {
 public:
-    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&) override
+    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&,
+        mc::DestinationAlpha) override
     {
         return std::unique_ptr<mtd::StubRenderer>(new mtd::StubRenderer);
     }
@@ -131,6 +132,7 @@ struct SurfaceStackCompositor : public testing::Test
             mock_buffer_stream,
             std::shared_ptr<mir::input::InputChannel>(),
             std::shared_ptr<ms::SurfaceConfigurator>(),
+            std::shared_ptr<mg::CursorImage>(),
             null_scene_report)}
     {
         using namespace testing;

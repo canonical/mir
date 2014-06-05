@@ -162,3 +162,13 @@ TEST_F(ScreencastDisplayBufferTest, rejects_attempt_to_optimize)
 
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderables));
 }
+
+TEST_F(ScreencastDisplayBufferTest, does_not_use_alpha)
+{
+    geom::Rectangle const rect{{100,100}, {800,600}};
+    mtd::StubBuffer stub_buffer;
+
+    mc::ScreencastDisplayBuffer db{rect, stub_buffer};
+
+    EXPECT_FALSE(db.uses_alpha());
+}

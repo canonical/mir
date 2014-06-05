@@ -96,6 +96,14 @@ void ms::SurfaceObservers::transformation_set_to(glm::mat4 const& t)
         p->transformation_set_to(t);
 }
 
+void ms::SurfaceObservers::cursor_image_set_to(mg::CursorImage const& image)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->cursor_image_set_to(image);
+}
+
 void ms::SurfaceObservers::reception_mode_set_to(mi::InputReceptionMode mode)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -123,9 +131,10 @@ ms::BasicSurface::BasicSurface(
     std::string const& name,
     geometry::Rectangle rect,
     bool nonrectangular,
-    std::shared_ptr<compositor::BufferStream> const& buffer_stream,
-    std::shared_ptr<input::InputChannel> const& input_channel,
+    std::shared_ptr<mc::BufferStream> const& buffer_stream,
+    std::shared_ptr<mi::InputChannel> const& input_channel,
     std::shared_ptr<SurfaceConfigurator> const& configurator,
+    std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
     surface_name(name),
     surface_rect(rect),
@@ -138,6 +147,7 @@ ms::BasicSurface::BasicSurface(
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
     configurator(configurator),
+    cursor_image_(cursor_image),
     report(report),
     type_value(mir_surface_type_normal),
     state_value(mir_surface_state_restored),
@@ -474,6 +484,21 @@ void ms::BasicSurface::show()
     set_hidden(false);
 }
 
+void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& image)
+{
+        std::unique_lock<std::mutex> lock(guard);
+        cursor_image_ = image;
+
+        observers.cursor_image_set_to(*image);
+}
+    
+std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image()
+{
+    std::unique_lock<std::mutex> lock(guard);
+    return cursor_image_;
+}
+
+
 int ms::BasicSurface::dpi() const
 {
     return dpi_value;
@@ -489,7 +514,7 @@ bool ms::BasicSurface::set_dpi(int new_dpi)
         valid = true;
         observers.attrib_changed(mir_surface_attrib_dpi, dpi_value);
     }
-
+    
     return valid;
 }
 
