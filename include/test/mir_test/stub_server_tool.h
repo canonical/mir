@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -20,7 +20,7 @@
 #ifndef MIR_TEST_STUB_SERVER_TOOL_H_
 #define MIR_TEST_STUB_SERVER_TOOL_H_
 
-#include "mir_protobuf.pb.h"
+#include "src/server/frontend/display_server.h"
 #include <condition_variable>
 #include <mutex>
 
@@ -29,12 +29,14 @@ namespace mir
 namespace test
 {
 
-struct StubServerTool : mir::protobuf::DisplayServer
+struct StubServerTool : mir::frontend::detail::DisplayServer
 {
     StubServerTool()
         : drm_magic{0}
     {
     }
+
+    void client_pid(int /*pid*/) override {}
 
     virtual void create_surface(google::protobuf::RpcController* /*controller*/,
                  const mir::protobuf::SurfaceParameters* request,

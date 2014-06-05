@@ -22,20 +22,21 @@
 #include "kms_output_container.h"
 #include "kms_display_configuration.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/cursor_image.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 
 #include <stdexcept>
 #include <vector>
 
-namespace mgm = mir::graphics::mesa;
+namespace mg = mir::graphics;
+namespace mgm = mg::mesa;
 namespace geom = mir::geometry;
 
 namespace
 {
-#include "black_arrow.c"
-int const width = black_arrow.width;
-int const height = black_arrow.height;
+int const width = 64;
+int const height = 64;
 
 // Transforms a relative position within the display bounds described by \a rect which is rotated with \a orientation
 geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement const& vector, MirOrientation orientation)
@@ -72,15 +73,17 @@ inline mgm::Cursor::GBMBOWrapper::~GBMBOWrapper()    { gbm_bo_destroy(buffer); }
 mgm::Cursor::Cursor(
     gbm_device* gbm,
     KMSOutputContainer& output_container,
-    std::shared_ptr<CurrentConfiguration> const& current_configuration) :
+    std::shared_ptr<CurrentConfiguration> const& current_configuration,
+    std::shared_ptr<mg::CursorImage> const& initial_image) :
         output_container(output_container),
         current_position(),
+        visible(true),
         buffer(gbm),
         current_configuration(current_configuration)
 {
-    set_image(black_arrow.pixel_data, geometry::Size{width, height});
+    show(*initial_image);
 
-    show_at_last_known_position();
+    resume();
 }
 
 mgm::Cursor::~Cursor() noexcept
@@ -88,14 +91,19 @@ mgm::Cursor::~Cursor() noexcept
     hide();
 }
 
-void mgm::Cursor::set_image(const void* raw_argb, geometry::Size size)
+void mgm::Cursor::show(CursorImage const& cursor_image)
 {
+    std::lock_guard<std::mutex> lg(guard);
+    visible = true;
+
+    auto const& size = cursor_image.size();
+
     if (size != geometry::Size{width, height})
         BOOST_THROW_EXCEPTION(std::logic_error("No support for cursors that aren't 64x64"));
 
     auto const count = size.width.as_uint32_t() * size.height.as_uint32_t() * sizeof(uint32_t);
 
-    if (auto result = gbm_bo_write(buffer, raw_argb, count))
+    if (auto result = gbm_bo_write(buffer, cursor_image.as_argb_8888(), count))
     {
         BOOST_THROW_EXCEPTION(
             ::boost::enable_error_info(std::runtime_error("failed to initialize gbm buffer"))
@@ -108,13 +116,24 @@ void mgm::Cursor::move_to(geometry::Point position)
     place_cursor_at(position, UpdateState);
 }
 
-void mgm::Cursor::show_at_last_known_position()
+void mir::graphics::mesa::Cursor::suspend()
+{
+    std::lock_guard<std::mutex> lg(guard);
+
+    output_container.for_each_output(
+        [&](KMSOutput& output) { output.clear_cursor(); });
+}
+
+void mgm::Cursor::resume()
 {
     place_cursor_at(current_position, ForceState);
 }
 
 void mgm::Cursor::hide()
 {
+    std::lock_guard<std::mutex> lg(guard);
+    visible = false;
+
     output_container.for_each_output(
         [&](KMSOutput& output) { output.clear_cursor(); });
 }
@@ -142,6 +161,13 @@ void mgm::Cursor::place_cursor_at(
     geometry::Point position,
     ForceCursorState force_state)
 {
+    std::lock_guard<std::mutex> lg(guard);
+
+    current_position = position;
+
+    if (!visible)
+        return;
+
     for_each_used_output([&](KMSOutput& output, geom::Rectangle const& output_rect, MirOrientation orientation)
     {
         if (output_rect.contains(position))
@@ -161,6 +187,4 @@ void mgm::Cursor::place_cursor_at(
             }
         }
     });
-
-    current_position = position;
 }

@@ -23,6 +23,7 @@
 #include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
+#include "mir/time/high_resolution_clock.h"
 #include "mir/asio_main_loop.h"
 
 #include "mir_test_doubles/mock_egl.h"
@@ -126,7 +127,8 @@ public:
     {
         return std::make_shared<mgm::Platform>(
             null_report,
-            std::make_shared<mtd::NullVirtualTerminal>());
+            std::make_shared<mtd::NullVirtualTerminal>(),
+            mgm::BypassOption::allowed);
     }
 
     std::shared_ptr<mgm::Display> create_display(
@@ -645,7 +647,8 @@ TEST_F(MesaDisplayTest, constructor_sets_vt_graphics_mode)
     EXPECT_CALL(*mock_vt, set_graphics_mode())
         .Times(1);
 
-    auto platform = std::make_shared<mgm::Platform>(null_report, mock_vt);
+    auto platform = std::make_shared<mgm::Platform>(
+        null_report, mock_vt, mgm::BypassOption::allowed);
 
     auto display = create_display(platform);
 }
@@ -688,8 +691,9 @@ TEST_F(MesaDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
     EXPECT_CALL(*mock_report, report_drm_master_failure(EPERM));
 
     auto platform = std::make_shared<mgm::Platform>(
-                        mock_report,
-                        std::make_shared<mtd::NullVirtualTerminal>());
+        mock_report,
+        std::make_shared<mtd::NullVirtualTerminal>(),
+        mgm::BypassOption::allowed);
     auto display = std::make_shared<mgm::Display>(
                         platform,
                         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
@@ -723,7 +727,7 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
 
     auto display = create_display(create_platform());
 
-    mir::AsioMainLoop ml;
+    mir::AsioMainLoop ml{std::make_shared<mir::time::HighResolutionClock>()};
     std::condition_variable done;
 
     int const device_add_count{1};

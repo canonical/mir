@@ -20,13 +20,15 @@
 #include "mir/frontend/connector.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
-#include "mir/main_loop.h"
-#include "mir/display_changer.h"
+#include "mir/server_action_queue.h"
+#include "mir/graphics/event_handler_register.h"
 #include "mir/server_status_listener.h"
 
 #include "mir_test/pipe.h"
+#include "mir_test/wait_condition.h"
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_doubles/mock_input_manager.h"
+#include "mir_test_doubles/mock_input_dispatcher.h"
 #include "mir_test_doubles/mock_compositor.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/mock_server_status_listener.h"
@@ -63,15 +65,8 @@ public:
      * to silence gmock warnings.
      */
     int client_socket_fd() const { return 0; }
+    int client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const override { return 0; }
     void remove_endpoint() const {}
-};
-
-class MockDisplayChanger : public mir::DisplayChanger
-{
-public:
-    MOCK_METHOD2(configure_for_hardware_change,
-                 void(std::shared_ptr<mg::DisplayConfiguration> const& conf,
-                      SystemStateHandling pause_resume_system));
 };
 
 class MockDisplay : public mtd::NullDisplay
@@ -250,12 +245,12 @@ public:
         return mock_input_manager;
     }
 
-    std::shared_ptr<mir::DisplayChanger> the_display_changer() override
+    std::shared_ptr<mi::InputDispatcher> the_input_dispatcher() override
     {
-        if (!mock_display_changer)
-            mock_display_changer = std::make_shared<MockDisplayChanger>();
+        if (!mock_input_dispatcher)
+            mock_input_dispatcher = std::make_shared<mtd::MockInputDispatcher>();
 
-        return mock_display_changer;
+        return mock_input_dispatcher;
     }
 
     std::shared_ptr<MockDisplay> the_mock_display()
@@ -282,10 +277,10 @@ public:
         return mock_input_manager;
     }
 
-    std::shared_ptr<MockDisplayChanger> the_mock_display_changer()
+    std::shared_ptr<mtd::MockInputDispatcher> the_mock_input_dispatcher()
     {
-        the_display_changer();
-        return mock_display_changer;
+        the_input_dispatcher();
+        return mock_input_dispatcher;
     }
 
     void emit_pause_event_and_wait_for_handler()
@@ -309,12 +304,21 @@ public:
             std::this_thread::sleep_for(std::chrono::microseconds{500});
     }
 
+    void wait_for_server_actions_to_finish()
+    {
+        mt::WaitCondition last_action_done;
+        the_server_action_queue()->enqueue(&last_action_done,
+            [&] { last_action_done.wake_up_everyone(); });
+
+        last_action_done.wait_for_at_most_seconds(5);
+    }
+
 private:
     std::shared_ptr<mtd::MockCompositor> mock_compositor;
     std::shared_ptr<MockDisplay> mock_display;
     std::shared_ptr<MockConnector> mock_connector;
     std::shared_ptr<mtd::MockInputManager> mock_input_manager;
-    std::shared_ptr<MockDisplayChanger> mock_display_changer;
+    std::shared_ptr<mtd::MockInputDispatcher> mock_input_dispatcher;
 
     mt::Pipe p;
     int const pause_signal;
@@ -376,6 +380,7 @@ TEST(DisplayServerMainLoopEvents, display_server_components_pause_and_resume)
     auto mock_display = server_config.the_mock_display();
     auto mock_connector = server_config.the_mock_connector();
     auto mock_input_manager = server_config.the_mock_input_manager();
+    auto mock_input_dispatcher = server_config.the_mock_input_dispatcher();
 
     {
         InSequence s;
@@ -384,8 +389,10 @@ TEST(DisplayServerMainLoopEvents, display_server_components_pause_and_resume)
         EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
+        EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
 
         /* Pause */
+        EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
@@ -395,9 +402,11 @@ TEST(DisplayServerMainLoopEvents, display_server_components_pause_and_resume)
         EXPECT_CALL(*mock_display, resume()).Times(1);
         EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
+        EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
 
         /* Stop */
+        EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
@@ -427,6 +436,7 @@ TEST(DisplayServerMainLoopEvents, display_server_quits_when_paused)
     auto mock_display = server_config.the_mock_display();
     auto mock_connector = server_config.the_mock_connector();
     auto mock_input_manager = server_config.the_mock_input_manager();
+    auto mock_input_dispatcher = server_config.the_mock_input_dispatcher();
 
     {
         InSequence s;
@@ -435,14 +445,17 @@ TEST(DisplayServerMainLoopEvents, display_server_quits_when_paused)
         EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
+        EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
 
         /* Pause */
+        EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause()).Times(1);
 
         /* Stop */
+        EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
@@ -471,6 +484,7 @@ TEST(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause_f
     auto mock_display = server_config.the_mock_display();
     auto mock_connector = server_config.the_mock_connector();
     auto mock_input_manager = server_config.the_mock_input_manager();
+    auto mock_input_dispatcher = server_config.the_mock_input_dispatcher();
 
     {
         InSequence s;
@@ -479,8 +493,10 @@ TEST(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause_f
         EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
+        EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
 
         /* Pause failure */
+        EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
@@ -491,8 +507,10 @@ TEST(DisplayServerMainLoopEvents, display_server_attempts_to_continue_on_pause_f
         EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
+        EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
 
         /* Stop */
+        EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
@@ -521,7 +539,7 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
     auto mock_display = server_config.the_mock_display();
     auto mock_connector = server_config.the_mock_connector();
     auto mock_input_manager = server_config.the_mock_input_manager();
-    auto mock_display_changer = server_config.the_mock_display_changer();
+    auto mock_input_dispatcher = server_config.the_mock_input_dispatcher();
 
     {
         InSequence s;
@@ -530,13 +548,15 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
         EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
+        EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
 
-        /* Configuration change event */
-        EXPECT_CALL(*mock_display_changer,
-                    configure_for_hardware_change(_, mir::DisplayChanger::PauseResumeSystem))
-            .Times(1);
+        /* Change configuration */
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_display, configure(_)).Times(1);
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
 
         /* Stop */
+        EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
@@ -549,6 +569,7 @@ TEST(DisplayServerMainLoopEvents, display_server_handles_configuration_change)
                         [&]
                         {
                             server_config.emit_configuration_change_event_and_wait_for_handler();
+                            server_config.wait_for_server_actions_to_finish();
                             kill(getpid(), SIGTERM);
                         }};
                     t.detach();
@@ -565,7 +586,7 @@ TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
     auto mock_display = server_config.the_mock_display();
     auto mock_connector = server_config.the_mock_connector();
     auto mock_input_manager = server_config.the_mock_input_manager();
-    auto mock_display_changer = server_config.the_mock_display_changer();
+    auto mock_input_dispatcher = server_config.the_mock_input_dispatcher();
 
     {
         InSequence s;
@@ -574,25 +595,29 @@ TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
         EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
+        EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
 
         /* Pause event */
+        EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
         EXPECT_CALL(*mock_display, pause()) .Times(1);
 
-        /* Resume and reconfigure event */
+        /* Resume event */
         EXPECT_CALL(*mock_display, resume()).Times(1);
         EXPECT_CALL(*mock_connector, start()).Times(1);
-
-        EXPECT_CALL(*mock_display_changer,
-                    configure_for_hardware_change(_, mir::DisplayChanger::RetainSystemState))
-            .Times(1);
-
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
+        EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
+        EXPECT_CALL(*mock_compositor, start()).Times(1);
+
+        /* Change configuration (after resuming) */
+        EXPECT_CALL(*mock_compositor, stop()).Times(1);
+        EXPECT_CALL(*mock_display, configure(_)).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
 
         /* Stop */
+        EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
@@ -607,6 +632,7 @@ TEST(DisplayServerMainLoopEvents, postpones_configuration_when_paused)
                             server_config.emit_pause_event_and_wait_for_handler();
                             server_config.emit_configuration_change_event_and_wait_for_handler();
                             server_config.emit_resume_event_and_wait_for_handler();
+                            server_config.wait_for_server_actions_to_finish();
 
                             kill(getpid(), SIGTERM);
                         }};
@@ -624,6 +650,7 @@ TEST(DisplayServerMainLoopEvents, server_status_listener)
     auto mock_display = server_config.the_mock_display();
     auto mock_connector = server_config.the_mock_connector();
     auto mock_input_manager = server_config.the_mock_input_manager();
+    auto mock_input_dispatcher = server_config.the_mock_input_dispatcher();
     auto mock_server_status_listener = server_config.the_mock_server_status_listener();
 
     {
@@ -633,9 +660,11 @@ TEST(DisplayServerMainLoopEvents, server_status_listener)
         EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
+        EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
         EXPECT_CALL(*mock_server_status_listener, started()).Times(1);
 
         /* "paused" is emitted after all components have been paused/stopped */
+        EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);
@@ -646,10 +675,12 @@ TEST(DisplayServerMainLoopEvents, server_status_listener)
         EXPECT_CALL(*mock_display, resume()).Times(1);
         EXPECT_CALL(*mock_connector, start()).Times(1);
         EXPECT_CALL(*mock_input_manager, start()).Times(1);
+        EXPECT_CALL(*mock_input_dispatcher, start()).Times(1);
         EXPECT_CALL(*mock_compositor, start()).Times(1);
         EXPECT_CALL(*mock_server_status_listener, resumed()).Times(1);
 
         /* Stop */
+        EXPECT_CALL(*mock_input_dispatcher, stop()).Times(1);
         EXPECT_CALL(*mock_input_manager, stop()).Times(1);
         EXPECT_CALL(*mock_compositor, stop()).Times(1);
         EXPECT_CALL(*mock_connector, stop()).Times(1);

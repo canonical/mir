@@ -17,6 +17,7 @@
  */
 
 #include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/command_line_server_configuration.h"
 
 #include "mir/options/default_configuration.h"
 #include "mir/geometry/rectangle.h"
@@ -39,6 +40,8 @@
 #include "mir/compositor/renderer.h"
 #include "mir/compositor/renderer_factory.h"
 #include "src/server/input/null_input_configuration.h"
+#include "src/server/input/null_input_dispatcher.h"
+#include "src/server/input/null_input_targeter.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -49,6 +52,7 @@
 
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
+namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mo = mir::options;
@@ -57,10 +61,6 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-char const* dummy[] = {0};
-int argc = 0;
-char const** argv = dummy;
-
 class StubFDBuffer : public mtd::StubBuffer
 {
 public:
@@ -200,6 +200,7 @@ class StubGraphicPlatform : public mtd::NullPlatform
 
     std::shared_ptr<mg::Display> create_display(
         std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
+        std::shared_ptr<mg::GLProgramFactory> const&,
         std::shared_ptr<mg::GLConfig> const&) override
     {
         return std::make_shared<StubDisplay>();
@@ -215,36 +216,12 @@ public:
     }
 };
 
-struct StubInputChannel : public mi::InputChannel
-{
-    int client_fd() const
-    {
-        return 0;
-    }
-
-    int server_fd() const
-    {
-        return 0;
-    }
-};
-
-class StubInputManager : public mi::InputManager
-{
-  public:
-    void start() {}
-    void stop() {}
-
-    std::shared_ptr<mi::InputChannel> make_input_channel()
-    {
-        return std::make_shared<StubInputChannel>();
-    }
-};
 }
 
 mtf::StubbedServerConfiguration::StubbedServerConfiguration() :
     DefaultServerConfiguration([]
     {
-        auto result = std::make_shared<mo::DefaultConfiguration>(::argc, ::argv);
+        auto result = mtf::configuration_from_commandline();
 
         namespace po = boost::program_options;
 
@@ -291,15 +268,22 @@ std::shared_ptr<mi::InputConfiguration> mtf::StubbedServerConfiguration::the_inp
         return std::make_shared<mi::NullInputConfiguration>();
 }
 
-int main(int argc, char** argv)
+std::shared_ptr<msh::InputTargeter> mtf::StubbedServerConfiguration::the_input_targeter()
 {
-    ::argc = std::remove_if(
-        argv,
-        argv+argc,
-        [](char const* arg) { return !strncmp(arg, "--gtest_", 8); }) - argv;
-    ::argv = const_cast<char const**>(argv);
+    auto options = the_options();
 
-  ::testing::InitGoogleTest(&argc, argv);
+    if (options->get<bool>("tests-use-real-input"))
+        return DefaultServerConfiguration::the_input_targeter();
+    else
+        return std::make_shared<mi::NullInputTargeter>();
+}
 
-  return RUN_ALL_TESTS();
+std::shared_ptr<mi::InputDispatcher> mtf::StubbedServerConfiguration::the_input_dispatcher()
+{
+    auto options = the_options();
+
+    if (options->get<bool>("tests-use-real-input"))
+        return DefaultServerConfiguration::the_input_dispatcher();
+    else
+        return std::make_shared<mi::NullInputDispatcher>();
 }

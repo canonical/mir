@@ -62,9 +62,10 @@ public:
     void resized_to(geometry::Size const& size) override;
     void moved_to(geometry::Point const& top_left) override;
     void hidden_set_to(bool hide) override;
-    void frame_posted() override;
+    void frame_posted(int frames_available) override;
     void alpha_set_to(float alpha) override;
     void transformation_set_to(glm::mat4 const& t) override;
+    void reception_mode_set_to(input::InputReceptionMode mode) override;
 
     void add(std::shared_ptr<SurfaceObserver> const& observer);
     void remove(std::shared_ptr<SurfaceObserver> const& observer);
@@ -88,13 +89,13 @@ public:
 
     ~BasicSurface() noexcept;
 
-    graphics::Renderable::ID id() const override;
     std::string name() const override;
     void move_to(geometry::Point const& top_left) override;
     float alpha() const override;
     void set_hidden(bool is_hidden);
 
     geometry::Size size() const override;
+    geometry::Size client_size() const override;
 
     MirPixelFormat pixel_format() const;
 
@@ -106,6 +107,8 @@ public:
     int client_input_fd() const;
     void allow_framedropping(bool);
     std::shared_ptr<input::InputChannel> input_channel() const override;
+    input::InputReceptionMode reception_mode() const override;
+    void set_reception_mode(input::InputReceptionMode mode) override;
 
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;
 
@@ -113,20 +116,14 @@ public:
 
     void resize(geometry::Size const& size) override;
     geometry::Point top_left() const override;
-    bool contains(geometry::Point const& point) const override;
+    geometry::Rectangle input_bounds() const override;
+    bool input_area_contains(geometry::Point const& point) const override;
     void set_alpha(float alpha) override;
     void set_transformation(glm::mat4 const&) override;
-    glm::mat4 transformation() const override;
 
     bool visible() const;
     
-    bool shaped() const  override;  // meaning the pixel format has alpha
-
-    // Renderable interface
-    std::shared_ptr<graphics::Buffer> buffer(void const*) const override;
-    bool alpha_enabled() const override;
-    geometry::Rectangle screen_position() const override;
-    int buffers_ready_for_compositor() const override;
+    std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const;
 
     void with_most_recent_buffer_do(
         std::function<void(graphics::Buffer&)> const& exec) override;
@@ -139,11 +136,15 @@ public:
     void show() override;
 
     void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
-    void remove_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
+    void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override;
+
+    int dpi() const;
 
 private:
+    bool visible(std::unique_lock<std::mutex>&) const;
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
+    bool set_dpi(int);
 
     SurfaceObservers observers;
     std::mutex mutable guard;
@@ -153,6 +154,7 @@ private:
     float surface_alpha;
     bool first_frame_posted;
     bool hidden;
+    input::InputReceptionMode input_mode;
     const bool nonrectangular;
     std::vector<geometry::Rectangle> input_rectangles;
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
@@ -162,6 +164,7 @@ private:
 
     MirSurfaceType type_value;
     MirSurfaceState state_value;
+    int dpi_value;
 };
 
 }

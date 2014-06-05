@@ -19,6 +19,7 @@
 
 #include "program_factory.h"
 #include "mir/graphics/gl_program.h"
+#include "mir/compositor/recently_used_cache.h"
 
 namespace mg = mir::graphics;
 
@@ -28,5 +29,12 @@ mg::ProgramFactory::create_gl_program(
     std::string const& fragment_shader) const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
-    return std::unique_ptr<mg::GLProgram>(new GLProgram(vertex_shader.c_str(), fragment_shader.c_str()));
+    return std::unique_ptr<mg::GLProgram>(
+        new SimpleGLProgram(vertex_shader.c_str(), fragment_shader.c_str()));
+}
+
+std::unique_ptr<mg::GLTextureCache> mg::ProgramFactory::create_texture_cache() const
+{
+    return std::unique_ptr<mg::GLTextureCache>(
+        new mir::compositor::RecentlyUsedCache());
 }

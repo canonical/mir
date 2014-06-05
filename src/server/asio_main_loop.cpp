@@ -18,7 +18,85 @@
 
 #include "mir/asio_main_loop.h"
 
+#include "boost/date_time/posix_time/conversion.hpp"
+
 #include <cassert>
+#include <mutex>
+#include <condition_variable>
+
+namespace
+{
+struct MirClockTimerTraits
+{
+    // TODO the clock used by the main loop is a global setting, this is a restriction
+    // of boost::asio only allowing static methods inside the taits type.
+    struct TimerServiceClockStorage
+    {
+    public:
+        void set_clock(std::shared_ptr<mir::time::Clock const> const& clock)
+        {
+            std::lock_guard<std::mutex> lock(timer_service_mutex);
+            auto stored_clock = timer_service_clock.lock();
+            if (stored_clock && stored_clock != clock)
+                BOOST_THROW_EXCEPTION(std::logic_error("A clock is already in use as time source for mir::AsioMainLoop"));
+            timer_service_clock = clock;
+        }
+        mir::time::Timestamp now()
+        {
+            std::lock_guard<std::mutex> lock(timer_service_mutex);
+            auto clock = timer_service_clock.lock();
+            if (!clock)
+                BOOST_THROW_EXCEPTION(std::logic_error("No clock available to create time stamp"));
+            return clock->sample();
+        }
+    private:
+        std::mutex timer_service_mutex;
+        std::weak_ptr<mir::time::Clock const> timer_service_clock;
+    };
+
+    static TimerServiceClockStorage clock_storage;
+
+    static void set_clock(std::shared_ptr<mir::time::Clock const> const& clock)
+    {
+        clock_storage.set_clock(clock);
+    }
+
+    // time_traits interface required by boost::asio::deadline_timer{_service}
+    typedef mir::time::Timestamp time_type;
+    typedef std::chrono::milliseconds duration_type;
+
+
+    static time_type now()
+    {
+        return clock_storage.now();
+    }
+
+    static time_type add(const time_type& t, const duration_type& d)
+    {
+        return t + d;
+    }
+
+    static duration_type subtract(const time_type& t1, const time_type& t2)
+    {
+        return std::chrono::duration_cast<duration_type>(t1 - t2);
+    }
+
+    static bool less_than(const time_type& t1, const time_type& t2)
+    {
+        return t1 < t2;
+    }
+
+    static boost::posix_time::time_duration to_posix_duration(
+        const duration_type& d)
+    {
+        return boost::posix_time::millisec(d.count());
+    }
+};
+
+MirClockTimerTraits::TimerServiceClockStorage MirClockTimerTraits::clock_storage;
+
+typedef boost::asio::basic_deadline_timer<mir::time::Timestamp, MirClockTimerTraits> deadline_timer;
+}
 
 class mir::AsioMainLoop::SignalHandler
 {
@@ -102,14 +180,16 @@ private:
 };
 
 /*
- * We need to define an empty constructor and destructor in the .cpp file,
+ * We need to define the constructor and destructor in the .cpp file,
  * so that we can use unique_ptr to hold SignalHandler. Otherwise, users
- * of AsioMainLoop end up creating default constructors and destructors
- * that don't have complete type information for SignalHandler and fail
+ * of AsioMainLoop end up creating constructors and destructors that
+ * don't have complete type information for SignalHandler and fail
  * to compile.
  */
-mir::AsioMainLoop::AsioMainLoop()
+mir::AsioMainLoop::AsioMainLoop(std::shared_ptr<time::Clock> const& clock)
+    : work{io}, clock(clock)
 {
+    MirClockTimerTraits::set_clock(clock);
 }
 
 mir::AsioMainLoop::~AsioMainLoop() noexcept(true)
@@ -152,4 +232,196 @@ void mir::AsioMainLoop::register_fd_handler(
     fd_handler->async_wait();
 
     fd_handlers.push_back(std::move(fd_handler));
+}
+
+namespace
+{
+class AlarmImpl : public mir::time::Alarm
+{
+public:
+    AlarmImpl(boost::asio::io_service& io,
+              std::chrono::milliseconds delay,
+              std::function<void(void)> callback);
+
+    AlarmImpl(boost::asio::io_service& io,
+              mir::time::Timestamp time_point,
+              std::function<void(void)> callback);
+
+    ~AlarmImpl() noexcept override;
+
+    bool cancel() override;
+    State state() const override;
+
+    bool reschedule_in(std::chrono::milliseconds delay) override;
+    bool reschedule_for(mir::time::Timestamp time_point) override;
+private:
+    void update_timer();
+    struct InternalState
+    {
+        explicit InternalState(std::function<void(void)> callback)
+            : callback{callback}
+        {
+        }
+
+        mutable std::mutex m;
+        std::function<void(void)> callback;
+        State state;
+    };
+
+    ::deadline_timer timer;
+    std::shared_ptr<InternalState> data;
+};
+
+AlarmImpl::AlarmImpl(boost::asio::io_service& io,
+                     std::chrono::milliseconds delay,
+                     std::function<void ()> callback)
+    : timer{io},
+      data{std::make_shared<InternalState>(callback)}
+{
+    reschedule_in(delay);
+}
+
+AlarmImpl::AlarmImpl(boost::asio::io_service& io,
+                     mir::time::Timestamp time_point,
+                     std::function<void ()> callback)
+    : timer{io},
+      data{std::make_shared<InternalState>(callback)}
+{
+    reschedule_for(time_point);
+}
+
+AlarmImpl::~AlarmImpl() noexcept
+{
+    AlarmImpl::cancel();
+}
+
+bool AlarmImpl::cancel()
+{
+    std::lock_guard<decltype(data->m)> lock(data->m);
+    if (data->state == triggered)
+        return false;
+
+    data->state = cancelled;
+    timer.cancel();
+    return true;
+}
+
+mir::time::Alarm::State AlarmImpl::state() const
+{
+    std::lock_guard<decltype(data->m)> lock(data->m);
+
+    return data->state;
+}
+
+bool AlarmImpl::reschedule_in(std::chrono::milliseconds delay)
+{
+    bool cancelling = timer.expires_from_now(delay);
+    update_timer();
+    return cancelling;
+}
+
+bool AlarmImpl::reschedule_for(mir::time::Timestamp time_point)
+{
+    bool cancelling = timer.expires_at(time_point);
+    update_timer();
+    return cancelling;
+}
+
+void AlarmImpl::update_timer()
+{
+    std::lock_guard<decltype(data->m)> lock(data->m);
+    // Awkwardly, we can't stop the async_wait handler from being called
+    // on a destroyed AlarmImpl. This means we need to wedge a shared_ptr
+    // into the async_wait callback.
+    std::weak_ptr<InternalState> possible_data = data;
+    timer.async_wait([possible_data](boost::system::error_code const& ec)
+    {
+        auto data = possible_data.lock();
+        if (!data)
+            return;
+
+        std::unique_lock<decltype(data->m)> lock(data->m);
+        if (!ec && data->state == pending)
+        {
+            data->state = triggered;
+            lock.unlock();
+            data->callback();
+        }
+    });
+    data->state = pending;
+}
+}
+
+std::unique_ptr<mir::time::Alarm> mir::AsioMainLoop::notify_in(std::chrono::milliseconds delay,
+                                                               std::function<void()> callback)
+{
+    return std::unique_ptr<mir::time::Alarm>{new AlarmImpl{io, delay, callback}};
+}
+
+std::unique_ptr<mir::time::Alarm> mir::AsioMainLoop::notify_at(mir::time::Timestamp time_point,
+                                                               std::function<void()> callback)
+{
+    return std::unique_ptr<mir::time::Alarm>{new AlarmImpl{io, time_point, callback}};
+
+}
+void mir::AsioMainLoop::enqueue(void const* owner, ServerAction const& action)
+{
+    {
+        std::lock_guard<std::mutex> lock{server_actions_mutex};
+        server_actions.push_back({owner, action});
+    }
+
+    io.post([this] { process_server_actions(); });
+}
+
+void mir::AsioMainLoop::pause_processing_for(void const* owner)
+{
+    std::lock_guard<std::mutex> lock{server_actions_mutex};
+    do_not_process.insert(owner);
+}
+
+void mir::AsioMainLoop::resume_processing_for(void const* owner)
+{
+    {
+        std::lock_guard<std::mutex> lock{server_actions_mutex};
+        do_not_process.erase(owner);
+    }
+
+    io.post([this] { process_server_actions(); });
+}
+
+void mir::AsioMainLoop::process_server_actions()
+{
+    std::unique_lock<std::mutex> lock{server_actions_mutex};
+
+    size_t i = 0;
+
+    while (i < server_actions.size())
+    {
+        /* 
+         * It's safe to use references to elements, since std::deque<>
+         * guarantees that references remain valid after appends, which is
+         * the only operation that can be performed on server_actions outside
+         * this function (in AsioMainLoop::post()).
+         */
+        auto const& owner = server_actions[i].first;
+        auto const& action = server_actions[i].second;
+
+        if (do_not_process.find(owner) == do_not_process.end())
+        {
+            lock.unlock();
+            action();
+            lock.lock();
+            /*
+             * This erase is always ok, since outside this function
+             * we only append to server_actions, i.e., our index i
+             * is guaranteed to remain valid and correct.
+             */
+            server_actions.erase(server_actions.begin() + i);
+        }
+        else
+        {
+            ++i;
+        }
+    }
 }

@@ -22,7 +22,7 @@
 
 #include "mir/input/input_channel.h"
 
-#include "mir_test_doubles/mock_input_dispatcher.h"
+#include "mir_test_doubles/mock_android_input_dispatcher.h"
 #include "mir_test_doubles/stub_input_channel.h"
 
 #include "mir_test/fake_shared.h"
@@ -46,11 +46,14 @@ namespace mia = mi::android;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 
-TEST(AndroidInputTargeterSetup, on_focus_cleared)
+struct AndroidInputTargeterSetup : ::testing::Test
+{
+    std::shared_ptr<mtd::MockAndroidInputDispatcher> dispatcher = std::make_shared<mtd::MockAndroidInputDispatcher>();
+};
+
+TEST_F(AndroidInputTargeterSetup, on_focus_cleared)
 {
     using namespace ::testing;
-
-    droidinput::sp<mtd::MockInputDispatcher> dispatcher = new mtd::MockInputDispatcher;
 
     EXPECT_CALL(*dispatcher, setKeyboardFocus(droidinput::sp<droidinput::InputWindowHandle>(0)))
         .Times(1);
@@ -61,14 +64,14 @@ TEST(AndroidInputTargeterSetup, on_focus_cleared)
     targeter.focus_cleared();
 }
 
-TEST(AndroidInputTargeterSetup, on_focus_changed)
+TEST_F(AndroidInputTargeterSetup, on_focus_changed)
 {
     using namespace ::testing;
 
     std::shared_ptr<mi::InputChannel const> stub_channel = std::make_shared<mtd::StubInputChannel>();
     mtd::MockWindowHandleRepository repository;
 
-    droidinput::sp<mtd::MockInputDispatcher> dispatcher = new mtd::MockInputDispatcher;
+    std::shared_ptr<mtd::MockAndroidInputDispatcher> dispatcher = std::make_shared<mtd::MockAndroidInputDispatcher>();
     droidinput::sp<droidinput::InputWindowHandle> stub_window_handle = new mtd::StubWindowHandle;
 
     EXPECT_CALL(*dispatcher, setKeyboardFocus(stub_window_handle))
@@ -81,11 +84,10 @@ TEST(AndroidInputTargeterSetup, on_focus_changed)
     targeter.focus_changed(stub_channel);
 }
 
-TEST(AndroidInputTargeterSetup, on_focus_changed_throw_behavior)
+TEST_F(AndroidInputTargeterSetup, on_focus_changed_throw_behavior)
 {
     using namespace ::testing;
 
-    droidinput::sp<mtd::MockInputDispatcher> dispatcher = new mtd::MockInputDispatcher;
     mtd::MockWindowHandleRepository repository;
     mia::InputTargeter targeter(dispatcher, mt::fake_shared(repository));
 

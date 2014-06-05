@@ -110,7 +110,7 @@ public:
         return this;
     }
 
-    std::shared_ptr<mg::Buffer> buffer(void const*) const override
+    std::shared_ptr<mg::Buffer> buffer() const override
     {
         return client->last_rendered();
     }
@@ -173,9 +173,7 @@ try
     mir::DefaultServerConfiguration conf{argc, argv};
 
     auto platform = conf.the_graphics_platform();
-    auto display = platform->create_display(
-        conf.the_display_configuration_policy(),
-        conf.the_gl_config());
+    auto display = conf.the_display();
     auto buffer_allocator = platform->create_buffer_allocator(conf.the_buffer_initializer());
 
      mg::BufferProperties buffer_properties{
@@ -189,8 +187,8 @@ try
 
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {
-        std::make_shared<DemoRenderable>(client1, geom::Rectangle{{0,0} , {512, 512}}),
-        std::make_shared<DemoRenderable>(client2, geom::Rectangle{{80,80} , {592,592}})
+        std::make_shared<DemoRenderable>(client1, geom::Rectangle{{0,0} , buffer_properties.size}),
+        std::make_shared<DemoRenderable>(client2, geom::Rectangle{{80,80} , buffer_properties.size})
     };
 
     while (running)
@@ -200,8 +198,7 @@ try
             buffer.make_current();
             client1->update_green_channel();
             client2->update_green_channel();
-            auto render_fn = [](mg::Renderable const&) {};
-            buffer.render_and_post_update(renderlist, render_fn);
+            buffer.post_renderables_if_optimizable(renderlist);
         });
     }
    return 0;

@@ -32,6 +32,7 @@
 #include <memory>
 #include <functional>
 #include <mutex>
+#include <unordered_set>
 
 namespace mir
 {
@@ -74,7 +75,6 @@ public:
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
     int id() const;
-    bool is_valid() const;
     MirWaitHandle* next_buffer(mir_surface_callback callback, void * context);
     MirWaitHandle* get_create_wait_handle();
 
@@ -87,6 +87,8 @@ public:
 
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
     int attrib(MirSurfaceAttrib a) const;
+    
+    MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
     void set_event_handler(MirEventDelegate const* delegate);
     void handle_event(MirEvent const& e);
@@ -95,6 +97,7 @@ public:
     void request_and_wait_for_next_buffer();
     void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
 
+    static bool is_valid(MirSurface* query);
 private:
     mutable std::mutex mutex; // Protects all members of *this
 
@@ -109,11 +112,13 @@ private:
     mir::protobuf::DisplayServer::Stub & server;
     mir::protobuf::Surface surface;
     std::string error_message;
+    mir::protobuf::Void void_response;
 
     MirConnection* const connection;
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle configure_wait_handle;
+    MirWaitHandle configure_cursor_wait_handle;
 
     std::shared_ptr<mir::client::MemoryRegion> secured_region;
     std::shared_ptr<mir::client::ClientBufferDepository> buffer_depository;

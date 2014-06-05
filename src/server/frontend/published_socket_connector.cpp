@@ -17,11 +17,12 @@
  */
 
 #include "published_socket_connector.h"
-#include "mir/frontend/protobuf_session_creator.h"
+#include "mir/frontend/protobuf_connection_creator.h"
 
+#include "mir/frontend/connection_context.h"
 #include "mir/frontend/connector_report.h"
+#include "mir/emergency_cleanup_registry.h"
 
-#include <boost/signals2.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -97,19 +98,22 @@ std::string remove_if_stale(std::string const& socket_name)
 
 mf::PublishedSocketConnector::PublishedSocketConnector(
     const std::string& socket_file,
-    std::shared_ptr<SessionCreator> const& session_creator,
+    std::shared_ptr<ConnectionCreator> const& connection_creator,
     int threads,
+    EmergencyCleanupRegistry& emergency_cleanup_registry,
     std::shared_ptr<ConnectorReport> const& report)
-:   BasicConnector(session_creator, threads, report),
+:   BasicConnector(connection_creator, threads, report),
     socket_file(remove_if_stale(socket_file)),
     acceptor(io_service, socket_file)
 {
+    emergency_cleanup_registry.add(
+        [socket_file] { std::remove(socket_file.c_str()); });
     start_accept();
 }
 
 mf::PublishedSocketConnector::~PublishedSocketConnector() noexcept
 {
-    remove_endpoint();
+    std::remove(socket_file.c_str());
 }
 
 void mf::PublishedSocketConnector::start_accept()
@@ -120,16 +124,10 @@ void mf::PublishedSocketConnector::start_accept()
 
     acceptor.async_accept(
         *socket,
-        boost::bind(
-            &PublishedSocketConnector::on_new_connection,
-            this,
-            socket,
-            ba::placeholders::error));
-}
-
-void mf::PublishedSocketConnector::remove_endpoint() const
-{
-    std::remove(socket_file.c_str());
+        [this,socket](boost::system::error_code const& ec)
+        {
+            on_new_connection(socket, ec);
+        });
 }
 
 void mf::PublishedSocketConnector::on_new_connection(
@@ -138,19 +136,19 @@ void mf::PublishedSocketConnector::on_new_connection(
 {
     if (!ec)
     {
-        create_session_for(socket);
+        create_session_for(socket, [](std::shared_ptr<mf::Session> const&) {});
     }
     start_accept();
 }
 
 mf::BasicConnector::BasicConnector(
-    std::shared_ptr<SessionCreator> const& session_creator,
+    std::shared_ptr<ConnectionCreator> const& connection_creator,
     int threads,
     std::shared_ptr<ConnectorReport> const& report)
 :   work(io_service),
     report(report),
     io_service_threads(threads),
-    session_creator{session_creator}
+    connection_creator{connection_creator}
 {
 }
 
@@ -199,13 +197,26 @@ void mf::BasicConnector::stop()
     io_service.reset();
 }
 
-void mf::BasicConnector::create_session_for(std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket) const
+void mf::BasicConnector::create_session_for(
+    std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket,
+    std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
 {
     report->creating_session_for(server_socket->native_handle());
-    session_creator->create_session_for(server_socket);
+
+    /* We set the SO_PASSCRED socket option in order to receive credentials */
+    auto const optval = 1;
+    if (setsockopt(server_socket->native_handle(), SOL_SOCKET, SO_PASSCRED, &optval, sizeof(optval)) == -1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set SO_PASSCRED"));
+
+    connection_creator->create_connection_for(server_socket, {connect_handler, this});
 }
 
 int mf::BasicConnector::client_socket_fd() const
+{
+    return client_socket_fd([](std::shared_ptr<mf::Session> const&) {});
+}
+
+int mf::BasicConnector::client_socket_fd(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
 {
     enum { server, client, size };
     int socket_fd[size];
@@ -222,13 +233,9 @@ int mf::BasicConnector::client_socket_fd() const
 
     report->creating_socket_pair(socket_fd[server], socket_fd[client]);
 
-    create_session_for(server_socket);
+    create_session_for(server_socket, connect_handler);
 
     return socket_fd[client];
-}
-
-void mf::BasicConnector::remove_endpoint() const
-{
 }
 
 mf::BasicConnector::~BasicConnector() noexcept

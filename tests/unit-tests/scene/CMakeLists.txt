@@ -8,12 +8,14 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_session_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_the_session_container_implementation.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_threaded_snapshot_strategy.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_mediating_display_changer.cpp
 
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_impl.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_basic_surface.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_stack.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_controller.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_legacy_scene_change_notification.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

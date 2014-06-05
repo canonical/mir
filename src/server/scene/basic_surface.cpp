@@ -72,12 +72,12 @@ void ms::SurfaceObservers::hidden_set_to(bool hide)
         p->hidden_set_to(hide);
 }
 
-void ms::SurfaceObservers::frame_posted()
+void ms::SurfaceObservers::frame_posted(int frames_available)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     // TBD Maybe we should copy observers so we can release the lock?
     for (auto const& p : observers)
-        p->frame_posted();
+        p->frame_posted(frames_available);
 }
 
 void ms::SurfaceObservers::alpha_set_to(float alpha)
@@ -94,6 +94,14 @@ void ms::SurfaceObservers::transformation_set_to(glm::mat4 const& t)
     // TBD Maybe we should copy observers so we can release the lock?
     for (auto const& p : observers)
         p->transformation_set_to(t);
+}
+
+void ms::SurfaceObservers::reception_mode_set_to(mi::InputReceptionMode mode)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->reception_mode_set_to(mode);
 }
 
 void ms::SurfaceObservers::add(std::shared_ptr<SurfaceObserver> const& observer)
@@ -124,6 +132,7 @@ ms::BasicSurface::BasicSurface(
     surface_alpha(1.0f),
     first_frame_posted(false),
     hidden(false),
+    input_mode(mi::InputReceptionMode::normal),
     nonrectangular(nonrectangular),
     input_rectangles{surface_rect},
     surface_buffer_stream(buffer_stream),
@@ -131,14 +140,10 @@ ms::BasicSurface::BasicSurface(
     configurator(configurator),
     report(report),
     type_value(mir_surface_type_normal),
-    state_value(mir_surface_state_restored)
+    state_value(mir_surface_state_restored),
+    dpi_value(0)
 {
     report->surface_created(this, surface_name);
-}
-
-mg::Renderable::ID ms::BasicSurface::id() const
-{
-    return this; // Always sufficient or should we cast from a SurfaceID?
 }
 
 void ms::BasicSurface::force_requests_to_complete()
@@ -191,6 +196,12 @@ mir::geometry::Size ms::BasicSurface::size() const
     return surface_rect.size;
 }
 
+mir::geometry::Size ms::BasicSurface::client_size() const
+{
+    // TODO: In future when decorated, client_size() would be smaller than size
+    return size();
+}
+
 MirPixelFormat ms::BasicSurface::pixel_format() const
 {
     return surface_buffer_stream->get_stream_pixel_format();
@@ -208,7 +219,8 @@ void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(m
             std::unique_lock<std::mutex> lk(guard);
             first_frame_posted = true;
         }
-        observers.frame_posted();
+
+        observers.frame_posted(1);
     }
 }
 
@@ -247,29 +259,29 @@ void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& inpu
     this->input_rectangles = input_rectangles;
 }
 
-void ms::BasicSurface::resize(geom::Size const& size)
+void ms::BasicSurface::resize(geom::Size const& desired_size)
 {
-    if (size == this->size())
+    geom::Size new_size = desired_size;
+    if (new_size.width <= geom::Width{0})   new_size.width = geom::Width{1};
+    if (new_size.height <= geom::Height{0}) new_size.height = geom::Height{1};
+
+    if (new_size == size())
         return;
 
-    if (size.width <= geom::Width{0} || size.height <= geom::Height{0})
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Impossible resize requested"));
-    }
     /*
      * Other combinations may still be invalid (like dimensions too big or
      * insufficient resources), but those are runtime and platform-specific, so
      * not predictable here. Such critical exceptions would arise from
      * the platform buffer allocator as a runtime_error via:
      */
-    surface_buffer_stream->resize(size);
+    surface_buffer_stream->resize(new_size);
 
     // Now the buffer stream has successfully resized, update the state second;
     {
         std::unique_lock<std::mutex> lock(guard);
-        surface_rect.size = size;
+        surface_rect.size = new_size;
     }
-    observers.resized_to(size);
+    observers.resized_to(new_size);
 }
 
 geom::Point ms::BasicSurface::top_left() const
@@ -278,7 +290,16 @@ geom::Point ms::BasicSurface::top_left() const
     return surface_rect.top_left;
 }
 
-bool ms::BasicSurface::contains(geom::Point const& point) const
+geom::Rectangle ms::BasicSurface::input_bounds() const
+{
+    std::unique_lock<std::mutex> lk(guard);
+
+    // This is historically unchanged, but if you look at input_area_contains()
+    // it seems a bit inconsistent...
+    return surface_rect;
+}
+
+bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 {
     std::unique_lock<std::mutex> lock(guard);
     if (hidden)
@@ -313,41 +334,29 @@ void ms::BasicSurface::set_transformation(glm::mat4 const& t)
     observers.transformation_set_to(t);
 }
 
-glm::mat4 ms::BasicSurface::transformation() const
-{
-    std::unique_lock<std::mutex> lk(guard);
-    return transformation_matrix;
-}
-
 bool ms::BasicSurface::visible() const
 {
     std::unique_lock<std::mutex> lk(guard);
+    return visible(lk); 
+}
+
+bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
+{
     return !hidden && first_frame_posted;
-} 
-
-bool ms::BasicSurface::shaped() const
-{
-    return nonrectangular;
 }
 
-std::shared_ptr<mg::Buffer> ms::BasicSurface::buffer(void const* user_id) const
+mi::InputReceptionMode ms::BasicSurface::reception_mode() const
 {
-    return buffer_stream()->lock_compositor_buffer(user_id);
+    return input_mode;
 }
 
-bool ms::BasicSurface::alpha_enabled() const
+void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
 {
-    return shaped() || alpha() < 1.0f;
-}
-
-geom::Rectangle ms::BasicSurface::screen_position() const
-{   // This would be more efficient to return a const reference
-    return surface_rect;
-}
-
-int ms::BasicSurface::buffers_ready_for_compositor() const
-{
-    return surface_buffer_stream->buffers_ready_for_compositor();
+    {
+        std::lock_guard<std::mutex> lk(guard);
+        input_mode = mode;
+    }
+    observers.reception_mode_set_to(mode);
 }
 
 void ms::BasicSurface::with_most_recent_buffer_do(
@@ -433,6 +442,11 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
         allow_framedropping(allow_dropping);
         result = value;
         break;
+    case mir_surface_attrib_dpi:
+        if (value >= 0 && !set_dpi(value))  // Negative means query only
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid DPI value"));
+        result = dpi();
+        break;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                "attribute."));
@@ -454,13 +468,130 @@ void ms::BasicSurface::show()
     set_hidden(false);
 }
 
+int ms::BasicSurface::dpi() const
+{
+    return dpi_value;
+}
+
+bool ms::BasicSurface::set_dpi(int new_dpi)
+{
+    bool valid = false;
+
+    if (new_dpi >= 0)
+    {
+        dpi_value = new_dpi;
+        valid = true;
+        observers.attrib_changed(mir_surface_attrib_dpi, dpi_value);
+    }
+
+    return valid;
+}
 
 void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
 {
     observers.add(observer);
 }
 
-void ms::BasicSurface::remove_observer(std::shared_ptr<SurfaceObserver> const& observer)
+void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& observer)
 {
-    observers.remove(observer);
+    auto o = observer.lock();
+    if (!o)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (previously destroyed)"));
+    observers.remove(o);
+}
+
+namespace
+{
+//This class avoids locking for long periods of time by copying (or lazy-copying)
+class SurfaceSnapshot : public mg::Renderable
+{
+public:
+    SurfaceSnapshot(
+        std::shared_ptr<mc::BufferStream> const& stream,
+        void const* compositor_id,
+        geom::Rectangle const& position,
+        glm::mat4 const& transform,
+        bool visible,
+        bool alpha_enabled,
+        float alpha,
+        bool shaped,
+        mg::Renderable::ID id)
+    : underlying_buffer_stream{stream},
+      compositor_buffer{nullptr},
+      compositor_id{compositor_id},
+      alpha_enabled_{alpha_enabled},
+      alpha_{alpha},
+      shaped_{shaped},
+      visible_{visible},
+      screen_position_(position),
+      transformation_(transform),
+      id_(id)
+    {
+    }
+
+    ~SurfaceSnapshot()
+    {
+    }
+ 
+    int buffers_ready_for_compositor() const override
+    { return underlying_buffer_stream->buffers_ready_for_compositor(); }
+
+    std::shared_ptr<mg::Buffer> buffer() const override
+    {
+        if (!compositor_buffer)
+            compositor_buffer = underlying_buffer_stream->lock_compositor_buffer(compositor_id);
+        return compositor_buffer;
+    }
+
+    bool visible() const override
+    { return visible_; }
+
+    bool alpha_enabled() const override
+    { return alpha_enabled_; }
+
+    geom::Rectangle screen_position() const override
+    { return screen_position_; }
+
+    float alpha() const override
+    { return alpha_; }
+
+    glm::mat4 transformation() const override
+    { return transformation_; }
+
+    bool shaped() const override
+    { return shaped_; }
+ 
+    mg::Renderable::ID id() const override
+    { return id_; }
+
+private:
+    std::shared_ptr<mc::BufferStream> const underlying_buffer_stream;
+    std::shared_ptr<mg::Buffer> mutable compositor_buffer;
+    void const*const compositor_id;
+    bool const alpha_enabled_;
+    float const alpha_;
+    bool const shaped_;
+    bool const visible_;
+    geom::Rectangle const screen_position_;
+    glm::mat4 const transformation_;
+    mg::Renderable::ID const id_; 
+};
+}
+
+std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const* compositor_id) const
+{
+    std::unique_lock<std::mutex> lk(guard);
+
+    auto const shaped = nonrectangular || (surface_alpha < 1.0f);
+    return std::unique_ptr<mg::Renderable>(
+        new SurfaceSnapshot(
+            surface_buffer_stream,
+            compositor_id,
+            surface_rect,
+            transformation_matrix,
+            visible(lk),
+            shaped,
+            surface_alpha,
+            nonrectangular, 
+            this));
 }

@@ -121,7 +121,7 @@ TEST_F(PostingFBBundleTest, hwc_fb_size_allocation)
         .Times(2)
         .WillRepeatedly(Return(nullptr));
 
-    mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
+    mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device, 2u);
     EXPECT_EQ(display_size, framebuffers.fb_size());
 }
 
@@ -155,7 +155,7 @@ TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
     EXPECT_CALL(mock_egl, eglTerminate(fake_display))
         .InSequence(seq);
 
-    mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
+    mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device, 2u);
     EXPECT_EQ(mir_pixel_format_argb_8888, framebuffers.fb_format());
 }
 
@@ -168,7 +168,7 @@ TEST_F(PostingFBBundleTest, test_hwc_device_display_config_failure_throws)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
+        mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device, 2u);
     }, std::runtime_error);
 }
 
@@ -192,7 +192,7 @@ TEST_F(PostingFBBundleTest, hwc_version_11_format_selection_failure)
     EXPECT_CALL(mock_egl, eglTerminate(fake_display))
         .InSequence(seq);
 
-    mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device);
+    mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device, 2u);
     EXPECT_EQ(mir_pixel_format_abgr_8888, framebuffers.fb_format());
 }
 
@@ -233,4 +233,33 @@ TEST_F(PostingFBBundleTest, last_rendered_returns_valid)
     EXPECT_NE(first_buffer, framebuffers.last_rendered_buffer());
     first_buffer.reset();
     EXPECT_EQ(first_buffer_ptr, framebuffers.last_rendered_buffer().get());
+}
+
+TEST_F(PostingFBBundleTest, last_rendered_is_first_returned_from_driver)
+{
+    mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device, 2u);
+    auto buffer1 = framebuffers.buffer_for_render().get();
+    EXPECT_EQ(buffer1, framebuffers.last_rendered_buffer().get());
+    auto buffer2 = framebuffers.buffer_for_render().get();
+    EXPECT_EQ(buffer2, framebuffers.last_rendered_buffer().get());
+}
+
+TEST_F(PostingFBBundleTest, no_rendering_returns_same_buffer)
+{
+    mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device, 2u);
+    framebuffers.buffer_for_render().get();
+    auto buffer = framebuffers.last_rendered_buffer();
+    EXPECT_EQ(buffer, framebuffers.last_rendered_buffer());
+}
+
+TEST_F(PostingFBBundleTest, three_buffers_for_hwc)
+{
+    mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device, 3u);
+
+    auto buffer1 = framebuffers.buffer_for_render().get();
+    framebuffers.buffer_for_render();
+    framebuffers.buffer_for_render();
+    auto buffer4 = framebuffers.buffer_for_render().get();
+
+    EXPECT_EQ(buffer1, buffer4);
 }

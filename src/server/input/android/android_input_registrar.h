@@ -21,11 +21,12 @@
 
 #include "android_window_handle_repository.h"
 
-#include "mir/scene/input_registrar.h"
+#include "mir/scene/null_observer.h"
 
 #include <utils/StrongPointer.h>
 
 #include <map>
+#include <memory>
 #include <mutex>
 
 namespace android
@@ -38,35 +39,51 @@ namespace droidinput = android;
 
 namespace mir
 {
-namespace input
+namespace compositor
+{
+class Scene;
+}
+namespace scene
 {
 class Surface;
+}
+namespace input
+{
 namespace android
 {
 class InputConfiguration;
 class InputTargeter;
 
-class InputRegistrar : public scene::InputRegistrar, public WindowHandleRepository
+class InputRegistrar : public WindowHandleRepository
 {
 public:
-    explicit InputRegistrar(droidinput::sp<droidinput::InputDispatcherInterface> const& input_dispatcher);
+    explicit InputRegistrar(std::shared_ptr<mir::compositor::Scene> const& scene);
     virtual ~InputRegistrar() noexcept(true);
-
-    void input_channel_opened(std::shared_ptr<input::InputChannel> const& opened_channel,
-                              std::shared_ptr<input::Surface> const& surface,
-                              InputReceptionMode mode);
-
-    void input_channel_closed(std::shared_ptr<input::InputChannel> const& closed_channel);
-
 
     virtual droidinput::sp<droidinput::InputWindowHandle> handle_for_channel(std::shared_ptr<input::InputChannel const> const& channel);
 
+    void set_dispatcher(std::shared_ptr<droidinput::InputDispatcherInterface> const& dispatcher);
+    void add_window_handle_for_surface(mir::scene::Surface *);
+    void remove_window_handle_for_surface(mir::scene::Surface *);
 private:
-    droidinput::sp<droidinput::InputDispatcherInterface> const input_dispatcher;
+    struct SceneObserver : mir::scene::NullObserver
+    {
+        typedef std::function<void(mir::scene::Surface*)> SurfaceCallback;
+        SceneObserver(SurfaceCallback const& add, SurfaceCallback const& remove);
+        void surface_added(scene::Surface* surface) override;
+        void surface_removed(scene::Surface* surface) override;
+        void surface_exists(scene::Surface* surface) override;
+
+        SurfaceCallback add, remove;
+    };
+    // weak ptr as input dispatcher already has a strong references to the registrar through the mir::input::android::InputTargetEnumerator
+    std::weak_ptr<droidinput::InputDispatcherInterface> input_dispatcher;
 
     std::map<std::shared_ptr<input::InputChannel const>, droidinput::sp<droidinput::InputWindowHandle>> window_handles;
 
     std::mutex handles_mutex;
+    std::shared_ptr<compositor::Scene> const scene;
+    std::shared_ptr<SceneObserver> const observer;
 };
 
 }

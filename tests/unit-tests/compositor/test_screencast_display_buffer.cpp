@@ -34,16 +34,6 @@ namespace mg = mir::graphics;
 namespace
 {
 
-struct MockRenderFunctor
-{
-    void operator()(mg::Renderable const& r)
-    {
-        operator_call(&r);
-    }
-
-    MOCK_METHOD1(operator_call, void(mg::Renderable const*));
-};
-
 struct ScreencastDisplayBufferTest : testing::Test
 {
     testing::NiceMock<mtd::MockGL> mock_gl;
@@ -158,10 +148,8 @@ TEST_F(ScreencastDisplayBufferTest, forces_rendering_to_complete_on_post_update)
     db.post_update();
 }
 
-TEST_F(ScreencastDisplayBufferTest, renders_renderables_on_render_and_post_update)
+TEST_F(ScreencastDisplayBufferTest, rejects_attempt_to_optimize)
 {
-    using namespace testing;
-
     geom::Rectangle const rect{{100,100}, {800,600}};
     mtd::StubBuffer stub_buffer;
 
@@ -172,15 +160,5 @@ TEST_F(ScreencastDisplayBufferTest, renders_renderables_on_render_and_post_updat
 
     mc::ScreencastDisplayBuffer db{rect, stub_buffer};
 
-    Mock::VerifyAndClearExpectations(&mock_gl);
-    MockRenderFunctor mock_render_functor;
-
-    InSequence s;
-
-    for (auto const& renderable : renderables)
-        EXPECT_CALL(mock_render_functor, operator_call(renderable.get()));
-
-    EXPECT_CALL(mock_gl, glFinish());
-
-    db.render_and_post_update(renderables, std::ref(mock_render_functor));
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderables));
 }

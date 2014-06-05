@@ -24,8 +24,18 @@
 #include <memory>
 #include <string>
 
+namespace android
+{
+class InputDispatcherInterface;
+class InputDispatcherPolicyInterface;
+}
+
+namespace droidinput = android;
+
 namespace mir
 {
+class ServerActionQueue;
+
 namespace compositor
 {
 class Renderer;
@@ -43,7 +53,7 @@ class Shell;
 class Connector;
 class ConnectorReport;
 class ProtobufIpcFactory;
-class SessionCreator;
+class ConnectionCreator;
 class SessionMediatorReport;
 class MessageProcessorReport;
 class SessionAuthorizer;
@@ -75,13 +85,12 @@ class SessionContainer;
 class SessionEventSink;
 class SessionEventHandlerRegister;
 class SessionListener;
-class SessionManager;
+class SessionCoordinator;
 class SnapshotStrategy;
 class SurfaceCoordinator;
 class SurfaceConfigurator;
 class SurfaceStackModel;
 class SurfaceStack;
-class InputRegistrar;
 class SceneReport;
 }
 namespace graphics
@@ -91,6 +100,9 @@ class Display;
 class BufferInitializer;
 class DisplayReport;
 class GraphicBufferAllocator;
+class Cursor;
+class CursorImage;
+class CursorImages;
 class GLConfig;
 class GLProgramFactory;
 namespace nested { class HostConnection; }
@@ -98,6 +110,7 @@ namespace nested { class HostConnection; }
 namespace input
 {
 class InputReport;
+class InputTargets;
 class InputManager;
 class CompositeEventFilter;
 class InputChannelFactory;
@@ -106,6 +119,11 @@ class CursorListener;
 class InputRegion;
 class NestedInputRelay;
 class EventHandler;
+namespace android
+{
+class InputRegistrar;
+class InputThread;
+}
 }
 
 namespace logging
@@ -142,6 +160,8 @@ public:
     virtual std::shared_ptr<DisplayChanger>         the_display_changer();
     virtual std::shared_ptr<graphics::Platform>     the_graphics_platform();
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
+    virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher();
+    virtual std::shared_ptr<EmergencyCleanup>  the_emergency_cleanup();
     /** @} */
 
     /** @name graphics configuration - customization
@@ -151,7 +171,6 @@ public:
     virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
-    virtual std::shared_ptr<input::EventFilter> the_nested_event_filter();
     virtual std::shared_ptr<graphics::GLConfig> the_gl_config();
     /** @} */
 
@@ -159,6 +178,10 @@ public:
      * dependencies of graphics on the rest of the Mir
      *  @{ */
     virtual std::shared_ptr<graphics::DisplayReport> the_display_report();
+    virtual std::shared_ptr<graphics::Cursor> the_cursor();
+    virtual std::shared_ptr<graphics::CursorImage> the_default_cursor_image();
+    virtual std::shared_ptr<graphics::CursorImages> the_cursor_images();
+
     /** @} */
 
     /** @name compositor configuration - customization
@@ -181,6 +204,8 @@ public:
     virtual std::shared_ptr<frontend::SessionMediatorReport>  the_session_mediator_report();
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
+    // TODO clients should customize the_session_coordinator() instead of the_frontend_shell();
+    // TODO once the_session_coordinator() has landed and clients updated this should become non-virtual
     virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
     virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
@@ -188,11 +213,13 @@ public:
     /** @name frontend configuration - internal dependencies
      * internal dependencies of frontend
      *  @{ */
-    virtual std::shared_ptr<frontend::SessionCreator>         the_session_creator();
+    virtual std::shared_ptr<frontend::ConnectionCreator>      the_connection_creator();
     virtual std::shared_ptr<frontend::ConnectorReport>        the_connector_report();
     /** @} */
     /** @} */
 
+    // TODO clients should customize the_session_coordinator() instead of the_focus_controller();
+    // TODO once the_session_coordinator() has landed and clients updated this should become non-virtual
     virtual std::shared_ptr<shell::FocusController> the_focus_controller();
 
     /** @name shell configuration - customization
@@ -224,6 +251,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<scene::BufferStreamFactory> the_buffer_stream_factory();
     virtual std::shared_ptr<scene::SceneReport>      the_scene_report();
+    virtual std::shared_ptr<scene::SessionCoordinator>  the_session_coordinator();
     /** @} */
 
 
@@ -231,8 +259,8 @@ public:
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
-    virtual std::shared_ptr<scene::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
+    virtual std::shared_ptr<input::InputTargets>  the_input_targets();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     /** @} */
@@ -244,6 +272,7 @@ public:
     /** @} */
 
     virtual std::shared_ptr<time::Clock> the_clock();
+    virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
@@ -255,6 +284,29 @@ protected:
         std::shared_ptr<frontend::Shell> const& shell,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
+    /** @name input dispatcher related configuration
+     *  @{ */
+    virtual std::shared_ptr<input::android::InputRegistrar> the_input_registrar();
+    virtual std::shared_ptr<droidinput::InputDispatcherInterface> the_android_input_dispatcher();
+    virtual std::shared_ptr<input::android::InputThread> the_dispatcher_thread();
+    virtual std::shared_ptr<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
+    virtual bool is_key_repeat_enabled() const;
+    /** @} */
+
+    /** @Convenience wrapper functions
+     *  @{ */
+    virtual std::shared_ptr<scene::SurfaceCoordinator>  wrap_surface_coordinator(
+        std::shared_ptr<scene::SurfaceCoordinator> const& wrapped);
+
+    virtual std::shared_ptr<scene::SessionCoordinator>  wrap_session_coordinator(
+        std::shared_ptr<scene::SessionCoordinator> const& wrapped);
+/** @} */
+
+    CachedPtr<input::android::InputRegistrar> input_registrar;
+    CachedPtr<input::android::InputThread> dispatcher_thread;
+    CachedPtr<droidinput::InputDispatcherInterface> android_input_dispatcher;
+    CachedPtr<droidinput::InputDispatcherPolicyInterface> android_dispatcher_policy;
+
     CachedPtr<frontend::Connector>   connector;
 
     CachedPtr<input::InputConfiguration> input_configuration;
@@ -262,14 +314,17 @@ protected:
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
+    CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<input::InputRegion>     input_region;
-    CachedPtr<scene::InputRegistrar> input_registrar;
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::Display>      display;
+    CachedPtr<graphics::Cursor>       cursor;
+    CachedPtr<graphics::CursorImage>  default_cursor_image;
+    CachedPtr<graphics::CursorImages> cursor_images;
 
     CachedPtr<frontend::ConnectorReport>   connector_report;
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
@@ -277,7 +332,7 @@ protected:
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<frontend::EventSink> global_event_sink;
-    CachedPtr<frontend::SessionCreator>    session_creator;
+    CachedPtr<frontend::ConnectionCreator> connection_creator;
     CachedPtr<frontend::Screencast> screencast;
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
@@ -307,6 +362,8 @@ protected:
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<graphics::GLProgramFactory> gl_program_factory;
     CachedPtr<graphics::GLConfig> gl_config;
+    CachedPtr<scene::SessionCoordinator> session_coordinator;
+    CachedPtr<EmergencyCleanup> emergency_cleanup;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
@@ -317,12 +374,8 @@ private:
     // The following caches and factory functions are internal to the
     // default implementations of corresponding the Mir components
     CachedPtr<scene::BroadcastingSessionEventSink> broadcasting_session_event_sink;
-    CachedPtr<input::NestedInputRelay> nested_input_relay;
-    CachedPtr<scene::SessionManager> session_manager;
 
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
-    std::shared_ptr<input::NestedInputRelay>        the_nested_input_relay();
-    std::shared_ptr<scene::SessionManager>       the_session_manager();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
 };

@@ -22,9 +22,11 @@
 #include "src/platform/graphics/android/resource_factory.h"
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 #include "src/platform/graphics/android/output_builder.h"
+#include "src/server/graphics/program_factory.h"
 #include "src/server/report/null_report_factory.h"
 
 #include "examples/graphics.h"
+#include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/stub_gl_config.h"
 
 #include <gtest/gtest.h>
@@ -78,7 +80,8 @@ TEST_F(AndroidDisplay, display_can_post)
     auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
         fb_allocator, display_resource_factory, null_display_report);
 
-    mga::AndroidDisplay display{display_buffer_factory, stub_gl_config, null_display_report};
+    auto program_factory = std::make_shared<mg::ProgramFactory>();
+    mga::AndroidDisplay display{display_buffer_factory, program_factory, stub_gl_config, null_display_report};
 
     display.for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {

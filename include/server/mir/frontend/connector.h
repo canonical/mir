@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -19,10 +19,15 @@
 #ifndef MIR_FRONTEND_CONNECTOR_H_
 #define MIR_FRONTEND_CONNECTOR_H_
 
+#include <functional>
+#include <memory>
+
 namespace mir
 {
 namespace frontend
 {
+class Session;
+
 /// Handle client process connections
 class Connector
 {
@@ -31,7 +36,8 @@ public:
     virtual void stop() = 0;
 
     virtual int client_socket_fd() const = 0;
-    virtual void remove_endpoint() const = 0;
+
+    virtual int client_socket_fd(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const = 0;
 
 protected:
     Connector() = default;

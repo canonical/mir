@@ -19,7 +19,9 @@
 #ifndef MIR_INPUT_NESTED_INPUT_CONFIGURATION_H_
 #define MIR_INPUT_NESTED_INPUT_CONFIGURATION_H_
 
-#include "mir/input/android/dispatcher_input_configuration.h"
+#include "mir/input/input_configuration.h"
+
+#include "mir/cached_ptr.h"
 
 namespace mir
 {
@@ -27,23 +29,16 @@ namespace input
 {
 class NestedInputRelay;
 
-class NestedInputConfiguration : public android::DispatcherInputConfiguration
+class NestedInputConfiguration : public InputConfiguration
 {
 public:
-    NestedInputConfiguration(
-        std::shared_ptr<NestedInputRelay> const& input_relay,
-        std::shared_ptr<EventFilter> const& event_filter,
-        std::shared_ptr<InputRegion> const& input_region,
-        std::shared_ptr<CursorListener> const& cursor_listener,
-        std::shared_ptr<InputReport> const& input_report);
-    virtual ~NestedInputConfiguration();
+    NestedInputConfiguration();
+    virtual ~NestedInputConfiguration() = default;
+    std::shared_ptr<InputChannelFactory> the_input_channel_factory() override;
+    std::shared_ptr<InputManager> the_input_manager() override;
 
 private:
-    droidinput::sp<droidinput::InputDispatcherInterface> the_dispatcher() override;
-
-    std::shared_ptr<NestedInputRelay> const input_relay;
-
-    android::CachedAndroidPtr<droidinput::InputDispatcherInterface> dispatcher;
+    CachedPtr<InputManager> input_manager;
 };
 }
 }

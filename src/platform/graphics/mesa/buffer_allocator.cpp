@@ -110,15 +110,15 @@ struct GBMBODeleter
 
 mgm::BufferAllocator::BufferAllocator(
     gbm_device* device,
-    const std::shared_ptr<BufferInitializer>& buffer_initializer)
+    const std::shared_ptr<BufferInitializer>& buffer_initializer,
+    BypassOption bypass_option)
     : device(device),
       buffer_initializer(buffer_initializer),
-      egl_extensions(std::make_shared<mg::EGLExtensions>())
+      egl_extensions(std::make_shared<mg::EGLExtensions>()),
+      bypass_option(bypass_option)
+
 {
     assert(buffer_initializer.get() != 0);
-
-    const char *env = getenv("MIR_BYPASS");
-    bypass_env = env ? env[0] != '0' : true;
 }
 
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
@@ -160,9 +160,9 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
      *       resizing). We may also want to check for
      *       mir_surface_state_fullscreen later when it's fully wired up.
      */
-    if (bypass_env &&
-        buffer_properties.size.width.as_uint32_t() >= 800 &&
-        buffer_properties.size.height.as_uint32_t() >= 600)
+    if ((bypass_option == mgm::BypassOption::allowed) &&
+         buffer_properties.size.width.as_uint32_t() >= 800 &&
+         buffer_properties.size.height.as_uint32_t() >= 600)
     {
         bo_flags |= GBM_BO_USE_SCANOUT;
     }

@@ -19,21 +19,27 @@
 
 #include "src/server/input/android/android_input_manager.h"
 #include "src/server/report/null_report_factory.h"
+#include "src/server/input/android/android_input_dispatcher.h"
+#include "src/server/input/android/event_filter_dispatcher_policy.h"
+#include "src/server/input/android/common_input_thread.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/cursor_listener.h"
 #include "mir/input/input_targets.h"
 #include "mir/input/input_region.h"
+#include "mir/input/input_dispatcher.h"
 #include "mir/geometry/rectangle.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
-#include "mir_test_doubles/stub_input_targets.h"
 #include "mir_test_doubles/mock_event_filter.h"
+#include "mir_test_doubles/stub_input_enumerator.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
+
+#include "InputDispatcher.h"
 
 #include <thread>
 
@@ -75,36 +81,42 @@ struct MockCursorListener : public mi::CursorListener
 
 struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
 {
+    bool repeat_is_disabled{false};
+    std::shared_ptr<mi::InputReport> null_report = mir::report::null_input_report();
+    std::shared_ptr<MockEventFilter> event_filter = std::make_shared<MockEventFilter>();
+    mia::EventFilterDispatcherPolicy policy{event_filter, repeat_is_disabled};
+    droidinput::InputDispatcher android_dispatcher{mt::fake_shared(policy), null_report, std::make_shared<mtd::StubInputEnumerator>()};
+    mia::CommonInputThread input_thread{"InputDispatcher",
+                                        new droidinput::InputDispatcherThread(mt::fake_shared(android_dispatcher))};
+
+    mia::AndroidInputDispatcher dispatcher{mt::fake_shared(android_dispatcher), mt::fake_shared(input_thread)};
+
     void SetUp()
     {
-        event_filter = std::make_shared<MockEventFilter>();
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
-            event_filter,
+            mt::fake_shared(dispatcher),
             mt::fake_shared(input_region),
             mt::fake_shared(cursor_listener),
-            mr::null_input_report());
+            null_report);
 
         fake_event_hub = configuration->the_fake_event_hub();
 
         input_manager = configuration->the_input_manager();
 
-        stub_targets = std::make_shared<mtd::StubInputTargets>();
-        configuration->set_input_targets(stub_targets);
-
         input_manager->start();
+        dispatcher.start();
     }
 
     void TearDown()
     {
+        dispatcher.stop();
         input_manager->stop();
     }
 
     std::shared_ptr<mtd::FakeEventHubInputConfiguration> configuration;
     mia::FakeEventHub* fake_event_hub;
-    std::shared_ptr<MockEventFilter> event_filter;
     std::shared_ptr<mi::InputManager> input_manager;
     MockCursorListener cursor_listener;
-    std::shared_ptr<mtd::StubInputTargets> stub_targets;
     StubInputRegion input_region;
 };
 

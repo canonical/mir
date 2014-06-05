@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
+                Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #include "mir/input/android/default_android_input_configuration.h"
@@ -24,6 +25,15 @@
 #include "android_input_targeter.h"
 #include "android_input_target_enumerator.h"
 #include "android_input_manager.h"
+#include "input_translator.h"
+#include "input_channel_factory.h"
+#include "common_input_thread.h"
+
+#include "mir/input/event_filter.h"
+
+#include <EventHub.h>
+#include <InputDispatcher.h>
+
 #include "mir/input/event_filter.h"
 
 #include <EventHub.h>
@@ -39,47 +49,15 @@ namespace mia = mi::android;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-namespace
-{
-class CommonInputThread : public mia::InputThread
-{
-public:
-     CommonInputThread(std::string const& name, droidinput::sp<droidinput::Thread> const& thread)
-      : name(name),
-        thread(thread)
-    {
-    }
-    virtual ~CommonInputThread()
-    {
-    }
-
-    void start()
-    {
-        thread->run(name.c_str(), droidinput::PRIORITY_URGENT_DISPLAY);
-    }
-    void request_stop()
-    {
-        thread->requestExit();
-    }
-    void join()
-    {
-        thread->join();
-    }
-
-private:
-    CommonInputThread(const CommonInputThread&) = delete;
-    CommonInputThread& operator=(const CommonInputThread&) = delete;
-
-    std::string const name;
-    droidinput::sp<droidinput::Thread> const thread;
-};
-}
-
-mia::DefaultInputConfiguration::DefaultInputConfiguration(std::shared_ptr<mi::EventFilter> const& event_filter,
-                                                          std::shared_ptr<mi::InputRegion> const& input_region,
-                                                          std::shared_ptr<mi::CursorListener> const& cursor_listener,
-                                                          std::shared_ptr<mi::InputReport> const& input_report)
-  : DispatcherInputConfiguration(event_filter, input_region, cursor_listener, input_report)
+mia::DefaultInputConfiguration::DefaultInputConfiguration(
+    std::shared_ptr<mi::InputDispatcher> const& input_dispatcher,
+    std::shared_ptr<mi::InputRegion> const& input_region,
+    std::shared_ptr<CursorListener> const& cursor_listener,
+    std::shared_ptr<mi::InputReport> const& input_report) :
+    input_dispatcher(input_dispatcher),
+    input_region(input_region),
+    cursor_listener(cursor_listener),
+    input_report(input_report)
 {
 }
 
@@ -87,40 +65,37 @@ mia::DefaultInputConfiguration::~DefaultInputConfiguration()
 {
 }
 
-droidinput::sp<droidinput::InputDispatcherInterface> mia::DefaultInputConfiguration::the_dispatcher()
+std::shared_ptr<mi::InputChannelFactory> mia::DefaultInputConfiguration::the_input_channel_factory()
 {
-    return dispatcher(
-        [this]() -> droidinput::sp<droidinput::InputDispatcherInterface>
-        {
-            return new droidinput::InputDispatcher(the_dispatcher_policy(), input_report);
-        });
+    return std::make_shared<mia::InputChannelFactory>();
 }
 
-droidinput::sp<droidinput::EventHubInterface> mia::DefaultInputConfiguration::the_event_hub()
+std::shared_ptr<droidinput::EventHubInterface> mia::DefaultInputConfiguration::the_event_hub()
 {
     return event_hub(
         [this]()
         {
-            return new droidinput::EventHub(input_report);
+            return std::make_shared<droidinput::EventHub>(input_report);
         });
 }
 
-droidinput::sp<droidinput::InputReaderPolicyInterface> mia::DefaultInputConfiguration::the_reader_policy()
+std::shared_ptr<droidinput::InputReaderPolicyInterface> mia::DefaultInputConfiguration::the_reader_policy()
 {
     return reader_policy(
         [this]()
         {
-            return new mia::InputReaderPolicy(input_region, cursor_listener);
+            return std::make_shared<mia::InputReaderPolicy>(input_region, cursor_listener);
         });
 }
 
 
-droidinput::sp<droidinput::InputReaderInterface> mia::DefaultInputConfiguration::the_reader()
+std::shared_ptr<droidinput::InputReaderInterface> mia::DefaultInputConfiguration::the_reader()
 {
     return reader(
         [this]()
         {
-            return new droidinput::InputReader(the_event_hub(), the_reader_policy(), the_dispatcher());
+            return std::make_shared<droidinput::InputReader>(
+                the_event_hub(), the_reader_policy(), the_input_translator());
         });
 }
 
@@ -134,12 +109,19 @@ std::shared_ptr<mia::InputThread> mia::DefaultInputConfiguration::the_reader_thr
         });
 }
 
+std::shared_ptr<droidinput::InputListenerInterface> mia::DefaultInputConfiguration::the_input_translator()
+{
+    return std::make_shared<mia::InputTranslator>(input_dispatcher);
+}
+
 std::shared_ptr<mi::InputManager> mia::DefaultInputConfiguration::the_input_manager()
 {
     return input_manager(
-        [this]()
+        [this]() -> std::shared_ptr<mi::InputManager>
         {
-            return std::make_shared<mia::InputManager>(the_event_hub(), the_dispatcher(),
-                                                       the_reader_thread(), the_dispatcher_thread());
+            return std::make_shared<mia::InputManager>(
+                the_event_hub(),
+                the_reader_thread());
         });
 }
+

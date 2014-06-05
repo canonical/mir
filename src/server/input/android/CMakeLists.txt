@@ -12,8 +12,10 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_registrar.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_targeter.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_target_enumerator.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/dispatcher_input_configuration.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/input_dispatcher_manager.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/android_input_dispatcher.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/common_input_thread.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/input_channel_factory.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/input_translator.cpp
 )
 
 set(

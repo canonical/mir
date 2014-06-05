@@ -16,6 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "device_quirks.h"
 #include "output_builder.h"
 #include "display_resource_factory.h"
 #include "display_buffer.h"
@@ -54,7 +55,10 @@ mga::OutputBuilder::OutputBuilder(
     }
     else
     {
-        framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, hwc_native);
+        mga::PropertiesOps ops;
+        mga::DeviceQuirks quirks(ops);
+        framebuffers = std::make_shared<mga::Framebuffers>(
+            buffer_allocator, hwc_native, quirks.num_framebuffers());
     }
 }
 
@@ -64,6 +68,7 @@ MirPixelFormat mga::OutputBuilder::display_format()
 }
 
 std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_display_buffer(
+    GLProgramFactory const& gl_program_factory,
     GLContext const& gl_context)
 {
     std::shared_ptr<mga::DisplayDevice> device;
@@ -101,5 +106,5 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
 
     auto native_window = res_factory->create_native_window(framebuffers);
     return std::unique_ptr<mga::DisplayBuffer>(
-        new DisplayBuffer(framebuffers, device, native_window, gl_context));
+        new DisplayBuffer(framebuffers, device, native_window, gl_context, gl_program_factory));
 }

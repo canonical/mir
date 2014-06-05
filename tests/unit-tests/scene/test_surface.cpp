@@ -432,7 +432,7 @@ TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
     EXPECT_EQ(size, surf.size());
 }
 
-TEST_F(SurfaceCreation, impossible_resize_throws)
+TEST_F(SurfaceCreation, impossible_resize_clamps)
 {
     using namespace testing;
 
@@ -454,14 +454,17 @@ TEST_F(SurfaceCreation, impossible_resize_throws)
         stub_configurator,
         report);
 
-    EXPECT_CALL(*mock_buffer_stream, resize(size))
-        .Times(0);
-
     for (auto &size : bad_sizes)
     {
-        EXPECT_THROW({
-            surf.resize(size);
-        }, std::logic_error);
+        geom::Size expect_size = size;
+        if (expect_size.width <= geom::Width{0})
+            expect_size.width = geom::Width{1};
+        if (expect_size.height <= geom::Height{0})
+            expect_size.height = geom::Height{1};
+
+        EXPECT_CALL(*mock_buffer_stream, resize(expect_size)).Times(1);
+        EXPECT_NO_THROW({ surf.resize(size); });
+        EXPECT_EQ(expect_size, surf.size());
     }
 }
 
@@ -495,7 +498,7 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
         report);
 
     surf.set_alpha(alpha);
-    EXPECT_FLOAT_EQ(alpha, surf.alpha());
+    EXPECT_FLOAT_EQ(alpha, surf.compositor_snapshot(nullptr)->alpha());
 }
 
 TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
@@ -546,7 +549,9 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
         stub_configurator,
         report);
 
-    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(change_notification);
+    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(
+        change_notification,
+        [this](int){change_notification();});
     surf.add_observer(observer);
 
     mg::Buffer* buffer{nullptr};
