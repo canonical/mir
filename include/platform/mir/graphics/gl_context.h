@@ -34,8 +34,6 @@ public:
 
 protected:
     GLContext() = default;
-    GLContext(GLContext const&) = delete;
-    GLContext& operator=(GLContext const&) = delete;
 };
 
 }

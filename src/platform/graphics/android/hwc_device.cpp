@@ -76,7 +76,7 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
     setup_layer_types();
 }
 
-void mga::HwcDevice::render_gl(SwappingGLContext const& context)
+void mga::HwcDevice::post_gl(SwappingGLContext const& context)
 {
     hwc_list.update_list_and_check_if_changed({}, fbtarget_plus_skip_size);
     setup_layer_types();
@@ -86,9 +86,11 @@ void mga::HwcDevice::render_gl(SwappingGLContext const& context)
     hwc_wrapper->prepare(*hwc_list.native_list().lock());
 
     context.swap_buffers();
+
+    post(context);
 }
 
-void mga::HwcDevice::prepare_overlays(
+void mga::HwcDevice::post_overlays(
     SwappingGLContext const& context,
     RenderableList const& renderables,
     RenderableListCompositor const& list_compositor)
@@ -111,15 +113,16 @@ void mga::HwcDevice::prepare_overlays(
     }
 
     list_compositor.render(rejected_renderables, context);
+    post(context);
 }
 
-void mga::HwcDevice::post(mg::Buffer const& buffer)
+void mga::HwcDevice::post(SwappingGLContext const& context)
 {
     if (!list_needs_commit)
         return;
 
     auto lg = lock_unblanked();
-    set_list_framebuffer(buffer);
+    set_list_framebuffer(*context.last_rendered_buffer());
     hwc_wrapper->set(*hwc_list.native_list().lock());
 
     for(auto& layer : hwc_list)
