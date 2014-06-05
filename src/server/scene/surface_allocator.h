@@ -27,6 +27,10 @@ namespace input
 {
 class InputChannelFactory;
 }
+namespace graphics
+{
+class CursorImage;
+}
 namespace scene
 {
 class BufferStreamFactory;
@@ -39,6 +43,7 @@ public:
     SurfaceAllocator(std::shared_ptr<BufferStreamFactory> const& bb_factory,
                      std::shared_ptr<input::InputChannelFactory> const& input_factory,
                      std::shared_ptr<SurfaceConfigurator> const& configurator,
+                     std::shared_ptr<graphics::CursorImage> const& default_cursor_image,
                      std::shared_ptr<SceneReport> const& report);
 
     std::shared_ptr<Surface> create_surface(SurfaceCreationParameters const& params) override;
@@ -47,6 +52,7 @@ private:
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
     std::shared_ptr<input::InputChannelFactory> const input_factory;
     std::shared_ptr<SurfaceConfigurator> const configurator;
+    std::shared_ptr<graphics::CursorImage> const default_cursor_image;
     std::shared_ptr<SceneReport> const report;
 };
 

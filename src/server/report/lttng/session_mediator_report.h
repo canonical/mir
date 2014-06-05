@@ -40,6 +40,7 @@ public:
     void session_disconnect_called(std::string const& app_name) override;
     void session_drm_auth_magic_called(std::string const& app_name) override;
     void session_configure_surface_called(std::string const& app_name) override;
+    void session_configure_surface_cursor_called(std::string const& app_name) override;
     void session_configure_display_called(std::string const& app_name) override;
 
     void session_error(std::string const& app_name, char const* method, std::string const& what) override;

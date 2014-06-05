@@ -46,6 +46,7 @@ namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -91,6 +92,7 @@ struct SessionManagerSetup : public testing::Test
         std::make_shared<mtd::StubBufferStream>(),
         std::shared_ptr<mi::InputChannel>(),
         std::shared_ptr<ms::SurfaceConfigurator>(),
+        std::shared_ptr<mg::CursorImage>(),
         mir::report::null_scene_report());
     mtd::MockSurfaceCoordinator surface_coordinator;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub

@@ -41,6 +41,7 @@ struct MockSurface : public scene::BasicSurface
             {},
             {},
             {},
+            {},
             mir::report::null_scene_report())
     {
     }

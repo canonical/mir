@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_HWC_FORMATTED_LOGGER_H_
-#define MIR_GRAPHICS_ANDROID_HWC_FORMATTED_LOGGER_H_
+#ifndef MIR_GRAPHICS_ANDROID_HWC_LOGGERS_H_
+#define MIR_GRAPHICS_ANDROID_HWC_LOGGERS_H_
 
 #include "hwc_logger.h"
 
@@ -34,8 +34,19 @@ public:
     void log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const override;
     void log_prepare_done(hwc_display_contents_1_t const& list) const override;
     void log_set_list(hwc_display_contents_1_t const& list) const override;
+    void log_overlay_optimization(OverlayOptimization optimization_option) const override;
+};
+
+class NullHwcLogger : public HwcLogger
+{
+public:
+    NullHwcLogger() = default;
+    void log_list_submitted_to_prepare(hwc_display_contents_1_t const&) const override;
+    void log_prepare_done(hwc_display_contents_1_t const&) const override;
+    void log_set_list(hwc_display_contents_1_t const&) const override;
+    void log_overlay_optimization(OverlayOptimization optimization_option) const override;
 };
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_HWC_FORMATTED_LOGGER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HWC_LOGGERS_H_ */

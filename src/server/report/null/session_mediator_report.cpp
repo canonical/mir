@@ -46,6 +46,10 @@ void mir::report::null::SessionMediatorReport::session_configure_surface_called(
 {
 }
 
+void mir::report::null::SessionMediatorReport::session_configure_surface_cursor_called(std::string const&)
+{
+}
+
 void mir::report::null::SessionMediatorReport::session_configure_display_called(std::string const&)
 {
 }
