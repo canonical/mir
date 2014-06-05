@@ -25,7 +25,6 @@
 #include "framebuffer_bundle.h"
 #include "buffer.h"
 #include "hwc_fallback_gl_renderer.h"
-#include "mir/graphics/android/native_buffer.h"
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
@@ -97,7 +96,6 @@ void mga::HwcDevice::post_overlays(
 {
     if (!hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size))
         return;
-
     setup_layer_types();
 
     hwc_wrapper->prepare(*hwc_list.native_list().lock());
