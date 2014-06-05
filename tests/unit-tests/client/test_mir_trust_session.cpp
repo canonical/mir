@@ -51,7 +51,7 @@ struct MockProtobufServer : mir::protobuf::DisplayServer
     MOCK_METHOD4(add_trusted_session,
                  void(::google::protobuf::RpcController* /*controller*/,
                       const ::mir::protobuf::TrustedSession* /*request*/,
-                      ::mir::protobuf::TrustSessionAddResult* /*response*/,
+                      ::mir::protobuf::Void* /*response*/,
                       ::google::protobuf::Closure* /*done*/));
 
     MOCK_METHOD4(stop_trust_session,
@@ -81,7 +81,7 @@ public:
 
     void add_trusted_session(::google::protobuf::RpcController* /*controller*/,
                              const ::mir::protobuf::TrustedSession* /*request*/,
-                             ::mir::protobuf::TrustSessionAddResult* /*response*/,
+                             ::mir::protobuf::Void* /*response*/,
                              ::google::protobuf::Closure* done)
     {
         if (server_thread.joinable())
