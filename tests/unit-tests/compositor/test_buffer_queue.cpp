@@ -1269,7 +1269,7 @@ TEST_F(BufferQueueTest, framedropping_client_acquire_does_not_block_when_no_avai
 
 TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)
 {
-    static std::chrono::microseconds const time_for_client_to_acquire{1};
+    static std::chrono::nanoseconds const time_for_client_to_acquire{1};
 
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
