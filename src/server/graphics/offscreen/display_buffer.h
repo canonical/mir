@@ -68,6 +68,7 @@ public:
     void post_update();
 
     MirOrientation orientation() const override;
+    bool uses_alpha() const override;
 
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override; 
 

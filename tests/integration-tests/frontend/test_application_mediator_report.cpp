@@ -60,6 +60,7 @@ struct MockApplicationMediatorReport : mf::SessionMediatorReport
 
     void session_drm_auth_magic_called(const std::string&) override {};
     void session_configure_surface_called(std::string const&) override {};
+    void session_configure_surface_cursor_called(std::string const&) override {};
     void session_configure_display_called(std::string const&) override {};
     void session_error(const std::string&, const char*, const std::string&) override {};
 };
