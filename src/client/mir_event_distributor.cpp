@@ -19,8 +19,7 @@
 #include "mir_event_distributor.h"
 
 MirEventDistributor::MirEventDistributor() :
-    next_fn_id{0},
-    in_event{false}
+    next_fn_id{0}
 {
 }
 
@@ -35,38 +34,25 @@ int MirEventDistributor::register_event_handler(std::function<void(MirEvent cons
 
 void MirEventDistributor::unregister_event_handler(int id)
 {
-    std::lock_guard<std::recursive_mutex> thread_lock(thread_mutex);
     std::unique_lock<std::mutex> lock(mutex);
 
-    if (in_event)
-        delete_later_ids.insert(id);
-    else
-        event_handlers.erase(id);
+    event_handlers.erase(id);
 }
 
 void MirEventDistributor::handle_event(MirEvent const& event)
 {
-    std::lock_guard<std::recursive_mutex> thread_lock(thread_mutex);
     std::unique_lock<std::mutex> lock(mutex);
 
-    auto event_handlers_copy(event_handlers);
+    auto const event_handlers_copy(event_handlers);
 
     for (auto const& handler : event_handlers_copy)
     {
-        if (delete_later_ids.find(handler.first) == delete_later_ids.end())
+        // Ensure handler wasn't unregistered since making copy
+        if (event_handlers.find(handler.first) != event_handlers.end())
         {
-            in_event = true;
-
             lock.unlock();
             handler.second(event);
             lock.lock();
-
-            in_event = false;
         }
     }
-
-    for (int id : delete_later_ids)
-        event_handlers.erase(id);
-
-    delete_later_ids.clear();
 }
