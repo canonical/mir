@@ -2,15 +2,15 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
@@ -21,16 +21,15 @@
 #include "bypass.h"
 
 using namespace mir;
-namespace mc=mir::compositor;
-namespace mg=mir::graphics;
+namespace mgm = mir::graphics::mesa;
 
-mc::BypassMatch::BypassMatch(geometry::Rectangle const& rect)
+mgm::BypassMatch::BypassMatch(geometry::Rectangle const& rect)
     : view_area(rect),
       bypass_is_feasible(true)
 {
 }
 
-bool mc::BypassMatch::operator()(std::shared_ptr<graphics::Renderable> const& renderable)
+bool mgm::BypassMatch::operator()(std::shared_ptr<graphics::Renderable> const& renderable)
 {
     //we've already eliminated bypass as a possibility
     if (!bypass_is_feasible)
