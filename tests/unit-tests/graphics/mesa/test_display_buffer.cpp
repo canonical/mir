@@ -20,12 +20,11 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/null_platform.h"
-#include "mir_test_doubles/null_virtual_terminal.h"
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/stub_gl_config.h"
+#include "mir_test_doubles/platform_factory.h"
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_doubles/fake_renderable.h"
 #include "mock_kms_output.h"
@@ -86,10 +85,7 @@ public:
     // reconstructed locally to ensure its lifetime is shorter than mock_gbm.
     shared_ptr<graphics::mesa::Platform> create_platform()
     {
-        return make_shared<graphics::mesa::Platform>(
-                      null_display_report(),
-                      make_shared<NullVirtualTerminal>(),
-                      graphics::mesa::BypassOption::allowed);
+        return mir::test::doubles::create_mesa_platform_with_null_dependencies();
     }
 
 protected:
