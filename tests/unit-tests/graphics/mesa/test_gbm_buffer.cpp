@@ -27,7 +27,7 @@
 #include "src/platform/graphics/mesa/buffer_allocator.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/buffer_properties.h"
-#include "mir_test_doubles/platform_with_null_dependencies.h"
+#include "mir_test_doubles/platform_factory.h"
 
 #include <gbm.h>
 

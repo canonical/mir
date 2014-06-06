@@ -26,7 +26,7 @@
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_buffer_initializer.h"
-#include "mir_test_doubles/platform_with_null_dependencies.h"
+#include "mir_test_doubles/platform_factory.h"
 #include "mir_test_framework/udev_environment.h"
 
 #include <cstdlib>

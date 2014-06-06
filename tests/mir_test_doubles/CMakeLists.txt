@@ -13,7 +13,7 @@ set(
   test_protobuf_socket_server.cpp
   mock_timer.cpp
   mock_frame_dropping_policy_factory.cpp
-  platform_with_null_dependencies.cpp
+  platform_factory.cpp
 )
 
 set(

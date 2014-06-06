@@ -22,7 +22,7 @@
 #include "src/platform/graphics/mesa/internal_client.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
-#include "mir_test_doubles/platform_with_null_dependencies.h"
+#include "mir_test_doubles/platform_factory.h"
 
 #include <gtest/gtest.h>
 

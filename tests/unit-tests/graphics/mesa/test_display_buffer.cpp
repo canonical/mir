@@ -23,7 +23,7 @@
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/stub_gl_config.h"
-#include "mir_test_doubles/platform_with_null_dependencies.h"
+#include "mir_test_doubles/platform_factory.h"
 #include "mir_test_framework/udev_environment.h"
 #include "mock_kms_output.h"
 

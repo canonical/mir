@@ -22,7 +22,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/platform_with_null_dependencies.h"
+#include "mir_test_doubles/platform_factory.h"
 #ifndef ANDROID
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"

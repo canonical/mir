@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_PLATFORM_WITH_NULL_DEPENDENCIES_H_
-#define MIR_TEST_DOUBLES_PLATFORM_WITH_NULL_DEPENDENCIES_H_
+#ifndef MIR_TEST_DOUBLES_PLATFORM_FACTORY_H_
+#define MIR_TEST_DOUBLES_PLATFORM_FACTORY_H_
 
 #include <memory>
 
@@ -43,4 +43,4 @@ std::shared_ptr<graphics::mesa::Platform> create_mesa_platform_with_null_depende
 }
 }
 
-#endif
+#endif /* MIR_TEST_DOUBLES_PLATFORM_FACTORY_H_ */
