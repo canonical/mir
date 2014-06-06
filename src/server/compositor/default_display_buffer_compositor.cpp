@@ -25,7 +25,6 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
 #include "mir/compositor/buffer_stream.h"
-#include "bypass.h"
 #include "occlusion.h"
 #include <mutex>
 #include <cstdlib>
@@ -51,8 +50,6 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 {
     report->began_frame(this);
 
-    bool bypassed = false;
-
     auto const& view_area = display_buffer.view_area();
     auto renderable_list = scene->renderable_list_for(this);
     mc::filter_occlusions_from(renderable_list, view_area);
@@ -62,27 +59,17 @@ bool mc::DefaultDisplayBufferCompositor::composite()
     //      schedule compositions when they're needed. 
     bool uncomposited_buffers{false};
 
-    if (display_buffer.can_bypass())
+    if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
-        mc::BypassMatch bypass_match(view_area);
-        auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);
-        if (bypass_it != renderable_list.rend())
-        {
-            auto bypass_buf = (*bypass_it)->buffer();
-            if (bypass_buf->can_bypass())
-            {
-                display_buffer.post_update(bypass_buf);
-                bypassed = true;
-                renderer->suspend();
-            }
-        }
+        renderer->suspend();
+        report->finished_frame(true, this);
     }
-
-    if (!bypassed)
+    else
     {
         display_buffer.make_current();
 
         renderer->set_rotation(display_buffer.orientation());
+
         renderer->begin();  // TODO deprecatable now?
         renderer->render(renderable_list);
         display_buffer.post_update();
@@ -94,9 +81,10 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
         last_pass_rendered_anything = !renderable_list.empty();
         // End of frig
+
+        report->finished_frame(false, this);
     }
 
-    report->finished_frame(bypassed, this);
     for(auto const& renderable : renderable_list)
         uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 0);
     return uncomposited_buffers;

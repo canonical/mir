@@ -35,6 +35,7 @@
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_renderer.h"
+#include "mir_test_doubles/null_pixel_buffer.h"
 
 #include <gtest/gtest.h>
 
@@ -88,7 +89,8 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     {
         struct StubRendererFactory : public mc::RendererFactory
         {
-            std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
+            std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&,
+                mc::DestinationAlpha)
             {
                 auto raw = new mtd::StubRenderer{};
                 return std::unique_ptr<mtd::StubRenderer>(raw);
@@ -101,18 +103,10 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
 
     std::shared_ptr<ms::PixelBuffer> the_pixel_buffer() override
     {
-        struct StubPixelBuffer : public ms::PixelBuffer
-        {
-            void fill_from(mg::Buffer&) {}
-            void const* as_argb_8888() { return nullptr; }
-            geom::Size size() const { return geom::Size(); }
-            geom::Stride stride() const { return geom::Stride(); }
-        };
-
         return pixel_buffer(
             []
             {
-                return std::make_shared<StubPixelBuffer>();
+                return std::make_shared<mtd::NullPixelBuffer>();
             });
     }
 
