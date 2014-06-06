@@ -36,7 +36,7 @@ auto mtd::create_platform_with_null_dependencies()
 {
     return graphics::create_platform(
         std::make_shared<options::ProgramOption>(),
-        mr::null_display_report());
+        report::null_display_report());
 }
 
 #else
