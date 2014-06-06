@@ -29,12 +29,6 @@ namespace mtf = mir_test_framework;
 namespace
 {
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
-
-struct ClientConfigCommon : TestingClientConfiguration
-{
-    MirConnection* connection{nullptr};
-    MirSurface* surface{nullptr};
-};
 }
 
 bool signalled;
@@ -45,7 +39,7 @@ static void SIGIO_handler(int /*signo*/)
 
 TEST_F(DefaultDisplayServerTestFixture, ClientLibraryThreadsHandleNoSignals)
 {
-    struct ClientConfig : ClientConfigCommon
+    struct ClientConfig : TestingClientConfiguration
     {
         void exec()
         {
@@ -81,7 +75,7 @@ TEST_F(DefaultDisplayServerTestFixture, ClientLibraryThreadsHandleNoSignals)
                 mir_display_output_id_invalid
             };
 
-            surface = mir_connection_create_surface_sync(conn, &request_params);
+            mir_connection_create_surface_sync(conn, &request_params);
 
             mir_connection_release(conn);
 
@@ -94,7 +88,7 @@ TEST_F(DefaultDisplayServerTestFixture, ClientLibraryThreadsHandleNoSignals)
 
 TEST_F(DefaultDisplayServerTestFixture, ClientLibraryDoesNotInterfereWithClientSignalHandling)
 {
-    struct ClientConfig : ClientConfigCommon
+    struct ClientConfig : TestingClientConfiguration
     {
         void exec()
         {
