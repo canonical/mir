@@ -113,8 +113,6 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc)
     EXPECT_CALL(mock_packer, pack_size(_))
         .Times(1);
 
-    /* full ipc is sent on a buffer allocation so waiting is not costly,
-       as its fence is probably not up */
     EXPECT_CALL(*native_buffer, wait_for_content())
         .Times(1);
 
