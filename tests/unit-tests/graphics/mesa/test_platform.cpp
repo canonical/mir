@@ -143,6 +143,7 @@ TEST_F(MesaGraphicsPlatform, fails_if_no_resources)
 /* ipc packaging tests */
 TEST_F(MesaGraphicsPlatform, test_ipc_data_packed_correctly)
 {
+    using namespace testing;
     mtd::MockBuffer mock_buffer;
     mir::geometry::Stride dummy_stride(4390);
 
@@ -168,21 +169,22 @@ TEST_F(MesaGraphicsPlatform, test_ipc_data_packed_correctly)
     for(auto i=0; i < native_handle->fd_items; i++)
     {
         EXPECT_CALL(mock_packer, pack_fd(native_handle->fd[i]))
-            .Times(1);
+            .Times(Exactly(1));
     }
     for(auto i=0; i < native_handle->data_items; i++)
     {
         EXPECT_CALL(mock_packer, pack_data(native_handle->data[i]))
-            .Times(1);
+            .Times(Exactly(1));
     }
     EXPECT_CALL(mock_packer, pack_stride(dummy_stride))
-        .Times(1);
+        .Times(Exactly(1));
     EXPECT_CALL(mock_packer, pack_flags(testing::_))
-        .Times(1);
+        .Times(Exactly(1));
     EXPECT_CALL(mock_packer, pack_size(testing::_))
-        .Times(1);
+        .Times(Exactly(1));
 
-    platform->fill_ipc_package(&mock_packer, &mock_buffer);
+    platform->arrange_buffer_ipc(&mock_packer, &mock_buffer, true);
+    platform->arrange_buffer_ipc(&mock_packer, &mock_buffer, false);
 }
 
 TEST_F(MesaGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)

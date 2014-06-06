@@ -167,21 +167,24 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::Platform::get_ipc_package()
     return std::make_shared<MesaPlatformIPCPackage>(drm.get_authenticated_fd());
 }
 
-void mgm::Platform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
+void mgm::Platform::arrange_buffer_ipc(BufferIPCPacker* packer, Buffer const* buffer, bool full_ipc) const
 {
-    auto native_handle = buffer->native_buffer_handle();
-    for(auto i=0; i<native_handle->data_items; i++)
+    if (full_ipc)
     {
-        packer->pack_data(native_handle->data[i]);
-    }
-    for(auto i=0; i<native_handle->fd_items; i++)
-    {
-        packer->pack_fd(native_handle->fd[i]);
-    }
+        auto native_handle = buffer->native_buffer_handle();
+        for(auto i=0; i<native_handle->data_items; i++)
+        {
+            packer->pack_data(native_handle->data[i]);
+        }
+        for(auto i=0; i<native_handle->fd_items; i++)
+        {
+            packer->pack_fd(native_handle->fd[i]);
+        }
 
-    packer->pack_stride(buffer->stride());
-    packer->pack_flags(native_handle->flags);
-    packer->pack_size(buffer->size());
+        packer->pack_stride(buffer->stride());
+        packer->pack_flags(native_handle->flags);
+        packer->pack_size(buffer->size());
+    }
 }
 
 void mgm::Platform::drm_auth_magic(unsigned int magic)

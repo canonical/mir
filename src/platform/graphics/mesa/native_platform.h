@@ -42,7 +42,7 @@ public:
         std::shared_ptr<BufferInitializer> const& buffer_initializer) override;
     std::shared_ptr<PlatformIPCPackage> get_ipc_package() override;
     std::shared_ptr<InternalClient> create_internal_client() override;
-    void fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const override;
+    void arrange_buffer_ipc(BufferIPCPacker* packer, Buffer const* buffer, bool full_ipc) const override;
     
     static std::shared_ptr<InternalNativeDisplay> internal_native_display();
     static bool internal_native_display_in_use();
