@@ -65,7 +65,7 @@ public:
         return {};
     }
 
-    void fill_ipc_package(mg::BufferIPCPacker*, mg::Buffer const*) const override {}
+    void arrange_buffer_ipc(mg::BufferIPCPacker*, mg::Buffer const*, bool) const override {}
 };
 
 TEST(NestedGraphicsPlatform, egl_native_display_is_host_connection_native_display)

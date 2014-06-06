@@ -538,9 +538,6 @@ void mf::SessionMediator::pack_protobuf_buffer(
 {
     protobuf_buffer.set_buffer_id(graphics_buffer->id().as_uint32_t());
 
-    if (need_full_ipc)
-    {
-        mfd::ProtobufBufferPacker packer{&protobuf_buffer};
-        graphics_platform->fill_ipc_package(&packer, graphics_buffer);
-    }
+    mfd::ProtobufBufferPacker packer{&protobuf_buffer};
+    graphics_platform->arrange_buffer_ipc(&packer, graphics_buffer, need_full_ipc);
 }

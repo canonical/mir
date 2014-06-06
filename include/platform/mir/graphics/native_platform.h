@@ -52,7 +52,7 @@ public:
 
     virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
 
-    virtual void fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const = 0;
+    virtual void arrange_buffer_ipc(BufferIPCPacker* packer, Buffer const* buffer, bool needs_full_ipc) const = 0;
 
     virtual ~NativePlatform() = default;
     NativePlatform(NativePlatform const&) = delete;

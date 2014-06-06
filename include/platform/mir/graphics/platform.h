@@ -96,15 +96,18 @@ public:
     virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
 
     /**
-     * Fills the IPC package for a buffer.
+     * Arranges the IPC package for a buffer that is to be sent cross-process. This should be
+     * called every time a buffer is to be sent cross-process.
      *
      * The Buffer IPC package will be sent to clients when receiving a buffer.
      * The implementation must use the provided packer object to perform the packing.
      *
-     * \param [in] packer the object providing the packing functionality
-     * \param [in] buffer the buffer to fill the IPC package for
+     * \param [in] packer   the object providing the packing functionality
+     * \param [in] buffer   the buffer to fill the IPC package for
+     * \param [in] full_ipc_needed If true, the implemenation must send the full ipc package.
+     *                             If false, the implementation is permitted to send a partial ipc package.
      */
-    virtual void fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const = 0;
+    virtual void arrange_buffer_ipc(BufferIPCPacker* packer, Buffer const* buffer, bool full_ipc_needed) const = 0;
 
     /**
      * Creates the in-process client support object.
