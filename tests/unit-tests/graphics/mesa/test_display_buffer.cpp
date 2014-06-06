@@ -23,9 +23,11 @@
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
 #include "mir_test_doubles/mock_drm.h"
+#include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_framework/udev_environment.h"
+#include "mir_test_doubles/fake_renderable.h"
 #include "mock_kms_output.h"
 
 #include <gtest/gtest.h>
@@ -45,6 +47,7 @@ class MesaDisplayBufferTest : public Test
 {
 public:
     MesaDisplayBufferTest()
+     : bypassable_list{std::make_shared<FakeRenderable>(display_area)}
     {
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
             .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
@@ -99,69 +102,66 @@ protected:
     UdevEnvironment   fake_devices;
     std::shared_ptr<MockKMSOutput> mock_kms_output;
     StubGLConfig gl_config;
+    int const width{56};
+    int const height{78};
+    mir::geometry::Rectangle const display_area{{12,34}, {width,height}};
+    mir::graphics::RenderableList const bypassable_list;
+
 };
 
 TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
 {
-    geometry::Rectangle const area{{12,34}, {56,78}};
-
     graphics::mesa::DisplayBuffer db(
         create_platform(),
         null_display_report(),
         {},
         nullptr,
-        area,
+        display_area,
         mir_orientation_normal,
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_EQ(area, db.view_area());
+    EXPECT_EQ(display_area, db.view_area());
 }
 
-TEST_F(MesaDisplayBufferTest, normal_orientation_can_bypass)
+TEST_F(MesaDisplayBufferTest, normal_orientation_with_bypassable_list_can_bypass)
 {
-    geometry::Rectangle const area{{12,34}, {56,78}};
-
     graphics::mesa::DisplayBuffer db(
         create_platform(),
         null_display_report(),
-        {},
+        {mock_kms_output},
         nullptr,
-        area,
+        display_area,
         mir_orientation_normal,
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_TRUE(db.can_bypass());
+    EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
 }
 
 TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
 {
-    geometry::Rectangle const area{{12,34}, {56,78}};
-
     graphics::mesa::DisplayBuffer db(
         create_platform(),
         null_display_report(),
         {},
         nullptr,
-        area,
+        display_area,
         mir_orientation_right,
         gl_config,
         mock_egl.fake_egl_context);
 
-    EXPECT_FALSE(db.can_bypass());
+    EXPECT_FALSE(db.post_renderables_if_optimizable(bypassable_list));
 }
 
 TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
 {
-    geometry::Rectangle const area{{12,34}, {56,78}};
-
     graphics::mesa::DisplayBuffer db(
         create_platform(),
         null_display_report(),
         {},
         nullptr,
-        area,
+        display_area,
         mir_orientation_left,
         gl_config,
         mock_egl.fake_egl_context);
@@ -171,10 +171,6 @@ TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
 
 TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
 {
-    int const width = 56;
-    int const height = 78;
-    geometry::Rectangle const area{{12,34}, {width,height}};
-
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
     EXPECT_CALL(mock_drm, drmModeAddFB(_, width, height, _, _, _, _, _))
@@ -185,7 +181,7 @@ TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
         null_display_report(),
         {},
         nullptr,
-        area,
+        display_area,
         mir_orientation_normal,
         gl_config,
         mock_egl.fake_egl_context);
@@ -193,10 +189,6 @@ TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
 
 TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
 {
-    int const width = 56;
-    int const height = 78;
-    geometry::Rectangle const area{{12,34}, {width,height}};
-
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
     EXPECT_CALL(mock_drm, drmModeAddFB(_, height, width, _, _, _, _, _))
@@ -207,7 +199,7 @@ TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
         null_display_report(),
         {},
         nullptr,
-        area,
+        display_area,
         mir_orientation_left,
         gl_config,
         mock_egl.fake_egl_context);
@@ -215,10 +207,6 @@ TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
 
 TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
 {
-    int const width = 56;
-    int const height = 78;
-    geometry::Rectangle const area{{12,34}, {width,height}};
-
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
     EXPECT_CALL(mock_drm, drmModeAddFB(_, width, height, _, _, _, _, _))
@@ -229,7 +217,7 @@ TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
         null_display_report(),
         {},
         nullptr,
-        area,
+        display_area,
         mir_orientation_inverted,
         gl_config,
         mock_egl.fake_egl_context);
@@ -237,10 +225,6 @@ TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
 
 TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
 {
-    int const width = 56;
-    int const height = 78;
-    geometry::Rectangle const area{{12,34}, {width,height}};
-
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
     EXPECT_CALL(mock_drm, drmModeAddFB(_, height, width, _, _, _, _, _))
@@ -251,7 +235,7 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
         null_display_report(),
         {},
         nullptr,
-        area,
+        display_area,
         mir_orientation_right,
         gl_config,
         mock_egl.fake_egl_context);
@@ -259,8 +243,6 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
 
 TEST_F(MesaDisplayBufferTest, first_post_flips_but_no_wait)
 {
-    geometry::Rectangle const area{{12,34}, {56,78}};
-
     EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
         .Times(1);
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
@@ -271,7 +253,7 @@ TEST_F(MesaDisplayBufferTest, first_post_flips_but_no_wait)
         null_display_report(),
         {mock_kms_output},
         nullptr,
-        area,
+        display_area,
         mir_orientation_normal,
         gl_config,
         mock_egl.fake_egl_context);
@@ -281,8 +263,6 @@ TEST_F(MesaDisplayBufferTest, first_post_flips_but_no_wait)
 
 TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_post)
 {
-    geometry::Rectangle const area{{12,34}, {56,78}};
-
     InSequence seq;
 
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
@@ -301,7 +281,7 @@ TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_post)
         null_display_report(),
         {mock_kms_output},
         nullptr,
-        area,
+        display_area,
         mir_orientation_normal,
         gl_config,
         mock_egl.fake_egl_context);
@@ -310,3 +290,61 @@ TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_post)
     db.post_update();
 }
 
+TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_list)
+{
+    graphics::RenderableList list{
+        std::make_shared<FakeRenderable>(display_area),
+        std::make_shared<FakeRenderable>(geometry::Rectangle{{12, 34}, {1, 1}})
+    };
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    EXPECT_FALSE(db.post_renderables_if_optimizable(list));
+}
+
+TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer)
+{
+    auto fullscreen = std::make_shared<FakeRenderable>(display_area);
+    auto nonbypassable = std::make_shared<testing::NiceMock<MockBuffer>>();
+    ON_CALL(*nonbypassable, can_bypass())
+        .WillByDefault(Return(false));
+    fullscreen->set_buffer(nonbypassable);
+    graphics::RenderableList list{fullscreen};
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    EXPECT_FALSE(db.post_renderables_if_optimizable(list));
+}
+
+TEST_F(MesaDisplayBufferTest, does_not_use_alpha)
+{
+    geometry::Rectangle const area{{12,34}, {56,78}};
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    EXPECT_FALSE(db.uses_alpha());
+}

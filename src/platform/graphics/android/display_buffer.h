@@ -52,10 +52,10 @@ public:
     void make_current();
     void release_current();
     void post_update();
-    bool can_bypass() const override;
-
     bool post_renderables_if_optimizable(RenderableList const& renderlist);
+
     MirOrientation orientation() const override;
+    bool uses_alpha() const override;
 
     DisplayConfigurationOutput configuration() const;
     void configure(DisplayConfigurationOutput const&);

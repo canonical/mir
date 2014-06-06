@@ -132,11 +132,6 @@ void mga::DisplayBuffer::post()
     display_device->post(*last_rendered);
 }
 
-bool mga::DisplayBuffer::can_bypass() const
-{
-    return false;
-}
-
 MirOrientation mga::DisplayBuffer::orientation() const
 {
     /*
@@ -146,6 +141,11 @@ MirOrientation mga::DisplayBuffer::orientation() const
      * If and when we choose to implement HWC rotation, this may change.
      */
     return current_configuration.orientation;
+}
+
+bool mga::DisplayBuffer::uses_alpha() const
+{
+    return false;
 }
 
 mg::DisplayConfigurationOutput mga::DisplayBuffer::configuration() const

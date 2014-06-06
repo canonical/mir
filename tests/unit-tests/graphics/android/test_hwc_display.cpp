@@ -143,11 +143,10 @@ TEST_F(AndroidDisplayBuffer, can_post_update_with_gl_only)
 TEST_F(AndroidDisplayBuffer, rejects_empty_list)
 {
     using namespace testing;
-
     mga::DisplayBuffer db(
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
 
-    mg::RenderableList renderlist{};
+    std::list<std::shared_ptr<mg::Renderable>> renderlist{};
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 }
 
@@ -484,4 +483,12 @@ TEST_F(AndroidDisplayBuffer, android_display_configuration_info)
 
     EXPECT_EQ(refresh_rate, disp_mode.vrefresh_hz);
     //TODO fill physical_size_mm fields accordingly;
+}
+
+TEST_F(AndroidDisplayBuffer, does_not_use_alpha)
+{
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
+
+    EXPECT_FALSE(db.uses_alpha());
 }
