@@ -63,9 +63,10 @@ public:
           buf_stride{stride}
     {
 #ifndef ANDROID
-        native_buffer = std::make_shared<graphics::mesa::GBMNativeBuffer>();
+        auto buffer = std::make_shared<graphics::mesa::GBMNativeBuffer>();
         int fake_bo{0}; 
-        b->bo = reinterpret_cast<gbm_bo*>(&fake_bo); //gbm_bo is opaque, so test code shouldn't dereference.
+        buffer->bo = reinterpret_cast<gbm_bo*>(&fake_bo); //gbm_bo is opaque, so test code shouldn't dereference.
+        native_buffer = buffer;
 #else
         native_buffer = std::make_shared<StubAndroidNativeBuffer>();
 #endif
@@ -82,7 +83,6 @@ public:
 
     virtual bool can_bypass() const override { return true; }
 
-private:
     std::shared_ptr<graphics::NativeBuffer> native_buffer;
     geometry::Size const buf_size;
     MirPixelFormat const buf_pixel_format;
