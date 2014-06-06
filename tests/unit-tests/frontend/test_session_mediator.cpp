@@ -499,16 +499,14 @@ TEST_F(SessionMediatorTest, session_only_sends_mininum_information_for_buffers)
         mp::Buffer buffer_response[3];
 
         Sequence seq;
-        //first time id 4 is sent
-        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), true));
-        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), false));
-        //first time id 5 is sent
-        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), true));
-        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), false));
-        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), false));
-        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), false));
-        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), false));
-        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), false));
+        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), true))
+            .InSequence(seq);
+        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), true))
+            .InSequence(seq);
+        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), false))
+            .InSequence(seq);
+        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), false))
+            .InSequence(seq);
 
         mp::SurfaceParameters surface_request;
         mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
@@ -555,7 +553,9 @@ TEST_F(SessionMediatorTest, session_with_multiple_surfaces_only_sends_needed_buf
         mp::SurfaceId buffer_request[2];
         mp::Buffer buffer_response[6];
 
-        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), _))
+        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), true))
+            .Times(4);
+        EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, stubbed_session->mock_buffer.get(), false))
             .Times(4);
 
         mp::SurfaceParameters surface_request;
@@ -712,8 +712,8 @@ TEST_F(SessionMediatorTest, partially_packs_buffer_for_screencast_buffer)
     mp::Buffer protobuf_buffer;
     auto const& stub_buffer = stub_screencast->stub_buffer;
 
-    EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, &stub_buffer, _))
-        .Times(0);
+    EXPECT_CALL(*graphics_platform, arrange_buffer_ipc(_, &stub_buffer, false))
+        .Times(1);
 
     mediator.screencast_buffer(nullptr, &screencast_id,
                                &protobuf_buffer, null_callback.get());
