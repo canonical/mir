@@ -111,9 +111,11 @@ TEST_F(TrustSessionClientAPI, can_start_and_stop_a_trust_session)
     mir_trust_session_release_sync(trust_session);
 }
 
-TEST_F(TrustSessionClientAPI, notifies_start)
+TEST_F(TrustSessionClientAPI, notifies_start_and_stop)
 {
+    InSequence seq;
     EXPECT_CALL(*this, trust_session_event(_, mir_trust_session_state_started));
+    EXPECT_CALL(*this, trust_session_event(_, mir_trust_session_state_stopped));
 
     MirTrustSession* trust_session = mir_connection_start_trust_session_sync(
         connection, arbitrary_base_session_id, trust_session_event_callback, this);

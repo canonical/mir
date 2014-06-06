@@ -24,6 +24,8 @@
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 
+#include <iostream> // DEBUG
+
 namespace
 {
 void null_callback(MirTrustSession*, void*) {}
@@ -89,8 +91,7 @@ MirBool mir_trust_session_add_trusted_session_sync(MirTrustSession *trust_sessio
 
 void mir_trust_session_release_sync(MirTrustSession *trust_session)
 {
-    if (trust_session->get_state() == mir_trust_session_state_stopped)
-        mir_wait_for(trust_session->stop(null_callback, nullptr));
+    mir_wait_for(trust_session->stop(&null_callback, nullptr));
     delete trust_session;
 }
 

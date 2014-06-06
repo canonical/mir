@@ -65,6 +65,7 @@ private:
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
     int event_handler_register_id;
 
+    bool stop_sent{false}; // When handling a stopped event we need to know if we caused it
     MirWaitHandle start_wait_handle;
     MirWaitHandle stop_wait_handle;
     MirWaitHandle add_result_wait_handle;

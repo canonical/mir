@@ -43,8 +43,11 @@ MirTrustSession::MirTrustSession(
                 handle_trust_session_event(event.trust_session.new_state);
             }
 
-            if (event.trust_session.new_state == mir_trust_session_state_stopped)
+            if (event.trust_session.new_state == mir_trust_session_state_stopped &&
+                !stop_sent)
+            {
                 delete this;
+            }
         }
     );
 }
@@ -87,6 +90,7 @@ MirWaitHandle* MirTrustSession::stop(mir_trust_session_callback callback, void* 
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         stop_wait_handle.expect_result();
+        stop_sent = true;
     }
 
     server.stop_trust_session(
