@@ -81,7 +81,7 @@ TEST_F(DefaultDisplayServerTestFixture, ClientLibraryThreadsHandleNoSignals)
                 mir_display_output_id_invalid
             };
 
-            mir_connection_create_surface_sync(conn, &request_params);
+            surface = mir_connection_create_surface_sync(conn, &request_params);
 
             mir_connection_release(conn);
 
