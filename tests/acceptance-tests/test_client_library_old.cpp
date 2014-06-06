@@ -29,6 +29,12 @@ namespace mtf = mir_test_framework;
 namespace
 {
     char const* const mir_test_socket = mtf::test_socket_file().c_str();
+
+struct ClientConfigCommon : TestingClientConfiguration
+{
+    MirConnection* connection{nullptr};
+    MirSurface* surface{nullptr};
+};
 }
 
 bool signalled;
@@ -37,11 +43,9 @@ static void SIGIO_handler(int /*signo*/)
     signalled = true;
 }
 
-using ClientProcess = DefaultDisplayServerTestFixture;
-
-TEST_F(ClientProcess, ThreadsHandleNoSignals)
+TEST_F(DefaultDisplayServerTestFixture, ClientLibraryThreadsHandleNoSignals)
 {
-    struct ClientConfig : TestingClientConfiguration
+    struct ClientConfig : ClientConfigCommon
     {
         void exec()
         {
@@ -57,7 +61,8 @@ TEST_F(ClientProcess, ThreadsHandleNoSignals)
             if (sigaction(SIGIO, &act, NULL))
                 FAIL() << "Failed to set SIGIO action";
 
-            MirConnection* conn = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            MirConnection* conn = NULL;
+            conn = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
 
             sigaddset(&sigset, SIGIO);
             pthread_sigmask(SIG_BLOCK, &sigset, NULL);
@@ -76,7 +81,7 @@ TEST_F(ClientProcess, ThreadsHandleNoSignals)
                 mir_display_output_id_invalid
             };
 
-            mir_connection_create_surface_sync(conn, &request_params);
+            surface = mir_connection_create_surface_sync(conn, &request_params);
 
             mir_connection_release(conn);
 
@@ -87,9 +92,9 @@ TEST_F(ClientProcess, ThreadsHandleNoSignals)
     launch_client_process(client_config);
 }
 
-TEST_F(ClientProcess, DoesNotInterfereWithClientSignalHandling)
+TEST_F(DefaultDisplayServerTestFixture, ClientLibraryDoesNotInterfereWithClientSignalHandling)
 {
-    struct ClientConfig : TestingClientConfiguration
+    struct ClientConfig : ClientConfigCommon
     {
         void exec()
         {
@@ -105,7 +110,8 @@ TEST_F(ClientProcess, DoesNotInterfereWithClientSignalHandling)
             if (sigaction(SIGIO, &act, NULL))
                 FAIL() << "Failed to set SIGIO action";
 
-            MirConnection* conn = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            MirConnection* conn = NULL;
+            conn = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
 
             // We should receieve SIGIO
             if (kill(getpid(), SIGIO))
