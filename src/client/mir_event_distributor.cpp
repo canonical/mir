@@ -67,6 +67,8 @@ void MirEventDistributor::handle_event(MirEvent const& event)
 
     for (int id : delete_later_ids)
         event_handlers.erase(id);
+
+    delete_later_ids.clear();
 }
 
 int MirEventDistributor::next_id()
