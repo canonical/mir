@@ -28,7 +28,7 @@ int MirEventDistributor::register_event_handler(std::function<void(MirEvent cons
 {
     std::unique_lock<std::mutex> lock(mutex);
 
-    int id = next_id();
+    int id = ++next_fn_id;
     event_handlers[id] = fn;
     return id;
 }
@@ -69,9 +69,4 @@ void MirEventDistributor::handle_event(MirEvent const& event)
         event_handlers.erase(id);
 
     delete_later_ids.clear();
-}
-
-int MirEventDistributor::next_id()
-{
-    return ++next_fn_id;
 }

@@ -23,7 +23,6 @@
 #include <mutex>
 #include <map>
 #include <unordered_set>
-#include <atomic>
 
 class MirEventDistributor : public mir::client::EventDistributor
 {
@@ -37,14 +36,12 @@ public:
     void handle_event(MirEvent const& event) override;
 
 private:
-    int next_id();
-
     mutable std::mutex mutex;
     mutable std::recursive_mutex thread_mutex;
     std::map<int, std::function<void(MirEvent const&)>> event_handlers;
-    std::atomic<int> next_fn_id;
+    int next_fn_id;
     std::unordered_set<int> delete_later_ids;
-    std::atomic<bool> in_event;
+    bool in_event;
 };
 
 #endif /* MIR_EVENT_DISTRIBUTOR_H */
