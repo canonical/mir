@@ -19,18 +19,18 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/gl_context.h"
+#include "mir/graphics/platform.h"
 #include "mir/options/program_option.h"
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_gl_program_factory.h"
+#include "mir_test_doubles/platform_factory.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
 #ifndef ANDROID
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
-#include "mir_test_doubles/null_virtual_terminal.h"
-#include "src/platform/graphics/mesa/platform.h"
 #include "mir_test_framework/udev_environment.h"
 #else
 #include "src/platform/graphics/android/android_platform.h"
@@ -38,14 +38,11 @@
 #include "mir_test_doubles/mock_display_device.h"
 #endif
 
-#include "src/server/report/null_report_factory.h"
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
-namespace mr = mir::report;
 #ifndef ANDROID
 namespace mtf = mir::mir_test_framework;
 #endif
@@ -77,16 +74,7 @@ public:
 
     std::shared_ptr<mg::Display> create_display()
     {
-        auto report = mr::null_display_report();
-#ifdef ANDROID
-        auto platform = mg::create_platform(
-            std::make_shared<mir::options::ProgramOption>(),
-            report);
-#else
-        auto platform = std::make_shared<mg::mesa::Platform>(report,
-            std::make_shared<mir::test::doubles::NullVirtualTerminal>(),
-            mg::mesa::BypassOption::allowed);
-#endif
+        auto const platform = mtd::create_platform_with_null_dependencies();
         return platform->create_display(
             std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLProgramFactory>(),
