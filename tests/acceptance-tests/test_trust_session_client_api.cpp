@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_trust_session.h"
 #include "mir/scene/trust_session_listener.h"
 #include "mir/scene/trust_session.h"
+#include "mir/scene/trust_session_manager.h"
 #include "mir/scene/session.h"
 #include "mir/frontend/shell.h"
 
@@ -87,7 +88,11 @@ struct TrustSessionClientAPI : mtf::BasicClientServerFixture<TrustSessionListene
 {
     static constexpr int arbitrary_base_session_id = __LINE__;
     static constexpr mir_trust_session_event_callback null_event_callback = nullptr;
-    MirTrustSession* trust_session = nullptr;
+
+    MockTrustSessionListener* the_mock_trust_session_listener()
+    {
+        return server_configuration.the_mock_trust_session_listener().get();
+    }
 
     MOCK_METHOD2(trust_session_event, void(MirTrustSession* trusted_session, MirTrustSessionState state));
 
@@ -143,13 +148,14 @@ TEST_F(TrustSessionClientAPI, can_start_and_stop_a_trust_session)
 {
     {
         InSequence server_seq;
-        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), starting(_));
-        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), stopping(_));
+        EXPECT_CALL(*the_mock_trust_session_listener(), starting(_));
+        EXPECT_CALL(*the_mock_trust_session_listener(), stopping(_));
     }
 
     MirTrustSession* trust_session = mir_connection_start_trust_session_sync(
         connection, arbitrary_base_session_id, null_event_callback, this);
     ASSERT_THAT(trust_session, Ne(nullptr));
+    EXPECT_THAT(mir_trust_session_get_state(trust_session), Eq(mir_trust_session_state_started));
 
     mir_trust_session_release_sync(trust_session);
 }
@@ -174,8 +180,8 @@ TEST_F(TrustSessionClientAPI, can_add_trusted_session)
     {
         auto const participant = std::dynamic_pointer_cast<ms::Session>(participant_session);
         InSequence server_seq;
-        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), participant_added(_, Eq(participant)));
-        EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), participant_removed(_, Eq(participant)));
+        EXPECT_CALL(*the_mock_trust_session_listener(), participant_added(_, Eq(participant)));
+        EXPECT_CALL(*the_mock_trust_session_listener(), participant_removed(_, Eq(participant)));
     }
 
     MirTrustSession* trust_session = mir_connection_start_trust_session_sync(
@@ -216,7 +222,7 @@ TEST_F(TrustSessionClientAPI, when_prompt_provider_connects_over_fd_participant_
 
     auto const expected_pid = getpid();
 
-    EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), participant_added(_, SessionWithPid(expected_pid)));
+    EXPECT_CALL(*the_mock_trust_session_listener(), participant_added(_, SessionWithPid(expected_pid)));
 
     auto client_connection = mir_connect_sync(fd_connect_string(actual_fds[0]), __PRETTY_FUNCTION__);
 
@@ -236,7 +242,7 @@ TEST_F(TrustSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
     mir_trust_session_new_fds_for_prompt_providers(trust_session, 1, &client_fd_callback, this);
     wait_for_callback(std::chrono::milliseconds(500));
 
-    EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), participant_added(_, Not(SessionWithPid(server_pid))));
+    EXPECT_CALL(*the_mock_trust_session_listener(), participant_added(_, Not(SessionWithPid(server_pid))));
 
     InSequence seq;
     EXPECT_CALL(*this, process_line(StrEq("Starting")));
@@ -249,6 +255,50 @@ TEST_F(TrustSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
 
     std::string line;
     while (output.get_line(line)) process_line(line);
+
+    mir_trust_session_release_sync(trust_session);
+}
+
+TEST_F(TrustSessionClientAPI, notifies_when_server_closes_trust_session)
+{
+    std::shared_ptr<ms::TrustSession> server_trust_session;
+
+    EXPECT_CALL(*the_mock_trust_session_listener(), starting(_)).
+        WillOnce(DoAll(
+            Invoke(the_mock_trust_session_listener()->wrapped.get(), &ms::TrustSessionListener::starting),
+            SaveArg<0>(&server_trust_session)));
+    EXPECT_CALL(*this, trust_session_event(_, mir_trust_session_state_started));
+
+    MirTrustSession* trust_session = mir_connection_start_trust_session_sync(
+        connection, arbitrary_base_session_id, trust_session_event_callback, this);
+
+    EXPECT_CALL(*this, trust_session_event(_, mir_trust_session_state_stopped));
+
+    server_configuration.the_trust_session_manager()->stop_trust_session(server_trust_session);
+
+    // Verify we have got the "stopped" notification before we go on and release the session
+    Mock::VerifyAndClearExpectations(the_mock_trust_session_listener());
+
+    mir_trust_session_release_sync(trust_session);
+}
+
+TEST_F(TrustSessionClientAPI, after_server_closes_trust_session_api_isnt_broken)
+{
+    std::shared_ptr<ms::TrustSession> server_trust_session;
+
+    EXPECT_CALL(*the_mock_trust_session_listener(), starting(_)).
+        WillOnce(DoAll(
+            Invoke(the_mock_trust_session_listener()->wrapped.get(), &ms::TrustSessionListener::starting),
+            SaveArg<0>(&server_trust_session)));
+
+    MirTrustSession* trust_session = mir_connection_start_trust_session_sync(
+        connection, arbitrary_base_session_id, null_event_callback, this);
+
+    server_configuration.the_trust_session_manager()->stop_trust_session(server_trust_session);
+
+    pid_t participant_pid = __LINE__;
+    EXPECT_FALSE(mir_trust_session_add_trusted_session_sync(trust_session, participant_pid));
+    EXPECT_THAT(mir_trust_session_get_state(trust_session), Eq(mir_trust_session_state_stopped));
 
     mir_trust_session_release_sync(trust_session);
 }
