@@ -24,8 +24,6 @@
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 
-#include <iostream> // DEBUG
-
 namespace
 {
 void null_callback(MirTrustSession*, void*) {}
