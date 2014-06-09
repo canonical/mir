@@ -174,7 +174,7 @@ char const* MirTrustSession::get_error_message()
     return session.error().c_str();
 }
 
-MirWaitHandle* MirTrustSession::new_fds_for_trusted_clients(
+MirWaitHandle* MirTrustSession::new_fds_for_prompt_providers(
     unsigned int no_of_fds,
     mir_client_fd_callback callback,
     void * context)
@@ -182,7 +182,7 @@ MirWaitHandle* MirTrustSession::new_fds_for_trusted_clients(
     mir::protobuf::SocketFDRequest request;
     request.set_number(no_of_fds);
 
-    server.new_fds_for_trusted_clients(
+    server.new_fds_for_prompt_providers(
         nullptr,
         &request,
         &socket_fd_response,

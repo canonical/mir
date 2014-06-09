@@ -155,7 +155,7 @@ public:
                         mir::protobuf::DRMAuthMagicStatus* response,
                         google::protobuf::Closure* done) override;
 
-    void new_fds_for_trusted_clients(
+    void new_fds_for_prompt_providers(
         ::google::protobuf::RpcController* controller,
         ::mir::protobuf::SocketFDRequest const* parameters,
         ::mir::protobuf::SocketFD* response,

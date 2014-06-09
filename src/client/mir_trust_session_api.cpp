@@ -98,7 +98,7 @@ MirWaitHandle* mir_trust_session_new_fds_for_prompt_providers(
     try
     {
         return trust_session ?
-            trust_session->new_fds_for_trusted_clients(no_of_fds, callback, context) :
+            trust_session->new_fds_for_prompt_providers(no_of_fds, callback, context) :
             nullptr;
     }
     catch (std::exception const&)

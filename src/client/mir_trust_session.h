@@ -49,7 +49,7 @@ public:
     MirWaitHandle* stop(mir_trust_session_callback callback, void* context);
     MirWaitHandle* add_trusted_session(pid_t pid, mir_trust_session_add_trusted_session_callback callback, void* context);
 
-    MirWaitHandle* new_fds_for_trusted_clients(
+    MirWaitHandle* new_fds_for_prompt_providers(
         unsigned int no_of_fds,
         mir_client_fd_callback callback,
         void * context);

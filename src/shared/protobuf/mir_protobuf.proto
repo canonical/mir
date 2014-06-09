@@ -226,7 +226,7 @@ service DisplayServer {
   rpc release_screencast(ScreencastId) returns (Void);
 
   rpc configure_cursor(CursorSetting) returns (Void);
-  rpc new_fds_for_trusted_clients(SocketFDRequest) returns (SocketFD);
+  rpc new_fds_for_prompt_providers(SocketFDRequest) returns (SocketFD);
 
   rpc start_trust_session(TrustSessionParameters) returns (Void);
   rpc add_trusted_session(TrustedSession) returns (Void);

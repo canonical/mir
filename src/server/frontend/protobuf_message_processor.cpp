@@ -183,9 +183,9 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::configure_cursor, invocation);
         }
-        else if ("new_fds_for_trusted_clients" == invocation.method_name())
+        else if ("new_fds_for_prompt_providers" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &protobuf::DisplayServer::new_fds_for_trusted_clients, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::new_fds_for_prompt_providers, invocation);
         }
         else if ("start_trust_session" == invocation.method_name())
         {

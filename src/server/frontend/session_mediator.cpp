@@ -469,7 +469,7 @@ void mf::SessionMediator::configure_cursor(
     done->Run();
 }
 
-void mf::SessionMediator::new_fds_for_trusted_clients(
+void mf::SessionMediator::new_fds_for_prompt_providers(
     ::google::protobuf::RpcController* ,
     ::mir::protobuf::SocketFDRequest const* parameters,
     ::mir::protobuf::SocketFD* response,
