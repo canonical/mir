@@ -509,6 +509,7 @@ TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_wind
     start_client(client_config);
 }
 
+// TODO: Consider tests for more input devices with custom mapping (i.e. joysticks...)
 TEST_F(TestClientInput, usb_direct_input_devices_work)
 {
     using namespace ::testing;
@@ -544,14 +545,11 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
         {
             InSequence seq;
-            // We should see the cursor enter
-//            EXPECT_CALL(handler, handle_input(mt::HoverEnterEvent())).Times(1);
             EXPECT_CALL(handler, handle_input(
                 mt::TouchEvent(expected_motion_x_1, expected_motion_y_1))).Times(1);
             EXPECT_CALL(handler, handle_input(
                 mt::MotionEventWithPosition(expected_motion_x_2, expected_motion_y_2))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
-            // But we should not receive an event for the second movement outside of our surface!
         };
     start_client(client_config);
 }
