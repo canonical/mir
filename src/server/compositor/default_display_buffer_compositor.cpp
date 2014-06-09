@@ -33,7 +33,6 @@
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
-
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplayBuffer& display_buffer,
     std::shared_ptr<mc::Scene> const& scene,
@@ -46,7 +45,6 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       last_pass_rendered_anything{false}
 {
 }
-
 
 bool mc::DefaultDisplayBufferCompositor::composite()
 {
