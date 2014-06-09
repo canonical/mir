@@ -18,7 +18,7 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/renderable.h"
-#include "occlusion.h"
+#include "mir/compositor/occlusion.h"
 
 using namespace mir::geometry;
 using namespace mir::graphics;
@@ -27,8 +27,9 @@ namespace
 {
 bool renderable_is_occluded(
     Renderable const& renderable, 
-    Rectangle const& area,
-    std::vector<Rectangle>& coverage)
+    Rectangle const& display_area,
+    Rectangle const& coverage_area,
+    std::vector<Rectangle>& coverage_list)
 {
     static const glm::mat4 identity;
     if (renderable.transformation() != identity)
@@ -41,14 +42,13 @@ bool renderable_is_occluded(
         return true;  //invisible; definitely occluded.
 
     // Not weirdly transformed but also not on this monitor? Don't care...
-    if (!area.overlaps(renderable.screen_position()))
+    if (!display_area.overlaps(coverage_area))
         return true;  // Not on the display; definitely occluded.
 
     bool occluded = false;
-    Rectangle const& window = renderable.screen_position();
-    for (const auto &r : coverage)
+    for (const auto &r : coverage_list)
     {
-        if (r.contains(window))
+        if (r.contains(coverage_area))
         {
             occluded = true;
             break;
@@ -56,21 +56,27 @@ bool renderable_is_occluded(
     }
 
     if (!occluded && renderable.alpha() == 1.0f && !renderable.shaped())
-        coverage.push_back(window);
+        coverage_list.push_back(coverage_area);
 
     return occluded;
 }
 }
 
+Rectangle mir::compositor::simple_renderable_rect(Renderable const& renderable)
+{
+    return renderable.screen_position();
+}
+
 void mir::compositor::filter_occlusions_from(
     RenderableList& list,
-    Rectangle const& area)
+    geometry::Rectangle const& area,
+    std::function<Rectangle(Renderable const&)> coverage_of)
 {
     std::vector<Rectangle> coverage;
     auto it = list.rbegin();
     while (it != list.rend())
     {
-        if (renderable_is_occluded(**it, area, coverage))
+        if (renderable_is_occluded(**it, area, coverage_of(**it), coverage))
             list.erase(std::prev(it.base()));
         else
             it++;

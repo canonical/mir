@@ -17,7 +17,7 @@
  */
 
 #include "mir/geometry/rectangle.h"
-#include "src/server/compositor/occlusion.h"
+#include "mir/compositor/occlusion.h"
 #include "mir_test_doubles/fake_renderable.h"
 
 #include <gtest/gtest.h>
@@ -45,7 +45,7 @@ TEST_F(OcclusionFilterTest, single_window_not_occluded)
     auto window = std::make_shared<mtd::FakeRenderable>(12, 34, 56, 78);
     mg::RenderableList list{window};
  
-    filter_occlusions_from(list, monitor_rect);
+    filter_occlusions_from(list, monitor_rect, simple_renderable_rect);
     ASSERT_EQ(1u, list.size());
     EXPECT_EQ(window, list.front());
 }
@@ -58,7 +58,7 @@ TEST_F(OcclusionFilterTest, partially_offscreen_still_visible)
     auto bottom = std::make_shared<mtd::FakeRenderable>(200, 1000, 100, 1000);
     mg::RenderableList list{left, right, top, bottom};
  
-    filter_occlusions_from(list, monitor_rect);
+    filter_occlusions_from(list, monitor_rect, simple_renderable_rect);
     EXPECT_EQ(4u, list.size());
 }
 
@@ -68,7 +68,7 @@ TEST_F(OcclusionFilterTest, smaller_window_occluded)
     auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
     mg::RenderableList list{bottom, top};
 
-    filter_occlusions_from(list, monitor_rect);
+    filter_occlusions_from(list, monitor_rect, simple_renderable_rect);
 
     ASSERT_EQ(1u, list.size());
     EXPECT_EQ(top, list.front());
@@ -80,7 +80,7 @@ TEST_F(OcclusionFilterTest, translucent_window_occludes_nothing)
     auto bottom = std::make_shared<mtd::FakeRenderable>(Rectangle{{12, 12}, {5, 5}}, 1.0f);
     mg::RenderableList list{bottom, top};
 
-    filter_occlusions_from(list, monitor_rect);
+    filter_occlusions_from(list, monitor_rect, simple_renderable_rect);
 
     ASSERT_EQ(2u, list.size());
     EXPECT_EQ(bottom, list.front());
@@ -92,7 +92,7 @@ TEST_F(OcclusionFilterTest, hidden_window_is_self_occluded)
     auto window = std::make_shared<mtd::FakeRenderable>(Rectangle{{10, 10}, {10, 10}}, 1.0f, true, false);
     mg::RenderableList list{window};
 
-    filter_occlusions_from(list, monitor_rect);
+    filter_occlusions_from(list, monitor_rect, simple_renderable_rect);
 
     EXPECT_EQ(0u, list.size());
 }
@@ -103,7 +103,7 @@ TEST_F(OcclusionFilterTest, hidden_window_occludes_nothing)
     auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
     mg::RenderableList list{bottom, top};
 
-    filter_occlusions_from(list, monitor_rect);
+    filter_occlusions_from(list, monitor_rect, simple_renderable_rect);
 
     ASSERT_EQ(1u, list.size());
     EXPECT_EQ(bottom, list.front());
@@ -115,7 +115,7 @@ TEST_F(OcclusionFilterTest, shaped_window_occludes_nothing)
     auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
     mg::RenderableList list{bottom, top};
 
-    filter_occlusions_from(list, monitor_rect);
+    filter_occlusions_from(list, monitor_rect, simple_renderable_rect);
 
     ASSERT_EQ(2u, list.size());
     EXPECT_EQ(bottom, list.front());
@@ -128,7 +128,7 @@ TEST_F(OcclusionFilterTest, identical_window_occluded)
     auto bottom = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10);
     mg::RenderableList list{bottom, top};
 
-    filter_occlusions_from(list, monitor_rect);
+    filter_occlusions_from(list, monitor_rect, simple_renderable_rect);
 
     ASSERT_EQ(1u, list.size());
     EXPECT_EQ(top, list.front());
@@ -140,7 +140,7 @@ TEST_F(OcclusionFilterTest, larger_window_never_occluded)
     auto bottom = std::make_shared<mtd::FakeRenderable>(9, 9, 12, 12);
     mg::RenderableList list{bottom, top};
 
-    filter_occlusions_from(list, monitor_rect);
+    filter_occlusions_from(list, monitor_rect, simple_renderable_rect);
 
     ASSERT_EQ(2u, list.size());
     EXPECT_EQ(bottom, list.front());
@@ -154,7 +154,7 @@ TEST_F(OcclusionFilterTest, cascaded_windows_never_occluded)
     for (auto x = 0u; x < num_windows; x++)
         list.push_back(std::make_shared<mtd::FakeRenderable>(x, x, 200, 100));
 
-    filter_occlusions_from(list, monitor_rect);
+    filter_occlusions_from(list, monitor_rect, simple_renderable_rect);
     EXPECT_EQ(num_windows, list.size());
 }
 
@@ -175,7 +175,7 @@ TEST_F(OcclusionFilterTest, some_occluded_and_some_not)
         window0  //not occluded
     };
 
-    filter_occlusions_from(list, monitor_rect);
+    filter_occlusions_from(list, monitor_rect, simple_renderable_rect);
 
     auto expected_size = 3u;
     ASSERT_EQ(expected_size, list.size());
