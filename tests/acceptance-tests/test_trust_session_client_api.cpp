@@ -109,10 +109,10 @@ struct TrustSessionClientAPI : mtf::BasicClientServerFixture<TrustSessionListene
         return cv.wait_for(lock, timeout, [this]{ return called_back; });
     }
 
-    char client_connect_string[128] = {0};
-
     char const* fd_connect_string(int fd)
     {
+        static char client_connect_string[32] = {0};
+
         sprintf(client_connect_string, "fd://%d", fd);
         return client_connect_string;
     }
