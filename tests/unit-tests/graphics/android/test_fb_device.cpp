@@ -55,6 +55,8 @@ struct FBDevice : public ::testing::Test
         native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
         ON_CALL(*mock_buffer, native_buffer_handle())
             .WillByDefault(Return(native_buffer));
+        ON_CALL(mock_context, last_rendered_buffer())
+            .WillByDefault(Return(mock_buffer));
     }
 
     unsigned int width, height, format, fbnum;
@@ -62,7 +64,7 @@ struct FBDevice : public ::testing::Test
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<mir::graphics::NativeBuffer> native_buffer;
     mtd::HardwareAccessMock hw_access_mock;
-    mtd::MockSwappingGLContext mock_context;
+    testing::NiceMock<mtd::MockSwappingGLContext> mock_context;
 };
 
 TEST_F(FBDevice, prepares_overlays_by_rendering)
@@ -79,7 +81,7 @@ TEST_F(FBDevice, prepares_overlays_by_rendering)
     EXPECT_CALL(mock_compositor, render(testing::Ref(renderlist),testing::_))
         .Times(1);
     mga::FBDevice fbdev(fb_hal_mock);
-    fbdev.prepare_overlays(mock_context, renderlist, mock_compositor);
+    fbdev.post_overlays(mock_context, renderlist, mock_compositor);
 }
 
 TEST_F(FBDevice, commits_frame_via_post)
@@ -93,10 +95,10 @@ TEST_F(FBDevice, commits_frame_via_post)
     mga::FBDevice fbdev(fb_hal_mock);
 
     EXPECT_THROW({
-        fbdev.post(*mock_buffer);
+        fbdev.post_gl(mock_context);
     }, std::runtime_error);
 
-    fbdev.post(*mock_buffer);
+    fbdev.post_gl(mock_context);
 }
 
 TEST_F(FBDevice, sets_swapinterval_1_on_start)

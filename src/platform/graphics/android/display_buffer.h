@@ -25,6 +25,7 @@
 #include "android_display_configuration.h"
 #include "gl_context.h"
 #include "hwc_fallback_gl_renderer.h"
+#include "overlay_optimization.h"
 #include <system/window.h>
 
 namespace mir
@@ -44,29 +45,29 @@ public:
                   std::shared_ptr<DisplayDevice> const& display_device,
                   std::shared_ptr<ANativeWindow> const& native_window,
                   GLContext const& shared_gl_context,
-                  GLProgramFactory const& program_factory);
+                  GLProgramFactory const& program_factory,
+                  OverlayOptimization overlay_option);
 
     geometry::Rectangle view_area() const;
     void make_current();
     void release_current();
     void post_update();
-    bool can_bypass() const override;
-
     bool post_renderables_if_optimizable(RenderableList const& renderlist);
+
     MirOrientation orientation() const override;
+    bool uses_alpha() const override;
 
     DisplayConfigurationOutput configuration() const;
     void configure(DisplayConfigurationOutput const&);
 
 private:
-    void post();
-
     std::shared_ptr<FramebufferBundle> const fb_bundle;
     std::shared_ptr<DisplayDevice> const display_device;
     std::shared_ptr<ANativeWindow> const native_window;
-    GLContext gl_context;
+    FramebufferGLContext gl_context;
     HWCFallbackGLRenderer overlay_program;
     bool prepared;
+    bool overlay_enabled;
     DisplayConfigurationOutput current_configuration;
     MirOrientation rotation;
 };

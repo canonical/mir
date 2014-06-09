@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "hwc_formatted_logger.h"
+#include "hwc_loggers.h"
 #include <iostream>
 #include <iomanip>
 
@@ -131,6 +131,14 @@ std::ostream& operator<<(std::ostream& str, HwcRect r)
                << HwcRectMember{r.rect.right} << ","
                << HwcRectMember{r.rect.bottom} << "}";
 }
+
+std::ostream& operator<<(std::ostream& str, mga::OverlayOptimization opt)
+{
+    if (opt == mga::OverlayOptimization::enabled)
+        return str << "ON";
+    else
+        return str << "OFF";
+}
 }
 
 void mga::HwcFormattedLogger::log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const
@@ -174,4 +182,25 @@ void mga::HwcFormattedLogger::log_set_list(hwc_display_contents_1_t const& list)
                   << separator
                   << list.hwLayers[i].handle
                   << std::endl;
+}
+
+void mga::HwcFormattedLogger::log_overlay_optimization(OverlayOptimization overlay_optimization) const
+{
+    std::cout << "HWC overlay optimizations are " << overlay_optimization << std::endl;
+}
+
+void mga::NullHwcLogger::log_list_submitted_to_prepare(hwc_display_contents_1_t const&) const
+{
+}
+
+void mga::NullHwcLogger::log_prepare_done(hwc_display_contents_1_t const&) const
+{
+}
+
+void mga::NullHwcLogger::log_set_list(hwc_display_contents_1_t const&) const
+{
+}
+
+void mga::NullHwcLogger::log_overlay_optimization(OverlayOptimization) const
+{
 }
