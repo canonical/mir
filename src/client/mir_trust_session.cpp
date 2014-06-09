@@ -34,7 +34,6 @@ MirTrustSession::MirTrustSession(
         })},
     state(mir_trust_session_state_stopped),
     handle_trust_session_event{[](MirTrustSessionState){}}
-
 {
 }
 
