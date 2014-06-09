@@ -476,6 +476,7 @@ public:
     inline const String8& getName() { return mIdentifier.name; }
     inline uint32_t getClasses() { return mClasses; }
     inline uint32_t getSources() { return mSources; }
+    inline InputDeviceIdentifier const& getIdentifier() { return mIdentifier; }
 
     inline bool isExternal() { return mIsExternal; }
     inline void setExternal(bool external) { mIsExternal = external; }
@@ -484,7 +485,7 @@ public:
 
     void dump(String8& dump);
     void addMapper(InputMapper* mapper);
-    void configure(nsecs_t when, InputReaderPolicyInterface const* policy, InputReaderConfiguration const* config, uint32_t changes);
+    void configure(nsecs_t when, InputReaderPolicyInterface* policy, InputReaderConfiguration const* config, uint32_t changes);
     void reset(nsecs_t when);
     void process(const RawEvent* rawEvents, size_t count);
     void timeoutExpired(nsecs_t when);
@@ -896,7 +897,7 @@ public:
     virtual uint32_t getSources() = 0;
     virtual void populateDeviceInfo(InputDeviceInfo* deviceInfo);
     virtual void dump(String8& dump);
-    virtual void configure(nsecs_t when, InputReaderPolicyInterface const* policy, 
+    virtual void configure(nsecs_t when, InputReaderPolicyInterface* policy, 
         InputReaderConfiguration const* config, uint32_t changes);
     virtual void reset(nsecs_t when);
     virtual void process(const RawEvent* rawEvent) = 0;
@@ -979,7 +980,7 @@ public:
     virtual uint32_t getSources();
     virtual void populateDeviceInfo(InputDeviceInfo* deviceInfo);
     virtual void dump(String8& dump);
-    virtual void configure(nsecs_t when, InputReaderPolicyInterface const* policy, 
+    virtual void configure(nsecs_t when, InputReaderPolicyInterface* policy, 
         InputReaderConfiguration const* config, uint32_t changes);
     virtual void reset(nsecs_t when);
     virtual void process(const RawEvent* rawEvent);
@@ -1048,7 +1049,7 @@ public:
     virtual uint32_t getSources();
     virtual void populateDeviceInfo(InputDeviceInfo* deviceInfo);
     virtual void dump(String8& dump);
-    virtual void configure(nsecs_t when, InputReaderPolicyInterface const* policy, 
+    virtual void configure(nsecs_t when, InputReaderPolicyInterface* policy, 
         InputReaderConfiguration const* config, uint32_t changes);
     virtual void reset(nsecs_t when);
     virtual void process(const RawEvent* rawEvent);
@@ -1114,7 +1115,7 @@ public:
     virtual uint32_t getSources();
     virtual void populateDeviceInfo(InputDeviceInfo* deviceInfo);
     virtual void dump(String8& dump);
-    virtual void configure(nsecs_t when, InputReaderPolicyInterface const* policy, 
+    virtual void configure(nsecs_t when, InputReaderPolicyInterface* policy, 
         InputReaderConfiguration const* config, uint32_t changes);
     virtual void reset(nsecs_t when);
     virtual void process(const RawEvent* rawEvent);
@@ -1283,7 +1284,7 @@ protected:
 
     Vector<VirtualKey> mVirtualKeys;
 
-    virtual void configureParameters();
+    virtual void configureParameters(InputReaderPolicyInterface* policy);
     virtual void dumpParameters(String8& dump);
     virtual void configureRawPointerAxes();
     virtual void dumpRawPointerAxes(String8& dump);
@@ -1687,7 +1688,7 @@ public:
     virtual uint32_t getSources();
     virtual void populateDeviceInfo(InputDeviceInfo* deviceInfo);
     virtual void dump(String8& dump);
-    virtual void configure(nsecs_t when, InputReaderPolicyInterface const* policy, 
+    virtual void configure(nsecs_t when, InputReaderPolicyInterface* policy, 
         InputReaderConfiguration const* config, uint32_t changes);
     virtual void reset(nsecs_t when);
     virtual void process(const RawEvent* rawEvent);

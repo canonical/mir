@@ -458,7 +458,7 @@ private:
         }
     }
 
-    void configure(nsecs_t when, InputReaderPolicyInterface const* /* policy */,
+    void configure(nsecs_t when, InputReaderPolicyInterface* /* policy */,
             const InputReaderConfiguration* config, uint32_t changes) override {
         (void)when;
         (void)config;

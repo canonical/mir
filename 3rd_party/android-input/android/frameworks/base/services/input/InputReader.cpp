@@ -922,7 +922,7 @@ void InputDevice::addMapper(InputMapper* mapper) {
     mMappers.add(mapper);
 }
 
-void InputDevice::configure(nsecs_t when, InputReaderPolicyInterface const* policy, InputReaderConfiguration const* config, uint32_t changes) {
+void InputDevice::configure(nsecs_t when, InputReaderPolicyInterface* policy, InputReaderConfiguration const* config, uint32_t changes) {
     mSources = 0;
 
     if (!isIgnored()) {
@@ -1760,7 +1760,7 @@ void InputMapper::populateDeviceInfo(InputDeviceInfo* info) {
 void InputMapper::dump(String8& dump) {
 }
 
-void InputMapper::configure(nsecs_t when, InputReaderPolicyInterface const* /* policy */, 
+void InputMapper::configure(nsecs_t when, InputReaderPolicyInterface* /* policy */, 
         const InputReaderConfiguration* config, uint32_t changes) {
 }
 
@@ -1998,7 +1998,7 @@ void KeyboardInputMapper::dump(String8& dump) {
 }
 
 
-void KeyboardInputMapper::configure(nsecs_t when, InputReaderPolicyInterface const* policy,
+void KeyboardInputMapper::configure(nsecs_t when, InputReaderPolicyInterface* policy,
         const InputReaderConfiguration* config, uint32_t changes) {
     InputMapper::configure(when, policy, config, changes);
 
@@ -2284,7 +2284,7 @@ void CursorInputMapper::dump(String8& dump) {
     appendFormat(dump, INDENT3 "DownTime: %lld\n", mDownTime);
 }
 
-void CursorInputMapper::configure(nsecs_t when, InputReaderPolicyInterface const* policy,
+void CursorInputMapper::configure(nsecs_t when, InputReaderPolicyInterface* policy,
         const InputReaderConfiguration* config, uint32_t changes) {
     InputMapper::configure(when, policy, config, changes);
 
@@ -2694,7 +2694,7 @@ void TouchInputMapper::dump(String8& dump) {
     }
 }
 
-void TouchInputMapper::configure(nsecs_t when, InputReaderPolicyInterface const* policy,
+void TouchInputMapper::configure(nsecs_t when, InputReaderPolicyInterface* policy,
         const InputReaderConfiguration* config, uint32_t changes) {
     InputMapper::configure(when, policy, config, changes);
 
@@ -2702,7 +2702,7 @@ void TouchInputMapper::configure(nsecs_t when, InputReaderPolicyInterface const*
 
     if (!changes) { // first time only
         // Configure basic parameters.
-        configureParameters();
+        configureParameters(policy);
 
         // Configure common accumulators.
         mCursorScrollAccumulator.configure(getDevice());
@@ -2739,7 +2739,7 @@ void TouchInputMapper::configure(nsecs_t when, InputReaderPolicyInterface const*
     }
 }
 
-void TouchInputMapper::configureParameters() {
+void TouchInputMapper::configureParameters(InputReaderPolicyInterface* policy) {
     // Use the pointer presentation mode for devices that do not support distinct
     // multitouch.  The spot-based presentation relies on being able to accurately
     // locate two or more fingers on the touch pad.
@@ -2792,16 +2792,9 @@ void TouchInputMapper::configureParameters() {
     getDevice()->getConfiguration().tryGetProperty(String8("touch.orientationAware"),
             mParameters.orientationAware);
 
-    mParameters.associatedDisplayId = -1;
-    mParameters.associatedDisplayIsExternal = false;
-    if (mParameters.orientationAware
-            || mParameters.deviceType == Parameters::DEVICE_TYPE_TOUCH_SCREEN
-            || mParameters.deviceType == Parameters::DEVICE_TYPE_POINTER) {
-        mParameters.associatedDisplayIsExternal =
-                mParameters.deviceType == Parameters::DEVICE_TYPE_TOUCH_SCREEN
-                        && getDevice()->isExternal();
-        mParameters.associatedDisplayId = 0;
-    }
+    policy->getAssociatedDisplayInfo(getDevice()->getIdentifier(),
+                                     mParameters.associatedDisplayId, mParameters.associatedDisplayIsExternal);
+    
 }
 
 void TouchInputMapper::dumpParameters(String8& dump) {
@@ -6055,7 +6048,7 @@ void JoystickInputMapper::dump(String8& dump) {
     }
 }
 
-void JoystickInputMapper::configure(nsecs_t when, InputReaderPolicyInterface const* policy,
+void JoystickInputMapper::configure(nsecs_t when, InputReaderPolicyInterface* policy,
         const InputReaderConfiguration* config, uint32_t changes) {
     InputMapper::configure(when, policy, config, changes);
 
