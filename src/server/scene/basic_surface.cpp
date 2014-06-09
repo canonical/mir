@@ -227,7 +227,7 @@ void ms::BasicSurface::swap_buffers(mg::Buffer* old_buffer, std::function<void(m
             first_frame_posted = true;
         }
 
-        observers.frame_posted(1);
+        observers.frame_posted(surface_buffer_stream->buffers_ready_for_compositor());
     }
 
     surface_buffer_stream->acquire_client_buffer(complete);
