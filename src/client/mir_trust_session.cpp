@@ -27,17 +27,15 @@ MirTrustSession::MirTrustSession(
     std::shared_ptr<mcl::EventHandlerRegister> const& event_handler_register) :
     server(server),
     event_handler_register(event_handler_register),
+    event_handler_register_id{event_handler_register->register_event_handler(
+        [this](MirEvent const& event)
+        {   if (event.type == mir_event_type_trust_session_state_change)
+                set_state(event.trust_session.new_state);
+        })},
     state(mir_trust_session_state_stopped),
     handle_trust_session_event{[](MirTrustSessionState){}}
 
 {
-    event_handler_register_id = event_handler_register->register_event_handler(
-        [this](MirEvent const& event)
-        {
-            if (event.type == mir_event_type_trust_session_state_change)
-                set_state(event.trust_session.new_state);
-        }
-    );
 }
 
 MirTrustSession::~MirTrustSession()

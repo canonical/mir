@@ -63,7 +63,7 @@ private:
     mir::protobuf::Void add_result;
     mir::protobuf::Void protobuf_void;
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
-    int event_handler_register_id;
+    int const event_handler_register_id;
 
     MirWaitHandle start_wait_handle;
     MirWaitHandle stop_wait_handle;
