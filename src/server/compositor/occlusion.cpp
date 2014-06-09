@@ -18,7 +18,7 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/renderable.h"
-#include "mir/compositor/occlusion.h"
+#include "occlusion.h"
 
 using namespace mir::geometry;
 using namespace mir::graphics;

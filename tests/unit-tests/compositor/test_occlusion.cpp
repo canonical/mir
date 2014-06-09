@@ -17,7 +17,7 @@
  */
 
 #include "mir/geometry/rectangle.h"
-#include "mir/compositor/occlusion.h"
+#include "src/server/compositor/occlusion.h"
 #include "mir_test_doubles/fake_renderable.h"
 
 #include <gtest/gtest.h>

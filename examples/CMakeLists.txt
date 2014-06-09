@@ -100,6 +100,10 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/platform
   ${GLESv2_INCLUDE_DIRS}
+  #mir has some useful private code that we don't want to duplicate in our examples.
+  #it is not part of our public api, but useful nonetheless. Users of the api will
+  #have to write their own implementations
+  ${PROJECT_SOURCE_DIR}/src/server/compositor
 )
 
 add_executable(mir_demo_standalone_render_to_fb
