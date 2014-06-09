@@ -218,7 +218,9 @@ TEST_F(MirTrustSessionTest, state_change_event_handler)
         mt::fake_shared(event_distributor)};
     trust_session.register_trust_session_event_callback(&MirTrustSessionTest::trust_session_event, this);
 
+    InSequence seq;
     EXPECT_CALL(*this, state_updated(mir_trust_session_state_started)).Times(1);
+    EXPECT_CALL(*this, state_updated(mir_trust_session_state_stopped)).Times(1);
 
     MirEvent e;
     e.type = mir_event_type_trust_session_state_change;

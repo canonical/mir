@@ -24,47 +24,48 @@ namespace mcl = mir::client;
 
 MirTrustSession::MirTrustSession(
     mp::DisplayServer& server,
-    std::shared_ptr<mcl::EventHandlerRegister> const& event_handler_register)
-    : server(server),
-      event_handler_register(event_handler_register),
-      state(mir_trust_session_state_stopped)
+    std::shared_ptr<mcl::EventHandlerRegister> const& event_handler_register) :
+    server(server),
+    event_handler_register(event_handler_register),
+    state(mir_trust_session_state_stopped),
+    handle_trust_session_event{[](MirTrustSessionState){}}
+
 {
     event_handler_register_id = event_handler_register->register_event_handler(
         [this](MirEvent const& event)
         {
-            if (event.type != mir_event_type_trust_session_state_change)
-                return;
-
-            std::lock_guard<decltype(event_handler_mutex)> lock(event_handler_mutex);
-
-            set_state(event.trust_session.new_state);
-            if (handle_trust_session_event)
-            {
-                handle_trust_session_event(event.trust_session.new_state);
-            }
-
-            if (event.trust_session.new_state == mir_trust_session_state_stopped &&
-                !stop_sent)
-            {
-                delete this;
-            }
+            if (event.type == mir_event_type_trust_session_state_change)
+                set_state(event.trust_session.new_state);
         }
     );
 }
 
 MirTrustSession::~MirTrustSession()
 {
-    event_handler_register->unregister_event_handler(event_handler_register_id);
+    set_state(mir_trust_session_state_stopped);
 }
 
 MirTrustSessionState MirTrustSession::get_state() const
 {
+    std::lock_guard<decltype(event_handler_mutex)> lock(event_handler_mutex);
     return state;
 }
 
 void MirTrustSession::set_state(MirTrustSessionState new_state)
 {
-    state = new_state;
+    std::lock_guard<decltype(event_handler_mutex)> lock(event_handler_mutex);
+
+    if (new_state != state)
+    {
+        handle_trust_session_event(new_state);
+
+        if (new_state == mir_trust_session_state_stopped)
+        {
+            event_handler_register->unregister_event_handler(event_handler_register_id);
+        }
+
+        state = new_state;
+    }
 }
 
 MirWaitHandle* MirTrustSession::start(pid_t pid, mir_trust_session_callback callback, void* context)
@@ -90,7 +91,6 @@ MirWaitHandle* MirTrustSession::stop(mir_trust_session_callback callback, void* 
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         stop_wait_handle.expect_result();
-        stop_sent = true;
     }
 
     server.stop_trust_session(
