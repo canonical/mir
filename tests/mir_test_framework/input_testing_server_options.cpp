@@ -82,6 +82,7 @@ std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::th
 
         fake_event_hub->synthesize_builtin_keyboard_added();
         fake_event_hub->synthesize_builtin_cursor_added();
+        fake_event_hub->synthesize_usb_touchscreen_added();
         fake_event_hub->synthesize_device_scan_complete();
     }
 

@@ -26,7 +26,7 @@ namespace mi = mir::input;
 namespace mia = mir::input::android;
 
 mia::InputReaderPolicy::InputReaderPolicy(std::shared_ptr<mi::InputRegion> const& input_region,
-                                          std::shared_ptr<CursorListener> const& cursor_listener)
+    std::shared_ptr<CursorListener> const& cursor_listener)
     : input_region(input_region),
       pointer_controller(new mia::PointerController(input_region, cursor_listener))
 {
@@ -55,4 +55,16 @@ void mia::InputReaderPolicy::getReaderConfiguration(droidinput::InputReaderConfi
 droidinput::sp<droidinput::PointerControllerInterface> mia::InputReaderPolicy::obtainPointerController(int32_t /*device_id*/)
 {
     return pointer_controller;
+}
+
+void mia::InputReaderPolicy::getAssociatedDisplayInfo(droidinput::InputDeviceIdentifier const& /* identifier */,
+    int& out_associated_display_id, bool& out_associated_display_is_external)
+{
+    // This is used primarily for mapping of direct input devices to screen space. Currently we only support one large display
+    // bounding all displays (i.e. input_region->bounding_rectangle())
+    // the external/internal distinction is mostly a leftover from android configuration nuances.
+    // Eventually we will need to use a combination of configuration and heuristic to implement this 
+    // correctly
+    out_associated_display_id = 0;
+    out_associated_display_is_external = false;
 }

@@ -149,7 +149,7 @@ class StubDisplay : public mtd::NullDisplay
 {
 public:
     StubDisplay()
-        : rect{geom::Point{0,0}, geom::Size{1600,1600}},
+        : rect{geom::Point{0,0}, mtf::StubbedServerConfiguration::display_bounds},
           display_buffer(rect)
     {
     }
@@ -233,6 +233,10 @@ mtf::StubbedServerConfiguration::StubbedServerConfiguration() :
     }())
 {
 }
+
+geom::Size const mtf::StubbedServerConfiguration::display_bounds = geom::Size{
+    geom::Width{1600}, geom::Height{800}
+};
 
 std::shared_ptr<mg::Platform> mtf::StubbedServerConfiguration::the_graphics_platform()
 {

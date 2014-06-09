@@ -240,6 +240,10 @@ public:
 
     /* Gets a user-supplied alias for a particular input device, or an empty string if none. */
     virtual String8 getDeviceAlias(const InputDeviceIdentifier& identifier) = 0;
+
+    /* Retreive the display association for a given device. */
+    virtual void getAssociatedDisplayInfo(InputDeviceIdentifier const& identifier,
+        int& out_associated_display_id, bool& out_associated_display_is_external) = 0;
 };
 
 

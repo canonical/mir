@@ -39,8 +39,11 @@ public:
 
     virtual ~InputReaderPolicy() {}
 
-    virtual droidinput::sp<droidinput::PointerControllerInterface> obtainPointerController(int32_t device_id);
-    virtual void getReaderConfiguration(droidinput::InputReaderConfiguration* out_config);
+    droidinput::sp<droidinput::PointerControllerInterface> obtainPointerController(int32_t device_id) override;
+    void getReaderConfiguration(droidinput::InputReaderConfiguration* out_config) override;
+
+    void getAssociatedDisplayInfo(droidinput::InputDeviceIdentifier const& identifier,
+        int& out_associated_display_id, bool& out_associated_display_is_external) override;
 private:
     std::shared_ptr<InputRegion> const input_region;
     droidinput::sp<droidinput::PointerControllerInterface> pointer_controller;

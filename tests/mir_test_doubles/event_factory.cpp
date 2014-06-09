@@ -113,3 +113,28 @@ mis::MotionParameters mis::a_motion_event()
 {
     return mis::MotionParameters();
 }
+
+mis::TouchParameters::TouchParameters() :
+    device_id(0),
+    abs_x(0),
+    abs_y(0)
+{
+}
+
+mis::TouchParameters& mis::TouchParameters::from_device(int new_device_id)
+{
+    device_id = new_device_id;
+    return *this;
+}
+
+mis::TouchParameters& mis::TouchParameters::at_position(int new_abs_x, int new_abs_y)
+{
+    abs_x = new_abs_x;
+    abs_y = new_abs_y;
+    return *this;
+}
+
+mis::TouchParameters mis::a_touch_event()
+{
+    return mis::TouchParameters();
+}

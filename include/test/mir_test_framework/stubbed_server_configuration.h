@@ -20,6 +20,7 @@
 #define MIR_TEST_FRAMEWORK_STUBBED_SERVER_CONFIGURATION_H_
 
 #include "mir/default_server_configuration.h"
+#include "mir/geometry/size.h"
 
 namespace mir_test_framework
 {
@@ -34,6 +35,8 @@ class StubbedServerConfiguration : public DefaultServerConfiguration
 public:
     StubbedServerConfiguration();
 
+    static geometry::Size const display_bounds;
+
     std::shared_ptr<graphics::Platform> the_graphics_platform() override;
     std::shared_ptr<compositor::RendererFactory> the_renderer_factory() override;
     // We override the_input_manager in the default server configuration
@@ -42,7 +45,7 @@ public:
     std::shared_ptr<input::InputConfiguration> the_input_configuration() override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
-
+    
 private:
     std::shared_ptr<graphics::Platform> graphics_platform;
 };

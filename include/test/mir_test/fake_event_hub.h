@@ -75,6 +75,10 @@ public:
     // special meaning) will do. There is no notion of a builtin
     // cursor device in the android input stack.
     static const int BuiltInCursorID = droidinput::BUILT_IN_KEYBOARD_ID + 1;
+    static const int USBTouchscreenID;
+
+    static const int TouchScreenMinAxisValue;
+    static const int TouchScreenMaxAxisValue;
 
     // From EventHubInterface
     uint32_t getDeviceClasses(int32_t deviceId) const override;
@@ -114,11 +118,13 @@ public:
 
     void synthesize_builtin_keyboard_added();
     void synthesize_builtin_cursor_added();
+    void synthesize_usb_touchscreen_added();
     void synthesize_device_scan_complete();
 
-    void synthesize_event(const synthesis::KeyParameters &parameters);
-    void synthesize_event(const synthesis::ButtonParameters &parameters);
-    void synthesize_event(const synthesis::MotionParameters &parameters);
+    void synthesize_event(synthesis::KeyParameters const& parameters);
+    void synthesize_event(synthesis::ButtonParameters const& parameters);
+    void synthesize_event(synthesis::MotionParameters const& parameters);
+    void synthesize_event(synthesis::TouchParameters const& parameters);
     void synthesize_event(nsecs_t when, int32_t deviceId, int32_t type, int32_t code, int32_t value);
 
     void addDevice(int32_t deviceId, const std::string& name, uint32_t classes);

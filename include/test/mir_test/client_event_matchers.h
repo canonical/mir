@@ -201,6 +201,19 @@ MATCHER_P2(ButtonUpEvent, x, y, "")
     return true;
 }
 
+MATCHER_P2(TouchEvent, x, y, "")
+{
+    if (to_ref(arg).type != mir_event_type_motion)
+        return false;
+    if (to_ref(arg).motion.action != mir_motion_action_down)
+        return false;
+    if (to_ref(arg).motion.pointer_coordinates[0].x != x)
+        return false;
+    if (to_ref(arg).motion.pointer_coordinates[0].y != y)
+        return false;
+    return true;
+}
+
 MATCHER_P2(MotionEventWithPosition, x, y, "")
 {
     if (to_ref(arg).type != mir_event_type_motion)
