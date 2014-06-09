@@ -17,6 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_trust_session.h"
 
 #include "src/server/frontend/session_mediator.h"
 
@@ -125,12 +126,24 @@ using MyBasicClientServerFixture = mir_test_framework::BasicClientServerFixture<
 
 struct TrustSessionHelper : MyBasicClientServerFixture
 {
+    static constexpr int arbitrary_base_session_id = __LINE__;
+    static constexpr mir_trust_session_event_callback null_event_callback = nullptr;
+
+    void SetUp()
+    {
+        MyBasicClientServerFixture::SetUp();
+        trust_session = mir_connection_start_trust_session_sync(
+            connection, arbitrary_base_session_id, null_event_callback, this);
+    }
 
     void TearDown()
     {
+        mir_trust_session_release_sync(trust_session);
         trusted_helper_mediator.reset();
         MyBasicClientServerFixture::TearDown();
     }
+
+    MirTrustSession* trust_session{nullptr};
 
     static std::size_t const arbritary_fd_request_count = 3;
 
@@ -157,7 +170,7 @@ struct TrustSessionHelper : MyBasicClientServerFixture
     MOCK_METHOD1(process_line, void(std::string const&));
 };
 
-void client_fd_callback(MirConnection*, size_t count, int const* fds, void* context)
+void client_fd_callback(MirTrustSession*, size_t count, int const* fds, void* context)
 {
     auto const self = static_cast<TrustSessionHelper*>(context);
 
@@ -172,7 +185,7 @@ void client_fd_callback(MirConnection*, size_t count, int const* fds, void* cont
 
 TEST_F(TrustSessionHelper, can_get_fds_for_trusted_clients)
 {
-    mir_connection_new_fds_for_trusted_clients(connection, arbritary_fd_request_count, &client_fd_callback, this);
+    mir_trust_session_new_fds_for_prompt_providers(trust_session, arbritary_fd_request_count, &client_fd_callback, this);
     EXPECT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
 
     EXPECT_THAT(actual_fd_count, Eq(arbritary_fd_request_count));
@@ -180,7 +193,7 @@ TEST_F(TrustSessionHelper, can_get_fds_for_trusted_clients)
 
 TEST_F(TrustSessionHelper, gets_pid_when_trusted_client_connects_over_fd)
 {
-    mir_connection_new_fds_for_trusted_clients(connection, 1, &client_fd_callback, this);
+    mir_trust_session_new_fds_for_prompt_providers(trust_session, 1, &client_fd_callback, this);
     wait_for_callback(std::chrono::milliseconds(500));
 
     auto const expected_pid = getpid();
@@ -198,7 +211,7 @@ TEST_F(TrustSessionHelper, DISABLED_client_pid_is_associated_with_session)
 {
     auto const server_pid = getpid();
 
-    mir_connection_new_fds_for_trusted_clients(connection, 1, &client_fd_callback, this);
+    mir_trust_session_new_fds_for_prompt_providers(trust_session, 1, &client_fd_callback, this);
     wait_for_callback(std::chrono::milliseconds(500));
 
     InSequence seq;

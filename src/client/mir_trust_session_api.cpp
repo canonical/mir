@@ -89,6 +89,24 @@ MirBool mir_trust_session_add_trusted_session_sync(MirTrustSession *trust_sessio
     return result;
 }
 
+MirWaitHandle* mir_trust_session_new_fds_for_prompt_providers(
+    MirTrustSession *trust_session,
+    unsigned int no_of_fds,
+    mir_client_fd_callback callback,
+    void * context)
+{
+    try
+    {
+        return trust_session ?
+            trust_session->new_fds_for_trusted_clients(no_of_fds, callback, context) :
+            nullptr;
+    }
+    catch (std::exception const&)
+    {
+        return nullptr;
+    }
+}
+
 void mir_trust_session_release_sync(MirTrustSession *trust_session)
 {
     mir_wait_for(trust_session->stop(&null_callback, nullptr));

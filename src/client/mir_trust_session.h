@@ -49,6 +49,11 @@ public:
     MirWaitHandle* stop(mir_trust_session_callback callback, void* context);
     MirWaitHandle* add_trusted_session(pid_t pid, mir_trust_session_add_trusted_session_callback callback, void* context);
 
+    MirWaitHandle* new_fds_for_trusted_clients(
+        unsigned int no_of_fds,
+        mir_client_fd_callback callback,
+        void * context);
+
     void register_trust_session_event_callback(mir_trust_session_event_callback callback, void* context);
 
     char const* get_error_message();
@@ -62,12 +67,14 @@ private:
     mir::protobuf::TrustSessionParameters parameters;
     mir::protobuf::Void add_result;
     mir::protobuf::Void protobuf_void;
+    mir::protobuf::SocketFD socket_fd_response;
     std::shared_ptr<mir::client::EventHandlerRegister> const event_handler_register;
     int const event_handler_register_id;
 
     MirWaitHandle start_wait_handle;
     MirWaitHandle stop_wait_handle;
     MirWaitHandle add_result_wait_handle;
+    MirWaitHandle fds_for_trusted_clients_wait_handle;
     std::atomic<MirTrustSessionState> state;
 
     std::mutex mutable session_mutex; // Protects session
@@ -80,6 +87,7 @@ private:
     void done_start(mir_trust_session_callback callback, void* context);
     void done_stop(mir_trust_session_callback callback, void* context);
     void done_add_trusted_session(mir_trust_session_add_trusted_session_callback callback, void* context);
+    void done_fds_for_trusted_clients(mir_client_fd_callback callback, void* context);
     MirTrustSession(MirTrustSession const&) = delete;
     MirTrustSession& operator=(MirTrustSession const&) = delete;
 };

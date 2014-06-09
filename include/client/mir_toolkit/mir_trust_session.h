@@ -52,6 +52,26 @@ MirBool mir_trust_session_add_trusted_session_sync(MirTrustSession *trust_sessio
     pid_t pid);
 
 /**
+ * Allocate some FDs for trusted clients to connect on
+ *
+ * Trusted helpers need to allocate connection FDs it will pass to
+ * prompt providers to use when connecting to the server. The server can
+ * then associate them with the trust session.
+ *
+ *   \warning This API is tentative until the implementation of trust sessions is complete
+ *   \param [in] trust_session  The trust session
+ *   \param [in] no_of_fds      The number of fds to allocate
+ *   \param [in] callback       Callback invoked when request completes
+ *   \param [in,out] context    User data passed to the callback function
+ *   \return                    A handle that can be passed to mir_wait_for
+ */
+MirWaitHandle* mir_trust_session_new_fds_for_prompt_providers(
+    MirTrustSession *trust_session,
+    unsigned int no_of_fds,
+    mir_client_fd_callback callback,
+    void * context);
+
+/**
  * Stop and release the specified trust session
  *   \param [in] trust_session  The trust session
  */

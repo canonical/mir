@@ -106,7 +106,7 @@ typedef void (*mir_display_config_callback)(
 
 /**
  * Callback called when a request for client file descriptors completes
- *   \param [in] connection     The connection associated with the display change
+ *   \param [in] trust_session  The trust session
  *   \param [in] count          The number of FDs allocated
  *   \param [in] fds            Array of FDs
  *   \param [in,out] context    The context provided by client
@@ -115,7 +115,7 @@ typedef void (*mir_display_config_callback)(
  */
 
 typedef void (*mir_client_fd_callback)(
-    MirConnection* connection, size_t count, int const* fds, void* context);
+    MirTrustSession *trust_session, size_t count, int const* fds, void* context);
 
 /**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
