@@ -29,6 +29,7 @@
 #include "mir_toolkit/common.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/cursor_images.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/graphics/platform.h"
@@ -67,7 +68,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<EventSink> const& sender,
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast,
-    ConnectionContext const& connection_context) :
+    ConnectionContext const& connection_context,
+    std::shared_ptr<mg::CursorImages> const& cursor_images) :
     client_pid_(0),
     shell(shell),
     graphics_platform(graphics_platform),
@@ -77,7 +79,8 @@ mf::SessionMediator::SessionMediator(
     event_sink(sender),
     resource_cache(resource_cache),
     screencast(screencast),
-    connection_context(connection_context)
+    connection_context(connection_context),
+    cursor_images(cursor_images)
 {
 }
 
@@ -427,12 +430,34 @@ std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::tr
 
 void mf::SessionMediator::configure_cursor(
     google::protobuf::RpcController*,
-    mir::protobuf::CursorSetting const* /* cursor_request */,
+    mir::protobuf::CursorSetting const* cursor_request,
     mir::protobuf::Void* /* void_response */,
-    google::protobuf::Closure* /* done */)
+    google::protobuf::Closure* done)
 {
-    // TODO: Pass cursor settings down to surface.
-    BOOST_THROW_EXCEPTION(std::logic_error("Cursor API not yet implemented"));
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        report->session_configure_surface_cursor_called(session->name());
+
+        auto const id = frontend::SurfaceId(cursor_request->surfaceid().value());
+        auto const surface = session->get_surface(id);
+        
+        if (cursor_request->has_name())
+        {
+            auto const& image = cursor_images->image(cursor_request->name(), mg::default_cursor_size);
+            surface->set_cursor_image(image);
+        }
+        else
+        {
+            surface->set_cursor_image({});
+        }
+    }
+    done->Run();
 }
 
 void mf::SessionMediator::new_fds_for_trusted_clients(

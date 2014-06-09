@@ -122,7 +122,6 @@ find_package(GLog REQUIRED)
 find_package(GFlags REQUIRED)
 find_package(XKBCOMMON REQUIRED)
 find_package(LTTngUST REQUIRED)
-find_package(AndroidProperties REQUIRED)
 pkg_check_modules(UDEV REQUIRED libudev)
 
 include_directories (${GLESv2_INCLUDE_DIRS})
@@ -130,6 +129,7 @@ include_directories (${EGL_INCLUDE_DIRS})
 include_directories (${GLM_INCLUDE_DIRS})
 
 if (MIR_BUILD_PLATFORM_ANDROID)
+  find_package(AndroidProperties REQUIRED)
   find_package(LibHardware REQUIRED)
 endif()
 

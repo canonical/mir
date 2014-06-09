@@ -36,12 +36,11 @@ class MockDisplayDevice : public graphics::android::DisplayDevice
 public:
     ~MockDisplayDevice() noexcept {}
     MOCK_METHOD1(mode, void(MirPowerMode));
-    MOCK_METHOD1(render_gl, void(graphics::android::SwappingGLContext const&));
-    MOCK_METHOD3(prepare_overlays, void(
+    MOCK_METHOD1(post_gl, void(graphics::android::SwappingGLContext const&));
+    MOCK_METHOD3(post_overlays, void(
         graphics::android::SwappingGLContext const&,
         graphics::RenderableList const&,
         graphics::android::RenderableListCompositor const&));
-    MOCK_METHOD1(post, void(graphics::Buffer const&));
     MOCK_CONST_METHOD1(apply_orientation, bool(MirOrientation));
 };
 }

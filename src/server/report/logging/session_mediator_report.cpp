@@ -68,6 +68,11 @@ void mrl::SessionMediatorReport::session_configure_surface_called(std::string co
     log->log(ml::Logger::informational, "session_configure_surface_called(\"" + app_name + "\")", component);
 }
 
+void mrl::SessionMediatorReport::session_configure_surface_cursor_called(std::string const& app_name)
+{
+    log->log(ml::Logger::informational, "session_configure_surface_cursor_called(\"" + app_name + "\")", component);
+}
+
 void mrl::SessionMediatorReport::session_configure_display_called(std::string const& app_name)
 {
     log->log(ml::Logger::informational, "session_configure_display_called(\"" + app_name + "\")", component);

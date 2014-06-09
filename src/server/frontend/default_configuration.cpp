@@ -83,6 +83,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_frontend_display_changer(),
                 allocator,
                 the_screencast(),
-                the_session_authorizer());
+                the_session_authorizer(),
+                the_cursor_images());
         });
 }

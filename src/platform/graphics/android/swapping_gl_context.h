@@ -16,26 +16,32 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_HWC_FORMATTED_LOGGER_H_
-#define MIR_GRAPHICS_ANDROID_HWC_FORMATTED_LOGGER_H_
+#ifndef MIR_GRAPHICS_ANDROID_SWAPPING_GL_CONTEXT_H_
+#define MIR_GRAPHICS_ANDROID_SWAPPING_GL_CONTEXT_H_
 
-#include "hwc_logger.h"
+#include <memory>
 
 namespace mir
 {
 namespace graphics
 {
+class Buffer;
 namespace android
 {
-class HwcFormattedLogger : public HwcLogger
+class SwappingGLContext
 {
 public:
-    HwcFormattedLogger() = default;
-    void log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const override;
-    void log_prepare_done(hwc_display_contents_1_t const& list) const override;
-    void log_set_list(hwc_display_contents_1_t const& list) const override;
+    virtual ~SwappingGLContext() = default;
+    virtual void swap_buffers() const = 0;
+    virtual std::shared_ptr<Buffer> last_rendered_buffer() const = 0;
+
+protected:
+    SwappingGLContext() = default;
+    SwappingGLContext(SwappingGLContext const&) = delete;
+    SwappingGLContext& operator=(SwappingGLContext const&) = delete;
 };
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_HWC_FORMATTED_LOGGER_H_ */
+
+#endif /* MIR_GRAPHICS_ANDROID_SWAPPING_GL_CONTEXT_H_ */
