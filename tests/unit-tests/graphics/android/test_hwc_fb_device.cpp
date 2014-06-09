@@ -26,6 +26,7 @@
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/stub_swapping_gl_context.h"
+#include "mir_test_doubles/mock_swapping_gl_context.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include "mir_test_doubles/stub_renderable_list_compositor.h"
@@ -69,6 +70,9 @@ protected:
         skip_layer.visibleRegionScreen = {1, &empty_region};
         skip_layer.acquireFenceFd = -1;
         skip_layer.releaseFenceFd = -1;
+
+        ON_CALL(mock_context, last_rendered_buffer())
+            .WillByDefault(Return(mock_buffer));
     }
 
     int fake_dpy = 0;
@@ -85,10 +89,11 @@ protected:
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_hwc_device_wrapper;
     mtd::StubSwappingGLContext stub_context;
+    testing::NiceMock<mtd::MockSwappingGLContext> mock_context;
     hwc_layer_1_t skip_layer;
 };
 
-TEST_F(HwcFbDevice, hwc10_render_gl_only)
+TEST_F(HwcFbDevice, hwc10_post_gl_only)
 {
     using namespace testing;
     std::list<hwc_layer_1_t*> expected_list{&skip_layer};
@@ -107,7 +112,7 @@ TEST_F(HwcFbDevice, hwc10_render_gl_only)
 
     mga::HwcFbDevice device(mock_hwc_device, mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
 
-    device.render_gl(stub_context);
+    device.post_gl(stub_context);
 }
 
 TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
@@ -142,7 +147,7 @@ TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
         .InSequence(seq);
 
     mga::HwcFbDevice device(mock_hwc_device, mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
-    device.prepare_overlays(stub_context, renderlist, mock_compositor);
+    device.post_overlays(stub_context, renderlist, mock_compositor);
 }
 
 TEST_F(HwcFbDevice, hwc10_post)
@@ -158,5 +163,5 @@ TEST_F(HwcFbDevice, hwc10_post)
     EXPECT_CALL(*mock_vsync, wait_for_vsync())
         .InSequence(seq);
     mga::HwcFbDevice device(mock_hwc_device, mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
-    device.post(*mock_buffer);
+    device.post_gl(mock_context);
 }

@@ -13,32 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_SWAPPING_GL_CONTEXT_H_
-#define MIR_TEST_DOUBLES_STUB_SWAPPING_GL_CONTEXT_H_
+#ifndef MIR_TEST_DOUBLES_PLATFORM_FACTORY_H_
+#define MIR_TEST_DOUBLES_PLATFORM_FACTORY_H_
 
-#include "src/platform/graphics/android/gl_context.h"
-#include "stub_buffer.h"
+#include <memory>
 
 namespace mir
 {
+namespace graphics
+{
+class Platform;
+namespace mesa { class Platform; }
+}
 namespace test
 {
 namespace doubles
 {
 
-struct StubSwappingGLContext : public graphics::android::SwappingGLContext
-{
-    void swap_buffers() const {}
-    std::shared_ptr<graphics::Buffer> last_rendered_buffer() const
-    {
-        return std::make_shared<StubBuffer>();
-    }
-};
+std::shared_ptr<graphics::Platform> create_platform_with_null_dependencies();
+
+#ifndef ANDROID
+std::shared_ptr<graphics::mesa::Platform> create_mesa_platform_with_null_dependencies();
+#endif
 
 }
 }
 }
-#endif // MIR_TEST_DOUBLES_STUB_COMPOSITING_CRITERIA_H_
+
+#endif /* MIR_TEST_DOUBLES_PLATFORM_FACTORY_H_ */
