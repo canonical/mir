@@ -95,11 +95,6 @@ void mc::ScreencastDisplayBuffer::post_update()
     glFinish();
 }
 
-bool mc::ScreencastDisplayBuffer::can_bypass() const
-{
-    return false;
-}
-
 MirOrientation mc::ScreencastDisplayBuffer::orientation() const
 {
     return mir_orientation_normal;

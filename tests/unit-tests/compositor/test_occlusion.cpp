@@ -76,8 +76,8 @@ TEST_F(OcclusionFilterTest, smaller_window_occluded)
 
 TEST_F(OcclusionFilterTest, translucent_window_occludes_nothing)
 {
-    auto top = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10, 0.5f);
-    auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5, 1.0f);
+    auto top = std::make_shared<mtd::FakeRenderable>(Rectangle{{10, 10}, {10, 10}}, 0.5f);
+    auto bottom = std::make_shared<mtd::FakeRenderable>(Rectangle{{12, 12}, {5, 5}}, 1.0f);
     mg::RenderableList list{bottom, top};
 
     filter_occlusions_from(list, monitor_rect);
@@ -89,7 +89,7 @@ TEST_F(OcclusionFilterTest, translucent_window_occludes_nothing)
 
 TEST_F(OcclusionFilterTest, hidden_window_is_self_occluded)
 {
-    auto window = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10, 1.0f, true, false);
+    auto window = std::make_shared<mtd::FakeRenderable>(Rectangle{{10, 10}, {10, 10}}, 1.0f, true, false);
     mg::RenderableList list{window};
 
     filter_occlusions_from(list, monitor_rect);
@@ -99,7 +99,7 @@ TEST_F(OcclusionFilterTest, hidden_window_is_self_occluded)
 
 TEST_F(OcclusionFilterTest, hidden_window_occludes_nothing)
 {
-    auto top = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10, 1.0f, true, false);
+    auto top = std::make_shared<mtd::FakeRenderable>(Rectangle{{10, 10}, {10, 10}}, 1.0f, true, false);
     auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
     mg::RenderableList list{bottom, top};
 
@@ -111,7 +111,7 @@ TEST_F(OcclusionFilterTest, hidden_window_occludes_nothing)
 
 TEST_F(OcclusionFilterTest, shaped_window_occludes_nothing)
 {
-    auto top = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10, 1.0f, false, true);
+    auto top = std::make_shared<mtd::FakeRenderable>(Rectangle{{10, 10}, {10, 10}}, 1.0f, false, true);
     auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
     mg::RenderableList list{bottom, top};
 

@@ -94,15 +94,6 @@ GLuint generate_frame_corner_texture(float corner_radius,
         {
             Color col = color;
 
-            // Cut out the corner in a circular shape.
-            if (x < cx && y < cy)
-            {
-                int dx = cx - x;
-                int dy = cy - y;
-                if (dx * dx + dy * dy >= radius_sqr)
-                    col.a = 0;
-            }
-
             // Set gradient
             if (y < cy)
             {
@@ -112,6 +103,15 @@ GLuint generate_frame_corner_texture(float corner_radius,
                 col.r += (highlight - col.r) * brighten;
                 col.g += (highlight - col.g) * brighten;
                 col.b += (highlight - col.b) * brighten;
+            }
+
+            // Cut out the corner in a circular shape.
+            if (x < cx && y < cy)
+            {
+                int dx = cx - x;
+                int dy = cy - y;
+                if (dx * dx + dy * dy >= radius_sqr)
+                    col = {0, 0, 0, 0};
             }
 
             image[y * width + x] = col;
@@ -164,7 +164,7 @@ void DemoRenderer::begin() const
     if (opaque)
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     else
-        glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -273,7 +273,7 @@ void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primiti
 
     // Shadows always need blending...
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitives,

@@ -108,6 +108,5 @@ auto mga::AndroidDisplay::create_hardware_cursor(std::shared_ptr<mg::CursorImage
 
 std::unique_ptr<mg::GLContext> mga::AndroidDisplay::create_gl_context()
 {
-    return std::unique_ptr<mg::GLContext>{
-        new mga::GLContext(gl_context, mga::create_dummy_pbuffer_surface)};
+    return std::unique_ptr<mg::GLContext>{new mga::PbufferGLContext(gl_context)};
 }

@@ -183,7 +183,7 @@ TEST_F(GLRenderer, render_is_done_in_sequence)
     EXPECT_CALL(*renderable, shaped())
         .WillOnce(Return(true));
     EXPECT_CALL(mock_gl, glEnable(GL_BLEND));
-    EXPECT_CALL(mock_gl, glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    EXPECT_CALL(mock_gl, glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
     EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
 
     EXPECT_CALL(mock_gl, glUniform2f(centre_uniform_location, _, _));

@@ -62,23 +62,12 @@ struct CountingDisplayBuffer : public mtd::StubDisplayBuffer
     {
     }
 
-    bool can_bypass() const override
+    bool post_renderables_if_optimizable(mg::RenderableList const&) override
     {
-        return true;
-    }
-
-    bool post_renderables_if_optimizable(mg::RenderableList const&)
-    {
-        increment_post_count();
-        return true;
+        return false;
     }
 
     void post_update() override
-    {
-        increment_post_count();
-    }
-
-    void post_update(std::shared_ptr<mg::Buffer>) override
     {
         increment_post_count();
     }

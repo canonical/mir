@@ -90,7 +90,7 @@ protected:
         testing::NiceMock<mtd::MockDisplayReport> report;
         mtd::StubGLConfig stub_gl_config;
 
-        gl_context = std::make_shared<mga::GLContext>(
+        gl_context = std::make_shared<mga::PbufferGLContext>(
             mga::to_mir_format(mock_egl.fake_visual_id), stub_gl_config, report);
 
         mock_fb_bundle = std::make_shared<testing::NiceMock<mtd::MockFBBundle>>();
@@ -126,13 +126,8 @@ TEST_F(AndroidDisplayBuffer, can_post_update_with_gl_only)
     using namespace testing;
 
     InSequence seq;
-    EXPECT_CALL(*mock_display_device, render_gl(_))
+    EXPECT_CALL(*mock_display_device, post_gl(_))
         .Times(Exactly(1));
-    EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
-        .Times(1)
-        .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
-        .Times(1);
 
     mg::RenderableList renderlist{};
     mga::DisplayBuffer db(
@@ -143,11 +138,10 @@ TEST_F(AndroidDisplayBuffer, can_post_update_with_gl_only)
 TEST_F(AndroidDisplayBuffer, rejects_empty_list)
 {
     using namespace testing;
-
     mga::DisplayBuffer db(
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
 
-    mg::RenderableList renderlist{};
+    std::list<std::shared_ptr<mg::Renderable>> renderlist{};
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 }
 
@@ -197,13 +191,7 @@ TEST_F(AndroidDisplayBuffer, posts_overlay_list)
         std::make_shared<mtd::StubRenderable>(),
         std::make_shared<mtd::StubRenderable>()};
 
-    InSequence seq;
-    EXPECT_CALL(*mock_display_device, prepare_overlays(_, Ref(renderlist), _))
-        .Times(1);
-    EXPECT_CALL(*mock_fb_bundle, last_rendered_buffer())
-        .Times(1)
-        .WillOnce(Return(stub_buffer));
-    EXPECT_CALL(*mock_display_device, post(Ref(*stub_buffer)))
+    EXPECT_CALL(*mock_display_device, post_overlays(_, Ref(renderlist), _))
         .Times(1);
 
     mga::DisplayBuffer db(
