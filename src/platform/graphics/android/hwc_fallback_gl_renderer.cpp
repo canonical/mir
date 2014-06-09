@@ -21,7 +21,7 @@
 #include "mir/graphics/gl_texture.h"
 #include "mir/graphics/tessellation_helpers.h"
 #include "hwc_fallback_gl_renderer.h"
-#include "gl_context.h"
+#include "swapping_gl_context.h"
 #include "buffer.h"
 
 #define GLM_FORCE_RADIANS
