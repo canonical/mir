@@ -24,9 +24,13 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test/popen.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <condition_variable>
+#include <mutex>
 
 namespace mtf = mir_test_framework;
 namespace ms = mir::scene;
@@ -86,6 +90,29 @@ struct TrustSessionClientAPI : mtf::BasicClientServerFixture<TrustSessionListene
     MirTrustSession* trust_session = nullptr;
 
     MOCK_METHOD2(trust_session_event, void(MirTrustSession* trusted_session, MirTrustSessionState state));
+
+    static std::size_t const arbritary_fd_request_count = 3;
+    std::mutex mutex;
+    std::size_t actual_fd_count = 0;
+    int actual_fds[arbritary_fd_request_count] = {};
+    std::condition_variable cv;
+    bool called_back = false;
+
+    bool wait_for_callback(std::chrono::milliseconds timeout)
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        return cv.wait_for(lock, timeout, [this]{ return called_back; });
+    }
+
+    char client_connect_string[128] = {0};
+
+    char const* fd_connect_string(int fd)
+    {
+        sprintf(client_connect_string, "fd://%d", fd);
+        return client_connect_string;
+    }
+
+    MOCK_METHOD1(process_line, void(std::string const&));
 };
 
 extern "C" void trust_session_event_callback(MirTrustSession* trusted_session, MirTrustSessionState state, void* context)
@@ -94,6 +121,22 @@ extern "C" void trust_session_event_callback(MirTrustSession* trusted_session, M
     self->trust_session_event(trusted_session, state);
 }
 
+void client_fd_callback(MirTrustSession*, size_t count, int const* fds, void* context)
+{
+    auto const self = static_cast<TrustSessionClientAPI*>(context);
+
+    std::unique_lock<decltype(self->mutex)> lock(self->mutex);
+    self->actual_fd_count = count;
+
+    std::copy(fds, fds+count, self->actual_fds);
+    self->called_back = true;
+    self->cv.notify_one();
+}
+
+MATCHER_P(SessionWithPid, pid, "")
+{
+    return arg->process_id() == pid;
+}
 }
 
 TEST_F(TrustSessionClientAPI, can_start_and_stop_a_trust_session)
@@ -148,4 +191,64 @@ TEST_F(TrustSessionClientAPI, can_add_trusted_session)
     // TODO SessionManager::~SessionManager() in code that the comments claim
     // TODO works around broken ownership.
     server_config().the_frontend_shell()->close_session(participant_session);
+}
+
+TEST_F(TrustSessionClientAPI, can_get_fds_for_prompt_providers)
+{
+    MirTrustSession* trust_session = mir_connection_start_trust_session_sync(
+        connection, arbitrary_base_session_id, null_event_callback, this);
+
+    mir_trust_session_new_fds_for_prompt_providers(trust_session, arbritary_fd_request_count, &client_fd_callback, this);
+    EXPECT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
+
+    EXPECT_THAT(actual_fd_count, Eq(arbritary_fd_request_count));
+
+    mir_trust_session_release_sync(trust_session);
+}
+
+TEST_F(TrustSessionClientAPI, when_prompt_provider_connects_over_fd_participant_added_with_right_pid)
+{
+    MirTrustSession* trust_session = mir_connection_start_trust_session_sync(
+        connection, arbitrary_base_session_id, null_event_callback, this);
+
+    mir_trust_session_new_fds_for_prompt_providers(trust_session, 1, &client_fd_callback, this);
+    ASSERT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
+
+    auto const expected_pid = getpid();
+
+    EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), participant_added(_, SessionWithPid(expected_pid)));
+
+    auto client_connection = mir_connect_sync(fd_connect_string(actual_fds[0]), __PRETTY_FUNCTION__);
+
+    mir_connection_release(client_connection);
+    mir_trust_session_release_sync(trust_session);
+}
+
+// TODO we need a nice way to run this (and similar tests that require a separate client process) in CI
+// Disabled as we can't be sure the mir_demo_client_basic is about
+TEST_F(TrustSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
+{
+    auto const server_pid = getpid();
+
+    MirTrustSession* trust_session = mir_connection_start_trust_session_sync(
+        connection, arbitrary_base_session_id, null_event_callback, this);
+
+    mir_trust_session_new_fds_for_prompt_providers(trust_session, 1, &client_fd_callback, this);
+    wait_for_callback(std::chrono::milliseconds(500));
+
+    EXPECT_CALL(*server_configuration.the_mock_trust_session_listener(), participant_added(_, Not(SessionWithPid(server_pid))));
+
+    InSequence seq;
+    EXPECT_CALL(*this, process_line(StrEq("Starting")));
+    EXPECT_CALL(*this, process_line(StrEq("Connected")));
+    EXPECT_CALL(*this, process_line(StrEq("Surface created")));
+    EXPECT_CALL(*this, process_line(StrEq("Surface released")));
+    EXPECT_CALL(*this, process_line(StrEq("Connection released")));
+
+    mir::test::Popen output(std::string("bin/mir_demo_client_basic -m ") + fd_connect_string(actual_fds[0]));
+
+    std::string line;
+    while (output.get_line(line)) process_line(line);
+
+    mir_trust_session_release_sync(trust_session);
 }
