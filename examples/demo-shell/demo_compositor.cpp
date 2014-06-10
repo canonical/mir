@@ -50,9 +50,14 @@ me::DemoCompositor::DemoCompositor(
     display_buffer(display_buffer),
     scene(scene),
     report(report),
-    shadow_radius(80.0f),
-    titlebar_height(30.0f),
-    renderer(factory, display_buffer.view_area(), destination_alpha(display_buffer), shadow_radius, titlebar_height) 
+    shadow_radius(80),
+    titlebar_height(30),
+    renderer(
+        factory,
+        display_buffer.view_area(),
+        destination_alpha(display_buffer),
+        static_cast<float>(shadow_radius),
+        static_cast<float>(titlebar_height)) 
 {
 }
 
@@ -66,13 +71,17 @@ bool me::DemoCompositor::composite()
         {
             //accommodate for shadows and titlebar in occlusion filtering
             using namespace mir::geometry;
-            auto rect = renderable.screen_position();
-            rect.top_left.y = rect.top_left.y - geom::DeltaY{titlebar_height};
-            rect.size = geom::Size{
-                rect.size.width.as_int() + static_cast<int>(shadow_radius),
-                rect.size.height.as_int() + static_cast<int>(shadow_radius) + static_cast<int>(titlebar_height)
+            auto const& rect = renderable.screen_position();
+            return geom::Rectangle{
+                geom::Point{
+                    rect.top_left.x,
+                    rect.top_left.y - geom::DeltaY{titlebar_height}
+                },
+                geom::Size{
+                    rect.size.width.as_int() + shadow_radius,
+                    rect.size.height.as_int() + shadow_radius + titlebar_height
+                }
             };
-            return rect; 
         });
 
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
