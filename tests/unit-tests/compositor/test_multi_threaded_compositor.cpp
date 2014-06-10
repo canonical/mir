@@ -156,12 +156,11 @@ public:
     {
     }
 
-    bool composite()
+    void composite()
     {
         mark_render_buffer();
         /* Reduce run-time under valgrind */
         std::this_thread::yield();
-        return false;
     }
 
 private:
@@ -273,12 +272,11 @@ public:
     {
     }
 
-    bool composite()
+    void composite()
     {
         fake_surface_update();
         /* Reduce run-time under valgrind */
         std::this_thread::yield();
-        return false;
     }
 
 private:
@@ -323,7 +321,7 @@ public:
     {
         struct NullDisplayBufferCompositor : mc::DisplayBufferCompositor
         {
-            bool composite() { return false; }
+            void composite() {}
         };
 
         auto raw = new NullDisplayBufferCompositor{};
