@@ -22,10 +22,17 @@
 #include "mir/compositor/destination_alpha.h"
 #include "demo_compositor.h"
 #include "occlusion.h"
+#include "mir/geometry/dimensions.h"
+#include "mir/geometry/dimensions.h"
+#include "mir/geometry/dimensions.h"
+#include "mir/geometry/dimensions.h"
+#include "mir/geometry/dimensions.h"
+#include "mir/geometry/dimensions.h"
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -54,16 +61,36 @@ bool me::DemoCompositor::composite()
     report->began_frame(this);
 
     auto renderable_list = scene->renderable_list_for(this);
-    mc::filter_occlusions_from(renderable_list, display_buffer.view_area(), mc::simple_renderable_rect);
+    mc::filter_occlusions_from(renderable_list, display_buffer.view_area(),
+        [this](mg::Renderable const& renderable) -> geom::Rectangle
+        {
+            //accommodate for shadows and titlebar in occlusion filtering
+            using namespace mir::geometry;
+            auto rect = renderable.screen_position();
+            rect.top_left.y = rect.top_left.y - geom::DeltaY{titlebar_height};
+            rect.size = geom::Size{
+                rect.size.width.as_int() + static_cast<int>(shadow_radius),
+                rect.size.height.as_int() + static_cast<int>(shadow_radius) + static_cast<int>(titlebar_height)
+            };
+            return rect; 
+        });
 
-    display_buffer.make_current();
+    if (display_buffer.post_renderables_if_optimizable(renderable_list))
+    {
+        renderer.suspend();
+        report->finished_frame(true, this);
+    }
+    else
+    {
+        display_buffer.make_current();
 
-    renderer.set_rotation(display_buffer.orientation());
-    renderer.begin();
-    renderer.render(renderable_list);
-    display_buffer.post_update();
-    renderer.end();
-    report->finished_frame(false, this);
+        renderer.set_rotation(display_buffer.orientation());
+        renderer.begin();
+        renderer.render(renderable_list);
+        display_buffer.post_update();
+        renderer.end();
+        report->finished_frame(false, this);
+    }
 
     return false;
 }
