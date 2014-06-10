@@ -35,7 +35,8 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     std::shared_ptr<DisplayChanger> const& display_changer,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<Screencast> const& screencast,
-    std::shared_ptr<SessionAuthorizer> const& session_authorizer) :
+    std::shared_ptr<SessionAuthorizer> const& session_authorizer,
+    std::shared_ptr<mg::CursorImages> const& cursor_images) :
     shell(shell),
     sm_report(sm_report),
     cache(std::make_shared<ResourceCache>()),
@@ -43,7 +44,8 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     display_changer(display_changer),
     buffer_allocator(buffer_allocator),
     screencast(screencast),
-    session_authorizer(session_authorizer)
+    session_authorizer(session_authorizer),
+    cursor_images(cursor_images)
 {
 }
 
@@ -81,7 +83,7 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
         sm_report,
         sink,
         effective_screencast,
-        connection_context);
+        connection_context, cursor_images);
 }
 
 std::shared_ptr<mf::ResourceCache> mf::DefaultIpcFactory::resource_cache()
@@ -97,7 +99,8 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
     std::shared_ptr<SessionMediatorReport> const& sm_report,
     std::shared_ptr<EventSink> const& sink,
     std::shared_ptr<Screencast> const& effective_screencast,
-    ConnectionContext const& connection_context)
+    ConnectionContext const& connection_context,
+    std::shared_ptr<mg::CursorImages> const& cursor_images)
 {
     return std::make_shared<SessionMediator>(
         shell,
@@ -108,5 +111,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         sink,
         resource_cache(),
         effective_screencast,
-        connection_context);
+        connection_context,
+        cursor_images);
 }

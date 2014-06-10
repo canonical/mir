@@ -323,7 +323,7 @@ MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor
     
     configure_cursor_wait_handle.expect_result();
     server.configure_cursor(0, &setting, &void_response,
-        google::protobuf::NewCallback(this, &MirSurface::on_configured));
+        google::protobuf::NewCallback(this, &MirSurface::on_cursor_configured));
     
     return &configure_cursor_wait_handle;
 }
@@ -374,6 +374,12 @@ void MirSurface::on_configured()
         configure_wait_handle.result_received();
     }
 }
+
+void MirSurface::on_cursor_configured()
+{
+    configure_cursor_wait_handle.result_received();
+}
+
 
 int MirSurface::attrib(MirSurfaceAttrib at) const
 {

@@ -32,6 +32,7 @@ public:
     DemoRenderer(
         graphics::GLProgramFactory const& factory,
         geometry::Rectangle const& display_area,
+        compositor::DestinationAlpha dest_alpha,
         float shadow_radius,
         float titlebar_height);
     ~DemoRenderer();

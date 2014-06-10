@@ -24,6 +24,7 @@
 #include "hwc_common_device.h"
 #include "hwc_layerlist.h"
 #include <memory>
+#include <vector>
 
 namespace mir
 {
@@ -47,21 +48,23 @@ public:
               std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
               std::shared_ptr<SyncFileOps> const& sync_ops);
 
-    virtual void render_gl(SwappingGLContext const& context);
-    virtual void prepare_overlays(
+    virtual void post_gl(SwappingGLContext const& context);
+    virtual void post_overlays(
         SwappingGLContext const& context,
         RenderableList const& list,
         RenderableListCompositor const& list_compositor);
-    void post(Buffer const& buffer);
 
 private:
+    void post(SwappingGLContext const& context);
+
     LayerList hwc_list;
+    std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
+
     void set_list_framebuffer(Buffer const&);
     void setup_layer_types();
 
     std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<SyncFileOps> const sync_ops;
-    bool list_needs_commit{false};
 };
 
 }

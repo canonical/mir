@@ -52,7 +52,7 @@ bool mc::DefaultDisplayBufferCompositor::composite()
 
     auto const& view_area = display_buffer.view_area();
     auto renderable_list = scene->renderable_list_for(this);
-    mc::filter_occlusions_from(renderable_list, view_area);
+    mc::filter_occlusions_from(renderable_list, view_area, simple_renderable_rect);
 
     //TODO: the DisplayBufferCompositor should not have to figure out if it has to force
     //      a subsequent compositon. The MultiThreadedCompositor should be smart enough to 

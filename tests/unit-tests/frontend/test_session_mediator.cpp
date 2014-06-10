@@ -25,6 +25,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/cursor_images.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_display_changer.h"
@@ -217,7 +218,7 @@ struct SessionMediatorTest : public ::testing::Test
           mediator{shell, graphics_platform, graphics_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
-                   resource_cache, stub_screencast, &connector},
+                   resource_cache, stub_screencast, &connector, {}},
           stubbed_session{std::make_shared<StubbedSession>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
@@ -275,7 +276,7 @@ TEST_F(SessionMediatorTest, connect_calls_connect_handler)
         std::make_shared<mtd::NullEventSink>(),
         resource_cache,
         stub_screencast,
-        context};
+        context, nullptr};
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -418,7 +419,7 @@ TEST_F(SessionMediatorTest, connect_packs_display_configuration)
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
         resource_cache, std::make_shared<mtd::NullScreencast>(),
-        nullptr);
+        nullptr, nullptr);
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -643,7 +644,7 @@ TEST_F(SessionMediatorTest, display_config_request)
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(), resource_cache,
         std::make_shared<mtd::NullScreencast>(),
-        nullptr};
+          nullptr, nullptr};
 
     session_mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 

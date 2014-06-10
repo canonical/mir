@@ -87,7 +87,6 @@ void mc::ScreencastDisplayBuffer::release_current()
 
 bool mc::ScreencastDisplayBuffer::post_renderables_if_optimizable(mg::RenderableList const&)
 {
-    //no optimizations possible
     return false;
 }
 
@@ -99,4 +98,9 @@ void mc::ScreencastDisplayBuffer::post_update()
 MirOrientation mc::ScreencastDisplayBuffer::orientation() const
 {
     return mir_orientation_normal;
+}
+
+bool mc::ScreencastDisplayBuffer::uses_alpha() const
+{
+    return false;
 }

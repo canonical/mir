@@ -35,6 +35,7 @@
 namespace mir
 {
 void terminate_with_current_exception();
+void set_thread_name(std::string const&);
 }
 
 namespace mir_input
@@ -54,13 +55,15 @@ public:
         int32_t priority = PRIORITY_DEFAULT,
         size_t stack = 0)
     {
-        (void)name; (void)priority; (void)stack;
+        (void)priority; (void)stack;
+        std::string const name_str{name};
 
         status.store(NO_ERROR);
         exit_pending.store(false);
 
-        thread = std::thread([this]() -> void
+        thread = std::thread([name_str,this]() -> void
             {
+                mir::set_thread_name(name_str);
                 try
                 {
                     if (auto result = readyToRun()) status.store(result);

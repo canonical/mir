@@ -37,6 +37,7 @@ MIR_SESSION_MEDIATOR_EVENT_METHOD(session_release_surface_called)
 MIR_SESSION_MEDIATOR_EVENT_METHOD(session_disconnect_called)
 MIR_SESSION_MEDIATOR_EVENT_METHOD(session_drm_auth_magic_called)
 MIR_SESSION_MEDIATOR_EVENT_METHOD(session_configure_surface_called)
+MIR_SESSION_MEDIATOR_EVENT_METHOD(session_configure_surface_cursor_called)
 MIR_SESSION_MEDIATOR_EVENT_METHOD(session_configure_display_called)
 
 void mir::report::lttng::SessionMediatorReport::session_error(std::string const& app_name, char const* method, std::string const& what)

@@ -61,6 +61,7 @@ public:
     bool post_renderables_if_optimizable(RenderableList const& renderlist);
 
     MirOrientation orientation() const override;
+    bool uses_alpha() const override;
     void schedule_set_crtc();
     void wait_for_page_flip();
 

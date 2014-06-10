@@ -17,7 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "gl_context.h"
+#include "swapping_gl_context.h"
 #include "hwc_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync_coordinator.h"
@@ -76,24 +76,25 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
     setup_layer_types();
 }
 
-void mga::HwcDevice::render_gl(SwappingGLContext const& context)
+void mga::HwcDevice::post_gl(SwappingGLContext const& context)
 {
     hwc_list.update_list_and_check_if_changed({}, fbtarget_plus_skip_size);
     setup_layer_types();
 
-    list_needs_commit = true;
-
     hwc_wrapper->prepare(*hwc_list.native_list().lock());
 
     context.swap_buffers();
+
+    post(context);
+    onscreen_overlay_buffers.clear();
 }
 
-void mga::HwcDevice::prepare_overlays(
+void mga::HwcDevice::post_overlays(
     SwappingGLContext const& context,
     RenderableList const& renderables,
     RenderableListCompositor const& list_compositor)
 {
-    if (!(list_needs_commit = hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size)))
+    if (!hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size))
         return;
     setup_layer_types();
 
@@ -101,32 +102,31 @@ void mga::HwcDevice::prepare_overlays(
 
     mg::RenderableList rejected_renderables;
 
+    std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
     auto layers_it = hwc_list.begin();
     for(auto const& renderable : renderables)
     {
         layers_it->prepare_for_draw();
         if (layers_it->needs_gl_render())
             rejected_renderables.push_back(renderable);
+        else
+            next_onscreen_overlay_buffers.push_back(renderable->buffer());
         layers_it++;
     }
 
     list_compositor.render(rejected_renderables, context);
+    post(context);
+    onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
 }
 
-void mga::HwcDevice::post(mg::Buffer const& buffer)
+void mga::HwcDevice::post(SwappingGLContext const& context)
 {
-    if (!list_needs_commit)
-        return;
-
     auto lg = lock_unblanked();
-    set_list_framebuffer(buffer);
+    set_list_framebuffer(*context.last_rendered_buffer());
     hwc_wrapper->set(*hwc_list.native_list().lock());
 
     for(auto& layer : hwc_list)
-    {
         layer.update_fence_and_release_buffer();
-    }
 
     mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
-    list_needs_commit = false;
 }

@@ -81,9 +81,9 @@ struct FakeScene : mc::Scene
 struct DefaultDisplayBufferCompositor : public testing::Test
 {
     DefaultDisplayBufferCompositor()
-     : small(std::make_shared<mtd::FakeRenderable>(10, 20, 30, 40)),
-       big(std::make_shared<mtd::FakeRenderable>(5, 10, 100, 200)),
-       fullscreen(std::make_shared<mtd::FakeRenderable>(0, 0, 1366, 768))
+     : small(std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{10, 20},{30, 40}})),
+       big(std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{5, 10},{100, 200}})),
+       fullscreen(std::make_shared<mtd::FakeRenderable>(screen))
     {
         using namespace testing;
         ON_CALL(display_buffer, orientation())
@@ -191,17 +191,20 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
 TEST_F(DefaultDisplayBufferCompositor, optimization_skips_composition)
 {
     using namespace testing;
-    mg::RenderableList list{
-        small,
-        fullscreen
-    };
-    FakeScene scene(list);
+    FakeScene scene({});
+    auto report = std::make_shared<mtd::MockCompositorReport>();
 
-    EXPECT_CALL(display_buffer, post_renderables_if_optimizable(Ref(list)))
-        .Times(1)
+    Sequence seq;
+    EXPECT_CALL(*report, began_frame(_))
+        .InSequence(seq);
+    EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
+        .InSequence(seq)
         .WillOnce(Return(true));
     EXPECT_CALL(mock_renderer, suspend())
-        .Times(1);
+        .InSequence(seq);
+    EXPECT_CALL(*report, finished_frame(true,_))
+        .InSequence(seq);
+
     EXPECT_CALL(mock_renderer, begin())
         .Times(0);
     EXPECT_CALL(mock_renderer, render(_))
@@ -209,9 +212,6 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_skips_composition)
     EXPECT_CALL(mock_renderer, end())
         .Times(0);
 
-    auto report = std::make_shared<mtd::MockCompositorReport>();
-    EXPECT_CALL(*report, began_frame(_));
-    EXPECT_CALL(*report, finished_frame(true,_));
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         mt::fake_shared(scene),
@@ -256,121 +256,8 @@ TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
     compositor.composite();
 }
 
-TEST_F(DefaultDisplayBufferCompositor, obscured_fullscreen_does_not_bypass)
-{
-    using namespace testing;
-    ON_CALL(display_buffer, post_renderables_if_optimizable(_))
-        .WillByDefault(Return(true));
-
-    mg::RenderableList list{
-        fullscreen,
-        small
-    };
-    FakeScene scene(list);
-    auto report = std::make_shared<mtd::MockCompositorReport>();
-
-    InSequence seq;
-    EXPECT_CALL(*report, began_frame(_))
-        .Times(1);
-    EXPECT_CALL(display_buffer, make_current())
-        .Times(1);
-    EXPECT_CALL(mock_renderer, render(list))
-        .Times(1);
-    EXPECT_CALL(display_buffer, post_update())
-        .Times(1);
-    EXPECT_CALL(*report, finished_frame(false,_))
-        .Times(1);
-
-    mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
-        mt::fake_shared(scene),
-        mt::fake_shared(mock_renderer),
-        report);
-    compositor.composite();
-}
-
-#if 0
-MOVE TO MESA TEST
-=======
-TEST_F(DefaultDisplayBufferCompositor, platform_does_not_support_bypass)
-{
-    using namespace testing;
-    mg::RenderableList list{
-        small, //obscured
-        fullscreen
-    };
-    FakeScene scene(list);
-
-    mg::RenderableList const visible{fullscreen};
-
-    EXPECT_CALL(display_buffer, view_area())
-        .WillRepeatedly(Return(screen));
-    EXPECT_CALL(display_buffer, make_current())
-        .Times(1);
-    EXPECT_CALL(display_buffer, orientation())
-        .WillOnce(Return(mir_orientation_normal));
-    EXPECT_CALL(display_buffer, post_update())
-        .Times(1);
-    EXPECT_CALL(display_buffer, can_bypass())
-        .WillRepeatedly(Return(false));
-    EXPECT_CALL(mock_renderer, render(visible))
-        .Times(1);
-
-    mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
-        mt::fake_shared(scene),
-        mt::fake_shared(mock_renderer),
-        mr::null_compositor_report());
-    compositor.composite();
-}
-
->>>>>>> MERGE-SOURCE
-TEST_F(DefaultDisplayBufferCompositor, bypass_aborted_for_incompatible_buffers)
-{
-    using namespace testing;
-
-    EXPECT_CALL(display_buffer, view_area())
-        .WillRepeatedly(Return(screen));
-    EXPECT_CALL(display_buffer, make_current())
-        .Times(1);
-    EXPECT_CALL(display_buffer, orientation())
-        .WillOnce(Return(mir_orientation_normal));
-    EXPECT_CALL(display_buffer, post_update())
-        .Times(1);
-    EXPECT_CALL(display_buffer, can_bypass())
-        .WillRepeatedly(Return(true));
-
-    mg::RenderableList list{
-        small, //obscured
-        fullscreen
-    };
-    FakeScene scene(list);
-
-    mg::RenderableList const visible{fullscreen};
-    EXPECT_CALL(mock_renderer, render(visible))
-        .Times(1);
-
-    auto nonbypassable = std::make_shared<mtd::MockBuffer>();
-    fullscreen->set_buffer(nonbypassable);
-    EXPECT_CALL(*nonbypassable, can_bypass())
-        .WillRepeatedly(Return(false));
-
-    mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
-        mt::fake_shared(scene),
-        mt::fake_shared(mock_renderer),
-        mr::null_compositor_report());
-    compositor.composite();
-}
-#endif
-
-
 TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
 {
-    mg::RenderableList const first_list{fullscreen, small};
-    mg::RenderableList const second_list{small, fullscreen};
-    mg::RenderableList const third_list{small};
-
     using namespace testing;
     ON_CALL(display_buffer, view_area())
         .WillByDefault(Return(screen));
@@ -390,7 +277,7 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
         .InSequence(seq);
     EXPECT_CALL(mock_renderer, begin())
         .InSequence(seq);
-    EXPECT_CALL(mock_renderer, render(first_list))
+    EXPECT_CALL(mock_renderer, render(_))
         .InSequence(seq);
     EXPECT_CALL(display_buffer, post_update())
         .InSequence(seq);
@@ -411,12 +298,12 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
         .InSequence(seq);
     EXPECT_CALL(mock_renderer, begin())
         .InSequence(seq);
-    EXPECT_CALL(mock_renderer, render(third_list))
+    EXPECT_CALL(mock_renderer, render(_))
         .InSequence(seq);
     EXPECT_CALL(display_buffer, post_update())
         .InSequence(seq);
 
-    FakeScene scene(first_list);
+    FakeScene scene({});
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         mt::fake_shared(scene),
@@ -440,11 +327,11 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
     EXPECT_CALL(display_buffer, post_renderables_if_optimizable(_))
         .WillRepeatedly(Return(false));
 
-    auto window0 = std::make_shared<mtd::FakeRenderable>(99, 99, 2, 2);
-    auto window1 = std::make_shared<mtd::FakeRenderable>(10, 10, 20, 20);
-    auto window2 = std::make_shared<mtd::FakeRenderable>(0,0,100,100);
-    auto window3 = std::make_shared<mtd::FakeRenderable>(0,0,100,100);
-    auto window4 = std::make_shared<mtd::FakeRenderable>(0,0,500,500, 1.0f, true, false, true);
+    auto window0 = std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{99,99},{2,2}});
+    auto window1 = std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{10,10},{20,20}});
+    auto window2 = std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0,0},{100,100}});
+    auto window3 = std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0,0},{100,100}});
+    auto window4 = std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0,0},{500,500}}, 1.0f, true, false, true);
 
     mg::RenderableList list({
         window0, //not occluded

@@ -31,6 +31,7 @@ namespace mir
 namespace input { class InputChannel; }
 namespace shell { class InputTargeter; }
 namespace geometry { class Rectangle; }
+namespace graphics { class CursorImage; }
 
 namespace scene
 {
@@ -70,6 +71,9 @@ public:
     virtual void set_transformation(glm::mat4 const& t) = 0;
     virtual void set_alpha(float alpha) = 0;
     virtual void force_requests_to_complete() = 0;
+    
+    virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
+    virtual std::shared_ptr<graphics::CursorImage> cursor_image() = 0;
 
     virtual void add_observer(std::shared_ptr<SurfaceObserver> const& observer) = 0;
     virtual void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) = 0;
