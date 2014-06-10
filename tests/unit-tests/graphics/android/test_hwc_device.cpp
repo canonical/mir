@@ -204,6 +204,15 @@ protected:
 
         ON_CALL(mock_context, last_rendered_buffer())
             .WillByDefault(Return(mt::fake_shared(mock_buffer)));
+
+        stub_buffer1 = std::make_shared<mtd::StubBuffer>();
+        stub_buffer2 = std::make_shared<mtd::StubBuffer>();
+        mock_renderable1 = std::make_shared<NiceMock<mtd::MockRenderable>>();
+        mock_renderable2 = std::make_shared<NiceMock<mtd::MockRenderable>>();
+        ON_CALL(*mock_renderable1, buffer())
+            .WillByDefault(Return(stub_buffer1));
+        ON_CALL(*mock_renderable2, buffer())
+            .WillByDefault(Return(stub_buffer2));
     }
 
     std::shared_ptr<MockFileOps> mock_file_ops;
@@ -228,11 +237,15 @@ protected:
     geom::Rectangle screen_position{{9,8},{245, 250}};
     std::shared_ptr<StubRenderable> stub_renderable1;
     std::shared_ptr<StubRenderable> stub_renderable2;
+    std::shared_ptr<mtd::MockRenderable> mock_renderable1;
+    std::shared_ptr<mtd::MockRenderable> mock_renderable2;
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_hwc_device_wrapper;
 
     std::function<void(hwc_display_contents_1_t&)> empty_prepare_fn;
     std::function<void(mg::Renderable const&)> empty_render_fn;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
+    std::shared_ptr<mtd::StubBuffer> stub_buffer1;
+    std::shared_ptr<mtd::StubBuffer> stub_buffer2;
     testing::NiceMock<mtd::MockSwappingGLContext> mock_context;
     mtd::StubSwappingGLContext stub_context;
     mtd::StubRenderableListCompositor stub_compositor;
@@ -560,15 +573,6 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
 TEST_F(HwcDevice, overlay_buffers_are_owned_until_next_set)
 {
     using namespace testing;
-    auto stub_buffer1 = std::make_shared<mtd::StubBuffer>();
-    auto stub_buffer2 = std::make_shared<mtd::StubBuffer>();
-    auto mock_renderable1 = std::make_shared<NiceMock<mtd::MockRenderable>>();
-    auto mock_renderable2 = std::make_shared<NiceMock<mtd::MockRenderable>>();
-    ON_CALL(*mock_renderable1, buffer())
-        .WillByDefault(Return(stub_buffer1));
-    ON_CALL(*mock_renderable2, buffer())
-        .WillByDefault(Return(stub_buffer2));
-
     EXPECT_CALL(*mock_hwc_device_wrapper, prepare(_))
         .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
         {
@@ -596,11 +600,6 @@ TEST_F(HwcDevice, overlay_buffers_are_owned_until_next_set)
 TEST_F(HwcDevice, framebuffer_buffers_are_not_owned_past_set)
 {
     using namespace testing;
-    auto stub_buffer1 = std::make_shared<mtd::StubBuffer>();
-    auto mock_renderable1 = std::make_shared<NiceMock<mtd::MockRenderable>>();
-    ON_CALL(*mock_renderable1, buffer())
-        .WillByDefault(Return(stub_buffer1));
-
     EXPECT_CALL(*mock_hwc_device_wrapper, prepare(_))
        .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
         {

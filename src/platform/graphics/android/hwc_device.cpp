@@ -116,7 +116,7 @@ void mga::HwcDevice::post_overlays(
 
     list_compositor.render(rejected_renderables, context);
     post(context);
-    std::swap(onscreen_overlay_buffers, next_onscreen_overlay_buffers);
+    onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
 }
 
 void mga::HwcDevice::post(SwappingGLContext const& context)
