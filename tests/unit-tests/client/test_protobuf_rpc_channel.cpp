@@ -102,16 +102,17 @@ public:
     {
     }
 
-    size_t send_data(std::vector<uint8_t> const& /*buffer*/)
+    size_t send_data(std::vector<uint8_t> const& buffer)
     {
-        return 0;
+        sent_messages.push_back(buffer);
+        return buffer.size();
     }
 
-private:
     std::list<data_received_notifier> callbacks;
 
     size_t read_offset{0};
     std::list<std::vector<uint8_t>> datagrams;
+    std::list<std::vector<uint8_t>> sent_messages;
 };
 
 class MirProtobufRpcChannelTest : public testing::Test
@@ -119,16 +120,17 @@ class MirProtobufRpcChannelTest : public testing::Test
 public:
     MirProtobufRpcChannelTest()
         : transport{new MockTransport},
-          channel{std::unique_ptr<MockTransport>{transport},
+          channel{new mclr::MirProtobufRpcChannel{
+                  std::unique_ptr<MockTransport>{transport},
                   std::make_shared<StubSurfaceMap>(),
                   std::make_shared<mcl::DisplayConfiguration>(),
                   std::make_shared<mclr::NullRpcReport>(),
-                  std::make_shared<mcl::LifecycleControl>()}
+                  std::make_shared<mcl::LifecycleControl>()}}
     {
     }
 
     MockTransport* transport;
-    mclr::MirProtobufRpcChannel channel;
+    std::unique_ptr<::google::protobuf::RpcChannel> channel;
 };
 
 }
@@ -172,4 +174,28 @@ TEST_F(MirProtobufRpcChannelTest, ReadsAllQueuedMessages)
 
     transport->notify_data_received();
     EXPECT_TRUE(transport->all_data_consumed());
+}
+
+TEST_F(MirProtobufRpcChannelTest, SendsMessagesAtomically)
+{
+    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mir::protobuf::ConnectParameters message;
+    message.set_application_name("I'm a little teapot!");
+
+    channel_user.connect(nullptr, &message, nullptr, nullptr);
+
+    EXPECT_EQ(transport->sent_messages.size(), 1);
+}
+
+TEST_F(MirProtobufRpcChannelTest, SetsCorrectSizeWhenSendingMessage)
+{
+    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mir::protobuf::ConnectParameters message;
+    message.set_application_name("I'm a little teapot!");
+
+    channel_user.connect(nullptr, &message, nullptr, nullptr);
+
+    uint16_t message_header = *reinterpret_cast<uint16_t*>(transport->sent_messages.front().data());
+    message_header = be16toh(message_header);
+    EXPECT_EQ(transport->sent_messages.front().size() - sizeof(uint16_t), message_header);
 }
