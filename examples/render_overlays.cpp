@@ -145,11 +145,6 @@ public:
         return true;
     }
 
-    int buffers_ready_for_compositor() const override
-    {
-        return 1;
-    }
-
 private:
     std::shared_ptr<DemoOverlayClient> const client;
     geom::Rectangle const position;
@@ -160,7 +155,6 @@ private:
 int main(int argc, char const** argv)
 try
 {
-
     /* Set up graceful exit on SIGINT and SIGTERM */
     struct sigaction sa;
     sa.sa_handler = signal_handler;

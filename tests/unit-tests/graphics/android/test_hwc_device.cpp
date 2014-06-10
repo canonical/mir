@@ -98,10 +98,6 @@ public:
         return true;
     }
 
-    int buffers_ready_for_compositor() const override
-    {
-        return 1;
-    }
 private:
     std::shared_ptr<mg::Buffer> buf;
     geom::Rectangle screen_pos;
