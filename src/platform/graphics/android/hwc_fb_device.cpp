@@ -25,7 +25,7 @@
 #include "hwc_fallback_gl_renderer.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
-#include "gl_context.h"
+#include "swapping_gl_context.h"
 
 #include <boost/throw_exception.hpp>
 #include <sstream>
@@ -40,15 +40,25 @@ namespace
 class HWC10Context : public mga::SwappingGLContext
 {
 public:
-    HWC10Context(std::function<void()> const& swapping_fn)
-        : swapping_fn(std::move(swapping_fn))
+    HWC10Context(mga::SwappingGLContext const& context,
+                 std::function<void()> const& swapping_fn) :
+        wrapped_context(context),
+        swapping_fn(swapping_fn)
     {
     }
     void swap_buffers() const override
     {
+        //hwc 1.0 is weird in that the driver gets to call eglSwapBuffers.
         swapping_fn();
     }
+
+    std::shared_ptr<mg::Buffer> last_rendered_buffer() const
+    {
+        return wrapped_context.last_rendered_buffer();
+    }
+
 private:
+    mga::SwappingGLContext const& wrapped_context;
     std::function<void()> const swapping_fn;
 };
 }
@@ -98,28 +108,30 @@ void mga::HwcFbDevice::prepare()
     }
 }
 
-void mga::HwcFbDevice::render_gl(SwappingGLContext const&)
+void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
 {
     prepare();
     gpu_render();
+    post(context);
 }
 
-void mga::HwcFbDevice::prepare_overlays(
-    SwappingGLContext const&,
+void mga::HwcFbDevice::post_overlays(
+    SwappingGLContext const& context,
     RenderableList const& list,
     RenderableListCompositor const& compositor)
 {
     prepare();
-    //hwc 1.0 is weird in that the driver gets to call eglSwapBuffers.
-    HWC10Context context(std::bind(&HwcFbDevice::gpu_render, this));
-    compositor.render(list, context);
+    HWC10Context hwc10_context(context, std::bind(&HwcFbDevice::gpu_render, this));
+    compositor.render(list, hwc10_context);
+    post(hwc10_context);
 }
 
-void mga::HwcFbDevice::post(mg::Buffer const& buffer)
+void mga::HwcFbDevice::post(SwappingGLContext const& context)
 {
     auto lg = lock_unblanked();
 
-    auto native_buffer = buffer.native_buffer_handle();
+    auto const& buffer = context.last_rendered_buffer();
+    auto native_buffer = buffer->native_buffer_handle();
     native_buffer->wait_for_content();
     if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)
     {

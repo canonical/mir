@@ -200,21 +200,11 @@ TEST_F(SurfaceStackCompositor, adding_a_surface_that_has_been_swapped_triggers_a
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));
 }
 
-namespace
-{
-int thread_distinguishing_buffers_ready_for_compositor()
-{
-    //could use c++14 integer_sequence one day
-    std::vector<int> sequence{5,4,3,2,1,0};
-    thread_local size_t sequence_idx{0};
-    return sequence[sequence_idx++];
-}
-}
 TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_consumed)
 {
     using namespace testing;
     ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor())
-        .WillByDefault(Invoke(thread_distinguishing_buffers_ready_for_compositor));
+        .WillByDefault(Return(5));
 
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),
@@ -223,8 +213,8 @@ TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_co
         null_comp_report, false);
     mt_compositor.start();
 
-    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(5, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(5, timeout));
@@ -234,7 +224,7 @@ TEST_F(SurfaceStackCompositor, bypassed_compositor_runs_until_all_surfaces_buffe
 {
     using namespace testing;
     ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor())
-        .WillByDefault(Invoke(thread_distinguishing_buffers_ready_for_compositor));
+        .WillByDefault(Return(5));
 
     stub_surface->resize(geom::Size{10,10});
     stub_surface->move_to(geom::Point{0,0});
@@ -245,8 +235,8 @@ TEST_F(SurfaceStackCompositor, bypassed_compositor_runs_until_all_surfaces_buffe
         null_comp_report, false);
     mt_compositor.start();
 
-    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(5, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(5, timeout));
@@ -265,18 +255,16 @@ TEST_F(SurfaceStackCompositor, an_empty_scene_retriggers)
         null_comp_report, false);
     mt_compositor.start();
 
-    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(1, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));
 
     stack.remove_surface(stub_surface);
     
-    //The second render would be the removal of the surface. The 3rd is the frig
-    //implemented to avoid lp:1286190
-    EXPECT_TRUE(stub_primary_db.has_posted_at_least(3, timeout));
-    EXPECT_TRUE(stub_secondary_db.has_posted_at_least(3, timeout));
+    EXPECT_TRUE(stub_primary_db.has_posted_at_least(2, timeout));
+    EXPECT_TRUE(stub_secondary_db.has_posted_at_least(2, timeout));
 }
 
 TEST_F(SurfaceStackCompositor, moving_a_surface_triggers_composition)
@@ -317,8 +305,10 @@ TEST_F(SurfaceStackCompositor, removing_a_surface_triggers_composition)
 
 TEST_F(SurfaceStackCompositor, buffer_updates_trigger_composition)
 {
-    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
+    ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor())
+        .WillByDefault(testing::Return(1));
     stack.add_surface(stub_surface, default_params.depth, default_params.input_mode);
+    stub_surface->swap_buffers(&stubbuf, [](mg::Buffer*){});
 
     mc::MultiThreadedCompositor mt_compositor(
         mt::fake_shared(stub_display),

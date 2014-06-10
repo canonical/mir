@@ -19,7 +19,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
-#include "gl_context.h"
+#include "swapping_gl_context.h"
 #include "android_format_conversion-inl.h"
 #include "fb_device.h"
 #include "framebuffer_bundle.h"
@@ -45,22 +45,25 @@ mga::FBDevice::FBDevice(
     mode(mir_power_mode_on);
 }
 
-void mga::FBDevice::render_gl(SwappingGLContext const& context)
+void mga::FBDevice::post_gl(SwappingGLContext const& context)
 {
     context.swap_buffers();
+    post(context);
 }
 
-void mga::FBDevice::prepare_overlays(
+void mga::FBDevice::post_overlays(
     SwappingGLContext const& context,
     RenderableList const& list,
     RenderableListCompositor const& compositor)
 {
     compositor.render(list, context);
+    post(context);
 }
 
-void mga::FBDevice::post(mg::Buffer const& buffer)
+void mga::FBDevice::post(SwappingGLContext const& context)
 {
-    auto native_buffer = buffer.native_buffer_handle();
+    auto const& buffer = context.last_rendered_buffer();
+    auto native_buffer = buffer->native_buffer_handle();
     native_buffer->wait_for_content();
     if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)
     {
