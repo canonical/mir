@@ -216,6 +216,16 @@ public:
     {
         using namespace testing;
 
+        set_up_expectations_for_vt_restore(vt_mode);
+
+        EXPECT_CALL(mock_fops, close(fake_vt_fd))
+            .WillOnce(Return(0));
+    }
+
+    void set_up_expectations_for_vt_restore(vt_mode const& vt_mode)
+    {
+        using namespace testing;
+
         EXPECT_CALL(mock_fops, tcsetattr(fake_vt_fd, TCSANOW, An<const struct termios *>()))
             .WillOnce(Return(0));
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSKBMODE, fake_kb_mode))
@@ -234,9 +244,6 @@ public:
             EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_SETMODE, An<void*>()))
                 .Times(0);
         }
-
-        EXPECT_CALL(mock_fops, close(fake_vt_fd))
-            .WillOnce(Return(0));
     }
 
     int const fake_vt_fd;
@@ -653,4 +660,29 @@ TEST_F(LinuxVirtualTerminalTest, exception_if_becoming_session_leader_fails)
     EXPECT_THROW({
         mgm::LinuxVirtualTerminal vt(fops, std::move(pops), vt_num, null_report);
     }, std::runtime_error);
+}
+
+TEST_F(LinuxVirtualTerminalTest, restores_keyboard_and_graphics)
+{
+    using namespace testing;
+
+    int const vt_num{7};
+
+    InSequence s;
+
+    set_up_expectations_for_vt_setup(vt_num, true);
+
+    set_up_expectations_for_vt_restore(fake_vt_mode_auto);
+
+    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new StubPosixProcessOperations());
+    auto null_report = mr::null_display_report();
+
+    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), vt_num, null_report);
+
+    vt.restore();
+
+    Mock::VerifyAndClearExpectations(&mock_fops);
+
+    set_up_expectations_for_vt_teardown();
 }
