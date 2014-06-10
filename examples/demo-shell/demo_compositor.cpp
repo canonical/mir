@@ -33,31 +33,14 @@ me::DemoCompositor::DemoCompositor(
     display_buffer(display_buffer),
     scene(scene),
     report(report),
-    renderer(factory, display_buffer.view_area()) 
+    shadow_radius(80.0f),
+    titlebar_height(30.0f),
+    renderer(factory, display_buffer.view_area(), shadow_radius, titlebar_height) 
 {
 }
 
 bool me::DemoCompositor::composite()
 {
-#if 0
-    if (display_buffer.can_bypass())
-    {
-        mc::BypassMatch bypass_match(view_area);
-        auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);
-        if (bypass_it != renderable_list.rend())
-        {
-            auto bypass_buf = (*bypass_it)->buffer();
-            if (bypass_buf->can_bypass())
-            {
-                display_buffer.post_update(bypass_buf);
-                bypassed = true;
-                renderer->suspend();
-            }
-        }
-    }
-    if (!bypassed)
-    {
-#endif
     report->began_frame(this);
 
     auto renderable_list = scene->renderable_list_for(this);

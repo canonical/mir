@@ -29,7 +29,11 @@ namespace examples
 class DemoRenderer : public compositor::GLRenderer
 {
 public:
-    DemoRenderer(graphics::GLProgramFactory const& factory, geometry::Rectangle const& display_area);
+    DemoRenderer(
+        graphics::GLProgramFactory const& factory,
+        geometry::Rectangle const& display_area,
+        float shadow_radius,
+        float titlebar_height);
     ~DemoRenderer();
 
     void begin() const override;
@@ -44,6 +48,8 @@ public:
 
 private:
     float const corner_radius;
+    float const shadow_radius;
+    float const titlebar_height;
     GLuint shadow_corner_tex;
     GLuint titlebar_corner_tex;
 };
