@@ -8,6 +8,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_wait_handle.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_display_conf.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_mir_screencast.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_rpc_channel.cpp
 )
 
 if(MIR_TEST_PLATFORM STREQUAL "android")

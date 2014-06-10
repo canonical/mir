@@ -60,21 +60,21 @@ void mcll::RpcReport::invocation_succeeded(
 
 void mcll::RpcReport::invocation_failed(
     mir::protobuf::wire::Invocation const& invocation,
-    boost::system::error_code const& error)
+    std::exception const& ex)
 {
     std::stringstream ss;
     ss << "Invocation failed: id: " << invocation.id()
        << " method_name: " << invocation.method_name()
-       << " error: " << error.message();
+       << " error: " << ex.what();
 
     logger->log(ml::Logger::error, ss.str(), component);
 }
 
 void mcll::RpcReport::header_receipt_failed(
-    boost::system::error_code const& error)
+    std::exception const& ex)
 {
     std::stringstream ss;
-    ss << "Header receipt failed: " << " error: " << error.message();
+    ss << "Header receipt failed: " << " error: " << ex.what();
 
     logger->log(ml::Logger::error, ss.str(), component);
 }

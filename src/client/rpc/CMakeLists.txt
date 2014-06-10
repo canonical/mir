@@ -10,6 +10,7 @@ add_library(
   null_rpc_report.cpp
   mir_socket_rpc_channel.cpp
   make_socket_rpc_channel.cpp
+  asio_socket_transport.cpp
   ${PROTO_SRCS}
 )
 

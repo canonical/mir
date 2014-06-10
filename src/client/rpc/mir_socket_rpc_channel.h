@@ -20,8 +20,7 @@
 #define MIR_CLIENT_RPC_MIR_SOCKET_RPC_CHANNEL_H_
 
 #include "mir_basic_rpc_channel.h"
-
-#include <boost/asio.hpp>
+#include "transport.h"
 
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>
@@ -49,46 +48,36 @@ namespace rpc
 
 class RpcReport;
 
-class MirSocketRpcChannel : public MirBasicRpcChannel
+class MirProtobufRpcChannel : public MirBasicRpcChannel
 {
 public:
-    MirSocketRpcChannel(std::string const& endpoint,
+    MirProtobufRpcChannel(std::unique_ptr<Transport> transport,
                         std::shared_ptr<SurfaceMap> const& surface_map,
                         std::shared_ptr<DisplayConfiguration> const& disp_config,
                         std::shared_ptr<RpcReport> const& rpc_report,
                         std::shared_ptr<LifecycleControl> const& lifecycle_control);
+    ~MirProtobufRpcChannel();
 
-    MirSocketRpcChannel(int native_socket,
-                        std::shared_ptr<SurfaceMap> const& surface_map,
-                        std::shared_ptr<DisplayConfiguration> const& disp_config,
-                        std::shared_ptr<RpcReport> const& rpc_report,
-                        std::shared_ptr<LifecycleControl> const& lifecycle_control);
-    ~MirSocketRpcChannel();
-
-private:
-    void init();
-
+private:    
+    void on_message_available();
+    
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
         const google::protobuf::Message* parameters, google::protobuf::Message* response,
         google::protobuf::Closure* complete);
+
     std::shared_ptr<RpcReport> const rpc_report;
     detail::PendingCallCache pending_calls;
-    std::thread io_service_thread;
-    boost::asio::io_service io_service;
-    boost::asio::io_service::work work;
-    boost::asio::local::stream_protocol::socket socket;
 
-    static size_t const size_of_header = 2;
-    unsigned char header_bytes[size_of_header];
-    std::vector<char> body_bytes;
+    static constexpr size_t size_of_header = 2;
+    detail::SendBuffer header_bytes;
+    detail::SendBuffer body_bytes;
 
     void receive_file_descriptors(google::protobuf::Message* response, google::protobuf::Closure* complete);
-    void receive_file_descriptors(std::vector<int> &fds);
     template<class MessageType>
     void receive_any_file_descriptors_for(MessageType* response);
     void send_message(mir::protobuf::wire::Invocation const& body,
                       mir::protobuf::wire::Invocation const& invocation);
-    void on_header_read(const boost::system::error_code& error);
+//    void on_header_read(const boost::system::error_code& error);
 
     void read_message();
     void process_event_sequence(std::string const& event);
@@ -99,6 +88,7 @@ private:
                            size_t const body_size);
     void notify_disconnected();
 
+    std::unique_ptr<Transport> transport;
     std::shared_ptr<SurfaceMap> surface_map;
     std::shared_ptr<DisplayConfiguration> display_configuration;
     std::shared_ptr<LifecycleControl> lifecycle_control;

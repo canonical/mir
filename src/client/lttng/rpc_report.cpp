@@ -43,12 +43,12 @@ void mcl::lttng::RpcReport::invocation_succeeded(
 
 void mcl::lttng::RpcReport::invocation_failed(
     mir::protobuf::wire::Invocation const& /*invocation*/,
-    boost::system::error_code const& /*error*/)
+    std::exception const& /*ex*/)
 {
 }
 
 void mcl::lttng::RpcReport::header_receipt_failed(
-    boost::system::error_code const& /*error*/)
+    std::exception const& /*ex*/)
 {
 }
 

@@ -48,9 +48,9 @@ public:
     virtual void invocation_requested(mir::protobuf::wire::Invocation const& invocation) = 0;
     virtual void invocation_succeeded(mir::protobuf::wire::Invocation const& invocation) = 0;
     virtual void invocation_failed(mir::protobuf::wire::Invocation const& invocation,
-                                   boost::system::error_code const& error) = 0;
+                                   std::exception const& ex) = 0;
 
-    virtual void header_receipt_failed(boost::system::error_code const& error) = 0;
+    virtual void header_receipt_failed(std::exception const& ex) = 0;
     virtual void result_receipt_succeeded(mir::protobuf::wire::Result const& result) = 0;
     virtual void result_receipt_failed(std::exception const& ex) = 0;
 
