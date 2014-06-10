@@ -62,7 +62,7 @@ mga::DisplayBuffer::DisplayBuffer(
     : fb_bundle{fb_bundle},
       display_device{display_device},
       native_window{native_window},
-      gl_context{shared_gl_context, std::bind(mga::create_window_surface, std::placeholders::_1, std::placeholders::_2, native_window.get())},
+      gl_context{shared_gl_context, fb_bundle, native_window},
       overlay_program{program_factory, gl_context, geom::Rectangle{{0,0},fb_bundle->fb_size()}},
       overlay_enabled{overlay_option == mga::OverlayOptimization::enabled},
       current_configuration{
@@ -115,21 +115,13 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     if (renderable_list_is_hwc_incompatible(renderlist) || !overlay_enabled)
         return false;
 
-    display_device->prepare_overlays(gl_context, renderlist, overlay_program);
-    post();
+    display_device->post_overlays(gl_context, renderlist, overlay_program);
     return true;
 }
 
 void mga::DisplayBuffer::post_update()
 {
-    display_device->render_gl(gl_context);
-    post();
-}
-
-void mga::DisplayBuffer::post()
-{
-    auto last_rendered = fb_bundle->last_rendered_buffer();
-    display_device->post(*last_rendered);
+    display_device->post_gl(gl_context);
 }
 
 MirOrientation mga::DisplayBuffer::orientation() const
