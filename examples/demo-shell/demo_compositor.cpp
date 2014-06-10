@@ -21,6 +21,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/destination_alpha.h"
 #include "demo_compositor.h"
+#include "occlusion.h"
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
@@ -33,6 +34,7 @@ mc::DestinationAlpha destination_alpha(mg::DisplayBuffer const& db)
     return db.uses_alpha() ? mc::DestinationAlpha::generate_from_source : mc::DestinationAlpha::opaque;
 }
 }
+
 me::DemoCompositor::DemoCompositor(
     mg::DisplayBuffer& display_buffer,
     std::shared_ptr<mc::Scene> const& scene,
@@ -52,7 +54,7 @@ bool me::DemoCompositor::composite()
     report->began_frame(this);
 
     auto renderable_list = scene->renderable_list_for(this);
-    //mc::filter_occlusions_from(renderable_list, display_buffer.view_area();
+    mc::filter_occlusions_from(renderable_list, display_buffer.view_area(), mc::simple_renderable_rect);
 
     display_buffer.make_current();
 
