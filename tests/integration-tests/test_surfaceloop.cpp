@@ -183,48 +183,6 @@ void wait_for_surface_release(SurfaceSync* context)
 }
 }
 
-TEST_F(SurfaceLoopDefault, creating_a_client_surface_gets_surface_of_requested_size)
-{
-    struct ClientConfig : TestingClientConfiguration
-    {
-        void exec()
-        {
-            auto const connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-
-            ASSERT_TRUE(connection != NULL);
-            EXPECT_TRUE(mir_connection_is_valid(connection));
-            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
-
-            MirSurfaceParameters const request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-
-            auto const surface = mir_connection_create_surface_sync(connection, &request_params);
-
-            ASSERT_TRUE(surface != NULL);
-            EXPECT_TRUE(mir_surface_is_valid(surface));
-            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
-
-            MirSurfaceParameters response_params;
-            mir_surface_get_parameters(surface, &response_params);
-            EXPECT_EQ(request_params.width, response_params.width);
-            EXPECT_EQ(request_params.height, response_params.height);
-            EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
-            EXPECT_EQ(request_params.buffer_usage, response_params.buffer_usage);
-
-            mir_surface_release_sync(surface);
-            mir_connection_release(connection);
-        }
-    } client_config;
-
-    launch_client_process(client_config);
-}
-
 namespace
 {
 struct BufferCounterConfig : TestingServerConfiguration
