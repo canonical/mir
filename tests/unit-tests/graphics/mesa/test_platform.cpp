@@ -20,11 +20,9 @@
 #include "mir/graphics/drm_authenticator.h"
 #include "src/platform/graphics/mesa/platform.h"
 #include "src/platform/graphics/mesa/internal_client.h"
-#include "mir_test_doubles/null_virtual_terminal.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
-
-#include "src/server/report/null_report_factory.h"
+#include "mir_test_doubles/platform_factory.h"
 
 #include <gtest/gtest.h>
 
@@ -46,7 +44,6 @@ namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir::mir_test_framework;
-namespace mr = mir::report;
 
 namespace
 {
@@ -63,10 +60,7 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-        return std::make_shared<mgm::Platform>(
-            mr::null_display_report(),
-            std::make_shared<mtd::NullVirtualTerminal>(),
-            mgm::BypassOption::prohibited);
+        return mtd::create_platform_with_null_dependencies();
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;

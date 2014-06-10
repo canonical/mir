@@ -20,11 +20,8 @@
 #ifndef MIR_FRONTEND_SURFACE_H_
 #define MIR_FRONTEND_SURFACE_H_
 
-#include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
-
-#include <glm/glm.hpp>
 
 #include <memory>
 
@@ -36,21 +33,15 @@ class Buffer;
 class InternalSurface;
 class CursorImage;
 }
-namespace input
-{
-class InputChannel;
-}
 
 namespace frontend
 {
-
 class ClientBufferTracker;
 
 class Surface
 {
 public:
-
-    virtual ~Surface() {}
+    virtual ~Surface() = default;
 
     /// Size of the client area of the surface (excluding any decorations)
     virtual geometry::Size client_size() const = 0;

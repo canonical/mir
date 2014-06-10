@@ -64,7 +64,7 @@ const GLchar* fragment_shader_src =
     "varying vec2 v_texcoord;\n"
     "void main() {\n"
     "   vec4 frag = texture2D(tex, v_texcoord);\n"
-    "   gl_FragColor = vec4(frag.xyz, frag.a * alpha);\n"
+    "   gl_FragColor = alpha*frag;\n"
     "}\n"
 };
 }
@@ -125,7 +125,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     if (renderable.shaped() || renderable.alpha() < 1.0f)
     {
         glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     }
     else
     {
