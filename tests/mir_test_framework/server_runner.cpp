@@ -70,7 +70,7 @@ mtf::ServerRunner::~ServerRunner()
 mir::DisplayServer* mtf::ServerRunner::start_mir_server()
 {
     std::mutex mutex;
-    std::condition_variable cv;
+    std::condition_variable started;
     mir::DisplayServer* result{nullptr};
 
     server_thread = std::thread([&]
@@ -79,9 +79,9 @@ mir::DisplayServer* mtf::ServerRunner::start_mir_server()
         {
             mir::run_mir(server_config(), [&](mir::DisplayServer& ds)
             {
-                std::unique_lock<std::mutex> lock(mutex);
+                std::lock_guard<std::mutex> lock(mutex);
                 result = &ds;
-                cv.notify_one();
+                started.notify_one();
             });
         }
         catch (std::exception const& e)
@@ -90,13 +90,8 @@ mir::DisplayServer* mtf::ServerRunner::start_mir_server()
         }
     });
 
-    using namespace std::chrono;
-    auto const time_limit = system_clock::now() + seconds(2);
-
     std::unique_lock<std::mutex> lock(mutex);
-
-    while (!result && time_limit > system_clock::now())
-        cv.wait_until(lock, time_limit);
+    started.wait_for(lock, std::chrono::seconds(2), [&]{ return !!result; });
 
     return result;
 }
