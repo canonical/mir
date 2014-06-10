@@ -76,14 +76,12 @@ TEST_F(ClientLibraryThread, HandlesNoSignals)
                 mir_display_output_id_invalid
             };
 
-            surface = mir_connection_create_surface_sync(conn, &request_params);
-
+            MirSurface* surface = mir_connection_create_surface_sync(conn, &request_params);
+            mir_surface_release_sync(surface);
             mir_connection_release(conn);
 
             EXPECT_FALSE(signalled);
         }
-
-        MirSurface* surface{nullptr};
     } client_config;
 
     launch_client_process(client_config);
