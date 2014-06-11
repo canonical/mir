@@ -160,6 +160,8 @@ void mclr::MirProtobufRpcChannel::on_message_available()
             body_bytes.resize(message_size);
             transport->receive_data(body_bytes.data(), message_size);
 
+            result.ParseFromArray(body_bytes.data(), message_size);
+
             rpc_report->result_receipt_succeeded(result);
         }
         catch (std::exception const& x)

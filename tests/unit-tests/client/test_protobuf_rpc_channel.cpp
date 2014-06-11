@@ -24,6 +24,7 @@
 #include "src/client/lifecycle_control.h"
 
 #include "mir_protobuf.pb.h"
+#include "mir_protobuf_wire.pb.h"
 
 #include <list>
 #include <endian.h>
@@ -52,7 +53,11 @@ class MockTransport : public mclr::Transport
 public:
     void add_receive_hunk(std::vector<uint8_t>&& message)
     {
-        datagrams.emplace_back(std::forward<std::vector<uint8_t>>(message));
+        datagrams.emplace_back(std::forward<std::vector<uint8_t>>(message), std::list<int>());
+    }
+    void add_receive_hunk(std::vector<uint8_t>&& message, std::initializer_list<int> fds)
+    {
+        datagrams.emplace_back(std::forward<std::vector<uint8_t>>(message), fds);
     }
 
     bool all_data_consumed() const
@@ -82,14 +87,15 @@ public:
         size_t read_bytes{0};
         while ((message_size != 0) && !datagrams.empty())
         {
-            size_t read_size = std::min(datagrams.front().size() - read_offset, message_size);
+            fds_for_current_message = datagrams.front().second;
+            size_t read_size = std::min(datagrams.front().first.size() - read_offset, message_size);
 
-            memcpy(buffer, datagrams.front().data() + read_offset, read_size);
+            memcpy(buffer, datagrams.front().first.data() + read_offset, read_size);
             read_bytes += read_size;
             read_offset += read_size;
             message_size -= read_size;
 
-            if (read_offset == datagrams.front().size())
+            if (read_offset == datagrams.front().first.size())
             {
                 datagrams.pop_front();
                 read_offset = 0;
@@ -98,8 +104,16 @@ public:
         return read_bytes;
     }
 
-    void receive_file_descriptors(std::vector<int>& /*fds*/)
+    void receive_file_descriptors(std::vector<int>& fds)
     {
+        if (fds.size() > fds_for_current_message.size())
+            throw std::runtime_error("Attempted to read more fds than are available");
+
+        for (auto& fd : fds)
+        {
+            fd = fds_for_current_message.front();
+            fds_for_current_message.pop_front();
+        }
     }
 
     size_t send_data(std::vector<uint8_t> const& buffer)
@@ -111,7 +125,8 @@ public:
     std::list<data_received_notifier> callbacks;
 
     size_t read_offset{0};
-    std::list<std::vector<uint8_t>> datagrams;
+    std::list<std::pair<std::vector<uint8_t>, std::list<int>>> datagrams;
+    std::list<int> fds_for_current_message;
     std::list<std::vector<uint8_t>> sent_messages;
 };
 
@@ -198,4 +213,51 @@ TEST_F(MirProtobufRpcChannelTest, SetsCorrectSizeWhenSendingMessage)
     uint16_t message_header = *reinterpret_cast<uint16_t*>(transport->sent_messages.front().data());
     message_header = be16toh(message_header);
     EXPECT_EQ(transport->sent_messages.front().size() - sizeof(uint16_t), message_header);
+}
+
+TEST_F(MirProtobufRpcChannelTest, ReadsFds)
+{
+    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mir::protobuf::Buffer reply;
+    mir::protobuf::Void dummy;
+
+    channel_user.test_file_descriptors(nullptr, &dummy, &reply, google::protobuf::NewCallback([](){}));
+
+    std::initializer_list<int> fds = {2, 3, 5};
+
+    ASSERT_EQ(transport->sent_messages.size(), 1);
+    {
+        mir::protobuf::Buffer reply_message;
+
+        for (auto fd : fds)
+            reply_message.add_fd(fd);
+        reply_message.set_fds_on_side_channel(fds.size());
+
+        mir::protobuf::wire::Invocation request;
+        mir::protobuf::wire::Result reply;
+
+        request.ParseFromArray(transport->sent_messages.front().data() + sizeof(uint16_t),
+                               transport->sent_messages.front().size() - sizeof(uint16_t));
+
+        reply.set_id(request.id());
+        reply.set_response(reply_message.SerializeAsString());
+
+        ASSERT_TRUE(reply.has_id());
+        ASSERT_TRUE(reply.has_response());
+
+        std::vector<uint8_t> buffer(reply.ByteSize() + sizeof(uint16_t));
+        *reinterpret_cast<uint16_t*>(buffer.data()) = htobe16(reply.ByteSize());
+        ASSERT_TRUE(reply.SerializeToArray(buffer.data() + sizeof(uint16_t), buffer.size() - sizeof(uint16_t)));
+
+        transport->add_receive_hunk(std::move(buffer), fds);
+        transport->notify_data_received();
+    }
+
+    ASSERT_EQ(reply.fd_size(), fds.size());
+    int i = 0;
+    for (auto fd : fds)
+    {
+        EXPECT_EQ(reply.fd(i), fd);
+        ++i;
+    }
 }
