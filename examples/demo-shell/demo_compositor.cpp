@@ -22,12 +22,6 @@
 #include "mir/compositor/destination_alpha.h"
 #include "demo_compositor.h"
 #include "occlusion.h"
-#include "mir/geometry/dimensions.h"
-#include "mir/geometry/dimensions.h"
-#include "mir/geometry/dimensions.h"
-#include "mir/geometry/dimensions.h"
-#include "mir/geometry/dimensions.h"
-#include "mir/geometry/dimensions.h"
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
