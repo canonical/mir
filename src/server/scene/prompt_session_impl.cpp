@@ -16,30 +16,22 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SCENE_TRUST_SESSION_IMPL_H_
-#define MIR_SCENE_TRUST_SESSION_IMPL_H_
+#include "prompt_session_impl.h"
+#include "mir/scene/session.h"
+#include "mir/scene/prompt_session_listener.h"
 
-#include "mir/scene/trust_session.h"
+namespace ms = mir::scene;
 
-namespace mir
+ms::PromptSessionImpl::PromptSessionImpl(std::weak_ptr<Session> const& session) :
+    helper(session)
 {
-namespace scene
-{
-class TrustSessionImpl : public TrustSession
-{
-public:
-    explicit TrustSessionImpl(std::weak_ptr<Session> const& session);
-
-    std::weak_ptr<Session> get_trusted_helper() const override;
-
-protected:
-    TrustSessionImpl(const TrustSessionImpl&) = delete;
-    TrustSessionImpl& operator=(const TrustSessionImpl&) = delete;
-
-private:
-    std::weak_ptr<Session> const trusted_helper;
-};
-}
+    if (auto const& helper_locked = helper.lock())
+    {
+        helper_locked->start_prompt_session();
+    }
 }
 
-#endif // MIR_SCENE_TRUST_SESSION_IMPL_H_
+std::weak_ptr<ms::Session> ms::PromptSessionImpl::get_helper() const
+{
+    return helper;
+}

@@ -16,10 +16,10 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_TRUST_SESSION_LISTENER_H_
-#define MIR_TEST_DOUBLES_MOCK_TRUST_SESSION_LISTENER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_PROMPT_SESSION_LISTENER_H_
+#define MIR_TEST_DOUBLES_MOCK_PROMPT_SESSION_LISTENER_H_
 
-#include "mir/scene/trust_session_listener.h"
+#include "mir/scene/prompt_session_listener.h"
 
 #include <gmock/gmock.h>
 
@@ -30,19 +30,19 @@ namespace test
 namespace doubles
 {
 
-struct MockTrustSessionListener : public scene::TrustSessionListener
+struct MockPromptSessionListener : public scene::PromptSessionListener
 {
-    virtual ~MockTrustSessionListener() noexcept(true) {}
+    virtual ~MockPromptSessionListener() noexcept(true) {}
 
-    MOCK_METHOD1(starting, void(std::shared_ptr<scene::TrustSession> const&));
-    MOCK_METHOD1(stopping, void(std::shared_ptr<scene::TrustSession> const&));
+    MOCK_METHOD1(starting, void(std::shared_ptr<scene::PromptSession> const&));
+    MOCK_METHOD1(stopping, void(std::shared_ptr<scene::PromptSession> const&));
 
-    MOCK_METHOD2(participant_added, void(scene::TrustSession const&, std::shared_ptr<scene::Session> const&));
-    MOCK_METHOD2(participant_removed, void(scene::TrustSession const&, std::shared_ptr<scene::Session> const&));
+    MOCK_METHOD2(participant_added, void(scene::PromptSession const&, std::shared_ptr<scene::Session> const&));
+    MOCK_METHOD2(participant_removed, void(scene::PromptSession const&, std::shared_ptr<scene::Session> const&));
 };
 
 }
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_MOCK_TRUST_SESSION_LISTENER_H_
+#endif // MIR_TEST_DOUBLES_MOCK_PROMPT_SESSION_LISTENER_H_

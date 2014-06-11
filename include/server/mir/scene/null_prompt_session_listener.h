@@ -16,22 +16,25 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#include "trust_session_impl.h"
-#include "mir/scene/session.h"
-#include "mir/scene/trust_session_listener.h"
+#ifndef MIR_SCENE_NULL_PROMPT_SESSION_LISTENER_H_
+#define MIR_SCENE_NULL_PROMPT_SESSION_LISTENER_H_
 
-namespace ms = mir::scene;
+#include "mir/scene/prompt_session_listener.h"
 
-ms::TrustSessionImpl::TrustSessionImpl(std::weak_ptr<Session> const& session) :
-    trusted_helper(session)
+namespace mir
 {
-    if (auto const& helper = trusted_helper.lock())
-    {
-        helper->start_trust_session();
-    }
+namespace scene
+{
+class NullPromptSessionListener : public PromptSessionListener
+{
+public:
+    void starting(std::shared_ptr<PromptSession> const&) override {}
+    void stopping(std::shared_ptr<PromptSession> const&) override {}
+
+    void participant_added(PromptSession const&, std::shared_ptr<Session> const&) override {}
+    void participant_removed(PromptSession const&, std::shared_ptr<Session> const&) override {}
+};
+}
 }
 
-std::weak_ptr<ms::Session> ms::TrustSessionImpl::get_trusted_helper() const
-{
-    return trusted_helper;
-}
+#endif // MIR_SHELL_NULL_PROMPT_SESSION_LISTENER_H_

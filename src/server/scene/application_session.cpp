@@ -184,21 +184,21 @@ void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
     event_sink->handle_lifecycle_event(state);
 }
 
-void ms::ApplicationSession::start_trust_session()
+void ms::ApplicationSession::start_prompt_session()
 {
-    // All sessions which are part of the trust session get this event.
+    // All sessions which are part of the prompt session get this event.
     MirEvent start_event;
     memset(&start_event, 0, sizeof start_event);
-    start_event.type = mir_event_type_trust_session_state_change;
-    start_event.trust_session.new_state = mir_trust_session_state_started;
+    start_event.type = mir_event_type_prompt_session_state_change;
+    start_event.prompt_session.new_state = mir_prompt_session_state_started;
     event_sink->handle_event(start_event);
 }
 
-void ms::ApplicationSession::stop_trust_session()
+void ms::ApplicationSession::stop_prompt_session()
 {
     MirEvent stop_event;
     memset(&stop_event, 0, sizeof stop_event);
-    stop_event.type = mir_event_type_trust_session_state_change;
-    stop_event.trust_session.new_state = mir_trust_session_state_stopped;
+    stop_event.type = mir_event_type_prompt_session_state_change;
+    stop_event.prompt_session.new_state = mir_prompt_session_state_stopped;
     event_sink->handle_event(stop_event);
 }

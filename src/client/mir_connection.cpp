@@ -18,7 +18,7 @@
 
 #include "mir_connection.h"
 #include "mir_surface.h"
-#include "mir_trust_session.h"
+#include "mir_prompt_session.h"
 #include "client_platform.h"
 #include "client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"
@@ -195,9 +195,9 @@ MirWaitHandle* MirConnection::release_surface(
     return new_wait_handle;
 }
 
-MirTrustSession* MirConnection::create_trust_session()
+MirPromptSession* MirConnection::create_prompt_session()
 {
-    return new MirTrustSession(display_server(), event_handler_register);
+    return new MirPromptSession(display_server(), event_handler_register);
 }
 
 namespace

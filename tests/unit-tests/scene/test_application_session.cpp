@@ -27,7 +27,7 @@
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
-#include "mir_test_doubles/null_trust_session.h"
+#include "mir_test_doubles/null_prompt_session.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -72,8 +72,8 @@ MATCHER(IsNullSnapshot, "")
            arg.pixels == nullptr;
 }
 
-MATCHER_P(EqTrustedEventState, state, "") {
-  return arg.type == mir_event_type_trust_session_state_change && arg.trust_session.new_state == state;
+MATCHER_P(EqPromptSessionEventState, state, "") {
+  return arg.type == mir_event_type_prompt_session_state_change && arg.prompt_session.new_state == state;
 }
 }
 
@@ -386,7 +386,7 @@ TEST(ApplicationSession, process_id)
     EXPECT_THAT(app_session.process_id(), Eq(pid));
 }
 
-TEST(ApplicationSession, start_trust_session)
+TEST(ApplicationSession, start_prompt_session)
 {
     using namespace ::testing;
 
@@ -401,12 +401,12 @@ TEST(ApplicationSession, start_trust_session)
         std::make_shared<ms::NullSessionListener>(),
         mt::fake_shared(sender));
 
-    EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_state_started))).Times(1);
+    EXPECT_CALL(sender, handle_event(EqPromptSessionEventState(mir_prompt_session_state_started))).Times(1);
 
-    app_session.start_trust_session();
+    app_session.start_prompt_session();
 }
 
-TEST(ApplicationSession, stop_trust_session)
+TEST(ApplicationSession, stop_prompt_session)
 {
     using namespace ::testing;
 
@@ -421,7 +421,7 @@ TEST(ApplicationSession, stop_trust_session)
         std::make_shared<ms::NullSessionListener>(),
         mt::fake_shared(sender));
 
-    EXPECT_CALL(sender, handle_event(EqTrustedEventState(mir_trust_session_state_stopped))).Times(1);
+    EXPECT_CALL(sender, handle_event(EqPromptSessionEventState(mir_prompt_session_state_stopped))).Times(1);
 
-    app_session.stop_trust_session();
+    app_session.stop_prompt_session();
 }

@@ -27,8 +27,8 @@
 #include "src/server/scene/session_event_sink.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/scene/trust_session_creation_parameters.h"
-#include "mir/scene/trust_session.h"
+#include "mir/scene/prompt_session_creation_parameters.h"
+#include "mir/scene/prompt_session.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -39,9 +39,9 @@
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/null_session_event_sink.h"
-#include "mir_test_doubles/mock_trust_session_listener.h"
+#include "mir_test_doubles/mock_prompt_session_listener.h"
 #include "mir_test_doubles/null_event_sink.h"
-#include "mir_test_doubles/null_trust_session_manager.h"
+#include "mir_test_doubles/null_prompt_session_manager.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -84,7 +84,7 @@ struct SessionManagerSetup : public testing::Test
                         std::make_shared<mtd::NullSnapshotStrategy>(),
                         std::make_shared<mtd::NullSessionEventSink>(),
                         mt::fake_shared(session_listener),
-                        std::make_shared<mtd::NullTrustSessionManager>())
+                        std::make_shared<mtd::NullPromptSessionManager>())
     {
         using namespace ::testing;
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
@@ -186,7 +186,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
                         std::make_shared<mtd::NullSnapshotStrategy>(),
                         std::make_shared<mtd::NullSessionEventSink>(),
                         mt::fake_shared(session_listener),
-                        std::make_shared<mtd::NullTrustSessionManager>())
+                        std::make_shared<mtd::NullPromptSessionManager>())
     {
         using namespace ::testing;
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
@@ -226,7 +226,7 @@ struct SessionManagerSessionEventsSetup : public testing::Test
                         std::make_shared<mtd::NullSnapshotStrategy>(),
                         mt::fake_shared(session_event_sink),
                         std::make_shared<ms::NullSessionListener>(),
-                        std::make_shared<mtd::NullTrustSessionManager>())
+                        std::make_shared<mtd::NullPromptSessionManager>())
     {
         using namespace ::testing;
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));

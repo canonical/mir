@@ -72,28 +72,28 @@ void msh::SessionCoordinatorWrapper::handle_surface_created(
     wrapped->handle_surface_created(session);
 }
 
-std::shared_ptr<mf::TrustSession> msh::SessionCoordinatorWrapper::start_trust_session_for(
+std::shared_ptr<mf::PromptSession> msh::SessionCoordinatorWrapper::start_prompt_session_for(
     std::shared_ptr<mf::Session> const& session,
-    scene::TrustSessionCreationParameters const& params)
+    scene::PromptSessionCreationParameters const& params)
 {
-    return wrapped->start_trust_session_for(session, params);
+    return wrapped->start_prompt_session_for(session, params);
 }
 
-void msh::SessionCoordinatorWrapper::add_trusted_process_for(
-    std::shared_ptr<mf::TrustSession> const& trust_session,
+void msh::SessionCoordinatorWrapper::add_prompt_provider_process_for(
+    std::shared_ptr<mf::PromptSession> const& prompt_session,
     pid_t process_id)
 {
-    wrapped->add_trusted_process_for(trust_session, process_id);
+    wrapped->add_prompt_provider_process_for(prompt_session, process_id);
 }
 
-void msh::SessionCoordinatorWrapper::add_trusted_session_for(
-    std::shared_ptr<mf::TrustSession> const& trust_session,
+void msh::SessionCoordinatorWrapper::add_prompt_provider_for(
+    std::shared_ptr<mf::PromptSession> const& prompt_session,
     std::shared_ptr<mf::Session> const& session)
 {
-    wrapped->add_trusted_session_for(trust_session, session);
+    wrapped->add_prompt_provider_for(prompt_session, session);
 }
 
-void msh::SessionCoordinatorWrapper::stop_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
+void msh::SessionCoordinatorWrapper::stop_prompt_session(std::shared_ptr<mf::PromptSession> const& prompt_session)
 {
-    wrapped->stop_trust_session(trust_session);
+    wrapped->stop_prompt_session(prompt_session);
 }

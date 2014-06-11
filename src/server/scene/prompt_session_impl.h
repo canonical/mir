@@ -16,33 +16,30 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_TRUST_SESSION_H_
-#define MIR_FRONTEND_TRUST_SESSION_H_
+#ifndef MIR_SCENE_PROMPT_SESSION_IMPL_H_
+#define MIR_SCENE_PROMPT_SESSION_IMPL_H_
 
-#include "mir_toolkit/common.h"
-
-#include <sys/types.h>
-#include <vector>
-#include <string>
-#include <memory>
+#include "mir/scene/prompt_session.h"
 
 namespace mir
 {
-
-namespace frontend
+namespace scene
 {
-class TrustSession
+class PromptSessionImpl : public PromptSession
 {
 public:
-    virtual ~TrustSession() = default;
+    explicit PromptSessionImpl(std::weak_ptr<Session> const& session);
+
+    std::weak_ptr<Session> get_helper() const override;
 
 protected:
-    TrustSession() = default;
-    TrustSession(const TrustSession&) = delete;
-    TrustSession& operator=(const TrustSession&) = delete;
+    PromptSessionImpl(const PromptSessionImpl&) = delete;
+    PromptSessionImpl& operator=(const PromptSessionImpl&) = delete;
+
+private:
+    std::weak_ptr<Session> const helper;
 };
-
 }
 }
 
-#endif // MIR_FRONTEND_TRUST_SESSION_H_
+#endif // MIR_SCENE_PROMPT_SESSION_IMPL_H_

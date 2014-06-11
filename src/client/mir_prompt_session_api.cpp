@@ -17,8 +17,8 @@
  */
 
 
-#include "mir_toolkit/mir_trust_session.h"
-#include "mir_trust_session.h"
+#include "mir_toolkit/mir_prompt_session.h"
+#include "mir_prompt_session.h"
 #include "mir_connection.h"
 
 #include <stdexcept>
@@ -26,9 +26,9 @@
 
 namespace
 {
-void null_callback(MirTrustSession*, void*) {}
+void null_callback(MirPromptSession*, void*) {}
 
-void add_trusted_session_callback(MirTrustSession*,
+void add_prompt_provider_callback(MirPromptSession*,
                                   MirBool added,
                                   void* context)
 {
@@ -38,21 +38,21 @@ void add_trusted_session_callback(MirTrustSession*,
 
 }
 
-MirTrustSession *mir_connection_start_trust_session_sync(MirConnection* connection,
+MirPromptSession *mir_connection_start_prompt_session_sync(MirConnection* connection,
                                                          pid_t base_session_pid,
-                                                         mir_trust_session_event_callback event_callback,
+                                                         mir_prompt_session_event_callback event_callback,
                                                          void* context)
 {
     try
     {
-        auto trust_session = connection->create_trust_session();
+        auto prompt_session = connection->create_prompt_session();
         if (event_callback)
-            trust_session->register_trust_session_event_callback(event_callback, context);
+            prompt_session->register_prompt_session_event_callback(event_callback, context);
 
-        mir_wait_for(trust_session->start(base_session_pid,
+        mir_wait_for(prompt_session->start(base_session_pid,
                      null_callback,
                      nullptr));
-        return trust_session;
+        return prompt_session;
     }
     catch (std::exception const&)
     {
@@ -61,14 +61,14 @@ MirTrustSession *mir_connection_start_trust_session_sync(MirConnection* connecti
     }
 }
 
-MirWaitHandle *mir_trust_session_add_trusted_session(MirTrustSession *trust_session,
+MirWaitHandle *mir_prompt_session_add_prompt_provider(MirPromptSession *prompt_session,
                                                      pid_t session_pid,
-                                                     mir_trust_session_add_trusted_session_callback callback,
+                                                     mir_prompt_session_add_prompt_provider_callback callback,
                                                      void* context)
 {
     try
     {
-        return trust_session->add_trusted_session(session_pid, callback, context);
+        return prompt_session->add_prompt_provider(session_pid, callback, context);
     }
     catch (std::exception const&)
     {
@@ -77,26 +77,26 @@ MirWaitHandle *mir_trust_session_add_trusted_session(MirTrustSession *trust_sess
     }
 }
 
-MirBool mir_trust_session_add_trusted_session_sync(MirTrustSession *trust_session, pid_t base_session_pid)
+MirBool mir_prompt_session_add_prompt_provider_sync(MirPromptSession *prompt_session, pid_t base_session_pid)
 {
     MirBool result;
-    mir_wait_for(mir_trust_session_add_trusted_session(trust_session,
+    mir_wait_for(mir_prompt_session_add_prompt_provider(prompt_session,
         base_session_pid,
-        add_trusted_session_callback,
+        add_prompt_provider_callback,
         &result));
     return result;
 }
 
-MirWaitHandle* mir_trust_session_new_fds_for_prompt_providers(
-    MirTrustSession *trust_session,
+MirWaitHandle* mir_prompt_session_new_fds_for_prompt_providers(
+    MirPromptSession *prompt_session,
     unsigned int no_of_fds,
     mir_client_fd_callback callback,
     void * context)
 {
     try
     {
-        return trust_session ?
-            trust_session->new_fds_for_prompt_providers(no_of_fds, callback, context) :
+        return prompt_session ?
+            prompt_session->new_fds_for_prompt_providers(no_of_fds, callback, context) :
             nullptr;
     }
     catch (std::exception const&)
@@ -105,13 +105,13 @@ MirWaitHandle* mir_trust_session_new_fds_for_prompt_providers(
     }
 }
 
-void mir_trust_session_release_sync(MirTrustSession *trust_session)
+void mir_prompt_session_release_sync(MirPromptSession *prompt_session)
 {
-    mir_wait_for(trust_session->stop(&null_callback, nullptr));
-    delete trust_session;
+    mir_wait_for(prompt_session->stop(&null_callback, nullptr));
+    delete prompt_session;
 }
 
-MirTrustSessionState mir_trust_session_get_state(MirTrustSession *trust_session)
+MirPromptSessionState mir_prompt_session_get_state(MirPromptSession *prompt_session)
 {
-    return trust_session->get_state();
+    return prompt_session->get_state();
 }

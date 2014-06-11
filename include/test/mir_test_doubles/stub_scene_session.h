@@ -80,11 +80,11 @@ struct StubSceneSession : public scene::Session
     {
     }
 
-    void start_trust_session() override
+    void start_prompt_session() override
     {
     }
 
-    void stop_trust_session() override
+    void stop_prompt_session() override
     {
     }
 

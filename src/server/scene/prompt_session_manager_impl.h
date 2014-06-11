@@ -16,10 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SCENE_TRUST_SESSION_MANAGERIMPL_H_
-#define MIR_SCENE_TRUST_SESSION_MANAGERIMPL_H_
+#ifndef MIR_SCENE_PROMPT_SESSION_MANAGERIMPL_H_
+#define MIR_SCENE_PROMPT_SESSION_MANAGERIMPL_H_
 
-#include "mir/scene/trust_session_manager.h"
+#include "mir/scene/prompt_session_manager.h"
 #include "mir_toolkit/common.h"
 
 #include <mutex>
@@ -31,31 +31,31 @@ namespace scene
 {
 class Session;
 class SessionContainer;
-class TrustSession;
-class TrustSessionContainer;
-class TrustSessionCreationParameters;
-class TrustSessionListener;
+class PromptSession;
+class PromptSessionContainer;
+class PromptSessionCreationParameters;
+class PromptSessionListener;
 
-class TrustSessionManagerImpl : public scene::TrustSessionManager
+class PromptSessionManagerImpl : public scene::PromptSessionManager
 {
 public:
-    explicit TrustSessionManagerImpl(
+    explicit PromptSessionManagerImpl(
         std::shared_ptr<SessionContainer> const& app_container,
-        std::shared_ptr<TrustSessionListener> const& trust_session_listener);
+        std::shared_ptr<PromptSessionListener> const& prompt_session_listener);
 
-    std::shared_ptr<TrustSession> start_trust_session_for(
+    std::shared_ptr<PromptSession> start_prompt_session_for(
         std::shared_ptr<Session> const& session,
-        TrustSessionCreationParameters const& params) const override;
+        PromptSessionCreationParameters const& params) const override;
 
-    void stop_trust_session(
-        std::shared_ptr<TrustSession> const& trust_session) const override;
+    void stop_prompt_session(
+        std::shared_ptr<PromptSession> const& prompt_session) const override;
 
     void add_participant(
-        std::shared_ptr<TrustSession> const& trust_session,
+        std::shared_ptr<PromptSession> const& prompt_session,
         std::shared_ptr<Session> const& session) const override;
 
     void add_participant_by_pid(
-        std::shared_ptr<TrustSession> const& trust_session,
+        std::shared_ptr<PromptSession> const& prompt_session,
         pid_t process_id) const override;
 
     void add_expected_session(
@@ -64,27 +64,27 @@ public:
     void remove_session(
         std::shared_ptr<Session> const& session) const override;
 
-    void for_each_participant_in_trust_session(
-        std::shared_ptr<TrustSession> const& trust_session,
+    void for_each_participant_in_prompt_session(
+        std::shared_ptr<PromptSession> const& prompt_session,
         std::function<void(std::shared_ptr<Session> const& participant)> const& f) const override;
 
 private:
-    std::shared_ptr<TrustSessionContainer> const trust_session_container;
-    std::shared_ptr<TrustSessionListener> const trust_session_listener;
+    std::shared_ptr<PromptSessionContainer> const prompt_session_container;
+    std::shared_ptr<PromptSessionListener> const prompt_session_listener;
     std::shared_ptr<SessionContainer> const app_container;
 
-    std::mutex mutable trust_sessions_mutex;
+    std::mutex mutable prompt_sessions_mutex;
 
     void add_participant_by_pid_locked(
         std::lock_guard<std::mutex> const&,
-        std::shared_ptr<TrustSession> const& trust_session,
+        std::shared_ptr<PromptSession> const& prompt_session,
         pid_t process_id) const;
 
-    void stop_trust_session_locked(
+    void stop_prompt_session_locked(
         std::lock_guard<std::mutex> const&,
-        std::shared_ptr<TrustSession> const& trust_session) const;
+        std::shared_ptr<PromptSession> const& prompt_session) const;
 };
 }
 }
 
-#endif // MIR_SCENE_TRUST_SESSION_MANAGERIMPL_H_
+#endif // MIR_SCENE_PROMPT_SESSION_MANAGERIMPL_H_

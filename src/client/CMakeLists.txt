@@ -48,8 +48,8 @@ set(
   mir_screencast.cpp
   mir_screencast_api.cpp
   mir_cursor_api.cpp
-  mir_trust_session.cpp
-  mir_trust_session_api.cpp
+  mir_prompt_session.cpp
+  mir_prompt_session_api.cpp
   mir_event_distributor.cpp
 )
 

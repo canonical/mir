@@ -49,22 +49,22 @@ struct StubShell : public frontend::Shell
     void handle_surface_created(std::shared_ptr<frontend::Session> const& /* session */) override
     {
     }
-    std::shared_ptr<frontend::TrustSession> start_trust_session_for(std::shared_ptr<frontend::Session> const& /* session */,
-        scene::TrustSessionCreationParameters const& /* params */)
+    std::shared_ptr<frontend::PromptSession> start_prompt_session_for(std::shared_ptr<frontend::Session> const& /* session */,
+        scene::PromptSessionCreationParameters const& /* params */)
     {
-        return std::shared_ptr<frontend::TrustSession>();
+        return std::shared_ptr<frontend::PromptSession>();
     }
-    void add_trusted_process_for(
-        std::shared_ptr<frontend::TrustSession> const&  /* trust_session */,
+    void add_prompt_provider_process_for(
+        std::shared_ptr<frontend::PromptSession> const&  /* prompt_session */,
         pid_t /* process_id */)
     {
     }
-    void add_trusted_session_for(
-        std::shared_ptr<frontend::TrustSession> const&  /* trust_session */,
+    void add_prompt_provider_for(
+        std::shared_ptr<frontend::PromptSession> const&  /* prompt_session */,
         std::shared_ptr<frontend::Session> const& /* session */)
     {
     }
-    void stop_trust_session(std::shared_ptr<frontend::TrustSession>  const& /* trust_session */)
+    void stop_prompt_session(std::shared_ptr<frontend::PromptSession>  const& /* prompt_session */)
     {
     }
 

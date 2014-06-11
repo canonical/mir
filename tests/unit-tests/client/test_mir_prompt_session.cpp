@@ -16,7 +16,7 @@
  * Authored by: Nick Dedekind <nick.dedekind <nick.dedekind@canonical.com>
  */
 
-#include "src/client/mir_trust_session.h"
+#include "src/client/mir_prompt_session.h"
 #include "src/client/mir_event_distributor.h"
 
 #include "mir_test/fake_shared.h"
@@ -42,19 +42,19 @@ namespace
 struct MockProtobufServer : mir::protobuf::DisplayServer
 {
 
-    MOCK_METHOD4(start_trust_session,
+    MOCK_METHOD4(start_prompt_session,
                  void(::google::protobuf::RpcController* /*controller*/,
-                      ::mir::protobuf::TrustSessionParameters const* /*request*/,
+                      ::mir::protobuf::PromptSessionParameters const* /*request*/,
                       ::mir::protobuf::Void* /*response*/,
                       ::google::protobuf::Closure* /*done*/));
 
-    MOCK_METHOD4(add_trusted_session,
+    MOCK_METHOD4(add_prompt_provider,
                  void(::google::protobuf::RpcController* /*controller*/,
-                      const ::mir::protobuf::TrustedSession* /*request*/,
+                      const ::mir::protobuf::PromptProvider* /*request*/,
                       ::mir::protobuf::Void* /*response*/,
                       ::google::protobuf::Closure* /*done*/));
 
-    MOCK_METHOD4(stop_trust_session,
+    MOCK_METHOD4(stop_prompt_session,
                  void(::google::protobuf::RpcController* /*controller*/,
                       ::mir::protobuf::Void const* /*request*/,
                       ::mir::protobuf::Void* /*response*/,
@@ -64,8 +64,8 @@ struct MockProtobufServer : mir::protobuf::DisplayServer
 class StubProtobufServer : public mir::protobuf::DisplayServer
 {
 public:
-    void start_trust_session(::google::protobuf::RpcController* /*controller*/,
-                             ::mir::protobuf::TrustSessionParameters const* /*request*/,
+    void start_prompt_session(::google::protobuf::RpcController* /*controller*/,
+                             ::mir::protobuf::PromptSessionParameters const* /*request*/,
                              ::mir::protobuf::Void* response,
                              ::google::protobuf::Closure* done) override
     {
@@ -79,8 +79,8 @@ public:
             }};
     }
 
-    void add_trusted_session(::google::protobuf::RpcController* /*controller*/,
-                             const ::mir::protobuf::TrustedSession* /*request*/,
+    void add_prompt_provider(::google::protobuf::RpcController* /*controller*/,
+                             const ::mir::protobuf::PromptProvider* /*request*/,
                              ::mir::protobuf::Void* /*response*/,
                              ::google::protobuf::Closure* done)
     {
@@ -89,7 +89,7 @@ public:
         server_thread = std::thread{[done, this] { done->Run(); }};
     }
 
-    void stop_trust_session(::google::protobuf::RpcController* /*controller*/,
+    void stop_prompt_session(::google::protobuf::RpcController* /*controller*/,
                             mir::protobuf::Void const* /*request*/,
                             ::mir::protobuf::Void* /*response*/,
                             ::google::protobuf::Closure* done) override
@@ -113,20 +113,20 @@ private:
     std::thread server_thread;
 };
 
-class MirTrustSessionTest : public testing::Test
+class MirPromptSessionTest : public testing::Test
 {
 public:
-    MirTrustSessionTest()
+    MirPromptSessionTest()
     {
     }
 
-    static void trust_session_event(MirTrustSession*, MirTrustSessionState new_state, void* context)
+    static void prompt_session_event(MirPromptSession*, MirPromptSessionState new_state, void* context)
     {
-        MirTrustSessionTest* test = static_cast<MirTrustSessionTest*>(context);
+        MirPromptSessionTest* test = static_cast<MirPromptSessionTest*>(context);
         test->state_updated(new_state);
     }
 
-    MOCK_METHOD1(state_updated, void(MirTrustSessionState));
+    MOCK_METHOD1(state_updated, void(MirPromptSessionState));
 
     testing::NiceMock<MockProtobufServer> mock_server;
     StubProtobufServer stub_server;
@@ -138,13 +138,13 @@ struct MockCallback
     MOCK_METHOD2(call, void(void*, void*));
 };
 
-void mock_callback_func(MirTrustSession* trust_session, void* context)
+void mock_callback_func(MirPromptSession* prompt_session, void* context)
 {
     auto mock_cb = static_cast<MockCallback*>(context);
-    mock_cb->call(trust_session, context);
+    mock_cb->call(prompt_session, context);
 }
 
-void null_callback_func(MirTrustSession*, void*)
+void null_callback_func(MirPromptSession*, void*)
 {
 }
 
@@ -155,79 +155,79 @@ ACTION(RunClosure)
 
 }
 
-TEST_F(MirTrustSessionTest, start_trust_session)
+TEST_F(MirPromptSessionTest, start_prompt_session)
 {
     using namespace testing;
 
     EXPECT_CALL(mock_server,
-                start_trust_session(_,_,_,_))
+                start_prompt_session(_,_,_,_))
         .WillOnce(RunClosure());
 
-    MirTrustSession trust_session{
+    MirPromptSession prompt_session{
         mock_server,
         mt::fake_shared(event_distributor)};
-    trust_session.start(__LINE__, null_callback_func, nullptr);
+    prompt_session.start(__LINE__, null_callback_func, nullptr);
 }
 
-TEST_F(MirTrustSessionTest, stop_trust_session)
+TEST_F(MirPromptSessionTest, stop_prompt_session)
 {
     using namespace testing;
 
     EXPECT_CALL(mock_server,
-                stop_trust_session(_,_,_,_))
+                stop_prompt_session(_,_,_,_))
         .WillOnce(RunClosure());
 
-    MirTrustSession trust_session{
+    MirPromptSession prompt_session{
         mock_server,
         mt::fake_shared(event_distributor)};
-    trust_session.stop(null_callback_func, nullptr);
+    prompt_session.stop(null_callback_func, nullptr);
 }
 
-TEST_F(MirTrustSessionTest, executes_callback_on_start)
+TEST_F(MirPromptSessionTest, executes_callback_on_start)
 {
     using namespace testing;
 
     MockCallback mock_cb;
     EXPECT_CALL(mock_cb, call(_, &mock_cb));
 
-    MirTrustSession trust_session{
+    MirPromptSession prompt_session{
         stub_server,
         mt::fake_shared(event_distributor)};
-    trust_session.start(__LINE__, mock_callback_func, &mock_cb)->wait_for_all();
+    prompt_session.start(__LINE__, mock_callback_func, &mock_cb)->wait_for_all();
 }
 
-TEST_F(MirTrustSessionTest, executes_callback_on_stop)
+TEST_F(MirPromptSessionTest, executes_callback_on_stop)
 {
     using namespace testing;
 
     MockCallback mock_cb;
     EXPECT_CALL(mock_cb, call(_, &mock_cb));
 
-    MirTrustSession trust_session{
+    MirPromptSession prompt_session{
         stub_server,
         mt::fake_shared(event_distributor)};
-    trust_session.stop(mock_callback_func, &mock_cb)->wait_for_all();
+    prompt_session.stop(mock_callback_func, &mock_cb)->wait_for_all();
 }
 
-TEST_F(MirTrustSessionTest, notifies_event_callback)
+TEST_F(MirPromptSessionTest, notifies_event_callback)
 {
     using namespace testing;
 
-    MirTrustSession trust_session{
+    MirPromptSession prompt_session{
         mock_server,
         mt::fake_shared(event_distributor)};
-    trust_session.register_trust_session_event_callback(&MirTrustSessionTest::trust_session_event, this);
+    prompt_session.register_prompt_session_event_callback(&MirPromptSessionTest::prompt_session_event, this);
 
     MirEvent e;
-    e.type = mir_event_type_trust_session_state_change;
+    e.type = mir_event_type_prompt_session_state_change;
 
     InSequence seq;
-    EXPECT_CALL(*this, state_updated(mir_trust_session_state_started));
-    EXPECT_CALL(*this, state_updated(mir_trust_session_state_stopped));
+    EXPECT_CALL(*this, state_updated(mir_prompt_session_state_started));
+    EXPECT_CALL(*this, state_updated(mir_prompt_session_state_stopped));
 
-    e.trust_session.new_state = mir_trust_session_state_started;
+    e.prompt_session.new_state = mir_prompt_session_state_started;
     event_distributor.handle_event(e);
-    e.trust_session.new_state = mir_trust_session_state_stopped;
+    e.prompt_session.new_state = mir_prompt_session_state_stopped;
     event_distributor.handle_event(e);
 }
 

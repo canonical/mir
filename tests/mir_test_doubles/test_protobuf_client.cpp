@@ -61,8 +61,8 @@ mir::test::TestProtobufClient::TestProtobufClient(
     surface_parameters.set_buffer_usage(0);
     surface_parameters.set_output_id(mir_display_output_id_invalid);
 
-    trusted_session.set_pid(__LINE__);
-    trust_session_parameters.mutable_base_trusted_session()->set_pid(__LINE__);
+    prompt_provider.set_pid(__LINE__);
+    prompt_session_parameters.mutable_base_prompt_provider()->set_pid(__LINE__);
 
     ON_CALL(*this, connect_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_connect_done));
@@ -78,12 +78,12 @@ mir::test::TestProtobufClient::TestProtobufClient(
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_drm_auth_magic_done));
     ON_CALL(*this, display_configure_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_configure_display_done));
-    ON_CALL(*this, trust_session_start_done())
-        .WillByDefault(testing::Invoke(&wc_trust_session_start, &WaitCondition::wake_up_everyone));
-    ON_CALL(*this, trust_session_add_trusted_session_done())
-        .WillByDefault(testing::Invoke(&wc_trust_session_add, &WaitCondition::wake_up_everyone));
-    ON_CALL(*this, trust_session_stop_done())
-        .WillByDefault(testing::Invoke(&wc_trust_session_stop, &WaitCondition::wake_up_everyone));
+    ON_CALL(*this, prompt_session_start_done())
+        .WillByDefault(testing::Invoke(&wc_prompt_session_start, &WaitCondition::wake_up_everyone));
+    ON_CALL(*this, prompt_session_add_prompt_provider_done())
+        .WillByDefault(testing::Invoke(&wc_prompt_session_add, &WaitCondition::wake_up_everyone));
+    ON_CALL(*this, prompt_session_stop_done())
+        .WillByDefault(testing::Invoke(&wc_prompt_session_stop, &WaitCondition::wake_up_everyone));
 }
 
 void mir::test::TestProtobufClient::on_connect_done()
@@ -237,17 +237,17 @@ void mir::test::TestProtobufClient::wait_for_tfd_done()
     tfd_done_called.store(false);
 }
 
-void mir::test::TestProtobufClient::wait_for_trust_session_start_done()
+void mir::test::TestProtobufClient::wait_for_prompt_session_start_done()
 {
-    wc_trust_session_start.wait_for_at_most_seconds(maxwait);
+    wc_prompt_session_start.wait_for_at_most_seconds(maxwait);
 }
 
-void mir::test::TestProtobufClient::wait_for_trust_session_add_trusted_session_done()
+void mir::test::TestProtobufClient::wait_for_prompt_session_add_prompt_provider_done()
 {
-    wc_trust_session_add.wait_for_at_most_seconds(maxwait);
+    wc_prompt_session_add.wait_for_at_most_seconds(maxwait);
 }
 
-void mir::test::TestProtobufClient::wait_for_trust_session_stop_done()
+void mir::test::TestProtobufClient::wait_for_prompt_session_stop_done()
 {
-    wc_trust_session_stop.wait_for_at_most_seconds(maxwait);
+    wc_prompt_session_stop.wait_for_at_most_seconds(maxwait);
 }

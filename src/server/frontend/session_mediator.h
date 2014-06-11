@@ -54,7 +54,7 @@ class SessionMediatorReport;
 class EventSink;
 class DisplayChanger;
 class Screencast;
-class TrustSession;
+class PromptSession;
 
 // SessionMediator relays requests from the client process into the server.
 class SessionMediator : public detail::DisplayServer
@@ -134,17 +134,17 @@ public:
                           mir::protobuf::Void*,
                           google::protobuf::Closure* done);
 
-    void start_trust_session(::google::protobuf::RpcController* controller,
-                            const ::mir::protobuf::TrustSessionParameters* request,
+    void start_prompt_session(::google::protobuf::RpcController* controller,
+                            const ::mir::protobuf::PromptSessionParameters* request,
                             ::mir::protobuf::Void* response,
                             ::google::protobuf::Closure* done);
 
-    void add_trusted_session(::google::protobuf::RpcController* controller,
-                             const ::mir::protobuf::TrustedSession* request,
+    void add_prompt_provider(::google::protobuf::RpcController* controller,
+                             const ::mir::protobuf::PromptProvider* request,
                              ::mir::protobuf::Void*,
                              ::google::protobuf::Closure* done);
 
-    void stop_trust_session(::google::protobuf::RpcController* controller,
+    void stop_prompt_session(::google::protobuf::RpcController* controller,
                             const ::mir::protobuf::Void* request,
                             ::mir::protobuf::Void* response,
                             ::google::protobuf::Closure* done);
@@ -168,7 +168,7 @@ private:
 
     void advance_buffer(SurfaceId surf_id, Surface& surface, std::function<void(graphics::Buffer*, bool)> complete);
 
-    virtual std::function<void(std::shared_ptr<Session> const&)> trusted_connect_handler() const;
+    virtual std::function<void(std::shared_ptr<Session> const&)> prompt_session_connect_handler() const;
 
     pid_t client_pid_;
     std::shared_ptr<Shell> const shell;
@@ -189,7 +189,7 @@ private:
 
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;
-    std::weak_ptr<TrustSession> weak_trust_session;
+    std::weak_ptr<PromptSession> weak_prompt_session;
 };
 
 }

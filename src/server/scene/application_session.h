@@ -71,8 +71,8 @@ public:
 
     void set_lifecycle_state(MirLifecycleState state);
 
-    void start_trust_session() override;
-    void stop_trust_session() override;
+    void start_prompt_session() override;
+    void stop_prompt_session() override;
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;

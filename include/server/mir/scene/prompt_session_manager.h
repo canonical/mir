@@ -16,8 +16,8 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SCENE_TRUST_SESSION_MANAGER_H_
-#define MIR_SCENE_TRUST_SESSION_MANAGER_H_
+#ifndef MIR_SCENE_PROMPT_SESSION_MANAGER_H_
+#define MIR_SCENE_PROMPT_SESSION_MANAGER_H_
 
 #include <sys/types.h>
 #include <memory>
@@ -27,39 +27,39 @@ namespace mir
 namespace scene
 {
 class Session;
-class TrustSession;
-struct TrustSessionCreationParameters;
+class PromptSession;
+struct PromptSessionCreationParameters;
 
-class TrustSessionManager
+class PromptSessionManager
 {
 public:
-    virtual ~TrustSessionManager() = default;
+    virtual ~PromptSessionManager() = default;
 
-    virtual std::shared_ptr<TrustSession> start_trust_session_for(std::shared_ptr<Session> const& session,
-                                                                  TrustSessionCreationParameters const& params) const = 0;
+    virtual std::shared_ptr<PromptSession> start_prompt_session_for(std::shared_ptr<Session> const& session,
+                                                                  PromptSessionCreationParameters const& params) const = 0;
 
-    virtual void stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) const = 0;
+    virtual void stop_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) const = 0;
 
-    virtual void add_participant(std::shared_ptr<TrustSession> const& trust_session,
+    virtual void add_participant(std::shared_ptr<PromptSession> const& prompt_session,
                                  std::shared_ptr<Session> const& session) const = 0;
 
-    virtual void add_participant_by_pid(std::shared_ptr<TrustSession> const& trust_session,
+    virtual void add_participant_by_pid(std::shared_ptr<PromptSession> const& prompt_session,
                                         pid_t process_id) const = 0;
 
     virtual void add_expected_session(std::shared_ptr<Session> const& new_session) const = 0;
 
     virtual void remove_session(std::shared_ptr<Session> const& session) const = 0;
 
-    virtual void for_each_participant_in_trust_session(std::shared_ptr<TrustSession> const& trust_session,
+    virtual void for_each_participant_in_prompt_session(std::shared_ptr<PromptSession> const& prompt_session,
                                                        std::function<void(std::shared_ptr<Session> const& participant)> const& f) const = 0;
 
 protected:
-    TrustSessionManager() = default;
-    TrustSessionManager(const TrustSessionManager&) = delete;
-    TrustSessionManager& operator=(const TrustSessionManager&) = delete;
+    PromptSessionManager() = default;
+    PromptSessionManager(const PromptSessionManager&) = delete;
+    PromptSessionManager& operator=(const PromptSessionManager&) = delete;
 };
 
 }
 }
 
-#endif // MIR_SCENE_TRUST_SESSION_MANAGER_H_
+#endif // MIR_SCENE_PROMPT_SESSION_MANAGER_H_

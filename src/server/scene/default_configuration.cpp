@@ -35,7 +35,7 @@
 #include "surface_controller.h"
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
-#include "trust_session_manager_impl.h"
+#include "prompt_session_manager_impl.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -181,7 +181,7 @@ mir::DefaultServerConfiguration::the_session_coordinator()
                     the_snapshot_strategy(),
                     the_session_event_sink(),
                     the_session_listener(),
-                    the_trust_session_manager()));
+                    the_prompt_session_manager()));
         });
 }
 
@@ -226,14 +226,14 @@ mir::DefaultServerConfiguration::the_snapshot_strategy()
         });
 }
 
-std::shared_ptr<ms::TrustSessionManager>
-mir::DefaultServerConfiguration::the_trust_session_manager()
+std::shared_ptr<ms::PromptSessionManager>
+mir::DefaultServerConfiguration::the_prompt_session_manager()
 {
-    return trust_session_manager(
+    return prompt_session_manager(
         [this]()
         {
-            return std::make_shared<ms::TrustSessionManagerImpl>(
+            return std::make_shared<ms::PromptSessionManagerImpl>(
                 the_session_container(),
-                the_trust_session_listener());
+                the_prompt_session_listener());
         });
 }

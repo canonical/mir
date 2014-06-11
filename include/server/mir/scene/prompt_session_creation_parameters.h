@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,29 +13,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Nick Dedekind <nick.dedekind@gmail.com>
+ * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_TRUST_SESSION_H_
-#define MIR_TEST_DOUBLES_NULL_TRUST_SESSION_H_
+#ifndef MIR_SCENE_PROMPT_PROVIDER_CREATION_PARAMETERS_H_
+#define MIR_SCENE_PROMPT_PROVIDER_CREATION_PARAMETERS_H_
 
-#include "mir/scene/trust_session.h"
+#include <sys/types.h>
 
 namespace mir
 {
-namespace test
+namespace scene
 {
-namespace doubles
+
+struct PromptSessionCreationParameters
 {
-class NullTrustSession : public scene::TrustSession
-{
-    std::weak_ptr<scene::Session> get_trusted_helper() const override
-    {
-      return std::weak_ptr<scene::Session>();
-    }
+    pid_t base_process_id = 0;
 };
 }
 }
-}
 
-#endif /* MIR_TEST_DOUBLES_NULL_TRUST_SESSION_H_ */
+#endif /* MIR_SCENE_PROMPT_PROVIDER_CREATION_PARAMETERS_H_ */

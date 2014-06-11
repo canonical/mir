@@ -41,8 +41,8 @@
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
-#include "mir/frontend/trust_session.h"
-#include "mir/scene/trust_session_creation_parameters.h"
+#include "mir/frontend/prompt_session.h"
+#include "mir/scene/prompt_session_creation_parameters.h"
 
 #include "mir/geometry/rectangles.h"
 #include "client_buffer_tracker.h"
@@ -425,15 +425,15 @@ void mf::SessionMediator::screencast_buffer(
     done->Run();
 }
 
-std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::trusted_connect_handler() const
+std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::prompt_session_connect_handler() const
 {
     return [this](std::shared_ptr<frontend::Session> const& session)
     {
-        auto trust_session = weak_trust_session.lock();
-        if (trust_session.get() == nullptr)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
+        auto prompt_session = weak_prompt_session.lock();
+        if (prompt_session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid prompt session"));
 
-        shell->add_trusted_session_for(trust_session, session);
+        shell->add_prompt_provider_for(prompt_session, session);
     };
 }
 
@@ -455,7 +455,7 @@ void mf::SessionMediator::configure_cursor(
 
         auto const id = frontend::SurfaceId(cursor_request->surfaceid().value());
         auto const surface = session->get_surface(id);
-        
+
         if (cursor_request->has_name())
         {
             auto const& image = cursor_images->image(cursor_request->name(), mg::default_cursor_size);
@@ -482,7 +482,7 @@ void mf::SessionMediator::new_fds_for_prompt_providers(
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        auto const connect_handler = trusted_connect_handler();
+        auto const connect_handler = prompt_session_connect_handler();
 
         auto const fds_requested = parameters->number();
 
@@ -539,9 +539,9 @@ void mf::SessionMediator::drm_auth_magic(
     done->Run();
 }
 
-void mf::SessionMediator::start_trust_session(
+void mf::SessionMediator::start_prompt_session(
     ::google::protobuf::RpcController*,
-    const ::mir::protobuf::TrustSessionParameters* request,
+    const ::mir::protobuf::PromptSessionParameters* request,
     ::mir::protobuf::Void* /*response*/,
     ::google::protobuf::Closure* done)
 {
@@ -552,22 +552,22 @@ void mf::SessionMediator::start_trust_session(
         if (!session)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        if (weak_trust_session.lock())
-            BOOST_THROW_EXCEPTION(std::runtime_error("Cannot start another trust session"));
+        if (weak_prompt_session.lock())
+            BOOST_THROW_EXCEPTION(std::runtime_error("Cannot start another prompt session"));
 
-        ms::TrustSessionCreationParameters parameters;
-        parameters.base_process_id = request->base_trusted_session().pid();
+        ms::PromptSessionCreationParameters parameters;
+        parameters.base_process_id = request->base_prompt_provider().pid();
 
-        report->session_start_trust_session_called(session->name(), parameters.base_process_id);
+        report->session_start_prompt_session_called(session->name(), parameters.base_process_id);
 
-        weak_trust_session = shell->start_trust_session_for(session, parameters);
+        weak_prompt_session = shell->start_prompt_session_for(session, parameters);
     }
     done->Run();
 }
 
-void mf::SessionMediator::add_trusted_session(
+void mf::SessionMediator::add_prompt_provider(
     ::google::protobuf::RpcController*,
-    const ::mir::protobuf::TrustedSession* request,
+    const ::mir::protobuf::PromptProvider* request,
     ::mir::protobuf::Void*,
     ::google::protobuf::Closure* done)
 {
@@ -578,18 +578,18 @@ void mf::SessionMediator::add_trusted_session(
         if (!session)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        auto const trust_session = weak_trust_session.lock();
+        auto const prompt_session = weak_prompt_session.lock();
 
-        if (!trust_session)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
+        if (!prompt_session)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid prompt session"));
 
-        report->session_add_trusted_session_called(session->name(), request->pid());
-        shell->add_trusted_process_for(trust_session, request->pid());
+        report->session_add_prompt_provider_called(session->name(), request->pid());
+        shell->add_prompt_provider_process_for(prompt_session, request->pid());
     }
     done->Run();
 }
 
-void mf::SessionMediator::stop_trust_session(
+void mf::SessionMediator::stop_prompt_session(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::Void*,
     ::mir::protobuf::Void*,
@@ -602,16 +602,16 @@ void mf::SessionMediator::stop_trust_session(
         if (!session)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        auto const trust_session = weak_trust_session.lock();
+        auto const prompt_session = weak_prompt_session.lock();
 
-        if (!trust_session)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid trust session"));
+        if (!prompt_session)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid prompt session"));
 
-        weak_trust_session.reset();
+        weak_prompt_session.reset();
 
-        report->session_stop_trust_session_called(session->name());
+        report->session_stop_prompt_session_called(session->name());
 
-        shell->stop_trust_session(trust_session);
+        shell->stop_prompt_session(prompt_session);
     }
     done->Run();
 }

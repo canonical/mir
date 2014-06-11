@@ -16,47 +16,47 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#include "mir_trust_session.h"
+#include "mir_prompt_session.h"
 #include "event_handler_register.h"
 
 namespace mp = mir::protobuf;
 namespace mcl = mir::client;
 
-MirTrustSession::MirTrustSession(
+MirPromptSession::MirPromptSession(
     mp::DisplayServer& server,
     std::shared_ptr<mcl::EventHandlerRegister> const& event_handler_register) :
     server(server),
     event_handler_register(event_handler_register),
     event_handler_register_id{event_handler_register->register_event_handler(
         [this](MirEvent const& event)
-        {   if (event.type == mir_event_type_trust_session_state_change)
-                set_state(event.trust_session.new_state);
+        {   if (event.type == mir_event_type_prompt_session_state_change)
+                set_state(event.prompt_session.new_state);
         })},
-    state(mir_trust_session_state_stopped),
-    handle_trust_session_event{[](MirTrustSessionState){}}
+    state(mir_prompt_session_state_stopped),
+    handle_prompt_session_event{[](MirPromptSessionState){}}
 {
 }
 
-MirTrustSession::~MirTrustSession()
+MirPromptSession::~MirPromptSession()
 {
-    set_state(mir_trust_session_state_stopped);
+    set_state(mir_prompt_session_state_stopped);
 }
 
-MirTrustSessionState MirTrustSession::get_state() const
+MirPromptSessionState MirPromptSession::get_state() const
 {
     std::lock_guard<decltype(event_handler_mutex)> lock(event_handler_mutex);
     return state;
 }
 
-void MirTrustSession::set_state(MirTrustSessionState new_state)
+void MirPromptSession::set_state(MirPromptSessionState new_state)
 {
     std::lock_guard<decltype(event_handler_mutex)> lock(event_handler_mutex);
 
     if (new_state != state)
     {
-        handle_trust_session_event(new_state);
+        handle_prompt_session_event(new_state);
 
-        if (new_state == mir_trust_session_state_stopped)
+        if (new_state == mir_prompt_session_state_stopped)
         {
             event_handler_register->unregister_event_handler(event_handler_register_id);
         }
@@ -65,95 +65,95 @@ void MirTrustSession::set_state(MirTrustSessionState new_state)
     }
 }
 
-MirWaitHandle* MirTrustSession::start(pid_t pid, mir_trust_session_callback callback, void* context)
+MirWaitHandle* MirPromptSession::start(pid_t pid, mir_prompt_session_callback callback, void* context)
 {
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        parameters.mutable_base_trusted_session()->set_pid(pid);
+        parameters.mutable_base_prompt_provider()->set_pid(pid);
         start_wait_handle.expect_result();
     }
 
-    server.start_trust_session(
+    server.start_prompt_session(
         0,
         &parameters,
         &session,
-        google::protobuf::NewCallback(this, &MirTrustSession::done_start,
+        google::protobuf::NewCallback(this, &MirPromptSession::done_start,
                                       callback, context));
 
     return &start_wait_handle;
 }
 
-MirWaitHandle* MirTrustSession::stop(mir_trust_session_callback callback, void* context)
+MirWaitHandle* MirPromptSession::stop(mir_prompt_session_callback callback, void* context)
 {
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         stop_wait_handle.expect_result();
     }
 
-    server.stop_trust_session(
+    server.stop_prompt_session(
         0,
         &protobuf_void,
         &protobuf_void,
-        google::protobuf::NewCallback(this, &MirTrustSession::done_stop,
+        google::protobuf::NewCallback(this, &MirPromptSession::done_stop,
                                       callback, context));
 
     return &stop_wait_handle;
 }
 
-MirWaitHandle* MirTrustSession::add_trusted_session(pid_t pid,
-    mir_trust_session_add_trusted_session_callback callback,
+MirWaitHandle* MirPromptSession::add_prompt_provider(pid_t pid,
+    mir_prompt_session_add_prompt_provider_callback callback,
     void* context)
 {
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        trusted_session.set_pid(pid);
+        prompt_provider.set_pid(pid);
         add_result_wait_handle.expect_result();
     }
 
-    server.add_trusted_session(
+    server.add_prompt_provider(
         0,
-        &trusted_session,
+        &prompt_provider,
         &add_result,
-        google::protobuf::NewCallback(this, &MirTrustSession::done_add_trusted_session,
+        google::protobuf::NewCallback(this, &MirPromptSession::done_add_prompt_provider,
                                       callback, context));
 
     return &add_result_wait_handle;
 }
 
-void MirTrustSession::register_trust_session_event_callback(
-    mir_trust_session_event_callback callback,
+void MirPromptSession::register_prompt_session_event_callback(
+    mir_prompt_session_event_callback callback,
     void* context)
 {
     std::lock_guard<decltype(event_handler_mutex)> lock(event_handler_mutex);
 
-    handle_trust_session_event =
-        [this, callback, context](MirTrustSessionState new_state)
+    handle_prompt_session_event =
+        [this, callback, context](MirPromptSessionState new_state)
         {
             callback(this, new_state, context);
         };
 }
 
-void MirTrustSession::done_start(mir_trust_session_callback callback, void* context)
+void MirPromptSession::done_start(mir_prompt_session_callback callback, void* context)
 {
     {
         std::lock_guard<decltype(session_mutex)> lock(session_mutex);
 
-        state = session.has_error() ? mir_trust_session_state_stopped : mir_trust_session_state_started;
+        state = session.has_error() ? mir_prompt_session_state_stopped : mir_prompt_session_state_started;
     }
 
     callback(this, context);
     start_wait_handle.result_received();
 }
 
-void MirTrustSession::done_stop(mir_trust_session_callback callback, void* context)
+void MirPromptSession::done_stop(mir_prompt_session_callback callback, void* context)
 {
-    set_state(mir_trust_session_state_stopped);
+    set_state(mir_prompt_session_state_stopped);
 
     callback(this, context);
     stop_wait_handle.result_received();
 }
 
-void MirTrustSession::done_add_trusted_session(mir_trust_session_add_trusted_session_callback callback, void* context)
+void MirPromptSession::done_add_prompt_provider(mir_prompt_session_add_prompt_provider_callback callback, void* context)
 {
     MirBool added = mir_true;
     if (add_result.has_error())
@@ -164,7 +164,7 @@ void MirTrustSession::done_add_trusted_session(mir_trust_session_add_trusted_ses
     add_result_wait_handle.result_received();
 }
 
-char const* MirTrustSession::get_error_message()
+char const* MirPromptSession::get_error_message()
 {
     std::lock_guard<decltype(session_mutex)> lock(session_mutex);
 
@@ -174,7 +174,7 @@ char const* MirTrustSession::get_error_message()
     return session.error().c_str();
 }
 
-MirWaitHandle* MirTrustSession::new_fds_for_prompt_providers(
+MirWaitHandle* MirPromptSession::new_fds_for_prompt_providers(
     unsigned int no_of_fds,
     mir_client_fd_callback callback,
     void * context)
@@ -186,13 +186,13 @@ MirWaitHandle* MirTrustSession::new_fds_for_prompt_providers(
         nullptr,
         &request,
         &socket_fd_response,
-        google::protobuf::NewCallback(this, &MirTrustSession::done_fds_for_trusted_clients,
+        google::protobuf::NewCallback(this, &MirPromptSession::done_fds_for_prompt_providers,
                                               callback, context));
 
-    return &fds_for_trusted_clients_wait_handle;
+    return &fds_for_prompt_providers_wait_handle;
 }
 
-void MirTrustSession::done_fds_for_trusted_clients(
+void MirPromptSession::done_fds_for_prompt_providers(
     mir_client_fd_callback callback,
     void* context)
 {
@@ -205,5 +205,5 @@ void MirTrustSession::done_fds_for_trusted_clients(
         fds.push_back(socket_fd_response.fd(i));
 
     callback(this, size, fds.data(), context);
-    fds_for_trusted_clients_wait_handle.result_received();
+    fds_for_prompt_providers_wait_handle.result_received();
 }

@@ -30,7 +30,7 @@ set(
   test_surfaces_with_output_id.cpp
   test_server_disconnect.cpp
   test_client_library_drm.cpp
-  test_trust_session_client_api.cpp
+  test_prompt_session_client_api.cpp
   test_protobuf.cpp
   test_client_screencast.cpp
   test_client_surface_swap_buffers.cpp

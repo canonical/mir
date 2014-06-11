@@ -42,9 +42,9 @@ public:
     void session_configure_surface_called(std::string const& app_name) override;
     void session_configure_surface_cursor_called(std::string const& app_name) override;
     void session_configure_display_called(std::string const& app_name) override;
-    void session_start_trust_session_called(std::string const& app_name, pid_t base_process) override;
-    void session_add_trusted_session_called(std::string const& app_name, pid_t process) override;
-    void session_stop_trust_session_called(std::string const& app_name) override;
+    void session_start_prompt_session_called(std::string const& app_name, pid_t base_process) override;
+    void session_add_prompt_provider_called(std::string const& app_name, pid_t process) override;
+    void session_stop_prompt_session_called(std::string const& app_name) override;
 
     void session_error(std::string const& app_name, char const* method, std::string const& what) override;
 private:

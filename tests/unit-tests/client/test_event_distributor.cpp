@@ -54,7 +54,7 @@ TEST_F(EventDistributorTest, calls_back_when_registered)
     event_distributor.register_event_handler([this](MirEvent const& event) { event_handled2(event); });
 
     MirEvent e;
-    e.type = mir_event_type_trust_session_state_change;
+    e.type = mir_event_type_prompt_session_state_change;
 
     EXPECT_CALL(*this, event_handled1(MirEventTypeIs(e.type))).Times(1);
     EXPECT_CALL(*this, event_handled2(MirEventTypeIs(e.type))).Times(1);
@@ -70,7 +70,7 @@ TEST_F(EventDistributorTest, no_calls_back_after_unregistered)
     event_distributor.unregister_event_handler(reg_id2);
 
     MirEvent e;
-    e.type = mir_event_type_trust_session_state_change;
+    e.type = mir_event_type_prompt_session_state_change;
 
     EXPECT_CALL(*this, event_handled1(MirEventTypeIs(e.type))).Times(1);
     EXPECT_CALL(*this, event_handled2(MirEventTypeIs(e.type))).Times(0);
@@ -91,7 +91,7 @@ TEST_F(EventDistributorTest, no_callback_on_callback_deregistration)
     reg_id2 = event_distributor.register_event_handler([this](MirEvent const& event) { event_handled2(event); });
 
     MirEvent e;
-    e.type = mir_event_type_trust_session_state_change;
+    e.type = mir_event_type_prompt_session_state_change;
 
     EXPECT_CALL(*this, event_handled1(MirEventTypeIs(e.type))).Times(1);
     EXPECT_CALL(*this, event_handled2(MirEventTypeIs(e.type))).Times(0);
@@ -126,7 +126,7 @@ TEST_F(EventDistributorTest, succeeds_with_thread_delete_unregister)
     };
 
     MirEvent e;
-    e.type = mir_event_type_trust_session_state_change;
+    e.type = mir_event_type_prompt_session_state_change;
 
     std::vector<EventCatcher*> catchers;
     for (int p = 0; p < 10; p++)

@@ -23,8 +23,8 @@
 #include "mir/shell/focus_setter.h"
 #include "mir/scene/session.h"
 #include "mir/scene/session_listener.h"
-#include "mir/scene/trust_session.h"
-#include "mir/scene/trust_session_manager.h"
+#include "mir/scene/prompt_session.h"
+#include "mir/scene/prompt_session_manager.h"
 #include "session_event_sink.h"
 
 #include <memory>
@@ -41,14 +41,14 @@ ms::SessionManager::SessionManager(std::shared_ptr<SurfaceCoordinator> const& su
     std::shared_ptr<SnapshotStrategy> const& snapshot_strategy,
     std::shared_ptr<SessionEventSink> const& session_event_sink,
     std::shared_ptr<SessionListener> const& session_listener,
-    std::shared_ptr<TrustSessionManager> const& trust_session_manager) :
+    std::shared_ptr<PromptSessionManager> const& prompt_session_manager) :
     surface_coordinator(surface_factory),
     app_container(container),
     focus_setter(focus_setter),
     snapshot_strategy(snapshot_strategy),
     session_event_sink(session_event_sink),
     session_listener(session_listener),
-    trust_session_manager(trust_session_manager)
+    prompt_session_manager(prompt_session_manager)
 {
     assert(surface_factory);
     assert(container);
@@ -89,7 +89,7 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
 
     session_listener->starting(new_session);
 
-    trust_session_manager->add_expected_session(new_session);
+    prompt_session_manager->add_expected_session(new_session);
 
     set_focus_to(new_session);
 
@@ -129,7 +129,7 @@ void ms::SessionManager::close_session(std::shared_ptr<mf::Session> const& sessi
 
     session_event_sink->handle_session_stopping(scene_session);
 
-    trust_session_manager->remove_session(scene_session);
+    prompt_session_manager->remove_session(scene_session);
 
     session_listener->stopping(scene_session);
 
@@ -179,37 +179,37 @@ void ms::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> con
     set_focus_to(std::dynamic_pointer_cast<Session>(session));
 }
 
-std::shared_ptr<mf::TrustSession> ms::SessionManager::start_trust_session_for(std::shared_ptr<mf::Session> const& session,
-    TrustSessionCreationParameters const& params)
+std::shared_ptr<mf::PromptSession> ms::SessionManager::start_prompt_session_for(std::shared_ptr<mf::Session> const& session,
+    PromptSessionCreationParameters const& params)
 {
     auto shell_session = std::dynamic_pointer_cast<Session>(session);
 
-    return trust_session_manager->start_trust_session_for(
+    return prompt_session_manager->start_prompt_session_for(
         shell_session, params);
 
 }
 
-void ms::SessionManager::add_trusted_process_for(
-    std::shared_ptr<mf::TrustSession> const& trust_session,
+void ms::SessionManager::add_prompt_provider_process_for(
+    std::shared_ptr<mf::PromptSession> const& prompt_session,
     pid_t process_id)
 {
-    auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
+    auto scene_prompt_session = std::dynamic_pointer_cast<PromptSession>(prompt_session);
 
-    trust_session_manager->add_participant_by_pid(scene_trust_session, process_id);
+    prompt_session_manager->add_participant_by_pid(scene_prompt_session, process_id);
 }
 
-void ms::SessionManager::add_trusted_session_for(
-    std::shared_ptr<mf::TrustSession> const& trust_session,
+void ms::SessionManager::add_prompt_provider_for(
+    std::shared_ptr<mf::PromptSession> const& prompt_session,
     std::shared_ptr<frontend::Session> const& session)
 {
-    auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
+    auto scene_prompt_session = std::dynamic_pointer_cast<PromptSession>(prompt_session);
     auto scene_session = std::dynamic_pointer_cast<Session>(session);
 
-    trust_session_manager->add_participant(scene_trust_session, scene_session);
+    prompt_session_manager->add_participant(scene_prompt_session, scene_session);
 }
 
-void ms::SessionManager::stop_trust_session(std::shared_ptr<mf::TrustSession> const& trust_session)
+void ms::SessionManager::stop_prompt_session(std::shared_ptr<mf::PromptSession> const& prompt_session)
 {
-    auto scene_trust_session = std::dynamic_pointer_cast<TrustSession>(trust_session);
-    trust_session_manager->stop_trust_session(scene_trust_session);
+    auto scene_prompt_session = std::dynamic_pointer_cast<PromptSession>(prompt_session);
+    prompt_session_manager->stop_prompt_session(scene_prompt_session);
 }

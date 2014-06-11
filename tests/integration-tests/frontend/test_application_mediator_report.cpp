@@ -51,10 +51,10 @@ struct MockApplicationMediatorReport : mf::SessionMediatorReport
         EXPECT_CALL(*this, session_disconnect_called(testing::_)).
             Times(testing::AtLeast(0));
 
-        EXPECT_CALL(*this, session_start_trust_session_called(testing::_, testing::_)).
+        EXPECT_CALL(*this, session_start_prompt_session_called(testing::_, testing::_)).
             Times(testing::AtLeast(0));
 
-        EXPECT_CALL(*this, session_stop_trust_session_called(testing::_)).
+        EXPECT_CALL(*this, session_stop_prompt_session_called(testing::_)).
             Times(testing::AtLeast(0));
     }
 
@@ -63,9 +63,9 @@ struct MockApplicationMediatorReport : mf::SessionMediatorReport
     MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_release_surface_called, void (std::string const&));
     MOCK_METHOD1(session_disconnect_called, void (std::string const&));
-    MOCK_METHOD2(session_start_trust_session_called, void (std::string const&, pid_t));
-    MOCK_METHOD2(session_add_trusted_session_called, void (std::string const&, pid_t));
-    MOCK_METHOD1(session_stop_trust_session_called, void (std::string const&));
+    MOCK_METHOD2(session_start_prompt_session_called, void (std::string const&, pid_t));
+    MOCK_METHOD2(session_add_prompt_provider_called, void (std::string const&, pid_t));
+    MOCK_METHOD1(session_stop_prompt_session_called, void (std::string const&));
 
     void session_drm_auth_magic_called(const std::string&) override {};
     void session_configure_surface_called(std::string const&) override {};
@@ -369,7 +369,7 @@ TEST_F(ApplicationMediatorReport, session_disconnect_called)
     launch_client_process(client_process);
 }
 
-TEST_F(ApplicationMediatorReport, trust_session_start_called)
+TEST_F(ApplicationMediatorReport, prompt_session_start_called)
 {
     struct Server : TestingServerConfiguration
     {
@@ -378,7 +378,7 @@ TEST_F(ApplicationMediatorReport, trust_session_start_called)
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
-            EXPECT_CALL(*result, session_start_trust_session_called(testing::_, testing::_)).
+            EXPECT_CALL(*result, session_start_prompt_session_called(testing::_, testing::_)).
                 Times(1);
 
             return result;
@@ -396,7 +396,7 @@ TEST_F(ApplicationMediatorReport, trust_session_start_called)
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).
                 Times(testing::AtLeast(0));
-            EXPECT_CALL(client, trust_session_start_done()).
+            EXPECT_CALL(client, prompt_session_start_done()).
                 Times(testing::AtLeast(0));
 
             client.display_server.connect(
@@ -407,12 +407,12 @@ TEST_F(ApplicationMediatorReport, trust_session_start_called)
 
             client.wait_for_connect_done();
 
-            client.display_server.start_trust_session(
+            client.display_server.start_prompt_session(
                 0,
-                &client.trust_session_parameters,
-                &client.trust_session,
-                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::trust_session_start_done));
-            client.wait_for_trust_session_start_done();
+                &client.prompt_session_parameters,
+                &client.prompt_session,
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::prompt_session_start_done));
+            client.wait_for_prompt_session_start_done();
 
         }
     } client_process;
@@ -420,7 +420,7 @@ TEST_F(ApplicationMediatorReport, trust_session_start_called)
     launch_client_process(client_process);
 }
 
-TEST_F(ApplicationMediatorReport, trust_session_add_trusted_session_called)
+TEST_F(ApplicationMediatorReport, prompt_session_add_prompt_provider_called)
 {
     struct Server : TestingServerConfiguration
     {
@@ -429,7 +429,7 @@ TEST_F(ApplicationMediatorReport, trust_session_add_trusted_session_called)
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
-            EXPECT_CALL(*result, session_start_trust_session_called(testing::_, testing::_)).
+            EXPECT_CALL(*result, session_start_prompt_session_called(testing::_, testing::_)).
                 Times(1);
 
             return result;
@@ -447,9 +447,9 @@ TEST_F(ApplicationMediatorReport, trust_session_add_trusted_session_called)
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).
                 Times(testing::AtLeast(0));
-            EXPECT_CALL(client, trust_session_start_done()).
+            EXPECT_CALL(client, prompt_session_start_done()).
                 Times(testing::AtLeast(0));
-            EXPECT_CALL(client, trust_session_add_trusted_session_done()).
+            EXPECT_CALL(client, prompt_session_add_prompt_provider_done()).
                 Times(testing::AtLeast(0));
 
             client.display_server.connect(
@@ -460,19 +460,19 @@ TEST_F(ApplicationMediatorReport, trust_session_add_trusted_session_called)
 
             client.wait_for_connect_done();
 
-            client.display_server.start_trust_session(
+            client.display_server.start_prompt_session(
                 0,
-                &client.trust_session_parameters,
-                &client.trust_session,
-                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::trust_session_start_done));
-            client.wait_for_trust_session_start_done();
+                &client.prompt_session_parameters,
+                &client.prompt_session,
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::prompt_session_start_done));
+            client.wait_for_prompt_session_start_done();
 
-            client.display_server.add_trusted_session(
+            client.display_server.add_prompt_provider(
                 0,
-                &client.trusted_session,
+                &client.prompt_provider,
                 &client.ignored,
-                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::trust_session_add_trusted_session_done));
-            client.wait_for_trust_session_add_trusted_session_done();
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::prompt_session_add_prompt_provider_done));
+            client.wait_for_prompt_session_add_prompt_provider_done();
 
         }
     } client_process;
@@ -480,7 +480,7 @@ TEST_F(ApplicationMediatorReport, trust_session_add_trusted_session_called)
     launch_client_process(client_process);
 }
 
-TEST_F(ApplicationMediatorReport, trust_session_stop_called)
+TEST_F(ApplicationMediatorReport, prompt_session_stop_called)
 {
     struct Server : TestingServerConfiguration
     {
@@ -489,7 +489,7 @@ TEST_F(ApplicationMediatorReport, trust_session_stop_called)
         {
             auto result = std::make_shared<MockApplicationMediatorReport>();
 
-            EXPECT_CALL(*result, session_stop_trust_session_called(testing::_)).
+            EXPECT_CALL(*result, session_stop_prompt_session_called(testing::_)).
                 Times(1);
 
             return result;
@@ -507,9 +507,9 @@ TEST_F(ApplicationMediatorReport, trust_session_stop_called)
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
             EXPECT_CALL(client, connect_done()).
                 Times(testing::AtLeast(0));
-            EXPECT_CALL(client, trust_session_start_done()).
+            EXPECT_CALL(client, prompt_session_start_done()).
                 Times(testing::AtLeast(0));
-            EXPECT_CALL(client, trust_session_stop_done()).
+            EXPECT_CALL(client, prompt_session_stop_done()).
                 Times(testing::AtLeast(0));
 
             client.display_server.connect(
@@ -520,19 +520,19 @@ TEST_F(ApplicationMediatorReport, trust_session_stop_called)
 
             client.wait_for_connect_done();
 
-            client.display_server.start_trust_session(
+            client.display_server.start_prompt_session(
                 0,
-                &client.trust_session_parameters,
-                &client.trust_session,
-                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::trust_session_start_done));
-            client.wait_for_trust_session_start_done();
+                &client.prompt_session_parameters,
+                &client.prompt_session,
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::prompt_session_start_done));
+            client.wait_for_prompt_session_start_done();
 
-            client.display_server.stop_trust_session(
+            client.display_server.stop_prompt_session(
                 0,
                 &client.ignored,
                 &client.ignored,
-                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::trust_session_stop_done));
-            client.wait_for_trust_session_stop_done();
+                google::protobuf::NewCallback(&client, &mt::TestProtobufClient::prompt_session_stop_done));
+            client.wait_for_prompt_session_stop_done();
         }
     } client_process;
 

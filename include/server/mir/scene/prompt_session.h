@@ -16,25 +16,24 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SCENE_NULL_TRUST_SESSION_LISTENER_H_
-#define MIR_SCENE_NULL_TRUST_SESSION_LISTENER_H_
+#ifndef MIR_SCENE_PROMPT_SESSION_H_
+#define MIR_SCENE_PROMPT_SESSION_H_
 
-#include "mir/scene/trust_session_listener.h"
+#include "mir/frontend/prompt_session.h"
 
 namespace mir
 {
 namespace scene
 {
-class NullTrustSessionListener : public TrustSessionListener
+class Session;
+
+class PromptSession : public frontend::PromptSession
 {
 public:
-    void starting(std::shared_ptr<TrustSession> const&) override {}
-    void stopping(std::shared_ptr<TrustSession> const&) override {}
-
-    void participant_added(TrustSession const&, std::shared_ptr<Session> const&) override {}
-    void participant_removed(TrustSession const&, std::shared_ptr<Session> const&) override {}
+    virtual std::weak_ptr<Session> get_helper() const = 0;
 };
+
 }
 }
 
-#endif // MIR_SHELL_NULL_TRUST_SESSION_LISTENER_H_
+#endif // MIR_SHELL_PROMPT_SESSION_H_

@@ -30,13 +30,13 @@ namespace mir
 namespace scene
 {
 struct SurfaceCreationParameters;
-struct TrustSessionCreationParameters;
+struct PromptSessionCreationParameters;
 }
 namespace frontend
 {
 class EventSink;
 class Session;
-class TrustSession;
+class PromptSession;
 
 class Shell
 {
@@ -56,13 +56,13 @@ public:
 
     virtual void handle_surface_created(std::shared_ptr<Session> const& session) = 0;
 
-    virtual std::shared_ptr<TrustSession> start_trust_session_for(std::shared_ptr<Session> const& session,
-                                                                  scene::TrustSessionCreationParameters const& params) = 0;
-    virtual void add_trusted_process_for(std::shared_ptr<TrustSession> const& trust_session,
+    virtual std::shared_ptr<PromptSession> start_prompt_session_for(std::shared_ptr<Session> const& session,
+                                                                  scene::PromptSessionCreationParameters const& params) = 0;
+    virtual void add_prompt_provider_process_for(std::shared_ptr<PromptSession> const& prompt_session,
                                                                   pid_t process_id) = 0;
-    virtual void add_trusted_session_for(std::shared_ptr<TrustSession> const& trust_session,
+    virtual void add_prompt_provider_for(std::shared_ptr<PromptSession> const& prompt_session,
                                                                   std::shared_ptr<Session> const& session) = 0;
-    virtual void stop_trust_session(std::shared_ptr<TrustSession> const& trust_session) = 0;
+    virtual void stop_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) = 0;
 
 protected:
     Shell() = default;

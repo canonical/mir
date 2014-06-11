@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_TOOLKIT_MIR_TRUST_SESSION_H_
-#define MIR_TOOLKIT_MIR_TRUST_SESSION_H_
+#ifndef MIR_TOOLKIT_MIR_PROMPT_SESSION_H_
+#define MIR_TOOLKIT_MIR_PROMPT_SESSION_H_
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -30,63 +30,63 @@ extern "C" {
 #endif
 
 /**
- * Create and start a new trust session
+ * Create and start a new prompt session
  *   \param [in] connection        The connection
  *   \param [in] base_session_pid  The process id of the initiating application
- *   \param [in] event_callback    The function to be called when a trust session event occurs
+ *   \param [in] event_callback    The function to be called when a prompt session event occurs
  *   \param [in,out] context       User data passed to the callback functions
  *   \return                       A handle that can be passed to mir_wait_for
  */
-MirTrustSession *mir_connection_start_trust_session_sync(MirConnection* connection,
+MirPromptSession *mir_connection_start_prompt_session_sync(MirConnection* connection,
     pid_t base_session_pid,
-    mir_trust_session_event_callback event_callback,
+    mir_prompt_session_event_callback event_callback,
     void *context);
 
 /**
- * Add a process id to the trust session relationship
- *   \param [in] trust_session  The trust session
+ * Add a process id to the prompt session relationship
+ *   \param [in] prompt_session  The prompt session
  *   \param [in] session_pid    The process id of the application to add
  *   \return                    True if the process id was added, false otherwise
  */
-MirBool mir_trust_session_add_trusted_session_sync(MirTrustSession *trust_session,
+MirBool mir_prompt_session_add_prompt_provider_sync(MirPromptSession *prompt_session,
     pid_t pid);
 
 /**
- * Allocate some FDs for trusted clients to connect on
+ * Allocate some FDs for prompt providers to connect on
  *
- * Trusted helpers need to allocate connection FDs it will pass to
+ * Prompt helpers need to allocate connection FDs it will pass to
  * prompt providers to use when connecting to the server. The server can
- * then associate them with the trust session.
+ * then associate them with the prompt session.
  *
- *   \warning This API is tentative until the implementation of trust sessions is complete
- *   \param [in] trust_session  The trust session
+ *   \warning This API is tentative until the implementation of prompt sessions is complete
+ *   \param [in] prompt_session  The prompt session
  *   \param [in] no_of_fds      The number of fds to allocate
  *   \param [in] callback       Callback invoked when request completes
  *   \param [in,out] context    User data passed to the callback function
  *   \return                    A handle that can be passed to mir_wait_for
  */
-MirWaitHandle* mir_trust_session_new_fds_for_prompt_providers(
-    MirTrustSession *trust_session,
+MirWaitHandle* mir_prompt_session_new_fds_for_prompt_providers(
+    MirPromptSession *prompt_session,
     unsigned int no_of_fds,
     mir_client_fd_callback callback,
     void * context);
 
 /**
- * Stop and release the specified trust session
- *   \param [in] trust_session  The trust session
+ * Stop and release the specified prompt session
+ *   \param [in] prompt_session  The prompt session
  */
-void mir_trust_session_release_sync(MirTrustSession *trust_session);
+void mir_prompt_session_release_sync(MirPromptSession *prompt_session);
 
 /**
- * Return the state of trust session
- * \param [in] trust_session  The trust session
- * \return                    The state of the trust session
+ * Return the state of prompt session
+ * \param [in] prompt_session  The prompt session
+ * \return                    The state of the prompt session
  */
-MirTrustSessionState mir_trust_session_get_state(MirTrustSession *trust_session);
+MirPromptSessionState mir_prompt_session_get_state(MirPromptSession *prompt_session);
 
 #ifdef __cplusplus
 }
 /**@}*/
 #endif
 
-#endif /* MIR_TOOLKIT_MIR_TRUST_SESSION_H_ */
+#endif /* MIR_TOOLKIT_MIR_PROMPT_SESSION_H_ */

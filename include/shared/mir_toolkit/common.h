@@ -88,11 +88,11 @@ typedef enum MirPowerMode
     mir_power_mode_off /* Powered down. */
 } MirPowerMode;
 
-typedef enum MirTrustSessionState
+typedef enum MirPromptSessionState
 {
-    mir_trust_session_state_stopped = 0,
-    mir_trust_session_state_started
-} MirTrustSessionState;
+    mir_prompt_session_state_stopped = 0,
+    mir_prompt_session_state_started
+} MirPromptSessionState;
 
 /**
  * The order of components in a format enum matches the

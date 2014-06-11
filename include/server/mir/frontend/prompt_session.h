@@ -16,21 +16,33 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SCENE_TRUSTED_SESSION_CREATION_PARAMETERS_H_
-#define MIR_SCENE_TRUSTED_SESSION_CREATION_PARAMETERS_H_
+#ifndef MIR_FRONTEND_PROMPT_SESSION_H_
+#define MIR_FRONTEND_PROMPT_SESSION_H_
+
+#include "mir_toolkit/common.h"
 
 #include <sys/types.h>
+#include <vector>
+#include <string>
+#include <memory>
 
 namespace mir
 {
-namespace scene
-{
 
-struct TrustSessionCreationParameters
+namespace frontend
 {
-    pid_t base_process_id = 0;
+class PromptSession
+{
+public:
+    virtual ~PromptSession() = default;
+
+protected:
+    PromptSession() = default;
+    PromptSession(const PromptSession&) = delete;
+    PromptSession& operator=(const PromptSession&) = delete;
 };
+
 }
 }
 
-#endif /* MIR_SCENE_TRUSTED_SESSION_CREATION_PARAMETERS_H_ */
+#endif // MIR_FRONTEND_PROMPT_SESSION_H_

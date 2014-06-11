@@ -192,17 +192,12 @@ message SocketFD {
   optional string error = 127;
 }
 
-message TrustedSession {
+message PromptProvider {
   required int32 pid = 1;
 }
 
-message TrustSessionParameters {
-  required TrustedSession base_trusted_session = 1;
-}
-
-message TrustSessionAddResult {
-  optional int32 result = 1;
-  optional string error = 127;
+message PromptSessionParameters {
+  required PromptProvider base_prompt_provider = 1;
 }
 
 service DisplayServer {
@@ -228,7 +223,7 @@ service DisplayServer {
   rpc configure_cursor(CursorSetting) returns (Void);
   rpc new_fds_for_prompt_providers(SocketFDRequest) returns (SocketFD);
 
-  rpc start_trust_session(TrustSessionParameters) returns (Void);
-  rpc add_trusted_session(TrustedSession) returns (Void);
-  rpc stop_trust_session(Void) returns (Void);
+  rpc start_prompt_session(PromptSessionParameters) returns (Void);
+  rpc add_prompt_provider(PromptProvider) returns (Void);
+  rpc stop_prompt_session(Void) returns (Void);
 }

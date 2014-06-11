@@ -41,7 +41,7 @@ typedef enum
     mir_event_type_motion,
     mir_event_type_surface,
     mir_event_type_resize,
-    mir_event_type_trust_session_state_change
+    mir_event_type_prompt_session_state_change
 } MirEventType;
 
 typedef enum {
@@ -209,8 +209,8 @@ typedef struct
 {
     MirEventType type;
 
-    MirTrustSessionState new_state;
-} MirTrustSessionEvent;
+    MirPromptSessionState new_state;
+} MirPromptSessionEvent;
 
 typedef union
 {
@@ -219,7 +219,7 @@ typedef union
     MirMotionEvent  motion;
     MirSurfaceEvent surface;
     MirResizeEvent  resize;
-    MirTrustSessionEvent  trust_session;
+    MirPromptSessionEvent  prompt_session;
 } MirEvent;
 
 #ifdef __cplusplus

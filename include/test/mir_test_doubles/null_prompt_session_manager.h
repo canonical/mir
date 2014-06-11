@@ -16,10 +16,10 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SCENE_NULL_TRUST_SESSION_MANAGER_H_
-#define MIR_SCENE_NULL_TRUST_SESSION_MANAGER_H_
+#ifndef MIR_SCENE_NULL_PROMPT_SESSION_MANAGER_H_
+#define MIR_SCENE_NULL_PROMPT_SESSION_MANAGER_H_
 
-#include "mir/scene/trust_session_manager.h"
+#include "mir/scene/prompt_session_manager.h"
 
 namespace mir
 {
@@ -28,25 +28,25 @@ namespace test
 namespace doubles
 {
 
-class NullTrustSessionManager: public scene::TrustSessionManager
+class NullPromptSessionManager: public scene::PromptSessionManager
 {
 public:
-    std::shared_ptr<scene::TrustSession> start_trust_session_for(std::shared_ptr<scene::Session> const&,
-                                                          scene::TrustSessionCreationParameters const&) const
+    std::shared_ptr<scene::PromptSession> start_prompt_session_for(std::shared_ptr<scene::Session> const&,
+                                                          scene::PromptSessionCreationParameters const&) const
     {
-      return std::shared_ptr<scene::TrustSession>();
+      return std::shared_ptr<scene::PromptSession>();
     }
 
-    void stop_trust_session(std::shared_ptr<scene::TrustSession> const&) const
+    void stop_prompt_session(std::shared_ptr<scene::PromptSession> const&) const
     {
     }
 
-    void add_participant(std::shared_ptr<scene::TrustSession> const&,
+    void add_participant(std::shared_ptr<scene::PromptSession> const&,
                          std::shared_ptr<scene::Session> const&) const
     {
     }
 
-    void add_participant_by_pid(std::shared_ptr<scene::TrustSession> const&,
+    void add_participant_by_pid(std::shared_ptr<scene::PromptSession> const&,
                                 pid_t) const
     {
     }
@@ -59,7 +59,7 @@ public:
     {
     }
 
-    void for_each_participant_in_trust_session(std::shared_ptr<scene::TrustSession> const&,
+    void for_each_participant_in_prompt_session(std::shared_ptr<scene::PromptSession> const&,
                                                std::function<void(std::shared_ptr<scene::Session> const& participant)> const&) const
     {
     }
@@ -69,4 +69,4 @@ public:
 }
 }
 
-#endif // MIR_SCENE_NULL_TRUST_SESSION_MANAGER_H_
+#endif // MIR_SCENE_NULL_PROMPT_SESSION_MANAGER_H_
