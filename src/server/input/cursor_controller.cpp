@@ -39,10 +39,10 @@ namespace geom = mir::geometry;
 namespace
 {
 
-struct SurfaceObserver : ms::SurfaceObserver
+struct UpdateCursorOnSurfaceChanges : ms::SurfaceObserver
 {
-    SurfaceObserver(std::function<void()> const& update_cursor)
-        : update_cursor(update_cursor)
+    UpdateCursorOnSurfaceChanges(mi::CursorController* cursor_controller)
+        : cursor_controller(cursor_controller)
     {
     }
 
@@ -52,15 +52,15 @@ struct SurfaceObserver : ms::SurfaceObserver
     }
     void resized_to(geom::Size const&) override
     {
-        update_cursor();
+        cursor_controller->update_cursor_image();
     }
     void moved_to(geom::Point const&) override
     {
-        update_cursor();
+        cursor_controller->update_cursor_image();
     }
     void hidden_set_to(bool) override
     {
-        update_cursor();
+        cursor_controller->update_cursor_image();
     }
     void frame_posted(int) override
     {
@@ -68,34 +68,34 @@ struct SurfaceObserver : ms::SurfaceObserver
     }
     void alpha_set_to(float) override
     {
-        update_cursor();
+        cursor_controller->update_cursor_image();
     }
     void transformation_set_to(glm::mat4 const&) override
     {
-        update_cursor();
+        cursor_controller->update_cursor_image();
     }
     void reception_mode_set_to(mi::InputReceptionMode) override
     {
-        update_cursor();
+        cursor_controller->update_cursor_image();
     }
     void cursor_image_set_to(mg::CursorImage const&) override
     {
-        update_cursor();
+        cursor_controller->update_cursor_image();
     }
 
-    std::function<void()> const update_cursor;
+    mi::CursorController* const cursor_controller;
 };
 
-struct Observer : ms::Observer
+struct UpdateCursorOnSceneChanges : ms::Observer
 {
-    Observer(std::function<void()> const& update_cursor)
-        : update_cursor(update_cursor)
+    UpdateCursorOnSceneChanges(mi::CursorController* cursor_controller)
+        : cursor_controller(cursor_controller)
     {
     }
     
     void add_surface_observer(ms::Surface* surface)
     {
-        auto observer = std::make_shared<SurfaceObserver>(update_cursor);
+        auto observer = std::make_shared<UpdateCursorOnSurfaceChanges>(cursor_controller);
         surface->add_observer(observer);
 
         {
@@ -107,7 +107,7 @@ struct Observer : ms::Observer
     void surface_added(ms::Surface *surface)
     {
         add_surface_observer(surface);
-        update_cursor();
+        cursor_controller->update_cursor_image();
     }
     void surface_removed(ms::Surface *surface)
     {
@@ -120,17 +120,17 @@ struct Observer : ms::Observer
                 surface_observers.erase(it);
             }
         }
-        update_cursor();
+        cursor_controller->update_cursor_image();
     }
     void surfaces_reordered()
     {
-        update_cursor();
+        cursor_controller->update_cursor_image();
     }
     
     void surface_exists(ms::Surface *surface)
     {
         add_surface_observer(surface);
-        update_cursor();
+        cursor_controller->update_cursor_image();
     }
     
     void end_observation()
@@ -145,10 +145,10 @@ struct Observer : ms::Observer
         surface_observers.clear();
     }
     
-    std::function<void()> const update_cursor;
+    mi::CursorController* const cursor_controller;
 
     std::mutex surface_observers_guard;
-    std::map<ms::Surface*, std::weak_ptr<SurfaceObserver>> surface_observers;
+    std::map<ms::Surface*, std::weak_ptr<ms::SurfaceObserver>> surface_observers;
 };
 
 std::shared_ptr<mi::Surface> topmost_surface_containing_point(
@@ -176,11 +176,7 @@ mi::CursorController::CursorController(std::shared_ptr<mi::InputTargets> const& 
 {
     // TODO: Add observer could return weak_ptr to eliminate this
     // pattern
-    auto strong_observer = std::make_shared<Observer>([&]()
-    {
-        std::lock_guard<std::mutex> lg(cursor_state_guard);
-        update_cursor_image_locked(lg);
-    });
+    auto strong_observer = std::make_shared<UpdateCursorOnSceneChanges>(this);
     input_targets->add_observer(strong_observer);
     observer = strong_observer;
 }
@@ -216,6 +212,12 @@ void mi::CursorController::update_cursor_image_locked(std::lock_guard<std::mutex
     {
         set_cursor_image_locked(lg, default_cursor_image);
     }
+}
+
+void mi::CursorController::update_cursor_image()
+{
+    std::lock_guard<std::mutex> lg(cursor_state_guard);
+    update_cursor_image_locked(lg);
 }
 
 void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
