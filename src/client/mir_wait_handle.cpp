@@ -50,6 +50,8 @@ void MirWaitHandle::wait_for_all()  // wait for all results you expect
 {
     std::unique_lock<std::mutex> lock(guard);
 
+    // TODO this condition ought to be "received == expecting" but some
+    // TODO client code seems to not call expect_result() and tests break.
     wait_condition.wait(lock,
         [&]{ return (expecting || received) && (received >= expecting); });
 
@@ -61,7 +63,7 @@ void MirWaitHandle::wait_for_pending(std::chrono::milliseconds limit)
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    wait_condition.wait_for(lock, limit, [&]{ return received >= expecting; });
+    wait_condition.wait_for(lock, limit, [&]{ return received == expecting; });
 }
 
 
