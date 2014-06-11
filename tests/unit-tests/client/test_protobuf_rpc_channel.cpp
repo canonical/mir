@@ -51,6 +51,23 @@ public:
 class MockTransport : public mclr::Transport
 {
 public:
+    MockTransport()
+    {
+        using namespace testing;
+        ON_CALL(*this, register_data_received_notification(_))
+            .WillByDefault(Invoke(std::bind(&MockTransport::register_data_received_notification_default,
+                                            this, std::placeholders::_1)));
+        ON_CALL(*this, receive_data(_,_))
+            .WillByDefault(Invoke(std::bind(&MockTransport::receive_data_default,
+                                            this, std::placeholders::_1, std::placeholders::_2)));
+        ON_CALL(*this, receive_file_descriptors(_))
+            .WillByDefault(Invoke(std::bind(&MockTransport::receive_file_descriptors_default,
+                                            this, std::placeholders::_1)));
+        ON_CALL(*this, send_data(_))
+            .WillByDefault(Invoke(std::bind(&MockTransport::send_data_default,
+                                            this, std::placeholders::_1)));
+    }
+
     void add_receive_hunk(std::vector<uint8_t>&& message)
     {
         datagrams.emplace_back(std::forward<std::vector<uint8_t>>(message), std::list<int>());
@@ -71,18 +88,23 @@ public:
             callback();
     }
 
-    // Transport interface
-    void register_data_received_notification(data_received_notifier const& callback)
-    {
-        callbacks.push_back(callback);
-    }
-
     bool data_available() const override
     {
         return !datagrams.empty();
     }
 
-    size_t receive_data(void* buffer, size_t message_size)
+    MOCK_METHOD1(register_data_received_notification, void(data_received_notifier const&));
+    MOCK_METHOD2(receive_data, size_t(void*, size_t));
+    MOCK_METHOD1(receive_file_descriptors, void(std::vector<int>&));
+    MOCK_METHOD1(send_data, size_t(std::vector<uint8_t> const&));
+
+    // Transport interface
+    void register_data_received_notification_default(data_received_notifier const& callback)
+    {
+        callbacks.push_back(callback);
+    }
+
+    size_t receive_data_default(void* buffer, size_t message_size)
     {
         size_t read_bytes{0};
         while ((message_size != 0) && !datagrams.empty())
@@ -104,7 +126,7 @@ public:
         return read_bytes;
     }
 
-    void receive_file_descriptors(std::vector<int>& fds)
+    void receive_file_descriptors_default(std::vector<int>& fds)
     {
         if (fds.size() > fds_for_current_message.size())
             throw std::runtime_error("Attempted to read more fds than are available");
@@ -116,7 +138,7 @@ public:
         }
     }
 
-    size_t send_data(std::vector<uint8_t> const& buffer)
+    size_t send_data_default(std::vector<uint8_t> const& buffer)
     {
         sent_messages.push_back(buffer);
         return buffer.size();
@@ -134,17 +156,19 @@ class MirProtobufRpcChannelTest : public testing::Test
 {
 public:
     MirProtobufRpcChannelTest()
-        : transport{new MockTransport},
+        : transport{new testing::NiceMock<MockTransport>},
+          lifecycle{std::make_shared<mcl::LifecycleControl>()},
           channel{new mclr::MirProtobufRpcChannel{
                   std::unique_ptr<MockTransport>{transport},
                   std::make_shared<StubSurfaceMap>(),
                   std::make_shared<mcl::DisplayConfiguration>(),
                   std::make_shared<mclr::NullRpcReport>(),
-                  std::make_shared<mcl::LifecycleControl>()}}
+                  lifecycle}}
     {
     }
 
     MockTransport* transport;
+    std::shared_ptr<mcl::LifecycleControl> lifecycle;
     std::unique_ptr<::google::protobuf::RpcChannel> channel;
 };
 
@@ -260,4 +284,32 @@ TEST_F(MirProtobufRpcChannelTest, ReadsFds)
         EXPECT_EQ(reply.fd(i), fd);
         ++i;
     }
+}
+
+TEST_F(MirProtobufRpcChannelTest, TreatsWriteErrorAsDisconnect)
+{
+    using namespace ::testing;
+
+    bool disconnected{false};
+
+    lifecycle->set_lifecycle_event_handler([&disconnected](MirLifecycleState state)
+    {
+        if (state == mir_lifecycle_connection_lost)
+        {
+            disconnected = true;
+        }
+    });
+
+    EXPECT_CALL(*transport, send_data(_))
+        .WillOnce(Throw(std::runtime_error("Eaten by giant space goat")));
+
+    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mir::protobuf::Buffer reply;
+    mir::protobuf::Void dummy;
+
+    EXPECT_THROW(
+        channel_user.test_file_descriptors(nullptr, &dummy, &reply, google::protobuf::NewCallback([](){})),
+        std::runtime_error);
+
+    EXPECT_TRUE(disconnected);
 }
