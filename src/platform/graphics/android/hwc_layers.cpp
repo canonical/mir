@@ -119,7 +119,7 @@ void mga::HWCLayer::set_layer_type(LayerType type)
 void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alpha_enabled)
 {
     if (alpha_enabled)
-        hwc_layer->blending = HWC_BLENDING_COVERAGE;
+        hwc_layer->blending = HWC_BLENDING_PREMULT;
     else
         hwc_layer->blending = HWC_BLENDING_NONE;
 
