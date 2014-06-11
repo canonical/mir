@@ -32,6 +32,20 @@ namespace geom=mir::geometry;
 
 namespace
 {
+bool plane_alpha_is_opaque(mg::Renderable const& renderable)
+{
+    if (!renderable.alpha_enabled())
+        return true;
+
+    //planeAlpha is a uint8_t sized field
+    float const tolerance{1.0f/512.0f}; 
+    float const alpha_value{renderable.alpha()};
+    if ((alpha_value < 1.0f + tolerance) && 
+        (alpha_value > 1.0f - tolerance))
+        return true;
+    return false;
+}
+
 bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
 {
     if (list.empty())
@@ -39,10 +53,9 @@ bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
 
     for(auto const& renderable : list)
     {
-        //TODO: enable alpha, 90 deg rotation
+        //TODO: enable plane alpha, 90 deg rotation
         static glm::mat4 const identity;
-        if (renderable->shaped() ||
-            renderable->alpha_enabled() ||
+        if ((!plane_alpha_is_opaque(*renderable)) ||
             (renderable->transformation() != identity))
         {
             return true;

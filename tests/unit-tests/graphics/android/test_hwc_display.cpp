@@ -74,6 +74,19 @@ struct TranslucentRenderable : public mtd::StubRenderable
     }
 };
 
+struct PlaneAlphaRenderable : public mtd::StubRenderable
+{
+    bool alpha_enabled() const override
+    {
+        return true;
+    }
+    float alpha() const override
+    {
+        //approx 99% alpha 
+        return 1.0f - ( 3.0f / 1024.0f );
+    }
+};
+
 class AndroidDisplayBuffer : public ::testing::Test
 {
 protected:
@@ -169,7 +182,7 @@ TEST_F(AndroidDisplayBuffer, rejects_list_containing_transformed)
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 }
 
-TEST_F(AndroidDisplayBuffer, rejects_list_containing_alpha)
+TEST_F(AndroidDisplayBuffer, accepts_list_containing_alpha)
 {
     using namespace testing;
 
