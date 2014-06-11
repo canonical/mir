@@ -72,7 +72,7 @@ struct ClientSurfaces : mtf::BasicClientServerFixture<mtf::StubbedServerConfigur
 
     MirSurfaceParameters surface_params
     {
-        __PRETTY_FUNCTION__,
+        "Arbitrary surface name",
         640, 480,
         mir_pixel_format_abgr_8888,
         mir_buffer_usage_hardware,
