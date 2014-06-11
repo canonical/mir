@@ -169,7 +169,6 @@ TEST_F(AndroidDisplayBuffer, rejects_list_containing_transformed)
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 }
 
-//TODO: remove once alpha+HWC is turned on
 TEST_F(AndroidDisplayBuffer, rejects_list_containing_alpha)
 {
     using namespace testing;
@@ -178,10 +177,22 @@ TEST_F(AndroidDisplayBuffer, rejects_list_containing_alpha)
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
 
     mg::RenderableList renderlist{std::make_shared<TranslucentRenderable>()};
-    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
+    EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist));
 
     mg::RenderableList renderlist2{std::make_shared<ShapedRenderable>()};
-    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist2));
+    EXPECT_TRUE(db.post_renderables_if_optimizable(renderlist2));
+}
+
+//TODO: support plane alpha for hwc 1.2 and later
+TEST_F(AndroidDisplayBuffer, rejects_list_containing_plane_alpha)
+{
+    using namespace testing;
+
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
+
+    mg::RenderableList renderlist{std::make_shared<PlaneAlphaRenderable>()};
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist));
 }
 
 TEST_F(AndroidDisplayBuffer, posts_overlay_list)
