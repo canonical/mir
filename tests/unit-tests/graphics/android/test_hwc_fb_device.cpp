@@ -70,6 +70,7 @@ protected:
         skip_layer.visibleRegionScreen = {1, &empty_region};
         skip_layer.acquireFenceFd = -1;
         skip_layer.releaseFenceFd = -1;
+        skip_layer.planeAlpha = 0xFF;
 
         ON_CALL(mock_context, last_rendered_buffer())
             .WillByDefault(Return(mock_buffer));

@@ -157,6 +157,7 @@ protected:
         comp_layer.visibleRegionScreen = {1, &set_region};
         comp_layer.acquireFenceFd = -1;
         comp_layer.releaseFenceFd = -1;
+        comp_layer.planeAlpha = 0xFF;
 
         target_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
         target_layer.hints = 0;
@@ -169,6 +170,7 @@ protected:
         target_layer.visibleRegionScreen = {1, &set_region};
         target_layer.acquireFenceFd = -1;
         target_layer.releaseFenceFd = -1;
+        target_layer.planeAlpha = 0xFF;
 
         skip_layer.compositionType = HWC_FRAMEBUFFER;
         skip_layer.hints = 0;
@@ -181,6 +183,7 @@ protected:
         skip_layer.visibleRegionScreen = {1, &set_region};
         skip_layer.acquireFenceFd = -1;
         skip_layer.releaseFenceFd = -1;
+        skip_layer.planeAlpha = 0xFF;
 
         set_skip_layer = skip_layer;
         set_skip_layer.handle = mock_native_buffer->handle();
@@ -420,6 +423,7 @@ TEST_F(HwcDevice, sets_proper_list_with_overlays)
     comp_layer1.visibleRegionScreen = {1, &set_region};
     comp_layer1.acquireFenceFd = overlay_acquire_fence1;
     comp_layer1.releaseFenceFd = -1;
+    comp_layer1.planeAlpha = 0xFF;
 
     comp_layer2.compositionType = HWC_OVERLAY;
     comp_layer2.hints = 0;
@@ -432,6 +436,7 @@ TEST_F(HwcDevice, sets_proper_list_with_overlays)
     comp_layer2.visibleRegionScreen = {1, &set_region};
     comp_layer2.acquireFenceFd = overlay_acquire_fence2;
     comp_layer2.releaseFenceFd = -1;
+    comp_layer2.planeAlpha = 0xFF;
 
     set_target_layer.acquireFenceFd = fb_acquire_fence;
     set_target_layer.handle = native_handle_3->handle();

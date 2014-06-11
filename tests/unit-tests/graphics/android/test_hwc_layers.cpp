@@ -71,6 +71,7 @@ public:
         expected_layer.visibleRegionScreen = {1, &region};
         expected_layer.acquireFenceFd = -1;
         expected_layer.releaseFenceFd = -1;
+        expected_layer.planeAlpha = 0xFF;
     }
 
     mga::LayerType type;
@@ -276,6 +277,7 @@ TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)
     expected_layer.visibleRegionScreen = visible_region;
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
+    expected_layer.planeAlpha = 0xFF;
 
     mga::HWCLayer layer(list, list_index);
     layer.set_render_parameters(screen_position, true);

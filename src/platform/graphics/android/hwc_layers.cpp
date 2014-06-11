@@ -58,6 +58,7 @@ mga::HWCLayer::HWCLayer(std::shared_ptr<hwc_display_contents_1_t> list, size_t l
     hwc_layer->acquireFenceFd = -1;
     hwc_layer->releaseFenceFd = -1;
     hwc_layer->blending = HWC_BLENDING_NONE;
+    hwc_layer->planeAlpha = 0xFF;
 
     hwc_layer->visibleRegionScreen.numRects=1;
     hwc_layer->visibleRegionScreen.rects= &visible_rect;
@@ -121,6 +122,8 @@ void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alp
         hwc_layer->blending = HWC_BLENDING_COVERAGE;
     else
         hwc_layer->blending = HWC_BLENDING_NONE;
+
+    hwc_layer->planeAlpha = 0xFF;
 
     /* note, if the sourceCrop and DisplayFrame sizes differ, the output will be linearly scaled */
     hwc_layer->displayFrame = 
