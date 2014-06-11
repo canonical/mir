@@ -20,15 +20,23 @@
 #include <gtest/gtest.h>
 #include "src/client/mir_wait_handle.h"
 
+namespace
+{
+int const arbitrary_number_of_events = 100;
+}
+
 TEST(WaitHandle, symmetric_synchronous)
 {
     MirWaitHandle w;
+    for (int i = 0; i != arbitrary_number_of_events; ++i)
+        w.expect_result();
 
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < arbitrary_number_of_events; i++)
     {
         w.result_received();
-        w.wait_for_all();
     }
+
+    w.wait_for_all();
 
     EXPECT_TRUE(true);   // Failure would be hanging in the above loop
 }
@@ -37,8 +45,11 @@ TEST(WaitHandle, asymmetric_synchronous)
 {
     MirWaitHandle w;
 
-    for (int i = 1; i <= 100; i++)
+    for (int i = 1; i <= arbitrary_number_of_events; i++)
     {
+        for (int j = 0; j != i; ++j)
+            w.expect_result();
+
         for (int j = 1; j <= i; j++)
             w.result_received();
 
@@ -56,6 +67,7 @@ namespace
     {
         for (int i = 1; i <= max; i++)
         {
+            in->expect_result();
             in->wait_for_all();
             symmetric_result = i;
             out->result_received();
@@ -71,6 +83,7 @@ TEST(WaitHandle, symmetric_asynchronous)
 
     for (int i = 1; i <= max; i++)
     {
+        out.expect_result();
         in.result_received();
         out.wait_for_all();
         ASSERT_EQ(symmetric_result, i);
@@ -86,6 +99,7 @@ namespace
     {
         for (int i = 1; i <= max; i++)
         {
+            in->expect_result();
             in->wait_for_all();
             asymmetric_result = i;
             for (int j = 1; j <= i; j++)
