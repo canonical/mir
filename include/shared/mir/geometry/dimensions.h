@@ -121,7 +121,6 @@ inline DeltaY operator+(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_int() + r
 inline DeltaX operator-(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
 inline DeltaY operator-(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_int() - rhs.as_int()); }
 
-
 // Adding deltas to co-ordinates is fine
 inline X operator+(X lhs, DeltaX rhs) { return X(lhs.as_int() + rhs.as_int()); }
 inline Y operator+(Y lhs, DeltaY rhs) { return Y(lhs.as_int() + rhs.as_int()); }
