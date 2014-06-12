@@ -556,9 +556,9 @@ void mf::SessionMediator::start_prompt_session(
             BOOST_THROW_EXCEPTION(std::runtime_error("Cannot start another prompt session"));
 
         ms::PromptSessionCreationParameters parameters;
-        parameters.base_process_id = request->base_prompt_provider().pid();
+        parameters.application_pid = request->application_pid();
 
-        report->session_start_prompt_session_called(session->name(), parameters.base_process_id);
+        report->session_start_prompt_session_called(session->name(), parameters.application_pid);
 
         weak_prompt_session = shell->start_prompt_session_for(session, parameters);
     }

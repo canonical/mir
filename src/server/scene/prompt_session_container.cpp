@@ -146,7 +146,7 @@ void ms::PromptSessionContainer::for_each_prompt_session_with_participant(
 
 void ms::PromptSessionContainer::for_each_prompt_session_with_participant(
     std::weak_ptr<Session> const& participant,
-    std::function<void(std::shared_ptr<PromptSession> const&)> f) const
+    std::function<void(std::shared_ptr<PromptSession> const&, ParticipantType)> f) const
 {
     std::unique_lock<std::mutex> lk(mutex);
     if (auto locked_session = participant.lock())
@@ -160,7 +160,7 @@ void ms::PromptSessionContainer::for_each_prompt_session_with_participant(
 
             auto tsit = prompt_sessions.find(participant.prompt_session);
             if (tsit != prompt_sessions.end())
-                f(tsit->second);
+                f(tsit->second, participant.participant_type);
         }
     }
 }

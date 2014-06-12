@@ -34,8 +34,8 @@ public:
     virtual void starting(std::shared_ptr<PromptSession> const& prompt_session) = 0;
     virtual void stopping(std::shared_ptr<PromptSession> const& prompt_session) = 0;
 
-    virtual void participant_added(PromptSession const& prompt_session, std::shared_ptr<Session> const& participant) = 0;
-    virtual void participant_removed(PromptSession const& prompt_session, std::shared_ptr<Session> const& participant) = 0;
+    virtual void prompt_provider_added(PromptSession const& prompt_session, std::shared_ptr<Session> const& prompt_provider) = 0;
+    virtual void prompt_provider_removed(PromptSession const& prompt_session, std::shared_ptr<Session> const& prompt_provider) = 0;
 
 protected:
     PromptSessionListener() = default;

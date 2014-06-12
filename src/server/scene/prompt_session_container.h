@@ -47,7 +47,8 @@ public:
 
     enum class ParticipantType
     {
-        helper_session,
+        helper,
+        application,
         prompt_provider,
     };
 
@@ -59,7 +60,7 @@ public:
 
     void for_each_participant_in_prompt_session(PromptSession* prompt_session, std::function<void(std::weak_ptr<Session> const&, ParticipantType)> f) const;
     void for_each_prompt_session_with_participant(std::weak_ptr<Session> const& participant, ParticipantType participant_type, std::function<void(std::shared_ptr<PromptSession> const&)> f) const;
-    void for_each_prompt_session_with_participant(std::weak_ptr<Session> const& participant, std::function<void(std::shared_ptr<PromptSession> const&)> f) const;
+    void for_each_prompt_session_with_participant(std::weak_ptr<Session> const& participant, std::function<void(std::shared_ptr<PromptSession> const&, ParticipantType)> f) const;
 
     void insert_waiting_process(PromptSession* prompt_session, pid_t process_id);
     void for_each_prompt_session_expecting_process(pid_t process_id, std::function<void(std::shared_ptr<PromptSession> const&)> f) const;

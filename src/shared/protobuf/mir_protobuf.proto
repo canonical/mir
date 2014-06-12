@@ -197,7 +197,7 @@ message PromptProvider {
 }
 
 message PromptSessionParameters {
-  required PromptProvider base_prompt_provider = 1;
+  required int32 application_pid = 1;
 }
 
 service DisplayServer {

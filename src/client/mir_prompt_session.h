@@ -45,9 +45,9 @@ public:
 
     ~MirPromptSession();
 
-    MirWaitHandle* start(pid_t pid, mir_prompt_session_callback callback, void* context);
+    MirWaitHandle* start(pid_t application_pid, mir_prompt_session_callback callback, void* context);
     MirWaitHandle* stop(mir_prompt_session_callback callback, void* context);
-    MirWaitHandle* add_prompt_provider(pid_t pid, mir_prompt_session_add_prompt_provider_callback callback, void* context);
+    MirWaitHandle* add_prompt_provider(pid_t provider_pid, mir_prompt_session_add_prompt_provider_callback callback, void* context);
 
     MirWaitHandle* new_fds_for_prompt_providers(
         unsigned int no_of_fds,

@@ -39,7 +39,7 @@ void add_prompt_provider_callback(MirPromptSession*,
 }
 
 MirPromptSession *mir_connection_start_prompt_session_sync(MirConnection* connection,
-                                                         pid_t base_session_pid,
+                                                         pid_t application_pid,
                                                          mir_prompt_session_event_callback event_callback,
                                                          void* context)
 {
@@ -49,7 +49,7 @@ MirPromptSession *mir_connection_start_prompt_session_sync(MirConnection* connec
         if (event_callback)
             prompt_session->register_prompt_session_event_callback(event_callback, context);
 
-        mir_wait_for(prompt_session->start(base_session_pid,
+        mir_wait_for(prompt_session->start(application_pid,
                      null_callback,
                      nullptr));
         return prompt_session;
@@ -62,13 +62,13 @@ MirPromptSession *mir_connection_start_prompt_session_sync(MirConnection* connec
 }
 
 MirWaitHandle *mir_prompt_session_add_prompt_provider(MirPromptSession *prompt_session,
-                                                     pid_t session_pid,
+                                                     pid_t provider_pid,
                                                      mir_prompt_session_add_prompt_provider_callback callback,
                                                      void* context)
 {
     try
     {
-        return prompt_session->add_prompt_provider(session_pid, callback, context);
+        return prompt_session->add_prompt_provider(provider_pid, callback, context);
     }
     catch (std::exception const&)
     {
@@ -77,11 +77,11 @@ MirWaitHandle *mir_prompt_session_add_prompt_provider(MirPromptSession *prompt_s
     }
 }
 
-MirBool mir_prompt_session_add_prompt_provider_sync(MirPromptSession *prompt_session, pid_t base_session_pid)
+MirBool mir_prompt_session_add_prompt_provider_sync(MirPromptSession *prompt_session, pid_t provider_pid)
 {
     MirBool result;
     mir_wait_for(mir_prompt_session_add_prompt_provider(prompt_session,
-        base_session_pid,
+        provider_pid,
         add_prompt_provider_callback,
         &result));
     return result;

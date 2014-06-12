@@ -195,7 +195,7 @@ void ms::SessionManager::add_prompt_provider_process_for(
 {
     auto scene_prompt_session = std::dynamic_pointer_cast<PromptSession>(prompt_session);
 
-    prompt_session_manager->add_participant_by_pid(scene_prompt_session, process_id);
+    prompt_session_manager->add_prompt_provider_by_pid(scene_prompt_session, process_id);
 }
 
 void ms::SessionManager::add_prompt_provider_for(
@@ -205,7 +205,7 @@ void ms::SessionManager::add_prompt_provider_for(
     auto scene_prompt_session = std::dynamic_pointer_cast<PromptSession>(prompt_session);
     auto scene_session = std::dynamic_pointer_cast<Session>(session);
 
-    prompt_session_manager->add_participant(scene_prompt_session, scene_session);
+    prompt_session_manager->add_prompt_provider(scene_prompt_session, scene_session);
 }
 
 void ms::SessionManager::stop_prompt_session(std::shared_ptr<mf::PromptSession> const& prompt_session)

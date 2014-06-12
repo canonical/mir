@@ -50,11 +50,11 @@ public:
     void stop_prompt_session(
         std::shared_ptr<PromptSession> const& prompt_session) const override;
 
-    void add_participant(
+    void add_prompt_provider(
         std::shared_ptr<PromptSession> const& prompt_session,
-        std::shared_ptr<Session> const& session) const override;
+        std::shared_ptr<Session> const& prompt_provider) const override;
 
-    void add_participant_by_pid(
+    void add_prompt_provider_by_pid(
         std::shared_ptr<PromptSession> const& prompt_session,
         pid_t process_id) const override;
 
@@ -64,9 +64,15 @@ public:
     void remove_session(
         std::shared_ptr<Session> const& session) const override;
 
-    void for_each_participant_in_prompt_session(
+    std::shared_ptr<Session> application_for_prompt_session(
+        std::shared_ptr<PromptSession> const& prompt_session) const override;
+
+    std::shared_ptr<Session> helper_for_prompt_session(
+        std::shared_ptr<PromptSession> const& prompt_session) const override;
+
+    void for_each_provider_in_prompt_session(
         std::shared_ptr<PromptSession> const& prompt_session,
-        std::function<void(std::shared_ptr<Session> const& participant)> const& f) const override;
+        std::function<void(std::shared_ptr<Session> const& prompt_provider)> const& f) const override;
 
 private:
     std::shared_ptr<PromptSessionContainer> const prompt_session_container;
@@ -75,7 +81,7 @@ private:
 
     std::mutex mutable prompt_sessions_mutex;
 
-    void add_participant_by_pid_locked(
+    void add_prompt_provider_by_pid_locked(
         std::lock_guard<std::mutex> const&,
         std::shared_ptr<PromptSession> const& prompt_session,
         pid_t process_id) const;

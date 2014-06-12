@@ -31,25 +31,25 @@ extern "C" {
 
 /**
  * Create and start a new prompt session
- *   \param [in] connection        The connection
- *   \param [in] base_session_pid  The process id of the initiating application
- *   \param [in] event_callback    The function to be called when a prompt session event occurs
- *   \param [in,out] context       User data passed to the callback functions
- *   \return                       A handle that can be passed to mir_wait_for
+ *   \param [in] connection       The connection
+ *   \param [in] application_pid  The process id of the initiating application
+ *   \param [in] event_callback   The function to be called when a prompt session event occurs
+ *   \param [in,out] context      User data passed to the callback functions
+ *   \return                      A handle that can be passed to mir_wait_for
  */
 MirPromptSession *mir_connection_start_prompt_session_sync(MirConnection* connection,
-    pid_t base_session_pid,
+    pid_t application_pid,
     mir_prompt_session_event_callback event_callback,
     void *context);
 
 /**
  * Add a prompt provider process id to the prompt session
  *   \param [in] prompt_session  The prompt session
- *   \param [in] session_pid     The process id of the application to add
+ *   \param [in] provider_pid    The process id of the prompt provider to add
  *   \return                     True if the process id was added, false otherwise
  */
 MirBool mir_prompt_session_add_prompt_provider_sync(MirPromptSession *prompt_session,
-    pid_t pid);
+    pid_t provider_pid);
 
 /**
  * Allocate some FDs for prompt providers to connect on

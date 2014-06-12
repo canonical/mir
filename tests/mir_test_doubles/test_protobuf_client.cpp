@@ -62,7 +62,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
     surface_parameters.set_output_id(mir_display_output_id_invalid);
 
     prompt_provider.set_pid(__LINE__);
-    prompt_session_parameters.mutable_base_prompt_provider()->set_pid(__LINE__);
+    prompt_session_parameters.set_application_pid(__LINE__);
 
     ON_CALL(*this, connect_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_connect_done));

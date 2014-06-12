@@ -86,7 +86,7 @@ struct PromptSessionContainer : testing::Test
     std::vector<std::shared_ptr<ms::PromptSession>> list_prompt_sessions_for(std::shared_ptr<ms::Session> const& session)
     {
         std::vector<std::shared_ptr<ms::PromptSession>> results;
-        auto list_prompt_sessions = [&results](std::shared_ptr<ms::PromptSession> const& prompt_session)
+        auto list_prompt_sessions = [&results](std::shared_ptr<ms::PromptSession> const& prompt_session, ms::PromptSessionContainer::ParticipantType)
         {
             results.push_back(prompt_session);
         };
@@ -152,7 +152,8 @@ TEST_F(PromptSessionContainer, insert_true_if_not_duplicate)
     EXPECT_TRUE(container.insert_participant(prompt_session1.get(), session2, ms::PromptSessionContainer::ParticipantType::prompt_provider));
     EXPECT_TRUE(container.insert_participant(prompt_session1.get(), session3, ms::PromptSessionContainer::ParticipantType::prompt_provider));
     EXPECT_FALSE(container.insert_participant(prompt_session1.get(), session1, ms::PromptSessionContainer::ParticipantType::prompt_provider));
-    EXPECT_TRUE(container.insert_participant(prompt_session1.get(), session1, ms::PromptSessionContainer::ParticipantType::helper_session));
+    EXPECT_TRUE(container.insert_participant(prompt_session1.get(), session1, ms::PromptSessionContainer::ParticipantType::helper));
+    EXPECT_TRUE(container.insert_participant(prompt_session1.get(), session1, ms::PromptSessionContainer::ParticipantType::application));
 
     EXPECT_TRUE(container.insert_participant(prompt_session2.get(), session2, ms::PromptSessionContainer::ParticipantType::prompt_provider));
     EXPECT_TRUE(container.insert_participant(prompt_session2.get(), session3, ms::PromptSessionContainer::ParticipantType::prompt_provider));
@@ -186,7 +187,8 @@ TEST_F(PromptSessionContainer, lists_prompt_sessions_for_a_participant)
     container.insert_prompt_session(prompt_session2);
     container.insert_prompt_session(prompt_session3);
 
-    container.insert_participant(prompt_session1.get(), session1, ms::PromptSessionContainer::ParticipantType::helper_session);
+    container.insert_participant(prompt_session1.get(), session1, ms::PromptSessionContainer::ParticipantType::helper);
+    container.insert_participant(prompt_session1.get(), session2, ms::PromptSessionContainer::ParticipantType::application);
     container.insert_participant(prompt_session1.get(), session1, ms::PromptSessionContainer::ParticipantType::prompt_provider);
     container.insert_participant(prompt_session1.get(), session2, ms::PromptSessionContainer::ParticipantType::prompt_provider);
     container.insert_participant(prompt_session2.get(), session3, ms::PromptSessionContainer::ParticipantType::prompt_provider);
@@ -195,10 +197,11 @@ TEST_F(PromptSessionContainer, lists_prompt_sessions_for_a_participant)
     container.insert_participant(prompt_session2.get(), session4, ms::PromptSessionContainer::ParticipantType::prompt_provider);
 
     EXPECT_THAT(list_prompt_sessions_for(session1), ElementsAre(prompt_session1, prompt_session1, prompt_session2));
-    EXPECT_THAT(list_prompt_sessions_for(session1, ms::PromptSessionContainer::ParticipantType::helper_session), ElementsAre(prompt_session1));
+    EXPECT_THAT(list_prompt_sessions_for(session1, ms::PromptSessionContainer::ParticipantType::helper), ElementsAre(prompt_session1));
+    EXPECT_THAT(list_prompt_sessions_for(session2, ms::PromptSessionContainer::ParticipantType::application), ElementsAre(prompt_session1));
     EXPECT_THAT(list_prompt_sessions_for(session1, ms::PromptSessionContainer::ParticipantType::prompt_provider), ElementsAre(prompt_session1, prompt_session2));
 
-    EXPECT_THAT(list_prompt_sessions_for(session2), ElementsAre(prompt_session1, prompt_session3));
+    EXPECT_THAT(list_prompt_sessions_for(session2), ElementsAre(prompt_session1, prompt_session1, prompt_session3));
     EXPECT_THAT(list_prompt_sessions_for(session3), ElementsAre(prompt_session2));
     EXPECT_THAT(list_prompt_sessions_for(session4), ElementsAre(prompt_session2));
 }

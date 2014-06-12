@@ -41,13 +41,13 @@ public:
     {
     }
 
-    void add_participant(std::shared_ptr<scene::PromptSession> const&,
-                         std::shared_ptr<scene::Session> const&) const
+    void add_prompt_provider(std::shared_ptr<scene::PromptSession> const&,
+                             std::shared_ptr<scene::Session> const&) const
     {
     }
 
-    void add_participant_by_pid(std::shared_ptr<scene::PromptSession> const&,
-                                pid_t) const
+    void add_prompt_provider_by_pid(std::shared_ptr<scene::PromptSession> const&,
+                                    pid_t) const
     {
     }
 
@@ -59,8 +59,18 @@ public:
     {
     }
 
-    void for_each_participant_in_prompt_session(std::shared_ptr<scene::PromptSession> const&,
-                                               std::function<void(std::shared_ptr<scene::Session> const& participant)> const&) const
+    std::shared_ptr<scene::Session> application_for_prompt_session(std::shared_ptr<scene::PromptSession> const&) const
+    {
+        return std::shared_ptr<scene::Session>();
+    }
+
+    std::shared_ptr<scene::Session> helper_for_prompt_session(std::shared_ptr<scene::PromptSession> const&) const
+    {
+        return std::shared_ptr<scene::Session>();
+    }
+
+    void for_each_provider_in_prompt_session(std::shared_ptr<scene::PromptSession> const&,
+                                             std::function<void(std::shared_ptr<scene::Session> const&)> const&) const
     {
     }
 };

@@ -65,11 +65,11 @@ void MirPromptSession::set_state(MirPromptSessionState new_state)
     }
 }
 
-MirWaitHandle* MirPromptSession::start(pid_t pid, mir_prompt_session_callback callback, void* context)
+MirWaitHandle* MirPromptSession::start(pid_t application_pid, mir_prompt_session_callback callback, void* context)
 {
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        parameters.mutable_base_prompt_provider()->set_pid(pid);
+        parameters.set_application_pid(application_pid);
         start_wait_handle.expect_result();
     }
 
@@ -100,13 +100,13 @@ MirWaitHandle* MirPromptSession::stop(mir_prompt_session_callback callback, void
     return &stop_wait_handle;
 }
 
-MirWaitHandle* MirPromptSession::add_prompt_provider(pid_t pid,
+MirWaitHandle* MirPromptSession::add_prompt_provider(pid_t provider_pid,
     mir_prompt_session_add_prompt_provider_callback callback,
     void* context)
 {
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        prompt_provider.set_pid(pid);
+        prompt_provider.set_pid(provider_pid);
         add_result_wait_handle.expect_result();
     }
 

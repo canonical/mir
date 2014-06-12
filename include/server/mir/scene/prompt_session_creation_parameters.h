@@ -28,7 +28,7 @@ namespace scene
 
 struct PromptSessionCreationParameters
 {
-    pid_t base_process_id = 0;
+    pid_t application_pid = 0;
 };
 }
 }
