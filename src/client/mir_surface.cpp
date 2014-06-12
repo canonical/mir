@@ -62,6 +62,7 @@ MirSurface::MirSurface(
     message.set_buffer_usage(params.buffer_usage);
     message.set_output_id(params.output_id);
 
+    create_wait_handle.expect_result();
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 
     for (int i = 0; i < mir_surface_attribs; i++)
@@ -76,6 +77,7 @@ MirSurface::MirSurface(
 
 MirSurface::~MirSurface()
 {
+    valid_surfaces.erase(this);
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     if (input_thread)
@@ -158,6 +160,7 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * con
     auto const mutable_buffer = surface.mutable_buffer();
     lock.unlock();
 
+    next_buffer_wait_handle.expect_result();
     server.next_buffer(
         0,
         id,

@@ -35,7 +35,10 @@ mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
     std::lock_guard<std::mutex> lk(guard);
 
     for (auto const& surface :surfaces)
-        delete surface.second;
+    {
+        if (MirSurface::is_valid(surface.second))
+            delete surface.second;
+    }
 }
 
 void mcl::ConnectionSurfaceMap::with_surface_do(
