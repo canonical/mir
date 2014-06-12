@@ -37,7 +37,8 @@ extern "C" {
  *   \param [in,out] context      User data passed to the callback functions
  *   \return                      A handle that can be passed to mir_wait_for
  */
-MirPromptSession *mir_connection_create_prompt_session_sync(MirConnection* connection,
+MirPromptSession *mir_connection_create_prompt_session_sync(
+    MirConnection* connection,
     pid_t application_pid,
     mir_prompt_session_event_callback event_callback,
     void *context);
@@ -48,7 +49,8 @@ MirPromptSession *mir_connection_create_prompt_session_sync(MirConnection* conne
  *   \param [in] provider_pid    The process id of the prompt provider to add
  *   \return                     True if the process id was added, false otherwise
  */
-MirBool mir_prompt_session_add_prompt_provider_sync(MirPromptSession *prompt_session,
+MirBool mir_prompt_session_add_prompt_provider_sync(
+    MirPromptSession *prompt_session,
     pid_t provider_pid);
 
 /**

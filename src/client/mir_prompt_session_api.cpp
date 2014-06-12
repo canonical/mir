@@ -28,9 +28,10 @@ namespace
 {
 void null_callback(MirPromptSession*, void*) {}
 
-void add_prompt_provider_callback(MirPromptSession*,
-                                  MirBool added,
-                                  void* context)
+void add_prompt_provider_callback(
+    MirPromptSession*,
+    MirBool added,
+    void* context)
 {
     if (context)
         *(MirBool*)context = added;
@@ -38,10 +39,11 @@ void add_prompt_provider_callback(MirPromptSession*,
 
 }
 
-MirPromptSession *mir_connection_create_prompt_session_sync(MirConnection* connection,
-                                                         pid_t application_pid,
-                                                         mir_prompt_session_event_callback event_callback,
-                                                         void* context)
+MirPromptSession *mir_connection_create_prompt_session_sync(
+    MirConnection* connection,
+    pid_t application_pid,
+    mir_prompt_session_event_callback event_callback,
+    void* context)
 {
     try
     {
@@ -61,10 +63,11 @@ MirPromptSession *mir_connection_create_prompt_session_sync(MirConnection* conne
     }
 }
 
-MirWaitHandle *mir_prompt_session_add_prompt_provider(MirPromptSession *prompt_session,
-                                                     pid_t provider_pid,
-                                                     mir_prompt_session_add_prompt_provider_callback callback,
-                                                     void* context)
+MirWaitHandle *mir_prompt_session_add_prompt_provider(
+    MirPromptSession *prompt_session,
+    pid_t provider_pid,
+    mir_prompt_session_add_prompt_provider_callback callback,
+    void* context)
 {
     try
     {
@@ -77,7 +80,9 @@ MirWaitHandle *mir_prompt_session_add_prompt_provider(MirPromptSession *prompt_s
     }
 }
 
-MirBool mir_prompt_session_add_prompt_provider_sync(MirPromptSession *prompt_session, pid_t provider_pid)
+MirBool mir_prompt_session_add_prompt_provider_sync(
+    MirPromptSession *prompt_session,
+    pid_t provider_pid)
 {
     MirBool result;
     mir_wait_for(mir_prompt_session_add_prompt_provider(prompt_session,
@@ -105,13 +110,15 @@ MirWaitHandle* mir_prompt_session_new_fds_for_prompt_providers(
     }
 }
 
-void mir_prompt_session_release_sync(MirPromptSession *prompt_session)
+void mir_prompt_session_release_sync(
+    MirPromptSession *prompt_session)
 {
     mir_wait_for(prompt_session->stop(&null_callback, nullptr));
     delete prompt_session;
 }
 
-MirPromptSessionState mir_prompt_session_get_state(MirPromptSession *prompt_session)
+MirPromptSessionState mir_prompt_session_get_state(
+    MirPromptSession *prompt_session)
 {
     return prompt_session->get_state();
 }
