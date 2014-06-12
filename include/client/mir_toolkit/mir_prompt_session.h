@@ -43,10 +43,10 @@ MirPromptSession *mir_connection_start_prompt_session_sync(MirConnection* connec
     void *context);
 
 /**
- * Add a process id to the prompt session relationship
+ * Add a prompt provider process id to the prompt session
  *   \param [in] prompt_session  The prompt session
- *   \param [in] session_pid    The process id of the application to add
- *   \return                    True if the process id was added, false otherwise
+ *   \param [in] session_pid     The process id of the application to add
+ *   \return                     True if the process id was added, false otherwise
  */
 MirBool mir_prompt_session_add_prompt_provider_sync(MirPromptSession *prompt_session,
     pid_t pid);
@@ -60,10 +60,10 @@ MirBool mir_prompt_session_add_prompt_provider_sync(MirPromptSession *prompt_ses
  *
  *   \warning This API is tentative until the implementation of prompt sessions is complete
  *   \param [in] prompt_session  The prompt session
- *   \param [in] no_of_fds      The number of fds to allocate
- *   \param [in] callback       Callback invoked when request completes
- *   \param [in,out] context    User data passed to the callback function
- *   \return                    A handle that can be passed to mir_wait_for
+ *   \param [in] no_of_fds       The number of fds to allocate
+ *   \param [in] callback        Callback invoked when request completes
+ *   \param [in,out] context     User data passed to the callback function
+ *   \return                     A handle that can be passed to mir_wait_for
  */
 MirWaitHandle* mir_prompt_session_new_fds_for_prompt_providers(
     MirPromptSession *prompt_session,
@@ -80,7 +80,7 @@ void mir_prompt_session_release_sync(MirPromptSession *prompt_session);
 /**
  * Return the state of prompt session
  * \param [in] prompt_session  The prompt session
- * \return                    The state of the prompt session
+ * \return                     The state of the prompt session
  */
 MirPromptSessionState mir_prompt_session_get_state(MirPromptSession *prompt_session);
 
