@@ -29,10 +29,6 @@ namespace doubles
 {
 class NullPromptSession : public scene::PromptSession
 {
-    std::weak_ptr<scene::Session> get_helper() const override
-    {
-      return std::weak_ptr<scene::Session>();
-    }
 };
 }
 }

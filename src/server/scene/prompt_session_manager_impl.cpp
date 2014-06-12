@@ -21,8 +21,8 @@
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/scene/prompt_session_listener.h"
 #include "mir/scene/session.h"
+#include "mir/scene/prompt_session.h"
 #include "session_container.h"
-#include "prompt_session_impl.h"
 #include "prompt_session_container.h"
 
 namespace ms = mir::scene;
@@ -40,17 +40,21 @@ void ms::PromptSessionManagerImpl::stop_prompt_session_locked(
     std::lock_guard<std::mutex> const&,
     std::shared_ptr<PromptSession> const& prompt_session) const
 {
-    if (auto const& helper = prompt_session->get_helper().lock())
-        helper->stop_prompt_session();
-
     std::vector<std::shared_ptr<Session>> participants;
 
     prompt_session_container->for_each_participant_in_prompt_session(prompt_session.get(),
         [&](std::weak_ptr<Session> const& session, PromptSessionContainer::ParticipantType type)
         {
-            if (type == PromptSessionContainer::ParticipantType::prompt_provider)
+            if (type == PromptSessionContainer::ParticipantType::helper)
+            {
+                if (auto locked_session = session.lock())
+                    locked_session->stop_prompt_session();
+            }
+            else if (type == PromptSessionContainer::ParticipantType::prompt_provider)
+            {
                 if (auto locked_session = session.lock())
                     participants.push_back(locked_session);
+            }
         });
 
     for (auto const& participant : participants)
@@ -130,13 +134,15 @@ std::shared_ptr<ms::PromptSession> ms::PromptSessionManagerImpl::start_prompt_se
     std::shared_ptr<Session> const& session,
     PromptSessionCreationParameters const& params) const
 {
-    auto prompt_session = std::make_shared<PromptSessionImpl>(session);
+    auto prompt_session = std::make_shared<PromptSession>();
 
     std::lock_guard<std::mutex> lock(prompt_sessions_mutex);
 
     prompt_session_container->insert_prompt_session(prompt_session);
-    prompt_session_container->insert_participant(prompt_session.get(), session, PromptSessionContainer::ParticipantType::helper);
+    if (!prompt_session_container->insert_participant(prompt_session.get(), session, PromptSessionContainer::ParticipantType::helper))
+        BOOST_THROW_EXCEPTION(std::runtime_error("Could not set prompt session helper"));
 
+    session->start_prompt_session();
     prompt_session_listener->starting(prompt_session);
 
     app_container->for_each(

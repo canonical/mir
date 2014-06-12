@@ -29,8 +29,6 @@ class Session;
 
 class PromptSession : public frontend::PromptSession
 {
-public:
-    virtual std::weak_ptr<Session> get_helper() const = 0;
 };
 
 }
