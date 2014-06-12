@@ -36,7 +36,6 @@ set(
   test_client_surface_swap_buffers.cpp
   test_client_cursor_api.cpp
   test_large_messages.cpp
-  test_prompt_session_manager.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )

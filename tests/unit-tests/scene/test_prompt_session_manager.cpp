@@ -66,8 +66,10 @@ struct StubSessionContainer : ms::SessionContainer
 struct PromptSessionManager : public testing::Test
 {
     pid_t const helper_pid = __LINE__;
+    pid_t const application_pid = __LINE__;
     pid_t const prompt_provider_pid = __LINE__;
     std::shared_ptr<ms::Session> const helper{std::make_shared<mtd::StubSceneSession>(helper_pid)};
+    std::shared_ptr<ms::Session> const application_session{std::make_shared<mtd::StubSceneSession>(application_pid)};
     std::shared_ptr<ms::Session> const provider_session{std::make_shared<mtd::StubSceneSession>(prompt_provider_pid)};
     std::shared_ptr<ms::Session> const another_prompt_provider{std::make_shared<mtd::StubSceneSession>(__LINE__)};
     ms::PromptSessionCreationParameters parameters;
@@ -77,7 +79,15 @@ struct PromptSessionManager : public testing::Test
 
     ms::PromptSessionManagerImpl session_manager{mt::fake_shared(existing_sessions), mt::fake_shared(prompt_session_listener)};
 
-    std::shared_ptr<ms::PromptSession> const prompt_session{session_manager.start_prompt_session_for(helper, parameters)};
+    std::shared_ptr<ms::PromptSession> prompt_session;
+
+    void SetUp()
+    {
+        existing_sessions.insert_session(application_session);
+
+        parameters.application_pid = application_pid;
+        prompt_session = session_manager.start_prompt_session_for(helper, parameters);
+    }
 
     std::vector<std::shared_ptr<ms::Session>> list_providers_for(std::shared_ptr<ms::PromptSession> const& prompt_session)
     {
@@ -111,6 +121,11 @@ TEST_F(PromptSessionManager, notifies_provider_of_start_and_stop)
 TEST_F(PromptSessionManager, sets_helper_for)
 {
     EXPECT_EQ(session_manager.helper_for(prompt_session), helper);
+}
+
+TEST_F(PromptSessionManager, sets_application_for)
+{
+    EXPECT_EQ(session_manager.application_for(prompt_session), application_session);
 }
 
 TEST_F(PromptSessionManager, successfully_adds_a_provider)
