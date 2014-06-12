@@ -155,7 +155,6 @@ TEST_F(PromptSessionClientAPI, can_start_and_stop_a_prompt_session)
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, arbitrary_base_session_id, null_event_callback, this);
     ASSERT_THAT(prompt_session, Ne(nullptr));
-    EXPECT_THAT(mir_prompt_session_get_state(prompt_session), Eq(mir_prompt_session_state_started));
 
     mir_prompt_session_release_sync(prompt_session);
 }
@@ -298,7 +297,6 @@ TEST_F(PromptSessionClientAPI, after_server_closes_prompt_session_api_isnt_broke
 
     pid_t prompt_provider_pid = __LINE__;
     EXPECT_FALSE(mir_prompt_session_add_prompt_provider_sync(prompt_session, prompt_provider_pid));
-    EXPECT_THAT(mir_prompt_session_get_state(prompt_session), Eq(mir_prompt_session_state_stopped));
 
     mir_prompt_session_release_sync(prompt_session);
 }

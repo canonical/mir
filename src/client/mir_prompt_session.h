@@ -58,8 +58,6 @@ public:
 
     char const* get_error_message();
 
-    MirPromptSessionState get_state() const;
-
 private:
     std::mutex mutable mutex; // Protects parameters, wait_handles & results
     mir::protobuf::DisplayServer& server;

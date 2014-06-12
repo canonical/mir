@@ -59,6 +59,7 @@ typedef struct MirDemoState
     MirSurface *surface;
     MirPromptSession *prompt_session;
     pid_t  child_pid;
+    MirPromptSessionState state;
 } MirDemoState;
 ///\internal [MirDemoState_tag]
 
@@ -71,6 +72,7 @@ static void prompt_session_event_callback(MirPromptSession* prompt_session,
 {
     (void)prompt_session;
     MirDemoState* demo_state = (MirDemoState*)context;
+    demo_state->state = state;
 
     printf("Trust Session state updated to %d\n", state);
     if (state == mir_prompt_session_state_stopped)
@@ -127,13 +129,14 @@ void helper(const char* server, pid_t child_pid)
     mcd.surface = 0;
     mcd.prompt_session = 0;
     mcd.child_pid = child_pid;
+    mcd.state = mir_prompt_session_state_stopped;
     start_session(server, "helper", &mcd);
 
     // We create a prompt session
     mcd.prompt_session = mir_connection_create_prompt_session_sync(mcd.connection, getpid(), prompt_session_event_callback, &mcd);
     assert(mcd.prompt_session != NULL);
 
-    assert(mir_prompt_session_get_state(mcd.prompt_session) == mir_prompt_session_state_started);
+    assert(mcd.state == mir_prompt_session_state_started);
     puts("helper: Started prompt session");
 
     MirBool add_result = mir_prompt_session_add_prompt_provider_sync(mcd.prompt_session, child_pid);
@@ -144,7 +147,7 @@ void helper(const char* server, pid_t child_pid)
     printf("helper: waiting on child app: %d\n", child_pid);
     waitpid(child_pid, &status, 0);
 
-    if (mir_prompt_session_get_state(mcd.prompt_session) == mir_prompt_session_state_started)
+    if (mcd.state == mir_prompt_session_state_started)
     {
         mir_prompt_session_release_sync(mcd.prompt_session);
         mcd.prompt_session = NULL;

@@ -116,9 +116,3 @@ void mir_prompt_session_release_sync(
     mir_wait_for(prompt_session->stop(&null_callback, nullptr));
     delete prompt_session;
 }
-
-MirPromptSessionState mir_prompt_session_get_state(
-    MirPromptSession *prompt_session)
-{
-    return prompt_session->get_state();
-}

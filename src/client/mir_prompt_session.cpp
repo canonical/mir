@@ -29,7 +29,8 @@ MirPromptSession::MirPromptSession(
     event_handler_register(event_handler_register),
     event_handler_register_id{event_handler_register->register_event_handler(
         [this](MirEvent const& event)
-        {   if (event.type == mir_event_type_prompt_session_state_change)
+        {
+            if (event.type == mir_event_type_prompt_session_state_change)
                 set_state(event.prompt_session.new_state);
         })},
     state(mir_prompt_session_state_stopped),
@@ -40,12 +41,6 @@ MirPromptSession::MirPromptSession(
 MirPromptSession::~MirPromptSession()
 {
     set_state(mir_prompt_session_state_stopped);
-}
-
-MirPromptSessionState MirPromptSession::get_state() const
-{
-    std::lock_guard<decltype(event_handler_mutex)> lock(event_handler_mutex);
-    return state;
 }
 
 void MirPromptSession::set_state(MirPromptSessionState new_state)
