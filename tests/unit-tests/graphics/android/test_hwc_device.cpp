@@ -35,6 +35,7 @@
 #include "mir_test_doubles/stub_swapping_gl_context.h"
 #include "mir_test_doubles/stub_renderable_list_compositor.h"
 #include "mir_test_doubles/mock_renderable_list_compositor.h"
+#include "mir_test_doubles/mock_renderable.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -203,6 +204,15 @@ protected:
 
         ON_CALL(mock_context, last_rendered_buffer())
             .WillByDefault(Return(mt::fake_shared(mock_buffer)));
+
+        stub_buffer1 = std::make_shared<mtd::StubBuffer>();
+        stub_buffer2 = std::make_shared<mtd::StubBuffer>();
+        mock_renderable1 = std::make_shared<NiceMock<mtd::MockRenderable>>();
+        mock_renderable2 = std::make_shared<NiceMock<mtd::MockRenderable>>();
+        ON_CALL(*mock_renderable1, buffer())
+            .WillByDefault(Return(stub_buffer1));
+        ON_CALL(*mock_renderable2, buffer())
+            .WillByDefault(Return(stub_buffer2));
     }
 
     std::shared_ptr<MockFileOps> mock_file_ops;
@@ -227,11 +237,15 @@ protected:
     geom::Rectangle screen_position{{9,8},{245, 250}};
     std::shared_ptr<StubRenderable> stub_renderable1;
     std::shared_ptr<StubRenderable> stub_renderable2;
+    std::shared_ptr<mtd::MockRenderable> mock_renderable1;
+    std::shared_ptr<mtd::MockRenderable> mock_renderable2;
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_hwc_device_wrapper;
 
     std::function<void(hwc_display_contents_1_t&)> empty_prepare_fn;
     std::function<void(mg::Renderable const&)> empty_render_fn;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
+    std::shared_ptr<mtd::StubBuffer> stub_buffer1;
+    std::shared_ptr<mtd::StubBuffer> stub_buffer2;
     testing::NiceMock<mtd::MockSwappingGLContext> mock_context;
     mtd::StubSwappingGLContext stub_context;
     mtd::StubRenderableListCompositor stub_compositor;
@@ -553,4 +567,50 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
 
     device.post_overlays(stub_context, updated_list, stub_compositor);
     device.post_overlays(stub_context, updated_list, stub_compositor);
+}
+
+//note: HWC models overlay layer buffers as owned by the display hardware until a subsequent set.
+TEST_F(HwcDevice, overlay_buffers_are_owned_until_next_set)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(_))
+        .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
+        {
+            ASSERT_THAT(contents.numHwLayers, Ge(2));
+            contents.hwLayers[0].compositionType = HWC_OVERLAY;
+            contents.hwLayers[1].compositionType = HWC_FRAMEBUFFER_TARGET;
+        }))
+        .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
+        {
+            ASSERT_THAT(contents.numHwLayers, Ge(2));
+            contents.hwLayers[0].compositionType = HWC_FRAMEBUFFER;
+            contents.hwLayers[1].compositionType = HWC_FRAMEBUFFER_TARGET;
+        }));
+
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+
+    auto use_count_before = stub_buffer1.use_count();
+    device.post_overlays(stub_context, {mock_renderable1}, stub_compositor);
+    EXPECT_THAT(stub_buffer1.use_count(), Gt(use_count_before));
+
+    device.post_overlays(stub_context, {mock_renderable2}, stub_compositor);
+    EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
+}
+
+TEST_F(HwcDevice, framebuffer_buffers_are_not_owned_past_set)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(_))
+       .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
+        {
+            ASSERT_THAT(contents.numHwLayers, Ge(2));
+            contents.hwLayers[0].compositionType = HWC_FRAMEBUFFER;
+            contents.hwLayers[1].compositionType = HWC_FRAMEBUFFER_TARGET;
+        }));
+
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+
+    auto use_count_before = stub_buffer1.use_count();
+    device.post_overlays(stub_context, {mock_renderable1}, stub_compositor);
+    EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
 }
