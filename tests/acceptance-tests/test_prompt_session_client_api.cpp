@@ -118,6 +118,19 @@ struct PromptSessionClientAPI : mtf::BasicClientServerFixture<PromptSessionListe
     }
 
     MOCK_METHOD1(process_line, void(std::string const&));
+
+    std::vector<std::shared_ptr<mf::Session>> list_providers_for(std::shared_ptr<ms::PromptSession> const& prompt_session)
+    {
+        std::vector<std::shared_ptr<mf::Session>> results;
+        auto providers_fn = [&results](std::weak_ptr<ms::Session> const& session)
+        {
+            results.push_back(session.lock());
+        };
+
+        server_configuration.the_prompt_session_manager()->for_each_provider_in(prompt_session, providers_fn);
+
+        return results;
+    }
 };
 
 extern "C" void prompt_session_event_callback(MirPromptSession* prompt_provider, MirPromptSessionState state, void* context)
@@ -299,4 +312,81 @@ TEST_F(PromptSessionClientAPI, after_server_closes_prompt_session_api_isnt_broke
     EXPECT_FALSE(mir_prompt_session_add_prompt_provider_sync(prompt_session, prompt_provider_pid));
 
     mir_prompt_session_release_sync(prompt_session);
+}
+
+TEST_F(PromptSessionClientAPI, can_server_retreive_application_session)
+{
+    pid_t application_session_pid = __LINE__;
+    auto const application_session = server_config().the_frontend_shell()->open_session(application_session_pid, __PRETTY_FUNCTION__,  std::shared_ptr<mf::EventSink>());
+    std::shared_ptr<ms::PromptSession> server_prompt_session;
+
+    EXPECT_CALL(*the_mock_prompt_session_listener(), starting(_)).
+        WillOnce(DoAll(
+            Invoke(the_mock_prompt_session_listener()->wrapped.get(), &ms::PromptSessionListener::starting),
+            SaveArg<0>(&server_prompt_session)));
+
+    MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
+        connection, application_session_pid, null_event_callback, this);
+
+    EXPECT_EQ(server_configuration.the_prompt_session_manager()->application_for(server_prompt_session), application_session);
+
+    mir_prompt_session_release_sync(prompt_session);
+
+    // TODO It really shouldn't be necessary to close the prompt provider session.
+    // TODO But the MediatingDisplayChanger id destroyed without deregistering
+    // TODO callbacks from the BroadcastingSessionEventSink which gets called in
+    // TODO SessionManager::~SessionManager() in code that the comments claim
+    // TODO works around broken ownership.
+    server_config().the_frontend_shell()->close_session(application_session);
+}
+
+TEST_F(PromptSessionClientAPI, can_server_retreive_helper_session)
+{
+    std::shared_ptr<ms::PromptSession> server_prompt_session;
+
+    EXPECT_CALL(*the_mock_prompt_session_listener(), starting(_)).
+        WillOnce(DoAll(
+            Invoke(the_mock_prompt_session_listener()->wrapped.get(), &ms::PromptSessionListener::starting),
+            SaveArg<0>(&server_prompt_session)));
+
+    MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
+        connection, arbitrary_base_session_id, null_event_callback, this);
+
+    // can't get the helper session. but it will be the current pid.
+    EXPECT_EQ(server_configuration.the_prompt_session_manager()->helper_for(server_prompt_session)->process_id(), getpid());
+
+    mir_prompt_session_release_sync(prompt_session);
+}
+
+TEST_F(PromptSessionClientAPI, can_server_retreive_provider_sessions)
+{
+    std::shared_ptr<ms::PromptSession> server_prompt_session;
+
+    pid_t prompt_provider1_pid = __LINE__;
+    auto const prompt_provider1 = server_config().the_frontend_shell()->open_session(prompt_provider1_pid, __PRETTY_FUNCTION__,  std::shared_ptr<mf::EventSink>());
+    pid_t prompt_provider2_pid = __LINE__;
+    auto const prompt_provider2 = server_config().the_frontend_shell()->open_session(prompt_provider2_pid, __PRETTY_FUNCTION__,  std::shared_ptr<mf::EventSink>());
+
+    EXPECT_CALL(*the_mock_prompt_session_listener(), starting(_)).
+        WillOnce(DoAll(
+            Invoke(the_mock_prompt_session_listener()->wrapped.get(), &ms::PromptSessionListener::starting),
+            SaveArg<0>(&server_prompt_session)));
+
+    MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
+        connection, arbitrary_base_session_id, null_event_callback, this);
+
+    mir_prompt_session_add_prompt_provider_sync(prompt_session, prompt_provider1_pid);
+    mir_prompt_session_add_prompt_provider_sync(prompt_session, prompt_provider2_pid);
+
+    EXPECT_THAT(list_providers_for(server_prompt_session), ElementsAre(prompt_provider1, prompt_provider2));
+
+    mir_prompt_session_release_sync(prompt_session);
+
+    // TODO It really shouldn't be necessary to close the prompt provider session.
+    // TODO But the MediatingDisplayChanger id destroyed without deregistering
+    // TODO callbacks from the BroadcastingSessionEventSink which gets called in
+    // TODO SessionManager::~SessionManager() in code that the comments claim
+    // TODO works around broken ownership.
+    server_config().the_frontend_shell()->close_session(prompt_provider1);
+    server_config().the_frontend_shell()->close_session(prompt_provider2);
 }
