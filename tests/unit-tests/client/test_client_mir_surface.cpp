@@ -750,12 +750,12 @@ TEST_F(MirClientSurfaceTest, valid_surface_is_valid)
 {
     MirSurface surface{
         connection.get(),
-            *client_comm_channel,
-            mock_buffer_factory,
-            input_platform,
-            params,
-            &empty_callback,
-            nullptr
+        *client_comm_channel,
+        mock_buffer_factory,
+        input_platform,
+        params,
+        &empty_callback,
+        nullptr
     };
 
     surface.get_create_wait_handle()->wait_for_all();
