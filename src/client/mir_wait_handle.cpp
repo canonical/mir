@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -33,14 +33,14 @@ MirWaitHandle::~MirWaitHandle()
 
 void MirWaitHandle::expect_result()
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
 
     expecting++;
 }
 
 void MirWaitHandle::result_received()
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
 
     received++;
     wait_condition.notify_all();
@@ -50,8 +50,10 @@ void MirWaitHandle::wait_for_all()  // wait for all results you expect
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    while ((!expecting && !received) || (received < expecting))
-        wait_condition.wait(lock);
+    // TODO this condition ought to be "received == expecting" but some
+    // TODO client code seems to not call expect_result() and tests break.
+    wait_condition.wait(lock,
+        [&]{ return (expecting || received) && (received >= expecting); });
 
     received = 0;
     expecting = 0;
@@ -59,14 +61,9 @@ void MirWaitHandle::wait_for_all()  // wait for all results you expect
 
 void MirWaitHandle::wait_for_pending(std::chrono::milliseconds limit)
 {
-    using std::chrono::steady_clock;
-
     std::unique_lock<std::mutex> lock(guard);
 
-    auto time_limit = steady_clock::now() + limit;
-
-    while (received < expecting && steady_clock::now() < time_limit)
-        wait_condition.wait_until(lock, time_limit);
+    wait_condition.wait_for(lock, limit, [&]{ return received == expecting; });
 }
 
 
@@ -74,8 +71,7 @@ void MirWaitHandle::wait_for_one()  // wait for any single result
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    while (received == 0)
-        wait_condition.wait(lock);
+    wait_condition.wait(lock, [&]{ return received != 0; });
 
     received--;
     if (expecting > 0)
