@@ -24,6 +24,7 @@
 #include "hwc_common_device.h"
 #include "hwc_layerlist.h"
 #include <memory>
+#include <vector>
 
 namespace mir
 {
@@ -57,12 +58,13 @@ private:
     void post(SwappingGLContext const& context);
 
     LayerList hwc_list;
+    std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
+
     void set_list_framebuffer(Buffer const&);
     void setup_layer_types();
 
     std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<SyncFileOps> const sync_ops;
-    bool list_needs_commit{false};
 };
 
 }
