@@ -87,7 +87,7 @@ struct PromptSessionManager : public testing::Test
             results.push_back(session.lock());
         };
 
-        session_manager.for_each_provider_in_prompt_session(prompt_session, providers_fn);
+        session_manager.for_each_provider_in(prompt_session, providers_fn);
 
         return results;
     }
@@ -108,10 +108,9 @@ TEST_F(PromptSessionManager, notifies_provider_of_start_and_stop)
     Mock::VerifyAndClearExpectations(&prompt_session_listener);
 }
 
-
-TEST_F(PromptSessionManager, sets_helper_for_prompt_session)
+TEST_F(PromptSessionManager, sets_helper_for)
 {
-    EXPECT_EQ(session_manager.helper_for_prompt_session(prompt_session), helper);
+    EXPECT_EQ(session_manager.helper_for(prompt_session), helper);
 }
 
 TEST_F(PromptSessionManager, successfully_adds_a_provider)
@@ -196,7 +195,7 @@ TEST_F(PromptSessionManager, can_iterate_over_prompt_providers_in_a_prompt_sessi
     EXPECT_CALL(mock, enumerate(provider_session));
     EXPECT_CALL(mock, enumerate(another_prompt_provider));
 
-    session_manager.for_each_provider_in_prompt_session(
+    session_manager.for_each_provider_in(
         prompt_session,
         [&](std::shared_ptr<ms::Session> const& prompt_provider)
             { mock.enumerate(prompt_provider); });

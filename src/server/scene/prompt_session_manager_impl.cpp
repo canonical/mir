@@ -186,7 +186,7 @@ void ms::PromptSessionManagerImpl::add_prompt_provider(
         prompt_session_listener->prompt_provider_added(*prompt_session, prompt_provider);
 }
 
-std::shared_ptr<ms::Session> ms::PromptSessionManagerImpl::application_for_prompt_session(
+std::shared_ptr<ms::Session> ms::PromptSessionManagerImpl::application_for(
     std::shared_ptr<PromptSession> const& prompt_session) const
 {
     std::shared_ptr<Session> application_session;
@@ -201,7 +201,7 @@ std::shared_ptr<ms::Session> ms::PromptSessionManagerImpl::application_for_promp
     return application_session;
 }
 
-std::shared_ptr<ms::Session> ms::PromptSessionManagerImpl::helper_for_prompt_session(
+std::shared_ptr<ms::Session> ms::PromptSessionManagerImpl::helper_for(
     std::shared_ptr<PromptSession> const& prompt_session) const
 {
     std::shared_ptr<Session> helper_session;
@@ -216,7 +216,7 @@ std::shared_ptr<ms::Session> ms::PromptSessionManagerImpl::helper_for_prompt_ses
     return helper_session;
 }
 
-void ms::PromptSessionManagerImpl::for_each_provider_in_prompt_session(
+void ms::PromptSessionManagerImpl::for_each_provider_in(
     std::shared_ptr<PromptSession> const& prompt_session,
     std::function<void(std::shared_ptr<Session> const& prompt_provider)> const& f) const
 {

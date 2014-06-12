@@ -50,12 +50,12 @@ public:
 
     virtual void remove_session(std::shared_ptr<Session> const& session) const = 0;
 
-    virtual std::shared_ptr<Session> application_for_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) const = 0;
+    virtual std::shared_ptr<Session> application_for(std::shared_ptr<PromptSession> const& prompt_session) const = 0;
 
-    virtual std::shared_ptr<Session> helper_for_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) const = 0;
+    virtual std::shared_ptr<Session> helper_for(std::shared_ptr<PromptSession> const& prompt_session) const = 0;
 
-    virtual void for_each_provider_in_prompt_session(std::shared_ptr<PromptSession> const& prompt_session,
-                                                     std::function<void(std::shared_ptr<Session> const& prompt_provider)> const& f) const = 0;
+    virtual void for_each_provider_in(std::shared_ptr<PromptSession> const& prompt_session,
+                                      std::function<void(std::shared_ptr<Session> const& prompt_provider)> const& f) const = 0;
 
 protected:
     PromptSessionManager() = default;

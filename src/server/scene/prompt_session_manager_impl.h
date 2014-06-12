@@ -64,13 +64,13 @@ public:
     void remove_session(
         std::shared_ptr<Session> const& session) const override;
 
-    std::shared_ptr<Session> application_for_prompt_session(
+    std::shared_ptr<Session> application_for(
         std::shared_ptr<PromptSession> const& prompt_session) const override;
 
-    std::shared_ptr<Session> helper_for_prompt_session(
+    std::shared_ptr<Session> helper_for(
         std::shared_ptr<PromptSession> const& prompt_session) const override;
 
-    void for_each_provider_in_prompt_session(
+    void for_each_provider_in(
         std::shared_ptr<PromptSession> const& prompt_session,
         std::function<void(std::shared_ptr<Session> const& prompt_provider)> const& f) const override;
 
