@@ -65,7 +65,7 @@ void mga::InternalClientWindow::driver_returns_buffer(ANativeWindowBuffer* key, 
     buffer = it->second.buffer;
     lookup.erase(it);
 
-    handle->update_fence(fence_fd);
+    handle->update_fence(fence_fd, mg::Access::write);
     surface->swap_buffers(buffer);
 }
 

@@ -27,6 +27,12 @@ namespace mir
 namespace graphics
 {
 
+enum class Access
+{
+    read,
+    write
+};
+
 class NativeBuffer
 {
 public:
@@ -36,8 +42,8 @@ public:
     virtual buffer_handle_t handle() const = 0;
     virtual android::NativeFence copy_fence() const = 0;
 
-    virtual void wait_for_content() = 0;
-    virtual void update_fence(android::NativeFence& fence) = 0;
+    virtual void wait_for_content(Access intent) = 0;
+    virtual void update_fence(android::NativeFence& fence, Access usage) = 0;
 
 protected:
     NativeBuffer() = default;
