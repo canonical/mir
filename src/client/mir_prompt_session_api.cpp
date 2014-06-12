@@ -38,7 +38,7 @@ void add_prompt_provider_callback(MirPromptSession*,
 
 }
 
-MirPromptSession *mir_connection_start_prompt_session_sync(MirConnection* connection,
+MirPromptSession *mir_connection_create_prompt_session_sync(MirConnection* connection,
                                                          pid_t application_pid,
                                                          mir_prompt_session_event_callback event_callback,
                                                          void* context)

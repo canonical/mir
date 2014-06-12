@@ -130,7 +130,7 @@ void helper(const char* server, pid_t child_pid)
     start_session(server, "helper", &mcd);
 
     // We create a prompt session
-    mcd.prompt_session = mir_connection_start_prompt_session_sync(mcd.connection, getpid(), prompt_session_event_callback, &mcd);
+    mcd.prompt_session = mir_connection_create_prompt_session_sync(mcd.connection, getpid(), prompt_session_event_callback, &mcd);
     assert(mcd.prompt_session != NULL);
 
     assert(mir_prompt_session_get_state(mcd.prompt_session) == mir_prompt_session_state_started);
