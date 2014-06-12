@@ -77,6 +77,7 @@ MirSurface::MirSurface(
 
 MirSurface::~MirSurface()
 {
+    valid_surfaces.erase(this);
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     if (input_thread)
