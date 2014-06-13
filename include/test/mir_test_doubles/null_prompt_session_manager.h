@@ -32,9 +32,9 @@ class NullPromptSessionManager: public scene::PromptSessionManager
 {
 public:
     std::shared_ptr<scene::PromptSession> start_prompt_session_for(std::shared_ptr<scene::Session> const&,
-                                                          scene::PromptSessionCreationParameters const&) const
+                                                                   scene::PromptSessionCreationParameters const&) const
     {
-      return std::shared_ptr<scene::PromptSession>();
+        return std::shared_ptr<scene::PromptSession>();
     }
 
     void stop_prompt_session(std::shared_ptr<scene::PromptSession> const&) const

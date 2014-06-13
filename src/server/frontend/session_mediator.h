@@ -110,9 +110,9 @@ public:
                            google::protobuf::Closure* done) override;
 
     void configure_display(::google::protobuf::RpcController* controller,
-                       const ::mir::protobuf::DisplayConfiguration* request,
-                       ::mir::protobuf::DisplayConfiguration* response,
-                       ::google::protobuf::Closure* done) override;
+                           const ::mir::protobuf::DisplayConfiguration* request,
+                           ::mir::protobuf::DisplayConfiguration* response,
+                           ::google::protobuf::Closure* done) override;
 
     void create_screencast(google::protobuf::RpcController*,
                            const mir::protobuf::ScreencastParameters*,

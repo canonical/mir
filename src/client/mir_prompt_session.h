@@ -41,7 +41,7 @@ struct MirPromptSession
 {
 public:
     MirPromptSession(mir::protobuf::DisplayServer& server,
-                    std::shared_ptr<mir::client::EventHandlerRegister> const& event_handler_register);
+                     std::shared_ptr<mir::client::EventHandlerRegister> const& event_handler_register);
 
     ~MirPromptSession();
 

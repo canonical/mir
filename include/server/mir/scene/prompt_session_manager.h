@@ -21,6 +21,7 @@
 
 #include <sys/types.h>
 #include <memory>
+#include <functional>
 
 namespace mir
 {
@@ -38,7 +39,7 @@ public:
     /**
      * Start a new prompt session
      *   \param [in] session  The prompt helper session
-     *   \param [in] params   The creation parameters for contructing the prompt session
+     *   \param [in] params   The creation parameters for constructing the prompt session
      */
     virtual std::shared_ptr<PromptSession> start_prompt_session_for(std::shared_ptr<Session> const& session,
                                                                     PromptSessionCreationParameters const& params) const = 0;
@@ -72,7 +73,7 @@ public:
     virtual void add_expected_session(std::shared_ptr<Session> const& new_session) const = 0;
 
     /**
-     * Remove a session from all accociated prompr sessions
+     * Remove a session from all accociated prompt sessions
      *   \param [in] session  The new session that is to be removed
      */
     virtual void remove_session(std::shared_ptr<Session> const& session) const = 0;
