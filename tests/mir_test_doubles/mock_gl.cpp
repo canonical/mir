@@ -90,12 +90,6 @@ void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
     global_mock_gl->glClearColor(red, green, blue, alpha);
 }
 
-void glColorMask(GLboolean r, GLboolean g, GLboolean b, GLboolean a)
-{
-    CHECK_GLOBAL_VOID_MOCK();
-    global_mock_gl->glColorMask(r, g, b, a);
-}
-
 void glEnable(GLenum func)
 {
     CHECK_GLOBAL_VOID_MOCK();
