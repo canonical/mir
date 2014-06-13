@@ -86,7 +86,7 @@ struct PromptSessionListenerConfiguration : mtf::StubbedServerConfiguration
 
 struct PromptSessionClientAPI : mtf::BasicClientServerFixture<PromptSessionListenerConfiguration>
 {
-    static constexpr int arbitrary_base_session_id = __LINE__;
+    static constexpr int arbitrary_application_pid = __LINE__;
     static constexpr mir_prompt_session_event_callback null_event_callback = nullptr;
 
     MockPromptSessionListener* the_mock_prompt_session_listener()
@@ -166,7 +166,7 @@ TEST_F(PromptSessionClientAPI, can_start_and_stop_a_prompt_session)
     }
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
-        connection, arbitrary_base_session_id, null_event_callback, this);
+        connection, arbitrary_application_pid, null_event_callback, this);
     ASSERT_THAT(prompt_session, Ne(nullptr));
 
     mir_prompt_session_release_sync(prompt_session);
@@ -179,7 +179,7 @@ TEST_F(PromptSessionClientAPI, notifies_start_and_stop)
     EXPECT_CALL(*this, prompt_session_event(_, mir_prompt_session_state_stopped));
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
-        connection, arbitrary_base_session_id, prompt_session_event_callback, this);
+        connection, arbitrary_application_pid, prompt_session_event_callback, this);
 
     mir_prompt_session_release_sync(prompt_session);
 }
@@ -197,7 +197,7 @@ TEST_F(PromptSessionClientAPI, can_add_prompt_provider)
     }
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
-        connection, arbitrary_base_session_id, null_event_callback, this);
+        connection, arbitrary_application_pid, null_event_callback, this);
 
     EXPECT_TRUE(mir_prompt_session_add_prompt_provider_sync(prompt_session, prompt_provider_pid));
 
@@ -214,7 +214,7 @@ TEST_F(PromptSessionClientAPI, can_add_prompt_provider)
 TEST_F(PromptSessionClientAPI, can_get_fds_for_prompt_providers)
 {
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
-        connection, arbitrary_base_session_id, null_event_callback, this);
+        connection, arbitrary_application_pid, null_event_callback, this);
 
     mir_prompt_session_new_fds_for_prompt_providers(prompt_session, arbritary_fd_request_count, &client_fd_callback, this);
     EXPECT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
@@ -227,7 +227,7 @@ TEST_F(PromptSessionClientAPI, can_get_fds_for_prompt_providers)
 TEST_F(PromptSessionClientAPI, when_prompt_provider_connects_over_fd_prompt_provider_added_with_right_pid)
 {
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
-        connection, arbitrary_base_session_id, null_event_callback, this);
+        connection, arbitrary_application_pid, null_event_callback, this);
 
     mir_prompt_session_new_fds_for_prompt_providers(prompt_session, 1, &client_fd_callback, this);
     ASSERT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
@@ -249,7 +249,7 @@ TEST_F(PromptSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
     auto const server_pid = getpid();
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
-        connection, arbitrary_base_session_id, null_event_callback, this);
+        connection, arbitrary_application_pid, null_event_callback, this);
 
     mir_prompt_session_new_fds_for_prompt_providers(prompt_session, 1, &client_fd_callback, this);
     wait_for_callback(std::chrono::milliseconds(500));
@@ -282,7 +282,7 @@ TEST_F(PromptSessionClientAPI, notifies_when_server_closes_prompt_session)
     EXPECT_CALL(*this, prompt_session_event(_, mir_prompt_session_state_started));
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
-        connection, arbitrary_base_session_id, prompt_session_event_callback, this);
+        connection, arbitrary_application_pid, prompt_session_event_callback, this);
 
     EXPECT_CALL(*this, prompt_session_event(_, mir_prompt_session_state_stopped));
 
@@ -304,7 +304,7 @@ TEST_F(PromptSessionClientAPI, after_server_closes_prompt_session_api_isnt_broke
             SaveArg<0>(&server_prompt_session)));
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
-        connection, arbitrary_base_session_id, null_event_callback, this);
+        connection, arbitrary_application_pid, null_event_callback, this);
 
     server_configuration.the_prompt_session_manager()->stop_prompt_session(server_prompt_session);
 
@@ -316,8 +316,7 @@ TEST_F(PromptSessionClientAPI, after_server_closes_prompt_session_api_isnt_broke
 
 TEST_F(PromptSessionClientAPI, can_server_retreive_application_session)
 {
-    pid_t application_session_pid = __LINE__;
-    auto const application_session = server_config().the_frontend_shell()->open_session(application_session_pid, __PRETTY_FUNCTION__,  std::shared_ptr<mf::EventSink>());
+    auto const application_session = server_config().the_frontend_shell()->open_session(arbitrary_application_pid, __PRETTY_FUNCTION__,  std::shared_ptr<mf::EventSink>());
     std::shared_ptr<ms::PromptSession> server_prompt_session;
 
     EXPECT_CALL(*the_mock_prompt_session_listener(), starting(_)).
@@ -326,7 +325,7 @@ TEST_F(PromptSessionClientAPI, can_server_retreive_application_session)
             SaveArg<0>(&server_prompt_session)));
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
-        connection, application_session_pid, null_event_callback, this);
+        connection, arbitrary_application_pid, null_event_callback, this);
 
     EXPECT_EQ(server_configuration.the_prompt_session_manager()->application_for(server_prompt_session), application_session);
 
@@ -350,7 +349,7 @@ TEST_F(PromptSessionClientAPI, can_server_retreive_helper_session)
             SaveArg<0>(&server_prompt_session)));
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
-        connection, arbitrary_base_session_id, null_event_callback, this);
+        connection, arbitrary_application_pid, null_event_callback, this);
 
     // can't get the helper session. but it will be the current pid.
     EXPECT_EQ(server_configuration.the_prompt_session_manager()->helper_for(server_prompt_session)->process_id(), getpid());
@@ -373,7 +372,7 @@ TEST_F(PromptSessionClientAPI, can_server_retreive_provider_sessions)
             SaveArg<0>(&server_prompt_session)));
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
-        connection, arbitrary_base_session_id, null_event_callback, this);
+        connection, arbitrary_application_pid, null_event_callback, this);
 
     mir_prompt_session_add_prompt_provider_sync(prompt_session, prompt_provider1_pid);
     mir_prompt_session_add_prompt_provider_sync(prompt_session, prompt_provider2_pid);
