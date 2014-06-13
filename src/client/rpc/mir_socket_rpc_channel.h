@@ -48,7 +48,9 @@ namespace rpc
 
 class RpcReport;
 
-class MirProtobufRpcChannel : public MirBasicRpcChannel
+class MirProtobufRpcChannel :
+        public MirBasicRpcChannel,
+        public Transport::Observer
 {
 public:
     MirProtobufRpcChannel(std::unique_ptr<Transport> transport,
@@ -58,9 +60,9 @@ public:
                         std::shared_ptr<LifecycleControl> const& lifecycle_control);
     ~MirProtobufRpcChannel();
 
-private:    
-    void on_message_available();
-    
+    void on_data_available() override;
+    void on_disconnected() override;
+private:
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
         const google::protobuf::Message* parameters, google::protobuf::Message* response,
         google::protobuf::Closure* complete);

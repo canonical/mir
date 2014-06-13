@@ -54,8 +54,8 @@ public:
     MockTransport()
     {
         using namespace testing;
-        ON_CALL(*this, register_data_received_notification(_))
-            .WillByDefault(Invoke(std::bind(&MockTransport::register_data_received_notification_default,
+        ON_CALL(*this, register_observer(_))
+            .WillByDefault(Invoke(std::bind(&MockTransport::register_observer_default,
                                             this, std::placeholders::_1)));
         ON_CALL(*this, receive_data(_,_))
             .WillByDefault(Invoke(std::bind(&MockTransport::receive_data_default,
@@ -84,24 +84,23 @@ public:
 
     void notify_data_received()
     {
-        for(auto& callback : callbacks)
-            callback();
+        do
+        {
+            for(auto& observer : observers)
+                observer->on_data_available();
+        }
+        while (!all_data_consumed());
     }
 
-    bool data_available() const override
-    {
-        return !datagrams.empty();
-    }
-
-    MOCK_METHOD1(register_data_received_notification, void(data_received_notifier const&));
+    MOCK_METHOD1(register_observer, void(std::shared_ptr<Observer> const&));
     MOCK_METHOD2(receive_data, size_t(void*, size_t));
     MOCK_METHOD1(receive_file_descriptors, void(std::vector<int>&));
     MOCK_METHOD1(send_data, size_t(std::vector<uint8_t> const&));
 
     // Transport interface
-    void register_data_received_notification_default(data_received_notifier const& callback)
+    void register_observer_default(std::shared_ptr<Observer> const& observer)
     {
-        callbacks.push_back(callback);
+        observers.push_back(observer);
     }
 
     size_t receive_data_default(void* buffer, size_t message_size)
@@ -144,7 +143,7 @@ public:
         return buffer.size();
     }
 
-    std::list<data_received_notifier> callbacks;
+    std::list<std::shared_ptr<Observer>> observers;
 
     size_t read_offset{0};
     std::list<std::pair<std::vector<uint8_t>, std::list<int>>> datagrams;
@@ -169,7 +168,7 @@ public:
 
     MockTransport* transport;
     std::shared_ptr<mcl::LifecycleControl> lifecycle;
-    std::unique_ptr<::google::protobuf::RpcChannel> channel;
+    std::shared_ptr<::google::protobuf::RpcChannel> channel;
 };
 
 }
@@ -286,7 +285,7 @@ TEST_F(MirProtobufRpcChannelTest, ReadsFds)
     }
 }
 
-TEST_F(MirProtobufRpcChannelTest, TreatsWriteErrorAsDisconnect)
+TEST_F(MirProtobufRpcChannelTest, NotifiesOfDisconnectOnWriteError)
 {
     using namespace ::testing;
 
@@ -302,6 +301,68 @@ TEST_F(MirProtobufRpcChannelTest, TreatsWriteErrorAsDisconnect)
 
     EXPECT_CALL(*transport, send_data(_))
         .WillOnce(Throw(std::runtime_error("Eaten by giant space goat")));
+
+    mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
+    mir::protobuf::Buffer reply;
+    mir::protobuf::Void dummy;
+
+    EXPECT_THROW(
+        channel_user.test_file_descriptors(nullptr, &dummy, &reply, google::protobuf::NewCallback([](){})),
+        std::runtime_error);
+
+    EXPECT_TRUE(disconnected);
+}
+
+TEST_F(MirProtobufRpcChannelTest, ForwardsDisconnectNotification)
+{
+    using namespace ::testing;
+
+    bool disconnected{false};
+
+    lifecycle->set_lifecycle_event_handler([&disconnected](MirLifecycleState state)
+    {
+        if (state == mir_lifecycle_connection_lost)
+        {
+            disconnected = true;
+        }
+    });
+
+    for(auto& observer : transport->observers)
+    {
+        observer->on_disconnected();
+    }
+
+    EXPECT_TRUE(disconnected);
+}
+
+TEST_F(MirProtobufRpcChannelTest, NotifiesOfDisconnectOnlyOnce)
+{
+    using namespace ::testing;
+
+    bool disconnected{false};
+
+    lifecycle->set_lifecycle_event_handler([&disconnected](MirLifecycleState state)
+    {
+        if (state == mir_lifecycle_connection_lost)
+        {
+            if (disconnected)
+            {
+                FAIL()<<"Received disconnected message twice";
+            }
+            disconnected = true;
+        }
+    });
+
+    EXPECT_CALL(*transport, send_data(_))
+        .WillOnce(DoAll(Throw(std::runtime_error("Eaten by giant space goat")),
+                        InvokeWithoutArgs([this]()
+    {
+        for(auto& observer : transport->observers)
+        {
+            observer->on_disconnected();
+        }
+        return 0;
+    })));
 
     mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
     mir::protobuf::Buffer reply;

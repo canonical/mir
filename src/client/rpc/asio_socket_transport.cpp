@@ -32,13 +32,8 @@ mclr::AsioSocketTransport::~AsioSocketTransport()
     }
 }
 
-void mclr::AsioSocketTransport::register_data_received_notification(const mir::client::rpc::Transport::data_received_notifier &/*callback*/)
+void mclr::AsioSocketTransport::register_observer(std::shared_ptr<Observer> const&/*callback*/)
 {
-}
-
-bool mclr::AsioSocketTransport::data_available() const
-{
-    return false;
 }
 
 size_t mclr::AsioSocketTransport::receive_data(void* /*buffer*/, size_t /*message_size*/)

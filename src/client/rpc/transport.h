@@ -22,6 +22,7 @@
 
 #include <functional>
 #include <vector>
+#include <memory>
 #include <stdint.h>
 
 namespace mir
@@ -38,19 +39,25 @@ namespace rpc
 class Transport
 {
 public:
-    typedef std::function<void(void)> data_received_notifier;
     virtual ~Transport() = default;
 
     /**
-     * @brief register_data_received_notification
-     * @param callback
+     * @brief The Observer class
      */
-    virtual void register_data_received_notification(data_received_notifier const& callback) = 0;
+    class Observer
+    {
+    public:
+        virtual ~Observer() = default;
+        virtual void on_data_available() = 0;
+        virtual void on_disconnected() = 0;
+    };
+
     /**
-     * @brief data_available
-     * @return
+     * @brief register_observer
+     * @param observer
      */
-    virtual bool data_available() const = 0;
+    virtual void register_observer(std::shared_ptr<Observer> const& observer) = 0;
+
     /**
      * @brief receive_data
      * @param buffer

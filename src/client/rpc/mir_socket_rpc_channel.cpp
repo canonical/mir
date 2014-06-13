@@ -56,8 +56,17 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     lifecycle_control(lifecycle_control),
     disconnected(false)
 {
-    this->transport->register_data_received_notification(std::bind(&mclr::MirProtobufRpcChannel::on_message_available,
-                                                                   this));
+    class NullDeleter
+    {
+    public:
+        void operator()(mclr::MirProtobufRpcChannel*)
+        {
+        }
+    };
+
+    // This fake shared ptr is safe; we own the Transport, so the lifetime of this
+    // is guaranteed to exceed the lifetime of the Transport
+    this->transport->register_observer(std::shared_ptr<mclr::Transport::Observer>{this, NullDeleter()});
 }
 
 mclr::MirProtobufRpcChannel::~MirProtobufRpcChannel()
@@ -144,50 +153,6 @@ void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Mes
         receive_any_file_descriptors_for(socket_fd);
     }
     complete->Run();
-}
-
-void mclr::MirProtobufRpcChannel::on_message_available()
-{
-    while (transport->data_available())
-    {
-        mir::protobuf::wire::Result result;
-        try
-        {
-            uint16_t message_size;
-            transport->receive_data(&message_size, sizeof(uint16_t));
-            message_size = be16toh(message_size);
-
-            body_bytes.resize(message_size);
-            transport->receive_data(body_bytes.data(), message_size);
-
-            result.ParseFromArray(body_bytes.data(), message_size);
-
-            rpc_report->result_receipt_succeeded(result);
-        }
-        catch (std::exception const& x)
-        {
-            rpc_report->result_receipt_failed(x);
-            throw;
-        }
-
-        try
-        {
-            for (int i = 0; i != result.events_size(); ++i)
-            {
-                process_event_sequence(result.events(i));
-            }
-
-            if (result.has_id())
-            {
-                pending_calls.complete_response(result);
-            }
-        }
-        catch (std::exception const& x)
-        {
-            rpc_report->result_processing_failed(result, x);
-            // Eat this exception as it doesn't affect rpc
-        }
-    }
 }
 
 void mclr::MirProtobufRpcChannel::CallMethod(
@@ -372,4 +337,51 @@ void mclr::MirProtobufRpcChannel::read_message_body(
     }
 */
     result.ParseFromArray(body_bytes.data(), body_size);
+}
+
+
+void mclr::MirProtobufRpcChannel::on_data_available()
+{
+    mir::protobuf::wire::Result result;
+    try
+    {
+        uint16_t message_size;
+        transport->receive_data(&message_size, sizeof(uint16_t));
+        message_size = be16toh(message_size);
+
+        body_bytes.resize(message_size);
+        transport->receive_data(body_bytes.data(), message_size);
+
+        result.ParseFromArray(body_bytes.data(), message_size);
+
+        rpc_report->result_receipt_succeeded(result);
+    }
+    catch (std::exception const& x)
+    {
+        rpc_report->result_receipt_failed(x);
+        throw;
+    }
+
+    try
+    {
+        for (int i = 0; i != result.events_size(); ++i)
+        {
+            process_event_sequence(result.events(i));
+        }
+
+        if (result.has_id())
+        {
+            pending_calls.complete_response(result);
+        }
+    }
+    catch (std::exception const& x)
+    {
+        rpc_report->result_processing_failed(result, x);
+        // Eat this exception as it doesn't affect rpc
+    }
+}
+
+void mclr::MirProtobufRpcChannel::on_disconnected()
+{
+    notify_disconnected();
 }

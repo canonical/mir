@@ -42,8 +42,7 @@ public:
 
     // Transport interface
 public:
-    void register_data_received_notification(const data_received_notifier &callback) override;
-    bool data_available() const override;
+    void register_observer(std::shared_ptr<Observer> const& observer) override;
     size_t receive_data(void* buffer, size_t message_size) override;
     void receive_file_descriptors(std::vector<int> &fds) override;
     size_t send_data(const std::vector<uint8_t> &buffer) override;
