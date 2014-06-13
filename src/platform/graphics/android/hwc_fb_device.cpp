@@ -47,10 +47,11 @@ mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_
     layer_list.additional_layers_begin()->set_layer_type(mga::LayerType::skip);
 }
 
-void mga::HwcFbDevice::gpu_render()
+void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
 {
     if (auto display_list = layer_list.native_list().lock())
     {
+        hwc_wrapper->prepare(*display_list);
         display_list->dpy = eglGetCurrentDisplay();
         display_list->sur = eglGetCurrentSurface(EGL_DRAW);
 
@@ -61,42 +62,10 @@ void mga::HwcFbDevice::gpu_render()
     else
     {
         std::stringstream ss;
-        ss << "error locking list during hwc set()";
-        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
-    }
-}
-
-void mga::HwcFbDevice::prepare()
-{
-    if (auto display_list = layer_list.native_list().lock())
-    {
-        hwc_wrapper->prepare(*display_list);
-    }
-    else
-    {
-        std::stringstream ss;
         ss << "error accessing list during hwc prepare()";
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
-}
 
-void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
-{
-    prepare();
-    gpu_render();
-    post(context);
-}
-
-bool mga::HwcFbDevice::post_overlays(
-    SwappingGLContext const&,
-    RenderableList const&,
-    RenderableListCompositor const&)
-{
-    return false;
-}
-
-void mga::HwcFbDevice::post(SwappingGLContext const& context)
-{
     auto lg = lock_unblanked();
 
     auto const& buffer = context.last_rendered_buffer();
@@ -108,4 +77,12 @@ void mga::HwcFbDevice::post(SwappingGLContext const& context)
     }
 
     coordinator->wait_for_vsync();
+}
+
+bool mga::HwcFbDevice::post_overlays(
+    SwappingGLContext const&,
+    RenderableList const&,
+    RenderableListCompositor const&)
+{
+    return false;
 }

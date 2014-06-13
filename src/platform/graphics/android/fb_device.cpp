@@ -19,8 +19,8 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
-#include "android_format_conversion-inl.h"
 #include "swapping_gl_context.h"
+#include "android_format_conversion-inl.h"
 #include "fb_device.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
@@ -47,17 +47,6 @@ mga::FBDevice::FBDevice(
 void mga::FBDevice::post_gl(SwappingGLContext const& context)
 {
     context.swap_buffers();
-    post(context);
-}
-
-bool mga::FBDevice::post_overlays(
-    SwappingGLContext const&, RenderableList const&, RenderableListCompositor const&)
-{
-    return false;
-}
-
-void mga::FBDevice::post(SwappingGLContext const& context)
-{
     auto const& buffer = context.last_rendered_buffer();
     auto native_buffer = buffer->native_buffer_handle();
     native_buffer->wait_for_content();
@@ -65,6 +54,12 @@ void mga::FBDevice::post(SwappingGLContext const& context)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
     }
+}
+
+bool mga::FBDevice::post_overlays(
+    SwappingGLContext const&, RenderableList const&, RenderableListCompositor const&)
+{
+    return false;
 }
 
 bool mga::FBDevice::apply_orientation(MirOrientation) const

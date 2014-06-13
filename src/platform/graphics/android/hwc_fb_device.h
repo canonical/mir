@@ -47,10 +47,6 @@ public:
         RenderableListCompositor const& list_compositor);
 
 private:
-    void post(SwappingGLContext const& context);
-    void prepare();
-    void gpu_render();
-
     std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<framebuffer_device_t> const fb_device;
     static int const num_displays{1};

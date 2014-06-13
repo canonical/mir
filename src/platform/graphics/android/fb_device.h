@@ -44,7 +44,6 @@ public:
         RenderableListCompositor const& list_compositor);
 
 private:
-    void post(SwappingGLContext const& context);
     std::shared_ptr<framebuffer_device_t> const fb_device;
 };
 
