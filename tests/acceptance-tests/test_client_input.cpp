@@ -27,7 +27,7 @@
 #include "mir_test/wait_condition.h"
 #include "mir_test/client_event_matchers.h"
 #include "mir_test/barrier.h"
-#include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/server_runner.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
 #include "mir_test_framework/input_testing_client_configuration.h"
 #include "mir_test_framework/declarative_placement_strategy.h"
@@ -105,10 +105,12 @@ private:
 };
 
 
-struct DeferredInProcessServer : mtf::InProcessServer
+struct DeferredInProcessServer : testing::Test, private mtf::ServerRunner
 {
-    void SetUp() override { /* TODO this is a nasty frig around the unfortunate coupling in InProcessServer */ }
-    void start_server() { mtf::InProcessServer::SetUp(); }
+    void TearDown() override { ServerRunner::stop_server(); }
+
+    using ServerRunner::start_server;
+    using ServerRunner::new_connection;
 };
 
 struct TestClientInput : DeferredInProcessServer
