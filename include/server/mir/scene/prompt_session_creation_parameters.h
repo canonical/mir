@@ -16,8 +16,8 @@
  * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SCENE_PROMPT_PROVIDER_CREATION_PARAMETERS_H_
-#define MIR_SCENE_PROMPT_PROVIDER_CREATION_PARAMETERS_H_
+#ifndef MIR_SCENE_PROMPT_SESSION_CREATION_PARAMETERS_H_
+#define MIR_SCENE_PROMPT_SESSION_CREATION_PARAMETERS_H_
 
 #include <sys/types.h>
 
@@ -33,4 +33,4 @@ struct PromptSessionCreationParameters
 }
 }
 
-#endif /* MIR_SCENE_PROMPT_PROVIDER_CREATION_PARAMETERS_H_ */
+#endif /* MIR_SCENE_PROMPT_SESSION_CREATION_PARAMETERS_H_ */
