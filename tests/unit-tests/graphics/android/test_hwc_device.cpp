@@ -303,7 +303,7 @@ TEST_F(HwcDevice, calls_render_with_list_of_rejected_overlays)
         .InSequence(seq);
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
-    device.post_overlays(mock_context, updated_list, mock_compositor);
+    EXPECT_TRUE(device.post_overlays(mock_context, updated_list, mock_compositor));
 }
 
 TEST_F(HwcDevice, resets_layers_when_prepare_gl_called)
@@ -334,7 +334,7 @@ TEST_F(HwcDevice, resets_layers_when_prepare_gl_called)
         stub_renderable2
     });
 
-    device.post_overlays(stub_context, updated_list, stub_compositor);
+    EXPECT_TRUE(device.post_overlays(stub_context, updated_list, stub_compositor));
     device.post_gl(stub_context);
 }
 
@@ -479,7 +479,7 @@ TEST_F(HwcDevice, sets_proper_list_with_overlays)
     EXPECT_CALL(*native_handle_3, update_fence(release_fence3))
         .InSequence(seq);
     
-    device.post_overlays(mock_context, updated_list, stub_compositor);
+    EXPECT_TRUE(device.post_overlays(mock_context, updated_list, stub_compositor));
 }
 
 TEST_F(HwcDevice, discards_second_set_if_all_overlays_and_nothing_has_changed)
@@ -504,8 +504,8 @@ TEST_F(HwcDevice, discards_second_set_if_all_overlays_and_nothing_has_changed)
     EXPECT_CALL(*mock_hwc_device_wrapper, set(_))
         .Times(1);
 
-    device.post_overlays(stub_context, updated_list, stub_compositor);
-    device.post_overlays(stub_context, updated_list, stub_compositor);
+    EXPECT_TRUE(device.post_overlays(stub_context, updated_list, stub_compositor));
+    EXPECT_FALSE(device.post_overlays(stub_context, updated_list, stub_compositor));
 }
 
 TEST_F(HwcDevice, submits_every_time_if_at_least_one_layer_is_gl_rendered)
@@ -530,8 +530,8 @@ TEST_F(HwcDevice, submits_every_time_if_at_least_one_layer_is_gl_rendered)
     EXPECT_CALL(*mock_hwc_device_wrapper, set(_))
         .Times(2);
 
-    device.post_overlays(stub_context, updated_list, stub_compositor);
-    device.post_overlays(stub_context, updated_list, stub_compositor);
+    EXPECT_TRUE(device.post_overlays(stub_context, updated_list, stub_compositor));
+    EXPECT_TRUE(device.post_overlays(stub_context, updated_list, stub_compositor));
 }
 
 TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
@@ -565,8 +565,8 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
             EXPECT_EQ(HWC_FRAMEBUFFER, contents.hwLayers[0].compositionType);
         }));
 
-    device.post_overlays(stub_context, updated_list, stub_compositor);
-    device.post_overlays(stub_context, updated_list, stub_compositor);
+    EXPECT_TRUE(device.post_overlays(stub_context, updated_list, stub_compositor));
+    EXPECT_TRUE(device.post_overlays(stub_context, updated_list, stub_compositor));
 }
 
 //note: HWC models overlay layer buffers as owned by the display hardware until a subsequent set.
@@ -590,10 +590,10 @@ TEST_F(HwcDevice, overlay_buffers_are_owned_until_next_set)
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
     auto use_count_before = stub_buffer1.use_count();
-    device.post_overlays(stub_context, {mock_renderable1}, stub_compositor);
+    EXPECT_TRUE(device.post_overlays(stub_context, {mock_renderable1}, stub_compositor));
     EXPECT_THAT(stub_buffer1.use_count(), Gt(use_count_before));
 
-    device.post_overlays(stub_context, {mock_renderable2}, stub_compositor);
+    EXPECT_TRUE(device.post_overlays(stub_context, {mock_renderable2}, stub_compositor));
     EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
 }
 
@@ -611,6 +611,6 @@ TEST_F(HwcDevice, framebuffer_buffers_are_not_owned_past_set)
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
     auto use_count_before = stub_buffer1.use_count();
-    device.post_overlays(stub_context, {mock_renderable1}, stub_compositor);
+    EXPECT_TRUE(device.post_overlays(stub_context, {mock_renderable1}, stub_compositor));
     EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
 }
