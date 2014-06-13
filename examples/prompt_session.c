@@ -33,7 +33,7 @@
 #include <sys/types.h>
 #include <signal.h>
 
-///\page prompt_session.c prompt_session.c: A mir client which starts a prompt session and trusted client app.
+///\page prompt_session.c prompt_session.c: A mir client which starts a prompt session and prompt client app.
 /// mir_demo_client_prompt_session shows the use of mir prompt session API.
 /// This program opens a mir connection and creates a prompt session.
 ///\section helper helper()
@@ -74,7 +74,7 @@ static void prompt_session_event_callback(MirPromptSession* prompt_session,
     MirDemoState* demo_state = (MirDemoState*)context;
     demo_state->state = state;
 
-    printf("Trust Session state updated to %d\n", state);
+    printf("Prompt Session state updated to %d\n", state);
     if (state == mir_prompt_session_state_stopped)
     {
         kill(demo_state->child_pid, SIGINT);
@@ -141,7 +141,7 @@ void helper(const char* server, pid_t child_pid)
 
     MirBool add_result = mir_prompt_session_add_prompt_provider_sync(mcd.prompt_session, child_pid);
     assert(add_result == mir_true);
-    printf("helper: added trusted session pid: %d\n", child_pid);
+    printf("helper: added prompt provider pid: %d\n", child_pid);
 
     int status;
     printf("helper: waiting on child app: %d\n", child_pid);
@@ -155,7 +155,7 @@ void helper(const char* server, pid_t child_pid)
     }
     else
     {
-        puts("helper: Trusted session stoped by server");
+        puts("helper: Prompt session stopped by server");
     }
     puts("helper: Done");
 
@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
     }
 
     // Start a new process.
-    // This simulates the helper starting a new application which it adds to the trusted session.
+    // This simulates the helper starting a new application which it adds to the prompt session.
     pid_t pid = fork();
 
     if (pid == 0)
