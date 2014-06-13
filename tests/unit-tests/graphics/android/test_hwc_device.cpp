@@ -36,6 +36,7 @@
 #include "mir_test_doubles/stub_renderable_list_compositor.h"
 #include "mir_test_doubles/mock_renderable_list_compositor.h"
 #include "mir_test_doubles/mock_renderable.h"
+#include "mir_test_doubles/stub_renderable.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -48,74 +49,12 @@ namespace mt=mir::test;
 
 namespace
 {
-
-class StubRenderable : public mg::Renderable
-{
-public:
-    StubRenderable(std::shared_ptr<mg::Buffer> const& buffer, geom::Rectangle screen_pos)
-        : buf(buffer),
-          screen_pos(screen_pos)
-    {
-    }
-
-    ID id() const override
-    {
-        return this;
-    }
-
-    std::shared_ptr<mg::Buffer> buffer() const override
-    {
-        return buf;
-    }
-
-    bool alpha_enabled() const
-    {
-        return false;
-    }
-
-    geom::Rectangle screen_position() const override
-    {
-        return screen_pos;
-    }
-
-    float alpha() const
-    {
-        return 1.0;
-    }
-    
-    glm::mat4 transformation() const
-    {
-        static glm::mat4 matrix;
-        return matrix;
-    }
-
-    bool visible() const
-    {
-        return true;
-    }
-
-    bool shaped() const
-    {
-        return true;
-    }
-
-    int buffers_ready_for_compositor() const override
-    {
-        return 1;
-    }
-private:
-    std::shared_ptr<mg::Buffer> buf;
-    geom::Rectangle screen_pos;
-};
-
 struct MockFileOps : public mga::SyncFileOps
 {
     MOCK_METHOD3(ioctl, int(int,int,void*));
     MOCK_METHOD1(dup, int(int));
     MOCK_METHOD1(close, int(int));
 };
-
-}
 
 class HwcDevice : public ::testing::Test
 {
@@ -192,9 +131,9 @@ protected:
         set_target_layer.sourceCrop = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()}; 
         set_target_layer.displayFrame = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()};
 
-        stub_renderable1 = std::make_shared<StubRenderable>(
+        stub_renderable1 = std::make_shared<mtd::StubRenderable>(
                                 mt::fake_shared(mock_buffer), screen_position);
-        stub_renderable2 = std::make_shared<StubRenderable>(
+        stub_renderable2 = std::make_shared<mtd::StubRenderable>(
                                 mt::fake_shared(mock_buffer), screen_position);
 
         empty_prepare_fn = [] (hwc_display_contents_1_t&) {};
@@ -235,8 +174,8 @@ protected:
 
     geom::Size buffer_size{333, 444};
     geom::Rectangle screen_position{{9,8},{245, 250}};
-    std::shared_ptr<StubRenderable> stub_renderable1;
-    std::shared_ptr<StubRenderable> stub_renderable2;
+    std::shared_ptr<mtd::StubRenderable> stub_renderable1;
+    std::shared_ptr<mtd::StubRenderable> stub_renderable2;
     std::shared_ptr<mtd::MockRenderable> mock_renderable1;
     std::shared_ptr<mtd::MockRenderable> mock_renderable2;
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_hwc_device_wrapper;
@@ -250,7 +189,7 @@ protected:
     mtd::StubSwappingGLContext stub_context;
     mtd::StubRenderableListCompositor stub_compositor;
 };
-
+}
 
 TEST_F(HwcDevice, prepares_a_skip_and_target_layer_by_default)
 {
@@ -613,4 +552,42 @@ TEST_F(HwcDevice, framebuffer_buffers_are_not_owned_past_set)
     auto use_count_before = stub_buffer1.use_count();
     EXPECT_TRUE(device.post_overlays(stub_context, {mock_renderable1}, stub_compositor));
     EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
+}
+
+TEST_F(HwcDevice, rejects_empty_list)
+{
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+
+    std::list<std::shared_ptr<mg::Renderable>> renderlist{};
+    EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
+}
+
+TEST_F(HwcDevice, reject_list_if_option_disabled)
+{
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+
+    mg::RenderableList renderlist{std::make_shared<mtd::StubRenderable>()};
+    EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
+}
+
+//TODO: we could accept a 90 degree transform
+TEST_F(HwcDevice, rejects_list_containing_transformed)
+{
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+
+    auto renderable = std::make_shared<mtd::StubTransformedRenderable>();
+    mg::RenderableList renderlist{renderable};
+    EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
+}
+
+//TODO: remove once alpha+HWC is turned on
+TEST_F(HwcDevice, rejects_list_containing_alpha)
+{
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+
+    mg::RenderableList renderlist{std::make_shared<mtd::StubTranslucentRenderable>()};
+    EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
+
+    mg::RenderableList renderlist2{std::make_shared<mtd::StubShapedRenderable>()};
+    EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
 }
