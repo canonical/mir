@@ -53,20 +53,20 @@ MIR_SESSION_MEDIATOR_EVENT(session_stop_prompt_session_called)
 TRACEPOINT_EVENT(
     mir_server_session_mediator,
     session_start_prompt_session_called,
-    TP_ARGS(char const*, application, pid_t, base_process),
+    TP_ARGS(char const*, application, pid_t, application_process),
     TP_FIELDS(
         ctf_string(application, application)
-        ctf_integer(pid_t, base_process, base_process)
+        ctf_integer(pid_t, application_process, application_process)
         )
     )
 
 TRACEPOINT_EVENT(
     mir_server_session_mediator,
     session_add_prompt_provider_called,
-    TP_ARGS(char const*, application, pid_t, process),
+    TP_ARGS(char const*, application, pid_t, provider_process),
     TP_FIELDS(
         ctf_string(application, application)
-        ctf_integer(pid_t, process, process)
+        ctf_integer(pid_t, provider_process, provider_process)
         )
     )
 
