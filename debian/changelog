@@ -1,3 +1,5 @@
+mir (0.3.0-0ubuntu1) UNRELEASED; urgency=medium
+
   * New upstream release 0.3.0 (https://launchpad.net/mir/+milestone/0.3.0)
     - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
     - mirserver ABI bumped to 21. Shells need rebuilding.
