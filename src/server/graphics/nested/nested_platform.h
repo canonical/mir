@@ -49,7 +49,8 @@ public:
             std::shared_ptr<GLConfig> const& gl_config);
     std::shared_ptr<PlatformIPCPackage> get_ipc_package() override;
     std::shared_ptr<InternalClient> create_internal_client() override;
-    void arrange_buffer_ipc(BufferIPCPacker* packer, Buffer const* Buffer, bool full_ipc) const override;
+    void prepare_and_pack_buffer_msg(
+        BufferIPCPacker* packer, Buffer const* Buffer, BufferIpcMsgType msg_type) const override;
     EGLNativeDisplayType egl_native_display() const;
 
 private:

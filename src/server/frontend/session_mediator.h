@@ -22,6 +22,7 @@
 #include "display_server.h"
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
+#include "mir/graphics/platform.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
@@ -148,9 +149,12 @@ public:
 private:
     void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
                               graphics::Buffer* graphics_buffer,
-                              bool need_full_ipc);
+                              graphics::BufferIpcMsgType msg_type);
 
-    void advance_buffer(SurfaceId surf_id, Surface& surface, std::function<void(graphics::Buffer*, bool)> complete);
+    void advance_buffer(
+        SurfaceId surf_id,
+        Surface& surface,
+        std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete);
 
     virtual std::function<void(std::shared_ptr<Session> const&)> trusted_connect_handler() const;
 

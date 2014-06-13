@@ -97,10 +97,11 @@ std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client(
     return std::make_shared<mgm::InternalClient>(nd);
 }
 
-/* TODO : this is just a duplication of mgm::Platform::arrange_buffer_ipc */
-void mgm::NativePlatform::arrange_buffer_ipc(BufferIPCPacker* packer, Buffer const* buffer, bool full_ipc) const
+/* TODO : this is just a duplication of mgm::Platform::prepare_and_pack_buffer_msg */
+void mgm::NativePlatform::prepare_and_pack_buffer_msg(
+    BufferIPCPacker* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const
 {
-    if (full_ipc)
+    if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
         auto native_handle = buffer->native_buffer_handle();
         for(auto i=0; i<native_handle->data_items; i++)

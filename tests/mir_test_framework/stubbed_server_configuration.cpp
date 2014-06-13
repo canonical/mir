@@ -179,9 +179,10 @@ class StubGraphicPlatform : public mtd::NullPlatform
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    void arrange_buffer_ipc(mg::BufferIPCPacker* packer, mg::Buffer const* buffer, bool full_ipc) const override
+    void prepare_and_pack_buffer_msg(
+        mg::BufferIPCPacker* packer, mg::Buffer const* buffer, mg::BufferIpcMsgType msg_type) const override
     {
-        if (full_ipc)
+        if (msg_type == mg::BufferIpcMsgType::full_msg)
         {
 #ifndef ANDROID
             auto native_handle = buffer->native_buffer_handle();

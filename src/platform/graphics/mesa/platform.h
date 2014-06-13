@@ -59,7 +59,8 @@ public:
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
     std::shared_ptr<InternalClient> create_internal_client();
 
-    void arrange_buffer_ipc(BufferIPCPacker* packer, Buffer const* buffer, bool full_ipc) const;
+    void prepare_and_pack_buffer_msg(
+        BufferIPCPacker* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const;
 
     EGLNativeDisplayType egl_native_display() const;
 

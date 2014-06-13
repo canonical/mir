@@ -99,9 +99,10 @@ std::shared_ptr<mg::InternalClient> mgn::NestedPlatform::create_internal_client(
     return native_platform->create_internal_client();
 }
 
-void mgn::NestedPlatform::arrange_buffer_ipc(BufferIPCPacker* packer, Buffer const* buffer, bool full_ipc) const
+void mgn::NestedPlatform::prepare_and_pack_buffer_msg(
+    BufferIPCPacker* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const
 {
-    native_platform->arrange_buffer_ipc(packer, buffer, full_ipc);
+    native_platform->prepare_and_pack_buffer_msg(packer, buffer, msg_type);
 }
 
 EGLNativeDisplayType mgn::NestedPlatform::egl_native_display() const

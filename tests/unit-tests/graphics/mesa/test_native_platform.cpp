@@ -145,6 +145,6 @@ TEST_F(MesaNativePlatformTest, packs_buffer_ipc_package_correctly)
 
     mgm::NativePlatform native;
 
-    native.arrange_buffer_ipc(&mock_packer, &stub_buffer, true);
-    native.arrange_buffer_ipc(&mock_packer, &stub_buffer, false);
+    native.prepare_and_pack_buffer_msg(&mock_packer, &stub_buffer, mg::BufferIpcMsgType::full_msg);
+    native.prepare_and_pack_buffer_msg(&mock_packer, &stub_buffer, mg::BufferIpcMsgType::update_msg);
 }

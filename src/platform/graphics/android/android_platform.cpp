@@ -112,14 +112,14 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-void mga::AndroidPlatform::arrange_buffer_ipc(
-    BufferIPCPacker* packer, graphics::Buffer const* buffer, bool full_ipc) const
+void mga::AndroidPlatform::prepare_and_pack_buffer_msg(
+    BufferIPCPacker* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const
 {
     auto native_buffer = buffer->native_buffer_handle();
 
     /* TODO: instead of waiting, pack the fence fd in the message to the client */ 
     native_buffer->wait_for_content();
-    if (full_ipc)
+    if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
         auto buffer_handle = native_buffer->handle();
 

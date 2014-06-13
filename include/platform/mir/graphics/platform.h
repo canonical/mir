@@ -52,6 +52,11 @@ class GraphicBufferAllocator;
 class GLConfig;
 class GLProgramFactory;
 
+enum class BufferIpcMsgType
+{
+    full_msg, //pack the full ipc representation of the buffer
+    update_msg //assume the client has a full representation, and pack only updates to the buffer 
+};
 /**
  * \defgroup platform_enablement Mir platform enablement
  *
@@ -104,10 +109,12 @@ public:
      *
      * \param [in] packer   the object providing the packing functionality
      * \param [in] buffer   the buffer to fill the IPC package for
-     * \param [in] full_ipc If true, the implemenation must send the full ipc package.
-     *                      If false, the implementation is permitted to send a partial ipc package.
+     * \param [in] ipc_type what sort of ipc message is needed
      */
-    virtual void arrange_buffer_ipc(BufferIPCPacker* packer, Buffer const* buffer, bool full_ipc) const = 0;
+    virtual void prepare_and_pack_buffer_msg(
+        BufferIPCPacker* packer,
+        Buffer const* buffer,
+        BufferIpcMsgType msg_type) const = 0;
 
     /**
      * Creates the in-process client support object.

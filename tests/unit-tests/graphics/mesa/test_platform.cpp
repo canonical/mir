@@ -177,8 +177,8 @@ TEST_F(MesaGraphicsPlatform, test_ipc_data_packed_correctly)
     EXPECT_CALL(mock_packer, pack_size(testing::_))
         .Times(Exactly(1));
 
-    platform->arrange_buffer_ipc(&mock_packer, &mock_buffer, true);
-    platform->arrange_buffer_ipc(&mock_packer, &mock_buffer, false);
+    platform->prepare_and_pack_buffer_msg(&mock_packer, &mock_buffer, mg::BufferIpcMsgType::full_msg);
+    platform->prepare_and_pack_buffer_msg(&mock_packer, &mock_buffer, mg::BufferIpcMsgType::update_msg);
 }
 
 TEST_F(MesaGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)

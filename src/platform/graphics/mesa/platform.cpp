@@ -167,9 +167,10 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::Platform::get_ipc_package()
     return std::make_shared<MesaPlatformIPCPackage>(drm.get_authenticated_fd());
 }
 
-void mgm::Platform::arrange_buffer_ipc(BufferIPCPacker* packer, Buffer const* buffer, bool full_ipc) const
+void mgm::Platform::prepare_and_pack_buffer_msg(
+    BufferIPCPacker* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const
 {
-    if (full_ipc)
+    if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
         auto native_handle = buffer->native_buffer_handle();
         for(auto i=0; i<native_handle->data_items; i++)
