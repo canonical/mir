@@ -19,12 +19,11 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
-#include "swapping_gl_context.h"
 #include "android_format_conversion-inl.h"
+#include "swapping_gl_context.h"
 #include "fb_device.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
-#include "hwc_fallback_gl_renderer.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -51,13 +50,10 @@ void mga::FBDevice::post_gl(SwappingGLContext const& context)
     post(context);
 }
 
-void mga::FBDevice::post_overlays(
-    SwappingGLContext const& context,
-    RenderableList const& list,
-    RenderableListCompositor const& compositor)
+bool mga::FBDevice::post_overlays(
+    SwappingGLContext const&, RenderableList const&, RenderableListCompositor const&)
 {
-    compositor.render(list, context);
-    post(context);
+    return false;
 }
 
 void mga::FBDevice::post(SwappingGLContext const& context)
