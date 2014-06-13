@@ -70,7 +70,7 @@ protected:
     CachedPtr<ConnectionSurfaceMap> surface_map;
     CachedPtr<DisplayConfiguration> display_configuration;
     CachedPtr<LifecycleControl> lifecycle_control;
-    CachedPtr<mir::client::EventDistributor> event_distributor;
+    CachedPtr<EventDistributor> event_distributor;
 
     CachedPtr<rpc::RpcReport> rpc_report;
     CachedPtr<input::receiver::InputReceiverReport> input_receiver_report;

@@ -27,7 +27,7 @@ namespace mir
 namespace client
 {
 
-class EventDistributor : public mir::client::EventHandlerRegister, public mir::client::EventSink
+class EventDistributor : public EventHandlerRegister, public EventSink
 {
 };
 
