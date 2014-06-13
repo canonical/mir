@@ -51,7 +51,7 @@ public:
     virtual void stop_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) const = 0;
 
     /**
-     * Add a prompt provider to an exising prompt session
+     * Add a prompt provider to an existing prompt session
      *   \param [in] prompt_session  The prompt session
      *   \param [in] prompt_provider The prompt provider to add to the prompt session
      */
@@ -67,13 +67,13 @@ public:
                                             pid_t process_id) const = 0;
 
     /**
-     * Add a session that may have been expeceted by a prompt session.
+     * Add a session that may have been expected by a prompt session.
      *   \param [in] session  The new session that was being expected
      */
     virtual void add_expected_session(std::shared_ptr<Session> const& new_session) const = 0;
 
     /**
-     * Remove a session from all accociated prompt sessions
+     * Remove a session from all associated prompt sessions
      *   \param [in] session  The new session that is to be removed
      */
     virtual void remove_session(std::shared_ptr<Session> const& session) const = 0;
