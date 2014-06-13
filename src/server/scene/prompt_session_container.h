@@ -80,6 +80,13 @@ private:
         Session* session_fun() const { return session.lock().get(); }
     };
 
+    /**
+     * A multi map for associating PromptSessions <-> Sessions.
+     * indexed by insertion order for determining the Sessions participating in a PromptSession
+     * and indexed for determining the Prompt Sessions in which a Session is participating.
+     * A Session can be associated a number of times with a single PromptSession, providing it has a different type
+     * eg A Session can be both a helper and a provider for a PromptSession.
+     */
     typedef multi_index_container<
         Participant,
         indexed_by<
@@ -114,6 +121,11 @@ private:
         pid_t process_id;
     };
 
+    /**
+     * A multimap for associating PromptSessions <-> process ids
+     * indexed for determining which process ids a Prompt Session is waiting for
+     * and the prompt sessions which are waiting for a speicific process.
+     */
     typedef multi_index_container<
         WaitingProcess,
         indexed_by<

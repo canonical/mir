@@ -35,25 +35,65 @@ class PromptSessionManager
 public:
     virtual ~PromptSessionManager() = default;
 
+    /**
+     * Start a new prompt session
+     *   \param [in] session  The prompt helper session
+     *   \param [in] params   The creation parameters for contructing the prompt session
+     */
     virtual std::shared_ptr<PromptSession> start_prompt_session_for(std::shared_ptr<Session> const& session,
                                                                     PromptSessionCreationParameters const& params) const = 0;
 
+    /**
+     * Stop a started prompt session
+     *   \param [in] prompt_session  The prompt session
+     */
     virtual void stop_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) const = 0;
 
+    /**
+     * Add a prompt provider to an exising prompt session
+     *   \param [in] prompt_session  The prompt session
+     *   \param [in] prompt_provider The prompt provider to add to the prompt session
+     */
     virtual void add_prompt_provider(std::shared_ptr<PromptSession> const& prompt_session,
                                      std::shared_ptr<Session> const& prompt_provider) const = 0;
 
+    /**
+     * Add a process id to wait for to the prompt session
+     *   \param [in] prompt_session  The prompt session
+     *   \param [in] process_id      The process id to wait for
+     */
     virtual void add_prompt_provider_by_pid(std::shared_ptr<PromptSession> const& prompt_session,
                                             pid_t process_id) const = 0;
 
+    /**
+     * Add a session that may have been expeceted by a prompt session.
+     *   \param [in] session  The new session that was being expected
+     */
     virtual void add_expected_session(std::shared_ptr<Session> const& new_session) const = 0;
 
+    /**
+     * Remove a session from all accociated prompr sessions
+     *   \param [in] session  The new session that is to be removed
+     */
     virtual void remove_session(std::shared_ptr<Session> const& session) const = 0;
 
+    /**
+     * Retrieve the application session for a prompt session
+     *   \param [in] prompt_session  The prompt session
+     */
     virtual std::shared_ptr<Session> application_for(std::shared_ptr<PromptSession> const& prompt_session) const = 0;
 
+    /**
+     * Retrieve the helper session for a prompt session
+     *   \param [in] prompt_session  The prompt session
+     */
     virtual std::shared_ptr<Session> helper_for(std::shared_ptr<PromptSession> const& prompt_session) const = 0;
 
+    /**
+     * Iterate over all the prompt providers associated with a prompt session
+     *   \param [in] prompt_session  The prompt session
+     *   \param [in] f               The callback function to call for each provider
+     */
     virtual void for_each_provider_in(std::shared_ptr<PromptSession> const& prompt_session,
                                       std::function<void(std::shared_ptr<Session> const& prompt_provider)> const& f) const = 0;
 
