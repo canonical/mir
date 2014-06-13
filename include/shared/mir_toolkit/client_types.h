@@ -342,7 +342,7 @@ typedef void (*mir_prompt_session_add_prompt_provider_callback)(
  *   \param [in] state            The state of the prompt session
  *   \param [in,out] context      The context provided by the client
  */
-typedef void (*mir_prompt_session_event_callback)(
+typedef void (*mir_prompt_session_state_change_callback)(
     MirPromptSession* prompt_provider, MirPromptSessionState state, void* context);
 
 #ifdef __cplusplus

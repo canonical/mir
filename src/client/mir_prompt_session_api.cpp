@@ -42,14 +42,14 @@ void add_prompt_provider_callback(
 MirPromptSession *mir_connection_create_prompt_session_sync(
     MirConnection* connection,
     pid_t application_pid,
-    mir_prompt_session_event_callback event_callback,
+    mir_prompt_session_state_change_callback state_change_callback,
     void* context)
 {
     try
     {
         auto prompt_session = connection->create_prompt_session();
-        if (event_callback)
-            prompt_session->register_prompt_session_event_callback(event_callback, context);
+        if (state_change_callback)
+            prompt_session->register_prompt_session_state_change_callback(state_change_callback, context);
 
         mir_wait_for(prompt_session->start(application_pid,
                      null_callback,

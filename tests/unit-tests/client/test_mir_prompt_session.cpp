@@ -120,7 +120,7 @@ public:
     {
     }
 
-    static void prompt_session_event(MirPromptSession*, MirPromptSessionState new_state, void* context)
+    static void prompt_session_state_change(MirPromptSession*, MirPromptSessionState new_state, void* context)
     {
         MirPromptSessionTest* test = static_cast<MirPromptSessionTest*>(context);
         test->state_updated(new_state);
@@ -216,7 +216,7 @@ TEST_F(MirPromptSessionTest, notifies_event_callback)
     MirPromptSession prompt_session{
         mock_server,
         mt::fake_shared(event_distributor)};
-    prompt_session.register_prompt_session_event_callback(&MirPromptSessionTest::prompt_session_event, this);
+    prompt_session.register_prompt_session_state_change_callback(&MirPromptSessionTest::prompt_session_state_change, this);
 
     MirEvent e;
     e.type = mir_event_type_prompt_session_state_change;

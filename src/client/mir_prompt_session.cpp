@@ -34,7 +34,7 @@ MirPromptSession::MirPromptSession(
                 set_state(event.prompt_session.new_state);
         })},
     state(mir_prompt_session_state_stopped),
-    handle_prompt_session_event{[](MirPromptSessionState){}}
+    handle_prompt_session_state_change{[](MirPromptSessionState){}}
 {
 }
 
@@ -49,7 +49,7 @@ void MirPromptSession::set_state(MirPromptSessionState new_state)
 
     if (new_state != state)
     {
-        handle_prompt_session_event(new_state);
+        handle_prompt_session_state_change(new_state);
 
         if (new_state == mir_prompt_session_state_stopped)
         {
@@ -115,13 +115,13 @@ MirWaitHandle* MirPromptSession::add_prompt_provider(pid_t provider_pid,
     return &add_result_wait_handle;
 }
 
-void MirPromptSession::register_prompt_session_event_callback(
-    mir_prompt_session_event_callback callback,
+void MirPromptSession::register_prompt_session_state_change_callback(
+    mir_prompt_session_state_change_callback callback,
     void* context)
 {
     std::lock_guard<decltype(event_handler_mutex)> lock(event_handler_mutex);
 
-    handle_prompt_session_event =
+    handle_prompt_session_state_change =
         [this, callback, context](MirPromptSessionState new_state)
         {
             callback(this, new_state, context);

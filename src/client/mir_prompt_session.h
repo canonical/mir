@@ -54,7 +54,7 @@ public:
         mir_client_fd_callback callback,
         void * context);
 
-    void register_prompt_session_event_callback(mir_prompt_session_event_callback callback, void* context);
+    void register_prompt_session_state_change_callback(mir_prompt_session_state_change_callback callback, void* context);
 
     char const* get_error_message();
 
@@ -79,7 +79,7 @@ private:
     mir::protobuf::Void session;
 
     std::mutex mutable event_handler_mutex; // Need another mutex for callback access to members
-    std::function<void(MirPromptSessionState)> handle_prompt_session_event;
+    std::function<void(MirPromptSessionState)> handle_prompt_session_state_change;
 
     void set_state(MirPromptSessionState new_state);
     void done_start(mir_prompt_session_callback callback, void* context);

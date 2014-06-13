@@ -31,16 +31,16 @@ extern "C" {
 
 /**
  * Create and start a new prompt session
- *   \param [in] connection       The connection
- *   \param [in] application_pid  The process id of the initiating application
- *   \param [in] event_callback   The function to be called when a prompt session event occurs
- *   \param [in,out] context      User data passed to the callback functions
- *   \return                      A handle that can be passed to mir_wait_for
+ *   \param [in] connection             The connection
+ *   \param [in] application_pid        The process id of the initiating application
+ *   \param [in] state_change_callback  The function to be called when a prompt session state change occurs
+ *   \param [in,out] context            User data passed to the callback functions
+ *   \return                            A handle that can be passed to mir_wait_for
  */
 MirPromptSession *mir_connection_create_prompt_session_sync(
     MirConnection* connection,
     pid_t application_pid,
-    mir_prompt_session_event_callback event_callback,
+    mir_prompt_session_state_change_callback state_change_callback,
     void *context);
 
 /**
