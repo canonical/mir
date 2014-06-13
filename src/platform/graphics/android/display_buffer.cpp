@@ -90,8 +90,10 @@ void mga::DisplayBuffer::release_current()
 
 bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderlist)
 {
-    return (!overlay_enabled ||
-           display_device->post_overlays(gl_context, renderlist, overlay_program));
+    if (overlay_enabled)
+        return display_device->post_overlays(gl_context, renderlist, overlay_program);
+    else
+        return false;
 }
 
 void mga::DisplayBuffer::post_update()

@@ -562,14 +562,6 @@ TEST_F(HwcDevice, rejects_empty_list)
     EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
 }
 
-TEST_F(HwcDevice, reject_list_if_option_disabled)
-{
-    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
-
-    mg::RenderableList renderlist{std::make_shared<mtd::StubRenderable>()};
-    EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
-}
-
 //TODO: we could accept a 90 degree transform
 TEST_F(HwcDevice, rejects_list_containing_transformed)
 {

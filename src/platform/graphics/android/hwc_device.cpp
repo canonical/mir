@@ -112,8 +112,9 @@ bool mga::HwcDevice::post_overlays(
     RenderableList const& renderables,
     RenderableListCompositor const& list_compositor)
 {
-    if (renderable_list_is_hwc_incompatible(renderables) ||
-        !hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size))
+    if (renderable_list_is_hwc_incompatible(renderables))
+        return false;
+    if (!hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size))
         return false;
     setup_layer_types();
 

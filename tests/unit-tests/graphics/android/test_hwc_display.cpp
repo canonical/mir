@@ -403,3 +403,17 @@ TEST_F(AndroidDisplayBuffer, does_not_use_alpha)
 
     EXPECT_FALSE(db.uses_alpha());
 }
+
+TEST_F(AndroidDisplayBuffer, reject_list_if_option_disabled)
+{
+    mg::RenderableList renderlist{std::make_shared<mtd::StubRenderable>()};
+    mga::DisplayBuffer db(
+        mock_fb_bundle,
+        mock_display_device,
+        native_window,
+        *gl_context,
+        stub_program_factory,
+        mga::OverlayOptimization::disabled);
+
+    EXPECT_FALSE(db.post_renderables_if_optimizable(renderlist)); 
+}
