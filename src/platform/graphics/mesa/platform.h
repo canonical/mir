@@ -27,6 +27,7 @@
 
 namespace mir
 {
+class EmergencyCleanupRegistry;
 namespace graphics
 {
 namespace mesa
@@ -46,6 +47,7 @@ class Platform : public graphics::Platform,
 public:
     explicit Platform(std::shared_ptr<DisplayReport> const& reporter,
                       std::shared_ptr<VirtualTerminal> const& vt,
+                      EmergencyCleanupRegistry& emergency_cleanup_registry,
                       BypassOption bypass_option);
     ~Platform();
 
@@ -67,7 +69,7 @@ public:
     void drm_auth_magic(unsigned int magic);
 
     std::shared_ptr<mir::udev::Context> udev;
-    helpers::DRMHelper drm;
+    std::shared_ptr<helpers::DRMHelper> const drm;
     helpers::GBMHelper gbm;
 
     std::shared_ptr<DisplayReport> const listener;

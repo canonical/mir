@@ -41,23 +41,17 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     : display_buffer(display_buffer),
       scene{scene},
       renderer{renderer},
-      report{report},
-      last_pass_rendered_anything{false}
+      report{report}
 {
 }
 
-bool mc::DefaultDisplayBufferCompositor::composite()
+void mc::DefaultDisplayBufferCompositor::composite()
 {
     report->began_frame(this);
 
     auto const& view_area = display_buffer.view_area();
     auto renderable_list = scene->renderable_list_for(this);
     mc::filter_occlusions_from(renderable_list, view_area);
-
-    //TODO: the DisplayBufferCompositor should not have to figure out if it has to force
-    //      a subsequent compositon. The MultiThreadedCompositor should be smart enough to 
-    //      schedule compositions when they're needed. 
-    bool uncomposited_buffers{false};
 
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
@@ -75,17 +69,6 @@ bool mc::DefaultDisplayBufferCompositor::composite()
         display_buffer.post_update();
         renderer->end();
 
-        // This is a frig to avoid lp:1286190
-        if (last_pass_rendered_anything && renderable_list.empty())
-            uncomposited_buffers = true;
-
-        last_pass_rendered_anything = !renderable_list.empty();
-        // End of frig
-
         report->finished_frame(false, this);
     }
-
-    for(auto const& renderable : renderable_list)
-        uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 0);
-    return uncomposited_buffers;
 }

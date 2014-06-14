@@ -20,9 +20,14 @@
 #include "mir/graphics/drm_authenticator.h"
 #include "src/platform/graphics/mesa/platform.h"
 #include "src/platform/graphics/mesa/internal_client.h"
+#include "src/server/report/null_report_factory.h"
+#include "mir/emergency_cleanup_registry.h"
+
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/platform_factory.h"
+#include "mir_test_doubles/mock_virtual_terminal.h"
+#include "mir_test_doubles/null_virtual_terminal.h"
 
 #include <gtest/gtest.h>
 
@@ -302,4 +307,76 @@ TEST_F(MesaGraphicsPlatform, drm_close_not_called_concurrently_on_ipc_package_de
         t.join();
 
     EXPECT_FALSE(detector.detected_concurrent_calls());
+}
+
+struct StubEmergencyCleanupRegistry : mir::EmergencyCleanupRegistry
+{
+    void add(mir::EmergencyCleanupHandler const& handler) override
+    {
+        this->handler = handler;
+    }
+
+    mir::EmergencyCleanupHandler handler;
+};
+
+TEST_F(MesaGraphicsPlatform, restores_vt_on_emergency_cleanup)
+{
+    using namespace testing;
+
+    auto const mock_vt = std::make_shared<mtd::MockVirtualTerminal>();
+    StubEmergencyCleanupRegistry emergency_cleanup_registry;
+    mgm::Platform platform{
+        mir::report::null_display_report(),
+        mock_vt,
+        emergency_cleanup_registry,
+        mgm::BypassOption::allowed};
+
+    EXPECT_CALL(*mock_vt, restore());
+
+    emergency_cleanup_registry.handler();
+
+    Mock::VerifyAndClearExpectations(mock_vt.get());
+}
+
+TEST_F(MesaGraphicsPlatform, releases_drm_on_emergency_cleanup)
+{
+    using namespace testing;
+
+    auto const null_vt = std::make_shared<mtd::NullVirtualTerminal>();
+    StubEmergencyCleanupRegistry emergency_cleanup_registry;
+    mgm::Platform platform{
+        mir::report::null_display_report(),
+        null_vt,
+        emergency_cleanup_registry,
+        mgm::BypassOption::allowed};
+
+    int const success_code = 0;
+    EXPECT_CALL(mock_drm, drmDropMaster(mock_drm.fake_drm.fd()))
+        .WillOnce(Return(success_code));
+
+    emergency_cleanup_registry.handler();
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+}
+
+TEST_F(MesaGraphicsPlatform, does_not_propagate_emergency_cleanup_exceptions)
+{
+    using namespace testing;
+
+    auto const mock_vt = std::make_shared<mtd::MockVirtualTerminal>();
+    StubEmergencyCleanupRegistry emergency_cleanup_registry;
+    mgm::Platform platform{
+        mir::report::null_display_report(),
+        mock_vt,
+        emergency_cleanup_registry,
+        mgm::BypassOption::allowed};
+
+    EXPECT_CALL(*mock_vt, restore())
+        .WillOnce(Throw(std::runtime_error("vt restore exception")));
+    EXPECT_CALL(mock_drm, drmDropMaster(mock_drm.fake_drm.fd()))
+        .WillOnce(Throw(std::runtime_error("drm drop master exception")));
+
+    emergency_cleanup_registry.handler();
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
 }
