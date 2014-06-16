@@ -66,7 +66,7 @@ public:
     void set_render_parameters(geometry::Rectangle screen_position, bool alpha_enabled);
     void set_buffer(Buffer const& buffer);
 
-    void update_usage_and_release_buffer();
+    void update_fence_and_release_buffer();
     bool needs_gl_render() const;
     bool needs_hwc_commit() const;
     void prepare_for_draw();

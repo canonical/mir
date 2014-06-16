@@ -147,7 +147,7 @@ void mga::HwcDevice::post(SwappingGLContext const& context)
     hwc_wrapper->set(*hwc_list.native_list().lock());
 
     for(auto& layer : hwc_list)
-        layer.update_usage_and_release_buffer();
+        layer.update_fence_and_release_buffer();
 
     mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
 }
