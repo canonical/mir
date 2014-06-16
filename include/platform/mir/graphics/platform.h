@@ -27,6 +27,8 @@
 
 namespace mir
 {
+class EmergencyCleanupRegistry;
+
 namespace frontend
 {
 class Surface;
@@ -116,14 +118,21 @@ public:
  * Function prototype used to return a new graphics platform.
  *
  * \param [in] options options to use for this platform
+ * \param [in] emergency_cleanup_registry object to register emergency shutdown handlers with
  * \param [in] report the object to use to report interesting events from the display subsystem
  *
  * This factory function needs to be implemented by each platform.
  *
  * \ingroup platform_enablement
  */
-extern "C" typedef std::shared_ptr<Platform>(*CreatePlatform)(std::shared_ptr<options::Option> const& options, std::shared_ptr<DisplayReport> const& report);
-extern "C" std::shared_ptr<Platform> create_platform (std::shared_ptr<options::Option> const& options, std::shared_ptr<DisplayReport> const& report);
+extern "C" typedef std::shared_ptr<Platform>(*CreatePlatform)(
+    std::shared_ptr<options::Option> const& options,
+    std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<DisplayReport> const& report);
+extern "C" std::shared_ptr<Platform> create_platform(
+    std::shared_ptr<options::Option> const& options,
+    std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<DisplayReport> const& report);
 extern "C" typedef void(*AddPlatformOptions)(
     boost::program_options::options_description& config);
 extern "C" void add_platform_options(

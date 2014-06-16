@@ -24,7 +24,6 @@
 #include "fb_device.h"
 #include "framebuffer_bundle.h"
 #include "buffer.h"
-#include "hwc_fallback_gl_renderer.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -48,20 +47,6 @@ mga::FBDevice::FBDevice(
 void mga::FBDevice::post_gl(SwappingGLContext const& context)
 {
     context.swap_buffers();
-    post(context);
-}
-
-void mga::FBDevice::post_overlays(
-    SwappingGLContext const& context,
-    RenderableList const& list,
-    RenderableListCompositor const& compositor)
-{
-    compositor.render(list, context);
-    post(context);
-}
-
-void mga::FBDevice::post(SwappingGLContext const& context)
-{
     auto const& buffer = context.last_rendered_buffer();
     auto native_buffer = buffer->native_buffer_handle();
     native_buffer->wait_for_content();
@@ -69,6 +54,12 @@ void mga::FBDevice::post(SwappingGLContext const& context)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
     }
+}
+
+bool mga::FBDevice::post_overlays(
+    SwappingGLContext const&, RenderableList const&, RenderableListCompositor const&)
+{
+    return false;
 }
 
 bool mga::FBDevice::apply_orientation(MirOrientation) const

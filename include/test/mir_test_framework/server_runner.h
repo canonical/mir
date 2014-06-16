@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,13 +13,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_FRAMEWORK_IN_PROCESS_SERVER_H_
-#define MIR_TEST_FRAMEWORK_IN_PROCESS_SERVER_H_
-
-#include "mir_test_framework/server_runner.h"
+#ifndef MIR_TEST_FRAMEWORK_SERVER_RUNNER_H_
+#define MIR_TEST_FRAMEWORK_SERVER_RUNNER_H_
 
 #include <gtest/gtest.h>
 
@@ -32,23 +30,31 @@ class DisplayServer;
 class DefaultServerConfiguration;
 }
 
-
 namespace mir_test_framework
 {
-/// Fixture for running Mir server in test process
-struct InProcessServer : testing::Test, private ServerRunner
+/// Utility for running Mir server in test process
+struct ServerRunner
 {
+    ServerRunner();
+    virtual ~ServerRunner();
+
     /// Starts the server
-    /// \warning don't forget to call this if you override SetUp()
-    void SetUp() override { ServerRunner::start_server(); }
+    void start_server();
 
     /// Stops the server
-    /// \warning don't forget to call this if you override TearDown()
-    void TearDown() override { ServerRunner::stop_server(); }
+    void stop_server();
 
     /// \return a connection string for a new client to connect to the server
-    using ServerRunner::new_connection;
+    std::string new_connection();
+
+private:
+    mir::DisplayServer* start_mir_server();
+    virtual mir::DefaultServerConfiguration& server_config() = 0;
+
+    char const* const old_env;
+    std::thread server_thread;
+    mir::DisplayServer* display_server = 0;
 };
 }
 
-#endif /* MIR_TEST_FRAMEWORK_IN_PROCESS_SERVER_H_ */
+#endif /* MIR_TEST_FRAMEWORK_SERVER_RUNNER_H_ */
