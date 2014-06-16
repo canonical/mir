@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/server_runner.h"
 
 #include "mir/default_server_configuration.h"
 #include "mir/display_server.h"
@@ -35,43 +35,42 @@ namespace
 char const* const env_no_file = "MIR_SERVER_NO_FILE";
 }
 
-mtf::InProcessServer::InProcessServer() :
+mtf::ServerRunner::ServerRunner() :
     old_env(getenv(env_no_file))
 {
     if (!old_env) setenv(env_no_file, "", true);
 }
 
-void mtf::InProcessServer::SetUp()
+void mtf::ServerRunner::start_server()
 {
     display_server = start_mir_server();
     ASSERT_TRUE(display_server);
 }
 
-std::string mtf::InProcessServer::new_connection()
+std::string mtf::ServerRunner::new_connection()
 {
     char connect_string[64] = {0};
     sprintf(connect_string, "fd://%d", server_config().the_connector()->client_socket_fd());
     return connect_string;
 }
 
-void mtf::InProcessServer::TearDown()
+void mtf::ServerRunner::stop_server()
 {
-    ASSERT_TRUE(display_server)
-        << "Did you override SetUp() and forget to call mtf::InProcessServer::SetUp()?";
+    ASSERT_TRUE(display_server);
     display_server->stop();
 }
 
-mtf::InProcessServer::~InProcessServer()
+mtf::ServerRunner::~ServerRunner()
 {
     if (server_thread.joinable()) server_thread.join();
 
     if (!old_env) unsetenv(env_no_file);
 }
 
-mir::DisplayServer* mtf::InProcessServer::start_mir_server()
+mir::DisplayServer* mtf::ServerRunner::start_mir_server()
 {
     std::mutex mutex;
-    std::condition_variable cv;
+    std::condition_variable started;
     mir::DisplayServer* result{nullptr};
 
     server_thread = std::thread([&]
@@ -80,9 +79,9 @@ mir::DisplayServer* mtf::InProcessServer::start_mir_server()
         {
             mir::run_mir(server_config(), [&](mir::DisplayServer& ds)
             {
-                std::unique_lock<std::mutex> lock(mutex);
+                std::lock_guard<std::mutex> lock(mutex);
                 result = &ds;
-                cv.notify_one();
+                started.notify_one();
             });
         }
         catch (std::exception const& e)
@@ -91,13 +90,8 @@ mir::DisplayServer* mtf::InProcessServer::start_mir_server()
         }
     });
 
-    using namespace std::chrono;
-    auto const time_limit = system_clock::now() + seconds(2);
-
     std::unique_lock<std::mutex> lock(mutex);
-
-    while (!result && time_limit > system_clock::now())
-        cv.wait_until(lock, time_limit);
+    started.wait_for(lock, std::chrono::seconds(2), [&]{ return !!result; });
 
     return result;
 }

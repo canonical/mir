@@ -108,7 +108,7 @@ mgm::DisplayBuffer::DisplayBuffer(
       scheduled_bufobj{nullptr},
       platform(platform),
       listener(listener),
-      drm(platform->drm),
+      drm(*platform->drm),
       outputs(outputs),
       surface_gbm{std::move(surface_gbm_param)},
       egl{gl_config},
