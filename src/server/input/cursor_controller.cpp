@@ -95,7 +95,7 @@ struct UpdateCursorOnSceneChanges : ms::Observer
     
     void add_surface_observer(ms::Surface* surface)
     {
-        auto observer = std::make_shared<UpdateCursorOnSurfaceChanges>(cursor_controller);
+        auto const observer = std::make_shared<UpdateCursorOnSurfaceChanges>(cursor_controller);
         surface->add_observer(observer);
 
         {
@@ -155,7 +155,7 @@ private:
 std::shared_ptr<mi::Surface> topmost_surface_containing_point(
     std::shared_ptr<mi::InputTargets> const& targets, geom::Point const& point)
 {
-    std::shared_ptr<mi::Surface> top_surface_at_point = nullptr;
+    std::shared_ptr<mi::Surface> top_surface_at_point;
     targets->for_each([&top_surface_at_point, &point]
         (std::shared_ptr<mi::Surface> const& surface) 
         {
@@ -190,6 +190,7 @@ mi::CursorController::~CursorController()
     }
     catch (...)
     {
+        std::terminate();
     }
 }
 

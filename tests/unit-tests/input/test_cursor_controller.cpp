@@ -390,11 +390,9 @@ TEST(CursorController, cursor_image_not_reset_needlessly)
 
     // Here we also demonstrate that the cursor begins at 0,0.
     StubInputSurface surface1{geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
-                                  geom::Size{geom::Width{1}, geom::Height{1}}},
-                              image};
+                                  geom::Size{geom::Width{1}, geom::Height{1}}}, image};
     StubInputSurface surface2{geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
-                                  geom::Size{geom::Width{1}, geom::Height{1}}},
-                              image};
+                                  geom::Size{geom::Width{1}, geom::Height{1}}}, image};
     StubInputTargets targets({});
     MockCursor cursor;
     

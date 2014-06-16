@@ -23,7 +23,6 @@
 #include "mir/scene/surface_factory.h"
 #include "mir/scene/null_observer.h"
 #include "mir/scene/null_surface_observer.h"
-#include "mir/compositor/scene.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -31,7 +30,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test/event_factory.h"
 #include "mir_test/wait_condition.h"
-#include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/server_runner.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
 #include "mir_test_framework/input_testing_client_configuration.h"
@@ -224,10 +223,12 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
     
 };
 
-struct DeferredInProcessServer : mtf::InProcessServer
+struct DeferredInProcessServer : testing::Test, private mtf::ServerRunner
 {
-    void SetUp() override { /* TODO this is a nasty frig around the unfortunate coupling in InProcessServer */ }
-    void start_server() { mtf::InProcessServer::SetUp(); }
+    void TearDown() override { ServerRunner::stop_server(); }
+
+    using ServerRunner::start_server;
+    using ServerRunner::new_connection;
 };
 
 struct TestClientCursorAPI : DeferredInProcessServer
