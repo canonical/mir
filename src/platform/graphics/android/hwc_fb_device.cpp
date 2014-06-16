@@ -35,34 +35,6 @@ namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 
-namespace 
-{
-class HWC10Context : public mga::SwappingGLContext
-{
-public:
-    HWC10Context(mga::SwappingGLContext const& context,
-                 std::function<void()> const& swapping_fn) :
-        wrapped_context(context),
-        swapping_fn(swapping_fn)
-    {
-    }
-    void swap_buffers() const override
-    {
-        //hwc 1.0 is weird in that the driver gets to call eglSwapBuffers.
-        swapping_fn();
-    }
-
-    std::shared_ptr<mg::Buffer> last_rendered_buffer() const
-    {
-        return wrapped_context.last_rendered_buffer();
-    }
-
-private:
-    mga::SwappingGLContext const& wrapped_context;
-    std::function<void()> const swapping_fn;
-};
-}
-
 mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
                               std::shared_ptr<HwcWrapper> const& hwc_wrapper,
                               std::shared_ptr<framebuffer_device_t> const& fb_device,
@@ -75,10 +47,11 @@ mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_
     layer_list.additional_layers_begin()->set_layer_type(mga::LayerType::skip);
 }
 
-void mga::HwcFbDevice::gpu_render()
+void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
 {
     if (auto display_list = layer_list.native_list().lock())
     {
+        hwc_wrapper->prepare(*display_list);
         display_list->dpy = eglGetCurrentDisplay();
         display_list->sur = eglGetCurrentSurface(EGL_DRAW);
 
@@ -89,45 +62,10 @@ void mga::HwcFbDevice::gpu_render()
     else
     {
         std::stringstream ss;
-        ss << "error locking list during hwc set()";
-        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
-    }
-}
-
-void mga::HwcFbDevice::prepare()
-{
-    if (auto display_list = layer_list.native_list().lock())
-    {
-        hwc_wrapper->prepare(*display_list);
-    }
-    else
-    {
-        std::stringstream ss;
         ss << "error accessing list during hwc prepare()";
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
-}
 
-void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
-{
-    prepare();
-    gpu_render();
-    post(context);
-}
-
-void mga::HwcFbDevice::post_overlays(
-    SwappingGLContext const& context,
-    RenderableList const& list,
-    RenderableListCompositor const& compositor)
-{
-    prepare();
-    HWC10Context hwc10_context(context, std::bind(&HwcFbDevice::gpu_render, this));
-    compositor.render(list, hwc10_context);
-    post(hwc10_context);
-}
-
-void mga::HwcFbDevice::post(SwappingGLContext const& context)
-{
     auto lg = lock_unblanked();
 
     auto const& buffer = context.last_rendered_buffer();
@@ -139,4 +77,12 @@ void mga::HwcFbDevice::post(SwappingGLContext const& context)
     }
 
     coordinator->wait_for_vsync();
+}
+
+bool mga::HwcFbDevice::post_overlays(
+    SwappingGLContext const&,
+    RenderableList const&,
+    RenderableListCompositor const&)
+{
+    return false;
 }
