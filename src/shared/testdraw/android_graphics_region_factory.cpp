@@ -66,7 +66,7 @@ public:
     std::shared_ptr<MirGraphicsRegion> graphic_region_from_handle(
         mir::graphics::NativeBuffer& native_buffer)
     {
-        native_buffer.wait_for_content(mir::graphics::Access::write);
+        native_buffer.ensure_available_for(mir::graphics::Access::write);
         auto anwb = native_buffer.anwb();
         int *vaddr;
         int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;

@@ -54,8 +54,8 @@ struct MockAndroidNativeBuffer : public graphics::NativeBuffer
     MOCK_CONST_METHOD0(handle, buffer_handle_t());
     MOCK_CONST_METHOD0(copy_fence, graphics::android::NativeFence());
 
-    MOCK_METHOD1(wait_for_content, void(graphics::Access));
-    MOCK_METHOD2(update_fence, void(graphics::android::NativeFence&, graphics::Access));
+    MOCK_METHOD1(ensure_available_for, void(graphics::Access));
+    MOCK_METHOD2(update_usage, void(graphics::android::NativeFence&, graphics::Access));
 
     ANativeWindowBuffer stub_anwb;
     native_handle_t native_handle;

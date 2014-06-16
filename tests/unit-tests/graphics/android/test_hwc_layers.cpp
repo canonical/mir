@@ -233,14 +233,14 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_fbtarget)
 TEST_F(HWCLayersTest, buffer_fence_updates)
 {
     int fake_fence = 552;
-    EXPECT_CALL(*native_handle_1, update_fence(fake_fence))
+    EXPECT_CALL(*native_handle_1, update_usage(fake_fence))
         .Times(1);
     type = mga::LayerType::framebuffer_target;
     mga::HWCLayer layer(type, screen_position, alpha_enabled, list, list_index);
 
     layer.set_buffer(mock_buffer);
     hwc_layer->releaseFenceFd = fake_fence;
-    layer.update_fence_and_release_buffer();
+    layer.update_usage_and_release_buffer();
 }
 
 TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)

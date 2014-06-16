@@ -78,10 +78,10 @@ TEST(AndroidAndroidNativeBuffer, wait_for_fence)
 
     auto native_handle_resource = std::make_shared<ANativeWindowBuffer>();
     mga::AndroidNativeBuffer buffer(native_handle_resource, fence);
-    buffer.wait_for_content();
+    buffer.ensure_available_for();
 }
 
-TEST(AndroidAndroidNativeBuffer, update_fence)
+TEST(AndroidAndroidNativeBuffer, update_usage)
 {
     int fake_fd = 48484;
     auto fence = std::make_shared<mtd::MockFence>();
@@ -90,5 +90,5 @@ TEST(AndroidAndroidNativeBuffer, update_fence)
 
     auto native_handle_resource = std::make_shared<ANativeWindowBuffer>();
     mga::AndroidNativeBuffer buffer(native_handle_resource, fence);
-    buffer.update_fence(fake_fd);
+    buffer.update_usage(fake_fd);
 }

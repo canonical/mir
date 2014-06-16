@@ -40,8 +40,8 @@ struct AndroidNativeBuffer : public graphics::NativeBuffer
     buffer_handle_t handle() const;
     NativeFence copy_fence() const;
 
-    void wait_for_content(Access);
-    void update_fence(NativeFence& merge_fd, Access);
+    void ensure_available_for(Access);
+    void update_usage(NativeFence& merge_fd, Access);
 
 private:
     std::shared_ptr<Fence> fence;

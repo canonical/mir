@@ -80,11 +80,11 @@ bool mga::HWCLayer::needs_gl_render() const
     return ((hwc_layer->compositionType == HWC_FRAMEBUFFER) || (hwc_layer->flags == HWC_SKIP_LAYER));
 }
 
-void mga::HWCLayer::update_fence_and_release_buffer()
+void mga::HWCLayer::update_usage_and_release_buffer()
 {
     if (hwc_layer->compositionType != HWC_FRAMEBUFFER)
     { 
-        associated_buffer->update_fence(hwc_layer->releaseFenceFd, mir::graphics::Access::read);
+        associated_buffer->update_usage(hwc_layer->releaseFenceFd, mir::graphics::Access::read);
         hwc_layer->releaseFenceFd = -1;
         hwc_layer->acquireFenceFd = -1;
         associated_buffer.reset();

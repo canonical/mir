@@ -30,7 +30,7 @@ mga::AndroidNativeBuffer::AndroidNativeBuffer(
 {
 }
 
-void mga::AndroidNativeBuffer::wait_for_content(Access intent)
+void mga::AndroidNativeBuffer::ensure_available_for(Access intent)
 {
     if ((fence_access == mg::Access::read) && (intent == mg::Access::read))
         return;
@@ -38,7 +38,7 @@ void mga::AndroidNativeBuffer::wait_for_content(Access intent)
     fence->wait();
 }
 
-void mga::AndroidNativeBuffer::update_fence(NativeFence& merge_fd, Access access)
+void mga::AndroidNativeBuffer::update_usage(NativeFence& merge_fd, Access access)
 {
     fence->merge_with(merge_fd);
     fence_access = access;

@@ -29,6 +29,7 @@ namespace
 {
 static void invalidate_hook(const struct hwc_procs* /*procs*/)
 {
+    printf("INVALIDATE!\n");
 }
 
 static void vsync_hook(const struct hwc_procs* procs, int /*disp*/, int64_t /*timestamp*/)
