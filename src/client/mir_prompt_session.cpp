@@ -65,9 +65,9 @@ MirWaitHandle* MirPromptSession::start(pid_t application_pid, mir_prompt_session
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         parameters.set_application_pid(application_pid);
-        start_wait_handle.expect_result();
     }
 
+    start_wait_handle.expect_result();
     server.start_prompt_session(
         0,
         &parameters,
@@ -80,10 +80,7 @@ MirWaitHandle* MirPromptSession::start(pid_t application_pid, mir_prompt_session
 
 MirWaitHandle* MirPromptSession::stop(mir_prompt_session_callback callback, void* context)
 {
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        stop_wait_handle.expect_result();
-    }
+    stop_wait_handle.expect_result();
 
     server.stop_prompt_session(
         0,
@@ -102,9 +99,9 @@ MirWaitHandle* MirPromptSession::add_prompt_provider(pid_t provider_pid,
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         prompt_provider.set_pid(provider_pid);
-        add_result_wait_handle.expect_result();
     }
 
+    add_result_wait_handle.expect_result();
     server.add_prompt_provider(
         0,
         &prompt_provider,
@@ -176,6 +173,8 @@ MirWaitHandle* MirPromptSession::new_fds_for_prompt_providers(
 {
     mir::protobuf::SocketFDRequest request;
     request.set_number(no_of_fds);
+
+    fds_for_prompt_providers_wait_handle.expect_result();
 
     server.new_fds_for_prompt_providers(
         nullptr,

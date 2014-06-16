@@ -410,8 +410,7 @@ TEST_F(PromptSessionClientAPI, server_retrieves_child_provider_sessions)
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
-    mir_prompt_session_new_fds_for_prompt_providers(prompt_session, no_of_prompt_providers, &client_fd_callback, this);
-    ASSERT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
+    mir_wait_for(mir_prompt_session_new_fds_for_prompt_providers(prompt_session, no_of_prompt_providers, &client_fd_callback, this));
 
     DummyPromptProvider child_provider1{fd_connect_string(actual_fds[0]), child_provider_name[0]};
     DummyPromptProvider child_provider2{fd_connect_string(actual_fds[1]), child_provider_name[1]};
