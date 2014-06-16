@@ -145,6 +145,7 @@ struct UpdateCursorOnSceneChanges : ms::Observer
         surface_observers.clear();
     }
     
+private:
     mi::CursorController* const cursor_controller;
 
     std::mutex surface_observers_guard;
@@ -183,7 +184,13 @@ mi::CursorController::CursorController(std::shared_ptr<mi::InputTargets> const& 
 
 mi::CursorController::~CursorController()
 {
-    input_targets->remove_observer(observer);
+    try 
+    {
+        input_targets->remove_observer(observer);
+    }
+    catch (...)
+    {
+    }
 }
 
 void mi::CursorController::set_cursor_image_locked(std::lock_guard<std::mutex> const&,
@@ -223,8 +230,6 @@ void mi::CursorController::update_cursor_image()
 void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
 {
     std::lock_guard<std::mutex> lg(cursor_state_guard);
-
-    assert(input_targets);
 
     cursor_location = geom::Point{geom::X{abs_x}, geom::Y{abs_y}};
     
