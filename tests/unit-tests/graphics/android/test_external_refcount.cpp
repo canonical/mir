@@ -78,7 +78,7 @@ TEST(AndroidAndroidNativeBuffer, wait_for_fence)
 
     auto native_handle_resource = std::make_shared<ANativeWindowBuffer>();
     mga::AndroidNativeBuffer buffer(native_handle_resource, fence);
-    buffer.ensure_available_for();
+    buffer.ensure_available_for(mir::graphics::Access::write);
 }
 
 TEST(AndroidAndroidNativeBuffer, update_usage)
@@ -90,5 +90,5 @@ TEST(AndroidAndroidNativeBuffer, update_usage)
 
     auto native_handle_resource = std::make_shared<ANativeWindowBuffer>();
     mga::AndroidNativeBuffer buffer(native_handle_resource, fence);
-    buffer.update_usage(fake_fd);
+    buffer.update_usage(fake_fd, mir::graphics::Access::write);
 }
