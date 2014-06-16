@@ -27,6 +27,7 @@
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/option.h"
 #include "mir/graphics/native_buffer.h"
+#include "mir/emergency_cleanup_registry.h"
 
 #include "drm_close_threadsafe.h"
 
@@ -126,15 +127,29 @@ std::shared_ptr<mgm::InternalNativeDisplay> mgm::Platform::internal_native_displ
 bool mgm::Platform::internal_display_clients_present;
 mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                         std::shared_ptr<VirtualTerminal> const& vt,
+                        EmergencyCleanupRegistry& emergency_cleanup_registry,
                         BypassOption bypass_option)
     : udev{std::make_shared<mir::udev::Context>()},
+      drm{std::make_shared<helpers::DRMHelper>()},
       listener{listener},
       vt{vt},
       bypass_option_{bypass_option}
 {
-    drm.setup(udev);
-    gbm.setup(drm);
+    drm->setup(udev);
+    gbm.setup(*drm);
     internal_display_clients_present = false;
+
+    std::weak_ptr<VirtualTerminal> weak_vt = vt;
+    std::weak_ptr<helpers::DRMHelper> weak_drm = drm;
+    emergency_cleanup_registry.add(
+        [weak_vt,weak_drm]
+        {
+            if (auto const vt = weak_vt.lock())
+                try { vt->restore(); } catch (...) {}
+
+            if (auto const drm = weak_drm.lock())
+                try { drm->drop_master(); } catch (...) {}
+        });
 }
 
 mgm::Platform::~Platform()
@@ -164,7 +179,7 @@ std::shared_ptr<mg::Display> mgm::Platform::create_display(
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::Platform::get_ipc_package()
 {
-    return std::make_shared<MesaPlatformIPCPackage>(drm.get_authenticated_fd());
+    return std::make_shared<MesaPlatformIPCPackage>(drm->get_authenticated_fd());
 }
 
 void mgm::Platform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
@@ -186,7 +201,7 @@ void mgm::Platform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buff
 
 void mgm::Platform::drm_auth_magic(unsigned int magic)
 {
-    drm.auth_magic(magic);
+    drm->auth_magic(magic);
 }
 
 std::shared_ptr<mg::InternalClient> mgm::Platform::create_internal_client()
@@ -207,7 +222,10 @@ mgm::BypassOption mgm::Platform::bypass_option() const
     return bypass_option_;
 }
 
-extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& report)
+extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
+    std::shared_ptr<mo::Option> const& options,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<DisplayReport> const& report)
 {
     auto real_fops = std::make_shared<RealVTFileOperations>();
     auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
@@ -220,8 +238,9 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo:
     auto bypass_option = mgm::BypassOption::allowed;
     if (!options->get<bool>(bypass_option_name))
         bypass_option = mgm::BypassOption::prohibited;
-        
-    return std::make_shared<mgm::Platform>(report, vt, bypass_option);
+
+    return std::make_shared<mgm::Platform>(
+        report, vt, *emergency_cleanup_registry, bypass_option);
 }
 
 extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display)

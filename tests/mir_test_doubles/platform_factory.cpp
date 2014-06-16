@@ -26,6 +26,7 @@
 
 #include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
+#include "mir_test_doubles/null_emergency_cleanup.h"
 #include "mir/options/program_option.h"
 
 namespace mtd = mir::test::doubles;
@@ -36,6 +37,7 @@ auto mtd::create_platform_with_null_dependencies()
 {
     return graphics::create_platform(
         std::make_shared<options::ProgramOption>(),
+        std::make_shared<NullEmergencyCleanup>(),
         report::null_display_report());
 }
 
@@ -52,6 +54,7 @@ auto mtd::create_mesa_platform_with_null_dependencies()
     return std::make_shared<graphics::mesa::Platform>(
         report::null_display_report(),
         std::make_shared<NullVirtualTerminal>(),
+        *std::make_shared<NullEmergencyCleanup>(),
         graphics::mesa::BypassOption::allowed);
 }
 #endif

@@ -156,6 +156,13 @@ bool me::WindowManager::handle(MirEvent const& event)
             return true;
         }
         else if ((event.key.modifiers & mir_key_modifier_alt) &&
+                 (event.key.modifiers & mir_key_modifier_ctrl) &&
+                 (event.key.scan_code == KEY_ESC))
+        {
+            std::abort();
+            return true;
+        }
+        else if ((event.key.modifiers & mir_key_modifier_alt) &&
                  (event.key.modifiers & mir_key_modifier_ctrl))
         {
             MirOrientation orientation = mir_orientation_normal;
