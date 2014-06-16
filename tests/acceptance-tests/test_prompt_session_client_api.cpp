@@ -193,9 +193,30 @@ void client_fd_callback(MirPromptSession*, size_t count, int const* fds, void* c
     self->cv.notify_one();
 }
 
+struct DummyPromptProvider
+{
+    DummyPromptProvider(char const* connect_string, char const* app_name) :
+        connection{mir_connect_sync(connect_string, app_name)}
+    {
+        EXPECT_THAT(connection, NotNull());
+    }
+
+    ~DummyPromptProvider() noexcept
+    {
+        mir_connection_release(connection);
+    }
+
+    MirConnection* const connection;
+};
+
 MATCHER_P(SessionWithPid, pid, "")
 {
     return arg->process_id() == pid;
+}
+
+MATCHER_P(SessionWithName, name, "")
+{
+    return arg->name() == name;
 }
 }
 
@@ -268,9 +289,8 @@ TEST_F(PromptSessionClientAPI, when_prompt_provider_connects_over_fd_prompt_prov
 
     EXPECT_CALL(*the_mock_prompt_session_listener(), prompt_provider_added(_, SessionWithPid(expected_pid)));
 
-    auto client_connection = mir_connect_sync(fd_connect_string(actual_fds[0]), __PRETTY_FUNCTION__);
+    DummyPromptProvider{fd_connect_string(actual_fds[0]), __PRETTY_FUNCTION__};
 
-    mir_connection_release(client_connection);
     mir_prompt_session_release_sync(prompt_session);
 }
 
@@ -361,7 +381,7 @@ TEST_F(PromptSessionClientAPI, server_retrieves_helper_session)
     mir_prompt_session_release_sync(prompt_session);
 }
 
-TEST_F(PromptSessionClientAPI, server_retrieves_provider_sessions)
+TEST_F(PromptSessionClientAPI, server_retrieves_existing_provider_sessions)
 {
     capture_server_prompt_session();
 
@@ -372,6 +392,31 @@ TEST_F(PromptSessionClientAPI, server_retrieves_provider_sessions)
     mir_prompt_session_add_prompt_provider_sync(prompt_session, another_prompt_provider_pid);
 
     EXPECT_THAT(list_providers_for(server_prompt_session), ElementsAre(existing_prompt_provider_session, another_existing_prompt_provider));
+
+    mir_prompt_session_release_sync(prompt_session);
+}
+
+TEST_F(PromptSessionClientAPI, server_retrieves_child_provider_sessions)
+{
+    static int const no_of_prompt_providers = 2;
+    char const* const child_provider_name[no_of_prompt_providers] =
+    {
+        "child_provider0",
+        "child_provider1"
+    };
+
+    capture_server_prompt_session();
+
+    MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
+        connection, application_session_pid, null_state_change_callback, this);
+
+    mir_prompt_session_new_fds_for_prompt_providers(prompt_session, no_of_prompt_providers, &client_fd_callback, this);
+    ASSERT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
+
+    DummyPromptProvider child_provider1{fd_connect_string(actual_fds[0]), child_provider_name[0]};
+    DummyPromptProvider child_provider2{fd_connect_string(actual_fds[1]), child_provider_name[1]};
+
+    EXPECT_THAT(list_providers_for(server_prompt_session), ElementsAre(SessionWithName(child_provider_name[0]), SessionWithName(child_provider_name[1])));
 
     mir_prompt_session_release_sync(prompt_session);
 }
