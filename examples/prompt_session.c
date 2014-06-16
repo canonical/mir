@@ -60,6 +60,9 @@ typedef struct MirDemoState
     MirPromptSession *prompt_session;
     pid_t  child_pid;
     MirPromptSessionState state;
+
+    int* client_fds;
+    unsigned int client_fd_count;
 } MirDemoState;
 ///\internal [MirDemoState_tag]
 
@@ -74,11 +77,23 @@ static void prompt_session_event_callback(MirPromptSession* prompt_session,
     MirDemoState* demo_state = (MirDemoState*)context;
     demo_state->state = state;
 
-    printf("Prompt Session state updated to %d\n", state);
+    printf("helper: Prompt Session state updated to %d\n", state);
     if (state == mir_prompt_session_state_stopped)
     {
         kill(demo_state->child_pid, SIGINT);
     }
+}
+
+static void client_fd_callback(MirPromptSession* prompt_session, size_t count, int const* fds, void* context)
+{
+    (void)prompt_session;
+    ((MirDemoState*)context)->client_fds = malloc(sizeof(int)*count);
+    unsigned int i = 0;
+    for (; i < count; i++)
+    {
+        ((MirDemoState*)context)->client_fds[i] = fds[i];
+    }
+    ((MirDemoState*)context)->client_fd_count = count;
 }
 ///\internal [Callback_tag]
 
@@ -122,14 +137,14 @@ void stop_session(MirDemoState* mcd, const char* name)
     printf("%s: Connection released\n", name);
 }
 
-void helper(const char* server, pid_t child_pid)
+void helper(const char* server)
 {
     MirDemoState mcd;
     mcd.connection = 0;
     mcd.surface = 0;
     mcd.prompt_session = 0;
-    mcd.child_pid = child_pid;
     mcd.state = mir_prompt_session_state_stopped;
+    mcd.client_fd_count = 0;
     start_session(server, "helper", &mcd);
 
     // We create a prompt session
@@ -139,13 +154,32 @@ void helper(const char* server, pid_t child_pid)
     assert(mcd.state == mir_prompt_session_state_started);
     puts("helper: Started prompt session");
 
-    MirBool add_result = mir_prompt_session_add_prompt_provider_sync(mcd.prompt_session, child_pid);
-    assert(add_result == mir_true);
-    printf("helper: added prompt provider pid: %d\n", child_pid);
+    mir_wait_for(mir_prompt_session_new_fds_for_prompt_providers(mcd.prompt_session, 1, client_fd_callback, &mcd));
+    assert(mcd.client_fd_count == 1);
+    puts("helper: Added waiting FD");
+
+    printf("helper: Starting child application 'mir_demo_client_basic' with fd://%d\n", mcd.client_fds[0]);
+    mcd.child_pid = fork();
+
+    if (mcd.child_pid == 0)
+    {
+        char buffer[128] = {0};
+        sprintf(buffer, "fd://%d", mcd.client_fds[0]);
+
+        char* args[4];
+        args[0] = "mir_demo_client_basic";
+        args[1] = "-m";
+        args[2] = &buffer[0];
+        args[3] = NULL;
+
+        errno = 0;
+        execvp("mir_demo_client_basic", args);
+        return;
+    }
 
     int status;
-    printf("helper: waiting on child app: %d\n", child_pid);
-    waitpid(child_pid, &status, 0);
+    printf("helper: Waiting on child application: %d\n", mcd.child_pid);
+    waitpid(mcd.child_pid, &status, 0);
 
     if (mcd.state == mir_prompt_session_state_started)
     {
@@ -160,41 +194,6 @@ void helper(const char* server, pid_t child_pid)
     puts("helper: Done");
 
     stop_session(&mcd, "helper");
-}
-
-void prompt_session_app(const char* server)
-{
-    MirDemoState mcd;
-    mcd.connection = 0;
-    mcd.surface = 0;
-    mcd.prompt_session = 0;
-    start_session(server, "prompt_session_app", &mcd);
-
-    // Identify a supported pixel format
-    MirPixelFormat pixel_format;
-    unsigned int valid_formats;
-    mir_connection_get_available_surface_formats(mcd.connection, &pixel_format, 1, &valid_formats);
-    MirSurfaceParameters const request_params =
-        {__PRETTY_FUNCTION__, 640, 480, pixel_format,
-         mir_buffer_usage_hardware, mir_display_output_id_invalid};
-
-    // ...we create a surface using that format and wait for callback to complete.
-    mcd.surface = mir_connection_create_surface_sync(mcd.connection, &request_params);
-
-    // We expect a surface handle;
-    // we expect it to be valid; and,
-    // we don't expect an error description
-    assert(mcd.surface != NULL);
-    assert(mir_surface_is_valid(mcd.surface));
-    assert(strcmp(mir_surface_get_error_message(mcd.surface), "") == 0);
-    puts("prompt_session_app: Surface created");
-
-    puts("prompt_session_app: Press any key to exit");
-    // Wait for stdin
-    getchar();
-    puts("prompt_session_app: Done");
-
-    stop_session(&mcd, "prompt_session_app");
 }
 
 // The main() function deals with parsing arguments and defaults
@@ -227,20 +226,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    // Start a new process.
-    // This simulates the helper starting a new application which it adds to the prompt session.
-    pid_t pid = fork();
-
-    if (pid == 0)
-    {
-        sleep(1);
-        prompt_session_app(server);
-    }
-    else if (pid > 0)
-    {
-        printf("helper: pid:%d , child:%d\n", getpid(), pid);
-        helper(server, pid);
-    }
-
+    helper(server);
     return 0;
 }
