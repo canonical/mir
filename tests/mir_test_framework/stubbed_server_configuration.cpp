@@ -235,7 +235,7 @@ mtf::StubbedServerConfiguration::StubbedServerConfiguration() :
 }
 
 geom::Size const mtf::StubbedServerConfiguration::display_bounds = geom::Size{
-    geom::Width{1600}, geom::Height{800}
+    geom::Width{1600}, geom::Height{1200}
 };
 
 std::shared_ptr<mg::Platform> mtf::StubbedServerConfiguration::the_graphics_platform()
