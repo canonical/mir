@@ -41,6 +41,8 @@
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
+#include "mir/frontend/prompt_session.h"
+#include "mir/scene/prompt_session_creation_parameters.h"
 
 #include "mir/geometry/rectangles.h"
 #include "client_buffer_tracker.h"
@@ -423,9 +425,16 @@ void mf::SessionMediator::screencast_buffer(
     done->Run();
 }
 
-std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::trusted_connect_handler() const
+std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::prompt_session_connect_handler() const
 {
-    return [](std::shared_ptr<frontend::Session> const&) {};
+    return [this](std::shared_ptr<frontend::Session> const& session)
+    {
+        auto prompt_session = weak_prompt_session.lock();
+        if (prompt_session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid prompt session"));
+
+        shell->add_prompt_provider_for(prompt_session, session);
+    };
 }
 
 void mf::SessionMediator::configure_cursor(
@@ -446,7 +455,7 @@ void mf::SessionMediator::configure_cursor(
 
         auto const id = frontend::SurfaceId(cursor_request->surfaceid().value());
         auto const surface = session->get_surface(id);
-        
+
         if (cursor_request->has_name())
         {
             auto const& image = cursor_images->image(cursor_request->name(), mg::default_cursor_size);
@@ -460,7 +469,7 @@ void mf::SessionMediator::configure_cursor(
     done->Run();
 }
 
-void mf::SessionMediator::new_fds_for_trusted_clients(
+void mf::SessionMediator::new_fds_for_prompt_providers(
     ::google::protobuf::RpcController* ,
     ::mir::protobuf::SocketFDRequest const* parameters,
     ::mir::protobuf::SocketFD* response,
@@ -473,8 +482,7 @@ void mf::SessionMediator::new_fds_for_trusted_clients(
         if (session.get() == nullptr)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-        // TODO write a handler that connects the new session to our trust session
-        auto const connect_handler = trusted_connect_handler();
+        auto const connect_handler = prompt_session_connect_handler();
 
         auto const fds_requested = parameters->number();
 
@@ -528,6 +536,83 @@ void mf::SessionMediator::drm_auth_magic(
             throw;
     }
 
+    done->Run();
+}
+
+void mf::SessionMediator::start_prompt_session(
+    ::google::protobuf::RpcController*,
+    const ::mir::protobuf::PromptSessionParameters* request,
+    ::mir::protobuf::Void* /*response*/,
+    ::google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto const session = weak_session.lock();
+
+        if (!session)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        if (weak_prompt_session.lock())
+            BOOST_THROW_EXCEPTION(std::runtime_error("Cannot start another prompt session"));
+
+        ms::PromptSessionCreationParameters parameters;
+        parameters.application_pid = request->application_pid();
+
+        report->session_start_prompt_session_called(session->name(), parameters.application_pid);
+
+        weak_prompt_session = shell->start_prompt_session_for(session, parameters);
+    }
+    done->Run();
+}
+
+void mf::SessionMediator::add_prompt_provider(
+    ::google::protobuf::RpcController*,
+    const ::mir::protobuf::PromptProvider* request,
+    ::mir::protobuf::Void*,
+    ::google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto const session = weak_session.lock();
+
+        if (!session)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        auto const prompt_session = weak_prompt_session.lock();
+
+        if (!prompt_session)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid prompt session"));
+
+        report->session_add_prompt_provider_called(session->name(), request->pid());
+        shell->add_prompt_provider_process_for(prompt_session, request->pid());
+    }
+    done->Run();
+}
+
+void mf::SessionMediator::stop_prompt_session(
+    ::google::protobuf::RpcController*,
+    const ::mir::protobuf::Void*,
+    ::mir::protobuf::Void*,
+    ::google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto const session = weak_session.lock();
+
+        if (!session)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        auto const prompt_session = weak_prompt_session.lock();
+
+        if (!prompt_session)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid prompt session"));
+
+        weak_prompt_session.reset();
+
+        report->session_stop_prompt_session_called(session->name());
+
+        shell->stop_prompt_session(prompt_session);
+    }
     done->Run();
 }
 

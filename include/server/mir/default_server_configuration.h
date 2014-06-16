@@ -93,6 +93,8 @@ class SurfaceConfigurator;
 class SurfaceStackModel;
 class SurfaceStack;
 class SceneReport;
+class PromptSessionListener;
+class PromptSessionManager;
 }
 namespace graphics
 {
@@ -231,6 +233,8 @@ public:
     virtual std::shared_ptr<scene::PlacementStrategy>   the_placement_strategy();
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
+    virtual std::shared_ptr<scene::PromptSessionListener> the_prompt_session_listener();
+    virtual std::shared_ptr<scene::PromptSessionManager>  the_prompt_session_manager();
     /** @} */
 
     /** @name internal scene configuration
@@ -365,6 +369,8 @@ protected:
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<graphics::GLProgramFactory> gl_program_factory;
     CachedPtr<graphics::GLConfig> gl_config;
+    CachedPtr<scene::PromptSessionListener> prompt_session_listener;
+    CachedPtr<scene::PromptSessionManager> prompt_session_manager;
     CachedPtr<scene::SessionCoordinator> session_coordinator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
 

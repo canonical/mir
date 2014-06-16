@@ -100,7 +100,7 @@ message Surface {
   optional int32 pixel_format = 4;
   optional int32 buffer_usage = 5;
   optional Buffer buffer = 6;
-  
+
   repeated sint32 fd = 7;
   optional int32 fds_on_side_channel = 8;
 
@@ -185,12 +185,19 @@ message SocketFDRequest {
   required int32 number = 1;
 }
 
-
 message SocketFD {
   repeated sint32 fd = 1;
   optional int32  fds_on_side_channel = 2;
 
   optional string error = 127;
+}
+
+message PromptProvider {
+  required int32 pid = 1;
+}
+
+message PromptSessionParameters {
+  required int32 application_pid = 1;
 }
 
 service DisplayServer {
@@ -212,7 +219,11 @@ service DisplayServer {
   rpc create_screencast(ScreencastParameters) returns (Screencast);
   rpc screencast_buffer(ScreencastId) returns (Buffer);
   rpc release_screencast(ScreencastId) returns (Void);
-  
+
   rpc configure_cursor(CursorSetting) returns (Void);
-  rpc new_fds_for_trusted_clients(SocketFDRequest) returns (SocketFD);
+  rpc new_fds_for_prompt_providers(SocketFDRequest) returns (SocketFD);
+
+  rpc start_prompt_session(PromptSessionParameters) returns (Void);
+  rpc add_prompt_provider(PromptProvider) returns (Void);
+  rpc stop_prompt_session(Void) returns (Void);
 }
