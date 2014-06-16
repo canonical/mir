@@ -24,6 +24,10 @@
 char const *const mir_default_cursor_name = "default";
 char const *const mir_disabled_cursor_name = "disabled";
 
+MirCursorConfiguration::MirCursorConfiguration(char const* s_name)
+{
+    s_name ? name = std::string(s_name) : name = std::string();
+}
 
 void mir_cursor_configuration_destroy(MirCursorConfiguration *cursor)
 {
@@ -34,8 +38,7 @@ MirCursorConfiguration* mir_cursor_configuration_from_name(char const* name)
 {
     try 
     {
-        std::unique_ptr<MirCursorConfiguration> c(new MirCursorConfiguration);
-        c->name = name ? std::string(name) : std::string();
+        std::unique_ptr<MirCursorConfiguration> c(new MirCursorConfiguration(name));
     
         return c.release();
     }

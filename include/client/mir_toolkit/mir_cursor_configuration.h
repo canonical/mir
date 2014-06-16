@@ -18,6 +18,8 @@
 #ifndef MIR_TOOLKIT_MIR_CURSOR_H_
 #define MIR_TOOLKIT_MIR_CURSOR_H_
 
+#include <mir_toolkit/common.h>
+
 /**
  * Opaque structure containing cursor parameterization. Create with mir_cursor* family.
  * Used with mir_surface_configure_cursor.
@@ -31,17 +33,6 @@ typedef struct MirCursorConfiguration MirCursorConfiguration;
  */
 extern "C" {
 #endif
-
-/**
- * A special cursor name for use with mir_cursor_configuration_from_name
- * representing the system default cursor.
- */
-extern char const *const mir_default_cursor_name;
-/**
- * A special cursor name for use with mir_cursor_configuration_from_name
- * representing a disabled cursor image.
- */
-extern char const *const mir_disabled_cursor_name;
 
 /**
  * Release resources assosciated with cursor parameters

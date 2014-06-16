@@ -34,6 +34,8 @@
 #include "mir/abnormal_exit.h"
 #include "mir/emergency_cleanup.h"
 
+#include "mir_toolkit/common.h"
+
 #include <boost/throw_exception.hpp>
 
 #include "builtin_cursor_images.h"
@@ -138,7 +140,7 @@ mir::DefaultServerConfiguration::the_default_cursor_image()
     return default_cursor_image(
         [this]()
         {
-            return the_cursor_images()->image("default", default_cursor_size);
+            return the_cursor_images()->image(mir_default_cursor_name, default_cursor_size);
         });
 }
 
