@@ -76,8 +76,6 @@ private:
         std::weak_ptr<Session> session;
         ParticipantType participant_type;
         uint insert_order;
-
-        Session* session_fun() const { return session.lock().get(); }
     };
 
     /**
@@ -100,10 +98,14 @@ private:
             ordered_unique<
                 composite_key<
                     Participant,
-                    const_mem_fun<Participant, Session*, &Participant::session_fun>,
+                    member<Participant, std::weak_ptr<Session>, &Participant::session>,
                     member<Participant, ParticipantType, &Participant::participant_type>,
                     member<Participant, PromptSession*, &Participant::prompt_session>
-                >
+                >,
+                composite_key_compare<
+                    std::owner_less<std::weak_ptr<Session>>,
+                    std::less<ParticipantType>,
+                    std::less<PromptSession*>>
             >
         >
     > PromptSessionParticipants;

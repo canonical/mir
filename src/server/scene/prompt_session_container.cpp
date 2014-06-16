@@ -94,16 +94,13 @@ bool ms::PromptSessionContainer::insert_participant(PromptSession* prompt_sessio
 bool ms::PromptSessionContainer::remove_participant(PromptSession* prompt_session, std::weak_ptr<Session> const& session, ParticipantType participant_type)
 {
     std::unique_lock<std::mutex> lk(mutex);
-    if (auto locked_session = session.lock())
-    {
-        participant_by_session::iterator it = participant_index.find(boost::make_tuple(locked_session.get(), participant_type, prompt_session));
-        if (it == participant_index.end())
-            return false;
 
-        participant_index.erase(it);
-        return true;
-    }
-    return false;
+    participant_by_session::iterator it = participant_index.find(boost::make_tuple(session, participant_type, prompt_session));
+    if (it == participant_index.end())
+        return false;
+
+    participant_index.erase(it);
+    return true;
 }
 
 void ms::PromptSessionContainer::for_each_participant_in_prompt_session(
@@ -128,19 +125,17 @@ void ms::PromptSessionContainer::for_each_prompt_session_with_participant(
     std::function<void(std::shared_ptr<PromptSession> const&)> f) const
 {
     std::unique_lock<std::mutex> lk(mutex);
-    if (auto locked_session = participant.lock())
+
+    participant_by_session::iterator it,end;
+    boost::tie(it,end) = participant_index.equal_range(boost::make_tuple(participant, participant_type));
+
+    for (; it != end; ++it)
     {
-        participant_by_session::iterator it,end;
-        boost::tie(it,end) = participant_index.equal_range(boost::make_tuple(locked_session.get(), participant_type));
+        Participant const& participant = *it;
 
-        for (; it != end; ++it)
-        {
-            Participant const& participant = *it;
-
-            auto tsit = prompt_sessions.find(participant.prompt_session);
-            if (tsit != prompt_sessions.end())
-                f(tsit->second);
-        }
+        auto tsit = prompt_sessions.find(participant.prompt_session);
+        if (tsit != prompt_sessions.end())
+            f(tsit->second);
     }
 }
 
@@ -149,19 +144,16 @@ void ms::PromptSessionContainer::for_each_prompt_session_with_participant(
     std::function<void(std::shared_ptr<PromptSession> const&, ParticipantType)> f) const
 {
     std::unique_lock<std::mutex> lk(mutex);
-    if (auto locked_session = participant.lock())
+    participant_by_session::iterator it,end;
+    boost::tie(it,end) = participant_index.equal_range(participant);
+
+    for (; it != end; ++it)
     {
-        participant_by_session::iterator it,end;
-        boost::tie(it,end) = participant_index.equal_range(locked_session.get());
+        Participant const& participant = *it;
 
-        for (; it != end; ++it)
-        {
-            Participant const& participant = *it;
-
-            auto tsit = prompt_sessions.find(participant.prompt_session);
-            if (tsit != prompt_sessions.end())
-                f(tsit->second, participant.participant_type);
-        }
+        auto tsit = prompt_sessions.find(participant.prompt_session);
+        if (tsit != prompt_sessions.end())
+            f(tsit->second, participant.participant_type);
     }
 }
 
