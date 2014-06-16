@@ -30,41 +30,6 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-namespace
-{
-bool plane_alpha_is_opaque(mg::Renderable const& renderable)
-{
-    if (!renderable.alpha_enabled())
-        return true;
-
-    //planeAlpha is a uint8_t sized field
-    float const tolerance{1.0f/512.0f}; 
-    float const alpha_value{renderable.alpha()};
-    if ((alpha_value < 1.0f + tolerance) && 
-        (alpha_value > 1.0f - tolerance))
-        return true;
-    return false;
-}
-
-bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
-{
-    if (list.empty())
-        return true;
-
-    for(auto const& renderable : list)
-    {
-        //TODO: enable plane alpha, 90 deg rotation
-        static glm::mat4 const identity;
-        if ((!plane_alpha_is_opaque(*renderable)) ||
-            (renderable->transformation() != identity))
-        {
-            return true;
-        }
-    }
-    return false;
-}
-}
-
 mga::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<FramebufferBundle> const& fb_bundle,
     std::shared_ptr<DisplayDevice> const& display_device,
@@ -125,11 +90,10 @@ void mga::DisplayBuffer::release_current()
 
 bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& renderlist)
 {
-    if (renderable_list_is_hwc_incompatible(renderlist) || !overlay_enabled)
+    if (!overlay_enabled)
         return false;
 
-    display_device->post_overlays(gl_context, renderlist, overlay_program);
-    return true;
+    return display_device->post_overlays(gl_context, renderlist, overlay_program);
 }
 
 void mga::DisplayBuffer::post_update()

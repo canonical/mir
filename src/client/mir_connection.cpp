@@ -186,6 +186,7 @@ MirWaitHandle* MirConnection::release_surface(
         release_wait_handles.push_back(new_wait_handle);
     }
 
+    new_wait_handle->expect_result();
     server.release_surface(0, &message, &void_response,
                            gp::NewCallback(this, &MirConnection::released, surf_release));
 
@@ -272,6 +273,7 @@ void MirConnection::done_disconnect()
 
 MirWaitHandle* MirConnection::disconnect()
 {
+    disconnect_wait_handle.expect_result();
     server.disconnect(0, &ignored, &ignored,
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
@@ -294,6 +296,7 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
     mir::protobuf::DRMMagic request;
     request.set_magic(magic);
 
+    drm_auth_magic_wait_handle.expect_result();
     server.drm_auth_magic(
         0,
         &request,
@@ -500,6 +503,7 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
         }
     }
 
+    configure_display_wait_handle.expect_result();
     server.configure_display(0, &request, &display_configuration_response,
         google::protobuf::NewCallback(this, &MirConnection::done_display_configure));
 

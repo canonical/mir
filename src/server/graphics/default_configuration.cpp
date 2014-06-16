@@ -32,6 +32,7 @@
 #include "mir/shared_library.h"
 #include "mir/shared_library_loader.h"
 #include "mir/abnormal_exit.h"
+#include "mir/emergency_cleanup.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -72,7 +73,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
             {
                 // fallback to standalone if host socket is unset
                 auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
-                return create_platform(the_options(), the_display_report());
+                return create_platform(the_options(), the_emergency_cleanup(), the_display_report());
             }
 
             auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,10 +16,12 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_
-#define MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_VIRTUAL_TERMINAL_H_
+#define MIR_TEST_DOUBLES_MOCK_VIRTUAL_TERMINAL_H_
 
 #include "src/platform/graphics/mesa/virtual_terminal.h"
+
+#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -28,22 +30,19 @@ namespace test
 namespace doubles
 {
 
-class NullVirtualTerminal : public graphics::mesa::VirtualTerminal
+class MockVirtualTerminal : public graphics::mesa::VirtualTerminal
 {
 public:
-    void set_graphics_mode() override {}
-
-    void register_switch_handlers(graphics::EventHandlerRegister&,
-                                  std::function<bool()> const&,
-                                  std::function<bool()> const&) override
-    {
-    }
-
-    void restore() override {}
+    MOCK_METHOD0(set_graphics_mode, void());
+    MOCK_METHOD3(register_switch_handlers,
+                 void(graphics::EventHandlerRegister&,
+                      std::function<bool()> const&,
+                      std::function<bool()> const&));
+    MOCK_METHOD0(restore, void());
 };
 
 }
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_ */
+#endif
