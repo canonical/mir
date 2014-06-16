@@ -65,7 +65,7 @@ public:
         return {};
     }
 
-    void prepare_and_pack_buffer_msg(
+    void fill_buffer_package(
         mg::BufferIPCPacker*, mg::Buffer const*, mg::BufferIpcMsgType) const override {}
 };
 

@@ -53,7 +53,7 @@ public:
 
     virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
 
-    virtual void prepare_and_pack_buffer_msg(
+    virtual void fill_buffer_package(
         BufferIPCPacker* packer,
         Buffer const* buffer,
         BufferIpcMsgType msg_type) const = 0;

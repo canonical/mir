@@ -116,7 +116,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc)
     EXPECT_CALL(*native_buffer, wait_for_content())
         .Times(1);
 
-    platform.prepare_and_pack_buffer_msg(
+    platform.fill_buffer_package(
         &mock_packer, mock_buffer.get(), mg::BufferIpcMsgType::full_msg);
 }
 
@@ -140,7 +140,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
     EXPECT_CALL(*native_buffer, wait_for_content())
         .Times(1);
 
-    platform.prepare_and_pack_buffer_msg(
+    platform.fill_buffer_package(
         &mock_packer, mock_buffer.get(), mg::BufferIpcMsgType::update_msg);
 }
 

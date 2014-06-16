@@ -545,5 +545,5 @@ void mf::SessionMediator::pack_protobuf_buffer(
     protobuf_buffer.set_buffer_id(graphics_buffer->id().as_uint32_t());
 
     mfd::ProtobufBufferPacker packer{&protobuf_buffer};
-    graphics_platform->prepare_and_pack_buffer_msg(&packer, graphics_buffer, buffer_msg_type);
+    graphics_platform->fill_buffer_package(&packer, graphics_buffer, buffer_msg_type);
 }

@@ -112,7 +112,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-void mga::AndroidPlatform::prepare_and_pack_buffer_msg(
+void mga::AndroidPlatform::fill_buffer_package(
     BufferIPCPacker* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const
 {
     auto native_buffer = buffer->native_buffer_handle();

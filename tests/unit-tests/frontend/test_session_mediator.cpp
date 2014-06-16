@@ -191,7 +191,7 @@ class MockPlatform : public mg::Platform
                      std::shared_ptr<mg::GLConfig> const&));
     MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
     MOCK_METHOD0(create_internal_client, std::shared_ptr<mg::InternalClient>());
-    MOCK_CONST_METHOD3(prepare_and_pack_buffer_msg,
+    MOCK_CONST_METHOD3(fill_buffer_package,
         void(mg::BufferIPCPacker*, mg::Buffer const*, mg::BufferIpcMsgType));
     MOCK_CONST_METHOD0(egl_native_display, EGLNativeDisplayType());
 };
@@ -501,19 +501,19 @@ TEST_F(SessionMediatorTest, session_only_sends_mininum_information_for_buffers)
 
         Sequence seq;
         EXPECT_CALL(*graphics_platform,
-            prepare_and_pack_buffer_msg(
+            fill_buffer_package(
                 _, stubbed_session->mock_buffer.get(), mg::BufferIpcMsgType::full_msg))
             .InSequence(seq);
         EXPECT_CALL(*graphics_platform,
-            prepare_and_pack_buffer_msg(
+            fill_buffer_package(
                 _, stubbed_session->mock_buffer.get(), mg::BufferIpcMsgType::full_msg))
             .InSequence(seq);
         EXPECT_CALL(*graphics_platform,
-            prepare_and_pack_buffer_msg(
+            fill_buffer_package(
                 _, stubbed_session->mock_buffer.get(), mg::BufferIpcMsgType::update_msg))
             .InSequence(seq);
         EXPECT_CALL(*graphics_platform,
-            prepare_and_pack_buffer_msg(
+            fill_buffer_package(
                 _, stubbed_session->mock_buffer.get(), mg::BufferIpcMsgType::update_msg))
             .InSequence(seq);
 
@@ -563,11 +563,11 @@ TEST_F(SessionMediatorTest, session_with_multiple_surfaces_only_sends_needed_buf
         mp::Buffer buffer_response[6];
 
         EXPECT_CALL(*graphics_platform,
-            prepare_and_pack_buffer_msg(
+            fill_buffer_package(
                 _, stubbed_session->mock_buffer.get(), mg::BufferIpcMsgType::full_msg))
             .Times(4);
         EXPECT_CALL(*graphics_platform,
-            prepare_and_pack_buffer_msg(
+            fill_buffer_package(
                 _, stubbed_session->mock_buffer.get(), mg::BufferIpcMsgType::update_msg))
             .Times(4);
 
@@ -708,7 +708,7 @@ TEST_F(SessionMediatorTest, fully_packs_buffer_for_create_screencast)
     mp::Screencast screencast;
     auto const& stub_buffer = stub_screencast->stub_buffer;
 
-    EXPECT_CALL(*graphics_platform, prepare_and_pack_buffer_msg(_, &stub_buffer, _));
+    EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &stub_buffer, _));
 
     mediator.create_screencast(nullptr, &screencast_parameters,
                                &screencast, null_callback.get());
@@ -726,7 +726,7 @@ TEST_F(SessionMediatorTest, partially_packs_buffer_for_screencast_buffer)
     auto const& stub_buffer = stub_screencast->stub_buffer;
 
     EXPECT_CALL(*graphics_platform,
-        prepare_and_pack_buffer_msg(
+        fill_buffer_package(
             _, &stub_buffer, mg::BufferIpcMsgType::update_msg))
         .Times(1);
 

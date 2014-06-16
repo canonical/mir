@@ -179,7 +179,7 @@ class StubGraphicPlatform : public mtd::NullPlatform
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    void prepare_and_pack_buffer_msg(
+    void fill_buffer_package(
         mg::BufferIPCPacker* packer, mg::Buffer const* buffer, mg::BufferIpcMsgType msg_type) const override
     {
         if (msg_type == mg::BufferIpcMsgType::full_msg)
