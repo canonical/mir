@@ -45,26 +45,14 @@ void mclr::AsioSocketTransport::register_observer(std::shared_ptr<Observer> cons
 
 void mclr::AsioSocketTransport::receive_data(void* buffer, size_t read_bytes)
 {
-    boost::system::error_code error;
- /*
-    ssize_t bytes_read = boost::asio::read(socket, boost::asio::buffer(buffer, message_size), error);
-    */
     ssize_t bytes_read = recv(socket.native_handle(), buffer, read_bytes, MSG_NOSIGNAL);
 
- /*  if (bytes_read == EPIPE)
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        for(auto& observer : observers)
-        {
-            observer->on_disconnected();
-        }
-    }*/
     if (bytes_read < 0)
     {
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(
-                                  std::runtime_error(std::string("Failed to read message from server:")
-                                                     + strerror(errno)))
-                                  <<boost::errinfo_errno(errno));
+        BOOST_THROW_EXCEPTION(
+                    boost::enable_error_info(
+                        std::runtime_error(std::string("Failed to read message from server:")
+                                           + strerror(errno))) << boost::errinfo_errno(errno));
     }
 }
 
@@ -92,22 +80,15 @@ void mclr::AsioSocketTransport::receive_file_descriptors(std::vector<int> &fds)
     header.msg_control = control.data();
     header.msg_flags = 0;
 
-    socket.native_non_blocking(false);
-    ssize_t bytes_read = recvmsg(socket.native_handle(), &header, MSG_NOSIGNAL | MSG_WAITALL);
+    ssize_t bytes_read = recvmsg(socket.native_handle(), &header, MSG_NOSIGNAL);
 
     if (bytes_read < 0)
     {
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(
-                                  std::runtime_error(std::string("Failed to read message from server:")
-                                                     + strerror(errno)))
-                                  <<boost::errinfo_errno(errno));
-/*        std::lock_guard<decltype(mutex)> lock(mutex);
-        for(auto& observer : observers)
-        {
-            observer->on_disconnected();
-        }*/
+        BOOST_THROW_EXCEPTION(
+                    boost::enable_error_info(
+                        std::runtime_error(std::string("Failed to read message from server:")
+                                           + strerror(errno))) << boost::errinfo_errno(errno));
     }
-
     // If we get a proper control message, copy the received
     // file descriptors back to the caller
     struct cmsghdr const* const cmsg = CMSG_FIRSTHDR(&header);
@@ -122,32 +103,21 @@ void mclr::AsioSocketTransport::receive_file_descriptors(std::vector<int> &fds)
     }
     else
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid control message for receiving file descriptors"));
+        BOOST_THROW_EXCEPTION(
+                    std::runtime_error("Invalid control message for receiving file descriptors"));
     }
 }
 
 void mclr::AsioSocketTransport::send_data(const std::vector<uint8_t>& buffer)
 {
-    boost::system::error_code error;
-    /*
-    ssize_t bytes_written = boost::asio::write(socket, boost::asio::buffer(buffer), error);
-    */
     ssize_t bytes_written = send(socket.native_handle(), buffer.data(), buffer.size(), MSG_NOSIGNAL);
 
-/*    if (bytes_written == EPIPE)
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        for(auto& observer : observers)
-        {
-            observer->on_disconnected();
-        }
-    }*/
     if (bytes_written < 0)
     {
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(
-                                  std::runtime_error(std::string("Failed to send message to server:")
-                                                     + strerror(errno)))
-                                  <<boost::errinfo_errno(errno));
+        BOOST_THROW_EXCEPTION(
+                    boost::enable_error_info(
+                        std::runtime_error(std::string("Failed to send message to server:")
+                                           + strerror(errno))) << boost::errinfo_errno(errno));
     }
 }
 
@@ -164,6 +134,7 @@ void mclr::AsioSocketTransport::init()
                     boost::enable_error_info(
                         std::runtime_error("Failed to block signals on IO thread")) << boost::errinfo_errno(error));
 
+            socket.native_non_blocking(false);
             socket.async_read_some(boost::asio::null_buffers(),
                                    std::bind(&mclr::AsioSocketTransport::notify_data_available, this,
                                              std::placeholders::_1, std::placeholders::_2));
