@@ -34,6 +34,24 @@ namespace
 {
 static const size_t fbtarget_plus_skip_size = 2;
 static const size_t fbtarget_size = 1;
+bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
+{
+    if (list.empty())
+        return true;
+
+    for(auto const& renderable : list)
+    {
+        //TODO: enable alpha, 90 deg rotation
+        static glm::mat4 const identity;
+        if (renderable->shaped() ||
+            renderable->alpha_enabled() ||
+            (renderable->transformation() != identity))
+        {
+            return true;
+        }
+    }
+    return false;
+}
 }
 
 void mga::HwcDevice::setup_layer_types()
@@ -81,55 +99,55 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
     hwc_list.update_list_and_check_if_changed({}, fbtarget_plus_skip_size);
     setup_layer_types();
 
-    list_needs_commit = true;
-
     hwc_wrapper->prepare(*hwc_list.native_list().lock());
 
     context.swap_buffers();
 
     post(context);
+    onscreen_overlay_buffers.clear();
 }
 
-void mga::HwcDevice::post_overlays(
+bool mga::HwcDevice::post_overlays(
     SwappingGLContext const& context,
     RenderableList const& renderables,
     RenderableListCompositor const& list_compositor)
 {
-    if (!(list_needs_commit = hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size)))
-        return;
+    if (renderable_list_is_hwc_incompatible(renderables))
+        return false;
+    if (!hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size))
+        return false;
     setup_layer_types();
 
     hwc_wrapper->prepare(*hwc_list.native_list().lock());
 
     mg::RenderableList rejected_renderables;
 
+    std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
     auto layers_it = hwc_list.begin();
     for(auto const& renderable : renderables)
     {
         layers_it->prepare_for_draw();
         if (layers_it->needs_gl_render())
             rejected_renderables.push_back(renderable);
+        else
+            next_onscreen_overlay_buffers.push_back(renderable->buffer());
         layers_it++;
     }
 
     list_compositor.render(rejected_renderables, context);
     post(context);
+    onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
+    return true;
 }
 
 void mga::HwcDevice::post(SwappingGLContext const& context)
 {
-    if (!list_needs_commit)
-        return;
-
     auto lg = lock_unblanked();
     set_list_framebuffer(*context.last_rendered_buffer());
     hwc_wrapper->set(*hwc_list.native_list().lock());
 
     for(auto& layer : hwc_list)
-    {
         layer.update_fence_and_release_buffer();
-    }
 
     mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
-    list_needs_commit = false;
 }
