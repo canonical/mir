@@ -45,7 +45,8 @@ mclr::make_rpc_channel(std::string const& name,
                        std::shared_ptr<mcl::SurfaceMap> const& map,
                        std::shared_ptr<mcl::DisplayConfiguration> const& disp_conf,
                        std::shared_ptr<RpcReport> const& rpc_report,
-                       std::shared_ptr<mcl::LifecycleControl> const& lifecycle_control)
+                       std::shared_ptr<mcl::LifecycleControl> const& lifecycle_control,
+                       std::shared_ptr<mcl::EventSink> const& event_sink)
 {
     std::unique_ptr<mclr::Transport> transport;
     if (fd_prefix.is_start_of(name))
@@ -57,6 +58,5 @@ mclr::make_rpc_channel(std::string const& name,
     {
         transport = std::unique_ptr<mclr::Transport>{new mclr::AsioSocketTransport{name}};
     }
-
-    return std::make_shared<MirProtobufRpcChannel>(std::move(transport), map, disp_conf, rpc_report, lifecycle_control);
+    return std::make_shared<MirProtobufRpcChannel>(std::move(transport), map, disp_conf, rpc_report, lifecycle_control, event_sink);
 }

@@ -17,6 +17,7 @@
 
 #include "mir/compositor/gl_renderer.h"
 #include "mir/compositor/buffer_stream.h"
+#include "mir/compositor/destination_alpha.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/gl_texture_cache.h"
@@ -63,7 +64,7 @@ const GLchar* fragment_shader_src =
     "varying vec2 v_texcoord;\n"
     "void main() {\n"
     "   vec4 frag = texture2D(tex, v_texcoord);\n"
-    "   gl_FragColor = vec4(frag.xyz, frag.a * alpha);\n"
+    "   gl_FragColor = alpha*frag;\n"
     "}\n"
 };
 }
@@ -71,7 +72,8 @@ const GLchar* fragment_shader_src =
 mc::GLRenderer::GLRenderer(
     mg::GLProgramFactory const& program_factory,
     std::unique_ptr<mg::GLTextureCache> && texture_cache, 
-    geom::Rectangle const& display_area)
+    geom::Rectangle const& display_area,
+    DestinationAlpha dest_alpha)
     : program(program_factory.create_gl_program(vertex_shader_src, fragment_shader_src)),
       texture_cache(std::move(texture_cache)),
       position_attr_loc(0),
@@ -79,7 +81,8 @@ mc::GLRenderer::GLRenderer(
       centre_uniform_loc(0),
       transform_uniform_loc(0),
       alpha_uniform_loc(0),
-      rotation(NAN) // ensure the first set_rotation succeeds
+      rotation(NAN), // ensure the first set_rotation succeeds
+      dest_alpha(dest_alpha)
 {
     glUseProgram(*program);
 
@@ -122,7 +125,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     if (renderable.shaped() || renderable.alpha() < 1.0f)
     {
         glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     }
     else
     {
@@ -239,15 +242,16 @@ void mc::GLRenderer::set_rotation(float degrees)
 
 void mc::GLRenderer::begin() const
 {
-    // Ensure background is opaque otherwise alpha artifacts may occur
-    // when rendering a nested display buffer (LP: #1317260)
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    if (dest_alpha == DestinationAlpha::opaque)
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    else
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Ensure we don't change the framebuffer's alpha components (if any)
-    // as that would ruin the appearance of screengrabs. (LP: #1301210)
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+    if (dest_alpha == DestinationAlpha::opaque)
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 }
 
 void mc::GLRenderer::end() const
@@ -258,4 +262,9 @@ void mc::GLRenderer::end() const
 void mc::GLRenderer::suspend()
 {
     texture_cache->invalidate();
+}
+
+mc::DestinationAlpha mc::GLRenderer::destination_alpha() const
+{
+    return dest_alpha;
 }

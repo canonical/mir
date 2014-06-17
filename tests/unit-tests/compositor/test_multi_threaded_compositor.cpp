@@ -24,6 +24,7 @@
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/scene/observer.h"
 
+#include "mir_test/current_thread_name.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_display_buffer.h"
 #include "mir_test_doubles/mock_display_buffer.h"
@@ -47,6 +48,7 @@ namespace ms = mir::scene;
 namespace mr = mir::report;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
+namespace mt = mir::test;
 
 namespace
 {
@@ -154,12 +156,11 @@ public:
     {
     }
 
-    bool composite()
+    void composite()
     {
         mark_render_buffer();
         /* Reduce run-time under valgrind */
         std::this_thread::yield();
-        return false;
     }
 
 private:
@@ -271,12 +272,11 @@ public:
     {
     }
 
-    bool composite()
+    void composite()
     {
         fake_surface_update();
         /* Reduce run-time under valgrind */
         std::this_thread::yield();
-        return false;
     }
 
 private:
@@ -321,12 +321,36 @@ public:
     {
         struct NullDisplayBufferCompositor : mc::DisplayBufferCompositor
         {
-            bool composite() { return false; }
+            void composite() {}
         };
 
         auto raw = new NullDisplayBufferCompositor{};
         return std::unique_ptr<NullDisplayBufferCompositor>(raw);
     }
+};
+
+class ThreadNameDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
+{
+public:
+    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer&)
+    {
+        auto raw = new RecordingDisplayBufferCompositor{
+            [this]()
+            {
+                std::lock_guard<std::mutex> lock{thread_names_mutex};
+                thread_names.emplace_back(mt::current_thread_name());
+            }};
+        return std::unique_ptr<RecordingDisplayBufferCompositor>(raw);
+    }
+
+    size_t num_thread_names_gathered()
+    {
+        std::lock_guard<std::mutex> lock{thread_names_mutex};
+        return thread_names.size();
+    }
+
+    std::mutex thread_names_mutex;
+    std::vector<std::string> thread_names;
 };
 
 auto const null_report = mr::null_compositor_report();
@@ -644,4 +668,30 @@ TEST(MultiThreadedCompositor, cleans_up_after_throw_in_start)
      * compositing the same display buffer
      */
     EXPECT_TRUE(db_compositor_factory->each_buffer_rendered_in_single_thread());
+}
+
+TEST(MultiThreadedCompositor, names_compositor_threads)
+{
+    using namespace testing;
+
+    unsigned int const nbuffers{3};
+
+    auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
+    auto scene = std::make_shared<StubScene>();
+    auto db_compositor_factory = std::make_shared<ThreadNameDisplayBufferCompositorFactory>();
+    mc::MultiThreadedCompositor compositor{display, scene, db_compositor_factory, null_report, true};
+
+    compositor.start();
+
+    unsigned int const min_number_of_thread_names = 10;
+
+    while (db_compositor_factory->num_thread_names_gathered() < min_number_of_thread_names)
+        scene->emit_change_event();
+
+    compositor.stop();
+
+    auto const& thread_names = db_compositor_factory->thread_names;
+
+    for (size_t i = 0; i < thread_names.size(); ++i)
+        EXPECT_THAT(thread_names[i], Eq("Mir/Comp")) << "i=" << i;
 }

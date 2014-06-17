@@ -1269,11 +1269,14 @@ TEST_F(BufferQueueTest, framedropping_client_acquire_does_not_block_when_no_avai
 
 TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)
 {
+    static std::chrono::nanoseconds const time_for_client_to_acquire{1};
+
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
         std::mutex client_buffer_guard;
+        std::condition_variable client_buffer_cv;
         mg::Buffer* client_buffer = nullptr;
         std::atomic<bool> done(false);
 
@@ -1285,9 +1288,15 @@ TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)
                 auto buffer = q.compositor_acquire(this);
 
                 {
-                    std::lock_guard<std::mutex> lock(client_buffer_guard);
-                    if (client_buffer)
+                    std::unique_lock<std::mutex> lock(client_buffer_guard);
+
+                    if (client_buffer_cv.wait_for(
+                        lock,
+                        time_for_client_to_acquire,
+                        [&]()->bool{ return client_buffer; }))
+                    {
                         ASSERT_THAT(buffer->id(), Ne(client_buffer->id()));
+                    }
                 }
 
                 std::this_thread::yield();
@@ -1304,6 +1313,7 @@ TEST_F(BufferQueueTest, compositor_never_owns_client_buffers)
             {
                 std::lock_guard<std::mutex> lock(client_buffer_guard);
                 client_buffer = handle->buffer();
+                client_buffer_cv.notify_one();
             }
 
             std::this_thread::yield();

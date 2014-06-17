@@ -21,6 +21,9 @@
 
 #ifdef ANDROID
 #include "mock_android_native_buffer.h"
+#else
+#include "src/platform/graphics/mesa/gbm_buffer.h"
+#include "mock_gbm.h"
 #endif
 
 #include "mir/graphics/buffer_basic.h"
@@ -59,6 +62,14 @@ public:
           buf_pixel_format{properties.format},
           buf_stride{stride}
     {
+#ifndef ANDROID
+        auto buffer = std::make_shared<graphics::mesa::GBMNativeBuffer>();
+        int fake_bo{0}; 
+        buffer->bo = reinterpret_cast<gbm_bo*>(&fake_bo); //gbm_bo is opaque, so test code shouldn't dereference.
+        native_buffer = buffer;
+#else
+        native_buffer = std::make_shared<StubAndroidNativeBuffer>();
+#endif
     }
 
     virtual geometry::Size size() const { return buf_size; }
@@ -67,18 +78,12 @@ public:
 
     virtual MirPixelFormat pixel_format() const { return buf_pixel_format; }
 
-    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const
-    {
-#ifndef ANDROID
-        return std::make_shared<graphics::NativeBuffer>();
-#else
-        return std::make_shared<StubAndroidNativeBuffer>();
-#endif
-    }
+    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const { return native_buffer; }
     virtual void gl_bind_to_texture() override {}
 
-    virtual bool can_bypass() const override { return false; }
+    virtual bool can_bypass() const override { return true; }
 
+    std::shared_ptr<graphics::NativeBuffer> native_buffer;
     geometry::Size const buf_size;
     MirPixelFormat const buf_pixel_format;
     geometry::Stride const buf_stride;

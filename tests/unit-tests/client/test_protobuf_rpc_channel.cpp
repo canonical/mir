@@ -26,6 +26,8 @@
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 
+#include "mir_test_doubles/null_client_event_sink.h"
+
 #include <list>
 #include <endian.h>
 
@@ -36,6 +38,7 @@
 
 namespace mcl = mir::client;
 namespace mclr = mir::client::rpc;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -162,7 +165,8 @@ public:
                   std::make_shared<StubSurfaceMap>(),
                   std::make_shared<mcl::DisplayConfiguration>(),
                   std::make_shared<mclr::NullRpcReport>(),
-                  lifecycle}}
+                  lifecycle,
+                  std::make_shared<mtd::NullClientEventSink>()}}
     {
     }
 

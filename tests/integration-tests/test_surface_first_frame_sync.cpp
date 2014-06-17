@@ -197,7 +197,8 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
             struct StubRendererFactory : public mc::RendererFactory
             {
                 StubRendererFactory(int ops_fd) : ops_fd{ops_fd} {}
-                std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
+                std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&,
+                    mc::DestinationAlpha)
                 {
                     auto raw = new StubRenderer{ops_fd};
                     return std::unique_ptr<StubRenderer>(raw);

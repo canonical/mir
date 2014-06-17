@@ -32,7 +32,7 @@ msh::SessionCoordinatorWrapper::SessionCoordinatorWrapper(
 std::shared_ptr<mf::Session> msh::SessionCoordinatorWrapper::open_session(
     pid_t client_pid,
     std::string const& name,
-    std::shared_ptr<frontend::EventSink> const& sink)
+    std::shared_ptr<mf::EventSink> const& sink)
 {
     return wrapped->open_session(client_pid, name, sink);
 }
@@ -67,7 +67,33 @@ void msh::SessionCoordinatorWrapper::set_focus_to(
 }
 
 void msh::SessionCoordinatorWrapper::handle_surface_created(
-    std::shared_ptr<frontend::Session> const& session)
+    std::shared_ptr<mf::Session> const& session)
 {
     wrapped->handle_surface_created(session);
+}
+
+std::shared_ptr<mf::PromptSession> msh::SessionCoordinatorWrapper::start_prompt_session_for(
+    std::shared_ptr<mf::Session> const& session,
+    scene::PromptSessionCreationParameters const& params)
+{
+    return wrapped->start_prompt_session_for(session, params);
+}
+
+void msh::SessionCoordinatorWrapper::add_prompt_provider_process_for(
+    std::shared_ptr<mf::PromptSession> const& prompt_session,
+    pid_t process_id)
+{
+    wrapped->add_prompt_provider_process_for(prompt_session, process_id);
+}
+
+void msh::SessionCoordinatorWrapper::add_prompt_provider_for(
+    std::shared_ptr<mf::PromptSession> const& prompt_session,
+    std::shared_ptr<mf::Session> const& session)
+{
+    wrapped->add_prompt_provider_for(prompt_session, session);
+}
+
+void msh::SessionCoordinatorWrapper::stop_prompt_session(std::shared_ptr<mf::PromptSession> const& prompt_session)
+{
+    wrapped->stop_prompt_session(prompt_session);
 }

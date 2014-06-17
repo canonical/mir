@@ -713,7 +713,7 @@ TEST_F(SessionMediatorTest, partially_packs_buffer_for_screencast_buffer)
               protobuf_buffer.buffer_id());
 }
 
-TEST_F(SessionMediatorTest, client_socket_fd_calls_connector_client_socket_fd)
+TEST_F(SessionMediatorTest, new_fds_for_prompt_providers_calls_connector_client_socket_fd)
 {
     int const fd_count = 1;
     int const dummy_fd = __LINE__;
@@ -730,7 +730,7 @@ TEST_F(SessionMediatorTest, client_socket_fd_calls_connector_client_socket_fd)
     using namespace ::testing;
 
     EXPECT_CALL(connector, client_socket_fd(_)).Times(1).WillOnce(Return(dummy_fd));
-    mediator.new_fds_for_trusted_clients(nullptr, &request, &response, null_callback.get());
+    mediator.new_fds_for_prompt_providers(nullptr, &request, &response, null_callback.get());
 
     EXPECT_THAT(response.fd_size(), Eq(fd_count));
     EXPECT_THAT(response.fd(0), Eq(dummy_fd));
@@ -738,7 +738,7 @@ TEST_F(SessionMediatorTest, client_socket_fd_calls_connector_client_socket_fd)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
-TEST_F(SessionMediatorTest, client_socket_fd_allocates_requested_number_of_fds)
+TEST_F(SessionMediatorTest, new_fds_for_prompt_providers_allocates_requested_number_of_fds)
 {
     int const fd_count = 11;
     int const dummy_fd = __LINE__;
@@ -755,7 +755,7 @@ TEST_F(SessionMediatorTest, client_socket_fd_allocates_requested_number_of_fds)
     using namespace ::testing;
 
     EXPECT_CALL(connector, client_socket_fd(_)).Times(fd_count).WillRepeatedly(Return(dummy_fd));
-    mediator.new_fds_for_trusted_clients(nullptr, &request, &response, null_callback.get());
+    mediator.new_fds_for_prompt_providers(nullptr, &request, &response, null_callback.get());
 
     EXPECT_THAT(response.fd_size(), Eq(fd_count));
 

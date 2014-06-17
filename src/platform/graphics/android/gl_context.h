@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -21,6 +21,7 @@
 
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
+#include "swapping_gl_context.h"
 #include "mir_toolkit/common.h"
 #include <functional>
 
@@ -33,47 +34,63 @@ class GLConfig;
 namespace android
 {
 
-//handy functions
-EGLSurface create_dummy_pbuffer_surface(EGLDisplay, EGLConfig);
-EGLSurface create_window_surface(EGLDisplay, EGLConfig, EGLNativeWindowType);
+class FramebufferBundle;
 
-class SwappingGLContext
+//helper base class that doesn't have an egl surface.
+class GLContext : public graphics::GLContext
 {
 public:
-    virtual ~SwappingGLContext() = default;
-    virtual void swap_buffers() const = 0;
+    ~GLContext();
 
 protected:
-    SwappingGLContext() = default;
-    SwappingGLContext(SwappingGLContext const&) = delete;
-    SwappingGLContext& operator=(SwappingGLContext const&) = delete;
-};
-
-class GLContext : public SwappingGLContext,
-                  public graphics::GLContext
-{
-public:
-    //For creating a gl context
     GLContext(MirPixelFormat display_format,
               GLConfig const& gl_config,
               DisplayReport& report);
 
-    //For creating a gl context shared with another GLContext
-    GLContext(GLContext const& shared_gl_context,
-              std::function<EGLSurface(EGLDisplay, EGLConfig)> const& create_egl_surface);
+    GLContext(GLContext const& shared_gl_context);
 
-    ~GLContext();
-
-    void make_current() const override;
-    void swap_buffers() const override;
     void release_current() const override;
+    void make_current(EGLSurface) const;
+
+    EGLDisplay const egl_display;
+    EGLConfig const egl_config;
+    EGLContextStore const egl_context;
 
 private:
-    EGLDisplay const egl_display;
     bool const own_display;
-    EGLConfig const egl_config;
+};
 
-    EGLContextStore const egl_context;
+class PbufferGLContext : public GLContext
+{
+public:
+    PbufferGLContext(MirPixelFormat display_format,
+              GLConfig const& gl_config,
+              DisplayReport& report);
+
+    PbufferGLContext(PbufferGLContext const& shared_gl_context);
+
+    void make_current() const override;
+    void release_current() const override;
+private:
+    EGLSurfaceStore const egl_surface;
+};
+
+
+class FramebufferGLContext : public GLContext,
+                             public SwappingGLContext
+{
+public:
+    FramebufferGLContext(GLContext const& shared_gl_context,
+              std::shared_ptr<FramebufferBundle> const& fb_bundle,
+              std::shared_ptr<ANativeWindow> const& native_window);
+
+    void make_current() const override;
+    void release_current() const override;
+    void swap_buffers() const override;
+    std::shared_ptr<Buffer> last_rendered_buffer() const override;
+
+private:
+    std::shared_ptr<FramebufferBundle> const fb_bundle;
     EGLSurfaceStore const egl_surface;
 };
 
