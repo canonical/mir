@@ -21,12 +21,6 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/renderable.h"
 
-#include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/stub_display_buffer.h"
-#include "mir_test_doubles/stub_display_configuration.h"
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/null_platform.h"
-
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
 
@@ -34,69 +28,13 @@
 
 #include <vector>
 #include <tuple>
+#include <algorithm>
 
 namespace mtf = mir_test_framework;
 namespace geom = mir::geometry;
-namespace mg = mir::graphics;
-namespace mtd = mir::test::doubles;
 
 namespace
 {
-
-class StubDisplay : public mtd::NullDisplay
-{
-public:
-    StubDisplay(std::vector<geom::Rectangle> const& rects)
-        : rects{rects}
-    {
-        for (auto const& rect : rects)
-        {
-            display_buffers.push_back(
-                std::make_shared<mtd::StubDisplayBuffer>(rect));
-        }
-    }
-
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
-    {
-        for (auto& db : display_buffers)
-            f(*db);
-    }
-
-    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
-    {
-        return std::unique_ptr<mg::DisplayConfiguration>(
-            new mtd::StubDisplayConfig(rects)
-        );
-    }
-
-private:
-    std::vector<geom::Rectangle> const rects;
-    std::vector<std::shared_ptr<mtd::StubDisplayBuffer>> display_buffers;
-};
-
-class StubPlatform : public mtd::NullPlatform
-{
-public:
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
-        const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
-    {
-        return std::make_shared<mtd::StubBufferAllocator>();
-    }
-
-    std::shared_ptr<mg::Display> create_display(
-        std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-        std::shared_ptr<mg::GLProgramFactory> const&,
-        std::shared_ptr<mg::GLConfig> const&) override
-    {
-        return std::make_shared<StubDisplay>(display_rects());
-    }
-
-    static std::vector<geom::Rectangle> display_rects()
-    {
-        return {{{0,0}, {800,600}},
-                {{800,600}, {200,400}}};
-    }
-};
 
 struct RectangleCompare
 {
@@ -119,15 +57,14 @@ struct RectangleCompare
 
 struct ServerConfig : mtf::StubbedServerConfiguration
 {
-    std::shared_ptr<mg::Platform> the_graphics_platform() override
-    {
-        if (!graphics_platform)
-            graphics_platform = std::make_shared<StubPlatform>();
-        return graphics_platform;
-    }
+    static std::vector<geom::Rectangle> const display_rects;
 
-    std::shared_ptr<mg::Platform> graphics_platform;
+    ServerConfig() : mtf::StubbedServerConfiguration(display_rects) {}
 };
+
+std::vector<geom::Rectangle> const ServerConfig::display_rects{
+    {{0,0}, {800,600}},
+    {{800,600}, {200,400}}};
 
 using BasicFixture = mtf::BasicClientServerFixture<ServerConfig>;
 
@@ -218,7 +155,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
     }
 
     auto surface_rects = server_surface_rectangles();
-    auto display_rects = StubPlatform::display_rects();
+    auto display_rects = ServerConfig::display_rects;
 
     std::sort(display_rects.begin(), display_rects.end(), RectangleCompare());
     std::sort(surface_rects.begin(), surface_rects.end(), RectangleCompare());

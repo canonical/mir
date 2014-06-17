@@ -27,8 +27,7 @@
 #include "mir/scene/legacy_scene_change_notification.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/stub_display_buffer.h"
+#include "mir_test_doubles/stub_display.h"
 #include "mir_test_doubles/stub_renderer.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -123,23 +122,6 @@ private:
     int render_operations_fd;
 };
 
-class StubDisplay : public mtd::NullDisplay
-{
-public:
-    StubDisplay()
-        : display_buffer{geom::Rectangle{geom::Point{}, geom::Size{1600,1600}}}
-    {
-    }
-
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
-    {
-        f(display_buffer);
-    }
-
-private:
-    mtd::StubDisplayBuffer display_buffer;
-};
-
 }
 
 using SurfaceFirstFrameSync = BespokeDisplayServerTestFixture;
@@ -186,7 +168,12 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
             using namespace testing;
 
             if (!stub_display)
-                stub_display = std::make_shared<StubDisplay>();
+            {
+                stub_display = std::make_shared<mtd::StubDisplay>(
+                    std::vector<geom::Rectangle>{
+                        {{0,0}, {1600,1600}}
+                    });
+            }
 
             return stub_display;
         }
@@ -242,7 +229,7 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
 
         int rendering_ops_pipe[2];
         std::shared_ptr<mc::RendererFactory> stub_renderer_factory;
-        std::shared_ptr<StubDisplay> stub_display;
+        std::shared_ptr<mtd::StubDisplay> stub_display;
         std::shared_ptr<SynchronousCompositor> sync_compositor;
     } server_config;
 
