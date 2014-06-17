@@ -18,30 +18,30 @@
 
 #include "mir/graphics/android/android_native_buffer.h"
 
-namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 mga::AndroidNativeBuffer::AndroidNativeBuffer(
     std::shared_ptr<ANativeWindowBuffer> const& anwb,
-    std::shared_ptr<Fence> const& fence)
+    std::shared_ptr<Fence> const& fence,
+    BufferAccess access)
     : fence(fence),
-      fence_access(mir::graphics::Access::read),
+      access(access),
       native_window_buffer(anwb)
 {
 }
 
-void mga::AndroidNativeBuffer::ensure_available_for(Access intent)
+void mga::AndroidNativeBuffer::ensure_available_for(BufferAccess intent)
 {
-    if ((fence_access == mg::Access::read) && (intent == mg::Access::read))
+    if ((access == mga::BufferAccess::read) && (intent == mga::BufferAccess::read))
         return;
   
     fence->wait();
 }
 
-void mga::AndroidNativeBuffer::update_usage(NativeFence& merge_fd, Access access)
+void mga::AndroidNativeBuffer::update_usage(NativeFence& merge_fd, BufferAccess updated_access)
 {
     fence->merge_with(merge_fd);
-    fence_access = access;
+    access = updated_access;
 }
 
 ANativeWindowBuffer* mga::AndroidNativeBuffer::anwb() const

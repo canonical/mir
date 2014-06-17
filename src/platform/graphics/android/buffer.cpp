@@ -76,7 +76,7 @@ bool mga::Buffer::can_bypass() const
 void mga::Buffer::gl_bind_to_texture()
 {
     std::unique_lock<std::mutex> lk(content_lock);
-    native_buffer->ensure_available_for(mg::Access::read);
+    native_buffer->ensure_available_for(mga::BufferAccess::read);
 
     DispContextPair current
     {

@@ -33,19 +33,21 @@ class Fence;
 
 struct AndroidNativeBuffer : public graphics::NativeBuffer
 {
-    AndroidNativeBuffer(std::shared_ptr<ANativeWindowBuffer> const& handle,
-        std::shared_ptr<Fence> const& fence);
+    AndroidNativeBuffer(
+        std::shared_ptr<ANativeWindowBuffer> const& handle,
+        std::shared_ptr<Fence> const& fence,
+        BufferAccess fence_access);
 
     ANativeWindowBuffer* anwb() const;
     buffer_handle_t handle() const;
     NativeFence copy_fence() const;
 
-    void ensure_available_for(Access);
-    void update_usage(NativeFence& merge_fd, Access);
+    void ensure_available_for(BufferAccess);
+    void update_usage(NativeFence& merge_fd, BufferAccess);
 
 private:
     std::shared_ptr<Fence> fence;
-    Access fence_access;
+    BufferAccess access;
     std::shared_ptr<ANativeWindowBuffer> native_window_buffer;
 };
 

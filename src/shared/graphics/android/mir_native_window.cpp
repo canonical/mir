@@ -171,7 +171,7 @@ int mga::MirNativeWindow::dequeueBufferAndWait(struct ANativeWindowBuffer** buff
 {
     auto buffer = driver_interpreter->driver_requests_buffer();
     *buffer_to_driver = buffer->anwb();
-    buffer->ensure_available_for(mir::graphics::Access::write);
+    buffer->ensure_available_for(mga::BufferAccess::write);
     return 0;
 }
 
