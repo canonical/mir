@@ -27,6 +27,7 @@
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_gl_program_factory.h"
+#include "mir_test_doubles/null_emergency_cleanup.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
 #include "src/server/report/null_report_factory.h"
 
@@ -99,9 +100,16 @@ protected:
         auto options = mtf::TestingServerConfiguration().the_options();
 
         if (options->get<bool>("tests-use-real-graphics"))
-            platform = mg::create_platform(options, mr::null_display_report());
+        {
+            platform = mg::create_platform(
+                options,
+                std::make_shared<mtd::NullEmergencyCleanup>(),
+                mr::null_display_report());
+        }
         else
+        {
             platform = std::make_shared<StubGraphicPlatform>();
+        }
 
         auto conf_policy = std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
         display = platform->create_display(

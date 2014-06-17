@@ -67,7 +67,7 @@ public:
     {
         struct ExceptionThrowingDisplayBufferCompositor : mc::DisplayBufferCompositor
         {
-            bool composite() override
+            void composite() override
             {
                 throw std::runtime_error("ExceptionThrowingDisplayBufferCompositor");
             }
