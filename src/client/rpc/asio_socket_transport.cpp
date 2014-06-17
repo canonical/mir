@@ -43,13 +43,13 @@ void mclr::AsioSocketTransport::register_observer(std::shared_ptr<Observer> cons
     observers.push_back(observer);
 }
 
-size_t mclr::AsioSocketTransport::receive_data(void* buffer, size_t message_size)
+void mclr::AsioSocketTransport::receive_data(void* buffer, size_t read_bytes)
 {
     boost::system::error_code error;
  /*
     ssize_t bytes_read = boost::asio::read(socket, boost::asio::buffer(buffer, message_size), error);
     */
-    ssize_t bytes_read = recv(socket.native_handle(), buffer, message_size, MSG_NOSIGNAL);
+    ssize_t bytes_read = recv(socket.native_handle(), buffer, read_bytes, MSG_NOSIGNAL);
 
  /*  if (bytes_read == EPIPE)
     {
@@ -66,8 +66,6 @@ size_t mclr::AsioSocketTransport::receive_data(void* buffer, size_t message_size
                                                      + strerror(errno)))
                                   <<boost::errinfo_errno(errno));
     }
-
-    return bytes_read;
 }
 
 void mclr::AsioSocketTransport::receive_file_descriptors(std::vector<int> &fds)
@@ -128,7 +126,7 @@ void mclr::AsioSocketTransport::receive_file_descriptors(std::vector<int> &fds)
     }
 }
 
-size_t mclr::AsioSocketTransport::send_data(const std::vector<uint8_t>& buffer)
+void mclr::AsioSocketTransport::send_data(const std::vector<uint8_t>& buffer)
 {
     boost::system::error_code error;
     /*
@@ -151,7 +149,6 @@ size_t mclr::AsioSocketTransport::send_data(const std::vector<uint8_t>& buffer)
                                                      + strerror(errno)))
                                   <<boost::errinfo_errno(errno));
     }
-    return bytes_written;
 }
 
 void mclr::AsioSocketTransport::init()

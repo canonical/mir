@@ -34,7 +34,9 @@ namespace rpc
 /**
  * \brief Responsible for shuttling bytes to and from the server
  *
- * \note All functions are non-blocking
+ * \note It is safe to call a read and a write method simultaneously
+ *       from different threads. Multiple threads calling the same
+ *       function need synchronisation.
  */
 class Transport
 {
@@ -42,41 +44,58 @@ public:
     virtual ~Transport() = default;
 
     /**
-     * @brief The Observer class
+     * \brief Observer of IO status
+     * \note The Transport may call Observer members from arbitrary threads.
+     *       The Observer implementation is responsible for any synchronisation.
      */
     class Observer
     {
     public:
         virtual ~Observer() = default;
+        /**
+         * \brief Called by the Transport when data is available for reading
+         */
         virtual void on_data_available() = 0;
+        /**
+         * \brief Called by the Transport when the connection to the server has been broken.
+         */
         virtual void on_disconnected() = 0;
     };
 
     /**
-     * @brief register_observer
-     * @param observer
+     * \brief Register an IO observer
+     * \param [in] observer
+     * \note There is no guarantee which thread will call into the observer.
+     *       Synchronisation is the responsibility of the caller.
      */
     virtual void register_observer(std::shared_ptr<Observer> const& observer) = 0;
 
     /**
-     * @brief receive_data
-     * @param buffer
-     * @param message_size
-     * @return
+     * \brief Read data from the server
+     * \param [out] buffer          Buffer to read into
+     * \param [in]  read_bytes      Number of bytes to read
+     * \throws A std::runtime_error if it is not possible to read
+     *         read_bytes bytes from the server.
      */
-    virtual size_t receive_data(void* buffer, size_t message_size) = 0;
+    virtual void receive_data(void* buffer, size_t read_bytes) = 0;
+
     /**
-     * @brief receive_file_descriptors
-     * @param fds
+     * \brief Receive file descriptors from the server
+     * \param [in,out] fds  Vector to populate with received file descriptors.
+     *                      The size of this vector determines how many descriptors
+     *                      are attempted to be received.
+     * \throws A std::runtime_error if it is not possible to read fds.size() file
+     *         descriptors from the server.
      */
     virtual void receive_file_descriptors(std::vector<int> &fds) = 0;
 
     /**
-     * @brief send_message
-     * @param message
-     * @return
+     * \brief Write data to the server
+     * \param [in] buffer   Data to send
+     * \throws A std::runtime_error if it is not possible to write the full contents
+     *         of buffer to the server.
      */
-    virtual size_t send_data(std::vector<uint8_t> const& buffer) = 0;
+    virtual void send_data(std::vector<uint8_t> const& buffer) = 0;
 };
 
 }

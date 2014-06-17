@@ -96,9 +96,9 @@ public:
     }
 
     MOCK_METHOD1(register_observer, void(std::shared_ptr<Observer> const&));
-    MOCK_METHOD2(receive_data, size_t(void*, size_t));
+    MOCK_METHOD2(receive_data, void(void*, size_t));
     MOCK_METHOD1(receive_file_descriptors, void(std::vector<int>&));
-    MOCK_METHOD1(send_data, size_t(std::vector<uint8_t> const&));
+    MOCK_METHOD1(send_data, void(std::vector<uint8_t> const&));
 
     // Transport interface
     void register_observer_default(std::shared_ptr<Observer> const& observer)
@@ -106,18 +106,16 @@ public:
         observers.push_back(observer);
     }
 
-    size_t receive_data_default(void* buffer, size_t message_size)
+    void receive_data_default(void* buffer, size_t read_bytes)
     {
-        size_t read_bytes{0};
-        while ((message_size != 0) && !datagrams.empty())
+        while ((read_bytes != 0) && !datagrams.empty())
         {
             fds_for_current_message = datagrams.front().second;
-            size_t read_size = std::min(datagrams.front().first.size() - read_offset, message_size);
+            size_t read_size = std::min(datagrams.front().first.size() - read_offset, read_bytes);
 
             memcpy(buffer, datagrams.front().first.data() + read_offset, read_size);
-            read_bytes += read_size;
             read_offset += read_size;
-            message_size -= read_size;
+            read_bytes -= read_size;
 
             if (read_offset == datagrams.front().first.size())
             {
@@ -125,7 +123,6 @@ public:
                 read_offset = 0;
             }
         }
-        return read_bytes;
     }
 
     void receive_file_descriptors_default(std::vector<int>& fds)
@@ -140,10 +137,9 @@ public:
         }
     }
 
-    size_t send_data_default(std::vector<uint8_t> const& buffer)
+    void send_data_default(std::vector<uint8_t> const& buffer)
     {
         sent_messages.push_back(buffer);
-        return buffer.size();
     }
 
     std::list<std::shared_ptr<Observer>> observers;
