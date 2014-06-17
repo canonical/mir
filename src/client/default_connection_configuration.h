@@ -36,6 +36,7 @@ class InputReceiverReport;
 }
 namespace client
 {
+class EventDistributor;
 
 namespace rpc
 {
@@ -54,6 +55,8 @@ public:
     std::shared_ptr<input::receiver::InputPlatform> the_input_platform();
     std::shared_ptr<DisplayConfiguration> the_display_configuration();
     std::shared_ptr<LifecycleControl> the_lifecycle_control();
+    std::shared_ptr<EventSink> the_event_sink();
+    std::shared_ptr<EventHandlerRegister> the_event_handler_register();
 
     virtual std::string the_socket_file();
     virtual std::shared_ptr<rpc::RpcReport> the_rpc_report();
@@ -67,6 +70,7 @@ protected:
     CachedPtr<ConnectionSurfaceMap> surface_map;
     CachedPtr<DisplayConfiguration> display_configuration;
     CachedPtr<LifecycleControl> lifecycle_control;
+    CachedPtr<EventDistributor> event_distributor;
 
     CachedPtr<rpc::RpcReport> rpc_report;
     CachedPtr<input::receiver::InputReceiverReport> input_receiver_report;
