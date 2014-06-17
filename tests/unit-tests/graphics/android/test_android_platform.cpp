@@ -84,7 +84,7 @@ protected:
 };
 
 /* ipc packaging tests */
-TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
+TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc)
 {
     using namespace ::testing;
 
@@ -113,7 +113,35 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly)
     EXPECT_CALL(mock_packer, pack_size(_))
         .Times(1);
 
-    platform.fill_ipc_package(&mock_packer, mock_buffer.get());
+    EXPECT_CALL(*native_buffer, ensure_available_for(mga::BufferAccess::write))
+        .Times(1);
+
+    platform.fill_buffer_package(
+        &mock_packer, mock_buffer.get(), mg::BufferIpcMsgType::full_msg);
+}
+
+TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ipc)
+{
+    using namespace ::testing;
+
+    mga::AndroidPlatform platform(stub_display_builder, stub_display_report);
+
+    mtd::MockPacker mock_packer;
+    EXPECT_CALL(mock_packer, pack_fd(_))
+        .Times(0);
+    EXPECT_CALL(mock_packer, pack_data(_))
+        .Times(0);
+    EXPECT_CALL(mock_packer, pack_stride(_))
+        .Times(0);
+    EXPECT_CALL(mock_packer, pack_size(_))
+        .Times(0);
+
+    /* TODO: instead of waiting, pass the fd along */
+    EXPECT_CALL(*native_buffer, ensure_available_for(mga::BufferAccess::write))
+        .Times(1);
+
+    platform.fill_buffer_package(
+        &mock_packer, mock_buffer.get(), mg::BufferIpcMsgType::update_msg);
 }
 
 TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)

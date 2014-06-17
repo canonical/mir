@@ -32,7 +32,6 @@
 #include "mir/graphics/cursor_images.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/geometry/dimensions.h"
-#include "mir/graphics/platform.h"
 #include "mir/frontend/display_changer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/pixel_format_utils.h"
@@ -139,7 +138,7 @@ void mf::SessionMediator::connect(
 void mf::SessionMediator::advance_buffer(
     SurfaceId surf_id,
     Surface& surface,
-    std::function<void(graphics::Buffer*, bool)> complete)
+    std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
     auto& tracker = client_buffer_tracker[surf_id];
     if (!tracker) tracker = std::make_shared<ClientBufferTracker>(client_buffer_cache_size);
@@ -148,12 +147,17 @@ void mf::SessionMediator::advance_buffer(
     surface.swap_buffers(client_buffer,
         [&tracker, &client_buffer, complete](mg::Buffer* new_buffer)
         {
+
             client_buffer = new_buffer;
             auto id = client_buffer->id();
             auto need_full_ipc = !tracker->client_has(id);
+            
             tracker->add(id);
 
-            complete(client_buffer, need_full_ipc);
+            if (need_full_ipc)
+                complete(client_buffer, mg::BufferIpcMsgType::full_msg);
+            else
+                complete(client_buffer, mg::BufferIpcMsgType::update_msg);
         });
 }
 
@@ -193,12 +197,13 @@ void mf::SessionMediator::create_surface(
         response->add_fd(surface->client_input_fd());
 
     advance_buffer(surf_id, *surface,
-        [lock, this, response, done, session](graphics::Buffer* client_buffer, bool need_full_ipc)
+        [lock, this, response, done, session]
+        (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
             lock->unlock();
 
             auto buffer = response->mutable_buffer();
-            pack_protobuf_buffer(*buffer, client_buffer, need_full_ipc);
+            pack_protobuf_buffer(*buffer, client_buffer, msg_type);
 
             // TODO: NOTE: We use the ordering here to ensure the shell acts on the surface after the surface ID is sent over the wire.
             // This guarantees that notifications such as, gained focus, etc, can be correctly interpreted by the client.
@@ -229,11 +234,12 @@ void mf::SessionMediator::next_buffer(
     auto surface = session->get_surface(surf_id);
 
     advance_buffer(surf_id, *surface,
-        [lock, this, response, done, session](graphics::Buffer* client_buffer, bool need_full_ipc)
+        [lock, this, response, done, session]
+        (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
             lock->unlock();
 
-            pack_protobuf_buffer(*response, client_buffer, need_full_ipc);
+            pack_protobuf_buffer(*response, client_buffer, msg_type);
 
             done->Run();
         });
@@ -373,7 +379,7 @@ void mf::SessionMediator::create_screencast(
     mir::protobuf::Screencast* protobuf_screencast,
     google::protobuf::Closure* done)
 {
-    static bool const need_full_ipc{true};
+    static auto const msg_type = mg::BufferIpcMsgType::full_msg;
 
     geom::Rectangle const region{
         {parameters->region().left(), parameters->region().top()},
@@ -389,7 +395,7 @@ void mf::SessionMediator::create_screencast(
         screencast_session_id.as_value());
     pack_protobuf_buffer(*protobuf_screencast->mutable_buffer(),
                          buffer.get(),
-                         need_full_ipc);
+                         msg_type);
 
     done->Run();
 }
@@ -412,7 +418,7 @@ void mf::SessionMediator::screencast_buffer(
     mir::protobuf::Buffer* protobuf_buffer,
     google::protobuf::Closure* done)
 {
-    static bool const does_not_need_full_ipc{false};
+    static auto const msg_type = mg::BufferIpcMsgType::update_msg;
     ScreencastSessionId const screencast_session_id{
         protobuf_screencast_id->value()};
 
@@ -420,7 +426,7 @@ void mf::SessionMediator::screencast_buffer(
 
     pack_protobuf_buffer(*protobuf_buffer,
                          buffer.get(),
-                         does_not_need_full_ipc);
+                         msg_type);
 
     done->Run();
 }
@@ -619,13 +625,10 @@ void mf::SessionMediator::stop_prompt_session(
 void mf::SessionMediator::pack_protobuf_buffer(
     protobuf::Buffer& protobuf_buffer,
     graphics::Buffer* graphics_buffer,
-    bool need_full_ipc)
+    mg::BufferIpcMsgType buffer_msg_type)
 {
     protobuf_buffer.set_buffer_id(graphics_buffer->id().as_uint32_t());
 
-    if (need_full_ipc)
-    {
-        mfd::ProtobufBufferPacker packer{&protobuf_buffer};
-        graphics_platform->fill_ipc_package(&packer, graphics_buffer);
-    }
+    mfd::ProtobufBufferPacker packer{&protobuf_buffer};
+    graphics_platform->fill_buffer_package(&packer, graphics_buffer, buffer_msg_type);
 }
