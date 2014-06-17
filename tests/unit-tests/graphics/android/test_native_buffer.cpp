@@ -24,7 +24,21 @@
 namespace mtd=mir::test::doubles;
 namespace mga=mir::graphics::android;
 
-TEST(AndroidRefcount, driver_hooks)
+struct NativeBuffer : public testing::Test
+{
+    NativeBuffer() :
+        a_native_window_buffer(std::make_shared<ANativeWindowBuffer>()),
+        mock_fence(std::make_shared<mtd::MockFence>()),
+        fake_fd{48484}
+    {
+    }
+
+    std::shared_ptr<ANativeWindowBuffer> a_native_window_buffer;
+    std::shared_ptr<mtd::MockFence> mock_fence;
+    int fake_fd;
+};
+
+TEST_F(NativeBuffer, external_refcount_driver_hooks)
 {
     auto native_handle_resource = std::make_shared<native_handle_t>();
     auto use_count_before = native_handle_resource.use_count();
@@ -46,7 +60,7 @@ TEST(AndroidRefcount, driver_hooks)
     EXPECT_EQ(use_count_before, native_handle_resource.use_count());
 }
 
-TEST(AndroidRefcount, driver_hooks_mir_ref)
+TEST_F(NativeBuffer, driver_hooks_mir_ref)
 {
     auto native_handle_resource = std::make_shared<native_handle_t>();
     auto use_count_before = native_handle_resource.use_count();
@@ -70,25 +84,56 @@ TEST(AndroidRefcount, driver_hooks_mir_ref)
     EXPECT_EQ(use_count_before, native_handle_resource.use_count());
 }
 
-TEST(AndroidAndroidNativeBuffer, wait_for_fence)
+TEST_F(NativeBuffer, access_for_read_while_being_read)
 {
-    auto fence = std::make_shared<mtd::MockFence>();
-    EXPECT_CALL(*fence, wait())
-        .Times(1);
+    EXPECT_CALL(*mock_fence, wait())
+        .Times(0);
+    mga::AndroidNativeBuffer buffer(a_native_window_buffer, mock_fence, mir::graphics::Access::read);
+    buffer.ensure_available_for(mir::graphics::Access::read);
+}
 
-    auto native_handle_resource = std::make_shared<ANativeWindowBuffer>();
-    mga::AndroidNativeBuffer buffer(native_handle_resource, fence);
+TEST_F(NativeBuffer, access_for_read_while_being_written)
+{
+    EXPECT_CALL(*mock_fence, wait())
+        .Times(1);
+    mga::AndroidNativeBuffer buffer(a_native_window_buffer, mock_fence, mir::graphics::Access::write);
+    buffer.ensure_available_for(mir::graphics::Access::read);
+}
+
+TEST_F(NativeBuffer, access_for_write_while_being_read)
+{
+    EXPECT_CALL(*mock_fence, wait())
+        .Times(1);
+    mga::AndroidNativeBuffer buffer(a_native_window_buffer, mock_fence, mir::graphics::Access::read);
     buffer.ensure_available_for(mir::graphics::Access::write);
 }
 
-TEST(AndroidAndroidNativeBuffer, update_usage)
+TEST_F(NativeBuffer, access_for_write_while_being_written)
 {
-    int fake_fd = 48484;
-    auto fence = std::make_shared<mtd::MockFence>();
-    EXPECT_CALL(*fence, merge_with(fake_fd))
+    EXPECT_CALL(*mock_fence, wait())
         .Times(1);
+    mga::AndroidNativeBuffer buffer(a_native_window_buffer, mock_fence, mir::graphics::Access::write);
+    buffer.ensure_available_for(mir::graphics::Access::write);
+}
 
-    auto native_handle_resource = std::make_shared<ANativeWindowBuffer>();
-    mga::AndroidNativeBuffer buffer(native_handle_resource, fence);
+TEST_F(NativeBuffer, update_usage)
+{
+    EXPECT_CALL(*mock_fence, merge_with(fake_fd))
+        .Times(1);
+    mga::AndroidNativeBuffer buffer(a_native_window_buffer, mock_fence, mir::graphics::Access::read);
     buffer.update_usage(fake_fd, mir::graphics::Access::write);
+}
+
+TEST_F(NativeBuffer, updates_access)
+{
+    EXPECT_CALL(*mock_fence, wait(fake_fd))
+        .Times(3);
+
+    mga::AndroidNativeBuffer buffer(a_native_window_buffer, mock_fence, mir::graphics::Access::read);
+    buffer.ensure_available_for(mir::graphics::Access::write);
+    buffer.ensure_available_for(mir::graphics::Access::read);
+
+    buffer.update_usage(fake_fd, mir::graphics::Access::write);
+    buffer.ensure_available_for(mir::graphics::Access::write);
+    buffer.ensure_available_for(mir::graphics::Access::read);
 }
