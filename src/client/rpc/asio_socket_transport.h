@@ -23,6 +23,7 @@
 #include "transport.h"
 
 #include <thread>
+#include <mutex>
 
 #include <boost/asio.hpp>
 
@@ -49,11 +50,14 @@ public:
 
 private:
     void init();
+    void notify_data_available(boost::system::error_code const& ec, size_t /*bytes_read*/);
 
     std::thread io_service_thread;
     boost::asio::io_service io_service;
     boost::asio::io_service::work work;
+    std::mutex mutex;
     boost::asio::local::stream_protocol::socket socket;
+    std::vector<std::shared_ptr<Observer>> observers;
 };
 
 }

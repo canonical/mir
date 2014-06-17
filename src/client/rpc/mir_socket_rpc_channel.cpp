@@ -71,15 +71,24 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
 
 mclr::MirProtobufRpcChannel::~MirProtobufRpcChannel()
 {
+    {
+        std::lock_guard<decltype(observer_mutex)> lock(observer_mutex);
+
+        disconnected = true;
+    }
+    // We need to kill the transport before we kill the lifecycle_control,
+    // otherwise we may end up trying to send a disconnected event.
+    transport.reset();
 }
 
 
 void mclr::MirProtobufRpcChannel::notify_disconnected()
 {
-    if (!disconnected.exchange(true))
+    if (!disconnected)
     {
         lifecycle_control->call_lifecycle_event_handler(mir_lifecycle_connection_lost);
     }
+    disconnected = true;
     pending_calls.force_completion();
 }
 
@@ -107,7 +116,7 @@ void mclr::MirProtobufRpcChannel::receive_any_file_descriptors_for(MessageType* 
 void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
-    if (!disconnected.load())
+    if (!disconnected)
     {
         auto const message_type = response->GetTypeName();
 
@@ -204,69 +213,6 @@ void mclr::MirProtobufRpcChannel::send_message(
     rpc_report->invocation_succeeded(invocation);
 }
 
-/*
-void mclr::MirProtobufRpcChannel::on_header_read(const boost::system::error_code& error)
-{
-    if (error)
-    {
-        // If we've not got a response to a call pending
-        // then during shutdown we expect to see "eof"
-        if (!pending_calls.empty() || error != boost::asio::error::eof)
-        {
-            rpc_report->header_receipt_failed(error);
-            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to read message header: " + error.message()));
-        }
-
-        return;
-    }
-
-    read_message();
-
-    boost::asio::async_read(
-        socket,
-        boost::asio::buffer(header_bytes),
-        boost::asio::transfer_exactly(sizeof header_bytes),
-        boost::bind(&MirProtobufRpcChannel::on_header_read, this,
-            boost::asio::placeholders::error));
-}
-*/
-void mclr::MirProtobufRpcChannel::read_message()
-{
-    mir::protobuf::wire::Result result;
-
-    try
-    {
-        const size_t body_size = read_message_header();
-
-        read_message_body(result, body_size);
-
-        rpc_report->result_receipt_succeeded(result);
-    }
-    catch (std::exception const& x)
-    {
-        rpc_report->result_receipt_failed(x);
-        throw;
-    }
-
-    try
-    {
-        for (int i = 0; i != result.events_size(); ++i)
-        {
-            process_event_sequence(result.events(i));
-        }
-
-        if (result.has_id())
-        {
-            pending_calls.complete_response(result);
-        }
-    }
-    catch (std::exception const& x)
-    {
-        rpc_report->result_processing_failed(result, x);
-        // Eat this exception as it doesn't affect rpc
-    }
-}
-
 void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& event)
 {
     mir::protobuf::EventSequence seq;
@@ -318,30 +264,13 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
     }
 }
 
-size_t mclr::MirProtobufRpcChannel::read_message_header()
-{
-    const size_t body_size = (header_bytes[0] << 8) + header_bytes[1];
-    return body_size;
-}
-
-void mclr::MirProtobufRpcChannel::read_message_body(
-    mir::protobuf::wire::Result& result,
-    size_t const body_size)
-{
-/*    boost::system::error_code error;
-    body_bytes.resize(body_size);
-    boost::asio::read(socket, boost::asio::buffer(body_bytes), error);
-    if (error)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to read message body: " + error.message()));
-    }
-*/
-    result.ParseFromArray(body_bytes.data(), body_size);
-}
-
-
 void mclr::MirProtobufRpcChannel::on_data_available()
 {
+    std::lock_guard<decltype(observer_mutex)> lock(observer_mutex);
+
+    if (disconnected)
+        return;
+
     mir::protobuf::wire::Result result;
     try
     {
@@ -383,5 +312,6 @@ void mclr::MirProtobufRpcChannel::on_data_available()
 
 void mclr::MirProtobufRpcChannel::on_disconnected()
 {
+    std::lock_guard<decltype(observer_mutex)> lock(observer_mutex);
     notify_disconnected();
 }

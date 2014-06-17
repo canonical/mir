@@ -2,6 +2,7 @@
 #include "mir/variable_length_array.h"
 
 #include <signal.h>
+#include <errno.h>
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -10,16 +11,20 @@
 
 namespace mclr = mir::client::rpc;
 
-mclr::AsioSocketTransport::AsioSocketTransport(int /*fd*/)
+mclr::AsioSocketTransport::AsioSocketTransport(int fd)
     : work{io_service},
       socket{io_service}
 {
+    socket.assign(boost::asio::local::stream_protocol(), fd);
+    init();
 }
 
-mclr::AsioSocketTransport::AsioSocketTransport(std::string const& /*socket_path*/)
+mclr::AsioSocketTransport::AsioSocketTransport(std::string const& socket_path)
     : work{io_service},
       socket{io_service}
 {
+    socket.connect(socket_path);
+    init();
 }
 
 mclr::AsioSocketTransport::~AsioSocketTransport()
@@ -32,13 +37,37 @@ mclr::AsioSocketTransport::~AsioSocketTransport()
     }
 }
 
-void mclr::AsioSocketTransport::register_observer(std::shared_ptr<Observer> const&/*callback*/)
+void mclr::AsioSocketTransport::register_observer(std::shared_ptr<Observer> const& observer)
 {
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    observers.push_back(observer);
 }
 
-size_t mclr::AsioSocketTransport::receive_data(void* /*buffer*/, size_t /*message_size*/)
+size_t mclr::AsioSocketTransport::receive_data(void* buffer, size_t message_size)
 {
-    return 0;
+    boost::system::error_code error;
+ /*
+    ssize_t bytes_read = boost::asio::read(socket, boost::asio::buffer(buffer, message_size), error);
+    */
+    ssize_t bytes_read = recv(socket.native_handle(), buffer, message_size, MSG_NOSIGNAL);
+
+ /*  if (bytes_read == EPIPE)
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        for(auto& observer : observers)
+        {
+            observer->on_disconnected();
+        }
+    }*/
+    if (bytes_read < 0)
+    {
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(
+                                  std::runtime_error(std::string("Failed to read message from server:")
+                                                     + strerror(errno)))
+                                  <<boost::errinfo_errno(errno));
+    }
+
+    return bytes_read;
 }
 
 void mclr::AsioSocketTransport::receive_file_descriptors(std::vector<int> &fds)
@@ -65,7 +94,21 @@ void mclr::AsioSocketTransport::receive_file_descriptors(std::vector<int> &fds)
     header.msg_control = control.data();
     header.msg_flags = 0;
 
-    recvmsg(socket.native_handle(), &header, 0);
+    socket.native_non_blocking(false);
+    ssize_t bytes_read = recvmsg(socket.native_handle(), &header, MSG_NOSIGNAL | MSG_WAITALL);
+
+    if (bytes_read < 0)
+    {
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(
+                                  std::runtime_error(std::string("Failed to read message from server:")
+                                                     + strerror(errno)))
+                                  <<boost::errinfo_errno(errno));
+/*        std::lock_guard<decltype(mutex)> lock(mutex);
+        for(auto& observer : observers)
+        {
+            observer->on_disconnected();
+        }*/
+    }
 
     // If we get a proper control message, copy the received
     // file descriptors back to the caller
@@ -81,27 +124,34 @@ void mclr::AsioSocketTransport::receive_file_descriptors(std::vector<int> &fds)
     }
     else
     {
-        BOOST_THROW_EXCEPTION(
-                    std::runtime_error("Invalid control message for receiving file descriptors"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid control message for receiving file descriptors"));
     }
 }
 
 size_t mclr::AsioSocketTransport::send_data(const std::vector<uint8_t>& buffer)
 {
     boost::system::error_code error;
+    /*
+    ssize_t bytes_written = boost::asio::write(socket, boost::asio::buffer(buffer), error);
+    */
+    ssize_t bytes_written = send(socket.native_handle(), buffer.data(), buffer.size(), MSG_NOSIGNAL);
 
-    boost::asio::write(
-        socket,
-        boost::asio::buffer(buffer),
-        error);
-
-    if (error)
+/*    if (bytes_written == EPIPE)
     {
-//        rpc_report->invocation_failed(invocation, error);
-//        notify_disconnected();
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send message to server: " + error.message()));
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        for(auto& observer : observers)
+        {
+            observer->on_disconnected();
+        }
+    }*/
+    if (bytes_written < 0)
+    {
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(
+                                  std::runtime_error(std::string("Failed to send message to server:")
+                                                     + strerror(errno)))
+                                  <<boost::errinfo_errno(errno));
     }
-    return 0;
+    return bytes_written;
 }
 
 void mclr::AsioSocketTransport::init()
@@ -116,23 +166,35 @@ void mclr::AsioSocketTransport::init()
                 BOOST_THROW_EXCEPTION(
                     boost::enable_error_info(
                         std::runtime_error("Failed to block signals on IO thread")) << boost::errinfo_errno(error));
-/*
-            boost::asio::async_read(
-                socket,
-                boost::asio::buffer(header_bytes),
-                boost::asio::transfer_exactly(sizeof header_bytes),
-                boost::bind(&MirProtobufRpcChannel::on_header_read, this,
-                    boost::asio::placeholders::error));
-*/
+
+            socket.async_read_some(boost::asio::null_buffers(),
+                                   std::bind(&mclr::AsioSocketTransport::notify_data_available, this,
+                                             std::placeholders::_1, std::placeholders::_2));
+
             try
             {
                 io_service.run();
             }
-            catch (std::exception const& x)
+            catch(...)
             {
-//                rpc_report->connection_failure(x);
-
-//                notify_disconnected();
+                std::lock_guard<decltype(mutex)> lock(mutex);
+                for(auto& observer : observers)
+                {
+                    observer->on_disconnected();
+                }
             }
-        });
+    });
+}
+
+void mclr::AsioSocketTransport::notify_data_available(boost::system::error_code const& /*ec*/, size_t /*bytes_read*/)
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    for (auto& observer : observers)
+    {
+        observer->on_data_available();
+    }
+    socket.async_read_some(boost::asio::null_buffers(),
+                           std::bind(&mclr::AsioSocketTransport::notify_data_available, this,
+                                     std::placeholders::_1, std::placeholders::_2));
+
 }
