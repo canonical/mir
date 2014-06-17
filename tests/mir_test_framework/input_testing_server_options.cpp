@@ -47,6 +47,12 @@ mtf::InputTestingServerConfiguration::InputTestingServerConfiguration()
 {
 }
 
+mtf::InputTestingServerConfiguration::InputTestingServerConfiguration(
+    std::vector<geom::Rectangle> const& display_rects) :
+    TestingServerConfiguration(display_rects)
+{
+}
+
 void mtf::InputTestingServerConfiguration::exec()
 {
     input_injection_thread = std::thread(std::mem_fn(&mtf::InputTestingServerConfiguration::inject_input), this);

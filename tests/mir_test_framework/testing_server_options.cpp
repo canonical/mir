@@ -27,6 +27,7 @@
 #include <fstream>
 
 namespace mtf = mir_test_framework;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -71,6 +72,12 @@ std::string create_random_socket_name()
 mtf::TestingServerConfiguration::TestingServerConfiguration() :
     using_server_started_sync(false)
 {
+}
+
+mtf::TestingServerConfiguration::TestingServerConfiguration(std::vector<geom::Rectangle> const& display_rects) :
+    StubbedServerConfiguration(display_rects)
+{
+    TestingServerConfiguration();
 }
 
 void mtf::TestingServerConfiguration::exec()

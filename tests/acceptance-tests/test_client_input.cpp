@@ -49,13 +49,16 @@ namespace
 struct ServerConfiguration : mtf::InputTestingServerConfiguration
 {
     mt::Barrier& input_cb_setup_fence;
+    
+    static geom::Rectangle const display_bounds;
 
     std::function<void(mtf::InputTestingServerConfiguration& server)> produce_events;
     mtf::SurfaceGeometries client_geometries;
     mtf::SurfaceDepths client_depths;
 
-    ServerConfiguration(mt::Barrier& input_cb_setup_fence)
-            : input_cb_setup_fence(input_cb_setup_fence)
+    ServerConfiguration(mt::Barrier& input_cb_setup_fence) : 
+        InputTestingServerConfiguration({display_bounds}),
+        input_cb_setup_fence(input_cb_setup_fence)
     {
     }
 
@@ -81,6 +84,8 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
         return scwrapper(wrapped);
     }
 };
+
+geom::Rectangle const ServerConfiguration::display_bounds = {{0, 0}, {1600, 1600}};
 
 struct ClientConfig : mtf::InputTestingClientConfiguration
 {
@@ -518,8 +523,8 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
 
     auto minimum_touch = mi::android::FakeEventHub::TouchScreenMinAxisValue;
     auto maximum_touch = mi::android::FakeEventHub::TouchScreenMaxAxisValue;
-    auto display_width = mtf::StubbedServerConfiguration::display_bounds.width.as_uint32_t();
-    auto display_height = mtf::StubbedServerConfiguration::display_bounds.height.as_uint32_t();
+    auto display_width = ServerConfiguration::display_bounds.size.width.as_uint32_t();
+    auto display_height = ServerConfiguration::display_bounds.size.height.as_uint32_t();
 
     // We place a click 10% in to the touchscreens space in both axis, and a second at 0,0. Thus we expect to see a click at
     // .1*screen_width/height and a second at zero zero.
@@ -541,7 +546,7 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
             server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position(abs_touch_x_1, abs_touch_y_1));
             server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position(abs_touch_x_2, abs_touch_y_2));
         };
-    server_configuration.client_geometries[arbitrary_client_name] = {{0, 0}, mtf::StubbedServerConfiguration::display_bounds};
+    server_configuration.client_geometries[arbitrary_client_name] = ServerConfiguration::display_bounds;
     start_server();
 
     client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)

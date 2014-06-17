@@ -54,6 +54,7 @@ class SessionMediatorReport;
 class EventSink;
 class DisplayChanger;
 class Screencast;
+class PromptSession;
 
 // SessionMediator relays requests from the client process into the server.
 class SessionMediator : public detail::DisplayServer
@@ -109,9 +110,9 @@ public:
                            google::protobuf::Closure* done) override;
 
     void configure_display(::google::protobuf::RpcController* controller,
-                       const ::mir::protobuf::DisplayConfiguration* request,
-                       ::mir::protobuf::DisplayConfiguration* response,
-                       ::google::protobuf::Closure* done) override;
+                           const ::mir::protobuf::DisplayConfiguration* request,
+                           ::mir::protobuf::DisplayConfiguration* response,
+                           ::google::protobuf::Closure* done) override;
 
     void create_screencast(google::protobuf::RpcController*,
                            const mir::protobuf::ScreencastParameters*,
@@ -127,11 +128,26 @@ public:
                            const mir::protobuf::ScreencastId*,
                            mir::protobuf::Buffer*,
                            google::protobuf::Closure* done);
-    
+
     void configure_cursor(google::protobuf::RpcController*,
                           mir::protobuf::CursorSetting const*,
                           mir::protobuf::Void*,
                           google::protobuf::Closure* done);
+
+    void start_prompt_session(::google::protobuf::RpcController* controller,
+                            const ::mir::protobuf::PromptSessionParameters* request,
+                            ::mir::protobuf::Void* response,
+                            ::google::protobuf::Closure* done);
+
+    void add_prompt_provider(::google::protobuf::RpcController* controller,
+                             const ::mir::protobuf::PromptProvider* request,
+                             ::mir::protobuf::Void*,
+                             ::google::protobuf::Closure* done);
+
+    void stop_prompt_session(::google::protobuf::RpcController* controller,
+                            const ::mir::protobuf::Void* request,
+                            ::mir::protobuf::Void* response,
+                            ::google::protobuf::Closure* done);
 
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,
@@ -139,7 +155,7 @@ public:
                         mir::protobuf::DRMAuthMagicStatus* response,
                         google::protobuf::Closure* done) override;
 
-    void new_fds_for_trusted_clients(
+    void new_fds_for_prompt_providers(
         ::google::protobuf::RpcController* controller,
         ::mir::protobuf::SocketFDRequest const* parameters,
         ::mir::protobuf::SocketFD* response,
@@ -152,7 +168,7 @@ private:
 
     void advance_buffer(SurfaceId surf_id, Surface& surface, std::function<void(graphics::Buffer*, bool)> complete);
 
-    virtual std::function<void(std::shared_ptr<Session> const&)> trusted_connect_handler() const;
+    virtual std::function<void(std::shared_ptr<Session> const&)> prompt_session_connect_handler() const;
 
     pid_t client_pid_;
     std::shared_ptr<Shell> const shell;
@@ -173,6 +189,7 @@ private:
 
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;
+    std::weak_ptr<PromptSession> weak_prompt_session;
 };
 
 }

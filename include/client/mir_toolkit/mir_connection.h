@@ -169,26 +169,6 @@ void mir_connection_get_available_surface_formats(
     MirConnection* connection, MirPixelFormat* formats,
     unsigned const int format_size, unsigned int *num_valid_formats);
 
-/**
- * Allocate some FDs for trusted clients to connect on
- *
- * Trust session helpers need to allocate connection FDs it will pass to
- * trusted clients to use when connecting to the server. The server can
- * then associate them with the trust session.
- *
- *   \warning This API is tentative until the implementation of trust sessions is complete
- *   \param [in] connection     The connection
- *   \param [in] no_of_fds      The number of fds to allocate
- *   \param [in] callback       Callback invoked when request completes
- *   \param [in,out] context    User data passed to the callback function
- *   \return                    A handle that can be passed to mir_wait_for
- */
-MirWaitHandle* mir_connection_new_fds_for_trusted_clients(
-    MirConnection* connection,
-    unsigned int no_of_fds,
-    mir_client_fd_callback callback,
-    void * context);
-
 #ifdef __cplusplus
 }
 /**@}*/

@@ -31,9 +31,8 @@
 #include "mir/frontend/connector.h"
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/null_display.h"
+#include "mir_test_doubles/stub_display.h"
 #include "mir_test_doubles/null_event_sink.h"
-#include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_renderer.h"
 #include "mir_test_doubles/null_pixel_buffer.h"
 
@@ -112,29 +111,15 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
 
     std::shared_ptr<mg::Display> the_display() override
     {
-        struct StubDisplay : public mtd::NullDisplay
-        {
-            StubDisplay()
-                : buffers{mtd::StubDisplayBuffer{geom::Rectangle{{0,0},{100,100}}},
-                          mtd::StubDisplayBuffer{geom::Rectangle{{100,0},{100,100}}},
-                          mtd::StubDisplayBuffer{geom::Rectangle{{0,100},{100,100}}}}
-            {
-
-            }
-
-            void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
-            {
-                for (auto& db : buffers)
-                    f(db);
-            }
-
-            std::vector<mtd::StubDisplayBuffer> buffers;
-        };
-
         return display(
             []()
             {
-                return std::make_shared<StubDisplay>();
+                return std::make_shared<mtd::StubDisplay>(
+                    std::vector<geom::Rectangle>{
+                        {{0,0},{100,100}},
+                        {{100,0},{100,100}},
+                        {{0,100},{100,100}}
+                    });
             });
     }
 
