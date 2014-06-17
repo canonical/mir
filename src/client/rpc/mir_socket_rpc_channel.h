@@ -82,15 +82,10 @@ private:
     void receive_any_file_descriptors_for(MessageType* response);
     void send_message(mir::protobuf::wire::Invocation const& body,
                       mir::protobuf::wire::Invocation const& invocation);
-//    void on_header_read(const boost::system::error_code& error);
 
     void read_message();
     void process_event_sequence(std::string const& event);
 
-    size_t read_message_header();
-
-    void read_message_body(mir::protobuf::wire::Result& result,
-                           size_t const body_size);
     void notify_disconnected();
 
     std::unique_ptr<Transport> transport;

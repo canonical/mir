@@ -120,51 +120,48 @@ void mclr::MirProtobufRpcChannel::receive_any_file_descriptors_for(MessageType* 
 void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
-    if (!disconnected)
+    auto const message_type = response->GetTypeName();
+
+    mir::protobuf::Surface* surface = nullptr;
+    mir::protobuf::Buffer* buffer = nullptr;
+    mir::protobuf::Platform* platform = nullptr;
+    mir::protobuf::SocketFD* socket_fd = nullptr;
+
+    if (message_type == "mir.protobuf.Buffer")
     {
-        auto const message_type = response->GetTypeName();
-
-        mir::protobuf::Surface* surface = nullptr;
-        mir::protobuf::Buffer* buffer = nullptr;
-        mir::protobuf::Platform* platform = nullptr;
-        mir::protobuf::SocketFD* socket_fd = nullptr;
-
-        if (message_type == "mir.protobuf.Buffer")
-        {
-            buffer = static_cast<mir::protobuf::Buffer*>(response);
-        }
-        else if (message_type == "mir.protobuf.Surface")
-        {
-            surface = static_cast<mir::protobuf::Surface*>(response);
-            if (surface && surface->has_buffer())
-                buffer = surface->mutable_buffer();
-        }
-        else if (message_type == "mir.protobuf.Screencast")
-        {
-            auto screencast = static_cast<mir::protobuf::Screencast*>(response);
-            if (screencast && screencast->has_buffer())
-                buffer = screencast->mutable_buffer();
-        }
-        else if (message_type == "mir.protobuf.Platform")
-        {
-            platform = static_cast<mir::protobuf::Platform*>(response);
-        }
-        else if (message_type == "mir.protobuf.Connection")
-        {
-            auto connection = static_cast<mir::protobuf::Connection*>(response);
-            if (connection && connection->has_platform())
-                platform = connection->mutable_platform();
-        }
-        else if (message_type == "mir.protobuf.SocketFD")
-        {
-            socket_fd = static_cast<mir::protobuf::SocketFD*>(response);
-        }
-
-        receive_any_file_descriptors_for(surface);
-        receive_any_file_descriptors_for(buffer);
-        receive_any_file_descriptors_for(platform);
-        receive_any_file_descriptors_for(socket_fd);
+        buffer = static_cast<mir::protobuf::Buffer*>(response);
     }
+    else if (message_type == "mir.protobuf.Surface")
+    {
+        surface = static_cast<mir::protobuf::Surface*>(response);
+        if (surface && surface->has_buffer())
+            buffer = surface->mutable_buffer();
+    }
+    else if (message_type == "mir.protobuf.Screencast")
+    {
+        auto screencast = static_cast<mir::protobuf::Screencast*>(response);
+        if (screencast && screencast->has_buffer())
+            buffer = screencast->mutable_buffer();
+    }
+    else if (message_type == "mir.protobuf.Platform")
+    {
+        platform = static_cast<mir::protobuf::Platform*>(response);
+    }
+    else if (message_type == "mir.protobuf.Connection")
+    {
+        auto connection = static_cast<mir::protobuf::Connection*>(response);
+        if (connection && connection->has_platform())
+            platform = connection->mutable_platform();
+    }
+    else if (message_type == "mir.protobuf.SocketFD")
+    {
+        socket_fd = static_cast<mir::protobuf::SocketFD*>(response);
+    }
+
+    receive_any_file_descriptors_for(surface);
+    receive_any_file_descriptors_for(buffer);
+    receive_any_file_descriptors_for(platform);
+    receive_any_file_descriptors_for(socket_fd);
     complete->Run();
 }
 
