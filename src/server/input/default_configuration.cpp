@@ -211,12 +211,10 @@ mir::DefaultServerConfiguration::the_cursor_listener()
 std::shared_ptr<mg::CursorImage>
 mir::DefaultServerConfiguration::the_default_cursor_image()
 {
-    static geometry::Size const default_cursor_size = {geometry::Width{64},
-                                                       geometry::Height{64}};
     return default_cursor_image(
         [this]()
         {
-            return the_cursor_images()->image(mir_default_cursor_name, default_cursor_size);
+            return the_cursor_images()->image(mir_default_cursor_name, mg::default_cursor_size);
         });
 }
 
