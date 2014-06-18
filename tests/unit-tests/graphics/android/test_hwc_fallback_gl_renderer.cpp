@@ -121,6 +121,7 @@ public:
     size_t const stride{sizeof(mg::GLVertex)};
 
     testing::NiceMock<MockGLProgramFactory> mock_gl_program_factory;
+    testing::NiceMock<mtd::MockSwappingGLContext> mock_swapping_context;
     testing::NiceMock<MockContext> mock_context;
     testing::NiceMock<mtd::MockGL> mock_gl;
     testing::NiceMock<mtd::MockEGL> mock_egl;
@@ -205,7 +206,6 @@ MATCHER_P2(MatchesVertices, vertices, stride, "matches vertices")
 TEST_F(HWCFallbackGLRenderer, computes_vertex_coordinates_correctly)
 {
     using namespace testing;
-    NiceMock<mtd::MockSwappingGLContext> mock_context_s;
     geom::Rectangle rect1{{100,200},{50, 60}};
     geom::Rectangle rect2{{150,250},{150, 90}};
     
@@ -238,13 +238,12 @@ TEST_F(HWCFallbackGLRenderer, computes_vertex_coordinates_correctly)
         .Times(1);
 
     mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
-    glprogram.render(renderlist, mock_context_s);
+    glprogram.render(renderlist, mock_swapping_context);
 }
 
 TEST_F(HWCFallbackGLRenderer, computes_texture_coordinates_correctly)
 {
     using namespace testing;
-    NiceMock<mtd::MockSwappingGLContext> mock_context_s;
     geom::Rectangle rect1{{100,200},{50, 60}};
     geom::Rectangle rect2{{150,250},{150, 90}};
     
@@ -266,13 +265,12 @@ TEST_F(HWCFallbackGLRenderer, computes_texture_coordinates_correctly)
         .Times(2);
 
     mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
-    glprogram.render(renderlist, mock_context_s);
+    glprogram.render(renderlist, mock_swapping_context);
 }
 
 TEST_F(HWCFallbackGLRenderer, executes_render_in_sequence)
 {
     using namespace testing;
-    NiceMock<mtd::MockSwappingGLContext> mock_context_s;
     auto renderable1 = std::make_shared<mtd::StubRenderable>();
     auto renderable2 = std::make_shared<mtd::StubRenderable>();
     mg::RenderableList renderlist{ renderable1, renderable2 };
@@ -308,8 +306,27 @@ TEST_F(HWCFallbackGLRenderer, executes_render_in_sequence)
 
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(texcoord_attr_loc));
     EXPECT_CALL(mock_gl, glDisableVertexAttribArray(position_attr_loc));
-    EXPECT_CALL(mock_context_s, swap_buffers());
+    EXPECT_CALL(mock_swapping_context, swap_buffers());
     EXPECT_CALL(mock_gl, glUseProgram(0));
 
-    glprogram.render(renderlist, mock_context_s);
+    glprogram.render(renderlist, mock_swapping_context);
+}
+
+TEST_F(HWCFallbackGLRenderer, activates_alpha_per_renderable)
+{
+    mg::RenderableList renderlist{
+        std::make_shared<mtd::StubTranslucentRenderable>(),
+        std::make_shared<mtd::StubRenderable>(),
+        std::make_shared<mtd::StubTranslucentRenderable>()
+    };
+
+    mga::HWCFallbackGLRenderer glprogram(mock_gl_program_factory, mock_context, dummy_screen_pos);
+
+    testing::InSequence seq;
+    EXPECT_CALL(mock_gl, glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
+    EXPECT_CALL(mock_gl, glEnable(GL_BLEND));
+    EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
+    EXPECT_CALL(mock_gl, glEnable(GL_BLEND));
+
+    glprogram.render(renderlist, mock_swapping_context);
 }
