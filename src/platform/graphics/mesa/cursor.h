@@ -82,6 +82,8 @@ private:
     enum ForceCursorState { UpdateState, ForceState };
     void for_each_used_output(std::function<void(KMSOutput&, geometry::Rectangle const&, MirOrientation orientation)> const& f);
     void place_cursor_at(geometry::Point position, ForceCursorState force_state);
+    void write_buffer_data_locked(std::lock_guard<std::mutex> const&, void const* data, size_t count);
+    void pad_and_write_image_data_locked(std::lock_guard<std::mutex> const&, CursorImage const& image);
     
     std::mutex guard;
 

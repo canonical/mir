@@ -226,7 +226,8 @@ mir::DefaultServerConfiguration::the_cursor_images()
     return cursor_images(
         [this]()
         {
-            // TODO: Default to builtin repository?
+            // TODO: Consider defaulting to builtin repository?
+            // if we do not load any images.
             return std::make_shared<mi::XCursorLoader>();
         });
 }

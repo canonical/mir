@@ -260,23 +260,64 @@ TEST_F(MesaCursorTest, show_cursor_writes_to_bo)
     cursor.show(image);
 }
 
-TEST_F(MesaCursorTest, show_cursor_throws_on_incorrect_size)
+// When we upload our 1x1 cursor we should upload a single white pixel and then transparency filling a 64x64 buffer.
+MATCHER(ContainsASingleWhitePixel, "")
+{
+    auto pixels = static_cast<uint32_t const*>(arg);
+    if (pixels[0] != 0xffffffff)
+        return false;
+    for (int i = 1; i < 64*64; i++)
+    {
+        if (pixels[i] != 0x0)
+            return false;
+    }
+    return true; 
+}
+
+TEST_F(MesaCursorTest, show_cursor_pads_missing_data)
 {
     using namespace testing;
 
-    struct InvalidlySizedCursorImage : public StubCursorImage
+    struct SinglePixelCursorImage : public StubCursorImage
     {
         geom::Size size() const
         {
-            return invalid_cursor_size;
+            return small_cursor_size;
         }
-        size_t const cursor_side{48};
-        geom::Size const invalid_cursor_size{cursor_side, cursor_side};
+        void const* as_argb_8888() const
+        {
+            static uint32_t const pixel = 0xffffffff;
+            return &pixel;
+        }
+
+        size_t const cursor_side{1};
+        geom::Size const small_cursor_size{cursor_side, cursor_side};
     };
 
-    EXPECT_THROW(
-        cursor.show(InvalidlySizedCursorImage());
-    , std::logic_error);
+    // We expect a full 64x64 pixel write as we will pad missing data with transparency.
+    size_t const buffer_size_bytes{64 * 64 * sizeof(uint32_t)};
+    EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, ContainsASingleWhitePixel(), buffer_size_bytes));
+
+    cursor.show(SinglePixelCursorImage());
+}
+
+TEST_F(MesaCursorTest, throws_when_images_are_too_large)
+{
+    using namespace testing;
+
+    struct LargeCursorImage : public StubCursorImage
+    {
+        geom::Size size() const
+        {
+            return large_cursor_size;
+        }
+        size_t const cursor_side{128};
+        geom::Size const large_cursor_size{cursor_side, cursor_side};
+    };
+
+    EXPECT_THROW({
+        cursor.show(LargeCursorImage());
+    }, std::logic_error);
 }
 
 TEST_F(MesaCursorTest, forces_cursor_state_on_construction)

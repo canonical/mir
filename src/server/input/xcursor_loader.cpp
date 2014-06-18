@@ -49,7 +49,7 @@ struct XCursorImage : public mg::CursorImage
             image->height != mg::default_cursor_size.height.as_uint32_t())
         {
             BOOST_THROW_EXCEPTION(
-                std::runtime_error("Somehow we got a cursor not of the default size (currently only 64x64 supported)"));
+                std::runtime_error("Somehow we got a cursor not of the default size (currently only 48x48 supported)"));
         }
     }
 

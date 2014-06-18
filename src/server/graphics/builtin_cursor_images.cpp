@@ -21,6 +21,8 @@
 
 #include "mir/graphics/cursor_image.h"
 
+// TODO: Move to input!
+
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 

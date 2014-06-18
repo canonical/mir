@@ -35,8 +35,8 @@ namespace geom = mir::geometry;
 
 namespace
 {
-int const width = 64;
-int const height = 64;
+int const buffer_width = 64;
+int const buffer_height = 64;
 
 // Transforms a relative position within the display bounds described by \a rect which is rotated with \a orientation
 geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement const& vector, MirOrientation orientation)
@@ -59,8 +59,8 @@ geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement con
 mgm::Cursor::GBMBOWrapper::GBMBOWrapper(gbm_device* gbm) :
     buffer(gbm_bo_create(
                 gbm,
-                width,
-                height,
+                buffer_width,
+                buffer_height,
                 GBM_FORMAT_ARGB8888,
                 GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE))
 {
@@ -91,24 +91,60 @@ mgm::Cursor::~Cursor() noexcept
     hide();
 }
 
-void mgm::Cursor::show(CursorImage const& cursor_image)
+void mgm::Cursor::write_buffer_data_locked(std::lock_guard<std::mutex> const&, void const* data, size_t count)
 {
-    std::lock_guard<std::mutex> lg(guard);
-    visible = true;
-
-    auto const& size = cursor_image.size();
-
-    if (size != geometry::Size{width, height})
-        BOOST_THROW_EXCEPTION(std::logic_error("No support for cursors that aren't 64x64"));
-
-    auto const count = size.width.as_uint32_t() * size.height.as_uint32_t() * sizeof(uint32_t);
-
-    if (auto result = gbm_bo_write(buffer, cursor_image.as_argb_8888(), count))
+    if (auto result = gbm_bo_write(buffer, data, count))
     {
         BOOST_THROW_EXCEPTION(
             ::boost::enable_error_info(std::runtime_error("failed to initialize gbm buffer"))
                 << (boost::error_info<Cursor, decltype(result)>(result)));
     }
+}
+
+void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> const& lg, CursorImage const& image)
+{
+    uint32_t const* image_argb = static_cast<uint32_t const*>(image.as_argb_8888());
+    auto image_width = image.size().width.as_uint32_t();
+    auto image_height = image.size().height.as_uint32_t();
+
+    if (image_width > buffer_width || image_height > buffer_height)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Image is too big for GBM cursor buffer"));
+    }
+    
+    uint32_t *pixels = static_cast<uint32_t*>(calloc(buffer_width*buffer_height, sizeof(uint32_t)));
+    // 'pixels' is initialized to transparent so we just need to fill in the initial image.
+    for (unsigned int i = 0; i < image_height; i++)
+    {
+        for (unsigned int j = 0; i < image_width; i++)
+        {
+            pixels[buffer_width*i+j] = image_argb[image_width*i + j];
+        }
+    }
+
+    auto const count = buffer_width * buffer_height * sizeof(uint32_t);
+    write_buffer_data_locked(lg, pixels, count);
+    free(pixels);
+}
+
+void mgm::Cursor::show(CursorImage const& cursor_image)
+{
+    std::lock_guard<std::mutex> lg(guard);
+
+    auto const& size = cursor_image.size();
+
+    if (size != geometry::Size{buffer_width, buffer_height})
+    {
+        pad_and_write_image_data_locked(lg, cursor_image);
+    }
+    else
+    {
+        auto const count = size.width.as_uint32_t() * size.height.as_uint32_t() * sizeof(uint32_t);
+        write_buffer_data_locked(lg, cursor_image.as_argb_8888(), count);
+    }
+
+    // Writing the data could throw an exception so hold setting visible until after.
+    visible = true;
 }
 
 void mgm::Cursor::move_to(geometry::Point position)
