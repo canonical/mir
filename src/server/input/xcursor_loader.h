@@ -23,7 +23,6 @@
 #include "mir/graphics/cursor_images.h"
 
 #include <memory>
-#include <vector>
 #include <string>
 #include <map>
 #include <mutex>
@@ -62,8 +61,6 @@ private:
     std::mutex guard;
 
     std::map<std::string, std::shared_ptr<graphics::CursorImage>> loaded_images;
-
-    std::vector<std::shared_ptr<_XcursorImages>> resources;
 
     void load_cursor_theme(std::string const& theme_name);
     void load_appropriately_sized_image(_XcursorImages *images);

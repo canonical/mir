@@ -45,7 +45,8 @@ struct XCursorImage : public mg::CursorImage
         : image(image),
           save_resource(save_resource)
     {
-        if (image->size != mg::default_cursor_size.width.as_uint32_t())
+        if (image->width != mg::default_cursor_size.width.as_uint32_t() ||
+            image->height != mg::default_cursor_size.height.as_uint32_t())
         {
             BOOST_THROW_EXCEPTION(
                 std::runtime_error("Somehow we got a cursor not of the default size (currently only 64x64 supported)"));
@@ -78,13 +79,13 @@ mi::XCursorLoader::XCursorLoader()
 // Each XcursorImages represents images for the different sizes of a given symbolic cursor.
 void mi::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images)
 {
-    // TODO: We would rather take this lock in load_cursor_theme but the Xcursor lib style 
+    // We would rather take this lock in load_cursor_theme but the Xcursor lib style 
     // makes it difficult to use our standard 'pass the lg around to _locked members' pattern
     std::lock_guard<std::mutex> lg(guard);
 
     // We have to save all the images as XCursor expects us to free them.
     // This contains the actual image data though, so we need to ensure they stay alive 
-    // with the lifetime of the images (rather than the lifetime of this object)
+    // with the lifetime of the mg::CursorImage instance which refers to them.
     auto saved_xcursor_library_resource = std::shared_ptr<_XcursorImages>(images, [](_XcursorImages *images)
         {
             XcursorImagesDestroy(images);
@@ -108,8 +109,9 @@ void mi::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images)
 
 void mi::XCursorLoader::load_cursor_theme(std::string const& theme_name)
 {
- 
-    xcursor_load_theme(theme_name.c_str(), mg::default_cursor_size.width.as_uint32_t(),
+    // Cursors are named by their square dimension...called the nominal size in XCursor terminology, so we just look up by width.
+    // Later we verify the actual size.
+    xcursor_load_theme(theme_name.c_str(), mg::default_cursor_size.width.as_uint32_t(), 
         [](XcursorImages* images, void *this_ptr)  -> void
         {
             // Can't use lambda capture as this lambda is thunked to a C function ptr
@@ -128,6 +130,8 @@ std::shared_ptr<mg::CursorImage> mi::XCursorLoader::image(std::string const& cur
     if (size != mg::default_cursor_size)
         BOOST_THROW_EXCEPTION(
             std::logic_error("Only the default cursor size is currently supported (mg::default_cursor_size)"));
+    
+    std::lock_guard<std::mutex> lg(guard);
 
     auto it = loaded_images.find(cursor_name);
     if (it != loaded_images.end())
