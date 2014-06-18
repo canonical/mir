@@ -41,6 +41,7 @@
 #include <gmock/gmock.h>
 
 #include <assert.h>
+#include <cstring>
 
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
@@ -150,7 +151,7 @@ struct CursorSettingClient : mtf::TestingClientConfiguration
     }
 };
 
-char const* const CursorSettingClient::mir_test_socket = mtf::test_socket_file().c_str();
+char const* const CursorSettingClient::mir_test_socket = strdup(mtf::test_socket_file().c_str());
 
 struct MockSurfaceObserver : public ms::NullSurfaceObserver
 {
