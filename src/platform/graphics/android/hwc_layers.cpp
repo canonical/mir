@@ -31,6 +31,13 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
+namespace
+{
+decltype(hwc_layer_1_t::planeAlpha) static const plane_alpha_max{
+    std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max()
+};
+}
+
 mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer && other)
 {
     hwc_layer = other.hwc_layer;
@@ -59,7 +66,7 @@ mga::HWCLayer::HWCLayer(std::shared_ptr<hwc_display_contents_1_t> list, size_t l
     hwc_layer->acquireFenceFd = -1;
     hwc_layer->releaseFenceFd = -1;
     hwc_layer->blending = HWC_BLENDING_NONE;
-    hwc_layer->planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
+    hwc_layer->planeAlpha = plane_alpha_max;
 
     hwc_layer->visibleRegionScreen.numRects=1;
     hwc_layer->visibleRegionScreen.rects= &visible_rect;
@@ -124,7 +131,7 @@ void mga::HWCLayer::set_render_parameters(geometry::Rectangle position, bool alp
     else
         hwc_layer->blending = HWC_BLENDING_NONE;
 
-    hwc_layer->planeAlpha = 0xFF;
+    hwc_layer->planeAlpha = plane_alpha_max;
 
     /* note, if the sourceCrop and DisplayFrame sizes differ, the output will be linearly scaled */
     hwc_layer->displayFrame = 

@@ -52,7 +52,7 @@ bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
 
     for(auto const& renderable : list)
     {
-        //TODO: enable planeAlpha, 90 deg rotation
+        //TODO: enable planeAlpha for (hwc version >= 1.2), 90 deg rotation
         static glm::mat4 const identity;
         if (plane_alpha_is_translucent(*renderable) ||
            (renderable->transformation() != identity))
