@@ -313,6 +313,7 @@ TEST_F(ClientLibrary, can_set_surface_state)
     mir_connection_release(connection);
 }
 
+// TODO remove - obsoleted by
 TEST_F(ClientLibrary, receives_surface_state_events)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);

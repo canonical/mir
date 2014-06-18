@@ -39,8 +39,35 @@ using namespace testing;
 
 namespace
 {
+struct SceneSurface // TODO remove dummy
+{
+    void orientation(MirOrientation) {}
+};
+
+
+struct MockSurfaceCoordinator : msh::SurfaceCoordinatorWrapper
+{
+    using msh::SurfaceCoordinatorWrapper::SurfaceCoordinatorWrapper;
+
+    // TODO need mocked functions to hook into server side
+};
+
 struct MyConfig : mtf::StubbedServerConfiguration
 {
+    std::shared_ptr<ms::SurfaceCoordinator> wrap_surface_coordinator(
+        std::shared_ptr<ms::SurfaceCoordinator> const& wrapped) override
+    {
+        auto const msc = std::make_shared<MockSurfaceCoordinator>(wrapped);
+        mock_surface_coordinator = msc;
+        return msc;
+    }
+
+    std::shared_ptr<MockSurfaceCoordinator> the_mock_surface_coordinator() const
+    {
+        return mock_surface_coordinator.lock();
+    }
+
+    std::weak_ptr<MockSurfaceCoordinator> mock_surface_coordinator;
 };
 
 using BasicClientServerFixture = mtf::BasicClientServerFixture<MyConfig>;
@@ -63,12 +90,16 @@ struct ClientSurfaceEvents : BasicClientServerFixture
     MirSurface* last_event_surface = nullptr;
     MirEventDelegate delegate{&event_callback, this};
 
+    std::shared_ptr<SceneSurface> scene_surface{new SceneSurface()};
+
     static void event_callback(MirSurface* surface, MirEvent const* event, void* ctx)
     {
         ClientSurfaceEvents* self = static_cast<ClientSurfaceEvents*>(ctx);
         self->last_event = *event;
         self->last_event_surface = surface;
     }
+
+    bool receive_event_within(std::chrono::milliseconds) { return true; } // TODO
 
     void reset_last_event()
     {
@@ -135,3 +166,22 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
     EXPECT_THAT(last_event.surface.attrib, Eq(0));
     EXPECT_THAT(last_event.surface.value, Eq(0));
 }
+
+struct OrientationEvents : ClientSurfaceEvents, ::testing::WithParamInterface<MirOrientation> {};
+
+TEST_P(OrientationEvents, surface_receives_orientation_events)
+{
+    auto const direction = GetParam();
+
+    scene_surface->orientation(direction);
+
+    EXPECT_TRUE(receive_event_within(std::chrono::milliseconds(100)));
+
+    EXPECT_THAT(last_event_surface, Eq(surface));
+    EXPECT_THAT(last_event.type, Eq(mir_event_type_orientation));
+    EXPECT_THAT(last_event.orientation.direction, Eq(direction));
+}
+
+INSTANTIATE_TEST_CASE_P(ClientSurfaceEvents,
+    OrientationEvents,
+    Values(mir_orientation_normal, mir_orientation_left, mir_orientation_inverted, mir_orientation_right));
