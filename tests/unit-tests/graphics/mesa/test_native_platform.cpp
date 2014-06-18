@@ -129,16 +129,22 @@ TEST_F(MesaNativePlatformTest, packs_buffer_ipc_package_correctly)
     auto const native_buffer = stub_buffer.native_buffer_handle();
 
     for(auto i = 0; i < native_buffer->fd_items; i++)
-        EXPECT_CALL(mock_packer, pack_fd(native_buffer->fd[i]));
+        EXPECT_CALL(mock_packer, pack_fd(native_buffer->fd[i]))
+            .Times(Exactly(1));
 
     for(auto i = 0; i < native_buffer->data_items; i++)
-        EXPECT_CALL(mock_packer, pack_data(native_buffer->data[i]));
+        EXPECT_CALL(mock_packer, pack_data(native_buffer->data[i]))
+            .Times(Exactly(1));
 
-    EXPECT_CALL(mock_packer, pack_stride(stub_buffer.stride()));
-    EXPECT_CALL(mock_packer, pack_flags(native_buffer->flags));
-    EXPECT_CALL(mock_packer, pack_size(stub_buffer.size()));
+    EXPECT_CALL(mock_packer, pack_stride(stub_buffer.stride()))
+        .Times(Exactly(1));
+    EXPECT_CALL(mock_packer, pack_flags(native_buffer->flags))
+        .Times(Exactly(1));
+    EXPECT_CALL(mock_packer, pack_size(stub_buffer.size()))
+        .Times(Exactly(1));
 
     mgm::NativePlatform native;
 
-    native.fill_ipc_package(&mock_packer, &stub_buffer);
+    native.fill_buffer_package(&mock_packer, &stub_buffer, mg::BufferIpcMsgType::full_msg);
+    native.fill_buffer_package(&mock_packer, &stub_buffer, mg::BufferIpcMsgType::update_msg);
 }
