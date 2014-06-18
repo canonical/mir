@@ -38,10 +38,10 @@ namespace rpc
  *       from different threads. Multiple threads calling the same
  *       function need synchronisation.
  */
-class Transport
+class StreamTransport
 {
 public:
-    virtual ~Transport() = default;
+    virtual ~StreamTransport() = default;
 
     /**
      * \brief Observer of IO status
@@ -76,6 +76,8 @@ public:
      * \param [in]  read_bytes      Number of bytes to read
      * \throws A std::runtime_error if it is not possible to read
      *         read_bytes bytes from the server.
+     *
+     * \note This provides stream semantics - message boundaries are not preserved.
      */
     virtual void receive_data(void* buffer, size_t read_bytes) = 0;
 

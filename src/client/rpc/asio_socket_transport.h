@@ -34,7 +34,7 @@ namespace client
 namespace rpc
 {
 
-class AsioSocketTransport : public Transport
+class AsioSocketTransport : public StreamTransport
 {
 public:
     AsioSocketTransport(int fd);

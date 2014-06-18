@@ -51,10 +51,10 @@ class RpcReport;
 
 class MirProtobufRpcChannel :
         public MirBasicRpcChannel,
-        public Transport::Observer
+        public StreamTransport::Observer
 {
 public:
-    MirProtobufRpcChannel(std::unique_ptr<Transport> transport,
+    MirProtobufRpcChannel(std::unique_ptr<StreamTransport> transport,
                           std::shared_ptr<SurfaceMap> const& surface_map,
                           std::shared_ptr<DisplayConfiguration> const& disp_config,
                           std::shared_ptr<RpcReport> const& rpc_report,
@@ -88,7 +88,7 @@ private:
 
     void notify_disconnected();
 
-    std::unique_ptr<Transport> transport;
+    std::unique_ptr<StreamTransport> transport;
     std::shared_ptr<SurfaceMap> surface_map;
     std::shared_ptr<DisplayConfiguration> display_configuration;
     std::shared_ptr<LifecycleControl> lifecycle_control;

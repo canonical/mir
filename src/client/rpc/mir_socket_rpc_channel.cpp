@@ -45,7 +45,7 @@ std::chrono::milliseconds const timeout(200);
 }
 
 mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
-    std::unique_ptr<mclr::Transport> transport,
+    std::unique_ptr<mclr::StreamTransport> transport,
     std::shared_ptr<mcl::SurfaceMap> const& surface_map,
     std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<RpcReport> const& rpc_report,
@@ -70,7 +70,7 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
 
     // This fake shared ptr is safe; we own the Transport, so the lifetime of this
     // is guaranteed to exceed the lifetime of the Transport
-    this->transport->register_observer(std::shared_ptr<mclr::Transport::Observer>{this, NullDeleter()});
+    this->transport->register_observer(std::shared_ptr<mclr::StreamTransport::Observer>{this, NullDeleter()});
 }
 
 mclr::MirProtobufRpcChannel::~MirProtobufRpcChannel()

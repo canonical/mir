@@ -51,7 +51,7 @@ public:
     }
 };
 
-class MockTransport : public mclr::Transport
+class MockTransport : public mclr::StreamTransport
 {
 public:
     MockTransport()
