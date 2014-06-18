@@ -1,5 +1,6 @@
-mir (0.3.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.3.0+14.10.20140618.1-0ubuntu1) utopic; urgency=medium
 
+  [ Cemil Azizoglu ]
   * New upstream release 0.3.0 (https://launchpad.net/mir/+milestone/0.3.0)
     - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
     - mirserver ABI bumped to 21. Shells need rebuilding.
@@ -39,7 +40,10 @@ mir (0.3.0-0ubuntu1) UNRELEASED; urgency=medium
          pre-multiplied alpha sources. (LP: #1318852)
        . Rework the recomposition messaging so that the DisplayBufferCompositor
          is no longer involved. (LP: #1319907)
- -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Thu, 12 Jun 2014 20:15:39 +0800
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 18 Jun 2014 17:51:53 +0000
 
 mir (0.2.0+14.10.20140605-0ubuntu1) utopic; urgency=medium
 
