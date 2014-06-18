@@ -37,12 +37,11 @@ public:
 
     bool apply_orientation(MirOrientation orientation) const;
     void mode(MirPowerMode mode);
-    virtual void render_gl(SwappingGLContext const& context);
-    virtual void prepare_overlays(
+    virtual void post_gl(SwappingGLContext const& context);
+    virtual bool post_overlays(
         SwappingGLContext const& context,
         RenderableList const& list,
         RenderableListCompositor const& list_compositor);
-    void post(Buffer const& buffer);
 
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;

@@ -88,6 +88,12 @@ typedef enum MirPowerMode
     mir_power_mode_off /* Powered down. */
 } MirPowerMode;
 
+typedef enum MirPromptSessionState
+{
+    mir_prompt_session_state_stopped = 0,
+    mir_prompt_session_state_started
+} MirPromptSessionState;
+
 /**
  * The order of components in a format enum matches the
  * order of the components as they would be written in an
@@ -118,6 +124,17 @@ typedef enum MirOrientation
     mir_orientation_inverted = 180,
     mir_orientation_right = 270
 } MirOrientation;
+
+/**
+ * A special cursor name for use with mir_cursor_configuration_from_name
+ * representing the system default cursor.
+ */
+extern char const *const mir_default_cursor_name;
+/**
+ * A special cursor name for use with mir_cursor_configuration_from_name
+ * representing a disabled cursor image.
+ */
+extern char const *const mir_disabled_cursor_name;
 
 /**@}*/
 

@@ -22,20 +22,17 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
+#include "mir_test_doubles/platform_factory.h"
 #ifndef ANDROID
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
-#include "mir_test_doubles/null_virtual_terminal.h"
-#include "src/platform/graphics/mesa/platform.h"
 #include "mir_test_framework/udev_environment.h"
 #else
 #include "mir_test_doubles/mock_android_hw.h"
 #endif
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/logging/dumb_console_logger.h"
-#include "mir/options/program_option.h"
 
-#include "src/server/report/null_report_factory.h"
 
 #include <gtest/gtest.h>
 
@@ -43,7 +40,6 @@ namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
-namespace mr = mir::report;
 namespace mo = mir::options;
 #ifndef ANDROID
 namespace mtf = mir::mir_test_framework;
@@ -73,14 +69,7 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-#ifdef ANDROID
-        return mg::create_platform(std::make_shared<mo::ProgramOption>(), mr::null_display_report());
-#else
-        return std::make_shared<mg::mesa::Platform>(
-            mr::null_display_report(),
-            std::make_shared<mir::test::doubles::NullVirtualTerminal>(),
-            mg::mesa::BypassOption::prohibited);
-#endif
+        return mtd::create_platform_with_null_dependencies();
     }
 
     std::shared_ptr<ml::Logger> logger;

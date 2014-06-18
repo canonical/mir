@@ -104,7 +104,7 @@ std::shared_ptr<mia::InputThread> mia::DefaultInputConfiguration::the_reader_thr
     return reader_thread(
         [this]()
         {
-            return std::make_shared<CommonInputThread>("InputReader",
+            return std::make_shared<CommonInputThread>("Mir/InputReader",
                                                        new droidinput::InputReaderThread(the_reader()));
         });
 }

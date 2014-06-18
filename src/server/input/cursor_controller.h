@@ -50,7 +50,11 @@ public:
     virtual ~CursorController();
 
     void cursor_moved_to(float abs_x, float abs_y);
-    
+
+    // Trigger an update of the cursor image without cursor motion, e.g.
+    // in response to scene changes.
+    void update_cursor_image();
+
 private:
     std::shared_ptr<InputTargets> const input_targets;
     std::shared_ptr<graphics::Cursor> const cursor;

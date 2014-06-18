@@ -25,6 +25,8 @@
 // Will grow to include cursors specified by raw RGBA data, hotspots, etc...
 struct MirCursorConfiguration 
 {
+    MirCursorConfiguration(char const* name);
+
     std::string name;
 };
 

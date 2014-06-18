@@ -97,23 +97,7 @@ mgm::LinuxVirtualTerminal::LinuxVirtualTerminal(std::shared_ptr<VTFileOperations
 
 mgm::LinuxVirtualTerminal::~LinuxVirtualTerminal() noexcept(true)
 {
-    if (vt_fd.fd() > 0)
-    {
-        fops->tcsetattr(vt_fd.fd(), TCSANOW, &prev_tcattr);
-        fops->ioctl(vt_fd.fd(), KDSKBMODE, prev_tty_mode);
-        fops->ioctl(vt_fd.fd(), KDSETMODE, prev_kd_mode);
-
-        /*
-         * Only restore the previous mode if it was VT_AUTO. VT_PROCESS mode is
-         * always bound to the calling process, so "restoring" VT_PROCESS will
-         * not work; it will just bind the notification signals to our process
-         * again. Not "restoring" VT_PROCESS also ensures we don't mess up the
-         * VT state of the previous controlling process, in case it had set
-         * VT_PROCESS and we fail during setup.
-         */
-        if (prev_vt_mode.mode == VT_AUTO)
-            fops->ioctl(vt_fd.fd(), VT_SETMODE, &prev_vt_mode);
-    }
+    restore();
 }
 
 void mgm::LinuxVirtualTerminal::set_graphics_mode()
@@ -181,6 +165,28 @@ void mgm::LinuxVirtualTerminal::register_switch_handlers(
                     << boost::errinfo_errno(errno));
     }
 }
+
+void mgm::LinuxVirtualTerminal::restore()
+{
+    if (vt_fd.fd() > 0)
+    {
+        fops->tcsetattr(vt_fd.fd(), TCSANOW, &prev_tcattr);
+        fops->ioctl(vt_fd.fd(), KDSKBMODE, prev_tty_mode);
+        fops->ioctl(vt_fd.fd(), KDSETMODE, prev_kd_mode);
+
+        /*
+         * Only restore the previous mode if it was VT_AUTO. VT_PROCESS mode is
+         * always bound to the calling process, so "restoring" VT_PROCESS will
+         * not work; it will just bind the notification signals to our process
+         * again. Not "restoring" VT_PROCESS also ensures we don't mess up the
+         * VT state of the previous controlling process, in case it had set
+         * VT_PROCESS and we fail during setup.
+         */
+        if (prev_vt_mode.mode == VT_AUTO)
+            fops->ioctl(vt_fd.fd(), VT_SETMODE, &prev_vt_mode);
+    }
+}
+
 
 int mgm::LinuxVirtualTerminal::find_active_vt_number()
 {

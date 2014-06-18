@@ -16,8 +16,9 @@ set(
   server_configuration_wrapping.cpp
   clients.cpp
   test_client_library.cpp
+  test_client_library_old.cpp
   test_custom_input_dispatcher.cpp
-  test_surfaceloop.cpp
+  test_client_surfaces.cpp
   test_test_framework.cpp
   test_focus_selection.cpp
   test_server_shutdown.cpp
@@ -29,11 +30,11 @@ set(
   test_surfaces_with_output_id.cpp
   test_server_disconnect.cpp
   test_client_library_drm.cpp
+  test_prompt_session_client_api.cpp
   test_protobuf.cpp
   test_client_screencast.cpp
   test_client_surface_swap_buffers.cpp
   test_client_cursor_api.cpp
-  test_trust_session_helper.cpp
   test_large_messages.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}

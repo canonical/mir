@@ -25,6 +25,8 @@
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/cursor.h"
 
+#include "mir_toolkit/common.h"
+
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_scene_surface.h"
 
@@ -46,8 +48,6 @@ namespace mtd = mt::doubles;
 
 namespace
 {
-
-std::string const default_cursor_name = "default";
 
 struct NamedCursorImage : public mg::CursorImage
 {
@@ -72,7 +72,7 @@ bool cursor_is_named(mg::CursorImage const& i, std::string const& name)
 
 MATCHER(DefaultCursorImage, "")
 {
-    return cursor_is_named(arg, default_cursor_name);
+    return cursor_is_named(arg, mir_default_cursor_name);
 }
 
 MATCHER_P(CursorNamed, name, "")
@@ -231,7 +231,7 @@ TEST(CursorController, moves_cursor)
     MockCursor cursor;
     
     mi::CursorController controller(mt::fake_shared(targets),
-        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(mir_default_cursor_name));
 
     InSequence seq;
     EXPECT_CALL(cursor, move_to(geom::Point{geom::X{1.0f}, geom::Y{1.0f}}));
@@ -254,7 +254,7 @@ TEST(CursorController, updates_cursor_image_when_entering_surface)
     MockCursor cursor;
     
     mi::CursorController controller(mt::fake_shared(targets),
-        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(mir_default_cursor_name));
 
     EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name))).Times(1);
@@ -273,7 +273,7 @@ TEST(CursorController, surface_with_no_cursor_image_hides_cursor)
     MockCursor cursor;
     
     mi::CursorController controller(mt::fake_shared(targets),
-        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(mir_default_cursor_name));
 
     EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     EXPECT_CALL(cursor, hide()).Times(1);
@@ -297,7 +297,7 @@ TEST(CursorController, takes_cursor_image_from_topmost_surface)
     MockCursor cursor;
     
     mi::CursorController controller(mt::fake_shared(targets),
-        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(mir_default_cursor_name));
 
     EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     EXPECT_CALL(cursor, show(CursorNamed(surface_2_cursor_name))).Times(1);
@@ -318,7 +318,7 @@ TEST(CursorController, restores_cursor_when_leaving_surface)
     MockCursor cursor;
     
     mi::CursorController controller(mt::fake_shared(targets),
-        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(mir_default_cursor_name));
 
     EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
 
@@ -346,7 +346,7 @@ TEST(CursorController, change_in_cursor_request_triggers_image_update_without_cu
     MockCursor cursor;
     
     mi::CursorController controller(mt::fake_shared(targets),
-        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(mir_default_cursor_name));
 
     EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     {
@@ -373,7 +373,7 @@ TEST(CursorController, change_in_scene_triggers_image_update)
     MockCursor cursor;
     
     mi::CursorController controller(mt::fake_shared(targets),
-        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(mir_default_cursor_name));
 
     EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name))).Times(1);
@@ -390,16 +390,14 @@ TEST(CursorController, cursor_image_not_reset_needlessly)
 
     // Here we also demonstrate that the cursor begins at 0,0.
     StubInputSurface surface1{geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
-                                  geom::Size{geom::Width{1}, geom::Height{1}}},
-                              image};
+                                  geom::Size{geom::Width{1}, geom::Height{1}}}, image};
     StubInputSurface surface2{geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
-                                  geom::Size{geom::Width{1}, geom::Height{1}}},
-                              image};
+                                  geom::Size{geom::Width{1}, geom::Height{1}}}, image};
     StubInputTargets targets({});
     MockCursor cursor;
     
     mi::CursorController controller(mt::fake_shared(targets),
-        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(default_cursor_name));
+        mt::fake_shared(cursor), std::make_shared<NamedCursorImage>(mir_default_cursor_name));
 
     EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name))).Times(1);

@@ -34,10 +34,10 @@
 #include "mir/input/cursor_listener.h"
 #include "mir/input/vt_filter.h"
 #include "mir/input/input_manager.h"
-
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
+#include "mir/scene/null_prompt_session_listener.h"
 
 #include <map>
 #include <vector>
@@ -88,6 +88,16 @@ mir::DefaultServerConfiguration::the_session_listener()
         [this]
         {
             return std::make_shared<ms::NullSessionListener>();
+        });
+}
+
+std::shared_ptr<ms::PromptSessionListener>
+mir::DefaultServerConfiguration::the_prompt_session_listener()
+{
+    return prompt_session_listener(
+        [this]
+        {
+            return std::make_shared<ms::NullPromptSessionListener>();
         });
 }
 

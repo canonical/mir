@@ -22,6 +22,11 @@
 #include "mir_test_doubles/stub_buffer.h"
 #include <mir/graphics/renderable.h>
 #include <memory>
+#define GLM_FORCE_RADIANS
+#define GLM_PRECISION_MEDIUMP_FLOAT
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace mir
 {
@@ -33,20 +38,26 @@ namespace doubles
 class StubRenderable : public graphics::Renderable
 {
 public:
+    StubRenderable(std::shared_ptr<graphics::Buffer> const& buffer, geometry::Rectangle const& rect)
+        : rect(rect),
+          stub_buffer(buffer)
+    {}
+
     StubRenderable(geometry::Rectangle const& rect)
-        : rect(rect)
+        : StubRenderable(make_stub_buffer(rect), rect)
     {}
+
     StubRenderable() :
-        StubRenderable({{},{}})
+        StubRenderable(make_stub_buffer({{},{}}), {{},{}})
     {}
+
     ID id() const override
     {
         return this;
     }
     std::shared_ptr<graphics::Buffer> buffer() const override
     {
-        graphics::BufferProperties prop{rect.size, mir_pixel_format_abgr_8888, graphics::BufferUsage::hardware};
-        return std::make_shared<StubBuffer>(prop);
+        return stub_buffer;
     }
     bool alpha_enabled() const
     {
@@ -79,8 +90,44 @@ public:
     }
 
 private:
+    std::shared_ptr<graphics::Buffer> make_stub_buffer(geometry::Rectangle const& rect)
+    {
+        graphics::BufferProperties prop{
+            rect.size, mir_pixel_format_abgr_8888, graphics::BufferUsage::hardware};
+        return std::make_shared<StubBuffer>(prop);
+    }
+
     glm::mat4 trans;
     geometry::Rectangle const rect;
+    std::shared_ptr<graphics::Buffer> const stub_buffer;
+};
+
+struct StubTransformedRenderable : public StubRenderable
+{
+    glm::mat4 transformation() const override
+    {
+        glm::mat4 transform(1.0);
+        glm::vec3 vec(1.0, 0.0, 0.0);
+        transform = glm::rotate(transform, 33.0f, vec);
+        return transform;
+    }
+};
+
+//hopefully the alpha representation gets condensed at some point
+struct StubShapedRenderable : public StubRenderable
+{
+    bool shaped() const override
+    {
+        return true;
+    }
+};
+
+struct StubTranslucentRenderable : public StubRenderable
+{
+    bool alpha_enabled() const override
+    {
+        return true;
+    }
 };
 
 }
