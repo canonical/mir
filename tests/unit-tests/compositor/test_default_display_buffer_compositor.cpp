@@ -360,40 +360,6 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
     compositor.composite();
 }
 
-//test associated with lp:1290306, 1293896, 1294048, 1294051, 1294053
-TEST_F(DefaultDisplayBufferCompositor, decides_whether_to_recomposite_after_rendering)
-{
-    using namespace testing;
-    ON_CALL(display_buffer, view_area())
-        .WillByDefault(Return(screen));
-    ON_CALL(display_buffer, orientation())
-        .WillByDefault(Return(mir_orientation_normal));
-    ON_CALL(display_buffer, post_renderables_if_optimizable(_))
-        .WillByDefault(Return(false));
-
-    auto mock_renderable = std::make_shared<NiceMock<mtd::MockRenderable>>();
-    ON_CALL(*mock_renderable, screen_position())
-        .WillByDefault(Return(geom::Rectangle{{0,0},{200,200}})); 
-
-    EXPECT_CALL(*mock_renderable, buffers_ready_for_compositor())
-        .WillOnce(Return(2))
-        .WillOnce(Return(1))
-        .WillOnce(Return(0));
-
-    mg::RenderableList list({mock_renderable});
-    FakeScene scene(list);
-
-    mc::DefaultDisplayBufferCompositor compositor(
-        display_buffer,
-        mt::fake_shared(scene),
-        mt::fake_shared(mock_renderer),
-        mr::null_compositor_report());
-
-    EXPECT_TRUE(compositor.composite());
-    EXPECT_TRUE(compositor.composite());
-    EXPECT_FALSE(compositor.composite());
-}
-
 TEST_F(DefaultDisplayBufferCompositor, renderer_ends_after_post_update)
 {
     using namespace testing;

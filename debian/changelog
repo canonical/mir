@@ -10,6 +10,8 @@ mir (0.3.0-0ubuntu1) UNRELEASED; urgency=medium
         observer.
       . Generate destination alpha for alpha enabled display buffers.
       . Named threads.
+      . Support for prompt sessions :
+        https://wiki.ubuntu.com/Security/TrustStoreAndSessions.
 
     - mirscreencast screenshots now produce images with correct color instead
       of transparency.
@@ -22,6 +24,9 @@ mir (0.3.0-0ubuntu1) UNRELEASED; urgency=medium
       functions are called in any particular order.
     - Phablet:  graphics: android: preserve buffer ownership for onscreen
       overlay layers until the subsequent display posting.
+    - Allow the platform to register emergency cleanup handlers in order to
+      restore the graphics system to a sane state when the server fails
+      abruptly.
 
     - Bugs fixed:
        . Mirscreencast outputs translucency instead of shadows, producing

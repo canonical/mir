@@ -67,21 +67,17 @@ struct FBDevice : public ::testing::Test
     testing::NiceMock<mtd::MockSwappingGLContext> mock_context;
 };
 
-TEST_F(FBDevice, prepares_overlays_by_rendering)
+TEST_F(FBDevice, rejects_overlays)
 {
-    auto renderable1 = std::make_shared<mtd::StubRenderable>();
-    auto renderable2 = std::make_shared<mtd::StubRenderable>();
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {
-        renderable1,
-        renderable2
+        std::make_shared<mtd::StubRenderable>(),
+        std::make_shared<mtd::StubRenderable>()
     };
 
-    mtd::MockRenderableListCompositor mock_compositor;
-    EXPECT_CALL(mock_compositor, render(testing::Ref(renderlist),testing::_))
-        .Times(1);
+    mtd::MockRenderableListCompositor stub_compositor;
     mga::FBDevice fbdev(fb_hal_mock);
-    fbdev.post_overlays(mock_context, renderlist, mock_compositor);
+    EXPECT_FALSE(fbdev.post_overlays(mock_context, renderlist, stub_compositor));
 }
 
 TEST_F(FBDevice, commits_frame_via_post)

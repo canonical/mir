@@ -30,7 +30,6 @@
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include "mir_test_doubles/stub_renderable_list_compositor.h"
-#include "mir_test_doubles/mock_renderable_list_compositor.h"
 #include "src/platform/graphics/android/hwc_fallback_gl_renderer.h"
 #include "hwc_struct_helpers.h"
 #include <gtest/gtest.h>
@@ -115,11 +114,10 @@ TEST_F(HwcFbDevice, hwc10_post_gl_only)
     device.post_gl(stub_context);
 }
 
-TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
+TEST_F(HwcFbDevice, hwc10_rejects_overlays)
 {
     using namespace testing;
-    mtd::MockRenderableListCompositor mock_compositor;
-    std::list<hwc_layer_1_t*> expected_list{&skip_layer};
+    mtd::StubRenderableListCompositor stub_compositor;
     auto renderable1 = std::make_shared<mtd::StubRenderable>();
     auto renderable2 = std::make_shared<mtd::StubRenderable>();
     std::list<std::shared_ptr<mg::Renderable>> renderlist
@@ -128,26 +126,8 @@ TEST_F(HwcFbDevice, hwc10_prepare_with_renderables)
         renderable2
     };
 
-    testing::Sequence seq;
-    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesList(expected_list)))
-        .InSequence(seq);
-    EXPECT_CALL(mock_compositor, render(Ref(renderlist),_))
-        .InSequence(seq)
-        .WillOnce(Invoke([](mg::RenderableList const&, mga::SwappingGLContext const& cont)
-        {
-            cont.swap_buffers();
-        }));
-    EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
-        .InSequence(seq)
-        .WillOnce(Return(dpy));
-    EXPECT_CALL(mock_egl, eglGetCurrentSurface(EGL_DRAW))
-        .InSequence(seq)
-        .WillOnce(Return(sur));
-    EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesListWithEglFields(expected_list, dpy, sur)))
-        .InSequence(seq);
-
     mga::HwcFbDevice device(mock_hwc_device, mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
-    device.post_overlays(stub_context, renderlist, mock_compositor);
+    EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
 }
 
 TEST_F(HwcFbDevice, hwc10_post)

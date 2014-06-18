@@ -24,6 +24,7 @@
 #include "mir_test_doubles/stub_ipc_factory.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
+#include "mir_test_doubles/null_client_event_sink.h"
 
 #include "src/client/connection_surface_map.h"
 #include "src/client/display_configuration.h"
@@ -43,6 +44,7 @@
 
 namespace mf = mir::frontend;
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -178,7 +180,8 @@ StubProtobufClient::StubProtobufClient(
         std::make_shared<mir::client::ConnectionSurfaceMap>(),
         std::make_shared<mir::client::DisplayConfiguration>(),
         rpc_report,
-        std::make_shared<mir::client::LifecycleControl>())),
+        std::make_shared<mir::client::LifecycleControl>(),
+        std::make_shared<mtd::NullClientEventSink>())),
     display_server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
     maxwait(timeout_ms),
     connect_done_called(false),
