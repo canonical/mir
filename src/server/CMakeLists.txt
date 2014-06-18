@@ -65,6 +65,7 @@ list(APPEND MIRSERVER_LINKS
   mirplatform
   mirclient
   3rd_party
+  xcursorloader
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}

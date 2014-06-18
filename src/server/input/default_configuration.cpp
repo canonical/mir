@@ -31,6 +31,7 @@
 #include "cursor_controller.h"
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
+#include "xcursor_loader.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/options/configuration.h"
@@ -45,6 +46,7 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mr = mir::report;
 namespace ms = mir::scene;
+namespace mg = mir::graphics;
 namespace msh = mir::shell;
 
 std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
@@ -204,4 +206,27 @@ mir::DefaultServerConfiguration::the_cursor_listener()
                 the_cursor(), the_default_cursor_image());
         });
 
+}
+
+std::shared_ptr<mg::CursorImage>
+mir::DefaultServerConfiguration::the_default_cursor_image()
+{
+    static geometry::Size const default_cursor_size = {geometry::Width{64},
+                                                       geometry::Height{64}};
+    return default_cursor_image(
+        [this]()
+        {
+            return the_cursor_images()->image(mir_default_cursor_name, default_cursor_size);
+        });
+}
+
+std::shared_ptr<mg::CursorImages>
+mir::DefaultServerConfiguration::the_cursor_images()
+{
+    return cursor_images(
+        [this]()
+        {
+            // TODO: Default to builtin repository?
+            return std::make_shared<mi::XCursorLoader>();
+        });
 }
