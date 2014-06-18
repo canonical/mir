@@ -1,3 +1,46 @@
+mir (0.3.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.3.0 (https://launchpad.net/mir/+milestone/0.3.0)
+    - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
+    - mirserver ABI bumped to 21. Shells need rebuilding.
+      . Divide swap_client_buffers into separate functions.
+      . Allow buffer swapping even when compositor is turned off or blocked.
+        (LP: #1308843, 1308844)
+      . Wire the cursor client API through the session mediator to the surface
+        observer.
+      . Generate destination alpha for alpha enabled display buffers.
+      . Named threads.
+      . Support for prompt sessions :
+        https://wiki.ubuntu.com/Security/TrustStoreAndSessions.
+
+    - mirscreencast screenshots now produce images with correct color instead
+      of transparency.
+    - Rename bind_to_texture->gl_bind_to_texture.
+    - Refinements in test infrastructure.
+    - Phablet: allow disabling the overlays via a command line switch.
+    - Unify the DisplayBuffer interface's optimization functions
+      behind post_renderables_if_optimizable.
+    - Clean up the DisplayDevice interface so that it doesn't require the
+      functions are called in any particular order.
+    - Phablet:  graphics: android: preserve buffer ownership for onscreen
+      overlay layers until the subsequent display posting.
+    - Allow the platform to register emergency cleanup handlers in order to
+      restore the graphics system to a sane state when the server fails
+      abruptly.
+
+    - Bugs fixed:
+       . Mirscreencast outputs translucency instead of shadows, producing
+         incorrect images. (LP: #1301210)
+       . JSON formatting. (LP: #1324902)
+       . Fix input_area_contains to work properly in global coordinates even
+         when input_rectangles is updated. (LP: #1261647)
+       . Allow a moment for clients to acquire a buffer. (LP: #1317370)
+       . Generate correct alpha by changing blending equation to assume
+         pre-multiplied alpha sources. (LP: #1318852)
+       . Rework the recomposition messaging so that the DisplayBufferCompositor
+         is no longer involved. (LP: #1319907)
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Thu, 12 Jun 2014 20:15:39 +0800
+
 mir (0.2.0+14.10.20140605-0ubuntu1) utopic; urgency=medium
 
   [ Daniel van Vugt ]

@@ -25,6 +25,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/cursor_images.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_display_changer.h"
@@ -217,7 +218,7 @@ struct SessionMediatorTest : public ::testing::Test
           mediator{shell, graphics_platform, graphics_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
-                   resource_cache, stub_screencast, &connector},
+                   resource_cache, stub_screencast, &connector, {}},
           stubbed_session{std::make_shared<StubbedSession>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
@@ -275,7 +276,7 @@ TEST_F(SessionMediatorTest, connect_calls_connect_handler)
         std::make_shared<mtd::NullEventSink>(),
         resource_cache,
         stub_screencast,
-        context};
+        context, nullptr};
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -418,7 +419,7 @@ TEST_F(SessionMediatorTest, connect_packs_display_configuration)
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
         resource_cache, std::make_shared<mtd::NullScreencast>(),
-        nullptr);
+        nullptr, nullptr);
 
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -643,7 +644,7 @@ TEST_F(SessionMediatorTest, display_config_request)
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(), resource_cache,
         std::make_shared<mtd::NullScreencast>(),
-        nullptr};
+          nullptr, nullptr};
 
     session_mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
@@ -712,7 +713,7 @@ TEST_F(SessionMediatorTest, partially_packs_buffer_for_screencast_buffer)
               protobuf_buffer.buffer_id());
 }
 
-TEST_F(SessionMediatorTest, client_socket_fd_calls_connector_client_socket_fd)
+TEST_F(SessionMediatorTest, new_fds_for_prompt_providers_calls_connector_client_socket_fd)
 {
     int const fd_count = 1;
     int const dummy_fd = __LINE__;
@@ -729,7 +730,7 @@ TEST_F(SessionMediatorTest, client_socket_fd_calls_connector_client_socket_fd)
     using namespace ::testing;
 
     EXPECT_CALL(connector, client_socket_fd(_)).Times(1).WillOnce(Return(dummy_fd));
-    mediator.new_fds_for_trusted_clients(nullptr, &request, &response, null_callback.get());
+    mediator.new_fds_for_prompt_providers(nullptr, &request, &response, null_callback.get());
 
     EXPECT_THAT(response.fd_size(), Eq(fd_count));
     EXPECT_THAT(response.fd(0), Eq(dummy_fd));
@@ -737,7 +738,7 @@ TEST_F(SessionMediatorTest, client_socket_fd_calls_connector_client_socket_fd)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
-TEST_F(SessionMediatorTest, client_socket_fd_allocates_requested_number_of_fds)
+TEST_F(SessionMediatorTest, new_fds_for_prompt_providers_allocates_requested_number_of_fds)
 {
     int const fd_count = 11;
     int const dummy_fd = __LINE__;
@@ -754,7 +755,7 @@ TEST_F(SessionMediatorTest, client_socket_fd_allocates_requested_number_of_fds)
     using namespace ::testing;
 
     EXPECT_CALL(connector, client_socket_fd(_)).Times(fd_count).WillRepeatedly(Return(dummy_fd));
-    mediator.new_fds_for_trusted_clients(nullptr, &request, &response, null_callback.get());
+    mediator.new_fds_for_prompt_providers(nullptr, &request, &response, null_callback.get());
 
     EXPECT_THAT(response.fd_size(), Eq(fd_count));
 

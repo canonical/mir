@@ -41,7 +41,8 @@ public:
     virtual geometry::Size size() const = 0;
     virtual geometry::Stride stride() const = 0;
     virtual MirPixelFormat pixel_format() const = 0;
-    virtual void bind_to_texture() = 0;
+    virtual void gl_bind_to_texture() = 0;
+    /* TODO: remove this function, as it is specific to the mesa platform */
     virtual bool can_bypass() const = 0;
 
 protected:

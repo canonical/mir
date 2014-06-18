@@ -37,7 +37,19 @@ MIR_SESSION_MEDIATOR_EVENT_METHOD(session_release_surface_called)
 MIR_SESSION_MEDIATOR_EVENT_METHOD(session_disconnect_called)
 MIR_SESSION_MEDIATOR_EVENT_METHOD(session_drm_auth_magic_called)
 MIR_SESSION_MEDIATOR_EVENT_METHOD(session_configure_surface_called)
+MIR_SESSION_MEDIATOR_EVENT_METHOD(session_configure_surface_cursor_called)
 MIR_SESSION_MEDIATOR_EVENT_METHOD(session_configure_display_called)
+MIR_SESSION_MEDIATOR_EVENT_METHOD(session_stop_prompt_session_called)
+
+void mir::report::lttng::SessionMediatorReport::session_start_prompt_session_called(std::string const& app_name, pid_t application_process)
+{
+    mir_tracepoint(mir_server_session_mediator, session_start_prompt_session_called, app_name.c_str(), application_process);
+}
+
+void mir::report::lttng::SessionMediatorReport::session_add_prompt_provider_called(std::string const& app_name, pid_t provider_process)
+{
+    mir_tracepoint(mir_server_session_mediator, session_add_prompt_provider_called, app_name.c_str(), provider_process);
+}
 
 void mir::report::lttng::SessionMediatorReport::session_error(std::string const& app_name, char const* method, std::string const& what)
 {

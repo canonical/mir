@@ -24,7 +24,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <mir/geometry/rectangle.h>
-#include "mir/compositor/renderer.h"
+#include <mir/compositor/renderer.h>
+#include <mir/compositor/destination_alpha.h>
 #include "src/server/compositor/gl_renderer_factory.h"
 #include "src/server/graphics/program_factory.h"
 #include <mir_test/fake_shared.h>
@@ -151,7 +152,7 @@ TEST_F(ProgramFactory, vertex_shader_compiler_failure_recovers_and_throws)
                 stub_info_log.size()));
 
     EXPECT_THROW({
-        auto r = gl_renderer_factory.create_renderer_for(display_area);
+        auto r = gl_renderer_factory.create_renderer_for(display_area, mc::DestinationAlpha::opaque);
     }, std::runtime_error);
 }
 
@@ -172,7 +173,7 @@ TEST_F(ProgramFactory, fragment_shader_compiler_failure_recovers_and_throw)
                 stub_info_log.size()));
 
     EXPECT_THROW({
-        auto r = gl_renderer_factory.create_renderer_for(display_area);
+        auto r = gl_renderer_factory.create_renderer_for(display_area, mc::DestinationAlpha::opaque);
     }, std::runtime_error);
 }
 
@@ -194,7 +195,7 @@ TEST_F(ProgramFactory, graphics_program_linker_failure_recovers_and_throw)
                 stub_info_log.size()));
 
     EXPECT_THROW({
-        auto r = gl_renderer_factory.create_renderer_for(display_area);
+        auto r = gl_renderer_factory.create_renderer_for(display_area, mc::DestinationAlpha::opaque);
     }, std::runtime_error);
 }
 
@@ -206,6 +207,6 @@ TEST_F(ProgramFactory, graphics_program_creation_success)
     SetUpMockFragmentShader(mock_gl, std::bind(ExpectShaderCompileSuccess, _1, _2));
     SetUpMockGraphicsProgram(mock_gl, std::bind(ExpectProgramLinkSuccess, _1, _2));
 
-    gl_renderer_factory.create_renderer_for(display_area);
+    gl_renderer_factory.create_renderer_for(display_area, mc::DestinationAlpha::opaque);
 }
 }

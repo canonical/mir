@@ -33,6 +33,7 @@ class ConnectionSurfaceMap : public SurfaceMap
 {
 public:
     ConnectionSurfaceMap();
+    ~ConnectionSurfaceMap() noexcept;
 
     void with_surface_do(int surface_id, std::function<void(MirSurface*)> exec) const override;
     void insert(int surface_id, MirSurface* surface);

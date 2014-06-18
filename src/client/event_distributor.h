@@ -13,29 +13,25 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_HWC_FORMATTED_LOGGER_H_
-#define MIR_GRAPHICS_ANDROID_HWC_FORMATTED_LOGGER_H_
+#ifndef MIR_CLIENT_EVENT_DISTRIBUTOR_H_
+#define MIR_CLIENT_EVENT_DISTRIBUTOR_H_
 
-#include "hwc_logger.h"
+#include "event_sink.h"
+#include "event_handler_register.h"
 
 namespace mir
 {
-namespace graphics
+namespace client
 {
-namespace android
+
+class EventDistributor : public EventHandlerRegister, public EventSink
 {
-class HwcFormattedLogger : public HwcLogger
-{
-public:
-    HwcFormattedLogger() = default;
-    void log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const override;
-    void log_prepare_done(hwc_display_contents_1_t const& list) const override;
-    void log_set_list(hwc_display_contents_1_t const& list) const override;
 };
-}
-}
-}
-#endif /* MIR_GRAPHICS_ANDROID_HWC_FORMATTED_LOGGER_H_ */
+
+} // namespace client
+} // namespace mir
+
+#endif // MIR_CLIENT_EVENT_DISTRIBUTOR_H_

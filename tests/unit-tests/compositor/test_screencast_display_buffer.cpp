@@ -121,7 +121,7 @@ TEST_F(ScreencastDisplayBufferTest, renders_to_supplied_buffer)
 
     InSequence s;
     /* Set the buffer as rendering target */
-    EXPECT_CALL(mock_buffer, bind_to_texture());
+    EXPECT_CALL(mock_buffer, gl_bind_to_texture());
     EXPECT_CALL(mock_gl,
                 glViewport(0, 0,
                            mock_buffer.size().width.as_int(),
@@ -161,4 +161,14 @@ TEST_F(ScreencastDisplayBufferTest, rejects_attempt_to_optimize)
     mc::ScreencastDisplayBuffer db{rect, stub_buffer};
 
     EXPECT_FALSE(db.post_renderables_if_optimizable(renderables));
+}
+
+TEST_F(ScreencastDisplayBufferTest, does_not_use_alpha)
+{
+    geom::Rectangle const rect{{100,100}, {800,600}};
+    mtd::StubBuffer stub_buffer;
+
+    mc::ScreencastDisplayBuffer db{rect, stub_buffer};
+
+    EXPECT_FALSE(db.uses_alpha());
 }

@@ -41,12 +41,14 @@ public:
     virtual ~DisplayDevice() = default;
 
     virtual void mode(MirPowerMode mode) = 0;
-    virtual void render_gl(SwappingGLContext const& context) = 0;
-    virtual void prepare_overlays(
+    virtual void post_gl(SwappingGLContext const& context) = 0;
+    /* \returns true if the DisplayDevice can support the renderlist
+                false if the display device cannot support drawing the given renderlist.
+    */
+    virtual bool post_overlays(
         SwappingGLContext const& context,
         RenderableList const& list,
         RenderableListCompositor const& list_compositor) = 0;
-    virtual void post(Buffer const& buffer) = 0;
     virtual bool apply_orientation(MirOrientation orientation) const = 0;
 
 protected:

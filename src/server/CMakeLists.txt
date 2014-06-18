@@ -49,6 +49,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsharedlogging
   mirsharedenv
   mirsharedsharedlibrary
+  mirsharedthreadname
   mirshell
   mirscene
   mirtime
@@ -95,7 +96,7 @@ else()
   )
 endif()
 
-set(MIRSERVER_ABI 20) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 21) # Be sure to increment MIR_VERSION_MINOR at the same time
 
 set_target_properties(
   mirserver

@@ -35,6 +35,7 @@
 #include "surface_controller.h"
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
+#include "prompt_session_manager_impl.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -72,6 +73,7 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
                 the_buffer_stream_factory(),
                 the_input_channel_factory(),
                 the_surface_configurator(),
+                the_default_cursor_image(),
                 the_scene_report());
         });
 }
@@ -178,7 +180,8 @@ mir::DefaultServerConfiguration::the_session_coordinator()
                     the_shell_focus_setter(),
                     the_snapshot_strategy(),
                     the_session_event_sink(),
-                    the_session_listener()));
+                    the_session_listener(),
+                    the_prompt_session_manager()));
         });
 }
 
@@ -220,5 +223,17 @@ mir::DefaultServerConfiguration::the_snapshot_strategy()
         {
             return std::make_shared<ms::ThreadedSnapshotStrategy>(
                 the_pixel_buffer());
+        });
+}
+
+std::shared_ptr<ms::PromptSessionManager>
+mir::DefaultServerConfiguration::the_prompt_session_manager()
+{
+    return prompt_session_manager(
+        [this]()
+        {
+            return std::make_shared<ms::PromptSessionManagerImpl>(
+                the_session_container(),
+                the_prompt_session_listener());
         });
 }

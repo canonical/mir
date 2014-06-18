@@ -102,7 +102,7 @@ void me::InprocessEGLClient::thread_loop()
 
     auto input_platform = mircv::InputPlatform::create();
     input_thread = input_platform->create_input_thread(
-        surface->client_input_fd(), 
+        surface->client_input_fd(),
             std::bind(std::mem_fn(&me::InprocessEGLClient::handle_event), this, std::placeholders::_1));
     input_thread->start();
 

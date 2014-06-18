@@ -247,6 +247,9 @@ public:
               mir::time::Timestamp time_point,
               std::function<void(void)> callback);
 
+    AlarmImpl(boost::asio::io_service& io,
+              std::function<void(void)> callback);
+
     ~AlarmImpl() noexcept override;
 
     bool cancel() override;
@@ -275,8 +278,7 @@ private:
 AlarmImpl::AlarmImpl(boost::asio::io_service& io,
                      std::chrono::milliseconds delay,
                      std::function<void ()> callback)
-    : timer{io},
-      data{std::make_shared<InternalState>(callback)}
+    : AlarmImpl(io, callback)
 {
     reschedule_in(delay);
 }
@@ -284,10 +286,17 @@ AlarmImpl::AlarmImpl(boost::asio::io_service& io,
 AlarmImpl::AlarmImpl(boost::asio::io_service& io,
                      mir::time::Timestamp time_point,
                      std::function<void ()> callback)
+    : AlarmImpl(io, callback)
+{
+    reschedule_for(time_point);
+}
+
+AlarmImpl::AlarmImpl(boost::asio::io_service& io,
+                     std::function<void(void)> callback)
     : timer{io},
       data{std::make_shared<InternalState>(callback)}
 {
-    reschedule_for(time_point);
+    data->state = triggered;
 }
 
 AlarmImpl::~AlarmImpl() noexcept
@@ -362,8 +371,13 @@ std::unique_ptr<mir::time::Alarm> mir::AsioMainLoop::notify_at(mir::time::Timest
                                                                std::function<void()> callback)
 {
     return std::unique_ptr<mir::time::Alarm>{new AlarmImpl{io, time_point, callback}};
-
 }
+
+std::unique_ptr<mir::time::Alarm> mir::AsioMainLoop::create_alarm(std::function<void()> callback)
+{
+    return std::unique_ptr<mir::time::Alarm>{new AlarmImpl{io, callback}};
+}
+
 void mir::AsioMainLoop::enqueue(void const* owner, ServerAction const& action)
 {
     {

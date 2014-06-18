@@ -45,6 +45,7 @@ public:
     void transformation_set_to(glm::mat4 const& /*t*/) override;
     void attrib_changed(MirSurfaceAttrib, int) override;
     void reception_mode_set_to(input::InputReceptionMode mode) override;
+    void cursor_image_set_to(graphics::CursorImage const& image) override;
 
 private:
     std::function<void()> const notify_scene_change;

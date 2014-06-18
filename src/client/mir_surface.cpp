@@ -62,6 +62,7 @@ MirSurface::MirSurface(
     message.set_buffer_usage(params.buffer_usage);
     message.set_output_id(params.output_id);
 
+    create_wait_handle.expect_result();
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 
     for (int i = 0; i < mir_surface_attribs; i++)
@@ -76,6 +77,11 @@ MirSurface::MirSurface(
 
 MirSurface::~MirSurface()
 {
+    {
+        std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
+        valid_surfaces.erase(this);
+    }
+
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     if (input_thread)
@@ -158,6 +164,7 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * con
     auto const mutable_buffer = surface.mutable_buffer();
     lock.unlock();
 
+    next_buffer_wait_handle.expect_result();
     server.next_buffer(
         0,
         id,
@@ -243,8 +250,10 @@ MirWaitHandle* MirSurface::release_surface(
         mir_surface_callback callback,
         void * context)
 {
-    std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
-    valid_surfaces.erase(this);
+    {
+        std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
+        valid_surfaces.erase(this);
+    }
 
     return connection->release_surface(this, callback, context);
 }
@@ -323,7 +332,7 @@ MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor
     
     configure_cursor_wait_handle.expect_result();
     server.configure_cursor(0, &setting, &void_response,
-        google::protobuf::NewCallback(this, &MirSurface::on_configured));
+        google::protobuf::NewCallback(this, &MirSurface::on_cursor_configured));
     
     return &configure_cursor_wait_handle;
 }
@@ -374,6 +383,12 @@ void MirSurface::on_configured()
         configure_wait_handle.result_received();
     }
 }
+
+void MirSurface::on_cursor_configured()
+{
+    configure_cursor_wait_handle.result_received();
+}
+
 
 int MirSurface::attrib(MirSurfaceAttrib at) const
 {

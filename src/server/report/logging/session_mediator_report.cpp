@@ -68,9 +68,29 @@ void mrl::SessionMediatorReport::session_configure_surface_called(std::string co
     log->log(ml::Logger::informational, "session_configure_surface_called(\"" + app_name + "\")", component);
 }
 
+void mrl::SessionMediatorReport::session_configure_surface_cursor_called(std::string const& app_name)
+{
+    log->log(ml::Logger::informational, "session_configure_surface_cursor_called(\"" + app_name + "\")", component);
+}
+
 void mrl::SessionMediatorReport::session_configure_display_called(std::string const& app_name)
 {
     log->log(ml::Logger::informational, "session_configure_display_called(\"" + app_name + "\")", component);
+}
+
+void mrl::SessionMediatorReport::session_start_prompt_session_called(std::string const& app_name, pid_t application_process)
+{
+    log->log(ml::Logger::informational, "session_start_prompt_session_called(\"" + app_name + ", " + std::to_string(application_process) + ")", component);
+}
+
+void mrl::SessionMediatorReport::session_add_prompt_provider_called(std::string const& app_name, pid_t provider_process)
+{
+    log->log(ml::Logger::informational, "session_add_prompt_provider_called(\"" + app_name + ", " + std::to_string(provider_process) + ")", component);
+}
+
+void mrl::SessionMediatorReport::session_stop_prompt_session_called(std::string const& app_name)
+{
+    log->log(ml::Logger::informational, "session_stop_prompt_session_called(\"" + app_name + "\")", component);
 }
 
 void mrl::SessionMediatorReport::session_error(

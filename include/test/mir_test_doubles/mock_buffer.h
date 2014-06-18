@@ -63,7 +63,7 @@ struct MockBuffer : public graphics::Buffer
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<graphics::NativeBuffer>());
 
-    MOCK_METHOD0(bind_to_texture, void());
+    MOCK_METHOD0(gl_bind_to_texture, void());
     MOCK_CONST_METHOD0(id, graphics::BufferID());
 
     MOCK_CONST_METHOD0(can_bypass, bool());
