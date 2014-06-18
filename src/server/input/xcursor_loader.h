@@ -43,7 +43,6 @@ class CursorImage;
 
 namespace input
 {
-// TODO: Renamespace base CursorImages
 class XCursorLoader : public graphics::CursorImages
 {
 public:
