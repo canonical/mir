@@ -96,7 +96,7 @@ protected:
         comp_layer.visibleRegionScreen = {1, &set_region};
         comp_layer.acquireFenceFd = -1;
         comp_layer.releaseFenceFd = -1;
-        comp_layer.planeAlpha = 0xFF;
+        comp_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
 
         target_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
         target_layer.hints = 0;
@@ -109,7 +109,7 @@ protected:
         target_layer.visibleRegionScreen = {1, &set_region};
         target_layer.acquireFenceFd = -1;
         target_layer.releaseFenceFd = -1;
-        target_layer.planeAlpha = 0xFF;
+        target_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
 
         skip_layer.compositionType = HWC_FRAMEBUFFER;
         skip_layer.hints = 0;
@@ -122,7 +122,7 @@ protected:
         skip_layer.visibleRegionScreen = {1, &set_region};
         skip_layer.acquireFenceFd = -1;
         skip_layer.releaseFenceFd = -1;
-        skip_layer.planeAlpha = 0xFF;
+        skip_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
 
         set_skip_layer = skip_layer;
         set_skip_layer.handle = mock_native_buffer->handle();
