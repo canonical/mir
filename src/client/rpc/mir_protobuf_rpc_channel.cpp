@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_socket_rpc_channel.h"
+#include "mir_protobuf_rpc_channel.h"
 #include "rpc_report.h"
 
 #include "mir/protobuf/google_protobuf_guard.h"

@@ -17,7 +17,7 @@
  */
 
 #include "make_rpc_channel.h"
-#include "mir_socket_rpc_channel.h"
+#include "mir_protobuf_rpc_channel.h"
 #include "asio_socket_transport.h"
 
 #include <cstring>

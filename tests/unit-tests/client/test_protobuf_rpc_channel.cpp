@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "src/client/rpc/mir_socket_rpc_channel.h"
+#include "src/client/rpc/mir_protobuf_rpc_channel.h"
 #include "src/client/rpc/transport.h"
 #include "src/client/surface_map.h"
 #include "src/client/display_configuration.h"

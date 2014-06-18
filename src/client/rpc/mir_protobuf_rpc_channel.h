@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_CLIENT_RPC_MIR_SOCKET_RPC_CHANNEL_H_
-#define MIR_CLIENT_RPC_MIR_SOCKET_RPC_CHANNEL_H_
+#ifndef MIR_CLIENT_RPC_MIR_PROTOBUF_RPC_CHANNEL_H_
+#define MIR_CLIENT_RPC_MIR_PROTOBUF_RPC_CHANNEL_H_
 
 #include "mir_basic_rpc_channel.h"
 #include "transport.h"
@@ -101,4 +101,4 @@ private:
 }
 }
 
-#endif /* MIR_CLIENT_RPC_MIR_SOCKET_RPC_CHANNEL_H_ */
+#endif /* MIR_CLIENT_RPC_MIR_PROTOBUF_RPC_CHANNEL_H_ */
