@@ -25,7 +25,9 @@
 
 #include <string.h>
 
-// Unforunately this can not be compiled as C++...so no namespace
+// Unforunately this can not be compiled as C++...so we can not namespace
+// these symbols. In order to differentiate from internal symbols
+//  we refer to them via their _ prefixed version, i.e. _XcursorImage
 extern "C"
 {
 #include <xcursor.h>
@@ -40,7 +42,7 @@ namespace
 // TODO: Rename or standardize on _
 struct XCursorImage : public mg::CursorImage
 {
-    XCursorImage(XcursorImage *image)
+    XCursorImage(_XcursorImage *image)
         : image(image)
     {
         if (image->size != mg::default_cursor_size.width.as_uint32_t())
@@ -63,7 +65,7 @@ struct XCursorImage : public mg::CursorImage
         return mg::default_cursor_size;
     }
 
-    XcursorImage *image;
+    _XcursorImage *image;
 };
 }
 
@@ -73,7 +75,7 @@ mi::XCursorLoader::XCursorLoader()
 }
 
 // Each XcursorImages represents images for the different sizes of a given symbolic cursor.
-void mi::XCursorLoader::load_appropriately_sized_image(XcursorImages *images)
+void mi::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images)
 {
     // TODO: We would rather take this lock in load_cursor_theme but the Xcursor lib style 
     // makes it difficult to use our standard 'pass the lg around to _locked members' pattern
@@ -86,10 +88,10 @@ void mi::XCursorLoader::load_appropriately_sized_image(XcursorImages *images)
             XcursorImagesDestroy(images);
         }));
 
-    XcursorImage *image_of_correct_size = nullptr;
+    _XcursorImage *image_of_correct_size = nullptr;
     for (int i = 0; i < images->nimage; i++)
     {
-        XcursorImage *candidate = images->images[i];
+        _XcursorImage *candidate = images->images[i];
         if (candidate->width == mg::default_cursor_size.width.as_uint32_t() &&
             candidate->height == mg::default_cursor_size.height.as_uint32_t())
         {
