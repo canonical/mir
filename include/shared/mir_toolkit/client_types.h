@@ -46,6 +46,7 @@ typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
 typedef struct MirSurface MirSurface;
 typedef struct MirScreencast MirScreencast;
+typedef struct MirPromptSession MirPromptSession;
 
 /**
  * Returned by asynchronous functions. Must not be free'd by
@@ -105,7 +106,7 @@ typedef void (*mir_display_config_callback)(
 
 /**
  * Callback called when a request for client file descriptors completes
- *   \param [in] connection     The connection associated with the display change
+ *   \param [in] prompt_session  The prompt session
  *   \param [in] count          The number of FDs allocated
  *   \param [in] fds            Array of FDs
  *   \param [in,out] context    The context provided by client
@@ -114,7 +115,7 @@ typedef void (*mir_display_config_callback)(
  */
 
 typedef void (*mir_client_fd_callback)(
-    MirConnection* connection, size_t count, int const* fds, void* context);
+    MirPromptSession *prompt_session, size_t count, int const* fds, void* context);
 
 /**
  * MirBufferUsage specifies how a surface can and will be used. A "hardware"
@@ -318,6 +319,31 @@ typedef struct MirScreencastParameters
  *   \param [in,out] client_context  context provided by the client
  */
 typedef void (*mir_screencast_callback)(MirScreencast *screencast, void *client_context);
+
+/**
+ * Callback member of MirPromptSession for handling of prompt sessions.
+ *   \param [in] prompt_provider  The prompt session associated with the callback
+ *   \param [in,out] context      The context provided by the client
+ */
+typedef void (*mir_prompt_session_callback)(MirPromptSession* prompt_provider, void* context);
+
+/**
+ * Callback member of MirPromptSession for adding prompt providers
+ *   \param [in] prompt_provider  The prompt session associated with the callback
+ *   \param [in] added            True if the session was added, false otherwise
+ *   \param [in,out] context      The context provided by the client
+ */
+typedef void (*mir_prompt_session_add_prompt_provider_callback)(
+    MirPromptSession* prompt_provider, MirBool added, void* context);
+
+/**
+ * Callback member of MirPromptSession for handling of prompt sessions events.
+ *   \param [in] prompt_provider  The prompt session associated with the callback
+ *   \param [in] state            The state of the prompt session
+ *   \param [in,out] context      The context provided by the client
+ */
+typedef void (*mir_prompt_session_state_change_callback)(
+    MirPromptSession* prompt_provider, MirPromptSessionState state, void* context);
 
 #ifdef __cplusplus
 }

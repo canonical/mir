@@ -77,6 +77,11 @@ MirSurface::MirSurface(
 
 MirSurface::~MirSurface()
 {
+    {
+        std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
+        valid_surfaces.erase(this);
+    }
+
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     if (input_thread)
@@ -245,8 +250,10 @@ MirWaitHandle* MirSurface::release_surface(
         mir_surface_callback callback,
         void * context)
 {
-    std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
-    valid_surfaces.erase(this);
+    {
+        std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
+        valid_surfaces.erase(this);
+    }
 
     return connection->release_surface(this, callback, context);
 }

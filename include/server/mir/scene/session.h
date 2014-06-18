@@ -40,6 +40,9 @@ public:
     virtual std::shared_ptr<Surface> default_surface() const = 0;
     virtual void set_lifecycle_state(MirLifecycleState state) = 0;
     virtual void send_display_config(graphics::DisplayConfiguration const&) = 0;
+
+    virtual void start_prompt_session() = 0;
+    virtual void stop_prompt_session() = 0;
 };
 }
 }

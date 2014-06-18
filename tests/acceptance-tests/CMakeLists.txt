@@ -30,11 +30,11 @@ set(
   test_surfaces_with_output_id.cpp
   test_server_disconnect.cpp
   test_client_library_drm.cpp
+  test_prompt_session_client_api.cpp
   test_protobuf.cpp
   test_client_screencast.cpp
   test_client_surface_swap_buffers.cpp
   test_client_cursor_api.cpp
-  test_trust_session_helper.cpp
   test_large_messages.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
