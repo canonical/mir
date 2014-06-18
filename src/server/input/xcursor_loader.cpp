@@ -39,11 +39,11 @@ namespace geom = mir::geometry;
 
 namespace
 {
-// TODO: Rename or standardize on _
 struct XCursorImage : public mg::CursorImage
 {
-    XCursorImage(_XcursorImage *image)
-        : image(image)
+    XCursorImage(_XcursorImage *image, std::shared_ptr<_XcursorImages> const& save_resource)
+        : image(image),
+          save_resource(save_resource)
     {
         if (image->size != mg::default_cursor_size.width.as_uint32_t())
         {
@@ -66,6 +66,7 @@ struct XCursorImage : public mg::CursorImage
     }
 
     _XcursorImage *image;
+    std::shared_ptr<_XcursorImages> const save_resource;
 };
 }
 
@@ -82,11 +83,12 @@ void mi::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images)
     std::lock_guard<std::mutex> lg(guard);
 
     // We have to save all the images as XCursor expects us to free them.
-    // TODO: Should probably share ownership with the image...
-    resources.push_back(ImagesUPtr(images, [](_XcursorImages *images)
+    // This contains the actual image data though, so we need to ensure they stay alive 
+    // with the lifetime of the images (rather than the lifetime of this object)
+    auto saved_xcursor_library_resource = std::shared_ptr<_XcursorImages>(images, [](_XcursorImages *images)
         {
             XcursorImagesDestroy(images);
-        }));
+        });
 
     _XcursorImage *image_of_correct_size = nullptr;
     for (int i = 0; i < images->nimage; i++)
@@ -101,7 +103,7 @@ void mi::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images)
     }
     if (!image_of_correct_size)
         return;
-    loaded_images[std::string(images->name)] = std::make_shared<XCursorImage>(image_of_correct_size);
+    loaded_images[std::string(images->name)] = std::make_shared<XCursorImage>(image_of_correct_size, saved_xcursor_library_resource);
 }
 
 void mi::XCursorLoader::load_cursor_theme(std::string const& theme_name)
@@ -113,7 +115,6 @@ void mi::XCursorLoader::load_cursor_theme(std::string const& theme_name)
             // Can't use lambda capture as this lambda is thunked to a C function ptr
             auto p = static_cast<mi::XCursorLoader*>(this_ptr);
             p->load_appropriately_sized_image(images);
-            
         }, this);
 }
 

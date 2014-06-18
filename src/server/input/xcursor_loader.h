@@ -63,8 +63,7 @@ private:
 
     std::map<std::string, std::shared_ptr<graphics::CursorImage>> loaded_images;
 
-    typedef std::unique_ptr<_XcursorImages, std::function<void(_XcursorImages*)>> ImagesUPtr;
-    std::vector<ImagesUPtr> resources;
+    std::vector<std::shared_ptr<_XcursorImages>> resources;
 
     void load_cursor_theme(std::string const& theme_name);
     void load_appropriately_sized_image(_XcursorImages *images);
