@@ -966,5 +966,3 @@ xcursor_load_theme(const char *theme, int size,
 	if (inherits)
 		free(inherits);
 }
-
-int xcursor_foo() { return 1; }

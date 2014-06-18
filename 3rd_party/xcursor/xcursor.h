@@ -27,7 +27,6 @@
 
 
 typedef int		XcursorBool;
-//typedef unsigned int	XcursorUInt;
 typedef uint32_t XcursorUInt;
 
 typedef XcursorUInt	XcursorDim;
