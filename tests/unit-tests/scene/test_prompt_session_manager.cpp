@@ -101,6 +101,22 @@ struct PromptSessionManager : public testing::Test
 
         return results;
     }
+
+    void helper_for()
+    {
+        session_manager.helper_for(prompt_session);
+    }
+
+    void application_for()
+    {
+        session_manager.application_for(prompt_session);
+    }
+
+    void iterate_providers()
+    {
+        session_manager.for_each_provider_in(prompt_session,
+                                             [](std::shared_ptr<ms::Session> const&) {});
+    }
 };
 }
 
@@ -214,4 +230,43 @@ TEST_F(PromptSessionManager, can_iterate_over_prompt_providers_in_a_prompt_sessi
         prompt_session,
         [&](std::shared_ptr<ms::Session> const& prompt_provider)
             { mock.enumerate(prompt_provider); });
+}
+
+TEST_F(PromptSessionManager, can_fetch_application_during_listener_notifications)
+{
+    ON_CALL(prompt_session_listener, starting(_)).WillByDefault(InvokeWithoutArgs(this, &PromptSessionManager::application_for));
+    ON_CALL(prompt_session_listener, stopping(_)).WillByDefault(InvokeWithoutArgs(this, &PromptSessionManager::application_for));
+    ON_CALL(prompt_session_listener, prompt_provider_added(_,_)).WillByDefault(InvokeWithoutArgs(this, &PromptSessionManager::application_for));
+    ON_CALL(prompt_session_listener, prompt_provider_removed(_,_)).WillByDefault(InvokeWithoutArgs(this, &PromptSessionManager::application_for));
+
+    auto const prompt_session = session_manager.start_prompt_session_for(helper, parameters);
+    session_manager.add_prompt_provider(prompt_session, provider_session);
+    session_manager.remove_session(provider_session);
+    session_manager.stop_prompt_session(prompt_session);
+}
+
+TEST_F(PromptSessionManager, can_fetch_helper_during_listener_notifications)
+{
+    ON_CALL(prompt_session_listener, starting(_)).WillByDefault(InvokeWithoutArgs(this, &PromptSessionManager::helper_for));
+    ON_CALL(prompt_session_listener, stopping(_)).WillByDefault(InvokeWithoutArgs(this, &PromptSessionManager::helper_for));
+    ON_CALL(prompt_session_listener, prompt_provider_added(_,_)).WillByDefault(InvokeWithoutArgs(this, &PromptSessionManager::helper_for));
+    ON_CALL(prompt_session_listener, prompt_provider_removed(_,_)).WillByDefault(InvokeWithoutArgs(this, &PromptSessionManager::helper_for));
+
+    auto const prompt_session = session_manager.start_prompt_session_for(helper, parameters);
+    session_manager.add_prompt_provider(prompt_session, provider_session);
+    session_manager.remove_session(provider_session);
+    session_manager.stop_prompt_session(prompt_session);
+}
+
+TEST_F(PromptSessionManager, can_iterating_over_prompt_providers_during_listener_notifications)
+{
+    ON_CALL(prompt_session_listener, starting(_)).WillByDefault(InvokeWithoutArgs(this, &PromptSessionManager::iterate_providers));
+    ON_CALL(prompt_session_listener, stopping(_)).WillByDefault(InvokeWithoutArgs(this, &PromptSessionManager::iterate_providers));
+    ON_CALL(prompt_session_listener, prompt_provider_added(_,_)).WillByDefault(InvokeWithoutArgs(this, &PromptSessionManager::iterate_providers));
+    ON_CALL(prompt_session_listener, prompt_provider_removed(_,_)).WillByDefault(InvokeWithoutArgs(this, &PromptSessionManager::iterate_providers));
+
+    auto const prompt_session = session_manager.start_prompt_session_for(helper, parameters);
+    session_manager.add_prompt_provider(prompt_session, provider_session);
+    session_manager.remove_session(provider_session);
+    session_manager.stop_prompt_session(prompt_session);
 }

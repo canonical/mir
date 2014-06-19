@@ -190,7 +190,6 @@ std::shared_ptr<ms::Session> ms::PromptSessionManagerImpl::application_for(
     std::shared_ptr<PromptSession> const& prompt_session) const
 {
     std::shared_ptr<Session> application_session;
-    std::unique_lock<std::mutex> lock(prompt_sessions_mutex);
 
     prompt_session_container->for_each_participant_in_prompt_session(prompt_session.get(),
         [&](std::weak_ptr<Session> const& session, PromptSessionContainer::ParticipantType type)
@@ -205,7 +204,6 @@ std::shared_ptr<ms::Session> ms::PromptSessionManagerImpl::helper_for(
     std::shared_ptr<PromptSession> const& prompt_session) const
 {
     std::shared_ptr<Session> helper_session;
-    std::unique_lock<std::mutex> lock(prompt_sessions_mutex);
 
     prompt_session_container->for_each_participant_in_prompt_session(prompt_session.get(),
         [&](std::weak_ptr<Session> const& session, PromptSessionContainer::ParticipantType type)
@@ -220,8 +218,6 @@ void ms::PromptSessionManagerImpl::for_each_provider_in(
     std::shared_ptr<PromptSession> const& prompt_session,
     std::function<void(std::shared_ptr<Session> const& prompt_provider)> const& f) const
 {
-    std::unique_lock<std::mutex> lock(prompt_sessions_mutex);
-
     prompt_session_container->for_each_participant_in_prompt_session(prompt_session.get(),
         [&](std::weak_ptr<Session> const& session, PromptSessionContainer::ParticipantType type)
         {

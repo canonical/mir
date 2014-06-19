@@ -16,19 +16,16 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/graphics/buffer_properties.h"
-#include "mir/graphics/buffer_id.h"
-#include "mir/graphics/buffer_basic.h"
-#include "mir/graphics/display.h"
-
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/stub_display_buffer.h"
+
+#include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/basic_client_server_fixture.h"
 
 #include <thread>
 #include <atomic>
@@ -47,8 +44,6 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-char const* const mir_test_socket = mtf::test_socket_file().c_str();
-
 geom::Size const size{640, 480};
 MirPixelFormat const format{mir_pixel_format_abgr_8888};
 mg::BufferUsage const usage{mg::BufferUsage::hardware};
@@ -78,13 +73,6 @@ class MockGraphicBufferAllocator : public mtd::StubBufferAllocator
     ~MockGraphicBufferAllocator() noexcept {}
 };
 
-}
-
-namespace mir
-{
-namespace
-{
-
 class StubDisplay : public mtd::NullDisplay
 {
 public:
@@ -104,11 +92,6 @@ private:
 
 struct SurfaceSync
 {
-    SurfaceSync() :
-        surface(0)
-    {
-    }
-
     void surface_created(MirSurface * new_surface)
     {
         std::unique_lock<std::mutex> lock(guard);
@@ -126,40 +109,20 @@ struct SurfaceSync
     void wait_for_surface_create()
     {
         std::unique_lock<std::mutex> lock(guard);
-        while (!surface)
-            wait_condition.wait(lock);
+        wait_condition.wait(lock, [&]{ return !!surface; });
     }
 
     void wait_for_surface_release()
     {
         std::unique_lock<std::mutex> lock(guard);
-        while (surface)
-            wait_condition.wait(lock);
+        wait_condition.wait(lock, [&]{ return !surface; });
     }
-
 
     std::mutex guard;
     std::condition_variable wait_condition;
-    MirSurface * surface;
+    MirSurface * surface{nullptr};
 };
 
-struct ClientConfigCommon : TestingClientConfiguration
-{
-    static const int max_surface_count = 5;
-    SurfaceSync ssync[max_surface_count];
-};
-const int ClientConfigCommon::max_surface_count;
-}
-}
-
-using SurfaceLoop = BespokeDisplayServerTestFixture;
-using SurfaceLoopDefault = DefaultDisplayServerTestFixture;
-using mir::SurfaceSync;
-using mir::ClientConfigCommon;
-using mir::StubDisplay;
-
-namespace
-{
 void create_surface_callback(MirSurface* surface, void * context)
 {
     SurfaceSync* config = reinterpret_cast<SurfaceSync*>(context);
@@ -181,152 +144,8 @@ void wait_for_surface_release(SurfaceSync* context)
 {
     context->wait_for_surface_release();
 }
-}
 
-TEST_F(SurfaceLoopDefault, creating_a_client_surface_gets_surface_of_requested_size)
-{
-    struct ClientConfig : TestingClientConfiguration
-    {
-        void exec()
-        {
-            auto const connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-
-            ASSERT_TRUE(connection != NULL);
-            EXPECT_TRUE(mir_connection_is_valid(connection));
-            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
-
-            MirSurfaceParameters const request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-
-            auto const surface = mir_connection_create_surface_sync(connection, &request_params);
-
-            ASSERT_TRUE(surface != NULL);
-            EXPECT_TRUE(mir_surface_is_valid(surface));
-            EXPECT_STREQ(mir_surface_get_error_message(surface), "");
-
-            MirSurfaceParameters response_params;
-            mir_surface_get_parameters(surface, &response_params);
-            EXPECT_EQ(request_params.width, response_params.width);
-            EXPECT_EQ(request_params.height, response_params.height);
-            EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
-            EXPECT_EQ(request_params.buffer_usage, response_params.buffer_usage);
-
-            mir_surface_release_sync(surface);
-            mir_connection_release(connection);
-        }
-    } client_config;
-
-    launch_client_process(client_config);
-}
-
-namespace
-{
-
-/*
- * Need to declare outside method, because g++ 4.4 doesn't support local types
- * as template parameters (in std::make_shared<StubPlatform>()).
- */
-struct ServerConfigAllocatesBuffersOnServer : TestingServerConfiguration
-{
-    class StubPlatform : public mtd::NullPlatform
-    {
-     public:
-        std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
-        {
-            using testing::AtMost;
-
-            auto buffer_allocator = std::make_shared<testing::NiceMock<MockGraphicBufferAllocator>>();
-            EXPECT_CALL(*buffer_allocator, alloc_buffer(buffer_properties))
-                .Times(AtMost(3));
-            return buffer_allocator;
-        }
-
-        std::shared_ptr<mg::Display> create_display(
-            std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-            std::shared_ptr<mg::GLProgramFactory> const&,
-            std::shared_ptr<mg::GLConfig> const&) override
-        {
-            return std::make_shared<StubDisplay>();
-        }
-    };
-
-    std::shared_ptr<mg::Platform> the_graphics_platform()
-    {
-        if (!platform)
-            platform = std::make_shared<StubPlatform>();
-
-        return platform;
-    }
-
-    std::shared_ptr<mg::Platform> platform;
-};
-
-}
-
-TEST_F(SurfaceLoop, creating_a_client_surface_allocates_buffers_on_server)
-{
-
-    ServerConfigAllocatesBuffersOnServer server_config;
-
-    launch_server_process(server_config);
-
-    struct ClientConfig : ClientConfigCommon
-    {
-        void exec()
-        {
-            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-
-            ASSERT_TRUE(connection != NULL);
-            EXPECT_TRUE(mir_connection_is_valid(connection));
-            EXPECT_STREQ(mir_connection_get_error_message(connection), "");
-
-            MirSurfaceParameters const request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-            mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync);
-
-            wait_for_surface_create(ssync);
-
-            ASSERT_TRUE(ssync->surface != NULL);
-            EXPECT_TRUE(mir_surface_is_valid(ssync->surface));
-            EXPECT_STREQ(mir_surface_get_error_message(ssync->surface), "");
-
-            MirSurfaceParameters response_params;
-            mir_surface_get_parameters(ssync->surface, &response_params);
-            EXPECT_EQ(request_params.width, response_params.width);
-            EXPECT_EQ(request_params.height, response_params.height);
-            EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
-            EXPECT_EQ(request_params.buffer_usage, response_params.buffer_usage);
-
-
-            mir_surface_release(ssync->surface, release_surface_callback, ssync);
-
-            wait_for_surface_release(ssync);
-
-            ASSERT_TRUE(ssync->surface == NULL);
-
-            mir_connection_release(connection);
-        }
-    } client_config;
-
-    launch_client_process(client_config);
-}
-
-namespace
-{
-struct BufferCounterConfig : TestingServerConfiguration
+struct BufferCounterConfig : mtf::StubbedServerConfiguration
 {
     class CountingStubBuffer : public mtd::StubBuffer
     {
@@ -389,93 +208,49 @@ std::atomic<int> BufferCounterConfig::CountingStubBuffer::buffers_created;
 std::atomic<int> BufferCounterConfig::CountingStubBuffer::buffers_destroyed;
 }
 
-
-TEST_F(SurfaceLoop, all_created_buffers_are_destoyed)
+struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
 {
-    struct ServerConfig : BufferCounterConfig
+    static const int max_surface_count = 5;
+    SurfaceSync ssync[max_surface_count];
+
+    MirSurfaceParameters const request_params
     {
-        void on_exit() override
-        {
-            EXPECT_EQ(CountingStubBuffer::buffers_created.load(),
-                      CountingStubBuffer::buffers_destroyed.load());
-        }
+        "Arbitrary surface name",
+        640, 480,
+        mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware,
+        mir_display_output_id_invalid
+    };
 
-    } server_config;
-
-    launch_server_process(server_config);
-
-    struct Client : ClientConfigCommon
+    void TearDown() override
     {
-        void exec() override
-        {
-            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+        mtf::BasicClientServerFixture<BufferCounterConfig>::TearDown();
 
-            MirSurfaceParameters const request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
+        EXPECT_EQ(BufferCounterConfig::CountingStubBuffer::buffers_created.load(),
+                  BufferCounterConfig::CountingStubBuffer::buffers_destroyed.load());
+    }
+};
 
-            for (int i = 0; i != max_surface_count; ++i)
-                mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync+i);
+TEST_F(SurfaceLoop, all_created_buffers_are_destroyed)
+{
+    for (int i = 0; i != max_surface_count; ++i)
+        mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync+i);
 
-            for (int i = 0; i != max_surface_count; ++i)
-                wait_for_surface_create(ssync+i);
+    for (int i = 0; i != max_surface_count; ++i)
+        wait_for_surface_create(ssync+i);
 
-            for (int i = 0; i != max_surface_count; ++i)
-                mir_surface_release(ssync[i].surface, release_surface_callback, ssync+i);
+    for (int i = 0; i != max_surface_count; ++i)
+        mir_surface_release(ssync[i].surface, release_surface_callback, ssync+i);
 
-            for (int i = 0; i != max_surface_count; ++i)
-                wait_for_surface_release(ssync+i);
-
-            mir_connection_release(connection);
-        }
-    } client_creates_surfaces;
-
-    launch_client_process(client_creates_surfaces);
+    for (int i = 0; i != max_surface_count; ++i)
+        wait_for_surface_release(ssync+i);
 }
 
-TEST_F(SurfaceLoop, all_created_buffers_are_destoyed_if_client_disconnects_without_releasing_surfaces)
+TEST_F(SurfaceLoop, all_created_buffers_are_destroyed_if_client_disconnects_without_releasing_surfaces)
 {
-    struct ServerConfig : BufferCounterConfig
-    {
-        void on_exit() override
-        {
-            EXPECT_EQ(CountingStubBuffer::buffers_created.load(),
-                      CountingStubBuffer::buffers_destroyed.load());
-        }
+    for (int i = 0; i != max_surface_count; ++i)
+        mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync+i);
 
-    } server_config;
-
-    launch_server_process(server_config);
-
-    struct Client : ClientConfigCommon
-    {
-        void exec() override
-        {
-            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-
-            MirSurfaceParameters const request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-
-            for (int i = 0; i != max_surface_count; ++i)
-                mir_connection_create_surface(connection, &request_params, create_surface_callback, ssync+i);
-
-            for (int i = 0; i != max_surface_count; ++i)
-                wait_for_surface_create(ssync+i);
-
-            mir_connection_release(connection);
-        }
-    } client_creates_surfaces;
-
-    launch_client_process(client_creates_surfaces);
+    for (int i = 0; i != max_surface_count; ++i)
+        wait_for_surface_create(ssync+i);
 }
