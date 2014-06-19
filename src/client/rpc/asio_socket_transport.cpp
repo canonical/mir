@@ -39,7 +39,7 @@ mclr::AsioSocketTransport::~AsioSocketTransport()
 
 void mclr::AsioSocketTransport::register_observer(std::shared_ptr<Observer> const& observer)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
+    std::lock_guard<decltype(observer_mutex)> lock(observer_mutex);
     observers.push_back(observer);
 }
 
@@ -49,6 +49,10 @@ void mclr::AsioSocketTransport::receive_data(void* buffer, size_t read_bytes)
 
     if (bytes_read < 0)
     {
+        if (errno == EPIPE)
+        {
+            notify_disconnected();
+        }
         BOOST_THROW_EXCEPTION(
                     boost::enable_error_info(
                         std::runtime_error(std::string("Failed to read message from server:")
@@ -83,6 +87,10 @@ void mclr::AsioSocketTransport::receive_data(void* buffer, size_t read_bytes, st
 
     if (bytes_read < 0)
     {
+        if (errno == EPIPE)
+        {
+            notify_disconnected();
+        }
         BOOST_THROW_EXCEPTION(
                     boost::enable_error_info(
                         std::runtime_error(std::string("Failed to read message from server:")
@@ -117,6 +125,10 @@ void mclr::AsioSocketTransport::send_data(const std::vector<uint8_t>& buffer)
 
     if (bytes_written < 0)
     {
+        if (errno == EPIPE)
+        {
+            notify_disconnected();
+        }
         BOOST_THROW_EXCEPTION(
                     boost::enable_error_info(
                         std::runtime_error(std::string("Failed to send message to server:")
@@ -139,7 +151,7 @@ void mclr::AsioSocketTransport::init()
 
             socket.native_non_blocking(false);
             socket.async_read_some(boost::asio::null_buffers(),
-                                   std::bind(&mclr::AsioSocketTransport::notify_data_available, this,
+                                   std::bind(&mclr::AsioSocketTransport::on_data_available, this,
                                              std::placeholders::_1, std::placeholders::_2));
 
             try
@@ -148,24 +160,42 @@ void mclr::AsioSocketTransport::init()
             }
             catch(...)
             {
-                std::lock_guard<decltype(mutex)> lock(mutex);
-                for(auto& observer : observers)
-                {
-                    observer->on_disconnected();
-                }
+                notify_disconnected();
             }
     });
 }
 
-void mclr::AsioSocketTransport::notify_data_available(boost::system::error_code const& /*ec*/, size_t /*bytes_read*/)
+void mclr::AsioSocketTransport::on_data_available(boost::system::error_code const& /*ec*/, size_t /*bytes_read*/)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
-    for (auto& observer : observers)
-    {
-        observer->on_data_available();
-    }
+    notify_data_available();
     socket.async_read_some(boost::asio::null_buffers(),
-                           std::bind(&mclr::AsioSocketTransport::notify_data_available, this,
+                           std::bind(&mclr::AsioSocketTransport::on_data_available, this,
                                      std::placeholders::_1, std::placeholders::_2));
 
+}
+
+void mclr::AsioSocketTransport::notify_data_available()
+{
+    std::unique_lock<decltype(observer_mutex)> lock(observer_mutex);
+    // We don't allow deregistration of observers, which is the only action that can invalidate
+    // our iterator.
+    for (auto& observer : observers)
+    {
+        lock.unlock();
+        observer->on_data_available();
+        lock.lock();
+    }
+}
+
+void mclr::AsioSocketTransport::notify_disconnected()
+{
+    std::unique_lock<decltype(observer_mutex)> lock(observer_mutex);
+    // We don't allow deregistration of observers, which is the only action that can invalidate
+    // our iterator.
+    for (auto& observer : observers)
+    {
+        lock.unlock();
+        observer->on_disconnected();
+        lock.lock();
+    }
 }
