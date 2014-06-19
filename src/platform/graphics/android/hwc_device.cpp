@@ -87,10 +87,10 @@ bool mga::HwcDevice::post_overlays(
 
     auto lg = lock_unblanked();
 
-    auto const& prebuffer = context.last_rendered_buffer();
-    geom::Rectangle const disp_frame{{0,0}, {prebuffer->size()}};
-    auto & fbtarget_layer = *hwc_list.additional_layers_begin();
-    fbtarget_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *prebuffer);
+    auto& buffer = *context.last_rendered_buffer();
+    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
+    auto& fbtarget_layer = *hwc_list.additional_layers_begin();
+    fbtarget_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, buffer);
 
     hwc_wrapper->prepare(*hwc_list.native_list().lock());
 
@@ -110,23 +110,19 @@ bool mga::HwcDevice::post_overlays(
 
     list_compositor.render(rejected_renderables, context);
 
-    auto const& final_fb = *context.last_rendered_buffer();
-    fbtarget_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, final_fb);
-    fbtarget_layer.prepare_for_draw(final_fb);
+    buffer = *context.last_rendered_buffer();
+    fbtarget_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, buffer);
+    fbtarget_layer.prepare_for_draw(buffer);
 
     hwc_wrapper->set(*hwc_list.native_list().lock());
+    onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
 
-    //take care of releaseFenceFds
     layers_it = hwc_list.begin();
     for(auto const& renderable : renderables)
-    {
-        layers_it->update_fence(*renderable->buffer());
-        layers_it++;
-    }
-    fbtarget_layer.update_fence(final_fb);
-    mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
+        (layers_it++)->update_fence(*renderable->buffer());
+    fbtarget_layer.update_fence(buffer);
 
-    onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
+    mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
     return true;
 }
 
@@ -134,32 +130,30 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
 {
     auto lg = lock_unblanked();
     hwc_list.update_list_and_check_if_changed({}, fbtarget_plus_skip_size);
-    geom::Rectangle const disp_frame{{0,0}, {context.last_rendered_buffer()->size()}};
 
-    auto buffer = context.last_rendered_buffer();
-    auto it = hwc_list.additional_layers_begin();
-    it->setup_layer(mga::LayerType::skip, disp_frame, false, *buffer);
-    ++it;
-    it->setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *buffer);
+    auto& buffer = *context.last_rendered_buffer();
+    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
+    auto& skip_layer = *hwc_list.additional_layers_begin();
+    auto& fb_layer = *(++hwc_list.additional_layers_begin());
+    skip_layer.setup_layer(mga::LayerType::skip, disp_frame, false, buffer);
+    fb_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, buffer);
 
     hwc_wrapper->prepare(*hwc_list.native_list().lock());
 
     context.swap_buffers();
 
-    buffer = context.last_rendered_buffer();
-    auto it2 = hwc_list.additional_layers_begin();
-    it2->setup_layer(mga::LayerType::skip, disp_frame, false, *buffer);
-    ++it2;
-    it2->setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *buffer);
-
-    for(auto it = hwc_list.additional_layers_begin(); it != hwc_list.end(); it++)
-        it->prepare_for_draw(*context.last_rendered_buffer());
-
-    hwc_wrapper->set(*hwc_list.native_list().lock());
+    buffer = *context.last_rendered_buffer();
+    skip_layer.setup_layer(mga::LayerType::skip, disp_frame, false, buffer);
+    fb_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, buffer);
 
     for(auto& layer : hwc_list)
-        layer.update_fence(*context.last_rendered_buffer());
+        layer.prepare_for_draw(buffer);
+
+    hwc_wrapper->set(*hwc_list.native_list().lock());
+    onscreen_overlay_buffers.clear();
+
+    for(auto& layer : hwc_list)
+        layer.update_fence(buffer);
 
     mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
-    onscreen_overlay_buffers.clear();
 }
