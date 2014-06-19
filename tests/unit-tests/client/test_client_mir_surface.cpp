@@ -388,9 +388,9 @@ TEST_F(MirClientSurfaceTest, create_wait_handle_really_blocks)
     using namespace testing;
 
     FakeRpcChannel fake_channel{};
-    auto unresponsive_server = std::make_shared<mir::protobuf::DisplayServer::Stub>(&fake_channel);
+    mir::protobuf::DisplayServer::Stub unresponsive_server{&fake_channel};
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *unresponsive_server, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
+    auto surface = std::make_shared<MirSurface> (connection.get(), unresponsive_server, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto wait_handle = surface->get_create_wait_handle();
 
@@ -411,9 +411,9 @@ TEST_F(MirClientSurfaceTest, next_buffer_wait_handle_really_blocks)
     using namespace testing;
 
     FakeRpcChannel fake_channel{};
-    auto unresponsive_server = std::make_shared<mir::protobuf::DisplayServer::Stub>(&fake_channel);
+    mir::protobuf::DisplayServer::Stub unresponsive_server{&fake_channel};
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *unresponsive_server, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
+    auto surface = std::make_shared<MirSurface> (connection.get(), unresponsive_server, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback, nullptr);
 
@@ -837,9 +837,9 @@ TEST_F(MirClientSurfaceTest, configure_wait_handle_really_blocks)
     using namespace testing;
 
     FakeRpcChannel fake_channel{};
-    auto unresponsive_server = std::make_shared<mir::protobuf::DisplayServer::Stub>(&fake_channel);
+    mir::protobuf::DisplayServer::Stub unresponsive_server{&fake_channel};
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *unresponsive_server, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
+    auto surface = std::make_shared<MirSurface> (connection.get(), unresponsive_server, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto configure_wait_handle = surface->configure(mir_surface_attrib_dpi, 100);
 
