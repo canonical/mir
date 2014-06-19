@@ -32,6 +32,7 @@
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
 #include "xcursor_loader.h"
+#include "builtin_cursor_images.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/options/configuration.h"
@@ -218,14 +219,26 @@ mir::DefaultServerConfiguration::the_default_cursor_image()
         });
 }
 
+namespace
+{
+bool has_default_cursor(mi::CursorImages& images)
+{
+    if (images.image(mir_default_cursor_name, mi::default_cursor_size))
+        return true;
+    return false;
+}
+}
+
 std::shared_ptr<mi::CursorImages>
 mir::DefaultServerConfiguration::the_cursor_images()
 {
     return cursor_images(
-        [this]()
+        [this]() -> std::shared_ptr<mi::CursorImages>
         {
-            // TODO: Consider defaulting to builtin repository?
-            // if we do not load any images.
-            return std::make_shared<mi::XCursorLoader>();
+            auto xcursor_loader = std::make_shared<mi::XCursorLoader>();
+            if (has_default_cursor(*xcursor_loader))
+                return xcursor_loader;
+            else
+                return std::make_shared<mi::BuiltinCursorImages>();
         });
 }
