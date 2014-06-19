@@ -80,11 +80,19 @@ bool mga::HwcDevice::post_overlays(
     RenderableList const& renderables,
     RenderableListCompositor const& list_compositor)
 {
+    printf("ooo\n");
     if (renderable_list_is_hwc_incompatible(renderables))
+    {
+        printf("???\n");
         return false;
+    }
     if (!hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size))
+    {
+        printf("reject.\n");
         return false;
+    }
 
+    printf("gothere\n");
     auto lg = lock_unblanked();
 
     auto& buffer = *context.last_rendered_buffer();
@@ -92,8 +100,11 @@ bool mga::HwcDevice::post_overlays(
     auto& fbtarget_layer = *hwc_list.additional_layers_begin();
     fbtarget_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, buffer);
 
+    printf("PREP!\n");
     hwc_wrapper->prepare(*hwc_list.native_list().lock());
 
+    (void) list_compositor;
+    (void)context;
     mg::RenderableList rejected_renderables;
     std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
 
@@ -119,7 +130,11 @@ bool mga::HwcDevice::post_overlays(
 
     layers_it = hwc_list.begin();
     for(auto const& renderable : renderables)
-        (layers_it++)->update_fence(*renderable->buffer());
+    {
+        layers_it->update_fence(*renderable->buffer());
+        layers_it++;
+    }
+    printf("update?\n");
     fbtarget_layer.update_fence(buffer);
 
     mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());

@@ -66,7 +66,7 @@ public:
     HWCLayer& operator=(HWCLayer const& layer) = delete;
     HWCLayer(HWCLayer const& layer) = delete;
     
-    void setup_layer(
+    bool setup_layer(
         LayerType type,
         geometry::Rectangle const& position,
         bool alpha_enabled,
@@ -74,13 +74,12 @@ public:
 
     void update_fence(Buffer const& buffer);
     bool needs_gl_render() const;
-    bool needs_hwc_commit() const;
     void prepare_for_draw(Buffer const& buffer);
 private:
     hwc_layer_1_t* hwc_layer;
     std::shared_ptr<hwc_display_contents_1_t> hwc_list;
     hwc_rect_t visible_rect;
-    bool updated;
+    bool needs_commit;
 };
 }
 }

@@ -43,7 +43,7 @@ mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer && other)
     hwc_layer = other.hwc_layer;
     hwc_list = std::move(other.hwc_list);
     visible_rect = std::move(other.visible_rect);
-    updated = other.updated;
+    needs_commit = other.needs_commit;
     return *this;
 }
 
@@ -51,14 +51,14 @@ mga::HWCLayer::HWCLayer(HWCLayer && other)
     : hwc_layer(std::move(other.hwc_layer)),
       hwc_list(std::move(other.hwc_list)),
       visible_rect(std::move(other.visible_rect)),
-      updated(other.updated)
+      needs_commit(other.needs_commit)
 {
 }
 
 mga::HWCLayer::HWCLayer(std::shared_ptr<hwc_display_contents_1_t> list, size_t layer_index)
     : hwc_layer(&list->hwLayers[layer_index]),
       hwc_list(list),
-      updated{false}
+      needs_commit{false}
 {
     memset(hwc_layer, 0, sizeof(hwc_layer_1_t));
     memset(&visible_rect, 0, sizeof(hwc_rect_t));
@@ -86,12 +86,15 @@ mga::HWCLayer::HWCLayer(
     setup_layer(type, position, alpha_enabled, buffer);
 }
 
-void mga::HWCLayer::setup_layer(
+bool mga::HWCLayer::setup_layer(
     LayerType type,
     geometry::Rectangle const& position,
     bool alpha_enabled,
     Buffer const& buffer)
 {
+    printf("SETPP\n");
+    needs_commit = needs_gl_render();
+
     hwc_layer->flags = 0;
     switch(type)
     {
@@ -132,7 +135,7 @@ void mga::HWCLayer::setup_layer(
     visible_rect = hwc_layer->displayFrame;
 
     auto const& native_buffer = buffer.native_buffer_handle();
-    updated = (hwc_layer->handle != native_buffer->handle());
+    needs_commit |= (hwc_layer->handle != native_buffer->handle());
 
     hwc_layer->handle = native_buffer->handle();
     hwc_layer->sourceCrop = 
@@ -141,11 +144,8 @@ void mga::HWCLayer::setup_layer(
         native_buffer->anwb()->width,
         native_buffer->anwb()->height
     };
-}
 
-bool mga::HWCLayer::needs_hwc_commit() const
-{
-    return (updated || needs_gl_render());
+    return needs_commit;
 }
 
 bool mga::HWCLayer::needs_gl_render() const
@@ -160,9 +160,8 @@ void mga::HWCLayer::prepare_for_draw(mg::Buffer const& buffer)
 
     //we shouldn't be copying the FD unless the HWC has marked this as a buffer its interested in.
     //we disregard fences that haven't changed, as the hwc will still own the buffer
-    if (updated && 
-        (((hwc_layer->compositionType == HWC_OVERLAY) ||
-          (hwc_layer->compositionType == HWC_FRAMEBUFFER_TARGET))))
+    if ((needs_commit && (hwc_layer->compositionType == HWC_OVERLAY)) ||
+        (hwc_layer->compositionType == HWC_FRAMEBUFFER_TARGET))
     {
         auto const& native_buffer = buffer.native_buffer_handle();
         hwc_layer->acquireFenceFd = native_buffer->copy_fence();
@@ -173,8 +172,11 @@ void mga::HWCLayer::update_fence(mg::Buffer const& buffer)
 {
     if (hwc_layer->compositionType != HWC_FRAMEBUFFER)
     { 
+        printf("OOO\n");
         auto const& native_buffer = buffer.native_buffer_handle();
+        printf("OaOO\n");
         native_buffer->update_fence(hwc_layer->releaseFenceFd);
+        printf("ObOO\n");
         hwc_layer->releaseFenceFd = -1;
         hwc_layer->acquireFenceFd = -1;
     }

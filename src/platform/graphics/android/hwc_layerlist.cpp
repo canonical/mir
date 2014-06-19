@@ -65,15 +65,15 @@ bool mga::LayerList::update_list_and_check_if_changed(
 
     if (layers.size() == needed_size)
     {
+        printf("same size.\n");
         auto layers_it = layers.begin();
         for(auto renderable : renderlist)
         {
-            layers_it->setup_layer(
+            any_buffer_updated |= layers_it->setup_layer(
                 mga::LayerType::gl_rendered,
                 renderable->screen_position(),
                 renderable->alpha_enabled(),
                 *renderable->buffer());
-            any_buffer_updated |= layers_it->needs_hwc_commit(); 
             layers_it++;
         }
     }

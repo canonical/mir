@@ -303,9 +303,9 @@ TEST_F(HwcDevice, sets_and_updates_fences)
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
-    EXPECT_CALL(*mock_file_ops, close(hwc_retire_fence))
-        .InSequence(seq);
     EXPECT_CALL(*mock_native_buffer, update_fence(fb_release_fence))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_file_ops, close(hwc_retire_fence))
         .InSequence(seq);
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
@@ -332,8 +332,13 @@ TEST_F(HwcDevice, sets_proper_list_with_overlays)
     native_handle_3->anwb()->height = buffer_size.height.as_int();
 
     EXPECT_CALL(mock_buffer, native_buffer_handle())
+        .Times(AnyNumber())
         .WillOnce(Return(native_handle_1))
         .WillOnce(Return(native_handle_2))
+        .WillOnce(Return(native_handle_3))
+        .WillOnce(Return(native_handle_1))
+        .WillOnce(Return(native_handle_2))
+        .WillOnce(Return(native_handle_3))
         .WillOnce(Return(native_handle_3))
         .WillOnce(Return(native_handle_1))
         .WillOnce(Return(native_handle_2))
@@ -391,6 +396,7 @@ TEST_F(HwcDevice, sets_proper_list_with_overlays)
         &set_target_layer
     };
 
+printf("OOO<<<\n");
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
     //all accepted
@@ -426,7 +432,7 @@ TEST_F(HwcDevice, sets_proper_list_with_overlays)
         .InSequence(seq);
     EXPECT_CALL(*native_handle_3, update_fence(release_fence3))
         .InSequence(seq);
-    
+
     EXPECT_TRUE(device.post_overlays(mock_context, updated_list, stub_compositor));
 }
 
@@ -489,6 +495,9 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
     auto native_handle_2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
 
     EXPECT_CALL(mock_buffer, native_buffer_handle())
+        .Times(AnyNumber())
+        .WillOnce(Return(native_handle_1))
+        .WillOnce(Return(native_handle_2))
         .WillOnce(Return(native_handle_1))
         .WillOnce(Return(native_handle_2));
 
