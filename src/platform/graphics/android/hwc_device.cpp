@@ -25,6 +25,7 @@
 #include "framebuffer_bundle.h"
 #include "buffer.h"
 #include "hwc_fallback_gl_renderer.h"
+#include <limits>
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
@@ -34,6 +35,16 @@ namespace
 {
 static const size_t fbtarget_plus_skip_size = 2;
 static const size_t fbtarget_size = 1;
+
+bool plane_alpha_is_translucent(mg::Renderable const& renderable)
+{
+    float static const tolerance
+    {
+        1.0f/(2.0 * static_cast<float>(std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max()))
+    };
+    return renderable.alpha_enabled() && (renderable.alpha() < 1.0f - tolerance);
+}
+
 bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
 {
     if (list.empty())
@@ -41,11 +52,10 @@ bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
 
     for(auto const& renderable : list)
     {
-        //TODO: enable alpha, 90 deg rotation
+        //TODO: enable planeAlpha for (hwc version >= 1.2), 90 deg rotation
         static glm::mat4 const identity;
-        if (renderable->shaped() ||
-            renderable->alpha_enabled() ||
-            (renderable->transformation() != identity))
+        if (plane_alpha_is_translucent(*renderable) ||
+           (renderable->transformation() != identity))
         {
             return true;
         }
