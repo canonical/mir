@@ -49,7 +49,7 @@ struct XCursorImage : public mg::CursorImage
             image->height != mg::default_cursor_size.height.as_uint32_t())
         {
             BOOST_THROW_EXCEPTION(
-                std::runtime_error("Somehow we got a cursor not of the default size (currently only 48x48 supported)"));
+                std::runtime_error("Somehow we got a cursor not of the default size (currently only 24x24 supported)"));
         }
     }
 
@@ -57,13 +57,17 @@ struct XCursorImage : public mg::CursorImage
     {
     }
 
-    void const* as_argb_8888() const
+    void const* as_argb_8888() const override
     {
         return image->pixels;
     }
-    geom::Size size() const
+    geom::Size size() const override
     {
         return mg::default_cursor_size;
+    }
+    geom::Displacement hotspot() const override
+    {
+        return {image->xhot, image->yhot};
     }
 
     _XcursorImage *image;
@@ -104,7 +108,6 @@ void mi::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images)
     }
     if (!image_of_correct_size)
         return;
-    printf("Loaded cursor: %s \n", images->name);
     loaded_images[std::string(images->name)] = std::make_shared<XCursorImage>(image_of_correct_size, saved_xcursor_library_resource);
 }
 

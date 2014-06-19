@@ -58,6 +58,7 @@ struct NamedCursorImage : public mg::CursorImage
     
     void const* as_argb_8888() const { return nullptr; }
     geom::Size size() const { return geom::Size{}; }
+    geom::Displacement hotspot() const { return geom::Displacement{0, 0}; }
 
     std::string const cursor_name;
 };

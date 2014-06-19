@@ -50,7 +50,7 @@ public:
     bool schedule_page_flip(uint32_t fb_id);
     void wait_for_page_flip();
 
-    void set_cursor(gbm_bo* buffer);
+    void set_cursor(gbm_bo* buffer, geometry::Displacement hotspot);
     void move_cursor(geometry::Point destination);
     void clear_cursor();
     bool has_cursor() const;

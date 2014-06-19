@@ -77,6 +77,7 @@ mgm::Cursor::Cursor(
     std::shared_ptr<mg::CursorImage> const& initial_image) :
         output_container(output_container),
         current_position(),
+        // Visible will be set to true if we successfully load the initial image
         visible(true),
         buffer(gbm),
         current_configuration(current_configuration)
@@ -142,6 +143,11 @@ void mgm::Cursor::show(CursorImage const& cursor_image)
         auto const count = size.width.as_uint32_t() * size.height.as_uint32_t() * sizeof(uint32_t);
         write_buffer_data_locked(lg, cursor_image.as_argb_8888(), count);
     }
+    hotspot = cursor_image.hotspot();
+    
+    // The hotspot may have changed so we need to call drmModeSetCursor again if the cursor was already visible.
+    if (visible)
+        place_cursor_at_locked(lg, current_position, ForceState);
 
     // Writing the data could throw an exception so hold setting visible until after.
     visible = true;
@@ -198,6 +204,14 @@ void mgm::Cursor::place_cursor_at(
     ForceCursorState force_state)
 {
     std::lock_guard<std::mutex> lg(guard);
+    place_cursor_at_locked(lg, position, force_state);
+}
+
+void mgm::Cursor::place_cursor_at_locked(
+    std::lock_guard<std::mutex> const&,
+    geometry::Point position,
+    ForceCursorState force_state)
+{
 
     current_position = position;
 
@@ -212,7 +226,7 @@ void mgm::Cursor::place_cursor_at(
             output.move_cursor({dp.dx.as_int(), dp.dy.as_int()});
             if (force_state || !output.has_cursor()) // TODO - or if orientation had changed - then set buffer..
             {
-                output.set_cursor(buffer);// TODO - select rotated buffer image
+                output.set_cursor(buffer, hotspot);// TODO - select rotated buffer image
             }
         }
         else

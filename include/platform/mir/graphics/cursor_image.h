@@ -21,6 +21,7 @@
 #define MIR_GRAPHICS_CURSOR_IMAGE_H_
 
 #include "mir/geometry/size.h"
+#include "mir/geometry/displacement.h"
 
 namespace mir
 {
@@ -33,6 +34,9 @@ public:
 
     virtual void const* as_argb_8888() const = 0;
     virtual geometry::Size size() const = 0;
+    
+    virtual geometry::Displacement hotspot() const = 0;
+    
 
 protected:
     CursorImage() = default;

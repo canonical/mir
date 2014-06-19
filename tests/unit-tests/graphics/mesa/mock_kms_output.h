@@ -38,7 +38,7 @@ struct MockKMSOutput : public graphics::mesa::KMSOutput
     MOCK_METHOD1(schedule_page_flip, bool(uint32_t));
     MOCK_METHOD0(wait_for_page_flip, void());
 
-    MOCK_METHOD1(set_cursor, void(gbm_bo*));
+    MOCK_METHOD2(set_cursor, void(gbm_bo*, geometry::Displacement));
     MOCK_METHOD1(move_cursor, void(geometry::Point));
     MOCK_METHOD0(clear_cursor, void());
     MOCK_CONST_METHOD0(has_cursor, bool());

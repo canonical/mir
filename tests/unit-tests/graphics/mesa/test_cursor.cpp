@@ -211,6 +211,11 @@ struct StubCursorImage : public mg::CursorImage
     {
         return geom::Size{geom::Width{64}, geom::Height{64}};
     }
+    geom::Displacement hotspot() const 
+    {
+        return geom::Displacement{0, 0};
+    }
+
     static void const* image_data;
 };
 void const* StubCursorImage::image_data = reinterpret_cast<void*>(&StubCursorImage::image_data);
@@ -258,6 +263,26 @@ TEST_F(MesaCursorTest, show_cursor_writes_to_bo)
     EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, StubCursorImage::image_data, cursor_size_bytes));
 
     cursor.show(image);
+}
+
+TEST_F(MesaCursorTest, show_cursor_sets_cursor_with_hotspot)
+{
+    using namespace testing;
+
+    static geom::Displacement hotspot_displacement{10, 10};
+
+    struct HotspotCursor : public StubCursorImage
+    {
+        geom::Displacement hotspot() const override
+        {
+            return hotspot_displacement;
+        }
+    };
+    
+    EXPECT_CALL(mock_gbm, gbm_bo_write(_, _, _)).Times(AnyNumber());
+    EXPECT_CALL(*output_container.outputs[10], set_cursor(_, hotspot_displacement)).Times(1);
+
+    cursor.show(HotspotCursor());
 }
 
 // When we upload our 1x1 cursor we should upload a single white pixel and then transparency filling a 64x64 buffer.
@@ -325,7 +350,7 @@ TEST_F(MesaCursorTest, forces_cursor_state_on_construction)
     using namespace testing;
 
     EXPECT_CALL(*output_container.outputs[10], move_cursor(geom::Point{0,0}));
-    EXPECT_CALL(*output_container.outputs[10], set_cursor(_));
+    EXPECT_CALL(*output_container.outputs[10], set_cursor(_, _));
     EXPECT_CALL(*output_container.outputs[11], clear_cursor());
     EXPECT_CALL(*output_container.outputs[12], clear_cursor());
 
@@ -348,7 +373,7 @@ TEST_F(MesaCursorTest, move_to_sets_clears_cursor_if_needed)
 
     EXPECT_CALL(*output_container.outputs[10], has_cursor())
         .WillOnce(Return(false));
-    EXPECT_CALL(*output_container.outputs[10], set_cursor(_));
+    EXPECT_CALL(*output_container.outputs[10], set_cursor(_, _));
 
     EXPECT_CALL(*output_container.outputs[11], has_cursor())
         .WillOnce(Return(true));
@@ -365,7 +390,7 @@ TEST_F(MesaCursorTest, move_to_doesnt_set_clear_cursor_if_not_needed)
 
     EXPECT_CALL(*output_container.outputs[10], has_cursor())
         .WillOnce(Return(true));
-    EXPECT_CALL(*output_container.outputs[10], set_cursor(_))
+    EXPECT_CALL(*output_container.outputs[10], set_cursor(_, _))
         .Times(0);
 
     EXPECT_CALL(*output_container.outputs[11], has_cursor())
@@ -516,8 +541,8 @@ TEST_F(MesaCursorTest, cursor_is_shown_at_correct_location_after_suspend_resume)
 
     output_container.verify_and_clear_expectations();
 
-    EXPECT_CALL(*output_container.outputs[10], set_cursor(_));
-    EXPECT_CALL(*output_container.outputs[11], set_cursor(_));
+    EXPECT_CALL(*output_container.outputs[10], set_cursor(_, _));
+    EXPECT_CALL(*output_container.outputs[11], set_cursor(_, _));
     EXPECT_CALL(*output_container.outputs[10], move_cursor(geom::Point{150,75}));
     EXPECT_CALL(*output_container.outputs[11], move_cursor(geom::Point{50,25}));
 
@@ -538,10 +563,12 @@ TEST_F(MesaCursorTest, hidden_cursor_is_not_shown_after_suspend_resume)
 
     output_container.verify_and_clear_expectations();
 
-    EXPECT_CALL(*output_container.outputs[10], set_cursor(_)).Times(0);
-    EXPECT_CALL(*output_container.outputs[11], set_cursor(_)).Times(0);
-    EXPECT_CALL(*output_container.outputs[12], set_cursor(_)).Times(0);
+    EXPECT_CALL(*output_container.outputs[10], set_cursor(_, _)).Times(0);
+    EXPECT_CALL(*output_container.outputs[11], set_cursor(_, _)).Times(0);
+    EXPECT_CALL(*output_container.outputs[12], set_cursor(_, _)).Times(0);
 
     cursor.resume();
     output_container.verify_and_clear_expectations();
 }
+
+// TODO: Hotspot

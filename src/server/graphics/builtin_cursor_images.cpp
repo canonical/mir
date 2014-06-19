@@ -38,6 +38,10 @@ struct BlackArrowCursorImage : public mg::CursorImage
     {
         return { black_arrow.width, black_arrow.height };
     }
+    geom::Displacement hotspot() const
+    {
+        return {0, 0};
+    }
 };
 }
 
