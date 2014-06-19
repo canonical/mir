@@ -38,6 +38,7 @@ typedef enum MirSurfaceAttrib
     mir_surface_attrib_swapinterval,
     mir_surface_attrib_focus,
     mir_surface_attrib_dpi,
+    mir_surface_attrib_visibility,
     mir_surface_attribs
 } MirSurfaceAttrib;
 
@@ -72,6 +73,12 @@ typedef enum MirSurfaceFocusState
     mir_surface_unfocused = 0,
     mir_surface_focused
 } MirSurfaceFocusState;
+
+typedef enum MirSurfaceVisibility
+{
+    mir_surface_visibility_occluded = 0,
+    mir_surface_visibility_exposed
+} MirSurfaceVisibility;
 
 typedef enum MirLifecycleState
 {

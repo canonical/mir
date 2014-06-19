@@ -150,6 +150,7 @@ private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
     bool set_dpi(int);
+    void set_visibility(MirSurfaceVisibility v);
 
     SurfaceObservers observers;
     std::mutex mutable guard;
@@ -170,6 +171,7 @@ private:
 
     MirSurfaceType type_value;
     MirSurfaceState state_value;
+    MirSurfaceVisibility visibility_value;
     int dpi_value;
 };
 
