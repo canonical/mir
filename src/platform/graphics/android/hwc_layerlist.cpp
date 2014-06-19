@@ -68,11 +68,12 @@ bool mga::LayerList::update_list_and_check_if_changed(
         auto layers_it = layers.begin();
         for(auto renderable : renderlist)
         {
-            layers_it->set_render_parameters(
-                renderable->screen_position(), renderable->alpha_enabled());
-            layers_it->set_buffer(*renderable->buffer());
+            layers_it->setup_layer(
+                mga::LayerType::gl_rendered,
+                renderable->screen_position(),
+                renderable->alpha_enabled(),
+                *renderable->buffer());
             any_buffer_updated |= layers_it->needs_hwc_commit(); 
-            layers_it->set_layer_type(mga::LayerType::gl_rendered);
             layers_it++;
         }
     }
@@ -88,8 +89,8 @@ bool mga::LayerList::update_list_and_check_if_changed(
                     mga::LayerType::gl_rendered,
                     renderable->screen_position(),
                     renderable->alpha_enabled(),
+                    *renderable->buffer(),
                     hwc_representation, i++));
-            new_layers.back().set_buffer(*renderable->buffer());
         }
 
         for(; i < needed_size; i++)

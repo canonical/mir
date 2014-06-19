@@ -55,13 +55,13 @@ public:
         RenderableListCompositor const& list_compositor);
 
 private:
-    void post(SwappingGLContext const& context);
+    void post();
 
     LayerList hwc_list;
     std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
 
     void set_list_framebuffer(Buffer const&);
-    void setup_layer_types();
+    void setup_layer_types(Buffer const&);
 
     std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<SyncFileOps> const sync_ops;
