@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_CLIENT_RPC_STREAM_TRANSPORT_H
-#define MIR_CLIENT_RPC_STREAM_TRANSPORT_H
+#ifndef MIR_CLIENT_RPC_STREAM_TRANSPORT_H_
+#define MIR_CLIENT_RPC_STREAM_TRANSPORT_H_
 
 #include <vector>
 #include <memory>
@@ -121,4 +121,4 @@ public:
 }
 }
 
-#endif // MIR_CLIENT_RPC_STREAM_TRANSPORT_H
+#endif // MIR_CLIENT_RPC_STREAM_TRANSPORT_H_

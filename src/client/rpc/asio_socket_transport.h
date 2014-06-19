@@ -17,8 +17,8 @@
  */
 
 
-#ifndef ASIO_SOCKET_TRANSPORT_H
-#define ASIO_SOCKET_TRANSPORT_H
+#ifndef ASIO_SOCKET_TRANSPORT_H_
+#define ASIO_SOCKET_TRANSPORT_H_
 
 #include "stream_transport.h"
 
@@ -67,4 +67,4 @@ private:
 }
 
 
-#endif // ASIO_SOCKET_TRANSPORT_H
+#endif // ASIO_SOCKET_TRANSPORT_H_
