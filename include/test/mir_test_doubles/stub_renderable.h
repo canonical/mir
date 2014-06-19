@@ -130,6 +130,18 @@ struct StubTranslucentRenderable : public StubRenderable
     }
 };
 
+struct PlaneAlphaRenderable : public StubRenderable
+{
+    bool alpha_enabled() const override
+    {
+        return true;
+    }
+    float alpha() const override
+    {
+        //approx 99% alpha 
+        return 1.0f - ( 3.0f / 1024.0f );
+    }
+};
 }
 }
 }

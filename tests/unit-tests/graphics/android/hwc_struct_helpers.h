@@ -61,6 +61,7 @@ MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
     EXPECT_THAT(arg.sourceCrop, MatchesRect(value.sourceCrop, "sourceCrop"));
     EXPECT_THAT(arg.displayFrame, MatchesRect(value.displayFrame, "displayFrame"));
     EXPECT_THAT(arg.visibleRegionScreen.numRects, MatchesMember(value.visibleRegionScreen.numRects, "visibleRegionScreen.numRects"));
+    EXPECT_THAT(arg.planeAlpha, MatchesMember(value.planeAlpha, "planeAlpha"));
     EXPECT_THAT(arg.acquireFenceFd, MatchesMember(value.acquireFenceFd, "acquireFenceFd"));
     EXPECT_THAT(arg.releaseFenceFd, MatchesMember(value.releaseFenceFd, "releaseFenceFd"));
 
