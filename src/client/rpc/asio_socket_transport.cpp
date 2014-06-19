@@ -56,13 +56,12 @@ void mclr::AsioSocketTransport::receive_data(void* buffer, size_t read_bytes)
     }
 }
 
-void mclr::AsioSocketTransport::receive_file_descriptors(std::vector<int> &fds)
+void mclr::AsioSocketTransport::receive_data(void* buffer, size_t read_bytes, std::vector<int> &fds)
 {
-    // We send dummy data
+    // Store the data in the buffer requested
     struct iovec iov;
-    char dummy_iov_data = '\0';
-    iov.iov_base = &dummy_iov_data;
-    iov.iov_len = 1;
+    iov.iov_base = buffer;
+    iov.iov_len = read_bytes;
 
     // Allocate space for control message
     static auto const builtin_n_fds = 5;
@@ -70,7 +69,7 @@ void mclr::AsioSocketTransport::receive_file_descriptors(std::vector<int> &fds)
     auto const fds_bytes = fds.size() * sizeof(int);
     mir::VariableLengthArray<builtin_cmsg_space> control{CMSG_SPACE(fds_bytes)};
 
-    // Message to send
+    // Message to read
     struct msghdr header;
     header.msg_name = NULL;
     header.msg_namelen = 0;
@@ -89,22 +88,26 @@ void mclr::AsioSocketTransport::receive_file_descriptors(std::vector<int> &fds)
                         std::runtime_error(std::string("Failed to read message from server:")
                                            + strerror(errno))) << boost::errinfo_errno(errno));
     }
-    // If we get a proper control message, copy the received
-    // file descriptors back to the caller
-    struct cmsghdr const* const cmsg = CMSG_FIRSTHDR(&header);
 
-    if (cmsg && cmsg->cmsg_len == CMSG_LEN(fds_bytes) &&
-        cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS)
+    if (fds.size() > 0)
     {
-        int const* const data = reinterpret_cast<int const*>CMSG_DATA(cmsg);
-        int i = 0;
-        for (auto& fd : fds)
-            fd = data[i++];
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(
-                    std::runtime_error("Invalid control message for receiving file descriptors"));
+        // If we get a proper control message, copy the received
+        // file descriptors back to the caller
+        struct cmsghdr const* const cmsg = CMSG_FIRSTHDR(&header);
+
+        if (cmsg && cmsg->cmsg_len == CMSG_LEN(fds_bytes) &&
+            cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS)
+        {
+            int const* const data = reinterpret_cast<int const*>CMSG_DATA(cmsg);
+            int i = 0;
+            for (auto& fd : fds)
+                fd = data[i++];
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(
+                        std::runtime_error("Invalid control message for receiving file descriptors"));
+        }
     }
 }
 

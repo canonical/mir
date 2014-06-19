@@ -82,14 +82,18 @@ public:
     virtual void receive_data(void* buffer, size_t read_bytes) = 0;
 
     /**
-     * \brief Receive file descriptors from the server
-     * \param [in,out] fds  Vector to populate with received file descriptors.
-     *                      The size of this vector determines how many descriptors
-     *                      are attempted to be received.
-     * \throws A std::runtime_error if it is not possible to read fds.size() file
-     *         descriptors from the server.
+     * \brief Read data and file descriptors from the server
+     * \param [out] buffer          Buffer to read into
+     * \param [in]  read_bytes      Number of bytes to read
+     * \param [in,out] fds          File descriptors received in this read.
+     *                              The value of fds.size() determines the number of
+     *                              file descriptors to receive.
+     * \throws A std::runtime_error if it is not possible to read
+     *         read_bytes bytes from the server.
+     *
+     * \note This provides stream semantics - message boundaries are not preserved.
      */
-    virtual void receive_file_descriptors(std::vector<int> &fds) = 0;
+    virtual void receive_data(void* buffer, size_t read_bytes, std::vector<int>& fds) = 0;
 
     /**
      * \brief Write data to the server

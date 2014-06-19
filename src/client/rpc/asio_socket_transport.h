@@ -45,7 +45,7 @@ public:
 public:
     void register_observer(std::shared_ptr<Observer> const& observer) override;
     void receive_data(void* buffer, size_t read_bytes) override;
-    void receive_file_descriptors(std::vector<int> &fds) override;
+    void receive_data(void* buffer, size_t read_bytes, std::vector<int>& fds) override;
     void send_data(const std::vector<uint8_t> &buffer) override;
 
 private:

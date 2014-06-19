@@ -51,38 +51,45 @@ public:
     }
 };
 
-class MockTransport : public mclr::StreamTransport
+class MockStreamTransport : public mclr::StreamTransport
 {
 public:
-    MockTransport()
+    MockStreamTransport()
     {
         using namespace testing;
         ON_CALL(*this, register_observer(_))
-            .WillByDefault(Invoke(std::bind(&MockTransport::register_observer_default,
+            .WillByDefault(Invoke(std::bind(&MockStreamTransport::register_observer_default,
                                             this, std::placeholders::_1)));
         ON_CALL(*this, receive_data(_,_))
-            .WillByDefault(Invoke(std::bind(&MockTransport::receive_data_default,
-                                            this, std::placeholders::_1, std::placeholders::_2)));
-        ON_CALL(*this, receive_file_descriptors(_))
-            .WillByDefault(Invoke(std::bind(&MockTransport::receive_file_descriptors_default,
-                                            this, std::placeholders::_1)));
+            .WillByDefault(Invoke([this](void* buffer, size_t message_size)
+        {
+            receive_data_default(buffer, message_size);
+        }));
+
+        ON_CALL(*this, receive_data(_,_,_))
+            .WillByDefault(Invoke([this](void* buffer, size_t message_size, std::vector<int>& fds)
+        {
+            receive_data_default(buffer, message_size, fds);
+        }));
+
         ON_CALL(*this, send_data(_))
-            .WillByDefault(Invoke(std::bind(&MockTransport::send_data_default,
+            .WillByDefault(Invoke(std::bind(&MockStreamTransport::send_data_default,
                                             this, std::placeholders::_1)));
     }
 
-    void add_receive_hunk(std::vector<uint8_t>&& message)
+    void add_server_message(std::vector<uint8_t> const& message)
     {
-        datagrams.emplace_back(std::forward<std::vector<uint8_t>>(message), std::list<int>());
+        received_data.insert(received_data.end(), message.begin(), message.end());
     }
-    void add_receive_hunk(std::vector<uint8_t>&& message, std::initializer_list<int> fds)
+    void add_server_message(std::vector<uint8_t> const& message, std::initializer_list<int> fds)
     {
-        datagrams.emplace_back(std::forward<std::vector<uint8_t>>(message), fds);
+        add_server_message(message);
+        received_fds.insert(received_fds.end(), fds);
     }
 
     bool all_data_consumed() const
     {
-        return datagrams.empty();
+        return received_data.empty() && received_fds.empty();
     }
 
     void notify_data_received()
@@ -97,7 +104,7 @@ public:
 
     MOCK_METHOD1(register_observer, void(std::shared_ptr<Observer> const&));
     MOCK_METHOD2(receive_data, void(void*, size_t));
-    MOCK_METHOD1(receive_file_descriptors, void(std::vector<int>&));
+    MOCK_METHOD3(receive_data, void(void*, size_t, std::vector<int>&));
     MOCK_METHOD1(send_data, void(std::vector<uint8_t> const&));
 
     // Transport interface
@@ -108,33 +115,27 @@ public:
 
     void receive_data_default(void* buffer, size_t read_bytes)
     {
-        while ((read_bytes != 0) && !datagrams.empty())
-        {
-            fds_for_current_message = datagrams.front().second;
-            size_t read_size = std::min(datagrams.front().first.size() - read_offset, read_bytes);
-
-            memcpy(buffer, datagrams.front().first.data() + read_offset, read_size);
-            read_offset += read_size;
-            read_bytes -= read_size;
-
-            if (read_offset == datagrams.front().first.size())
-            {
-                datagrams.pop_front();
-                read_offset = 0;
-            }
-        }
+        static std::vector<int> dummy;
+        receive_data_default(buffer, read_bytes, dummy);
     }
 
-    void receive_file_descriptors_default(std::vector<int>& fds)
+    void receive_data_default(void* buffer, size_t read_bytes, std::vector<int>& fds)
     {
-        if (fds.size() > fds_for_current_message.size())
-            throw std::runtime_error("Attempted to read more fds than are available");
-
-        for (auto& fd : fds)
+        auto num_fds = fds.size();
+        if (read_bytes > received_data.size())
         {
-            fd = fds_for_current_message.front();
-            fds_for_current_message.pop_front();
+            throw std::runtime_error("Attempt to read more data than is available");
         }
+        if (num_fds > received_fds.size())
+        {
+            throw std::runtime_error("Attempt to receive more fds than are available");
+        }
+
+        memcpy(buffer, received_data.data(), read_bytes);
+        fds.assign(received_fds.begin(), received_fds.begin() + num_fds);
+
+        received_data.erase(received_data.begin(), received_data.begin() + read_bytes);
+        received_fds.erase(received_fds.begin(), received_fds.begin() + num_fds);
     }
 
     void send_data_default(std::vector<uint8_t> const& buffer)
@@ -145,8 +146,8 @@ public:
     std::list<std::shared_ptr<Observer>> observers;
 
     size_t read_offset{0};
-    std::list<std::pair<std::vector<uint8_t>, std::list<int>>> datagrams;
-    std::list<int> fds_for_current_message;
+    std::vector<uint8_t> received_data;
+    std::vector<int> received_fds;
     std::list<std::vector<uint8_t>> sent_messages;
 };
 
@@ -154,10 +155,10 @@ class MirProtobufRpcChannelTest : public testing::Test
 {
 public:
     MirProtobufRpcChannelTest()
-        : transport{new testing::NiceMock<MockTransport>},
+        : transport{new testing::NiceMock<MockStreamTransport>},
           lifecycle{std::make_shared<mcl::LifecycleControl>()},
           channel{new mclr::MirProtobufRpcChannel{
-                  std::unique_ptr<MockTransport>{transport},
+                  std::unique_ptr<MockStreamTransport>{transport},
                   std::make_shared<StubSurfaceMap>(),
                   std::make_shared<mcl::DisplayConfiguration>(),
                   std::make_shared<mclr::NullRpcReport>(),
@@ -166,7 +167,7 @@ public:
     {
     }
 
-    MockTransport* transport;
+    MockStreamTransport* transport;
     std::shared_ptr<mcl::LifecycleControl> lifecycle;
     std::shared_ptr<::google::protobuf::RpcChannel> channel;
 };
@@ -183,15 +184,15 @@ TEST_F(MirProtobufRpcChannelTest, ReadsFullMessages)
     *reinterpret_cast<uint16_t*>(small_message.data()) = htobe16(8);
     *reinterpret_cast<uint16_t*>(large_message.data()) = htobe16(4096);
 
-    transport->add_receive_hunk(std::move(empty_message));
+    transport->add_server_message(empty_message);
     transport->notify_data_received();
     EXPECT_TRUE(transport->all_data_consumed());
 
-    transport->add_receive_hunk(std::move(small_message));
+    transport->add_server_message(small_message);
     transport->notify_data_received();
     EXPECT_TRUE(transport->all_data_consumed());
 
-    transport->add_receive_hunk(std::move(large_message));
+    transport->add_server_message(large_message);
     transport->notify_data_received();
     EXPECT_TRUE(transport->all_data_consumed());
 }
@@ -206,9 +207,9 @@ TEST_F(MirProtobufRpcChannelTest, ReadsAllQueuedMessages)
     *reinterpret_cast<uint16_t*>(small_message.data()) = htobe16(8);
     *reinterpret_cast<uint16_t*>(large_message.data()) = htobe16(4096);
 
-    transport->add_receive_hunk(std::move(empty_message));
-    transport->add_receive_hunk(std::move(small_message));
-    transport->add_receive_hunk(std::move(large_message));
+    transport->add_server_message(empty_message);
+    transport->add_server_message(small_message);
+    transport->add_server_message(large_message);
 
     transport->notify_data_received();
     EXPECT_TRUE(transport->all_data_consumed());
@@ -272,7 +273,12 @@ TEST_F(MirProtobufRpcChannelTest, ReadsFds)
         *reinterpret_cast<uint16_t*>(buffer.data()) = htobe16(reply.ByteSize());
         ASSERT_TRUE(reply.SerializeToArray(buffer.data() + sizeof(uint16_t), buffer.size() - sizeof(uint16_t)));
 
-        transport->add_receive_hunk(std::move(buffer), fds);
+        transport->add_server_message(buffer);
+
+        // Because our protocol is a bit silly...
+        std::vector<uint8_t> dummy = {1};
+        transport->add_server_message(dummy, fds);
+
         transport->notify_data_received();
     }
 
