@@ -116,10 +116,11 @@ struct ClientSurfaceEvents : BasicClientServerFixture
         self->last_event_cv.notify_one();
     }
 
-    bool receive_event_within(std::chrono::milliseconds delay)
+    bool wait_for_event(MirEventType type, std::chrono::milliseconds delay)
     {
         std::unique_lock<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
-        return last_event_cv.wait_for(last_event_lock, delay, [&] { return !!last_event_surface; });
+        return last_event_cv.wait_for(last_event_lock, delay,
+            [&] { return !!last_event_surface && last_event.type == type; });
     }
 
     void reset_last_event()
@@ -221,7 +222,7 @@ TEST_P(OrientationEvents, surface_receives_orientation_events)
 
     scene_surface->set_orientation(direction);
 
-    EXPECT_TRUE(receive_event_within(std::chrono::seconds(1)));
+    EXPECT_TRUE(wait_for_event(mir_event_type_orientation, std::chrono::seconds(1)));
 
     std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
