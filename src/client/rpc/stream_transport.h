@@ -17,10 +17,9 @@
  */
 
 
-#ifndef MIR_CLIENT_RPC_TRANSPORT_H
-#define MIR_CLIENT_RPC_TRANSPORT_H
+#ifndef MIR_CLIENT_RPC_STREAM_TRANSPORT_H
+#define MIR_CLIENT_RPC_STREAM_TRANSPORT_H
 
-#include <functional>
 #include <vector>
 #include <memory>
 #include <stdint.h>
@@ -33,6 +32,17 @@ namespace rpc
 {
 /**
  * \brief Responsible for shuttling bytes to and from the server
+ *
+ * This is a transport providing stream semantics. It does not preserve message
+ * boundaries, writes from the remote end are not guaranteed to become available
+ * for reading atomically, and local writes are not guaranteed to become available
+ * for reading at the remote end atomically.
+ *
+ * In practice reads and writes of “small size” will be atomic. See your kernel
+ * source tree for a definition of “small size” :).
+ *
+ * As it does not preserve message boundaries, partial reads do not discard any
+ * unread data waiting for reading. This applies for both binary data and file descriptors.
  *
  * \note It is safe to call a read and a write method simultaneously
  *       from different threads. Multiple threads calling the same
@@ -89,7 +99,8 @@ public:
      *                              The value of fds.size() determines the number of
      *                              file descriptors to receive.
      * \throws A std::runtime_error if it is not possible to read
-     *         read_bytes bytes from the server.
+     *         read_bytes bytes from the server or if it is not possible to read
+     *         fds.size() file descriptors from the server.
      *
      * \note This provides stream semantics - message boundaries are not preserved.
      */
@@ -108,4 +119,4 @@ public:
 }
 }
 
-#endif // MIR_CLIENT_RPC_TRANSPORT_H
+#endif // MIR_CLIENT_RPC_STREAM_TRANSPORT_H

@@ -20,7 +20,7 @@
 #define MIR_CLIENT_RPC_MIR_PROTOBUF_RPC_CHANNEL_H_
 
 #include "mir_basic_rpc_channel.h"
-#include "transport.h"
+#include "stream_transport.h"
 
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>

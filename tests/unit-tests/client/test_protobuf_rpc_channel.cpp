@@ -17,7 +17,7 @@
  */
 
 #include "src/client/rpc/mir_protobuf_rpc_channel.h"
-#include "src/client/rpc/transport.h"
+#include "src/client/rpc/stream_transport.h"
 #include "src/client/surface_map.h"
 #include "src/client/display_configuration.h"
 #include "src/client/rpc/null_rpc_report.h"

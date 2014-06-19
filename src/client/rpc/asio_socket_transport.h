@@ -20,7 +20,7 @@
 #ifndef ASIO_SOCKET_TRANSPORT_H
 #define ASIO_SOCKET_TRANSPORT_H
 
-#include "transport.h"
+#include "stream_transport.h"
 
 #include <thread>
 #include <mutex>
