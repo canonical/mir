@@ -124,6 +124,7 @@ struct ClientSurfaceEvents : BasicClientServerFixture
 
     void reset_last_event()
     {
+        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
         memset(&last_event, 0, sizeof last_event);
         last_event_surface = nullptr;
     }
@@ -157,39 +158,59 @@ TEST_F(ClientSurfaceEvents, surface_receives_state_events)
 {
     int surface_id = mir_debug_surface_id(surface);
 
-    mir_wait_for(mir_surface_set_state(surface, mir_surface_state_fullscreen));
-    mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_minimized));
-    EXPECT_THAT(last_event_surface, Eq(surface));
-    EXPECT_THAT(last_event.type, Eq(mir_event_type_surface));
-    EXPECT_THAT(last_event.surface.id, Eq(surface_id));
-    EXPECT_THAT(last_event.surface.attrib, Eq(mir_surface_attrib_state));
-    EXPECT_THAT(last_event.surface.value, Eq(mir_surface_state_fullscreen));
+    {
+        mir_wait_for(mir_surface_set_state(surface, mir_surface_state_fullscreen));
+        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_minimized));
 
-    mir_wait_for(mir_surface_set_state(surface, static_cast<MirSurfaceState>(999)));
-    EXPECT_THAT(last_event_surface, Eq(surface));
-    EXPECT_THAT(last_event.type, Eq(mir_event_type_surface));
-    EXPECT_THAT(last_event.surface.id, Eq(surface_id));
-    EXPECT_THAT(last_event.surface.attrib, Eq(mir_surface_attrib_state));
-    EXPECT_THAT(last_event.surface.value, Eq(mir_surface_state_fullscreen));
+        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
+
+        EXPECT_THAT(last_event_surface, Eq(surface));
+        EXPECT_THAT(last_event.type, Eq(mir_event_type_surface));
+        EXPECT_THAT(last_event.surface.id, Eq(surface_id));
+        EXPECT_THAT(last_event.surface.attrib, Eq(mir_surface_attrib_state));
+        EXPECT_THAT(last_event.surface.value, Eq(mir_surface_state_fullscreen));
+    }
+
+    {
+        mir_wait_for(mir_surface_set_state(surface, static_cast<MirSurfaceState>(999)));
+
+        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
+
+        EXPECT_THAT(last_event_surface, Eq(surface));
+        EXPECT_THAT(last_event.type, Eq(mir_event_type_surface));
+        EXPECT_THAT(last_event.surface.id, Eq(surface_id));
+        EXPECT_THAT(last_event.surface.attrib, Eq(mir_surface_attrib_state));
+        EXPECT_THAT(last_event.surface.value, Eq(mir_surface_state_fullscreen));
+    }
 
     reset_last_event();
 
-    mir_wait_for(mir_surface_set_state(surface, mir_surface_state_minimized));
-    EXPECT_THAT(last_event_surface, Eq(surface));
-    EXPECT_THAT(last_event.type, Eq(mir_event_type_surface));
-    EXPECT_THAT(last_event.surface.id, Eq(surface_id));
-    EXPECT_THAT(last_event.surface.attrib, Eq(mir_surface_attrib_state));
-    EXPECT_THAT(last_event.surface.value, Eq(mir_surface_state_minimized));
+    {
+        mir_wait_for(mir_surface_set_state(surface, mir_surface_state_minimized));
+
+        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
+
+        EXPECT_THAT(last_event_surface, Eq(surface));
+        EXPECT_THAT(last_event.type, Eq(mir_event_type_surface));
+        EXPECT_THAT(last_event.surface.id, Eq(surface_id));
+        EXPECT_THAT(last_event.surface.attrib, Eq(mir_surface_attrib_state));
+        EXPECT_THAT(last_event.surface.value, Eq(mir_surface_state_minimized));
+    }
 
     reset_last_event();
 
-    mir_wait_for(mir_surface_set_state(surface, static_cast<MirSurfaceState>(777)));
-    mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_maximized));
-    EXPECT_THAT(last_event_surface, IsNull());
-    EXPECT_THAT(last_event.type, Eq(0));
-    EXPECT_THAT(last_event.surface.id, Eq(0));
-    EXPECT_THAT(last_event.surface.attrib, Eq(0));
-    EXPECT_THAT(last_event.surface.value, Eq(0));
+    {
+        mir_wait_for(mir_surface_set_state(surface, static_cast<MirSurfaceState>(777)));
+        mir_wait_for(mir_surface_set_state(other_surface, mir_surface_state_maximized));
+
+        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
+
+        EXPECT_THAT(last_event_surface, IsNull());
+        EXPECT_THAT(last_event.type, Eq(0));
+        EXPECT_THAT(last_event.surface.id, Eq(0));
+        EXPECT_THAT(last_event.surface.attrib, Eq(0));
+        EXPECT_THAT(last_event.surface.value, Eq(0));
+    }
 }
 
 struct OrientationEvents : ClientSurfaceEvents, ::testing::WithParamInterface<MirOrientation> {};
@@ -200,7 +221,9 @@ TEST_P(OrientationEvents, surface_receives_orientation_events)
 
     scene_surface->set_orientation(direction);
 
-    EXPECT_TRUE(receive_event_within(std::chrono::milliseconds(400)));
+    EXPECT_TRUE(receive_event_within(std::chrono::seconds(1)));
+
+    std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
     EXPECT_THAT(last_event_surface, Eq(surface));
     EXPECT_THAT(last_event.type, Eq(mir_event_type_orientation));
