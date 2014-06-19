@@ -43,7 +43,6 @@
 #include <stdexcept>
 #include <memory>
 #include <string>
-#include <cstring>
 
 namespace mf = mir::frontend;
 namespace mt = mir::test;
@@ -89,10 +88,10 @@ public:
 
 struct PublishedSocketConnector : public ::testing::Test
 {
-    static const char* const test_socket;
+    static std::string const test_socket;
     static void SetUpTestCase()
     {
-        remove(test_socket);
+        remove(test_socket.c_str());
     }
 
     void SetUp()
@@ -129,7 +128,7 @@ struct PublishedSocketConnector : public ::testing::Test
     static std::shared_ptr<mt::TestProtobufServer> stub_server;
 };
 
-const char* const PublishedSocketConnector::test_socket = strdup(mtf::test_socket_file().c_str());
+std::string const PublishedSocketConnector::test_socket = mtf::test_socket_file();
 
 std::shared_ptr<mt::StubServerTool> PublishedSocketConnector::stub_server_tool;
 std::shared_ptr<MockConnectorReport> PublishedSocketConnector::communicator_report;
