@@ -20,7 +20,7 @@
 #ifndef MIR_INPUT_XCURSOR_CURSOR_LOADER_H_
 #define MIR_INPUT_XCURSOR_CURSOR_LOADER_H_
 
-#include "mir/graphics/cursor_images.h"
+#include "mir/input/cursor_images.h"
 
 #include <memory>
 #include <string>
@@ -43,7 +43,7 @@ class CursorImage;
 
 namespace input
 {
-class XCursorLoader : public graphics::CursorImages
+class XCursorLoader : public CursorImages
 {
 public:
     XCursorLoader();

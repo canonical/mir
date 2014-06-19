@@ -104,7 +104,7 @@ TEST(XCursorLoader, loads_cursors_from_testing_theme)
 
     mi::XCursorLoader loader;
     
-    auto size = mg::default_cursor_size;
+    auto size = mi::default_cursor_size;
     auto red_image = loader.image("red", size);
     auto blue_image = loader.image("blue", size);
     auto green_image = loader.image("green", size);
@@ -131,7 +131,7 @@ TEST(XCursorLoader, default_image_is_arrow_from_xcursor_theme)
 
     mi::XCursorLoader loader;
     
-    auto size = mg::default_cursor_size;
+    auto size = mi::default_cursor_size;
     auto arrow_image = loader.image(mir_default_cursor_name, size);
 
     // The testing theme uses a solid black image for the "arrow" symbolic
@@ -147,7 +147,7 @@ TEST(XCursorLoader, symbolic_names_which_are_not_present_resolve_to_default)
 
     mi::XCursorLoader loader;
     
-    auto size = mg::default_cursor_size;
+    auto size = mi::default_cursor_size;
     auto default_image = loader.image(mir_default_cursor_name, size);
     auto image_with_made_up_name = loader.image("Artickrumbulis", size);
 

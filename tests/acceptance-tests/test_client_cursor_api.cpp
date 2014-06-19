@@ -18,7 +18,7 @@
 
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/cursor_image.h"
-#include "mir/graphics/cursor_images.h"
+#include "mir/input/cursor_images.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_factory.h"
 #include "mir/scene/null_observer.h"
@@ -45,6 +45,7 @@
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
+namespace mi = mir::input;
 namespace mis = mir::input::synthesis;
 namespace geom = mir::geometry;
 
@@ -80,7 +81,7 @@ struct NamedCursorImage : public mg::CursorImage
     std::string const cursor_name;
 };
 
-struct NamedCursorImages : public mg::CursorImages
+struct NamedCursorImages : public mi::CursorImages
 {
    std::shared_ptr<mg::CursorImage> image(std::string const& name, geom::Size const& /* size */)
    {
@@ -192,7 +193,7 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
         return mt::fake_shared(cursor);
     }
     
-    std::shared_ptr<mg::CursorImages> the_cursor_images() override
+    std::shared_ptr<mi::CursorImages> the_cursor_images() override
     {
         return std::make_shared<NamedCursorImages>();
     }

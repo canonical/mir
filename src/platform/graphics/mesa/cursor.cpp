@@ -77,7 +77,6 @@ mgm::Cursor::Cursor(
     std::shared_ptr<mg::CursorImage> const& initial_image) :
         output_container(output_container),
         current_position(),
-        // Visible will be set to true if we successfully load the initial image
         visible(true),
         buffer(gbm),
         current_configuration(current_configuration)
@@ -112,7 +111,8 @@ void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> co
     }
     
     uint32_t *pixels = static_cast<uint32_t*>(calloc(buffer_width*buffer_height, sizeof(uint32_t)));
-    // 'pixels' is initialized to transparent so we just need to fill in the initial image.
+    // 'pixels' is initialized to transparent so we just need to copy the initial image
+    //  in to the top left corner.
     for (unsigned int i = 0; i < image_height; i++)
     {
         for (unsigned int j = 0; j < image_width; j++)
@@ -147,7 +147,8 @@ void mgm::Cursor::show(CursorImage const& cursor_image)
     if (visible)
         place_cursor_at_locked(lg, current_position, ForceState);
 
-    // Writing the data could throw an exception so hold setting visible until after.
+    // Writing the data could throw an exception so lets
+    // hold off on setting visible until after we have succeeded.
     visible = true;
 }
 

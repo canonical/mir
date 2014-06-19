@@ -15,6 +15,7 @@ set(
   cursor_controller.cpp
   default_configuration.cpp
   xcursor_loader.cpp
+  builtin_cursor_images.cpp
 )
 
 add_subdirectory(android)

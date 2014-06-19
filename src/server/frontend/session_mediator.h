@@ -39,6 +39,9 @@ class Buffer;
 class Platform;
 class Display;
 class GraphicBufferAllocator;
+}
+namespace input
+{
 class CursorImages;
 }
 
@@ -72,7 +75,7 @@ public:
         std::shared_ptr<ResourceCache> const& resource_cache,
         std::shared_ptr<Screencast> const& screencast,
         ConnectionContext const& connection_context,
-        std::shared_ptr<graphics::CursorImages> const& cursor_images);
+        std::shared_ptr<input::CursorImages> const& cursor_images);
 
     ~SessionMediator() noexcept;
 
@@ -186,7 +189,7 @@ private:
     std::shared_ptr<ResourceCache> const resource_cache;
     std::shared_ptr<Screencast> const screencast;
     ConnectionContext const connection_context;
-    std::shared_ptr<graphics::CursorImages> const cursor_images;
+    std::shared_ptr<input::CursorImages> const cursor_images;
 
     std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
     std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;

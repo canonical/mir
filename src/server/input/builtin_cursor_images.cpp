@@ -21,8 +21,7 @@
 
 #include "mir/graphics/cursor_image.h"
 
-// TODO: Move to input!
-
+namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
@@ -45,12 +44,12 @@ struct BlackArrowCursorImage : public mg::CursorImage
 };
 }
 
-mg::BuiltinCursorImages::BuiltinCursorImages()
+mi::BuiltinCursorImages::BuiltinCursorImages()
     : builtin_image(std::make_shared<BlackArrowCursorImage>())
 {
 }
 
-std::shared_ptr<mg::CursorImage> mg::BuiltinCursorImages::image(std::string const& /* cursor_name */,
+std::shared_ptr<mg::CursorImage> mi::BuiltinCursorImages::image(std::string const& /* cursor_name */,
     geom::Size const& /* size */)
 {
     // Builtin repository only has one cursor at a single size.

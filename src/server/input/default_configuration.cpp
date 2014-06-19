@@ -214,11 +214,11 @@ mir::DefaultServerConfiguration::the_default_cursor_image()
     return default_cursor_image(
         [this]()
         {
-            return the_cursor_images()->image(mir_default_cursor_name, mg::default_cursor_size);
+            return the_cursor_images()->image(mir_default_cursor_name, mi::default_cursor_size);
         });
 }
 
-std::shared_ptr<mg::CursorImages>
+std::shared_ptr<mi::CursorImages>
 mir::DefaultServerConfiguration::the_cursor_images()
 {
     return cursor_images(

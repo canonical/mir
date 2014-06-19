@@ -45,8 +45,8 @@ struct XCursorImage : public mg::CursorImage
         : image(image),
           save_resource(save_resource)
     {
-        if (image->width != mg::default_cursor_size.width.as_uint32_t() ||
-            image->height != mg::default_cursor_size.height.as_uint32_t())
+        if (image->width != mi::default_cursor_size.width.as_uint32_t() ||
+            image->height != mi::default_cursor_size.height.as_uint32_t())
         {
             BOOST_THROW_EXCEPTION(
                 std::runtime_error("Somehow we got a cursor not of the default size (currently only 24x24 supported)"));
@@ -63,7 +63,7 @@ struct XCursorImage : public mg::CursorImage
     }
     geom::Size size() const override
     {
-        return mg::default_cursor_size;
+        return mi::default_cursor_size;
     }
     geom::Displacement hotspot() const override
     {
@@ -99,8 +99,8 @@ void mi::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images)
     for (int i = 0; i < images->nimage; i++)
     {
         _XcursorImage *candidate = images->images[i];
-        if (candidate->width == mg::default_cursor_size.width.as_uint32_t() &&
-            candidate->height == mg::default_cursor_size.height.as_uint32_t())
+        if (candidate->width == mi::default_cursor_size.width.as_uint32_t() &&
+            candidate->height == mi::default_cursor_size.height.as_uint32_t())
         {
             image_of_correct_size = candidate;
             break;
@@ -115,7 +115,7 @@ void mi::XCursorLoader::load_cursor_theme(std::string const& theme_name)
 {
     // Cursors are named by their square dimension...called the nominal size in XCursor terminology, so we just look up by width.
     // Later we verify the actual size.
-    xcursor_load_theme(theme_name.c_str(), mg::default_cursor_size.width.as_uint32_t(), 
+    xcursor_load_theme(theme_name.c_str(), mi::default_cursor_size.width.as_uint32_t(), 
         [](XcursorImages* images, void *this_ptr)  -> void
         {
             // Can't use lambda capture as this lambda is thunked to a C function ptr
@@ -131,9 +131,9 @@ std::shared_ptr<mg::CursorImage> mi::XCursorLoader::image(std::string const& cur
     if (cursor_name == "default")
         return image("arrow", size);
 
-    if (size != mg::default_cursor_size)
+    if (size != mi::default_cursor_size)
         BOOST_THROW_EXCEPTION(
-            std::logic_error("Only the default cursor size is currently supported (mg::default_cursor_size)"));
+            std::logic_error("Only the default cursor size is currently supported (mi::default_cursor_size)"));
     
     std::lock_guard<std::mutex> lg(guard);
 

@@ -40,4 +40,3 @@ target_link_libraries(
   android-input
   xcursorloader
 )
-
