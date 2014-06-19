@@ -71,6 +71,7 @@ public:
         expected_layer.visibleRegionScreen = {1, &region};
         expected_layer.acquireFenceFd = -1;
         expected_layer.releaseFenceFd = -1;
+        expected_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
     }
 
     mga::LayerType type;
@@ -270,12 +271,13 @@ TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)
     expected_layer.flags = 0;
     expected_layer.handle = native_handle_1->handle();
     expected_layer.transform = 0;
-    expected_layer.blending = HWC_BLENDING_COVERAGE;
+    expected_layer.blending = HWC_BLENDING_PREMULT;
     expected_layer.sourceCrop = crop;
     expected_layer.displayFrame = screen_pos;
     expected_layer.visibleRegionScreen = visible_region;
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
+    expected_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
 
     mga::HWCLayer layer(list, list_index);
     layer.set_render_parameters(screen_position, true);
