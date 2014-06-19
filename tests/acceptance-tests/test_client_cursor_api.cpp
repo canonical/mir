@@ -103,7 +103,7 @@ MATCHER_P(CursorNamed, name, "")
 
 struct CursorSettingClient : mtf::TestingClientConfiguration
 {
-    static char const* const mir_test_socket;
+    static std::string const mir_test_socket;
 
     std::string const client_name;
 
@@ -125,7 +125,7 @@ struct CursorSettingClient : mtf::TestingClientConfiguration
 
     void exec() override
     {
-        auto connection = mir_connect_sync(mir_test_socket,
+        auto connection = mir_connect_sync(mir_test_socket.c_str(),
                                            client_name.c_str());
         
         ASSERT_TRUE(connection != NULL);
@@ -150,7 +150,7 @@ struct CursorSettingClient : mtf::TestingClientConfiguration
     }
 };
 
-char const* const CursorSettingClient::mir_test_socket = mtf::test_socket_file().c_str();
+std::string const CursorSettingClient::mir_test_socket = mtf::test_socket_file();
 
 struct MockSurfaceObserver : public ms::NullSurfaceObserver
 {

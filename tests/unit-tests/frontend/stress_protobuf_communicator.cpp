@@ -25,6 +25,7 @@
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test_doubles/null_client_event_sink.h"
+#include "mir_test_framework/testing_server_configuration.h"
 
 #include "src/client/connection_surface_map.h"
 #include "src/client/display_configuration.h"
@@ -45,6 +46,7 @@
 namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
+namespace mtf = mir_test_framework;
 
 namespace
 {
@@ -108,14 +110,14 @@ struct StressProtobufCommunicator : public ::testing::Test
     static void SetUpTestCase()
     {
         stub_server_tool = std::make_shared<mt::StubServerTool>();
-        stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
+        stub_server = std::make_shared<mt::TestProtobufServer>(mtf::test_socket_file(), stub_server_tool);
 
         stub_server->comm->start();
     }
 
     void SetUp()
     {
-        client = std::make_shared<StubProtobufClient>("./test_socket", 100);
+        client = std::make_shared<StubProtobufClient>(mtf::test_socket_file(), 100);
         client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
