@@ -97,8 +97,10 @@ bool mga::LayerList::update_list_and_check_if_changed(
         {
             new_layers.emplace_back(mga::HWCLayer(hwc_representation, i));
         }
+
         layers = std::move(new_layers);
     }
+    
 
     if (additional_layers == 0)
     {
