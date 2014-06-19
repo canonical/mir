@@ -170,7 +170,7 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
     
     mtf::SurfaceGeometries client_geometries;
     mtf::SurfaceDepths client_depths;
-    
+
     MockCursor cursor;
     
     ServerConfiguration(mt::Barrier& cursor_configured_fence, mt::Barrier& client_may_exit_fence)
