@@ -72,7 +72,7 @@ Description: Display server for Ubuntu - protocol definition
  .
  Contains the protocol's definition files.
 
-Package: libmirserver20
+Package: libmirserver21
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -150,7 +150,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver20 (= ${binary:Version}),
+Depends: libmirserver21 (= ${binary:Version}),
          libmirprotobuf-dev (= ${binary:Version}),
          mircommon-dev (= ${binary:Version}),
          libglm-dev,

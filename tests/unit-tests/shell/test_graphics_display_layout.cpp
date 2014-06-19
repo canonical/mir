@@ -18,9 +18,7 @@
 
 #include "src/server/shell/graphics_display_layout.h"
 
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/stub_display_configuration.h"
-#include "mir_test_doubles/stub_display_buffer.h"
+#include "mir_test_doubles/stub_display.h"
 
 #include <vector>
 #include <tuple>
@@ -35,37 +33,18 @@ namespace geom = mir::geometry;
 namespace
 {
 
-class StubDisplay : public mtd::NullDisplay
+struct StubDisplay : mtd::StubDisplay
 {
-public:
     StubDisplay()
-        : rects{{{0,0}, {800,600}},
-                {{0,600}, {100,100}},
-                {{800,0}, {100,100}}}
+        : mtd::StubDisplay{
+              std::vector<geom::Rectangle>{
+                  {{0,0}, {800,600}},
+                  {{0,600}, {100,100}},
+                  {{800,0}, {100,100}}
+              }
+          }
     {
-        for (auto const& rect : rects)
-        {
-            display_buffers.push_back(
-                std::make_shared<mtd::StubDisplayBuffer>(rect));
-        }
     }
-
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
-    {
-        for (auto& db : display_buffers)
-            f(*db);
-    }
-
-    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
-    {
-        return std::unique_ptr<mg::DisplayConfiguration>(
-            new mtd::StubDisplayConfig(rects)
-        );
-    }
-
-private:
-    std::vector<geom::Rectangle> const rects;
-    std::vector<std::shared_ptr<mtd::StubDisplayBuffer>> display_buffers;
 };
 
 }
