@@ -83,8 +83,6 @@ mgm::Cursor::Cursor(
         current_configuration(current_configuration)
 {
     show(*initial_image);
-
-    resume();
 }
 
 mgm::Cursor::~Cursor() noexcept
@@ -223,10 +221,15 @@ void mgm::Cursor::place_cursor_at_locked(
         if (output_rect.contains(position))
         {
             auto dp = transform(output_rect, position - output_rect.top_left, orientation);
-            output.move_cursor({dp.dx.as_int(), dp.dy.as_int()});
+            
+            // It's a little strange that we implement hotspot this way as there is
+            // drmModeSetCursor2 with hotspot support. However it appears to not actually
+            // work on radeon and intel. There also seems to be precedent in weston for
+            // implementing hotspot in this fashion.
+            output.move_cursor(geom::Point{dp.dx.as_int(), dp.dy.as_int()} - hotspot);
             if (force_state || !output.has_cursor()) // TODO - or if orientation had changed - then set buffer..
             {
-                output.set_cursor(buffer, hotspot);// TODO - select rotated buffer image
+                output.set_cursor(buffer);
             }
         }
         else

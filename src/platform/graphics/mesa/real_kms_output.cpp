@@ -24,7 +24,6 @@
 
 #include <stdexcept>
 #include <vector>
-#include <string.h> // strcmp
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -272,19 +271,16 @@ void mgm::RealKMSOutput::wait_for_page_flip()
     page_flipper->wait_for_flip(current_crtc->crtc_id);
 }
 
-void mgm::RealKMSOutput::set_cursor(gbm_bo* buffer, geom::Displacement hotspot)
+void mgm::RealKMSOutput::set_cursor(gbm_bo* buffer)
 {
-    printf("Hotspot: %u %u\n", hotspot.dx.as_uint32_t(), hotspot.dy.as_uint32_t());
     if (current_crtc)
     {
-        if (auto result = drmModeSetCursor2(
+        if (auto result = drmModeSetCursor(
                 drm_fd,
                 current_crtc->crtc_id,
                 gbm_bo_get_handle(buffer).u32,
                 gbm_bo_get_width(buffer),
-                gbm_bo_get_height(buffer),
-                hotspot.dx.as_uint32_t(),
-                hotspot.dy.as_uint32_t()))
+                gbm_bo_get_height(buffer)))
         {
             BOOST_THROW_EXCEPTION(
                 ::boost::enable_error_info(std::runtime_error("drmModeSetCursor() failed"))
