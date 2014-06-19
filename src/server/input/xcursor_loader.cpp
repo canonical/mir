@@ -74,7 +74,7 @@ struct XCursorImage : public mg::CursorImage
 mi::XCursorLoader::XCursorLoader()
 {
     load_cursor_theme("default");
-}
+
 
 // Each XcursorImages represents images for the different sizes of a given symbolic cursor.
 void mi::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images)
@@ -104,6 +104,7 @@ void mi::XCursorLoader::load_appropriately_sized_image(_XcursorImages *images)
     }
     if (!image_of_correct_size)
         return;
+    printf("Loaded cursor: %s \n", images->name);
     loaded_images[std::string(images->name)] = std::make_shared<XCursorImage>(image_of_correct_size, saved_xcursor_library_resource);
 }
 
