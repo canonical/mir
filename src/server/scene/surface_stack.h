@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_SCENE_SCENETACK_H_
-#define MIR_SCENE_SCENETACK_H_
+#ifndef MIR_SCENE_SURFACE_STACK_H_
+#define MIR_SCENE_SURFACE_STACK_H_
 
 #include "surface_stack_model.h"
 
@@ -33,23 +33,10 @@
 
 namespace mir
 {
-namespace compositor
+namespace graphics
 {
-class FilterForScene;
-class OperatorForScene;
+class Renderable;
 }
-
-namespace frontend
-{
-struct SurfaceCreationParameters;
-}
-
-namespace input
-{
-class InputChannelFactory;
-class Surface;
-}
-
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
 /// classes) and controller (SurfaceController) elements of an MVC design.
 namespace scene
@@ -84,7 +71,7 @@ public:
     virtual ~SurfaceStack() noexcept(true) {}
 
     // From Scene
-    graphics::RenderableList renderable_list_for(CompositorID id) const;
+    compositor::SceneElementSequence scene_elements_for(CompositorID id) override;
 
     // From InputTargets
     void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback);
@@ -119,4 +106,4 @@ private:
 }
 }
 
-#endif /* MIR_SCENE_SCENETACK_H_ */
+#endif /* MIR_SCENE_SURFACE_STACK_H_ */
