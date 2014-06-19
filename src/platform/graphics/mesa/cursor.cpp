@@ -116,7 +116,7 @@ void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> co
     // 'pixels' is initialized to transparent so we just need to fill in the initial image.
     for (unsigned int i = 0; i < image_height; i++)
     {
-        for (unsigned int j = 0; i < image_width; i++)
+        for (unsigned int j = 0; j < image_width; j++)
         {
             pixels[buffer_width*i+j] = image_argb[image_width*i + j];
         }
