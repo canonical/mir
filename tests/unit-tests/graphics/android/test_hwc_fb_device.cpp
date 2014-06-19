@@ -69,6 +69,7 @@ protected:
         skip_layer.visibleRegionScreen = {1, &empty_region};
         skip_layer.acquireFenceFd = -1;
         skip_layer.releaseFenceFd = -1;
+        skip_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
 
         ON_CALL(mock_context, last_rendered_buffer())
             .WillByDefault(Return(mock_buffer));
