@@ -68,6 +68,8 @@ public:
         virtual void on_data_available() = 0;
         /**
          * \brief Called by the Transport when the connection to the server has been broken.
+         * \note This is not guaranteed to be triggered exactly once; it may not fire
+         *       during destruction of the Transport, or it may fire multiple times.
          */
         virtual void on_disconnected() = 0;
     };
