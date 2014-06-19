@@ -99,6 +99,8 @@ struct ClientSurfaceEvents : BasicClientServerFixture
     MirSurface* surface{nullptr};
     MirSurface* other_surface;
 
+    std::mutex last_event_mutex;
+    std::condition_variable last_event_cv;
     MirEvent last_event{};
     MirSurface* last_event_surface = nullptr;
     MirEventDelegate delegate{&event_callback, this};
@@ -108,11 +110,17 @@ struct ClientSurfaceEvents : BasicClientServerFixture
     static void event_callback(MirSurface* surface, MirEvent const* event, void* ctx)
     {
         ClientSurfaceEvents* self = static_cast<ClientSurfaceEvents*>(ctx);
+        std::lock_guard<decltype(self->last_event_mutex)> last_event_lock{self->last_event_mutex};
         self->last_event = *event;
         self->last_event_surface = surface;
+        self->last_event_cv.notify_one();
     }
 
-    bool receive_event_within(std::chrono::milliseconds) { return true; } // TODO
+    bool receive_event_within(std::chrono::milliseconds delay)
+    {
+        std::unique_lock<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
+        return last_event_cv.wait_for(last_event_lock, delay, [&] { return !!last_event_surface; });
+    }
 
     void reset_last_event()
     {
@@ -131,6 +139,8 @@ struct ClientSurfaceEvents : BasicClientServerFixture
 
         other_surface = mir_connection_create_surface_sync(connection, &request_params);
         mir_surface_set_event_handler(other_surface, nullptr);
+
+        reset_last_event();
     }
 
     void TearDown() override
@@ -190,7 +200,7 @@ TEST_P(OrientationEvents, surface_receives_orientation_events)
 
     scene_surface->set_orientation(direction);
 
-    EXPECT_TRUE(receive_event_within(std::chrono::milliseconds(100)));
+    EXPECT_TRUE(receive_event_within(std::chrono::milliseconds(400)));
 
     EXPECT_THAT(last_event_surface, Eq(surface));
     EXPECT_THAT(last_event.type, Eq(mir_event_type_orientation));

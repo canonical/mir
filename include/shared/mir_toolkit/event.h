@@ -217,6 +217,7 @@ typedef struct MirOrientationEvent
 {
     MirEventType type;
 
+    int surface_id;
     MirOrientation direction;
 } MirOrientationEvent;
 

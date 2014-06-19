@@ -42,6 +42,7 @@ public:
     void hidden_set_to(bool /*hide*/) override;
     void frame_posted(int frames_available) override;
     void alpha_set_to(float /*alpha*/) override;
+    void orientation_set_to(MirOrientation orientation) override;
     void transformation_set_to(glm::mat4 const& /*t*/) override;
     void attrib_changed(MirSurfaceAttrib, int) override;
     void reception_mode_set_to(input::InputReceptionMode mode) override;

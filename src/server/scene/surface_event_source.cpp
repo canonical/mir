@@ -62,3 +62,15 @@ void ms::SurfaceEventSource::attrib_changed(MirSurfaceAttrib attrib, int value)
 
     event_sink->handle_event(e);
 }
+
+void ms::SurfaceEventSource::orientation_set_to(MirOrientation orientation)
+{
+    MirEvent e;
+    memset(&e, 0, sizeof e);
+
+    e.type = mir_event_type_orientation;
+    e.orientation.surface_id = id.as_value();
+    e.orientation.direction = orientation;
+
+    event_sink->handle_event(e);
+}
