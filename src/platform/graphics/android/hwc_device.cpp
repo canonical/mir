@@ -59,38 +59,10 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
                           std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
                           std::shared_ptr<SyncFileOps> const& sync_ops)
     : HWCCommonDevice(hwc_device, coordinator),
-      hwc_list{{}, 2},
+      hwc_list{{}, fbtarget_plus_skip_size},
       hwc_wrapper(hwc_wrapper), 
       sync_ops(sync_ops)
 {
-}
-
-void mga::HwcDevice::post_gl(SwappingGLContext const& context)
-{
-    auto lg = lock_unblanked();
-    hwc_list.update_list_and_check_if_changed({}, fbtarget_plus_skip_size);
- 
-    geom::Rectangle const disp_frame{{0,0}, {prebuffer->size()}};
-    auto const& prebuffer = context.last_rendered_buffer();
-    auto& skip_layer = *hwc_list.additional_layers_begin();
-    auto& fbtarget_layer = *(hwc_list.additional_layers_begin()++);
-    skip_layer.setup_layer(mga::LayerType::skip, disp_frame, false, *prebuffer);
-    fbtarget_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *prebuffer);
-
-    hwc_wrapper->prepare(*hwc_list.native_list().lock());
-
-    context.swap_buffers();
-
-    auto const& buffer = context.last_rendered_buffer();
-    skip_layer.setup_layer(mga::LayerType::skip, disp_frame, false, *buffer);
-    fbtarget_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *buffer);
-
-    hwc_wrapper->set(*hwc_list.native_list().lock());
-    for(auto& layer : hwc_list)
-        layer.update_fence(*context.last_rendered_buffer());
-
-    mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
-    onscreen_overlay_buffers.clear();
 }
 
 bool mga::HwcDevice::post_overlays(
@@ -105,8 +77,8 @@ bool mga::HwcDevice::post_overlays(
 
     auto lg = lock_unblanked();
 
-    geom::Rectangle const disp_frame{{0,0}, {prebuffer->size()}};
     auto const& prebuffer = context.last_rendered_buffer();
+    geom::Rectangle const disp_frame{{0,0}, {prebuffer->size()}};
     auto & fbtarget_layer = *hwc_list.additional_layers_begin();
     fbtarget_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *prebuffer);
 
@@ -146,4 +118,90 @@ bool mga::HwcDevice::post_overlays(
 
     onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
     return true;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void mga::HwcDevice::setup_layer_types(mg::Buffer const& buffer)
+{
+    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
+    auto it = hwc_list.additional_layers_begin();
+    auto const num_additional_layers = std::distance(it, hwc_list.end());
+    switch (num_additional_layers)
+    {
+        case fbtarget_plus_skip_size:
+            it->setup_layer(
+                mga::LayerType::skip,
+                disp_frame,
+                false,
+                buffer);
+            ++it;
+        case fbtarget_size:
+            it->setup_layer(
+                mga::LayerType::framebuffer_target,
+                disp_frame,
+                false,
+                buffer);
+        default:
+            break;
+    }
+}
+
+void mga::HwcDevice::set_list_framebuffer(mg::Buffer const& buffer)
+{
+    for(auto it = hwc_list.additional_layers_begin(); it != hwc_list.end(); it++)
+    {
+        it->prepare_for_draw(buffer);
+    }
+}
+
+void mga::HwcDevice::post_gl(SwappingGLContext const& context)
+{
+    auto lg = lock_unblanked();
+    hwc_list.update_list_and_check_if_changed({}, fbtarget_plus_skip_size);
+    setup_layer_types(*context.last_rendered_buffer());
+
+    hwc_wrapper->prepare(*hwc_list.native_list().lock());
+
+    context.swap_buffers();
+
+    setup_layer_types(*context.last_rendered_buffer());
+    set_list_framebuffer(*context.last_rendered_buffer());
+    hwc_wrapper->set(*hwc_list.native_list().lock());
+    for(auto& layer : hwc_list)
+        layer.update_fence(*context.last_rendered_buffer());
+
+    mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
+    onscreen_overlay_buffers.clear();
 }
