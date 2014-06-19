@@ -365,6 +365,8 @@ struct MirClientSurfaceTest : public testing::Test
     CallBack callback;
 
     std::shared_ptr<mir::protobuf::DisplayServer::Stub> client_comm_channel;
+
+    std::chrono::milliseconds const pause_time{10};
 };
 
 void empty_callback(MirSurface*, void*) { }
@@ -386,14 +388,14 @@ TEST_F(MirClientSurfaceTest, create_wait_handle_really_blocks)
     using namespace testing;
 
     FakeRpcChannel fake_channel{};
-    auto unresponsive_server = std::make_shared<mir::protobuf::DisplayServer::Stub>(&fake_channel);
+    mir::protobuf::DisplayServer::Stub unresponsive_server{&fake_channel};
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *unresponsive_server, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
+    auto surface = std::make_shared<MirSurface> (connection.get(), unresponsive_server, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto wait_handle = surface->get_create_wait_handle();
 
-    auto expected_end = std::chrono::steady_clock::now() + std::chrono::milliseconds{100};
-    wait_handle->wait_for_pending(std::chrono::milliseconds{100});
+    auto expected_end = std::chrono::steady_clock::now() + pause_time;
+    wait_handle->wait_for_pending(pause_time);
 
     EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
 }
@@ -408,14 +410,14 @@ TEST_F(MirClientSurfaceTest, next_buffer_wait_handle_really_blocks)
     using namespace testing;
 
     FakeRpcChannel fake_channel{};
-    auto unresponsive_server = std::make_shared<mir::protobuf::DisplayServer::Stub>(&fake_channel);
+    mir::protobuf::DisplayServer::Stub unresponsive_server{&fake_channel};
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *unresponsive_server, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
+    auto surface = std::make_shared<MirSurface> (connection.get(), unresponsive_server, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto buffer_wait_handle = surface->next_buffer(&empty_surface_callback, nullptr);
 
-    auto expected_end = std::chrono::steady_clock::now() + std::chrono::milliseconds{100};
-    buffer_wait_handle->wait_for_pending(std::chrono::milliseconds{100});
+    auto expected_end = std::chrono::steady_clock::now() + pause_time;
+    buffer_wait_handle->wait_for_pending(pause_time);
 
     EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
 }
@@ -821,8 +823,8 @@ TEST_F(MirClientSurfaceTest, configure_cursor_wait_handle_really_blocks)
     auto cursor_config = mir_cursor_configuration_from_name(mir_default_cursor_name);
     auto cursor_wait_handle = surface->configure_cursor(cursor_config);
 
-    auto expected_end = std::chrono::steady_clock::now() + std::chrono::milliseconds{100};
-    cursor_wait_handle->wait_for_pending(std::chrono::milliseconds{100});
+    auto expected_end = std::chrono::steady_clock::now() + pause_time;
+    cursor_wait_handle->wait_for_pending(pause_time);
 
     EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
 
@@ -834,14 +836,14 @@ TEST_F(MirClientSurfaceTest, configure_wait_handle_really_blocks)
     using namespace testing;
 
     FakeRpcChannel fake_channel{};
-    auto unresponsive_server = std::make_shared<mir::protobuf::DisplayServer::Stub>(&fake_channel);
+    mir::protobuf::DisplayServer::Stub unresponsive_server{&fake_channel};
 
-    auto surface = std::make_shared<MirSurface> (connection.get(), *unresponsive_server, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
+    auto surface = std::make_shared<MirSurface> (connection.get(), unresponsive_server, mock_buffer_factory, input_platform, params, &empty_callback, nullptr);
 
     auto configure_wait_handle = surface->configure(mir_surface_attrib_dpi, 100);
 
-    auto expected_end = std::chrono::steady_clock::now() + std::chrono::milliseconds{100};
-    configure_wait_handle->wait_for_pending(std::chrono::milliseconds{100});
+    auto expected_end = std::chrono::steady_clock::now() + pause_time;
+    configure_wait_handle->wait_for_pending(pause_time);
 
     EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
 }
