@@ -366,7 +366,7 @@ struct MirClientSurfaceTest : public testing::Test
 
     std::shared_ptr<mir::protobuf::DisplayServer::Stub> client_comm_channel;
 
-    std::chrono::milliseconds pause_time{10};
+    std::chrono::milliseconds const pause_time{10};
 };
 
 void empty_callback(MirSurface*, void*) { }
