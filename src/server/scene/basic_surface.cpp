@@ -340,6 +340,10 @@ void ms::BasicSurface::set_alpha(float alpha)
     observers.alpha_set_to(alpha);
 }
 
+void ms::BasicSurface::set_orientation(MirOrientation /*orientation*/)
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Not implemented"));
+}
 
 void ms::BasicSurface::set_transformation(glm::mat4 const& t)
 {

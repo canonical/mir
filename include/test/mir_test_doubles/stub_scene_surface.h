@@ -77,6 +77,7 @@ public:
     void resize(geometry::Size const&) override {}
     void set_transformation(glm::mat4 const&) override {}
     void set_alpha(float) override {}
+    void set_orientation(MirOrientation) {}
     void force_requests_to_complete() override {}
 
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const&) override {}

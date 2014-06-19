@@ -1,7 +1,7 @@
 /*
  * Simple definitions common to client and server.
  *
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License version 3 as
@@ -117,6 +117,7 @@ typedef enum MirPixelFormat
 /* This could be improved... https://bugs.launchpad.net/mir/+bug/1236254 */
 #define MIR_BYTES_PER_PIXEL(f) (((f) == mir_pixel_format_bgr_888) ? 3 : 4)
 
+/** Direction relative to the "natural" orientation of the display */
 typedef enum MirOrientation
 {
     mir_orientation_normal = 0,

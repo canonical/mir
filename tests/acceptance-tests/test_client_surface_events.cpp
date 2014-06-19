@@ -21,6 +21,9 @@
 
 #include "mir/shell/surface_coordinator_wrapper.h"
 
+#include "mir/scene/surface.h"
+#include "mir/scene/surface_creation_parameters.h"
+
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
 
@@ -39,17 +42,22 @@ using namespace testing;
 
 namespace
 {
-struct SceneSurface // TODO remove dummy
-{
-    void orientation(MirOrientation) {}
-};
-
-
 struct MockSurfaceCoordinator : msh::SurfaceCoordinatorWrapper
 {
-    using msh::SurfaceCoordinatorWrapper::SurfaceCoordinatorWrapper;
+    MockSurfaceCoordinator(std::shared_ptr<ms::SurfaceCoordinator> const& wrapped) :
+        msh::SurfaceCoordinatorWrapper(wrapped)
+    {
+    }
 
-    // TODO need mocked functions to hook into server side
+    std::shared_ptr<ms::Surface> add_surface(
+        ms::SurfaceCreationParameters const& params,
+        ms::Session* session) override
+    {
+        latest_surface = wrapped->add_surface(params, session);
+        return latest_surface;
+    }
+
+    std::shared_ptr<ms::Surface> latest_surface;
 };
 
 struct MyConfig : mtf::StubbedServerConfiguration
@@ -65,6 +73,11 @@ struct MyConfig : mtf::StubbedServerConfiguration
     std::shared_ptr<MockSurfaceCoordinator> the_mock_surface_coordinator() const
     {
         return mock_surface_coordinator.lock();
+    }
+
+    std::shared_ptr<ms::Surface> the_latest_surface() const
+    {
+        return the_mock_surface_coordinator()->latest_surface;
     }
 
     std::weak_ptr<MockSurfaceCoordinator> mock_surface_coordinator;
@@ -90,7 +103,7 @@ struct ClientSurfaceEvents : BasicClientServerFixture
     MirSurface* last_event_surface = nullptr;
     MirEventDelegate delegate{&event_callback, this};
 
-    std::shared_ptr<SceneSurface> scene_surface{new SceneSurface()};
+    std::shared_ptr<ms::Surface> scene_surface;
 
     static void event_callback(MirSurface* surface, MirEvent const* event, void* ctx)
     {
@@ -113,6 +126,8 @@ struct ClientSurfaceEvents : BasicClientServerFixture
 
         surface = mir_connection_create_surface_sync(connection, &request_params);
         mir_surface_set_event_handler(surface, &delegate);
+
+        scene_surface = server_configuration.the_latest_surface();
 
         other_surface = mir_connection_create_surface_sync(connection, &request_params);
         mir_surface_set_event_handler(other_surface, nullptr);
@@ -173,7 +188,7 @@ TEST_P(OrientationEvents, surface_receives_orientation_events)
 {
     auto const direction = GetParam();
 
-    scene_surface->orientation(direction);
+    scene_surface->set_orientation(direction);
 
     EXPECT_TRUE(receive_event_within(std::chrono::milliseconds(100)));
 
