@@ -97,21 +97,26 @@ std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client(
     return std::make_shared<mgm::InternalClient>(nd);
 }
 
-void mgm::NativePlatform::fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const
+/* TODO : this is just a duplication of mgm::Platform::fill_buffer_package */
+void mgm::NativePlatform::fill_buffer_package(
+    BufferIPCPacker* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const
 {
-    auto native_handle = buffer->native_buffer_handle();
-    for(auto i=0; i<native_handle->data_items; i++)
+    if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
-        packer->pack_data(native_handle->data[i]);
-    }
-    for(auto i=0; i<native_handle->fd_items; i++)
-    {
-        packer->pack_fd(native_handle->fd[i]);
-    }
+        auto native_handle = buffer->native_buffer_handle();
+        for(auto i=0; i<native_handle->data_items; i++)
+        {
+            packer->pack_data(native_handle->data[i]);
+        }
+        for(auto i=0; i<native_handle->fd_items; i++)
+        {
+            packer->pack_fd(native_handle->fd[i]);
+        }
 
-    packer->pack_stride(buffer->stride());
-    packer->pack_flags(native_handle->flags);
-    packer->pack_size(buffer->size());
+        packer->pack_stride(buffer->stride());
+        packer->pack_flags(native_handle->flags);
+        packer->pack_size(buffer->size());
+    }
 }
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& /*report*/)
