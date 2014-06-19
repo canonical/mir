@@ -55,8 +55,6 @@ public:
         RenderableListCompositor const& list_compositor);
 
 private:
-    void post();
-
     LayerList hwc_list;
     std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
 

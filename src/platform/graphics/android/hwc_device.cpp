@@ -112,7 +112,7 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
     set_list_framebuffer(*context.last_rendered_buffer());
     hwc_wrapper->set(*hwc_list.native_list().lock());
     for(auto& layer : hwc_list)
-        layer.update_fence_and_release_buffer(*context.last_rendered_buffer());
+        layer.update_fence(*context.last_rendered_buffer());
 
     mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
     onscreen_overlay_buffers.clear();
@@ -160,16 +160,12 @@ bool mga::HwcDevice::post_overlays(
     layers_it = hwc_list.begin();
     for(auto const& renderable : renderables)
     {
-        layers_it->update_fence_and_release_buffer(*renderable->buffer());
+        layers_it->update_fence(*renderable->buffer());
         layers_it++;
     }
-    layers_it->update_fence_and_release_buffer(final_fb);
+    layers_it->update_fence(final_fb);
     mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
 
     onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
     return true;
-}
-
-void mga::HwcDevice::post()
-{
 }

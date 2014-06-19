@@ -72,7 +72,7 @@ public:
         bool alpha_enabled,
         Buffer const& buffer);
 
-    void update_fence_and_release_buffer(Buffer const& buffer);
+    void update_fence(Buffer const& buffer);
     bool needs_gl_render() const;
     bool needs_hwc_commit() const;
     void prepare_for_draw(Buffer const& buffer);

@@ -122,7 +122,6 @@ void mga::HWCLayer::setup_layer(
 
     auto const& native_buffer = buffer.native_buffer_handle();
     updated = (hwc_layer->handle != native_buffer->handle());
-    printf("updated check 0x%X vs 0x%X : %i\n", (int) hwc_layer->handle, (int) native_buffer->handle(), updated);
 
     hwc_layer->handle = native_buffer->handle();
     hwc_layer->sourceCrop = 
@@ -138,29 +137,13 @@ bool mga::HWCLayer::needs_hwc_commit() const
     return (updated || needs_gl_render());
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 bool mga::HWCLayer::needs_gl_render() const
 {
     return ((hwc_layer->compositionType == HWC_FRAMEBUFFER) || (hwc_layer->flags == HWC_SKIP_LAYER));
 }
+
 void mga::HWCLayer::prepare_for_draw(mg::Buffer const& buffer)
 {
-
     hwc_layer->acquireFenceFd = -1;
     hwc_layer->releaseFenceFd = -1;
 
@@ -175,26 +158,11 @@ void mga::HWCLayer::prepare_for_draw(mg::Buffer const& buffer)
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void mga::HWCLayer::update_fence_and_release_buffer(mg::Buffer const& buffer)
+void mga::HWCLayer::update_fence(mg::Buffer const& buffer)
 {
-    auto const& native_buffer = buffer.native_buffer_handle();
-
     if (hwc_layer->compositionType != HWC_FRAMEBUFFER)
     { 
+        auto const& native_buffer = buffer.native_buffer_handle();
         native_buffer->update_fence(hwc_layer->releaseFenceFd);
         hwc_layer->releaseFenceFd = -1;
         hwc_layer->acquireFenceFd = -1;
