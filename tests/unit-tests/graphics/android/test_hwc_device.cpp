@@ -59,14 +59,23 @@ void fill_hwc_layer(
     hwc_layer_1_t& layer,
     hwc_rect_t* visible_rect,
     geom::Rectangle const& position,
-    mg::Buffer const& buffer,
+    mg::Buffer* buffer,
     int type, int flags)
 {
-    *visible_rect = {0, 0, buffer.size().width.as_int(), buffer.size().height.as_int()};
+    //TODO: clean up so we take a Buffer&
+    if (buffer)
+    {
+        layer.handle = buffer->native_buffer_handle()->handle();
+        *visible_rect = {0, 0, buffer->size().width.as_int(), buffer->size().height.as_int()};
+    }
+    else
+    {
+        layer.handle = nullptr;
+        *visible_rect = {0, 0, 0, 0};
+    }
     layer.compositionType = type;
     layer.hints = 0;
     layer.flags = flags;
-    layer.handle = buffer.native_buffer_handle()->handle();
     layer.transform = 0;
     layer.blending = HWC_BLENDING_NONE;
     layer.sourceCrop = *visible_rect;
@@ -100,23 +109,35 @@ struct HwcDevice : public ::testing::Test
         stub_context{stub_fb_buffer},
         renderlist({stub_renderable1, stub_renderable2})
     {
-        fill_hwc_layer(layer, &comp_rect, position1, *stub_buffer1, HWC_FRAMEBUFFER, 0);
-        fill_hwc_layer(layer2, &comp2_rect, position2, *stub_buffer2, HWC_FRAMEBUFFER, 0);
-        fill_hwc_layer(target_layer, &target_rect, fb_position, *stub_fb_buffer, HWC_FRAMEBUFFER_TARGET, 0);
-        fill_hwc_layer(skip_layer, &skip_rect, fb_position, *stub_fb_buffer, HWC_FRAMEBUFFER, HWC_SKIP_LAYER);
+        fill_hwc_layer(layer, &comp_rect, position1, stub_buffer1.get(), HWC_FRAMEBUFFER, 0);
+        fill_hwc_layer(layer2, &comp2_rect, position2, stub_buffer2.get(), HWC_FRAMEBUFFER, 0);
+        fill_hwc_layer(target_layer, &target_rect, fb_position, stub_fb_buffer.get(), HWC_FRAMEBUFFER_TARGET, 0);
+        fill_hwc_layer(skip_layer, &skip_rect, fb_position, stub_fb_buffer.get(), HWC_FRAMEBUFFER, HWC_SKIP_LAYER);
+
+        //FIXME: remove unset_layers, they could be set
+        fill_hwc_layer(
+            unset_skip_layer, &unset_skip_rect, {{0,0},{0,0}}, nullptr, HWC_FRAMEBUFFER, HWC_SKIP_LAYER);
+        fill_hwc_layer(
+            unset_target_layer, &unset_target_rect, {{0,0},{0,0}}, nullptr, HWC_FRAMEBUFFER_TARGET, 0);
+
         set_all_layers_to_overlay = [&](hwc_display_contents_1_t& contents)
         {
             for(auto i = 0u; i < contents.numHwLayers - 1; i++) //-1 because the last layer is the target
                 contents.hwLayers[i].compositionType = HWC_OVERLAY;
         };
+
     }
 
     hwc_rect_t skip_rect;
     hwc_rect_t target_rect;
+    hwc_rect_t unset_skip_rect;
+    hwc_rect_t unset_target_rect;
     hwc_rect_t comp_rect;
     hwc_rect_t comp2_rect;
     hwc_layer_1_t skip_layer;
     hwc_layer_1_t target_layer;
+    hwc_layer_1_t unset_skip_layer;
+    hwc_layer_1_t unset_target_layer;
     hwc_layer_1_t layer;
     hwc_layer_1_t layer2;
 
@@ -151,8 +172,8 @@ TEST_F(HwcDevice, prepares_a_skip_and_target_layer_by_default)
     using namespace testing;
     std::list<hwc_layer_1_t*> expected_list
     {
-        &skip_layer,
-        &target_layer
+        &unset_skip_layer,
+        &unset_target_layer
     };
 
     EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesList(expected_list)))
@@ -175,7 +196,7 @@ TEST_F(HwcDevice, calls_backup_compositor_when_overlay_rejected)
     {
         &layer,
         &layer2,
-        &target_layer
+        &unset_target_layer
     };
 
     Sequence seq;
@@ -203,13 +224,13 @@ TEST_F(HwcDevice, resets_layers_when_prepare_gl_called)
     {
         &layer,
         &layer2,
-        &target_layer
+        &unset_target_layer
     };
 
     std::list<hwc_layer_1_t*> expected_list2
     {
-        &skip_layer,
-        &target_layer
+        &unset_skip_layer,
+        &unset_target_layer
     };
 
     Sequence seq;
@@ -363,7 +384,7 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
     mg::RenderableList renderlist2({stub_renderable2});
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
-    std::list<hwc_layer_1_t*> expected_list1 { &layer, &target_layer };
+    std::list<hwc_layer_1_t*> expected_list1 { &layer, &unset_target_layer };
     std::list<hwc_layer_1_t*> expected_list2 { &layer2, &target_layer };
 
     Sequence seq; 
