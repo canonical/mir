@@ -427,12 +427,22 @@ void MirSurface::handle_event(MirEvent const& e)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
 
-    if (e.type == mir_event_type_surface)
+    switch (e.type)
+    {
+    case mir_event_type_surface:
     {
         MirSurfaceAttrib a = e.surface.attrib;
         if (a < mir_surface_attribs)
             attrib_cache[a] = e.surface.value;
+        break;
     }
+    case mir_event_type_orientation:
+        orientation = e.orientation.direction;
+        break;
+
+    default:
+        break;
+    };
 
     if (handle_event_callback)
     {
@@ -458,4 +468,9 @@ void MirSurface::request_and_wait_for_next_buffer()
 void MirSurface::request_and_wait_for_configure(MirSurfaceAttrib a, int value)
 {
     configure(a, value)->wait_for_all();
+}
+
+MirOrientation MirSurface::get_orientation() const
+{
+    return orientation;
 }

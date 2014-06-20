@@ -266,6 +266,13 @@ int mir_surface_get_dpi(MirSurface* surface);
  */
 MirWaitHandle* mir_surface_configure_cursor(MirSurface *surface, MirCursorConfiguration const* parameters);
 
+/**
+ * Get the orientation of a surface.
+ *   \param [in] surface  The surface to query
+ *   \return              The orientation of the surface
+ */
+MirOrientation mir_surface_get_orientation(MirSurface *surface);
+
 #ifdef __cplusplus
 }
 /**@}*/

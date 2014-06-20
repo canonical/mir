@@ -234,3 +234,20 @@ TEST_P(OrientationEvents, surface_receives_orientation_events)
 INSTANTIATE_TEST_CASE_P(ClientSurfaceEvents,
     OrientationEvents,
     Values(mir_orientation_normal, mir_orientation_left, mir_orientation_inverted, mir_orientation_right));
+
+TEST_F(ClientSurfaceEvents, client_can_query_current_orientation)
+{
+    for (auto const direction:
+        {mir_orientation_normal, mir_orientation_left, mir_orientation_inverted,
+         mir_orientation_right, mir_orientation_normal, mir_orientation_inverted,
+         mir_orientation_left, mir_orientation_inverted, mir_orientation_right})
+    {
+        reset_last_event();
+
+        scene_surface->set_orientation(direction);
+
+        EXPECT_TRUE(wait_for_event(mir_event_type_orientation, std::chrono::seconds(1)));
+
+        EXPECT_THAT(mir_surface_get_orientation(surface), Eq(direction));
+    }
+}
