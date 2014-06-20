@@ -25,6 +25,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include <string.h>
+
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 namespace geom = mir::geometry;
