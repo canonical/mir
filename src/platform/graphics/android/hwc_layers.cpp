@@ -146,19 +146,18 @@ bool mga::HWCLayer::setup_layer(
         position.bottom_right().x.as_int(),
         position.bottom_right().y.as_int()
     };
+    hwc_layer->sourceCrop = 
+    {
+        0, 0,
+        buffer.size().width.as_int(),
+        buffer.size().height.as_int()
+    };
 
     visible_rect = hwc_layer->displayFrame;
 
     auto const& native_buffer = buffer.native_buffer_handle();
     needs_commit |= (hwc_layer->handle != native_buffer->handle());
-
     hwc_layer->handle = native_buffer->handle();
-    hwc_layer->sourceCrop = 
-    {
-        0, 0,
-        native_buffer->anwb()->width,
-        native_buffer->anwb()->height
-    };
 
     return needs_commit;
 }
@@ -170,8 +169,9 @@ void mga::HWCLayer::set_acquirefence_from(mg::Buffer const& buffer)
 
     //we shouldn't be copying the FD unless the HWC has marked this as a buffer its interested in.
     //we disregard fences that haven't changed, as the hwc will still own the buffer
-    if ((needs_commit && (hwc_layer->compositionType == HWC_OVERLAY)) ||
-        (hwc_layer->compositionType == HWC_FRAMEBUFFER_TARGET))
+    if (needs_commit &&
+        ((hwc_layer->compositionType == HWC_OVERLAY) ||
+         (hwc_layer->compositionType == HWC_FRAMEBUFFER_TARGET)))
     {
         auto const& native_buffer = buffer.native_buffer_handle();
         hwc_layer->acquireFenceFd = native_buffer->copy_fence();
