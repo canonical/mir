@@ -61,7 +61,11 @@ public:
                   mir_pixel_format_abgr_8888,
                   graphics::BufferUsage::hardware},
              geometry::Stride{}}
+    {
+    }
 
+    StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer)
+        : StubBuffer{native_buffer, {}}
     {
     }
 
