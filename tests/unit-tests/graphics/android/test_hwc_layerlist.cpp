@@ -69,3 +69,14 @@ TEST_F(LayerListTest, list_iterators)
     EXPECT_EQ(std::distance(list3.additional_layers_begin(), list3.end()), 0);
     EXPECT_EQ(std::distance(list3.begin(), list3.additional_layers_begin()), renderables.size());
 }
+
+TEST_F(LayerListTest, keeps_track_of_updated)
+{
+    size_t additional_layers = 4;
+    mga::LayerList list(renderables, additional_layers);
+
+    for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
+        EXPECT_TRUE(it.updated);
+    for(auto it = list.additional_layers_begin(); it != list.end(); it++)
+        EXPECT_FALSE(it.updated);
+}
