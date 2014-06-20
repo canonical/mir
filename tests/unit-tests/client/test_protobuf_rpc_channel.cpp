@@ -367,7 +367,6 @@ TEST_F(MirProtobufRpcChannelTest, NotifiesOfDisconnectOnlyOnce)
         {
             observer->on_disconnected();
         }
-        return 0;
     })));
 
     mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
