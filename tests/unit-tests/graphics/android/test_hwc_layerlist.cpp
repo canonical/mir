@@ -76,7 +76,7 @@ TEST_F(LayerListTest, keeps_track_of_updated)
     mga::LayerList list(renderables, additional_layers);
 
     for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
-        EXPECT_TRUE(it.updated);
+        EXPECT_TRUE(it->updated);
     for(auto it = list.additional_layers_begin(); it != list.end(); it++)
-        EXPECT_FALSE(it.updated);
+        EXPECT_FALSE(it->updated);
 }

@@ -49,7 +49,7 @@ mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_
 void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
 {
     auto& buffer = *context.last_rendered_buffer();
-    layer_list.begin()->setup_layer(mga::LayerType::skip, {{0,0},buffer.size()}, false, buffer);
+    layer_list.begin()->layer.setup_layer(mga::LayerType::skip, {{0,0},buffer.size()}, false, buffer);
 
     if (auto display_list = layer_list.native_list().lock())
     {
