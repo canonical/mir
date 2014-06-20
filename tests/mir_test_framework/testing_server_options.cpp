@@ -75,9 +75,9 @@ mtf::TestingServerConfiguration::TestingServerConfiguration() :
 }
 
 mtf::TestingServerConfiguration::TestingServerConfiguration(std::vector<geom::Rectangle> const& display_rects) :
-    StubbedServerConfiguration(display_rects)
+    StubbedServerConfiguration(display_rects),
+    using_server_started_sync(false)
 {
-    TestingServerConfiguration();
 }
 
 void mtf::TestingServerConfiguration::exec()
