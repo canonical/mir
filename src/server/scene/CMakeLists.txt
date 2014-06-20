@@ -22,4 +22,5 @@ ADD_LIBRARY(
   legacy_surface_change_notification.cpp
   prompt_session_container.cpp
   prompt_session_manager_impl.cpp
+  rendering_tracker.cpp
 )

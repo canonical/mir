@@ -19,6 +19,8 @@
 #ifndef MIR_COMPOSITOR_SCENE_H_
 #define MIR_COMPOSITOR_SCENE_H_
 
+#include "compositor_id.h"
+
 #include <memory>
 #include <vector>
 
@@ -51,8 +53,10 @@ public:
      * \returns a sequence of mc::SceneElements for the compositor id. The
      *          sequence is in stacking order from back to front.
      */
-    typedef void const* CompositorID;
     virtual SceneElementSequence scene_elements_for(CompositorID id) = 0;
+
+    virtual void register_compositor(CompositorID id) = 0;
+    virtual void unregister_compositor(CompositorID id) = 0;
 
     virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
     virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
