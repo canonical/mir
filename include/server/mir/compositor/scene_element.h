@@ -19,12 +19,14 @@
 #ifndef MIR_COMPOSITOR_SCENE_ELEMENT_H_
 #define MIR_COMPOSITOR_SCENE_ELEMENT_H_
 
-#include "mir/graphics/renderable.h"
-
 #include <memory>
 
 namespace mir
 {
+namespace graphics
+{
+class Renderable;
+}
 namespace compositor
 {
 

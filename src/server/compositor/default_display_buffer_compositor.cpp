@@ -22,7 +22,6 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/compositor/renderer.h"
-#include "mir/compositor/renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"

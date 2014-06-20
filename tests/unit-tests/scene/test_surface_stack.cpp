@@ -57,6 +57,11 @@ MATCHER_P(SurfaceWithInputReceptionMode, mode, "")
     return arg->reception_mode() == mode;
 }
 
+MATCHER_P(SceneElementFor, surface, "")
+{
+    return arg->renderable()->id() == surface.get();
+}
+
 struct StubInputChannelFactory : public mi::InputChannelFactory
 {
     std::shared_ptr<mi::InputChannel> make_input_channel()
@@ -174,14 +179,12 @@ TEST_F(SurfaceStack, stacking_order)
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
 
-    auto const elements = stack.scene_elements_for(compositor_id);
-    ASSERT_THAT(elements.size(), Eq(3u));
-    auto it = elements.begin();
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface1.get()));
-    std::advance(it, 1);
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface2.get()));
-    std::advance(it, 1);
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface3.get()));
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface1),
+            SceneElementFor(stub_surface2),
+            SceneElementFor(stub_surface3)));
 }
 
 TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
@@ -192,14 +195,12 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
     stack.add_surface(stub_surface2, ms::DepthId{1}, default_params.input_mode);
     stack.add_surface(stub_surface3, ms::DepthId{0}, default_params.input_mode);
 
-    auto const elements = stack.scene_elements_for(compositor_id);
-    ASSERT_THAT(elements.size(), Eq(3u));
-    auto it = elements.begin();
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface1.get()));
-    std::advance(it, 1);
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface3.get()));
-    std::advance(it, 1);
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface2.get()));
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface1),
+            SceneElementFor(stub_surface3),
+            SceneElementFor(stub_surface2)));
 }
 
 
@@ -230,25 +231,21 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
 
-    auto elements = stack.scene_elements_for(compositor_id);
-    ASSERT_THAT(elements.size(), Eq(3u));
-    auto it = elements.begin();
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface1.get()));
-    std::advance(it, 1);
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface2.get()));
-    std::advance(it, 1);
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface3.get()));
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface1),
+            SceneElementFor(stub_surface2),
+            SceneElementFor(stub_surface3)));
 
     stack.raise(stub_surface1);
 
-    elements = stack.scene_elements_for(compositor_id);
-    ASSERT_THAT(elements.size(), 3u);
-    it = elements.begin();
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface2.get()));
-    std::advance(it, 1);
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface3.get()));
-    std::advance(it, 1);
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface1.get()));
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface2),
+            SceneElementFor(stub_surface3),
+            SceneElementFor(stub_surface1)));
 }
 
 TEST_F(SurfaceStack, depth_id_trumps_raise)
@@ -259,25 +256,21 @@ TEST_F(SurfaceStack, depth_id_trumps_raise)
     stack.add_surface(stub_surface2, ms::DepthId{0}, default_params.input_mode);
     stack.add_surface(stub_surface3, ms::DepthId{1}, default_params.input_mode);
 
-    auto elements = stack.scene_elements_for(compositor_id);
-    ASSERT_THAT(elements.size(), 3u);
-    auto it = elements.begin();
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface1.get()));
-    std::advance(it, 1);
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface2.get()));
-    std::advance(it, 1);
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface3.get()));
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface1),
+            SceneElementFor(stub_surface2),
+            SceneElementFor(stub_surface3)));
 
     stack.raise(stub_surface1);
 
-    elements = stack.scene_elements_for(compositor_id);
-    ASSERT_THAT(elements.size(), 3u);
-    it = elements.begin();
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface2.get()));
-    std::advance(it, 1);
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface1.get()));
-    std::advance(it, 1);
-    EXPECT_THAT((*it)->renderable()->id(), Eq(stub_surface3.get()));
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface2),
+            SceneElementFor(stub_surface1),
+            SceneElementFor(stub_surface3)));
 }
 
 TEST_F(SurfaceStack, raise_throw_behavior)

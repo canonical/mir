@@ -25,7 +25,6 @@
 
 using namespace mir::geometry;
 using namespace mir::graphics;
-namespace mc = mir::compositor;
 
 namespace
 {

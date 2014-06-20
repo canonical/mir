@@ -28,8 +28,9 @@ namespace test
 namespace doubles
 {
 
-struct StubSceneElement : public compositor::SceneElement
+class StubSceneElement : public compositor::SceneElement
 {
+public:
     StubSceneElement(std::shared_ptr<graphics::Renderable> const& renderable)
         : renderable_{renderable}
     {
@@ -40,6 +41,7 @@ struct StubSceneElement : public compositor::SceneElement
         return renderable_;
     }
 
+private:
     std::shared_ptr<graphics::Renderable> const renderable_;
 };
 
