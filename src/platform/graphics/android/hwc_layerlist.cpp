@@ -65,7 +65,6 @@ bool mga::LayerList::update_list_and_check_if_changed(
 
     if (layers.size() == needed_size)
     {
-        printf("same size.\n");
         auto layers_it = layers.begin();
         for(auto renderable : renderlist)
         {
@@ -97,10 +96,8 @@ bool mga::LayerList::update_list_and_check_if_changed(
         {
             new_layers.emplace_back(mga::HWCLayer(hwc_representation, i));
         }
-
         layers = std::move(new_layers);
     }
-    
 
     if (additional_layers == 0)
     {

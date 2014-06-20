@@ -75,81 +75,15 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_devi
 {
 }
 
-bool mga::HwcDevice::post_overlays(
-    SwappingGLContext const& context,
-    RenderableList const& renderables,
-    RenderableListCompositor const& list_compositor)
-{
-    printf("ooo\n");
-    if (renderable_list_is_hwc_incompatible(renderables))
-    {
-        printf("???\n");
-        return false;
-    }
-    if (!hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size))
-    {
-        printf("reject.\n");
-        return false;
-    }
-
-    printf("gothere\n");
-    auto lg = lock_unblanked();
-
-    auto& buffer = *context.last_rendered_buffer();
-    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
-    auto& fbtarget_layer = *hwc_list.additional_layers_begin();
-    fbtarget_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, buffer);
-
-    printf("PREP!\n");
-    hwc_wrapper->prepare(*hwc_list.native_list().lock());
-
-    (void) list_compositor;
-    (void)context;
-    mg::RenderableList rejected_renderables;
-    std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
-
-    auto layers_it = hwc_list.begin();
-    for(auto const& renderable : renderables)
-    {
-        layers_it->prepare_for_draw(*renderable->buffer());
-        if (layers_it->needs_gl_render())
-            rejected_renderables.push_back(renderable);
-        else
-            next_onscreen_overlay_buffers.push_back(renderable->buffer());
-        layers_it++;
-    }
-
-    list_compositor.render(rejected_renderables, context);
-
-    buffer = *context.last_rendered_buffer();
-    fbtarget_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, buffer);
-    fbtarget_layer.prepare_for_draw(buffer);
-
-    hwc_wrapper->set(*hwc_list.native_list().lock());
-    onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
-
-    layers_it = hwc_list.begin();
-    for(auto const& renderable : renderables)
-    {
-        layers_it->update_fence(*renderable->buffer());
-        layers_it++;
-    }
-    printf("update?\n");
-    fbtarget_layer.update_fence(buffer);
-
-    mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
-    return true;
-}
-
 void mga::HwcDevice::post_gl(SwappingGLContext const& context)
 {
     auto lg = lock_unblanked();
     hwc_list.update_list_and_check_if_changed({}, fbtarget_plus_skip_size);
+    auto& skip_layer = *hwc_list.additional_layers_begin();
+    auto& fb_layer = *(++hwc_list.additional_layers_begin());
 
     auto& buffer = *context.last_rendered_buffer();
     geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
-    auto& skip_layer = *hwc_list.additional_layers_begin();
-    auto& fb_layer = *(++hwc_list.additional_layers_begin());
     skip_layer.setup_layer(mga::LayerType::skip, disp_frame, false, buffer);
     fb_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, buffer);
 
@@ -162,13 +96,66 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
     fb_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, buffer);
 
     for(auto& layer : hwc_list)
-        layer.prepare_for_draw(buffer);
+        layer.set_acquirefence_from(buffer);
 
     hwc_wrapper->set(*hwc_list.native_list().lock());
     onscreen_overlay_buffers.clear();
 
     for(auto& layer : hwc_list)
-        layer.update_fence(buffer);
+        layer.update_from_releasefence(buffer);
 
     mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
+}
+
+bool mga::HwcDevice::post_overlays(
+    SwappingGLContext const& context,
+    RenderableList const& renderables,
+    RenderableListCompositor const& list_compositor)
+{
+    if (renderable_list_is_hwc_incompatible(renderables))
+        return false;
+    if (!hwc_list.update_list_and_check_if_changed(renderables, fbtarget_size))
+        return false;
+
+    auto lg = lock_unblanked();
+    auto& fbtarget_layer = *hwc_list.additional_layers_begin();
+
+    auto& buffer = *context.last_rendered_buffer();
+    geom::Rectangle const disp_frame{{0,0}, {buffer.size()}};
+    fbtarget_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, buffer);
+
+    hwc_wrapper->prepare(*hwc_list.native_list().lock());
+
+    mg::RenderableList rejected_renderables;
+    std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
+    auto layers_it = hwc_list.begin();
+    for(auto const& renderable : renderables)
+    {
+        layers_it->set_acquirefence_from(*renderable->buffer());
+        if (layers_it->needs_gl_render())
+            rejected_renderables.push_back(renderable);
+        else
+            next_onscreen_overlay_buffers.push_back(renderable->buffer());
+        layers_it++;
+    }
+
+    list_compositor.render(rejected_renderables, context);
+
+    buffer = *context.last_rendered_buffer();
+    fbtarget_layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, buffer);
+    fbtarget_layer.set_acquirefence_from(buffer);
+
+    hwc_wrapper->set(*hwc_list.native_list().lock());
+    onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
+
+    layers_it = hwc_list.begin();
+    for(auto const& renderable : renderables)
+    {
+        layers_it->update_from_releasefence(*renderable->buffer());
+        layers_it++;
+    }
+    fbtarget_layer.update_from_releasefence(buffer);
+
+    mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
+    return true;
 }

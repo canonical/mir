@@ -71,10 +71,9 @@ public:
         geometry::Rectangle const& position,
         bool alpha_enabled,
         Buffer const& buffer);
-
-    void update_fence(Buffer const& buffer);
     bool needs_gl_render() const;
-    void prepare_for_draw(Buffer const& buffer);
+    void set_acquirefence_from(Buffer const& buffer);
+    void update_from_releasefence(Buffer const& buffer);
 private:
     hwc_layer_1_t* hwc_layer;
     std::shared_ptr<hwc_display_contents_1_t> hwc_list;

@@ -86,13 +86,28 @@ mga::HWCLayer::HWCLayer(
     setup_layer(type, position, alpha_enabled, buffer);
 }
 
+bool mga::HWCLayer::needs_gl_render() const
+{
+    return ((hwc_layer->compositionType == HWC_FRAMEBUFFER) || (hwc_layer->flags == HWC_SKIP_LAYER));
+}
+
+void mga::HWCLayer::update_from_releasefence(mg::Buffer const& buffer)
+{
+    if (hwc_layer->compositionType != HWC_FRAMEBUFFER)
+    { 
+        auto const& native_buffer = buffer.native_buffer_handle();
+        native_buffer->update_fence(hwc_layer->releaseFenceFd);
+        hwc_layer->releaseFenceFd = -1;
+        hwc_layer->acquireFenceFd = -1;
+    }
+}
+
 bool mga::HWCLayer::setup_layer(
     LayerType type,
     geometry::Rectangle const& position,
     bool alpha_enabled,
     Buffer const& buffer)
 {
-    printf("SETPP\n");
     needs_commit = needs_gl_render();
 
     hwc_layer->flags = 0;
@@ -148,12 +163,7 @@ bool mga::HWCLayer::setup_layer(
     return needs_commit;
 }
 
-bool mga::HWCLayer::needs_gl_render() const
-{
-    return ((hwc_layer->compositionType == HWC_FRAMEBUFFER) || (hwc_layer->flags == HWC_SKIP_LAYER));
-}
-
-void mga::HWCLayer::prepare_for_draw(mg::Buffer const& buffer)
+void mga::HWCLayer::set_acquirefence_from(mg::Buffer const& buffer)
 {
     hwc_layer->acquireFenceFd = -1;
     hwc_layer->releaseFenceFd = -1;
@@ -165,19 +175,5 @@ void mga::HWCLayer::prepare_for_draw(mg::Buffer const& buffer)
     {
         auto const& native_buffer = buffer.native_buffer_handle();
         hwc_layer->acquireFenceFd = native_buffer->copy_fence();
-    }
-}
-
-void mga::HWCLayer::update_fence(mg::Buffer const& buffer)
-{
-    if (hwc_layer->compositionType != HWC_FRAMEBUFFER)
-    { 
-        printf("OOO\n");
-        auto const& native_buffer = buffer.native_buffer_handle();
-        printf("OaOO\n");
-        native_buffer->update_fence(hwc_layer->releaseFenceFd);
-        printf("ObOO\n");
-        hwc_layer->releaseFenceFd = -1;
-        hwc_layer->acquireFenceFd = -1;
     }
 }

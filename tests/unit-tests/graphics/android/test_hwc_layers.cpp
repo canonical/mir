@@ -182,14 +182,14 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_overlay_layers)
     hwc_layer->compositionType = HWC_OVERLAY;
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 
-    //prepare_for_draw should set the fence
+    //set_acquirefence_from should set the fence
     //mir must reset releaseFenceFd to -1
     hwc_layer->releaseFenceFd = fake_fence;
     EXPECT_CALL(*native_handle_1, copy_fence())
         .Times(1)
         .WillOnce(testing::Return(fake_fence));
     expected_layer.acquireFenceFd = fake_fence;
-    layer.prepare_for_draw(mock_buffer);
+    layer.set_acquirefence_from(mock_buffer);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 
     //multiple sequential updates to the same layer must not set the acquireFenceFds on the calls
@@ -198,7 +198,7 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_overlay_layers)
     expected_layer.acquireFenceFd = -1;
     layer.setup_layer(type, screen_position, alpha_enabled, mock_buffer);
     hwc_layer->compositionType = HWC_OVERLAY;
-    layer.prepare_for_draw(mock_buffer);
+    layer.set_acquirefence_from(mock_buffer);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
 
@@ -225,7 +225,7 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_fbtarget)
         .Times(1)
         .WillOnce(testing::Return(fake_fence));
     expected_layer.acquireFenceFd = fake_fence;
-    layer.prepare_for_draw(mock_buffer);
+    layer.set_acquirefence_from(mock_buffer);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 
     //hwc will set this to -1 to acknowledge that its adopted this layer's fence.
@@ -253,7 +253,7 @@ TEST_F(HWCLayersTest, buffer_fence_updates)
         screen_position, alpha_enabled, mock_buffer, list, list_index);
 
     hwc_layer->releaseFenceFd = fake_fence;
-    layer.update_fence(mock_buffer);
+    layer.update_from_releasefence(mock_buffer);
 }
 
 TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)
