@@ -88,6 +88,14 @@ void ms::SurfaceObservers::alpha_set_to(float alpha)
         p->alpha_set_to(alpha);
 }
 
+void ms::SurfaceObservers::orientation_set_to(MirOrientation orientation)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->orientation_set_to(orientation);
+}
+
 void ms::SurfaceObservers::transformation_set_to(glm::mat4 const& t)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -341,6 +349,10 @@ void ms::BasicSurface::set_alpha(float alpha)
     observers.alpha_set_to(alpha);
 }
 
+void ms::BasicSurface::set_orientation(MirOrientation orientation)
+{
+    observers.orientation_set_to(orientation);
+}
 
 void ms::BasicSurface::set_transformation(glm::mat4 const& t)
 {
