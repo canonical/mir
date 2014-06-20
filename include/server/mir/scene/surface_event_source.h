@@ -38,6 +38,7 @@ public:
 
     void attrib_changed(MirSurfaceAttrib attrib, int value) override;
     void resized_to(geometry::Size const& size) override;
+    void orientation_set_to(MirOrientation orientation) override;
 
 private:
     frontend::SurfaceId const id;
