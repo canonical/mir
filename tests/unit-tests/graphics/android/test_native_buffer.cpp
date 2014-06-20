@@ -38,7 +38,7 @@ struct NativeBuffer : public testing::Test
     int fake_fd;
 };
 
-TEST_F(NativeBuffer, external_refcount_driver_hooks)
+TEST_F(NativeBuffer, extends_lifetime_when_driver_calls_external_refcount_hooks)
 {
     auto native_handle_resource = std::make_shared<native_handle_t>();
     auto use_count_before = native_handle_resource.use_count();
@@ -60,7 +60,7 @@ TEST_F(NativeBuffer, external_refcount_driver_hooks)
     EXPECT_EQ(use_count_before, native_handle_resource.use_count());
 }
 
-TEST_F(NativeBuffer, driver_hooks_mir_ref)
+TEST_F(NativeBuffer, is_not_destroyed_if_driver_loses_reference_while_mir_still_has_reference)
 {
     auto native_handle_resource = std::make_shared<native_handle_t>();
     auto use_count_before = native_handle_resource.use_count();
@@ -84,7 +84,7 @@ TEST_F(NativeBuffer, driver_hooks_mir_ref)
     EXPECT_EQ(use_count_before, native_handle_resource.use_count());
 }
 
-TEST_F(NativeBuffer, access_for_read_while_being_read)
+TEST_F(NativeBuffer, does_not_wait_for_read_access_while_being_read)
 {
     EXPECT_CALL(*mock_fence, wait())
         .Times(0);
@@ -92,7 +92,7 @@ TEST_F(NativeBuffer, access_for_read_while_being_read)
     buffer.ensure_available_for(mga::BufferAccess::read);
 }
 
-TEST_F(NativeBuffer, access_for_read_while_being_written)
+TEST_F(NativeBuffer, waits_for_read_access_while_being_written)
 {
     EXPECT_CALL(*mock_fence, wait())
         .Times(1);
@@ -100,7 +100,7 @@ TEST_F(NativeBuffer, access_for_read_while_being_written)
     buffer.ensure_available_for(mga::BufferAccess::read);
 }
 
-TEST_F(NativeBuffer, access_for_write_while_being_read)
+TEST_F(NativeBuffer, waits_for_write_access_while_being_read)
 {
     EXPECT_CALL(*mock_fence, wait())
         .Times(1);
@@ -108,7 +108,7 @@ TEST_F(NativeBuffer, access_for_write_while_being_read)
     buffer.ensure_available_for(mga::BufferAccess::write);
 }
 
-TEST_F(NativeBuffer, access_for_write_while_being_written)
+TEST_F(NativeBuffer, waits_for_write_access_while_being_written)
 {
     EXPECT_CALL(*mock_fence, wait())
         .Times(1);
@@ -116,7 +116,7 @@ TEST_F(NativeBuffer, access_for_write_while_being_written)
     buffer.ensure_available_for(mga::BufferAccess::write);
 }
 
-TEST_F(NativeBuffer, update_usage)
+TEST_F(NativeBuffer, merges_existing_fence_with_updated_fence)
 {
     EXPECT_CALL(*mock_fence, merge_with(fake_fd))
         .Times(1);
@@ -124,7 +124,7 @@ TEST_F(NativeBuffer, update_usage)
     buffer.update_usage(fake_fd, mga::BufferAccess::write);
 }
 
-TEST_F(NativeBuffer, updates_access)
+TEST_F(NativeBuffer, waits_depending_on_last_fence_update)
 {
     EXPECT_CALL(*mock_fence, wait())
         .Times(3);
