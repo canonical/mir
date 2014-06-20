@@ -76,7 +76,6 @@ protected:
         ON_CALL(mock_buffer, native_buffer_handle())
             .WillByDefault(Return(mock_native_buffer));
 
-        empty_region = {0,0,0,0};
         set_region = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()};
         screen_pos = {
             screen_position.top_left.x.as_int(),
@@ -124,16 +123,6 @@ protected:
         skip_layer.releaseFenceFd = -1;
         skip_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
 
-        set_skip_layer = skip_layer;
-        set_skip_layer.handle = mock_native_buffer->handle();
-        set_skip_layer.sourceCrop = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()}; 
-        set_skip_layer.displayFrame = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()};
-
-        set_target_layer = target_layer;
-        set_target_layer.handle = mock_native_buffer->handle();
-        set_target_layer.sourceCrop = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()}; 
-        set_target_layer.displayFrame = {0, 0, buffer_size.width.as_int(), buffer_size.height.as_int()};
-
         stub_renderable1 = std::make_shared<mtd::StubRenderable>(
                                 mt::fake_shared(mock_buffer), screen_position);
         stub_renderable2 = std::make_shared<mtd::StubRenderable>(
@@ -156,6 +145,8 @@ protected:
         ON_CALL(*mock_renderable2, buffer())
             .WillByDefault(Return(stub_buffer2));
         stub_context = std::make_shared<mtd::StubSwappingGLContext>(mt::fake_shared(mock_buffer));
+
+        renderlist = {stub_renderable1, stub_renderable2};
     }
 
     std::shared_ptr<MockFileOps> mock_file_ops;
@@ -168,12 +159,9 @@ protected:
     EGLSurface surf;
 
     hwc_rect_t screen_pos;
-    hwc_rect_t empty_region;
     hwc_rect_t set_region;
     hwc_layer_1_t skip_layer;
     hwc_layer_1_t target_layer;
-    hwc_layer_1_t set_skip_layer;
-    hwc_layer_1_t set_target_layer;
     hwc_layer_1_t comp_layer;
 
     geom::Size buffer_size{333, 444};
@@ -192,6 +180,7 @@ protected:
     testing::NiceMock<mtd::MockSwappingGLContext> mock_context;
     std::shared_ptr<mtd::StubSwappingGLContext> stub_context;
     mtd::StubRenderableListCompositor stub_compositor;
+    mg::RenderableList renderlist;
 };
 }
 
@@ -216,10 +205,6 @@ TEST_F(HwcDevice, calls_render_with_list_of_rejected_overlays)
     using namespace testing;
     mtd::MockRenderableListCompositor mock_compositor;
 
-    mg::RenderableList updated_list({
-        stub_renderable1,
-        stub_renderable2
-    });
     mg::RenderableList expected_renderable_list({
         stub_renderable2
     });
@@ -246,7 +231,7 @@ TEST_F(HwcDevice, calls_render_with_list_of_rejected_overlays)
         .InSequence(seq);
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
-    EXPECT_TRUE(device.post_overlays(mock_context, updated_list, mock_compositor));
+    EXPECT_TRUE(device.post_overlays(mock_context, renderlist, mock_compositor));
 }
 
 TEST_F(HwcDevice, resets_layers_when_prepare_gl_called)
@@ -272,12 +257,7 @@ TEST_F(HwcDevice, resets_layers_when_prepare_gl_called)
         .InSequence(seq);
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
-    mg::RenderableList updated_list({
-        stub_renderable1,
-        stub_renderable2
-    });
-
-    EXPECT_TRUE(device.post_overlays(*stub_context, updated_list, stub_compositor));
+    EXPECT_TRUE(device.post_overlays(*stub_context, renderlist, stub_compositor));
     device.post_gl(*stub_context);
 }
 
@@ -295,8 +275,8 @@ TEST_F(HwcDevice, sets_and_updates_fences)
 
     std::list<hwc_layer_1_t*> expected_list
     {
-        &set_skip_layer,
-        &set_target_layer
+        &skip_layer,
+        &target_layer
     };
 
     Sequence seq;
@@ -321,15 +301,9 @@ TEST_F(HwcDevice, sets_proper_list_with_overlays)
     int release_fence1 = 381;
     int release_fence2 = 382;
     int release_fence3 = 383;
-    auto native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>();
-    auto native_handle_2 = std::make_shared<mtd::StubAndroidNativeBuffer>();
-    auto native_handle_3 = std::make_shared<mtd::StubAndroidNativeBuffer>();
-    native_handle_1->anwb()->width = buffer_size.width.as_int();
-    native_handle_1->anwb()->height = buffer_size.height.as_int();
-    native_handle_2->anwb()->width = buffer_size.width.as_int();
-    native_handle_2->anwb()->height = buffer_size.height.as_int();
-    native_handle_3->anwb()->width = buffer_size.width.as_int();
-    native_handle_3->anwb()->height = buffer_size.height.as_int();
+    auto native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>(buffer_size);
+    auto native_handle_2 = std::make_shared<mtd::StubAndroidNativeBuffer>(buffer_size);
+    auto native_handle_3 = std::make_shared<mtd::StubAndroidNativeBuffer>(buffer_size);
 
     EXPECT_CALL(mock_buffer, native_buffer_handle())
         .Times(AnyNumber())
@@ -352,12 +326,6 @@ TEST_F(HwcDevice, sets_proper_list_with_overlays)
         contents.hwLayers[2].releaseFenceFd = release_fence3;
         contents.retireFenceFd = -1;
     };
-
-    /* set non-default renderlist */
-    mg::RenderableList updated_list({
-        stub_renderable1,
-        stub_renderable1
-    });
 
     hwc_layer_1_t comp_layer1, comp_layer2;
     comp_layer1.compositionType = HWC_OVERLAY;
@@ -386,17 +354,16 @@ TEST_F(HwcDevice, sets_proper_list_with_overlays)
     comp_layer2.releaseFenceFd = -1;
     comp_layer2.planeAlpha = 0xFF;
 
-    set_target_layer.acquireFenceFd = fb_acquire_fence;
-    set_target_layer.handle = native_handle_3->handle();
+    target_layer.acquireFenceFd = fb_acquire_fence;
+    target_layer.handle = native_handle_3->handle();
 
     std::list<hwc_layer_1_t*> expected_list
     {
         &comp_layer1,
         &comp_layer2,
-        &set_target_layer
+        &target_layer
     };
 
-printf("OOO<<<\n");
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
     //all accepted
@@ -433,18 +400,12 @@ printf("OOO<<<\n");
     EXPECT_CALL(*native_handle_3, update_fence(release_fence3))
         .InSequence(seq);
 
-    EXPECT_TRUE(device.post_overlays(mock_context, updated_list, stub_compositor));
+    EXPECT_TRUE(device.post_overlays(mock_context, renderlist, stub_compositor));
 }
 
 TEST_F(HwcDevice, discards_second_set_if_all_overlays_and_nothing_has_changed)
 {
     using namespace testing;
-    mg::RenderableList updated_list({
-        stub_renderable1,
-        stub_renderable2
-    });
-
-    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
     ON_CALL(*mock_hwc_device_wrapper, prepare(_))
         .WillByDefault(Invoke([&](hwc_display_contents_1_t& contents)
@@ -454,22 +415,17 @@ TEST_F(HwcDevice, discards_second_set_if_all_overlays_and_nothing_has_changed)
             contents.hwLayers[1].compositionType = HWC_OVERLAY;
             contents.hwLayers[2].compositionType = HWC_FRAMEBUFFER_TARGET;
         }));
-
     EXPECT_CALL(*mock_hwc_device_wrapper, set(_))
         .Times(1);
 
-    EXPECT_TRUE(device.post_overlays(*stub_context, updated_list, stub_compositor));
-    EXPECT_FALSE(device.post_overlays(*stub_context, updated_list, stub_compositor));
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+    EXPECT_TRUE(device.post_overlays(*stub_context, renderlist, stub_compositor));
+    EXPECT_FALSE(device.post_overlays(*stub_context, renderlist, stub_compositor));
 }
 
 TEST_F(HwcDevice, submits_every_time_if_at_least_one_layer_is_gl_rendered)
 {
     using namespace testing;
-    mg::RenderableList updated_list({
-        stub_renderable1,
-        stub_renderable2
-    });
-
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
     ON_CALL(*mock_hwc_device_wrapper, prepare(_))
@@ -484,8 +440,8 @@ TEST_F(HwcDevice, submits_every_time_if_at_least_one_layer_is_gl_rendered)
     EXPECT_CALL(*mock_hwc_device_wrapper, set(_))
         .Times(2);
 
-    EXPECT_TRUE(device.post_overlays(*stub_context, updated_list, stub_compositor));
-    EXPECT_TRUE(device.post_overlays(*stub_context, updated_list, stub_compositor));
+    EXPECT_TRUE(device.post_overlays(*stub_context, renderlist, stub_compositor));
+    EXPECT_TRUE(device.post_overlays(*stub_context, renderlist, stub_compositor));
 }
 
 TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
@@ -501,7 +457,7 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
         .WillOnce(Return(native_handle_1))
         .WillOnce(Return(native_handle_2));
 
-    mg::RenderableList updated_list({stub_renderable1});
+    mg::RenderableList renderlist({stub_renderable1});
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
@@ -522,8 +478,8 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
             EXPECT_EQ(HWC_FRAMEBUFFER, contents.hwLayers[0].compositionType);
         }));
 
-    EXPECT_TRUE(device.post_overlays(*stub_context, updated_list, stub_compositor));
-    EXPECT_TRUE(device.post_overlays(*stub_context, updated_list, stub_compositor));
+    EXPECT_TRUE(device.post_overlays(*stub_context, renderlist, stub_compositor));
+    EXPECT_TRUE(device.post_overlays(*stub_context, renderlist, stub_compositor));
 }
 
 //note: HWC models overlay layer buffers as owned by the display hardware until a subsequent set.
