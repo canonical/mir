@@ -50,32 +50,14 @@ class StubBuffer : public mtd::StubBuffer
 public:
     StubBuffer()
         : mtd::StubBuffer{
+              std::make_shared<mg::NativeBuffer>(),
               mg::BufferProperties{
                   geom::Size{123, 456},
                   mir_pixel_format_abgr_8888,
                   mg::BufferUsage::software},
-              geom::Stride{4390}},
-          native_buffer{std::make_shared<mg::NativeBuffer>()}
+              geom::Stride{4390}}
     {
-        native_buffer->data_items = 4;
-        native_buffer->fd_items = 2;
-        for(auto i = 0; i < native_buffer->data_items; i++)
-            native_buffer->data[i] = i;
-        for(auto i = 0; i < native_buffer->fd_items; i++)
-            native_buffer->fd[i] = i;
-        native_buffer->width = buf_size.width.as_int();
-        native_buffer->height = buf_size.height.as_int();
-        native_buffer->flags = 0x66;
-        native_buffer->stride = buf_stride.as_int();
     }
-
-    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
-    {
-        return native_buffer;
-    }
-
-private:
-    std::shared_ptr<mg::NativeBuffer> native_buffer;
 };
 
 class MesaNativePlatformTest : public ::testing::Test
@@ -124,7 +106,24 @@ TEST_F(MesaNativePlatformTest, packs_buffer_ipc_package_correctly)
 {
     using namespace testing;
 
-    StubBuffer const stub_buffer;
+    int const width{123};
+    int const height{456};
+    auto stub_native_buffer = std::make_shared<mg::NativeBuffer>();
+    stub_native_buffer->data_items = 4;
+    stub_native_buffer->fd_items = 2;
+    for(auto i = 0; i < stub_native_buffer->data_items; i++)
+        stub_native_buffer->data[i] = i;
+    for(auto i = 0; i < stub_native_buffer->fd_items; i++)
+        stub_native_buffer->fd[i] = i;
+    stub_native_buffer->width = width;
+    stub_native_buffer->height = height;
+    stub_native_buffer->flags = 0x66;
+    stub_native_buffer->stride = 4390;
+
+    mg::BufferProperties properties{
+        geom::Size{width, height}, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
+    mtd::StubBuffer const stub_buffer(
+        stub_native_buffer, properties, geom::Stride{stub_native_buffer->stride});
     mtd::MockPacker mock_packer;
     auto const native_buffer = stub_buffer.native_buffer_handle();
 

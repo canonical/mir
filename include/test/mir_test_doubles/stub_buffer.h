@@ -65,6 +65,11 @@ public:
     {
     }
 
+    StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer)
+        : StubBuffer{native_buffer, {}}
+    {
+    }
+
     StubBuffer(graphics::BufferProperties const& properties)
         : StubBuffer{create_native_buffer(), properties, geometry::Stride{}}
     {
