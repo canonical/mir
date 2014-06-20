@@ -53,7 +53,7 @@ public:
     {
     }
 
-    StubBuffer(std::shared_ptr<graphics::NativeBuffer> const&, geometry::Size const& size)
+    StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer, geometry::Size const& size)
         : StubBuffer{
               native_buffer,
               graphics::BufferProperties{
