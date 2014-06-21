@@ -143,7 +143,8 @@ bool mga::HwcDevice::post_overlays(
         }
         else
         {
-            layers_it->layer.set_acquirefence_from(*renderable->buffer());
+            if (layers_it->needs_commit)
+                layers_it->layer.set_acquirefence_from(*renderable->buffer());
             next_onscreen_overlay_buffers.push_back(renderable->buffer());
         }
         layers_it++;
