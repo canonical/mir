@@ -61,6 +61,7 @@ public:
                   mir_pixel_format_abgr_8888,
                   graphics::BufferUsage::hardware},
              geometry::Stride{}}
+
     {
     }
 
