@@ -191,15 +191,6 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_overlay_layers)
     expected_layer.acquireFenceFd = fake_fence;
     layer.set_acquirefence_from(mock_buffer);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
-
-    //multiple sequential updates to the same layer must not set the acquireFenceFds on the calls
-    //after the first.
-    hwc_layer->acquireFenceFd = -1;
-    expected_layer.acquireFenceFd = -1;
-    layer.setup_layer(type, screen_position, alpha_enabled, mock_buffer);
-    hwc_layer->compositionType = HWC_OVERLAY;
-    layer.set_acquirefence_from(mock_buffer);
-    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }
 
 TEST_F(HWCLayersTest, apply_buffer_updates_to_fbtarget)

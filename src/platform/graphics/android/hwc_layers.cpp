@@ -161,6 +161,8 @@ bool mga::HWCLayer::setup_layer(
 
 void mga::HWCLayer::set_acquirefence_from(mg::Buffer const& buffer)
 {
+    hwc_layer->releaseFenceFd = -1;
+    hwc_layer->acquireFenceFd = -1;
     //we shouldn't be copying the FD unless the HWC has marked this as a buffer its interested in.
     //we disregard fences that haven't changed, as the hwc will still own the buffer
     if (!needs_gl_render())

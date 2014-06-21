@@ -41,9 +41,9 @@ namespace android
 
 struct HwcLayerEntry
 {
-    HwcLayerEntry(HWCLayer && layer, bool updated);
+    HwcLayerEntry(HWCLayer && layer, bool needs_commit);
     HWCLayer layer;
-    bool updated;
+    bool needs_commit;
 };
 
 /* this is a partitioned list. renderlist makes up the first renderlist.size() elements

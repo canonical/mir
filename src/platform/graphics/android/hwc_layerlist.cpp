@@ -51,9 +51,9 @@ std::shared_ptr<hwc_display_contents_1_t> generate_hwc_list(size_t needed_size)
 }
 }
 
-mga::HwcLayerEntry::HwcLayerEntry(HWCLayer && layer, bool updated) :
+mga::HwcLayerEntry::HwcLayerEntry(HWCLayer && layer, bool needs_commit) :
     layer(std::move(layer)),
-    updated{updated}
+    needs_commit{needs_commit}
 {
 }
 
@@ -71,7 +71,7 @@ void mga::LayerList::update_list(RenderableList const& renderlist, size_t additi
         auto it = layers.begin();
         for(auto renderable : renderlist)
         {
-            it->updated = it->layer.setup_layer(
+            it->needs_commit = it->layer.setup_layer(
                 mga::LayerType::gl_rendered,
                 renderable->screen_position(),
                 renderable->alpha_enabled(),

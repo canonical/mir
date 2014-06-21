@@ -117,10 +117,10 @@ bool mga::HwcDevice::post_overlays(
 
     hwc_list.update_list(renderables, fbtarget_size);
 
-    bool updated{false};
+    bool needs_commit{false};
     for(auto& layer : hwc_list)
-        updated |= layer.updated;
-    if (!updated)
+        needs_commit |= layer.needs_commit;
+    if (!needs_commit)
         return false;
 
     auto lg = lock_unblanked();
@@ -143,8 +143,7 @@ bool mga::HwcDevice::post_overlays(
         }
         else
         {
-            if (layers_it->updated)
-                layers_it->layer.set_acquirefence_from(*renderable->buffer());
+            layers_it->layer.set_acquirefence_from(*renderable->buffer());
             next_onscreen_overlay_buffers.push_back(renderable->buffer());
         }
         layers_it++;
