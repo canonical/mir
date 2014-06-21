@@ -398,9 +398,9 @@ TEST_F(HwcDevice, owns_overlay_buffers_until_next_set)
 TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_without_update)
 {
     using namespace testing;
-    int acquire_fence = 39303;
-    ON_CALL(*mock_native_buffer1, copy_fence())
-        .WillByDefault(Return(acquire_fence));
+    int acquire_fence1 = 39303;
+    int acquire_fence2 = 39302;
+    int acquire_fence3 = 39301;
 
     int release_fence1 = 381;
     int release_fence2 = 382;
@@ -416,16 +416,15 @@ TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_wit
         contents.retireFenceFd = -1;
     };
 
-    hwc_rect_t update_layer_rect;
-    hwc_layer_1_t update_layer;
-    fill_hwc_layer(update_layer, &update_layer_rect, position2, *updated_buffer, HWC_FRAMEBUFFER, 0);
-
     mg::RenderableList renderlist{
         stub_renderable1,
         stub_renderable2
     };
 
-    layer2.acquireFenceFd = acquire_fence; 
+    layer.acquireFenceFd = acquire_fence1;
+    layer2.acquireFenceFd = acquire_fence2;
+    layer.compositionType = HWC_OVERLAY;
+    layer2.compositionType = HWC_OVERLAY;
     std::list<hwc_layer_1_t*> expected_list1
     {
         &layer,
@@ -433,11 +432,18 @@ TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_wit
         &target_layer
     };
 
-    update_layer.acquireFenceFd = -1;
+    hwc_rect_t update_layer_rect;
+    hwc_layer_1_t update_layer;
+    hwc_rect_t nofence_rect;
+    hwc_layer_1_t nofence_layer;
+    fill_hwc_layer(update_layer, &update_layer_rect, position1, *updated_buffer, HWC_OVERLAY, 0);
+    fill_hwc_layer(nofence_layer, &nofence_rect, position2, *stub_buffer2, HWC_OVERLAY, 0);
+    update_layer.acquireFenceFd = acquire_fence3;
+    nofence_layer.acquireFenceFd = -1;
     std::list<hwc_layer_1_t*> expected_list2
     {
         &update_layer,
-        &layer2,
+        &nofence_layer,
         &target_layer
     };
 
@@ -445,19 +451,27 @@ TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_wit
     EXPECT_CALL(*mock_hwc_device_wrapper, prepare(_))
         .InSequence(seq)
         .WillOnce(Invoke(set_all_layers_to_overlay));
+    EXPECT_CALL(*mock_native_buffer1, copy_fence())
+        .InSequence(seq)
+        .WillOnce(Return(acquire_fence1));
+    EXPECT_CALL(*mock_native_buffer2, copy_fence())
+        .InSequence(seq)
+        .WillOnce(Return(acquire_fence2));
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list1)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
     EXPECT_CALL(*mock_hwc_device_wrapper, prepare(_))
         .InSequence(seq)
         .WillOnce(Invoke(set_all_layers_to_overlay));
+    EXPECT_CALL(*native_buffer, copy_fence())
+        .InSequence(seq)
+        .WillOnce(Return(acquire_fence3));
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list2)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
 
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
     EXPECT_TRUE(device.post_overlays(stub_context, renderlist, stub_compositor));
-
     //set only the 2nd layer to a new buffer. the first buffer has the same buffer, and would 
     //still be onscreen if this wasn't against a mock
     stub_renderable1->set_buffer(updated_buffer);
