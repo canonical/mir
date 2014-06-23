@@ -30,9 +30,10 @@ namespace
 class SynchronousServerAction
 {
 public:
-    SynchronousServerAction(mir::ServerActionQueue & queue,
+    SynchronousServerAction(mir::ServerActionQueue& queue,
                             boost::optional<std::thread::id> queue_thread_id,
                             mir::ServerAction const& action)
+        : done{false}
     {
         if (queue_thread_id &&
             *queue_thread_id != std::this_thread::get_id())
@@ -48,14 +49,14 @@ public:
         }
         else
         {
-            done = true;
             action();
+            done = true;
         }
     }
     ~SynchronousServerAction()
     {
         std::unique_lock<std::mutex> lock(done_mutex);
-        while(!done) done_condition.wait(lock);
+        done_condition.wait(lock, [this] { return done;});
     }
 private:
     std::mutex done_mutex;
@@ -193,14 +194,14 @@ public:
         return owner == possible_owner;
     }
 
-    static void async_wait(std::shared_ptr<FDHandler> const& fd_handler, ServerActionQueue & queue)
+    static void async_wait(std::shared_ptr<FDHandler> const& fd_handler, ServerActionQueue& queue)
     {
         for (auto const& s : fd_handler->stream_descriptors)
             read_some(s.get(), fd_handler, queue);
     }
 
 private:
-    static void read_some(boost::asio::posix::stream_descriptor* s, std::weak_ptr<FDHandler> const& possible_fd_handler, ServerActionQueue & queue)
+    static void read_some(boost::asio::posix::stream_descriptor* s, std::weak_ptr<FDHandler> const& possible_fd_handler, ServerActionQueue& queue)
     {
         s->async_read_some(
             boost::asio::null_buffers(),
@@ -461,8 +462,6 @@ std::unique_ptr<mir::time::Alarm> mir::AsioMainLoop::create_alarm(std::function<
 {
     return std::unique_ptr<mir::time::Alarm>{new AlarmImpl{io, callback}};
 }
-
-
 
 void mir::AsioMainLoop::enqueue(void const* owner, ServerAction const& action)
 {
