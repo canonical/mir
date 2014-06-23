@@ -52,7 +52,7 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
     anwb->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     anwb->handle = native_handle.get();
 
-    native_window_buffer = std::make_shared<mga::AndroidNativeBuffer>(anwb, fence);
+    native_window_buffer = std::make_shared<mga::AndroidNativeBuffer>(anwb, fence, mga::BufferAccess::read);
 }
 
 mcla::AndroidClientBuffer::~AndroidClientBuffer() noexcept
