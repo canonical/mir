@@ -118,7 +118,7 @@ void mga::AndroidPlatform::fill_buffer_package(
     auto native_buffer = buffer->native_buffer_handle();
 
     /* TODO: instead of waiting, pack the fence fd in the message to the client */ 
-    native_buffer->wait_for_content();
+    native_buffer->ensure_available_for(mga::BufferAccess::write);
     if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
         auto buffer_handle = native_buffer->handle();

@@ -350,7 +350,7 @@ TEST_F(AndroidBufferBinding, buffer_binding_uses_right_image_after_display_swap)
 TEST_F(AndroidBufferBinding, gl_bind_to_texture_waits_on_fence)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_native_buffer, wait_for_content())
+    EXPECT_CALL(*mock_native_buffer, ensure_available_for(mga::BufferAccess::read))
         .Times(1);
 
     mga::Buffer buffer(mock_native_buffer, extensions);
