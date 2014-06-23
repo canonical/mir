@@ -176,26 +176,28 @@ void mclr::AsioSocketTransport::on_data_available(boost::system::error_code cons
 
 void mclr::AsioSocketTransport::notify_data_available()
 {
-    std::unique_lock<decltype(observer_mutex)> lock(observer_mutex);
-    // We don't allow deregistration of observers, which is the only action that can invalidate
-    // our iterator.
-    for (auto& observer : observers)
+    // TODO: If copying the observers turns out to be slow, replace with
+    // an RCUish data type; this is a read-mostly, write infrequently structure.
+    decltype(observers) observer_copy;
     {
-        lock.unlock();
+        std::lock_guard<decltype(observer_mutex)> lock(observer_mutex);
+        observer_copy = observers;
+    }
+    for (auto& observer : observer_copy)
+    {
         observer->on_data_available();
-        lock.lock();
     }
 }
 
 void mclr::AsioSocketTransport::notify_disconnected()
 {
-    std::unique_lock<decltype(observer_mutex)> lock(observer_mutex);
-    // We don't allow deregistration of observers, which is the only action that can invalidate
-    // our iterator.
-    for (auto& observer : observers)
+    decltype(observers) observer_copy;
     {
-        lock.unlock();
+        std::lock_guard<decltype(observer_mutex)> lock(observer_mutex);
+        observer_copy = observers;
+    }
+    for (auto& observer : observer_copy)
+    {
         observer->on_disconnected();
-        lock.lock();
     }
 }
