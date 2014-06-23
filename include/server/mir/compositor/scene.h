@@ -19,11 +19,10 @@
 #ifndef MIR_COMPOSITOR_SCENE_H_
 #define MIR_COMPOSITOR_SCENE_H_
 
-#include "mir/geometry/forward.h"
-#include "mir/graphics/renderable.h"
+#include "compositor_id.h"
 
 #include <memory>
-#include <functional>
+#include <vector>
 
 namespace mir
 {
@@ -35,24 +34,29 @@ class Observer;
 namespace compositor
 {
 
+class SceneElement;
+using SceneElementSequence = std::vector<std::shared_ptr<SceneElement>>;
+
 class Scene
 {
 public:
     virtual ~Scene() {}
 
     /**
-     * Generate a valid list of renderables based on the current state of the Scene.
+     * Generate a valid sequence of scene elements based on the current state of the Scene.
      * \param [in] id      An arbitrary unique identifier used to distinguish
-     *                     separate compositors which need to receive a list
+     *                     separate compositors which need to receive a sequence
      *                     for rendering. Calling with the same id will return
-     *                     a new (different) list to that user each time. For
+     *                     a new (different) sequence to that user each time. For
      *                     consistency, all callers need to determine their id
      *                     in the same way (e.g. always use "this" pointer).
-     * \returns a list of mg::Renderables for the compositor id. The list is in
-     *          stacking order from back to front.
+     * \returns a sequence of mc::SceneElements for the compositor id. The
+     *          sequence is in stacking order from back to front.
      */
-    typedef void const* CompositorID;
-    virtual graphics::RenderableList renderable_list_for(CompositorID id) const = 0;
+    virtual SceneElementSequence scene_elements_for(CompositorID id) = 0;
+
+    virtual void register_compositor(CompositorID id) = 0;
+    virtual void unregister_compositor(CompositorID id) = 0;
 
     virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
     virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;

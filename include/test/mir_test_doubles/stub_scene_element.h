@@ -13,14 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_SCENE_H_
-#define MIR_TEST_DOUBLES_STUB_SCENE_H_
+#ifndef MIR_TEST_DOUBLES_STUB_SCENE_ELEMENT_H_
+#define MIR_TEST_DOUBLES_STUB_SCENE_ELEMENT_H_
 
-#include "mir/compositor/scene.h"
-#include <gmock/gmock.h>
+#include "mir/compositor/scene_element.h"
 
 namespace mir
 {
@@ -29,29 +28,33 @@ namespace test
 namespace doubles
 {
 
-class StubScene : public compositor::Scene
+class StubSceneElement : public compositor::SceneElement
 {
 public:
-    compositor::SceneElementSequence scene_elements_for(compositor::CompositorID) override
-    {
-          return {};
-    }
-    void register_compositor(compositor::CompositorID) override
+    StubSceneElement(std::shared_ptr<graphics::Renderable> const& renderable)
+        : renderable_{renderable}
     {
     }
-    void unregister_compositor(compositor::CompositorID) override
+
+    std::shared_ptr<graphics::Renderable> renderable() const
+    {
+        return renderable_;
+    }
+
+    void rendered_in(compositor::CompositorID) override
     {
     }
-    void add_observer(std::shared_ptr<scene::Observer> const&) override
+
+    void occluded_in(compositor::CompositorID) override
     {
     }
-    void remove_observer(std::weak_ptr<scene::Observer> const&) override
-    {
-    }
+
+private:
+    std::shared_ptr<graphics::Renderable> const renderable_;
 };
 
-} // namespace doubles
-} // namespace test
-} // namespace mir
+}
+}
+}
 
-#endif /* MIR_TEST_DOUBLES_STUB_SCENE_H_ */
+#endif

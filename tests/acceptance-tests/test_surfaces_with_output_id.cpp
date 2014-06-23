@@ -18,6 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/compositor/scene.h"
+#include "mir/compositor/scene_element.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/renderable.h"
 
@@ -132,9 +133,9 @@ struct SurfacesWithOutputId : BasicFixture
     std::vector<geom::Rectangle> server_surface_rectangles()
     {
         std::vector<geom::Rectangle> rects;
-        auto const renderables = server_config().the_scene()->renderable_list_for(this);
-        for (auto const& renderable : renderables)
-            rects.push_back(renderable->screen_position());
+        auto const elements = server_config().the_scene()->scene_elements_for(this);
+        for (auto const& element : elements)
+            rects.push_back(element->renderable()->screen_position());
         return rects;
     }
 

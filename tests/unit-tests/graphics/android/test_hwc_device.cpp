@@ -266,7 +266,7 @@ TEST_F(HwcDevice, sets_and_updates_fences)
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
-    EXPECT_CALL(*mock_native_buffer3, update_fence(fb_release_fence))
+    EXPECT_CALL(*mock_native_buffer3, update_usage(fb_release_fence, mga::BufferAccess::read))
         .InSequence(seq);
     EXPECT_CALL(*mock_file_ops, close(hwc_retire_fence))
         .InSequence(seq);
@@ -332,11 +332,11 @@ TEST_F(HwcDevice, sets_proper_overlay_lists)
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
-    EXPECT_CALL(*mock_native_buffer1, update_fence(release_fence1))
+    EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence1, mga::BufferAccess::read))
         .InSequence(seq);
-    EXPECT_CALL(*mock_native_buffer2, update_fence(release_fence2))
+    EXPECT_CALL(*mock_native_buffer2, update_usage(release_fence2, mga::BufferAccess::read))
         .InSequence(seq);
-    EXPECT_CALL(*mock_native_buffer3, update_fence(release_fence3))
+    EXPECT_CALL(*mock_native_buffer3, update_usage(release_fence3, mga::BufferAccess::read))
         .InSequence(seq);
 
     EXPECT_TRUE(device.post_overlays(stub_context, renderlist, stub_compositor));
