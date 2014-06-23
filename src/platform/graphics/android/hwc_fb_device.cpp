@@ -70,7 +70,7 @@ void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
 
     auto const& buffer = context.last_rendered_buffer();
     auto native_buffer = buffer->native_buffer_handle();
-    native_buffer->wait_for_content();
+    native_buffer->ensure_available_for(mga::BufferAccess::read);
     if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("error posting with fb device"));
