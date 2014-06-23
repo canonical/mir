@@ -57,8 +57,9 @@ private:
     std::thread io_service_thread;
     boost::asio::io_service io_service;
     boost::asio::io_service::work work;
-    std::mutex observer_mutex;
     boost::asio::local::stream_protocol::socket socket;
+
+    std::mutex observer_mutex;
     std::vector<std::shared_ptr<Observer>> observers;
 };
 
