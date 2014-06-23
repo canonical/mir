@@ -395,6 +395,48 @@ TEST_F(HwcDevice, owns_overlay_buffers_until_next_set)
     EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
 }
 
+TEST_F(HwcDevice, does_not_copy_fbtarget_acquirefence_if_all_layers_overlays)
+{
+    using namespace testing;
+    int acquire_fence1 = 39303;
+    int acquire_fence2 = 39302;
+
+    mg::RenderableList renderlist{
+        stub_renderable1,
+        stub_renderable2
+    };
+
+    layer.compositionType = HWC_OVERLAY;
+    layer2.compositionType = HWC_OVERLAY;
+    layer.acquireFenceFd = acquire_fence1;
+    layer2.acquireFenceFd = acquire_fence2;
+    target_layer.acquireFenceFd = -1;
+    std::list<hwc_layer_1_t*> expected_list1
+    {
+        &layer,
+        &layer2,
+        &target_layer
+    };
+
+    EXPECT_CALL(*mock_native_buffer3, copy_fence())
+        .Times(0);
+    Sequence seq; 
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(_))
+        .InSequence(seq)
+        .WillOnce(Invoke(set_all_layers_to_overlay));
+    EXPECT_CALL(*mock_native_buffer1, copy_fence())
+        .InSequence(seq)
+        .WillOnce(Return(acquire_fence1));
+    EXPECT_CALL(*mock_native_buffer2, copy_fence())
+        .InSequence(seq)
+        .WillOnce(Return(acquire_fence2));
+    EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list1)))
+        .InSequence(seq);
+
+    mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
+    EXPECT_TRUE(device.post_overlays(stub_context, renderlist, stub_compositor));
+}
+
 TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_without_update)
 {
     using namespace testing;
