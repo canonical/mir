@@ -140,7 +140,7 @@ public:
     void show() override;
     
     void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image);
-    std::shared_ptr<graphics::CursorImage> cursor_image();
+    std::shared_ptr<graphics::CursorImage> cursor_image() const;
 
     void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override;

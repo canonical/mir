@@ -47,6 +47,8 @@ public:
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
 
+    std::shared_ptr<graphics::Cursor> the_cursor() override;
+
 private:
     std::shared_ptr<graphics::Platform> graphics_platform;
     std::vector<geometry::Rectangle> const display_rects;

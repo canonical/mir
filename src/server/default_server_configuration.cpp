@@ -101,30 +101,6 @@ mir::DefaultServerConfiguration::the_prompt_session_listener()
         });
 }
 
-std::shared_ptr<mi::CursorListener>
-mir::DefaultServerConfiguration::the_cursor_listener()
-{
-    struct DefaultCursorListener : mi::CursorListener
-    {
-        DefaultCursorListener(std::shared_ptr<mg::Cursor> const& cursor) :
-            cursor(cursor)
-        {
-        }
-
-        void cursor_moved_to(float abs_x, float abs_y)
-        {
-            cursor->move_to(geom::Point{abs_x, abs_y});
-        }
-
-        std::shared_ptr<mg::Cursor> const cursor;
-    };
-    return cursor_listener(
-        [this]() -> std::shared_ptr<mi::CursorListener>
-        {
-            return std::make_shared<DefaultCursorListener>(the_cursor());
-        });
-}
-
 std::shared_ptr<ms::SurfaceConfigurator> mir::DefaultServerConfiguration::the_surface_configurator()
 {
     struct DefaultSurfaceConfigurator : public ms::SurfaceConfigurator
