@@ -30,6 +30,7 @@
 #include "mir_test_doubles/mock_display_buffer.h"
 #include "mir_test_doubles/mock_compositor_report.h"
 #include "mir_test_doubles/mock_scene.h"
+#include "mir_test_doubles/stub_scene.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -89,21 +90,9 @@ private:
     std::vector<testing::NiceMock<mtd::MockDisplayBuffer>> buffers;
 };
 
-class StubScene : public mc::Scene
+class StubScene : public mtd::StubScene
 {
 public:
-    StubScene(mg::RenderableList const& list)
-        : renderable_list{list},
-          throw_on_add_observer_{false}
-    {
-    }
-    StubScene() : StubScene(mg::RenderableList{}) {}
-
-    mc::SceneElementSequence scene_elements_for(void const*)
-    {
-        return {};
-    }
-
     void add_observer(std::shared_ptr<ms::Observer> const& observer_)
     {
         std::lock_guard<std::mutex> lock{observer_mutex};
@@ -141,10 +130,7 @@ public:
 
 private:
     std::mutex observer_mutex;
-    mg::RenderableList renderable_list;
-
     std::shared_ptr<ms::Observer> observer;
-    
     bool throw_on_add_observer_;
 };
 

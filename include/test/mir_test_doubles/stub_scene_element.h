@@ -41,6 +41,14 @@ public:
         return renderable_;
     }
 
+    void rendered_in(compositor::CompositorID) override
+    {
+    }
+
+    void occluded_in(compositor::CompositorID) override
+    {
+    }
+
 private:
     std::shared_ptr<graphics::Renderable> const renderable_;
 };

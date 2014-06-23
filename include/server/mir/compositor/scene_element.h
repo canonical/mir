@@ -19,6 +19,7 @@
 #ifndef MIR_COMPOSITOR_SCENE_ELEMENT_H_
 #define MIR_COMPOSITOR_SCENE_ELEMENT_H_
 
+#include "compositor_id.h"
 #include <memory>
 
 namespace mir
@@ -36,6 +37,8 @@ public:
     virtual ~SceneElement() = default;
 
     virtual std::shared_ptr<graphics::Renderable> renderable() const = 0;
+    virtual void rendered_in(CompositorID cid) = 0;
+    virtual void occluded_in(CompositorID cid) = 0;
 
 protected:
     SceneElement() = default;
