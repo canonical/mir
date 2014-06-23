@@ -18,19 +18,11 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/graphics/buffer_properties.h"
-#include "mir/scene/surface_creation_parameters.h"
 #include "surface_stack.h"
-#include "mir/compositor/buffer_stream.h"
-#include "mir/input/input_channel_factory.h"
+#include "mir/scene/surface.h"
 #include "mir/scene/scene_report.h"
-
-// TODO Including this doesn't seem right - why would SurfaceStack "know" about BasicSurface
-// It is needed by the following member function:
-//  for_each()
-// to access:
-//  buffer_stream() and input_channel()
-#include "basic_surface.h"
+#include "mir/compositor/scene_element.h"
+#include "mir/graphics/renderable.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -46,20 +38,48 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
+namespace
+{
+
+class SurfaceSceneElement : public mc::SceneElement
+{
+public:
+    SurfaceSceneElement(std::shared_ptr<mg::Renderable> const& renderable)
+        : renderable_{renderable}
+    {
+    }
+
+    std::shared_ptr<mg::Renderable> renderable() const override
+    {
+        return renderable_;
+    }
+
+private:
+    std::shared_ptr<mg::Renderable> const renderable_;
+};
+
+}
+
 ms::SurfaceStack::SurfaceStack(
     std::shared_ptr<SceneReport> const& report) :
     report{report}
 {
 }
 
-mg::RenderableList ms::SurfaceStack::renderable_list_for(CompositorID id) const
+mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(CompositorID id)
 {
     std::lock_guard<decltype(guard)> lg(guard);
-    mg::RenderableList list;
+    mc::SceneElementSequence elements;
     for (auto const& layer : layers_by_depth)
+    {
         for (auto const& surface : layer.second) 
-            list.emplace_back(surface->compositor_snapshot(id));
-    return list;
+        {
+            auto element = std::make_shared<SurfaceSceneElement>(
+                surface->compositor_snapshot(id));
+            elements.emplace_back(element);
+        }
+    }
+    return elements;
 }
 
 void ms::SurfaceStack::add_surface(

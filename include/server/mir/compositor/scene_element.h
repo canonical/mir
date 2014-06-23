@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,22 +13,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_COMPOSITOR_OCCLUSION_H_
-#define MIR_COMPOSITOR_OCCLUSION_H_
+#ifndef MIR_COMPOSITOR_SCENE_ELEMENT_H_
+#define MIR_COMPOSITOR_SCENE_ELEMENT_H_
 
-#include "mir/compositor/scene.h"
+#include <memory>
 
 namespace mir
 {
+namespace graphics
+{
+class Renderable;
+}
 namespace compositor
 {
 
-void filter_occlusions_from(SceneElementSequence& list, geometry::Rectangle const& area);
+class SceneElement
+{
+public:
+    virtual ~SceneElement() = default;
 
-} // namespace compositor
-} // namespace mir
+    virtual std::shared_ptr<graphics::Renderable> renderable() const = 0;
 
-#endif // MIR_COMPOSITOR_OCCLUSION_H_
+protected:
+    SceneElement() = default;
+    SceneElement(SceneElement const&) = delete;
+    SceneElement& operator=(SceneElement const&) = delete;
+};
+
+}
+}
+
+#endif // MIR_COMPOSITOR_SCENE_ELEMENT_H_

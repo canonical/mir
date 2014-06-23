@@ -99,9 +99,9 @@ public:
     }
     StubScene() : StubScene(mg::RenderableList{}) {}
 
-    mg::RenderableList renderable_list_for(void const*) const
+    mc::SceneElementSequence scene_elements_for(void const*)
     {
-        return mg::RenderableList{};
+        return {};
     }
 
     void add_observer(std::shared_ptr<ms::Observer> const& observer_)
@@ -610,9 +610,9 @@ TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
         .Times(1);
     EXPECT_CALL(*mock_scene, remove_observer(_))
         .Times(1);
-    EXPECT_CALL(*mock_scene, renderable_list_for(_))
+    EXPECT_CALL(*mock_scene, scene_elements_for(_))
         .Times(AtLeast(0))
-        .WillRepeatedly(Return(mg::RenderableList{}));
+        .WillRepeatedly(Return(mc::SceneElementSequence{}));
 
     mc::MultiThreadedCompositor compositor{display, mock_scene, db_compositor_factory, mock_report, true};
 
