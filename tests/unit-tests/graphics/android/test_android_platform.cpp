@@ -113,7 +113,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc)
     EXPECT_CALL(mock_packer, pack_size(_))
         .Times(1);
 
-    EXPECT_CALL(*native_buffer, wait_for_content())
+    EXPECT_CALL(*native_buffer, ensure_available_for(mga::BufferAccess::write))
         .Times(1);
 
     platform.fill_buffer_package(
@@ -137,7 +137,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
         .Times(0);
 
     /* TODO: instead of waiting, pass the fd along */
-    EXPECT_CALL(*native_buffer, wait_for_content())
+    EXPECT_CALL(*native_buffer, ensure_available_for(mga::BufferAccess::write))
         .Times(1);
 
     platform.fill_buffer_package(

@@ -88,7 +88,7 @@ std::shared_ptr<mg::NativeBuffer> mga::AndroidAllocAdaptor::alloc_buffer(
     anwb->format = format;
     anwb->usage = usage_flag;
 
-    return std::make_shared<mga::AndroidNativeBuffer>(anwb, fence);
+    return std::make_shared<mga::AndroidNativeBuffer>(anwb, fence, mga::BufferAccess::read);
 }
 
 int mga::AndroidAllocAdaptor::convert_to_android_usage(BufferUsage usage)
