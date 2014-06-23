@@ -34,11 +34,13 @@ class MockScene : public compositor::Scene
 public:
     MockScene()
     {
-        ON_CALL(*this, renderable_list_for(testing::_))
-            .WillByDefault(testing::Return(graphics::RenderableList{}));
+        ON_CALL(*this, scene_elements_for(testing::_))
+            .WillByDefault(testing::Return(compositor::SceneElementSequence{}));
     }
 
-    MOCK_CONST_METHOD1(renderable_list_for, graphics::RenderableList(void const*));
+    MOCK_METHOD1(scene_elements_for, compositor::SceneElementSequence(compositor::CompositorID));
+    MOCK_METHOD1(register_compositor, void(compositor::CompositorID));
+    MOCK_METHOD1(unregister_compositor, void(compositor::CompositorID));
 
     MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::Observer> const&));
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::Observer> const&));

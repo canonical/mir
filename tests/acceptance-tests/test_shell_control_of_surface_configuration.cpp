@@ -83,8 +83,10 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_is_notifi
         {
             using namespace ::testing;
 
-            EXPECT_CALL(mock_configurator, select_attribute_value(_, mir_surface_attrib_focus, _)).Times(AnyNumber());
-            EXPECT_CALL(mock_configurator, attribute_set(_, mir_surface_attrib_focus, _)).Times(AnyNumber());
+            EXPECT_CALL(mock_configurator, select_attribute_value(_, Ne(mir_surface_attrib_type), _))
+                .Times(AnyNumber())
+                .WillRepeatedly(ReturnArg<2>());
+            EXPECT_CALL(mock_configurator, attribute_set(_, Ne(mir_surface_attrib_type), _)).Times(AnyNumber());
 
             ON_CALL(mock_configurator, select_attribute_value(_, _, _)).WillByDefault(Return(mir_surface_type_freestyle));
             EXPECT_CALL(mock_configurator, select_attribute_value(_, mir_surface_attrib_type, Eq(mir_surface_type_freestyle))).Times(1);
@@ -121,8 +123,10 @@ TEST_F(BespokeDisplayServerTestFixture, the_shell_surface_configurator_may_inter
         {
             using namespace ::testing;
 
-            EXPECT_CALL(mock_configurator, select_attribute_value(_, mir_surface_attrib_focus, _)).Times(AnyNumber());
-            EXPECT_CALL(mock_configurator, attribute_set(_, mir_surface_attrib_focus, _)).Times(AnyNumber());
+            EXPECT_CALL(mock_configurator, select_attribute_value(_, Ne(mir_surface_attrib_type), _))
+                .Times(AnyNumber())
+                .WillRepeatedly(ReturnArg<2>());
+            EXPECT_CALL(mock_configurator, attribute_set(_, Ne(mir_surface_attrib_type), _)).Times(AnyNumber());
 
             EXPECT_CALL(mock_configurator, select_attribute_value(_, mir_surface_attrib_type, Eq(mir_surface_type_freestyle))).Times(1)
                 .WillOnce(Return(mir_surface_type_normal));
