@@ -22,8 +22,7 @@
 #ifdef ANDROID
 #include "mock_android_native_buffer.h"
 #else
-#include "src/platform/graphics/mesa/gbm_buffer.h"
-#include "mock_gbm.h"
+#include "stub_gbm_native_buffer.h"
 #endif
 
 #include "mir/graphics/buffer_basic.h"
@@ -104,10 +103,7 @@ public:
     std::shared_ptr<graphics::NativeBuffer> create_native_buffer()
     {
 #ifndef ANDROID
-        auto buffer = std::make_shared<graphics::mesa::GBMNativeBuffer>();
-        int fake_bo{0}; 
-        buffer->bo = reinterpret_cast<gbm_bo*>(&fake_bo); //gbm_bo is opaque, so test code shouldn't dereferenceo.
-        return buffer;
+        return std::make_shared<StubGBMNativeBuffer>(geometry::Size{0,0});
 #else
         return std::make_shared<StubAndroidNativeBuffer>();
 #endif

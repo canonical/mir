@@ -108,20 +108,9 @@ TEST_F(MesaNativePlatformTest, packs_buffer_ipc_package_correctly)
 
     int const width{123};
     int const height{456};
-    auto stub_native_buffer = std::make_shared<mg::NativeBuffer>();
-    stub_native_buffer->data_items = 4;
-    stub_native_buffer->fd_items = 2;
-    for(auto i = 0; i < stub_native_buffer->data_items; i++)
-        stub_native_buffer->data[i] = i;
-    for(auto i = 0; i < stub_native_buffer->fd_items; i++)
-        stub_native_buffer->fd[i] = i;
-    stub_native_buffer->width = width;
-    stub_native_buffer->height = height;
-    stub_native_buffer->flags = 0x66;
-    stub_native_buffer->stride = 4390;
-
-    mg::BufferProperties properties{
-        geom::Size{width, height}, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
+    geom::Size size{width, height};
+    auto stub_native_buffer = std::make_shared<mtd::StubGBMNativeBuffer>(size);
+    mg::BufferProperties properties{size, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
     mtd::StubBuffer const stub_buffer(
         stub_native_buffer, properties, geom::Stride{stub_native_buffer->stride});
     mtd::MockPacker mock_packer;
