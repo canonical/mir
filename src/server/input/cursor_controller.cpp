@@ -82,6 +82,10 @@ struct UpdateCursorOnSurfaceChanges : ms::SurfaceObserver
     {
         cursor_controller->update_cursor_image();
     }
+    void orientation_set_to(MirOrientation /* orientation */) override
+    {
+        // No need to update cursor for orientation property change alone.
+    }
 
     mi::CursorController* const cursor_controller;
 };

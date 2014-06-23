@@ -1,7 +1,7 @@
 /*
  * Simple definitions common to client and server.
  *
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License version 3 as
@@ -38,6 +38,7 @@ typedef enum MirSurfaceAttrib
     mir_surface_attrib_swapinterval,
     mir_surface_attrib_focus,
     mir_surface_attrib_dpi,
+    mir_surface_attrib_visibility,
     mir_surface_attribs
 } MirSurfaceAttrib;
 
@@ -72,6 +73,12 @@ typedef enum MirSurfaceFocusState
     mir_surface_unfocused = 0,
     mir_surface_focused
 } MirSurfaceFocusState;
+
+typedef enum MirSurfaceVisibility
+{
+    mir_surface_visibility_occluded = 0,
+    mir_surface_visibility_exposed
+} MirSurfaceVisibility;
 
 typedef enum MirLifecycleState
 {
@@ -117,6 +124,7 @@ typedef enum MirPixelFormat
 /* This could be improved... https://bugs.launchpad.net/mir/+bug/1236254 */
 #define MIR_BYTES_PER_PIXEL(f) (((f) == mir_pixel_format_bgr_888) ? 3 : 4)
 
+/** Direction relative to the "natural" orientation of the display */
 typedef enum MirOrientation
 {
     mir_orientation_normal = 0,

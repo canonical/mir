@@ -84,12 +84,12 @@ TEST_F(InterpreterResourceTest, deposit_buffer_has_ownership)
     EXPECT_EQ(use_count_before, stub_buffer1.use_count());
 }
 
-TEST_F(InterpreterResourceTest, update_fence_for)
+TEST_F(InterpreterResourceTest, update_usage_for)
 {
     int fence_fd = 44;
     mga::InterpreterCache cache;
 
-    EXPECT_CALL(*native_buffer1, update_fence(fence_fd))
+    EXPECT_CALL(*native_buffer1, update_usage(fence_fd, mga::BufferAccess::write))
         .Times(1);
 
     cache.store_buffer(stub_buffer1, native_buffer1);

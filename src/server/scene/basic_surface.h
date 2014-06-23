@@ -64,6 +64,7 @@ public:
     void hidden_set_to(bool hide) override;
     void frame_posted(int frames_available) override;
     void alpha_set_to(float alpha) override;
+    void orientation_set_to(MirOrientation orientation) override;
     void transformation_set_to(glm::mat4 const& t) override;
     void reception_mode_set_to(input::InputReceptionMode mode) override;
     void cursor_image_set_to(graphics::CursorImage const& image) override;
@@ -121,6 +122,7 @@ public:
     geometry::Rectangle input_bounds() const override;
     bool input_area_contains(geometry::Point const& point) const override;
     void set_alpha(float alpha) override;
+    void set_orientation(MirOrientation orientation) override;
     void set_transformation(glm::mat4 const&) override;
 
     bool visible() const;
@@ -150,6 +152,7 @@ private:
     bool set_type(MirSurfaceType t);  // Use configure() to make public changes
     bool set_state(MirSurfaceState s);
     bool set_dpi(int);
+    void set_visibility(MirSurfaceVisibility v);
 
     SurfaceObservers observers;
     std::mutex mutable guard;
@@ -170,6 +173,7 @@ private:
 
     MirSurfaceType type_value;
     MirSurfaceState state_value;
+    MirSurfaceVisibility visibility_value;
     int dpi_value;
 };
 
