@@ -127,6 +127,14 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
          */
         printf("Resized to %dx%d\n", ev->resize.width, ev->resize.height);
     }
+    else if (ev->type == mir_event_type_surface &&
+             ev->surface.attrib == mir_surface_attrib_visibility)
+    {
+        if (ev->surface.value == mir_surface_visibility_exposed)
+            printf("Surface exposed\n");
+        else if (ev->surface.value == mir_surface_visibility_occluded)
+            printf("Surface occluded\n");
+    }
 }
 
 static const MirDisplayOutput *find_active_output(

@@ -52,29 +52,37 @@ namespace
 
 struct FakeScene : mtd::StubScene
 {
+    FakeScene() = default;
+
     FakeScene(mg::RenderableList const& renderlist)
     {
-        create_element_list_from(renderlist);
+        create_scene_elements_from(renderlist);
+    }
+
+    FakeScene(mc::SceneElementSequence const& scene_elements)
+         : scene_elements{scene_elements}
+    {
     }
 
     mc::SceneElementSequence scene_elements_for(void const*) override
     {
-        return element_list;
+        return scene_elements;
     }
 
     void change(mg::RenderableList const& new_renderlist)
     {
-        create_element_list_from(new_renderlist);
+        create_scene_elements_from(new_renderlist);
     }
 
-    void create_element_list_from(mg::RenderableList const& renderlist)
+    void create_scene_elements_from(mg::RenderableList const& renderlist)
     {
-        element_list.clear();
+        scene_elements.clear();
         for (auto const& renderable : renderlist)
-            element_list.push_back(std::make_shared<mtd::StubSceneElement>(renderable));
+            scene_elements.push_back(std::make_shared<mtd::StubSceneElement>(renderable));
     }
 
-    mc::SceneElementSequence element_list;
+private:
+    mc::SceneElementSequence scene_elements;
 };
 
 struct DefaultDisplayBufferCompositor : public testing::Test
@@ -105,7 +113,7 @@ struct DefaultDisplayBufferCompositor : public testing::Test
 TEST_F(DefaultDisplayBufferCompositor, render)
 {
     using namespace testing;
-    mtd::MockScene scene;
+    NiceMock<mtd::MockScene> scene;
 
     mg::RenderableList const empty;
     EXPECT_CALL(mock_renderer, render(empty))
@@ -190,7 +198,7 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
 TEST_F(DefaultDisplayBufferCompositor, optimization_skips_composition)
 {
     using namespace testing;
-    FakeScene scene({});
+    FakeScene scene;
     auto report = std::make_shared<mtd::MockCompositorReport>();
 
     Sequence seq;
@@ -302,7 +310,7 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
     EXPECT_CALL(display_buffer, post_update())
         .InSequence(seq);
 
-    FakeScene scene({});
+    FakeScene scene;
     mc::DefaultDisplayBufferCompositor compositor(
         display_buffer,
         mt::fake_shared(scene),
@@ -394,5 +402,104 @@ TEST_F(DefaultDisplayBufferCompositor, renderer_ends_after_post_update)
         mt::fake_shared(scene),
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
+    compositor.composite();
+}
+
+TEST_F(DefaultDisplayBufferCompositor, registers_and_unregisters_with_scene)
+{
+    using namespace testing;
+    mtd::MockScene scene;
+
+    InSequence s;
+    EXPECT_CALL(scene, register_compositor(_))
+        .Times(1);
+    EXPECT_CALL(scene, unregister_compositor(_))
+        .Times(1);
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(scene),
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+}
+
+namespace
+{
+struct MockVisibilitySceneElement : mtd::StubSceneElement
+{
+    using mtd::StubSceneElement::StubSceneElement;
+
+    MOCK_METHOD1(rendered_in, void(mc::CompositorID));
+    MOCK_METHOD1(occluded_in, void(mc::CompositorID));
+};
+}
+
+TEST_F(DefaultDisplayBufferCompositor, marks_rendered_scene_elements)
+{
+    using namespace testing;
+
+    auto element0_rendered = std::make_shared<MockVisibilitySceneElement>(
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{99,99},{2,2}}));
+    auto element1_rendered = std::make_shared<MockVisibilitySceneElement>(
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0,0},{100,100}}));
+
+    EXPECT_CALL(*element0_rendered, rendered_in(_));
+    EXPECT_CALL(*element1_rendered, rendered_in(_));
+
+    FakeScene scene({element0_rendered, element1_rendered});
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(scene),
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+
+    compositor.composite();
+}
+
+TEST_F(DefaultDisplayBufferCompositor, marks_occluded_scene_elements)
+{
+    using namespace testing;
+
+    auto element0_occluded = std::make_shared<MockVisibilitySceneElement>(
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{10,10},{20,20}}));
+    auto element1_rendered = std::make_shared<MockVisibilitySceneElement>(
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0,0},{100,100}}));
+    auto element2_occluded = std::make_shared<MockVisibilitySceneElement>(
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{10000,10000},{20,20}}));
+
+    EXPECT_CALL(*element0_occluded, occluded_in(_));
+    EXPECT_CALL(*element1_rendered, rendered_in(_));
+    EXPECT_CALL(*element2_occluded, occluded_in(_));
+
+    FakeScene scene({element0_occluded, element1_rendered, element2_occluded});
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(scene),
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+
+    compositor.composite();
+}
+
+TEST_F(DefaultDisplayBufferCompositor, ignores_invisible_scene_elements)
+{
+    using namespace testing;
+
+    auto element0_invisible = std::make_shared<MockVisibilitySceneElement>(
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0,0},{500,500}}, 1.0f, true, false, true));
+
+    EXPECT_CALL(*element0_invisible, occluded_in(_)).Times(0);
+    EXPECT_CALL(*element0_invisible, rendered_in(_)).Times(0);
+
+    FakeScene scene({element0_invisible});
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
+        mt::fake_shared(scene),
+        mt::fake_shared(mock_renderer),
+        mr::null_compositor_report());
+
     compositor.composite();
 }
