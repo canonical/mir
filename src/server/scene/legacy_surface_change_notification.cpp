@@ -56,6 +56,11 @@ void ms::LegacySurfaceChangeNotification::alpha_set_to(float /*alpha*/)
     notify_scene_change();
 }
 
+// An orientation change alone is not enough to trigger recomposition.
+void ms::LegacySurfaceChangeNotification::orientation_set_to(MirOrientation /*orientation*/)
+{
+}
+
 void ms::LegacySurfaceChangeNotification::transformation_set_to(glm::mat4 const& /*t*/)
 {
     notify_scene_change();

@@ -23,6 +23,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/displacement.h"
 #include "mir/scene/surface_configurator.h"
+#include "mir/scene/null_surface_observer.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/stub_buffer.h"
@@ -53,6 +54,12 @@ public:
     MOCK_METHOD0(call, void());
 };
 
+class MockSurfaceAttribObserver : public ms::NullSurfaceObserver
+{
+public:
+    MOCK_METHOD2(attrib_changed, void(MirSurfaceAttrib, int));
+};
+
 class StubEventSink : public mir::frontend::EventSink
 {
 public:
@@ -63,44 +70,27 @@ public:
 
 struct StubSurfaceConfigurator : ms::SurfaceConfigurator
 {
-    int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int) override { return 0; }
+    int select_attribute_value(ms::Surface const&, MirSurfaceAttrib, int value) override { return value; }
 
     void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override { }
 };
 
 struct BasicSurfaceTest : public testing::Test
 {
-    void SetUp()
-    {
-        name = std::string("aa");
-        top_left = geom::Point{geom::X{4}, geom::Y{7}};
-        size = geom::Size{5, 9};
-        rect = geom::Rectangle{top_left, size};
-        null_change_cb = []{};
-        mock_change_cb = std::bind(&MockCallback::call, &mock_callback);
-        observer = std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb,
-        [this](int){mock_change_cb();});
-    }
-    std::string name;
-    geom::Point top_left;
-    geom::Size size;
-    geom::Rectangle rect;
+    std::string name{"aa"};
+    geom::Rectangle rect{{4,7},{5,9}};
 
     testing::NiceMock<MockCallback> mock_callback;
-    std::function<void()> null_change_cb;
-    std::function<void()> mock_change_cb;
+    std::function<void()> null_change_cb{[]{}};
+    std::function<void()> mock_change_cb{std::bind(&MockCallback::call, &mock_callback)};
     std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream =
         std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
     std::shared_ptr<StubSurfaceConfigurator> const stub_configurator = std::make_shared<StubSurfaceConfigurator>();
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     void const* compositor_id{nullptr};
-    std::shared_ptr<ms::LegacySurfaceChangeNotification> observer;
-};
+    std::shared_ptr<ms::LegacySurfaceChangeNotification> observer =
+        std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb, [this](int){mock_change_cb();});
 
-}
-
-TEST_F(BasicSurfaceTest, basics)
-{
     ms::BasicSurface surface{
         name,
         rect,
@@ -110,7 +100,12 @@ TEST_F(BasicSurfaceTest, basics)
         stub_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report};
+};
 
+}
+
+TEST_F(BasicSurfaceTest, basics)
+{
     EXPECT_EQ(name, surface.name());
     EXPECT_EQ(rect.size, surface.size());
     EXPECT_EQ(rect.top_left, surface.top_left());
@@ -157,16 +152,6 @@ TEST_F(BasicSurfaceTest, update_top_left)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::BasicSurface surface{
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_configurator,
-        std::shared_ptr<mg::CursorImage>(),
-        report};
-
     surface.add_observer(observer);
 
     EXPECT_EQ(rect.top_left, surface.top_left());
@@ -182,16 +167,6 @@ TEST_F(BasicSurfaceTest, update_size)
 
     EXPECT_CALL(mock_callback, call())
         .Times(1);
-
-    ms::BasicSurface surface{
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_configurator,
-        std::shared_ptr<mg::CursorImage>(),
-        report};
 
     surface.add_observer(observer);
 
@@ -214,16 +189,6 @@ TEST_F(BasicSurfaceTest, size_equals_client_size)
 {
     geom::Size const new_size{34, 56};
 
-    ms::BasicSurface surface{
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_configurator,
-        nullptr,
-        report};
-
     EXPECT_EQ(rect.size, surface.size());
     EXPECT_EQ(rect.size, surface.client_size());
     EXPECT_NE(new_size, surface.size());
@@ -238,16 +203,6 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
 {
     EXPECT_CALL(mock_callback, call())
         .Times(1);
-
-    ms::BasicSurface surface{
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_configurator,
-        std::shared_ptr<mg::CursorImage>(),
-        report};
 
     surface.add_observer(observer);
 
@@ -269,16 +224,6 @@ TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::BasicSurface surface{
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_configurator,
-        std::shared_ptr<mg::CursorImage>(),
-        report};
-
     surface.add_observer(observer);
 
     float alpha = 0.5f;
@@ -289,15 +234,6 @@ TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
 TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
 {
     using namespace testing;
-    ms::BasicSurface surface{
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_configurator,
-        std::shared_ptr<mg::CursorImage>(),
-        report};
 
     EXPECT_THAT(1.0f, FloatEq(surface.alpha()));
     EXPECT_FALSE(surface.compositor_snapshot(compositor_id)->shaped());
@@ -312,16 +248,6 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
 
     mir::graphics::Buffer* buffer = nullptr;
     auto const callback = [&](mir::graphics::Buffer* new_buffer) { buffer = new_buffer; };
-
-    ms::BasicSurface surface{
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_configurator,
-        std::shared_ptr<mg::CursorImage>(),
-        report};
 
     //not visible by default
     EXPECT_FALSE(surface.visible());
@@ -348,16 +274,6 @@ TEST_F(BasicSurfaceTest, test_surface_hidden_notifies_changes)
     EXPECT_CALL(mock_callback, call())
         .Times(1);
 
-    ms::BasicSurface surface{
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_configurator,
-        std::shared_ptr<mg::CursorImage>(),
-        report};
-
     surface.add_observer(observer);
 
     surface.set_hidden(true);
@@ -369,16 +285,6 @@ TEST_F(BasicSurfaceTest, test_surface_frame_posted_notifies_changes)
     mtd::StubBuffer mock_buffer;
     EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_)).Times(2)
         .WillRepeatedly(InvokeArgument<0>(&mock_buffer));
-
-    ms::BasicSurface surface{
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_configurator,
-        std::shared_ptr<mg::CursorImage>(),
-        report};
 
     surface.add_observer(observer);
 
@@ -439,16 +345,6 @@ TEST_F(BasicSurfaceTest, set_input_region)
         {{geom::X{1}, geom::Y{1}}, {geom::Width{1}, geom::Height{1}}}  //region1
     };
 
-    ms::BasicSurface surface{
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_configurator,
-        std::shared_ptr<mg::CursorImage>(),
-        report};
-
     surface.add_observer(observer);
 
     surface.set_input_region(rectangles);
@@ -482,32 +378,54 @@ TEST_F(BasicSurfaceTest, set_input_region)
 
 TEST_F(BasicSurfaceTest, reception_mode_is_normal_by_default)
 {
-    ms::BasicSurface surface{
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_configurator,
-        nullptr,
-        report};
-
     EXPECT_EQ(mi::InputReceptionMode::normal, surface.reception_mode());
 }
 
 TEST_F(BasicSurfaceTest, reception_mode_can_be_changed)
 {
-    ms::BasicSurface surface{
-        name,
-        rect,
-        false,
-        mock_buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_configurator,
-        nullptr,
-        report};
-
     surface.set_reception_mode(mi::InputReceptionMode::receives_all_input);
 
     EXPECT_EQ(mi::InputReceptionMode::receives_all_input, surface.reception_mode());
+}
+
+TEST_F(BasicSurfaceTest, notifies_about_visibility_attrib_changes)
+{
+    using namespace testing;
+    MockSurfaceAttribObserver mock_surface_observer;
+
+    InSequence s;
+    EXPECT_CALL(mock_surface_observer, attrib_changed(mir_surface_attrib_visibility, mir_surface_visibility_occluded))
+        .Times(1);
+    EXPECT_CALL(mock_surface_observer, attrib_changed(mir_surface_attrib_visibility, mir_surface_visibility_exposed))
+        .Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+
+    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded);
+    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
+}
+
+TEST_F(BasicSurfaceTest, does_not_notify_if_visibility_attrib_is_unchanged)
+{
+    using namespace testing;
+    MockSurfaceAttribObserver mock_surface_observer;
+
+    EXPECT_CALL(mock_surface_observer, attrib_changed(mir_surface_attrib_visibility, mir_surface_visibility_occluded))
+        .Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+
+    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
+    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded);
+    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded);
+}
+
+TEST_F(BasicSurfaceTest, throws_on_invalid_visibility_attrib_value)
+{
+    using namespace testing;
+
+    EXPECT_THROW({
+        surface.configure(mir_surface_attrib_visibility,
+                          static_cast<int>(mir_surface_visibility_exposed) + 1);
+    }, std::logic_error);
 }
