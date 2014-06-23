@@ -23,6 +23,8 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/input/input_reception_mode.h"
 
+#include "mir_toolkit/event.h"
+
 #include <string>
 #include <memory>
 
@@ -40,6 +42,7 @@ public:
     virtual bool input_area_contains(geometry::Point const& point) const = 0;
     virtual std::shared_ptr<input::InputChannel> input_channel() const = 0;
     virtual InputReceptionMode reception_mode() const = 0;
+    virtual void consume(MirEvent const& event) = 0;
 
 protected:
     Surface() = default;

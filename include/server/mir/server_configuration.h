@@ -26,6 +26,10 @@ namespace compositor
 {
 class Compositor;
 }
+namespace time
+{
+class TimerService;
+}
 namespace frontend
 {
 class Connector;

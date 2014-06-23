@@ -113,6 +113,7 @@ struct SurfaceStack : public ::testing::Test
             false,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
+            std::shared_ptr<mir::input::InputSender>(),
             std::shared_ptr<ms::SurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
@@ -123,6 +124,7 @@ struct SurfaceStack : public ::testing::Test
             false,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
+            std::shared_ptr<mir::input::InputSender>(),
             std::shared_ptr<ms::SurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
@@ -133,6 +135,7 @@ struct SurfaceStack : public ::testing::Test
             false,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
+            std::shared_ptr<mir::input::InputSender>(),
             std::shared_ptr<ms::SurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
@@ -304,6 +307,7 @@ TEST_F(SurfaceStack, generate_renderlist)
             true,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
+            std::shared_ptr<mir::input::InputSender>(),
             std::shared_ptr<ms::SurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
@@ -433,6 +437,7 @@ TEST_F(SurfaceStack, renderlist_is_snapshot_of_positioning_info)
             true,
             std::make_shared<mtd::StubBufferStream>(),
             std::shared_ptr<mir::input::InputChannel>(),
+            std::shared_ptr<mir::input::InputSender>(),
             std::shared_ptr<ms::SurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
@@ -466,6 +471,7 @@ TEST_F(SurfaceStack, generates_renderlist_that_delays_buffer_acquisition)
         true,
         mock_stream,
         std::shared_ptr<mir::input::InputChannel>(),
+        std::shared_ptr<mir::input::InputSender>(),
         std::shared_ptr<ms::SurfaceConfigurator>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
@@ -496,6 +502,7 @@ TEST_F(SurfaceStack, generates_renderlist_that_allows_only_one_buffer_acquisitio
         true,
         mock_stream,
         std::shared_ptr<mir::input::InputChannel>(),
+        std::shared_ptr<mir::input::InputSender>(),
         std::shared_ptr<ms::SurfaceConfigurator>(),
         std::shared_ptr<mg::CursorImage>(),
         report);

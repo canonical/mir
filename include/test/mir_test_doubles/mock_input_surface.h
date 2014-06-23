@@ -52,6 +52,7 @@ public:
     MOCK_CONST_METHOD1(input_area_contains, bool(geometry::Point const&));
     MOCK_CONST_METHOD0(input_channel, std::shared_ptr<input::InputChannel>());
     MOCK_CONST_METHOD0(reception_mode, input::InputReceptionMode());
+    MOCK_METHOD1(consume, void(MirEvent const&));
 };
 
 }

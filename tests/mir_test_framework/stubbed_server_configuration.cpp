@@ -30,6 +30,7 @@
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_renderer.h"
+#include "mir_test_doubles/stub_input_sender.h"
 
 #ifdef ANDROID
 #include "mir_test_doubles/mock_android_native_buffer.h"
@@ -252,4 +253,14 @@ std::shared_ptr<mi::InputDispatcher> mtf::StubbedServerConfiguration::the_input_
         return DefaultServerConfiguration::the_input_dispatcher();
     else
         return std::make_shared<mi::NullInputDispatcher>();
+}
+
+std::shared_ptr<mi::InputSender> mtf::StubbedServerConfiguration::the_input_sender()
+{
+    auto options = the_options();
+
+    if (options->get<bool>("tests-use-real-input"))
+        return DefaultServerConfiguration::the_input_sender();
+    else
+        return std::make_shared<mtd::StubInputSender>();
 }

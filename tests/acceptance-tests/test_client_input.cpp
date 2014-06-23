@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
+ *              Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #include "mir/scene/surface_creation_parameters.h"
@@ -34,6 +35,8 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <cstring>
 
 namespace mi = mir::input;
 namespace mis = mi::synthesis;
@@ -510,3 +513,36 @@ TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_wind
 
     start_client(client_config);
 }
+
+TEST_F(TestClientInput, send_mir_input_events_through_surface)
+{
+    using namespace ::testing;
+
+    MirEvent key_event;
+    std::memset(&key_event, 0, sizeof key_event);
+    key_event.type = mir_event_type_key;
+    key_event.key.action= mir_key_action_down;
+
+    server_configuration.produce_events = [key_event](mtf::InputTestingServerConfiguration& server)
+         {
+             server.the_session_container()->for_each([key_event](std::shared_ptr<ms::Session> const& session) -> void
+                {
+                std::cout << "Sending the event" << std::endl;
+                    session->default_surface()->consume(key_event);
+                });
+         };
+    start_server();
+
+    client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
+         {
+                std::cout << "now expecting something" << std::endl;
+             using namespace ::testing;
+             EXPECT_CALL(handler, handle_input(mt::KeyDownEvent())).Times(1)
+                 .WillOnce(mt::WakeUp(&events_received));
+
+         };
+    start_client(client_config);
+                std::cout << "waiting for test to complete" << std::endl;
+}
+
+
