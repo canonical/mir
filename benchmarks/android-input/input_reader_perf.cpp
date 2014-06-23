@@ -61,6 +61,12 @@ public:
         return mInputDevices;
     }
 
+    void getAssociatedDisplayInfo(InputDeviceIdentifier const& /* identifier */,
+        int& out_associated_display_id, bool& out_associated_display_is_external) {
+        out_associated_display_id = 0;
+        out_associated_display_is_external = false;
+    }
+
 private:
     virtual void getReaderConfiguration(InputReaderConfiguration* outConfig) {
         *outConfig = mConfig;

@@ -75,6 +75,19 @@ public:
 };
 MotionParameters a_motion_event();
 
+class TouchParameters
+{
+public:
+    TouchParameters();
+    TouchParameters& from_device(int device_id);
+    TouchParameters& at_position(int abs_x, int abs_y);
+    
+    int device_id;
+    int abs_x;
+    int abs_y;
+};
+TouchParameters a_touch_event();
+
 }
 }
 }
