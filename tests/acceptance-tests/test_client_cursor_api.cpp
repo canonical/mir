@@ -19,28 +19,20 @@
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/cursor_images.h"
-#include "mir/scene/surface.h"
-#include "mir/scene/surface_factory.h"
-#include "mir/scene/null_observer.h"
-#include "mir/scene/null_surface_observer.h"
-#include "mir/compositor/scene.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
+#include "mir_test/barrier.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test/event_factory.h"
 #include "mir_test/wait_condition.h"
-#include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
-#include "mir_test_framework/input_testing_client_configuration.h"
+#include "mir_test_framework/testing_client_configuration.h"
 #include "mir_test_framework/declarative_placement_strategy.h"
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test_framework/deferred_in_process_server.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
-#include <assert.h>
 
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
@@ -59,7 +51,11 @@ struct MockCursor : public mg::Cursor
     MOCK_METHOD1(show, void(mg::CursorImage const&));
     MOCK_METHOD0(hide, void());
 
-    MOCK_METHOD1(move_to, void(geom::Point));
+    // We are not interested in mocking the motion in these tests as we
+    // generate it ourself.
+    void move_to(geom::Point)
+    {
+    }
 };
 
 struct NamedCursorImage : public mg::CursorImage
@@ -101,31 +97,29 @@ MATCHER_P(CursorNamed, name, "")
     return cursor_is_named(arg, name);
 }
 
-struct CursorSettingClient : mtf::TestingClientConfiguration
+struct ClientConfig : mtf::TestingClientConfiguration
 {
-    static std::string const mir_test_socket;
+    std::string connect_string;
 
     std::string const client_name;
 
-    mtf::CrossProcessSync set_cursor_complete;
-    mtf::CrossProcessSync client_may_exit;
+    mt::Barrier& set_cursor_complete;
+    mt::Barrier& client_may_exit;
     
-    std::function<void(MirSurface*)> const set_cursor;
+    std::function<void(MirSurface*)> set_cursor;
 
-    CursorSettingClient(std::string const& client_name,
-                        mtf::CrossProcessSync const& cursor_ready_fence,
-                        mtf::CrossProcessSync const& client_may_exit_fence,
-                        std::function<void(MirSurface*)> const& set_cursor)
+    ClientConfig(std::string const& client_name,
+                        mt::Barrier& cursor_ready_fence,
+                        mt::Barrier& client_may_exit_fence)
         : client_name(client_name),
           set_cursor_complete(cursor_ready_fence),
-          client_may_exit(client_may_exit_fence),
-          set_cursor(set_cursor)
+          client_may_exit(client_may_exit_fence)
     {
     }
-
-    void exec() override
+    
+    virtual void thread_exec()
     {
-        auto connection = mir_connect_sync(mir_test_socket.c_str(),
+        auto connection = mir_connect_sync(connect_string.c_str(),
                                            client_name.c_str());
         
         ASSERT_TRUE(connection != NULL);
@@ -141,93 +135,49 @@ struct CursorSettingClient : mtf::TestingClientConfiguration
         auto surface = mir_connection_create_surface_sync(connection, &request_params);
         
         set_cursor(surface);
-        set_cursor_complete.signal_ready();
+        set_cursor_complete.ready();
         
-        client_may_exit.wait_for_signal_ready_for();
+        client_may_exit.ready();
         
         mir_surface_release_sync(surface);
         mir_connection_release(connection);
     }
-};
+    void tear_down() { if (thread.joinable()) thread.join(); }
 
-std::string const CursorSettingClient::mir_test_socket = mtf::test_socket_file();
-
-struct MockSurfaceObserver : public ms::NullSurfaceObserver
-{
-    MOCK_METHOD1(cursor_image_set_to, void(mg::CursorImage const&));
-};
-
-struct SurfaceObserverInstaller : public ms::NullObserver
-{
-    SurfaceObserverInstaller(std::shared_ptr<ms::SurfaceObserver> const& observer)
-        : observer(observer)
+    void exec() override
     {
+        thread = std::thread([this]{ thread_exec(); });
     }
+private:
+    std::thread thread;
+};
+
+struct ServerConfiguration : mtf::InputTestingServerConfiguration
+{
+    mt::Barrier& cursor_configured_fence;
+    mt::Barrier& client_may_exit_fence;
     
-    void surface_added(ms::Surface *surf) override
-    {
-        surf->add_observer(observer);
-    }
-
-    std::shared_ptr<ms::SurfaceObserver> const observer;
-};
-
-struct SurfaceObservingServerConfiguration : mtf::TestingServerConfiguration
-{
-    SurfaceObservingServerConfiguration(std::function<void(MockSurfaceObserver&)> const& set_expectations)
-        : set_expectations(set_expectations),
-          observer(std::make_shared<MockSurfaceObserver>())
-    {
-    }
-
-    void on_start() override
-    {
-        auto scene = the_scene();
-        scene->add_observer(std::make_shared<SurfaceObserverInstaller>(observer));
-        
-        set_expectations(*observer);
-    }
-
-    std::function<void(MockSurfaceObserver&)> const set_expectations;
-    std::shared_ptr<MockSurfaceObserver> const observer;
-};
-
-typedef unsigned ClientCount;
-struct CursorTestServerConfiguration : mtf::InputTestingServerConfiguration
-{
-    std::shared_ptr<ms::PlacementStrategy> placement_strategy;
-    mtf::CrossProcessSync client_ready_fence;
-    mtf::CrossProcessSync client_may_exit_fence;
-    int const number_of_clients;
-
-    std::function<void(MockCursor&, mt::WaitCondition&)> const expect_cursor_states;
-    std::function<void(CursorTestServerConfiguration*)> const synthesize_cursor_motion;
+    std::function<void(MockCursor&, mt::WaitCondition&)> expect_cursor_states;
+    std::function<void(ServerConfiguration*)> synthesize_cursor_motion;
     
+    mtf::SurfaceGeometries client_geometries;
+    mtf::SurfaceDepths client_depths;
+
     MockCursor cursor;
-
-    CursorTestServerConfiguration(mtf::SurfaceGeometries surface_geometries_by_name,
-                                  mtf::SurfaceDepths surface_depths_by_name,
-                                  mtf::CrossProcessSync client_ready_fence,
-                                  mtf::CrossProcessSync client_may_exit_fence,
-                                  ClientCount const number_of_clients,
-                                  std::function<void(MockCursor&, mt::WaitCondition&)> const& expect_cursor_states,
-                                  std::function<void(CursorTestServerConfiguration*)> const& synthesize_cursor_motion)
-        : placement_strategy(
-              std::make_shared<mtf::DeclarativePlacementStrategy>(InputTestingServerConfiguration::the_placement_strategy(),
-                  surface_geometries_by_name, surface_depths_by_name)),
-          client_ready_fence(client_ready_fence),
-          client_may_exit_fence(client_may_exit_fence),
-          number_of_clients(number_of_clients),
-          expect_cursor_states(expect_cursor_states),
-          synthesize_cursor_motion(synthesize_cursor_motion)
+    
+    ServerConfiguration(mt::Barrier& cursor_configured_fence, mt::Barrier& client_may_exit_fence)
+        : cursor_configured_fence(cursor_configured_fence),
+          client_may_exit_fence(client_may_exit_fence)
     {
     }
-    
+
     std::shared_ptr<ms::PlacementStrategy> the_placement_strategy() override
     {
-        return placement_strategy;
+        return std::make_shared<mtf::DeclarativePlacementStrategy>(
+            InputTestingServerConfiguration::the_placement_strategy(),
+            client_geometries, client_depths);
     }
-    
+
     std::shared_ptr<mg::Cursor> the_cursor() override
     {
         return mt::fake_shared(cursor);
@@ -241,283 +191,324 @@ struct CursorTestServerConfiguration : mtf::InputTestingServerConfiguration
     void inject_input()
     {
         using namespace ::testing;
-
-        for (int i = 1; i < number_of_clients + 1; i++)
-            EXPECT_EQ(i, client_ready_fence.wait_for_signal_ready_for());
-
+        cursor_configured_fence.ready();
+       
         mt::WaitCondition expectations_satisfied;
-        
+
         // Clear any states applied during server initialization.
         Mock::VerifyAndClearExpectations(&cursor);
         expect_cursor_states(cursor, expectations_satisfied);
+        
+        // We are only interested in the cursor image changes, not
+        // the synthetic motion.
 
         synthesize_cursor_motion(this);
         expectations_satisfied.wait_for_at_most_seconds(60);
+        
+        Mock::VerifyAndClearExpectations(&cursor);
 
-        EXPECT_CALL(cursor, show(_)).Times(AnyNumber()); // Client shutdown
-        for (int i = 0; i < number_of_clients; i++)
-            client_may_exit_fence.signal_ready();
+        // Client shutdown
+        EXPECT_CALL(cursor, show(_)).Times(AnyNumber());
+        EXPECT_CALL(cursor, hide()).Times(AnyNumber());
+        client_may_exit_fence.ready();
+    }
+    
+};
+
+struct TestClientCursorAPI : mtf::DeferredInProcessServer
+{
+    std::string const client_name_1 = "1";
+    std::string const client_name_2 = "2";
+    std::string const client_cursor_1 = "cursor-1";
+    std::string const client_cursor_2 = "cursor-2";
+    
+    // Reset to higher values for more clients.
+    mt::Barrier cursor_configured_fence{2};
+    mt::Barrier client_may_exit_fence{2};
+    
+    ServerConfiguration server_configuration{cursor_configured_fence, client_may_exit_fence};
+    mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
+    
+    ClientConfig client_config_1{client_name_1, cursor_configured_fence, client_may_exit_fence};
+    ClientConfig client_config_2{client_name_2, cursor_configured_fence, client_may_exit_fence};
+
+    // Default number allows one client.
+    void set_client_count(unsigned count)
+    {
+        cursor_configured_fence.reset(count + 1);
+        client_may_exit_fence.reset(count + 1);
+    }
+
+    void start_server()
+    {
+        DeferredInProcessServer::start_server();
+        server_configuration.exec();
+    }
+
+    void start_client(ClientConfig& config)
+    {
+        config.connect_string = new_connection();
+        config.exec();
+    }
+
+    void TearDown()
+    {
+        client_config_1.tear_down();
+        client_config_2.tear_down();
+        server_configuration.on_exit();
+        DeferredInProcessServer::TearDown();
     }
 };
 
 }
 
-// TODO: A lot of common code setup in these tests could be moved to 
-// a fixture.
-using TestClientCursorAPI = BespokeDisplayServerTestFixture;
-
-TEST_F(TestClientCursorAPI, client_cursor_request_is_made_surface_data)
-{
-    using namespace ::testing;
-
-    static std::string const test_client_name = "1";
-    static std::string const client_1_cursor = "1";
-
-    static mtf::CrossProcessSync client_ready_fence, client_may_exit_fence;
-
-    SurfaceObservingServerConfiguration config([&](MockSurfaceObserver &observer)
-    {
-        EXPECT_CALL(observer, cursor_image_set_to(_)).WillOnce(Invoke(
-        [&](mg::CursorImage const&)
-        {
-            client_may_exit_fence.signal_ready();
-        }));
-        client_ready_fence.signal_ready();
-    });
-    launch_server_process(config);
-
-    CursorSettingClient client1_conf(test_client_name, client_ready_fence, client_may_exit_fence,
-        [](MirSurface *surface)
-        {
-            auto conf = mir_cursor_configuration_from_name(client_1_cursor.c_str());
-            mir_wait_for(mir_surface_configure_cursor(surface, conf));
-            mir_cursor_configuration_destroy(conf);
-        });
-    launch_client_process(client1_conf);
-}
-
 // In this set we create a 1x1 client surface at the point (1,0). The client requests to disable the cursor
 // over this surface. Since the cursor starts at (0,0) we when we move the cursor by (1,0) thus causing it
 // to enter the bounds of the first surface, we should observe it being disabled.
-// TODO: Enable
-TEST_F(TestClientCursorAPI, DISABLED_client_may_disable_cursor_over_surface)
+TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
 {
     using namespace ::testing;
 
-    std::string const test_client_name = "1";
-    mtf::SurfaceGeometries client_geometries;
-    client_geometries[test_client_name] = geom::Rectangle{geom::Point{geom::X{1}, geom::Y{0}},
-                                                          geom::Size{geom::Width{1}, geom::Height{1}}};
+    server_configuration.client_geometries[client_name_1] = geom::Rectangle{geom::Point{geom::X{1}, geom::Y{0}},
+                                                                            geom::Size{geom::Width{1}, geom::Height{1}}};
     
-    mtf::CrossProcessSync client_ready_fence, client_may_exit_fence;
 
-    CursorTestServerConfiguration server_conf(
-        client_geometries, mtf::SurfaceDepths(),
-        client_ready_fence, client_may_exit_fence,
-        ClientCount{1},
-        [](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
+    server_configuration.expect_cursor_states = [](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
         {
             EXPECT_CALL(cursor, hide()).Times(1)
                 .WillOnce(mt::WakeUp(&expectations_satisfied));
-        },
-        [](CursorTestServerConfiguration *server)
+        };
+    server_configuration.synthesize_cursor_motion = [](ServerConfiguration *server)
         {
             server->fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 0));
-        });
-    launch_server_process(server_conf);
+        };
+    start_server();
     
-    CursorSettingClient client_conf(test_client_name, client_ready_fence, client_may_exit_fence,
-        [](MirSurface *surface)
+    client_config_1.set_cursor = [](MirSurface *surface)
         {
-            // Disable cursor
-            mir_wait_for(mir_surface_configure_cursor(surface, 
-                mir_cursor_configuration_from_name(mir_disabled_cursor_name)));
-        });
-    launch_client_process(client_conf);
+            auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_cursor_configuration_destroy(conf);
+        };
+    start_client(client_config_1);
 }
 
-// TODO: Enable
-TEST_F(TestClientCursorAPI, DISABLED_cursor_restored_when_leaving_surface)
+TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
 {
     using namespace ::testing;
 
-    std::string const test_client_name = "1";
-    mtf::SurfaceGeometries client_geometries;
-    client_geometries[test_client_name] = geom::Rectangle{geom::Point{geom::X{1}, geom::Y{0}},
-                                                          geom::Size{geom::Width{1}, geom::Height{1}}};
+    server_configuration.client_geometries[client_name_1] = geom::Rectangle{geom::Point{geom::X{1}, geom::Y{0}},
+                                                                            geom::Size{geom::Width{1}, geom::Height{1}}};
     
     mtf::CrossProcessSync client_ready_fence, client_may_exit_fence;
 
-    CursorTestServerConfiguration server_conf(
-        client_geometries, mtf::SurfaceDepths(),
-        client_ready_fence, client_may_exit_fence,
-        ClientCount{1},
-        [](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
+    server_configuration.expect_cursor_states = [](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
         {
             InSequence seq;
             EXPECT_CALL(cursor, hide()).Times(1);
             EXPECT_CALL(cursor, show(DefaultCursorImage())).Times(1)
                 .WillOnce(mt::WakeUp(&expectations_satisfied));
-        },
-        [](CursorTestServerConfiguration *server)
+        };
+    server_configuration.synthesize_cursor_motion = [](ServerConfiguration *server)
         {
             server->fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 0));
             server->fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(2,0));
-        });
-    launch_server_process(server_conf);
+        };
+    start_server();
     
-    CursorSettingClient client_conf(test_client_name, client_ready_fence, client_may_exit_fence,
-        [](MirSurface *surface)
+
+    client_config_1.set_cursor = [](MirSurface *surface)
         {
             // Disable cursor
-            mir_wait_for(mir_surface_configure_cursor(surface, 
-                mir_cursor_configuration_from_name(mir_disabled_cursor_name)));
-        });
-    launch_client_process(client_conf);
+            auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_cursor_configuration_destroy(conf);
+        };
+    start_client(client_config_1);
 }
 
-// TODO: Enable
-TEST_F(TestClientCursorAPI, DISABLED_cursor_changed_when_crossing_surface_boundaries)
+TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
 {
     using namespace ::testing;
 
-    static std::string const test_client_name_1 = "1";
-    static std::string const test_client_name_2 = "2";
-    static std::string const client_1_cursor = test_client_name_1;
-    static std::string const client_2_cursor = test_client_name_2;
-
-    mtf::SurfaceGeometries client_geometries;
-    client_geometries[test_client_name_1] = geom::Rectangle{geom::Point{geom::X{1}, geom::Y{0}},
-                                                          geom::Size{geom::Width{1}, geom::Height{1}}};
-    client_geometries[test_client_name_2] = geom::Rectangle{geom::Point{geom::X{2}, geom::Y{0}},
-                                                            geom::Size{geom::Width{1}, geom::Height{1}}};
+    server_configuration.client_geometries[client_name_1] = geom::Rectangle{geom::Point{geom::X{1}, geom::Y{0}},
+                                                                            geom::Size{geom::Width{1}, geom::Height{1}}};
+    server_configuration.client_geometries[client_name_2] = geom::Rectangle{geom::Point{geom::X{2}, geom::Y{0}},
+                                                                            geom::Size{geom::Width{1}, geom::Height{1}}};
+    set_client_count(2);
     
-    mtf::CrossProcessSync client_ready_fence, client_may_exit_fence;
-
-    CursorTestServerConfiguration server_conf(
-        client_geometries, mtf::SurfaceDepths(),
-        client_ready_fence, client_may_exit_fence,
-        ClientCount{2},
-        [](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
+    server_configuration.expect_cursor_states =
+        [this](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
         {
             InSequence seq;
-            EXPECT_CALL(cursor, show(CursorNamed(client_1_cursor))).Times(1);
-            EXPECT_CALL(cursor, show(CursorNamed(client_2_cursor))).Times(1)
+            EXPECT_CALL(cursor, show(CursorNamed(client_cursor_1))).Times(1);
+            EXPECT_CALL(cursor, show(CursorNamed(client_cursor_2))).Times(1)
                 .WillOnce(mt::WakeUp(&expectations_satisfied));
-        },
-        [](CursorTestServerConfiguration *server)
+        };
+    server_configuration.synthesize_cursor_motion = 
+        [](ServerConfiguration *server)
         {
             server->fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 0));
             server->fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 0));
-        });
-    launch_server_process(server_conf);
+        };
+    start_server();
     
-    CursorSettingClient client1_conf(test_client_name_1, client_ready_fence, client_may_exit_fence,
-        [](MirSurface *surface)
+    client_config_1.set_cursor =
+        [this](MirSurface *surface)
         {
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
-        });
-    launch_client_process(client1_conf);
-    CursorSettingClient client2_conf(test_client_name_2, client_ready_fence, client_may_exit_fence,
-        [](MirSurface *surface)
+            auto conf = mir_cursor_configuration_from_name(client_cursor_1.c_str());
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_cursor_configuration_destroy(conf);
+        };
+    start_client(client_config_1);
+
+    client_config_2.set_cursor = 
+        [this](MirSurface *surface)
         {
-            // Disable cursor
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_2_cursor.c_str())));
-        });
-    launch_client_process(client2_conf);
+            auto conf = mir_cursor_configuration_from_name(client_cursor_2.c_str());
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_cursor_configuration_destroy(conf);
+        };
+    start_client(client_config_2);
 }
 
-// TODO: Enable
-TEST_F(TestClientCursorAPI, DISABLED_cursor_request_taken_from_top_surface)
+TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
 {
     using namespace ::testing;
 
-    static std::string const test_client_name_1 = "1";
-    static std::string const test_client_name_2 = "2";
-    static std::string const client_1_cursor = test_client_name_1;
-    static std::string const client_2_cursor = test_client_name_2;
-
-    mtf::SurfaceGeometries client_geometries;
-    client_geometries[test_client_name_1] = geom::Rectangle{geom::Point{geom::X{1}, geom::Y{0}},
-                                                          geom::Size{geom::Width{1}, geom::Height{1}}};
-    client_geometries[test_client_name_1] = geom::Rectangle{geom::Point{geom::X{1}, geom::Y{0}},
-                                                          geom::Size{geom::Width{1}, geom::Height{1}}};
-    mtf::SurfaceDepths client_depths;
-    client_depths[test_client_name_1] = ms::DepthId{0};
-    client_depths[test_client_name_2] = ms::DepthId{1};
+    server_configuration.client_geometries[client_name_1] = geom::Rectangle{geom::Point{geom::X{1}, geom::Y{0}},
+                                                                            geom::Size{geom::Width{1}, geom::Height{1}}};
+    server_configuration.client_geometries[client_name_2] = geom::Rectangle{geom::Point{geom::X{1}, geom::Y{0}},
+                                                                            geom::Size{geom::Width{1}, geom::Height{1}}};
+    server_configuration.client_depths[client_name_1] = ms::DepthId{0};
+    server_configuration.client_depths[client_name_2] = ms::DepthId{1};
     
-    mtf::CrossProcessSync client_ready_fence, client_may_exit_fence;
+    set_client_count(2);
 
-    CursorTestServerConfiguration server_conf(
-        client_geometries, client_depths,
-        client_ready_fence, client_may_exit_fence,
-        ClientCount{2},
-        [](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
+    server_configuration.expect_cursor_states = 
+        [this](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
         {
             InSequence seq;
-            EXPECT_CALL(cursor, show(CursorNamed(client_2_cursor))).Times(1)
+            EXPECT_CALL(cursor, show(CursorNamed(client_cursor_2))).Times(1)
                 .WillOnce(mt::WakeUp(&expectations_satisfied));
-        },
-        [](CursorTestServerConfiguration *server)
+        };
+    server_configuration.synthesize_cursor_motion = 
+        [](ServerConfiguration *server)
         {
             server->fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 0));
-        });
-    launch_server_process(server_conf);
+        };
+    start_server();
     
-    CursorSettingClient client1_conf(test_client_name_1, client_ready_fence, client_may_exit_fence,
-        [](MirSurface *surface)
+    
+    client_config_1.set_cursor =
+        [this](MirSurface *surface)
         {
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
-        });
-    launch_client_process(client1_conf);
-    CursorSettingClient client2_conf(test_client_name_2, client_ready_fence, client_may_exit_fence,
-        [](MirSurface *surface)
+            auto conf = mir_cursor_configuration_from_name(client_cursor_1.c_str());
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_cursor_configuration_destroy(conf);
+        };
+    client_config_2.set_cursor =
+        [this](MirSurface *surface)
         {
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
-        });
-
-    launch_client_process(client2_conf);
+            auto conf = mir_cursor_configuration_from_name(client_cursor_2.c_str());
+            mir_wait_for(mir_surface_configure_cursor(surface, conf));
+            mir_cursor_configuration_destroy(conf);
+        };
+    start_client(client_config_1);
+    start_client(client_config_2);
 }
 
-// TODO: Enable
-TEST_F(TestClientCursorAPI, DISABLED_cursor_request_applied_without_cursor_motion)
+namespace
+{
+
+// In the following test the cursor changes are not responsive
+// to cursor motion so we need a different synchronization model.
+struct WaitsToChangeCursorClient : ClientConfig
+{
+    WaitsToChangeCursorClient(std::string const& client_name,
+                              mt::Barrier& cursor_ready_fence,
+                              mt::Barrier& client_may_exit_fence)
+        : ClientConfig(client_name, cursor_ready_fence, client_may_exit_fence)
+    {
+    }
+
+    void thread_exec() override
+    {
+        auto connection = mir_connect_sync(connect_string.c_str(),
+                                           client_name.c_str());
+        
+        ASSERT_TRUE(connection != NULL);
+        MirSurfaceParameters const request_params =
+            {
+                client_name.c_str(),
+                // For this fixture, we force geometry on server side
+                0, 0,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
+            };
+        auto surface = mir_connection_create_surface_sync(connection, &request_params);
+
+        set_cursor_complete.ready();
+        set_cursor(surface);
+        
+        client_may_exit.ready();
+        
+        mir_surface_release_sync(surface);
+        mir_connection_release(connection);
+    }
+};
+
+struct TestClientCursorAPINoMotion : TestClientCursorAPI
+{
+    mt::Barrier client_may_change_cursor{2};
+    WaitsToChangeCursorClient waiting_client{client_name_1, cursor_configured_fence, client_may_exit_fence};
+    
+    void TearDown() override
+    {
+        waiting_client.tear_down();
+        TestClientCursorAPI::TearDown();
+    }
+};
+
+}
+
+TEST_F(TestClientCursorAPINoMotion, cursor_request_applied_without_cursor_motion)
 {
     using namespace ::testing;
-    static std::string const test_client_name_1 = "1";
-    static std::string const client_1_cursor = test_client_name_1;
 
-    mtf::SurfaceGeometries client_geometries;
-    client_geometries[test_client_name_1] = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
-                                                          geom::Size{geom::Width{1}, geom::Height{1}}};
+    server_configuration.client_geometries[client_name_1] = 
+        geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}},
+                        geom::Size{geom::Width{1}, geom::Height{1}}};
     
-    mtf::CrossProcessSync client_ready_fence, client_may_exit_fence;
-    static mtf::CrossProcessSync client_may_change_cursor;
-
-    CursorTestServerConfiguration server_conf(
-        client_geometries, mtf::SurfaceDepths(),
-        client_ready_fence, client_may_exit_fence,
-        ClientCount{1},
-        [](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
+    server_configuration.expect_cursor_states =
+        [this](MockCursor& cursor, mt::WaitCondition& expectations_satisfied)
         {
             InSequence seq;
-            EXPECT_CALL(cursor, show(CursorNamed(client_1_cursor))).Times(1);
+            EXPECT_CALL(cursor, show(CursorNamed(client_cursor_1))).Times(1);
             EXPECT_CALL(cursor, hide()).Times(1)
-                .WillOnce(mt::WakeUp(&expectations_satisfied));
-        },
-        [](CursorTestServerConfiguration * /* server */)
+            .WillOnce(mt::WakeUp(&expectations_satisfied));
+        };
+    server_configuration.synthesize_cursor_motion =
+        [this](ServerConfiguration * /* server */)
         {
-            client_may_change_cursor.signal_ready();
-        });
-    launch_server_process(server_conf);
-    
-    CursorSettingClient client1_conf(test_client_name_1, client_ready_fence, client_may_exit_fence,
-        [&client_ready_fence](MirSurface *surface)
+            client_may_change_cursor.ready();
+        };
+    start_server();
+
+    waiting_client.set_cursor = 
+        [this](MirSurface *surface)
         {
-            client_ready_fence.signal_ready();
-            client_may_change_cursor.wait_for_signal_ready_for();
-            mir_wait_for(mir_surface_configure_cursor(surface, mir_cursor_configuration_from_name(client_1_cursor.c_str())));
-            mir_wait_for(mir_surface_configure_cursor(surface, 
-                mir_cursor_configuration_from_name(mir_disabled_cursor_name)));
-        });
-    launch_client_process(client1_conf);
+            client_may_change_cursor.ready();
+            auto conf1 = mir_cursor_configuration_from_name(client_cursor_1.c_str());
+            auto conf2 = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
+
+            mir_wait_for(mir_surface_configure_cursor(surface, conf1));
+            mir_wait_for(mir_surface_configure_cursor(surface, conf2));
+
+            mir_cursor_configuration_destroy(conf1);
+            mir_cursor_configuration_destroy(conf2);
+        };
+    start_client(waiting_client);
 }
+

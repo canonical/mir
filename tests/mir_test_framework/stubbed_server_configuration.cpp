@@ -21,6 +21,7 @@
 
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/cursor.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
 
@@ -118,6 +119,13 @@ class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
     }
 };
 
+class StubCursor : public mg::Cursor
+{
+    void show(mg::CursorImage const&) override {}
+    void hide() override {}
+    void move_to(geom::Point) override {}
+};
+
 class StubGraphicPlatform : public mtd::NullPlatform
 {
 public:
@@ -162,7 +170,7 @@ public:
     {
         return std::make_shared<mtd::StubDisplay>(display_rects);
     }
-
+    
     std::vector<geom::Rectangle> const display_rects;
 };
 
@@ -253,3 +261,9 @@ std::shared_ptr<mi::InputDispatcher> mtf::StubbedServerConfiguration::the_input_
     else
         return std::make_shared<mi::NullInputDispatcher>();
 }
+
+std::shared_ptr<mg::Cursor> mtf::StubbedServerConfiguration::the_cursor()
+{
+    return std::make_shared<StubCursor>();
+}
+

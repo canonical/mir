@@ -10,6 +10,7 @@ set(
   nested_input_configuration.cpp
   display_input_region.cpp
   vt_filter.cpp
+  cursor_controller.cpp
   default_configuration.cpp
 )
 
