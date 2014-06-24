@@ -33,7 +33,6 @@ public:
     NullInputConfiguration() = default;
     virtual ~NullInputConfiguration() = default;
 
-    std::shared_ptr<input::InputChannelFactory> the_input_channel_factory() override;
     std::shared_ptr<input::InputManager> the_input_manager() override;
 
 protected:

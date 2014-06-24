@@ -24,6 +24,7 @@
 #include "android/android_input_registrar.h"
 #include "android/android_input_target_enumerator.h"
 #include "android/event_filter_dispatcher_policy.h"
+#include "android/input_channel_factory.h"
 #include "display_input_region.h"
 #include "event_filter_chain.h"
 #include "nested_input_configuration.h"
@@ -191,7 +192,7 @@ mir::DefaultServerConfiguration::the_input_manager()
 
 std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()
 {
-    return the_input_configuration()->the_input_channel_factory();
+    return std::make_shared<mia::InputChannelFactory>();
 }
 
 std::shared_ptr<mi::CursorListener>
