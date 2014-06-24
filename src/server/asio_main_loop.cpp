@@ -27,42 +27,35 @@
 namespace
 {
 
-class SynchronousServerAction
+void synchronous_server_action(
+    mir::ServerActionQueue& queue,
+    boost::optional<std::thread::id> queue_thread_id,
+    mir::ServerAction const& action)
 {
-public:
-    SynchronousServerAction(mir::ServerActionQueue& queue,
-                            boost::optional<std::thread::id> queue_thread_id,
-                            mir::ServerAction const& action)
-        : done{false}
+    if (!queue_thread_id || *queue_thread_id == std::this_thread::get_id())
     {
-        if (queue_thread_id &&
-            *queue_thread_id != std::this_thread::get_id())
-        {
-            queue.enqueue(this,
-                          [this,action]()
-                          {
-                              action();
-                              std::lock_guard<std::mutex> lock(done_mutex);
-                              done = true;
-                              done_condition.notify_one();
-                          });
-        }
-        else
-        {
-            action();
-            done = true;
-        }
+        try { action(); } catch(...) {}
     }
-    ~SynchronousServerAction()
+    else
     {
+        std::mutex done_mutex;
+        bool done{false};
+        std::condition_variable done_condition;
+
+        queue.enqueue(&queue, [&]
+            {
+                std::lock_guard<std::mutex> lock(done_mutex);
+
+                try { action(); } catch(...) {}
+
+                done = true;
+                done_condition.notify_one();
+            });
+
         std::unique_lock<std::mutex> lock(done_mutex);
-        done_condition.wait(lock, [this] { return done;});
+        done_condition.wait(lock, [&] { return done; });
     }
-private:
-    std::mutex done_mutex;
-    bool done;
-    std::condition_variable done_condition;
-};
+}
 
 struct MirClockTimerTraits
 {
@@ -297,12 +290,12 @@ void mir::AsioMainLoop::register_fd_handler(
 
 void mir::AsioMainLoop::unregister_fd_handler(void const* owner)
 {
-    // The SynchronousServerAction makes sure that with the
+    // synchronous_server_action makes sure that with the
     // completion of the method unregister_fd_handler the
     // handler will no longer be called.
     // There is a chance for a fd handler callback to happen before
     // the completion of this method.
-    SynchronousServerAction unregister{
+    synchronous_server_action(
         *this,
         main_loop_thread,
         [this,owner]()
@@ -316,7 +309,7 @@ void mir::AsioMainLoop::unregister_fd_handler(void const* owner)
                     return item->is_owned_by(owner);
                 });
             fd_handlers.erase(end_of_valid, end(fd_handlers));
-        }};
+        });
 }
 
 namespace

@@ -399,16 +399,15 @@ TEST_F(AsioMainLoopTest, unregister_prevents_callback_and_does_not_harm_other_ca
 {
     mt::Pipe p1, p2;
     char const data_to_write{'a'};
-    int p1_handler_never_triggers{-1};
     int p2_handler_executes{-1};
     char data_read{0};
 
     ml.register_fd_handler(
         {p1.read_fd()},
         this,
-        [&p1_handler_never_triggers](int fd)
+        [](int)
         {
-            p1_handler_never_triggers = fd;
+            FAIL() << "unregistered handler called";
         });
 
     ml.register_fd_handler(
@@ -429,7 +428,6 @@ TEST_F(AsioMainLoopTest, unregister_prevents_callback_and_does_not_harm_other_ca
     ml.run();
 
     EXPECT_EQ(data_to_write, data_read);
-    EXPECT_EQ(-1, p1_handler_never_triggers);
     EXPECT_EQ(p2.read_fd(), p2_handler_executes);
 }
 
