@@ -41,11 +41,14 @@ public:
             queue.enqueue(this,
                           [this,action]()
                           {
-                              action();
-                              std::lock_guard<std::mutex> lock(done_mutex);
-                              done = true;
-                              done_condition.notify_one();
-                          });
+                              try { action(); }
+                              catch(...)
+                              {
+                                  unblock();
+                                  throw;
+                              }
+                              unblock();
+                         });
         }
         else
         {
@@ -59,6 +62,12 @@ public:
         done_condition.wait(lock, [this] { return done;});
     }
 private:
+    void unblock()
+    {
+        std::lock_guard<std::mutex> lock(done_mutex);
+        done = true;
+        done_condition.notify_one();
+    }
     std::mutex done_mutex;
     bool done;
     std::condition_variable done_condition;
