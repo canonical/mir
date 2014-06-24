@@ -30,7 +30,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test/event_factory.h"
 #include "mir_test/wait_condition.h"
-#include "mir_test_framework/server_runner.h"
+#include "mir_test_framework/deferred_in_process_server.h"
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
 #include "mir_test_framework/input_testing_client_configuration.h"
@@ -223,15 +223,7 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
     
 };
 
-struct DeferredInProcessServer : testing::Test, private mtf::ServerRunner
-{
-    void TearDown() override { ServerRunner::stop_server(); }
-
-    using ServerRunner::start_server;
-    using ServerRunner::new_connection;
-};
-
-struct TestClientCursorAPI : DeferredInProcessServer
+struct TestClientCursorAPI : mtf::DeferredInProcessServer
 {
     std::string const client_name_1 = "1";
     std::string const client_name_2 = "2";
