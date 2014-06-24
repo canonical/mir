@@ -206,6 +206,6 @@ TEST_F(OcclusionFilterTest, some_occluded_and_some_not)
 
     auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
 
-    EXPECT_THAT(renderables_from(occlusions), ElementsAre(window3,window2,window1));
+    EXPECT_THAT(renderables_from(occlusions), ElementsAre(window3, window2, window1));
     EXPECT_THAT(renderables_from(elements), ElementsAre(window5, window4, window0));
 }
