@@ -278,14 +278,6 @@ TEST_F(AndroidInputSender, can_send_consumeable_mir_key_events)
     EXPECT_EQ(key_event.key.scan_code, client_key_event.getScanCode());
 }
 
-MATCHER_P2(NthPositionMatches, index, coordinate_array, "")
-{
-    return coordinate_array[index].x == arg.getRawX(index) &&
-        coordinate_array[index].x == arg.getX(index) &&
-        coordinate_array[index].y == arg.getY(index) &&
-        coordinate_array[index].y == arg.getY(index);
-}
-
 TEST_F(AndroidInputSender, can_send_consumeable_mir_motion_events)
 {
     using namespace ::testing;
@@ -300,9 +292,16 @@ TEST_F(AndroidInputSender, can_send_consumeable_mir_motion_events)
     EXPECT_EQ(motion_event.motion.device_id, client_motion_event.getDeviceId());
     EXPECT_EQ(0, client_motion_event.getXOffset());
     EXPECT_EQ(0, client_motion_event.getYOffset());
-    auto const& coords = motion_event.motion.pointer_coordinates;
-    EXPECT_THAT(client_motion_event, NthPositionMatches(0, coords));
-    EXPECT_THAT(client_motion_event, NthPositionMatches(1, coords));
+
+    auto const& expected_coords = motion_event.motion.pointer_coordinates;
+
+    for (size_t i = 0; i != motion_event.motion.pointer_count; ++i)
+    {
+        EXPECT_EQ(expected_coords[i].x, client_motion_event.getRawX(i)) << "When i=" << i;
+        EXPECT_EQ(expected_coords[i].x, client_motion_event.getX(i)) << "When i=" << i;
+        EXPECT_EQ(expected_coords[i].y, client_motion_event.getRawY(i)) << "When i=" << i;
+        EXPECT_EQ(expected_coords[i].y, client_motion_event.getY(i)) << "When i=" << i;
+    }
 }
 
 TEST_F(AndroidInputSender, response_unregisters_fd)
