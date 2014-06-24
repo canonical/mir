@@ -86,7 +86,7 @@ public:
     void set_reception_mode(input::InputReceptionMode mode) override { input_mode = mode; }
 
     void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& /* image */) {}
-    std::shared_ptr<graphics::CursorImage> cursor_image() { return {}; }
+    std::shared_ptr<graphics::CursorImage> cursor_image() const { return {}; }
 
     MirPixelFormat pixel_format() const override { return mir_pixel_format_xrgb_8888; }
 
