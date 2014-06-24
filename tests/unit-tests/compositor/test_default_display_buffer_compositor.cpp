@@ -50,7 +50,7 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct FakeScene : mc::Scene
+struct FakeScene : mtd::StubScene
 {
     FakeScene(mg::RenderableList const& renderlist)
     {
@@ -60,13 +60,6 @@ struct FakeScene : mc::Scene
     mc::SceneElementSequence scene_elements_for(void const*) override
     {
         return element_list;
-    }
-
-    void add_observer(std::shared_ptr<ms::Observer> const& /* observer */) override
-    {
-    }
-    void remove_observer(std::weak_ptr<ms::Observer> const& /* observer */) override
-    {
     }
 
     void change(mg::RenderableList const& new_renderlist)

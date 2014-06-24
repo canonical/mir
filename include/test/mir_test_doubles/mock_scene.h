@@ -38,7 +38,9 @@ public:
             .WillByDefault(testing::Return(compositor::SceneElementSequence{}));
     }
 
-    MOCK_METHOD1(scene_elements_for, compositor::SceneElementSequence(void const*));
+    MOCK_METHOD1(scene_elements_for, compositor::SceneElementSequence(compositor::CompositorID));
+    MOCK_METHOD1(register_compositor, void(compositor::CompositorID));
+    MOCK_METHOD1(unregister_compositor, void(compositor::CompositorID));
 
     MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::Observer> const&));
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::Observer> const&));

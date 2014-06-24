@@ -19,6 +19,7 @@
  */
 
 #include "surface_stack.h"
+#include "rendering_tracker.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/scene_report.h"
 #include "mir/compositor/scene_element.h"
@@ -44,8 +45,11 @@ namespace
 class SurfaceSceneElement : public mc::SceneElement
 {
 public:
-    SurfaceSceneElement(std::shared_ptr<mg::Renderable> const& renderable)
-        : renderable_{renderable}
+    SurfaceSceneElement(
+        std::shared_ptr<mg::Renderable> renderable,
+        std::shared_ptr<ms::RenderingTracker> const& tracker)
+        : renderable_{renderable},
+          tracker{tracker}
     {
     }
 
@@ -54,8 +58,19 @@ public:
         return renderable_;
     }
 
+    void rendered_in(mc::CompositorID cid) override
+    {
+        tracker->rendered_in(cid);
+    }
+
+    void occluded_in(mc::CompositorID cid) override
+    {
+        tracker->occluded_in(cid);
+    }
+
 private:
     std::shared_ptr<mg::Renderable> const renderable_;
+    std::shared_ptr<ms::RenderingTracker> const tracker;
 };
 
 }
@@ -66,7 +81,7 @@ ms::SurfaceStack::SurfaceStack(
 {
 }
 
-mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(CompositorID id)
+mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID id)
 {
     std::lock_guard<decltype(guard)> lg(guard);
     mc::SceneElementSequence elements;
@@ -75,11 +90,30 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(CompositorID id)
         for (auto const& surface : layer.second) 
         {
             auto element = std::make_shared<SurfaceSceneElement>(
-                surface->compositor_snapshot(id));
+                surface->compositor_snapshot(id),
+                rendering_trackers[surface.get()]);
             elements.emplace_back(element);
         }
     }
     return elements;
+}
+
+void ms::SurfaceStack::register_compositor(mc::CompositorID cid)
+{
+    std::lock_guard<decltype(guard)> lg(guard);
+
+    registered_compositors.insert(cid);
+
+    update_rendering_tracker_compositors();
+}
+
+void ms::SurfaceStack::unregister_compositor(mc::CompositorID cid)
+{
+    std::lock_guard<decltype(guard)> lg(guard);
+
+    registered_compositors.erase(cid);
+
+    update_rendering_tracker_compositors();
 }
 
 void ms::SurfaceStack::add_surface(
@@ -90,13 +124,13 @@ void ms::SurfaceStack::add_surface(
     {
         std::lock_guard<decltype(guard)> lg(guard);
         layers_by_depth[depth].push_back(surface);
+        create_rendering_tracker_for(surface);
     }
     surface->set_reception_mode(input_mode);
     observers.surface_added(surface.get());
 
     report->surface_added(surface.get(), surface.get()->name());
 }
-
 
 void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 {
@@ -114,6 +148,7 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
             if (p != surfaces.end())
             {
                 surfaces.erase(p);
+                rendering_trackers.erase(keep_alive.get());
                 found_surface = true;
                 break;
             }
@@ -164,6 +199,19 @@ void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+}
+
+void ms::SurfaceStack::create_rendering_tracker_for(std::shared_ptr<Surface> const& surface)
+{
+    auto const tracker = std::make_shared<RenderingTracker>(surface);
+    tracker->active_compositors(registered_compositors);
+    rendering_trackers[surface.get()] = tracker;
+}
+
+void ms::SurfaceStack::update_rendering_tracker_compositors()
+{
+    for (auto const& pair : rendering_trackers)
+        pair.second->active_compositors(registered_compositors);
 }
 
 void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observer)

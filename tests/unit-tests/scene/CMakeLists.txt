@@ -18,6 +18,7 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_stack.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_controller.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_legacy_scene_change_notification.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_rendering_tracker.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

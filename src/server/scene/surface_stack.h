@@ -30,13 +30,10 @@
 #include <vector>
 #include <mutex>
 #include <map>
+#include <set>
 
 namespace mir
 {
-namespace graphics
-{
-class Renderable;
-}
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
 /// classes) and controller (SurfaceController) elements of an MVC design.
 namespace scene
@@ -44,6 +41,7 @@ namespace scene
 class InputRegistrar;
 class BasicSurface;
 class SceneReport;
+class RenderingTracker;
 
 class Observers : public Observer
 {
@@ -71,7 +69,9 @@ public:
     virtual ~SurfaceStack() noexcept(true) {}
 
     // From Scene
-    compositor::SceneElementSequence scene_elements_for(CompositorID id) override;
+    compositor::SceneElementSequence scene_elements_for(compositor::CompositorID id) override;
+    void register_compositor(compositor::CompositorID id) override;
+    void unregister_compositor(compositor::CompositorID id) override;
 
     // From InputTargets
     void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback);
@@ -91,6 +91,8 @@ public:
 private:
     SurfaceStack(const SurfaceStack&) = delete;
     SurfaceStack& operator=(const SurfaceStack&) = delete;
+    void create_rendering_tracker_for(std::shared_ptr<Surface> const&);
+    void update_rendering_tracker_compositors();
 
     std::mutex mutable guard;
 
@@ -99,6 +101,8 @@ private:
 
     typedef std::vector<std::shared_ptr<Surface>> Layer;
     std::map<DepthId, Layer> layers_by_depth;
+    std::map<Surface*,std::shared_ptr<RenderingTracker>> rendering_trackers;
+    std::set<compositor::CompositorID> registered_compositors;
 
     Observers observers;
 };

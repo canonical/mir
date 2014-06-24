@@ -33,6 +33,12 @@ class StubInputTargets : public input::InputTargets
     void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& ) override
     {
     }
+    void add_observer(std::shared_ptr<scene::Observer> const& /* observer */)
+    {
+    }
+    void remove_observer(std::weak_ptr<scene::Observer> const& /* observer */)
+    {
+    }
 };
 
 }
