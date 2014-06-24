@@ -1,8 +1,10 @@
 #include "asio_socket_transport.h"
 #include "mir/variable_length_array.h"
 
+#include <poll.h>
 #include <signal.h>
 #include <errno.h>
+#include <system_error>
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -154,6 +156,39 @@ void mclr::AsioSocketTransport::init()
                                    std::bind(&mclr::AsioSocketTransport::on_data_available, this,
                                              std::placeholders::_1, std::placeholders::_2));
 
+            int pipefds[2];
+            if (pipe(pipefds) < 0)
+            {
+                BOOST_THROW_EXCEPTION(std::system_error(errno,
+                                                        std::system_category(),
+                                                        "Failed to create shutdown pipes"));
+            };
+
+            int const shutdown_read_fd = pipefds[0];
+            int const shutdown_write_fd = pipefds[1];
+
+            auto disconnect_watcher = std::thread([this, shutdown_read_fd]
+            {
+                pollfd fds[2];
+                // Watch for disconnect events on the native handle
+                fds[0].fd = socket.native_handle();
+                fds[0].events = POLLRDHUP; // poll automatically listens for the other error conditions
+                // And also handle the shutdown dance
+                fds[1].fd = shutdown_read_fd;
+                fds[1].events = POLLIN;
+
+                if (poll(fds, sizeof(fds) / sizeof(struct pollfd), -1) < 0)
+                {
+                    BOOST_THROW_EXCEPTION(std::system_error(errno,
+                                                            std::system_category(),
+                                                            "Failed to monitor for socket disconnect"));
+                }
+
+                if (fds[0].events & (POLLRDHUP | POLLERR | POLLHUP | POLLNVAL))
+                {
+                    notify_disconnected();
+                }
+            });
             try
             {
                 io_service.run();
@@ -162,6 +197,20 @@ void mclr::AsioSocketTransport::init()
             {
                 notify_disconnected();
             }
+
+            if (disconnect_watcher.joinable())
+            {
+                int dummy{0};
+                if (write(shutdown_write_fd, &dummy, sizeof(dummy)) < 0)
+                {
+                    BOOST_THROW_EXCEPTION(std::system_error(errno,
+                                                            std::system_category(),
+                                                            "Failed to send shutdown message"));
+                }
+                disconnect_watcher.join();
+            }
+            ::close(shutdown_read_fd);
+            ::close(shutdown_write_fd);
     });
 }
 
