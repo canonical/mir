@@ -70,11 +70,7 @@ public:
     int transport_fd;
 };
 
-/*
- * AsioSocketTransport doesn't actually support this, and it's not
- * trivial to implement
- */
-TEST_F(AsioSocketTransport, DISABLED_NoticesRemoteDisconnect)
+TEST_F(AsioSocketTransport, NoticesRemoteDisconnect)
 {
     using namespace testing;
     mir::client::rpc::AsioSocketTransport transport{transport_fd};
@@ -105,7 +101,7 @@ TEST_F(AsioSocketTransport, NotifiesOnDataAvailable)
     transport.register_observer(observer);
 
     uint64_t dummy{0xdeadbeef};
-    write(test_fd, &dummy, sizeof(dummy));
+    EXPECT_EQ(sizeof(dummy), write(test_fd, &dummy, sizeof(dummy)));
 
     EXPECT_TRUE(done->wait_for(std::chrono::milliseconds{100}));
 }
@@ -128,7 +124,7 @@ TEST_F(AsioSocketTransport, DoesntNotifyUntilDataAvailable)
     EXPECT_FALSE(done->raised());
 
     uint64_t dummy{0xdeadbeef};
-    write(test_fd, &dummy, sizeof(dummy));
+    EXPECT_EQ(sizeof(dummy), write(test_fd, &dummy, sizeof(dummy)));
 
     EXPECT_TRUE(done->wait_for(std::chrono::milliseconds{100}));
 }
@@ -185,7 +181,7 @@ TEST_F(AsioSocketTransport, ReadsCorrectData)
 
     transport.register_observer(observer);
 
-    write(test_fd, expected.data(), expected.size());
+    EXPECT_EQ(expected.size(), write(test_fd, expected.data(), expected.size()));
 
     ASSERT_TRUE(done->wait_for(std::chrono::milliseconds{100}));
     EXPECT_EQ(0, memcmp(expected.data(), received.data(), expected.size()));
