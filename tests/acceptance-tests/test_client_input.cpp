@@ -36,7 +36,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <cstring>
 
 namespace mi = mir::input;
 namespace mis = mi::synthesis;
@@ -52,7 +51,7 @@ namespace
 struct ServerConfiguration : mtf::InputTestingServerConfiguration
 {
     mt::Barrier& input_cb_setup_fence;
-    
+
     static geom::Rectangle const display_bounds;
 
     std::function<void(mtf::InputTestingServerConfiguration& server)> produce_events;
@@ -535,7 +534,7 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
     static int const abs_touch_y_1 = minimum_touch+(maximum_touch-minimum_touch)*.10;
     static int const abs_touch_x_2 = 0;
     static int const abs_touch_y_2 = 0;
-    
+
     static float const expected_scale_x = float(display_width) / (maximum_touch - minimum_touch + 1);
     static float const expected_scale_y = float(display_height) / (maximum_touch - minimum_touch + 1);
 

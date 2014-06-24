@@ -144,10 +144,9 @@ public:
         for(auto const& callback : timeout_callbacks)
             callback();
     }
+
 private:
-
     std::vector<callback> timeout_callbacks;
-
 
 private:
     struct Item
@@ -160,7 +159,6 @@ private:
 };
 
 }
-
 
 class AndroidInputSender : public ::testing::Test
 {
@@ -239,7 +237,6 @@ TEST_F(AndroidInputSender, throws_on_unknown_channel)
     EXPECT_THROW(sender.send_event(key_event, channel), boost::exception);
 }
 
-
 TEST_F(AndroidInputSender,throws_on_deregistered_channels)
 {
     register_surface();
@@ -247,7 +244,6 @@ TEST_F(AndroidInputSender,throws_on_deregistered_channels)
 
     EXPECT_THROW(sender.send_event(key_event, channel), boost::exception);
 }
-
 
 TEST_F(AndroidInputSender, first_send_on_surface_registers_server_fd)
 {
@@ -282,6 +278,14 @@ TEST_F(AndroidInputSender, can_send_consumeable_mir_key_events)
     EXPECT_EQ(key_event.key.scan_code, client_key_event.getScanCode());
 }
 
+MATCHER_P2(NthPositionMatches, index, coordinate_array, "")
+{
+    return coordinate_array[index].x == arg.getRawX(index) &&
+        coordinate_array[index].x == arg.getX(index) &&
+        coordinate_array[index].y == arg.getY(index) &&
+        coordinate_array[index].y == arg.getY(index);
+}
+
 TEST_F(AndroidInputSender, can_send_consumeable_mir_motion_events)
 {
     using namespace ::testing;
@@ -296,15 +300,9 @@ TEST_F(AndroidInputSender, can_send_consumeable_mir_motion_events)
     EXPECT_EQ(motion_event.motion.device_id, client_motion_event.getDeviceId());
     EXPECT_EQ(0, client_motion_event.getXOffset());
     EXPECT_EQ(0, client_motion_event.getYOffset());
-    EXPECT_EQ(motion_event.motion.pointer_coordinates[0].x, client_motion_event.getRawX(0));
-    EXPECT_EQ(motion_event.motion.pointer_coordinates[0].x, client_motion_event.getX(0));
-    EXPECT_EQ(motion_event.motion.pointer_coordinates[0].y, client_motion_event.getRawY(0));
-    EXPECT_EQ(motion_event.motion.pointer_coordinates[0].y, client_motion_event.getY(0));
-
-    EXPECT_EQ(motion_event.motion.pointer_coordinates[1].x, client_motion_event.getRawX(1));
-    EXPECT_EQ(motion_event.motion.pointer_coordinates[1].x, client_motion_event.getX(1));
-    EXPECT_EQ(motion_event.motion.pointer_coordinates[1].y, client_motion_event.getRawY(1));
-    EXPECT_EQ(motion_event.motion.pointer_coordinates[1].y, client_motion_event.getY(1));
+    auto const& coords = motion_event.motion.pointer_coordinates;
+    EXPECT_THAT(client_motion_event, NthPositionMatches(0, coords));
+    EXPECT_THAT(client_motion_event, NthPositionMatches(1, coords));
 }
 
 TEST_F(AndroidInputSender, response_unregisters_fd)
@@ -374,7 +372,6 @@ TEST_F(AndroidInputSender, unordered_finish_signal_triggers_the_right_callback)
     consumer.sendFinishedSignal(first_sequence, false);
     loop.trigger_pending_fds();
 }
-
 
 TEST_F(AndroidInputSender, observer_notified_on_disapeared_surface )
 {
