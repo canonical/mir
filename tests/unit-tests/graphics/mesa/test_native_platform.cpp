@@ -45,21 +45,6 @@ struct MockNestedContext : public mg::NestedContext
     MOCK_METHOD1(drm_set_gbm_device, void(struct gbm_device*));
 };
 
-class StubBuffer : public mtd::StubBuffer
-{
-public:
-    StubBuffer()
-        : mtd::StubBuffer{
-              std::make_shared<mg::NativeBuffer>(),
-              mg::BufferProperties{
-                  geom::Size{123, 456},
-                  mir_pixel_format_abgr_8888,
-                  mg::BufferUsage::software},
-              geom::Stride{4390}}
-    {
-    }
-};
-
 class MesaNativePlatformTest : public ::testing::Test
 {
 public:
