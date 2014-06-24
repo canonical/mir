@@ -27,7 +27,7 @@
 #include "mir_test/wait_condition.h"
 #include "mir_test/client_event_matchers.h"
 #include "mir_test/barrier.h"
-#include "mir_test_framework/server_runner.h"
+#include "mir_test_framework/deferred_in_process_server.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
 #include "mir_test_framework/input_testing_client_configuration.h"
 #include "mir_test_framework/declarative_placement_strategy.h"
@@ -109,16 +109,7 @@ private:
     std::thread thread;
 };
 
-
-struct DeferredInProcessServer : testing::Test, private mtf::ServerRunner
-{
-    void TearDown() override { ServerRunner::stop_server(); }
-
-    using ServerRunner::start_server;
-    using ServerRunner::new_connection;
-};
-
-struct TestClientInput : DeferredInProcessServer
+struct TestClientInput : mtf::DeferredInProcessServer
 {
     std::string const arbitrary_client_name{"input-test-client"};
     std::string const test_client_name_1 = "1";
