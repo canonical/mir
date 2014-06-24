@@ -32,6 +32,7 @@
 #include "cursor_controller.h"
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
+#include "null_input_channel_factory.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/options/configuration.h"
@@ -192,7 +193,11 @@ mir::DefaultServerConfiguration::the_input_manager()
 
 std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()
 {
-    return std::make_shared<mia::InputChannelFactory>();
+    auto const options = the_options();
+    if (!options->get<bool>(options::enable_input_opt))
+        return std::make_shared<mi::NullInputChannelFactory>();
+    else
+        return std::make_shared<mia::InputChannelFactory>();
 }
 
 std::shared_ptr<mi::CursorListener>
