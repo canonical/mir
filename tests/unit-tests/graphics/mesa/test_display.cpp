@@ -75,9 +75,12 @@ public:
     MOCK_METHOD2(register_signal_handler,
                  void(std::initializer_list<int>,
                  std::function<void(int)> const&));
-    MOCK_METHOD2(register_fd_handler,
+    MOCK_METHOD3(register_fd_handler,
                  void(std::initializer_list<int>,
-                 std::function<void(int)> const&));
+                 void const*, std::function<void(int)> const&));
+    MOCK_METHOD1(unregister_fd_handler,
+                 void(void const*));
+
 };
 
 
@@ -708,7 +711,7 @@ TEST_F(MesaDisplayTest, configuration_change_registers_video_devices_handler)
     auto display = create_display(create_platform());
     MockEventRegister mock_register;
 
-    EXPECT_CALL(mock_register, register_fd_handler(_,_));
+    EXPECT_CALL(mock_register, register_fd_handler(_,_,_));
 
     display->register_configuration_change_handler(mock_register, []{});
 }
