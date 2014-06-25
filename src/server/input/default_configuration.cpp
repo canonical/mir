@@ -27,11 +27,11 @@
 #include "android/input_channel_factory.h"
 #include "display_input_region.h"
 #include "event_filter_chain.h"
-#include "nested_input_configuration.h"
 #include "null_input_configuration.h"
 #include "cursor_controller.h"
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
+#include "null_input_manager.h"
 #include "null_input_channel_factory.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
@@ -76,11 +76,11 @@ mir::DefaultServerConfiguration::the_input_configuration()
     [this]() -> std::shared_ptr<mi::InputConfiguration>
     {
         auto const options = the_options();
-        if (!options->get<bool>(options::enable_input_opt))
-        {
-            return std::make_shared<mi::NullInputConfiguration>();
-        }
-        else if (!options->is_set(options::host_socket_opt))
+        bool input_reading_required =
+            options->get<bool>(options::enable_input_opt) &&
+            !options->is_set(options::host_socket_opt);
+
+        if (input_reading_required)
         {
             // fallback to standalone if host socket is unset
             return std::make_shared<mia::DefaultInputConfiguration>(
@@ -92,7 +92,7 @@ mir::DefaultServerConfiguration::the_input_configuration()
         }
         else
         {
-            return std::make_shared<mi::NestedInputConfiguration>();
+            return std::make_shared<mi::NullInputConfiguration>();
         }
     });
 }
