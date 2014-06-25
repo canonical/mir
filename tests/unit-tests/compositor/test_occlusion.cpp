@@ -30,6 +30,8 @@ using namespace mir::compositor;
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
 
+namespace
+{
 struct OcclusionFilterTest : public Test
 {
     OcclusionFilterTest()
@@ -48,17 +50,29 @@ struct OcclusionFilterTest : public Test
         return elements;
     }
 
+    mg::RenderableList renderables_from(SceneElementSequence const& elements)
+    {
+        mg::RenderableList renderables;
+        for (auto const& element : elements)
+            renderables.push_back(element->renderable());
+
+        return renderables;
+    }
+
     Rectangle monitor_rect;
 };
+
+}
 
 TEST_F(OcclusionFilterTest, single_window_not_occluded)
 {
     auto window = std::make_shared<mtd::FakeRenderable>(12, 34, 56, 78);
     auto elements = scene_elements_from({window});
  
-    filter_occlusions_from(elements, monitor_rect);
-    ASSERT_EQ(1u, elements.size());
-    EXPECT_EQ(window, elements.front()->renderable());
+    auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
+
+    EXPECT_THAT(renderables_from(occlusions), IsEmpty());
+    EXPECT_THAT(renderables_from(elements), ElementsAre(window));
 }
 
 TEST_F(OcclusionFilterTest, partially_offscreen_still_visible)
@@ -69,8 +83,10 @@ TEST_F(OcclusionFilterTest, partially_offscreen_still_visible)
     auto bottom = std::make_shared<mtd::FakeRenderable>(200, 1000, 100, 1000);
     auto elements = scene_elements_from({left, right, top, bottom});
  
-    filter_occlusions_from(elements, monitor_rect);
-    EXPECT_EQ(4u, elements.size());
+    auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
+
+    EXPECT_THAT(renderables_from(occlusions), IsEmpty());
+    EXPECT_THAT(renderables_from(elements), ElementsAre(left, right, top, bottom));
 }
 
 TEST_F(OcclusionFilterTest, smaller_window_occluded)
@@ -79,10 +95,10 @@ TEST_F(OcclusionFilterTest, smaller_window_occluded)
     auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
     auto elements = scene_elements_from({bottom, top});
 
-    filter_occlusions_from(elements, monitor_rect);
+    auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
 
-    ASSERT_EQ(1u, elements.size());
-    EXPECT_EQ(top, elements.front()->renderable());
+    EXPECT_THAT(renderables_from(occlusions), ElementsAre(bottom));
+    EXPECT_THAT(renderables_from(elements), ElementsAre(top));
 }
 
 TEST_F(OcclusionFilterTest, translucent_window_occludes_nothing)
@@ -91,11 +107,10 @@ TEST_F(OcclusionFilterTest, translucent_window_occludes_nothing)
     auto bottom = std::make_shared<mtd::FakeRenderable>(Rectangle{{12, 12}, {5, 5}}, 1.0f);
     auto elements = scene_elements_from({bottom, top});
 
-    filter_occlusions_from(elements, monitor_rect);
+    auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
 
-    ASSERT_EQ(2u, elements.size());
-    EXPECT_EQ(bottom, elements.front()->renderable());
-    EXPECT_EQ(top, elements.back()->renderable());
+    EXPECT_THAT(renderables_from(occlusions), IsEmpty());
+    EXPECT_THAT(renderables_from(elements), ElementsAre(bottom, top));
 }
 
 TEST_F(OcclusionFilterTest, hidden_window_is_self_occluded)
@@ -103,9 +118,10 @@ TEST_F(OcclusionFilterTest, hidden_window_is_self_occluded)
     auto window = std::make_shared<mtd::FakeRenderable>(Rectangle{{10, 10}, {10, 10}}, 1.0f, true, false);
     auto elements = scene_elements_from({window});
 
-    filter_occlusions_from(elements, monitor_rect);
+    auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
 
-    EXPECT_EQ(0u, elements.size());
+    EXPECT_THAT(renderables_from(occlusions), ElementsAre(window));
+    EXPECT_THAT(renderables_from(elements), IsEmpty());
 }
 
 TEST_F(OcclusionFilterTest, hidden_window_occludes_nothing)
@@ -114,10 +130,10 @@ TEST_F(OcclusionFilterTest, hidden_window_occludes_nothing)
     auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
     auto elements = scene_elements_from({bottom, top});
 
-    filter_occlusions_from(elements, monitor_rect);
+    auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
 
-    ASSERT_EQ(1u, elements.size());
-    EXPECT_EQ(bottom, elements.front()->renderable());
+    EXPECT_THAT(renderables_from(occlusions), ElementsAre(top));
+    EXPECT_THAT(renderables_from(elements), ElementsAre(bottom));
 }
 
 TEST_F(OcclusionFilterTest, shaped_window_occludes_nothing)
@@ -126,11 +142,10 @@ TEST_F(OcclusionFilterTest, shaped_window_occludes_nothing)
     auto bottom = std::make_shared<mtd::FakeRenderable>(12, 12, 5, 5);
     auto elements = scene_elements_from({bottom, top});
 
-    filter_occlusions_from(elements, monitor_rect);
+    auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
 
-    ASSERT_EQ(2u, elements.size());
-    EXPECT_EQ(bottom, elements.front()->renderable());
-    EXPECT_EQ(top, elements.back()->renderable());
+    EXPECT_THAT(renderables_from(occlusions), IsEmpty());
+    EXPECT_THAT(renderables_from(elements), ElementsAre(bottom, top));
 }
 
 TEST_F(OcclusionFilterTest, identical_window_occluded)
@@ -139,10 +154,10 @@ TEST_F(OcclusionFilterTest, identical_window_occluded)
     auto bottom = std::make_shared<mtd::FakeRenderable>(10, 10, 10, 10);
     auto elements = scene_elements_from({bottom, top});
 
-    filter_occlusions_from(elements, monitor_rect);
+    auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
 
-    ASSERT_EQ(1u, elements.size());
-    EXPECT_EQ(top, elements.front()->renderable());
+    EXPECT_THAT(renderables_from(occlusions), ElementsAre(bottom));
+    EXPECT_THAT(renderables_from(elements), ElementsAre(top));
 }
 
 TEST_F(OcclusionFilterTest, larger_window_never_occluded)
@@ -151,11 +166,10 @@ TEST_F(OcclusionFilterTest, larger_window_never_occluded)
     auto bottom = std::make_shared<mtd::FakeRenderable>(9, 9, 12, 12);
     auto elements = scene_elements_from({bottom, top});
 
-    filter_occlusions_from(elements, monitor_rect);
+    auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
 
-    ASSERT_EQ(2u, elements.size());
-    EXPECT_EQ(bottom, elements.front()->renderable());
-    EXPECT_EQ(top, elements.back()->renderable());
+    EXPECT_THAT(renderables_from(occlusions), IsEmpty());
+    EXPECT_THAT(renderables_from(elements), ElementsAre(bottom, top));
 }
 
 TEST_F(OcclusionFilterTest, cascaded_windows_never_occluded)
@@ -167,8 +181,10 @@ TEST_F(OcclusionFilterTest, cascaded_windows_never_occluded)
 
     auto elements = scene_elements_from(renderables);
 
-    filter_occlusions_from(elements, monitor_rect);
-    EXPECT_EQ(num_windows, elements.size());
+    auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
+
+    EXPECT_THAT(renderables_from(occlusions), IsEmpty());
+    EXPECT_THAT(renderables_from(elements), ElementsAreArray(renderables));
 }
 
 TEST_F(OcclusionFilterTest, some_occluded_and_some_not)
@@ -188,28 +204,8 @@ TEST_F(OcclusionFilterTest, some_occluded_and_some_not)
         window0  //not occluded
     });
 
-    filter_occlusions_from(elements, monitor_rect);
+    auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
 
-    auto expected_size = 3u;
-    ASSERT_EQ(expected_size, elements.size());
-    auto it = elements.begin();
-    for(auto count = 0u; count < expected_size; count++)
-    {
-        switch (count)
-        {
-            case 0u:
-                EXPECT_EQ(window5, (*it)->renderable());
-                break;
-            case 1u:
-                EXPECT_EQ(window4, (*it)->renderable());
-                break;
-            case 2u:
-                EXPECT_EQ(window0, (*it)->renderable());
-                break;
-            default:
-                FAIL();
-                break;
-        }
-        it++;
-    }
+    EXPECT_THAT(renderables_from(occlusions), ElementsAre(window3, window2, window1));
+    EXPECT_THAT(renderables_from(elements), ElementsAre(window5, window4, window0));
 }

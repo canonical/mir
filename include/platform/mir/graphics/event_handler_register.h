@@ -37,7 +37,10 @@ public:
 
     virtual void register_fd_handler(
         std::initializer_list<int> fds,
+        void const* owner,
         std::function<void(int)> const& handler) = 0;
+
+    virtual void unregister_fd_handler(void const* owner) = 0;
 
 protected:
     EventHandlerRegister() = default;

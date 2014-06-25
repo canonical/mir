@@ -19,28 +19,20 @@
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/cursor_images.h"
-#include "mir/scene/surface.h"
-#include "mir/scene/surface_factory.h"
-#include "mir/scene/null_observer.h"
-#include "mir/scene/null_surface_observer.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
+#include "mir_test/barrier.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test/event_factory.h"
 #include "mir_test/wait_condition.h"
-#include "mir_test_framework/server_runner.h"
-#include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
-#include "mir_test_framework/input_testing_client_configuration.h"
+#include "mir_test_framework/testing_client_configuration.h"
 #include "mir_test_framework/declarative_placement_strategy.h"
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test_framework/deferred_in_process_server.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
-#include <assert.h>
 
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
@@ -223,15 +215,7 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
     
 };
 
-struct DeferredInProcessServer : testing::Test, private mtf::ServerRunner
-{
-    void TearDown() override { ServerRunner::stop_server(); }
-
-    using ServerRunner::start_server;
-    using ServerRunner::new_connection;
-};
-
-struct TestClientCursorAPI : DeferredInProcessServer
+struct TestClientCursorAPI : mtf::DeferredInProcessServer
 {
     std::string const client_name_1 = "1";
     std::string const client_name_2 = "2";

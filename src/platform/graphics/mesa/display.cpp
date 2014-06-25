@@ -233,6 +233,7 @@ void mgm::Display::register_configuration_change_handler(
 {
     handlers.register_fd_handler(
         {monitor.fd()},
+        this,
         [conf_change_handler, this](int)
         {
             monitor.process_events([conf_change_handler]
