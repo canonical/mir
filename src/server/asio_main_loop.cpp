@@ -431,7 +431,6 @@ void AlarmImpl::update_timer()
         if (!ec && data->state == pending)
         {
             data->state = triggered;
-            lock.unlock();
             data->callback();
         }
     });
