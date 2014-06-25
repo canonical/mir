@@ -209,11 +209,10 @@ TEST_F(HwcWrapper, turns_vsync_off)
         wrapper.vsync_signal_off();
     }, std::runtime_error);
 }
+
 #if 0
 int mga::HWCCommonDevice::turn_screen_on() const noexcept(true)
 {
-    if (auto err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0))
-        return err;
     return hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1);
 }
 
@@ -221,7 +220,6 @@ int mga::HWCCommonDevice::turn_screen_off() const noexcept(true)
 {
     if (auto err = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0))
         return err;
-    return hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
 }
     if (err)
     {
