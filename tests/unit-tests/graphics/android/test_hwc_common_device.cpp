@@ -120,42 +120,6 @@ TYPED_TEST(HWCCommon, registerst_hooks_and_turns_on_display)
     testing::Mock::VerifyAndClearExpectations(this->mock_device.get());
 }
 
-#if 0
-TYPED_TEST(HWCCommon, test_vsync_activation_failure_throws)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*this->mock_device, eventControl_interface(this->mock_device.get(), 0, HWC_EVENT_VSYNC, _))
-        .WillRepeatedly(Return(-EINVAL));
-
-
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
-    EXPECT_THROW({
-        auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
-        device->mode(mir_power_mode_off);
-    }, std::runtime_error);
-}
-
-TYPED_TEST(HWCCommon, test_hwc_throws_on_blanking_request_error)
-{
-    using namespace testing;
-
-    InSequence seq;
-    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
-        .Times(1)
-        .WillOnce(Return(0));
-    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
-        .Times(2)
-        .WillOnce(Return(-1))
-        .WillOnce(Return(0));
-
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
-    EXPECT_THROW({
-        device->mode(mir_power_mode_off);
-    }, std::runtime_error);
-}
-#endif
-
 TYPED_TEST(HWCCommon, test_hwc_suspend_standby_throw)
 {
     using namespace testing;

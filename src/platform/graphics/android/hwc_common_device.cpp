@@ -122,31 +122,6 @@ void mga::HWCCommonDevice::turn_screen_off() const
     hwc_device->vsync_signal_off();
     hwc_device->display_off();
 }
-#if 0
-int mga::HWCCommonDevice::turn_screen_on() const noexcept(true)
-{
-    if (auto err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0))
-        return err;
-    return hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1);
-}
-
-int mga::HWCCommonDevice::turn_screen_off() const noexcept(true)
-{
-    if (auto err = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0))
-        return err;
-    return hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
-}
-    if (err)
-    {
-        std::string blanking_status_msg = "Could not " +
-            ((mode_request == mir_power_mode_off) ? std::string("blank") : std::string("unblank")) + " display";
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error(blanking_status_msg)) <<
-            boost::errinfo_errno(-err));
-    }
-
-#endif
 
 bool mga::HWCCommonDevice::apply_orientation(MirOrientation) const
 {

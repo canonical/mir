@@ -139,3 +139,134 @@ TEST_F(HwcWrapper, throws_on_set_failure)
         wrapper.set(list);
     }, std::runtime_error);
 }
+
+TEST_F(HwcWrapper, register_procs)
+{
+    using namespace testing;
+    hwc_procs_t procs;
+    EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(), &procs))
+        .Times(1);
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
+    wrapper.register_hooks(&procs);
+}
+
+TEST_F(HwcWrapper, turns_display_on)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        .Times(2)
+        .WillOnce(Return(0))
+        .WillOnce(Return(-1));
+
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
+    wrapper.display_on();
+    EXPECT_THROW({
+        wrapper.display_on();
+    }, std::runtime_error);
+}
+
+TEST_F(HwcWrapper, turns_display_off)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
+        .Times(2)
+        .WillOnce(Return(0))
+        .WillOnce(Return(-1));
+
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
+    wrapper.display_off();
+    EXPECT_THROW({
+        wrapper.display_off();
+    }, std::runtime_error);
+}
+
+TEST_F(HwcWrapper, turns_vsync_on)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 1))
+        .Times(2)
+        .WillOnce(Return(0))
+        .WillOnce(Return(-1));
+
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
+    wrapper.vsync_signal_on();
+    EXPECT_THROW({
+        wrapper.vsync_signal_on();
+    }, std::runtime_error);
+}
+
+TEST_F(HwcWrapper, turns_vsync_off)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 0))
+        .Times(2)
+        .WillOnce(Return(0))
+        .WillOnce(Return(-1));
+
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
+    wrapper.vsync_signal_off();
+    EXPECT_THROW({
+        wrapper.vsync_signal_off();
+    }, std::runtime_error);
+}
+#if 0
+int mga::HWCCommonDevice::turn_screen_on() const noexcept(true)
+{
+    if (auto err = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        return err;
+    return hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1);
+}
+
+int mga::HWCCommonDevice::turn_screen_off() const noexcept(true)
+{
+    if (auto err = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0))
+        return err;
+    return hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1);
+}
+    if (err)
+    {
+        std::string blanking_status_msg = "Could not " +
+            ((mode_request == mir_power_mode_off) ? std::string("blank") : std::string("unblank")) + " display";
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error(blanking_status_msg)) <<
+            boost::errinfo_errno(-err));
+    }
+
+#endif
+#if 0
+TYPED_TEST(HWCCommon, test_vsync_activation_failure_throws)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*this->mock_device, eventControl_interface(this->mock_device.get(), 0, HWC_EVENT_VSYNC, _))
+        .WillRepeatedly(Return(-EINVAL));
+
+
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+    EXPECT_THROW({
+        auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+        device->mode(mir_power_mode_off);
+    }, std::runtime_error);
+}
+
+TYPED_TEST(HWCCommon, test_hwc_throws_on_blanking_request_error)
+{
+    using namespace testing;
+
+    InSequence seq;
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        .Times(1)
+        .WillOnce(Return(0));
+    EXPECT_CALL(*this->mock_device, blank_interface(this->mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
+        .Times(2)
+        .WillOnce(Return(-1))
+        .WillOnce(Return(0));
+
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+    EXPECT_THROW({
+        device->mode(mir_power_mode_off);
+    }, std::runtime_error);
+}
+#endif
+
