@@ -155,6 +155,7 @@ private:
 int main(int argc, char const** argv)
 try
 {
+
     /* Set up graceful exit on SIGINT and SIGTERM */
     struct sigaction sa;
     sa.sa_handler = signal_handler;
