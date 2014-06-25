@@ -364,19 +364,21 @@ auto make_handler(std::weak_ptr<AlarmImpl::InternalState> possible_data)
     // on a destroyed AlarmImpl. This means we need to wedge a weak_ptr
     // into the async_wait callback.
     return [possible_data](boost::system::error_code const& ec)
+    {
+        if (!ec)
         {
             if (auto data = possible_data.lock())
             {
                 std::unique_lock<decltype(data->m)> lock(data->m);
-                if (!ec && data->state == mir::time::Alarm::pending)
+                if (data->state == mir::time::Alarm::pending)
                 {
                     data->state = mir::time::Alarm::triggered;
                     data->callback();
                 }
             }
-        };
+        }
+    };
 }
-
 
 AlarmImpl::AlarmImpl(boost::asio::io_service& io,
                      std::chrono::milliseconds delay,
