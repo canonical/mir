@@ -41,10 +41,7 @@ class HwcWrapper;
 class HwcDevice : public HWCCommonDevice
 {
 public:
-    //TODO: the first two constructor arguments are redundant. eliminate the 1st one when the 2nd
-    //      one can be used by the HWCCommonDevice 
-    HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-              std::shared_ptr<HwcWrapper> const& hwc_wrapper,
+    HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
               std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
               std::shared_ptr<SyncFileOps> const& sync_ops);
 

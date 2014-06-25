@@ -67,7 +67,6 @@ protected:
         mock_native_buffer->anwb()->width = buffer_size.width.as_int();
         mock_native_buffer->anwb()->height =  buffer_size.height.as_int();
 
-        mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
         mock_file_ops = std::make_shared<MockFileOps>();
 

@@ -18,7 +18,6 @@
 
 #include "src/platform/graphics/android/hwc_fb_device.h"
 #include "mir_test_doubles/mock_display_device.h"
-#include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
@@ -50,7 +49,6 @@ protected:
         int height = 4;
         test_size = geom::Size{width, height};
         int fbnum = 558;
-        mock_hwc_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_fb_device = std::make_shared<mtd::MockFBHalDevice>(
             width, height, HAL_PIXEL_FORMAT_RGBA_8888, fbnum);
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
@@ -83,7 +81,6 @@ protected:
     testing::NiceMock<mtd::MockEGL> mock_egl;
 
     geom::Size test_size;
-    std::shared_ptr<mtd::MockHWCComposerDevice1> mock_hwc_device;
     std::shared_ptr<mtd::MockFBHalDevice> mock_fb_device;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
@@ -110,7 +107,7 @@ TEST_F(HwcFbDevice, hwc10_post_gl_only)
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesListWithEglFields(expected_list, dpy, sur)))
         .InSequence(seq);
 
-    mga::HwcFbDevice device(mock_hwc_device, mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
 
     device.post_gl(stub_context);
 }
@@ -127,7 +124,7 @@ TEST_F(HwcFbDevice, hwc10_rejects_overlays)
         renderable2
     };
 
-    mga::HwcFbDevice device(mock_hwc_device, mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
     EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
 }
 
@@ -143,6 +140,6 @@ TEST_F(HwcFbDevice, hwc10_post)
         .InSequence(seq);
     EXPECT_CALL(*mock_vsync, wait_for_vsync())
         .InSequence(seq);
-    mga::HwcFbDevice device(mock_hwc_device, mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
     device.post_gl(mock_context);
 }

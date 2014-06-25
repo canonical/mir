@@ -60,3 +60,24 @@ void mga::RealHwcWrapper::set(hwc_display_contents_1_t& display_list) const
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }
+
+void mga::RealHwcWrapper::register_hooks(hwc_procs_t* callbacks) const
+{
+    (void) callbacks;
+}
+
+void mga::RealHwcWrapper::vsync_signal_on() const
+{
+}
+
+void mga::RealHwcWrapper::vsync_signal_off() const
+{
+}
+
+void mga::RealHwcWrapper::display_on() const
+{
+}
+
+void mga::RealHwcWrapper::display_off() const
+{
+}
