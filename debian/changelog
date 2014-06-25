@@ -1,3 +1,9 @@
+mir (0.4.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * mirserver ABI bumped to 22. Shells need rebuilding.
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 25 Jun 2014 07:23:58 +0000
+
 mir (0.3.0+14.10.20140618.1-0ubuntu1) utopic; urgency=medium
 
   [ Cemil Azizoglu ]
