@@ -1,8 +1,56 @@
-mir (0.2.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.3.0+14.10.20140618.1-0ubuntu1) utopic; urgency=medium
 
+  [ Cemil Azizoglu ]
+  * New upstream release 0.3.0 (https://launchpad.net/mir/+milestone/0.3.0)
+    - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
+    - mirserver ABI bumped to 21. Shells need rebuilding.
+      . Divide swap_client_buffers into separate functions.
+      . Allow buffer swapping even when compositor is turned off or blocked.
+        (LP: #1308843, 1308844)
+      . Wire the cursor client API through the session mediator to the surface
+        observer.
+      . Generate destination alpha for alpha enabled display buffers.
+      . Named threads.
+      . Support for prompt sessions :
+        https://wiki.ubuntu.com/Security/TrustStoreAndSessions.
+
+    - mirscreencast screenshots now produce images with correct color instead
+      of transparency.
+    - Rename bind_to_texture->gl_bind_to_texture.
+    - Refinements in test infrastructure.
+    - Phablet: allow disabling the overlays via a command line switch.
+    - Unify the DisplayBuffer interface's optimization functions
+      behind post_renderables_if_optimizable.
+    - Clean up the DisplayDevice interface so that it doesn't require the
+      functions are called in any particular order.
+    - Phablet:  graphics: android: preserve buffer ownership for onscreen
+      overlay layers until the subsequent display posting.
+    - Allow the platform to register emergency cleanup handlers in order to
+      restore the graphics system to a sane state when the server fails
+      abruptly.
+
+    - Bugs fixed:
+       . Mirscreencast outputs translucency instead of shadows, producing
+         incorrect images. (LP: #1301210)
+       . JSON formatting. (LP: #1324902)
+       . Fix input_area_contains to work properly in global coordinates even
+         when input_rectangles is updated. (LP: #1261647)
+       . Allow a moment for clients to acquire a buffer. (LP: #1317370)
+       . Generate correct alpha by changing blending equation to assume
+         pre-multiplied alpha sources. (LP: #1318852)
+       . Rework the recomposition messaging so that the DisplayBufferCompositor
+         is no longer involved. (LP: #1319907)
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 18 Jun 2014 17:51:53 +0000
+
+mir (0.2.0+14.10.20140605-0ubuntu1) utopic; urgency=medium
+
+  [ Daniel van Vugt ]
   * New upstream release 0.2.0 (https://launchpad.net/mir/+milestone/0.2.0)
     - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
-    - mirserver ABI bumped to 20. Shells need rebuilding and probably changes:
+    - mirserver ABI bumped to 20. Shells need rebuilding.
       . Cursor::set_image() parameters changed.
       . Display::the_cursor() renamed to Display::create_hardware_cursor()
       . Platform::create_display() requires a new parameter; gl_program_factory
@@ -12,24 +60,44 @@ mir (0.2.0-0ubuntu1) UNRELEASED; urgency=medium
         where id is an opaque compositor ID of your choosing.
       . Scene::set_change_callback() replaced by the more generic:
         add_observer() and remove_observer() functions.
+      . Added default implementation for SceneObserver.  
       . SessionCreator renamed to ConnectionCreator.
       . ConnectedSessions renamed to Connections.
       . ProtobufSessionCreator renamed to ProtobufConnectionCreator.
       . SessionAuthorizer: pid_t parameters replaced by SessionCredentials.
       . Massive architectural changes to Input-everything.
-      . Surface no longer implemnents Renderable, but emits one via
+      . Surface no longer implements Renderable, but emits one via
         compositor_snapshot().
+      . Pass the full renderable list to Renderer::render().
+      . Graceful handling of exceptions thrown from server threads.
+      . Clarify size position interfaces in the Surface classes.
+      . Plumbing for trusted sessions.
+      . Allow posting and managing custom main-loop actions.
+      . Timer extension.
+      . Identify client process when client connects to Mir not when socket
+        connects.
+      . Use the ServerActionQueue for display config.
+      . Recomposition signal moved to the MultiThreadedCompositor.
+      . Make timer service replaceable.
+      . Clarify assumptions about how many buffers a client can fill without
+        blocking.
+      . Introduce EmergencyCleanup interface.
     - Demo shell enhancements:
       . You can now change graphics modes on the fly using Ctrl+Alt+(-/=).
         To reset to the preferred mode use Ctrl+Alt+0.
       . The above mode changing as well as existing screen rotation keys
         (Ctrl+Alt+arrows) are now per-display; only applied to the monitor
         the mouse pointer is on.
+      . New shell controls documented.
+    - A new testing category, performance test, was introduced. It currently
+      runs glmark2-es2 and compares the result to a minimum threshold. 
+    - MIR_VERSION_MINOR is tied to MIRSERVER_ABI in the sense that a change
+      in the former now requires dependent projects that a rebuild is 
+      necessary.
+    - SwitchingBundle was replaced by BufferQueue.
     - Expand credentials to include uid/gid for session authorizer.
     - Bypass control is now Mesa-specific and tied to the command line options.
       So the environment variable MIR_BYPASS has changed to MIR_SERVER_BYPASS.
-    - mirscreencast screenshots now produce images with correct color instead
-      of transparency.
     - Ongoing architectural changes in the compositor/renderer logic to
       prepare for overlay support, and to reduce locking overhead.
     - Made InputDispatcher replaceable.
@@ -37,10 +105,75 @@ mir (0.2.0-0ubuntu1) UNRELEASED; urgency=medium
       toolkit control of the mouse cursor appearance. More work required.
     - Updated cross-compile docs and scripts to support the latest utopic
       devel images.
+    - Replaced uses of android::sp with std::shared_ptr.
+    - Client cursor API infrastructure.
+    - Enabled eglSwapInternal(0).
+    - Make texture caching algorithm reuseable.
+    - Add a DPI surface attribute.
+    - Exclude arm64 from build.
     - Bugs fixed:
-      . <TODO: Fill in when proposing to archive>
+      . Mir doesn't install cleanly if docs are not built. (LP: #1304271)
+      . Unity-system-compositor crashed [what(): Failed to set DRM crtc].
+        (LP: #1294510)
+      . [regression] unity8 fails to load libmirplatformgraphics
+        (undefined symbol: _ZN3mir8graphics9GLProgramD1Ev). (LP: #1317200)
+      . [regression] unity8 rendering artifacts. (LP: #1317260)
+      . [regression] [BufferQueue] 
+        BufferQueueTest.compositor_never_owns_client_buffers occasionally
+        crashes with: what(): unexpected release: buffer was not given to
+        compositor. (LP: #1317801)
+      . Hardcoded size for serialization buffers is neither reliable nor
+        secure. (LP: #1320187)
+      . [regression] [BufferQueue] mir does not composite last client given
+        buffer. (LP: #1321861)
+      . [regression] stale frame on seen on greeter when screen is unblanked
+        and toolkit/apps are laggy/throttled. (LP: #1321886)
+      . [regression] [BufferQueue] current_buffer_users vector memory usage
+        grows unbounded. (LP: #1317808)
+      . Intermittent test failures in 
+        CustomInputDispatcherFixture.custom_input_dispatcher_receives_input.
+        (LP: #1318587)
+      . [regression] [BufferQueue] Race condition in 
+        BufferQueue::compositor_acquire could underflow shared_ptr refcount and
+        delete prematurely, crash. (LP: #1318632)
+      . Overflow in 
+        mir::client::rpc::MirSocketRpcChannel::receive_file_descriptors as
+        reported by address sanitizer. (LP: #1320821)
+      . [regression] [input] Scroll events are now always zero: 
+        event.motion.pointer_coordinates[0].vscroll. (LP: #1321077)
+      . CI failures in CustomInputDispatcherFixture
+        .custom_input_dispatcher_gets_started_and_stopped. (LP: #1321215)
+      . [regression] Mir cursor vanishes after switching VTs. (LP: #1323225)
+      . Server library links against libmirserverlttng. (LP: #1323317)
+      . [DRM/GBM] Killing (or crashing) Mir often leaves the screen blank and
+        difficult to recover. (LP: #1189770)
+      . Frame rates of GL clients are limited to 60Hz on Android, even with
+        swapinterval=0. (LP: #1206400)
+      . mir_surface_is_valid(NULL) crashes instead of returning false.
+        (LP: #1248474)
+      . [regression] tests/unit-tests/shell/test_mediating_display_changer.cpp
+        is not compiled and executed. (LP: #1312832)
+      . Android platform does not reset the compositionType to HWC_FRAMEBUFFER
+        before prepare() on every frame. (LP: #1314399)
+      . The client process is identified when the socket connects, not when the
+        client connects to Mir. (LP: #1314574)
+      . [regression] Clients can't acquire multiple buffers any more.
+        (LP: #1315302)
+      . [regression] Enabling SwitchingBundleTest 
+        DISABLED_synchronous_clients_only_get_two_real_buffers now crashes with
+        no usable stack trace. It used to only fail. (LP: #1315312)
+      . [regression] [BufferQueue] double-buffered client freezes as no buffer
+        is returned on compositor_release. (LP: #1319765)
+      . Uninitialized mem in OutputBuilder.hwc_version_11_success.
+        (LP: #1312867)
+      . [enhancement] In the tests make it possible to get a
+        DefaultConfiguration initialized from the command line (LP: #1316987)
+      . ci train blocked due to missing arm64 libandroid-properties-dev.
+        (LP: #1323504)
+  [ Ubuntu daily release ]
+  * New rebuild forced
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 01 May 2014 15:15:39 +0800
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 05 Jun 2014 14:02:57 +0000
 
 mir (0.1.9+14.10.20140430.1-0ubuntu1) utopic; urgency=medium
 
