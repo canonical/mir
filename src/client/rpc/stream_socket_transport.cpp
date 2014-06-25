@@ -78,7 +78,7 @@ void mclr::StreamSocketTransport::register_observer(std::shared_ptr<Observer> co
 
 void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes)
 {
-    ssize_t bytes_read = recv(socket_fd, buffer, read_bytes, MSG_NOSIGNAL);
+    ssize_t const bytes_read = recv(socket_fd, buffer, read_bytes, MSG_NOSIGNAL);
 
     if (bytes_read < 0)
     {
@@ -119,7 +119,7 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes, 
     header.msg_control = control.data();
     header.msg_flags = 0;
 
-    ssize_t bytes_read = recvmsg(socket_fd, &header, MSG_NOSIGNAL);
+    ssize_t const bytes_read = recvmsg(socket_fd, &header, MSG_NOSIGNAL);
 
     if (bytes_read < 0)
     {
@@ -158,7 +158,7 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes, 
 
 void mclr::StreamSocketTransport::send_data(const std::vector<uint8_t>& buffer)
 {
-    ssize_t bytes_written = send(socket_fd, buffer.data(), buffer.size(), MSG_NOSIGNAL);
+    ssize_t const bytes_written = send(socket_fd, buffer.data(), buffer.size(), MSG_NOSIGNAL);
 
     if (bytes_written < 0)
     {
