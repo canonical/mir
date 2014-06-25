@@ -39,8 +39,9 @@ namespace geom = mir::geometry;
 
 namespace
 {
-struct XCursorImage : public mg::CursorImage
+class XCursorImage : public mg::CursorImage
 {
+public:
     XCursorImage(_XcursorImage *image, std::shared_ptr<_XcursorImages> const& save_resource)
         : image(image),
           save_resource(save_resource)
@@ -70,6 +71,7 @@ struct XCursorImage : public mg::CursorImage
         return {image->xhot, image->yhot};
     }
 
+private:
     _XcursorImage *image;
     std::shared_ptr<_XcursorImages> const save_resource;
 };
