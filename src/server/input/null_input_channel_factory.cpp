@@ -28,11 +28,11 @@ class NullInputChannel : public mi::InputChannel
 {
     int client_fd() const override
     {
-        return 0;
+        return -1;
     }
     int server_fd() const override
     {
-        return 0;
+        return -1;
     }
 };
 }
