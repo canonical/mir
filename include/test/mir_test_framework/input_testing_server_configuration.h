@@ -56,6 +56,7 @@ class InputTestingServerConfiguration : public TestingServerConfiguration
 {
 public:
     InputTestingServerConfiguration();
+    explicit InputTestingServerConfiguration(std::vector<geometry::Rectangle> const& display_rects);
 
     void exec();
     void on_exit();

@@ -258,6 +258,7 @@ TEST_F(AsioMainLoopTest, fd_data_handled)
 
     ml.register_fd_handler(
         {p.read_fd()},
+        this,
         [&handled_fd, &data_read, this](int fd)
         {
             handled_fd = fd;
@@ -282,6 +283,7 @@ TEST_F(AsioMainLoopTest, multiple_fds_with_single_handler_handled)
 
     ml.register_fd_handler(
         {pipes[0].read_fd(), pipes[1].read_fd()},
+        this,
         [&handled_fds, &elems_read, &num_handled_fds](int fd)
         {
             handled_fds.push_back(fd);
@@ -329,6 +331,7 @@ TEST_F(AsioMainLoopTest, multiple_fd_handlers_are_called)
 
     ml.register_fd_handler(
         {pipes[0].read_fd()},
+        this,
         [&handled_fds, &elems_read, this](int fd)
         {
             EXPECT_EQ(static_cast<ssize_t>(sizeof(elems_read[0])),
@@ -344,6 +347,7 @@ TEST_F(AsioMainLoopTest, multiple_fd_handlers_are_called)
 
     ml.register_fd_handler(
         {pipes[1].read_fd()},
+        this,
         [&handled_fds, &elems_read, this](int fd)
         {
             EXPECT_EQ(static_cast<ssize_t>(sizeof(elems_read[1])),
@@ -359,6 +363,7 @@ TEST_F(AsioMainLoopTest, multiple_fd_handlers_are_called)
 
     ml.register_fd_handler(
         {pipes[2].read_fd()},
+        this,
         [&handled_fds, &elems_read, this](int fd)
         {
             EXPECT_EQ(static_cast<ssize_t>(sizeof(elems_read[2])),
@@ -389,6 +394,44 @@ TEST_F(AsioMainLoopTest, multiple_fd_handlers_are_called)
     EXPECT_EQ(elems_to_send[1], elems_read[1]);
     EXPECT_EQ(elems_to_send[2], elems_read[2]);
 }
+
+TEST_F(AsioMainLoopTest, unregister_prevents_callback_and_does_not_harm_other_callbacks)
+{
+    mt::Pipe p1, p2;
+    char const data_to_write{'a'};
+    int p2_handler_executes{-1};
+    char data_read{0};
+
+    ml.register_fd_handler(
+        {p1.read_fd()},
+        this,
+        [](int)
+        {
+            FAIL() << "unregistered handler called";
+        });
+
+    ml.register_fd_handler(
+        {p2.read_fd()},
+        this+2,
+        [&p2_handler_executes,&data_read,this](int fd)
+        {
+            p2_handler_executes = fd;
+            EXPECT_EQ(1, read(fd, &data_read, 1));
+            ml.stop();
+        });
+
+    ml.unregister_fd_handler(this);
+
+    EXPECT_EQ(-1, send(p1.write_fd(), &data_to_write, 1, MSG_NOSIGNAL));
+    EXPECT_EQ(1, write(p2.write_fd(), &data_to_write, 1));
+
+    ml.run();
+
+    EXPECT_EQ(data_to_write, data_read);
+    EXPECT_EQ(p2.read_fd(), p2_handler_executes);
+}
+
+
 
 TEST_F(AsioMainLoopAlarmTest, main_loop_runs_until_stop_called)
 {

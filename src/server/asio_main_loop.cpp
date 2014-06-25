@@ -26,6 +26,37 @@
 
 namespace
 {
+
+void synchronous_server_action(
+    mir::ServerActionQueue& queue,
+    boost::optional<std::thread::id> queue_thread_id,
+    mir::ServerAction const& action)
+{
+    if (!queue_thread_id || *queue_thread_id == std::this_thread::get_id())
+    {
+        try { action(); } catch(...) {}
+    }
+    else
+    {
+        std::mutex done_mutex;
+        bool done{false};
+        std::condition_variable done_condition;
+
+        queue.enqueue(&queue, [&]
+            {
+                std::lock_guard<std::mutex> lock(done_mutex);
+
+                try { action(); } catch(...) {}
+
+                done = true;
+                done_condition.notify_one();
+            });
+
+        std::unique_lock<std::mutex> lock(done_mutex);
+        done_condition.wait(lock, [&] { return done; });
+    }
+}
+
 struct MirClockTimerTraits
 {
     // TODO the clock used by the main loop is a global setting, this is a restriction
@@ -139,8 +170,9 @@ class mir::AsioMainLoop::FDHandler
 public:
     FDHandler(boost::asio::io_service& io,
               std::initializer_list<int> fds,
+              void const* owner,
               std::function<void(int)> const& handler)
-        : handler{handler}
+        : handler{handler}, owner{owner}
     {
         for (auto fd : fds)
         {
@@ -150,33 +182,52 @@ public:
         }
     }
 
-    void async_wait()
+    bool is_owned_by(void const* possible_owner) const
     {
-        for (auto const& s : stream_descriptors)
-        {
-            s->async_read_some(
-                boost::asio::null_buffers(),
-                std::bind(&FDHandler::handle, this,
-                          std::placeholders::_1, std::placeholders::_2, s.get()));
-        }
+        return owner == possible_owner;
+    }
+
+    static void async_wait(std::shared_ptr<FDHandler> const& fd_handler, ServerActionQueue& queue)
+    {
+        for (auto const& s : fd_handler->stream_descriptors)
+            read_some(s.get(), fd_handler, queue);
     }
 
 private:
-    void handle(boost::system::error_code err, size_t /*bytes*/,
-                boost::asio::posix::stream_descriptor* s)
+    static void read_some(boost::asio::posix::stream_descriptor* s, std::weak_ptr<FDHandler> const& possible_fd_handler, ServerActionQueue& queue)
     {
-        if (!err)
-        {
-            handler(s->native_handle());
-            s->async_read_some(
-                boost::asio::null_buffers(),
-                std::bind(&FDHandler::handle, this,
-                          std::placeholders::_1, std::placeholders::_2, s));
-        }
+        s->async_read_some(
+            boost::asio::null_buffers(),
+            [possible_fd_handler,s,&queue](boost::system::error_code err, size_t /*bytes*/)
+            {
+                if (err)
+                    return;
+
+                // The actual execution of the fd handler is moved to the action queue.This allows us to synchronously
+                // unregister FDHandlers even when they are about to be executed. We do this because of the way Asio
+                // copies and executes pending completion handlers.
+                // In worst case during the call to unregister the FDHandler, it may still be executed, but not after
+                // the unregister call returned.
+                queue.enqueue(
+                    s,
+                    [possible_fd_handler, s, &queue]()
+                    {
+                        auto fd_handler = possible_fd_handler.lock();
+                        if (!fd_handler)
+                            return;
+
+                        fd_handler->handler(s->native_handle());
+                        fd_handler.reset();
+
+                        if (possible_fd_handler.lock())
+                            read_some(s, possible_fd_handler, queue);
+                    });
+            });
     }
 
     std::vector<std::unique_ptr<boost::asio::posix::stream_descriptor>> stream_descriptors;
     std::function<void(int)> handler;
+    void const* owner;
 };
 
 /*
@@ -198,12 +249,14 @@ mir::AsioMainLoop::~AsioMainLoop() noexcept(true)
 
 void mir::AsioMainLoop::run()
 {
+    main_loop_thread = std::this_thread::get_id();
     io.run();
 }
 
 void mir::AsioMainLoop::stop()
 {
     io.stop();
+    main_loop_thread.reset();
 }
 
 void mir::AsioMainLoop::register_signal_handler(
@@ -222,16 +275,41 @@ void mir::AsioMainLoop::register_signal_handler(
 
 void mir::AsioMainLoop::register_fd_handler(
     std::initializer_list<int> fds,
+    void const* owner,
     std::function<void(int)> const& handler)
 {
     assert(handler);
 
-    auto fd_handler = std::unique_ptr<FDHandler>{
-        new FDHandler{io, fds, handler}};
+    auto fd_handler = std::make_shared<FDHandler>(io, fds, owner, handler);
 
-    fd_handler->async_wait();
+    FDHandler::async_wait(fd_handler, *this);
 
+    std::lock_guard<std::mutex> lock(fd_handlers_mutex);
     fd_handlers.push_back(std::move(fd_handler));
+}
+
+void mir::AsioMainLoop::unregister_fd_handler(void const* owner)
+{
+    // synchronous_server_action makes sure that with the
+    // completion of the method unregister_fd_handler the
+    // handler will no longer be called.
+    // There is a chance for a fd handler callback to happen before
+    // the completion of this method.
+    synchronous_server_action(
+        *this,
+        main_loop_thread,
+        [this,owner]()
+        {
+            std::lock_guard<std::mutex> lock(fd_handlers_mutex);
+            auto end_of_valid = remove_if(
+                begin(fd_handlers),
+                end(fd_handlers),
+                [owner](std::shared_ptr<FDHandler> const& item)
+                {
+                    return item->is_owned_by(owner);
+                });
+            fd_handlers.erase(end_of_valid, end(fd_handlers));
+        });
 }
 
 namespace
