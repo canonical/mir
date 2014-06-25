@@ -18,7 +18,7 @@
 
 #include "make_rpc_channel.h"
 #include "mir_protobuf_rpc_channel.h"
-#include "asio_socket_transport.h"
+#include "stream_socket_transport.h"
 
 #include <cstring>
 
@@ -52,11 +52,11 @@ mclr::make_rpc_channel(std::string const& name,
     if (fd_prefix.is_start_of(name))
     {
         auto const fd = atoi(name.c_str()+fd_prefix.size);
-        transport = std::unique_ptr<mclr::StreamTransport>{new mclr::AsioSocketTransport{fd}};
+        transport = std::unique_ptr<mclr::StreamTransport>{new mclr::StreamSocketTransport{fd}};
     }
     else
     {
-        transport = std::unique_ptr<mclr::StreamTransport>{new mclr::AsioSocketTransport{name}};
+        transport = std::unique_ptr<mclr::StreamTransport>{new mclr::StreamSocketTransport{name}};
     }
     return std::make_shared<MirProtobufRpcChannel>(std::move(transport), map, disp_conf, rpc_report, lifecycle_control, event_sink);
 }

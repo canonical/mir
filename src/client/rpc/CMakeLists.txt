@@ -10,7 +10,7 @@ add_library(
   null_rpc_report.cpp
   mir_protobuf_rpc_channel.cpp
   make_socket_rpc_channel.cpp
-  asio_socket_transport.cpp
+  stream_socket_transport.cpp
   ${PROTO_SRCS}
 )
 
@@ -18,5 +18,6 @@ target_link_libraries(
   mirclientrpc
 
   mirprotobuf
+  mirsharedthreadname
   ${PROTOBUF_LIBRARIES}
 )

@@ -17,10 +17,12 @@
  */
 
 #include "src/client/rpc/stream_transport.h"
-#include "src/client/rpc/asio_socket_transport.h"
+#include "src/client/rpc/stream_socket_transport.h"
 
 #include "mir_test/signal.h"
 
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <cstdint>
 #include <thread>
 #include <system_error>
@@ -43,10 +45,11 @@ public:
 };
 }
 
-class AsioSocketTransport : public ::testing::Test
+template<typename TransportMechanism>
+class StreamTransportTest : public ::testing::Test
 {
 public:
-    AsioSocketTransport()
+    StreamTransportTest()
     {
         int socket_fds[2];
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, socket_fds) < 0)
@@ -56,84 +59,86 @@ public:
 
         test_fd = socket_fds[0];
         transport_fd = socket_fds[1];
+        transport = new TransportMechanism(socket_fds[1]);
     }
 
-    virtual ~AsioSocketTransport()
+    virtual ~StreamTransportTest()
     {
+        delete transport;
         // Transport should have closed its fd
 
-        // We don't care about errors.
+        // We don't care about errors, so unconditionally close the test fd.
         close(test_fd);
     }
 
-    int test_fd;
     int transport_fd;
+    int test_fd;
+    TransportMechanism* transport;
 };
 
-TEST_F(AsioSocketTransport, NoticesRemoteDisconnect)
+typedef ::testing::Types<mclr::StreamSocketTransport> Transports;
+TYPED_TEST_CASE(StreamTransportTest, Transports);
+
+TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnect)
 {
     using namespace testing;
-    mir::client::rpc::AsioSocketTransport transport{transport_fd};
     auto observer = std::make_shared<NiceMock<MockObserver>>();
     auto done = std::make_shared<mir::test::Signal>();
 
     ON_CALL(*observer, on_disconnected())
         .WillByDefault(Invoke([done]() { done->raise(); }));
 
-    transport.register_observer(observer);
+    this->transport->register_observer(observer);
 
-    close(test_fd);
+    close(this->test_fd);
 
     EXPECT_TRUE(done->wait_for(std::chrono::milliseconds{100}));
 }
 
-TEST_F(AsioSocketTransport, NotifiesOnDataAvailable)
+TYPED_TEST(StreamTransportTest, NotifiesOnDataAvailable)
 {
     using namespace testing;
 
-    mir::client::rpc::AsioSocketTransport transport{transport_fd};
     auto observer = std::make_shared<NiceMock<MockObserver>>();
     auto done = std::make_shared<mir::test::Signal>();
 
     ON_CALL(*observer, on_data_available())
         .WillByDefault(Invoke([done]() { done->raise(); }));
 
-    transport.register_observer(observer);
+    this->transport->register_observer(observer);
 
     uint64_t dummy{0xdeadbeef};
-    EXPECT_EQ(sizeof(dummy), write(test_fd, &dummy, sizeof(dummy)));
+    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
 
     EXPECT_TRUE(done->wait_for(std::chrono::milliseconds{100}));
 }
 
-TEST_F(AsioSocketTransport, DoesntNotifyUntilDataAvailable)
+TYPED_TEST(StreamTransportTest, DoesntNotifyUntilDataAvailable)
 {
     using namespace testing;
 
-    mir::client::rpc::AsioSocketTransport transport{transport_fd};
     auto observer = std::make_shared<NiceMock<MockObserver>>();
     auto done = std::make_shared<mir::test::Signal>();
 
     ON_CALL(*observer, on_data_available())
         .WillByDefault(Invoke([done]() { done->raise(); }));
 
-    transport.register_observer(observer);
+    this->transport->register_observer(observer);
 
     std::this_thread::sleep_for(std::chrono::milliseconds{100});
 
     EXPECT_FALSE(done->raised());
 
     uint64_t dummy{0xdeadbeef};
-    EXPECT_EQ(sizeof(dummy), write(test_fd, &dummy, sizeof(dummy)));
+    EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
 
     EXPECT_TRUE(done->wait_for(std::chrono::milliseconds{100}));
 }
 
-TEST_F(AsioSocketTransport, KeepsNotifyingOfAvailableDataUntilAllIsRead)
+TYPED_TEST(StreamTransportTest, KeepsNotifyingOfAvailableDataUntilAllIsRead)
 {
     using namespace testing;
 
-    mir::client::rpc::AsioSocketTransport transport{transport_fd};
     auto observer = std::make_shared<NiceMock<MockObserver>>();
     auto done = std::make_shared<mir::test::Signal>();
 
@@ -142,10 +147,10 @@ TEST_F(AsioSocketTransport, KeepsNotifyingOfAvailableDataUntilAllIsRead)
     std::atomic<size_t> bytes_left{data.size()};
 
     ON_CALL(*observer, on_data_available())
-        .WillByDefault(Invoke([done, &bytes_left, &transport]()
+        .WillByDefault(Invoke([done, &bytes_left, this]()
     {
         int dummy;
-        transport.receive_data(&dummy, sizeof(dummy));
+        this->transport->receive_data(&dummy, sizeof(dummy));
         bytes_left.fetch_sub(sizeof(dummy));
         if (bytes_left.load() == 0)
         {
@@ -153,19 +158,18 @@ TEST_F(AsioSocketTransport, KeepsNotifyingOfAvailableDataUntilAllIsRead)
         }
     }));
 
-    transport.register_observer(observer);
+    this->transport->register_observer(observer);
 
-    ASSERT_EQ(data.size(), write(test_fd, data.data(), data.size()));
+    EXPECT_EQ(data.size(), write(this->test_fd, data.data(), data.size()));
 
     EXPECT_TRUE(done->wait_for(std::chrono::seconds{5}));
     EXPECT_EQ(0, bytes_left.load());
 }
 
-TEST_F(AsioSocketTransport, ReadsCorrectData)
+TYPED_TEST(StreamTransportTest, ReadsCorrectData)
 {
     using namespace testing;
 
-    mir::client::rpc::AsioSocketTransport transport{transport_fd};
     auto observer = std::make_shared<NiceMock<MockObserver>>();
     auto done = std::make_shared<mir::test::Signal>();
 
@@ -173,25 +177,24 @@ TEST_F(AsioSocketTransport, ReadsCorrectData)
     std::vector<char> received(expected.size());
 
     ON_CALL(*observer, on_data_available())
-        .WillByDefault(Invoke([done, &received, &transport]()
+        .WillByDefault(Invoke([done, &received, this]()
     {
-        transport.receive_data(received.data(), received.size());
+        this->transport->receive_data(received.data(), received.size());
         done->raise();
     }));
 
-    transport.register_observer(observer);
+    this->transport->register_observer(observer);
 
-    EXPECT_EQ(expected.size(), write(test_fd, expected.data(), expected.size()));
+    EXPECT_EQ(expected.size(), write(this->test_fd, expected.data(), expected.size()));
 
     ASSERT_TRUE(done->wait_for(std::chrono::milliseconds{100}));
     EXPECT_EQ(0, memcmp(expected.data(), received.data(), expected.size()));
 }
 
-TEST_F(AsioSocketTransport, WritesCorrectData)
+TYPED_TEST(StreamTransportTest, WritesCorrectData)
 {
     using namespace testing;
 
-    mir::client::rpc::AsioSocketTransport transport{transport_fd};
     auto observer = std::make_shared<NiceMock<MockObserver>>();
     auto done = std::make_shared<mir::test::Signal>();
 
@@ -199,14 +202,14 @@ TEST_F(AsioSocketTransport, WritesCorrectData)
     std::vector<uint8_t> send_buffer{expected.begin(), expected.end()};
     std::vector<char> received(expected.size());
 
-    transport.send_data(send_buffer);
+    this->transport->send_data(send_buffer);
 
     pollfd read_listener;
-    read_listener.fd = test_fd;
+    read_listener.fd = this->test_fd;
     read_listener.events = POLLIN;
 
     ASSERT_EQ(1, poll(&read_listener, 1, 1000)) << "Failed to poll(): " << strerror(errno);
 
-    EXPECT_EQ(expected.size(), read(test_fd, received.data(), received.size()));
+    EXPECT_EQ(expected.size(), read(this->test_fd, received.data(), received.size()));
     EXPECT_EQ(0, memcmp(expected.data(), received.data(), expected.size()));
 }

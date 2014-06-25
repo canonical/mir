@@ -17,15 +17,13 @@
  */
 
 
-#ifndef ASIO_SOCKET_TRANSPORT_H_
-#define ASIO_SOCKET_TRANSPORT_H_
+#ifndef STREAM_SOCKET_TRANSPORT_H_
+#define STREAM_SOCKET_TRANSPORT_H_
 
 #include "stream_transport.h"
 
 #include <thread>
 #include <mutex>
-
-#include <boost/asio.hpp>
 
 namespace mir
 {
@@ -34,12 +32,12 @@ namespace client
 namespace rpc
 {
 
-class AsioSocketTransport : public StreamTransport
+class StreamSocketTransport : public StreamTransport
 {
 public:
-    AsioSocketTransport(int fd);
-    AsioSocketTransport(std::string const& socket_path);
-    ~AsioSocketTransport() override;
+    StreamSocketTransport(int fd);
+    StreamSocketTransport(std::string const& socket_path);
+    ~StreamSocketTransport() override;
 
     // Transport interface
 public:
@@ -50,14 +48,13 @@ public:
 
 private:
     void init();
-    void on_data_available(boost::system::error_code const& ec, size_t /*bytes_read*/);
+    int open_socket(std::string const& path);
     void notify_data_available();
     void notify_disconnected();
 
     std::thread io_service_thread;
-    boost::asio::io_service io_service;
-    boost::asio::io_service::work work;
-    boost::asio::local::stream_protocol::socket socket;
+    int const socket_fd;
+    int shutdown_fd;
 
     std::mutex observer_mutex;
     std::vector<std::shared_ptr<Observer>> observers;
@@ -68,4 +65,4 @@ private:
 }
 
 
-#endif // ASIO_SOCKET_TRANSPORT_H_
+#endif // STREAM_SOCKET_TRANSPORT_H_
