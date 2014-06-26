@@ -27,15 +27,6 @@
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 
-mi::NestedInputConfiguration::NestedInputConfiguration()
-{
-}
-
-std::shared_ptr<mi::InputChannelFactory> mi::NestedInputConfiguration::the_input_channel_factory()
-{
-    return std::make_shared<mia::InputChannelFactory>();
-}
-
 std::shared_ptr<mi::InputManager> mi::NestedInputConfiguration::the_input_manager()
 {
     return input_manager(

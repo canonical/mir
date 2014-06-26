@@ -25,6 +25,7 @@
 #include "android/android_input_target_enumerator.h"
 #include "android/event_filter_dispatcher_policy.h"
 #include "android/input_sender.h"
+#include "android/input_channel_factory.h"
 #include "display_input_region.h"
 #include "event_filter_chain.h"
 #include "nested_input_configuration.h"
@@ -33,6 +34,7 @@
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
 #include "null_input_send_observer.h"
+#include "null_input_channel_factory.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/options/configuration.h"
@@ -215,7 +217,11 @@ mir::DefaultServerConfiguration::the_input_manager()
 
 std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()
 {
-    return the_input_configuration()->the_input_channel_factory();
+    auto const options = the_options();
+    if (!options->get<bool>(options::enable_input_opt))
+        return std::make_shared<mi::NullInputChannelFactory>();
+    else
+        return std::make_shared<mia::InputChannelFactory>();
 }
 
 std::shared_ptr<mi::CursorListener>
