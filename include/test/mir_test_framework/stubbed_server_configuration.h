@@ -20,6 +20,9 @@
 #define MIR_TEST_FRAMEWORK_STUBBED_SERVER_CONFIGURATION_H_
 
 #include "mir/default_server_configuration.h"
+#include "mir/geometry/rectangle.h"
+
+#include <vector>
 
 namespace mir_test_framework
 {
@@ -33,6 +36,7 @@ class StubbedServerConfiguration : public DefaultServerConfiguration
 {
 public:
     StubbedServerConfiguration();
+    explicit StubbedServerConfiguration(std::vector<geometry::Rectangle> const& display_rects);
 
     std::shared_ptr<graphics::Platform> the_graphics_platform() override;
     std::shared_ptr<compositor::RendererFactory> the_renderer_factory() override;
@@ -43,8 +47,11 @@ public:
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
 
+    std::shared_ptr<graphics::Cursor> the_cursor() override;
+
 private:
     std::shared_ptr<graphics::Platform> graphics_platform;
+    std::vector<geometry::Rectangle> const display_rects;
 };
 }
 

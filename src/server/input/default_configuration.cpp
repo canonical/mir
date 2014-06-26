@@ -28,6 +28,7 @@
 #include "event_filter_chain.h"
 #include "nested_input_configuration.h"
 #include "null_input_configuration.h"
+#include "cursor_controller.h"
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
 
@@ -193,4 +194,14 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
     return the_input_configuration()->the_input_channel_factory();
 }
 
+std::shared_ptr<mi::CursorListener>
+mir::DefaultServerConfiguration::the_cursor_listener()
+{
+    return cursor_listener(
+        [this]() -> std::shared_ptr<mi::CursorListener>
+        {
+            return std::make_shared<mi::CursorController>(the_input_targets(), 
+                the_cursor(), the_default_cursor_image());
+        });
 
+}

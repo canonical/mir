@@ -225,6 +225,11 @@ MirSurfaceState mir_surface_get_state(MirSurface* surf)
     return state;
 }
 
+MirOrientation mir_surface_get_orientation(MirSurface *surface)
+{
+    return surface->get_orientation();
+}
+
 MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
 {
     if ((interval < 0) || (interval > 1))

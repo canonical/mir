@@ -18,89 +18,24 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/compositor/scene.h"
+#include "mir/compositor/scene_element.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/renderable.h"
 
-#include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/stub_display_buffer.h"
-#include "mir_test_doubles/stub_display_configuration.h"
-#include "mir_test_doubles/null_display.h"
-#include "mir_test_doubles/null_platform.h"
-
-#include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test/cross_process_action.h"
+#include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/basic_client_server_fixture.h"
 
 #include <gtest/gtest.h>
 
-#include <thread>
 #include <vector>
 #include <tuple>
+#include <algorithm>
 
-namespace mt = mir::test;
 namespace mtf = mir_test_framework;
-namespace mc = mir::compositor;
 namespace geom = mir::geometry;
-namespace mg = mir::graphics;
-namespace mtd = mir::test::doubles;
 
 namespace
 {
-char const* const mir_test_socket = mtf::test_socket_file().c_str();
-
-class StubDisplay : public mtd::NullDisplay
-{
-public:
-    StubDisplay(std::vector<geom::Rectangle> const& rects)
-        : rects{rects}
-    {
-        for (auto const& rect : rects)
-        {
-            display_buffers.push_back(
-                std::make_shared<mtd::StubDisplayBuffer>(rect));
-        }
-    }
-
-    void for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f) override
-    {
-        for (auto& db : display_buffers)
-            f(*db);
-    }
-
-    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
-    {
-        return std::unique_ptr<mg::DisplayConfiguration>(
-            new mtd::StubDisplayConfig(rects)
-        );
-    }
-
-private:
-    std::vector<geom::Rectangle> const rects;
-    std::vector<std::shared_ptr<mtd::StubDisplayBuffer>> display_buffers;
-};
-
-class StubPlatform : public mtd::NullPlatform
-{
-public:
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
-        const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
-    {
-        return std::make_shared<mtd::StubBufferAllocator>();
-    }
-
-    std::shared_ptr<mg::Display> create_display(
-        std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-        std::shared_ptr<mg::GLProgramFactory> const&,
-        std::shared_ptr<mg::GLConfig> const&) override
-    {
-        return std::make_shared<StubDisplay>(display_rects());
-    }
-
-    std::vector<geom::Rectangle> display_rects()
-    {
-        return {{{0,0}, {800,600}},
-                {{800,600}, {200,400}}};
-    }
-};
 
 struct RectangleCompare
 {
@@ -121,186 +56,119 @@ struct RectangleCompare
     }
 };
 
-void null_surface_callback(MirSurface*, void*)
+struct ServerConfig : mtf::StubbedServerConfiguration
 {
-}
+    static std::vector<geom::Rectangle> const display_rects;
+
+    ServerConfig() : mtf::StubbedServerConfiguration(display_rects) {}
+};
+
+std::vector<geom::Rectangle> const ServerConfig::display_rects{
+    {{0,0}, {800,600}},
+    {{800,600}, {200,400}}};
+
+using BasicFixture = mtf::BasicClientServerFixture<ServerConfig>;
+
+struct SurfacesWithOutputId : BasicFixture
+{
+    void SetUp()
+    {
+        BasicFixture::SetUp();
+        config = mir_connection_create_display_config(connection);
+        ASSERT_TRUE(config != NULL);
+    }
+
+    void TearDown()
+    {
+        mir_display_config_destroy(config);
+        BasicFixture::TearDown();
+    }
+
+    std::shared_ptr<MirSurface> create_non_fullscreen_surface_for(MirDisplayOutput const& output)
+    {
+        auto const& mode = output.modes[output.current_mode];
+
+        MirSurfaceParameters const request_params =
+        {
+            __PRETTY_FUNCTION__,
+            static_cast<int>(mode.horizontal_resolution) - 1,
+            static_cast<int>(mode.vertical_resolution) + 1,
+            mir_pixel_format_abgr_8888,
+            mir_buffer_usage_hardware,
+            output.output_id
+        };
+
+        auto surface_raw = mir_connection_create_surface_sync(connection, &request_params);
+        return shared_ptr_surface(surface_raw);
+    }
+
+    std::shared_ptr<MirSurface> create_fullscreen_surface_for(MirDisplayOutput const& output)
+    {
+        auto const& mode = output.modes[output.current_mode];
+
+        MirSurfaceParameters const request_params =
+        {
+            __PRETTY_FUNCTION__,
+            static_cast<int>(mode.horizontal_resolution),
+            static_cast<int>(mode.vertical_resolution),
+            mir_pixel_format_abgr_8888,
+            mir_buffer_usage_hardware,
+            output.output_id
+        };
+
+        auto surface_raw = mir_connection_create_surface_sync(connection, &request_params);
+        return shared_ptr_surface(surface_raw);
+    }
+
+    std::shared_ptr<MirSurface> shared_ptr_surface(MirSurface* surface_raw)
+    {
+        return std::shared_ptr<MirSurface>{
+            surface_raw,
+            [](MirSurface* surface)
+            {
+                mir_surface_release_sync(surface);
+            }};
+    }
+
+    std::vector<geom::Rectangle> server_surface_rectangles()
+    {
+        std::vector<geom::Rectangle> rects;
+        auto const elements = server_config().the_scene()->scene_elements_for(this);
+        for (auto const& element : elements)
+            rects.push_back(element->renderable()->screen_position());
+        return rects;
+    }
+
+    MirDisplayConfiguration* config;
+};
 
 }
-
-using SurfacesWithOutputId = BespokeDisplayServerTestFixture;
 
 TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_correct_output)
 {
-    mt::CrossProcessAction client_connect_and_create_surface;
-    mt::CrossProcessAction client_release_surface_and_disconnect;
-    mt::CrossProcessAction verify_scene;
+    std::vector<std::shared_ptr<MirSurface>> surfaces;
 
-    struct ServerConfig : TestingServerConfiguration
+    for (uint32_t n = 0; n < config->num_outputs; ++n)
     {
-        ServerConfig(mt::CrossProcessAction verify_scene)
-            : verify_scene{verify_scene}
-        {
-        }
+        auto surface = create_fullscreen_surface_for(config->outputs[n]);
+        EXPECT_TRUE(mir_surface_is_valid(surface.get()));
+        surfaces.push_back(surface);
+    }
 
-        std::shared_ptr<mg::Platform> the_graphics_platform() override
-        {
-            if (!graphics_platform)
-                graphics_platform = std::make_shared<StubPlatform>();
-            return graphics_platform;
-        }
+    auto surface_rects = server_surface_rectangles();
+    auto display_rects = ServerConfig::display_rects;
 
-        void exec() override
-        {
-            verification_thread = std::thread([this](){
-                verify_scene.exec([this]
-                {
-                    std::vector<geom::Rectangle> rects;
-                    auto list = the_scene()->renderable_list_for(this);
-                    for(auto &rend : list) 
-                        rects.push_back(rend->screen_position());
-
-                    auto display_rects = graphics_platform->display_rects();
-                    std::sort(display_rects.begin(), display_rects.end(), RectangleCompare());
-                    std::sort(rects.begin(), rects.end(), RectangleCompare());
-                    EXPECT_EQ(display_rects, rects);
-                });
-            });
-        }
-
-        void on_exit() override
-        {
-            verification_thread.join();
-        }
-
-        std::shared_ptr<StubPlatform> graphics_platform;
-        std::thread verification_thread;
-        mt::CrossProcessAction verify_scene;
-    } server_config{verify_scene};
-
-    launch_server_process(server_config);
-
-    struct ClientConfig : TestingClientConfiguration
-    {
-        ClientConfig(mt::CrossProcessAction const& connect_and_create_surface,
-                     mt::CrossProcessAction const& release_surface_and_disconnect)
-            : connect_and_create_surface{connect_and_create_surface},
-              release_surface_and_disconnect{release_surface_and_disconnect}
-        {
-        }
-
-        void exec()
-        {
-            MirConnection* connection;
-            std::vector<MirSurface*> surfaces;
-
-            connect_and_create_surface.exec([&]
-            {
-                connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-                ASSERT_TRUE(mir_connection_is_valid(connection));
-
-                auto config = mir_connection_create_display_config(connection);
-                ASSERT_TRUE(config != NULL);
-
-                for (uint32_t n = 0; n < config->num_outputs; ++n)
-                {
-                    auto const& output = config->outputs[n];
-                    auto const& mode = output.modes[output.current_mode];
-
-                    MirSurfaceParameters const request_params =
-                    {
-                        __PRETTY_FUNCTION__,
-                        static_cast<int>(mode.horizontal_resolution),
-                        static_cast<int>(mode.vertical_resolution),
-                        mir_pixel_format_abgr_8888,
-                        mir_buffer_usage_hardware,
-                        output.output_id
-                    };
-
-                    surfaces.push_back(
-                        mir_connection_create_surface_sync(connection, &request_params));
-                }
-
-                mir_display_config_destroy(config);
-            });
-
-            release_surface_and_disconnect.exec([&]
-            {
-                for (auto surface : surfaces)
-                    mir_surface_release_sync(surface);
-                mir_connection_release(connection);
-            });
-        }
-
-        mt::CrossProcessAction connect_and_create_surface;
-        mt::CrossProcessAction release_surface_and_disconnect;
-    } client_config{client_connect_and_create_surface,
-                    client_release_surface_and_disconnect};
-
-    launch_client_process(client_config);
-
-    run_in_test_process([&]
-    {
-        client_connect_and_create_surface();
-        verify_scene();
-        client_release_surface_and_disconnect();
-    });
+    std::sort(display_rects.begin(), display_rects.end(), RectangleCompare());
+    std::sort(surface_rects.begin(), surface_rects.end(), RectangleCompare());
+    EXPECT_EQ(display_rects, surface_rects);
 }
 
 TEST_F(SurfacesWithOutputId, non_fullscreen_surfaces_are_not_accepted)
 {
-    mt::CrossProcessAction client_connect_and_create_scene;
-    mt::CrossProcessAction client_disconnect;
-
-    struct ServerConfig : TestingServerConfiguration
+    for (uint32_t n = 0; n < config->num_outputs; ++n)
     {
-        std::shared_ptr<mg::Platform> the_graphics_platform() override
-        {
-            if (!graphics_platform)
-                graphics_platform = std::make_shared<StubPlatform>();
-            return graphics_platform;
-        }
+        auto surface = create_non_fullscreen_surface_for(config->outputs[n]);
 
-        std::shared_ptr<StubPlatform> graphics_platform;
-    } server_config;
-
-    launch_server_process(server_config);
-
-    struct ClientConfig : TestingClientConfiguration
-    {
-        void exec()
-        {
-            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-            ASSERT_TRUE(mir_connection_is_valid(connection));
-
-            auto config = mir_connection_create_display_config(connection);
-            ASSERT_TRUE(config != NULL);
-
-            for (uint32_t n = 0; n < config->num_outputs; ++n)
-            {
-                auto const& output = config->outputs[n];
-                auto const& mode = output.modes[output.current_mode];
-
-                MirSurfaceParameters const request_params =
-                {
-                    __PRETTY_FUNCTION__,
-                    static_cast<int>(mode.horizontal_resolution) - 1,
-                    static_cast<int>(mode.vertical_resolution) + 1,
-                    mir_pixel_format_abgr_8888,
-                    mir_buffer_usage_hardware,
-                    output.output_id
-                };
-
-                auto surface = mir_connection_create_surface_sync(connection, &request_params);
-                EXPECT_FALSE(mir_surface_is_valid(surface));
-                mir_surface_release(surface, &null_surface_callback, nullptr);
-            }
-
-            mir_display_config_destroy(config);
-
-            mir_connection_release(connection);
-        }
-
-    } client_config;
-
-    launch_client_process(client_config);
+        EXPECT_FALSE(mir_surface_is_valid(surface.get()));
+    }
 }

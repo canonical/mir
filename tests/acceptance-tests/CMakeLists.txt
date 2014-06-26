@@ -17,6 +17,7 @@ set(
   clients.cpp
   test_client_library.cpp
   test_client_library_old.cpp
+  test_client_surface_events.cpp
   test_custom_input_dispatcher.cpp
   test_client_surfaces.cpp
   test_test_framework.cpp
@@ -36,6 +37,7 @@ set(
   test_client_surface_swap_buffers.cpp
   test_client_cursor_api.cpp
   test_large_messages.cpp
+  test_client_surface_visibility.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )

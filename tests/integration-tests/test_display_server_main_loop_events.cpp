@@ -104,6 +104,7 @@ public:
     {
         handlers.register_fd_handler(
             {fd},
+            this,
             [this,conf_change_handler](int fd)
             {
                 char c;

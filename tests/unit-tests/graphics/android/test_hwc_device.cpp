@@ -96,6 +96,7 @@ protected:
         comp_layer.visibleRegionScreen = {1, &set_region};
         comp_layer.acquireFenceFd = -1;
         comp_layer.releaseFenceFd = -1;
+        comp_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
 
         target_layer.compositionType = HWC_FRAMEBUFFER_TARGET;
         target_layer.hints = 0;
@@ -108,6 +109,7 @@ protected:
         target_layer.visibleRegionScreen = {1, &set_region};
         target_layer.acquireFenceFd = -1;
         target_layer.releaseFenceFd = -1;
+        target_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
 
         skip_layer.compositionType = HWC_FRAMEBUFFER;
         skip_layer.hints = 0;
@@ -120,6 +122,7 @@ protected:
         skip_layer.visibleRegionScreen = {1, &set_region};
         skip_layer.acquireFenceFd = -1;
         skip_layer.releaseFenceFd = -1;
+        skip_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
 
         set_skip_layer = skip_layer;
         set_skip_layer.handle = mock_native_buffer->handle();
@@ -299,7 +302,7 @@ TEST_F(HwcDevice, sets_and_updates_fences)
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
-    EXPECT_CALL(*mock_native_buffer, update_fence(fb_release_fence))
+    EXPECT_CALL(*mock_native_buffer, update_usage(fb_release_fence, mga::BufferAccess::read))
         .InSequence(seq);
     EXPECT_CALL(*mock_file_ops, close(hwc_retire_fence))
         .InSequence(seq);
@@ -359,6 +362,7 @@ TEST_F(HwcDevice, sets_proper_list_with_overlays)
     comp_layer1.visibleRegionScreen = {1, &set_region};
     comp_layer1.acquireFenceFd = overlay_acquire_fence1;
     comp_layer1.releaseFenceFd = -1;
+    comp_layer1.planeAlpha = 0xFF;
 
     comp_layer2.compositionType = HWC_OVERLAY;
     comp_layer2.hints = 0;
@@ -371,6 +375,7 @@ TEST_F(HwcDevice, sets_proper_list_with_overlays)
     comp_layer2.visibleRegionScreen = {1, &set_region};
     comp_layer2.acquireFenceFd = overlay_acquire_fence2;
     comp_layer2.releaseFenceFd = -1;
+    comp_layer2.planeAlpha = 0xFF;
 
     set_target_layer.acquireFenceFd = fb_acquire_fence;
     set_target_layer.handle = native_handle_3->handle();
@@ -411,11 +416,11 @@ TEST_F(HwcDevice, sets_proper_list_with_overlays)
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesList(expected_list)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
-    EXPECT_CALL(*native_handle_1, update_fence(release_fence1))
+    EXPECT_CALL(*native_handle_1, update_usage(release_fence1, mga::BufferAccess::read))
         .InSequence(seq);
-    EXPECT_CALL(*native_handle_2, update_fence(release_fence2))
+    EXPECT_CALL(*native_handle_2, update_usage(release_fence2, mga::BufferAccess::read))
         .InSequence(seq);
-    EXPECT_CALL(*native_handle_3, update_fence(release_fence3))
+    EXPECT_CALL(*native_handle_3, update_usage(release_fence3, mga::BufferAccess::read))
         .InSequence(seq);
     
     EXPECT_TRUE(device.post_overlays(mock_context, updated_list, stub_compositor));
@@ -572,14 +577,13 @@ TEST_F(HwcDevice, rejects_list_containing_transformed)
     EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
 }
 
-//TODO: remove once alpha+HWC is turned on
-TEST_F(HwcDevice, rejects_list_containing_alpha)
+//TODO: support plane alpha for hwc 1.2 and later
+TEST_F(HwcDevice, rejects_list_containing_plane_alpha)
 {
+    using namespace testing;
+
     mga::HwcDevice device(mock_device, mock_hwc_device_wrapper, mock_vsync, mock_file_ops);
 
-    mg::RenderableList renderlist{std::make_shared<mtd::StubTranslucentRenderable>()};
-    EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
-
-    mg::RenderableList renderlist2{std::make_shared<mtd::StubShapedRenderable>()};
+    mg::RenderableList renderlist{std::make_shared<mtd::PlaneAlphaRenderable>()};
     EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
 }
