@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -17,6 +17,7 @@
  */
 
 #include "mir/frontend/session_mediator_report.h"
+#include "mir/graphics/native_platform.h"
 #include "mir/display_server.h"
 #include "mir/run_mir.h"
 
@@ -27,6 +28,7 @@
 #include <gmock/gmock.h>
 
 namespace mf = mir::frontend;
+namespace mg = mir::graphics;
 namespace mtf = mir_test_framework;
 using namespace testing;
 
@@ -91,13 +93,61 @@ struct FakeCommandLine
     }
 };
 
+struct StubNativePlatform : mg::NativePlatform
+{
+    StubNativePlatform(std::shared_ptr<mg::Platform> const& wrapped) :
+        wrapped(wrapped) {}
+
+    void initialize(std::shared_ptr<mg::NestedContext> const& /*nested_context*/) override {}
+
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
+        std::shared_ptr<mg::BufferInitializer> const& buffer_initializer) override
+    {
+        return wrapped->create_buffer_allocator(buffer_initializer);
+    }
+
+    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package() override
+    {
+        return wrapped->get_ipc_package();
+    }
+
+    std::shared_ptr<mg::InternalClient> create_internal_client() override
+    {
+        return wrapped->create_internal_client();
+    }
+
+    void fill_buffer_package(
+        mg::BufferIPCPacker* packer,
+        mg::Buffer const* buffer,
+        mg::BufferIpcMsgType msg_type) const override
+    {
+        return wrapped->fill_buffer_package(packer, buffer, msg_type);
+    }
+
+    std::shared_ptr<mg::Platform> const wrapped;
+};
+
 struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerConfiguration
 {
-    NestedServerConfiguration(std::string const& host_socket) :
+    NestedServerConfiguration(
+        std::string const& host_socket,
+        std::shared_ptr<mg::Platform> const& graphics_platform) :
         FakeCommandLine(host_socket),
-        DefaultServerConfiguration(FakeCommandLine::argc, FakeCommandLine::argv)
+        DefaultServerConfiguration(FakeCommandLine::argc, FakeCommandLine::argv),
+        graphics_platform(graphics_platform)
     {
     }
+
+    std::shared_ptr<mg::NativePlatform> the_graphics_native_platform() override
+    {
+        return graphics_native_platform(
+            [this]() -> std::shared_ptr<mg::NativePlatform>
+            {
+                return std::make_shared<StubNativePlatform>(graphics_platform);
+            });
+    }
+
+    std::shared_ptr<mg::Platform> const graphics_platform;
 };
 
 struct NestedServer : mtf::InProcessServer, HostServerConfiguration
@@ -112,7 +162,7 @@ struct NestedServer : mtf::InProcessServer, HostServerConfiguration
 TEST_F(NestedServer, nested_platform_connects_and_disconnects)
 {
     std::string const connection_string{new_connection()};
-    NestedServerConfiguration nested_config(connection_string);
+    NestedServerConfiguration nested_config{connection_string, the_graphics_platform()};
 
     InSequence seq;
     EXPECT_CALL(*mock_session_mediator_report, session_connect_called(_)).Times(1);
