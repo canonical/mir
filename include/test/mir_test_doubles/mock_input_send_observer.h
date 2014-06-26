@@ -16,30 +16,28 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_CONFIGURATION_H_
-#define MIR_INPUT_INPUT_CONFIGURATION_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_SEND_OBSERVER_H_
+#define MIR_TEST_DOUBLES_MOCK_INPUT_SEND_OBSERVER_H_
 
-#include <memory>
+#include "mir/input/input_send_observer.h"
+#include <gmock/gmock.h>
 
 namespace mir
 {
-namespace input
+namespace test
 {
-class InputManager;
-
-class InputConfiguration
+namespace doubles
 {
-public:
-    virtual ~InputConfiguration() = default;
 
-    virtual std::shared_ptr<InputManager> the_input_manager() = 0;
-
-protected:
-    InputConfiguration() = default;
-    InputConfiguration(InputConfiguration const&) = delete;
-    InputConfiguration& operator=(InputConfiguration const&) = delete;
+struct MockInputSendObserver : public mir::input::InputSendObserver
+{
+    MockInputSendObserver() = default;
+    MOCK_METHOD3(send_failed, void(MirEvent const&, mir::input::Surface*, FailureReason));
+    MOCK_METHOD3(send_suceeded, void(MirEvent const&, mir::input::Surface*, InputResponse));
+    MOCK_METHOD2(client_blocked, void(MirEvent const&, mir::input::Surface*));
 };
 
+}
 }
 }
 

@@ -26,6 +26,8 @@
 #include "mir/scene/null_surface_observer.h"
 
 #include "mir_test_doubles/mock_buffer_stream.h"
+#include "mir_test_doubles/mock_input_sender.h"
+#include "mir_test_doubles/stub_input_sender.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test/fake_shared.h"
 
@@ -90,6 +92,8 @@ struct BasicSurfaceTest : public testing::Test
     void const* compositor_id{nullptr};
     std::shared_ptr<ms::LegacySurfaceChangeNotification> observer =
         std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb, [this](int){mock_change_cb();});
+    std::shared_ptr<mi::InputSender> const stub_input_sender = std::make_shared<mtd::StubInputSender>();
+    testing::NiceMock<mtd::MockInputSender> mock_sender;
 
     ms::BasicSurface surface{
         name,
@@ -97,6 +101,7 @@ struct BasicSurfaceTest : public testing::Test
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report};
@@ -121,7 +126,8 @@ TEST_F(BasicSurfaceTest, id_always_unique)
     {
         surfaces[i].reset(new ms::BasicSurface(
                 name, rect, false, mock_buffer_stream,
-                std::shared_ptr<mi::InputChannel>(), stub_configurator, std::shared_ptr<mg::CursorImage>(), report)
+                std::shared_ptr<mi::InputChannel>(), stub_input_sender,
+                stub_configurator, std::shared_ptr<mg::CursorImage>(), report)
             );
 
         for (int j = 0; j < i; ++j)
@@ -140,7 +146,8 @@ TEST_F(BasicSurfaceTest, id_never_invalid)
     {
         surfaces[i].reset(new ms::BasicSurface(
                 name, rect, false, mock_buffer_stream,
-                std::shared_ptr<mi::InputChannel>(), stub_configurator, std::shared_ptr<mg::CursorImage>(), report)
+                std::shared_ptr<mi::InputChannel>(), stub_input_sender,
+                stub_configurator, std::shared_ptr<mg::CursorImage>(), report)
             );
 
         ASSERT_TRUE(surfaces[i]->compositor_snapshot(compositor_id)->id());
@@ -309,6 +316,7 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report};
@@ -428,4 +436,25 @@ TEST_F(BasicSurfaceTest, throws_on_invalid_visibility_attrib_value)
         surface.configure(mir_surface_attrib_visibility,
                           static_cast<int>(mir_surface_visibility_exposed) + 1);
     }, std::logic_error);
+}
+
+TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
+{
+    using namespace ::testing;
+
+    ms::BasicSurface surface{
+        name,
+        rect,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        mt::fake_shared(mock_sender),
+        stub_configurator,
+        nullptr,
+        report};
+
+    MirEvent event;
+    EXPECT_CALL(mock_sender, send_event(_,_));
+
+    surface.consume(event);
 }

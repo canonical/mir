@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
+ *              Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #include "mir/scene/surface_creation_parameters.h"
@@ -35,6 +36,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+
 namespace mi = mir::input;
 namespace mis = mi::synthesis;
 namespace msh = mir::shell;
@@ -49,7 +51,7 @@ namespace
 struct ServerConfiguration : mtf::InputTestingServerConfiguration
 {
     mt::Barrier& input_cb_setup_fence;
-    
+
     static geom::Rectangle const display_bounds;
 
     std::function<void(mtf::InputTestingServerConfiguration& server)> produce_events;
@@ -523,7 +525,7 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
     static int const abs_touch_y_1 = minimum_touch+(maximum_touch-minimum_touch)*.10;
     static int const abs_touch_x_2 = 0;
     static int const abs_touch_y_2 = 0;
-    
+
     static float const expected_scale_x = float(display_width) / (maximum_touch - minimum_touch + 1);
     static float const expected_scale_y = float(display_height) / (maximum_touch - minimum_touch + 1);
 
@@ -549,5 +551,30 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
                 mt::MotionEventWithPosition(expected_motion_x_2, expected_motion_y_2))).Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         };
+    start_client(client_config);
+}
+
+TEST_F(TestClientInput, send_mir_input_events_through_surface)
+{
+    MirEvent key_event;
+    std::memset(&key_event, 0, sizeof key_event);
+    key_event.type = mir_event_type_key;
+    key_event.key.action= mir_key_action_down;
+
+    server_configuration.produce_events = [key_event](mtf::InputTestingServerConfiguration& server)
+         {
+             server.the_session_container()->for_each([key_event](std::shared_ptr<ms::Session> const& session) -> void
+                {
+                    session->default_surface()->consume(key_event);
+                });
+         };
+
+    start_server();
+
+    client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
+    {
+        EXPECT_CALL(handler, handle_input(mt::KeyDownEvent())).Times(1)
+                 .WillOnce(mt::WakeUp(&events_received));
+    };
     start_client(client_config);
 }

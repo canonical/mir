@@ -46,6 +46,7 @@ public:
     std::shared_ptr<input::InputConfiguration> the_input_configuration() override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
+    std::shared_ptr<input::InputSender> the_input_sender() override;
 
     std::shared_ptr<graphics::Cursor> the_cursor() override;
 

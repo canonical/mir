@@ -31,11 +31,22 @@ namespace doubles
 
 struct StubSwappingGLContext : public graphics::android::SwappingGLContext
 {
+    StubSwappingGLContext(std::shared_ptr<graphics::Buffer> const& buffer) :
+        buffer(buffer)
+    {
+    }
+
+    StubSwappingGLContext() :
+        StubSwappingGLContext(std::make_shared<StubBuffer>())
+    {
+    }
     void swap_buffers() const {}
     std::shared_ptr<graphics::Buffer> last_rendered_buffer() const
     {
-        return std::make_shared<StubBuffer>();
+        return buffer;
     }
+private:
+    std::shared_ptr<graphics::Buffer> const buffer;
 };
 
 }

@@ -37,7 +37,7 @@ class StubAlarm : public mir::time::Alarm
     }
     State state() const override
     {
-        return Cancelled;
+        return cancelled;
     }
     bool reschedule_in(std::chrono::milliseconds) override
     {
