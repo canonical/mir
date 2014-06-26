@@ -213,14 +213,9 @@ TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
             next_buffer_done.set();
             server_done.wait();
 
-            /*
-             * TODO: Releasing the connection to a shut down server blocks
-             * the client. We should handle unexpected server shutdown more
-             * gracefully on the client side.
-             *
-             * mir_connection_release(connection);
-             */
+            mir_connection_release(connection);
         }
+
 
         Flag& next_buffer_done;
         Flag& server_done;
@@ -289,6 +284,8 @@ TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clie
 
             surface_created.set();
             server_done.wait();
+
+            mir_connection_release(connection);
         }
 
         Flag& surface_created;
