@@ -74,6 +74,8 @@ public:
     void remove(std::shared_ptr<SurfaceObserver> const& observer);
 
 private:
+    void for_each(
+        std::function<void(std::shared_ptr<SurfaceObserver> const&)> const& callback);
     std::mutex mutex;
     std::vector<std::shared_ptr<SurfaceObserver>> observers;
 };

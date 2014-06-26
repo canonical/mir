@@ -41,84 +41,84 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-void ms::SurfaceObservers::attrib_changed(MirSurfaceAttrib attrib, int value)
+void ms::SurfaceObservers::for_each(
+    std::function<void(std::shared_ptr<SurfaceObserver> const&)> const& callback)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
-    // TBD Maybe we should copy observers so we can release the lock?
-    for (auto const& p : observers)
-        p->attrib_changed(attrib, value);
+    auto observers_snapshot = observers;
+    lock.unlock();
+    for (auto const& observer : observers_snapshot)
+        callback(observer);
+}
+
+void ms::SurfaceObservers::attrib_changed(MirSurfaceAttrib attrib, int value)
+{
+    for_each([=](std::shared_ptr<SurfaceObserver> const& o) {
+        o->attrib_changed(attrib, value);
+    });
 }
 
 void ms::SurfaceObservers::resized_to(geometry::Size const& size)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    // TBD Maybe we should copy observers so we can release the lock?
-    for (auto const& p : observers)
-        p->resized_to(size);
+    for_each([&size](std::shared_ptr<SurfaceObserver> const& o) {
+        o->resized_to(size);
+    });
 }
 
 void ms::SurfaceObservers::moved_to(geometry::Point const& top_left)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    // TBD Maybe we should copy observers so we can release the lock?
-    for (auto const& p : observers)
-        p->moved_to(top_left);
+    for_each([&top_left](std::shared_ptr<SurfaceObserver> const& o) {
+        o->moved_to(top_left);
+    });
 }
 
 void ms::SurfaceObservers::hidden_set_to(bool hide)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    // TBD Maybe we should copy observers so we can release the lock?
-    for (auto const& p : observers)
-        p->hidden_set_to(hide);
+    for_each([=](std::shared_ptr<SurfaceObserver> const& o) {
+        o->hidden_set_to(hide);
+    });
 }
 
 void ms::SurfaceObservers::frame_posted(int frames_available)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    // TBD Maybe we should copy observers so we can release the lock?
-    for (auto const& p : observers)
-        p->frame_posted(frames_available);
+    for_each([=](std::shared_ptr<SurfaceObserver> const& o) {
+        o->frame_posted(frames_available);
+    });
 }
 
 void ms::SurfaceObservers::alpha_set_to(float alpha)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    // TBD Maybe we should copy observers so we can release the lock?
-    for (auto const& p : observers)
-        p->alpha_set_to(alpha);
+    for_each([=](std::shared_ptr<SurfaceObserver> const& o) {
+        o->alpha_set_to(alpha);
+    });
 }
 
 void ms::SurfaceObservers::orientation_set_to(MirOrientation orientation)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    // TBD Maybe we should copy observers so we can release the lock?
-    for (auto const& p : observers)
-        p->orientation_set_to(orientation);
+    for_each([=](std::shared_ptr<SurfaceObserver> const& o) {
+        o->orientation_set_to(orientation);
+    });
 }
 
 void ms::SurfaceObservers::transformation_set_to(glm::mat4 const& t)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    // TBD Maybe we should copy observers so we can release the lock?
-    for (auto const& p : observers)
-        p->transformation_set_to(t);
+    for_each([&t](std::shared_ptr<SurfaceObserver> const& o) {
+        o->transformation_set_to(t);
+    });
 }
 
 void ms::SurfaceObservers::cursor_image_set_to(mg::CursorImage const& image)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    // TBD Maybe we should copy observers so we can release the lock?
-    for (auto const& p : observers)
-        p->cursor_image_set_to(image);
+    for_each([&image](std::shared_ptr<SurfaceObserver> const& o) {
+        o->cursor_image_set_to(image);
+    });
 }
 
 void ms::SurfaceObservers::reception_mode_set_to(mi::InputReceptionMode mode)
 {
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    // TBD Maybe we should copy observers so we can release the lock?
-    for (auto const& p : observers)
-        p->reception_mode_set_to(mode);
+    for_each([=](std::shared_ptr<SurfaceObserver> const& o) {
+        o->reception_mode_set_to(mode);
+    });
 }
 
 void ms::SurfaceObservers::add(std::shared_ptr<SurfaceObserver> const& observer)
@@ -324,7 +324,7 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 
     if (hidden)
         return false;
-    
+
     // Restrict to bounding rectangle
     if (!surface_rect.contains(point))
         return false;

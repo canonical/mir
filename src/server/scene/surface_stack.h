@@ -57,6 +57,8 @@ public:
    void remove_observer(std::shared_ptr<Observer> const& observer);
 
 private:
+    void for_each(
+        std::function<void(std::shared_ptr<Observer> const&)> const& callback);
     std::mutex mutex;
     std::vector<std::shared_ptr<Observer>> observers;
 };
