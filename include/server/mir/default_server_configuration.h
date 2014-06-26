@@ -361,7 +361,8 @@ protected:
     CachedPtr<compositor::CompositorReport> compositor_report;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
-    CachedPtr<time::Clock> clock;
+    // static to workaround the singleton clock in AsioMainLoop when running multiple servers
+    static CachedPtr<time::Clock> clock;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;

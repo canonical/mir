@@ -20,20 +20,14 @@
 #include "mir/display_server.h"
 #include "mir/run_mir.h"
 
-#include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/mock_egl.h"
+#include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/stubbed_server_configuration.h"
 
-#ifndef ANDROID
-#include "mir_test_doubles/mock_gbm.h"
-#endif
-
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
-
 using namespace testing;
 
 namespace
@@ -67,7 +61,7 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     void session_error(const std::string&, const char*, const std::string&) override {};
 };
 
-struct HostServerConfiguration : public mtf::TestingServerConfiguration
+struct HostServerConfiguration : mtf::StubbedServerConfiguration
 {
     virtual std::shared_ptr<mf::SessionMediatorReport>  the_session_mediator_report()
     {
@@ -106,126 +100,28 @@ struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerCon
     }
 };
 
-struct NestedMockEGL : mir::test::doubles::MockEGL
+struct NestedServer : mtf::InProcessServer, HostServerConfiguration
 {
-    NestedMockEGL()
+    virtual mir::DefaultServerConfiguration& server_config()
     {
-        {
-            InSequence init_before_terminate;
-            EXPECT_CALL(*this, eglGetDisplay(_)).Times(1);
-
-            EXPECT_CALL(*this, eglInitialize(_, _, _)).Times(1).WillRepeatedly(
-                DoAll(WithArgs<1, 2>(Invoke(this, &NestedMockEGL::egl_initialize)), Return(EGL_TRUE)));
-
-            EXPECT_CALL(*this, eglChooseConfig(_, _, _, _, _)).Times(AnyNumber()).WillRepeatedly(
-                DoAll(WithArgs<2, 4>(Invoke(this, &NestedMockEGL::egl_choose_config)), Return(EGL_TRUE)));
-
-            EXPECT_CALL(*this, eglTerminate(_)).Times(1);
-        }
-
-        EXPECT_CALL(*this, eglCreateWindowSurface(_, _, _, _)).Times(AnyNumber());
-        EXPECT_CALL(*this, eglMakeCurrent(_, _, _, _)).Times(AnyNumber());
-        EXPECT_CALL(*this, eglDestroySurface(_, _)).Times(AnyNumber());
-
-        EXPECT_CALL(*this, eglGetProcAddress(StrEq("eglCreateImageKHR"))).Times(AnyNumber());
-        EXPECT_CALL(*this, eglGetProcAddress(StrEq("eglDestroyImageKHR"))).Times(AnyNumber());
-        EXPECT_CALL(*this, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES"))).Times(AnyNumber());
-
-        {
-            InSequence context_lifecycle;
-            EXPECT_CALL(*this, eglCreateContext(_, _, _, _)).Times(AnyNumber()).WillRepeatedly(Return((EGLContext)this));
-            EXPECT_CALL(*this, eglDestroyContext(_, _)).Times(AnyNumber()).WillRepeatedly(Return(EGL_TRUE));
-        }
-    }
-
-private:
-    void egl_initialize(EGLint* major, EGLint* minor) { *major = 1; *minor = 4; }
-    void egl_choose_config(EGLConfig* config, EGLint*  num_config)
-    {
-        *config = this;
-        *num_config = 1;
-    }
-};
-
-struct NestedMockPlatform
-#ifndef ANDROID
-    : mir::test::doubles::MockGBM
-#endif
-{
-    NestedMockPlatform()
-    {
-#ifndef ANDROID
-        InSequence gbm_device_lifecycle;
-        EXPECT_CALL(*this, gbm_create_device(_)).Times(1);
-        EXPECT_CALL(*this, gbm_device_destroy(_)).Times(1);
-#endif
-    }
-};
-
-struct NestedMockGL : NiceMock<mir::test::doubles::MockGL>
-{
-    NestedMockGL() {}
-};
-
-template<class NestedServerConfiguration>
-struct ClientConfig : mtf::TestingClientConfiguration
-{
-    ClientConfig(std::string const& host_socket) : host_socket(host_socket) {}
-
-    std::string const host_socket;
-
-    void exec() override
-    {
-        try
-        {
-            NestedMockPlatform mock_gbm;
-            NestedMockEGL mock_egl;
-            NestedMockGL mock_gl;
-            NestedServerConfiguration nested_config(host_socket);
-
-            mir::run_mir(nested_config, [](mir::DisplayServer& server){server.stop();});
-
-            // TODO - remove FAIL() as we should exit (NB we need logic to cause exit).
-            FAIL();
-        }
-        catch (std::exception const& x)
-        {
-            // TODO - this is only temporary until NestedPlatform is implemented.
-            EXPECT_THAT(x.what(), HasSubstr("Platform::create_buffer_allocator is not implemented yet!"));
-        }
+        return *this;
     }
 };
 }
 
-using TestNestedMir = mtf::BespokeDisplayServerTestFixture;
-
-// TODO resolve problems running "nested" tests on android and running nested on MESA
-#ifdef ANDROID
-#define DISABLED_ON_ANDROID_AND_MESA(name) DISABLED_##name
-#else
-#define DISABLED_ON_ANDROID_AND_MESA(name) DISABLED_##name
-#endif
-
-TEST_F(TestNestedMir, DISABLED_ON_ANDROID_AND_MESA(nested_platform_connects_and_disconnects))
+TEST_F(NestedServer, nested_platform_connects_and_disconnects)
 {
-    struct MyHostServerConfiguration : HostServerConfiguration
-    {
-        void exec() override
-        {
-            InSequence seq;
-            EXPECT_CALL(*mock_session_mediator_report, session_connect_called(_)).Times(1);
-            EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(1);
-        }
-    };
+    std::string const connection_string{new_connection()};
+    NestedServerConfiguration nested_config(connection_string);
 
-    MyHostServerConfiguration host_config;
-    ClientConfig<NestedServerConfiguration> client_config(host_config.the_socket_file());
+    InSequence seq;
+    EXPECT_CALL(*mock_session_mediator_report, session_connect_called(_)).Times(1);
+    EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(1);
 
-
-    launch_server_process(host_config);
-    launch_client_process(client_config);
+    mir::run_mir(nested_config, [](mir::DisplayServer& server){server.stop();});
 }
 
+#ifdef DISABLED_UNTIL_REWRITTEN
 //////////////////////////////////////////////////////////////////
 // TODO the following tests were used in investigating lifetime issues.
 // TODO they may not have much long term value, but decide that later
@@ -280,3 +176,4 @@ TEST_F(TestNestedMir, DISABLED_ON_ANDROID_AND_MESA(on_exit_display_objects_shoul
     launch_server_process(host_config);
     launch_client_process(client_config);
 }
+#endif
