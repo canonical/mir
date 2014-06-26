@@ -24,6 +24,8 @@
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 
+#include "mir_test_doubles/mock_egl.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -150,6 +152,56 @@ struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerCon
     std::shared_ptr<mg::Platform> const graphics_platform;
 };
 
+struct NestedMockEGL : mir::test::doubles::MockEGL
+{
+    NestedMockEGL()
+    {
+        {
+            InSequence init_before_terminate;
+            EXPECT_CALL(*this, eglGetDisplay(_)).Times(1);
+
+//            EXPECT_CALL(*this, eglInitialize(_, _, _)).Times(1).WillRepeatedly(
+//                DoAll(WithArgs<1, 2>(Invoke(this, &NestedMockEGL::egl_initialize)), Return(EGL_TRUE)));
+
+            EXPECT_CALL(*this, eglTerminate(_)).Times(1);
+        }
+
+        EXPECT_CALL(*this, eglCreateWindowSurface(_, _, _, _)).Times(AnyNumber());
+        EXPECT_CALL(*this, eglMakeCurrent(_, _, _, _)).Times(AnyNumber());
+        EXPECT_CALL(*this, eglDestroySurface(_, _)).Times(AnyNumber());
+
+        EXPECT_CALL(*this, eglQueryString(_, _)).Times(AnyNumber());
+        ON_CALL(*this, eglQueryString(_,EGL_EXTENSIONS))
+            .WillByDefault(Return("EGL_KHR_image "
+                                  "EGL_KHR_image_base "
+                                  "EGL_MESA_drm_image"));
+
+        EXPECT_CALL(*this, eglChooseConfig(_, _, _, _, _)).Times(AnyNumber()).WillRepeatedly(
+            DoAll(WithArgs<2, 4>(Invoke(this, &NestedMockEGL::egl_choose_config)), Return(EGL_TRUE)));
+
+        EXPECT_CALL(*this, eglGetCurrentContext()).Times(AnyNumber());
+        EXPECT_CALL(*this, eglCreatePbufferSurface(_, _, _)).Times(AnyNumber());
+
+        EXPECT_CALL(*this, eglGetProcAddress(StrEq("eglCreateImageKHR"))).Times(AnyNumber());
+        EXPECT_CALL(*this, eglGetProcAddress(StrEq("eglDestroyImageKHR"))).Times(AnyNumber());
+        EXPECT_CALL(*this, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES"))).Times(AnyNumber());
+
+        {
+            InSequence context_lifecycle;
+            EXPECT_CALL(*this, eglCreateContext(_, _, _, _)).Times(AnyNumber()).WillRepeatedly(Return((EGLContext)this));
+            EXPECT_CALL(*this, eglDestroyContext(_, _)).Times(AnyNumber()).WillRepeatedly(Return(EGL_TRUE));
+        }
+    }
+
+private:
+    void egl_initialize(EGLint* major, EGLint* minor) { *major = 1; *minor = 4; }
+    void egl_choose_config(EGLConfig* config, EGLint*  num_config)
+    {
+        *config = this;
+        *num_config = 1;
+    }
+};
+
 struct NestedServer : mtf::InProcessServer, HostServerConfiguration
 {
     virtual mir::DefaultServerConfiguration& server_config()
@@ -161,6 +213,7 @@ struct NestedServer : mtf::InProcessServer, HostServerConfiguration
 
 TEST_F(NestedServer, nested_platform_connects_and_disconnects)
 {
+    NestedMockEGL mock_egl;
     std::string const connection_string{new_connection()};
     NestedServerConfiguration nested_config{connection_string, the_graphics_platform()};
 
