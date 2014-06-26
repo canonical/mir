@@ -23,6 +23,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/input/input_channel.h"
 #include "mir/shell/input_targeter.h"
+#include "mir/input/input_sender.h"
 #include "mir/graphics/buffer.h"
 
 #include "mir/scene/scene_report.h"
@@ -141,6 +142,7 @@ ms::BasicSurface::BasicSurface(
     bool nonrectangular,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<mi::InputChannel> const& input_channel,
+    std::shared_ptr<input::InputSender> const& input_sender,
     std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
@@ -154,6 +156,7 @@ ms::BasicSurface::BasicSurface(
     input_rectangles{geom::Rectangle{geom::Point{0, 0}, surface_rect.size}},
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
+    input_sender(input_sender),
     configurator(configurator),
     cursor_image_(cursor_image),
     report(report),
@@ -661,4 +664,9 @@ std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const
             surface_alpha,
             nonrectangular, 
             this));
+}
+
+void ms::BasicSurface::consume(MirEvent const& event)
+{
+    input_sender->send_event(event, server_input_channel);
 }
