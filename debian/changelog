@@ -12,6 +12,11 @@ mir (0.4.0-0ubuntu1) UNRELEASED; urgency=medium
         API.
       . Support unregistering fd handlers in the EventHandlerRegister and
         related interfaces (MainLoop).
+    - android: support alpha blending overlays together in HWC. Bumps
+      android-headers version requirement from 4.2.2 to 4.4.2. (LP# #1329879)
+    - android: designate the buffer usage when attempting to access or
+      update the fence associated with the native buffer. (LP# #1329868)
+    - Enable client cursor API.
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 25 Jun 2014 07:23:58 +0000
 
