@@ -17,7 +17,7 @@
  */
 
 #include "mir_test_doubles/mock_android_registrar.h"
-#include "src/client/android/android_client_buffer.h"
+#include "src/client/android/buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 
 #include <memory>
@@ -42,12 +42,12 @@ struct AndroidClientBuffer : public ::testing::Test
     geom::Width const width{248};
     geom::Size const size{width, height};
     geom::Stride const stride{66};
-    MirPixelFormat const pf{mir_pixel_format_abgr_8888},
-    std::shared_ptr<native_handle_t> const package;
+    MirPixelFormat const pf{mir_pixel_format_abgr_8888};
     std::shared_ptr<mtd::MockAndroidRegistrar> const mock_registrar;
+    std::shared_ptr<native_handle_t const> const package;
 };
 
-TEST_F(AndroidClientBuffer, returns_properties_from_constructor}
+TEST_F(AndroidClientBuffer, returns_properties_from_constructor)
 {
     mcla::Buffer buffer(mock_registrar, package, size, pf, stride);
     EXPECT_EQ(size, buffer.size());
@@ -62,7 +62,7 @@ TEST_F(AndroidClientBuffer, secures_for_cpu_with_correct_rect_and_handle)
 
     EXPECT_CALL(*mock_registrar, secure_for_cpu(package,rect))
         .Times(1)
-        .WillOnce(Return(std::make_shared<char>()));
+        .WillOnce(testing::Return(std::make_shared<char>()));
 
     mcla::Buffer buffer(mock_registrar, package, size, pf, stride);
     buffer.secure_for_cpu_write();
@@ -96,24 +96,14 @@ TEST_F(AndroidClientBuffer, produces_valid_anwb)
 
     ASSERT_THAT(native_handle, Ne(nullptr));
     auto anwb = native_handle->anwb();
-    ASSERT_THAT(anwb, Ne(nullptr))
+    ASSERT_THAT(anwb, Ne(nullptr));
     EXPECT_EQ(package.get(), anwb->handle);
     EXPECT_EQ(width.as_uint32_t(), static_cast<uint32_t>(anwb->width));
     EXPECT_EQ(height.as_uint32_t(), static_cast<uint32_t>(anwb->height));
     EXPECT_EQ(correct_usage, anwb->usage);
     EXPECT_EQ(expected_stride_in_pixels, anwb->stride);
-}
-
-TEST_F(AndroidClientBuffer, buffer_packs_anativewindowbuffer_refcounters_set)
-{
-    mcla::Buffer buffer(mock_registrar, package, size, pf, stride);
-    auto native_handle = buffer.native_buffer_handle();
-    auto anwb = native_handle->anwb();
-
-    ASSERT_THAT(anwb, Ne(nullptr));
     ASSERT_THAT(anwb->common.incRef, Ne(nullptr));
     ASSERT_THAT(anwb->common.decRef, Ne(nullptr));
-
     anwb->common.incRef(&anwb->common);
     anwb->common.decRef(&anwb->common);
 }
