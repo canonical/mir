@@ -23,16 +23,6 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
-#include <thread>
-
-namespace mir
-{
-class DisplayServer;
-class DefaultServerConfiguration;
-}
-
-
 namespace mir_test_framework
 {
 /// Fixture for running Mir server in test process

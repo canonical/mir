@@ -182,7 +182,7 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_b
     EXPECT_CALL(*mock_driver_interpreter, driver_requests_buffer())
         .Times(1)
         .WillOnce(Return(mock_buffer.get()));
-    EXPECT_CALL(*mock_buffer, wait_for_content())
+    EXPECT_CALL(*mock_buffer, ensure_available_for(mga::BufferAccess::write))
         .Times(1);
     EXPECT_CALL(*mock_buffer, copy_fence())
         .Times(0);

@@ -47,6 +47,12 @@ mtf::InputTestingServerConfiguration::InputTestingServerConfiguration()
 {
 }
 
+mtf::InputTestingServerConfiguration::InputTestingServerConfiguration(
+    std::vector<geom::Rectangle> const& display_rects) :
+    TestingServerConfiguration(display_rects)
+{
+}
+
 void mtf::InputTestingServerConfiguration::exec()
 {
     input_injection_thread = std::thread(std::mem_fn(&mtf::InputTestingServerConfiguration::inject_input), this);
@@ -71,17 +77,16 @@ std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::th
 {
     if (!input_configuration)
     {
-        std::shared_ptr<mi::CursorListener> null_cursor_listener{nullptr};
-
         input_configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
             the_input_dispatcher(),
             the_input_region(),
-            null_cursor_listener,
+            the_cursor_listener(),
             the_input_report());
         fake_event_hub = input_configuration->the_fake_event_hub();
 
         fake_event_hub->synthesize_builtin_keyboard_added();
         fake_event_hub->synthesize_builtin_cursor_added();
+        fake_event_hub->synthesize_usb_touchscreen_added();
         fake_event_hub->synthesize_device_scan_complete();
     }
 

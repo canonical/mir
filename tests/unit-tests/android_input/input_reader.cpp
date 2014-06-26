@@ -177,6 +177,12 @@ public:
         return mInputDevices;
     }
 
+    void getAssociatedDisplayInfo(InputDeviceIdentifier const& /* identifier */,
+        int& out_associated_display_id, bool& out_associated_display_is_external) {
+        out_associated_display_id = 0;
+        out_associated_display_is_external = false;
+    }
+
 private:
     virtual void getReaderConfiguration(InputReaderConfiguration* outConfig) {
         *outConfig = mConfig;
@@ -452,8 +458,7 @@ private:
         }
     }
 
-    void configure(nsecs_t when,
-            const InputReaderConfiguration* config, uint32_t changes) override {
+    void configure(nsecs_t when, const InputReaderConfiguration* config, uint32_t changes) override {
         (void)when;
         (void)config;
         (void)changes;
@@ -1002,15 +1007,17 @@ protected:
 
     void addMapperAndConfigure(InputMapper* mapper) {
         mDevice->addMapper(mapper);
-        mDevice->configure(ARBITRARY_TIME, mFakePolicy->getReaderConfiguration(), 0);
+        mDevice->configure(ARBITRARY_TIME, 
+                           mFakePolicy->getReaderConfiguration(), 0);
         mDevice->reset(ARBITRARY_TIME);
     }
 
     void setDisplayInfoAndReconfigure(int32_t displayId, int32_t width, int32_t height,
             int32_t orientation) {
         mFakePolicy->setDisplayInfo(displayId, width, height, orientation);
-        mDevice->configure(ARBITRARY_TIME, mFakePolicy->getReaderConfiguration(),
-                InputReaderConfiguration::CHANGE_DISPLAY_INFO);
+        mDevice->configure(ARBITRARY_TIME, 
+                           mFakePolicy->getReaderConfiguration(),
+                           InputReaderConfiguration::CHANGE_DISPLAY_INFO);
     }
 
     static void process(InputMapper* mapper, nsecs_t when, int32_t deviceId, int32_t type,

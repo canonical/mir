@@ -70,10 +70,11 @@ public:
     virtual void resize(geometry::Size const& size) = 0;
     virtual void set_transformation(glm::mat4 const& t) = 0;
     virtual void set_alpha(float alpha) = 0;
+    virtual void set_orientation(MirOrientation orientation) = 0;
     virtual void force_requests_to_complete() = 0;
     
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
-    virtual std::shared_ptr<graphics::CursorImage> cursor_image() = 0;
+    virtual std::shared_ptr<graphics::CursorImage> cursor_image() const = 0;
 
     virtual void add_observer(std::shared_ptr<SurfaceObserver> const& observer) = 0;
     virtual void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) = 0;
