@@ -109,25 +109,31 @@ MATCHER(NoSpots, "")
     return true;
 }
 
-MATCHER_P(TouchSpotsAt, positions, "")
+static bool
+spots_have_position_and_pressure(std::vector<mi::TouchVisualizer::Spot> const& spots,
+    std::vector<geom::Point> const& positions, float pressure)
 {
-    if (positions.size() != arg.size())
+    if (spots.size() != positions.size())
         return false;
-    auto it = positions.begin();
-    auto arg_it = arg.begin();
-    
-    while (it != positions.end())
-    {
-        auto spot = *arg_it;
-        if (spot.touch_location != *it)
-            return false;
-        if (spot.pressed != true)
-            return false;
-        it++;
-        arg_it++;
-    }
+    auto spots_it = spots.begin();
+    auto positions_it = positions.begin();
 
+    while (spots_it != spots.end())
+    {
+        auto const& spot = *spots_it;
+        if (spot.touch_location != *positions_it)
+            return false;
+        if (spot.pressure != pressure)
+            return false;
+        spots_it++;
+        positions_it++;
+    }
     return true;
+}
+
+MATCHER_P(TouchedSpotsAt, positions, "")
+{
+    return spots_have_position_and_pressure(arg, positions, 1.0);
 }
 
 geom::Point transform_to_screen_space(geom::Point in_touchpad_space)
@@ -146,10 +152,10 @@ geom::Point transform_to_screen_space(geom::Point in_touchpad_space)
 
 }
 
+using namespace ::testing;
+
 TEST_F(TestTouchspotVisualizations, touch_is_given_to_touchspot_visualizer)
 {
-    using namespace ::testing;
-
     auto minimum_touch = mi::android::FakeEventHub::TouchScreenMinAxisValue;
 
     static geom::Point abs_touch = { minimum_touch, minimum_touch };
@@ -165,7 +171,7 @@ TEST_F(TestTouchspotVisualizations, touch_is_given_to_touchspot_visualizer)
 
             // First we will see the spots cleared, as this is the start of a new gesture.
             EXPECT_CALL(visualizer, visualize_touches(NoSpots())).Times(1);
-            EXPECT_CALL(visualizer, visualize_touches(TouchSpotsAt(expected_spots))).
+            EXPECT_CALL(visualizer, visualize_touches(TouchedSpotsAt(expected_spots))).
                 Times(1).WillOnce(UnblockBarrier(&test_complete));
         };
     start_server();
@@ -173,8 +179,6 @@ TEST_F(TestTouchspotVisualizations, touch_is_given_to_touchspot_visualizer)
 
 TEST_F(TestTouchspotVisualizations, touchspots_follow_gesture)
 {
-    using namespace ::testing;
-
     auto minimum_touch = mi::android::FakeEventHub::TouchScreenMinAxisValue;
     auto maximum_touch = mi::android::FakeEventHub::TouchScreenMaxAxisValue;
 
@@ -197,10 +201,9 @@ TEST_F(TestTouchspotVisualizations, touchspots_follow_gesture)
         {
             InSequence seq;
 
-            // First we will see the spots cleared, as this is the start of a new gesture.
             EXPECT_CALL(visualizer, visualize_touches(NoSpots())).Times(1);
-            EXPECT_CALL(visualizer, visualize_touches(TouchSpotsAt(expected_spots_1))).Times(1);
-            EXPECT_CALL(visualizer, visualize_touches(TouchSpotsAt(expected_spots_2))).Times(1);
+            EXPECT_CALL(visualizer, visualize_touches(TouchedSpotsAt(expected_spots_1))).Times(1);
+            EXPECT_CALL(visualizer, visualize_touches(TouchedSpotsAt(expected_spots_2))).Times(1);
             EXPECT_CALL(visualizer, visualize_touches(NoSpots())).
                 Times(1).WillOnce(UnblockBarrier(&test_complete));
         };

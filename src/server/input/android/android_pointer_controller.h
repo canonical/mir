@@ -39,8 +39,8 @@ class PointerController : public DummyPointerController
 {
   public:
     explicit PointerController(std::shared_ptr<InputRegion> const& input_region,
-                               std::shared_ptr<CursorListener> const& cursor_listener,
-                               std::shared_ptr<TouchVisualizer> const& touch_visualizer);
+        std::shared_ptr<CursorListener> const& cursor_listener,
+        std::shared_ptr<TouchVisualizer> const& touch_visualizer);
 
     bool getBounds(float* out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const;
     void move(float delta_x, float delta_y);

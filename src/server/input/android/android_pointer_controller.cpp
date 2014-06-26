@@ -119,9 +119,9 @@ void mia::PointerController::setSpots(const droidinput::PointerCoords* spot_coor
         
         auto x = coords.getX();
         auto y = coords.getY();
-        auto pressed = coords.getAxisValue(AMOTION_EVENT_AXIS_PRESSURE) != 0;
+        auto pressure = coords.getAxisValue(AMOTION_EVENT_AXIS_PRESSURE);
         
-        touches.push_back({{x, y}, pressed});
+        touches.push_back({{x, y}, pressure});
     }
     
     touch_visualizer->visualize_touches(touches);

@@ -39,9 +39,9 @@ public:
     {
         geometry::Point touch_location;
         
-        // Pressed set to true indicates the spot is being pressed
-        // as opposed to a hover.
-        bool pressed;
+        // If pressure is non-zero, it indicates a press at the spot, as
+        // opposed to a hover.
+        float pressure;
     };
     
     virtual void visualize_touches(std::vector<Spot> const& touches) = 0;
