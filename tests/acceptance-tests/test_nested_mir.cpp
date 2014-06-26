@@ -204,6 +204,8 @@ private:
 
 struct NestedServer : mtf::InProcessServer, HostServerConfiguration
 {
+    NestedMockEGL mock_egl;
+
     virtual mir::DefaultServerConfiguration& server_config()
     {
         return *this;
@@ -213,7 +215,6 @@ struct NestedServer : mtf::InProcessServer, HostServerConfiguration
 
 TEST_F(NestedServer, nested_platform_connects_and_disconnects)
 {
-    NestedMockEGL mock_egl;
     std::string const connection_string{new_connection()};
     NestedServerConfiguration nested_config{connection_string, the_graphics_platform()};
 
@@ -224,39 +225,16 @@ TEST_F(NestedServer, nested_platform_connects_and_disconnects)
     mir::run_mir(nested_config, [](mir::DisplayServer& server){server.stop();});
 }
 
-#ifdef DISABLED_UNTIL_REWRITTEN
 //////////////////////////////////////////////////////////////////
-// TODO the following tests were used in investigating lifetime issues.
-// TODO they may not have much long term value, but decide that later
-
-TEST(DisplayLeak, on_exit_display_objects_should_be_destroyed)
+// TODO the following test was used in investigating lifetime issues.
+// TODO it may not have much long term value, but decide that later.
+TEST_F(NestedServer, on_exit_display_objects_should_be_destroyed)
 {
-    struct MyServerConfiguration : mtf::TestingServerConfiguration
+    std::string const connection_string{new_connection()};
+
+    struct MyServerConfiguration : NestedServerConfiguration
     {
-        std::shared_ptr<mir::graphics::Display> the_display() override
-        {
-            auto const& temp = mtf::TestingServerConfiguration::the_display();
-            my_display = temp;
-            return temp;
-        }
-
-        std::weak_ptr<mir::graphics::Display> my_display;
-    };
-
-    MyServerConfiguration host_config;
-
-    mir::run_mir(host_config, [](mir::DisplayServer& server){server.stop();});
-
-    EXPECT_FALSE(host_config.my_display.lock()) << "after run_mir() exits the display should be released";
-}
-
-TEST_F(TestNestedMir, DISABLED_ON_ANDROID_AND_MESA(on_exit_display_objects_should_be_destroyed))
-{
-    struct MyNestedServerConfiguration : NestedServerConfiguration
-    {
-        // TODO clang says "error: inheriting constructors are not supported"
-        // using NestedServerConfiguration::NestedServerConfiguration;
-        MyNestedServerConfiguration(std::string const& host_socket) : NestedServerConfiguration(host_socket) {}
+        using NestedServerConfiguration::NestedServerConfiguration;
 
         std::shared_ptr<mir::graphics::Display> the_display() override
         {
@@ -265,18 +243,12 @@ TEST_F(TestNestedMir, DISABLED_ON_ANDROID_AND_MESA(on_exit_display_objects_shoul
             return temp;
         }
 
-        ~MyNestedServerConfiguration()
-        {
-            EXPECT_FALSE(my_display.lock()) << "after run_mir() exits the display should be released";
-        }
-
         std::weak_ptr<mir::graphics::Display> my_display;
     };
 
-    HostServerConfiguration host_config;
-    ClientConfig<MyNestedServerConfiguration> client_config(host_config.the_socket_file());
+    MyServerConfiguration config{connection_string, the_graphics_platform()};
 
-    launch_server_process(host_config);
-    launch_client_process(client_config);
+    mir::run_mir(config, [](mir::DisplayServer& server){server.stop();});
+
+    EXPECT_FALSE(config.my_display.lock()) << "after run_mir() exits the display should be released";
 }
-#endif
