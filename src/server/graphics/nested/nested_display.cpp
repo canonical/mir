@@ -65,8 +65,8 @@ mgn::detail::EGLDisplayHandle::EGLDisplayHandle(
       gl_config{gl_config}
 {
     egl_display = eglGetDisplay(native_display);
-//    if (egl_display == EGL_NO_DISPLAY)
-//        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL display."));
+    if (egl_display == EGL_NO_DISPLAY)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir Display Error: Failed to fetch EGL display."));
 }
 
 void mgn::detail::EGLDisplayHandle::initialize(MirPixelFormat format)
