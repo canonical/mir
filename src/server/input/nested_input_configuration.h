@@ -27,14 +27,11 @@ namespace mir
 {
 namespace input
 {
-class NestedInputRelay;
-
 class NestedInputConfiguration : public InputConfiguration
 {
 public:
-    NestedInputConfiguration();
+    NestedInputConfiguration() = default;
     virtual ~NestedInputConfiguration() = default;
-    std::shared_ptr<InputChannelFactory> the_input_channel_factory() override;
     std::shared_ptr<InputManager> the_input_manager() override;
 
 private:

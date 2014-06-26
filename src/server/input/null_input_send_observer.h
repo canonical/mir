@@ -16,31 +16,32 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_CONFIGURATION_H_
-#define MIR_INPUT_INPUT_CONFIGURATION_H_
+#ifndef MIR_INPUT_NULL_INPUT_SEND_OBSERVER_H_
+#define MIR_INPUT_NULL_INPUT_SEND_OBSERVER_H_
 
-#include <memory>
+#include "mir/input/input_send_observer.h"
 
 namespace mir
 {
 namespace input
 {
-class InputManager;
 
-class InputConfiguration
+class NullInputSendObserver : public InputSendObserver
 {
 public:
-    virtual ~InputConfiguration() = default;
+    void send_failed(MirEvent const& /*event*/, input::Surface* /*surface*/, FailureReason /*reason*/) override
+    {
+    }
 
-    virtual std::shared_ptr<InputManager> the_input_manager() = 0;
+    void send_suceeded(MirEvent const& /*event*/, input::Surface* /*surface*/, InputResponse /*response*/) override
+    {
+    }
 
-protected:
-    InputConfiguration() = default;
-    InputConfiguration(InputConfiguration const&) = delete;
-    InputConfiguration& operator=(InputConfiguration const&) = delete;
+    void client_blocked(MirEvent const& /*event*/, input::Surface* /*client*/) override
+    {
+    }
 };
 
 }
 }
-
 #endif
