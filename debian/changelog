@@ -1,6 +1,17 @@
 mir (0.4.0-0ubuntu1) UNRELEASED; urgency=medium
 
-  * mirserver ABI bumped to 22. Shells need rebuilding.
+  * New upstream release 0.4.0 (https://launchpad.net/mir/+milestone/0.4.0)
+    - mirclient ABI bumped to 8. Clients need rebuilding.
+      . Add surface attribute for visibility.
+      . Add surface orientation API.
+    - mirserver ABI bumped to 22. Shells need rebuilding.
+      . Allow setting the orientation of a server surface.
+      . Change compositor::Scene to expose compositor::SceneElements instead
+        of graphics::Renderables.
+      . Change various input and Surface classes to support the client cursor
+        API.
+      . Support unregistering fd handlers in the EventHandlerRegister and
+        related interfaces (MainLoop).
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 25 Jun 2014 07:23:58 +0000
 
