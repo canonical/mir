@@ -33,6 +33,7 @@
 #include "null_input_targeter.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
+#include "mir/input/touch_visualizer.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/compositor/scene.h"
@@ -85,6 +86,7 @@ mir::DefaultServerConfiguration::the_input_configuration()
                 the_input_dispatcher(),
                 the_input_region(),
                 the_cursor_listener(),
+                the_touch_visualizer(),
                 the_input_report()
                 );
         }
@@ -204,4 +206,20 @@ mir::DefaultServerConfiguration::the_cursor_listener()
                 the_cursor(), the_default_cursor_image());
         });
 
+}
+
+std::shared_ptr<mi::TouchVisualizer>
+mir::DefaultServerConfiguration::the_touch_visualizer()
+{
+    struct NullTouchVisualizer : public mi::TouchVisualizer
+    {
+        void visualize_touches(std::vector<Spot> const& /* touches */) override
+        {
+        }
+    };
+    return touch_visualizer(
+        [this]()
+        {
+            return std::make_shared<NullTouchVisualizer>();
+        });
 }
