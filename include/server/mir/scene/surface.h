@@ -65,6 +65,18 @@ public:
     virtual void show() = 0;
     virtual void move_to(geometry::Point const& top_left) = 0;
     virtual void take_input_focus(std::shared_ptr<shell::InputTargeter> const& targeter) = 0;
+
+    /**
+     * Sets the input region for this surface.
+     *
+     * The input region is expressed in coordinates relative to the surface (i.e.,
+     * use (0,0) for the top left point of the surface).
+     *
+     * By default the input region is the whole surface. To unset a custom input region
+     * and revert to the default set an empty input region, i.e., set_input_region({}).
+     * To disable input set a non-empty region containing an empty rectangle, i.e.,
+     * set_input_region({geom::Rectangle{}}).
+     */
     virtual void set_input_region(std::vector<geometry::Rectangle> const& region) = 0;
     virtual void allow_framedropping(bool) = 0;
     virtual void resize(geometry::Size const& size) = 0;
