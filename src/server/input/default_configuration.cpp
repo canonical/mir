@@ -31,7 +31,6 @@
 #include "cursor_controller.h"
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
-#include "null_input_manager.h"
 #include "null_input_channel_factory.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
