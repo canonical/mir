@@ -19,7 +19,7 @@
 #include "mir/graphics/android/android_native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir_toolkit/mir_client_library.h"
-#include "android_client_buffer.h"
+#include "buffer.h"
 #include <hardware/gralloc.h>
 
 namespace mcl=mir::client;
@@ -27,12 +27,17 @@ namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
 namespace mga=mir::graphics::android;
 
-mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> const& registrar,
-                                               std::shared_ptr<const native_handle_t> const& handle,
-                                               geom::Size size, MirPixelFormat pf, geometry::Stride stride)
- : buffer_registrar(registrar),
-   native_handle(handle),
-   buffer_pf(pf), buffer_stride{stride}, buffer_size(size)
+mcla::Buffer::Buffer(
+    std::shared_ptr<AndroidRegistrar> const& registrar,
+    std::shared_ptr<const native_handle_t> const& handle,
+    geom::Size size,
+    MirPixelFormat pf,
+    geometry::Stride stride) :
+    buffer_registrar(registrar),
+    native_handle(handle),
+    buffer_pf(pf),
+    buffer_stride{stride},
+    buffer_size(size)
 {
     auto ops = std::make_shared<mga::RealSyncFileOps>();
     auto fence = std::make_shared<mga::SyncFence>(ops, -1);
@@ -55,11 +60,11 @@ mcla::AndroidClientBuffer::AndroidClientBuffer(std::shared_ptr<AndroidRegistrar>
     native_window_buffer = std::make_shared<mga::AndroidNativeBuffer>(anwb, fence, mga::BufferAccess::read);
 }
 
-mcla::AndroidClientBuffer::~AndroidClientBuffer() noexcept
+mcla::Buffer::~Buffer() noexcept
 {
 }
 
-std::shared_ptr<mcl::MemoryRegion> mcla::AndroidClientBuffer::secure_for_cpu_write()
+std::shared_ptr<mcl::MemoryRegion> mcla::Buffer::secure_for_cpu_write()
 {
     auto rect = geom::Rectangle{geom::Point{0, 0}, size()};
     auto vaddr = buffer_registrar->secure_for_cpu(native_handle, rect);
@@ -72,22 +77,22 @@ std::shared_ptr<mcl::MemoryRegion> mcla::AndroidClientBuffer::secure_for_cpu_wri
     return region;
 }
 
-geom::Size mcla::AndroidClientBuffer::size() const
+geom::Size mcla::Buffer::size() const
 {
     return buffer_size;
 }
 
-geom::Stride mcla::AndroidClientBuffer::stride() const
+geom::Stride mcla::Buffer::stride() const
 {
     return buffer_stride;
 }
 
-MirPixelFormat mcla::AndroidClientBuffer::pixel_format() const
+MirPixelFormat mcla::Buffer::pixel_format() const
 {
     return buffer_pf;
 }
 
-std::shared_ptr<mir::graphics::NativeBuffer> mcla::AndroidClientBuffer::native_buffer_handle() const
+std::shared_ptr<mir::graphics::NativeBuffer> mcla::Buffer::native_buffer_handle() const
 {
     return native_window_buffer;
 }
