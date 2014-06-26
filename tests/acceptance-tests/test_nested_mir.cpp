@@ -95,27 +95,27 @@ struct FakeCommandLine
     }
 };
 
-struct StubNativePlatform : mg::NativePlatform
+struct NativePlatformAdapter : mg::NativePlatform
 {
-    StubNativePlatform(std::shared_ptr<mg::Platform> const& wrapped) :
-        wrapped(wrapped) {}
+    NativePlatformAdapter(std::shared_ptr<mg::Platform> const& adaptee) :
+        adaptee(adaptee) {}
 
     void initialize(std::shared_ptr<mg::NestedContext> const& /*nested_context*/) override {}
 
     std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& buffer_initializer) override
     {
-        return wrapped->create_buffer_allocator(buffer_initializer);
+        return adaptee->create_buffer_allocator(buffer_initializer);
     }
 
     std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package() override
     {
-        return wrapped->get_ipc_package();
+        return adaptee->get_ipc_package();
     }
 
     std::shared_ptr<mg::InternalClient> create_internal_client() override
     {
-        return wrapped->create_internal_client();
+        return adaptee->create_internal_client();
     }
 
     void fill_buffer_package(
@@ -123,10 +123,10 @@ struct StubNativePlatform : mg::NativePlatform
         mg::Buffer const* buffer,
         mg::BufferIpcMsgType msg_type) const override
     {
-        return wrapped->fill_buffer_package(packer, buffer, msg_type);
+        return adaptee->fill_buffer_package(packer, buffer, msg_type);
     }
 
-    std::shared_ptr<mg::Platform> const wrapped;
+    std::shared_ptr<mg::Platform> const adaptee;
 };
 
 struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerConfiguration
@@ -145,7 +145,7 @@ struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerCon
         return graphics_native_platform(
             [this]() -> std::shared_ptr<mg::NativePlatform>
             {
-                return std::make_shared<StubNativePlatform>(graphics_platform);
+                return std::make_shared<NativePlatformAdapter>(graphics_platform);
             });
     }
 
