@@ -16,30 +16,35 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_CONFIGURATION_H_
-#define MIR_INPUT_INPUT_CONFIGURATION_H_
+#ifndef MIR_INPUT_ANDROID_INPUT_SEND_ENTRY_H_
+#define MIR_INPUT_ANDROID_INPUT_SEND_ENTRY_H_
 
+#include "mir_toolkit/event.h"
 #include <memory>
 
 namespace mir
 {
 namespace input
 {
-class InputManager;
-
-class InputConfiguration
+class InputChannel;
+namespace android
 {
-public:
-    virtual ~InputConfiguration() = default;
 
-    virtual std::shared_ptr<InputManager> the_input_manager() = 0;
-
-protected:
-    InputConfiguration() = default;
-    InputConfiguration(InputConfiguration const&) = delete;
-    InputConfiguration& operator=(InputConfiguration const&) = delete;
+/*!
+ * Stores information about an input event to be sent to a client
+ */
+struct InputSendEntry
+{
+    uint32_t sequence_id;
+    MirEvent event;
+    std::shared_ptr<InputChannel> channel;
+    InputSendEntry(uint32_t id, MirEvent ev, std::shared_ptr<InputChannel> const& channel)
+        : sequence_id(id), event(ev), channel(channel)
+    {
+    }
 };
 
+}
 }
 }
 

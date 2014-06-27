@@ -23,6 +23,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/input/input_channel.h"
 #include "mir/shell/input_targeter.h"
+#include "mir/input/input_sender.h"
 #include "mir/graphics/buffer.h"
 
 #include "mir/scene/scene_report.h"
@@ -141,6 +142,7 @@ ms::BasicSurface::BasicSurface(
     bool nonrectangular,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<mi::InputChannel> const& input_channel,
+    std::shared_ptr<input::InputSender> const& input_sender,
     std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
@@ -151,9 +153,10 @@ ms::BasicSurface::BasicSurface(
     hidden(false),
     input_mode(mi::InputReceptionMode::normal),
     nonrectangular(nonrectangular),
-    input_rectangles{geom::Rectangle{geom::Point{0, 0}, surface_rect.size}},
+    custom_input_rectangles(),
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
+    input_sender(input_sender),
     configurator(configurator),
     cursor_image_(cursor_image),
     report(report),
@@ -274,7 +277,7 @@ std::shared_ptr<mi::InputChannel> ms::BasicSurface::input_channel() const
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
     std::unique_lock<std::mutex> lock(guard);
-    this->input_rectangles = input_rectangles;
+    custom_input_rectangles = input_rectangles;
 }
 
 void ms::BasicSurface::resize(geom::Size const& desired_size)
@@ -321,16 +324,20 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 
     if (hidden)
         return false;
-    
+
     // Restrict to bounding rectangle
     if (!surface_rect.contains(point))
         return false;
+
+    // No custom input region means effective input region is whole surface
+    if (custom_input_rectangles.empty())
+        return true;
 
     // TODO: Perhaps creates some issues with transformation.
     auto local_point = geom::Point{geom::X{point.x.as_uint32_t()-surface_rect.top_left.x.as_uint32_t()},
                                    geom::Y{point.y.as_uint32_t()-surface_rect.top_left.y.as_uint32_t()}};
 
-    for (auto const& rectangle : input_rectangles)
+    for (auto const& rectangle : custom_input_rectangles)
     {
         if (rectangle.contains(local_point))
         {
@@ -661,4 +668,9 @@ std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const
             surface_alpha,
             nonrectangular, 
             this));
+}
+
+void ms::BasicSurface::consume(MirEvent const& event)
+{
+    input_sender->send_event(event, server_input_channel);
 }

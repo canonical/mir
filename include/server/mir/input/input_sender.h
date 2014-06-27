@@ -16,8 +16,10 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_CONFIGURATION_H_
-#define MIR_INPUT_INPUT_CONFIGURATION_H_
+#ifndef MIR_INPUT_INPUT_SENDER_H_
+#define MIR_INPUT_INPUT_SENDER_H_
+
+#include "mir_toolkit/event.h"
 
 #include <memory>
 
@@ -25,19 +27,19 @@ namespace mir
 {
 namespace input
 {
-class InputManager;
+class InputSendObserver;
+class Surface;
+class InputChannel;
 
-class InputConfiguration
+class InputSender
 {
 public:
-    virtual ~InputConfiguration() = default;
-
-    virtual std::shared_ptr<InputManager> the_input_manager() = 0;
-
+    InputSender() = default;
+    virtual ~InputSender() = default;
+    virtual void send_event(MirEvent const& event, std::shared_ptr<InputChannel> const& channel) = 0;
 protected:
-    InputConfiguration() = default;
-    InputConfiguration(InputConfiguration const&) = delete;
-    InputConfiguration& operator=(InputConfiguration const&) = delete;
+    InputSender& operator=(InputSender const&) = delete;
+    InputSender(InputSender const&) = delete;
 };
 
 }
