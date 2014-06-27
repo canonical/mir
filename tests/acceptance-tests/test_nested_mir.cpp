@@ -159,10 +159,6 @@ struct NestedMockEGL : mir::test::doubles::MockEGL
         {
             InSequence init_before_terminate;
             EXPECT_CALL(*this, eglGetDisplay(_)).Times(1);
-
-//            EXPECT_CALL(*this, eglInitialize(_, _, _)).Times(1).WillRepeatedly(
-//                DoAll(WithArgs<1, 2>(Invoke(this, &NestedMockEGL::egl_initialize)), Return(EGL_TRUE)));
-
             EXPECT_CALL(*this, eglTerminate(_)).Times(1);
         }
 
