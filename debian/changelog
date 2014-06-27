@@ -1,5 +1,6 @@
-mir (0.2.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.2.0-0ubuntu2) UNRELEASED; urgency=medium
 
+  [ Daniel van Vugt ]
   * New upstream release 0.2.0 (https://launchpad.net/mir/+milestone/0.2.0)
     - mirclient ABI unchanged, still at 7. Clients do not need rebuilding.
     - mirserver ABI bumped to 20. Shells need rebuilding and probably changes:
@@ -40,7 +41,10 @@ mir (0.2.0-0ubuntu1) UNRELEASED; urgency=medium
     - Bugs fixed:
       . <TODO: Fill in when proposing to archive>
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 01 May 2014 15:15:39 +0800
+  [ Thomas Voß ]
+  * Explicitly select g++-4.9 to prevent from ABI breaks.
+
+ -- Thomas Voß <thomas.voss@canonical.com>  Fri, 27 Jun 2014 11:16:47 +0200
 
 mir (0.1.9+14.10.20140430.1-0ubuntu1) utopic; urgency=medium
 
