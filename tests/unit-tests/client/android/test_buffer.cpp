@@ -107,3 +107,9 @@ TEST_F(AndroidClientBuffer, produces_valid_anwb)
     anwb->common.incRef(&anwb->common);
     anwb->common.decRef(&anwb->common);
 }
+
+TEST_F(AndroidClientBuffer, updates_fence_from_update_package)
+{
+
+    mcla::Buffer buffer(mock_registrar, package, size, pf, stride);
+}
