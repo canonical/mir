@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/client/android/android_registrar_gralloc.h"
+#include "src/client/android/gralloc_registrar.h"
 #include <stdexcept>
 #include <fcntl.h>
 #include <gtest/gtest.h>
@@ -105,7 +105,7 @@ struct GrallocRegistrar : public ::testing::Test
 
 TEST_F(GrallocRegistrar, client_buffer_converts_stub_package)
 {
-    mcla::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::GrallocRegistrar registrar(mock_module);
     auto handle = registrar.register_buffer(stub_package);
 
     ASSERT_NE(nullptr, handle);
@@ -119,7 +119,7 @@ TEST_F(GrallocRegistrar, client_buffer_converts_stub_package)
 
 TEST_F(GrallocRegistrar, client_sets_correct_version)
 {
-    mcla::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::GrallocRegistrar registrar(mock_module);
     auto handle = registrar.register_buffer(stub_package);
     EXPECT_EQ(handle->version, static_cast<int>(sizeof(native_handle_t)));
 }
@@ -137,7 +137,7 @@ TEST_F(GrallocRegistrar, registrar_registers_using_module)
         .Times(1)
         .WillOnce(DoAll(SaveArg<1>(&handle2), Return(0)));
 
-    mcla::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::GrallocRegistrar registrar(mock_module);
     {
         auto handle = registrar.register_buffer(stub_package);
         EXPECT_EQ(handle1, handle.get());
@@ -154,7 +154,7 @@ TEST_F(GrallocRegistrar, registrar_frees_fds)
 
     int ret = pipe(static_cast<int*>(stub_package->fd));
     {
-        mcla::AndroidRegistrarGralloc registrar(mock_module);
+        mcla::GrallocRegistrar registrar(mock_module);
         auto handle = registrar.register_buffer(stub_package);
     }
 
@@ -173,7 +173,7 @@ TEST_F(GrallocRegistrar, register_failure)
     EXPECT_CALL(*mock_module, unregisterBuffer_interface(_,_))
         .Times(0);
 
-    mcla::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::GrallocRegistrar registrar(mock_module);
     EXPECT_THROW({
         registrar.register_buffer(stub_package);
     }, std::runtime_error);
@@ -183,7 +183,7 @@ TEST_F(GrallocRegistrar, register_failure)
 TEST_F(GrallocRegistrar, region_is_cleaned_up_correctly)
 {
     using namespace testing;
-    mcla::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::GrallocRegistrar registrar(mock_module);
 
     gralloc_module_t const* gralloc_dev_alloc{nullptr};
     gralloc_module_t const* gralloc_dev_freed{nullptr};
@@ -223,7 +223,7 @@ TEST_F(GrallocRegistrar, maps_buffer_for_cpu_correctly)
         testing::_))
         .Times(1);
 
-    mcla::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::GrallocRegistrar registrar(mock_module);
     registrar.secure_for_cpu(stub_handle, rect);
 }
 
@@ -234,7 +234,7 @@ TEST_F(GrallocRegistrar, lock_failure_throws)
         .Times(1)
         .WillOnce(Return(-1));
 
-    mcla::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::GrallocRegistrar registrar(mock_module);
 
     EXPECT_THROW({
         registrar.secure_for_cpu(stub_handle, rect);
@@ -248,7 +248,7 @@ TEST_F(GrallocRegistrar, unlock_failure_doesnt_throw)
     EXPECT_CALL(*mock_module, unlock_interface(_,_))
         .Times(1)
         .WillOnce(Return(-1));
-    mcla::AndroidRegistrarGralloc registrar(mock_module);
+    mcla::GrallocRegistrar registrar(mock_module);
 
     auto region = registrar.secure_for_cpu(stub_handle, rect);
     EXPECT_NO_THROW({
