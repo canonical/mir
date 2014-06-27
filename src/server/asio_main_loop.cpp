@@ -182,6 +182,14 @@ public:
         }
     }
 
+    ~FDHandler()
+    {
+        for (auto & desc : stream_descriptors)
+        {
+            desc->release(); // release native handle which is not owned by main loop
+        }
+    }
+
     bool is_owned_by(void const* possible_owner) const
     {
         return owner == possible_owner;
