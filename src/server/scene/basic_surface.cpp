@@ -153,7 +153,7 @@ ms::BasicSurface::BasicSurface(
     hidden(false),
     input_mode(mi::InputReceptionMode::normal),
     nonrectangular(nonrectangular),
-    input_rectangles{geom::Rectangle{geom::Point{0, 0}, surface_rect.size}},
+    custom_input_rectangles(),
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
     input_sender(input_sender),
@@ -277,7 +277,7 @@ std::shared_ptr<mi::InputChannel> ms::BasicSurface::input_channel() const
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
     std::unique_lock<std::mutex> lock(guard);
-    this->input_rectangles = input_rectangles;
+    custom_input_rectangles = input_rectangles;
 }
 
 void ms::BasicSurface::resize(geom::Size const& desired_size)
@@ -324,16 +324,20 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 
     if (hidden)
         return false;
-    
+
     // Restrict to bounding rectangle
     if (!surface_rect.contains(point))
         return false;
+
+    // No custom input region means effective input region is whole surface
+    if (custom_input_rectangles.empty())
+        return true;
 
     // TODO: Perhaps creates some issues with transformation.
     auto local_point = geom::Point{geom::X{point.x.as_uint32_t()-surface_rect.top_left.x.as_uint32_t()},
                                    geom::Y{point.y.as_uint32_t()-surface_rect.top_left.y.as_uint32_t()}};
 
-    for (auto const& rectangle : input_rectangles)
+    for (auto const& rectangle : custom_input_rectangles)
     {
         if (rectangle.contains(local_point))
         {
@@ -603,9 +607,6 @@ public:
     {
     }
  
-    int buffers_ready_for_compositor() const override
-    { return underlying_buffer_stream->buffers_ready_for_compositor(); }
-
     std::shared_ptr<mg::Buffer> buffer() const override
     {
         if (!compositor_buffer)
