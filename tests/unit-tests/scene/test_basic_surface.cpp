@@ -444,7 +444,7 @@ TEST_F(BasicSurfaceTest, restores_default_input_region_when_setting_empty_input_
 
 TEST_F(BasicSurfaceTest, disables_input_when_setting_input_region_with_empty_rectangle)
 {
-    surface.set_input_region({geom::Rectangle{}});
+    surface.set_input_region({geom::Rectangle()});
     EXPECT_FALSE(surface.input_area_contains(rect.top_left));
 }
 
