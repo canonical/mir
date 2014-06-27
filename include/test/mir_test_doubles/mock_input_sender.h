@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,15 +13,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "null_input_configuration.h"
-#include "null_input_manager.h"
+#ifndef MIR_TEST_DOUBLES_MOCK_INPUT_SENDER_H_
+#define MIR_TEST_DOUBLES_MOCK_INPUT_SENDER_H_
 
-namespace mi = mir::input;
+#include "mir/input/input_sender.h"
+#include <gmock/gmock.h>
 
-std::shared_ptr<mi::InputManager> mi::NullInputConfiguration::the_input_manager()
+namespace mir
 {
-    return std::make_shared<NullInputManager>();
+namespace test
+{
+namespace doubles
+{
+
+struct MockInputSender : mir::input::InputSender
+{
+    MOCK_METHOD1(set_send_observer, void(mir::input::InputSendObserver *));
+    MOCK_METHOD2(send_event, void(MirEvent const& ev, std::shared_ptr<mir::input::InputChannel> const& channel));
+};
+
 }
+}
+}
+
+#endif

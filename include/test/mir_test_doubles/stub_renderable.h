@@ -43,6 +43,10 @@ public:
           stub_buffer(buffer)
     {}
 
+    StubRenderable(std::shared_ptr<graphics::Buffer> const& buffer)
+        : StubRenderable(buffer, {{},{}})
+    {}
+
     StubRenderable(geometry::Rectangle const& rect)
         : StubRenderable(make_stub_buffer(rect), rect)
     {}

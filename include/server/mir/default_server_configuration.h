@@ -121,6 +121,8 @@ class InputChannelFactory;
 class InputConfiguration;
 class CursorListener;
 class InputRegion;
+class InputSender;
+class InputSendObserver;
 class NestedInputRelay;
 class EventHandler;
 namespace android
@@ -166,6 +168,8 @@ public:
     virtual std::shared_ptr<graphics::NativePlatform>  the_graphics_native_platform();
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
     virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher();
+    virtual std::shared_ptr<input::InputSender>     the_input_sender();
+    virtual std::shared_ptr<input::InputSendObserver> the_input_send_observer();
     virtual std::shared_ptr<EmergencyCleanup>  the_emergency_cleanup();
     /** @} */
 
@@ -323,6 +327,8 @@ protected:
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::InputDispatcher> input_dispatcher;
+    CachedPtr<input::InputSender>     input_sender;
+    CachedPtr<input::InputSendObserver> input_send_observer;
     CachedPtr<input::InputRegion>     input_region;
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
