@@ -88,11 +88,6 @@ public:
         return false;
     }
 
-    int buffers_ready_for_compositor() const override
-    {
-        return 1;
-    }
-
 private:
     std::shared_ptr<graphics::Buffer> make_stub_buffer(geometry::Rectangle const& rect)
     {
