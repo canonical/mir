@@ -432,7 +432,7 @@ TEST_F(AsioMainLoopTest, unregister_prevents_callback_and_does_not_harm_other_ca
     EXPECT_EQ(p2.read_fd(), p2_handler_executes);
 }
 
-TEST_F(AsioMainLoopTest, unregister_doens_not_close_fds)
+TEST_F(AsioMainLoopTest, unregister_does_not_close_fds)
 {
     mt::Pipe p1, p2;
     char const data_to_write{'b'};
