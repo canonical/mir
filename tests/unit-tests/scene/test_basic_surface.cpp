@@ -79,8 +79,8 @@ struct StubSurfaceConfigurator : ms::SurfaceConfigurator
 
 struct BasicSurfaceTest : public testing::Test
 {
-    std::string name{"aa"};
-    geom::Rectangle rect{{4,7},{5,9}};
+    std::string const name{"aa"};
+    geom::Rectangle const rect{{4,7},{5,9}};
 
     testing::NiceMock<MockCallback> mock_callback;
     std::function<void()> null_change_cb{[]{}};
@@ -383,6 +383,78 @@ TEST_F(BasicSurfaceTest, set_input_region)
     }
 }
 
+TEST_F(BasicSurfaceTest, updates_default_input_region_when_surface_is_resized_to_larger_size)
+{
+    geom::Rectangle const new_rect{rect.top_left,{10,10}};
+    surface.resize(new_rect.size);
+
+    for (auto x = new_rect.top_left.x.as_int() - 1;
+         x <= new_rect.top_right().x.as_int();
+         x++)
+    {
+        for (auto y = new_rect.top_left.y.as_int() - 1;
+             y <= new_rect.bottom_left().y.as_int();
+             y++)
+        {
+            auto const test_pt = geom::Point{x, y};
+            auto const contains = surface.input_area_contains(test_pt);
+            if (new_rect.contains(test_pt))
+            {
+                EXPECT_TRUE(contains) << " point = " << test_pt;
+            }
+            else
+            {
+                EXPECT_FALSE(contains) << " point = " << test_pt;
+            }
+        }
+    }
+}
+
+TEST_F(BasicSurfaceTest, updates_default_input_region_when_surface_is_resized_to_smaller_size)
+{
+    geom::Rectangle const new_rect{rect.top_left,{2,2}};
+    surface.resize(new_rect.size);
+
+    for (auto x = rect.top_left.x.as_int() - 1;
+         x <= rect.top_right().x.as_int();
+         x++)
+    {
+        for (auto y = rect.top_left.y.as_int() - 1;
+             y <= rect.bottom_left().y.as_int();
+             y++)
+        {
+            auto const test_pt = geom::Point{x, y};
+            auto const contains = surface.input_area_contains(test_pt);
+            if (new_rect.contains(test_pt))
+            {
+                EXPECT_TRUE(contains) << " point = " << test_pt;
+            }
+            else
+            {
+                EXPECT_FALSE(contains) << " point = " << test_pt;
+            }
+        }
+    }
+}
+
+TEST_F(BasicSurfaceTest, restores_default_input_region_when_setting_empty_input_region)
+{
+    std::vector<geom::Rectangle> const rectangles = {
+        {{geom::X{0}, geom::Y{0}}, {geom::Width{1}, geom::Height{1}}}, //region0
+    };
+
+    surface.set_input_region(rectangles);
+    EXPECT_FALSE(surface.input_area_contains(rect.bottom_right() - geom::Displacement{1,1}));
+
+    surface.set_input_region({});
+    EXPECT_TRUE(surface.input_area_contains(rect.bottom_right() - geom::Displacement{1,1}));
+}
+
+TEST_F(BasicSurfaceTest, disables_input_when_setting_input_region_with_empty_rectangle)
+{
+    surface.set_input_region({geom::Rectangle()});
+    EXPECT_FALSE(surface.input_area_contains(rect.top_left));
+}
 
 TEST_F(BasicSurfaceTest, reception_mode_is_normal_by_default)
 {
