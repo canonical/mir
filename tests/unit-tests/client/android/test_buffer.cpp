@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/mock_android_registrar.h"
+#include "mir_test_doubles/mock_buffer_registrar.h"
 #include "src/client/android/buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 
