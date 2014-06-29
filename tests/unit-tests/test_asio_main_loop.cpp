@@ -405,9 +405,10 @@ TEST_F(AsioMainLoopTest, unregister_prevents_callback_and_does_not_harm_other_ca
     ml.register_fd_handler(
         {p1.read_fd()},
         this,
-        [](int)
+        [this](int)
         {
             FAIL() << "unregistered handler called";
+            ml.stop();
         });
 
     ml.register_fd_handler(
@@ -422,7 +423,7 @@ TEST_F(AsioMainLoopTest, unregister_prevents_callback_and_does_not_harm_other_ca
 
     ml.unregister_fd_handler(this);
 
-    EXPECT_EQ(-1, send(p1.write_fd(), &data_to_write, 1, MSG_NOSIGNAL));
+    EXPECT_EQ(1, write(p1.write_fd(), &data_to_write, 1));
     EXPECT_EQ(1, write(p2.write_fd(), &data_to_write, 1));
 
     ml.run();
@@ -431,7 +432,38 @@ TEST_F(AsioMainLoopTest, unregister_prevents_callback_and_does_not_harm_other_ca
     EXPECT_EQ(p2.read_fd(), p2_handler_executes);
 }
 
+TEST_F(AsioMainLoopTest, unregister_does_not_close_fds)
+{
+    mt::Pipe p1, p2;
+    char const data_to_write{'b'};
+    char data_read{0};
 
+    ml.register_fd_handler(
+        {p1.read_fd()},
+        this,
+        [this](int)
+        {
+            FAIL() << "unregistered handler called";
+            ml.stop();
+        });
+
+    ml.unregister_fd_handler(this);
+
+    ml.register_fd_handler(
+        {p1.read_fd()},
+        this,
+        [this,&data_read](int fd)
+        {
+            EXPECT_EQ(1, read(fd, &data_read, 1));
+            ml.stop();
+        });
+
+    EXPECT_EQ(1, write(p1.write_fd(), &data_to_write, 1));
+
+    ml.run();
+
+    EXPECT_EQ(data_to_write, data_read);
+}
 
 TEST_F(AsioMainLoopAlarmTest, main_loop_runs_until_stop_called)
 {
