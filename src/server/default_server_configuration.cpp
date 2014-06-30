@@ -147,6 +147,8 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         });
 }
 
+mir::CachedPtr<mir::time::Clock> mir::DefaultServerConfiguration::clock;
+
 std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()
 {
     return clock(

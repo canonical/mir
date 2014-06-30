@@ -70,22 +70,31 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
     return graphics_platform(
         [this]()->std::shared_ptr<mg::Platform>
         {
-            auto graphics_lib = mir::load_library(the_options()->get<std::string>(options::platform_graphics_lib));
-
             if (!the_options()->is_set(options::host_socket_opt))
             {
                 // fallback to standalone if host socket is unset
+                auto graphics_lib = mir::load_library(the_options()->get<std::string>(options::platform_graphics_lib));
                 auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
                 return create_platform(the_options(), the_emergency_cleanup(), the_display_report());
             }
-
-            auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
 
             return std::make_shared<mir::graphics::nested::NestedPlatform>(
                 the_host_connection(),
                 the_input_dispatcher(),
                 the_display_report(),
-                create_native_platform(the_display_report()));
+                the_graphics_native_platform());
+        });
+}
+
+std::shared_ptr<mg::NativePlatform>  mir::DefaultServerConfiguration::the_graphics_native_platform()
+{
+    return graphics_native_platform(
+        [this]()
+        {
+            auto graphics_lib = mir::load_library(the_options()->get<std::string>(options::platform_graphics_lib));
+            auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
+
+            return create_native_platform(the_display_report());
         });
 }
 
