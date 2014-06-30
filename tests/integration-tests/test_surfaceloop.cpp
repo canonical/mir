@@ -153,13 +153,11 @@ struct BufferCounterConfig : mtf::StubbedServerConfiguration
 
         CountingStubBuffer()
         {
-            int created = buffers_created.load();
-            while (!buffers_created.compare_exchange_weak(created, created + 1)) std::this_thread::yield();
+            ++buffers_created;
         }
         ~CountingStubBuffer()
         {
-            int destroyed = buffers_destroyed.load();
-            while (!buffers_destroyed.compare_exchange_weak(destroyed, destroyed + 1)) std::this_thread::yield();
+            ++buffers_destroyed;
         }
 
         static std::atomic<int> buffers_created;
@@ -226,8 +224,19 @@ struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
     {
         mtf::BasicClientServerFixture<BufferCounterConfig>::TearDown();
 
-        EXPECT_EQ(BufferCounterConfig::CountingStubBuffer::buffers_created.load(),
-                  BufferCounterConfig::CountingStubBuffer::buffers_destroyed.load());
+        // Yield loop to allow time for counts to be visible in this thread
+        auto i = 0;
+        while (BufferCounterConfig::CountingStubBuffer::buffers_created
+            != BufferCounterConfig::CountingStubBuffer::buffers_destroyed)
+        {
+            if (++i < 10000)
+                std::this_thread::yield();
+            else
+                break;
+        }
+
+        EXPECT_EQ(BufferCounterConfig::CountingStubBuffer::buffers_created,
+                  BufferCounterConfig::CountingStubBuffer::buffers_destroyed);
     }
 };
 
