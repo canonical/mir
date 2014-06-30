@@ -24,6 +24,8 @@
 #include "android/android_input_registrar.h"
 #include "android/android_input_target_enumerator.h"
 #include "android/event_filter_dispatcher_policy.h"
+#include "android/input_sender.h"
+#include "android/input_channel_factory.h"
 #include "display_input_region.h"
 #include "event_filter_chain.h"
 #include "nested_input_configuration.h"
@@ -31,12 +33,15 @@
 #include "cursor_controller.h"
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
+#include "null_input_send_observer.h"
+#include "null_input_channel_factory.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/compositor/scene.h"
 #include "mir/report/legacy_input_report.h"
+#include "mir/main_loop.h"
 
 #include <InputDispatcher.h>
 
@@ -121,6 +126,27 @@ mir::DefaultServerConfiguration::the_input_registrar()
         });
 }
 
+std::shared_ptr<mi::InputSender>
+mir::DefaultServerConfiguration::the_input_sender()
+{
+    return input_sender(
+        [this]()
+        {
+            return std::make_shared<mia::InputSender>(the_scene(), the_main_loop(), the_input_send_observer(), the_input_report());
+        });
+}
+
+std::shared_ptr<mi::InputSendObserver>
+mir::DefaultServerConfiguration::the_input_send_observer()
+{
+    return input_send_observer(
+        [this]()
+        {
+            return std::make_shared<mi::NullInputSendObserver>();
+        });
+}
+
+
 std::shared_ptr<msh::InputTargeter>
 mir::DefaultServerConfiguration::the_input_targeter()
 {
@@ -191,7 +217,11 @@ mir::DefaultServerConfiguration::the_input_manager()
 
 std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()
 {
-    return the_input_configuration()->the_input_channel_factory();
+    auto const options = the_options();
+    if (!options->get<bool>(options::enable_input_opt))
+        return std::make_shared<mi::NullInputChannelFactory>();
+    else
+        return std::make_shared<mia::InputChannelFactory>();
 }
 
 std::shared_ptr<mi::CursorListener>

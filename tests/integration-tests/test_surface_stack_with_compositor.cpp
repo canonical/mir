@@ -29,6 +29,7 @@
 #include "mir_test_doubles/stub_renderer.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_input_sender.h"
 #include "mir_test_doubles/null_surface_configurator.h"
 
 #include <condition_variable>
@@ -132,6 +133,7 @@ struct SurfaceStackCompositor : public testing::Test
             false,
             mock_buffer_stream,
             std::shared_ptr<mir::input::InputChannel>(),
+            std::shared_ptr<mtd::StubInputSender>(),
             std::make_shared<mtd::NullSurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             null_scene_report)}
