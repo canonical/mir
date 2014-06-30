@@ -96,6 +96,7 @@ struct SessionManagerSetup : public testing::Test
         false,
         std::make_shared<mtd::StubBufferStream>(),
         std::shared_ptr<mi::InputChannel>(),
+        std::shared_ptr<mi::InputSender>(),
         std::shared_ptr<ms::SurfaceConfigurator>(),
         std::shared_ptr<mg::CursorImage>(),
         mir::report::null_scene_report());

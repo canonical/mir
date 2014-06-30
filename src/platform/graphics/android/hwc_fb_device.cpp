@@ -44,11 +44,13 @@ mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_
       fb_device(fb_device),
       layer_list{{},1}
 {
-    layer_list.additional_layers_begin()->set_layer_type(mga::LayerType::skip);
 }
 
 void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
 {
+    auto& buffer = *context.last_rendered_buffer();
+    layer_list.begin()->layer.setup_layer(mga::LayerType::skip, {{0,0},buffer.size()}, false, buffer);
+
     if (auto display_list = layer_list.native_list().lock())
     {
         hwc_wrapper->prepare(*display_list);
@@ -68,8 +70,8 @@ void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
 
     auto lg = lock_unblanked();
 
-    auto const& buffer = context.last_rendered_buffer();
-    auto native_buffer = buffer->native_buffer_handle();
+    buffer = *context.last_rendered_buffer();
+    auto native_buffer = buffer.native_buffer_handle();
     native_buffer->ensure_available_for(mga::BufferAccess::read);
     if (fb_device->post(fb_device.get(), native_buffer->handle()) != 0)
     {

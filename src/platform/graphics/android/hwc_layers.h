@@ -50,11 +50,15 @@ enum LayerType
 class HWCLayer
 {
 public:
-    HWCLayer(std::shared_ptr<hwc_display_contents_1_t> list, size_t layer_index);
-    HWCLayer(LayerType,
-             geometry::Rectangle screen_position,
-             bool alpha_enabled,
-             std::shared_ptr<hwc_display_contents_1_t> list, size_t layer_index);
+    HWCLayer(
+        std::shared_ptr<hwc_display_contents_1_t> list,
+        size_t layer_index);
+    HWCLayer(
+        LayerType,
+        geometry::Rectangle const& screen_position,
+        bool alpha_enabled,
+        Buffer const& buffer,
+        std::shared_ptr<hwc_display_contents_1_t> list, size_t layer_index);
 
     HWCLayer& operator=(HWCLayer && layer);
     HWCLayer(HWCLayer && layer);
@@ -62,20 +66,18 @@ public:
     HWCLayer& operator=(HWCLayer const& layer) = delete;
     HWCLayer(HWCLayer const& layer) = delete;
     
-    void set_layer_type(LayerType type);
-    void set_render_parameters(geometry::Rectangle screen_position, bool alpha_enabled);
-    void set_buffer(Buffer const& buffer);
-
-    void update_fence_and_release_buffer();
+    bool setup_layer(
+        LayerType type,
+        geometry::Rectangle const& position,
+        bool alpha_enabled,
+        Buffer const& buffer);
     bool needs_gl_render() const;
-    bool needs_hwc_commit() const;
-    void prepare_for_draw();
+    void set_acquirefence_from(Buffer const& buffer);
+    void update_from_releasefence(Buffer const& buffer);
 private:
     hwc_layer_1_t* hwc_layer;
     std::shared_ptr<hwc_display_contents_1_t> hwc_list;
     hwc_rect_t visible_rect;
-    std::shared_ptr<NativeBuffer> associated_buffer;
-    bool updated{false};
 };
 }
 }
