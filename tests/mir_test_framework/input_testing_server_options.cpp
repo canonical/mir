@@ -53,7 +53,7 @@ mtf::InputTestingServerConfiguration::InputTestingServerConfiguration(
 {
 }
 
-void mtf::InputTestingServerConfiguration::exec()
+void mtf::InputTestingServerConfiguration::on_start()
 {
     input_injection_thread = std::thread(std::mem_fn(&mtf::InputTestingServerConfiguration::inject_input), this);
 }

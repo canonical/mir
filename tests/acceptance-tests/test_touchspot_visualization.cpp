@@ -40,68 +40,6 @@ namespace mtf = mir_test_framework;
 namespace
 {
 
-struct MockTouchVisualizer : public mi::TouchVisualizer
-{
-    MOCK_METHOD1(visualize_touches, void(std::vector<mi::TouchVisualizer::Spot> const&));
-};
-
-struct ServerConfiguration : mtf::InputTestingServerConfiguration
-{
-    mt::Barrier& test_complete;
-
-    MockTouchVisualizer mock_visualizer;
-
-    std::function<void(mtf::InputTestingServerConfiguration& server)> produce_events;
-    std::function<void(MockTouchVisualizer& visualizer, mt::Barrier& test_complete)> expect_touchspots;
-
-    static geom::Rectangle const display_bounds;    
-    
-    ServerConfiguration(mt::Barrier& test_complete)
-        : InputTestingServerConfiguration({display_bounds}),
-          test_complete(test_complete)
-    {
-    }
-    
-    std::shared_ptr<mi::TouchVisualizer> the_touch_visualizer() override
-    {
-        return mt::fake_shared(mock_visualizer);
-    }
-    
-    void on_start() override
-    {
-        expect_touchspots(mock_visualizer, test_complete);
-        InputTestingServerConfiguration::on_start();
-    }
-
-    void inject_input() override
-    {
-        produce_events(*this);
-    }
-};
-
-geom::Rectangle const ServerConfiguration::display_bounds = {{0, 0}, {1600, 1600}};
-
-struct TestTouchspotVisualizations : mtf::DeferredInProcessServer
-{
-    mt::Barrier test_complete_fence{2};
-    ServerConfiguration server_configuration{test_complete_fence};
-
-    mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
-
-    void start_server()
-    {
-        DeferredInProcessServer::start_server();
-        server_configuration.exec();
-    }
-
-    void TearDown()
-    {
-        test_complete_fence.ready();
-        server_configuration.on_exit();
-        DeferredInProcessServer::TearDown();
-    }
-};
-    
 ACTION_P(UnblockBarrier, barrier)
 {
     barrier->ready();
@@ -141,6 +79,71 @@ MATCHER_P(TouchedSpotsAt, positions, "")
     return spots_have_position_and_pressure(arg, positions, 1.0);
 }
 
+struct MockTouchVisualizer : public mi::TouchVisualizer
+{
+    MOCK_METHOD1(visualize_touches, void(std::vector<mi::TouchVisualizer::Spot> const&));
+};
+
+struct ServerConfiguration : mtf::InputTestingServerConfiguration
+{
+    mt::Barrier& test_complete;
+
+    MockTouchVisualizer mock_visualizer;
+
+    std::function<void(mtf::InputTestingServerConfiguration& server)> produce_events;
+    std::function<void(MockTouchVisualizer& visualizer, mt::Barrier& test_complete)> expect_touchspots;
+
+    static geom::Rectangle const display_bounds;    
+    
+    ServerConfiguration(mt::Barrier& test_complete)
+        : InputTestingServerConfiguration({display_bounds}),
+          test_complete(test_complete)
+    {
+    }
+    
+    std::shared_ptr<mi::TouchVisualizer> the_touch_visualizer() override
+    {
+        return mt::fake_shared(mock_visualizer);
+    }
+    
+    void inject_input() override
+    {
+        produce_events(*this);
+    }
+    
+    void establish_expectations()
+    {
+        // We need to do this before we start the input stack to avoid races
+        // with the initial spot clearing.
+        expect_touchspots(mock_visualizer, test_complete);
+    }
+};
+
+geom::Rectangle const ServerConfiguration::display_bounds = {{0, 0}, {1600, 1600}};
+
+struct TestTouchspotVisualizations : mtf::DeferredInProcessServer
+{
+    mt::Barrier test_complete_fence{2};
+    ServerConfiguration server_configuration{test_complete_fence};
+
+    mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
+
+    void start_server()
+    {
+        server_configuration.establish_expectations();
+
+        DeferredInProcessServer::start_server();
+        server_configuration.exec();
+    }
+
+    void TearDown()
+    {
+        test_complete_fence.ready();
+        server_configuration.on_exit();
+        DeferredInProcessServer::TearDown();
+    }
+};
+    
 geom::Point transform_to_screen_space(geom::Point in_touchpad_space)
 {
     auto minimum_touch = mi::android::FakeEventHub::TouchScreenMinAxisValue;
@@ -169,6 +172,8 @@ TEST_F(TestTouchspotVisualizations, touch_is_given_to_touchspot_visualizer)
     server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
             server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position(abs_touch));
+            server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position(abs_touch)
+                .with_action(mis::TouchParameters::Action::Release));
         };
     server_configuration.expect_touchspots = [&](MockTouchVisualizer &visualizer, mt::Barrier& test_complete)
         {
@@ -176,8 +181,9 @@ TEST_F(TestTouchspotVisualizations, touch_is_given_to_touchspot_visualizer)
 
             // First we will see the spots cleared, as this is the start of a new gesture.
             EXPECT_CALL(visualizer, visualize_touches(NoSpots())).Times(1);
-            EXPECT_CALL(visualizer, visualize_touches(TouchedSpotsAt(expected_spots))).
-                Times(1).WillOnce(UnblockBarrier(&test_complete));
+            EXPECT_CALL(visualizer, visualize_touches(TouchedSpotsAt(expected_spots)));
+            EXPECT_CALL(visualizer, visualize_touches(NoSpots())).Times(1).
+                WillOnce(UnblockBarrier(&test_complete));
         };
     start_server();
 }
