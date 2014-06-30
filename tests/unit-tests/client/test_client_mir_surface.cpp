@@ -184,6 +184,7 @@ struct MockBuffer : public mcl::ClientBuffer
     MOCK_METHOD0(increment_age, void());
     MOCK_METHOD0(mark_as_submitted, void());
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mg::NativeBuffer>());
+    MOCK_METHOD1(update_from, void(MirBufferPackage const&));
 };
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory
@@ -322,6 +323,7 @@ struct StubBuffer : public mcl::ClientBuffer
     {
         return std::shared_ptr<mg::NativeBuffer>();
     }
+    void update_from(MirBufferPackage const&) {}
 
     std::shared_ptr<MirBufferPackage> const package;
     geom::Size size_;

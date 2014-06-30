@@ -50,6 +50,7 @@ public:
     geometry::Stride stride() const;
     MirPixelFormat pixel_format() const;
     std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const;
+    void update_from(MirBufferPackage const& update_package);
 
     Buffer(const Buffer&) = delete;
     Buffer& operator=(const Buffer&) = delete;
