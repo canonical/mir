@@ -17,6 +17,7 @@
  */
 
 #include "mir_test_doubles/stub_renderable.h"
+#include "mir_test_doubles/stub_buffer.h"
 #include "src/platform/graphics/android/hwc_layerlist.h"
 #include "hwc_struct_helpers.h"
 #include <gtest/gtest.h>
@@ -28,12 +29,16 @@ namespace
 {
 struct LayerListTest : public testing::Test
 {
-    LayerListTest()
-        : renderables{std::make_shared<mtd::StubRenderable>(),
-                      std::make_shared<mtd::StubRenderable>(),
-                      std::make_shared<mtd::StubRenderable>()}
+    LayerListTest() :
+        buffer1{std::make_shared<mtd::StubBuffer>()},
+        buffer2{std::make_shared<mtd::StubBuffer>()},
+        renderables{std::make_shared<mtd::StubRenderable>(buffer1),
+                    std::make_shared<mtd::StubRenderable>(buffer2),
+                    std::make_shared<mtd::StubRenderable>()}
     {}
 
+    std::shared_ptr<mtd::StubBuffer> buffer1;
+    std::shared_ptr<mtd::StubBuffer> buffer2;
     std::list<std::shared_ptr<mg::Renderable>> renderables;
 };
 }
@@ -68,4 +73,42 @@ TEST_F(LayerListTest, list_iterators)
     EXPECT_EQ(std::distance(list3.begin(), list3.end()), renderables.size());
     EXPECT_EQ(std::distance(list3.additional_layers_begin(), list3.end()), 0);
     EXPECT_EQ(std::distance(list3.begin(), list3.additional_layers_begin()), renderables.size());
+}
+
+TEST_F(LayerListTest, keeps_track_of_needs_commit)
+{
+    size_t additional_layers = 4;
+    mga::LayerList list(renderables, additional_layers);
+
+    for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
+        EXPECT_TRUE(it->needs_commit);
+    for(auto it = list.additional_layers_begin(); it != list.end(); it++)
+        EXPECT_FALSE(it->needs_commit);
+
+    mg::RenderableList list2{
+        std::make_shared<mtd::StubRenderable>(buffer1),
+        std::make_shared<mtd::StubRenderable>(buffer2),
+        std::make_shared<mtd::StubRenderable>()
+    };
+    list.update_list(list2, additional_layers);
+
+    //here, all should be needs_commit because they were all HWC_FRAMEBUFFER 
+    for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
+        EXPECT_TRUE(it->needs_commit);
+
+    ASSERT_THAT(list.native_list().lock()->numHwLayers, testing::Eq(list2.size() + additional_layers));
+    list.native_list().lock()->hwLayers[2].compositionType = HWC_OVERLAY;
+    list.update_list(list2, additional_layers);
+
+    auto i = 0;
+    for(auto it = list.begin(); it != list.additional_layers_begin(); it++)
+    {
+        if (i == 2)
+            EXPECT_FALSE(it->needs_commit);
+        else
+            EXPECT_TRUE(it->needs_commit);
+        i++;
+    }
+    for(auto it = list.additional_layers_begin(); it != list.end(); it++)
+        EXPECT_FALSE(it->needs_commit);
 }

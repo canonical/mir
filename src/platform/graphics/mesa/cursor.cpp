@@ -110,7 +110,7 @@ void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> co
         BOOST_THROW_EXCEPTION(std::logic_error("Image is too big for GBM cursor buffer"));
     }
     
-    uint32_t *pixels = static_cast<uint32_t*>(calloc(buffer_width*buffer_height, sizeof(uint32_t)));
+    uint32_t pixels[buffer_width*buffer_height] {};
     // 'pixels' is initialized to transparent so we just need to copy the initial image
     //  in to the top left corner.
     for (unsigned int i = 0; i < image_height; i++)
@@ -123,7 +123,6 @@ void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> co
 
     auto const count = buffer_width * buffer_height * sizeof(uint32_t);
     write_buffer_data_locked(lg, pixels, count);
-    free(pixels);
 }
 
 void mgm::Cursor::show(CursorImage const& cursor_image)

@@ -18,7 +18,7 @@
  */
 
 #include "android_client_buffer_factory.h"
-#include "android_client_buffer.h"
+#include "buffer.h"
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
@@ -33,7 +33,7 @@ std::shared_ptr<mcl::ClientBuffer> mcla::AndroidClientBufferFactory::create_buff
 {
     (void)size; // TODO: remove this unused parameter
     auto handle = registrar->register_buffer(package);
-    return std::make_shared<mcla::AndroidClientBuffer>(
+    return std::make_shared<mcla::Buffer>(
         registrar,
         handle,
         geometry::Size{package->width, package->height},
