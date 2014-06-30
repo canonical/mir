@@ -25,6 +25,7 @@
 
 using namespace mir::geometry;
 using namespace mir::graphics;
+using namespace mir::compositor;
 
 namespace
 {
@@ -65,18 +66,27 @@ bool renderable_is_occluded(
 }
 }
 
-void mir::compositor::filter_occlusions_from(
+SceneElementSequence mir::compositor::filter_occlusions_from(
     SceneElementSequence& elements,
     Rectangle const& area)
 {
+    SceneElementSequence occluded;
     std::vector<Rectangle> coverage;
+
     auto it = elements.rbegin();
     while (it != elements.rend())
     {
         auto const renderable = (*it)->renderable();
         if (renderable_is_occluded(*renderable, area, coverage))
+        {
+            occluded.insert(occluded.begin(), *it);
             it = SceneElementSequence::reverse_iterator(elements.erase(std::prev(it.base())));
+        }
         else
+        {
             it++;
+        }
     }
+
+    return occluded;
 }

@@ -73,16 +73,19 @@ std::shared_ptr<mi::InputDispatcher> mtf::InputTestingServerConfiguration::the_i
     return DefaultServerConfiguration::the_input_dispatcher();
 }
 
+std::shared_ptr<mi::InputSender> mtf::InputTestingServerConfiguration::the_input_sender()
+{
+    return DefaultServerConfiguration::the_input_sender();
+}
+
 std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::the_input_configuration()
 {
     if (!input_configuration)
     {
-        std::shared_ptr<mi::CursorListener> null_cursor_listener{nullptr};
-
         input_configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
             the_input_dispatcher(),
             the_input_region(),
-            null_cursor_listener,
+            the_cursor_listener(),
             the_input_report());
         fake_event_hub = input_configuration->the_fake_event_hub();
 

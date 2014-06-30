@@ -23,11 +23,23 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/input/input_reception_mode.h"
 
+#include "mir_toolkit/event.h"
+
 #include <string>
 #include <memory>
 
 namespace mir
 {
+namespace graphics
+{
+class CursorImage;
+}
+
+namespace scene
+{
+class SurfaceObserver;
+}
+
 namespace input
 {
 class InputChannel;
@@ -39,7 +51,9 @@ public:
     virtual geometry::Rectangle input_bounds() const = 0;
     virtual bool input_area_contains(geometry::Point const& point) const = 0;
     virtual std::shared_ptr<input::InputChannel> input_channel() const = 0;
+    virtual std::shared_ptr<graphics::CursorImage> cursor_image() const = 0;
     virtual InputReceptionMode reception_mode() const = 0;
+    virtual void consume(MirEvent const& event) = 0;
 
 protected:
     Surface() = default;
