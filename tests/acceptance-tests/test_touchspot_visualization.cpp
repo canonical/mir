@@ -66,10 +66,15 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
     {
         return mt::fake_shared(mock_visualizer);
     }
+    
+    void on_start() override
+    {
+        expect_touchspots(mock_visualizer, test_complete);
+        InputTestingServerConfiguration::on_start();
+    }
 
     void inject_input() override
     {
-        expect_touchspots(mock_visualizer, test_complete);
         produce_events(*this);
     }
 };
