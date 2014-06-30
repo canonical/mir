@@ -21,6 +21,8 @@
 #ifndef MIR_COMMON_H_
 #define MIR_COMMON_H_
 
+#include <mir_toolkit/cursors.h>
+
 /**
  * \addtogroup mir_toolkit
  * @{
