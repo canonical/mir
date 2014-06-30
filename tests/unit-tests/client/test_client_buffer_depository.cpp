@@ -271,21 +271,12 @@ TEST_F(MirBufferDepositoryTest, depository_destroys_old_buffers)
     std::shared_ptr<MirBufferPackage> packages[num_packages];
 
     depository.deposit_package(packages[0], 1, size, pf);
-    // Raw pointer so we don't influence the buffer's life-cycle
-//    MockBuffer *first_buffer = static_cast<MockBuffer *>(depository.current_buffer().get());
-    // We expect this to not be destroyed before we deposit the fourth buffer.
-//    bool buffer_destroyed = false;
-//    ON_CALL(*first_buffer, Destroy()).WillByDefault(Invoke([&buffer_destroyed] () {buffer_destroyed = true;}));
-
-
     depository.deposit_package(packages[1], 2, size, pf);
     depository.deposit_package(packages[2], 3, size, pf);
 
     // We've deposited three different buffers now; the fourth should trigger the destruction
     // of the first buffer.
     EXPECT_THAT(mock_factory->free_count, Eq(0));
-    //ASSERT_FALSE(buffer_destroyed);
-
     depository.deposit_package(packages[3], 4, size, pf);
 }
 
