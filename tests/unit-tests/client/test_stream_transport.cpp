@@ -19,7 +19,9 @@
 #include "src/client/rpc/stream_transport.h"
 #include "src/client/rpc/stream_socket_transport.h"
 
+#include "mir_test/auto_unblock_thread.h"
 #include "mir_test/signal.h"
+#include "mir/raii.h"
 
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -29,6 +31,8 @@
 #include <array>
 #include <atomic>
 #include <poll.h>
+#include <signal.h>
+#include <sys/time.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -212,4 +216,122 @@ TYPED_TEST(StreamTransportTest, WritesCorrectData)
 
     EXPECT_EQ(expected.size(), read(this->test_fd, received.data(), received.size()));
     EXPECT_EQ(0, memcmp(expected.data(), received.data(), expected.size()));
+}
+
+namespace
+{
+bool alarm_raised;
+void set_alarm_raised(int /*signo*/)
+{
+    alarm_raised = true;
+}
+
+}
+
+TYPED_TEST(StreamTransportTest, ReadsFullDataFromMultipleChunks)
+{
+    size_t const chunk_size{8};
+    std::vector<uint8_t> expected(chunk_size * 4);
+
+    uint8_t counter{0};
+    for (auto& byte : expected)
+    {
+        byte = counter++;
+    }
+    std::vector<uint8_t> received(expected.size());
+
+    auto reader = std::thread([&]()
+    {
+        this->transport->receive_data(received.data(), received.size());
+    });
+
+    size_t bytes_written{0};
+    while (bytes_written < expected.size())
+    {
+        auto result = send(this->test_fd,
+                           expected.data() + bytes_written,
+                           std::min(chunk_size, expected.size() - bytes_written),
+                           MSG_DONTWAIT);
+
+        ASSERT_NE(-1, result) << "Failed to send(): " << strerror(errno);
+        bytes_written += result;
+    }
+
+    if (reader.joinable())
+    {
+        reader.join();
+    }
+    EXPECT_EQ(expected, received);
+}
+
+TYPED_TEST(StreamTransportTest, ReadsFullDataWhenInterruptedWithSignals)
+{
+    size_t const chunk_size{262144};
+    std::vector<uint8_t> expected(chunk_size * 4);
+
+    uint8_t counter{0};
+    for (auto& byte : expected)
+    {
+        byte = counter++;
+    }
+    std::vector<uint8_t> received(expected.size());
+
+    struct sigaction old_handler;
+
+    auto sig_alarm_handler = mir::raii::paired_calls([&old_handler]()
+    {
+        struct sigaction alarm_handler;
+        sigset_t blocked_signals;
+
+        sigemptyset(&blocked_signals);
+        alarm_handler.sa_handler = &set_alarm_raised;
+        alarm_handler.sa_flags = 0;
+        alarm_handler.sa_mask = blocked_signals;
+        if (sigaction(SIGALRM, &alarm_handler, &old_handler) < 0)
+        {
+            throw std::system_error{errno, std::system_category(), "Failed to set SIGALRM handler"};
+        }
+    },
+    [&old_handler]()
+    {
+        if (sigaction(SIGALRM, &old_handler, nullptr) < 0)
+        {
+            throw std::system_error{errno, std::system_category(), "Failed to restore SIGALRM handler"};
+        }
+    });
+
+
+    auto reader = std::thread([&]()
+    {
+        alarm_raised = false;
+        this->transport->receive_data(received.data(), received.size());
+        EXPECT_TRUE(alarm_raised);
+    });
+
+    size_t bytes_written{0};
+    while (bytes_written < expected.size())
+    {
+        pollfd socket_writable;
+        socket_writable.events = POLLOUT;
+        socket_writable.fd = this->test_fd;
+
+        ASSERT_GE(poll(&socket_writable, 1, 10000), 1);
+        ASSERT_EQ(0, socket_writable.revents & (POLLERR | POLLHUP));
+
+        auto result = send(this->test_fd,
+                           expected.data() + bytes_written,
+                           std::min(chunk_size, expected.size() - bytes_written),
+                           MSG_DONTWAIT);
+
+        ASSERT_NE(-1, result) << "Failed to send(): " << strerror(errno);
+        bytes_written += result;
+        pthread_kill(reader.native_handle(), SIGALRM);
+    }
+
+    if (reader.joinable())
+    {
+        reader.join();
+    }
+
+    EXPECT_EQ(expected, received);
 }

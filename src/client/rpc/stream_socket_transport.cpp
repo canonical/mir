@@ -96,21 +96,29 @@ void mclr::StreamSocketTransport::register_observer(std::shared_ptr<Observer> co
 
 void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes)
 {
-    ssize_t const bytes_read = recv(socket_fd, buffer, read_bytes, MSG_NOSIGNAL);
-
-    if (bytes_read < 0)
+    size_t bytes_read{0};
+    while(bytes_read < read_bytes)
     {
-        if (errno == EPIPE)
+        ssize_t const result = recv(socket_fd,
+                                    static_cast<uint8_t*>(buffer) + bytes_read,
+                                    read_bytes - bytes_read,
+                                    MSG_WAITALL | MSG_NOSIGNAL);
+
+        if (result < 0)
         {
-            notify_disconnected();
+            if (errno == EPIPE)
+            {
+                notify_disconnected();
+                BOOST_THROW_EXCEPTION(
+                            boost::enable_error_info(
+                                socket_disconnected_error("Failed to read message from server"))
+                            << boost::errinfo_errno(errno));
+            }
             BOOST_THROW_EXCEPTION(
-                        boost::enable_error_info(
-                            socket_disconnected_error("Failed to read message from server"))
-                        << boost::errinfo_errno(errno));
+                        boost::enable_error_info(socket_error("Failed to read message from server"))
+                             << boost::errinfo_errno(errno));
         }
-        BOOST_THROW_EXCEPTION(
-                    boost::enable_error_info(socket_error("Failed to read message from server"))
-                    << boost::errinfo_errno(errno));
+        bytes_read += result;
     }
 }
 
