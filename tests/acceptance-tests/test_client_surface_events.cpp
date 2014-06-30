@@ -112,6 +112,7 @@ struct ClientSurfaceEvents : BasicClientServerFixture
     {
         ClientSurfaceEvents* self = static_cast<ClientSurfaceEvents*>(ctx);
         std::lock_guard<decltype(self->last_event_mutex)> last_event_lock{self->last_event_mutex};
+        // Don't overwrite an interesting event with an uninteresting one!
         if (event->type != self->event_filter) return;
         self->last_event = *event;
         self->last_event_surface = surface;
