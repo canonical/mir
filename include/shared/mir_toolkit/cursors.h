@@ -19,12 +19,13 @@
  */
 
 #ifndef MIR_CURSORS_H_
-#define MIR_CURSORSH_
+#define MIR_CURSORS_H_
 
 /**
  * \addtogroup mir_toolkit
  * @{
  */
+
 /* This is C code. Not C++. */
 
 /**
