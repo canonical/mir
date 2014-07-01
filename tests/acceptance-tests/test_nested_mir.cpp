@@ -35,6 +35,7 @@
 #include <mutex>
 #include <condition_variable>
 
+namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mtf = mir_test_framework;
@@ -244,7 +245,7 @@ int const screen_width[]{640, 1920};
 int const screen_left[]{0, 480};
 int const screen_top[]{0, 0};
 
-std::vector<mir::geometry::Rectangle> const display_geometry
+std::vector<geom::Rectangle> const display_geometry
 {
     {{screen_left[0], screen_top[0]}, {screen_width[0], screen_height[0]}},
     {{screen_left[1], screen_top[1]}, {screen_width[1], screen_height[1]}}
@@ -290,14 +291,17 @@ TEST_F(NestedServer, sees_expected_outputs)
     auto const display = nested_config.the_display();
     auto const display_config = display->configuration();
 
-    int output_count{0};
+    std::vector<geom::Rectangle> outputs;
 
-     display_config->for_each_output([&] (mg::UserDisplayConfigurationOutput& /*output*/)
+     display_config->for_each_output([&] (mg::UserDisplayConfigurationOutput& output)
         {
-             ++output_count;
+            outputs.push_back(
+                geom::Rectangle{
+                    output.top_left,
+                    output.modes[output.current_mode_index].size});
         });
 
-    EXPECT_THAT(output_count, Eq(display_geometry.size()));
+    EXPECT_THAT(outputs, ContainerEq(display_geometry));
 }
 
 //////////////////////////////////////////////////////////////////
