@@ -540,7 +540,7 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataAndFdsWhenInterruptedWithSignals)
     int const num_chunks{4};
     int const num_fds{5};
     std::vector<uint8_t> expected(chunk_size * num_chunks);
-    std::array<TestFd, num_chunks> fds;
+    std::array<TestFd, num_fds> fds;
 
     uint8_t counter{0};
     for (auto& byte : expected)
@@ -641,3 +641,4 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataAndFdsWhenInterruptedWithSignals)
         EXPECT_PRED_FORMAT2(fds_are_equivalent, test_files[i].fd, received_fds[i]);
     }
 }
+
