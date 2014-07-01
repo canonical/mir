@@ -18,6 +18,8 @@
 
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/graphics/native_platform.h"
+#include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/display_server.h"
 #include "mir/run_mir.h"
 
@@ -28,6 +30,10 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <future>
+#include <mutex>
+#include <condition_variable>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -67,6 +73,8 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
 
 struct HostServerConfiguration : mtf::StubbedServerConfiguration
 {
+    using mtf::StubbedServerConfiguration::StubbedServerConfiguration;
+
     virtual std::shared_ptr<mf::SessionMediatorReport>  the_session_mediator_report()
     {
         if (!mock_session_mediator_report)
@@ -198,8 +206,21 @@ private:
     }
 };
 
+int const screen_height[]{480, 1080};
+int const screen_width[]{640, 1920};
+int const screen_left[]{0, 480};
+int const screen_top[]{0, 0};
+
+std::vector<mir::geometry::Rectangle> const display_geometry
+{
+    {{screen_left[0], screen_top[0]}, {screen_width[0], screen_height[0]}},
+    {{screen_left[1], screen_top[1]}, {screen_width[1], screen_height[1]}}
+};
+
 struct NestedServer : mtf::InProcessServer, HostServerConfiguration
 {
+    NestedServer() : HostServerConfiguration(display_geometry) {}
+
     NestedMockEGL mock_egl;
 
     virtual mir::DefaultServerConfiguration& server_config()
@@ -219,6 +240,47 @@ TEST_F(NestedServer, nested_platform_connects_and_disconnects)
     EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(1);
 
     mir::run_mir(nested_config, [](mir::DisplayServer& server){server.stop();});
+}
+
+TEST_F(NestedServer, sees_expected_outputs)
+{
+    std::mutex nested_mutex;
+    std::condition_variable nested_cv;
+    mir::DisplayServer* nested_server{nullptr};
+
+    std::string const connection_string{new_connection()};
+    NestedServerConfiguration nested_config{connection_string, the_graphics_platform()};
+
+    auto nested_run_mir = std::async(std::launch::async, [&]
+        {
+            mir::run_mir(nested_config, [&](mir::DisplayServer& server)
+                {
+                    std::lock_guard<decltype(nested_mutex)> lock{nested_mutex};
+                    nested_server = &server;
+                    nested_cv.notify_one();
+                });
+        });
+
+    std::unique_lock<decltype(nested_mutex)> lock{nested_mutex};
+    nested_cv.wait(lock, [&] { return nested_server != nullptr; });
+
+    // TODO code above this point is "setup" and should be factored into a fixture
+
+    auto const display = nested_config.the_display();
+    auto const display_config = display->configuration();
+
+    int output_count{0};
+
+     display_config->for_each_output([&] (mg::UserDisplayConfigurationOutput& /*output*/)
+        {
+             ++output_count;
+        });
+
+    EXPECT_THAT(output_count, Eq(display_geometry.size()));
+
+    // TODO code below this point is "teardown" and should be factored into a fixture
+
+    nested_server->stop();
 }
 
 //////////////////////////////////////////////////////////////////
