@@ -145,6 +145,11 @@ public:
         return true;
     }
 
+    int buffers_ready_for_compositor() const override
+    {
+        return 1;
+    }
+
 private:
     std::shared_ptr<DemoOverlayClient> const client;
     geom::Rectangle const position;
