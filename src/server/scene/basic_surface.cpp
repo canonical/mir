@@ -607,6 +607,9 @@ public:
     {
     }
  
+    int buffers_ready_for_compositor() const override
+    { return underlying_buffer_stream->buffers_ready_for_compositor(); }
+
     std::shared_ptr<mg::Buffer> buffer() const override
     {
         if (!compositor_buffer)

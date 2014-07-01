@@ -28,7 +28,6 @@
 #include "mir_test_framework/basic_client_server_fixture.h"
 
 #include <thread>
-#include <atomic>
 #include <mutex>
 #include <condition_variable>
 #include <gmock/gmock.h>
@@ -153,17 +152,21 @@ struct BufferCounterConfig : mtf::StubbedServerConfiguration
 
         CountingStubBuffer()
         {
-            int created = buffers_created.load();
-            while (!buffers_created.compare_exchange_weak(created, created + 1)) std::this_thread::yield();
+            std::lock_guard<std::mutex> lock{buffers_mutex};
+            ++buffers_created;
+            buffers_cv.notify_one();
         }
         ~CountingStubBuffer()
         {
-            int destroyed = buffers_destroyed.load();
-            while (!buffers_destroyed.compare_exchange_weak(destroyed, destroyed + 1)) std::this_thread::yield();
+            std::lock_guard<std::mutex> lock{buffers_mutex};
+            ++buffers_destroyed;
+            buffers_cv.notify_one();
         }
 
-        static std::atomic<int> buffers_created;
-        static std::atomic<int> buffers_destroyed;
+        static std::mutex buffers_mutex;
+        static std::condition_variable buffers_cv;
+        static int buffers_created;
+        static int buffers_destroyed;
     };
 
     class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
@@ -204,8 +207,10 @@ struct BufferCounterConfig : mtf::StubbedServerConfiguration
     std::shared_ptr<mg::Platform> platform;
 };
 
-std::atomic<int> BufferCounterConfig::CountingStubBuffer::buffers_created;
-std::atomic<int> BufferCounterConfig::CountingStubBuffer::buffers_destroyed;
+std::mutex BufferCounterConfig::CountingStubBuffer::buffers_mutex;
+std::condition_variable BufferCounterConfig::CountingStubBuffer::buffers_cv;
+int BufferCounterConfig::CountingStubBuffer::buffers_created;
+int BufferCounterConfig::CountingStubBuffer::buffers_destroyed;
 }
 
 struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
@@ -226,8 +231,15 @@ struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
     {
         mtf::BasicClientServerFixture<BufferCounterConfig>::TearDown();
 
-        EXPECT_EQ(BufferCounterConfig::CountingStubBuffer::buffers_created.load(),
-                  BufferCounterConfig::CountingStubBuffer::buffers_destroyed.load());
+        using  Counter = BufferCounterConfig::CountingStubBuffer;
+
+        std::chrono::seconds const long_enough{4};
+        auto const all_buffers_destroyed =
+            []{ return Counter::buffers_created == Counter::buffers_destroyed; };
+        std::unique_lock<std::mutex> lock{Counter::buffers_mutex};
+
+        EXPECT_TRUE(
+            Counter::buffers_cv.wait_for(lock, long_enough, all_buffers_destroyed));
     }
 };
 
