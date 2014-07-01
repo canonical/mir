@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -17,23 +17,21 @@
  */
 
 #include "mir/frontend/session_mediator_report.h"
+#include "mir/graphics/native_platform.h"
 #include "mir/display_server.h"
 #include "mir/run_mir.h"
 
-#include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_doubles/mock_gl.h"
+#include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/stubbed_server_configuration.h"
+
 #include "mir_test_doubles/mock_egl.h"
 
-#ifndef ANDROID
-#include "mir_test_doubles/mock_gbm.h"
-#endif
-
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mf = mir::frontend;
+namespace mg = mir::graphics;
 namespace mtf = mir_test_framework;
-
 using namespace testing;
 
 namespace
@@ -67,7 +65,7 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
     void session_error(const std::string&, const char*, const std::string&) override {};
 };
 
-struct HostServerConfiguration : public mtf::TestingServerConfiguration
+struct HostServerConfiguration : mtf::StubbedServerConfiguration
 {
     virtual std::shared_ptr<mf::SessionMediatorReport>  the_session_mediator_report()
     {
@@ -97,13 +95,61 @@ struct FakeCommandLine
     }
 };
 
+struct NativePlatformAdapter : mg::NativePlatform
+{
+    NativePlatformAdapter(std::shared_ptr<mg::Platform> const& adaptee) :
+        adaptee(adaptee) {}
+
+    void initialize(std::shared_ptr<mg::NestedContext> const& /*nested_context*/) override {}
+
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
+        std::shared_ptr<mg::BufferInitializer> const& buffer_initializer) override
+    {
+        return adaptee->create_buffer_allocator(buffer_initializer);
+    }
+
+    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package() override
+    {
+        return adaptee->get_ipc_package();
+    }
+
+    std::shared_ptr<mg::InternalClient> create_internal_client() override
+    {
+        return adaptee->create_internal_client();
+    }
+
+    void fill_buffer_package(
+        mg::BufferIPCPacker* packer,
+        mg::Buffer const* buffer,
+        mg::BufferIpcMsgType msg_type) const override
+    {
+        return adaptee->fill_buffer_package(packer, buffer, msg_type);
+    }
+
+    std::shared_ptr<mg::Platform> const adaptee;
+};
+
 struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerConfiguration
 {
-    NestedServerConfiguration(std::string const& host_socket) :
+    NestedServerConfiguration(
+        std::string const& host_socket,
+        std::shared_ptr<mg::Platform> const& graphics_platform) :
         FakeCommandLine(host_socket),
-        DefaultServerConfiguration(FakeCommandLine::argc, FakeCommandLine::argv)
+        DefaultServerConfiguration(FakeCommandLine::argc, FakeCommandLine::argv),
+        graphics_platform(graphics_platform)
     {
     }
+
+    std::shared_ptr<mg::NativePlatform> the_graphics_native_platform() override
+    {
+        return graphics_native_platform(
+            [this]() -> std::shared_ptr<mg::NativePlatform>
+            {
+                return std::make_shared<NativePlatformAdapter>(graphics_platform);
+            });
+    }
+
+    std::shared_ptr<mg::Platform> const graphics_platform;
 };
 
 struct NestedMockEGL : mir::test::doubles::MockEGL
@@ -113,19 +159,24 @@ struct NestedMockEGL : mir::test::doubles::MockEGL
         {
             InSequence init_before_terminate;
             EXPECT_CALL(*this, eglGetDisplay(_)).Times(1);
-
-            EXPECT_CALL(*this, eglInitialize(_, _, _)).Times(1).WillRepeatedly(
-                DoAll(WithArgs<1, 2>(Invoke(this, &NestedMockEGL::egl_initialize)), Return(EGL_TRUE)));
-
-            EXPECT_CALL(*this, eglChooseConfig(_, _, _, _, _)).Times(AnyNumber()).WillRepeatedly(
-                DoAll(WithArgs<2, 4>(Invoke(this, &NestedMockEGL::egl_choose_config)), Return(EGL_TRUE)));
-
             EXPECT_CALL(*this, eglTerminate(_)).Times(1);
         }
 
         EXPECT_CALL(*this, eglCreateWindowSurface(_, _, _, _)).Times(AnyNumber());
         EXPECT_CALL(*this, eglMakeCurrent(_, _, _, _)).Times(AnyNumber());
         EXPECT_CALL(*this, eglDestroySurface(_, _)).Times(AnyNumber());
+
+        EXPECT_CALL(*this, eglQueryString(_, _)).Times(AnyNumber());
+        ON_CALL(*this, eglQueryString(_,EGL_EXTENSIONS))
+            .WillByDefault(Return("EGL_KHR_image "
+                                  "EGL_KHR_image_base "
+                                  "EGL_MESA_drm_image"));
+
+        EXPECT_CALL(*this, eglChooseConfig(_, _, _, _, _)).Times(AnyNumber()).WillRepeatedly(
+            DoAll(WithArgs<2, 4>(Invoke(this, &NestedMockEGL::egl_choose_config)), Return(EGL_TRUE)));
+
+        EXPECT_CALL(*this, eglGetCurrentContext()).Times(AnyNumber());
+        EXPECT_CALL(*this, eglCreatePbufferSurface(_, _, _)).Times(AnyNumber());
 
         EXPECT_CALL(*this, eglGetProcAddress(StrEq("eglCreateImageKHR"))).Times(AnyNumber());
         EXPECT_CALL(*this, eglGetProcAddress(StrEq("eglDestroyImageKHR"))).Times(AnyNumber());
@@ -147,117 +198,39 @@ private:
     }
 };
 
-struct NestedMockPlatform
-#ifndef ANDROID
-    : mir::test::doubles::MockGBM
-#endif
+struct NestedServer : mtf::InProcessServer, HostServerConfiguration
 {
-    NestedMockPlatform()
+    NestedMockEGL mock_egl;
+
+    virtual mir::DefaultServerConfiguration& server_config()
     {
-#ifndef ANDROID
-        InSequence gbm_device_lifecycle;
-        EXPECT_CALL(*this, gbm_create_device(_)).Times(1);
-        EXPECT_CALL(*this, gbm_device_destroy(_)).Times(1);
-#endif
-    }
-};
-
-struct NestedMockGL : NiceMock<mir::test::doubles::MockGL>
-{
-    NestedMockGL() {}
-};
-
-template<class NestedServerConfiguration>
-struct ClientConfig : mtf::TestingClientConfiguration
-{
-    ClientConfig(std::string const& host_socket) : host_socket(host_socket) {}
-
-    std::string const host_socket;
-
-    void exec() override
-    {
-        try
-        {
-            NestedMockPlatform mock_gbm;
-            NestedMockEGL mock_egl;
-            NestedMockGL mock_gl;
-            NestedServerConfiguration nested_config(host_socket);
-
-            mir::run_mir(nested_config, [](mir::DisplayServer& server){server.stop();});
-
-            // TODO - remove FAIL() as we should exit (NB we need logic to cause exit).
-            FAIL();
-        }
-        catch (std::exception const& x)
-        {
-            // TODO - this is only temporary until NestedPlatform is implemented.
-            EXPECT_THAT(x.what(), HasSubstr("Platform::create_buffer_allocator is not implemented yet!"));
-        }
+        return *this;
     }
 };
 }
 
-using TestNestedMir = mtf::BespokeDisplayServerTestFixture;
-
-// TODO resolve problems running "nested" tests on android and running nested on MESA
-#ifdef ANDROID
-#define DISABLED_ON_ANDROID_AND_MESA(name) DISABLED_##name
-#else
-#define DISABLED_ON_ANDROID_AND_MESA(name) DISABLED_##name
-#endif
-
-TEST_F(TestNestedMir, DISABLED_ON_ANDROID_AND_MESA(nested_platform_connects_and_disconnects))
+TEST_F(NestedServer, nested_platform_connects_and_disconnects)
 {
-    struct MyHostServerConfiguration : HostServerConfiguration
-    {
-        void exec() override
-        {
-            InSequence seq;
-            EXPECT_CALL(*mock_session_mediator_report, session_connect_called(_)).Times(1);
-            EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(1);
-        }
-    };
+    std::string const connection_string{new_connection()};
+    NestedServerConfiguration nested_config{connection_string, the_graphics_platform()};
 
-    MyHostServerConfiguration host_config;
-    ClientConfig<NestedServerConfiguration> client_config(host_config.the_socket_file());
+    InSequence seq;
+    EXPECT_CALL(*mock_session_mediator_report, session_connect_called(_)).Times(1);
+    EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(1);
 
-
-    launch_server_process(host_config);
-    launch_client_process(client_config);
+    mir::run_mir(nested_config, [](mir::DisplayServer& server){server.stop();});
 }
 
 //////////////////////////////////////////////////////////////////
-// TODO the following tests were used in investigating lifetime issues.
-// TODO they may not have much long term value, but decide that later
-
-TEST(DisplayLeak, on_exit_display_objects_should_be_destroyed)
+// TODO the following test was used in investigating lifetime issues.
+// TODO it may not have much long term value, but decide that later.
+TEST_F(NestedServer, on_exit_display_objects_should_be_destroyed)
 {
-    struct MyServerConfiguration : mtf::TestingServerConfiguration
+    std::string const connection_string{new_connection()};
+
+    struct MyServerConfiguration : NestedServerConfiguration
     {
-        std::shared_ptr<mir::graphics::Display> the_display() override
-        {
-            auto const& temp = mtf::TestingServerConfiguration::the_display();
-            my_display = temp;
-            return temp;
-        }
-
-        std::weak_ptr<mir::graphics::Display> my_display;
-    };
-
-    MyServerConfiguration host_config;
-
-    mir::run_mir(host_config, [](mir::DisplayServer& server){server.stop();});
-
-    EXPECT_FALSE(host_config.my_display.lock()) << "after run_mir() exits the display should be released";
-}
-
-TEST_F(TestNestedMir, DISABLED_ON_ANDROID_AND_MESA(on_exit_display_objects_should_be_destroyed))
-{
-    struct MyNestedServerConfiguration : NestedServerConfiguration
-    {
-        // TODO clang says "error: inheriting constructors are not supported"
-        // using NestedServerConfiguration::NestedServerConfiguration;
-        MyNestedServerConfiguration(std::string const& host_socket) : NestedServerConfiguration(host_socket) {}
+        using NestedServerConfiguration::NestedServerConfiguration;
 
         std::shared_ptr<mir::graphics::Display> the_display() override
         {
@@ -266,17 +239,12 @@ TEST_F(TestNestedMir, DISABLED_ON_ANDROID_AND_MESA(on_exit_display_objects_shoul
             return temp;
         }
 
-        ~MyNestedServerConfiguration()
-        {
-            EXPECT_FALSE(my_display.lock()) << "after run_mir() exits the display should be released";
-        }
-
         std::weak_ptr<mir::graphics::Display> my_display;
     };
 
-    HostServerConfiguration host_config;
-    ClientConfig<MyNestedServerConfiguration> client_config(host_config.the_socket_file());
+    MyServerConfiguration config{connection_string, the_graphics_platform()};
 
-    launch_server_process(host_config);
-    launch_client_process(client_config);
+    mir::run_mir(config, [](mir::DisplayServer& server){server.stop();});
+
+    EXPECT_FALSE(config.my_display.lock()) << "after run_mir() exits the display should be released";
 }
