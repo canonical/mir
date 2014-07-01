@@ -139,7 +139,7 @@ xcursor_name_for_mir_cursor(std::string const& mir_cursor_name)
     }
     else
     {
-        return "arrow";
+        return mir_cursor_name;
     }
 }
 }
