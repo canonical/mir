@@ -157,6 +157,7 @@ struct ClientSurfaceEvents : BasicClientServerFixture
     void TearDown() override
     {
         mir_surface_release_sync(other_surface);
+        scene_surface.reset();
         mir_surface_release_sync(surface);
 
         BasicClientServerFixture::TearDown();
