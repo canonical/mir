@@ -16,7 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/client/android/android_client_buffer.h"
 #include "src/client/android/android_registrar_gralloc.h"
 #include "mir_test_doubles/mock_android_alloc_device.h"
 #include "mir_test/fake_shared.h"

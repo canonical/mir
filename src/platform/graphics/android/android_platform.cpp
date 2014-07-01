@@ -112,24 +112,31 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-void mga::AndroidPlatform::fill_ipc_package(BufferIPCPacker* packer, graphics::Buffer const* buffer) const
+void mga::AndroidPlatform::fill_buffer_package(
+    BufferIPCPacker* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const
 {
     auto native_buffer = buffer->native_buffer_handle();
-    auto buffer_handle = native_buffer->handle();
 
-    int offset = 0;
-
-    for(auto i=0; i<buffer_handle->numFds; i++)
+    /* TODO: instead of waiting, pack the fence fd in the message to the client */ 
+    native_buffer->ensure_available_for(mga::BufferAccess::write);
+    if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
-        packer->pack_fd(buffer_handle->data[offset++]);
-    }
-    for(auto i=0; i<buffer_handle->numInts; i++)
-    {
-        packer->pack_data(buffer_handle->data[offset++]);
-    }
+        auto buffer_handle = native_buffer->handle();
 
-    packer->pack_stride(buffer->stride());
-    packer->pack_size(buffer->size());
+        int offset = 0;
+
+        for(auto i=0; i<buffer_handle->numFds; i++)
+        {
+            packer->pack_fd(buffer_handle->data[offset++]);
+        }
+        for(auto i=0; i<buffer_handle->numInts; i++)
+        {
+            packer->pack_data(buffer_handle->data[offset++]);
+        }
+
+        packer->pack_stride(buffer->stride());
+        packer->pack_size(buffer->size());
+    }
 }
 
 EGLNativeDisplayType mga::AndroidPlatform::egl_native_display() const

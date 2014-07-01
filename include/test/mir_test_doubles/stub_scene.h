@@ -32,9 +32,15 @@ namespace doubles
 class StubScene : public compositor::Scene
 {
 public:
-    graphics::RenderableList renderable_list_for(void const*) const override
+    compositor::SceneElementSequence scene_elements_for(compositor::CompositorID) override
     {
           return {};
+    }
+    void register_compositor(compositor::CompositorID) override
+    {
+    }
+    void unregister_compositor(compositor::CompositorID) override
+    {
     }
     void add_observer(std::shared_ptr<scene::Observer> const&) override
     {

@@ -103,6 +103,7 @@ public:
     {
         handlers.register_fd_handler(
             {p.read_fd()},
+            this,
             [this, handler](int fd)
             {
                 char c;

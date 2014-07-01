@@ -27,12 +27,15 @@
 
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/gl_config.h"
+#include "mir/graphics/cursor.h"
 #include "program_factory.h"
 
 #include "mir/shared_library.h"
 #include "mir/shared_library_loader.h"
 #include "mir/abnormal_exit.h"
 #include "mir/emergency_cleanup.h"
+
+#include "mir_toolkit/common.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -122,11 +125,23 @@ mir::DefaultServerConfiguration::the_display()
 std::shared_ptr<mg::Cursor>
 mir::DefaultServerConfiguration::the_cursor()
 {
+    struct NullCursor : public mg::Cursor
+    {
+        void show(mg::CursorImage const&) {}
+        void hide() {}
+        void move_to(geometry::Point) {}
+    };
     return cursor(
         [this]() -> std::shared_ptr<mg::Cursor>
         {
-            // For now we only support a hardware cursor.
-            return the_display()->create_hardware_cursor(the_default_cursor_image());
+            // We try to create a hardware cursor, as we have no software 
+            // cursor currently, if this fails we need to return
+            // a valid cursor object.
+            auto hardware_cursor = the_display()->create_hardware_cursor(the_default_cursor_image());
+            if (hardware_cursor)
+                return hardware_cursor;
+            else
+                return std::make_shared<NullCursor>();
         });
 }
 
@@ -138,7 +153,7 @@ mir::DefaultServerConfiguration::the_default_cursor_image()
     return default_cursor_image(
         [this]()
         {
-            return the_cursor_images()->image("arrow", default_cursor_size);
+            return the_cursor_images()->image(mir_default_cursor_name, default_cursor_size);
         });
 }
 

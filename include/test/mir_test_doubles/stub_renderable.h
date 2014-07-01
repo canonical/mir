@@ -43,6 +43,10 @@ public:
           stub_buffer(buffer)
     {}
 
+    StubRenderable(std::shared_ptr<graphics::Buffer> const& buffer)
+        : StubRenderable(buffer, {{},{}})
+    {}
+
     StubRenderable(geometry::Rectangle const& rect)
         : StubRenderable(make_stub_buffer(rect), rect)
     {}
@@ -130,6 +134,18 @@ struct StubTranslucentRenderable : public StubRenderable
     }
 };
 
+struct PlaneAlphaRenderable : public StubRenderable
+{
+    bool alpha_enabled() const override
+    {
+        return true;
+    }
+    float alpha() const override
+    {
+        //approx 99% alpha 
+        return 1.0f - ( 3.0f / 1024.0f );
+    }
+};
 }
 }
 }

@@ -23,6 +23,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/input/input_channel.h"
 #include "mir/shell/input_targeter.h"
+#include "mir/input/input_sender.h"
 #include "mir/graphics/buffer.h"
 
 #include "mir/scene/scene_report.h"
@@ -88,6 +89,14 @@ void ms::SurfaceObservers::alpha_set_to(float alpha)
         p->alpha_set_to(alpha);
 }
 
+void ms::SurfaceObservers::orientation_set_to(MirOrientation orientation)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    // TBD Maybe we should copy observers so we can release the lock?
+    for (auto const& p : observers)
+        p->orientation_set_to(orientation);
+}
+
 void ms::SurfaceObservers::transformation_set_to(glm::mat4 const& t)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
@@ -133,6 +142,7 @@ ms::BasicSurface::BasicSurface(
     bool nonrectangular,
     std::shared_ptr<mc::BufferStream> const& buffer_stream,
     std::shared_ptr<mi::InputChannel> const& input_channel,
+    std::shared_ptr<input::InputSender> const& input_sender,
     std::shared_ptr<SurfaceConfigurator> const& configurator,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
@@ -143,14 +153,16 @@ ms::BasicSurface::BasicSurface(
     hidden(false),
     input_mode(mi::InputReceptionMode::normal),
     nonrectangular(nonrectangular),
-    input_rectangles{geom::Rectangle{geom::Point{0, 0}, surface_rect.size}},
+    custom_input_rectangles(),
     surface_buffer_stream(buffer_stream),
     server_input_channel(input_channel),
+    input_sender(input_sender),
     configurator(configurator),
     cursor_image_(cursor_image),
     report(report),
     type_value(mir_surface_type_normal),
     state_value(mir_surface_state_restored),
+    visibility_value(mir_surface_visibility_exposed),
     dpi_value(0)
 {
     report->surface_created(this, surface_name);
@@ -265,7 +277,7 @@ std::shared_ptr<mi::InputChannel> ms::BasicSurface::input_channel() const
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
     std::unique_lock<std::mutex> lock(guard);
-    this->input_rectangles = input_rectangles;
+    custom_input_rectangles = input_rectangles;
 }
 
 void ms::BasicSurface::resize(geom::Size const& desired_size)
@@ -312,16 +324,20 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 
     if (hidden)
         return false;
-    
+
     // Restrict to bounding rectangle
     if (!surface_rect.contains(point))
         return false;
+
+    // No custom input region means effective input region is whole surface
+    if (custom_input_rectangles.empty())
+        return true;
 
     // TODO: Perhaps creates some issues with transformation.
     auto local_point = geom::Point{geom::X{point.x.as_uint32_t()-surface_rect.top_left.x.as_uint32_t()},
                                    geom::Y{point.y.as_uint32_t()-surface_rect.top_left.y.as_uint32_t()}};
 
-    for (auto const& rectangle : input_rectangles)
+    for (auto const& rectangle : custom_input_rectangles)
     {
         if (rectangle.contains(local_point))
         {
@@ -340,6 +356,10 @@ void ms::BasicSurface::set_alpha(float alpha)
     observers.alpha_set_to(alpha);
 }
 
+void ms::BasicSurface::set_orientation(MirOrientation orientation)
+{
+    observers.orientation_set_to(orientation);
+}
 
 void ms::BasicSurface::set_transformation(glm::mat4 const& t)
 {
@@ -431,6 +451,7 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
 {
     int result = 0;
     bool allow_dropping = false;
+
     /*
      * TODO: In future, query the shell implementation for the subset of
      *       attributes/types it implements.
@@ -463,6 +484,10 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid DPI value"));
         result = dpi();
         break;
+    case mir_surface_attrib_visibility:
+        set_visibility(static_cast<MirSurfaceVisibility>(value));
+        result = visibility_value;
+        break;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                "attribute."));
@@ -486,13 +511,16 @@ void ms::BasicSurface::show()
 
 void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& image)
 {
+    {
         std::unique_lock<std::mutex> lock(guard);
         cursor_image_ = image;
+    }
 
-        observers.cursor_image_set_to(*image);
+    observers.cursor_image_set_to(*image);
 }
     
-std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image()
+
+std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image() const
 {
     std::unique_lock<std::mutex> lock(guard);
     return cursor_image_;
@@ -516,6 +544,21 @@ bool ms::BasicSurface::set_dpi(int new_dpi)
     }
     
     return valid;
+}
+
+void ms::BasicSurface::set_visibility(MirSurfaceVisibility new_visibility)
+{
+    if (new_visibility != mir_surface_visibility_occluded &&
+        new_visibility != mir_surface_visibility_exposed)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid visibility value"));
+    }
+
+    if (visibility_value != new_visibility)
+    {
+        visibility_value = new_visibility;
+        observers.attrib_changed(mir_surface_attrib_visibility, visibility_value);
+    }
 }
 
 void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
@@ -625,4 +668,9 @@ std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const
             surface_alpha,
             nonrectangular, 
             this));
+}
+
+void ms::BasicSurface::consume(MirEvent const& event)
+{
+    input_sender->send_event(event, server_input_channel);
 }

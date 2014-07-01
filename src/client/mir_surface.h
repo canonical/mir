@@ -87,6 +87,7 @@ public:
 
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
     int attrib(MirSurfaceAttrib a) const;
+    MirOrientation get_orientation() const;
     
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
@@ -131,6 +132,7 @@ private:
 
     // Cache of latest SurfaceSettings returned from the server
     int attrib_cache[mir_surface_attribs];
+    MirOrientation orientation = mir_orientation_normal;
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::input::receiver::InputReceiverThread> input_thread;
