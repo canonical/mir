@@ -641,3 +641,36 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataAndFdsWhenInterruptedWithSignals)
     }
 }
 
+
+TYPED_TEST(StreamTransportTest, ThrowsErrorWhenReceivingMoreFdsThanRequested)
+{
+    int const num_fds{60};
+    std::array<TestFd, num_fds> test_files;
+    std::array<int, num_fds> test_fds;
+    for (unsigned int i = 0; i < test_fds.size(); ++i)
+    {
+        test_fds[i] = test_files[i].fd;
+    }
+
+    std::vector<int> received_fds(num_fds - 3);
+
+    auto receive_done = std::make_shared<mir::test::Signal>();
+    mir::test::AutoUnblockThread reader{[this]() { ::close(this->test_fd); },
+                                        [&]()
+    {
+        uint32_t dummy;
+        EXPECT_THROW(this->transport->receive_data(&dummy, sizeof(dummy), received_fds),
+                     std::runtime_error);
+        receive_done->raise();
+    }};
+
+    int32_t dummy{0};
+    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd,
+                                           test_fds,
+                                           &dummy,
+                                           sizeof(dummy),
+                                           MSG_DONTWAIT));
+
+    EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
+
+}
