@@ -28,23 +28,19 @@
 #include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/scene/surface_configurator.h"
-#include "mir/graphics/cursor.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/graphics/display.h"
-#include "mir/input/cursor_listener.h"
 #include "mir/input/vt_filter.h"
 #include "mir/input/input_manager.h"
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
-#include "mir/compositor/compositor.h"
 #include "mir/scene/null_prompt_session_listener.h"
 
 #include <map>
 #include <vector>
 #include <mutex>
 
-namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -95,43 +91,6 @@ mir::DefaultServerConfiguration::the_session_listener()
 std::shared_ptr<ms::PromptSessionListener>
 mir::DefaultServerConfiguration::the_prompt_session_listener()
 {
-#if 0
-    // FIXME
-    struct DefaultCursorListener : mi::CursorListener
-    {
-        DefaultCursorListener(std::shared_ptr<mg::Cursor> const& hw_cursor,
-                              CachedPtr<mc::Compositor> const& compositor)
-            : hw_cursor(hw_cursor), compositor(compositor)
-        {
-        }
-
-        void cursor_moved_to(float abs_x, float abs_y)
-        {
-            geom::Point p{abs_x, abs_y};
-
-            hw_cursor->move_to(p);
-
-            auto comp = *compositor;
-            if (comp)
-            {
-                auto sw_cursor = comp->cursor();
-                if (auto c = sw_cursor.lock())
-                    c->move_to(p);
-            }
-        }
-
-        std::shared_ptr<mg::Cursor> const hw_cursor;
-
-        // We use the cached ptr because a shared_ptr would force early
-        // construction resulting in a constructor cycle, and crash.
-        CachedPtr<mc::Compositor> const& compositor;
-    };
-    return cursor_listener(
-        [this]() -> std::shared_ptr<mi::CursorListener>
-        {
-            return std::make_shared<DefaultCursorListener>(
-                the_cursor(), compositor);
-#endif
     return prompt_session_listener(
         [this]
         {
