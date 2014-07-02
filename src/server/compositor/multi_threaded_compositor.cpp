@@ -131,31 +131,6 @@ public:
     {
     }
 
-    void schedule_compositing(int num)
-    {
-        std::lock_guard<std::mutex> lock{run_mutex};
-        schedule_compositing_unlocked(num);
-    }
-
-    void stop()
-    {
-        std::lock_guard<std::mutex> lock{run_mutex};
-        running = false;
-        run_cv.notify_one();
-    }
-
-    void on_cursor_movement(geometry::Point const& p)
-    {
-        std::lock_guard<std::mutex> lock{run_mutex};
-        on_cursor_movement_unlocked(p);
-    }
-
-    void zoom(float magnification)
-    {
-        std::lock_guard<std::mutex> lock{run_mutex};
-        zoom_unlocked(magnification);
-    }
-
     void operator()() noexcept  // noexcept is important! (LP: #1237332)
     try
     {
@@ -219,6 +194,19 @@ public:
         }
     }
 
+    void schedule_compositing(int num)
+    {
+        std::lock_guard<std::mutex> lock{run_mutex};
+        schedule_compositing_unlocked(num);
+    }
+
+    void stop()
+    {
+        std::lock_guard<std::mutex> lock{run_mutex};
+        running = false;
+        run_cv.notify_one();
+    }
+
     void on_cursor_movement_unlocked(geometry::Point const& p)
     {
         if (display_buffer_compositor)
@@ -230,6 +218,12 @@ public:
             schedule_compositing_unlocked(1);
     }
 
+    void on_cursor_movement(geometry::Point const& p)
+    {
+        std::lock_guard<std::mutex> lock{run_mutex};
+        on_cursor_movement_unlocked(p);
+    }
+
     void zoom_unlocked(float magnification)
     {
         if (auto db = dynamic_cast<Zoomable*>(display_buffer_compositor.get()))
@@ -239,6 +233,12 @@ public:
                 schedule_compositing_unlocked(1);
         }
         zoom_mag = magnification;
+    }
+
+    void zoom(float magnification)
+    {
+        std::lock_guard<std::mutex> lock{run_mutex};
+        zoom_unlocked(magnification);
     }
 
 private:
