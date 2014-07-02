@@ -22,8 +22,10 @@
 #include "mir/main_loop.h"
 
 #include <boost/asio.hpp>
+#include <boost/optional.hpp>
 #include <memory>
 #include <vector>
+#include <thread>
 #include <mutex>
 #include <utility>
 #include <deque>
@@ -32,10 +34,15 @@
 namespace mir
 {
 
+namespace time
+{
+class Clock;
+}
+
 class AsioMainLoop : public MainLoop
 {
 public:
-    AsioMainLoop();
+    explicit AsioMainLoop(std::shared_ptr<time::Clock> const& clock);
     ~AsioMainLoop() noexcept(true);
 
     void run();
@@ -47,12 +54,17 @@ public:
 
     void register_fd_handler(
         std::initializer_list<int> fd,
-        std::function<void(int)> const& handler);
+        void const* owner,
+        std::function<void(int)> const& handler) override;
+
+    void unregister_fd_handler(void const* owner) override;
 
     std::unique_ptr<time::Alarm> notify_in(std::chrono::milliseconds delay,
                                            std::function<void()> callback) override;
     std::unique_ptr<time::Alarm> notify_at(mir::time::Timestamp time_point,
                                            std::function<void()> callback) override;
+    std::unique_ptr<time::Alarm> create_alarm(std::function<void()> callback) override;
+
     void enqueue(void const* owner, ServerAction const& action);
     void pause_processing_for(void const* owner);
     void resume_processing_for(void const* owner);
@@ -65,11 +77,14 @@ private:
 
     boost::asio::io_service io;
     boost::asio::io_service::work work;
+    boost::optional<std::thread::id> main_loop_thread;
     std::vector<std::unique_ptr<SignalHandler>> signal_handlers;
-    std::vector<std::unique_ptr<FDHandler>> fd_handlers;
+    std::vector<std::shared_ptr<FDHandler>> fd_handlers;
+    std::mutex fd_handlers_mutex;
     std::mutex server_actions_mutex;
     std::deque<std::pair<void const*,ServerAction>> server_actions;
     std::set<void const*> do_not_process;
+    std::shared_ptr<time::Clock> const clock;
 };
 
 }

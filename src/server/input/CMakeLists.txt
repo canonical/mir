@@ -5,11 +5,13 @@ set(
 
   event_filter_chain.cpp
 
+  null_input_channel_factory.cpp
   null_input_configuration.cpp
   null_input_dispatcher.cpp
   nested_input_configuration.cpp
   display_input_region.cpp
   vt_filter.cpp
+  cursor_controller.cpp
   default_configuration.cpp
 )
 

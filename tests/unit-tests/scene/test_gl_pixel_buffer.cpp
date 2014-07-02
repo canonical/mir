@@ -133,7 +133,7 @@ TEST_F(GLPixelBufferTest, returns_data_from_bgra_buffer_texture)
         EXPECT_CALL(mock_gl, glBindFramebuffer(_,fbo));
 
         /* The buffer texture is read as BGRA */
-        EXPECT_CALL(mock_buffer, bind_to_texture());
+        EXPECT_CALL(mock_buffer, gl_bind_to_texture());
         EXPECT_CALL(mock_gl, glFramebufferTexture2D(_,_,_,tex,0));
         EXPECT_CALL(mock_gl, glReadPixels(0, 0, width, height,
                                           GL_BGRA_EXT, GL_UNSIGNED_BYTE, _))
@@ -187,7 +187,7 @@ TEST_F(GLPixelBufferTest, returns_data_from_rgba_buffer_texture)
         EXPECT_CALL(mock_gl, glBindFramebuffer(_,fbo));
 
         /* Try to read the FBO as BGRA but fail */
-        EXPECT_CALL(mock_buffer, bind_to_texture());
+        EXPECT_CALL(mock_buffer, gl_bind_to_texture());
         EXPECT_CALL(mock_gl, glFramebufferTexture2D(_,_,_,tex,0));
         EXPECT_CALL(mock_gl, glGetError())
             .WillOnce(Return(GL_NO_ERROR));

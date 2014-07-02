@@ -32,6 +32,7 @@
 #include <memory>
 #include <functional>
 #include <mutex>
+#include <unordered_set>
 
 namespace mir
 {
@@ -74,7 +75,6 @@ public:
     MirSurfaceParameters get_parameters() const;
     char const * get_error_message();
     int id() const;
-    bool is_valid() const;
     MirWaitHandle* next_buffer(mir_surface_callback callback, void * context);
     MirWaitHandle* get_create_wait_handle();
 
@@ -87,6 +87,7 @@ public:
 
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
     int attrib(MirSurfaceAttrib a) const;
+    MirOrientation get_orientation() const;
     
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
@@ -97,10 +98,12 @@ public:
     void request_and_wait_for_next_buffer();
     void request_and_wait_for_configure(MirSurfaceAttrib a, int value);
 
+    static bool is_valid(MirSurface* query);
 private:
     mutable std::mutex mutex; // Protects all members of *this
 
     void on_configured();
+    void on_cursor_configured();
     void process_incoming_buffer();
     void populate(MirBufferPackage& buffer_package);
     void created(mir_surface_callback callback, void * context);
@@ -129,6 +132,7 @@ private:
 
     // Cache of latest SurfaceSettings returned from the server
     int attrib_cache[mir_surface_attribs];
+    MirOrientation orientation = mir_orientation_normal;
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::input::receiver::InputReceiverThread> input_thread;

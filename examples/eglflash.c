@@ -23,6 +23,11 @@
 #include <unistd.h>
 #include <GLES2/gl2.h>
 
+typedef struct Color
+{
+    GLfloat r, g, b, a;
+} Color;
+
 int main(int argc, char *argv[])
 {
     unsigned int width = 0, height = 0;
@@ -30,20 +35,25 @@ int main(int argc, char *argv[])
     if (!mir_eglapp_init(argc, argv, &width, &height))
         return 1;
 
+    float const opacity = mir_eglapp_background_opacity;
+    Color red = {opacity, 0.0f, 0.0f, opacity};
+    Color green = {0.0f, opacity, 0.0f, opacity};
+    Color blue = {0.0f, 0.0f, opacity, opacity};
+
     /* This is probably the simplest GL you can do */
     while (mir_eglapp_running())
     {
-        glClearColor(1.0f, 0.0f, 0.0f, mir_eglapp_background_opacity);
+        glClearColor(red.r, red.g, red.b, red.a);
         glClear(GL_COLOR_BUFFER_BIT);
         mir_eglapp_swap_buffers();
         sleep(1);
 
-        glClearColor(0.0f, 1.0f, 0.0f, mir_eglapp_background_opacity);
+        glClearColor(green.r, green.g, green.b, green.a);
         glClear(GL_COLOR_BUFFER_BIT);
         mir_eglapp_swap_buffers();
         sleep(1);
 
-        glClearColor(0.0f, 0.0f, 1.0f, mir_eglapp_background_opacity);
+        glClearColor(blue.r, blue.g, blue.b, blue.a);
         glClear(GL_COLOR_BUFFER_BIT);
         mir_eglapp_swap_buffers();
         sleep(1);

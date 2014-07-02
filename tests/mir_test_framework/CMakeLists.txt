@@ -10,7 +10,7 @@ set(
 
   command_line_server_configuration.cpp
   cross_process_sync.cpp
-  in_process_server.cpp
+  server_runner.cpp
   testing_server_options.cpp
   input_testing_server_options.cpp
   input_testing_client_configuration.cpp

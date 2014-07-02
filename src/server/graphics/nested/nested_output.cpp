@@ -23,6 +23,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
+namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 namespace geom = mir::geometry;
 
@@ -32,6 +33,7 @@ mgn::detail::NestedOutput::NestedOutput(
     geometry::Rectangle const& area,
     std::shared_ptr<input::InputDispatcher> const& dispatcher,
     MirPixelFormat preferred_format) :
+    uses_alpha_{mg::contains_alpha(preferred_format)},
     egl_display(egl_display),
     host_surface{host_surface},
     egl_config{egl_display.choose_windowed_es_config(preferred_format)},
@@ -65,12 +67,6 @@ void mgn::detail::NestedOutput::post_update()
     eglSwapBuffers(egl_display, egl_surface);
 }
 
-bool mgn::detail::NestedOutput::can_bypass() const
-{
-    // TODO we really should return "true" - but we need to support bypass properly then
-    return false;
-}
-
 bool mgn::detail::NestedOutput::post_renderables_if_optimizable(RenderableList const&)
 {
     return false;
@@ -83,6 +79,11 @@ MirOrientation mgn::detail::NestedOutput::orientation() const
      * native display.
      */
     return mir_orientation_normal;
+}
+
+bool mgn::detail::NestedOutput::uses_alpha() const
+{
+    return uses_alpha_;
 }
 
 mgn::detail::NestedOutput::~NestedOutput() noexcept

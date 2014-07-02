@@ -77,12 +77,18 @@ public:
     void resize(geometry::Size const&) override {}
     void set_transformation(glm::mat4 const&) override {}
     void set_alpha(float) override {}
+    void set_orientation(MirOrientation) {}
     void force_requests_to_complete() override {}
 
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const&) override {}
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const&) override {}
 
     void set_reception_mode(input::InputReceptionMode mode) override { input_mode = mode; }
+    void consume(MirEvent const&) override {}
+
+    void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& /* image */) {}
+    std::shared_ptr<graphics::CursorImage> cursor_image() const { return {}; }
+
     MirPixelFormat pixel_format() const override { return mir_pixel_format_xrgb_8888; }
 
     void swap_buffers(graphics::Buffer*, std::function<void(graphics::Buffer*)>) override {}

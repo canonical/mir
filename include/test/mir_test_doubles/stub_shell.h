@@ -49,6 +49,25 @@ struct StubShell : public frontend::Shell
     void handle_surface_created(std::shared_ptr<frontend::Session> const& /* session */) override
     {
     }
+    std::shared_ptr<frontend::PromptSession> start_prompt_session_for(std::shared_ptr<frontend::Session> const& /* session */,
+        scene::PromptSessionCreationParameters const& /* params */)
+    {
+        return std::shared_ptr<frontend::PromptSession>();
+    }
+    void add_prompt_provider_process_for(
+        std::shared_ptr<frontend::PromptSession> const&  /* prompt_session */,
+        pid_t /* process_id */)
+    {
+    }
+    void add_prompt_provider_for(
+        std::shared_ptr<frontend::PromptSession> const&  /* prompt_session */,
+        std::shared_ptr<frontend::Session> const& /* session */)
+    {
+    }
+    void stop_prompt_session(std::shared_ptr<frontend::PromptSession>  const& /* prompt_session */)
+    {
+    }
+
     std::shared_ptr<StubSession> const stub_session;
 };
 

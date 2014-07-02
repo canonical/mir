@@ -23,14 +23,11 @@
 
 #include "mir_test_framework/udev_environment.h"
 
-#include "src/platform/graphics/mesa/platform.h"
 #include "src/platform/graphics/mesa/gbm_buffer.h"
 #include "src/platform/graphics/mesa/buffer_allocator.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/buffer_properties.h"
-#include "mir_test_doubles/null_virtual_terminal.h"
-
-#include "src/server/report/null_report_factory.h"
+#include "mir_test_doubles/platform_factory.h"
 
 #include <gbm.h>
 
@@ -44,7 +41,6 @@ namespace mg=mir::graphics;
 namespace mgm=mir::graphics::mesa;
 namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
-namespace mr=mir::report;
 namespace mtf=mir::mir_test_framework;
 
 class GBMBufferTest : public ::testing::Test
@@ -74,12 +70,10 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_stride(_))
         .WillByDefault(Return(stride.as_uint32_t()));
 
-        auto bypass_option = mgm::BypassOption::allowed;
-        platform = std::make_shared<mgm::Platform>(
-            mr::null_display_report(),
-            std::make_shared<mtd::NullVirtualTerminal>(), bypass_option);
+        platform = mtd::create_mesa_platform_with_null_dependencies();
         null_init = std::make_shared<mg::NullBufferInitializer>();
-        allocator.reset(new mgm::BufferAllocator(platform->gbm.device, null_init, bypass_option));
+
+        allocator.reset(new mgm::BufferAllocator(platform->gbm.device, null_init, mgm::BypassOption::allowed));
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
@@ -195,7 +189,7 @@ TEST_F(GBMBufferTest, buffer_creation_throws_on_prime_fd_failure)
     }, std::runtime_error);
 }
 
-TEST_F(GBMBufferTest, bind_to_texture_egl_image_creation_failed)
+TEST_F(GBMBufferTest, gl_bind_to_texture_egl_image_creation_failed)
 {
     using namespace testing;
 
@@ -204,11 +198,11 @@ TEST_F(GBMBufferTest, bind_to_texture_egl_image_creation_failed)
 
     EXPECT_THROW({
         auto buffer = allocator->alloc_buffer(buffer_properties);
-        buffer->bind_to_texture();
+        buffer->gl_bind_to_texture();
     }, std::runtime_error);
 }
 
-TEST_F(GBMBufferTest, bind_to_texture_uses_egl_image)
+TEST_F(GBMBufferTest, gl_bind_to_texture_uses_egl_image)
 {
     using namespace testing;
 
@@ -227,6 +221,6 @@ TEST_F(GBMBufferTest, bind_to_texture_uses_egl_image)
 
     EXPECT_NO_THROW({
         auto buffer = allocator->alloc_buffer(buffer_properties);
-        buffer->bind_to_texture();
+        buffer->gl_bind_to_texture();
     });
 }

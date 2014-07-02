@@ -26,6 +26,7 @@
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_client.h"
 #include "mir_test/test_protobuf_server.h"
+#include "mir_test_framework/testing_server_configuration.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -36,6 +37,7 @@
 
 namespace mf = mir::frontend;
 namespace mt = mir::test;
+namespace mtf = mir_test_framework;
 
 namespace mir
 {
@@ -79,11 +81,11 @@ struct ProtobufSurfaceCounter : public ::testing::Test
     void SetUp()
     {
         stub_server_tool = std::make_shared<mt::StubServerSurfaceCounter>();
-        stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
+        stub_server = std::make_shared<mt::TestProtobufServer>(mtf::test_socket_file(), stub_server_tool);
 
         stub_server->comm->start();
 
-        stub_client = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
+        stub_client = std::make_shared<mt::TestProtobufClient>(mtf::test_socket_file(), 100);
         stub_client->connect_parameters.set_application_name(__PRETTY_FUNCTION__);
     }
 
@@ -179,12 +181,12 @@ struct ProtobufSocketMultiClientCommunicator : public ::testing::Test
         using namespace testing;
 
         stub_server_tool = std::make_shared<mt::StubServerSurfaceCounter>();
-        stub_server = std::make_shared<mt::TestProtobufServer>("./test_socket", stub_server_tool);
+        stub_server = std::make_shared<mt::TestProtobufServer>(mtf::test_socket_file(), stub_server_tool);
         stub_server->comm->start();
 
         for(int i=0; i<number_of_clients; i++)
         {
-            auto client_tmp = std::make_shared<mt::TestProtobufClient>("./test_socket", 100);
+            auto client_tmp = std::make_shared<mt::TestProtobufClient>(mtf::test_socket_file(), 100);
             clients.push_back(client_tmp);
         }
     }

@@ -44,7 +44,8 @@ struct MockBufferStream : public compositor::BufferStream
         ON_CALL(*this, buffers_ready_for_compositor())
             .WillByDefault(testing::Invoke(this, &MockBufferStream::buffers_ready));
     }
-    MOCK_METHOD2(swap_client_buffers, void(graphics::Buffer*, std::function<void(graphics::Buffer*)> completee));
+    MOCK_METHOD1(acquire_client_buffer, void(std::function<void(graphics::Buffer* buffer)>));
+    MOCK_METHOD1(release_client_buffer, void(graphics::Buffer*));
     MOCK_METHOD1(lock_compositor_buffer,
                  std::shared_ptr<graphics::Buffer>(void const*));
     MOCK_METHOD0(lock_snapshot_buffer, std::shared_ptr<graphics::Buffer>());

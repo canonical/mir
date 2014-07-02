@@ -22,7 +22,10 @@
 #include "mir/graphics/buffer.h"
 
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/null_pixel_buffer.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test/wait_condition.h"
+#include "mir_test/current_thread_name.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -37,6 +40,9 @@ namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 
+namespace
+{
+
 class StubSurfaceBufferAccess : public ms::SurfaceBufferAccess
 {
 public:
@@ -45,10 +51,12 @@ public:
     void with_most_recent_buffer_do(
         std::function<void(mg::Buffer&)> const& exec)
     {
+        thread_name = mt::current_thread_name();
         exec(buffer);
     }
 
     mtd::StubBuffer buffer;
+    std::string thread_name;
 };
 
 class MockPixelBuffer : public ms::PixelBuffer
@@ -62,7 +70,14 @@ public:
     MOCK_CONST_METHOD0(stride, geom::Stride());
 };
 
-TEST(ThreadedSnapshotStrategyTest, takes_snapshot)
+struct ThreadedSnapshotStrategyTest : testing::Test
+{
+    StubSurfaceBufferAccess buffer_access;
+};
+
+}
+
+TEST_F(ThreadedSnapshotStrategyTest, takes_snapshot)
 {
     using namespace testing;
 
@@ -71,7 +86,6 @@ TEST(ThreadedSnapshotStrategyTest, takes_snapshot)
     geom::Stride stride{123};
 
     MockPixelBuffer pixel_buffer;
-    StubSurfaceBufferAccess buffer_access;
 
     EXPECT_CALL(pixel_buffer, fill_from(Ref(buffer_access.buffer)));
     EXPECT_CALL(pixel_buffer, as_argb_8888())
@@ -83,7 +97,7 @@ TEST(ThreadedSnapshotStrategyTest, takes_snapshot)
 
     ms::ThreadedSnapshotStrategy strategy{mt::fake_shared(pixel_buffer)};
 
-    std::atomic<bool> snapshot_taken{false};
+    mt::WaitCondition snapshot_taken;
 
     ms::Snapshot snapshot;
 
@@ -92,13 +106,34 @@ TEST(ThreadedSnapshotStrategyTest, takes_snapshot)
         [&](ms::Snapshot const& s)
         {
             snapshot = s;
-            snapshot_taken = true;
+            snapshot_taken.wake_up_everyone();
         });
 
-    while (!snapshot_taken)
-        std::this_thread::sleep_for(std::chrono::milliseconds{1});
+    snapshot_taken.wait_for_at_most_seconds(5);
 
     EXPECT_EQ(size,   snapshot.size);
     EXPECT_EQ(stride, snapshot.stride);
     EXPECT_EQ(pixels, snapshot.pixels);
+}
+
+TEST_F(ThreadedSnapshotStrategyTest, names_snapshot_thread)
+{
+    using namespace testing;
+
+    mtd::NullPixelBuffer pixel_buffer;
+
+    ms::ThreadedSnapshotStrategy strategy{mt::fake_shared(pixel_buffer)};
+
+    mt::WaitCondition snapshot_taken;
+
+    strategy.take_snapshot_of(
+        mt::fake_shared(buffer_access),
+        [&](ms::Snapshot const&)
+        {
+            snapshot_taken.wake_up_everyone();
+        });
+
+    snapshot_taken.wait_for_at_most_seconds(5);
+
+    EXPECT_THAT(buffer_access.thread_name, Eq("Mir/Snapshot"));
 }

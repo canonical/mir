@@ -91,6 +91,7 @@ static void format_motion_event(std::stringstream &ss, MirMotionEvent const& ev)
         ss << "    orientation: " << ev.pointer_coordinates[i].orientation << std::endl;
         ss << "    vscroll: " << ev.pointer_coordinates[i].vscroll << std::endl;
         ss << "    hscroll: " << ev.pointer_coordinates[i].hscroll << std::endl;
+        ss << "    tool_type: " << ev.pointer_coordinates[i].tool_type << std::endl;
         ss << "  }" << std::endl;
     }
     ss << "}";

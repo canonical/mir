@@ -151,7 +151,7 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
         .Times(1)
         .WillOnce(InvokeArgument<0>(mock_buffer.get()));
 
-    buffer_stream.swap_client_buffers(buffer, callback);
+    buffer_stream.acquire_client_buffer(callback);
 
     {
         std::unique_lock<decltype(mutex)> lock(mutex);
@@ -161,7 +161,9 @@ TEST_F(BufferStreamTest, get_buffer_for_client_releases_resources)
 
     done = false;
 
-    buffer_stream.swap_client_buffers(buffer, callback);
+    if (buffer)
+        buffer_stream.release_client_buffer(buffer);
+    buffer_stream.acquire_client_buffer(callback);
 
     {
         std::unique_lock<decltype(mutex)> lock(mutex);

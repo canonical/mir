@@ -26,7 +26,6 @@
 #include "android_input_target_enumerator.h"
 #include "android_input_manager.h"
 #include "input_translator.h"
-#include "input_channel_factory.h"
 #include "common_input_thread.h"
 
 #include "mir/input/event_filter.h"
@@ -65,11 +64,6 @@ mia::DefaultInputConfiguration::~DefaultInputConfiguration()
 {
 }
 
-std::shared_ptr<mi::InputChannelFactory> mia::DefaultInputConfiguration::the_input_channel_factory()
-{
-    return std::make_shared<mia::InputChannelFactory>();
-}
-
 std::shared_ptr<droidinput::EventHubInterface> mia::DefaultInputConfiguration::the_event_hub()
 {
     return event_hub(
@@ -104,7 +98,7 @@ std::shared_ptr<mia::InputThread> mia::DefaultInputConfiguration::the_reader_thr
     return reader_thread(
         [this]()
         {
-            return std::make_shared<CommonInputThread>("InputReader",
+            return std::make_shared<CommonInputThread>("Mir/InputReader",
                                                        new droidinput::InputReaderThread(the_reader()));
         });
 }

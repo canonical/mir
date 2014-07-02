@@ -48,14 +48,15 @@ public:
     void make_current() override;
     void release_current() override;
     void post_update() override;
-    virtual bool can_bypass() const override;
     MirOrientation orientation() const override;
+    bool uses_alpha() const override;
 
     bool post_renderables_if_optimizable(RenderableList const& renderlist);
 
     NestedOutput(NestedOutput const&) = delete;
     NestedOutput operator=(NestedOutput const&) = delete;
 private:
+    bool const uses_alpha_;
     EGLDisplayHandle const& egl_display;
     std::shared_ptr<HostSurface> const host_surface;
     EGLConfig const egl_config;

@@ -31,7 +31,7 @@ class BufferTextureBinder
 public:
     virtual ~BufferTextureBinder() {}
 
-    virtual void bind_to_texture() = 0;
+    virtual void gl_bind_to_texture() = 0;
 
 protected:
     BufferTextureBinder() = default;

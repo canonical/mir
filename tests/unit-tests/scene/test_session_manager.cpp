@@ -27,6 +27,8 @@
 #include "src/server/scene/session_event_sink.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"
+#include "mir/scene/prompt_session_creation_parameters.h"
+#include "mir/scene/prompt_session.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
@@ -37,6 +39,9 @@
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/null_session_event_sink.h"
+#include "mir_test_doubles/mock_prompt_session_listener.h"
+#include "mir_test_doubles/null_event_sink.h"
+#include "mir_test_doubles/null_prompt_session_manager.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -44,8 +49,8 @@
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
-namespace msh = mir::shell;
 namespace ms = mir::scene;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -78,7 +83,8 @@ struct SessionManagerSetup : public testing::Test
                         mt::fake_shared(focus_setter),
                         std::make_shared<mtd::NullSnapshotStrategy>(),
                         std::make_shared<mtd::NullSessionEventSink>(),
-                        mt::fake_shared(session_listener))
+                        mt::fake_shared(session_listener),
+                        std::make_shared<mtd::NullPromptSessionManager>())
     {
         using namespace ::testing;
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
@@ -90,7 +96,9 @@ struct SessionManagerSetup : public testing::Test
         false,
         std::make_shared<mtd::StubBufferStream>(),
         std::shared_ptr<mi::InputChannel>(),
+        std::shared_ptr<mi::InputSender>(),
         std::shared_ptr<ms::SurfaceConfigurator>(),
+        std::shared_ptr<mg::CursorImage>(),
         mir::report::null_scene_report());
     mtd::MockSurfaceCoordinator surface_coordinator;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
@@ -178,7 +186,8 @@ struct SessionManagerSessionListenerSetup : public testing::Test
                         mt::fake_shared(focus_setter),
                         std::make_shared<mtd::NullSnapshotStrategy>(),
                         std::make_shared<mtd::NullSessionEventSink>(),
-                        mt::fake_shared(session_listener))
+                        mt::fake_shared(session_listener),
+                        std::make_shared<mtd::NullPromptSessionManager>())
     {
         using namespace ::testing;
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
@@ -187,7 +196,7 @@ struct SessionManagerSessionListenerSetup : public testing::Test
     mtd::MockSurfaceCoordinator surface_coordinator;
     testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
     testing::NiceMock<mtd::MockFocusSetter> focus_setter; // Inelegant but some tests need a stub
-    mtd::MockSessionListener session_listener;
+    testing::NiceMock<mtd::MockSessionListener> session_listener;
 
     ms::SessionManager session_manager;
 };
@@ -217,7 +226,8 @@ struct SessionManagerSessionEventsSetup : public testing::Test
                         mt::fake_shared(focus_setter),
                         std::make_shared<mtd::NullSnapshotStrategy>(),
                         mt::fake_shared(session_event_sink),
-                        std::make_shared<ms::NullSessionListener>())
+                        std::make_shared<ms::NullSessionListener>(),
+                        std::make_shared<mtd::NullPromptSessionManager>())
     {
         using namespace ::testing;
         ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));

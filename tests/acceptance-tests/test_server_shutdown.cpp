@@ -54,7 +54,7 @@ char const* const mir_test_socket = mtf::test_socket_file().c_str();
 class StubRendererFactory : public mc::RendererFactory
 {
 public:
-    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&)
+    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&, mc::DestinationAlpha)
     {
         return std::unique_ptr<mc::Renderer>(new mtd::StubRenderer());
     }
@@ -68,7 +68,7 @@ public:
     {
         struct ExceptionThrowingDisplayBufferCompositor : mc::DisplayBufferCompositor
         {
-            bool composite() override
+            void composite() override
             {
                 throw std::runtime_error("ExceptionThrowingDisplayBufferCompositor");
             }

@@ -21,6 +21,8 @@
 
 #ifdef ANDROID
 #include "mock_android_native_buffer.h"
+#else
+#include "stub_gbm_native_buffer.h"
 #endif
 
 #include "mir/graphics/buffer_basic.h"
@@ -40,22 +42,43 @@ class StubBuffer : public graphics::BufferBasic
 public:
     StubBuffer()
         : StubBuffer{
+              create_native_buffer(),
               graphics::BufferProperties{
                   geometry::Size{},
                   mir_pixel_format_abgr_8888,
-                  graphics::BufferUsage::hardware}}
+                  graphics::BufferUsage::hardware},
+              geometry::Stride{}}
 
+    {
+    }
+
+    StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer, geometry::Size const& size)
+        : StubBuffer{
+              native_buffer,
+              graphics::BufferProperties{
+                  size,
+                  mir_pixel_format_abgr_8888,
+                  graphics::BufferUsage::hardware},
+             geometry::Stride{}}
+
+    {
+    }
+
+    StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer)
+        : StubBuffer{native_buffer, {}}
     {
     }
 
     StubBuffer(graphics::BufferProperties const& properties)
-        : StubBuffer{properties, geometry::Stride{}}
+        : StubBuffer{create_native_buffer(), properties, geometry::Stride{}}
     {
     }
 
-    StubBuffer(graphics::BufferProperties const& properties,
+    StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer,
+               graphics::BufferProperties const& properties,
                geometry::Stride stride)
-        : buf_size{properties.size},
+        : native_buffer(native_buffer),
+          buf_size{properties.size},
           buf_pixel_format{properties.format},
           buf_stride{stride}
     {
@@ -67,21 +90,24 @@ public:
 
     virtual MirPixelFormat pixel_format() const { return buf_pixel_format; }
 
-    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const
+    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const { return native_buffer; }
+    virtual void gl_bind_to_texture() override {}
+
+    virtual bool can_bypass() const override { return true; }
+
+    std::shared_ptr<graphics::NativeBuffer> const native_buffer;
+    geometry::Size const buf_size;
+    MirPixelFormat const buf_pixel_format;
+    geometry::Stride const buf_stride;
+
+    std::shared_ptr<graphics::NativeBuffer> create_native_buffer()
     {
 #ifndef ANDROID
-        return std::make_shared<graphics::NativeBuffer>();
+        return std::make_shared<StubGBMNativeBuffer>(geometry::Size{0,0});
 #else
         return std::make_shared<StubAndroidNativeBuffer>();
 #endif
     }
-    virtual void bind_to_texture() {}
-
-    virtual bool can_bypass() const override { return false; }
-
-    geometry::Size const buf_size;
-    MirPixelFormat const buf_pixel_format;
-    geometry::Stride const buf_stride;
 };
 }
 }

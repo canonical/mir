@@ -28,13 +28,18 @@
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_input_surface.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/mock_input_sender.h"
+#include "mir_test_doubles/stub_input_channel.h"
+#include "mir_test_doubles/stub_input_sender.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test/client_event_matchers.h"
 
 #include "gmock_set_arg.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <stdexcept>
+#include <cstring>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -197,8 +202,8 @@ struct SurfaceCreation : public ::testing::Test
         stride = geom::Stride{4 * size.width.as_uint32_t()};
         mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
 
-        ON_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
-            .WillByDefault(InvokeArgument<1>(&stub_buffer));
+        ON_CALL(*mock_buffer_stream, acquire_client_buffer(_))
+            .WillByDefault(InvokeArgument<0>(&stub_buffer));
     }
 
     std::string surface_name;
@@ -211,6 +216,7 @@ struct SurfaceCreation : public ::testing::Test
     std::function<void()> change_notification;
     int notification_count;
     mtd::StubBuffer stub_buffer;
+    std::shared_ptr<mtd::StubInputSender> const stub_input_sender = std::make_shared<mtd::StubInputSender>();
     std::shared_ptr<StubSurfaceConfigurator> const stub_configurator = std::make_shared<StubSurfaceConfigurator>();
 };
 
@@ -225,7 +231,9 @@ TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     EXPECT_CALL(*mock_buffer_stream, get_stream_pixel_format())
@@ -245,7 +253,9 @@ TEST_F(SurfaceCreation, test_surface_gets_right_name)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     EXPECT_EQ(surface_name, surf.name());
@@ -259,7 +269,9 @@ TEST_F(SurfaceCreation, test_surface_queries_state_for_size)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     EXPECT_EQ(size, surf.size());
@@ -274,14 +286,16 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     mtd::StubBuffer graphics_resource;
 
-    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
+    EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_))
         .Times(1)
-        .WillOnce(InvokeArgument<1>(&graphics_resource));
+        .WillOnce(InvokeArgument<0>(&graphics_resource));
 
     surf.swap_buffers(
         nullptr,
@@ -300,12 +314,14 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
-    EXPECT_CALL(*mock_buffer_stream, swap_client_buffers(_, _))
+    EXPECT_CALL(*mock_buffer_stream, acquire_client_buffer(_))
         .Times(1)
-        .WillOnce(InvokeArgument<1>(&stub_buffer));
+        .WillOnce(InvokeArgument<0>(&stub_buffer));
 
     surf.swap_buffers(
         nullptr,
@@ -320,7 +336,9 @@ TEST_F(SurfaceCreation, test_surface_gets_top_left)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     auto ret_top_left = surf.top_left();
@@ -337,7 +355,9 @@ TEST_F(SurfaceCreation, test_surface_move_to)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     surf.move_to(p);
@@ -361,7 +381,9 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     surf.add_observer(observer);
@@ -386,7 +408,9 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     surf.add_observer(observer);
@@ -422,7 +446,9 @@ TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     EXPECT_THROW({
@@ -451,7 +477,9 @@ TEST_F(SurfaceCreation, impossible_resize_clamps)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     for (auto &size : bad_sizes)
@@ -477,7 +505,9 @@ TEST_F(SurfaceCreation, test_get_input_channel)
         false,
         mock_buffer_stream,
         mock_channel,
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     EXPECT_EQ(mock_channel, surf.input_channel());
@@ -494,7 +524,9 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     surf.set_alpha(alpha);
@@ -513,7 +545,9 @@ TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     surf.force_requests_to_complete();
@@ -532,7 +566,9 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     surf.allow_framedropping(true);
@@ -546,10 +582,14 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
-    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(change_notification);
+    auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(
+        change_notification,
+        [this](int){change_notification();});
     surf.add_observer(observer);
 
     mg::Buffer* buffer{nullptr};
@@ -560,7 +600,7 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
     surf.swap_buffers(buffer, complete);
     surf.swap_buffers(buffer, complete);
 
-    EXPECT_EQ(3, notification_count); 
+    EXPECT_EQ(3, notification_count);
 }
 
 TEST_F(SurfaceCreation, input_fds)
@@ -573,7 +613,9 @@ TEST_F(SurfaceCreation, input_fds)
         false,
         mock_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     EXPECT_THROW({
@@ -588,9 +630,44 @@ TEST_F(SurfaceCreation, input_fds)
         surface_name,
         rect,
         false,
-        mock_buffer_stream,mt::fake_shared(channel),
+        mock_buffer_stream,
+        mt::fake_shared(channel),
+        stub_input_sender,
         stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
         report);
 
     EXPECT_EQ(client_fd, input_surf.client_input_fd());
+}
+
+TEST_F(SurfaceCreation, consume_calls_send_event)
+{
+    using namespace testing;
+
+    NiceMock<mtd::MockInputSender> mock_sender;
+
+    std::shared_ptr<mi::InputChannel> stub_channel = std::make_shared<mtd::StubInputChannel>();
+    ms::BasicSurface surf(
+        surface_name,
+        rect,
+        false,
+        mock_buffer_stream,
+        stub_channel,
+        mt::fake_shared(mock_sender),
+        stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+
+    MirEvent key_event;
+    MirEvent motion_event;
+    std::memset(&key_event, 0, sizeof(key_event));
+    std::memset(&motion_event, 0, sizeof(motion_event));
+    key_event.type = mir_event_type_key;
+    motion_event.type = mir_event_type_motion;
+
+    EXPECT_CALL(mock_sender, send_event(mt::MirKeyEventMatches(key_event), stub_channel)).Times(1);
+    EXPECT_CALL(mock_sender, send_event(mt::MirMotionEventMatches(motion_event), stub_channel)).Times(1);
+
+    surf.consume(key_event);
+    surf.consume(motion_event);
 }

@@ -18,6 +18,7 @@
 
 #include "mir_connection.h"
 #include "mir_surface.h"
+#include "mir_prompt_session.h"
 #include "client_platform.h"
 #include "client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"
@@ -82,7 +83,8 @@ MirConnection::MirConnection(
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
         lifecycle_control(conf.the_lifecycle_control()),
-        surface_map(conf.the_surface_map())
+        surface_map(conf.the_surface_map()),
+        event_handler_register(conf.the_event_handler_register())
 {
     connect_result.set_error("connect not called");
     {
@@ -186,11 +188,17 @@ MirWaitHandle* MirConnection::release_surface(
         release_wait_handles.push_back(new_wait_handle);
     }
 
+    new_wait_handle->expect_result();
     server.release_surface(0, &message, &void_response,
                            gp::NewCallback(this, &MirConnection::released, surf_release));
 
 
     return new_wait_handle;
+}
+
+MirPromptSession* MirConnection::create_prompt_session()
+{
+    return new MirPromptSession(display_server(), event_handler_register);
 }
 
 namespace
@@ -272,6 +280,7 @@ void MirConnection::done_disconnect()
 
 MirWaitHandle* MirConnection::disconnect()
 {
+    disconnect_wait_handle.expect_result();
     server.disconnect(0, &ignored, &ignored,
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
 
@@ -294,6 +303,7 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
     mir::protobuf::DRMMagic request;
     request.set_magic(magic);
 
+    drm_auth_magic_wait_handle.expect_result();
     server.drm_auth_magic(
         0,
         &request,
@@ -302,40 +312,6 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
                                       callback, context));
 
     return &drm_auth_magic_wait_handle;
-}
-
-MirWaitHandle* MirConnection::new_fds_for_trusted_clients(
-    unsigned int no_of_fds,
-    mir_client_fd_callback callback,
-    void * context)
-{
-    mir::protobuf::SocketFDRequest request;
-    request.set_number(no_of_fds);
-
-    server.new_fds_for_trusted_clients(
-        nullptr,
-        &request,
-        &socket_fd_response,
-        google::protobuf::NewCallback(this, &MirConnection::done_fds_for_trusted_clients,
-                                              callback, context));
-
-    return &fds_for_trusted_clients_wait_handle;
-}
-
-void MirConnection::done_fds_for_trusted_clients(
-    mir_client_fd_callback callback,
-    void* context)
-{
-    auto const size = socket_fd_response.fd_size();
-
-    std::vector<int> fds;
-    fds.reserve(size);
-
-    for (auto i = 0; i != size; ++i)
-        fds.push_back(socket_fd_response.fd(i));
-
-    callback(this, size, fds.data(), context);
-    fds_for_trusted_clients_wait_handle.result_received();
 }
 
 bool MirConnection::is_valid(MirConnection *connection)
@@ -500,6 +476,7 @@ MirWaitHandle* MirConnection::configure_display(MirDisplayConfiguration* config)
         }
     }
 
+    configure_display_wait_handle.expect_result();
     server.configure_display(0, &request, &display_configuration_response,
         google::protobuf::NewCallback(this, &MirConnection::done_display_configure));
 
@@ -522,6 +499,6 @@ bool MirConnection::set_extra_platform_data(
 }
 
 mir::protobuf::DisplayServer& MirConnection::display_server()
-{ 
+{
     return server;
 }

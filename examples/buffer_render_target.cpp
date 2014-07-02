@@ -77,7 +77,7 @@ void mt::BufferRenderTarget::Resources::setup(mg::Buffer& buffer)
         /* Set up color buffer... */
         glGenTextures(1, &color_tex);
         glBindTexture(GL_TEXTURE_2D, color_tex);
-        buffer.bind_to_texture();
+        buffer.gl_bind_to_texture();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                GL_TEXTURE_2D, color_tex, 0);
 

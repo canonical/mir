@@ -35,6 +35,7 @@
 #include "surface_controller.h"
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
+#include "prompt_session_manager_impl.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -71,7 +72,9 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
             return std::make_shared<ms::SurfaceAllocator>(
                 the_buffer_stream_factory(),
                 the_input_channel_factory(),
+                the_input_sender(),
                 the_surface_configurator(),
+                the_default_cursor_image(),
                 the_scene_report());
         });
 }
@@ -82,11 +85,19 @@ mir::DefaultServerConfiguration::the_surface_coordinator()
     return surface_coordinator(
         [this]()
         {
-            return std::make_shared<ms::SurfaceController>(
-                the_surface_factory(),
-                the_placement_strategy(),
-                the_surface_stack_model());
+            return wrap_surface_coordinator(
+                std::make_shared<ms::SurfaceController>(
+                    the_surface_factory(),
+                    the_placement_strategy(),
+                    the_surface_stack_model()));
         });
+}
+
+std::shared_ptr<ms::SurfaceCoordinator>
+mir::DefaultServerConfiguration::wrap_surface_coordinator(
+    std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
+{
+    return wrapped;
 }
 
 std::shared_ptr<ms::BroadcastingSessionEventSink>
@@ -157,32 +168,41 @@ mir::DefaultServerConfiguration::the_global_event_sink()
         });
 }
 
-std::shared_ptr<ms::SessionManager>
-mir::DefaultServerConfiguration::the_session_manager()
+std::shared_ptr<ms::SessionCoordinator>
+mir::DefaultServerConfiguration::the_session_coordinator()
 {
-    return session_manager(
-        [this]() -> std::shared_ptr<ms::SessionManager>
+    return session_coordinator(
+        [this]()
         {
-            return std::make_shared<ms::SessionManager>(
-                the_surface_coordinator(),
-                the_session_container(),
-                the_shell_focus_setter(),
-                the_snapshot_strategy(),
-                the_session_event_sink(),
-                the_session_listener());
+            return wrap_session_coordinator(
+                std::make_shared<ms::SessionManager>(
+                    the_surface_coordinator(),
+                    the_session_container(),
+                    the_shell_focus_setter(),
+                    the_snapshot_strategy(),
+                    the_session_event_sink(),
+                    the_session_listener(),
+                    the_prompt_session_manager()));
         });
+}
+
+std::shared_ptr<ms::SessionCoordinator>
+mir::DefaultServerConfiguration::wrap_session_coordinator(
+    std::shared_ptr<ms::SessionCoordinator> const& wrapped)
+{
+    return wrapped;
 }
 
 std::shared_ptr<mf::Shell>
 mir::DefaultServerConfiguration::the_frontend_shell()
 {
-    return the_session_manager();
+    return the_session_coordinator();
 }
 
 std::shared_ptr<msh::FocusController>
 mir::DefaultServerConfiguration::the_focus_controller()
 {
-    return the_session_manager();
+    return the_session_coordinator();
 }
 
 std::shared_ptr<ms::PixelBuffer>
@@ -204,5 +224,17 @@ mir::DefaultServerConfiguration::the_snapshot_strategy()
         {
             return std::make_shared<ms::ThreadedSnapshotStrategy>(
                 the_pixel_buffer());
+        });
+}
+
+std::shared_ptr<ms::PromptSessionManager>
+mir::DefaultServerConfiguration::the_prompt_session_manager()
+{
+    return prompt_session_manager(
+        [this]()
+        {
+            return std::make_shared<ms::PromptSessionManagerImpl>(
+                the_session_container(),
+                the_prompt_session_listener());
         });
 }

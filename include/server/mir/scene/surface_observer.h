@@ -32,6 +32,10 @@ namespace geometry
 struct Size;
 struct Point;
 }
+namespace graphics
+{
+class CursorImage;
+}
 
 namespace scene
 {
@@ -42,10 +46,12 @@ public:
     virtual void resized_to(geometry::Size const& size) = 0;
     virtual void moved_to(geometry::Point const& top_left) = 0;
     virtual void hidden_set_to(bool hide) = 0;
-    virtual void frame_posted() = 0;
+    virtual void frame_posted(int frames_available) = 0;
     virtual void alpha_set_to(float alpha) = 0;
+    virtual void orientation_set_to(MirOrientation orientation) = 0;
     virtual void transformation_set_to(glm::mat4 const& t) = 0;
     virtual void reception_mode_set_to(input::InputReceptionMode mode) = 0;
+    virtual void cursor_image_set_to(graphics::CursorImage const& image) = 0;
 
 protected:
     SurfaceObserver() = default;

@@ -23,6 +23,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <algorithm>
+#include <cassert>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -93,7 +94,8 @@ void replace(mg::Buffer const* item, std::shared_ptr<mg::Buffer> const& new_buff
 mc::BufferQueue::BufferQueue(
     int nbuffers,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc,
-    graphics::BufferProperties const& props)
+    graphics::BufferProperties const& props,
+    mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
       frame_dropping_enabled{false},
       the_properties{props},
@@ -127,6 +129,30 @@ mc::BufferQueue::BufferQueue(
      */
     if (nbuffers == 1)
         free_buffers.push_back(current_compositor_buffer);
+
+    framedrop_policy = policy_provider.create_policy([this]
+    {
+       std::unique_lock<decltype(guard)> lock{guard};
+       assert(!pending_client_notifications.empty());
+       if (ready_to_composite_queue.empty())
+       {
+           /*
+            * NOTE: This can only happen under two circumstances:
+            * 1) Client is single buffered. Don't do that, it's a bad idea.
+            * 2) Client already has a buffer, and is asking for a new one
+            *    without submitting the old one.
+            *
+            *    This shouldn't be exposed to the client as swap_buffers
+            *    blocking, as the client already has something to render to.
+            *
+            *    Our current implementation will never hit this case. If we
+            *    later want clients to be able to own multiple buffers simultaneously
+            *    then we might want to add an entry to the CompositorReport here.
+            */
+           return;
+       }
+       drop_frame(std::move(lock));
+    });
 }
 
 void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
@@ -159,9 +185,15 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
     /* Last resort, drop oldest buffer from the ready queue */
     if (frame_dropping_enabled && !ready_to_composite_queue.empty())
     {
-        auto const buffer = pop(ready_to_composite_queue);
-        give_buffer_to_client(buffer, std::move(lock));
+        drop_frame(std::move(lock));
+        return;
     }
+
+    /* Can't give the client a buffer yet; they'll just have to wait
+     * until the compositor is done with an old frame, or the policy
+     * says they've waited long enough.
+     */
+    framedrop_policy->swap_now_blocking();
 }
 
 void mc::BufferQueue::client_release(graphics::Buffer* released_buffer)
@@ -334,6 +366,19 @@ int mc::BufferQueue::buffers_ready_for_compositor() const
     return ready_to_composite_queue.size();
 }
 
+int mc::BufferQueue::buffers_free_for_client() const
+{
+    std::lock_guard<decltype(guard)> lock(guard);
+    int ret = 1;
+    if (nbuffers > 1)
+    {
+        int nfree = free_buffers.size();
+        int future_growth = nbuffers - buffers.size();
+        ret = nfree + future_growth;
+    }
+    return ret;
+}
+
 void mc::BufferQueue::give_buffer_to_client(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
@@ -388,7 +433,26 @@ void mc::BufferQueue::release(
     std::unique_lock<std::mutex> lock)
 {
     if (!pending_client_notifications.empty())
+    {
+        framedrop_policy->swap_unblocked();
         give_buffer_to_client(buffer, std::move(lock));
+    }
     else
         free_buffers.push_back(buffer);
+}
+
+void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
+{
+    auto buffer_to_give = pop(ready_to_composite_queue);
+    /* Advance compositor buffer so it always points to the most recent
+     * client content
+     */
+    if (!contains(current_compositor_buffer, buffers_sent_to_compositor))
+    {
+       current_buffer_users.clear();
+       void const* const impossible_user_id = this;
+       current_buffer_users.push_back(impossible_user_id);
+       std::swap(buffer_to_give, current_compositor_buffer);
+    }
+    give_buffer_to_client(buffer_to_give, std::move(lock));
 }

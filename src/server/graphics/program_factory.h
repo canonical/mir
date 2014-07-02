@@ -21,6 +21,7 @@
 
 #include "mir/graphics/gl_program_factory.h"
 #include "mir/graphics/gl_program.h"
+#include "mir/graphics/gl_texture_cache.h"
 #include <mutex>
 
 namespace mir
@@ -31,6 +32,7 @@ class ProgramFactory : public GLProgramFactory
 {
 public:
     std::unique_ptr<GLProgram> create_gl_program(std::string const&, std::string const&) const override;
+    std::unique_ptr<GLTextureCache> create_texture_cache() const;
 
 private:
     /*

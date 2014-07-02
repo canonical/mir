@@ -21,6 +21,7 @@
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
 #include "mir/default_server_status_listener.h"
+#include "mir/emergency_cleanup.h"
 #include "mir/default_configuration.h"
 
 #include "mir/options/program_option.h"
@@ -36,8 +37,11 @@
 #include "mir/time/high_resolution_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
+#include "mir/scene/null_prompt_session_listener.h"
 
 #include <map>
+#include <vector>
+#include <mutex>
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -87,27 +91,13 @@ mir::DefaultServerConfiguration::the_session_listener()
         });
 }
 
-std::shared_ptr<mi::CursorListener>
-mir::DefaultServerConfiguration::the_cursor_listener()
+std::shared_ptr<ms::PromptSessionListener>
+mir::DefaultServerConfiguration::the_prompt_session_listener()
 {
-    struct DefaultCursorListener : mi::CursorListener
-    {
-        DefaultCursorListener(std::shared_ptr<mg::Cursor> const& cursor) :
-            cursor(cursor)
+    return prompt_session_listener(
+        [this]
         {
-        }
-
-        void cursor_moved_to(float abs_x, float abs_y)
-        {
-            cursor->move_to(geom::Point{abs_x, abs_y});
-        }
-
-        std::shared_ptr<mg::Cursor> const cursor;
-    };
-    return cursor_listener(
-        [this]() -> std::shared_ptr<mi::CursorListener>
-        {
-            return std::make_shared<DefaultCursorListener>(the_cursor());
+            return std::make_shared<ms::NullPromptSessionListener>();
         });
 }
 
@@ -157,6 +147,8 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         });
 }
 
+mir::CachedPtr<mir::time::Clock> mir::DefaultServerConfiguration::clock;
+
 std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()
 {
     return clock(
@@ -169,9 +161,9 @@ std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()
 std::shared_ptr<mir::MainLoop> mir::DefaultServerConfiguration::the_main_loop()
 {
     return main_loop(
-        []()
+        [this]()
         {
-            return std::make_shared<mir::AsioMainLoop>();
+            return std::make_shared<mir::AsioMainLoop>(the_clock());
         });
 }
 
@@ -186,5 +178,39 @@ std::shared_ptr<mir::ServerStatusListener> mir::DefaultServerConfiguration::the_
         []()
         {
             return std::make_shared<mir::DefaultServerStatusListener>();
+        });
+}
+
+std::shared_ptr<mir::EmergencyCleanup> mir::DefaultServerConfiguration::the_emergency_cleanup()
+{
+    struct DefaultEmergencyCleanup : public EmergencyCleanup
+    {
+        void add(EmergencyCleanupHandler const& handler) override
+        {
+            std::lock_guard<std::mutex> lock{handlers_mutex};
+            handlers.push_back(handler);
+        }
+
+        void operator()() const override
+        {
+            decltype(handlers) handlers_copy;
+
+            {
+                std::unique_lock<std::mutex> lock{handlers_mutex};
+                handlers_copy = handlers;
+            }
+
+            for (auto const& handler : handlers_copy)
+                handler();
+        }
+
+        mutable std::mutex handlers_mutex;
+        std::vector<EmergencyCleanupHandler> handlers;
+    };
+
+    return emergency_cleanup(
+        []()
+        {
+            return std::make_shared<DefaultEmergencyCleanup>();
         });
 }

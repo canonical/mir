@@ -32,6 +32,7 @@
 #include "mir_test_doubles/null_snapshot_strategy.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/null_session_event_sink.h"
+#include "mir_test_doubles/null_prompt_session_manager.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -55,7 +56,8 @@ struct TestSessionManagerAndFocusSelectionStrategy : public testing::Test
               mt::fake_shared(focus_setter),
               std::make_shared<mtd::NullSnapshotStrategy>(),
               std::make_shared<mtd::NullSessionEventSink>(),
-              mt::fake_shared(session_listener))
+              mt::fake_shared(session_listener),
+              std::make_shared<mtd::NullPromptSessionManager>())
     {
 
     }

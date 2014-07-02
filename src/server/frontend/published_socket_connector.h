@@ -38,6 +38,8 @@ class Message;
 
 namespace mir
 {
+class EmergencyCleanupRegistry;
+
 namespace frontend
 {
 class ConnectionCreator;
@@ -55,7 +57,6 @@ public:
     void start() override;
     void stop() override;
     int client_socket_fd() const override;
-    void remove_endpoint() const override;
     int client_socket_fd(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const override;
 
 protected:
@@ -80,10 +81,9 @@ public:
         const std::string& socket_file,
         std::shared_ptr<ConnectionCreator> const& connection_creator,
         int threads,
+        EmergencyCleanupRegistry& emergency_cleanup_registry,
         std::shared_ptr<ConnectorReport> const& report);
     ~PublishedSocketConnector() noexcept;
-
-    void remove_endpoint() const override;
 
 private:
     void start_accept();
