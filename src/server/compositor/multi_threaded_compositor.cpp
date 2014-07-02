@@ -131,10 +131,10 @@ public:
     {
     }
 
-    void schedule_compositing()
+    void schedule_compositing(int num)
     {
         std::lock_guard<std::mutex> lock{run_mutex};
-        schedule_compositing_unlocked();
+        schedule_compositing_unlocked(num);
     }
 
     void stop()
@@ -210,21 +210,13 @@ public:
         mir::terminate_with_current_exception();
     }
 
-    void schedule_compositing(int num_frames)
+    void schedule_compositing_unlocked(int num_frames)
     {
-        std::lock_guard<std::mutex> lock{run_mutex};
-
         if (num_frames > frames_scheduled)
         {
             frames_scheduled = num_frames;
             run_cv.notify_one();
         }
-    }
-
-    void schedule_compositing_unlocked()
-    {
-        frames_scheduled = true;
-        run_cv.notify_one();
     }
 
     void on_cursor_movement_unlocked(geometry::Point const& p)
@@ -235,7 +227,7 @@ public:
                 cursor->move_to(p);
         }
         if (zoom_mag != 1.0f)
-            schedule_compositing_unlocked();
+            schedule_compositing_unlocked(1);
     }
 
     void zoom_unlocked(float magnification)
@@ -244,7 +236,7 @@ public:
         {
             db->zoom(magnification);
             if (magnification != zoom_mag)
-                schedule_compositing_unlocked();
+                schedule_compositing_unlocked(1);
         }
         zoom_mag = magnification;
     }
