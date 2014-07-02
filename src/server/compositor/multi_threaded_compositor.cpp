@@ -221,20 +221,13 @@ public:
         }
     }
 
-    void stop()
-    {
-        std::lock_guard<std::mutex> lock{run_mutex};
-        running = false;
-        run_cv.notify_one();
-    }
-
     void schedule_compositing_unlocked()
     {
         frames_scheduled = true;
         run_cv.notify_one();
     }
 
-    void on_cursor_movement_unlocked(geometry::Point const& p) override
+    void on_cursor_movement_unlocked(geometry::Point const& p)
     {
         if (display_buffer_compositor)
         {
@@ -245,7 +238,7 @@ public:
             schedule_compositing_unlocked();
     }
 
-    void zoom_unlocked(float magnification) override
+    void zoom_unlocked(float magnification)
     {
         if (auto db = dynamic_cast<Zoomable*>(display_buffer_compositor.get()))
         {

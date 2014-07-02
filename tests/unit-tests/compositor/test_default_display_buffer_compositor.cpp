@@ -519,8 +519,6 @@ TEST_F(DefaultDisplayBufferCompositor, zooms_to_correct_region)
         .WillRepeatedly(Return(mir_orientation_normal));
     EXPECT_CALL(display_buffer, post_update())
         .Times(3);
-    EXPECT_CALL(display_buffer, can_bypass())
-        .WillRepeatedly(Return(false));
 
     int left = screen.top_left.x.as_int();
     int top = screen.top_left.y.as_int();
@@ -565,8 +563,6 @@ TEST_F(DefaultDisplayBufferCompositor, zooms_to_correct_region)
 TEST_F(DefaultDisplayBufferCompositor, zoom_disables_bypass)
 {
     using namespace testing;
-    ON_CALL(display_buffer, can_bypass())
-        .WillByDefault(Return(true));
 
     mg::RenderableList list{fullscreen};
     FakeScene scene(list);
@@ -580,8 +576,6 @@ TEST_F(DefaultDisplayBufferCompositor, zoom_disables_bypass)
 
     auto compositor_buffer = std::make_shared<mtd::MockBuffer>();
     fullscreen->set_buffer(compositor_buffer);
-    EXPECT_CALL(*compositor_buffer, can_bypass())
-        .Times(0);
 
     auto report = std::make_shared<mtd::MockCompositorReport>();
     EXPECT_CALL(*report, began_frame(_));
