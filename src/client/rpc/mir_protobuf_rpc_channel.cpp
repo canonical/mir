@@ -53,12 +53,12 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     std::shared_ptr<EventSink> const& event_sink) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
-    transport{std::move(transport)},
     surface_map(surface_map),
     display_configuration(disp_config),
     lifecycle_control(lifecycle_control),
     event_sink(event_sink),
-    disconnected(false)
+    disconnected(false),
+    transport{std::move(transport)}
 {
     class NullDeleter
     {
@@ -73,26 +73,12 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     this->transport->register_observer(std::shared_ptr<mclr::StreamTransport::Observer>{this, NullDeleter()});
 }
 
-mclr::MirProtobufRpcChannel::~MirProtobufRpcChannel()
-{
-    {
-        std::lock_guard<decltype(observer_mutex)> lock(observer_mutex);
-
-        disconnected = true;
-    }
-    // We need to kill the transport before we kill the lifecycle_control,
-    // otherwise we may end up trying to send a disconnected event.
-    transport.reset();
-}
-
-
 void mclr::MirProtobufRpcChannel::notify_disconnected()
 {
-    if (!disconnected)
+    if (!disconnected.exchange(true))
     {
         lifecycle_control->call_lifecycle_event_handler(mir_lifecycle_connection_lost);
     }
-    disconnected = true;
     pending_calls.force_completion();
 }
 
@@ -283,10 +269,17 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
 void mclr::MirProtobufRpcChannel::on_data_available()
 {
-    std::lock_guard<decltype(observer_mutex)> lock(observer_mutex);
-
-    if (disconnected)
-        return;
+    /*
+     * Our transport isn't atomic, and even if it were we don't
+     * read messages from it atomically. We therefore need to guard
+     * these transport->receive_data with a lock.
+     *
+     * Additionally, event processing may itself reads, as that's
+     * how we handle messages with file descriptors.
+     *
+     * So we need to lock the whole shebang
+     */
+    std::lock_guard<decltype(read_mutex)> lock(read_mutex);
 
     mir::protobuf::wire::Result result;
     try
@@ -329,6 +322,5 @@ void mclr::MirProtobufRpcChannel::on_data_available()
 
 void mclr::MirProtobufRpcChannel::on_disconnected()
 {
-    std::lock_guard<decltype(observer_mutex)> lock(observer_mutex);
     notify_disconnected();
 }

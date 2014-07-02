@@ -26,6 +26,7 @@
 #include <google/protobuf/descriptor.h>
 
 #include <thread>
+#include <atomic>
 
 namespace mir
 {
@@ -61,7 +62,7 @@ public:
                           std::shared_ptr<LifecycleControl> const& lifecycle_control,
                           std::shared_ptr<EventSink> const& event_sink);
 
-    ~MirProtobufRpcChannel();
+    ~MirProtobufRpcChannel() = default;
 
     void on_data_available() override;
     void on_disconnected() override;
@@ -88,13 +89,21 @@ private:
 
     void notify_disconnected();
 
-    std::unique_ptr<StreamTransport> transport;
     std::shared_ptr<SurfaceMap> surface_map;
     std::shared_ptr<DisplayConfiguration> display_configuration;
     std::shared_ptr<LifecycleControl> lifecycle_control;
     std::shared_ptr<EventSink> event_sink;
-    bool disconnected;
-    std::mutex observer_mutex;
+    std::atomic<bool> disconnected;
+    std::mutex read_mutex;
+
+    /* We use the guarantee that the transport's destructor blocks until
+     * pending processing has finished to ensure that on_data_available()
+     * isn't called after the members it relies on are destroyed.
+     *
+     * For this means the transport field must appear after any field used
+     * by on_data_available. For simplicity, put it last.
+     */
+    std::unique_ptr<StreamTransport> transport;
 };
 
 }
