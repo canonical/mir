@@ -20,6 +20,7 @@
 #define MIR_SCENE_SURFACE_STACK_H_
 
 #include "surface_stack_model.h"
+#include "observer_list.h"
 
 #include "mir/compositor/scene.h"
 #include "mir/scene/depth_id.h"
@@ -43,7 +44,8 @@ class BasicSurface;
 class SceneReport;
 class RenderingTracker;
 
-class Observers : public Observer
+class Observers : public Observer,
+    public ObserverList<std::shared_ptr<Observer>>
 {
 public:
    // ms::Observer
@@ -52,15 +54,6 @@ public:
    void surfaces_reordered() override;
    void surface_exists(Surface* surface) override;
    void end_observation();
-
-   void add_observer(std::shared_ptr<Observer> const& observer);
-   void remove_observer(std::shared_ptr<Observer> const& observer);
-
-private:
-    void for_each(
-        std::function<void(std::shared_ptr<Observer> const&)> const& callback);
-    std::mutex mutex;
-    std::vector<std::shared_ptr<Observer>> observers;
 };
 
 class SurfaceStack : public compositor::Scene, public input::InputTargets, public SurfaceStackModel

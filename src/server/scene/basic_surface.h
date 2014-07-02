@@ -25,6 +25,7 @@
 #include "mir/geometry/rectangle.h"
 
 #include "mir_toolkit/common.h"
+#include "observer_list.h"
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -55,10 +56,10 @@ namespace scene
 class SceneReport;
 class SurfaceConfigurator;
 
-class SurfaceObservers : public SurfaceObserver
+class SurfaceObservers : public SurfaceObserver,
+    public ObserverList<std::shared_ptr<SurfaceObserver>>
 {
 public:
-
     void attrib_changed(MirSurfaceAttrib attrib, int value) override;
     void resized_to(geometry::Size const& size) override;
     void moved_to(geometry::Point const& top_left) override;
@@ -69,15 +70,6 @@ public:
     void transformation_set_to(glm::mat4 const& t) override;
     void reception_mode_set_to(input::InputReceptionMode mode) override;
     void cursor_image_set_to(graphics::CursorImage const& image) override;
-
-    void add(std::shared_ptr<SurfaceObserver> const& observer);
-    void remove(std::shared_ptr<SurfaceObserver> const& observer);
-
-private:
-    void for_each(
-        std::function<void(std::shared_ptr<SurfaceObserver> const&)> const& callback);
-    std::mutex mutex;
-    std::vector<std::shared_ptr<SurfaceObserver>> observers;
 };
 
 class BasicSurface : public Surface

@@ -41,19 +41,9 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-void ms::SurfaceObservers::for_each(
-    std::function<void(std::shared_ptr<SurfaceObserver> const&)> const& callback)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    auto observers_snapshot = observers;
-    lock.unlock();
-    for (auto const& observer : observers_snapshot)
-        callback(observer);
-}
-
 void ms::SurfaceObservers::attrib_changed(MirSurfaceAttrib attrib, int value)
 {
-    for_each([=](std::shared_ptr<SurfaceObserver> const& o) {
+    for_each([attrib, value](std::shared_ptr<SurfaceObserver> const& o) {
         o->attrib_changed(attrib, value);
     });
 }
@@ -74,28 +64,28 @@ void ms::SurfaceObservers::moved_to(geometry::Point const& top_left)
 
 void ms::SurfaceObservers::hidden_set_to(bool hide)
 {
-    for_each([=](std::shared_ptr<SurfaceObserver> const& o) {
+    for_each([hide](std::shared_ptr<SurfaceObserver> const& o) {
         o->hidden_set_to(hide);
     });
 }
 
 void ms::SurfaceObservers::frame_posted(int frames_available)
 {
-    for_each([=](std::shared_ptr<SurfaceObserver> const& o) {
+    for_each([frames_available](std::shared_ptr<SurfaceObserver> const& o) {
         o->frame_posted(frames_available);
     });
 }
 
 void ms::SurfaceObservers::alpha_set_to(float alpha)
 {
-    for_each([=](std::shared_ptr<SurfaceObserver> const& o) {
+    for_each([alpha](std::shared_ptr<SurfaceObserver> const& o) {
         o->alpha_set_to(alpha);
     });
 }
 
 void ms::SurfaceObservers::orientation_set_to(MirOrientation orientation)
 {
-    for_each([=](std::shared_ptr<SurfaceObserver> const& o) {
+    for_each([orientation](std::shared_ptr<SurfaceObserver> const& o) {
         o->orientation_set_to(orientation);
     });
 }
@@ -116,24 +106,9 @@ void ms::SurfaceObservers::cursor_image_set_to(mg::CursorImage const& image)
 
 void ms::SurfaceObservers::reception_mode_set_to(mi::InputReceptionMode mode)
 {
-    for_each([=](std::shared_ptr<SurfaceObserver> const& o) {
+    for_each([mode](std::shared_ptr<SurfaceObserver> const& o) {
         o->reception_mode_set_to(mode);
     });
-}
-
-void ms::SurfaceObservers::add(std::shared_ptr<SurfaceObserver> const& observer)
-{
-    if (observer)
-    {
-        std::unique_lock<decltype(mutex)> lock(mutex);
-        observers.push_back(observer);
-    }
-}
-
-void ms::SurfaceObservers::remove(std::shared_ptr<SurfaceObserver> const& observer)
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    observers.erase(std::remove(observers.begin(),observers.end(), observer), observers.end());
 }
 
 ms::BasicSurface::BasicSurface(
