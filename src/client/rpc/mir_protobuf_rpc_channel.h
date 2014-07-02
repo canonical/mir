@@ -101,7 +101,7 @@ private:
      * pending processing has finished to ensure that on_data_available()
      * isn't called after the members it relies on are destroyed.
      *
-     * For this means the transport field must appear after any field used
+     * This means the transport field must appear after any field used
      * by on_data_available. For simplicity, put it last.
      */
     std::unique_ptr<StreamTransport> transport;
