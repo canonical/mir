@@ -95,6 +95,7 @@ private:
     std::shared_ptr<EventSink> event_sink;
     std::atomic<bool> disconnected;
     std::mutex read_mutex;
+    std::mutex write_mutex;
 
     /* We use the guarantee that the transport's destructor blocks until
      * pending processing has finished to ensure that on_data_available()

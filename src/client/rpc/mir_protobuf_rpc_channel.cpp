@@ -190,6 +190,7 @@ void mclr::MirProtobufRpcChannel::send_message(
 
     try
     {
+        std::lock_guard<decltype(write_mutex)> lock(write_mutex);
         transport->send_data(send_buffer);
     }
     catch (std::runtime_error const& err)
