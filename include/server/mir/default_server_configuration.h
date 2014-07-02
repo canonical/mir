@@ -158,6 +158,7 @@ public:
      * dependencies of DisplayServer on the rest of the Mir
      *  @{ */
     virtual std::shared_ptr<frontend::Connector>    the_connector();
+    virtual std::shared_ptr<frontend::Connector>    the_trusted_connector();
     virtual std::shared_ptr<graphics::Display>      the_display();
     virtual std::shared_ptr<compositor::Compositor> the_compositor();
     virtual std::shared_ptr<input::InputManager>    the_input_manager();
@@ -224,6 +225,7 @@ public:
      * internal dependencies of frontend
      *  @{ */
     virtual std::shared_ptr<frontend::ConnectionCreator>      the_connection_creator();
+    virtual std::shared_ptr<frontend::ConnectionCreator>      the_trusted_connection_creator();
     virtual std::shared_ptr<frontend::ConnectorReport>        the_connector_report();
     /** @} */
     /** @} */
@@ -320,6 +322,7 @@ protected:
     CachedPtr<droidinput::InputDispatcherPolicyInterface> android_dispatcher_policy;
 
     CachedPtr<frontend::Connector>   connector;
+    CachedPtr<frontend::Connector>   trusted_connector;
 
     CachedPtr<input::InputConfiguration> input_configuration;
 
@@ -348,6 +351,7 @@ protected:
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<frontend::EventSink> global_event_sink;
     CachedPtr<frontend::ConnectionCreator> connection_creator;
+    CachedPtr<frontend::ConnectionCreator> trusted_connection_creator;
     CachedPtr<frontend::Screencast> screencast;
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;

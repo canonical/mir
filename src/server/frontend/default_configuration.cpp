@@ -23,6 +23,7 @@
 #include "published_socket_connector.h"
 
 #include "mir/frontend/protobuf_connection_creator.h"
+#include "mir/frontend/session_authorizer.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 
@@ -63,6 +64,68 @@ mir::DefaultServerConfiguration::the_connector()
                     the_connection_creator(),
                     threads,
                     *the_emergency_cleanup(),
+                    the_connector_report());
+            }
+        });
+}
+
+std::shared_ptr<mf::ConnectionCreator>
+mir::DefaultServerConfiguration::the_trusted_connection_creator()
+{
+    struct TrustedSessionAuthorizer : public mf::SessionAuthorizer
+    {
+        bool connection_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
+
+        bool configure_display_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
+
+        bool screencast_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
+
+        bool prompt_session_is_allowed(mf::SessionCredentials const& /* creds */) /*override*/
+        {
+            return true;
+        }
+    };
+
+    return trusted_connection_creator([this]
+        {
+            return std::make_shared<mf::ProtobufConnectionCreator>(
+                the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
+                std::make_shared<TrustedSessionAuthorizer>(),
+                the_message_processor_report());
+        });
+}
+
+std::shared_ptr<mf::Connector>
+mir::DefaultServerConfiguration::the_trusted_connector()
+{
+    return trusted_connector(
+        [&,this]() -> std::shared_ptr<mf::Connector>
+        {
+            auto const threads = the_options()->get<int>(options::frontend_threads_opt);
+
+            if (the_options()->is_set(options::trusted_socket_opt))
+            {
+                return std::make_shared<mf::PublishedSocketConnector>(
+                    the_socket_file(),
+                    the_trusted_connection_creator(),
+                    threads,
+                    *the_emergency_cleanup(),
+                    the_connector_report());
+            }
+            else
+            {
+                return std::make_shared<mf::BasicConnector>(
+                    the_trusted_connection_creator(),
+                    threads,
                     the_connector_report());
             }
         });
