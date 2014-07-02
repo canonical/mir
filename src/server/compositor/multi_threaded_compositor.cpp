@@ -142,7 +142,7 @@ public:
          */
         CurrentRenderingTarget target{buffer};
 
-        auto display_buffer_compositor = display_buffer_compositor_factory->create_compositor_for(buffer);
+        display_buffer_compositor = display_buffer_compositor_factory->create_compositor_for(buffer);
 
         CompositorReport::SubCompositorId report_id =
             display_buffer_compositor.get();
