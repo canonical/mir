@@ -215,10 +215,6 @@ void mgn::NestedDisplay::create_surfaces(mg::DisplayConfiguration const& configu
                 });
         });
 
-    if (result.empty())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir needs at least one output for display"));
-
-
     {
         std::unique_lock<std::mutex> lock(outputs_mutex);
         outputs.swap(result);

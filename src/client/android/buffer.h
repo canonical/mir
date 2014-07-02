@@ -34,13 +34,16 @@ namespace client
 namespace android
 {
 
-class AndroidClientBuffer : public AgingBuffer
+class Buffer : public AgingBuffer
 {
 public:
-    AndroidClientBuffer(std::shared_ptr<AndroidRegistrar> const&,
-                        std::shared_ptr<const native_handle_t> const&,
-                        geometry::Size size, MirPixelFormat pf, geometry::Stride stride);
-    ~AndroidClientBuffer() noexcept;
+    Buffer(
+        std::shared_ptr<AndroidRegistrar> const&,
+        std::shared_ptr<const native_handle_t> const&,
+        geometry::Size size,
+        MirPixelFormat pf,
+        geometry::Stride stride);
+    ~Buffer() noexcept;
 
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     geometry::Size size() const;
@@ -48,8 +51,8 @@ public:
     MirPixelFormat pixel_format() const;
     std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const;
 
-    AndroidClientBuffer(const AndroidClientBuffer&) = delete;
-    AndroidClientBuffer& operator=(const AndroidClientBuffer&) = delete;
+    Buffer(const Buffer&) = delete;
+    Buffer& operator=(const Buffer&) = delete;
 private:
     void pack_native_window_buffer();
 

@@ -55,6 +55,11 @@ public:
         StubRenderable(make_stub_buffer({{},{}}), {{},{}})
     {}
 
+    void set_buffer(std::shared_ptr<graphics::Buffer> const& buffer)
+    {
+        stub_buffer = buffer;
+    }
+
     ID id() const override
     {
         return this;
@@ -103,7 +108,7 @@ private:
 
     glm::mat4 trans;
     geometry::Rectangle const rect;
-    std::shared_ptr<graphics::Buffer> const stub_buffer;
+    std::shared_ptr<graphics::Buffer> stub_buffer;
 };
 
 struct StubTransformedRenderable : public StubRenderable
