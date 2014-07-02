@@ -28,8 +28,10 @@
 #include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/scene/surface_configurator.h"
+#include "mir/graphics/cursor.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/graphics/display.h"
+#include "mir/input/cursor_listener.h"
 #include "mir/input/vt_filter.h"
 #include "mir/input/input_manager.h"
 #include "mir/time/high_resolution_clock.h"
@@ -41,6 +43,7 @@
 #include <vector>
 #include <mutex>
 
+namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
