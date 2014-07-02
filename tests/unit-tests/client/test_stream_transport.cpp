@@ -295,7 +295,7 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataFromMultipleChunks)
 
 TYPED_TEST(StreamTransportTest, ReadsFullDataWhenInterruptedWithSignals)
 {
-    size_t const chunk_size{256 * 1024};
+    size_t const chunk_size{1024};
     std::vector<uint8_t> expected(chunk_size * 4);
 
     uint8_t counter{0};
@@ -536,7 +536,7 @@ TYPED_TEST(StreamTransportTest, ReadsDataWithFds)
 
 TYPED_TEST(StreamTransportTest, ReadsFullDataAndFdsWhenInterruptedWithSignals)
 {
-    size_t const chunk_size{1024 * 256};
+    size_t const chunk_size{1024};
     int const num_chunks{4};
     int const num_fds{5};
     std::vector<uint8_t> expected(chunk_size * num_chunks);
