@@ -58,15 +58,16 @@ public:
     void make_current();
     void release_current();
     void post_update();
+    bool post_renderables_if_optimizable(RenderableList const& renderlist);
 
-    bool can_bypass() const override;
-    void post_update(std::shared_ptr<graphics::Buffer> bypass_buf) override;
-    bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
     MirOrientation orientation() const override;
+    bool uses_alpha() const override;
     void schedule_set_crtc();
     void wait_for_page_flip();
 
 private:
+    void post_update(std::shared_ptr<graphics::Buffer> bypass_buf);
+
     BufferObject* get_front_buffer_object();
     BufferObject* get_buffer_object(struct gbm_bo *bo);
     bool schedule_page_flip(BufferObject* bufobj);

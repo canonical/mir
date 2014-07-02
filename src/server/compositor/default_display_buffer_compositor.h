@@ -46,8 +46,9 @@ public:
         std::shared_ptr<Scene> const& scene,
         std::shared_ptr<Renderer> const& renderer,
         std::shared_ptr<CompositorReport> const& report);
+    ~DefaultDisplayBufferCompositor();
 
-    bool composite() override;
+    void composite() override;
     std::weak_ptr<graphics::Cursor> cursor() const override;
     void zoom(float mag) override;
     void on_cursor_movement(geometry::Point const& p);
@@ -62,7 +63,6 @@ private:
     std::shared_ptr<CompositorReport> const report;
     std::shared_ptr<graphics::Cursor> const soft_cursor;
 
-    bool last_pass_rendered_anything;
     geometry::Rectangle viewport;
     geometry::Point cursor_pos;
     float zoom_mag;

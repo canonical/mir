@@ -89,7 +89,7 @@ private:
     CompositorState state;
     bool compose_on_start;
 
-    void schedule_compositing();
+    void schedule_compositing(int number_composites);
     
     std::shared_ptr<mir::scene::Observer> observer;
 };

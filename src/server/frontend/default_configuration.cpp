@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/emergency_cleanup.h"
 
 #include "default_ipc_factory.h"
 #include "published_socket_connector.h"
@@ -61,6 +62,7 @@ mir::DefaultServerConfiguration::the_connector()
                     the_socket_file(),
                     the_connection_creator(),
                     threads,
+                    *the_emergency_cleanup(),
                     the_connector_report());
             }
         });
@@ -81,6 +83,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_frontend_display_changer(),
                 allocator,
                 the_screencast(),
-                the_session_authorizer());
+                the_session_authorizer(),
+                the_cursor_images());
         });
 }

@@ -19,6 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_FAKE_RENDERABLE_H_
 #define MIR_TEST_DOUBLES_FAKE_RENDERABLE_H_
 
+#include "stub_buffer.h"
 #include "mir/graphics/renderable.h"
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
@@ -34,12 +35,36 @@ namespace doubles
 class FakeRenderable : public graphics::Renderable
 {
 public:
-    FakeRenderable(int x, int y, int width, int height,
-                   float opacity=1.0f,
-                   bool rectangular=true,
-                   bool visible=true,
-                   bool posted=true)
-        : rect{{x, y}, {width, height}},
+    FakeRenderable(int x, int y, int width, int height)
+        : FakeRenderable{geometry::Rectangle{{x,y},{width,height}}}
+    {
+    }
+    FakeRenderable(geometry::Rectangle display_area)
+        : FakeRenderable{display_area, 1.0f, true, true, true}
+    {
+    }
+
+    FakeRenderable(geometry::Rectangle display_area,
+                   float opacity)
+        : FakeRenderable{display_area, opacity, true, true, true}
+    {
+    }
+
+    FakeRenderable(geometry::Rectangle display_area,
+                   float opacity,
+                   bool rectangular,
+                   bool visible)
+        : FakeRenderable{display_area, opacity, rectangular, visible, true}
+    {
+    }
+
+    FakeRenderable(geometry::Rectangle display_area,
+                   float opacity,
+                   bool rectangular,
+                   bool visible,
+                   bool posted)
+        : buf{std::make_shared<StubBuffer>()},
+          rect(display_area),
           opacity(opacity),
           rectangular(rectangular),
           visible_(visible),

@@ -92,6 +92,9 @@ target_link_libraries(mir_demo_client_scroll
 
 )
 
+add_executable(mir_demo_client_prompt_session prompt_session.c)
+target_link_libraries(mir_demo_client_prompt_session mirclient)
+
 add_library(mirdraw STATIC graphics_utils.cpp)
 target_link_libraries(mirdraw ${GLESv2_LIBRARIES})
 
@@ -143,7 +146,7 @@ add_executable(mir_demo_standalone_input_filter
   server_configuration.cpp
 )
 
-target_link_libraries(mir_demo_standalone_input_filter  
+target_link_libraries(mir_demo_standalone_input_filter
   mirserver
 )
 
@@ -158,8 +161,9 @@ set (INSTALL_DEMOS
   mir_demo_client_multiwin
   mir_demo_client_display_config
   mir_demo_client_progressbar
+  mir_demo_client_prompt_session
   mir_demo_standalone_input_filter
-  mir_demo_standalone_render_to_fb 
+  mir_demo_standalone_render_to_fb
   mir_demo_standalone_render_surfaces
 )
 

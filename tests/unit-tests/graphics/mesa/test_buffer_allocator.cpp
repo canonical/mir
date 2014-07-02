@@ -26,9 +26,8 @@
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_buffer_initializer.h"
-#include "mir_test_doubles/null_virtual_terminal.h"
+#include "mir_test_doubles/platform_factory.h"
 #include "mir_test_framework/udev_environment.h"
-#include "src/server/report/null_report_factory.h"
 
 #include <cstdlib>
 #include <memory>
@@ -43,7 +42,6 @@ namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 namespace mtd = mir::test::doubles;
-namespace mr = mir::report;
 namespace mtf = mir::mir_test_framework;
 
 class MesaBufferAllocatorTest  : public ::testing::Test
@@ -63,10 +61,7 @@ protected:
         ON_CALL(mock_gbm, gbm_bo_get_handle(_))
         .WillByDefault(Return(mock_gbm.fake_gbm.bo_handle));
 
-        platform = std::make_shared<mgm::Platform>(
-            mr::null_display_report(),
-            std::make_shared<mtd::NullVirtualTerminal>(),
-            mgm::BypassOption::allowed);
+        platform = mtd::create_mesa_platform_with_null_dependencies();
         mock_buffer_initializer = std::make_shared<testing::NiceMock<mtd::MockBufferInitializer>>();
         allocator.reset(new mgm::BufferAllocator(
             platform->gbm.device, mock_buffer_initializer, mgm::BypassOption::allowed));

@@ -21,8 +21,9 @@
 
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/connector_report.h"
+#include "mir/emergency_cleanup_registry.h"
+#include "mir/thread_name.h"
 
-#include <boost/signals2.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -100,17 +101,20 @@ mf::PublishedSocketConnector::PublishedSocketConnector(
     const std::string& socket_file,
     std::shared_ptr<ConnectionCreator> const& connection_creator,
     int threads,
+    EmergencyCleanupRegistry& emergency_cleanup_registry,
     std::shared_ptr<ConnectorReport> const& report)
 :   BasicConnector(connection_creator, threads, report),
     socket_file(remove_if_stale(socket_file)),
     acceptor(io_service, socket_file)
 {
+    emergency_cleanup_registry.add(
+        [socket_file] { std::remove(socket_file.c_str()); });
     start_accept();
 }
 
 mf::PublishedSocketConnector::~PublishedSocketConnector() noexcept
 {
-    remove_endpoint();
+    std::remove(socket_file.c_str());
 }
 
 void mf::PublishedSocketConnector::start_accept()
@@ -121,16 +125,10 @@ void mf::PublishedSocketConnector::start_accept()
 
     acceptor.async_accept(
         *socket,
-        boost::bind(
-            &PublishedSocketConnector::on_new_connection,
-            this,
-            socket,
-            ba::placeholders::error));
-}
-
-void mf::PublishedSocketConnector::remove_endpoint() const
-{
-    std::remove(socket_file.c_str());
+        [this,socket](boost::system::error_code const& ec)
+        {
+            on_new_connection(socket, ec);
+        });
 }
 
 void mf::PublishedSocketConnector::on_new_connection(
@@ -159,6 +157,7 @@ void mf::BasicConnector::start()
 {
     auto run_io_service = [this]
     {
+        mir::set_thread_name("Mir/IPC");
         while (true)
         try
         {
@@ -239,10 +238,6 @@ int mf::BasicConnector::client_socket_fd(std::function<void(std::shared_ptr<Sess
     create_session_for(server_socket, connect_handler);
 
     return socket_fd[client];
-}
-
-void mf::BasicConnector::remove_endpoint() const
-{
 }
 
 mf::BasicConnector::~BasicConnector() noexcept

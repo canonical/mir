@@ -22,6 +22,7 @@
 #define MIR_COMPOSITOR_BUFFER_STREAM_FACTORY_H_
 
 #include "mir/scene/buffer_stream_factory.h"
+#include "mir/compositor/frame_dropping_policy_factory.h"
 
 #include <memory>
 
@@ -37,9 +38,8 @@ namespace compositor
 class BufferStreamFactory : public scene::BufferStreamFactory
 {
 public:
-
-    explicit BufferStreamFactory(
-        const std::shared_ptr<graphics::GraphicBufferAllocator> &gralloc);
+    BufferStreamFactory(std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc,
+                        std::shared_ptr<FrameDroppingPolicyFactory> const& policy_factory);
 
     virtual ~BufferStreamFactory() {}
 
@@ -48,7 +48,7 @@ public:
 
 private:
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
-
+    std::shared_ptr<FrameDroppingPolicyFactory> const policy_factory;
 };
 
 }

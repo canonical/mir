@@ -48,6 +48,9 @@ set(
   mir_screencast.cpp
   mir_screencast_api.cpp
   mir_cursor_api.cpp
+  mir_prompt_session.cpp
+  mir_prompt_session_api.cpp
+  mir_event_distributor.cpp
 )
 
 add_library(
@@ -56,7 +59,7 @@ add_library(
   ${CLIENT_SOURCES}
 )
 
-set(MIRCLIENT_ABI 7)
+set(MIRCLIENT_ABI 8)
 
 set_target_properties(
   mirclient
@@ -82,7 +85,7 @@ set(
   mirclientlttngstatic
 
   ${MIR_COMMON_PLATFORM_LIBRARIES}
- 
+
   3rd_party
 )
 

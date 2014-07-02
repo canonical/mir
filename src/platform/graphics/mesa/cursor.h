@@ -75,7 +75,8 @@ public:
 
     void move_to(geometry::Point position);
 
-    void show_at_last_known_position();
+    void suspend();
+    void resume();
 
 private:
     enum ForceCursorState { UpdateState, ForceState };

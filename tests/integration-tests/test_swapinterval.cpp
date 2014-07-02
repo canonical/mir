@@ -56,8 +56,15 @@ public:
     {
     }
 
-    void swap_client_buffers(mg::Buffer*, std::function<void(mg::Buffer* new_buffer)> complete) override
-        { complete(&stub_buffer); }
+    void acquire_client_buffer(
+        std::function<void(mg::Buffer* buffer)> complete) override
+    {
+        complete(&stub_buffer);
+    }
+
+    void release_client_buffer(mg::Buffer*) override
+    {
+    }
 
     std::shared_ptr<mg::Buffer> lock_compositor_buffer(void const*) override
         { return std::make_shared<mtd::StubBuffer>(); }

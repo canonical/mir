@@ -20,13 +20,13 @@
 #include "default_display_buffer_compositor.h"
 
 #include "mir/compositor/scene.h"
+#include "mir/compositor/scene_element.h"
 #include "mir/compositor/renderer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/cursor.h"
 #include "mir/compositor/buffer_stream.h"
-#include "bypass.h"
 #include "occlusion.h"
 #include <mutex>
 #include <cstdlib>
@@ -77,66 +77,56 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
       renderer{renderer},
       report{report},
       soft_cursor{std::make_shared<SoftCursor>(*this)},
-      last_pass_rendered_anything{false},
       viewport(display_buffer.view_area()),
       zoom_mag{1.0f}
 {
+    scene->register_compositor(this);
 }
 
-bool mc::DefaultDisplayBufferCompositor::composite()
+mc::DefaultDisplayBufferCompositor::~DefaultDisplayBufferCompositor()
+{
+    scene->unregister_compositor(this);
+}
+
+void mc::DefaultDisplayBufferCompositor::composite()
 {
     report->began_frame(this);
 
-    bool bypassed = false;
-    auto renderable_list = scene->renderable_list_for(this);
-    mc::filter_occlusions_from(renderable_list, viewport);
+    auto scene_elements = scene->scene_elements_for(this);
+    auto const& occlusions = mc::filter_occlusions_from(scene_elements, viewport);
 
-    //TODO: the DisplayBufferCompositor should not have to figure out if it has to force
-    //      a subsequent compositon. The MultiThreadedCompositor should be smart enough to 
-    //      schedule compositions when they're needed. 
-    bool uncomposited_buffers{false};
-    for(auto const& renderable : renderable_list)
-        uncomposited_buffers |= (renderable->buffers_ready_for_compositor() > 1);
-
-    if (viewport == display_buffer.view_area() &&
-        display_buffer.can_bypass())
+    for (auto const& element : occlusions)
     {
-        mc::BypassMatch bypass_match(viewport);
-
-        auto bypass_it = std::find_if(renderable_list.rbegin(), renderable_list.rend(), bypass_match);
-        if (bypass_it != renderable_list.rend())
-        {
-            auto bypass_buf = (*bypass_it)->buffer();
-            if (bypass_buf->can_bypass())
-            {
-                display_buffer.post_update(bypass_buf);
-                bypassed = true;
-                renderer->suspend();
-            }
-        }
+        if (element->renderable()->visible())
+            element->occluded_in(this);
     }
 
-    if (!bypassed)
+    mg::RenderableList renderable_list;
+    for (auto const& element : scene_elements)
+    {
+        element->rendered_in(this);
+        renderable_list.push_back(element->renderable());
+    }
+
+    if (display_buffer.post_renderables_if_optimizable(renderable_list))
+    {
+        renderer->suspend();
+        report->finished_frame(true, this);
+    }
+    else
     {
         display_buffer.make_current();
 
         renderer->set_rotation(display_buffer.orientation());
         renderer->set_viewport(viewport);
+
         renderer->begin();  // TODO deprecatable now?
         renderer->render(renderable_list);
         display_buffer.post_update();
         renderer->end();
 
-        // This is a frig to avoid lp:1286190
-        if (last_pass_rendered_anything && renderable_list.empty())
-            uncomposited_buffers = true;
-
-        last_pass_rendered_anything = !renderable_list.empty();
-        // End of frig
+        report->finished_frame(false, this);
     }
-
-    report->finished_frame(bypassed, this);
-    return uncomposited_buffers;
 }
 
 std::weak_ptr<graphics::Cursor>

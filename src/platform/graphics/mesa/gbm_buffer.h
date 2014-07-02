@@ -64,7 +64,7 @@ public:
 
     virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
 
-    virtual void bind_to_texture();
+    virtual void gl_bind_to_texture() override;
 
     bool can_bypass() const override;
 

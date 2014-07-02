@@ -22,7 +22,7 @@
 #include "mir/graphics/buffer.h"
 #include "src/platform/graphics/android/display_device.h"
 #include "src/platform/graphics/android/gl_context.h"
-#include "src/platform/graphics/android/overlay_gl_compositor.h"
+#include "src/platform/graphics/android/hwc_fallback_gl_renderer.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -36,12 +36,11 @@ class MockDisplayDevice : public graphics::android::DisplayDevice
 public:
     ~MockDisplayDevice() noexcept {}
     MOCK_METHOD1(mode, void(MirPowerMode));
-    MOCK_METHOD1(render_gl, void(graphics::android::SwappingGLContext const&));
-    MOCK_METHOD3(prepare_overlays, void(
+    MOCK_METHOD1(post_gl, void(graphics::android::SwappingGLContext const&));
+    MOCK_METHOD3(post_overlays, bool(
         graphics::android::SwappingGLContext const&,
         graphics::RenderableList const&,
         graphics::android::RenderableListCompositor const&));
-    MOCK_METHOD1(post, void(graphics::Buffer const&));
     MOCK_CONST_METHOD1(apply_orientation, bool(MirOrientation));
 };
 }

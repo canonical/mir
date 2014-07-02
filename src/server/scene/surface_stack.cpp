@@ -18,19 +18,12 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir/graphics/buffer_properties.h"
-#include "mir/scene/surface_creation_parameters.h"
 #include "surface_stack.h"
-#include "mir/compositor/buffer_stream.h"
-#include "mir/input/input_channel_factory.h"
+#include "rendering_tracker.h"
+#include "mir/scene/surface.h"
 #include "mir/scene/scene_report.h"
-
-// TODO Including this doesn't seem right - why would SurfaceStack "know" about BasicSurface
-// It is needed by the following member function:
-//  for_each()
-// to access:
-//  buffer_stream() and input_channel()
-#include "basic_surface.h"
+#include "mir/compositor/scene_element.h"
+#include "mir/graphics/renderable.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -46,20 +39,81 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
+namespace
+{
+
+class SurfaceSceneElement : public mc::SceneElement
+{
+public:
+    SurfaceSceneElement(
+        std::shared_ptr<mg::Renderable> renderable,
+        std::shared_ptr<ms::RenderingTracker> const& tracker)
+        : renderable_{renderable},
+          tracker{tracker}
+    {
+    }
+
+    std::shared_ptr<mg::Renderable> renderable() const override
+    {
+        return renderable_;
+    }
+
+    void rendered_in(mc::CompositorID cid) override
+    {
+        tracker->rendered_in(cid);
+    }
+
+    void occluded_in(mc::CompositorID cid) override
+    {
+        tracker->occluded_in(cid);
+    }
+
+private:
+    std::shared_ptr<mg::Renderable> const renderable_;
+    std::shared_ptr<ms::RenderingTracker> const tracker;
+};
+
+}
+
 ms::SurfaceStack::SurfaceStack(
     std::shared_ptr<SceneReport> const& report) :
     report{report}
 {
 }
 
-mg::RenderableList ms::SurfaceStack::renderable_list_for(CompositorID id) const
+mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID id)
 {
     std::lock_guard<decltype(guard)> lg(guard);
-    mg::RenderableList list;
+    mc::SceneElementSequence elements;
     for (auto const& layer : layers_by_depth)
+    {
         for (auto const& surface : layer.second) 
-            list.emplace_back(surface->compositor_snapshot(id));
-    return list;
+        {
+            auto element = std::make_shared<SurfaceSceneElement>(
+                surface->compositor_snapshot(id),
+                rendering_trackers[surface.get()]);
+            elements.emplace_back(element);
+        }
+    }
+    return elements;
+}
+
+void ms::SurfaceStack::register_compositor(mc::CompositorID cid)
+{
+    std::lock_guard<decltype(guard)> lg(guard);
+
+    registered_compositors.insert(cid);
+
+    update_rendering_tracker_compositors();
+}
+
+void ms::SurfaceStack::unregister_compositor(mc::CompositorID cid)
+{
+    std::lock_guard<decltype(guard)> lg(guard);
+
+    registered_compositors.erase(cid);
+
+    update_rendering_tracker_compositors();
 }
 
 void ms::SurfaceStack::add_surface(
@@ -70,13 +124,13 @@ void ms::SurfaceStack::add_surface(
     {
         std::lock_guard<decltype(guard)> lg(guard);
         layers_by_depth[depth].push_back(surface);
+        create_rendering_tracker_for(surface);
     }
     surface->set_reception_mode(input_mode);
     observers.surface_added(surface.get());
 
     report->surface_added(surface.get(), surface.get()->name());
 }
-
 
 void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 {
@@ -94,6 +148,7 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
             if (p != surfaces.end())
             {
                 surfaces.erase(p);
+                rendering_trackers.erase(keep_alive.get());
                 found_surface = true;
                 break;
             }
@@ -144,6 +199,19 @@ void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+}
+
+void ms::SurfaceStack::create_rendering_tracker_for(std::shared_ptr<Surface> const& surface)
+{
+    auto const tracker = std::make_shared<RenderingTracker>(surface);
+    tracker->active_compositors(registered_compositors);
+    rendering_trackers[surface.get()] = tracker;
+}
+
+void ms::SurfaceStack::update_rendering_tracker_compositors()
+{
+    for (auto const& pair : rendering_trackers)
+        pair.second->active_compositors(registered_compositors);
 }
 
 void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observer)

@@ -58,5 +58,5 @@ void mga::InterpreterCache::update_native_fence(ANativeWindowBuffer* key, int fe
     }
 
     auto native_buffer = native_it->second;
-    native_buffer->update_fence(fence);
+    native_buffer->update_usage(fence, mga::BufferAccess::write);
 }

@@ -13,6 +13,7 @@ set(
   test_raii.cpp
   test_udev_wrapper.cpp
   test_variable_length_array.cpp
+  test_thread_name.cpp
 )
 
 add_subdirectory(options/)

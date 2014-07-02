@@ -27,6 +27,7 @@
 
 namespace mir
 {
+class EmergencyCleanupRegistry;
 namespace graphics
 {
 namespace mesa
@@ -46,6 +47,7 @@ class Platform : public graphics::Platform,
 public:
     explicit Platform(std::shared_ptr<DisplayReport> const& reporter,
                       std::shared_ptr<VirtualTerminal> const& vt,
+                      EmergencyCleanupRegistry& emergency_cleanup_registry,
                       BypassOption bypass_option);
     ~Platform();
 
@@ -59,7 +61,8 @@ public:
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
     std::shared_ptr<InternalClient> create_internal_client();
 
-    void fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const;
+    void fill_buffer_package(
+        BufferIPCPacker* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const;
 
     EGLNativeDisplayType egl_native_display() const;
 
@@ -67,7 +70,7 @@ public:
     void drm_auth_magic(unsigned int magic);
 
     std::shared_ptr<mir::udev::Context> udev;
-    helpers::DRMHelper drm;
+    std::shared_ptr<helpers::DRMHelper> const drm;
     helpers::GBMHelper gbm;
 
     std::shared_ptr<DisplayReport> const listener;

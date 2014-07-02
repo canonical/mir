@@ -43,17 +43,26 @@ private:
 class GLProgram
 {
 public:
-    GLProgram(
-        GLchar const* vertex_shader_src,
-        GLchar const* fragment_shader_src);
-    ~GLProgram();
+    virtual ~GLProgram() = default;
+    virtual operator GLuint() const = 0;
 
-    operator GLuint() const;
-
+protected:
+    GLProgram() = default;
 private:
     GLProgram(GLProgram const&) = delete;
     GLProgram& operator=(GLProgram const&) = delete;
+};
 
+class SimpleGLProgram : public GLProgram
+{
+public:
+    SimpleGLProgram(
+        GLchar const* vertex_shader_src,
+        GLchar const* fragment_shader_src);
+    ~SimpleGLProgram();
+
+    operator GLuint() const override;
+private:
     GLShader const vertex_shader; 
     GLShader const fragment_shader;
     GLuint const program;

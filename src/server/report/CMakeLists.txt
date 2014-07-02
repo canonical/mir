@@ -7,4 +7,4 @@ add_library(
     default_server_configuration.cpp
     )
 
-target_link_libraries(mirreport mirserverlttng mirlogging mirnullreport)
+target_link_libraries(mirreport mirlogging mirnullreport)

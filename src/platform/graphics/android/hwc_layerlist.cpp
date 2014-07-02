@@ -51,13 +51,16 @@ std::shared_ptr<hwc_display_contents_1_t> generate_hwc_list(size_t needed_size)
 }
 }
 
-bool mga::LayerList::update_list_and_check_if_changed(
-    RenderableList const& renderlist,
-    size_t additional_layers)
+mga::HwcLayerEntry::HwcLayerEntry(HWCLayer && layer, bool needs_commit) :
+    layer(std::move(layer)),
+    needs_commit{needs_commit}
+{
+}
+
+void mga::LayerList::update_list(RenderableList const& renderlist, size_t additional_layers)
 {
     size_t needed_size = renderlist.size() + additional_layers; 
 
-    bool any_buffer_updated = false;
     if ((!hwc_representation) || hwc_representation->numHwLayers != needed_size)
     {
         hwc_representation = generate_hwc_list(needed_size);
@@ -65,21 +68,20 @@ bool mga::LayerList::update_list_and_check_if_changed(
 
     if (layers.size() == needed_size)
     {
-        auto layers_it = layers.begin();
+        auto it = layers.begin();
         for(auto renderable : renderlist)
         {
-            layers_it->set_render_parameters(
-                renderable->screen_position(), renderable->alpha_enabled());
-            layers_it->set_buffer(*renderable->buffer());
-            any_buffer_updated |= layers_it->needs_hwc_commit(); 
-            layers_it->set_layer_type(mga::LayerType::gl_rendered);
-            layers_it++;
+            it->needs_commit = it->layer.setup_layer(
+                mga::LayerType::gl_rendered,
+                renderable->screen_position(),
+                renderable->alpha_enabled(),
+                *renderable->buffer());
+            it++;
         }
     }
     else
     {
-        any_buffer_updated = true;
-        std::list<HWCLayer> new_layers;
+        std::list<HwcLayerEntry> new_layers;
         auto i = 0u;
         for(auto const& renderable : renderlist)
         {
@@ -88,13 +90,13 @@ bool mga::LayerList::update_list_and_check_if_changed(
                     mga::LayerType::gl_rendered,
                     renderable->screen_position(),
                     renderable->alpha_enabled(),
-                    hwc_representation, i++));
-            new_layers.back().set_buffer(*renderable->buffer());
+                    *renderable->buffer(),
+                    hwc_representation, i++), true);
         }
 
         for(; i < needed_size; i++)
         {
-            new_layers.emplace_back(mga::HWCLayer(hwc_representation, i));
+            new_layers.emplace_back(mga::HWCLayer(hwc_representation, i), false);
         }
         layers = std::move(new_layers);
     }
@@ -108,21 +110,19 @@ bool mga::LayerList::update_list_and_check_if_changed(
         first_additional_layer = layers.begin();
         std::advance(first_additional_layer, renderlist.size());
     }
-
-    return any_buffer_updated;
 }
 
-std::list<mga::HWCLayer>::iterator mga::LayerList::begin()
+std::list<mga::HwcLayerEntry>::iterator mga::LayerList::begin()
 {
     return layers.begin(); 
 }
 
-std::list<mga::HWCLayer>::iterator mga::LayerList::additional_layers_begin()
+std::list<mga::HwcLayerEntry>::iterator mga::LayerList::additional_layers_begin()
 {
     return first_additional_layer;
 }
 
-std::list<mga::HWCLayer>::iterator mga::LayerList::end()
+std::list<mga::HwcLayerEntry>::iterator mga::LayerList::end()
 {
     return layers.end(); 
 }
@@ -141,6 +141,6 @@ mga::LayerList::LayerList(
     RenderableList const& renderlist,
     size_t additional_layers)
 {
-    update_list_and_check_if_changed(renderlist, additional_layers);
+    update_list(renderlist, additional_layers);
 }
 

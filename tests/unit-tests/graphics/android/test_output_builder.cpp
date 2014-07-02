@@ -28,6 +28,7 @@
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_gl_program_factory.h"
@@ -98,13 +99,14 @@ public:
     }
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
+    testing::NiceMock<mtd::MockGL> mock_gl;
     testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
     testing::NiceMock<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<MockResourceFactory> mock_resource_factory;
     testing::NiceMock<mtd::MockDisplayReport> mock_display_report;
     testing::NiceMock<MockGraphicBufferAllocator> mock_buffer_allocator;
     mtd::StubGLConfig stub_gl_config;
-    mga::GLContext gl_context{
+    mga::PbufferGLContext gl_context{
         mga::to_mir_format(mock_egl.fake_visual_id), stub_gl_config, mock_display_report};
     mtd::StubGLProgramFactory const stub_program_factory;
 };
@@ -127,7 +129,7 @@ TEST_F(OutputBuilder, hwc_version_10_success)
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report));
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report), mga::OverlayOptimization::disabled);
     factory.create_display_buffer(stub_program_factory, gl_context);
 }
 
@@ -150,7 +152,7 @@ TEST_F(OutputBuilder, hwc_version_10_failure_uses_gpu)
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report));
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report), mga::OverlayOptimization::disabled);
     factory.create_display_buffer(stub_program_factory, gl_context);
 }
 
@@ -170,7 +172,7 @@ TEST_F(OutputBuilder, hwc_version_11_success)
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report));
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report), mga::OverlayOptimization::disabled);
     factory.create_display_buffer(stub_program_factory, gl_context);
 }
 
@@ -193,7 +195,7 @@ TEST_F(OutputBuilder, hwc_version_11_hwc_failure)
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report));
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report), mga::OverlayOptimization::disabled);
     factory.create_display_buffer(stub_program_factory, gl_context);
 }
 
@@ -212,7 +214,10 @@ TEST_F(OutputBuilder, hwc_version_11_hwc_and_fb_failure_fatal)
 
     EXPECT_THROW({
         mga::OutputBuilder factory(
-            mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report));
+            mt::fake_shared(mock_buffer_allocator),
+            mock_resource_factory,
+            mt::fake_shared(mock_display_report),
+            mga::OverlayOptimization::disabled);
     }, std::runtime_error);
 }
 
@@ -230,6 +235,6 @@ TEST_F(OutputBuilder, hwc_version_12)
         .Times(1);
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report));
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report), mga::OverlayOptimization::disabled);
     factory.create_display_buffer(stub_program_factory, gl_context);
 }

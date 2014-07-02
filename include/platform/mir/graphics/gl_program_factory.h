@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_GL_PROGRAM_FACTORY_H_
 
 #include "mir/graphics/gl_program.h"
+#include "mir/graphics/gl_texture_cache.h"
 #include <memory>
 
 namespace mir
@@ -34,7 +35,7 @@ public:
 
     virtual std::unique_ptr<GLProgram>
         create_gl_program(std::string const&, std::string const&) const = 0;
-
+    virtual std::unique_ptr<GLTextureCache> create_texture_cache() const = 0;
 protected:
     GLProgramFactory() = default;
 

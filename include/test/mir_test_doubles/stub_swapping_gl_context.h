@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_SWAPPING_GL_CONTEXT_H_
 
 #include "src/platform/graphics/android/gl_context.h"
+#include "stub_buffer.h"
 
 namespace mir
 {
@@ -30,7 +31,22 @@ namespace doubles
 
 struct StubSwappingGLContext : public graphics::android::SwappingGLContext
 {
+    StubSwappingGLContext(std::shared_ptr<graphics::Buffer> const& buffer) :
+        buffer(buffer)
+    {
+    }
+
+    StubSwappingGLContext() :
+        StubSwappingGLContext(std::make_shared<StubBuffer>())
+    {
+    }
     void swap_buffers() const {}
+    std::shared_ptr<graphics::Buffer> last_rendered_buffer() const
+    {
+        return buffer;
+    }
+private:
+    std::shared_ptr<graphics::Buffer> const buffer;
 };
 
 }

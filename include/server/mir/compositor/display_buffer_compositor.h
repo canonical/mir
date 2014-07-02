@@ -33,9 +33,7 @@ class DisplayBufferCompositor
 public:
     virtual ~DisplayBufferCompositor() = default;
 
-    /// Returns true if there is additional work to do. E.g. a composited surface
-    /// has additional buffers ready to composite or during animation
-    virtual bool composite() = 0;
+    virtual void composite() = 0;
 
     virtual std::weak_ptr<graphics::Cursor> cursor() const { return {}; }
 

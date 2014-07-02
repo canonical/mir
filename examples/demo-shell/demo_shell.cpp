@@ -53,9 +53,10 @@ public:
     }
 
     std::unique_ptr<compositor::Renderer> create_renderer_for(
-        geometry::Rectangle const& rect) override
+        geometry::Rectangle const& rect,
+        mir::compositor::DestinationAlpha dest_alpha) override
     {
-        return std::unique_ptr<compositor::Renderer>(new DemoRenderer(*gl_program_factory, rect));
+        return std::unique_ptr<compositor::Renderer>(new DemoRenderer(*gl_program_factory, rect, dest_alpha));
     }
 private:
     std::shared_ptr<graphics::GLProgramFactory> const gl_program_factory;

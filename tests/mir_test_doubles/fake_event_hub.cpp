@@ -46,6 +46,10 @@ namespace {
     const nsecs_t arbitrary_time = 1234;
 } // anonymous namespace
 
+int const FakeEventHub::USBTouchscreenID = droidinput::BUILT_IN_KEYBOARD_ID + 2;
+int const FakeEventHub::TouchScreenMinAxisValue = 0;
+int const FakeEventHub::TouchScreenMaxAxisValue = 100;
+
 FakeEventHub::FakeEventHub()
 {
     keymap.loadGenericMaps();
@@ -439,6 +443,34 @@ void FakeEventHub::synthesize_builtin_cursor_added()
     events_available.push_back(event);
 }
 
+void FakeEventHub::synthesize_usb_touchscreen_added()
+{
+    FakeDevice device;
+    device.classes = INPUT_DEVICE_CLASS_TOUCH | INPUT_DEVICE_CLASS_EXTERNAL;
+    device.input_properties[INPUT_PROP_DIRECT] = true;
+    device.identifier.bus = BUS_USB;
+
+    RawAbsoluteAxisInfo axis_info;
+    axis_info.valid = true;
+    axis_info.minValue = TouchScreenMinAxisValue;
+    axis_info.maxValue = TouchScreenMaxAxisValue;
+    axis_info.flat = 0;
+    axis_info.fuzz = 0;
+    axis_info.resolution = 1;
+    device.absoluteAxes.add(ABS_X, axis_info);
+    device.absoluteAxes.add(ABS_Y, axis_info);
+
+    device_from_id.insert(std::pair<int32_t, FakeDevice>(USBTouchscreenID, device));
+    
+    RawEvent event;
+    event.when = 0;
+    event.deviceId = USBTouchscreenID;
+    event.type = EventHubInterface::DEVICE_ADDED;
+    
+    std::lock_guard<std::mutex> lg(guard);
+    events_available.push_back(event);
+}
+
 void FakeEventHub::synthesize_device_scan_complete()
 {
     RawEvent event;
@@ -513,6 +545,36 @@ void FakeEventHub::synthesize_event(const mis::MotionParameters &parameters)
 
     event.code = REL_Y;
     event.value = parameters.rel_y;
+    events_available.push_back(event);
+
+    // Cursor motion events require a sync as per droidinput::CursorInputMapper::process
+    event.type = EV_SYN;
+    event.code = SYN_REPORT;
+    events_available.push_back(event);
+}
+
+void FakeEventHub::synthesize_event(const mis::TouchParameters &parameters)
+{
+    RawEvent event;
+    event.when = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    event.type = EV_ABS;
+    if (parameters.device_id)
+        event.deviceId = parameters.device_id;
+    else
+        event.deviceId = USBTouchscreenID;
+
+    std::lock_guard<std::mutex> lg(guard);
+    event.code = ABS_X;
+    event.value = parameters.abs_x;
+    events_available.push_back(event);
+
+    event.code = ABS_Y;
+    event.value = parameters.abs_y;
+    events_available.push_back(event);
+    
+    event.type = EV_KEY;
+    event.code = BTN_TOUCH;
+    event.value = 1;
     events_available.push_back(event);
 
     // Cursor motion events require a sync as per droidinput::CursorInputMapper::process

@@ -20,11 +20,8 @@
 #ifndef MIR_FRONTEND_SURFACE_H_
 #define MIR_FRONTEND_SURFACE_H_
 
-#include "mir/geometry/point.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
-
-#include <glm/glm.hpp>
 
 #include <memory>
 
@@ -34,22 +31,17 @@ namespace graphics
 {
 class Buffer;
 class InternalSurface;
-}
-namespace input
-{
-class InputChannel;
+class CursorImage;
 }
 
 namespace frontend
 {
-
 class ClientBufferTracker;
 
 class Surface
 {
 public:
-
-    virtual ~Surface() {}
+    virtual ~Surface() = default;
 
     /// Size of the client area of the surface (excluding any decorations)
     virtual geometry::Size client_size() const = 0;
@@ -61,6 +53,8 @@ public:
     virtual int client_input_fd() const = 0;
 
     virtual int configure(MirSurfaceAttrib attrib, int value) = 0;
+
+    virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
 
     /**
      *  swap_buffers_blocking() is a convenience wrapper around swap_buffers()

@@ -52,7 +52,7 @@ protected:
 
             if (file_type == raw)
             {
-                glmark2_output << line;
+                glmark2_output << line << std::endl;
             }
         }
         
@@ -64,9 +64,9 @@ protected:
         if (file_type == json)
         {
             std::string json =  "{";
-                json += "'benchmark_name':'glmark2-es2-mir'";
+                json += "\"benchmark_name\":\"glmark2-es2-mir\"";
                 json += ",";
-                json += "'score':'" + score + "'";
+                json += "\"score\":\"" + score + "\"";
                 json += "}";
             glmark2_output << json;
         }
@@ -78,6 +78,6 @@ private:
 
 TEST_F(GLMark2Test, benchmark_fullscreen_default)
 {
-    run_glmark2("glmark2_fullscreen_default.json", json);
+    run_glmark2("/tmp/glmark2_fullscreen_default.results", raw);
 }
 }

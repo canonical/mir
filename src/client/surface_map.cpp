@@ -17,8 +17,10 @@
  */
 
 #include "connection_surface_map.h"
-#include <sstream>
+#include "mir_surface.h"
+
 #include <boost/throw_exception.hpp>
+#include <sstream>
 
 namespace mcl=mir::client;
 
@@ -26,10 +28,23 @@ mcl::ConnectionSurfaceMap::ConnectionSurfaceMap()
 {
 }
 
+mcl::ConnectionSurfaceMap::~ConnectionSurfaceMap() noexcept
+{
+    // Unless the client has screwed up there should be no surfaces left
+    // here. (OTOH *we* don't need to leak memory when clients screw up.)
+    std::lock_guard<std::mutex> lk(guard);
+
+    for (auto const& surface :surfaces)
+    {
+        if (MirSurface::is_valid(surface.second))
+            delete surface.second;
+    }
+}
+
 void mcl::ConnectionSurfaceMap::with_surface_do(
     int surface_id, std::function<void(MirSurface*)> exec) const
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::lock_guard<std::mutex> lk(guard);
     auto const it = surfaces.find(surface_id);
     if (it != surfaces.end())
     {
@@ -49,12 +64,12 @@ void mcl::ConnectionSurfaceMap::with_surface_do(
 
 void mcl::ConnectionSurfaceMap::insert(int surface_id, MirSurface* surface)
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::lock_guard<std::mutex> lk(guard);
     surfaces[surface_id] = surface;
 }
 
 void mcl::ConnectionSurfaceMap::erase(int surface_id)
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::lock_guard<std::mutex> lk(guard);
     surfaces.erase(surface_id);
 }

@@ -44,7 +44,7 @@ static GLuint load_shader(const char *src, GLenum type)
 }
 
 /* Colours from http://design.ubuntu.com/brand/colour-palette */
-#define MID_AUBERGINE 0.368627451f, 0.152941176f, 0.31372549f
+#define MID_AUBERGINE(x) x*0.368627451f, x*0.152941176f, x*0.31372549f
 #define ORANGE        0.866666667f, 0.282352941f, 0.141414141f
 
 int main(int argc, char *argv[])
@@ -105,7 +105,8 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    glClearColor(MID_AUBERGINE, mir_eglapp_background_opacity);
+    float const opacity = mir_eglapp_background_opacity;
+    glClearColor(MID_AUBERGINE(opacity), opacity);
     glViewport(0, 0, width, height);
 
     glUseProgram(prog);

@@ -50,6 +50,9 @@ inline bool operator != (Point const& lhs, Point const& rhs)
     return lhs.x != rhs.x || lhs.y != rhs.y;
 }
 
+inline Point operator+(Point lhs, DeltaX rhs) { return{lhs.x + rhs, lhs.y}; }
+inline Point operator+(Point lhs, DeltaY rhs) { return{lhs.x, lhs.y + rhs}; }
+
 std::ostream& operator<<(std::ostream& out, Point const& value);
 }
 }

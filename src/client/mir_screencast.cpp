@@ -102,6 +102,7 @@ MirScreencast::MirScreencast(
     parameters.set_height(output_size.height.as_uint32_t());
     parameters.set_pixel_format(pixel_format);
 
+    create_screencast_wait_handle.expect_result();
     server.create_screencast(
         nullptr,
         &parameters,
@@ -143,6 +144,7 @@ MirWaitHandle* MirScreencast::release(
     mir::protobuf::ScreencastId screencast_id;
     screencast_id.set_value(protobuf_screencast.screencast_id().value());
 
+    release_wait_handle.expect_result();
     server.release_screencast(
         nullptr,
         &screencast_id,
@@ -159,6 +161,7 @@ MirWaitHandle* MirScreencast::next_buffer(
     mir::protobuf::ScreencastId screencast_id;
     screencast_id.set_value(protobuf_screencast.screencast_id().value());
 
+    next_buffer_wait_handle.expect_result();
     server.screencast_buffer(
         nullptr,
         &screencast_id,

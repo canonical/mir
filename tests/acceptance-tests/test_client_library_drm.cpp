@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,44 +16,27 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir_test_framework/display_server_test_fixture.h"
-
-#include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
 
+#include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/basic_client_server_fixture.h"
+
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace mtf = mir_test_framework;
+using namespace testing;
 
-namespace
-{
-char const* const mir_test_socket = mtf::test_socket_file().c_str();
-}
-
-using MirClientLibraryDrmTest = DefaultDisplayServerTestFixture;
+using MirClientLibraryDrmTest = mtf::BasicClientServerFixture<mtf::StubbedServerConfiguration>;
 
 TEST_F(MirClientLibraryDrmTest, sets_gbm_device_in_platform_data)
 {
-    struct ClientConfig : TestingClientConfiguration
-    {
-        void exec()
-        {
-            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-            ASSERT_TRUE(connection);
-            EXPECT_TRUE(mir_connection_is_valid(connection));
+    struct gbm_device* dev = reinterpret_cast<struct gbm_device*>(connection);
 
-            struct gbm_device* dev = reinterpret_cast<struct gbm_device*>(connection);
+    mir_connection_drm_set_gbm_device(connection, dev);
 
-            mir_connection_drm_set_gbm_device(connection, dev);
-
-            MirPlatformPackage pkg;
-            mir_connection_get_platform(connection, &pkg);
-            EXPECT_EQ(sizeof(dev) / sizeof(int), static_cast<size_t>(pkg.data_items));
-            EXPECT_EQ(dev, *reinterpret_cast<struct gbm_device**>(&pkg.data[0]));
-
-            mir_connection_release(connection);
-        }
-    } client_config;
-
-    launch_client_process(client_config);
+    MirPlatformPackage pkg;
+    mir_connection_get_platform(connection, &pkg);
+    EXPECT_THAT(pkg.data_items, Eq(sizeof(dev) / sizeof(int)));
+    EXPECT_THAT(*reinterpret_cast<struct gbm_device**>(&pkg.data[0]), Eq(dev));
 }

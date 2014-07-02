@@ -47,9 +47,12 @@ struct StubInputSurface : public mir::input::Surface
     }
 
     mir::input::InputReceptionMode reception_mode() const { return mir::input::InputReceptionMode::normal; }
+    void consume(MirEvent const&) override  {}
     std::string name() const { return {}; }
     mir::geometry::Rectangle input_bounds() const override { return {{},{}}; }
     bool input_area_contains(mir::geometry::Point const&) const { return false; }
+    
+    std::shared_ptr<graphics::CursorImage> cursor_image() const { return nullptr; }
 
     std::shared_ptr<mir::input::InputChannel> const channel;
 };

@@ -61,7 +61,7 @@ public:
     }
 
 
-    void bind_to_texture()
+    void gl_bind_to_texture() override
     {
         ensure_egl_image();
 

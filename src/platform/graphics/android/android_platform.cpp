@@ -24,6 +24,7 @@
 #include "android_display.h"
 #include "internal_client.h"
 #include "output_builder.h"
+#include "hwc_loggers.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_initializer.h"
@@ -44,22 +45,37 @@ namespace mo = mir::options;
 
 namespace
 {
+
 char const* const hwc_log_opt = "hwc-report";
-bool should_log_hwc(mo::Option const& options)
+char const* const hwc_overlay_opt = "disable-overlays";
+
+std::shared_ptr<mga::HwcLogger> make_logger(mo::Option const& options)
 {
     if (!options.is_set(hwc_log_opt))
-        return false;
+        return std::make_shared<mga::NullHwcLogger>();
 
     auto opt = options.get<std::string>(hwc_log_opt);
     if (opt == mo::log_opt_value)
-        return true;
+        return std::make_shared<mga::HwcFormattedLogger>();
     else if (opt == mo::off_opt_value)
-        return false;
+        return std::make_shared<mga::NullHwcLogger>();
     else
         throw mir::AbnormalExit(
             std::string("Invalid hwc-report option: " + opt + " (valid options are: \"" +
             mo::off_opt_value + "\" and \"" + mo::log_opt_value + "\")"));
 }
+
+mga::OverlayOptimization should_use_overlay_optimization(mo::Option const& options)
+{
+    if (!options.is_set(hwc_overlay_opt))
+        return mga::OverlayOptimization::disabled;
+
+    if (options.get<bool>(hwc_overlay_opt))
+        return mga::OverlayOptimization::disabled;
+    else
+        return mga::OverlayOptimization::enabled;
+}
+
 }
 
 mga::AndroidPlatform::AndroidPlatform(
@@ -96,24 +112,31 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-void mga::AndroidPlatform::fill_ipc_package(BufferIPCPacker* packer, graphics::Buffer const* buffer) const
+void mga::AndroidPlatform::fill_buffer_package(
+    BufferIPCPacker* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const
 {
     auto native_buffer = buffer->native_buffer_handle();
-    auto buffer_handle = native_buffer->handle();
 
-    int offset = 0;
-
-    for(auto i=0; i<buffer_handle->numFds; i++)
+    /* TODO: instead of waiting, pack the fence fd in the message to the client */ 
+    native_buffer->ensure_available_for(mga::BufferAccess::write);
+    if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
-        packer->pack_fd(buffer_handle->data[offset++]);
-    }
-    for(auto i=0; i<buffer_handle->numInts; i++)
-    {
-        packer->pack_data(buffer_handle->data[offset++]);
-    }
+        auto buffer_handle = native_buffer->handle();
 
-    packer->pack_stride(buffer->stride());
-    packer->pack_size(buffer->size());
+        int offset = 0;
+
+        for(auto i=0; i<buffer_handle->numFds; i++)
+        {
+            packer->pack_fd(buffer_handle->data[offset++]);
+        }
+        for(auto i=0; i<buffer_handle->numInts; i++)
+        {
+            packer->pack_data(buffer_handle->data[offset++]);
+        }
+
+        packer->pack_stride(buffer->stride());
+        packer->pack_size(buffer->size());
+    }
 }
 
 EGLNativeDisplayType mga::AndroidPlatform::egl_native_display() const
@@ -130,13 +153,19 @@ std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client
     return std::make_shared<mga::InternalClient>();
 }
 
-extern "C" std::shared_ptr<mg::Platform> mg::create_platform(std::shared_ptr<mo::Option> const& options, std::shared_ptr<DisplayReport> const& display_report)
+extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
+    std::shared_ptr<mo::Option> const& options,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
+    std::shared_ptr<DisplayReport> const& display_report)
 {
+    auto logger = make_logger(*options);
+    auto overlay_option = should_use_overlay_optimization(*options);
+    logger->log_overlay_optimization(overlay_option);
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto display_resource_factory = std::make_shared<mga::ResourceFactory>(should_log_hwc(*options));
+    auto display_resource_factory = std::make_shared<mga::ResourceFactory>(logger);
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
     auto display_builder = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, display_report);
+        fb_allocator, display_resource_factory, display_report, overlay_option);
     return std::make_shared<mga::AndroidPlatform>(display_builder, display_report);
 }
 
@@ -153,5 +182,8 @@ extern "C" void add_platform_options(
     config.add_options()
         (hwc_log_opt,
          boost::program_options::value<std::string>()->default_value(std::string{mo::off_opt_value}),
-         "[platform-specific] How to handle the HWC logging report. [{log,off}]");
+         "[platform-specific] How to handle the HWC logging report. [{log,off}]")
+        (hwc_overlay_opt,
+         boost::program_options::value<bool>()->default_value(true), //TODO: switch default to false 
+         "[platform-specific] Whether to disable overlay optimizations [{on,off}]");
 }

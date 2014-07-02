@@ -21,7 +21,7 @@ add_library(
   hwc_layerlist.cpp
   hwc_layers.cpp
   hwc_fb_device.cpp
-  hwc_formatted_logger.cpp
+  hwc_loggers.cpp
   hwc_device.cpp
   hwc_common_device.cpp
   hwc_vsync.cpp
@@ -36,7 +36,7 @@ add_library(
   gl_context.cpp
   device_quirks.cpp
   real_hwc_wrapper.cpp
-  overlay_gl_compositor.cpp
+  hwc_fallback_gl_renderer.cpp
 )
 
 set_target_properties(

@@ -19,6 +19,7 @@
 #include "threaded_snapshot_strategy.h"
 #include "pixel_buffer.h"
 #include "mir/scene/surface_buffer_access.h"
+#include "mir/thread_name.h"
 
 #include <deque>
 #include <mutex>
@@ -48,6 +49,7 @@ public:
 
     void operator()()
     {
+        mir::set_thread_name("Mir/Snapshot");
         std::unique_lock<std::mutex> lock{work_mutex};
 
         while (running)

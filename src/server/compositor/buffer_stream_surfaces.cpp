@@ -49,14 +49,15 @@ std::shared_ptr<mg::Buffer> mc::BufferStreamSurfaces::lock_snapshot_buffer()
     return std::make_shared<mc::TemporarySnapshotBuffer>(buffer_bundle);
 }
 
-void mc::BufferStreamSurfaces::swap_client_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete)
+void mc::BufferStreamSurfaces::acquire_client_buffer(
+    std::function<void(graphics::Buffer* buffer)> complete)
 {
-    if (old_buffer)
-    {
-        buffer_bundle->client_release(old_buffer);
-    }
-
     buffer_bundle->client_acquire(complete);
+}
+
+void mc::BufferStreamSurfaces::release_client_buffer(graphics::Buffer* buf)
+{
+    buffer_bundle->client_release(buf);
 }
 
 MirPixelFormat mc::BufferStreamSurfaces::get_stream_pixel_format()
