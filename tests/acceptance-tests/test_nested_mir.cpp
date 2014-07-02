@@ -240,15 +240,10 @@ private:
     std::future<void> nested_run_mir;
 };
 
-int const screen_height[]{480, 1080};
-int const screen_width[]{640, 1920};
-int const screen_left[]{0, 480};
-int const screen_top[]{0, 0};
-
 std::vector<geom::Rectangle> const display_geometry
 {
-    {{screen_left[0], screen_top[0]}, {screen_width[0], screen_height[0]}},
-    {{screen_left[1], screen_top[1]}, {screen_width[1], screen_height[1]}}
+    {{  0, 0}, { 640,  480}},
+    {{480, 0}, {1920, 1080}}
 };
 
 struct NestedServer : mtf::InProcessServer, HostServerConfiguration
