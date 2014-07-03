@@ -89,7 +89,7 @@ mir::DefaultServerConfiguration::the_prompt_connection_creator()
             return true;
         }
 
-        bool prompt_session_is_allowed(mf::SessionCredentials const& /* creds */) /*override*/
+        bool prompt_session_is_allowed(mf::SessionCredentials const& /* creds */) override
         {
             return true;
         }
