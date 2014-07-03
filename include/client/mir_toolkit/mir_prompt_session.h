@@ -80,7 +80,7 @@ MirWaitHandle* mir_prompt_session_new_fds_for_prompt_providers(
 void mir_prompt_session_release_sync(MirPromptSession *prompt_session);
 
 /**
- * Add a prompt provider process id to the prompt session
+ * Test for a valid prompt session
  *   \param [in] prompt_session  The prompt session
  *   \return                     True if prompt_session is valid, false otherwise
  */
