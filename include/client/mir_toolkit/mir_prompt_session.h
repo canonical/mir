@@ -79,6 +79,23 @@ MirWaitHandle* mir_prompt_session_new_fds_for_prompt_providers(
  */
 void mir_prompt_session_release_sync(MirPromptSession *prompt_session);
 
+/**
+ * Test for a valid prompt session
+ *   \param [in] prompt_session  The prompt session
+ *   \return                     True if prompt_session is valid, false otherwise
+ */
+MirBool mir_prompt_session_is_valid(MirPromptSession *prompt_session);
+
+/**
+ * Retrieve a text description of the last error. The returned string is owned
+ * by the library and remains valid until the prompt session has been released.
+ *   \param [in] prompt_session  The prompt session
+ *   \return                 A text description of any error resulting in an
+ *                           invalid connection, or the empty string "" if the
+ *                           connection is valid.
+ */
+char const *mir_prompt_session_error_message(MirPromptSession *prompt_session);
+
 #ifdef __cplusplus
 }
 /**@}*/
