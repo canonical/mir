@@ -127,7 +127,8 @@ public:
           buffer(buffer),
           running{true},
           frames_scheduled{0},
-          report{report}
+          report{report},
+          zoom_mag{0.0f}
     {
     }
 
