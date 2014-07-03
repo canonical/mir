@@ -44,9 +44,9 @@ using namespace testing;
 
 namespace
 {
-struct MockSessionListener : ms::PromptSessionListener
+struct MockPromptSessionListener : ms::PromptSessionListener
 {
-    MockSessionListener(std::shared_ptr<ms::PromptSessionListener> const& wrapped) :
+    MockPromptSessionListener(std::shared_ptr<ms::PromptSessionListener> const& wrapped) :
         wrapped(wrapped)
     {
         ON_CALL(*this, starting(_)).WillByDefault(Invoke(wrapped.get(), &ms::PromptSessionListener::starting));
@@ -86,11 +86,11 @@ struct PromptSessionTestConfiguration : mtf::StubbedServerConfiguration
            });
     }
 
-    std::shared_ptr<MockSessionListener> the_mock_prompt_session_listener()
+    std::shared_ptr<MockPromptSessionListener> the_mock_prompt_session_listener()
     {
         return mock_prompt_session_listener([this]
             {
-                return std::make_shared<NiceMock<MockSessionListener>>(
+                return std::make_shared<NiceMock<MockPromptSessionListener>>(
                     mtf::StubbedServerConfiguration::the_prompt_session_listener());
             });
     }
@@ -112,7 +112,7 @@ struct PromptSessionTestConfiguration : mtf::StubbedServerConfiguration
             });
     }
 
-    mir::CachedPtr<MockSessionListener> mock_prompt_session_listener;
+    mir::CachedPtr<MockPromptSessionListener> mock_prompt_session_listener;
     mir::CachedPtr<MockSessionAuthorizer> mock_prompt_session_authorizer;
 };
 
@@ -163,7 +163,7 @@ struct PromptSessionClientAPI : BasicClientServerFixture
         BasicClientServerFixture::TearDown();
     }
 
-    MockSessionListener* the_mock_prompt_session_listener()
+    MockPromptSessionListener* the_mock_prompt_session_listener()
     {
         return server_configuration.the_mock_prompt_session_listener().get();
     }
