@@ -202,6 +202,74 @@ TYPED_TEST(StreamTransportTest, KeepsNotifyingOfAvailableDataUntilAllIsRead)
     EXPECT_EQ(0, bytes_left.load());
 }
 
+TYPED_TEST(StreamTransportTest, StopsNotifyingOnceAllDataIsRead)
+{
+    using namespace testing;
+    int const buffer_size{256};
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    auto done = std::make_shared<mir::test::Signal>();
+
+    ON_CALL(*observer, on_data_available())
+        .WillByDefault(Invoke([this, done]()
+    {
+        if (done->raised())
+        {
+            FAIL() << "on_data_available called without new data available";
+        }
+        uint8_t dummy_buffer[buffer_size];
+        this->transport->receive_data(dummy_buffer, sizeof(dummy_buffer));
+        done->raise();
+    }));
+    this->transport->register_observer(observer);
+
+    EXPECT_FALSE(done->raised());
+    uint8_t dummy_buffer[buffer_size];
+    memset(dummy_buffer, 0xab, sizeof(dummy_buffer));
+    EXPECT_EQ(sizeof(dummy_buffer), write(this->test_fd, dummy_buffer, sizeof(dummy_buffer)));
+
+    EXPECT_TRUE(done->wait_for(std::chrono::seconds{1}));
+
+    std::this_thread::sleep_for(std::chrono::seconds{1});
+}
+
+TYPED_TEST(StreamTransportTest, DoesntSendDataAvailableNotificationOnDisconnect)
+{
+    using namespace testing;
+    int const buffer_size{256};
+
+    auto observer = std::make_shared<NiceMock<MockObserver>>();
+    auto read_done = std::make_shared<mir::test::Signal>();
+    auto disconnect_done = std::make_shared<mir::test::Signal>();
+    std::atomic<int> notify_count{0};
+
+    ON_CALL(*observer, on_data_available())
+        .WillByDefault(Invoke([this, read_done, &notify_count]()
+    {
+        notify_count++;
+        uint8_t dummy_buffer[buffer_size];
+        this->transport->receive_data(dummy_buffer, sizeof(dummy_buffer));
+        read_done->raise();
+    }));
+    ON_CALL(*observer, on_disconnected())
+        .WillByDefault(Invoke([this, disconnect_done]() { disconnect_done->raise(); }));
+
+    this->transport->register_observer(observer);
+
+    EXPECT_FALSE(read_done->raised());
+    uint8_t dummy_buffer[buffer_size];
+    memset(dummy_buffer, 0xab, sizeof(dummy_buffer));
+    EXPECT_EQ(sizeof(dummy_buffer), write(this->test_fd, dummy_buffer, sizeof(dummy_buffer)));
+
+    EXPECT_TRUE(read_done->wait_for(std::chrono::seconds{1}));
+    EXPECT_EQ(1, notify_count);
+
+    ::close(this->test_fd);
+    EXPECT_TRUE(disconnect_done->wait_for(std::chrono::seconds{1}));
+
+    EXPECT_EQ(1, notify_count);
+}
+
 TYPED_TEST(StreamTransportTest, ReadsCorrectData)
 {
     using namespace testing;

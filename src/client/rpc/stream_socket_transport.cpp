@@ -265,8 +265,8 @@ void mclr::StreamSocketTransport::init()
         int epoll_fd = epoll_create1(0);
 
         epoll_event event;
-        // Make valgrind happy
-        event.data.u64 = 0;
+        // Make valgrind happy, harder
+        memset(&event, 0, sizeof(event));
 
         event.events = EPOLLIN | EPOLLRDHUP;
         event.data.fd = socket_fd;
@@ -283,7 +283,35 @@ void mclr::StreamSocketTransport::init()
             epoll_wait(epoll_fd, &event, 1, -1);
             if (event.data.fd == socket_fd)
             {
-                if (event.events & EPOLLIN)
+                if (event.events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+                {
+                    if (event.events & EPOLLIN)
+                    {
+                        // If the remote end shut down cleanly it's possible there's some more
+                        // data left to read, or that reads will now return 0 (EOF)
+                        //
+                        // If there's more data left to read, notify of this before disconnect.
+                        int dummy;
+                        if (recv(socket_fd, &dummy, sizeof(dummy), MSG_PEEK | MSG_NOSIGNAL) > 0)
+                        {
+                            try
+                            {
+                                notify_data_available();
+                            }
+                            catch(...)
+                            {
+                                //It's quite likely that notify_data_available() will lead to
+                                //an exception being thrown; after all, the remote has closed
+                                //the connection.
+                                //
+                                //This doesn't matter; we're already shutting down.
+                            }
+                        }
+                    }
+                    notify_disconnected();
+                    shutdown_requested = true;
+                }
+                else if (event.events & EPOLLIN)
                 {
                     try
                     {
@@ -307,11 +335,6 @@ void mclr::StreamSocketTransport::init()
                         notify_disconnected();
                         shutdown_requested = true;
                     }
-                }
-                if (event.events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
-                {
-                    notify_disconnected();
-                    shutdown_requested = true;
                 }
             }
             if (event.data.fd == shutdown_fd)
