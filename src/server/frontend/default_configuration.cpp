@@ -70,9 +70,9 @@ mir::DefaultServerConfiguration::the_connector()
 }
 
 std::shared_ptr<mf::ConnectionCreator>
-mir::DefaultServerConfiguration::the_trusted_connection_creator()
+mir::DefaultServerConfiguration::the_prompt_connection_creator()
 {
-    struct TrustedSessionAuthorizer : public mf::SessionAuthorizer
+    struct PromptSessionAuthorizer : public mf::SessionAuthorizer
     {
         bool connection_is_allowed(mf::SessionCredentials const& /* creds */) override
         {
@@ -95,28 +95,28 @@ mir::DefaultServerConfiguration::the_trusted_connection_creator()
         }
     };
 
-    return trusted_connection_creator([this]
+    return prompt_connection_creator([this]
         {
             return std::make_shared<mf::ProtobufConnectionCreator>(
                 the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
-                std::make_shared<TrustedSessionAuthorizer>(),
+                std::make_shared<PromptSessionAuthorizer>(),
                 the_message_processor_report());
         });
 }
 
 std::shared_ptr<mf::Connector>
-mir::DefaultServerConfiguration::the_trusted_connector()
+mir::DefaultServerConfiguration::the_prompt_connector()
 {
-    return trusted_connector(
+    return prompt_connector(
         [&,this]() -> std::shared_ptr<mf::Connector>
         {
             auto const threads = the_options()->get<int>(options::frontend_threads_opt);
 
-            if (the_options()->is_set(options::trusted_socket_opt))
+            if (the_options()->is_set(options::prompt_socket_opt))
             {
                 return std::make_shared<mf::PublishedSocketConnector>(
-                    the_socket_file(),
-                    the_trusted_connection_creator(),
+                    the_socket_file() + "_trusted",
+                    the_prompt_connection_creator(),
                     threads,
                     *the_emergency_cleanup(),
                     the_connector_report());
@@ -124,7 +124,7 @@ mir::DefaultServerConfiguration::the_trusted_connector()
             else
             {
                 return std::make_shared<mf::BasicConnector>(
-                    the_trusted_connection_creator(),
+                    the_prompt_connection_creator(),
                     threads,
                     the_connector_report());
             }
