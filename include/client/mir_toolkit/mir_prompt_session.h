@@ -94,7 +94,7 @@ MirBool mir_prompt_session_is_valid(MirPromptSession *prompt_session);
  *                           invalid connection, or the empty string "" if the
  *                           connection is valid.
  */
-char const *mir_prompt_error_message(MirPromptSession *prompt_session);
+char const *mir_prompt_session_error_message(MirPromptSession *prompt_session);
 
 #ifdef __cplusplus
 }

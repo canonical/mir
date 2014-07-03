@@ -269,7 +269,7 @@ TEST_F(PromptSessionClientAPI, can_start_and_stop_a_prompt_session)
         connection, application_session_pid, null_state_change_callback, this);
     ASSERT_THAT(prompt_session, Ne(nullptr));
     EXPECT_THAT(mir_prompt_session_is_valid(prompt_session), Eq(true));
-    EXPECT_THAT(mir_prompt_error_message(prompt_session), StrEq(""));
+    EXPECT_THAT(mir_prompt_session_error_message(prompt_session), StrEq(""));
 
     mir_prompt_session_release_sync(prompt_session);
 }
@@ -474,7 +474,7 @@ TEST_F(PromptSessionClientAPI, cannot_start_a_prompt_session_without_authorizati
         connection, application_session_pid, null_state_change_callback, this);
 
     EXPECT_THAT(mir_prompt_session_is_valid(prompt_session), Eq(false));
-    EXPECT_THAT(mir_prompt_error_message(prompt_session), HasSubstr("Prompt sessions disabled"));
+    EXPECT_THAT(mir_prompt_session_error_message(prompt_session), HasSubstr("Prompt sessions disabled"));
 
     mir_prompt_session_release_sync(prompt_session);
 }
