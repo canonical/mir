@@ -97,7 +97,7 @@ TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnect)
 
     close(this->test_fd);
 
-    EXPECT_TRUE(done->wait_for(std::chrono::milliseconds{100}));
+    EXPECT_TRUE(done->wait_for(std::chrono::seconds{1}));
 }
 
 TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnectWhileReadingInIOLoop)
@@ -126,7 +126,7 @@ TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnectWhileReadingInIOLoop)
 
     close(this->test_fd);
 
-    EXPECT_TRUE(done->wait_for(std::chrono::milliseconds{100}));
+    EXPECT_TRUE(done->wait_for(std::chrono::seconds{1}));
     EXPECT_TRUE(data_notified);
     EXPECT_FALSE(finished_read);
 }
@@ -146,7 +146,7 @@ TYPED_TEST(StreamTransportTest, NotifiesOnDataAvailable)
     uint64_t dummy{0xdeadbeef};
     EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
 
-    EXPECT_TRUE(done->wait_for(std::chrono::milliseconds{100}));
+    EXPECT_TRUE(done->wait_for(std::chrono::seconds{1}));
 }
 
 TYPED_TEST(StreamTransportTest, DoesntNotifyUntilDataAvailable)
@@ -161,14 +161,14 @@ TYPED_TEST(StreamTransportTest, DoesntNotifyUntilDataAvailable)
 
     this->transport->register_observer(observer);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds{100});
+    std::this_thread::sleep_for(std::chrono::seconds{1});
 
     EXPECT_FALSE(done->raised());
 
     uint64_t dummy{0xdeadbeef};
     EXPECT_EQ(sizeof(dummy), write(this->test_fd, &dummy, sizeof(dummy)));
 
-    EXPECT_TRUE(done->wait_for(std::chrono::milliseconds{100}));
+    EXPECT_TRUE(done->wait_for(std::chrono::seconds{1}));
 }
 
 TYPED_TEST(StreamTransportTest, KeepsNotifyingOfAvailableDataUntilAllIsRead)
@@ -291,7 +291,7 @@ TYPED_TEST(StreamTransportTest, ReadsCorrectData)
 
     EXPECT_EQ(expected.size(), write(this->test_fd, expected.data(), expected.size()));
 
-    ASSERT_TRUE(done->wait_for(std::chrono::milliseconds{100}));
+    ASSERT_TRUE(done->wait_for(std::chrono::seconds{1}));
     EXPECT_EQ(0, memcmp(expected.data(), received.data(), expected.size()));
 }
 
@@ -407,7 +407,7 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataWhenInterruptedWithSignals)
         EXPECT_TRUE(alarm_raised);
     });
 
-    EXPECT_TRUE(read_now_waiting->wait_for(std::chrono::milliseconds{100}));
+    EXPECT_TRUE(read_now_waiting->wait_for(std::chrono::seconds{1}));
 
     pthread_kill(reader.native_handle(), SIGALRM);
 
