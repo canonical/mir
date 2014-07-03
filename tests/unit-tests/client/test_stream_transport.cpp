@@ -599,6 +599,7 @@ TYPED_TEST(StreamTransportTest, ReadsDataWithFds)
     for (unsigned int i = 0; i < test_files.size(); ++i)
     {
         EXPECT_PRED_FORMAT2(fds_are_equivalent, test_files[i].fd, received_fds[i]);
+        ::close(received_fds[i]);
     }
 }
 
@@ -706,6 +707,7 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataAndFdsWhenInterruptedWithSignals)
     for (unsigned int i = 0; i < test_files.size(); ++i)
     {
         EXPECT_PRED_FORMAT2(fds_are_equivalent, test_files[i].fd, received_fds[i]);
+        ::close(received_fds[i]);
     }
 }
 
