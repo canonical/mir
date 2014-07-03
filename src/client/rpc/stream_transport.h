@@ -51,6 +51,10 @@ namespace rpc
 class StreamTransport
 {
 public:
+    /**
+     * \note Upon completion of the destructor it is guaranteed that no methods will be called
+     *       by the StreamTransport on any Observer that had been registered.
+     */
     virtual ~StreamTransport() = default;
 
     /**
