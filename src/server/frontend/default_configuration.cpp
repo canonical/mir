@@ -35,9 +35,10 @@ mir::DefaultServerConfiguration::the_connection_creator()
 {
     return connection_creator([this]
         {
+            auto const session_authorizer = the_session_authorizer();
             return std::make_shared<mf::ProtobufConnectionCreator>(
-                the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
-                the_session_authorizer(),
+                the_ipc_factory(the_frontend_shell(), the_buffer_allocator(), session_authorizer),
+                session_authorizer,
                 the_message_processor_report());
         });
 }
@@ -97,9 +98,10 @@ mir::DefaultServerConfiguration::the_prompt_connection_creator()
 
     return prompt_connection_creator([this]
         {
+            auto const session_authorizer = std::make_shared<PromptSessionAuthorizer>();
             return std::make_shared<mf::ProtobufConnectionCreator>(
-                the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
-                std::make_shared<PromptSessionAuthorizer>(),
+                the_ipc_factory(the_frontend_shell(), the_buffer_allocator(), session_authorizer),
+                session_authorizer,
                 the_message_processor_report());
         });
 }
@@ -134,7 +136,8 @@ mir::DefaultServerConfiguration::the_prompt_connector()
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
     std::shared_ptr<mf::Shell> const& shell,
-    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
+    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer)
 {
     return ipc_factory(
         [&]()
@@ -146,7 +149,7 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_frontend_display_changer(),
                 allocator,
                 the_screencast(),
-                the_session_authorizer(),
+                session_authorizer,
                 the_cursor_images());
         });
 }

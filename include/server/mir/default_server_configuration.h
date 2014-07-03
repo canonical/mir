@@ -296,7 +296,8 @@ protected:
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
         std::shared_ptr<frontend::Shell> const& shell,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<frontend::SessionAuthorizer> const& session_authorizer);
 
     /** @name input dispatcher related configuration
      *  @{ */
