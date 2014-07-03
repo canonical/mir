@@ -479,3 +479,28 @@ TEST_F(PromptSessionClientAPI, cannot_start_a_prompt_session_without_authorizati
     mir_prompt_session_release_sync(prompt_session);
 }
 
+TEST_F(PromptSessionClientAPI, can_start_a_prompt_session_without_authorization_on_prompt_connection)
+{
+    ON_CALL(the_mock_session_authorizer(), prompt_session_is_allowed(_))
+        .WillByDefault(Return(false));
+    EXPECT_CALL(the_mock_session_authorizer(), prompt_session_is_allowed(_)).Times(0);
+
+    // TODO is ugly releasing a connection so we can start one with chosen permissions
+    mir_connection_release(connection);
+    connection = mir_connect_sync(new_prompt_connection().c_str(), __PRETTY_FUNCTION__);
+
+    {
+        InSequence server_seq;
+        EXPECT_CALL(*the_mock_prompt_session_listener(), starting(_));
+        EXPECT_CALL(*the_mock_prompt_session_listener(), stopping(_));
+    }
+
+    MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
+        connection, application_session_pid, null_state_change_callback, this);
+
+    EXPECT_THAT(mir_prompt_session_is_valid(prompt_session), Eq(true));
+    EXPECT_THAT(mir_prompt_session_error_message(prompt_session), StrEq(""));
+
+    mir_prompt_session_release_sync(prompt_session);
+}
+

@@ -213,6 +213,7 @@ mir::DisplayServer::~DisplayServer()
 void mir::DisplayServer::run()
 {
     p->connector->start();
+    p->prompt_connector->start();
     p->compositor->start();
     p->input_manager->start();
     p->input_dispatcher->start();
@@ -224,6 +225,7 @@ void mir::DisplayServer::run()
     p->input_dispatcher->stop();
     p->input_manager->stop();
     p->compositor->stop();
+    p->prompt_connector->stop();
     p->connector->stop();
 }
 
