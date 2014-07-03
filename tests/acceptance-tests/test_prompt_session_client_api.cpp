@@ -66,6 +66,12 @@ struct MockSessionListener : ms::PromptSessionListener
 
 struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
 {
+    MockSessionAuthorizer()
+    {
+        ON_CALL(*this, prompt_session_is_allowed(_))
+            .WillByDefault(Return(true));
+    }
+
     MOCK_METHOD1(prompt_session_is_allowed, bool(mf::SessionCredentials const&));
 };
 
@@ -456,10 +462,18 @@ TEST_F(PromptSessionClientAPI, cannot_start_a_prompt_session_without_authorizati
     EXPECT_CALL(the_mock_session_authorizer(), prompt_session_is_allowed(_))
         .WillOnce(Return(false));
 
+    // TODO is ugly releasing a connection so we can start one with chosen permissions
+    mir_connection_release(connection);
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
     EXPECT_CALL(*the_mock_prompt_session_listener(), starting(_)).Times(0);
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
-    ASSERT_THAT(prompt_session, Eq(nullptr));
+    ASSERT_THAT(prompt_session, Ne(nullptr));
+
+    // TODO how does client discover the prompt session didn't start?
+
+    mir_prompt_session_release_sync(prompt_session);
 }
 
