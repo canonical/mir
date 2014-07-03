@@ -71,6 +71,7 @@ public:
 
 private:
     std::shared_ptr<Shell> const shell;
+    std::shared_ptr<Shell> const no_prompt_shell;
     std::shared_ptr<SessionMediatorReport> const sm_report;
     std::shared_ptr<ResourceCache> const cache;
     std::shared_ptr<graphics::Platform> const graphics_platform;
