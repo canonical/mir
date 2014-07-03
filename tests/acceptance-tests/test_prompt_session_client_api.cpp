@@ -470,9 +470,9 @@ TEST_F(PromptSessionClientAPI, cannot_start_a_prompt_session_without_authorizati
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
-    ASSERT_THAT(prompt_session, Ne(nullptr));
 
-    // TODO how does client discover the prompt session didn't start?
+    EXPECT_THAT(mir_prompt_session_is_valid(prompt_session), Eq(false));
+    EXPECT_THAT(mir_prompt_error_message(prompt_session), HasSubstr("Prompt sessions disabled"));
 
     mir_prompt_session_release_sync(prompt_session);
 }
