@@ -711,18 +711,35 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataAndFdsWhenInterruptedWithSignals)
     }
 }
 
+namespace
+{
+/*
+ * Find the first integer n ≥ starting_fd_count where the CMSG_LEN for sending
+ * n fds is different to the CMSG_LEN for sending n+1 fds.
+ *
+ * Note: because there's an alignment constraint on CMSG_LEN, this is not necessarily
+ * just starting_fd_count.
+ */
+constexpr int cmsg_len_boundary(int starting_fd_count)
+{
+    return CMSG_LEN(starting_fd_count * sizeof(int)) == CMSG_LEN((starting_fd_count + 1) * sizeof(int)) ?
+           cmsg_len_boundary(starting_fd_count + 1) :
+           starting_fd_count;
+}
+}
 
 TYPED_TEST(StreamTransportTest, ThrowsErrorWhenReceivingMoreFdsThanRequested)
 {
-    int const num_fds{60};
-    std::array<TestFd, num_fds> test_files;
-    std::array<int, num_fds> test_fds;
+    constexpr int num_fds{cmsg_len_boundary(1)};
+
+    std::array<TestFd, num_fds + 1> test_files;
+    std::array<int, num_fds + 1> test_fds;
     for (unsigned int i = 0; i < test_fds.size(); ++i)
     {
         test_fds[i] = test_files[i].fd;
     }
 
-    std::vector<int> received_fds(num_fds - 3);
+    std::vector<int> received_fds(num_fds);
 
     auto receive_done = std::make_shared<mir::test::Signal>();
     mir::test::AutoUnblockThread reader{[this]() { ::close(this->test_fd); },
