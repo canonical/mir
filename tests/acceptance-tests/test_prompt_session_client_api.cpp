@@ -66,10 +66,10 @@ struct MockPromptSessionListener : ms::PromptSessionListener
     MOCK_METHOD1(stopping, void(std::shared_ptr<ms::PromptSession> const& prompt_session));
 
     MOCK_METHOD2(prompt_provider_added,
-        void(ms::PromptSession const& prompt_session, std::shared_ptr<ms::Session> const& prompt_provider));
+        void(ms::PromptSession const& session, std::shared_ptr<ms::Session> const& provider));
 
     MOCK_METHOD2(prompt_provider_removed,
-        void(ms::PromptSession const& prompt_session, std::shared_ptr<ms::Session> const& prompt_provider));
+        void(ms::PromptSession const& session, std::shared_ptr<ms::Session> const& provider));
 
     std::shared_ptr<ms::PromptSessionListener> const wrapped;
 };
@@ -355,7 +355,8 @@ TEST_F(PromptSessionClientAPI, can_add_preexisting_prompt_provider)
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
-    EXPECT_TRUE(mir_prompt_session_add_prompt_provider_sync(prompt_session, existing_prompt_provider_pid));
+    EXPECT_TRUE(mir_prompt_session_add_prompt_provider_sync(
+        prompt_session, existing_prompt_provider_pid));
 
     mir_prompt_session_release_sync(prompt_session);
 }
@@ -465,7 +466,8 @@ TEST_F(PromptSessionClientAPI, after_server_closes_prompt_session_api_isnt_broke
 
     the_prompt_session_manager()->stop_prompt_session(server_prompt_session);
 
-    EXPECT_FALSE(mir_prompt_session_add_prompt_provider_sync(prompt_session, existing_prompt_provider_pid));
+    EXPECT_FALSE(mir_prompt_session_add_prompt_provider_sync(
+        prompt_session, existing_prompt_provider_pid));
 
     mir_prompt_session_release_sync(prompt_session);
 }
