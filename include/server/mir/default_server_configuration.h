@@ -35,6 +35,7 @@ namespace droidinput = android;
 namespace mir
 {
 class ServerActionQueue;
+class HostLifecycleEventListener;
 
 namespace compositor
 {
@@ -95,6 +96,7 @@ class SurfaceStack;
 class SceneReport;
 class PromptSessionListener;
 class PromptSessionManager;
+class HostLifecycleEventListener;
 }
 namespace graphics
 {
@@ -288,6 +290,8 @@ public:
     virtual std::shared_ptr<time::Clock> the_clock();
     virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
 
+    virtual std::shared_ptr<scene::HostLifecycleEventListener> the_host_lifecycle_event_listener();
+
 protected:
     std::shared_ptr<options::Option> the_options() const;
 
@@ -394,6 +398,7 @@ protected:
     CachedPtr<scene::PromptSessionManager> prompt_session_manager;
     CachedPtr<scene::SessionCoordinator> session_coordinator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
+    CachedPtr<scene::HostLifecycleEventListener> host_lifecycle_event_listener;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_NESTED_MIR_CLIENT_HOST_CONNECTION_H_
 
 #include "host_connection.h"
+#include "mir/scene/host_lifecycle_event_listener.h"
 
 #include <string>
 
@@ -35,7 +36,7 @@ namespace nested
 class MirClientHostConnection : public HostConnection
 {
 public:
-    MirClientHostConnection(std::string const& host_socket, std::string const& name);
+    MirClientHostConnection(std::string const& host_socket, std::string const& name, std::shared_ptr<mir::scene::HostLifecycleEventListener> const& host_lifecycle_event_listener);
     ~MirClientHostConnection();
 
     std::vector<int> platform_fd_items() override;
@@ -51,6 +52,7 @@ public:
 private:
     MirConnection* const mir_connection;
     std::function<void()> conf_change_callback;
+    std::shared_ptr<mir::scene::HostLifecycleEventListener> const host_lifecycle_event_listener;
 };
 
 }

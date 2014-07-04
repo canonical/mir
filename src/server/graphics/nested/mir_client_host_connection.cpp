@@ -25,6 +25,7 @@
 #include <stdexcept>
 
 namespace mgn = mir::graphics::nested;
+namespace ms = mir::scene;
 
 namespace
 {
@@ -38,6 +39,13 @@ void drm_auth_magic_callback(int status, void* context)
 void display_config_callback_thunk(MirConnection* /*connection*/, void* context)
 {
     (*static_cast<std::function<void()>*>(context))();
+}
+
+static void nested_lifecycle_event_callback_thunk(MirConnection* /*connection*/, MirLifecycleState state, void *context)
+{
+	ms::HostLifecycleEventListener *listener = (ms::HostLifecycleEventListener *) context;
+    printf("[Nested]: lifecycle event occured %p\n", (void*)listener);
+    listener->occured(state);
 }
 
 class MirClientHostSurface : public mgn::HostSurface
@@ -80,9 +88,12 @@ private:
 }
 
 mgn::MirClientHostConnection::MirClientHostConnection(
-    std::string const& host_socket, std::string const& name)
+    std::string const& host_socket,
+    std::string const& name,
+    std::shared_ptr<ms::HostLifecycleEventListener> const& host_lifecycle_event_listener)
     : mir_connection{mir_connect_sync(host_socket.c_str(), name.c_str())},
-      conf_change_callback{[]{}}
+      conf_change_callback{[]{}},
+      host_lifecycle_event_listener{host_lifecycle_event_listener}
 {
     if (!mir_connection_is_valid(mir_connection))
     {
@@ -92,6 +103,11 @@ mgn::MirClientHostConnection::MirClientHostConnection(
 
         BOOST_THROW_EXCEPTION(std::runtime_error(msg));
     }
+
+    mir_connection_set_lifecycle_event_callback(
+        mir_connection,
+        nested_lifecycle_event_callback_thunk,
+        std::static_pointer_cast<void>(host_lifecycle_event_listener).get());
 }
 
 mgn::MirClientHostConnection::~MirClientHostConnection()

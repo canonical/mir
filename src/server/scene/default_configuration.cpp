@@ -23,6 +23,7 @@
 #include "mir/input/input_targets.h"
 #include "mir/abnormal_exit.h"
 #include "mir/scene/session.h"
+#include "mir/scene/default_host_lifecycle_event_listener.h"
 
 #include "broadcasting_session_event_sink.h"
 #include "default_session_container.h"
@@ -236,5 +237,16 @@ mir::DefaultServerConfiguration::the_prompt_session_manager()
             return std::make_shared<ms::PromptSessionManagerImpl>(
                 the_session_container(),
                 the_prompt_session_listener());
+        });
+}
+
+std::shared_ptr<ms::HostLifecycleEventListener>
+mir::DefaultServerConfiguration::the_host_lifecycle_event_listener()
+{
+    return host_lifecycle_event_listener(
+        [this]()
+        {
+            return std::make_shared<ms::DefaultHostLifecycleEventListener>(
+                the_session_container());
         });
 }
