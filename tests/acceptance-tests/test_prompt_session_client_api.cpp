@@ -210,7 +210,16 @@ struct PromptSessionClientAPI : BasicClientServerFixture
 
         return results;
     }
+
+    static int const no_of_prompt_providers{2};
+    static constexpr char const* const provider_name[no_of_prompt_providers]
+    {
+        "child_provider0",
+        "child_provider1"
+    };
 };
+
+constexpr char const* const PromptSessionClientAPI::provider_name[];
 
 extern "C" void prompt_session_state_change_callback(MirPromptSession* prompt_provider, MirPromptSessionState state, void* context)
 {
@@ -246,7 +255,7 @@ struct DummyPromptProvider
     MirConnection* const connection;
 };
 
-MATCHER_P(SessionWithPid, pid, "")
+MATCHER_P(IsSessionWithPid, pid, "")
 {
     return arg->process_id() == pid;
 }
@@ -326,7 +335,7 @@ TEST_F(PromptSessionClientAPI, when_prompt_provider_connects_over_fd_prompt_prov
 
     auto const expected_pid = getpid();
 
-    EXPECT_CALL(*the_mock_prompt_session_listener(), prompt_provider_added(_, SessionWithPid(expected_pid)));
+    EXPECT_CALL(*the_mock_prompt_session_listener(), prompt_provider_added(_, IsSessionWithPid(expected_pid)));
 
     DummyPromptProvider{fd_connect_string(actual_fds[0]), __PRETTY_FUNCTION__};
 
@@ -345,7 +354,7 @@ TEST_F(PromptSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
     mir_prompt_session_new_fds_for_prompt_providers(prompt_session, 1, &client_fd_callback, this);
     wait_for_callback(std::chrono::milliseconds(500));
 
-    EXPECT_CALL(*the_mock_prompt_session_listener(), prompt_provider_added(_, Not(SessionWithPid(server_pid))));
+    EXPECT_CALL(*the_mock_prompt_session_listener(), prompt_provider_added(_, Not(IsSessionWithPid(server_pid))));
 
     InSequence seq;
     EXPECT_CALL(*this, process_line(StrEq("Starting")));
@@ -415,7 +424,9 @@ TEST_F(PromptSessionClientAPI, server_retrieves_helper_session)
         connection, application_session_pid, null_state_change_callback, this);
 
     // can get the helper session. but it will be the current pid.
-    EXPECT_THAT(server_configuration.the_prompt_session_manager()->helper_for(server_prompt_session), SessionWithPid(getpid()));
+    EXPECT_THAT(
+        server_configuration.the_prompt_session_manager()->helper_for(server_prompt_session),
+        IsSessionWithPid(getpid()));
 
     mir_prompt_session_release_sync(prompt_session);
 }
@@ -430,31 +441,27 @@ TEST_F(PromptSessionClientAPI, server_retrieves_existing_provider_sessions)
     mir_prompt_session_add_prompt_provider_sync(prompt_session, existing_prompt_provider_pid);
     mir_prompt_session_add_prompt_provider_sync(prompt_session, another_prompt_provider_pid);
 
-    EXPECT_THAT(list_providers_for(server_prompt_session), ElementsAre(existing_prompt_provider_session, another_existing_prompt_provider));
+    EXPECT_THAT(list_providers_for(server_prompt_session),
+        ElementsAre(existing_prompt_provider_session, another_existing_prompt_provider));
 
     mir_prompt_session_release_sync(prompt_session);
 }
 
 TEST_F(PromptSessionClientAPI, server_retrieves_child_provider_sessions)
 {
-    static int const no_of_prompt_providers = 2;
-    char const* const child_provider_name[no_of_prompt_providers] =
-    {
-        "child_provider0",
-        "child_provider1"
-    };
-
     capture_server_prompt_session();
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
-    mir_wait_for(mir_prompt_session_new_fds_for_prompt_providers(prompt_session, no_of_prompt_providers, &client_fd_callback, this));
+    mir_wait_for(mir_prompt_session_new_fds_for_prompt_providers(
+        prompt_session, no_of_prompt_providers, &client_fd_callback, this));
 
-    DummyPromptProvider child_provider1{fd_connect_string(actual_fds[0]), child_provider_name[0]};
-    DummyPromptProvider child_provider2{fd_connect_string(actual_fds[1]), child_provider_name[1]};
+    DummyPromptProvider provider1{fd_connect_string(actual_fds[0]), provider_name[0]};
+    DummyPromptProvider provider2{fd_connect_string(actual_fds[1]), provider_name[1]};
 
-    EXPECT_THAT(list_providers_for(server_prompt_session), ElementsAre(SessionWithName(child_provider_name[0]), SessionWithName(child_provider_name[1])));
+    EXPECT_THAT(list_providers_for(server_prompt_session), ElementsAre(
+        SessionWithName(provider_name[0]), SessionWithName(provider_name[1])));
 
     mir_prompt_session_release_sync(prompt_session);
 }
@@ -474,12 +481,14 @@ TEST_F(PromptSessionClientAPI, cannot_start_a_prompt_session_without_authorizati
         connection, application_session_pid, null_state_change_callback, this);
 
     EXPECT_THAT(mir_prompt_session_is_valid(prompt_session), Eq(false));
-    EXPECT_THAT(mir_prompt_session_error_message(prompt_session), HasSubstr("Prompt sessions disabled"));
+    EXPECT_THAT(mir_prompt_session_error_message(prompt_session),
+        HasSubstr("Prompt sessions disabled"));
 
     mir_prompt_session_release_sync(prompt_session);
 }
 
-TEST_F(PromptSessionClientAPI, can_start_a_prompt_session_without_authorization_on_prompt_connection)
+TEST_F(PromptSessionClientAPI,
+    can_start_a_prompt_session_without_authorization_on_prompt_connection)
 {
     ON_CALL(the_mock_session_authorizer(), prompt_session_is_allowed(_))
         .WillByDefault(Return(false));
@@ -500,6 +509,27 @@ TEST_F(PromptSessionClientAPI, can_start_a_prompt_session_without_authorization_
 
     EXPECT_THAT(mir_prompt_session_is_valid(prompt_session), Eq(true));
     EXPECT_THAT(mir_prompt_session_error_message(prompt_session), StrEq(""));
+
+    mir_prompt_session_release_sync(prompt_session);
+}
+
+TEST_F(PromptSessionClientAPI,
+    prompt_providers_started_via_trusted_socket_are_not_authorize_by_shell)
+{
+    EXPECT_CALL(the_mock_session_authorizer(), prompt_session_is_allowed(_)).Times(0);
+
+    // TODO is ugly releasing a connection so we can start one with chosen permissions
+    mir_connection_release(connection);
+    connection = mir_connect_sync(new_prompt_connection().c_str(), __PRETTY_FUNCTION__);
+
+    MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
+        connection, application_session_pid, null_state_change_callback, this);
+
+    mir_wait_for(mir_prompt_session_new_fds_for_prompt_providers(
+        prompt_session, no_of_prompt_providers, &client_fd_callback, this));
+
+    DummyPromptProvider provider1{fd_connect_string(actual_fds[0]), provider_name[0]};
+    DummyPromptProvider provider2{fd_connect_string(actual_fds[1]), provider_name[1]};
 
     mir_prompt_session_release_sync(prompt_session);
 }
