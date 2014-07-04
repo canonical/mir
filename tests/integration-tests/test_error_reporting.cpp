@@ -88,15 +88,6 @@ struct ErrorServer : mf::detail::DisplayServer
     {
         throw std::runtime_error(test_exception_text);
     }
-
-    void test_file_descriptors(
-        google::protobuf::RpcController*,
-        const mir::protobuf::Void*,
-        mir::protobuf::Buffer*,
-        google::protobuf::Closure*)
-    {
-        throw std::runtime_error(test_exception_text);
-    }
 };
 
 std::string const ErrorServer::test_exception_text{"test exception text"};
