@@ -49,17 +49,27 @@ struct MockPromptSessionListener : ms::PromptSessionListener
     MockPromptSessionListener(std::shared_ptr<ms::PromptSessionListener> const& wrapped) :
         wrapped(wrapped)
     {
-        ON_CALL(*this, starting(_)).WillByDefault(Invoke(wrapped.get(), &ms::PromptSessionListener::starting));
-        ON_CALL(*this, stopping(_)).WillByDefault(Invoke(wrapped.get(), &ms::PromptSessionListener::stopping));
-        ON_CALL(*this, prompt_provider_added(_, _)).WillByDefault(Invoke(wrapped.get(), &ms::PromptSessionListener::prompt_provider_added));
-        ON_CALL(*this, prompt_provider_removed(_, _)).WillByDefault(Invoke(wrapped.get(), &ms::PromptSessionListener::prompt_provider_removed));
+        ON_CALL(*this, starting(_)).WillByDefault(Invoke(
+            wrapped.get(), &ms::PromptSessionListener::starting));
+
+        ON_CALL(*this, stopping(_)).WillByDefault(Invoke(
+            wrapped.get(), &ms::PromptSessionListener::stopping));
+
+        ON_CALL(*this, prompt_provider_added(_, _)).WillByDefault(Invoke(
+            wrapped.get(), &ms::PromptSessionListener::prompt_provider_added));
+
+        ON_CALL(*this, prompt_provider_removed(_, _)).WillByDefault(Invoke(
+            wrapped.get(), &ms::PromptSessionListener::prompt_provider_removed));
     }
 
     MOCK_METHOD1(starting, void(std::shared_ptr<ms::PromptSession> const& prompt_session));
     MOCK_METHOD1(stopping, void(std::shared_ptr<ms::PromptSession> const& prompt_session));
 
-    MOCK_METHOD2(prompt_provider_added, void(ms::PromptSession const& prompt_session, std::shared_ptr<ms::Session> const& prompt_provider));
-    MOCK_METHOD2(prompt_provider_removed, void(ms::PromptSession const& prompt_session, std::shared_ptr<ms::Session> const& prompt_provider));
+    MOCK_METHOD2(prompt_provider_added,
+        void(ms::PromptSession const& prompt_session, std::shared_ptr<ms::Session> const& prompt_provider));
+
+    MOCK_METHOD2(prompt_provider_removed,
+        void(ms::PromptSession const& prompt_session, std::shared_ptr<ms::Session> const& prompt_provider));
 
     std::shared_ptr<ms::PromptSessionListener> const wrapped;
 };
@@ -120,11 +130,10 @@ struct PromptSessionClientAPI : mtf::InProcessServer
 {
     PromptSessionTestConfiguration server_configuration;
 
-    mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
+    mir::DefaultServerConfiguration& server_config() override
+        { return server_configuration; }
 
     MirConnection* connection = nullptr;
-
-    static constexpr mir_prompt_session_state_change_callback null_state_change_callback = nullptr;
 
     static constexpr pid_t application_session_pid = __LINE__;
     std::shared_ptr<mf::Session> application_session;
@@ -140,16 +149,27 @@ struct PromptSessionClientAPI : mtf::InProcessServer
     void SetUp() override
     {
         mtf::InProcessServer::SetUp();
-        application_session = server_config().the_frontend_shell()->open_session(application_session_pid, __PRETTY_FUNCTION__,  std::shared_ptr<mf::EventSink>());
-        existing_prompt_provider_session = server_config().the_frontend_shell()->open_session(existing_prompt_provider_pid, __PRETTY_FUNCTION__,  std::shared_ptr<mf::EventSink>());
-        another_existing_prompt_provider = server_config().the_frontend_shell()->open_session(another_prompt_provider_pid, __PRETTY_FUNCTION__,  std::shared_ptr<mf::EventSink>());
+
+        std::shared_ptr<mf::EventSink> dummy_event_sink;
+        auto const the_frontend_shell = server_config().the_frontend_shell();
+
+        application_session = the_frontend_shell->open_session(
+            application_session_pid, __PRETTY_FUNCTION__, dummy_event_sink);
+
+        existing_prompt_provider_session = the_frontend_shell->open_session(
+            existing_prompt_provider_pid, __PRETTY_FUNCTION__,  dummy_event_sink);
+
+        another_existing_prompt_provider = the_frontend_shell->open_session(
+            another_prompt_provider_pid, __PRETTY_FUNCTION__,  dummy_event_sink);
     }
 
     void capture_server_prompt_session()
     {
         EXPECT_CALL(*the_mock_prompt_session_listener(), starting(_)).
             WillOnce(DoAll(
-                Invoke(the_mock_prompt_session_listener()->wrapped.get(), &ms::PromptSessionListener::starting),
+                Invoke(
+                    the_mock_prompt_session_listener()->wrapped.get(),
+                    &ms::PromptSessionListener::starting),
                 SaveArg<0>(&server_prompt_session)));
     }
 
@@ -160,9 +180,10 @@ struct PromptSessionClientAPI : mtf::InProcessServer
         // TODO callbacks from the BroadcastingSessionEventSink which gets called in
         // TODO SessionManager::~SessionManager() in code that the comments claim
         // TODO works around broken ownership.
-        server_config().the_frontend_shell()->close_session(another_existing_prompt_provider);
-        server_config().the_frontend_shell()->close_session(existing_prompt_provider_session);
-        server_config().the_frontend_shell()->close_session(application_session);
+        auto const the_frontend_shell = server_config().the_frontend_shell();
+        the_frontend_shell->close_session(another_existing_prompt_provider);
+        the_frontend_shell->close_session(existing_prompt_provider_session);
+        the_frontend_shell->close_session(application_session);
 
         if (connection) mir_connection_release(connection);
         mtf::InProcessServer::TearDown();
@@ -178,7 +199,8 @@ struct PromptSessionClientAPI : mtf::InProcessServer
         return *server_configuration.the_mock_session_authorizer();
     }
 
-    MOCK_METHOD2(prompt_session_state_change, void(MirPromptSession* prompt_provider, MirPromptSessionState state));
+    MOCK_METHOD2(prompt_session_state_change,
+        void(MirPromptSession* prompt_provider, MirPromptSessionState state));
 
     static std::size_t const arbritary_fd_request_count = 3;
     std::mutex mutex;
@@ -203,7 +225,8 @@ struct PromptSessionClientAPI : mtf::InProcessServer
 
     MOCK_METHOD1(process_line, void(std::string const&));
 
-    std::vector<std::shared_ptr<mf::Session>> list_providers_for(std::shared_ptr<ms::PromptSession> const& prompt_session)
+    std::vector<std::shared_ptr<mf::Session>> list_providers_for(
+        std::shared_ptr<ms::PromptSession> const& prompt_session)
     {
         std::vector<std::shared_ptr<mf::Session>> results;
         auto providers_fn = [&results](std::weak_ptr<ms::Session> const& session)
@@ -211,7 +234,8 @@ struct PromptSessionClientAPI : mtf::InProcessServer
             results.push_back(session.lock());
         };
 
-        server_configuration.the_prompt_session_manager()->for_each_provider_in(prompt_session, providers_fn);
+        server_config().the_prompt_session_manager()->for_each_provider_in(
+            prompt_session, providers_fn);
 
         return results;
     }
@@ -224,9 +248,13 @@ struct PromptSessionClientAPI : mtf::InProcessServer
     };
 };
 
+mir_prompt_session_state_change_callback const null_state_change_callback{nullptr};
 constexpr char const* const PromptSessionClientAPI::provider_name[];
 
-extern "C" void prompt_session_state_change_callback(MirPromptSession* prompt_provider, MirPromptSessionState state, void* context)
+extern "C" void prompt_session_state_change_callback(
+    MirPromptSession* prompt_provider,
+    MirPromptSessionState state,
+    void* context)
 {
     PromptSessionClientAPI* self = static_cast<PromptSessionClientAPI*>(context);
     self->prompt_session_state_change(prompt_provider, state);
@@ -309,10 +337,15 @@ TEST_F(PromptSessionClientAPI, can_add_preexisting_prompt_provider)
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     {
-        auto const prompt_provider = std::dynamic_pointer_cast<ms::Session>(existing_prompt_provider_session);
+        auto const prompt_provider =
+            std::dynamic_pointer_cast<ms::Session>(existing_prompt_provider_session);
+
         InSequence server_seq;
-        EXPECT_CALL(*the_mock_prompt_session_listener(), prompt_provider_added(_, Eq(prompt_provider)));
-        EXPECT_CALL(*the_mock_prompt_session_listener(), prompt_provider_removed(_, Eq(prompt_provider)));
+        EXPECT_CALL(*the_mock_prompt_session_listener(),
+            prompt_provider_added(_, Eq(prompt_provider)));
+
+        EXPECT_CALL(*the_mock_prompt_session_listener(),
+            prompt_provider_removed(_, Eq(prompt_provider)));
     }
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
@@ -330,35 +363,41 @@ TEST_F(PromptSessionClientAPI, can_get_fds_for_prompt_providers)
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
-    mir_prompt_session_new_fds_for_prompt_providers(prompt_session, arbritary_fd_request_count, &client_fd_callback, this);
-    EXPECT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
+    mir_prompt_session_new_fds_for_prompt_providers(
+        prompt_session, arbritary_fd_request_count, &client_fd_callback, this);
 
+    EXPECT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
     EXPECT_THAT(actual_fd_count, Eq(arbritary_fd_request_count));
 
     mir_prompt_session_release_sync(prompt_session);
 }
 
-TEST_F(PromptSessionClientAPI, when_prompt_provider_connects_over_fd_prompt_provider_added_with_right_pid)
+TEST_F(PromptSessionClientAPI,
+    when_prompt_provider_connects_over_fd_prompt_provider_added_with_right_pid)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
-    mir_prompt_session_new_fds_for_prompt_providers(prompt_session, 1, &client_fd_callback, this);
+    mir_prompt_session_new_fds_for_prompt_providers(
+        prompt_session, 1, &client_fd_callback, this);
+
     ASSERT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
 
     auto const expected_pid = getpid();
 
-    EXPECT_CALL(*the_mock_prompt_session_listener(), prompt_provider_added(_, IsSessionWithPid(expected_pid)));
+    EXPECT_CALL(*the_mock_prompt_session_listener(),
+        prompt_provider_added(_, IsSessionWithPid(expected_pid)));
 
     DummyPromptProvider{fd_connect_string(actual_fds[0]), __PRETTY_FUNCTION__};
 
     mir_prompt_session_release_sync(prompt_session);
 }
 
-// TODO we need a nice way to run this (and similar tests that require a separate client process) in CI
-// Disabled as we can't be sure the mir_demo_client_basic is about
+// TODO we need a nice way to run this (and similar tests that require a
+// TODO separate client process) in CI. Disabled as we can't be sure the
+// TODO mir_demo_client_basic executable is about.
 TEST_F(PromptSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -371,7 +410,8 @@ TEST_F(PromptSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
     mir_prompt_session_new_fds_for_prompt_providers(prompt_session, 1, &client_fd_callback, this);
     wait_for_callback(std::chrono::milliseconds(500));
 
-    EXPECT_CALL(*the_mock_prompt_session_listener(), prompt_provider_added(_, Not(IsSessionWithPid(server_pid))));
+    EXPECT_CALL(*the_mock_prompt_session_listener(),
+        prompt_provider_added(_, Not(IsSessionWithPid(server_pid))));
 
     InSequence seq;
     EXPECT_CALL(*this, process_line(StrEq("Starting")));
@@ -380,7 +420,8 @@ TEST_F(PromptSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
     EXPECT_CALL(*this, process_line(StrEq("Surface released")));
     EXPECT_CALL(*this, process_line(StrEq("Connection released")));
 
-    mir::test::Popen output(std::string("bin/mir_demo_client_basic -m ") + fd_connect_string(actual_fds[0]));
+    mir::test::Popen output(std::string("bin/mir_demo_client_basic -m ") +
+        fd_connect_string(actual_fds[0]));
 
     std::string line;
     while (output.get_line(line)) process_line(line);
@@ -401,7 +442,7 @@ TEST_F(PromptSessionClientAPI, notifies_when_server_closes_prompt_session)
 
     EXPECT_CALL(*this, prompt_session_state_change(_, mir_prompt_session_state_stopped));
 
-    server_configuration.the_prompt_session_manager()->stop_prompt_session(server_prompt_session);
+    server_config().the_prompt_session_manager()->stop_prompt_session(server_prompt_session);
 
     // Verify we have got the "stopped" notification before we go on and release the session
     Mock::VerifyAndClearExpectations(the_mock_prompt_session_listener());
@@ -418,7 +459,7 @@ TEST_F(PromptSessionClientAPI, after_server_closes_prompt_session_api_isnt_broke
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
-    server_configuration.the_prompt_session_manager()->stop_prompt_session(server_prompt_session);
+    server_config().the_prompt_session_manager()->stop_prompt_session(server_prompt_session);
 
     EXPECT_FALSE(mir_prompt_session_add_prompt_provider_sync(prompt_session, existing_prompt_provider_pid));
 
@@ -433,7 +474,8 @@ TEST_F(PromptSessionClientAPI, server_retrieves_application_session)
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
-    EXPECT_THAT(server_configuration.the_prompt_session_manager()->application_for(server_prompt_session), Eq(application_session));
+    EXPECT_THAT(server_config().the_prompt_session_manager()->application_for(server_prompt_session),
+        Eq(application_session));
 
     mir_prompt_session_release_sync(prompt_session);
 }
@@ -449,7 +491,7 @@ TEST_F(PromptSessionClientAPI, server_retrieves_helper_session)
 
     // can get the helper session. but it will be the current pid.
     EXPECT_THAT(
-        server_configuration.the_prompt_session_manager()->helper_for(server_prompt_session),
+        server_config().the_prompt_session_manager()->helper_for(server_prompt_session),
         IsSessionWithPid(getpid()));
 
     mir_prompt_session_release_sync(prompt_session);
@@ -555,4 +597,3 @@ TEST_F(PromptSessionClientAPI,
 
     mir_prompt_session_release_sync(prompt_session);
 }
-
