@@ -199,6 +199,11 @@ struct PromptSessionClientAPI : mtf::InProcessServer
         return *server_configuration.the_mock_session_authorizer();
     }
 
+    std::shared_ptr<ms::PromptSessionManager> the_prompt_session_manager()
+    {
+        return server_config().the_prompt_session_manager();
+    }
+
     MOCK_METHOD2(prompt_session_state_change,
         void(MirPromptSession* prompt_provider, MirPromptSessionState state));
 
@@ -234,8 +239,7 @@ struct PromptSessionClientAPI : mtf::InProcessServer
             results.push_back(session.lock());
         };
 
-        server_config().the_prompt_session_manager()->for_each_provider_in(
-            prompt_session, providers_fn);
+        the_prompt_session_manager()->for_each_provider_in(prompt_session, providers_fn);
 
         return results;
     }
@@ -442,7 +446,7 @@ TEST_F(PromptSessionClientAPI, notifies_when_server_closes_prompt_session)
 
     EXPECT_CALL(*this, prompt_session_state_change(_, mir_prompt_session_state_stopped));
 
-    server_config().the_prompt_session_manager()->stop_prompt_session(server_prompt_session);
+    the_prompt_session_manager()->stop_prompt_session(server_prompt_session);
 
     // Verify we have got the "stopped" notification before we go on and release the session
     Mock::VerifyAndClearExpectations(the_mock_prompt_session_listener());
@@ -459,7 +463,7 @@ TEST_F(PromptSessionClientAPI, after_server_closes_prompt_session_api_isnt_broke
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
-    server_config().the_prompt_session_manager()->stop_prompt_session(server_prompt_session);
+    the_prompt_session_manager()->stop_prompt_session(server_prompt_session);
 
     EXPECT_FALSE(mir_prompt_session_add_prompt_provider_sync(prompt_session, existing_prompt_provider_pid));
 
@@ -474,7 +478,7 @@ TEST_F(PromptSessionClientAPI, server_retrieves_application_session)
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
-    EXPECT_THAT(server_config().the_prompt_session_manager()->application_for(server_prompt_session),
+    EXPECT_THAT(the_prompt_session_manager()->application_for(server_prompt_session),
         Eq(application_session));
 
     mir_prompt_session_release_sync(prompt_session);
@@ -491,7 +495,7 @@ TEST_F(PromptSessionClientAPI, server_retrieves_helper_session)
 
     // can get the helper session. but it will be the current pid.
     EXPECT_THAT(
-        server_config().the_prompt_session_manager()->helper_for(server_prompt_session),
+        the_prompt_session_manager()->helper_for(server_prompt_session),
         IsSessionWithPid(getpid()));
 
     mir_prompt_session_release_sync(prompt_session);
