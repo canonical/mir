@@ -26,7 +26,7 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_doubles/stub_session_authorizer.h"
-#include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/in_process_server.h"
 #include "mir_test/popen.h"
 
 #include <gtest/gtest.h>
@@ -116,10 +116,14 @@ struct PromptSessionTestConfiguration : mtf::StubbedServerConfiguration
     mir::CachedPtr<MockSessionAuthorizer> mock_prompt_session_authorizer;
 };
 
-using BasicClientServerFixture = mtf::BasicClientServerFixture<PromptSessionTestConfiguration>;
-
-struct PromptSessionClientAPI : BasicClientServerFixture
+struct PromptSessionClientAPI : mtf::InProcessServer
 {
+    PromptSessionTestConfiguration server_configuration;
+
+    mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
+
+    MirConnection* connection = nullptr;
+
     static constexpr mir_prompt_session_state_change_callback null_state_change_callback = nullptr;
 
     static constexpr pid_t application_session_pid = __LINE__;
@@ -135,7 +139,7 @@ struct PromptSessionClientAPI : BasicClientServerFixture
 
     void SetUp() override
     {
-        BasicClientServerFixture::SetUp();
+        mtf::InProcessServer::SetUp();
         application_session = server_config().the_frontend_shell()->open_session(application_session_pid, __PRETTY_FUNCTION__,  std::shared_ptr<mf::EventSink>());
         existing_prompt_provider_session = server_config().the_frontend_shell()->open_session(existing_prompt_provider_pid, __PRETTY_FUNCTION__,  std::shared_ptr<mf::EventSink>());
         another_existing_prompt_provider = server_config().the_frontend_shell()->open_session(another_prompt_provider_pid, __PRETTY_FUNCTION__,  std::shared_ptr<mf::EventSink>());
@@ -160,7 +164,8 @@ struct PromptSessionClientAPI : BasicClientServerFixture
         server_config().the_frontend_shell()->close_session(existing_prompt_provider_session);
         server_config().the_frontend_shell()->close_session(application_session);
 
-        BasicClientServerFixture::TearDown();
+        if (connection) mir_connection_release(connection);
+        mtf::InProcessServer::TearDown();
     }
 
     MockPromptSessionListener* the_mock_prompt_session_listener()
@@ -268,6 +273,8 @@ MATCHER_P(SessionWithName, name, "")
 
 TEST_F(PromptSessionClientAPI, can_start_and_stop_a_prompt_session)
 {
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
     {
         InSequence server_seq;
         EXPECT_CALL(*the_mock_prompt_session_listener(), starting(_));
@@ -285,6 +292,8 @@ TEST_F(PromptSessionClientAPI, can_start_and_stop_a_prompt_session)
 
 TEST_F(PromptSessionClientAPI, notifies_start_and_stop)
 {
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
     InSequence seq;
     EXPECT_CALL(*this, prompt_session_state_change(_, mir_prompt_session_state_started));
     EXPECT_CALL(*this, prompt_session_state_change(_, mir_prompt_session_state_stopped));
@@ -297,6 +306,8 @@ TEST_F(PromptSessionClientAPI, notifies_start_and_stop)
 
 TEST_F(PromptSessionClientAPI, can_add_preexisting_prompt_provider)
 {
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
     {
         auto const prompt_provider = std::dynamic_pointer_cast<ms::Session>(existing_prompt_provider_session);
         InSequence server_seq;
@@ -314,6 +325,8 @@ TEST_F(PromptSessionClientAPI, can_add_preexisting_prompt_provider)
 
 TEST_F(PromptSessionClientAPI, can_get_fds_for_prompt_providers)
 {
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
@@ -327,6 +340,8 @@ TEST_F(PromptSessionClientAPI, can_get_fds_for_prompt_providers)
 
 TEST_F(PromptSessionClientAPI, when_prompt_provider_connects_over_fd_prompt_provider_added_with_right_pid)
 {
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
@@ -346,6 +361,8 @@ TEST_F(PromptSessionClientAPI, when_prompt_provider_connects_over_fd_prompt_prov
 // Disabled as we can't be sure the mir_demo_client_basic is about
 TEST_F(PromptSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
 {
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
     auto const server_pid = getpid();
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
@@ -373,6 +390,8 @@ TEST_F(PromptSessionClientAPI, DISABLED_client_pid_is_associated_with_session)
 
 TEST_F(PromptSessionClientAPI, notifies_when_server_closes_prompt_session)
 {
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
     EXPECT_CALL(*this, prompt_session_state_change(_, mir_prompt_session_state_started));
 
     capture_server_prompt_session();
@@ -392,6 +411,8 @@ TEST_F(PromptSessionClientAPI, notifies_when_server_closes_prompt_session)
 
 TEST_F(PromptSessionClientAPI, after_server_closes_prompt_session_api_isnt_broken)
 {
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
     capture_server_prompt_session();
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
@@ -406,6 +427,7 @@ TEST_F(PromptSessionClientAPI, after_server_closes_prompt_session_api_isnt_broke
 
 TEST_F(PromptSessionClientAPI, server_retrieves_application_session)
 {
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     capture_server_prompt_session();
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
@@ -418,6 +440,8 @@ TEST_F(PromptSessionClientAPI, server_retrieves_application_session)
 
 TEST_F(PromptSessionClientAPI, server_retrieves_helper_session)
 {
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
     capture_server_prompt_session();
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
@@ -433,6 +457,8 @@ TEST_F(PromptSessionClientAPI, server_retrieves_helper_session)
 
 TEST_F(PromptSessionClientAPI, server_retrieves_existing_provider_sessions)
 {
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
     capture_server_prompt_session();
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
@@ -449,6 +475,8 @@ TEST_F(PromptSessionClientAPI, server_retrieves_existing_provider_sessions)
 
 TEST_F(PromptSessionClientAPI, server_retrieves_child_provider_sessions)
 {
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
     capture_server_prompt_session();
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
@@ -471,8 +499,6 @@ TEST_F(PromptSessionClientAPI, cannot_start_a_prompt_session_without_authorizati
     EXPECT_CALL(the_mock_session_authorizer(), prompt_session_is_allowed(_))
         .WillOnce(Return(false));
 
-    // TODO is ugly releasing a connection so we can start one with chosen permissions
-    mir_connection_release(connection);
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     EXPECT_CALL(*the_mock_prompt_session_listener(), starting(_)).Times(0);
@@ -494,8 +520,6 @@ TEST_F(PromptSessionClientAPI,
         .WillByDefault(Return(false));
     EXPECT_CALL(the_mock_session_authorizer(), prompt_session_is_allowed(_)).Times(0);
 
-    // TODO is ugly releasing a connection so we can start one with chosen permissions
-    mir_connection_release(connection);
     connection = mir_connect_sync(new_prompt_connection().c_str(), __PRETTY_FUNCTION__);
 
     {
@@ -516,11 +540,9 @@ TEST_F(PromptSessionClientAPI,
 TEST_F(PromptSessionClientAPI,
     prompt_providers_started_via_trusted_socket_are_not_authorize_by_shell)
 {
-    EXPECT_CALL(the_mock_session_authorizer(), prompt_session_is_allowed(_)).Times(0);
-
-    // TODO is ugly releasing a connection so we can start one with chosen permissions
-    mir_connection_release(connection);
     connection = mir_connect_sync(new_prompt_connection().c_str(), __PRETTY_FUNCTION__);
+
+    EXPECT_CALL(the_mock_session_authorizer(), prompt_session_is_allowed(_)).Times(0);
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
