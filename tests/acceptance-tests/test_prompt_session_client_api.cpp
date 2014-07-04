@@ -24,8 +24,8 @@
 #include "mir/frontend/session_credentials.h"
 #include "mir/frontend/shell.h"
 
-#include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_doubles/stub_session_authorizer.h"
+#include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test/popen.h"
 
