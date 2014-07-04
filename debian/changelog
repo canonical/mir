@@ -1,4 +1,4 @@
-mir (0.4.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.4.0+14.10.20140701.1-0ubuntu1) utopic; urgency=medium
 
   * New upstream release 0.4.0 (https://launchpad.net/mir/+milestone/0.4.0)
     - mirclient ABI bumped to 8. Clients need rebuilding.
@@ -29,7 +29,7 @@ mir (0.4.0-0ubuntu1) UNRELEASED; urgency=medium
     - Various test improvements.
     - Ensure the_cursor() is not null. (LP: #1334010)
 
- -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 25 Jun 2014 07:23:58 +0000
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 01 Jul 2014 15:54:36 +0000
 
 mir (0.3.0+14.10.20140618.1-0ubuntu1) utopic; urgency=medium
 
