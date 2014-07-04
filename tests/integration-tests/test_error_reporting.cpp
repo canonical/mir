@@ -207,9 +207,7 @@ TEST_F(ErrorReporting, c_api_returns_error)
 
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mf::ProtobufIpcFactory> the_ipc_factory(
-            std::shared_ptr<mir::frontend::Shell> const&,
-            std::shared_ptr<mg::GraphicBufferAllocator> const&,
+        std::shared_ptr<mf::ProtobufIpcFactory> new_ipc_factory(
             std::shared_ptr<mf::SessionAuthorizer> const&) override
         {
             static auto error_server = std::make_shared<ErrorServer>();
