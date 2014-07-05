@@ -1,3 +1,9 @@
+mir (0.5.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Under development
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 04 Jul 2014 12:45:30 +0800
+
 mir (0.4.0+14.10.20140701.1-0ubuntu1) utopic; urgency=medium
 
   * New upstream release 0.4.0 (https://launchpad.net/mir/+milestone/0.4.0)
