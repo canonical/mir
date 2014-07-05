@@ -16,9 +16,9 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "mir/scene/default_host_lifecycle_event_listener.h"
-#include "session_container.h"
+#include "../session_container.h"
 #include "mir/scene/session.h"
+#include "mir/scene/default_host_lifecycle_event_listener.h"
 
 #include <stdio.h>
 #include <assert.h>

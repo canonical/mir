@@ -59,6 +59,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirlogger
   mirnestedgraphics
   miroffscreengraphics
+  mirnestedscene
 )
 
 list(APPEND MIRSERVER_LINKS
