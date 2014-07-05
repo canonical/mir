@@ -23,7 +23,6 @@
 #include "mir/input/input_targets.h"
 #include "mir/abnormal_exit.h"
 #include "mir/scene/session.h"
-#include "mir/scene/default_host_lifecycle_event_listener.h"
 
 #include "broadcasting_session_event_sink.h"
 #include "default_session_container.h"
@@ -37,6 +36,7 @@
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
 #include "prompt_session_manager_impl.h"
+#include "nested/default_host_lifecycle_event_listener.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;

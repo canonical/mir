@@ -20,7 +20,7 @@
 #define MIR_DEFAULT_HOST_LIFECYCLE_EVENT_LISTENER_H_
 
 #include <memory>
-#include "host_lifecycle_event_listener.h"
+#include "mir/scene/host_lifecycle_event_listener.h"
 
 namespace mir
 {

@@ -18,7 +18,7 @@
 
 #include "../session_container.h"
 #include "mir/scene/session.h"
-#include "mir/scene/default_host_lifecycle_event_listener.h"
+#include "default_host_lifecycle_event_listener.h"
 
 #include <stdio.h>
 #include <assert.h>
