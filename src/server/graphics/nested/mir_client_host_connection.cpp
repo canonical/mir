@@ -25,7 +25,6 @@
 #include <stdexcept>
 
 namespace mgn = mir::graphics::nested;
-namespace ms = mir::scene;
 
 namespace
 {
@@ -45,7 +44,7 @@ static void nested_lifecycle_event_callback_thunk(MirConnection* /*connection*/,
 {
 	ms::HostLifecycleEventListener *listener = (ms::HostLifecycleEventListener *) context;
     printf("[Nested]: lifecycle event occured %p\n", (void*)listener);
-    listener->occured(state);
+    listener->lifecycle_event_occured(state);
 }
 
 class MirClientHostSurface : public mgn::HostSurface

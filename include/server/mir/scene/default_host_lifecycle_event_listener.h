@@ -32,7 +32,7 @@ class DefaultHostLifecycleEventListener : public HostLifecycleEventListener
 {
 public:
     explicit DefaultHostLifecycleEventListener(std::shared_ptr<SessionContainer> const& app_container);
-    virtual void occured(MirLifecycleState state);
+    virtual void lifecycle_event_occured(MirLifecycleState state);
 
 private:
     std::shared_ptr<SessionContainer> const app_container;

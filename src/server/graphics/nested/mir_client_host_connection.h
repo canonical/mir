@@ -26,6 +26,8 @@
 
 struct MirConnection;
 
+namespace ms = mir::scene;
+
 namespace mir
 {
 namespace graphics
@@ -36,7 +38,7 @@ namespace nested
 class MirClientHostConnection : public HostConnection
 {
 public:
-    MirClientHostConnection(std::string const& host_socket, std::string const& name, std::shared_ptr<mir::scene::HostLifecycleEventListener> const& host_lifecycle_event_listener);
+    MirClientHostConnection(std::string const& host_socket, std::string const& name, std::shared_ptr<ms::HostLifecycleEventListener> const& host_lifecycle_event_listener);
     ~MirClientHostConnection();
 
     std::vector<int> platform_fd_items() override;

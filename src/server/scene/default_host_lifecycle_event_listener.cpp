@@ -35,7 +35,7 @@ DefaultHostLifecycleEventListener::DefaultHostLifecycleEventListener(
     assert(container);
 }
 
-void DefaultHostLifecycleEventListener::occured(MirLifecycleState state)
+void DefaultHostLifecycleEventListener::lifecycle_event_occured(MirLifecycleState state)
 {
 	printf("Life cycle event occured : state = %d\n", state);
 

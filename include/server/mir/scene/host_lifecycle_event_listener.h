@@ -29,7 +29,7 @@ namespace scene
 class HostLifecycleEventListener
 {
 public:
-    virtual void occured(MirLifecycleState state) = 0;
+    virtual void lifecycle_event_occured(MirLifecycleState state) = 0;
 
 protected:
     HostLifecycleEventListener() = default;

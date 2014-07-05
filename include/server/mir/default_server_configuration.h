@@ -35,7 +35,6 @@ namespace droidinput = android;
 namespace mir
 {
 class ServerActionQueue;
-class HostLifecycleEventListener;
 
 namespace compositor
 {
