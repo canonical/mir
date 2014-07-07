@@ -65,11 +65,7 @@ int main(int argc, char *argv[])
     unsigned int cursor_index = 0;
     while (mir_eglapp_running())
     {
-        configure_cursor(mir_eglapp_native_surface(), cursor_index);
-
-        // Of course we are subject to hypothetical overflow here, but it is of no consequence
-        cursor_index++;
-
+        configure_cursor(mir_eglapp_native_surface(), cursor_index++);
         sleep(1);
     }
 
