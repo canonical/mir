@@ -295,7 +295,7 @@ TEST_F(MirBufferDepositoryTest, depositing_packages_implicitly_submits_current_b
     depository.deposit_package(package2, 2, size, pf);
 }
 
-TEST_F(MirBufferDepositoryTest, depository_respects_max_buffer_parameter)
+TEST_F(MirBufferDepositoryTest, depository_frees_buffers_after_reaching_capacity)
 {
     using namespace testing;
     std::shared_ptr<mcl::ClientBufferDepository> depository;
@@ -311,7 +311,7 @@ TEST_F(MirBufferDepositoryTest, depository_respects_max_buffer_parameter)
         for (i = 0; i < num_buffers ; ++i)
             depository->deposit_package(packages[i], i + 1, size, pf);
 
-        // Next deposit should destroy first buffer
+        // Next deposit should destroy a buffer
         EXPECT_THAT(mock_factory->free_count, Eq(0));
         depository->deposit_package(packages[i], i+1, size, pf);
         EXPECT_THAT(mock_factory->free_count, Eq(1));
