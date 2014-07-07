@@ -3,7 +3,9 @@ set(
 
   client_buffer_tracker.cpp
   connection_context.cpp
+  no_prompt_shell.cpp
   session_mediator.cpp
+  shell_wrapper.cpp
   protobuf_message_processor.cpp
   protobuf_responder.cpp
   protobuf_buffer_packer.cpp
