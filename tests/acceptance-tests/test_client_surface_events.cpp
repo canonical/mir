@@ -100,6 +100,7 @@ struct ClientSurfaceEvents : BasicClientServerFixture
     MirSurface* other_surface;
 
     std::mutex last_event_mutex;
+    MirEventType event_filter{mir_event_type_surface};
     std::condition_variable last_event_cv;
     MirEvent last_event{};
     MirSurface* last_event_surface = nullptr;
@@ -111,16 +112,24 @@ struct ClientSurfaceEvents : BasicClientServerFixture
     {
         ClientSurfaceEvents* self = static_cast<ClientSurfaceEvents*>(ctx);
         std::lock_guard<decltype(self->last_event_mutex)> last_event_lock{self->last_event_mutex};
+        // Don't overwrite an interesting event with an uninteresting one!
+        if (event->type != self->event_filter) return;
         self->last_event = *event;
         self->last_event_surface = surface;
         self->last_event_cv.notify_one();
     }
 
-    bool wait_for_event(MirEventType type, std::chrono::milliseconds delay)
+    bool wait_for_event(std::chrono::milliseconds delay)
     {
         std::unique_lock<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
         return last_event_cv.wait_for(last_event_lock, delay,
-            [&] { return !!last_event_surface && last_event.type == type; });
+            [&] { return last_event_surface == surface && last_event.type == event_filter; });
+    }
+
+    void set_event_filter(MirEventType type)
+    {
+        std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
+        event_filter = type;
     }
 
     void reset_last_event()
@@ -148,6 +157,7 @@ struct ClientSurfaceEvents : BasicClientServerFixture
     void TearDown() override
     {
         mir_surface_release_sync(other_surface);
+        scene_surface.reset();
         mir_surface_release_sync(surface);
 
         BasicClientServerFixture::TearDown();
@@ -218,11 +228,13 @@ struct OrientationEvents : ClientSurfaceEvents, ::testing::WithParamInterface<Mi
 
 TEST_P(OrientationEvents, surface_receives_orientation_events)
 {
+    set_event_filter(mir_event_type_orientation);
+
     auto const direction = GetParam();
 
     scene_surface->set_orientation(direction);
 
-    EXPECT_TRUE(wait_for_event(mir_event_type_orientation, std::chrono::seconds(1)));
+    EXPECT_TRUE(wait_for_event(std::chrono::seconds(1)));
 
     std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
 
@@ -237,6 +249,8 @@ INSTANTIATE_TEST_CASE_P(ClientSurfaceEvents,
 
 TEST_F(ClientSurfaceEvents, client_can_query_current_orientation)
 {
+    set_event_filter(mir_event_type_orientation);
+
     for (auto const direction:
         {mir_orientation_normal, mir_orientation_left, mir_orientation_inverted,
          mir_orientation_right, mir_orientation_normal, mir_orientation_inverted,
@@ -246,7 +260,7 @@ TEST_F(ClientSurfaceEvents, client_can_query_current_orientation)
 
         scene_surface->set_orientation(direction);
 
-        EXPECT_TRUE(wait_for_event(mir_event_type_orientation, std::chrono::seconds(1)));
+        EXPECT_TRUE(wait_for_event(std::chrono::seconds(1)));
 
         EXPECT_THAT(mir_surface_get_orientation(surface), Eq(direction));
     }
