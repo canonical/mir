@@ -211,8 +211,6 @@ service DisplayServer {
   // Platform specific requests
   rpc drm_auth_magic(DRMMagic) returns (DRMAuthMagicStatus);
 
-  rpc test_file_descriptors(Void) returns (Buffer);
-
   rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
   rpc configure_display(DisplayConfiguration) returns (DisplayConfiguration);
 
