@@ -38,10 +38,7 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
 #include "mir/scene/null_prompt_session_listener.h"
-
-#include <map>
-#include <vector>
-#include <mutex>
+#include "default_emergency_cleanup.h"
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -188,31 +185,6 @@ std::shared_ptr<mir::ServerStatusListener> mir::DefaultServerConfiguration::the_
 
 std::shared_ptr<mir::EmergencyCleanup> mir::DefaultServerConfiguration::the_emergency_cleanup()
 {
-    struct DefaultEmergencyCleanup : public EmergencyCleanup
-    {
-        void add(EmergencyCleanupHandler const& handler) override
-        {
-            std::lock_guard<std::mutex> lock{handlers_mutex};
-            handlers.push_back(handler);
-        }
-
-        void operator()() const override
-        {
-            decltype(handlers) handlers_copy;
-
-            {
-                std::unique_lock<std::mutex> lock{handlers_mutex};
-                handlers_copy = handlers;
-            }
-
-            for (auto const& handler : handlers_copy)
-                handler();
-        }
-
-        mutable std::mutex handlers_mutex;
-        std::vector<EmergencyCleanupHandler> handlers;
-    };
-
     return emergency_cleanup(
         []()
         {
