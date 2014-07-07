@@ -21,9 +21,11 @@
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
 #include "mir/scene/session.h"
+#include "mir/frontend/session_credentials.h"
 #include "mir/frontend/shell.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
 #include "mir_test/popen.h"
 
@@ -33,6 +35,7 @@
 #include <condition_variable>
 #include <mutex>
 
+namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
@@ -61,9 +64,20 @@ struct MockPromptSessionListener : ms::PromptSessionListener
     std::shared_ptr<ms::PromptSessionListener> const wrapped;
 };
 
-struct PromptSessionListenerConfiguration : mtf::StubbedServerConfiguration
+struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
 {
-    std::shared_ptr<ms::PromptSessionListener> the_prompt_session_listener()
+    MockSessionAuthorizer()
+    {
+        ON_CALL(*this, prompt_session_is_allowed(_))
+            .WillByDefault(Return(true));
+    }
+
+    MOCK_METHOD1(prompt_session_is_allowed, bool(mf::SessionCredentials const&));
+};
+
+struct PromptSessionTestConfiguration : mtf::StubbedServerConfiguration
+{
+    std::shared_ptr<ms::PromptSessionListener> the_prompt_session_listener() override
     {
         return prompt_session_listener([this]()
            ->std::shared_ptr<ms::PromptSessionListener>
@@ -81,10 +95,28 @@ struct PromptSessionListenerConfiguration : mtf::StubbedServerConfiguration
             });
     }
 
+    std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer() override
+    {
+        return session_authorizer([this]()
+           ->std::shared_ptr<mf::SessionAuthorizer>
+           {
+               return the_mock_session_authorizer();
+           });
+    }
+
+    std::shared_ptr<MockSessionAuthorizer> the_mock_session_authorizer()
+    {
+        return mock_prompt_session_authorizer([this]
+            {
+                return std::make_shared<NiceMock<MockSessionAuthorizer>>();
+            });
+    }
+
     mir::CachedPtr<MockPromptSessionListener> mock_prompt_session_listener;
+    mir::CachedPtr<MockSessionAuthorizer> mock_prompt_session_authorizer;
 };
 
-using BasicClientServerFixture = mtf::BasicClientServerFixture<PromptSessionListenerConfiguration>;
+using BasicClientServerFixture = mtf::BasicClientServerFixture<PromptSessionTestConfiguration>;
 
 struct PromptSessionClientAPI : BasicClientServerFixture
 {
@@ -134,6 +166,11 @@ struct PromptSessionClientAPI : BasicClientServerFixture
     MockPromptSessionListener* the_mock_prompt_session_listener()
     {
         return server_configuration.the_mock_prompt_session_listener().get();
+    }
+
+    MockSessionAuthorizer& the_mock_session_authorizer()
+    {
+        return *server_configuration.the_mock_session_authorizer();
     }
 
     MOCK_METHOD2(prompt_session_state_change, void(MirPromptSession* prompt_provider, MirPromptSessionState state));
@@ -231,6 +268,8 @@ TEST_F(PromptSessionClientAPI, can_start_and_stop_a_prompt_session)
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
     ASSERT_THAT(prompt_session, Ne(nullptr));
+    EXPECT_THAT(mir_prompt_session_is_valid(prompt_session), Eq(true));
+    EXPECT_THAT(mir_prompt_session_error_message(prompt_session), StrEq(""));
 
     mir_prompt_session_release_sync(prompt_session);
 }
@@ -419,3 +458,24 @@ TEST_F(PromptSessionClientAPI, server_retrieves_child_provider_sessions)
 
     mir_prompt_session_release_sync(prompt_session);
 }
+
+TEST_F(PromptSessionClientAPI, cannot_start_a_prompt_session_without_authorization)
+{
+    EXPECT_CALL(the_mock_session_authorizer(), prompt_session_is_allowed(_))
+        .WillOnce(Return(false));
+
+    // TODO is ugly releasing a connection so we can start one with chosen permissions
+    mir_connection_release(connection);
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    EXPECT_CALL(*the_mock_prompt_session_listener(), starting(_)).Times(0);
+
+    MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
+        connection, application_session_pid, null_state_change_callback, this);
+
+    EXPECT_THAT(mir_prompt_session_is_valid(prompt_session), Eq(false));
+    EXPECT_THAT(mir_prompt_session_error_message(prompt_session), HasSubstr("Prompt sessions disabled"));
+
+    mir_prompt_session_release_sync(prompt_session);
+}
+

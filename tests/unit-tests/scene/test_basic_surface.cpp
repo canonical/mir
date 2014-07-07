@@ -510,6 +510,38 @@ TEST_F(BasicSurfaceTest, throws_on_invalid_visibility_attrib_value)
     }, std::logic_error);
 }
 
+TEST_F(BasicSurfaceTest, configure_returns_value_set_by_configurator)
+{
+    using namespace testing;
+    
+    struct FocusSwappingConfigurator : public StubSurfaceConfigurator
+    {
+        int select_attribute_value(ms::Surface const&, MirSurfaceAttrib attrib, int value) override 
+        {
+            if (attrib != mir_surface_attrib_focus)
+                return value;
+            else if (value == mir_surface_focused)
+                return mir_surface_unfocused;
+            else
+                return mir_surface_focused;
+        }
+    };
+
+    ms::BasicSurface surface{
+        name,
+        rect,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        mt::fake_shared(mock_sender),
+        std::make_shared<FocusSwappingConfigurator>(),
+        nullptr,
+        report};
+    
+    EXPECT_EQ(mir_surface_unfocused, surface.configure(mir_surface_attrib_focus, mir_surface_focused));
+    EXPECT_EQ(mir_surface_focused, surface.configure(mir_surface_attrib_focus, mir_surface_unfocused));
+}
+
 TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
 {
     using namespace ::testing;
