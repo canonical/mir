@@ -26,6 +26,7 @@
 #include "mir_test_doubles/stub_buffer_stream.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/mock_input_targeter.h"
+#include "mir_test_doubles/stub_input_sender.h"
 #include "mir_test_doubles/null_event_sink.h"
 #include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test_doubles/mock_surface_configurator.h"
@@ -79,6 +80,7 @@ struct Surface : testing::Test
     mf::SurfaceId stub_id;
     std::shared_ptr<ms::SurfaceConfigurator> null_configurator;
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
+    std::shared_ptr<mtd::StubInputSender> const stub_input_sender = std::make_shared<mtd::StubInputSender>();
 };
 }
 
@@ -92,6 +94,7 @@ TEST_F(Surface, attributes)
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         null_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report);
@@ -111,6 +114,7 @@ TEST_F(Surface, types)
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         null_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report);
@@ -151,6 +155,7 @@ TEST_F(Surface, states)
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         null_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report);
@@ -191,6 +196,7 @@ TEST_F(Surface, dpi_is_initialized)
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         null_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report);
@@ -208,6 +214,7 @@ TEST_F(Surface, dpi_changes)
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         null_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report);
@@ -244,6 +251,7 @@ TEST_F(Surface, clamps_undersized_resize)
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         null_configurator,
         nullptr,
         report);
@@ -266,6 +274,7 @@ TEST_F(Surface, emits_resize_events)
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         null_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report);
@@ -300,6 +309,7 @@ TEST_F(Surface, emits_resize_events_only_on_change)
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         null_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report);
@@ -343,6 +353,7 @@ TEST_F(Surface, remembers_alpha)
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         null_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report);
@@ -384,6 +395,7 @@ TEST_F(Surface, sends_focus_notifications_when_focus_gained_and_lost)
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         null_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report);
@@ -410,6 +422,7 @@ TEST_F(Surface, configurator_selects_attribute_values)
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         mt::fake_shared(configurator),
         std::shared_ptr<mg::CursorImage>(),
         report);
@@ -427,6 +440,7 @@ TEST_F(Surface, take_input_focus)
         false,
         buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         null_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report);
@@ -447,6 +461,7 @@ TEST_F(Surface, with_most_recent_buffer_do_uses_compositor_buffer)
         false,
         stub_buffer_stream,
         std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
         null_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report);

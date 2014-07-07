@@ -98,6 +98,7 @@ class PromptSessionManager;
 }
 namespace graphics
 {
+class NativePlatform;
 class Platform;
 class Display;
 class BufferInitializer;
@@ -120,6 +121,8 @@ class InputChannelFactory;
 class InputConfiguration;
 class CursorListener;
 class InputRegion;
+class InputSender;
+class InputSendObserver;
 class NestedInputRelay;
 class EventHandler;
 namespace android
@@ -162,8 +165,11 @@ public:
     virtual std::shared_ptr<ServerStatusListener>   the_server_status_listener();
     virtual std::shared_ptr<DisplayChanger>         the_display_changer();
     virtual std::shared_ptr<graphics::Platform>     the_graphics_platform();
+    virtual std::shared_ptr<graphics::NativePlatform>  the_graphics_native_platform();
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
     virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher();
+    virtual std::shared_ptr<input::InputSender>     the_input_sender();
+    virtual std::shared_ptr<input::InputSendObserver> the_input_send_observer();
     virtual std::shared_ptr<EmergencyCleanup>  the_emergency_cleanup();
     /** @} */
 
@@ -321,10 +327,13 @@ protected:
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::InputDispatcher> input_dispatcher;
+    CachedPtr<input::InputSender>     input_sender;
+    CachedPtr<input::InputSendObserver> input_send_observer;
     CachedPtr<input::InputRegion>     input_region;
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<graphics::Platform>     graphics_platform;
+    CachedPtr<graphics::NativePlatform>    graphics_native_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::Display>      display;
@@ -361,7 +370,8 @@ protected:
     CachedPtr<compositor::CompositorReport> compositor_report;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
-    CachedPtr<time::Clock> clock;
+    // static to workaround the singleton clock in AsioMainLoop when running multiple servers
+    static CachedPtr<time::Clock> clock;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;

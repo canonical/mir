@@ -30,15 +30,19 @@ namespace doubles
 
 class StubSessionAuthorizer : public frontend::SessionAuthorizer
 {
-    bool connection_is_allowed(mir::frontend::SessionCredentials const&)
+    bool connection_is_allowed(mir::frontend::SessionCredentials const&) override
     {
         return true;
     }
-    bool configure_display_is_allowed(mir::frontend::SessionCredentials const&)
+    bool configure_display_is_allowed(mir::frontend::SessionCredentials const&) override
     {
         return true;
     }
-    bool screencast_is_allowed(mir::frontend::SessionCredentials const&)
+    bool screencast_is_allowed(mir::frontend::SessionCredentials const&) override
+    {
+        return true;
+    }
+    bool prompt_session_is_allowed(mir::frontend::SessionCredentials const&) override
     {
         return true;
     }

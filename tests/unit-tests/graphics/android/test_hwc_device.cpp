@@ -344,6 +344,7 @@ TEST_F(HwcDevice, commits_correct_list_when_all_accepted_as_overlays)
         .InSequence(seq)
         .WillOnce(Invoke(set_all_layers_to_overlay));
 
+    //copy all fb fences for OVERLAY or FRAMEBUFFER_TARGET in preparation of set
     EXPECT_CALL(*mock_native_buffer1, copy_fence())
         .InSequence(seq)
         .WillOnce(Return(overlay_acquire_fence1));

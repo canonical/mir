@@ -24,6 +24,7 @@
 #include "mir/raii.h"
 #include "mir/emergency_cleanup.h"
 
+#include <atomic>
 #include <exception>
 #include <mutex>
 #include <csignal>
@@ -82,9 +83,11 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
 
     weak_emergency_cleanup = config.the_emergency_cleanup();
 
+    static std::atomic<unsigned int> concurrent_calls{0};
+
     auto const raii = raii::paired_calls(
-        [&]{ for (auto sig : intercepted) old_handler[sig] = signal(sig, fatal_signal_cleanup); },
-        [&]{ for (auto sig : intercepted) signal(sig, old_handler[sig]); });
+        [&]{ if (!concurrent_calls++) for (auto sig : intercepted) old_handler[sig] = signal(sig, fatal_signal_cleanup); },
+        [&]{ if (!--concurrent_calls) for (auto sig : intercepted) signal(sig, old_handler[sig]); });
 
     init(server);
     server.run();
