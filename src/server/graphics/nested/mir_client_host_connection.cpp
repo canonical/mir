@@ -43,7 +43,6 @@ void display_config_callback_thunk(MirConnection* /*connection*/, void* context)
 static void nested_lifecycle_event_callback_thunk(MirConnection* /*connection*/, MirLifecycleState state, void *context)
 {
 	ms::HostLifecycleEventListener *listener = (ms::HostLifecycleEventListener *) context;
-    printf("[Nested]: lifecycle event occured %p\n", (void*)listener);
     listener->lifecycle_event_occured(state);
 }
 

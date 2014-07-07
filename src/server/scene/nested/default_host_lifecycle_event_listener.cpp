@@ -20,7 +20,6 @@
 #include "mir/scene/session.h"
 #include "default_host_lifecycle_event_listener.h"
 
-#include <stdio.h>
 #include <assert.h>
 
 namespace mir
@@ -37,8 +36,6 @@ DefaultHostLifecycleEventListener::DefaultHostLifecycleEventListener(
 
 void DefaultHostLifecycleEventListener::lifecycle_event_occured(MirLifecycleState state)
 {
-	printf("Life cycle event occured : state = %d\n", state);
-
 	app_container->for_each(
 			[&state](std::shared_ptr<Session> const& session)
 			{
