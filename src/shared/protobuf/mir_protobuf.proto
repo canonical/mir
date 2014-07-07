@@ -103,6 +103,8 @@ message Surface {
 
   repeated sint32 fd = 7;
   optional int32 fds_on_side_channel = 8;
+  
+  repeated SurfaceSetting attributes = 9;
 
   optional string error = 127;
 }
@@ -124,7 +126,7 @@ message Void {
 message SurfaceSetting {
   optional SurfaceId surfaceid = 1;
   optional int32     attrib = 2;
-  optional int32     ivalue = 3;
+  optional int32     ivalue = 3; // Omission is interpreted as 'query only'
   // optional string    svalue = 4;  // Expected for future use
   optional string error = 127;
 }

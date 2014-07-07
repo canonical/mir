@@ -139,6 +139,7 @@ public:
     MirSurfaceState state() const override;
     void take_input_focus(std::shared_ptr<shell::InputTargeter> const& targeter) override;
     int configure(MirSurfaceAttrib attrib, int value) override;
+    int query(MirSurfaceAttrib attrib) override;
     void hide() override;
     void show() override;
     
@@ -156,6 +157,8 @@ private:
     bool set_state(MirSurfaceState s);
     bool set_dpi(int);
     void set_visibility(MirSurfaceVisibility v);
+    bool set_swap_interval(int);
+    bool set_focus_state(MirSurfaceFocusState f);
 
     SurfaceObservers observers;
     std::mutex mutable guard;
@@ -179,6 +182,8 @@ private:
     MirSurfaceState state_value;
     MirSurfaceVisibility visibility_value;
     int dpi_value;
+    unsigned int swapinterval_value;
+    MirSurfaceFocusState focus_state_value;
 };
 
 }

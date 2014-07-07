@@ -86,6 +86,9 @@ public:
     EGLNativeWindowType generate_native_window();
 
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
+    
+    // May black on request to server if there is no attribute in the cache (i.e. first call for
+    // a given attribute).
     int attrib(MirSurfaceAttrib a) const;
     MirOrientation get_orientation() const;
     
