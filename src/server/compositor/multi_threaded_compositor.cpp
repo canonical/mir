@@ -104,8 +104,6 @@ public:
     {
         mir::set_thread_name("Mir/Comp");
 
-        std::unique_lock<std::mutex> lock{run_mutex};
-
         /*
          * Make the buffer the current rendering target, and release
          * it when the thread is finished.
@@ -122,6 +120,7 @@ public:
                               r.top_left.x.as_int(), r.top_left.y.as_int(),
                               report_id);
 
+        std::unique_lock<std::mutex> lock{run_mutex};
         while (running)
         {
             /* Wait until compositing has been scheduled or we are stopped */
