@@ -1,4 +1,10 @@
-mir (0.4.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.5.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Under development
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 04 Jul 2014 12:45:30 +0800
+
+mir (0.4.0+14.10.20140701.1-0ubuntu1) utopic; urgency=medium
 
   * New upstream release 0.4.0 (https://launchpad.net/mir/+milestone/0.4.0)
     - mirclient ABI bumped to 8. Clients need rebuilding.
@@ -12,13 +18,24 @@ mir (0.4.0-0ubuntu1) UNRELEASED; urgency=medium
         API.
       . Support unregistering fd handlers in the EventHandlerRegister and
         related interfaces (MainLoop).
+      . server: Change mc::Scene to deal in mc::SceneElements instead of
+        mg::Renderables.
+      . Add visibility tracking to mc::SceneElement interface and
+        implementations.
+      . Unregister FD Handler from EventHandlerRegister.
+      . Sending user input events through Surfaces.
+      . Move InputChannelFactory into DefaultServerConfiguration.
+      . Ensure default input region is updated when surface is resized. (LP: #1332632)
     - android: support alpha blending overlays together in HWC. Bumps
-      android-headers version requirement from 4.2.2 to 4.4.2. (LP# #1329879)
+      android-headers version requirement from 4.2.2 to 4.4.2. (LP: #1329879)
     - android: designate the buffer usage when attempting to access or
-      update the fence associated with the native buffer. (LP# #1329868)
+      update the fence associated with the native buffer. (LP: #1329868)
     - Enable client cursor API.
+    - Enable support for USB touchscreens.
+    - Various test improvements.
+    - Ensure the_cursor() is not null. (LP: #1334010)
 
- -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 25 Jun 2014 07:23:58 +0000
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 01 Jul 2014 15:54:36 +0000
 
 mir (0.3.0+14.10.20140618.1-0ubuntu1) utopic; urgency=medium
 
