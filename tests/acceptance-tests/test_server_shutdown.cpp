@@ -158,6 +158,10 @@ struct FakeEventHubServerConfig : TestingServerConfiguration
     std::shared_ptr<mtd::FakeEventHubInputConfiguration> input_configuration;
 };
 
+void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
+{
+}
+
 }
 
 using ServerShutdown = BespokeDisplayServerTestFixture;
@@ -193,6 +197,9 @@ TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
             MirConnection* connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
 
             ASSERT_TRUE(connection != NULL);
+
+            /* Default lifecycle handler terminates the process on disconnect, so override it */
+            mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
 
             MirSurfaceParameters const request_params =
             {

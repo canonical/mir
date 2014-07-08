@@ -47,6 +47,7 @@ class Buffer;
 namespace input
 {
 class InputChannel;
+class InputSender;
 class Surface;
 }
 namespace scene
@@ -86,6 +87,7 @@ public:
         bool nonrectangular,
         std::shared_ptr<compositor::BufferStream> const& buffer_stream,
         std::shared_ptr<input::InputChannel> const& input_channel,
+        std::shared_ptr<input::InputSender> const& sender,
         std::shared_ptr<SurfaceConfigurator> const& configurator,
         std::shared_ptr<graphics::CursorImage> const& cursor_image,
         std::shared_ptr<SceneReport> const& report);
@@ -121,6 +123,7 @@ public:
     geometry::Point top_left() const override;
     geometry::Rectangle input_bounds() const override;
     bool input_area_contains(geometry::Point const& point) const override;
+    void consume(MirEvent const& event);
     void set_alpha(float alpha) override;
     void set_orientation(MirOrientation orientation) override;
     void set_transformation(glm::mat4 const&) override;
@@ -164,9 +167,10 @@ private:
     bool hidden;
     input::InputReceptionMode input_mode;
     const bool nonrectangular;
-    std::vector<geometry::Rectangle> input_rectangles;
+    std::vector<geometry::Rectangle> custom_input_rectangles;
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
     std::shared_ptr<input::InputChannel> const server_input_channel;
+    std::shared_ptr<input::InputSender> const input_sender;
     std::shared_ptr<SurfaceConfigurator> const configurator;
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;

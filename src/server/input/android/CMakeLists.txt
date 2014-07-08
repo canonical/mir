@@ -16,6 +16,7 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/common_input_thread.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/input_channel_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/input_translator.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/input_sender.cpp
 )
 
 set(

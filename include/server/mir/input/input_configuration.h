@@ -26,14 +26,12 @@ namespace mir
 namespace input
 {
 class InputManager;
-class InputChannelFactory;
 
 class InputConfiguration
 {
 public:
     virtual ~InputConfiguration() = default;
 
-    virtual std::shared_ptr<InputChannelFactory> the_input_channel_factory() = 0;
     virtual std::shared_ptr<InputManager> the_input_manager() = 0;
 
 protected:

@@ -14,6 +14,7 @@ set(
   test_udev_wrapper.cpp
   test_variable_length_array.cpp
   test_thread_name.cpp
+  test_default_emergency_cleanup.cpp
 )
 
 add_subdirectory(options/)

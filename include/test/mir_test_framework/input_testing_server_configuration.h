@@ -64,6 +64,7 @@ public:
     std::shared_ptr<mir::input::InputConfiguration> the_input_configuration() override;
     std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override;
+    std::shared_ptr<mir::input::InputSender> the_input_sender() override;
 
     mir::input::android::FakeEventHub* fake_event_hub;
 

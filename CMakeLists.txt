@@ -27,7 +27,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 3) # This should change at least with every MIRSERVER_ABI
+set(MIR_VERSION_MINOR 5) # This should change at least with every MIRSERVER_ABI
 set(MIR_VERSION_PATCH 0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -47,14 +47,20 @@ include (cmake/Doxygen.cmake)
 include (cmake/PrePush.cmake)
 include (GNUInstallDirs)
 
+set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer")
+# Change informational string for CMAKE_BUILD_TYPE
+set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "${build_types}" FORCE)
+# Enable cmake-gui to display a drop down list for CMAKE_BUILD_TYPE
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${build_types}")
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -g -Werror -Wall -pedantic -Wextra -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -g -std=c++0x -Werror -Wall -fno-strict-aliasing -pedantic -Wnon-virtual-dtor -Wextra -fPIC")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 
 if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-return-type-c-linkage -Wno-mismatched-tags")
 endif()
+
+string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_lower)
 
 #####################################################################
 # Enable code coverage calculation with gcov/gcovr/lcov
@@ -64,12 +70,23 @@ endif()
 #  * Find html report in subdir coveragereport
 #  * Find xml report feasible for jenkins in coverage.xml
 #####################################################################
-IF(CMAKE_BUILD_TYPE MATCHES [cC][oO][vV][eE][rR][aA][gG][eE])
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftest-coverage -fprofile-arcs" )
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftest-coverage -fprofile-arcs" )
-  SET(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -ftest-coverage -fprofile-arcs" )
-  SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ftest-coverage -fprofile-arcs" )
-ENDIF(CMAKE_BUILD_TYPE MATCHES [cC][oO][vV][eE][rR][aA][gG][eE])
+if(cmake_build_type_lower MATCHES "coverage")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftest-coverage -fprofile-arcs")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftest-coverage -fprofile-arcs")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -ftest-coverage -fprofile-arcs")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ftest-coverage -fprofile-arcs")
+endif()
+
+if(cmake_build_type_lower MATCHES "addresssanitizer")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
+else()
+  # AddressSanitizer builds fail if we disallow undefined symbols
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
+endif()
 
 enable_testing()
 
