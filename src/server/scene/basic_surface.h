@@ -86,8 +86,7 @@ private:
         void read_lock()
         {
             std::unique_lock<decltype(mutex)> lock{mutex};
-            unlocked_cv.wait(lock, [&]{ return locks >= 0; });
-            ++locks;
+            cv.wait(lock, [&]{ return !write_locked; });
             read_locking_threads.insert(std::this_thread::get_id());
         }
 
@@ -95,35 +94,33 @@ private:
         {
             std::unique_lock<decltype(mutex)> lock{mutex};
             read_locking_threads.erase(
-                read_locking_threads.find(
-                    std::this_thread::get_id()));
-            --locks;
-            unlocked_cv.notify_all();
+                read_locking_threads.find(std::this_thread::get_id()));
+
+            cv.notify_all();
         }
 
         void write_lock()
         {
             std::unique_lock<decltype(mutex)> lock{mutex};
-            unlocked_cv.wait(lock, [&]
+            cv.wait(lock, [&]
                 {
-                    return locks == 0 ||
-                        (locks == 1 &&
-                            read_locking_threads.find(std::this_thread::get_id())
-                            != read_locking_threads.end());
+                    return !write_locked &&
+                            read_locking_threads.count(std::this_thread::get_id())
+                            == read_locking_threads.size();
                 });
-            locks = -1;
+            write_locked = true;
         }
 
         void write_unlock()
         {
             std::unique_lock<decltype(mutex)> lock{mutex};
-            locks = read_locking_threads.size();
-            unlocked_cv.notify_all();
+            write_locked = false;
+            cv.notify_all();
         }
 private:
         std::mutex mutex;
-        std::condition_variable unlocked_cv;
-        int locks{0};
+        std::condition_variable cv;
+        bool write_locked{false};
         std::multiset<std::thread::id> read_locking_threads;
     };
 
