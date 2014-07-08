@@ -21,7 +21,6 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/destination_alpha.h"
 #include "demo_compositor.h"
-#include "occlusion.h"
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
