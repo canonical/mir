@@ -20,6 +20,8 @@
 #define MIR_EXAMPLES_DEMO_COMPOSITOR_H_
 
 #include "mir/compositor/display_buffer_compositor.h"
+#include "mir/compositor/scene.h"
+#include "mir/graphics/renderable.h"
 #include "demo_renderer.h"
 
 namespace mir
@@ -36,6 +38,12 @@ class DisplayBuffer;
 namespace examples
 {
 
+compositor::SceneElementSequence filter_occlusions_from(
+    compositor::SceneElementSequence& list,
+    geometry::Rectangle const& area,
+    int shadow_radius,
+    int titlebar_height);
+
 class DemoCompositor : public compositor::DisplayBufferCompositor
 {
 public:
@@ -45,9 +53,10 @@ public:
         graphics::GLProgramFactory const& factory,
         std::shared_ptr<compositor::CompositorReport> const& report);
 
-    bool composite() override;
+    void composite() override;
 
 private:
+    graphics::RenderableList generate_renderables();
     graphics::DisplayBuffer& display_buffer;
     std::shared_ptr<compositor::Scene> const scene;
     std::shared_ptr<compositor::CompositorReport> const report;

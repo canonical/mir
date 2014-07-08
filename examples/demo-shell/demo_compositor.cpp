@@ -19,8 +19,10 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/compositor_report.h"
 #include "mir/compositor/scene.h"
+#include "mir/compositor/scene_element.h"
 #include "mir/compositor/destination_alpha.h"
 #include "demo_compositor.h"
+#include "occlusion.h"
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
@@ -54,29 +56,28 @@ me::DemoCompositor::DemoCompositor(
 {
 }
 
-bool me::DemoCompositor::composite()
+mg::RenderableList me::DemoCompositor::generate_renderables()
+{
+    mg::RenderableList renderable_list;
+    auto elements = scene->scene_elements_for(this);
+    auto occluded = me::filter_occlusions_from(elements, display_buffer.view_area(), shadow_radius, titlebar_height);
+    for(auto const& it : elements)
+    {
+        renderable_list.push_back(it->renderable());
+        it->rendered_in(this);
+    }
+    for(auto const& it : occluded)
+        it->occluded_in(this);
+
+    
+    return renderable_list;
+}
+
+void me::DemoCompositor::composite()
 {
     report->began_frame(this);
 
-    auto renderable_list = scene->renderable_list_for(this);
-    mc::filter_occlusions_from(renderable_list, display_buffer.view_area(),
-        [this](mg::Renderable const& renderable) -> geom::Rectangle
-        {
-            //accommodate for shadows and titlebar in occlusion filtering
-            using namespace mir::geometry;
-            auto const& rect = renderable.screen_position();
-            return geom::Rectangle{
-                geom::Point{
-                    rect.top_left.x,
-                    rect.top_left.y - geom::DeltaY{titlebar_height}
-                },
-                geom::Size{
-                    rect.size.width.as_int() + shadow_radius,
-                    rect.size.height.as_int() + shadow_radius + titlebar_height
-                }
-            };
-        });
-
+    auto renderable_list = generate_renderables();
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();
@@ -93,6 +94,4 @@ bool me::DemoCompositor::composite()
         renderer.end();
         report->finished_frame(false, this);
     }
-
-    return false;
 }
