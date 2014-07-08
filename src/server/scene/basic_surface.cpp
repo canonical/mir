@@ -41,22 +41,6 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace geom = mir::geometry;
 
-void ms::SurfaceObservers::for_each(
-    std::function<void(std::shared_ptr<SurfaceObserver> const& observer)> f)
-{
-    ListItem* current_item = &head;
-
-    while (current_item)
-    {
-        ReadLock lock{current_item->mutex};
-
-        // We need to take a copy in case we recursively remove during call
-        if (auto const copy_of_observer = current_item->observer) f(copy_of_observer);
-
-        current_item = current_item->next;
-    }
-}
-
 void ms::SurfaceObservers::attrib_changed(MirSurfaceAttrib attrib, int value)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
@@ -117,51 +101,6 @@ void ms::SurfaceObservers::reception_mode_set_to(mi::InputReceptionMode mode)
         { observer->reception_mode_set_to(mode); });
 }
 
-void ms::SurfaceObservers::add(std::shared_ptr<SurfaceObserver> const& observer)
-{
-    ListItem* current_item = &head;
-
-    do
-    {
-        WriteLock lock{current_item->mutex};
-
-        if (!current_item->observer)
-        {
-            current_item->observer = observer;
-            return;
-        }
-    }
-    while (current_item->next && (current_item = current_item->next));
-
-    // No empty Items so append a new one
-    auto new_item = new ListItem;
-    new_item->observer = observer;
-
-    for (ListItem* expected{nullptr};
-        !current_item->next.compare_exchange_weak(expected, new_item);
-        expected = nullptr)
-    {
-        current_item = expected;
-    }
-}
-
-void ms::SurfaceObservers::remove(std::shared_ptr<SurfaceObserver> const& observer)
-{
-    ListItem* current_item = &head;
-
-    while (current_item)
-    {
-        WriteLock lock{current_item->mutex};
-
-        if (current_item->observer == observer)
-        {
-            current_item->observer.reset();
-            return;
-        }
-
-        current_item = current_item->next;
-    }
-}
 
 ms::BasicSurface::BasicSurface(
     std::string const& name,
