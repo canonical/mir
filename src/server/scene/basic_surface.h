@@ -29,7 +29,7 @@
 #include <glm/glm.hpp>
 #include <atomic>
 #include <condition_variable>
-#include <set>
+#include <unordered_set>
 #include <thread>
 #include <vector>
 #include <memory>
@@ -121,7 +121,7 @@ private:
         std::mutex mutex;
         std::condition_variable cv;
         bool write_locked{false};
-        std::multiset<std::thread::id> read_locking_threads;
+        std::unordered_multiset<std::thread::id> read_locking_threads;
     };
 
     class ReadLock
