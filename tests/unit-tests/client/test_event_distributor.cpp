@@ -23,6 +23,7 @@
 #include <mir_test/wait_condition.h>
 
 #include <thread>
+#include <atomic>
 
 namespace mcl = mir::client;
 namespace mt = mir::test;
@@ -107,29 +108,28 @@ TEST_F(EventDistributorTest, succeeds_with_thread_delete_unregister)
         EventCatcher(mcl::EventDistributor* event_distributor)
         : event_distributor(event_distributor)
         {
-            pending = true;
+            locked = false;
             reg = event_distributor->register_event_handler(
                 [this](MirEvent const&)
                 {
-                    if (pending)
+                    if (locked)
                     {
-                        this->event_distributor->unregister_event_handler(reg);
-                        pending = false;
+                        locked = false;
+                        mutex.unlock();
                     }
-                    mutex.unlock();
                 });
             mutex.lock();
+            locked = true;
         }
         ~EventCatcher()
         {
             std::unique_lock<std::mutex> lk(mutex);
-            if (pending)
-                event_distributor->unregister_event_handler(reg);
+            event_distributor->unregister_event_handler(reg);
         }
 
         mcl::EventDistributor* event_distributor;
         int reg;
-        bool pending;
+        std::atomic_bool locked;
         std::mutex mutex;
     };
 
