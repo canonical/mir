@@ -1071,7 +1071,7 @@ TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
 TEST_F(BufferQueueTest, uncomposited_client_swaps_when_policy_triggered)
 {
     for (int nbuffers = 2;
-         nbuffers < max_nbuffers_to_test;
+         nbuffers <= max_nbuffers_to_test;
          nbuffers++)
     {
         mtd::MockFrameDroppingPolicyFactory policy_factory;
@@ -1098,7 +1098,7 @@ TEST_F(BufferQueueTest, uncomposited_client_swaps_when_policy_triggered)
 TEST_F(BufferQueueTest, partially_composited_client_swaps_when_policy_triggered)
 {
     for (int nbuffers = 2;
-         nbuffers < max_nbuffers_to_test;
+         nbuffers <= max_nbuffers_to_test;
          nbuffers++)
     {
         mtd::MockFrameDroppingPolicyFactory policy_factory;

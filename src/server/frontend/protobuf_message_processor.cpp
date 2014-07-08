@@ -151,10 +151,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         {
             invoke(this, display_server.get(), &DisplayServer::release_surface, invocation);
         }
-        else if ("test_file_descriptors" == invocation.method_name())
-        {
-            invoke(this, display_server.get(), &DisplayServer::test_file_descriptors, invocation);
-        }
         else if ("drm_auth_magic" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::drm_auth_magic, invocation);

@@ -30,6 +30,7 @@ set(
   display_server.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
+  default_emergency_cleanup.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)
