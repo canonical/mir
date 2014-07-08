@@ -714,23 +714,37 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataAndFdsWhenInterruptedWithSignals)
 namespace
 {
 /*
- * Find the first integer n ≥ starting_fd_count where the CMSG_LEN for sending
- * n fds is different to the CMSG_LEN for sending n+1 fds.
+ * Find the first integer n ≥ starting_fd_count where the CMSG_SPACE for sending
+ * n fds is different to the CMSG_SPACE for sending n+1 fds.
  *
- * Note: because there's an alignment constraint on CMSG_LEN, this is not necessarily
+ * Note: because there are alignment constraints, this is not necessarily
  * just starting_fd_count.
  */
-constexpr int cmsg_len_boundary(int starting_fd_count)
+constexpr int cmsg_space_boundary(int starting_fd_count)
 {
-    return CMSG_LEN(starting_fd_count * sizeof(int)) == CMSG_LEN((starting_fd_count + 1) * sizeof(int)) ?
-           cmsg_len_boundary(starting_fd_count + 1) :
-           starting_fd_count;
-}
+    return CMSG_SPACE(starting_fd_count * sizeof(int)) != CMSG_SPACE((starting_fd_count + 1) * sizeof(int)) ?
+           starting_fd_count :
+           cmsg_space_boundary(starting_fd_count + 1);
 }
 
-TYPED_TEST(StreamTransportTest, ThrowsErrorWhenReceivingMoreFdsThanRequested)
+/*
+ * Find the first integer n ≥ starting_fd_count where the CMSG_SPACE for sending
+ * n fds is the same as the CMSG_SPACE for sending n+1 fds.
+ *
+ * Note: because there are alignment constraints, this will exist
+ */
+constexpr int cmsg_space_alias(int starting_fd_count)
 {
-    constexpr int num_fds{cmsg_len_boundary(1)};
+    return CMSG_SPACE(starting_fd_count * sizeof(int)) == CMSG_SPACE((starting_fd_count + 1) * sizeof(int)) ?
+           starting_fd_count :
+           cmsg_space_alias(starting_fd_count + 1);
+}
+
+}
+
+TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanExpectedOnCmsgBoundaryIsAnError)
+{
+    constexpr int num_fds{cmsg_space_boundary(1)};
 
     std::array<TestFd, num_fds + 1> test_files;
     std::array<int, num_fds + 1> test_fds;
@@ -759,5 +773,37 @@ TYPED_TEST(StreamTransportTest, ThrowsErrorWhenReceivingMoreFdsThanRequested)
                                            MSG_DONTWAIT));
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
+}
 
+TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanRequestedWithSameCmsgSpaceIsAnError)
+{
+    constexpr int num_fds{cmsg_space_alias(1)};
+
+    std::array<TestFd, num_fds + 1> test_files;
+    std::array<int, num_fds + 1> test_fds;
+    for (unsigned int i = 0; i < test_fds.size(); ++i)
+    {
+        test_fds[i] = test_files[i].fd;
+    }
+
+    std::vector<int> received_fds(num_fds);
+
+    auto receive_done = std::make_shared<mir::test::Signal>();
+    mir::test::AutoUnblockThread reader{[this]() { ::close(this->test_fd); },
+                                        [&]()
+    {
+        uint32_t dummy;
+        EXPECT_THROW(this->transport->receive_data(&dummy, sizeof(dummy), received_fds),
+                     std::runtime_error);
+        receive_done->raise();
+    }};
+
+    int32_t dummy{0};
+    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd,
+                                           test_fds,
+                                           &dummy,
+                                           sizeof(dummy),
+                                           MSG_DONTWAIT));
+
+    EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
 }
