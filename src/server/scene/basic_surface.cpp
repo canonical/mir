@@ -121,39 +121,27 @@ void ms::SurfaceObservers::add(std::shared_ptr<SurfaceObserver> const& observer)
 {
     ListItem* current_item = &head;
 
-    while (current_item)
+    do
     {
+        std::lock_guard<std::recursive_mutex> lock{current_item->mutex};
+
+        if (!current_item->observer)
         {
-            std::lock_guard<std::recursive_mutex> lock{current_item->mutex};
-
-            if (!current_item->observer)
-            {
-                current_item->observer = observer;
-                return;
-            }
-        }
-
-
-        if (current_item->next)
-        {
-            current_item = current_item->next;
-            continue;
-        }
-        else
-        {
-            auto new_item = new ListItem;
-            new_item->observer = observer;
-
-            for (ListItem* expected{nullptr};
-                !current_item->next.compare_exchange_weak(expected, new_item);
-                expected = nullptr)
-            {
-                current_item = expected;
-            }
-
+            current_item->observer = observer;
             return;
         }
+    }
+    while (current_item->next && (current_item = current_item->next));
 
+    // No empty Items so append a new one
+    auto new_item = new ListItem;
+    new_item->observer = observer;
+
+    for (ListItem* expected{nullptr};
+        !current_item->next.compare_exchange_weak(expected, new_item);
+        expected = nullptr)
+    {
+        current_item = expected;
     }
 }
 
