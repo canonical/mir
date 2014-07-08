@@ -48,7 +48,7 @@ void ms::SurfaceObservers::for_each(
 
     while (current_item)
     {
-        std::lock_guard<std::recursive_mutex> lock{current_item->mutex};
+        ReadLock lock{current_item->mutex};
 
         // We need to take a copy in case we recursively remove during call
         if (auto const copy_of_observer = current_item->observer) f(copy_of_observer);
@@ -123,7 +123,7 @@ void ms::SurfaceObservers::add(std::shared_ptr<SurfaceObserver> const& observer)
 
     do
     {
-        std::lock_guard<std::recursive_mutex> lock{current_item->mutex};
+        WriteLock lock{current_item->mutex};
 
         if (!current_item->observer)
         {
@@ -151,7 +151,7 @@ void ms::SurfaceObservers::remove(std::shared_ptr<SurfaceObserver> const& observ
 
     while (current_item)
     {
-        std::lock_guard<std::recursive_mutex> lock{current_item->mutex};
+        WriteLock lock{current_item->mutex};
 
         if (current_item->observer == observer)
         {

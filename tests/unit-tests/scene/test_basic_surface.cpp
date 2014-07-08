@@ -573,8 +573,14 @@ TEST_F(BasicSurfaceTest, observer_can_trigger_state_change_within_notification)
        surface.set_hidden(false);
     };
 
-    EXPECT_CALL(mock_callback, call()).Times(2)
+    //Make sure another thread can also change state
+    auto const async_state_changer = [&]{
+        std::async(std::launch::async, state_changer);
+    };
+
+    EXPECT_CALL(mock_callback, call()).Times(3)
         .WillOnce(InvokeWithoutArgs(state_changer))
+        .WillOnce(InvokeWithoutArgs(async_state_changer))
         .WillOnce(Return());
 
     surface.add_observer(observer);

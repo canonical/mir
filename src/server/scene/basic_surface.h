@@ -28,6 +28,9 @@
 
 #include <glm/glm.hpp>
 #include <atomic>
+#include <condition_variable>
+#include <set>
+#include <thread>
 #include <vector>
 #include <memory>
 #include <mutex>
@@ -76,9 +79,81 @@ public:
 
 private:
     void for_each(std::function<void(std::shared_ptr<SurfaceObserver> const& observer)> f);
+
+    class ReadWriteMutex
+    {
+    public:
+        void read_lock()
+        {
+            std::unique_lock<decltype(mutex)> lock{mutex};
+            unlocked_cv.wait(lock, [&]{ return locks >= 0; });
+            ++locks;
+            read_locking_threads.insert(std::this_thread::get_id());
+        }
+
+        void read_unlock()
+        {
+            std::unique_lock<decltype(mutex)> lock{mutex};
+            read_locking_threads.erase(
+                read_locking_threads.find(
+                    std::this_thread::get_id()));
+            --locks;
+            unlocked_cv.notify_all();
+        }
+
+        void write_lock()
+        {
+            std::unique_lock<decltype(mutex)> lock{mutex};
+            unlocked_cv.wait(lock, [&]
+                {
+                    return locks == 0 ||
+                        (locks == 1 &&
+                            read_locking_threads.find(std::this_thread::get_id())
+                            != read_locking_threads.end());
+                });
+            locks = -1;
+        }
+
+        void write_unlock()
+        {
+            std::unique_lock<decltype(mutex)> lock{mutex};
+            locks = read_locking_threads.size();
+            unlocked_cv.notify_all();
+        }
+private:
+        std::mutex mutex;
+        std::condition_variable unlocked_cv;
+        int locks{0};
+        std::multiset<std::thread::id> read_locking_threads;
+    };
+
+    class ReadLock
+    {
+    public:
+        explicit ReadLock(ReadWriteMutex& mutex) : mutex(mutex)
+            { mutex.read_lock(); }
+        ~ReadLock()
+            { mutex.read_unlock(); }
+
+    private:
+        ReadWriteMutex& mutex;
+    };
+
+    class WriteLock
+    {
+    public:
+        explicit WriteLock(ReadWriteMutex& mutex) : mutex(mutex)
+            { mutex.write_lock(); }
+        ~WriteLock()
+            { mutex.write_unlock(); }
+
+    private:
+        ReadWriteMutex& mutex;
+    };
+
     struct ListItem
     {
-        std::recursive_mutex mutex;
+        ReadWriteMutex mutex;
         std::shared_ptr<SurfaceObserver> observer;
         std::atomic<ListItem*> next{nullptr};
 
