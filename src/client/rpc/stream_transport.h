@@ -28,6 +28,20 @@ namespace mir
 {
 namespace client
 {
+
+/**
+ * \brief Client/Server communication implementation namespace.
+ *
+ * \par Theory of operation:
+ * The RPC layer is built in two parts: the transport layer and the protocol layer.
+ *
+ * The transport layer handles moving bytes and file descriptors between
+ * the client and the server, notifying when data is available, and notifying
+ * when the link has been disconnected..
+ *
+ * The protocol layer is responsible for mediating between the rest of the code
+ * and the transport layer. It provides an RPC interface built upon the transport.
+ */
 namespace rpc
 {
 /**
