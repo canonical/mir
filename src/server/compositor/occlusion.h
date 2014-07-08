@@ -29,12 +29,8 @@ namespace mir
 namespace compositor
 {
 
-geometry::Rectangle simple_renderable_rect(graphics::Renderable const& renderable);
+void filter_occlusions_from(graphics::RenderableList& list, geometry::Rectangle const& area);
 
-void filter_occlusions_from(
-    graphics::RenderableList& list,
-    geometry::Rectangle const& area,
-    std::function<geometry::Rectangle(graphics::Renderable const&)> filter_fn);
 } // namespace compositor
 } // namespace mir
 

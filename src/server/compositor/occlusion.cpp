@@ -27,9 +27,8 @@ namespace
 {
 bool renderable_is_occluded(
     Renderable const& renderable, 
-    Rectangle const& display_area,
-    Rectangle const& coverage_area,
-    std::vector<Rectangle>& coverage_list)
+    Rectangle const& area,
+    std::vector<Rectangle>& coverage)
 {
     static const glm::mat4 identity;
     if (renderable.transformation() != identity)
@@ -42,13 +41,14 @@ bool renderable_is_occluded(
         return true;  //invisible; definitely occluded.
 
     // Not weirdly transformed but also not on this monitor? Don't care...
-    if (!display_area.overlaps(coverage_area))
+    if (!area.overlaps(renderable.screen_position()))
         return true;  // Not on the display; definitely occluded.
 
     bool occluded = false;
-    for (const auto &r : coverage_list)
+    Rectangle const& window = renderable.screen_position();
+    for (const auto &r : coverage)
     {
-        if (r.contains(coverage_area))
+        if (r.contains(window))
         {
             occluded = true;
             break;
@@ -56,27 +56,21 @@ bool renderable_is_occluded(
     }
 
     if (!occluded && renderable.alpha() == 1.0f && !renderable.shaped())
-        coverage_list.push_back(coverage_area);
+        coverage.push_back(window);
 
     return occluded;
 }
 }
 
-Rectangle mir::compositor::simple_renderable_rect(Renderable const& renderable)
-{
-    return renderable.screen_position();
-}
-
 void mir::compositor::filter_occlusions_from(
     RenderableList& list,
-    geometry::Rectangle const& area,
-    std::function<Rectangle(Renderable const&)> coverage_of)
+    Rectangle const& area)
 {
     std::vector<Rectangle> coverage;
     auto it = list.rbegin();
     while (it != list.rend())
     {
-        if (renderable_is_occluded(**it, area, coverage_of(**it), coverage))
+        if (renderable_is_occluded(**it, area, coverage))
             list.erase(std::prev(it.base()));
         else
             it++;
