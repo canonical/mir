@@ -50,7 +50,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsharedlogging
   mirsharedenv
   mirsharedsharedlibrary
-  mirsharedthreadname
+  mirsharedthread
   mirshell
   mirscene
   mirtime

@@ -20,6 +20,7 @@
 #define MIR_SCENE_BASIC_SURFACE_H_
 
 #include "mir/scene/surface.h"
+#include "mir/basic_observers.h"
 #include "mir/scene/surface_observer.h"
 
 #include "mir/geometry/rectangle.h"
@@ -27,10 +28,6 @@
 #include "mir_toolkit/common.h"
 
 #include <glm/glm.hpp>
-#include <atomic>
-#include <condition_variable>
-#include <unordered_set>
-#include <thread>
 #include <vector>
 #include <memory>
 #include <mutex>
@@ -58,160 +55,6 @@ namespace scene
 {
 class SceneReport;
 class SurfaceConfigurator;
-
-class ReadWriteMutex
-{
-public:
-    void read_lock()
-    {
-        std::unique_lock<decltype(mutex)> lock{mutex};
-        cv.wait(lock, [&]{ return !write_locked; });
-        read_locking_threads.insert(std::this_thread::get_id());
-    }
-
-    void read_unlock()
-    {
-        std::unique_lock<decltype(mutex)> lock{mutex};
-        read_locking_threads.erase(
-            read_locking_threads.find(std::this_thread::get_id()));
-
-        cv.notify_all();
-    }
-
-    void write_lock()
-    {
-        std::unique_lock<decltype(mutex)> lock{mutex};
-        cv.wait(lock, [&]
-            {
-                return !write_locked &&
-                        read_locking_threads.count(std::this_thread::get_id())
-                        == read_locking_threads.size();
-            });
-        write_locked = true;
-    }
-
-    void write_unlock()
-    {
-        std::unique_lock<decltype(mutex)> lock{mutex};
-        write_locked = false;
-        cv.notify_all();
-    }
-
-private:
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool write_locked{false};
-    std::unordered_multiset<std::thread::id> read_locking_threads;
-};
-
-class ReadLock
-{
-public:
-    explicit ReadLock(ReadWriteMutex& mutex) : mutex(mutex)
-        { mutex.read_lock(); }
-    ~ReadLock()
-        { mutex.read_unlock(); }
-
-private:
-    ReadWriteMutex& mutex;
-};
-
-class WriteLock
-{
-public:
-    explicit WriteLock(ReadWriteMutex& mutex) : mutex(mutex)
-        { mutex.write_lock(); }
-    ~WriteLock()
-        { mutex.write_unlock(); }
-
-private:
-    ReadWriteMutex& mutex;
-};
-
-template<class Observer>
-class BasicObservers : public Observer
-{
-protected:
-    void add(std::shared_ptr<Observer> const& observer);
-    void remove(std::shared_ptr<Observer> const& observer);
-    void for_each(std::function<void(std::shared_ptr<Observer> const& observer)> f);
-
-private:
-    struct ListItem
-    {
-        ListItem() {}
-        ReadWriteMutex mutex;
-        std::shared_ptr<Observer> observer;
-        std::atomic<ListItem*> next{nullptr};
-
-        ~ListItem() { delete next.load(); }
-    } head;
-};
-
-template<class Observer>
-void BasicObservers<Observer>::for_each(
-    std::function<void(std::shared_ptr<Observer> const& observer)> f)
-{
-    ListItem* current_item = &head;
-
-    while (current_item)
-    {
-        ReadLock lock{current_item->mutex};
-
-        // We need to take a copy in case we recursively remove during call
-        if (auto const copy_of_observer = current_item->observer) f(copy_of_observer);
-
-        current_item = current_item->next;
-    }
-}
-
-template<class Observer>
-void BasicObservers<Observer>::add(std::shared_ptr<Observer> const& observer)
-{
-    ListItem* current_item = &head;
-
-    do
-    {
-        WriteLock lock{current_item->mutex};
-
-        if (!current_item->observer)
-        {
-            current_item->observer = observer;
-            return;
-        }
-    }
-    while (current_item->next && (current_item = current_item->next));
-
-    // No empty Items so append a new one
-    auto new_item = new ListItem;
-    new_item->observer = observer;
-
-    for (ListItem* expected{nullptr};
-        !current_item->next.compare_exchange_weak(expected, new_item);
-        expected = nullptr)
-    {
-        current_item = expected;
-    }
-}
-
-template<class Observer>
-void BasicObservers<Observer>::remove(std::shared_ptr<Observer> const& observer)
-{
-    ListItem* current_item = &head;
-
-    while (current_item)
-    {
-        WriteLock lock{current_item->mutex};
-
-        if (current_item->observer == observer)
-        {
-            current_item->observer.reset();
-            return;
-        }
-
-        current_item = current_item->next;
-    }
-}
 
 class SurfaceObservers : public BasicObservers<SurfaceObserver>
 {
