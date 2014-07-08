@@ -74,8 +74,13 @@ public:
     void remove(std::shared_ptr<SurfaceObserver> const& observer);
 
 private:
-    std::mutex mutex;
-    std::vector<std::shared_ptr<SurfaceObserver>> observers;
+    void for_each(std::function<void(std::shared_ptr<SurfaceObserver> const& observer)> f);
+    struct ListItem
+    {
+        std::recursive_mutex mutex;
+        std::shared_ptr<SurfaceObserver> observer;
+        std::unique_ptr<ListItem> next;
+    } head;
 };
 
 class BasicSurface : public Surface
