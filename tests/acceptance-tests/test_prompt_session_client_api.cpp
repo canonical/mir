@@ -78,10 +78,11 @@ struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
 {
     MockSessionAuthorizer()
     {
-        ON_CALL(*this, prompt_session_is_allowed(_))
-            .WillByDefault(Return(true));
+        ON_CALL(*this, connection_is_allowed(_)).WillByDefault(Return(true));
+        ON_CALL(*this, prompt_session_is_allowed(_)).WillByDefault(Return(true));
     }
 
+    MOCK_METHOD1(connection_is_allowed, bool(mf::SessionCredentials const&));
     MOCK_METHOD1(prompt_session_is_allowed, bool(mf::SessionCredentials const&));
 };
 
@@ -590,7 +591,7 @@ TEST_F(PromptSessionClientAPI,
 {
     connection = mir_connect_sync(new_prompt_connection().c_str(), __PRETTY_FUNCTION__);
 
-    EXPECT_CALL(the_mock_session_authorizer(), prompt_session_is_allowed(_)).Times(0);
+    EXPECT_CALL(the_mock_session_authorizer(), connection_is_allowed(_)).Times(0);
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
