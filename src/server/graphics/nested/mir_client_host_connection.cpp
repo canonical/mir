@@ -42,7 +42,7 @@ void display_config_callback_thunk(MirConnection* /*connection*/, void* context)
 
 static void nested_lifecycle_event_callback_thunk(MirConnection* /*connection*/, MirLifecycleState state, void *context)
 {
-	ms::HostLifecycleEventListener *listener = (ms::HostLifecycleEventListener *) context;
+	msh::HostLifecycleEventListener *listener = (msh::HostLifecycleEventListener *) context;
     listener->lifecycle_event_occured(state);
 }
 
@@ -88,7 +88,7 @@ private:
 mgn::MirClientHostConnection::MirClientHostConnection(
     std::string const& host_socket,
     std::string const& name,
-    std::shared_ptr<ms::HostLifecycleEventListener> const& host_lifecycle_event_listener)
+    std::shared_ptr<msh::HostLifecycleEventListener> const& host_lifecycle_event_listener)
     : mir_connection{mir_connect_sync(host_socket.c_str(), name.c_str())},
       conf_change_callback{[]{}},
       host_lifecycle_event_listener{host_lifecycle_event_listener}

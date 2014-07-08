@@ -23,7 +23,7 @@
 
 namespace mir
 {
-namespace scene
+namespace shell
 {
 
 class HostLifecycleEventListener

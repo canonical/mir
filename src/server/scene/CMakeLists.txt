@@ -24,5 +24,3 @@ ADD_LIBRARY(
   prompt_session_manager_impl.cpp
   rendering_tracker.cpp
 )
-
-add_subdirectory(nested/)

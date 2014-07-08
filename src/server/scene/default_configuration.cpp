@@ -36,7 +36,6 @@
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
 #include "prompt_session_manager_impl.h"
-#include "nested/default_host_lifecycle_event_listener.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -237,16 +236,5 @@ mir::DefaultServerConfiguration::the_prompt_session_manager()
             return std::make_shared<ms::PromptSessionManagerImpl>(
                 the_session_container(),
                 the_prompt_session_listener());
-        });
-}
-
-std::shared_ptr<ms::HostLifecycleEventListener>
-mir::DefaultServerConfiguration::the_host_lifecycle_event_listener()
-{
-    return host_lifecycle_event_listener(
-        [this]()
-        {
-            return std::make_shared<ms::DefaultHostLifecycleEventListener>(
-                the_session_container());
         });
 }

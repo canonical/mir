@@ -16,32 +16,23 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "../session_container.h"
-#include "mir/scene/session.h"
-#include "default_host_lifecycle_event_listener.h"
+#ifndef MIR_NULL_HOST_LIFECYCLE_EVENT_LISTENER_H_
+#define MIR_NULL_HOST_LIFECYCLE_EVENT_LISTENER_H_
 
-#include <assert.h>
+#include "mir/shell/host_lifecycle_event_listener.h"
 
 namespace mir
 {
-namespace scene
+namespace shell
 {
 
-DefaultHostLifecycleEventListener::DefaultHostLifecycleEventListener(
-		std::shared_ptr<SessionContainer> const& container) :
-		app_container(container)
+class NullHostLifecycleEventListener : public HostLifecycleEventListener
 {
-    assert(container);
-}
-
-void DefaultHostLifecycleEventListener::lifecycle_event_occured(MirLifecycleState state)
-{
-	app_container->for_each(
-			[&state](std::shared_ptr<Session> const& session)
-			{
-				session->set_lifecycle_state(state);
-			});
-}
+public:
+    virtual void lifecycle_event_occured(MirLifecycleState /*state*/) override {}
+};
 
 }
 }
+
+#endif /* MIR_NULL_HOST_LIFECYCLE_EVENT_LISTENER_H_ */

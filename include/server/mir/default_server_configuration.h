@@ -69,6 +69,7 @@ class InputTargeter;
 class FocusSetter;
 class FocusController;
 class DisplayLayout;
+class HostLifecycleEventListener;
 }
 namespace time
 {
@@ -95,7 +96,6 @@ class SurfaceStack;
 class SceneReport;
 class PromptSessionListener;
 class PromptSessionManager;
-class HostLifecycleEventListener;
 }
 namespace graphics
 {
@@ -244,6 +244,8 @@ public:
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     virtual std::shared_ptr<scene::PromptSessionListener> the_prompt_session_listener();
     virtual std::shared_ptr<scene::PromptSessionManager>  the_prompt_session_manager();
+    virtual std::shared_ptr<shell::HostLifecycleEventListener> the_host_lifecycle_event_listener();
+
     /** @} */
 
     /** @name internal scene configuration
@@ -288,8 +290,6 @@ public:
 
     virtual std::shared_ptr<time::Clock> the_clock();
     virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
-
-    virtual std::shared_ptr<scene::HostLifecycleEventListener> the_host_lifecycle_event_listener();
 
 protected:
     std::shared_ptr<options::Option> the_options() const;
@@ -397,7 +397,7 @@ protected:
     CachedPtr<scene::PromptSessionManager> prompt_session_manager;
     CachedPtr<scene::SessionCoordinator> session_coordinator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
-    CachedPtr<scene::HostLifecycleEventListener> host_lifecycle_event_listener;
+    CachedPtr<shell::HostLifecycleEventListener> host_lifecycle_event_listener;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
