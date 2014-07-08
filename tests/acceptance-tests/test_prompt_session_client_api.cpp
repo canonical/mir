@@ -587,7 +587,7 @@ TEST_F(PromptSessionClientAPI,
 }
 
 TEST_F(PromptSessionClientAPI,
-    prompt_providers_started_via_trusted_socket_are_not_authorize_by_shell)
+    prompt_providers_started_via_trusted_socket_are_not_authorized_by_shell)
 {
     connection = mir_connect_sync(new_prompt_connection().c_str(), __PRETTY_FUNCTION__);
 
