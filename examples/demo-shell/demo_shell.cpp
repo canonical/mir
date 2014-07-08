@@ -29,6 +29,7 @@
 #include "mir/graphics/display.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/compositor/renderer_factory.h"
+#include "mir/shell/host_lifecycle_event_listener.h"
 
 #include <iostream>
 
@@ -38,6 +39,7 @@ namespace mg = mir::graphics;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace mo = mir::options;
+namespace msh = mir::shell;
 
 namespace mir
 {
@@ -106,6 +108,47 @@ public:
     std::shared_ptr<compositor::RendererFactory> the_renderer_factory() override
     {
         return std::make_shared<DemoRendererFactory>(the_gl_program_factory());
+    }
+
+    /* Duplicate impl. Could move to a common library so Mir proper, and examples can share. */
+    class NullHostLifecycleEventListener : public msh::HostLifecycleEventListener
+    {
+    public:
+        virtual void lifecycle_event_occured(MirLifecycleState /*state*/) override
+        {
+        	printf("This line must not be output\n");
+        }
+    };
+
+    class NestedLifecycleEventListener : public msh::HostLifecycleEventListener
+    {
+    public:
+        virtual void lifecycle_event_occured(MirLifecycleState state) override
+        {
+        	printf("Lifecycle event occured : state = %d\n", state);
+        }
+    };
+
+    std::shared_ptr<msh::HostLifecycleEventListener> the_host_lifecycle_event_listener() override
+    {
+        auto nested = the_options()->is_set(options::host_socket_opt);
+
+        if (nested)
+        {
+           return host_lifecycle_event_listener(
+               []()
+               {
+                   return std::make_shared<NestedLifecycleEventListener>();
+               });
+        }
+        else
+        {
+            return host_lifecycle_event_listener(
+                []()
+                {
+                    return std::make_shared<NullHostLifecycleEventListener>();
+                });
+        }
     }
 
 private:
