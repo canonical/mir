@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ *
+ * based on src/server/compositor/occlusion.cpp, which was:  
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #include <mir/graphics/renderable.h>
