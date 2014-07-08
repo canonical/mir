@@ -203,21 +203,24 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes, 
                 // where the fds went later.
                 BOOST_THROW_EXCEPTION(std::runtime_error("Unexpectedly received file descriptors"));
             }
-            if (cmsg->cmsg_len == CMSG_LEN(fds_bytes) &&
-                cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS &&
-                !(header.msg_flags & MSG_CTRUNC))
+            if (cmsg->cmsg_len < CMSG_LEN(fds_bytes))
             {
-                int const* const data = reinterpret_cast<int const*>CMSG_DATA(cmsg);
-                int i = 0;
-                for (auto& fd : fds)
-                    fd = data[i++];
-
-                fds_read = true;
+                BOOST_THROW_EXCEPTION(std::runtime_error("Receieved fewer fds than expected"));
             }
-            else
+            if (cmsg->cmsg_len > CMSG_LEN(fds_bytes) || (header.msg_flags & MSG_CTRUNC))
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error("Received more fds than expected"));
+            }
+            if (cmsg->cmsg_level != SOL_SOCKET || cmsg->cmsg_type != SCM_RIGHTS)
             {
                 BOOST_THROW_EXCEPTION(fd_reception_error());
             }
+            int const* const data = reinterpret_cast<int const*>CMSG_DATA(cmsg);
+            int i = 0;
+            for (auto& fd : fds)
+                fd = data[i++];
+
+            fds_read = true;
         }
     }
 }

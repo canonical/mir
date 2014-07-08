@@ -807,3 +807,50 @@ TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanRequestedWithSameCmsgSpaceIs
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
 }
+
+TYPED_TEST(StreamTransportTest, MismatchedFdExpectationsHaveAppropriateErrorMessages)
+{
+    constexpr int num_fds{5};
+
+    std::array<TestFd, num_fds> test_files;
+    std::array<int, num_fds> test_fds;
+    for (unsigned int i = 0; i < test_fds.size(); ++i)
+    {
+        test_fds[i] = test_files[i].fd;
+    }
+
+    int32_t dummy{0};
+    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd,
+                                           test_fds,
+                                           &dummy,
+                                           sizeof(dummy),
+                                           MSG_DONTWAIT));
+
+    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd,
+                                           test_fds,
+                                           &dummy,
+                                           sizeof(dummy),
+                                           MSG_DONTWAIT));
+
+    try
+    {
+        std::vector<int> dummy_fds(num_fds + 1);
+        this->transport->receive_data(&dummy, sizeof(dummy), dummy_fds);
+        FAIL() << "Receiving fewer fds than sent unexpectedly succeeded";
+    }
+    catch (std::runtime_error const& err)
+    {
+        EXPECT_THAT(err.what(), testing::HasSubstr("fewer fds than expected"));
+    }
+
+    try
+    {
+        std::vector<int> dummy_fds(num_fds - 1);
+        this->transport->receive_data(&dummy, sizeof(dummy), dummy_fds);
+        FAIL() << "Receiving more fds than sent unexpectedly succeeded";
+    }
+    catch (std::runtime_error const& err)
+    {
+        EXPECT_THAT(err.what(), testing::HasSubstr("more fds than expected"));
+    }
+}
