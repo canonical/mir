@@ -33,7 +33,7 @@
  */
 typedef enum MirSurfaceAttrib
 {
-    /* Do not specify values...code relies on 1...N ordering. */
+    /* Do not specify values...code relies on 0...N ordering. */
     mir_surface_attrib_type,
     mir_surface_attrib_state,
     mir_surface_attrib_swapinterval,
