@@ -116,7 +116,7 @@ public:
     public:
         virtual void lifecycle_event_occured(MirLifecycleState /*state*/) override
         {
-        	printf("This line must not be output\n");
+            printf("This line must not be output\n");
         }
     };
 
@@ -125,7 +125,7 @@ public:
     public:
         virtual void lifecycle_event_occured(MirLifecycleState state) override
         {
-        	printf("Lifecycle event occured : state = %d\n", state);
+            printf("Lifecycle event occured : state = %d\n", state);
         }
     };
 
