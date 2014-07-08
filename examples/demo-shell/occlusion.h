@@ -20,6 +20,7 @@
 #define MIR_EXAMPLES_OCCLUSION_H_
 
 #include "mir/compositor/scene.h"
+#include "mir/geometry/rectangle.h"
 
 namespace mir
 {

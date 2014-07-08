@@ -38,12 +38,6 @@ class DisplayBuffer;
 namespace examples
 {
 
-compositor::SceneElementSequence filter_occlusions_from(
-    compositor::SceneElementSequence& list,
-    geometry::Rectangle const& area,
-    int shadow_radius,
-    int titlebar_height);
-
 class DemoCompositor : public compositor::DisplayBufferCompositor
 {
 public:

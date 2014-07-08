@@ -68,7 +68,6 @@ mg::RenderableList me::DemoCompositor::generate_renderables()
     }
     for(auto const& it : occluded)
         it->occluded_in(this);
-
     
     return renderable_list;
 }

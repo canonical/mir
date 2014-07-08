@@ -16,12 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/display_buffer.h"
-#include "mir/compositor/compositor_report.h"
-#include "mir/compositor/scene.h"
-#include "mir/compositor/scene_element.h"
-#include "mir/compositor/destination_alpha.h"
-#include "demo_compositor.h"
+#include <mir/graphics/renderable.h>
+#include <mir/compositor/scene_element.h>
+#include "occlusion.h"
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
