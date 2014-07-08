@@ -36,6 +36,7 @@ public:
     virtual bool connection_is_allowed(SessionCredentials const& creds) = 0;
     virtual bool configure_display_is_allowed(SessionCredentials const& creds) = 0;
     virtual bool screencast_is_allowed(SessionCredentials const& creds) = 0;
+    virtual bool prompt_session_is_allowed(SessionCredentials const&  creds) = 0;
 
 protected:
     SessionAuthorizer() = default;

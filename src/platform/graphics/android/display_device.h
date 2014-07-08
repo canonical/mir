@@ -42,7 +42,10 @@ public:
 
     virtual void mode(MirPowerMode mode) = 0;
     virtual void post_gl(SwappingGLContext const& context) = 0;
-    virtual void post_overlays(
+    /* \returns true if the DisplayDevice can support the renderlist
+                false if the display device cannot support drawing the given renderlist.
+    */
+    virtual bool post_overlays(
         SwappingGLContext const& context,
         RenderableList const& list,
         RenderableListCompositor const& list_compositor) = 0;

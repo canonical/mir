@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -19,44 +19,28 @@
 #ifndef MIR_TEST_FRAMEWORK_IN_PROCESS_SERVER_H_
 #define MIR_TEST_FRAMEWORK_IN_PROCESS_SERVER_H_
 
+#include "mir_test_framework/server_runner.h"
+
 #include <gtest/gtest.h>
-
-#include <string>
-#include <thread>
-
-namespace mir
-{
-class DisplayServer;
-class DefaultServerConfiguration;
-}
-
 
 namespace mir_test_framework
 {
 /// Fixture for running Mir server in test process
-struct InProcessServer : testing::Test
+struct InProcessServer : testing::Test, private ServerRunner
 {
-    InProcessServer();
-    ~InProcessServer();
-
     /// Starts the server
     /// \warning don't forget to call this if you override SetUp()
-    void SetUp() override;
+    void SetUp() override { ServerRunner::start_server(); }
 
     /// Stops the server
     /// \warning don't forget to call this if you override TearDown()
-    void TearDown() override;
+    void TearDown() override { ServerRunner::stop_server(); }
 
     /// \return a connection string for a new client to connect to the server
-    std::string new_connection();
+    using ServerRunner::new_connection;
 
-private:
-    mir::DisplayServer* start_mir_server();
-    virtual mir::DefaultServerConfiguration& server_config() = 0;
-
-    char const* const old_env;
-    std::thread server_thread;
-    mir::DisplayServer* display_server = 0;
+    /// \return a connection string for a new client to connect to the prompt server
+    using ServerRunner::new_prompt_connection;
 };
 }
 

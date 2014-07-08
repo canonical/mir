@@ -1,7 +1,7 @@
 /*
  * Simple definitions common to client and server.
  *
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License version 3 as
@@ -38,6 +38,7 @@ typedef enum MirSurfaceAttrib
     mir_surface_attrib_swapinterval,
     mir_surface_attrib_focus,
     mir_surface_attrib_dpi,
+    mir_surface_attrib_visibility,
     mir_surface_attribs
 } MirSurfaceAttrib;
 
@@ -73,6 +74,12 @@ typedef enum MirSurfaceFocusState
     mir_surface_focused
 } MirSurfaceFocusState;
 
+typedef enum MirSurfaceVisibility
+{
+    mir_surface_visibility_occluded = 0,
+    mir_surface_visibility_exposed
+} MirSurfaceVisibility;
+
 typedef enum MirLifecycleState
 {
     mir_lifecycle_state_will_suspend,
@@ -87,6 +94,12 @@ typedef enum MirPowerMode
     mir_power_mode_suspend, /* Blanked, lowest power. */
     mir_power_mode_off /* Powered down. */
 } MirPowerMode;
+
+typedef enum MirPromptSessionState
+{
+    mir_prompt_session_state_stopped = 0,
+    mir_prompt_session_state_started
+} MirPromptSessionState;
 
 /**
  * The order of components in a format enum matches the
@@ -111,6 +124,7 @@ typedef enum MirPixelFormat
 /* This could be improved... https://bugs.launchpad.net/mir/+bug/1236254 */
 #define MIR_BYTES_PER_PIXEL(f) (((f) == mir_pixel_format_bgr_888) ? 3 : 4)
 
+/** Direction relative to the "natural" orientation of the display */
 typedef enum MirOrientation
 {
     mir_orientation_normal = 0,
@@ -118,6 +132,17 @@ typedef enum MirOrientation
     mir_orientation_inverted = 180,
     mir_orientation_right = 270
 } MirOrientation;
+
+/**
+ * A special cursor name for use with mir_cursor_configuration_from_name
+ * representing the system default cursor.
+ */
+extern char const *const mir_default_cursor_name;
+/**
+ * A special cursor name for use with mir_cursor_configuration_from_name
+ * representing a disabled cursor image.
+ */
+extern char const *const mir_disabled_cursor_name;
 
 /**@}*/
 

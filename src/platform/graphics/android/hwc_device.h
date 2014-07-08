@@ -49,19 +49,14 @@ public:
               std::shared_ptr<SyncFileOps> const& sync_ops);
 
     virtual void post_gl(SwappingGLContext const& context);
-    virtual void post_overlays(
+    virtual bool post_overlays(
         SwappingGLContext const& context,
         RenderableList const& list,
         RenderableListCompositor const& list_compositor);
 
 private:
-    void post(SwappingGLContext const& context);
-
     LayerList hwc_list;
     std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
-
-    void set_list_framebuffer(Buffer const&);
-    void setup_layer_types();
 
     std::shared_ptr<HwcWrapper> const hwc_wrapper;
     std::shared_ptr<SyncFileOps> const sync_ops;

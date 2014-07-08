@@ -31,6 +31,7 @@ class TestingServerConfiguration : public StubbedServerConfiguration
 {
 public:
     TestingServerConfiguration();
+    explicit TestingServerConfiguration(std::vector<geometry::Rectangle> const& display_rects);
 
     // Code to run in server process
     virtual void exec();

@@ -29,6 +29,8 @@
 #include "mir_test_doubles/stub_renderer.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_input_sender.h"
+#include "mir_test_doubles/null_surface_configurator.h"
 
 #include <condition_variable>
 #include <mutex>
@@ -131,7 +133,8 @@ struct SurfaceStackCompositor : public testing::Test
             false,
             mock_buffer_stream,
             std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<ms::SurfaceConfigurator>(),
+            std::shared_ptr<mtd::StubInputSender>(),
+            std::make_shared<mtd::NullSurfaceConfigurator>(),
             std::shared_ptr<mg::CursorImage>(),
             null_scene_report)}
     {
@@ -200,6 +203,7 @@ TEST_F(SurfaceStackCompositor, adding_a_surface_that_has_been_swapped_triggers_a
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(1, timeout));
 }
 
+//test associated with lp:1290306, 1293896, 1294048, 1294051, 1294053
 TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_consumed)
 {
     using namespace testing;

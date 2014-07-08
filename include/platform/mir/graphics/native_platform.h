@@ -18,6 +18,7 @@
 #ifndef MIR_GRAPHICS_NATIVE_PLATFORM_H_
 #define MIR_GRAPHICS_NATIVE_PLATFORM_H_
 
+#include "mir/graphics/platform.h"
 #include <memory>
 #include <functional>
 
@@ -52,7 +53,10 @@ public:
 
     virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
 
-    virtual void fill_ipc_package(BufferIPCPacker* packer, Buffer const* buffer) const = 0;
+    virtual void fill_buffer_package(
+        BufferIPCPacker* packer,
+        Buffer const* buffer,
+        BufferIpcMsgType msg_type) const = 0;
 
     virtual ~NativePlatform() = default;
     NativePlatform(NativePlatform const&) = delete;

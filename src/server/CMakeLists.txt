@@ -30,6 +30,7 @@ set(
   display_server.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
+  default_emergency_cleanup.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)
@@ -96,7 +97,7 @@ else()
   )
 endif()
 
-set(MIRSERVER_ABI 20) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 22) # Be sure to increment MIR_VERSION_MINOR at the same time
 
 set_target_properties(
   mirserver

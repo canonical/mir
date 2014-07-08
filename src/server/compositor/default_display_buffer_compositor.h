@@ -43,8 +43,9 @@ public:
         std::shared_ptr<Scene> const& scene,
         std::shared_ptr<Renderer> const& renderer,
         std::shared_ptr<CompositorReport> const& report);
+    ~DefaultDisplayBufferCompositor();
 
-    bool composite() override;
+    void composite() override;
 
 private:
     graphics::DisplayBuffer& display_buffer;
@@ -52,8 +53,6 @@ private:
     std::shared_ptr<Scene> const scene;
     std::shared_ptr<Renderer> const renderer;
     std::shared_ptr<CompositorReport> const report;
-
-    bool last_pass_rendered_anything;
 };
 
 }

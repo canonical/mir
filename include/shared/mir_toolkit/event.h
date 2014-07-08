@@ -40,7 +40,9 @@ typedef enum
     mir_event_type_key,
     mir_event_type_motion,
     mir_event_type_surface,
-    mir_event_type_resize
+    mir_event_type_resize,
+    mir_event_type_prompt_session_state_change,
+    mir_event_type_orientation
 } MirEventType;
 
 typedef enum {
@@ -204,6 +206,21 @@ typedef struct
     int height;
 } MirResizeEvent;
 
+typedef struct
+{
+    MirEventType type;
+
+    MirPromptSessionState new_state;
+} MirPromptSessionEvent;
+
+typedef struct MirOrientationEvent
+{
+    MirEventType type;
+
+    int surface_id;
+    MirOrientation direction;
+} MirOrientationEvent;
+
 typedef union
 {
     MirEventType    type;
@@ -211,6 +228,8 @@ typedef union
     MirMotionEvent  motion;
     MirSurfaceEvent surface;
     MirResizeEvent  resize;
+    MirPromptSessionEvent  prompt_session;
+    MirOrientationEvent orientation;
 } MirEvent;
 
 #ifdef __cplusplus

@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
+ *              Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
 #include "mir/scene/surface_creation_parameters.h"
@@ -27,13 +28,14 @@
 #include "mir_test/wait_condition.h"
 #include "mir_test/client_event_matchers.h"
 #include "mir_test/barrier.h"
-#include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/deferred_in_process_server.h"
 #include "mir_test_framework/input_testing_server_configuration.h"
 #include "mir_test_framework/input_testing_client_configuration.h"
 #include "mir_test_framework/declarative_placement_strategy.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
 
 namespace mi = mir::input;
 namespace mis = mi::synthesis;
@@ -50,12 +52,15 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
 {
     mt::Barrier& input_cb_setup_fence;
 
+    static geom::Rectangle const display_bounds;
+
     std::function<void(mtf::InputTestingServerConfiguration& server)> produce_events;
     mtf::SurfaceGeometries client_geometries;
     mtf::SurfaceDepths client_depths;
 
-    ServerConfiguration(mt::Barrier& input_cb_setup_fence)
-            : input_cb_setup_fence(input_cb_setup_fence)
+    ServerConfiguration(mt::Barrier& input_cb_setup_fence) : 
+        InputTestingServerConfiguration({display_bounds}),
+        input_cb_setup_fence(input_cb_setup_fence)
     {
     }
 
@@ -82,6 +87,8 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
     }
 };
 
+geom::Rectangle const ServerConfiguration::display_bounds = {{0, 0}, {1600, 1600}};
+
 struct ClientConfig : mtf::InputTestingClientConfiguration
 {
     std::function<void(MockInputHandler&, mt::WaitCondition&)> expect_cb;
@@ -104,14 +111,7 @@ private:
     std::thread thread;
 };
 
-
-struct DeferredInProcessServer : mtf::InProcessServer
-{
-    void SetUp() override { /* TODO this is a nasty frig around the unfortunate coupling in InProcessServer */ }
-    void start_server() { mtf::InProcessServer::SetUp(); }
-};
-
-struct TestClientInput : DeferredInProcessServer
+struct TestClientInput : mtf::DeferredInProcessServer
 {
     std::string const arbitrary_client_name{"input-test-client"};
     std::string const test_client_name_1 = "1";
@@ -506,5 +506,75 @@ TEST_F(TestClientInput, clients_receive_motion_within_co_ordinate_system_of_wind
                  .WillOnce(mt::WakeUp(&events_received));
         };
 
+    start_client(client_config);
+}
+
+// TODO: Consider tests for more input devices with custom mapping (i.e. joysticks...)
+TEST_F(TestClientInput, usb_direct_input_devices_work)
+{
+    using namespace ::testing;
+
+    auto minimum_touch = mi::android::FakeEventHub::TouchScreenMinAxisValue;
+    auto maximum_touch = mi::android::FakeEventHub::TouchScreenMaxAxisValue;
+    auto display_width = ServerConfiguration::display_bounds.size.width.as_uint32_t();
+    auto display_height = ServerConfiguration::display_bounds.size.height.as_uint32_t();
+
+    // We place a click 10% in to the touchscreens space in both axis, and a second at 0,0. Thus we expect to see a click at
+    // .1*screen_width/height and a second at zero zero.
+    static int const abs_touch_x_1 = minimum_touch+(maximum_touch-minimum_touch)*.10;
+    static int const abs_touch_y_1 = minimum_touch+(maximum_touch-minimum_touch)*.10;
+    static int const abs_touch_x_2 = 0;
+    static int const abs_touch_y_2 = 0;
+
+    static float const expected_scale_x = float(display_width) / (maximum_touch - minimum_touch + 1);
+    static float const expected_scale_y = float(display_height) / (maximum_touch - minimum_touch + 1);
+
+    static float const expected_motion_x_1 = expected_scale_x * abs_touch_x_1;
+    static float const expected_motion_y_1 = expected_scale_y * abs_touch_y_1;
+    static float const expected_motion_x_2 = expected_scale_x * abs_touch_x_2;
+    static float const expected_motion_y_2 = expected_scale_y * abs_touch_y_2;
+
+    server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
+        {
+            server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position(abs_touch_x_1, abs_touch_y_1));
+            server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position(abs_touch_x_2, abs_touch_y_2));
+        };
+    server_configuration.client_geometries[arbitrary_client_name] = ServerConfiguration::display_bounds;
+    start_server();
+
+    client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
+        {
+            InSequence seq;
+            EXPECT_CALL(handler, handle_input(
+                mt::TouchEvent(expected_motion_x_1, expected_motion_y_1))).Times(1);
+            EXPECT_CALL(handler, handle_input(
+                mt::MotionEventWithPosition(expected_motion_x_2, expected_motion_y_2))).Times(1)
+                .WillOnce(mt::WakeUp(&events_received));
+        };
+    start_client(client_config);
+}
+
+TEST_F(TestClientInput, send_mir_input_events_through_surface)
+{
+    MirEvent key_event;
+    std::memset(&key_event, 0, sizeof key_event);
+    key_event.type = mir_event_type_key;
+    key_event.key.action= mir_key_action_down;
+
+    server_configuration.produce_events = [key_event](mtf::InputTestingServerConfiguration& server)
+         {
+             server.the_session_container()->for_each([key_event](std::shared_ptr<ms::Session> const& session) -> void
+                {
+                    session->default_surface()->consume(key_event);
+                });
+         };
+
+    start_server();
+
+    client_config.expect_cb = [&](MockHandler& handler, mt::WaitCondition& events_received)
+    {
+        EXPECT_CALL(handler, handle_input(mt::KeyDownEvent())).Times(1)
+                 .WillOnce(mt::WakeUp(&events_received));
+    };
     start_client(client_config);
 }

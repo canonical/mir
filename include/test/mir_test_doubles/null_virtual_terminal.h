@@ -31,13 +31,15 @@ namespace doubles
 class NullVirtualTerminal : public graphics::mesa::VirtualTerminal
 {
 public:
-    void set_graphics_mode() {}
+    void set_graphics_mode() override {}
 
     void register_switch_handlers(graphics::EventHandlerRegister&,
                                   std::function<bool()> const&,
-                                  std::function<bool()> const&)
+                                  std::function<bool()> const&) override
     {
     }
+
+    void restore() override {}
 };
 
 }

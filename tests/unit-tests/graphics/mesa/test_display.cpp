@@ -34,6 +34,8 @@
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/mock_gl_config.h"
 #include "mir_test_doubles/platform_factory.h"
+#include "mir_test_doubles/mock_virtual_terminal.h"
+#include "mir_test_doubles/null_emergency_cleanup.h"
 
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
@@ -67,27 +69,18 @@ struct MockLogger : public ml::Logger
     ~MockLogger() noexcept(true) {}
 };
 
-class MockVirtualTerminal : public mgm::VirtualTerminal
-{
-public:
-    ~MockVirtualTerminal() noexcept(true) {}
-
-    MOCK_METHOD0(set_graphics_mode, void());
-    MOCK_METHOD3(register_switch_handlers,
-                 void(mg::EventHandlerRegister&,
-                      std::function<bool()> const&,
-                      std::function<bool()> const&));
-};
-
 class MockEventRegister : public mg::EventHandlerRegister
 {
 public:
     MOCK_METHOD2(register_signal_handler,
                  void(std::initializer_list<int>,
                  std::function<void(int)> const&));
-    MOCK_METHOD2(register_fd_handler,
+    MOCK_METHOD3(register_fd_handler,
                  void(std::initializer_list<int>,
-                 std::function<void(int)> const&));
+                 void const*, std::function<void(int)> const&));
+    MOCK_METHOD1(unregister_fd_handler,
+                 void(void const*));
+
 };
 
 
@@ -640,13 +633,16 @@ TEST_F(MesaDisplayTest, constructor_sets_vt_graphics_mode)
 {
     using namespace testing;
 
-    auto mock_vt = std::make_shared<MockVirtualTerminal>();
+    auto mock_vt = std::make_shared<mtd::MockVirtualTerminal>();
 
     EXPECT_CALL(*mock_vt, set_graphics_mode())
         .Times(1);
 
     auto platform = std::make_shared<mgm::Platform>(
-        null_report, mock_vt, mgm::BypassOption::allowed);
+        null_report,
+        mock_vt,
+        *std::make_shared<mtd::NullEmergencyCleanup>(),
+        mgm::BypassOption::allowed);
 
     auto display = create_display(platform);
 }
@@ -691,6 +687,7 @@ TEST_F(MesaDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
     auto platform = std::make_shared<mgm::Platform>(
         mock_report,
         std::make_shared<mtd::NullVirtualTerminal>(),
+        *std::make_shared<mtd::NullEmergencyCleanup>(),
         mgm::BypassOption::allowed);
     auto display = std::make_shared<mgm::Display>(
                         platform,
@@ -714,7 +711,7 @@ TEST_F(MesaDisplayTest, configuration_change_registers_video_devices_handler)
     auto display = create_display(create_platform());
     MockEventRegister mock_register;
 
-    EXPECT_CALL(mock_register, register_fd_handler(_,_));
+    EXPECT_CALL(mock_register, register_fd_handler(_,_,_));
 
     display->register_configuration_change_handler(mock_register, []{});
 }

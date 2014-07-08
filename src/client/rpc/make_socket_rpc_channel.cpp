@@ -44,13 +44,14 @@ mclr::make_rpc_channel(std::string const& name,
                        std::shared_ptr<mcl::SurfaceMap> const& map,
                        std::shared_ptr<mcl::DisplayConfiguration> const& disp_conf,
                        std::shared_ptr<RpcReport> const& rpc_report,
-                       std::shared_ptr<mcl::LifecycleControl> const& lifecycle_control)
+                       std::shared_ptr<mcl::LifecycleControl> const& lifecycle_control,
+                       std::shared_ptr<mcl::EventSink> const& event_sink)
 {
     if (fd_prefix.is_start_of(name))
     {
         auto const fd = atoi(name.c_str()+fd_prefix.size);
-        return std::make_shared<MirSocketRpcChannel>(fd, map, disp_conf, rpc_report, lifecycle_control);
+        return std::make_shared<MirSocketRpcChannel>(fd, map, disp_conf, rpc_report, lifecycle_control, event_sink);
     }
 
-    return std::make_shared<MirSocketRpcChannel>(name, map, disp_conf, rpc_report, lifecycle_control);
+    return std::make_shared<MirSocketRpcChannel>(name, map, disp_conf, rpc_report, lifecycle_control, event_sink);
 }

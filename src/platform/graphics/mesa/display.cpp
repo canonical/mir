@@ -86,9 +86,9 @@ mgm::Display::Display(std::shared_ptr<Platform> const& platform,
       listener(listener),
       monitor(mir::udev::Context()),
       shared_egl{*gl_config},
-      output_container{platform->drm.fd,
-                       std::make_shared<KMSPageFlipper>(platform->drm.fd)},
-      current_display_configuration{platform->drm.fd},
+      output_container{platform->drm->fd,
+                       std::make_shared<KMSPageFlipper>(platform->drm->fd)},
+      current_display_configuration{platform->drm->fd},
       gl_config{gl_config}
 {
     platform->vt->set_graphics_mode();
@@ -233,6 +233,7 @@ void mgm::Display::register_configuration_change_handler(
 {
     handlers.register_fd_handler(
         {monitor.fd()},
+        this,
         [conf_change_handler, this](int)
         {
             monitor.process_events([conf_change_handler]
@@ -256,7 +257,7 @@ void mgm::Display::pause()
     try
     {
         if (auto c = cursor.lock()) c->suspend();
-        platform->drm.drop_master();
+        platform->drm->drop_master();
     }
     catch(std::runtime_error const& e)
     {
@@ -269,7 +270,7 @@ void mgm::Display::resume()
 {
     try
     {
-        platform->drm.set_master();
+        platform->drm->set_master();
     }
     catch(std::runtime_error const& e)
     {

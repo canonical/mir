@@ -72,15 +72,6 @@ struct ErrorServer : StubServerTool
     {
         throw std::runtime_error(test_exception_text);
     }
-
-    void test_file_descriptors(
-        google::protobuf::RpcController*,
-        const protobuf::Void*,
-        protobuf::Buffer*,
-        google::protobuf::Closure*)
-    {
-        throw std::runtime_error(test_exception_text);
-    }
 };
 
 std::string const ErrorServer::test_exception_text{"test exception text"};

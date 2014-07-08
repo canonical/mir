@@ -37,7 +37,7 @@ public:
     ~MockDisplayDevice() noexcept {}
     MOCK_METHOD1(mode, void(MirPowerMode));
     MOCK_METHOD1(post_gl, void(graphics::android::SwappingGLContext const&));
-    MOCK_METHOD3(post_overlays, void(
+    MOCK_METHOD3(post_overlays, bool(
         graphics::android::SwappingGLContext const&,
         graphics::RenderableList const&,
         graphics::android::RenderableListCompositor const&));

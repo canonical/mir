@@ -324,7 +324,7 @@ public:
             {
             }
 
-            bool composite()
+            void composite()
             {
                 while (!created) std::this_thread::yield();
                 stop_watch.stop();
@@ -342,7 +342,6 @@ public:
                     m.step();
 
                 frames++;
-                return false;
             }
 
         private:

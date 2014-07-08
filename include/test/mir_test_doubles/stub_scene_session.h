@@ -30,6 +30,8 @@ namespace doubles
 
 struct StubSceneSession : public scene::Session
 {
+    StubSceneSession(pid_t pid = -1) : pid(pid) {}
+
     frontend::SurfaceId create_surface(scene::SurfaceCreationParameters const& /* params */) override
     {
         return frontend::SurfaceId{0};
@@ -45,9 +47,10 @@ struct StubSceneSession : public scene::Session
     {
         return std::string();
     }
+
     pid_t process_id() const override
     {
-        return -1;
+        return pid;
     }
 
     void force_requests_to_complete() override
@@ -76,6 +79,16 @@ struct StubSceneSession : public scene::Session
     void set_lifecycle_state(MirLifecycleState /*state*/)
     {
     }
+
+    void start_prompt_session() override
+    {
+    }
+
+    void stop_prompt_session() override
+    {
+    }
+
+    pid_t const pid;
 };
 
 }
