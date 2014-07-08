@@ -280,7 +280,7 @@ int mir_surface_get_dpi(MirSurface* surf)
 
 MirSurfaceFocusState mir_surface_get_focus(MirSurface* surf)
 {
-    MirSurfaceFocusState state = static_cast<MirSurfaceFocusState>(-1);
+    MirSurfaceFocusState state = mir_surface_unfocused;
 
     try
     {
@@ -298,7 +298,7 @@ MirSurfaceFocusState mir_surface_get_focus(MirSurface* surf)
 
 MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
 {
-    MirSurfaceVisibility state = static_cast<MirSurfaceVisibility>(-1);
+    MirSurfaceVisibility state = static_cast<MirSurfaceVisibility>(mir_surface_visibility_occluded);
 
     try
     {
