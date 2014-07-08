@@ -278,7 +278,7 @@ int mir_surface_get_dpi(MirSurface* surf)
     return dpi;
 }
 
-MirSurfaceFocusState mir_surface_get_focus_state(MirSurface* surf)
+MirSurfaceFocusState mir_surface_get_focus(MirSurface* surf)
 {
     MirSurfaceFocusState state = static_cast<MirSurfaceFocusState>(-1);
 
@@ -296,7 +296,7 @@ MirSurfaceFocusState mir_surface_get_focus_state(MirSurface* surf)
     return state;
 }
 
-MirSurfaceVisibility mir_surface_get_visibility_state(MirSurface* surf)
+MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
 {
     MirSurfaceVisibility state = static_cast<MirSurfaceVisibility>(-1);
 

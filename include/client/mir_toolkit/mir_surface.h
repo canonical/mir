@@ -260,7 +260,7 @@ int mir_surface_get_dpi(MirSurface* surface);
  *   \return             The focus state of said surface or
  *                       -1 if the surface is invalid.
  */
-MirSurfaceFocusState mir_surface_get_focus_state(MirSurface *surface);
+MirSurfaceFocusState mir_surface_get_focus(MirSurface *surface);
 
 /**
  * Query the visibility state for a surface.
@@ -268,7 +268,7 @@ MirSurfaceFocusState mir_surface_get_focus_state(MirSurface *surface);
  *   \return             The visibility state of said surface or
  *                       -1 if the surface is invalid.
  */
-MirSurfaceVisibility mir_surface_get_visibility_state(MirSurface *surface);
+MirSurfaceVisibility mir_surface_get_visibility(MirSurface *surface);
 
 /**
  * Choose the cursor state for a surface: whether a cursor is shown, 

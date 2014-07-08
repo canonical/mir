@@ -295,7 +295,7 @@ struct MirSurfaceVisibilityEvent : BasicFixture
         EXPECT_CALL(mock_visibility_callback, handle(surface, visibility))
             .WillOnce(DoAll(Invoke([&visibility](MirSurface *s, MirSurfaceVisibility)
                 {
-                    EXPECT_EQ(visibility, mir_surface_get_visibility_state(s));
+                    EXPECT_EQ(visibility, mir_surface_get_visibility(s));
                 }), mt::WakeUp(&event_received)));
 
         action();
