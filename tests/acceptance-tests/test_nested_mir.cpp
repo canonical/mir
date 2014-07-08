@@ -18,6 +18,8 @@
 
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/graphics/native_platform.h"
+#include "mir/graphics/display.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/display_server.h"
 #include "mir/run_mir.h"
 
@@ -29,6 +31,11 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <future>
+#include <mutex>
+#include <condition_variable>
+
+namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mtf = mir_test_framework;
@@ -67,6 +74,8 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
 
 struct HostServerConfiguration : mtf::StubbedServerConfiguration
 {
+    using mtf::StubbedServerConfiguration::StubbedServerConfiguration;
+
     virtual std::shared_ptr<mf::SessionMediatorReport>  the_session_mediator_report()
     {
         if (!mock_session_mediator_report)
@@ -198,27 +207,96 @@ private:
     }
 };
 
+class NestedMirRunner
+{
+public:
+    NestedMirRunner(mir::ServerConfiguration& nested_config) :
+        nested_run_mir{
+            std::async(std::launch::async, [&]
+            {
+                mir::run_mir(nested_config, [&](mir::DisplayServer& server)
+                    {
+                        std::lock_guard<decltype(nested_mutex)> lock{nested_mutex};
+                        nested_server = &server;
+                        nested_cv.notify_one();
+                    });
+            })}
+    {
+        std::unique_lock<decltype(nested_mutex)> lock{nested_mutex};
+        nested_cv.wait(lock, [&] { return nested_server != nullptr; });
+    }
+
+    ~NestedMirRunner() noexcept
+    {
+        std::lock_guard<decltype(nested_mutex)> lock{nested_mutex};
+        nested_server->stop();
+    }
+
+private:
+    std::mutex nested_mutex;
+    std::condition_variable nested_cv;
+    mir::DisplayServer* nested_server{nullptr};
+
+    std::future<void> nested_run_mir;
+};
+
+std::vector<geom::Rectangle> const display_geometry
+{
+    {{  0, 0}, { 640,  480}},
+    {{480, 0}, {1920, 1080}}
+};
+
 struct NestedServer : mtf::InProcessServer, HostServerConfiguration
 {
+    NestedServer() : HostServerConfiguration(display_geometry) {}
+
     NestedMockEGL mock_egl;
 
     virtual mir::DefaultServerConfiguration& server_config()
     {
         return *this;
     }
+
+    void SetUp() override
+    {
+        mtf::InProcessServer::SetUp();
+        connection_string = new_connection();
+    }
+
+    std::string connection_string;
 };
 }
 
 TEST_F(NestedServer, nested_platform_connects_and_disconnects)
 {
-    std::string const connection_string{new_connection()};
     NestedServerConfiguration nested_config{connection_string, the_graphics_platform()};
 
     InSequence seq;
     EXPECT_CALL(*mock_session_mediator_report, session_connect_called(_)).Times(1);
     EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(1);
 
-    mir::run_mir(nested_config, [](mir::DisplayServer& server){server.stop();});
+    NestedMirRunner nested_mir{nested_config};
+}
+
+TEST_F(NestedServer, sees_expected_outputs)
+{
+    NestedServerConfiguration nested_config{connection_string, the_graphics_platform()};
+    NestedMirRunner nested_mir{nested_config};
+
+    auto const display = nested_config.the_display();
+    auto const display_config = display->configuration();
+
+    std::vector<geom::Rectangle> outputs;
+
+     display_config->for_each_output([&] (mg::UserDisplayConfigurationOutput& output)
+        {
+            outputs.push_back(
+                geom::Rectangle{
+                    output.top_left,
+                    output.modes[output.current_mode_index].size});
+        });
+
+    EXPECT_THAT(outputs, ContainerEq(display_geometry));
 }
 
 //////////////////////////////////////////////////////////////////
@@ -226,8 +304,6 @@ TEST_F(NestedServer, nested_platform_connects_and_disconnects)
 // TODO it may not have much long term value, but decide that later.
 TEST_F(NestedServer, on_exit_display_objects_should_be_destroyed)
 {
-    std::string const connection_string{new_connection()};
-
     struct MyServerConfiguration : NestedServerConfiguration
     {
         using NestedServerConfiguration::NestedServerConfiguration;
@@ -244,7 +320,7 @@ TEST_F(NestedServer, on_exit_display_objects_should_be_destroyed)
 
     MyServerConfiguration config{connection_string, the_graphics_platform()};
 
-    mir::run_mir(config, [](mir::DisplayServer& server){server.stop();});
+    NestedMirRunner{config};
 
     EXPECT_FALSE(config.my_display.lock()) << "after run_mir() exits the display should be released";
 }

@@ -18,6 +18,7 @@
 
 #include "default_ipc_factory.h"
 
+#include "no_prompt_shell.h"
 #include "session_mediator.h"
 #include "unauthorized_display_changer.h"
 #include "unauthorized_screencast.h"
@@ -38,6 +39,7 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     std::shared_ptr<SessionAuthorizer> const& session_authorizer,
     std::shared_ptr<mg::CursorImages> const& cursor_images) :
     shell(shell),
+    no_prompt_shell(std::make_shared<NoPromptShell>(shell)),
     sm_report(sm_report),
     cache(std::make_shared<ResourceCache>()),
     graphics_platform(graphics_platform),
@@ -75,8 +77,11 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
         effective_screencast = std::make_shared<UnauthorizedScreencast>();
     }
 
+    auto const effective_shell =
+        session_authorizer->prompt_session_is_allowed(creds) ? shell : no_prompt_shell;
+
     return make_mediator(
-        shell,
+        effective_shell,
         graphics_platform,
         changer,
         buffer_allocator,
