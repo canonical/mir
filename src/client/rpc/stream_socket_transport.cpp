@@ -193,7 +193,7 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes, 
         // file descriptors back to the caller
         struct cmsghdr const* const cmsg = CMSG_FIRSTHDR(&header);
         if (cmsg)
-        {            
+        {
             // NOTE: This relies on the file descriptor cmsg being read
             // (and written) atomically.
             if (fds_read)
@@ -204,7 +204,8 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes, 
                 BOOST_THROW_EXCEPTION(std::runtime_error("Unexpectedly received file descriptors"));
             }
             if (cmsg->cmsg_len == CMSG_LEN(fds_bytes) &&
-                cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS)
+                cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS &&
+                !(header.msg_flags & MSG_CTRUNC))
             {
                 int const* const data = reinterpret_cast<int const*>CMSG_DATA(cmsg);
                 int i = 0;
