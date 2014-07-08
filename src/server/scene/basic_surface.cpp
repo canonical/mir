@@ -53,7 +53,7 @@ void ms::SurfaceObservers::for_each(
         // We need to take a copy in case we recursively remove during call
         if (auto const copy_of_observer = current_item->observer) f(copy_of_observer);
 
-        current_item = current_item->next.get();
+        current_item = current_item->next;
     }
 }
 
@@ -123,20 +123,37 @@ void ms::SurfaceObservers::add(std::shared_ptr<SurfaceObserver> const& observer)
 
     while (current_item)
     {
-        std::lock_guard<std::recursive_mutex> lock{current_item->mutex};
-
-        if (!current_item->observer)
         {
-            current_item->observer = observer;
+            std::lock_guard<std::recursive_mutex> lock{current_item->mutex};
+
+            if (!current_item->observer)
+            {
+                current_item->observer = observer;
+                return;
+            }
+        }
+
+
+        if (current_item->next)
+        {
+            current_item = current_item->next;
+            continue;
+        }
+        else
+        {
+            auto new_item = new ListItem;
+            new_item->observer = observer;
+
+            for (ListItem* expected{nullptr};
+                !current_item->next.compare_exchange_weak(expected, new_item);
+                expected = nullptr)
+            {
+                current_item = expected;
+            }
+
             return;
         }
 
-        if (!current_item->next)
-        {
-            current_item->next.reset(new ListItem);
-        }
-
-        current_item = current_item->next.get();
     }
 }
 
@@ -154,7 +171,7 @@ void ms::SurfaceObservers::remove(std::shared_ptr<SurfaceObserver> const& observ
             return;
         }
 
-        current_item = current_item->next.get();
+        current_item = current_item->next;
     }
 }
 

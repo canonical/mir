@@ -27,6 +27,7 @@
 #include "mir_toolkit/common.h"
 
 #include <glm/glm.hpp>
+#include <atomic>
 #include <vector>
 #include <memory>
 #include <mutex>
@@ -79,7 +80,9 @@ private:
     {
         std::recursive_mutex mutex;
         std::shared_ptr<SurfaceObserver> observer;
-        std::unique_ptr<ListItem> next;
+        std::atomic<ListItem*> next{nullptr};
+
+        ~ListItem() { delete next.load(); }
     } head;
 };
 
