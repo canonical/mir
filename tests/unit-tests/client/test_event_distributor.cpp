@@ -107,9 +107,15 @@ TEST_F(EventDistributorTest, succeeds_with_thread_delete_unregister)
         EventCatcher(mcl::EventDistributor* event_distributor)
         : event_distributor(event_distributor)
         {
+            pending = true;
             reg = event_distributor->register_event_handler(
                 [this](MirEvent const&)
                 {
+                    if (pending)
+                    {
+                        this->event_distributor->unregister_event_handler(reg);
+                        pending = false;
+                    }
                     mutex.unlock();
                 });
             mutex.lock();
@@ -117,11 +123,13 @@ TEST_F(EventDistributorTest, succeeds_with_thread_delete_unregister)
         ~EventCatcher()
         {
             std::unique_lock<std::mutex> lk(mutex);
-            event_distributor->unregister_event_handler(reg);
+            if (pending)
+                event_distributor->unregister_event_handler(reg);
         }
 
         mcl::EventDistributor* event_distributor;
         int reg;
+        bool pending;
         std::mutex mutex;
     };
 
@@ -145,6 +153,7 @@ TEST_F(EventDistributorTest, succeeds_with_thread_delete_unregister)
 
     while(!thread_done.woken()) {
         event_distributor.handle_event(e);
+        std::this_thread::yield();
     }
 
     thread.join();
