@@ -410,23 +410,25 @@ MirSurfaceType ms::BasicSurface::type() const
     return type_value;
 }
 
-bool ms::BasicSurface::set_type(MirSurfaceType t)
+MirSurfaceType ms::BasicSurface::set_type(MirSurfaceType t)
 {
     std::unique_lock<std::mutex> lg(guard);
-
-    if (t >= 0 && t < mir_surface_types)
+    
+    if (t < 0 || t > mir_surface_types)
     {
-        if (type_value != t)
-        {
-            type_value = t;
-            lg.unlock();
-
-            observers.attrib_changed(mir_surface_attrib_type, type_value); 
-        }
-        return true;
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
+            "type."));
     }
 
-    return false;
+    if (type_value != t)
+    {
+        type_value = t;
+        lg.unlock();
+
+        observers.attrib_changed(mir_surface_attrib_type, type_value); 
+    }
+
+    return t;
 }
 
 MirSurfaceState ms::BasicSurface::state() const
@@ -434,62 +436,63 @@ MirSurfaceState ms::BasicSurface::state() const
     return state_value;
 }
 
-bool ms::BasicSurface::set_state(MirSurfaceState s)
+MirSurfaceState ms::BasicSurface::set_state(MirSurfaceState s)
 {
-    if (s > mir_surface_state_unknown &&
-        s < mir_surface_states)
+    if (s < mir_surface_state_unknown || s > mir_surface_states)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
+
+    std::unique_lock<std::mutex> lg(guard);
+    if (state_value != s)
     {
-        std::unique_lock<std::mutex> lg(guard);
-
-        if (state_value != s)
-        {
-            state_value = s;
-            lg.unlock();
-
-            observers.attrib_changed(mir_surface_attrib_state, s);
-        }
-        return true;
+        state_value = s;
+        lg.unlock();
+        
+        observers.attrib_changed(mir_surface_attrib_state, s);
     }
 
-    return false;
+    return s;
 }
 
-bool ms::BasicSurface::set_swap_interval(int s_interval)
+int ms::BasicSurface::set_swap_interval(int s_interval)
 {
-    if (s_interval >= 0)
+    if (s_interval < 0)
     {
-        std::unique_lock<std::mutex> lg(guard);
-        auto interval = static_cast<unsigned int>(s_interval);
-        if (swapinterval_value != interval)
-        {
-            swapinterval_value = interval;
-            bool allow_dropping = (interval == 0);
-            allow_framedropping(allow_dropping);
-
-            lg.unlock();
-            observers.attrib_changed(mir_surface_attrib_swapinterval, interval);
-        }
-        return true;
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid swapinterval"));
     }
-    return false;
+
+    auto interval = static_cast<unsigned int>(s_interval);
+    std::unique_lock<std::mutex> lg(guard);
+    if (swapinterval_value != interval)
+    {
+        swapinterval_value = interval;
+        bool allow_dropping = (interval == 0);
+        allow_framedropping(allow_dropping);
+
+        lg.unlock();
+        observers.attrib_changed(mir_surface_attrib_swapinterval, interval);
+    }
+
+    return s_interval;
 }
 
-bool ms::BasicSurface::set_focus_state(MirSurfaceFocusState new_state)
+MirSurfaceFocusState ms::BasicSurface::set_focus_state(MirSurfaceFocusState new_state)
 {
-    if (new_state == mir_surface_focused ||
-        new_state == mir_surface_unfocused)
+    if (new_state != mir_surface_focused &&
+        new_state != mir_surface_unfocused)
     {
-        std::unique_lock<std::mutex> lg(guard);
-        if (focus_state_value != new_state)
-        {
-            focus_state_value = new_state;
-
-            lg.unlock();
-            observers.attrib_changed(mir_surface_attrib_focus, new_state);
-        }
-        return true;
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid focus state."));
     }
-    return false;
+
+    std::unique_lock<std::mutex> lg(guard);
+    if (focus_state_value != new_state)
+    {
+        focus_state_value = new_state;
+
+        lg.unlock();
+        observers.attrib_changed(mir_surface_attrib_focus, new_state);
+    }
+
+    return new_state;
 }
 
 void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
@@ -499,39 +502,26 @@ void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> cons
 
 int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
 {
-    int result = value = configurator->select_attribute_value(*this, attrib, value);
+    int result = configurator->select_attribute_value(*this, attrib, value);
     switch (attrib)
     {
     case mir_surface_attrib_type:
-        if (!set_type(static_cast<MirSurfaceType>(value)))
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
-                                                   "type."));
-        result = type();
+        result = set_type(static_cast<MirSurfaceType>(result));
         break;
     case mir_surface_attrib_state:
-        if (value != mir_surface_state_unknown &&
-            !set_state(static_cast<MirSurfaceState>(value)))
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
-        result = state();
+        result = set_state(static_cast<MirSurfaceState>(result));
         break;
     case mir_surface_attrib_focus:
-        if (!set_focus_state(static_cast<MirSurfaceFocusState>(value)))
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid focus state."));
-        result = value;
+        result = set_focus_state(static_cast<MirSurfaceFocusState>(result));
         break;
     case mir_surface_attrib_swapinterval:
-        if (!set_swap_interval(value))
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid swapinterval"));
-        result = value;
+        result = set_swap_interval(result);
         break;
     case mir_surface_attrib_dpi:
-        if (!set_dpi(value))
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid DPI value"));
-        result = dpi();
+        result = set_dpi(result);
         break;
     case mir_surface_attrib_visibility:
-        set_visibility(static_cast<MirSurfaceVisibility>(value));
-        result = visibility_value;
+        result = set_visibility(static_cast<MirSurfaceVisibility>(result));
         break;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
@@ -601,25 +591,25 @@ int ms::BasicSurface::dpi() const
     return dpi_value;
 }
 
-bool ms::BasicSurface::set_dpi(int new_dpi)
+int ms::BasicSurface::set_dpi(int new_dpi)
 {
-    if (new_dpi >= 0)
+    if (new_dpi < 0)
     {
-        std::unique_lock<std::mutex> lg(guard);
-        
-        if (dpi_value != new_dpi)
-        {
-            dpi_value = new_dpi;
-            lg.unlock();
-            observers.attrib_changed(mir_surface_attrib_dpi, new_dpi);
-        }
-        return true;
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid DPI value"));
+    }
+
+    std::unique_lock<std::mutex> lg(guard);
+    if (dpi_value != new_dpi)
+    {
+        dpi_value = new_dpi;
+        lg.unlock();
+        observers.attrib_changed(mir_surface_attrib_dpi, new_dpi);
     }
     
-    return false;
+    return new_dpi;
 }
 
-void ms::BasicSurface::set_visibility(MirSurfaceVisibility new_visibility)
+MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_visibility)
 {
     if (new_visibility != mir_surface_visibility_occluded &&
         new_visibility != mir_surface_visibility_exposed)
@@ -627,11 +617,15 @@ void ms::BasicSurface::set_visibility(MirSurfaceVisibility new_visibility)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid visibility value"));
     }
 
+    std::unique_lock<std::mutex> lg(guard);
     if (visibility_value != new_visibility)
     {
         visibility_value = new_visibility;
+        lg.unlock();
         observers.attrib_changed(mir_surface_attrib_visibility, visibility_value);
     }
+
+    return new_visibility;
 }
 
 void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)

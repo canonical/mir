@@ -153,12 +153,12 @@ public:
 
 private:
     bool visible(std::unique_lock<std::mutex>&) const;
-    bool set_type(MirSurfaceType t);  // Use configure() to make public changes
-    bool set_state(MirSurfaceState s);
-    bool set_dpi(int);
-    void set_visibility(MirSurfaceVisibility v);
-    bool set_swap_interval(int);
-    bool set_focus_state(MirSurfaceFocusState f);
+    MirSurfaceType set_type(MirSurfaceType t);  // Use configure() to make public changes
+    MirSurfaceState set_state(MirSurfaceState s);
+    int set_dpi(int);
+    MirSurfaceVisibility set_visibility(MirSurfaceVisibility v);
+    int set_swap_interval(int);
+    MirSurfaceFocusState set_focus_state(MirSurfaceFocusState f);
 
     SurfaceObservers observers;
     std::mutex mutable guard;
@@ -178,12 +178,14 @@ private:
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
 
-    MirSurfaceType type_value;
+/*    MirSurfaceType type_value;
     MirSurfaceState state_value;
     MirSurfaceVisibility visibility_value;
     int dpi_value;
     unsigned int swapinterval_value;
-    MirSurfaceFocusState focus_state_value;
+    MirSurfaceFocusState focus_state_value;*/
+
+    int[mir_surface_attribs] attrib_values;
 };
 
 }
