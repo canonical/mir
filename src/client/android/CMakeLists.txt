@@ -4,7 +4,7 @@ add_definitions(-DANDROID)
 add_library(
   mirclientplatformandroid SHARED
 
-  android_client_buffer.cpp
+  buffer.cpp
   android_client_buffer_factory.cpp
   android_registrar.cpp
   android_client_platform.cpp

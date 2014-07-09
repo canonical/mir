@@ -19,43 +19,9 @@
 #include "null_input_configuration.h"
 #include "null_input_manager.h"
 
-#include "mir/input/input_channel_factory.h"
-#include "mir/input/input_channel.h"
-
 namespace mi = mir::input;
-
-namespace
-{
-
-class NullInputChannel : public mi::InputChannel
-{
-    int client_fd() const override
-    {
-        return 0;
-    }
-    int server_fd() const override
-    {
-        return 0;
-    }
-};
-
-class NullInputChannelFactory : public mi::InputChannelFactory
-{
-    std::shared_ptr<mi::InputChannel> make_input_channel() override
-    {
-        return std::make_shared<NullInputChannel>();
-    }
-};
-
-}
-
-std::shared_ptr<mi::InputChannelFactory> mi::NullInputConfiguration::the_input_channel_factory()
-{
-    return std::make_shared<NullInputChannelFactory>();
-}
 
 std::shared_ptr<mi::InputManager> mi::NullInputConfiguration::the_input_manager()
 {
     return std::make_shared<NullInputManager>();
 }
-
