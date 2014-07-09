@@ -77,8 +77,10 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
         effective_screencast = std::make_shared<UnauthorizedScreencast>();
     }
 
-    auto const effective_shell =
-        session_authorizer->prompt_session_is_allowed(creds) ? shell : no_prompt_shell;
+    auto const allow_prompt_session =
+        session_authorizer->prompt_session_is_allowed(creds);
+
+    auto const effective_shell = allow_prompt_session ? shell : no_prompt_shell;
 
     return make_mediator(
         effective_shell,

@@ -28,6 +28,7 @@ namespace mir
 namespace options
 {
 extern char const* const server_socket_opt;
+extern char const* const prompt_socket_opt;
 extern char const* const no_server_socket_opt;
 extern char const* const enable_input_opt;
 extern char const* const session_mediator_report_opt;

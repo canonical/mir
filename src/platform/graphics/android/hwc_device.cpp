@@ -150,11 +150,14 @@ bool mga::HwcDevice::post_overlays(
         it++;
     }
 
-    list_compositor.render(rejected_renderables, context);
+    if (!rejected_renderables.empty())
+    {
+        list_compositor.render(rejected_renderables, context);
 
-    buffer = context.last_rendered_buffer();
-    fbtarget.layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *buffer);
-    fbtarget.layer.set_acquirefence_from(*buffer);
+        buffer = context.last_rendered_buffer();
+        fbtarget.layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *buffer);
+        fbtarget.layer.set_acquirefence_from(*buffer);
+    }
 
     hwc_wrapper->set(*hwc_list.native_list().lock());
     onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
@@ -165,7 +168,8 @@ bool mga::HwcDevice::post_overlays(
         it->layer.update_from_releasefence(*renderable->buffer());
         it++;
     }
-    fbtarget.layer.update_from_releasefence(*buffer);
+    if (!rejected_renderables.empty())
+        fbtarget.layer.update_from_releasefence(*buffer);
 
     mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
     return true;
