@@ -47,6 +47,9 @@ struct ServerRunner
     /// \return a connection string for a new client to connect to the server
     std::string new_connection();
 
+    /// \return a connection string for a new client to connect to the prompt server
+    std::string new_prompt_connection();
+
 private:
     mir::DisplayServer* start_mir_server();
     virtual mir::DefaultServerConfiguration& server_config() = 0;
