@@ -70,6 +70,13 @@ void BasicObservers<Observer>::add(std::shared_ptr<Observer> const& observer)
 
     do
     {
+        // Note: we release the read lock to avoid two threads calling add at
+        // the same time mutually blocking the other's upgrade to write lock.
+        {
+            ReadLock lock{current_item->mutex};
+            if (current_item->observer) continue;
+        }
+
         WriteLock lock{current_item->mutex};
 
         if (!current_item->observer)
