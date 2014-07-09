@@ -18,31 +18,58 @@
 
 #include "mir/read_write_mutex.h"
 
+#include <algorithm>
 
 void mir::ReadWriteMutex::read_lock()
 {
+    auto const my_id = std::this_thread::get_id();
+
     std::unique_lock<decltype(mutex)> lock{mutex};
     cv.wait(lock, [&]{ return !write_locked; });
-    read_locking_threads.insert(std::this_thread::get_id());
+
+    auto const my_count = std::find_if(
+        read_locking_threads.begin(),
+        read_locking_threads.end(),
+        [my_id](ReaderThreadLockCount const& candidate) { return my_id == candidate.id; });
+
+    if (my_count == read_locking_threads.end())
+    {
+        read_locking_threads.push_back(ReaderThreadLockCount(my_id, 1U));
+    }
+    else
+    {
+        ++(my_count->count);
+    }
 }
 
 void mir::ReadWriteMutex::read_unlock()
 {
+    auto const my_id = std::this_thread::get_id();
+
     std::unique_lock<decltype(mutex)> lock{mutex};
-    read_locking_threads.erase(
-        read_locking_threads.find(std::this_thread::get_id()));
+    auto const my_count = std::find_if(
+        read_locking_threads.begin(),
+        read_locking_threads.end(),
+        [my_id](ReaderThreadLockCount const& candidate) { return my_id == candidate.id; });
+
+    --(my_count->count);
 
     cv.notify_all();
 }
 
 void mir::ReadWriteMutex::write_lock()
 {
+    auto const my_id = std::this_thread::get_id();
+
     std::unique_lock<decltype(mutex)> lock{mutex};
     cv.wait(lock, [&]
         {
-            return !write_locked &&
-                    read_locking_threads.count(std::this_thread::get_id())
-                    == read_locking_threads.size();
+            if (write_locked) return false;
+            for (auto const& candidate : read_locking_threads)
+            {
+                if (candidate.id != my_id && candidate.count != 0) return false;
+            }
+            return true;
         });
     write_locked = true;
 }

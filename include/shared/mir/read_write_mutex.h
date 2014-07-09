@@ -20,8 +20,8 @@
 #define MIR_READ_WRITE_MUTEX_H_
 
 #include <condition_variable>
-#include <unordered_set>
 #include <thread>
+#include <vector>
 
 namespace mir
 {
@@ -43,7 +43,13 @@ private:
     std::mutex mutex;
     std::condition_variable cv;
     bool write_locked{false};
-    std::unordered_multiset<std::thread::id> read_locking_threads;
+    struct ReaderThreadLockCount
+    {
+        ReaderThreadLockCount(std::thread::id id, unsigned int count) : id(id), count(count) {}
+        std::thread::id id;
+        unsigned int count;
+    };
+    std::vector<ReaderThreadLockCount> read_locking_threads;
 };
 
 class ReadLock
