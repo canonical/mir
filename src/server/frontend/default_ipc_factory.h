@@ -27,6 +27,9 @@ namespace graphics
 {
 class Platform;
 class GraphicBufferAllocator;
+}
+namespace input
+{
 class CursorImages;
 }
 
@@ -49,7 +52,7 @@ public:
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<Screencast> const& screencast,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-        std::shared_ptr<graphics::CursorImages> const& cursor_images);
+        std::shared_ptr<input::CursorImages> const& cursor_images);
 
     std::shared_ptr<detail::DisplayServer> make_ipc_server(
         SessionCredentials const& creds,
@@ -67,7 +70,7 @@ public:
         std::shared_ptr<EventSink> const& sink,
         std::shared_ptr<Screencast> const& effective_screencast,
         ConnectionContext const& connection_context,
-        std::shared_ptr<graphics::CursorImages> const& cursor_images);
+        std::shared_ptr<input::CursorImages> const& cursor_images);
 
 private:
     std::shared_ptr<Shell> const shell;
@@ -79,7 +82,7 @@ private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<Screencast> const screencast;
     std::shared_ptr<SessionAuthorizer> const session_authorizer;
-    std::shared_ptr<graphics::CursorImages> const cursor_images;
+    std::shared_ptr<input::CursorImages> const cursor_images;
 };
 }
 }
