@@ -143,7 +143,7 @@ struct DemoServerConfiguration : mir_test_framework::StubbedServerConfiguration
         return connection_creator([this]
             {
                 return std::make_shared<DemoConnectionCreator>(
-                    the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
+                    new_ipc_factory(the_session_authorizer()),
                     the_session_authorizer(),
                     the_message_processor_report());
             });
