@@ -731,13 +731,18 @@ constexpr int cmsg_space_boundary(int starting_fd_count)
  * Find the first integer n ≥ starting_fd_count where the CMSG_SPACE for sending
  * n fds is the same as the CMSG_SPACE for sending n+1 fds.
  *
- * Note: because there are alignment constraints, this will exist
+ * Note: because there are alignment constraints, this can exist
+ *
+ * Returns max_count if no such n has been found such that n < max_count;
+ * this occurs on some architectures.
  */
-constexpr int cmsg_space_alias(int starting_fd_count)
+constexpr int cmsg_space_alias(int starting_fd_count, int max_count)
 {
     return CMSG_SPACE(starting_fd_count * sizeof(int)) == CMSG_SPACE((starting_fd_count + 1) * sizeof(int)) ?
            starting_fd_count :
-           cmsg_space_alias(starting_fd_count + 1);
+               starting_fd_count >= max_count ?
+               max_count :
+               cmsg_space_alias(starting_fd_count + 1, max_count);
 }
 
 }
@@ -777,7 +782,7 @@ TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanExpectedOnCmsgBoundaryIsAnEr
 
 TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanRequestedWithSameCmsgSpaceIsAnError)
 {
-    constexpr int num_fds{cmsg_space_alias(1)};
+    constexpr int num_fds{cmsg_space_alias(1, 20)};
 
     std::array<TestFd, num_fds + 1> test_files;
     std::array<int, num_fds + 1> test_fds;
