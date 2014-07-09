@@ -56,7 +56,7 @@ namespace scene
 class SceneReport;
 class SurfaceConfigurator;
 
-class SurfaceObservers : public BasicObservers<SurfaceObserver>
+class SurfaceObservers : public SurfaceObserver, BasicObservers<SurfaceObserver>
 {
 public:
     using BasicObservers<SurfaceObserver>::add;

@@ -27,7 +27,7 @@
 namespace mir
 {
 template<class Observer>
-class BasicObservers : public Observer
+class BasicObservers
 {
 protected:
     void add(std::shared_ptr<Observer> const& observer);
