@@ -257,16 +257,14 @@ int mir_surface_get_dpi(MirSurface* surface);
 /**
  * Query the focus state for a surface.
  *   \param [in] surface The surface to operate on
- *   \return             The focus state of said surface or
- *                       -1 if the surface is invalid.
+ *   \return             The focus state of said surface
  */
 MirSurfaceFocusState mir_surface_get_focus(MirSurface *surface);
 
 /**
  * Query the visibility state for a surface.
  *   \param [in] surface The surface to operate on
- *   \return             The visibility state of said surface or
- *                       -1 if the surface is invalid.
+ *   \return             The visibility state of said surface
  */
 MirSurfaceVisibility mir_surface_get_visibility(MirSurface *surface);
 
