@@ -23,7 +23,6 @@
 #include <mir_test/wait_condition.h>
 
 #include <thread>
-#include <atomic>
 
 namespace mcl = mir::client;
 namespace mt = mir::test;
@@ -129,7 +128,7 @@ TEST_F(EventDistributorTest, succeeds_with_thread_delete_unregister)
 
         mcl::EventDistributor* event_distributor;
         int reg;
-        std::atomic_bool locked;
+        bool locked;
         std::mutex mutex;
     };
 
