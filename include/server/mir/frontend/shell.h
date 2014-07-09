@@ -58,8 +58,6 @@ public:
 
     virtual std::shared_ptr<PromptSession> start_prompt_session_for(std::shared_ptr<Session> const& session,
                                                                   scene::PromptSessionCreationParameters const& params) = 0;
-    virtual void add_prompt_provider_process_for(std::shared_ptr<PromptSession> const& prompt_session,
-                                                                  pid_t process_id) = 0;
     virtual void add_prompt_provider_for(std::shared_ptr<PromptSession> const& prompt_session,
                                                                   std::shared_ptr<Session> const& session) = 0;
     virtual void stop_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) = 0;

@@ -187,10 +187,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::start_prompt_session, invocation);
         }
-        else if ("add_prompt_provider" == invocation.method_name())
-        {
-            invoke(this, display_server.get(), &protobuf::DisplayServer::add_prompt_provider, invocation);
-        }
         else if ("stop_prompt_session" == invocation.method_name())
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::stop_prompt_session, invocation);

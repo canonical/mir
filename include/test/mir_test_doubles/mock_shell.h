@@ -48,9 +48,6 @@ struct MockShell : public frontend::Shell
     MOCK_METHOD2(start_prompt_session_for, std::shared_ptr<frontend::PromptSession>(
         std::shared_ptr<frontend::Session> const&,
         scene::PromptSessionCreationParameters const&));
-    MOCK_METHOD2(add_prompt_provider_process_for, void(
-        std::shared_ptr<frontend::PromptSession> const&,
-        pid_t));
     MOCK_METHOD2(add_prompt_provider_for, void(
         std::shared_ptr<frontend::PromptSession> const&,
         std::shared_ptr<frontend::Session> const&));

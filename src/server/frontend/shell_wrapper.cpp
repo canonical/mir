@@ -53,13 +53,6 @@ std::shared_ptr<mf::PromptSession> mf::ShellWrapper::start_prompt_session_for(
     return wrapped->start_prompt_session_for(session, params);
 }
 
-void mf::ShellWrapper::add_prompt_provider_process_for(
-    std::shared_ptr<PromptSession> const& prompt_session,
-    pid_t process_id)
-{
-    wrapped->add_prompt_provider_process_for(prompt_session, process_id);
-}
-
 void mf::ShellWrapper::add_prompt_provider_for(
     std::shared_ptr<PromptSession> const& prompt_session,
     std::shared_ptr<Session> const& session)

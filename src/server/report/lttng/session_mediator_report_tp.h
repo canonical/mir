@@ -62,16 +62,6 @@ TRACEPOINT_EVENT(
 
 TRACEPOINT_EVENT(
     mir_server_session_mediator,
-    session_add_prompt_provider_called,
-    TP_ARGS(char const*, application, pid_t, provider_process),
-    TP_FIELDS(
-        ctf_string(application, application)
-        ctf_integer(pid_t, provider_process, provider_process)
-        )
-    )
-
-TRACEPOINT_EVENT(
-    mir_server_session_mediator,
     session_error,
     TP_ARGS(char const*, application, char const*, method, char const*, what),
     TP_FIELDS(

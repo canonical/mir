@@ -44,16 +44,6 @@ MirPromptSession *mir_connection_create_prompt_session_sync(
     void *context);
 
 /**
- * Add a prompt provider process id to the prompt session
- *   \param [in] prompt_session  The prompt session
- *   \param [in] provider_pid    The process id of the prompt provider to add
- *   \return                     True if the process id was added, false otherwise
- */
-MirBool mir_prompt_session_add_prompt_provider_sync(
-    MirPromptSession *prompt_session,
-    pid_t provider_pid);
-
-/**
  * Allocate some FDs for prompt providers to connect on
  *
  * Prompt helpers need to allocate connection FDs it will pass to
