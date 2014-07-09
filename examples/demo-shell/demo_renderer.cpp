@@ -181,8 +181,8 @@ void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
                               graphics::Renderable const& renderable) const
 {
     GLRenderer::tessellate(primitives, renderable);
-    tessellate_shadow(primitives, renderable, 80.0f);
-    tessellate_frame(primitives, renderable, 30.0f);
+    tessellate_shadow(primitives, renderable, shadow_radius);
+    tessellate_frame(primitives, renderable, titlebar_height);
 }
 
 void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primitives,
