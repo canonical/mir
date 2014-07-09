@@ -17,7 +17,7 @@
 
 list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_client_android_registrar.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_gralloc_registrar.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_native_window.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_android_client_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_surface_interpreter.cpp

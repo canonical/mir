@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_doubles/mock_android_registrar.h"
+#include "mir_test_doubles/mock_buffer_registrar.h"
 #include "src/client/android/buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 
@@ -33,7 +33,7 @@ namespace geom = mir::geometry;
 struct AndroidClientBuffer : public ::testing::Test
 {
     AndroidClientBuffer() :
-    mock_registrar{std::make_shared<testing::NiceMock<mtd::MockAndroidRegistrar>>()},
+    mock_registrar{std::make_shared<testing::NiceMock<mtd::MockBufferRegistrar>>()},
     package{std::make_shared<native_handle_t>()}
     {
     }
@@ -43,7 +43,7 @@ struct AndroidClientBuffer : public ::testing::Test
     geom::Size const size{width, height};
     geom::Stride const stride{66};
     MirPixelFormat const pf{mir_pixel_format_abgr_8888};
-    std::shared_ptr<mtd::MockAndroidRegistrar> const mock_registrar;
+    std::shared_ptr<mtd::MockBufferRegistrar> const mock_registrar;
     std::shared_ptr<native_handle_t const> const package;
 };
 
