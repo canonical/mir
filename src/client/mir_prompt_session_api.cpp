@@ -116,3 +116,15 @@ void mir_prompt_session_release_sync(
     mir_wait_for(prompt_session->stop(&null_callback, nullptr));
     delete prompt_session;
 }
+
+MirBool mir_prompt_session_is_valid(MirPromptSession *prompt_session)
+{
+    auto const err = prompt_session->get_error_message();
+
+    return MirBool(!*err);
+}
+
+char const *mir_prompt_session_error_message(MirPromptSession *prompt_session)
+{
+    return prompt_session->get_error_message();
+}

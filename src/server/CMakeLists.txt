@@ -30,6 +30,7 @@ set(
   display_server.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
+  default_emergency_cleanup.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)
@@ -65,6 +66,7 @@ list(APPEND MIRSERVER_LINKS
   mirplatform
   mirclient
   3rd_party
+  xcursorloader
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}

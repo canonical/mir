@@ -449,14 +449,13 @@ void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> cons
 
 int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
 {
-    int result = 0;
     bool allow_dropping = false;
 
     /*
      * TODO: In future, query the shell implementation for the subset of
      *       attributes/types it implements.
      */
-    value = configurator->select_attribute_value(*this, attrib, value);
+    int result = value = configurator->select_attribute_value(*this, attrib, value);
     switch (attrib)
     {
     case mir_surface_attrib_type:
@@ -607,6 +606,9 @@ public:
     {
     }
  
+    int buffers_ready_for_compositor() const override
+    { return underlying_buffer_stream->buffers_ready_for_compositor(); }
+
     std::shared_ptr<mg::Buffer> buffer() const override
     {
         if (!compositor_buffer)

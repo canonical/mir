@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
-#include "android_registrar_gralloc.h"
+#include "gralloc_registrar.h"
 #include "../client_buffer.h"
 
 #include <boost/throw_exception.hpp>
@@ -66,12 +66,12 @@ private:
 };
 }
 
-mcla::AndroidRegistrarGralloc::AndroidRegistrarGralloc(const std::shared_ptr<const gralloc_module_t>& gr_module)
+mcla::GrallocRegistrar::GrallocRegistrar(const std::shared_ptr<const gralloc_module_t>& gr_module)
 : gralloc_module(gr_module)
 {
 }
 
-std::shared_ptr<const native_handle_t> mcla::AndroidRegistrarGralloc::register_buffer(
+std::shared_ptr<const native_handle_t> mcla::GrallocRegistrar::register_buffer(
     std::shared_ptr<MirBufferPackage> const& package) const
 {
     int native_handle_header_size = sizeof(native_handle_t);
@@ -102,7 +102,9 @@ std::shared_ptr<const native_handle_t> mcla::AndroidRegistrarGralloc::register_b
     return std::shared_ptr<const native_handle_t>(handle, del);
 }
 
-std::shared_ptr<char> mcla::AndroidRegistrarGralloc::secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle rect)
+std::shared_ptr<char> mcla::GrallocRegistrar::secure_for_cpu(
+    std::shared_ptr<const native_handle_t> handle,
+    const geometry::Rectangle rect)
 {
     char* vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;

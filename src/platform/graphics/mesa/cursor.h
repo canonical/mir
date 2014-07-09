@@ -21,6 +21,9 @@
 #define MIR_GRAPHICS_MESA_CURSOR_H_
 
 #include "mir/graphics/cursor.h"
+#include "mir/geometry/point.h"
+#include "mir/geometry/displacement.h"
+
 #include "mir_toolkit/common.h"
 
 #include <gbm.h>
@@ -82,11 +85,16 @@ private:
     enum ForceCursorState { UpdateState, ForceState };
     void for_each_used_output(std::function<void(KMSOutput&, geometry::Rectangle const&, MirOrientation orientation)> const& f);
     void place_cursor_at(geometry::Point position, ForceCursorState force_state);
+    void place_cursor_at_locked(std::lock_guard<std::mutex> const&, geometry::Point position, ForceCursorState force_state);
+    void write_buffer_data_locked(std::lock_guard<std::mutex> const&, void const* data, size_t count);
+    void pad_and_write_image_data_locked(std::lock_guard<std::mutex> const&, CursorImage const& image);
     
     std::mutex guard;
 
     KMSOutputContainer& output_container;
     geometry::Point current_position;
+    geometry::Displacement hotspot;
+
     bool visible;
 
     struct GBMBOWrapper
