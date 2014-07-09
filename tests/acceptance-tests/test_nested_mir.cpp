@@ -22,6 +22,9 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/display_server.h"
 #include "mir/run_mir.h"
+#include "mir/shell/focus_controller.h"
+#include "mir/scene/session.h"
+#include "mir/shell/host_lifecycle_event_listener.h"
 
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
@@ -39,6 +42,7 @@ namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mtf = mir_test_framework;
+namespace msh = mir::shell;
 using namespace testing;
 
 namespace
@@ -135,6 +139,17 @@ struct NativePlatformAdapter : mg::NativePlatform
     }
 
     std::shared_ptr<mg::Platform> const adaptee;
+};
+
+struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
+{
+    MockHostLifecycleEventListener()
+	{
+        EXPECT_CALL(*this, lifecycle_event_occured(lifecycle_state)).Times(1);
+ 	}
+
+    MOCK_METHOD1(lifecycle_event_occured, void (MirLifecycleState));
+    static MirLifecycleState const lifecycle_state = mir_lifecycle_state_resumed;
 };
 
 struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerConfiguration
@@ -262,6 +277,18 @@ struct NestedServer : mtf::InProcessServer, HostServerConfiguration
         connection_string = new_connection();
     }
 
+    void TriggerLifecycleEvent(MirLifecycleState const lifecycle_state)
+    {
+        auto const app = the_focus_controller()->focussed_application().lock();
+
+        EXPECT_TRUE(app != nullptr) << "Nested server not connected";
+
+        if (app)
+        {
+           app->set_lifecycle_state(lifecycle_state);
+        }
+    }
+
     std::string connection_string;
 };
 }
@@ -322,4 +349,27 @@ TEST_F(NestedServer, on_exit_display_objects_should_be_destroyed)
     NestedMirRunner{config};
 
     EXPECT_FALSE(config.my_display.lock()) << "after run_mir() exits the display should be released";
+}
+
+TEST_F(NestedServer, receives_lifecycle_events_from_host)
+{
+    struct MyServerConfiguration : NestedServerConfiguration
+    {
+        using NestedServerConfiguration::NestedServerConfiguration;
+
+        std::shared_ptr<msh::HostLifecycleEventListener> the_host_lifecycle_event_listener() override
+        {
+            return host_lifecycle_event_listener(
+                []() -> std::shared_ptr<msh::HostLifecycleEventListener>
+                {
+                    return std::make_shared<MockHostLifecycleEventListener>();
+                });
+        }
+    };
+
+    MyServerConfiguration nested_config{connection_string, the_graphics_platform()};
+
+    NestedMirRunner nested_mir{nested_config};
+
+    TriggerLifecycleEvent(MockHostLifecycleEventListener::lifecycle_state);
 }
