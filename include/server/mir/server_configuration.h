@@ -60,6 +60,7 @@ public:
     // TODO most of these interfaces are wider DisplayServer needs...
     // TODO ...some or all of them need narrowing
     virtual std::shared_ptr<frontend::Connector> the_connector() = 0;
+    virtual std::shared_ptr<frontend::Connector> the_prompt_connector() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;

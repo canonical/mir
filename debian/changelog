@@ -11,7 +11,6 @@ mir (0.4.0+14.10.20140701.1-0ubuntu1) utopic; urgency=medium
       . Add surface attribute for visibility.
       . Add surface orientation API.
     - mirserver ABI bumped to 22. Shells need rebuilding.
-      . Allow setting the orientation of a server surface.
       . Change compositor::Scene to expose compositor::SceneElements instead
         of graphics::Renderables.
       . Change various input and Surface classes to support the client cursor
@@ -22,18 +21,29 @@ mir (0.4.0+14.10.20140701.1-0ubuntu1) utopic; urgency=medium
         mg::Renderables.
       . Add visibility tracking to mc::SceneElement interface and
         implementations.
-      . Unregister FD Handler from EventHandlerRegister.
-      . Sending user input events through Surfaces.
       . Move InputChannelFactory into DefaultServerConfiguration.
-      . Ensure default input region is updated when surface is resized. (LP: #1332632)
-    - android: support alpha blending overlays together in HWC. Bumps
-      android-headers version requirement from 4.2.2 to 4.4.2. (LP: #1329879)
-    - android: designate the buffer usage when attempting to access or
-      update the fence associated with the native buffer. (LP: #1329868)
+    - Unregister FD Handler from EventHandlerRegister.
+    - Sending user input events through Surfaces.
+    - Allow setting the orientation of a server surface.
     - Enable client cursor API.
     - Enable support for USB touchscreens.
     - Various test improvements.
-    - Ensure the_cursor() is not null. (LP: #1334010)
+    - Bugs fixed:
+      . can't display toolbar after dismissing it (LP: #1332632)
+      . [regression] demo client connection crashes the server (LP: #1334010)
+      . demo server locks up in certain scenarios with --disable-overlays
+        false when starting/stopping second clients (LP: #1329868)
+      . MultiThreadedCompositor deadlocks (LP: #1335311)
+      . Intermittent memory error in
+        ClientSurfaceEvents.client_can_query_current_orientation (LP: #1335819)
+      . Intermittent hang & fail in mir_acceptance_tests.TestClientCursorAPI.*
+        (LP: #1332011)
+      . MirClientSurfaceTests tests leak fds and eventually hang when ran
+        repeatedly (LP: #1333673)
+      . [testfail] Intermittent "Invalid read" in MirSurfaceSwapBuffersTest.
+        swap_buffers_does_not_block_when_surface_is_not_composited
+        (LP: #1334287)
+      . android: support alpha blending during hwc overlay (LP: #1329879)
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 01 Jul 2014 15:54:36 +0000
 

@@ -17,8 +17,8 @@
  */
 
 
-#ifndef MIR_GRAPHICS_CURSOR_LOADER_H_
-#define MIR_GRAPHICS_CURSOR_LOADER_H_
+#ifndef MIR_INPUT_CURSOR_IMAGES_H_
+#define MIR_INPUT_CURSOR_IMAGES_H_
 
 #include "mir/geometry/size.h"
 
@@ -30,10 +30,13 @@ namespace mir
 namespace graphics
 {
 class CursorImage;
+}
 
-geometry::Size const default_cursor_size{geometry::Width{64}, geometry::Height{64}};
+namespace input
+{
+/// CursorImages is used to lookup cursor images from the system theme.
+geometry::Size const default_cursor_size{geometry::Width{24}, geometry::Height{24}};
 
-/// CursorImages is used to lookup cursor images.
 class CursorImages
 {
 public:
@@ -41,7 +44,7 @@ public:
 
     /// Looks up the image for a named cursor. Cursor names
     /// follow the XCursor naming conventions.
-    virtual std::shared_ptr<CursorImage> image(std::string const& cursor_name,
+    virtual std::shared_ptr<graphics::CursorImage> image(std::string const& cursor_name,
         geometry::Size const& size) = 0;
 
 protected:
@@ -52,4 +55,4 @@ protected:
 }
 }
 
-#endif /* MIR_GRAPHICS_CURSOR_LOADER_H_ */
+#endif /* MIR_INPUT_CURSOR_IMAGES_H_ */
