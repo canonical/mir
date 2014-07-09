@@ -25,8 +25,18 @@ set(
   MIR_ANDROID_INPUT_COMPILE_FLAGS
   ${MIR_ANDROID_INPUT_COMPILE_FLAGS}
   PARENT_SCOPE)
+
+add_subdirectory(xcursor)
+list(
+  APPEND MIR_XCURSOR_INCLUDE_DIRECTORIES
+  ${CMAKE_CURRENT_SOURCE_DIR}/xcursor/
+)
+
+set(MIR_XCURSOR_INCLUDE_DIRECTORIES ${MIR_XCURSOR_INCLUDE_DIRECTORIES} PARENT_SCOPE)
   
 target_link_libraries(
   3rd_party
 
-  android-input)
+  android-input
+  xcursorloader
+)
