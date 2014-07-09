@@ -1,5 +1,4 @@
-/*
->>>>>>> MERGE-SOURCE
+/**
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -349,8 +348,6 @@ TEST_F(HwcDevice, commits_correct_list_when_all_accepted_as_overlays)
     EXPECT_CALL(*mock_native_buffer2, copy_fence())
         .InSequence(seq)
         .WillOnce(Return(overlay_acquire_fence2));
-
-    //set
     EXPECT_CALL(*mock_device, set(MatchesList(expected_list)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
