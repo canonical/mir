@@ -382,7 +382,7 @@ auto make_handler(std::weak_ptr<AlarmImpl::InternalState> possible_data)
                 {
                     data->state = mir::time::Alarm::triggered;
                     auto cb_copy = data->callback;
-                    //lock.unlock();
+                    lock.unlock();
                     cb_copy();
                 }
             }
