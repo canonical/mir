@@ -640,16 +640,15 @@ TEST_F(AsioMainLoopAlarmTest, alarm_callback_cannot_deadlock)
 
     auto alarm = ml.notify_in(std::chrono::milliseconds{0}, [&]()
     {
-        // From this angle, ensure we can lock m without already holding alarm
+        // From this angle, ensure we can lock m (alarm should be unlocked)
         int tries = 0;
         while (!m.try_lock() && tries < 100) // 100 x 100 = try for 10 seconds
         {
             ++tries;
             std::this_thread::sleep_for(std::chrono::milliseconds{100});
         }
-        failed = true;  // We may not have mutex m so failed must be atomic
-        ASSERT_GT(100, tries);
-        failed = false;
+        failed = (tries >= 100);
+        ASSERT_FALSE(failed);
         ++i;
         m.unlock();
     });
