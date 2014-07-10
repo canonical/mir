@@ -278,6 +278,7 @@ TEST_F(MirBufferDepositoryTest, depository_destroys_old_buffers)
     // of the first buffer.
     EXPECT_THAT(mock_factory->free_count, Eq(0));
     depository.deposit_package(packages[3], 4, size, pf);
+    EXPECT_THAT(mock_factory->free_count, Eq(1));
 }
 
 TEST_F(MirBufferDepositoryTest, depositing_packages_implicitly_submits_current_buffer)
