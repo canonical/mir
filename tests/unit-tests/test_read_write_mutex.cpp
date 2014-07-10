@@ -38,7 +38,8 @@ struct ReadWriteMutex : public Test
 {
     int const recursion_depth{1729};
     unsigned const reader_threads{42};
-    mt::Barrier barrier{reader_threads+1};
+    mt::Barrier readonly_barrier{reader_threads};
+    mt::Barrier read_and_write_barrier{reader_threads+1};
     std::vector<std::thread> threads;
 
     mir::ReadWriteMutex mutex;
@@ -88,14 +89,12 @@ TEST_F(ReadWriteMutex, can_be_read_locked_on_thread_with_write_lock)
 
 TEST_F(ReadWriteMutex, can_be_read_locked_on_multiple_threads)
 {
-    barrier.reset(reader_threads);
-
     auto const reader_function =
         [&]{
             mutex.read_lock();
             notify_read_locked();
 
-            barrier.ready();
+            readonly_barrier.ready();
 
             notify_read_unlocking();
             mutex.read_unlock();
@@ -112,14 +111,12 @@ TEST_F(ReadWriteMutex, can_be_read_locked_on_multiple_threads)
 
 TEST_F(ReadWriteMutex, write_lock_waits_for_read_locks_on_other_threads)
 {
-    barrier.reset(reader_threads+1);
-
     auto const reader_function =
         [&]{
             mutex.read_lock();
             notify_read_locked();
 
-            barrier.ready();
+            read_and_write_barrier.ready();
 
             notify_read_unlocking();
             mutex.read_unlock();
@@ -127,7 +124,7 @@ TEST_F(ReadWriteMutex, write_lock_waits_for_read_locks_on_other_threads)
 
     auto const writer_function =
         [&]{
-            barrier.ready();
+            read_and_write_barrier.ready();
 
             mutex.write_lock();
             notify_write_locked();
@@ -147,11 +144,9 @@ TEST_F(ReadWriteMutex, write_lock_waits_for_read_locks_on_other_threads)
 
 TEST_F(ReadWriteMutex, read_lock_waits_for_write_locks_on_other_threads)
 {
-    barrier.reset(reader_threads+1);
-
     auto const reader_function =
         [&]{
-            barrier.ready();
+            read_and_write_barrier.ready();
 
             mutex.read_lock();
             notify_read_locked();
@@ -162,7 +157,7 @@ TEST_F(ReadWriteMutex, read_lock_waits_for_write_locks_on_other_threads)
             mutex.write_lock();
             notify_write_locked();
 
-            barrier.ready();
+            read_and_write_barrier.ready();
 
             notify_write_unlocking();
             mutex.write_unlock();
