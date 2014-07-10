@@ -34,6 +34,7 @@
 #include "src/server/report/null_report_factory.h"
 
 #include <algorithm>
+#include <future>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -60,6 +61,7 @@ class MockSurfaceAttribObserver : public ms::NullSurfaceObserver
 {
 public:
     MOCK_METHOD2(attrib_changed, void(MirSurfaceAttrib, int));
+    MOCK_METHOD1(hidden_set_to, void(bool));
 };
 
 class StubEventSink : public mir::frontend::EventSink
@@ -561,4 +563,54 @@ TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
     EXPECT_CALL(mock_sender, send_event(_,_));
 
     surface.consume(event);
+}
+
+TEST_F(BasicSurfaceTest, observer_can_trigger_state_change_within_notification)
+{
+    using namespace testing;
+
+    auto const state_changer = [&]{
+       surface.set_hidden(false);
+    };
+
+    //Make sure another thread can also change state
+    auto const async_state_changer = [&]{
+        std::async(std::launch::async, state_changer);
+    };
+
+    EXPECT_CALL(mock_callback, call()).Times(3)
+        .WillOnce(InvokeWithoutArgs(state_changer))
+        .WillOnce(InvokeWithoutArgs(async_state_changer))
+        .WillOnce(Return());
+
+    surface.add_observer(observer);
+
+    surface.set_hidden(true);
+}
+
+TEST_F(BasicSurfaceTest, observer_can_remove_itself_within_notification)
+{
+    using namespace testing;
+    MockSurfaceAttribObserver observer1;
+    MockSurfaceAttribObserver observer2;
+    MockSurfaceAttribObserver observer3;
+
+    //Both of these observers should still get their notifications
+    //regardless of the unregistration of observer2
+    EXPECT_CALL(observer1, hidden_set_to(true)).Times(2);
+    EXPECT_CALL(observer3, hidden_set_to(true)).Times(2);
+
+    auto const remove_observer = [&]{
+        surface.remove_observer(mt::fake_shared(observer2));
+    };
+
+    EXPECT_CALL(observer2, hidden_set_to(true)).Times(1)
+        .WillOnce(InvokeWithoutArgs(remove_observer));
+
+    surface.add_observer(mt::fake_shared(observer1));
+    surface.add_observer(mt::fake_shared(observer2));
+    surface.add_observer(mt::fake_shared(observer3));
+
+    surface.set_hidden(true);
+    surface.set_hidden(true);
 }
