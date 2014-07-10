@@ -83,7 +83,7 @@ void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& f
         send_fds_locked(lg, fds);
 }
 
-void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, std::vector<int32_t> const& fds)
+void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, std::vector<mir::Fd> const& fds)
 {
     if (fds.size() > 0)
     {
@@ -119,7 +119,7 @@ void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, 
 
         int* const data = reinterpret_cast<int*>(CMSG_DATA(message));
         int i = 0;
-        for (auto fd : fds)
+        for (auto& fd : fds)
             data[i++] = fd;
 
         auto const sent = sendmsg(socket->native_handle(), &header, 0);

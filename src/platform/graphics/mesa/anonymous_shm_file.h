@@ -31,20 +31,6 @@ namespace mesa
 
 namespace detail
 {
-class FdHandle
-{
-public:
-    FdHandle(int fd);
-    FdHandle(FdHandle&&);
-    ~FdHandle() noexcept;
-
-    operator int() const;
-
-private:
-    FdHandle(FdHandle const&) = delete;
-    FdHandle& operator=(FdHandle const&) = delete;
-    int fd;
-};
 
 class MapHandle
 {
