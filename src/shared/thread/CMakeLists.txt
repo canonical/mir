@@ -16,7 +16,7 @@
 
 add_library(mirsharedthread STATIC
   thread_name.cpp
-  read_write_mutex.cpp
+  recursive_read_write_mutex.cpp
 )
 
 target_link_libraries(

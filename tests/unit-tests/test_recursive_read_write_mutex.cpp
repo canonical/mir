@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/read_write_mutex.h"
+#include "mir/recursive_read_write_mutex.h"
 
 #include "mir_test/barrier.h"
 
@@ -34,7 +34,7 @@ namespace
  * causing "undefined behavior"). That is having a "watchdog" timeout just leads
  * to other issues and running in a separate process seems OTT.
  */
-struct ReadWriteMutex : public Test
+struct RecursiveReadWriteMutex : public Test
 {
     int const recursion_depth{1729};
     unsigned const reader_threads{42};
@@ -42,7 +42,7 @@ struct ReadWriteMutex : public Test
     mt::Barrier read_and_write_barrier{reader_threads+1};
     std::vector<std::thread> threads;
 
-    mir::ReadWriteMutex mutex;
+    mir::RecursiveReadWriteMutex mutex;
 
     void SetUp()
     {
@@ -63,31 +63,31 @@ struct ReadWriteMutex : public Test
 };
 }
 
-TEST_F(ReadWriteMutex, can_be_recursively_read_locked)
+TEST_F(RecursiveReadWriteMutex, can_be_recursively_read_locked)
 {
     for (int i = 0; i != recursion_depth; ++i)
         mutex.read_lock();
 }
 
-TEST_F(ReadWriteMutex, can_be_recursively_write_locked)
+TEST_F(RecursiveReadWriteMutex, can_be_recursively_write_locked)
 {
     for (int i = 0; i != recursion_depth; ++i)
         mutex.write_lock();
 }
 
-TEST_F(ReadWriteMutex, can_be_write_locked_on_thread_with_read_lock)
+TEST_F(RecursiveReadWriteMutex, can_be_write_locked_on_thread_with_read_lock)
 {
     mutex.read_lock();
     mutex.write_lock();
 }
 
-TEST_F(ReadWriteMutex, can_be_read_locked_on_thread_with_write_lock)
+TEST_F(RecursiveReadWriteMutex, can_be_read_locked_on_thread_with_write_lock)
 {
     mutex.write_lock();
     mutex.read_lock();
 }
 
-TEST_F(ReadWriteMutex, can_be_read_locked_on_multiple_threads)
+TEST_F(RecursiveReadWriteMutex, can_be_read_locked_on_multiple_threads)
 {
     auto const reader_function =
         [&]{
@@ -109,7 +109,7 @@ TEST_F(ReadWriteMutex, can_be_read_locked_on_multiple_threads)
         threads.push_back(std::thread{reader_function});
 }
 
-TEST_F(ReadWriteMutex, write_lock_waits_for_read_locks_on_other_threads)
+TEST_F(RecursiveReadWriteMutex, write_lock_waits_for_read_locks_on_other_threads)
 {
     auto const reader_function =
         [&]{
@@ -142,7 +142,7 @@ TEST_F(ReadWriteMutex, write_lock_waits_for_read_locks_on_other_threads)
     threads.push_back(std::thread{writer_function});
 }
 
-TEST_F(ReadWriteMutex, read_lock_waits_for_write_locks_on_other_threads)
+TEST_F(RecursiveReadWriteMutex, read_lock_waits_for_write_locks_on_other_threads)
 {
     auto const reader_function =
         [&]{

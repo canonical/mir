@@ -16,11 +16,11 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/read_write_mutex.h"
+#include "mir/recursive_read_write_mutex.h"
 
 #include <algorithm>
 
-void mir::ReadWriteMutex::read_lock()
+void mir::RecursiveReadWriteMutex::read_lock()
 {
     auto const my_id = std::this_thread::get_id();
 
@@ -44,7 +44,7 @@ void mir::ReadWriteMutex::read_lock()
     }
 }
 
-void mir::ReadWriteMutex::read_unlock()
+void mir::RecursiveReadWriteMutex::read_unlock()
 {
     auto const my_id = std::this_thread::get_id();
 
@@ -59,7 +59,7 @@ void mir::ReadWriteMutex::read_unlock()
     cv.notify_all();
 }
 
-void mir::ReadWriteMutex::write_lock()
+void mir::RecursiveReadWriteMutex::write_lock()
 {
     auto const my_id = std::this_thread::get_id();
 
@@ -79,7 +79,7 @@ void mir::ReadWriteMutex::write_lock()
     write_locking_thread.id = my_id;
 }
 
-void mir::ReadWriteMutex::write_unlock()
+void mir::RecursiveReadWriteMutex::write_unlock()
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
     --write_locking_thread.count;

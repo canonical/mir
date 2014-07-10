@@ -19,7 +19,7 @@
 #ifndef MIR_BASIC_OBSERVERS_H_
 #define MIR_BASIC_OBSERVERS_H_
 
-#include "mir/read_write_mutex.h"
+#include "mir/recursive_read_write_mutex.h"
 
 #include <atomic>
 #include <memory>
@@ -38,7 +38,7 @@ private:
     struct ListItem
     {
         ListItem() {}
-        ReadWriteMutex mutex;
+        RecursiveReadWriteMutex mutex;
         std::shared_ptr<Observer> observer;
         std::atomic<ListItem*> next{nullptr};
 
@@ -54,7 +54,7 @@ void BasicObservers<Observer>::for_each(
 
     while (current_item)
     {
-        ReadLock lock{current_item->mutex};
+        RecursiveReadLock lock{current_item->mutex};
 
         // We need to take a copy in case we recursively remove during call
         if (auto const copy_of_observer = current_item->observer) f(copy_of_observer);
@@ -73,11 +73,11 @@ void BasicObservers<Observer>::add(std::shared_ptr<Observer> const& observer)
         // Note: we release the read lock to avoid two threads calling add at
         // the same time mutually blocking the other's upgrade to write lock.
         {
-            ReadLock lock{current_item->mutex};
+            RecursiveReadLock lock{current_item->mutex};
             if (current_item->observer) continue;
         }
 
-        WriteLock lock{current_item->mutex};
+        RecursiveWriteLock lock{current_item->mutex};
 
         if (!current_item->observer)
         {
@@ -106,7 +106,7 @@ void BasicObservers<Observer>::remove(std::shared_ptr<Observer> const& observer)
 
     while (current_item)
     {
-        WriteLock lock{current_item->mutex};
+        RecursiveWriteLock lock{current_item->mutex};
 
         if (current_item->observer == observer)
         {

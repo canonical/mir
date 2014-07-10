@@ -16,8 +16,8 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_READ_WRITE_MUTEX_H_
-#define MIR_READ_WRITE_MUTEX_H_
+#ifndef MIR_RECURSIVE_READ_WRITE_MUTEX_H_
+#define MIR_RECURSIVE_READ_WRITE_MUTEX_H_
 
 #include <condition_variable>
 #include <thread>
@@ -28,7 +28,7 @@ namespace mir
 /** a recursive read-write mutex.
  * Note that a write lock can be acquired if no other threads have a read lock.
  */
-class ReadWriteMutex
+class RecursiveReadWriteMutex
 {
 public:
     void read_lock();
@@ -53,25 +53,25 @@ private:
     ThreadLockCount write_locking_thread;
 };
 
-class ReadLock
+class RecursiveReadLock
 {
 public:
-    explicit ReadLock(ReadWriteMutex& mutex) : mutex(mutex) { mutex.read_lock(); }
-    ~ReadLock() { mutex.read_unlock(); }
+    explicit RecursiveReadLock(RecursiveReadWriteMutex& mutex) : mutex(mutex) { mutex.read_lock(); }
+    ~RecursiveReadLock() { mutex.read_unlock(); }
 
 private:
-    ReadWriteMutex& mutex;
+    RecursiveReadWriteMutex& mutex;
 };
 
-class WriteLock
+class RecursiveWriteLock
 {
 public:
-    explicit WriteLock(ReadWriteMutex& mutex) : mutex(mutex) { mutex.write_lock(); }
-    ~WriteLock() { mutex.write_unlock(); }
+    explicit RecursiveWriteLock(RecursiveReadWriteMutex& mutex) : mutex(mutex) { mutex.write_lock(); }
+    ~RecursiveWriteLock() { mutex.write_unlock(); }
 
 private:
-    ReadWriteMutex& mutex;
+    RecursiveReadWriteMutex& mutex;
 };
 }
 
-#endif /* MIR_READ_WRITE_MUTEX_H_ */
+#endif /* MIR_RECURSIVE_READ_WRITE_MUTEX_H_ */
