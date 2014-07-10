@@ -48,7 +48,7 @@ void mir::ReadWriteMutex::read_unlock()
 {
     auto const my_id = std::this_thread::get_id();
 
-    std::unique_lock<decltype(mutex)> lock{mutex};
+    std::lock_guard<decltype(mutex)> lock{mutex};
     auto const my_count = std::find_if(
         read_locking_threads.begin(),
         read_locking_threads.end(),
@@ -81,7 +81,7 @@ void mir::ReadWriteMutex::write_lock()
 
 void mir::ReadWriteMutex::write_unlock()
 {
-    std::unique_lock<decltype(mutex)> lock{mutex};
+    std::lock_guard<decltype(mutex)> lock{mutex};
     --write_locking_thread.count;
     cv.notify_all();
 }
