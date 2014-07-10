@@ -17,11 +17,11 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_ANDROID_REGISTRAR_H_
-#define MIR_TEST_DOUBLES_MOCK_ANDROID_REGISTRAR_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_REGISTRAR_H_
+#define MIR_TEST_DOUBLES_MOCK_BUFFER_REGISTRAR_H_
 
+#include "src/client/android/buffer_registrar.h"
 #include <gmock/gmock.h>
-#include "src/client/android/android_registrar.h"
 
 namespace mir
 {
@@ -33,9 +33,9 @@ namespace test
 {
 namespace doubles
 {
-struct MockAndroidRegistrar : public client::android::AndroidRegistrar
+struct MockBufferRegistrar : public client::android::BufferRegistrar
 {
-    ~MockAndroidRegistrar() noexcept {}
+    ~MockBufferRegistrar() noexcept {}
     MOCK_CONST_METHOD1(register_buffer,
         std::shared_ptr<const native_handle_t>(std::shared_ptr<MirBufferPackage> const&));
     MOCK_METHOD2(secure_for_cpu, std::shared_ptr<char>(std::shared_ptr<const native_handle_t>, geometry::Rectangle));
@@ -44,4 +44,4 @@ struct MockAndroidRegistrar : public client::android::AndroidRegistrar
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_ANDROID_REGISTRAR_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_BUFFER_REGISTRAR_H_ */
