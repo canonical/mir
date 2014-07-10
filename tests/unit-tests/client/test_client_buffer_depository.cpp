@@ -59,13 +59,16 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
             .WillByDefault(InvokeWithoutArgs([this]()
             {
                 alloc_count++;
-                return std::shared_ptr<mcl::ClientBuffer>(
+                auto buffer = std::shared_ptr<mcl::ClientBuffer>(
                     new NiceMock<MockBuffer>(),
                     [this](mcl::ClientBuffer* buffer)
                     {
                         free_count++;
                         delete buffer;
                     });
+                if (alloc_count == 1)
+                    first_allocated_buffer = buffer;
+                return buffer;
             }));
     }
 
@@ -77,8 +80,17 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
     MOCK_METHOD3(create_buffer,
                  std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage> const&,
                                                     geom::Size, MirPixelFormat));
+
+    bool first_buffer_allocated_and_then_freed()
+    {
+        if ((alloc_count >= 1) && (first_allocated_buffer.lock() == nullptr))
+            return true;
+        return false;
+    }
+
     int alloc_count;
     int free_count;
+    std::weak_ptr<mcl::ClientBuffer> first_allocated_buffer;
 };
 
 struct MirBufferDepositoryTest : public testing::Test
@@ -279,6 +291,7 @@ TEST_F(MirBufferDepositoryTest, depository_destroys_old_buffers)
     EXPECT_THAT(mock_factory->free_count, Eq(0));
     depository.deposit_package(packages[3], 4, size, pf);
     EXPECT_THAT(mock_factory->free_count, Eq(1));
+    EXPECT_TRUE(mock_factory->first_buffer_allocated_and_then_freed());
 }
 
 TEST_F(MirBufferDepositoryTest, depositing_packages_implicitly_submits_current_buffer)
@@ -316,6 +329,7 @@ TEST_F(MirBufferDepositoryTest, depository_frees_buffers_after_reaching_capacity
         EXPECT_THAT(mock_factory->free_count, Eq(0));
         depository->deposit_package(packages[i], i+1, size, pf);
         EXPECT_THAT(mock_factory->free_count, Eq(1));
+        EXPECT_TRUE(mock_factory->first_buffer_allocated_and_then_freed());
     }
 }
 
