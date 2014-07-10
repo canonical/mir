@@ -42,14 +42,15 @@ public:
 private:
     std::mutex mutex;
     std::condition_variable cv;
-    bool write_locked{false};
-    struct ReaderThreadLockCount
+    struct ThreadLockCount
     {
-        ReaderThreadLockCount(std::thread::id id, unsigned int count) : id(id), count(count) {}
+        ThreadLockCount() : id(), count(0) {}
+        ThreadLockCount(std::thread::id id, unsigned int count) : id(id), count(count) {}
         std::thread::id id;
         unsigned int count;
     };
-    std::vector<ReaderThreadLockCount> read_locking_threads;
+    std::vector<ThreadLockCount> read_locking_threads;
+    ThreadLockCount write_locking_thread;
 };
 
 class ReadLock
