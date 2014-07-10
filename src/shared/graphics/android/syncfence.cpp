@@ -65,7 +65,7 @@ void mga::SyncFence::merge_with(NativeFence& merge_fd)
     {
         //both fences were valid, must merge
         struct sync_merge_data data { merge_fd, "mirfence", infinite_timeout };
-        ops->ioctl(fence_fd, SYNC_IOC_MERGE, &data);
+        ops->ioctl(fence_fd, static_cast<int>(SYNC_IOC_MERGE), &data);
         ops->close(fence_fd);
         ops->close(merge_fd);
         fence_fd = data.fence;

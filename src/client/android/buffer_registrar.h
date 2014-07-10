@@ -17,14 +17,14 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_H_
-#define MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_H_
+#ifndef MIR_CLIENT_ANDROID_BUFFER_REGISTRAR_H_
+#define MIR_CLIENT_ANDROID_BUFFER_REGISTRAR_H_
 
 #include <mir_toolkit/mir_native_buffer.h>
 #include "mir/geometry/rectangle.h"
 #include <cutils/native_handle.h>
-
 #include <memory>
+
 namespace mir
 {
 namespace client
@@ -33,16 +33,20 @@ class MemoryRegion;
 
 namespace android
 {
-class AndroidRegistrar
+class BufferRegistrar
 {
 public:
-    virtual ~AndroidRegistrar() = default;
+    virtual ~BufferRegistrar() = default;
     virtual std::shared_ptr<const native_handle_t> register_buffer(
         std::shared_ptr<MirBufferPackage> const& package) const = 0;
     virtual std::shared_ptr<char> secure_for_cpu(std::shared_ptr<const native_handle_t> handle, const geometry::Rectangle) = 0;
+protected:
+    BufferRegistrar() = default;
+    BufferRegistrar(BufferRegistrar const&) = delete;
+    BufferRegistrar& operator=(BufferRegistrar const&) = delete;
 };
 
 }
 }
 }
-#endif /* MIR_CLIENT_ANDROID_REGISTRAR_H_ */
+#endif /* MIR_CLIENT_ANDROID_BUFFER_REGISTRAR_H_ */

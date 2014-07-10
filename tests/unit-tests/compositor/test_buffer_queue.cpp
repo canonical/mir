@@ -768,47 +768,6 @@ TEST_F(BufferQueueTest, stress)
     }
 }
 
-TEST_F(BufferQueueTest, bypass_clients_get_more_than_two_buffers)
-{
-    for (int nbuffers = 3; nbuffers <= max_nbuffers_to_test; ++nbuffers)
-    {
-        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
-
-        std::shared_ptr<mg::Buffer> compositor[2];
-
-        auto handle = client_acquire_async(q);
-        ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
-        handle->release_buffer();
-        compositor[0] = q.compositor_acquire(this);
-
-        handle = client_acquire_async(q);
-        ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
-        handle->release_buffer();
-        compositor[1] = q.compositor_acquire(this);
-
-        for (int i = 0; i < 20; i++)
-        {
-            // Two compositors acquired, and they're always different...
-            ASSERT_THAT(compositor[0]->id(), Ne(compositor[1]->id()));
-
-            handle = client_acquire_async(q);
-            ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
-            ASSERT_THAT(compositor[0]->id(), Ne(handle->id()));
-            ASSERT_THAT(compositor[1]->id(), Ne(handle->id()));
-            handle->release_buffer();
-
-            // One of the compositors (the oldest one) gets a new buffer...
-            int oldest = i & 1;
-            q.compositor_release(compositor[oldest]);
-
-            compositor[oldest] = q.compositor_acquire(this);
-        }
-
-        q.compositor_release(compositor[0]);
-        q.compositor_release(compositor[1]);
-    }
-}
-
 TEST_F(BufferQueueTest, framedropping_clients_get_all_buffers)
 {
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
