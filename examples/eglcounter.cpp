@@ -201,7 +201,7 @@ private:
 };
 
 /* Colours from http://design.ubuntu.com/brand/colour-palette */
-#define MID_AUBERGINE(x) x*0.368627451f, x*0.152941176f, x*0.31372549f
+#define MID_AUBERGINE(x) (x)*0.368627451f, (x)*0.152941176f, (x)*0.31372549f
 #define ORANGE        0.866666667f, 0.282352941f, 0.141414141f
 
 int main(int argc, char *argv[])
