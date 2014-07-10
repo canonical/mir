@@ -84,20 +84,27 @@ TEST_F(ReadWriteMutex, can_be_read_locked_on_multiple_threads)
 {
     mt::Barrier barrier{reader_threads};
 
+    auto const reader_function =
+        [&]{
+            mutex.read_lock();
+            notify_read_locked();
+
+            barrier.ready();
+
+            notify_read_unlocking();
+            mutex.read_unlock();
+        };
+
+    InSequence seq;
+
+    EXPECT_CALL(*this, notify_read_locked()).Times(reader_threads);
+    EXPECT_CALL(*this, notify_read_unlocking()).Times(reader_threads);
+
     for (auto i = 0U; i != reader_threads; ++i)
-    {
-        threads.push_back(std::thread{
-            [&]{
-                mutex.read_lock();
-                barrier.ready();
-            }
-        });
-    }
+        threads.push_back(std::thread{reader_function});
 
     for (auto& thread : threads)
-    {
         if (thread.joinable()) thread.join();
-    }
 }
 
 TEST_F(ReadWriteMutex, write_lock_waits_for_read_locks_on_other_threads)
