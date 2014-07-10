@@ -97,3 +97,8 @@ std::shared_ptr<mir::graphics::NativeBuffer> mcla::Buffer::native_buffer_handle(
 {
     return native_window_buffer;
 }
+
+void mcla::Buffer::update_from(MirBufferPackage const& update_package)
+{
+    (void) update_package;
+}
