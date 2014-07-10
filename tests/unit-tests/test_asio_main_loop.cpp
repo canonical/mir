@@ -632,7 +632,7 @@ TEST_F(AsioMainLoopAlarmTest, rescheduled_alarm_cancels_previous_scheduling)
 }
 
 TEST_F(AsioMainLoopAlarmTest, alarm_callback_cannot_deadlock)
-{
+{   // Regression test for deadlock bug LP: #1339700
     std::mutex m;
     std::atomic_bool failed(false);
     int i = 0;
