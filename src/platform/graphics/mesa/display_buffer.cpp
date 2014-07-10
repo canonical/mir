@@ -303,7 +303,7 @@ void mgm::DisplayBuffer::post_update(
          * the next frame, but not for bypass frames. Deferring the flip of
          * bypass frames would increase the time we held
          * last_flipped_bypass_buf unacceptably, resulting in client stuttering
-         * unless we allocate quad-buffers (which I'm trying to avoid).
+         * unless we allocate more buffers (which I'm trying to avoid).
          * Also, bypass does not need the deferred page flip because it has
          * no compositing/rendering step for which to save time for.
          */
