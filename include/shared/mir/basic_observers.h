@@ -32,7 +32,7 @@ class BasicObservers
 protected:
     void add(std::shared_ptr<Observer> const& observer);
     void remove(std::shared_ptr<Observer> const& observer);
-    void for_each(std::function<void(std::shared_ptr<Observer> const& observer)> f);
+    void for_each(std::function<void(std::shared_ptr<Observer> const& observer)> const& f);
 
 private:
     struct ListItem
@@ -48,7 +48,7 @@ private:
 
 template<class Observer>
 void BasicObservers<Observer>::for_each(
-    std::function<void(std::shared_ptr<Observer> const& observer)> f)
+    std::function<void(std::shared_ptr<Observer> const& observer)> const& f)
 {
     ListItem* current_item = &head;
 
