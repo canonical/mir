@@ -29,10 +29,10 @@ using namespace testing;
 
 namespace
 {
-/* These tests are not ideal as they fail by hanging but I don't know a good
+/* These tests are not ideal as they may fail by hanging. But I don't know a good
  * way to kill a thread within the process (i.e. without leaking resources and
- * causing "undefined behavior"). So having a "watchdog" timeout just leads to
- * other issues and running in a separate process seems OTT.
+ * causing "undefined behavior"). That is having a "watchdog" timeout just leads
+ * to other issues and running in a separate process seems OTT.
  */
 struct ReadWriteMutex : public Test
 {
