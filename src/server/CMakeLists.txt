@@ -48,6 +48,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsharedinput
   mirsharedgeometry
   mirsharedlogging
+  mirsharedfd
   mirsharedenv
   mirsharedsharedlibrary
   mirsharedthreadname
