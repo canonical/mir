@@ -352,7 +352,9 @@ private:
         {
         }
 
-        std::recursive_mutex m;
+        std::mutex m;
+        int callbacks_running = 0;
+        std::condition_variable callback_done;
         std::function<void(void)> const callback;
         State state;
     };
@@ -381,7 +383,12 @@ auto make_handler(std::weak_ptr<AlarmImpl::InternalState> possible_data)
                 if (data->state == mir::time::Alarm::pending)
                 {
                     data->state = mir::time::Alarm::triggered;
+                    ++data->callbacks_running;
+                    lock.unlock();
                     data->callback();
+                    lock.lock();
+                    --data->callbacks_running;
+                    data->callback_done.notify_all();
                 }
             }
         }
@@ -420,7 +427,11 @@ AlarmImpl::~AlarmImpl() noexcept
 
 bool AlarmImpl::cancel()
 {
-    std::lock_guard<decltype(data->m)> lock(data->m);
+    std::unique_lock<decltype(data->m)> lock(data->m);
+
+    while (data->callbacks_running > 0)
+        data->callback_done.wait(lock);
+
     if (data->state == triggered)
         return false;
 
