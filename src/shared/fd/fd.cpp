@@ -33,7 +33,7 @@ mir::Fd::Fd(Fd&& other) :
 mir::Fd::~Fd() noexcept
 {
     if (fd >= 0)
-        close(fd);
+        ::close(fd);
 }
 
 mir::Fd& mir::Fd::operator=(Fd&& other)
