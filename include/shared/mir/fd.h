@@ -26,7 +26,6 @@ public:
     //transfer ownership of the POD-int to the object. The int no longer needs close()ing,
     //and has the lifetime of the Fd object.
     explicit Fd(int&& fd);
-    //move an exsting Fd
     explicit Fd(Fd&&);
     Fd& operator=(Fd&&);
     ~Fd() noexcept;

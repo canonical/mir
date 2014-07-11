@@ -18,7 +18,6 @@
 #include "mir/fd.h"
 #include <unistd.h>
 
-#include <iostream>
 mir::Fd::Fd(int&& other_fd) :
     fd{other_fd}
 {
