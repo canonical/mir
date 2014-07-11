@@ -119,7 +119,7 @@ void BasicObservers<Observer>::remove(std::shared_ptr<Observer> const& observer)
             return;
         }
     }
-    while (current_item->next && (current_item = current_item->next));
+    while ((current_item = current_item->next));
 }
 }
 
