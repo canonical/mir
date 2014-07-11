@@ -11,4 +11,6 @@ add_library(
   syncfence.cpp
 )
 
+target_link_libraries(mirsharedandroid mirsharedfd)
+
 set(MIR_COMMON_PLATFORM_LIBRARIES mirsharedandroid PARENT_SCOPE)

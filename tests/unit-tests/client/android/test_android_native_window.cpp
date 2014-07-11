@@ -20,7 +20,6 @@
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "src/client/mir_client_surface.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
-#include "mir_test_doubles/mock_fence.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

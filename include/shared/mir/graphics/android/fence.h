@@ -34,7 +34,7 @@ public:
     virtual ~Fence() = default;
 
     virtual void wait() = 0;
-    virtual void merge_with(NativeFence& merge_fd) = 0;
+    virtual void merge_with(NativeFence&& merge_fd) = 0;
     virtual NativeFence copy_native_handle() const = 0;
 
 protected:

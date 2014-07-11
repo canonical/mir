@@ -40,7 +40,7 @@ void mga::AndroidNativeBuffer::ensure_available_for(BufferAccess intent)
 
 void mga::AndroidNativeBuffer::update_usage(NativeFence& merge_fd, BufferAccess updated_access)
 {
-    fence->merge_with(merge_fd);
+    fence->merge_with(std::move(merge_fd));
     access = updated_access;
 }
 

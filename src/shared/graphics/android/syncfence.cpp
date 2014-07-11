@@ -44,12 +44,12 @@ void mga::SyncFence::wait()
     {
         int timeout = infinite_timeout;
         ops->ioctl(fence_fd, SYNC_IOC_WAIT, &timeout);
-        ops->close(fence_fd);
-        fence_fd = -1;
+        //ops->close(fence_fd);
+        //fence_fd = -1;
     }
 }
 
-void mga::SyncFence::merge_with(NativeFence& merge_fd)
+void mga::SyncFence::merge_with(NativeFence&& merge_fd)
 {
     if (merge_fd < 0)
     {
@@ -59,16 +59,17 @@ void mga::SyncFence::merge_with(NativeFence& merge_fd)
     if (fence_fd < 0)
     {
         //our fence was invalid, adopt the other fence
-        fence_fd = merge_fd;
+        mir::Fd fd(std::move(merge_fd));
+        fence_fd = mir::Fd(std::move(merge_fd));
     }
     else
     {
         //both fences were valid, must merge
         struct sync_merge_data data { merge_fd, "mirfence", infinite_timeout };
         ops->ioctl(fence_fd, static_cast<int>(SYNC_IOC_MERGE), &data);
-        ops->close(fence_fd);
+//        ops->close(fence_fd);
         ops->close(merge_fd);
-        fence_fd = data.fence;
+        fence_fd = mir::Fd(std::move(data.fence));
     }
 
     merge_fd = -1;

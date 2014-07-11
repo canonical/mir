@@ -32,6 +32,10 @@ namespace doubles
 
 struct MockFence : public graphics::android::Fence
 {
+    void merge_with(graphics::android::NativeFence&& fence)
+    {
+        merge_with(fence);
+    }
     MOCK_METHOD0(wait, void());
     MOCK_METHOD1(merge_with, void(graphics::android::NativeFence&));
     MOCK_CONST_METHOD0(copy_native_handle, graphics::android::NativeFence());
