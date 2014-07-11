@@ -36,15 +36,19 @@ struct DummyObservers : mir::BasicObservers<DummyObserver>
     using mir::BasicObservers<DummyObserver>::for_each;
 };
 
-}
-
-TEST(BasicObservers, can_remove_observer_from_within_same_observer)
+struct BasicObserversTest : testing::Test
 {
-    using namespace testing;
-
     DummyObservers observers;
 
-    auto const observer1 = std::make_shared<DummyObserver>();
+    std::shared_ptr<DummyObserver> const observer1 = std::make_shared<DummyObserver>();
+    std::shared_ptr<DummyObserver> const observer2 = std::make_shared<DummyObserver>();
+};
+
+}
+
+TEST_F(BasicObserversTest, can_remove_observer_from_within_same_observer)
+{
+    using namespace testing;
 
     observers.add(observer1);
 
@@ -65,14 +69,9 @@ TEST(BasicObservers, can_remove_observer_from_within_same_observer)
     EXPECT_THAT(observers_seen, Eq(0));
 }
 
-TEST(BasicObservers, can_remove_unused_observer_from_within_different_observer)
+TEST_F(BasicObserversTest, can_remove_unused_observer_from_within_different_observer)
 {
     using namespace testing;
-
-    DummyObservers observers;
-
-    auto const observer1 = std::make_shared<DummyObserver>();
-    auto const observer2 = std::make_shared<DummyObserver>();
 
     observers.add(observer1);
     observers.add(observer2);
@@ -89,14 +88,10 @@ TEST(BasicObservers, can_remove_unused_observer_from_within_different_observer)
     EXPECT_THAT(observers_seen, Eq(1));
 }
 
-TEST(BasicObservers, can_remove_unused_observer_while_different_observer_is_used_in_different_thread)
+TEST_F(BasicObserversTest,
+       can_remove_unused_observer_while_different_observer_is_used_in_different_thread)
 {
     using namespace testing;
-
-    DummyObservers observers;
-
-    auto const observer1 = std::make_shared<DummyObserver>();
-    auto const observer2 = std::make_shared<DummyObserver>();
 
     observers.add(observer1);
     observers.add(observer2);
