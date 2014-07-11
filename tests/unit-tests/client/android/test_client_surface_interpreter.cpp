@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir_toolkit/mir_native_buffer.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "src/client/mir_client_surface.h"
 #include "src/client/client_buffer.h"
@@ -53,7 +54,7 @@ struct MockClientBuffer : public mcl::ClientBuffer
     MOCK_CONST_METHOD0(age, uint32_t());
     MOCK_METHOD0(mark_as_submitted, void());
     MOCK_METHOD0(increment_age, void());
-
+    MOCK_METHOD1(update_from, void(MirBufferPackage const&));
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mir::graphics::NativeBuffer>());
 
     std::shared_ptr<mir::graphics::NativeBuffer> buffer;
