@@ -10,6 +10,10 @@ Build-Depends: cmake,
                doxygen,
                xsltproc,
                graphviz,
+# We rely on C++11 features, and to prevent from ABI breaks
+# in libstdc++ causing us issues, we explicitly select a G++
+# version.
+               g++-4.9,
                libboost-dev,
                libboost-chrono-dev,
                libboost-date-time-dev,

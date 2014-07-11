@@ -53,6 +53,7 @@ void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPacka
     }
     else
     {
+        existing_buffer_id_pair->second->update_from(*package);
         buffers.push_front(*existing_buffer_id_pair);
         buffers.erase(existing_buffer_id_pair);
     }
