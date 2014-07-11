@@ -110,16 +110,6 @@ public:
         return std::make_shared<DemoRendererFactory>(the_gl_program_factory());
     }
 
-    /* Duplicate impl. Could move to a common library so Mir proper, and examples can share. */
-    class NullHostLifecycleEventListener : public msh::HostLifecycleEventListener
-    {
-    public:
-        virtual void lifecycle_event_occured(MirLifecycleState /*state*/) override
-        {
-            printf("This line must not be output\n");
-        }
-    };
-
     class NestedLifecycleEventListener : public msh::HostLifecycleEventListener
     {
     public:
@@ -131,24 +121,11 @@ public:
 
     std::shared_ptr<msh::HostLifecycleEventListener> the_host_lifecycle_event_listener() override
     {
-        auto nested = the_options()->is_set(options::host_socket_opt);
-
-        if (nested)
-        {
-           return host_lifecycle_event_listener(
-               []()
-               {
-                   return std::make_shared<NestedLifecycleEventListener>();
-               });
-        }
-        else
-        {
-            return host_lifecycle_event_listener(
-                []()
-                {
-                    return std::make_shared<NullHostLifecycleEventListener>();
-                });
-        }
+	   return host_lifecycle_event_listener(
+		   []()
+		   {
+			   return std::make_shared<NestedLifecycleEventListener>();
+		   });
     }
 
 private:
