@@ -143,13 +143,7 @@ struct NativePlatformAdapter : mg::NativePlatform
 
 struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
 {
-    MockHostLifecycleEventListener()
-	{
-        EXPECT_CALL(*this, lifecycle_event_occured(lifecycle_state)).Times(1);
- 	}
-
     MOCK_METHOD1(lifecycle_event_occured, void (MirLifecycleState));
-    static MirLifecycleState const lifecycle_state = mir_lifecycle_state_resumed;
 };
 
 struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerConfiguration
@@ -371,5 +365,10 @@ TEST_F(NestedServer, receives_lifecycle_events_from_host)
 
     NestedMirRunner nested_mir{nested_config};
 
-    TriggerLifecycleEvent(MockHostLifecycleEventListener::lifecycle_state);
+    TriggerLifecycleEvent(mir_lifecycle_state_resumed);
+    TriggerLifecycleEvent(mir_lifecycle_state_will_suspend);
+
+    InSequence seq;
+    EXPECT_CALL(*(static_cast<MockHostLifecycleEventListener*>(nested_config.the_host_lifecycle_event_listener().get())), lifecycle_event_occured(mir_lifecycle_state_resumed)).Times(1);
+    EXPECT_CALL(*(static_cast<MockHostLifecycleEventListener*>(nested_config.the_host_lifecycle_event_listener().get())), lifecycle_event_occured(mir_lifecycle_state_will_suspend)).Times(1);
 }
