@@ -30,18 +30,13 @@ mga::SyncFence::SyncFence(std::shared_ptr<mga::SyncFileOps> const& ops, Fd&& fd)
 {
 }
 
-mga::SyncFence::~SyncFence() noexcept
-{
-}
-
 void mga::SyncFence::wait()
 {
     if (fence_fd > 0)
     {
-        int invalid = -1;
         int timeout = infinite_timeout;
         ops->ioctl(fence_fd, SYNC_IOC_WAIT, &timeout);
-        fence_fd = mir::Fd(std::move(invalid));
+        fence_fd = mir::Fd(-1);
     }
 }
 

@@ -50,7 +50,6 @@ class SyncFence : public Fence
 {
 public:
     explicit SyncFence(std::shared_ptr<SyncFileOps> const&, Fd&& fd);
-    ~SyncFence() noexcept;
 
     void wait();
     void merge_with(NativeFence&& merge_fd);
