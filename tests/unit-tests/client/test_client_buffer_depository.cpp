@@ -22,6 +22,7 @@
 #include "src/client/aging_buffer.h"
 #include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"
+#include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -36,15 +37,6 @@ struct MockBuffer : public mcl::AgingBuffer
         using namespace testing;
         ON_CALL(*this, mark_as_submitted())
             .WillByDefault(Invoke([this](){this->AgingBuffer::mark_as_submitted();}));
-
-        // By default we expect all buffers to be destroyed.
-        EXPECT_CALL(*this, Destroy()).Times(1);
-    }
-
-    MOCK_METHOD0(Destroy, void());
-    virtual ~MockBuffer() noexcept
-    {
-        Destroy();
     }
 
     MOCK_METHOD0(mark_as_submitted, void());
@@ -53,26 +45,52 @@ struct MockBuffer : public mcl::AgingBuffer
     MOCK_CONST_METHOD0(stride, geom::Stride());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mir::graphics::NativeBuffer>());
+    MOCK_METHOD1(update_from, void(MirBufferPackage const&));
 };
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory
 {
-    MockClientBufferFactory()
+    MockClientBufferFactory() :
+        alloc_count(0),
+        free_count(0)
     {
         using namespace testing;
-
-        // Some tests, quite reasonably, rely on create_buffer returning a different buffer each time
-        // Handle this by first updating our "buffer" temporary, then returning-by-pointee.
         ON_CALL(*this, create_buffer(_,_,_))
-            .WillByDefault(DoAll(InvokeWithoutArgs([this]() {this->buffer = std::make_shared<NiceMock<MockBuffer>>();}),
-                                 ReturnPointee(&buffer)));
+            .WillByDefault(InvokeWithoutArgs([this]()
+            {
+                alloc_count++;
+                auto buffer = std::shared_ptr<mcl::ClientBuffer>(
+                    new NiceMock<MockBuffer>(),
+                    [this](mcl::ClientBuffer* buffer)
+                    {
+                        free_count++;
+                        delete buffer;
+                    });
+                if (alloc_count == 1)
+                    first_allocated_buffer = buffer;
+                return buffer;
+            }));
+    }
+
+    ~MockClientBufferFactory()
+    {
+        EXPECT_THAT(alloc_count, testing::Eq(free_count));
     }
 
     MOCK_METHOD3(create_buffer,
                  std::shared_ptr<mcl::ClientBuffer>(std::shared_ptr<MirBufferPackage> const&,
                                                     geom::Size, MirPixelFormat));
 
-    std::shared_ptr<mcl::ClientBuffer> buffer;
+    bool first_buffer_allocated_and_then_freed()
+    {
+        if ((alloc_count >= 1) && (first_allocated_buffer.lock() == nullptr))
+            return true;
+        return false;
+    }
+
+    int alloc_count;
+    int free_count;
+    std::weak_ptr<mcl::ClientBuffer> first_allocated_buffer;
 };
 
 struct MirBufferDepositoryTest : public testing::Test
@@ -265,25 +283,15 @@ TEST_F(MirBufferDepositoryTest, depository_destroys_old_buffers)
     std::shared_ptr<MirBufferPackage> packages[num_packages];
 
     depository.deposit_package(packages[0], 1, size, pf);
-    // Raw pointer so we don't influence the buffer's life-cycle
-    MockBuffer *first_buffer = static_cast<MockBuffer *>(depository.current_buffer().get());
-    // We expect this to not be destroyed before we deposit the fourth buffer.
-    bool buffer_destroyed = false;
-    ON_CALL(*first_buffer, Destroy()).WillByDefault(Invoke([&buffer_destroyed] () {buffer_destroyed = true;}));
-
-
     depository.deposit_package(packages[1], 2, size, pf);
     depository.deposit_package(packages[2], 3, size, pf);
 
     // We've deposited three different buffers now; the fourth should trigger the destruction
     // of the first buffer.
-    ASSERT_FALSE(buffer_destroyed);
-
+    EXPECT_THAT(mock_factory->free_count, Eq(0));
     depository.deposit_package(packages[3], 4, size, pf);
-
-    // Explicitly verify that the buffer has been destroyed here, before the depository goes out of scope
-    // and its destructor cleans everything up.
-    EXPECT_TRUE(buffer_destroyed);
+    EXPECT_THAT(mock_factory->free_count, Eq(1));
+    EXPECT_TRUE(mock_factory->first_buffer_allocated_and_then_freed());
 }
 
 TEST_F(MirBufferDepositoryTest, depositing_packages_implicitly_submits_current_buffer)
@@ -301,38 +309,27 @@ TEST_F(MirBufferDepositoryTest, depositing_packages_implicitly_submits_current_b
     depository.deposit_package(package2, 2, size, pf);
 }
 
-TEST_F(MirBufferDepositoryTest, depository_respects_max_buffer_parameter)
+TEST_F(MirBufferDepositoryTest, depository_frees_buffers_after_reaching_capacity)
 {
     using namespace testing;
     std::shared_ptr<mcl::ClientBufferDepository> depository;
     std::shared_ptr<MirBufferPackage> packages[10];
-    bool buffer_destroyed[10];
 
     for (int num_buffers = 2; num_buffers < 10; ++num_buffers)
     {
         depository = std::make_shared<mcl::ClientBufferDepository>(mock_factory, num_buffers);
-
-        // Reset destroyed tracking; resetting the depository will have destroyed all the buffers
-        for (bool& destroyed_flag : buffer_destroyed)
-            destroyed_flag = false;
+        mock_factory->free_count = 0;
+        mock_factory->alloc_count = 0;
 
         int i;
         for (i = 0; i < num_buffers ; ++i)
-        {
-            MockBuffer *buffer;
             depository->deposit_package(packages[i], i + 1, size, pf);
-            buffer = static_cast<MockBuffer *>(depository->current_buffer().get());
-            ON_CALL(*buffer, Destroy()).WillByDefault(Invoke([&buffer_destroyed, i] () {buffer_destroyed[i] = true;}));
-        }
 
-        // Next deposit should destroy first buffer
-        ASSERT_FALSE(buffer_destroyed[0]);
+        // Next deposit should destroy a buffer
+        EXPECT_THAT(mock_factory->free_count, Eq(0));
         depository->deposit_package(packages[i], i+1, size, pf);
-        EXPECT_TRUE(buffer_destroyed[0]);
-
-        // Verify none of the other buffers have been destroyed
-        for (i = 1; i < num_buffers; ++i)
-            EXPECT_FALSE(buffer_destroyed[i]);
+        EXPECT_THAT(mock_factory->free_count, Eq(1));
+        EXPECT_TRUE(mock_factory->first_buffer_allocated_and_then_freed());
     }
 }
 
@@ -344,13 +341,20 @@ TEST_F(MirBufferDepositoryTest, depository_caches_recently_seen_buffer)
 
     auto package1 = std::make_shared<MirBufferPackage>();
     auto package2 = std::make_shared<MirBufferPackage>();
+    auto package3 = std::make_shared<MirBufferPackage>();
+    NiceMock<MockBuffer> mock_buffer;
+    Sequence seq;
+    EXPECT_CALL(*mock_factory, create_buffer(Ref(package1),_,_))
+        .InSequence(seq)
+        .WillOnce(Return(mir::test::fake_shared(mock_buffer)));
+    EXPECT_CALL(mock_buffer, update_from(Ref(*package2)))
+        .InSequence(seq);
+    EXPECT_CALL(mock_buffer, update_from(Ref(*package3)))
+        .InSequence(seq);
 
-    EXPECT_CALL(*mock_factory, create_buffer(_,_,_))
-        .Times(1);
-
     depository.deposit_package(package1, 8, size, pf);
-    depository.deposit_package(package1, 8, size, pf);
-    depository.deposit_package(package1, 8, size, pf);
+    depository.deposit_package(package2, 8, size, pf);
+    depository.deposit_package(package3, 8, size, pf);
 }
 
 TEST_F(MirBufferDepositoryTest, depository_creates_new_buffer_for_different_id)

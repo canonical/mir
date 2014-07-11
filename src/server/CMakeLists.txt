@@ -51,7 +51,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsharedfd
   mirsharedenv
   mirsharedsharedlibrary
-  mirsharedthreadname
+  mirsharedthread
   mirshell
   mirscene
   mirtime
