@@ -35,14 +35,14 @@ namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 
-mga::HwcFbDevice::HwcFbDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                              std::shared_ptr<HwcWrapper> const& hwc_wrapper,
-                              std::shared_ptr<framebuffer_device_t> const& fb_device,
-                              std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
-    : HWCCommonDevice(hwc_device, coordinator),
-      hwc_wrapper(hwc_wrapper), 
-      fb_device(fb_device),
-      layer_list{{},1}
+mga::HwcFbDevice::HwcFbDevice(
+    std::shared_ptr<HwcWrapper> const& hwc_wrapper,
+    std::shared_ptr<framebuffer_device_t> const& fb_device,
+    std::shared_ptr<HWCVsyncCoordinator> const& coordinator) :
+    HWCCommonDevice(hwc_wrapper, coordinator),
+    hwc_wrapper(hwc_wrapper), 
+    fb_device(fb_device),
+    layer_list{{},1}
 {
 }
 
