@@ -363,6 +363,36 @@ private:
     int send_fd, recv_fd;
     int old_sndbuf, old_recvbuf;
 };
+
+class TemporarySignalHandler
+{
+public:
+    TemporarySignalHandler(int signo, void (*handler)(int))
+        : signo{signo}
+    {
+        struct sigaction alarm_handler;
+        sigset_t blocked_signals;
+
+        sigemptyset(&blocked_signals);
+        alarm_handler.sa_handler = handler;
+        alarm_handler.sa_flags = 0;
+        alarm_handler.sa_mask = blocked_signals;
+        if (sigaction(signo, &alarm_handler, &old_handler) < 0)
+        {
+            throw std::system_error{errno, std::system_category(), "Failed to set signal handler"};
+        }
+    }
+    ~TemporarySignalHandler()
+    {
+        if (sigaction(signo, &old_handler, nullptr) < 0)
+        {
+            throw std::system_error{errno, std::system_category(), "Failed to restore SIGALRM handler"};
+        }
+    }
+private:
+    int const signo;
+    struct sigaction old_handler;
+};
 }
 
 TYPED_TEST(StreamTransportTest, ReadsFullDataFromMultipleChunks)
@@ -413,30 +443,7 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataWhenInterruptedWithSignals)
     }
     std::vector<uint8_t> received(expected.size());
 
-    struct sigaction old_handler;
-
-    auto sig_alarm_handler = mir::raii::paired_calls([&old_handler]()
-    {
-        struct sigaction alarm_handler;
-        sigset_t blocked_signals;
-
-        sigemptyset(&blocked_signals);
-        alarm_handler.sa_handler = &set_alarm_raised;
-        alarm_handler.sa_flags = 0;
-        alarm_handler.sa_mask = blocked_signals;
-        if (sigaction(SIGALRM, &alarm_handler, &old_handler) < 0)
-        {
-            throw std::system_error{errno, std::system_category(), "Failed to set SIGALRM handler"};
-        }
-    },
-    [&old_handler]()
-    {
-        if (sigaction(SIGALRM, &old_handler, nullptr) < 0)
-        {
-            throw std::system_error{errno, std::system_category(), "Failed to restore SIGALRM handler"};
-        }
-    });
-
+    TemporarySignalHandler sig_alarm_handler{SIGALRM, &set_alarm_raised};
     auto read_now_waiting = std::make_shared<mir::test::Signal>();
 
     mir::test::AutoJoinThread reader([&]()
@@ -448,8 +455,6 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataWhenInterruptedWithSignals)
     });
 
     EXPECT_TRUE(read_now_waiting->wait_for(std::chrono::seconds{1}));
-
-    pthread_kill(reader.native_handle(), SIGALRM);
 
     size_t bytes_written{0};
     while (bytes_written < expected.size())
@@ -667,31 +672,9 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataAndFdsWhenInterruptedWithSignals)
     std::vector<uint8_t> received(expected.size());
     std::vector<int> received_fds(num_fds);
 
-    struct sigaction old_handler;
-
-    auto sig_alarm_handler = mir::raii::paired_calls([&old_handler]()
-    {
-        struct sigaction alarm_handler;
-        sigset_t blocked_signals;
-
-        sigemptyset(&blocked_signals);
-        alarm_handler.sa_handler = &set_alarm_raised;
-        alarm_handler.sa_flags = 0;
-        alarm_handler.sa_mask = blocked_signals;
-        if (sigaction(SIGALRM, &alarm_handler, &old_handler) < 0)
-        {
-            throw std::system_error{errno, std::system_category(), "Failed to set SIGALRM handler"};
-        }
-    },
-    [&old_handler]()
-    {
-        if (sigaction(SIGALRM, &old_handler, nullptr) < 0)
-        {
-            throw std::system_error{errno, std::system_category(), "Failed to restore SIGALRM handler"};
-        }
-    });
-
+    TemporarySignalHandler sig_alarm_handler{SIGALRM, &set_alarm_raised};
     auto receive_done = std::make_shared<mir::test::Signal>();
+
     mir::test::AutoUnblockThread reader{[this]() { ::close(this->test_fd); },
                                         [&]()
     {
@@ -946,30 +929,7 @@ TYPED_TEST(StreamTransportTest, SendsFullMessagesWhenInterrupted)
     std::vector<uint8_t> received(expected.size());
 
 
-    struct sigaction old_handler;
-
-    auto sig_alarm_handler = mir::raii::paired_calls([&old_handler]()
-    {
-        struct sigaction alarm_handler;
-        sigset_t blocked_signals;
-
-        sigemptyset(&blocked_signals);
-        alarm_handler.sa_handler = &set_alarm_raised;
-        alarm_handler.sa_flags = 0;
-        alarm_handler.sa_mask = blocked_signals;
-        if (sigaction(SIGALRM, &alarm_handler, &old_handler) < 0)
-        {
-            throw std::system_error{errno, std::system_category(), "Failed to set SIGALRM handler"};
-        }
-    },
-    [&old_handler]()
-    {
-        if (sigaction(SIGALRM, &old_handler, nullptr) < 0)
-        {
-            throw std::system_error{errno, std::system_category(), "Failed to restore SIGALRM handler"};
-        }
-    });
-
+    TemporarySignalHandler sig_alarm_handler{SIGALRM, &set_alarm_raised};
     auto write_now_waiting = std::make_shared<mir::test::Signal>();
 
     mir::test::AutoJoinThread writer([&]()
