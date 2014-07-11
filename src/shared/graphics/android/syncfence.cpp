@@ -53,7 +53,6 @@ void mga::SyncFence::merge_with(NativeFence&& merge_fd)
     if (fence_fd < 0)
     {
         //our fence was invalid, adopt the other fence
-        mir::Fd fd(std::move(merge_fd));
         fence_fd = mir::Fd(std::move(merge_fd));
     }
     else

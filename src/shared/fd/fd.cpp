@@ -18,19 +18,19 @@
 #include "mir/fd.h"
 #include <unistd.h>
 
-mir::Fd::Fd(int&& other_fd)
-    : fd{other_fd}
+mir::Fd::Fd(int&& other_fd) :
+    fd{other_fd}
 {
     other_fd = -1;
 }
 
-mir::Fd::Fd(int const& fd)
-    : fd{dup(fd)}
+mir::Fd::Fd(int const& fd) :
+    fd{dup(fd)}
 {
 }
 
-mir::Fd::Fd(Fd&& other)
-    : fd{other.fd}
+mir::Fd::Fd(Fd&& other) :
+    fd{other.fd}
 {
     other.fd = -1;
 }

@@ -20,6 +20,7 @@
 #ifndef MIR_GRAPHICS_MESA_ANONYMOUS_SHM_FILE_H_
 #define MIR_GRAPHICS_MESA_ANONYMOUS_SHM_FILE_H_
 
+#include "mir/fd.h"
 #include "shm_file.h"
 
 namespace mir
@@ -57,7 +58,7 @@ public:
     int fd() const;
 
 private:
-    detail::FdHandle const fd_;
+    Fd const fd_;
     detail::MapHandle const mapping;
 };
 
