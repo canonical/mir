@@ -130,6 +130,13 @@ TEST_F(SyncSwTest, sync_merge_with_invalid_fd)
 
 TEST_F(SyncSwTest, copy_dups_fd)
 {
+    using namespace testing;
+    int fd2 = dummy_fd_value + 1;
+    EXPECT_CALL(*mock_fops, dup(dummy_fd_value))
+        .Times(1)
+        .WillOnce(Return(fd2));;
+
     mga::SyncFence fence(mock_fops, std::move(dummy_fd));
-    EXPECT_THAT(dummy_fd_value, testing::Ne(fence.copy_native_handle()));
+
+    EXPECT_EQ(fd2, fence.copy_native_handle());
 }
