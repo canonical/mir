@@ -325,6 +325,44 @@ void set_alarm_raised(int /*signo*/)
 {
     alarm_raised = true;
 }
+
+class SocketBlockThreshold
+{
+public:
+    SocketBlockThreshold(int send_fd, int recv_fd)
+        : send_fd{send_fd},
+          recv_fd{recv_fd}
+    {
+        int val{256};
+        socklen_t val_size{sizeof(val)};
+
+        getsockopt(recv_fd, SOL_SOCKET, SO_RCVBUF, &old_recvbuf, &val_size);
+        getsockopt(send_fd, SOL_SOCKET, SO_SNDBUF, &old_sndbuf, &val_size);
+
+        setsockopt(recv_fd, SOL_SOCKET, SO_SNDBUF, &val, sizeof(val));
+        setsockopt(send_fd, SOL_SOCKET, SO_RCVBUF, &val, sizeof(val));
+    }
+
+    ~SocketBlockThreshold()
+    {
+        setsockopt(recv_fd, SOL_SOCKET, SO_SNDBUF, &old_sndbuf, sizeof(old_sndbuf));
+        setsockopt(send_fd, SOL_SOCKET, SO_RCVBUF, &old_recvbuf, sizeof(old_recvbuf));
+    }
+
+    size_t data_size_which_should_block()
+    {
+        int sendbuf, recvbuf;
+        socklen_t buf_size{sizeof(sendbuf)};
+        getsockopt(recv_fd, SOL_SOCKET, SO_RCVBUF, &recvbuf, &buf_size);
+        getsockopt(send_fd, SOL_SOCKET, SO_SNDBUF, &sendbuf, &buf_size);
+
+        return sendbuf + recvbuf;
+    }
+
+private:
+    int send_fd, recv_fd;
+    int old_sndbuf, old_recvbuf;
+};
 }
 
 TYPED_TEST(StreamTransportTest, ReadsFullDataFromMultipleChunks)
@@ -858,4 +896,113 @@ TYPED_TEST(StreamTransportTest, MismatchedFdExpectationsHaveAppropriateErrorMess
     {
         EXPECT_THAT(err.what(), testing::HasSubstr("more fds than expected"));
     }
+}
+
+namespace
+{
+class SignalStorm
+{
+public:
+    template<typename rep, typename period>
+    SignalStorm(int signo,
+                std::chrono::duration<rep, period> interval,
+                std::thread::native_handle_type victim_thread)
+        : signaller{[this]() { done.raise(); },
+                    [this, signo, interval, victim_thread]()
+                    {
+                        while(!done.wait_for(interval))
+                        {
+                            pthread_kill(victim_thread, signo);
+                        }
+                    }}
+    {
+    }
+    ~SignalStorm()
+    {
+    }
+private:
+    mir::test::Signal done;
+    mir::test::AutoUnblockThread signaller;
+};
+
+}
+
+TYPED_TEST(StreamTransportTest, SendsFullMessagesWhenInterrupted)
+{
+    SocketBlockThreshold socketopt(this->transport_fd, this->test_fd);
+
+    size_t const chunk_size{socketopt.data_size_which_should_block()};
+    std::vector<uint8_t> expected(chunk_size * 4);
+
+    uint8_t counter{0};
+    for (auto& byte : expected)
+    {
+        byte = counter++;
+    }
+    std::vector<uint8_t> received(expected.size());
+
+
+    struct sigaction old_handler;
+
+    auto sig_alarm_handler = mir::raii::paired_calls([&old_handler]()
+    {
+        struct sigaction alarm_handler;
+        sigset_t blocked_signals;
+
+        sigemptyset(&blocked_signals);
+        alarm_handler.sa_handler = &set_alarm_raised;
+        alarm_handler.sa_flags = 0;
+        alarm_handler.sa_mask = blocked_signals;
+        if (sigaction(SIGALRM, &alarm_handler, &old_handler) < 0)
+        {
+            throw std::system_error{errno, std::system_category(), "Failed to set SIGALRM handler"};
+        }
+    },
+    [&old_handler]()
+    {
+        if (sigaction(SIGALRM, &old_handler, nullptr) < 0)
+        {
+            throw std::system_error{errno, std::system_category(), "Failed to restore SIGALRM handler"};
+        }
+    });
+
+    auto write_now_waiting = std::make_shared<mir::test::Signal>();
+
+    mir::test::AutoJoinThread writer([&]()
+    {
+        alarm_raised = false;
+        write_now_waiting->raise();
+        this->transport->send_data(expected);
+        EXPECT_TRUE(alarm_raised);
+    });
+
+    EXPECT_TRUE(write_now_waiting->wait_for(std::chrono::seconds{1}));
+
+    {
+        SignalStorm storm{SIGALRM, std::chrono::nanoseconds{100}, writer.native_handle()};
+
+        ssize_t bytes_read{0};
+        while(bytes_read < received.size())
+        {
+            pollfd socket_readable;
+            socket_readable.events = POLLIN;
+            socket_readable.fd = this->test_fd;
+
+            ASSERT_GE(poll(&socket_readable, 1, 10000), 1);
+            ASSERT_EQ(0, socket_readable.revents & (POLLERR | POLLHUP));
+
+            auto result = read(this->test_fd,
+                               received.data() + bytes_read,
+                               std::min(received.size() - bytes_read, chunk_size));
+            ASSERT_GE(result, 0) << "Failed to read(): " << strerror(errno);
+            bytes_read += result;
+
+            // Give our signal spam time to work...
+            std::this_thread::sleep_for(std::chrono::milliseconds{1});
+        }
+    }
+
+    writer.stop();
+
+    EXPECT_EQ(expected, received);
 }

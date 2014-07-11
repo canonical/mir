@@ -227,20 +227,32 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes, 
 
 void mclr::StreamSocketTransport::send_data(const std::vector<uint8_t>& buffer)
 {
-    ssize_t const bytes_written = send(socket_fd, buffer.data(), buffer.size(), MSG_NOSIGNAL);
-
-    if (bytes_written < 0)
+    size_t bytes_written{0};
+    while (bytes_written < buffer.size())
     {
-        if (errno == EPIPE)
+        ssize_t const result = send(socket_fd,
+                                    buffer.data() + bytes_written,
+                                    buffer.size() - bytes_written,
+                                    MSG_NOSIGNAL);
+
+        if (result < 0)
         {
-            notify_disconnected();
+            if (socket_error_is_transient(errno))
+            {
+                continue;
+            }
+            if (errno == EPIPE)
+            {
+                notify_disconnected();
+                BOOST_THROW_EXCEPTION(
+                            boost::enable_error_info(socket_disconnected_error("Failed to send message to server"))
+                            << boost::errinfo_errno(errno));
+            }
             BOOST_THROW_EXCEPTION(
-                        boost::enable_error_info(socket_disconnected_error("Failed to send message to server"))
+                        boost::enable_error_info(socket_error("Failed to send message to server"))
                         << boost::errinfo_errno(errno));
         }
-        BOOST_THROW_EXCEPTION(
-                    boost::enable_error_info(socket_error("Failed to send message to server"))
-                    << boost::errinfo_errno(errno));
+        bytes_written += result;
     }
 }
 
