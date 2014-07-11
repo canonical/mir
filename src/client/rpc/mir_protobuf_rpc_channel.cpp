@@ -273,9 +273,9 @@ void mclr::MirProtobufRpcChannel::on_data_available()
     /*
      * Our transport isn't atomic, and even if it were we don't
      * read messages from it atomically. We therefore need to guard
-     * these transport->receive_data with a lock.
+     * these transport->receive_data calls with a lock.
      *
-     * Additionally, event processing may itself reads, as that's
+     * Additionally, event processing may itself read, as that's
      * how we handle messages with file descriptors.
      *
      * So we need to lock the whole shebang
