@@ -18,14 +18,16 @@
  */
 
 #include "android_client_buffer_factory.h"
+#include "buffer_registrar.h"
 #include "buffer.h"
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
 
-mcla::AndroidClientBufferFactory::AndroidClientBufferFactory(std::shared_ptr<AndroidRegistrar> const& buffer_registrar)
- : registrar(buffer_registrar)
+mcla::AndroidClientBufferFactory::AndroidClientBufferFactory(
+    std::shared_ptr<BufferRegistrar> const& buffer_registrar) :
+    registrar(buffer_registrar)
 {
 }
 

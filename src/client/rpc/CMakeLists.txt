@@ -18,6 +18,6 @@ target_link_libraries(
   mirclientrpc
 
   mirprotobuf
-  mirsharedthreadname
+  mirsharedthread
   ${PROTOBUF_LIBRARIES}
 )

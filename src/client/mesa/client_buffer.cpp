@@ -131,3 +131,7 @@ std::shared_ptr<MirNativeBuffer> mclm::ClientBuffer::native_buffer_handle() cons
     creation_package->age = age();
     return creation_package;
 }
+
+void mclm::ClientBuffer::update_from(MirBufferPackage const&)
+{
+}

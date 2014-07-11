@@ -18,7 +18,7 @@
 
 #include "mir/graphics/android/mir_native_window.h"
 #include "android_client_platform.h"
-#include "android_registrar_gralloc.h"
+#include "gralloc_registrar.h"
 #include "android_client_buffer_factory.h"
 #include "client_surface_interpreter.h"
 #include "../mir_connection.h"
@@ -56,7 +56,7 @@ std::shared_ptr<mcl::ClientBufferFactory> mcla::AndroidClientPlatform::create_bu
     /* we use an empty deleter because hw_get_module does not give us the ownership of the ptr */
     EmptyDeleter empty_del;
     auto gralloc_dev = std::shared_ptr<gralloc_module_t>(gr_dev, empty_del);
-    auto registrar = std::make_shared<mcla::AndroidRegistrarGralloc>(gralloc_dev);
+    auto registrar = std::make_shared<mcla::GrallocRegistrar>(gralloc_dev);
     return std::make_shared<mcla::AndroidClientBufferFactory>(registrar);
 }
 

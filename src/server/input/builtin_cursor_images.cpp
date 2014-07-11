@@ -21,6 +21,7 @@
 
 #include "mir/graphics/cursor_image.h"
 
+namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
@@ -36,15 +37,19 @@ struct BlackArrowCursorImage : public mg::CursorImage
     {
         return { black_arrow.width, black_arrow.height };
     }
+    geom::Displacement hotspot() const
+    {
+        return {0, 0};
+    }
 };
 }
 
-mg::BuiltinCursorImages::BuiltinCursorImages()
+mi::BuiltinCursorImages::BuiltinCursorImages()
     : builtin_image(std::make_shared<BlackArrowCursorImage>())
 {
 }
 
-std::shared_ptr<mg::CursorImage> mg::BuiltinCursorImages::image(std::string const& /* cursor_name */,
+std::shared_ptr<mg::CursorImage> mi::BuiltinCursorImages::image(std::string const& /* cursor_name */,
     geom::Size const& /* size */)
 {
     // Builtin repository only has one cursor at a single size.

@@ -6,7 +6,7 @@ add_library(
 
   buffer.cpp
   android_client_buffer_factory.cpp
-  android_registrar.cpp
+  gralloc_registrar.cpp
   android_client_platform.cpp
   client_platform_factory.cpp
   client_surface_interpreter.cpp

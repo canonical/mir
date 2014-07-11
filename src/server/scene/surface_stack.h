@@ -26,6 +26,8 @@
 #include "mir/scene/observer.h"
 #include "mir/input/input_targets.h"
 
+#include "mir/basic_observers.h"
+
 #include <memory>
 #include <vector>
 #include <mutex>
@@ -43,7 +45,7 @@ class BasicSurface;
 class SceneReport;
 class RenderingTracker;
 
-class Observers : public Observer
+class Observers : public Observer, BasicObservers<Observer>
 {
 public:
    // ms::Observer
@@ -53,12 +55,8 @@ public:
    void surface_exists(Surface* surface) override;
    void end_observation();
 
-   void add_observer(std::shared_ptr<Observer> const& observer);
-   void remove_observer(std::shared_ptr<Observer> const& observer);
-
-private:
-    std::mutex mutex;
-    std::vector<std::shared_ptr<Observer>> observers;
+   using BasicObservers<Observer>::add;
+   using BasicObservers<Observer>::remove;
 };
 
 class SurfaceStack : public compositor::Scene, public input::InputTargets, public SurfaceStackModel
