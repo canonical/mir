@@ -18,6 +18,7 @@
 #include "mir/fd.h"
 #include <unistd.h>
 
+#include <iostream>
 mir::Fd::Fd(int&& other_fd) :
     fd{other_fd}
 {
@@ -32,13 +33,13 @@ mir::Fd::Fd(Fd&& other) :
 
 mir::Fd::~Fd() noexcept
 {
-    if (fd >= 0)
-        ::close(fd);
+    if (fd >= 0) ::close(fd);
 }
 
 mir::Fd& mir::Fd::operator=(Fd&& other)
 {
-    this->fd = other.fd;
+    if (fd >= 0) ::close(fd);
+    fd = other.fd;
     other.fd = -1;
     return *this;
 }

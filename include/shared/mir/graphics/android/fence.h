@@ -26,6 +26,7 @@ namespace graphics
 namespace android
 {
 
+//TODO: (kdub) remove this type in favor of mir::Fd
 typedef int NativeFence;
 
 class Fence
