@@ -121,11 +121,11 @@ public:
 
     std::shared_ptr<msh::HostLifecycleEventListener> the_host_lifecycle_event_listener() override
     {
-	   return host_lifecycle_event_listener(
-		   []()
-		   {
-			   return std::make_shared<NestedLifecycleEventListener>();
-		   });
+       return host_lifecycle_event_listener(
+           []()
+           {
+               return std::make_shared<NestedLifecycleEventListener>();
+           });
     }
 
 private:
