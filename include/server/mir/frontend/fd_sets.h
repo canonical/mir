@@ -28,7 +28,7 @@ namespace frontend
 {
 namespace detail
 {
-typedef std::vector<std::vector<Fd>> FdSets;
+typedef std::initializer_list<std::vector<Fd>> FdSets;
 }
 }
 } // namespace mir

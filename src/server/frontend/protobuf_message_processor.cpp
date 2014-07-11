@@ -226,9 +226,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
 {
-    FdSets fds;
-    fds.emplace_back(extract_fds_from(response));
-    sender->send_response(id, response, fds);
+    sender->send_response(id, response, {extract_fds_from(response)});
 }
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::Buffer> response)
@@ -238,34 +236,30 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
 {
-    FdSets fds;
     if (response->has_platform())
-        fds.emplace_back(extract_fds_from(response->mutable_platform()));
-    sender->send_response(id, response, fds);
+        sender->send_response(id, response, {extract_fds_from(response->mutable_platform())});
+    else
+        sender->send_response(id, response, {});
 }
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
 {
-    FdSets fds;
-    fds.emplace_back(extract_fds_from(response));
     if (response->has_buffer())
-        fds.emplace_back(extract_fds_from(response->mutable_buffer()));
-    sender->send_response(id, response, fds);
+        sender->send_response(id, response, {extract_fds_from(response), extract_fds_from(response->mutable_buffer())});
+    else
+        sender->send_response(id, response, {extract_fds_from(response)});
 }
 
 void mfd::ProtobufMessageProcessor::send_response(
     ::google::protobuf::uint32 id, mir::protobuf::Screencast* response)
 {
-    FdSets fds;
     if (response->has_buffer())
-        fds.emplace_back(extract_fds_from(response->mutable_buffer()));
-
-    sender->send_response(id, response, fds);
+        sender->send_response(id, response, {extract_fds_from(response->mutable_buffer())});
+    else
+        sender->send_response(id, response, {});
 }
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::SocketFD* response)
 {
-    FdSets fds;
-    fds.emplace_back(extract_fds_from(response));
-    sender->send_response(id, response, fds);
+    sender->send_response(id, response, {extract_fds_from(response)});
 }
