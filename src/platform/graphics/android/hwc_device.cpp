@@ -104,7 +104,7 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
     for(auto& layer : hwc_list)
         layer.layer.update_from_releasefence(*buffer);
 
-    mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
+    mga::SyncFence retire_fence(sync_ops, mir::Fd(std::move(hwc_list.retirement_fence())));
 }
 
 bool mga::HwcDevice::post_overlays(
@@ -171,6 +171,6 @@ bool mga::HwcDevice::post_overlays(
     if (!rejected_renderables.empty())
         fbtarget.layer.update_from_releasefence(*buffer);
 
-    mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
+    mga::SyncFence retire_fence(sync_ops, mir::Fd(std::move(hwc_list.retirement_fence())));
     return true;
 }

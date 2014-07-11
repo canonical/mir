@@ -25,11 +25,9 @@ class Fd
 public:
     //transfer ownership of the POD-int to the object. The int no longer needs close()ing,
     //and has the lifetime of the Fd object.
-    Fd(int&& fd);
-    //this will dup the fence, and the POD-int will still have the resource
-    Fd(int const& fd);
+    explicit Fd(int&& fd);
     //move an exsting Fd
-    Fd(Fd&&);
+    explicit Fd(Fd&&);
     Fd& operator=(Fd&&);
     ~Fd() noexcept;
 

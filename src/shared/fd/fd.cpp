@@ -24,11 +24,6 @@ mir::Fd::Fd(int&& other_fd) :
     other_fd = -1;
 }
 
-mir::Fd::Fd(int const& fd) :
-    fd{dup(fd)}
-{
-}
-
 mir::Fd::Fd(Fd&& other) :
     fd{other.fd}
 {

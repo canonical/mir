@@ -24,8 +24,8 @@
 
 namespace mga = mir::graphics::android;
 
-mga::SyncFence::SyncFence(std::shared_ptr<mga::SyncFileOps> const& ops, int fd)
-   : fence_fd(fd),
+mga::SyncFence::SyncFence(std::shared_ptr<mga::SyncFileOps> const& ops, Fd&& fd)
+   : fence_fd(std::move(fd)),
      ops(ops)
 {
 }
@@ -69,17 +69,12 @@ void mga::SyncFence::merge_with(NativeFence&& merge_fd)
 
 mga::NativeFence mga::SyncFence::copy_native_handle() const
 {
-    return ops->dup(fence_fd);
+    return ::dup(fence_fd);
 }
 
 int mga::RealSyncFileOps::ioctl(int fd, int req, void* dat)
 {
     return ::ioctl(fd, req, dat);
-}
-
-int mga::RealSyncFileOps::dup(int fd)
-{
-    return ::dup(fd);
 }
 
 int mga::RealSyncFileOps::close(int fd)

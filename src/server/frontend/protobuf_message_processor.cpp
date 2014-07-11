@@ -33,7 +33,10 @@ std::vector<mir::Fd> extract_fds_from(Response* response)
 {
     std::vector<mir::Fd> fd;
     for(auto i = 0u; i < response->fd().size(); ++i)
-        fd.push_back(mir::Fd(response->fd().data()[i]));
+    {
+        int fence = response->fd().data()[i];
+        fd.emplace_back(mir::Fd(std::move(fence)));
+    }
     response->clear_fd();
     response->set_fds_on_side_channel(fd.size());
     return fd;
