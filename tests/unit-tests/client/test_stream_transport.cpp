@@ -901,6 +901,73 @@ TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanRequestedWithSameCmsgSpaceIs
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
 }
 
+/* Amusingly, if recvmsg gets interrupted while reading a control message
+ * it turns out that we get back the fds, and then the next read will
+ * *also* get back (duplicates of) the fds.
+ *
+ * This would seem to be maybe a kernel bug, but this makes it impossible to
+ * distinguish between “we were expecting some fds, but the server sent us
+ * twice as many in two batches” and “recvmsg was interrupted and we got the same
+ * fds twice”
+ *
+ * Rad.
+ */
+TYPED_TEST(StreamTransportTest, DISABLED_ReceivingMoreFdsThanExpectedInMultipleChunksRaisesException)
+{
+    size_t const chunk_size{8};
+    int const num_chunks{4};
+    int const num_fds{6};
+    std::vector<uint8_t> expected(chunk_size * num_chunks);
+
+    std::array<TestFd, num_fds> first_test_files;
+    std::array<TestFd, num_fds> second_test_files;
+    std::array<int, num_fds> first_test_fds;
+    std::array<int, num_fds> second_test_fds;
+    for (unsigned int i = 0; i < num_fds; ++i)
+    {
+        first_test_fds[i] = first_test_files[i].fd;
+        second_test_fds[i] = second_test_files[i].fd;
+    }
+
+    uint8_t counter{0};
+    for (auto& byte : expected)
+    {
+        byte = counter++;
+    }
+    std::vector<uint8_t> received(expected.size() * 2);
+    std::vector<int> received_fds(num_fds);
+
+    auto receive_done = std::make_shared<mir::test::Signal>();
+    mir::test::AutoUnblockThread receive_thread{[this]() { ::close(this->test_fd); },
+                                                [&]()
+    {
+        EXPECT_THROW(
+            this->transport->receive_data(received.data(), received.size(), received_fds),
+            std::runtime_error);
+        receive_done->raise();
+    }};
+
+    EXPECT_EQ(expected.size(), send_with_fds(this->test_fd,
+                                             first_test_fds,
+                                             expected.data(),
+                                             expected.size(),
+                                             MSG_DONTWAIT));
+    EXPECT_EQ(expected.size(), send_with_fds(this->test_fd,
+                                             second_test_fds,
+                                             expected.data(),
+                                             expected.size(),
+                                             MSG_DONTWAIT));
+
+    EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
+
+    // Man, I'd really love std::zip() here...
+    for (unsigned int i = 0; i < num_fds; ++i)
+    {
+        EXPECT_PRED_FORMAT2(fds_are_equivalent, first_test_files[i].fd, received_fds[i]);
+        ::close(received_fds[i]);
+    }
+}
+
 TYPED_TEST(StreamTransportTest, MismatchedFdExpectationsHaveAppropriateErrorMessages)
 {
     constexpr int num_fds{5};
