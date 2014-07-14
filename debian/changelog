@@ -1,9 +1,10 @@
-mir (0.4.1-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.4.1+14.10.20140714-0ubuntu1) utopic; urgency=medium
 
+  [ Daniel van Vugt ]
   * Bug fix release 0.4.1 (https://launchpad.net/mir/+milestone/0.4.1) fixes:
     - [regression] Device locks randomly on welcome screen (LP: #1339700)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 14 Jul 2014 14:10:21 +0800
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 14 Jul 2014 13:13:37 +0000
 
 mir (0.4.0+14.10.20140701.1-0ubuntu1) utopic; urgency=medium
 
