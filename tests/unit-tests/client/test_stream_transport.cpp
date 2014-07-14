@@ -648,6 +648,69 @@ TYPED_TEST(StreamTransportTest, ReadsDataWithFds)
     }
 }
 
+TYPED_TEST(StreamTransportTest, ReadsFdsFromMultipleChunks)
+{
+    size_t const chunk_size{8};
+    int const num_chunks{4};
+    int const num_fds{6};
+    std::vector<uint8_t> expected(chunk_size * num_chunks);
+
+    std::array<TestFd, num_fds> first_test_files;
+    std::array<TestFd, num_fds> second_test_files;
+    std::array<int, num_fds> first_test_fds;
+    std::array<int, num_fds> second_test_fds;
+    for (unsigned int i = 0; i < num_fds; ++i)
+    {
+        first_test_fds[i] = first_test_files[i].fd;
+        second_test_fds[i] = second_test_files[i].fd;
+    }
+
+    uint8_t counter{0};
+    for (auto& byte : expected)
+    {
+        byte = counter++;
+    }
+    std::vector<uint8_t> received(expected.size() * 2);
+    std::vector<int> received_fds(num_fds * 2);
+
+    auto receive_done = std::make_shared<mir::test::Signal>();
+    mir::test::AutoUnblockThread receive_thread{[this]() { ::close(this->test_fd); },
+                                                [&]()
+    {
+        try
+        {
+            this->transport->receive_data(received.data(), received.size(), received_fds);
+        }
+        catch (std::exception& e)
+        {
+            ADD_FAILURE() << "Exception caught while reading data: " << e.what();
+        }
+        receive_done->raise();
+    }};
+
+    EXPECT_EQ(expected.size(), send_with_fds(this->test_fd,
+                                             first_test_fds,
+                                             expected.data(),
+                                             expected.size(),
+                                             MSG_DONTWAIT));
+    EXPECT_EQ(expected.size(), send_with_fds(this->test_fd,
+                                             second_test_fds,
+                                             expected.data(),
+                                             expected.size(),
+                                             MSG_DONTWAIT));
+
+    EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
+
+    // Man, I'd really love std::zip() here...
+    for (unsigned int i = 0; i < num_fds; ++i)
+    {
+        EXPECT_PRED_FORMAT2(fds_are_equivalent, first_test_files[i].fd, received_fds[i]);
+        EXPECT_PRED_FORMAT2(fds_are_equivalent, second_test_files[i].fd, received_fds[i + num_fds]);
+        ::close(received_fds[i]);
+        ::close(received_fds[i + num_fds]);
+    }
+}
+
 TYPED_TEST(StreamTransportTest, ReadsFullDataAndFdsWhenInterruptedWithSignals)
 {
     SocketBlockThreshold sockopt{this->test_fd, this->transport_fd};

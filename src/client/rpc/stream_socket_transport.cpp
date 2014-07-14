@@ -139,7 +139,7 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes)
 void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes, std::vector<int>& fds)
 {
     size_t bytes_read{0};
-    int fds_read{0};
+    unsigned fds_read{0};
     while (bytes_read < read_bytes)
     {
         // Store the data in the buffer requested
@@ -196,10 +196,6 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes, 
         {
             // NOTE: This relies on the file descriptor cmsg being read
             // (and written) atomically.
-            if (cmsg->cmsg_len < CMSG_LEN(fds_bytes))
-            {
-                BOOST_THROW_EXCEPTION(std::runtime_error("Receieved fewer fds than expected"));
-            }
             if (cmsg->cmsg_len > CMSG_LEN(fds_bytes) || (header.msg_flags & MSG_CTRUNC))
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error("Received more fds than expected"));
@@ -216,6 +212,10 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes, 
 
             fds_read += nfds;
         }
+    }
+    if (fds_read < fds.size())
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Receieved fewer fds than expected"));
     }
 }
 
