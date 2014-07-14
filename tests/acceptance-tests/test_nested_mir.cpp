@@ -143,7 +143,8 @@ struct NativePlatformAdapter : mg::NativePlatform
 
 struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
 {
-	MockHostLifecycleEventListener(std::shared_ptr<msh::HostLifecycleEventListener> const& wrapped) :
+    MockHostLifecycleEventListener(
+        std::shared_ptr<msh::HostLifecycleEventListener> const& wrapped) :
         wrapped(wrapped)
     {
     }
