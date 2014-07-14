@@ -40,6 +40,16 @@ target_link_libraries(
   ${MIR_SHARED_LIBRARIES}
 )
 
+# TODO we need a place to manage ABI and related versioning but use this as placeholder
+set(MIR_SHARED_ABI 1)
+
+set_target_properties(
+  mirshared
+
+  PROPERTIES
+  SOVERSION ${MIR_SHARED_ABI}
+)
+
 install(TARGETS mirshared LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
