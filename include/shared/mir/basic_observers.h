@@ -104,8 +104,13 @@ void BasicObservers<Observer>::remove(std::shared_ptr<Observer> const& observer)
 {
     ListItem* current_item = &head;
 
-    while (current_item)
+    do
     {
+        {
+            RecursiveReadLock lock{current_item->mutex};
+            if (current_item->observer != observer) continue;
+        }
+
         RecursiveWriteLock lock{current_item->mutex};
 
         if (current_item->observer == observer)
@@ -113,9 +118,8 @@ void BasicObservers<Observer>::remove(std::shared_ptr<Observer> const& observer)
             current_item->observer.reset();
             return;
         }
-
-        current_item = current_item->next;
     }
+    while ((current_item = current_item->next));
 }
 }
 

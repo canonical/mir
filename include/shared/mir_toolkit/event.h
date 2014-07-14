@@ -140,6 +140,24 @@ typedef struct
 
 typedef struct
 {
+    int id;
+    float x, raw_x;
+    float y, raw_y;
+    float touch_major;
+    float touch_minor;
+    float size;
+    float pressure;
+    float orientation;
+    float vscroll;
+    float hscroll;
+    MirMotionToolType tool_type;
+    int unused1;
+    int unused2;
+    int unused3;
+} MirMotionPointer;
+
+typedef struct
+{
     MirEventType type;
 
     int32_t device_id;
@@ -163,24 +181,9 @@ typedef struct
     nsecs_t event_time;
 
     size_t pointer_count;
-    struct
-    {
-        int id;
-        float x, raw_x;
-        float y, raw_y;
-        float touch_major;
-        float touch_minor;
-        float size;
-        float pressure;
-        float orientation;
-        float vscroll;
-        float hscroll;
-        MirMotionToolType tool_type;
-
-        int unused1;
-        int unused2;
-        int unused3;
-    } pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+    MirMotionPointer pointer_coordinates[MIR_INPUT_EVENT_MAX_POINTER_COUNT];
+    /* "_coordinates" is a misnomer here because there's plenty more info than
+       just coordinates, but renaming it accurately would be an API break */
 
     int unused0;
     int unused1;

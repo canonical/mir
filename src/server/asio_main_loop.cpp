@@ -344,11 +344,13 @@ public:
     bool reschedule_in(std::chrono::milliseconds delay) override;
     bool reschedule_for(mir::time::Timestamp time_point) override;
 private:
+    void stop();
+    bool cancel_unlocked();
     void update_timer();
     struct InternalState
     {
         explicit InternalState(std::function<void(void)> callback)
-            : callback{callback}
+            : callback{callback}, state{pending}
         {
         }
 
@@ -422,16 +424,27 @@ AlarmImpl::AlarmImpl(boost::asio::io_service& io,
 
 AlarmImpl::~AlarmImpl() noexcept
 {
-    AlarmImpl::cancel();
+    AlarmImpl::stop();
 }
 
-bool AlarmImpl::cancel()
+void AlarmImpl::stop()
 {
     std::unique_lock<decltype(data->m)> lock(data->m);
 
     while (data->callbacks_running > 0)
         data->callback_done.wait(lock);
 
+    cancel_unlocked();
+}
+
+bool AlarmImpl::cancel()
+{
+    std::lock_guard<decltype(data->m)> lock(data->m);
+    return cancel_unlocked();
+}
+
+bool AlarmImpl::cancel_unlocked()
+{
     if (data->state == triggered)
         return false;
 
