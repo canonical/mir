@@ -192,4 +192,14 @@ add_test(GPL-required
   /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/include/test ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
 )
 
+add_test(NAME server-ABI-unchanged
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  COMMAND sha1sum -c server-ABI-23-sha1sums
+)
+
+add_test(NAME client-ABI-unchanged
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  COMMAND sha1sum -c client-ABI-8-sha1sums
+)
+
 enable_coverage_report(mirserver)
