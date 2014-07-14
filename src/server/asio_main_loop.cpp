@@ -345,7 +345,7 @@ public:
     bool reschedule_for(mir::time::Timestamp time_point) override;
 private:
     void stop();
-    bool cancel_l();
+    bool cancel_unlocked();
     void update_timer();
     struct InternalState
     {
@@ -434,16 +434,16 @@ void AlarmImpl::stop()
     while (data->callbacks_running > 0)
         data->callback_done.wait(lock);
 
-    cancel_l();
+    cancel_unlocked();
 }
 
 bool AlarmImpl::cancel()
 {
     std::lock_guard<decltype(data->m)> lock(data->m);
-    return cancel_l();
+    return cancel_unlocked();
 }
 
-bool AlarmImpl::cancel_l()
+bool AlarmImpl::cancel_unlocked()
 {
     if (data->state == triggered)
         return false;
