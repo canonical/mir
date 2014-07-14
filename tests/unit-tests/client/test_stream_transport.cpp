@@ -686,12 +686,10 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataAndFdsWhenInterruptedWithSignals)
         }
         catch (std::exception& e)
         {
-            FAIL() << "Exception caught while reading data: " << e.what();
+            ADD_FAILURE() << "Exception caught while reading data: " << e.what();
         }
         receive_done->raise();
     }};
-
-    pthread_kill(reader.native_handle(), SIGALRM);
 
     size_t bytes_written{0};
     while (bytes_written < expected.size())
@@ -721,6 +719,8 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataAndFdsWhenInterruptedWithSignals)
                                    MSG_DONTWAIT);
         }
         bytes_written += result;
+        pthread_kill(reader.native_handle(), SIGALRM);
+        std::this_thread::yield();
         pthread_kill(reader.native_handle(), SIGALRM);
     }
 
