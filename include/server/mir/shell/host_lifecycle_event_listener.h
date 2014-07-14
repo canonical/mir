@@ -29,7 +29,7 @@ namespace shell
 class HostLifecycleEventListener
 {
 public:
-    virtual void lifecycle_event_occured(MirLifecycleState state) = 0;
+    virtual void lifecycle_event_occurred(MirLifecycleState state) = 0;
 
 protected:
     HostLifecycleEventListener() = default;

@@ -113,9 +113,9 @@ public:
     class NestedLifecycleEventListener : public msh::HostLifecycleEventListener
     {
     public:
-        virtual void lifecycle_event_occured(MirLifecycleState state) override
+        virtual void lifecycle_event_occurred(MirLifecycleState state) override
         {
-            printf("Lifecycle event occured : state = %d\n", state);
+            printf("Lifecycle event occurred : state = %d\n", state);
         }
     };
 

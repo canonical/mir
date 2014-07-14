@@ -143,7 +143,7 @@ struct NativePlatformAdapter : mg::NativePlatform
 
 struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
 {
-    MOCK_METHOD1(lifecycle_event_occured, void (MirLifecycleState));
+    MOCK_METHOD1(lifecycle_event_occurred, void (MirLifecycleState));
 };
 
 struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerConfiguration
@@ -271,7 +271,7 @@ struct NestedServer : mtf::InProcessServer, HostServerConfiguration
         connection_string = new_connection();
     }
 
-    void TriggerLifecycleEvent(MirLifecycleState const lifecycle_state)
+    void trigger_lifecycle_event(MirLifecycleState const lifecycle_state)
     {
         auto const app = the_focus_controller()->focussed_application().lock();
 
@@ -365,10 +365,15 @@ TEST_F(NestedServer, receives_lifecycle_events_from_host)
 
     NestedMirRunner nested_mir{nested_config};
 
-    TriggerLifecycleEvent(mir_lifecycle_state_resumed);
-    TriggerLifecycleEvent(mir_lifecycle_state_will_suspend);
+    MockHostLifecycleEventListener* listener{
+        static_cast<MockHostLifecycleEventListener*>
+            (nested_config.the_host_lifecycle_event_listener().get())
+    };
 
     InSequence seq;
-    EXPECT_CALL(*(static_cast<MockHostLifecycleEventListener*>(nested_config.the_host_lifecycle_event_listener().get())), lifecycle_event_occured(mir_lifecycle_state_resumed)).Times(1);
-    EXPECT_CALL(*(static_cast<MockHostLifecycleEventListener*>(nested_config.the_host_lifecycle_event_listener().get())), lifecycle_event_occured(mir_lifecycle_state_will_suspend)).Times(1);
+    EXPECT_CALL(*listener, lifecycle_event_occurred(mir_lifecycle_state_resumed)).Times(1);
+    EXPECT_CALL(*listener, lifecycle_event_occurred(mir_lifecycle_state_will_suspend)).Times(1);
+
+    trigger_lifecycle_event(mir_lifecycle_state_resumed);
+    trigger_lifecycle_event(mir_lifecycle_state_will_suspend);
 }
