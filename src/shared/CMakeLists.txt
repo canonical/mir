@@ -1,5 +1,5 @@
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
-set(MIR_COMMON_PLATFORM_LIBRARIES)
+set(MIR_SHARED_LIBRARIES)
 add_subdirectory(protobuf/)
 
 if (MIR_BUILD_PLATFORM_ANDROID)
@@ -37,7 +37,7 @@ add_library(
 
 target_link_libraries(
   mirshared
-  ${MIR_COMMON_PLATFORM_LIBRARIES}
+  ${MIR_SHARED_LIBRARIES}
 )
 
 install(TARGETS mirshared LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
