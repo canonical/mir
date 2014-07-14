@@ -42,7 +42,9 @@ public:
 private:
     std::chrono::milliseconds const timeout;
     std::atomic<unsigned int> pending_swaps;
-    //Ensure alarm gets destroyed first so its handler does not access dead objects.
+
+    // Ensure alarm gets destroyed first so its handler does not access dead
+    // objects.
     std::unique_ptr<mir::time::Alarm> const alarm;
 };
 
