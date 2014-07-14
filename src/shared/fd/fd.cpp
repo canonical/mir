@@ -19,6 +19,11 @@
 #include <unistd.h>
 #include <algorithm>
 
+mir::Fd::Fd() :
+    Fd{invalid}
+{
+}
+
 mir::Fd::Fd(int other_fd) :
     fd{other_fd}
 {
@@ -27,12 +32,12 @@ mir::Fd::Fd(int other_fd) :
 mir::Fd::Fd(Fd&& other) :
     fd{other.fd}
 {
-    other.fd = -1;
+    other.fd = invalid;
 }
 
 mir::Fd::~Fd() noexcept
 {
-    if (fd >= 0) ::close(fd);
+    if (fd > invalid) ::close(fd);
 }
 
 mir::Fd& mir::Fd::operator=(Fd other)

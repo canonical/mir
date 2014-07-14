@@ -26,6 +26,8 @@ public:
     //transfer ownership of the POD-int to the object. The int no longer needs close()ing,
     //and has the lifetime of the Fd object.
     explicit Fd(int fd);
+    static int const invalid{-1};
+    Fd(); //Initializes fd to the mir::Fd::invalid;
     Fd(Fd&&);
     Fd& operator=(Fd);
     ~Fd() noexcept;
