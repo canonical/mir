@@ -58,7 +58,7 @@ list(APPEND MIRSERVER_ARCHIVES
 list(APPEND MIRSERVER_LINKS
   mirplatform
   mirclient
-  mirshared
+  mircommon
   3rd_party
   xcursorloader
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}

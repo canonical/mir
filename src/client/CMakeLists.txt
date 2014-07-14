@@ -78,7 +78,7 @@ set(
   mirprotobuf
   mirclientrpc
   mirclientlttngstatic
-  mirshared
+  mircommon
 
   3rd_party
 )

@@ -32,11 +32,11 @@ set(
 
 
 add_library(
-  mirshared SHARED
+  mircommon SHARED
 )
 
 target_link_libraries(
-  mirshared
+  mircommon
   ${MIR_SHARED_LIBRARIES}
 )
 
@@ -44,13 +44,13 @@ target_link_libraries(
 set(MIR_SHARED_ABI 1)
 
 set_target_properties(
-  mirshared
+  mircommon
 
   PROPERTIES
   SOVERSION ${MIR_SHARED_ABI}
 )
 
-install(TARGETS mirshared LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS mircommon LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/shared/mir ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit

@@ -50,7 +50,7 @@ target_link_libraries(
 
   miroptions
   mirplatform
-  mirshared
+  mircommon
 
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${LIBHARDWARE_LIBRARIES}

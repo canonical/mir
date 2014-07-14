@@ -32,7 +32,7 @@ add_library(
 )
 
 # Fix build race condition - ensure the protobuf header is built before us.
-add_dependencies(mirfrontend mirshared)
+add_dependencies(mirfrontend mircommon)
 
 target_link_libraries(
   mirfrontend
