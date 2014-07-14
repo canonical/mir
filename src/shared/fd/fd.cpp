@@ -37,9 +37,7 @@ mir::Fd::~Fd() noexcept
 
 mir::Fd& mir::Fd::operator=(Fd&& other)
 {
-    if (fd >= 0) ::close(fd);
-    fd = other.fd;
-    other.fd = -1;
+    std::swap(fd, other.fd);
     return *this;
 }
 
