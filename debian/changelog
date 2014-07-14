@@ -9,7 +9,7 @@ mir (0.5.0-0ubuntu1) UNRELEASED; urgency=medium
       . DefaultServerConfiguration: New "prompt" API.
       . DefaultServerConfiguration: "clock" member is now static.
       . SessionAuthorizer: New functions.
-      . ServerConfiguration:: New function added: the_prompt_connector().
+      . ServerConfiguration: New function added: the_prompt_connector().
     - Bugs fixed:
       . TODO
 
