@@ -49,10 +49,10 @@ public:
 class SyncFence : public Fence
 {
 public:
-    explicit SyncFence(std::shared_ptr<SyncFileOps> const&, Fd&& fd);
+    explicit SyncFence(std::shared_ptr<SyncFileOps> const&, Fd fd);
 
     void wait();
-    void merge_with(NativeFence&& merge_fd);
+    void merge_with(NativeFence& merge_fd);
     NativeFence copy_native_handle() const;
 
 private:

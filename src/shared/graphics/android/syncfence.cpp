@@ -24,7 +24,7 @@
 
 namespace mga = mir::graphics::android;
 
-mga::SyncFence::SyncFence(std::shared_ptr<mga::SyncFileOps> const& ops, Fd&& fd)
+mga::SyncFence::SyncFence(std::shared_ptr<mga::SyncFileOps> const& ops, Fd fd)
    : fence_fd(std::move(fd)),
      ops(ops)
 {
@@ -36,11 +36,11 @@ void mga::SyncFence::wait()
     {
         int timeout = infinite_timeout;
         ops->ioctl(fence_fd, SYNC_IOC_WAIT, &timeout);
-        fence_fd = mir::Fd{-1};//(-1);
+        fence_fd = mir::Fd(-1);
     }
 }
 
-void mga::SyncFence::merge_with(NativeFence&& merge_fd)
+void mga::SyncFence::merge_with(NativeFence& merge_fd)
 {
     if (merge_fd < 0)
     {
@@ -58,7 +58,7 @@ void mga::SyncFence::merge_with(NativeFence&& merge_fd)
         struct sync_merge_data data { merge_fd, "mirfence", infinite_timeout };
         ops->ioctl(fence_fd, static_cast<int>(SYNC_IOC_MERGE), &data);
         ops->close(merge_fd);
-        fence_fd = mir::Fd(std::move(data.fence));
+        fence_fd = mir::Fd(data.fence);
     }
 
     merge_fd = -1;

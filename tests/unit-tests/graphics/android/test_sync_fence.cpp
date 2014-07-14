@@ -83,7 +83,6 @@ TEST_F(SyncSwTest, sync_wait)
     fence2.wait();
 }
 
-
 namespace
 {
 struct IoctlSetter
@@ -115,7 +114,7 @@ TEST_F(SyncSwTest, sync_merge_with_valid_fd)
         .WillOnce(Invoke(&setter, &IoctlSetter::merge_setter));
 
     mga::SyncFence fence1(mock_fops, std::move(dummy_fd));
-    fence1.merge_with(std::move(dummy_fd2));
+    fence1.merge_with(dummy_fd2);
 }
 
 TEST_F(SyncSwTest, sync_merge_with_invalid_fd)
@@ -125,7 +124,7 @@ TEST_F(SyncSwTest, sync_merge_with_invalid_fd)
         .Times(0);
 
     mga::SyncFence fence1(mock_fops, std::move(dummy_fd));
-    fence1.merge_with(std::move(invalid_fd));
+    fence1.merge_with(invalid_fd_value);
 }
 
 TEST_F(SyncSwTest, copy_dups_fd)
