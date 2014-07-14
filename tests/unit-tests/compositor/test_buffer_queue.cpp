@@ -1443,3 +1443,15 @@ TEST_F(BufferQueueTest, DISABLED_lp_1317801_regression_test)
     auto b = q.compositor_acquire(this);
     q.compositor_release(b);
 }
+
+TEST_F(BufferQueueTest, first_user_is_recorded)
+{
+    for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
+    {
+        mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
+
+        auto comp = q.compositor_acquire(this);
+        EXPECT_TRUE(q.is_a_current_buffer_user(this));
+        q.compositor_release(comp);
+    }
+}
