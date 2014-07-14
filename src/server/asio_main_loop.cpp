@@ -431,7 +431,8 @@ void AlarmImpl::stop()
 {
     std::unique_lock<decltype(data->m)> lock(data->m);
 
-    data->callback_done.wait(lock,[this]{return data->callbacks_running == 0;});
+    while (data->callbacks_running > 0)
+        data->callback_done.wait(lock);
 
     cancel_l();
 }
