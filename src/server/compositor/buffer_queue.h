@@ -86,11 +86,14 @@ private:
 
     int nbuffers;
     bool frame_dropping_enabled;
-    std::unique_ptr<FrameDroppingPolicy> framedrop_policy;
     graphics::BufferProperties the_properties;
 
     std::condition_variable snapshot_released;
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
+
+    // Ensure framedrop_policy gets destroyed first so the callback installed
+    // does not access dead objects.
+    std::unique_ptr<FrameDroppingPolicy> framedrop_policy;
 };
 
 }

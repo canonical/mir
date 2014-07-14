@@ -139,3 +139,73 @@ TEST_F(HwcWrapper, throws_on_set_failure)
         wrapper.set(list);
     }, std::runtime_error);
 }
+
+TEST_F(HwcWrapper, register_procs)
+{
+    using namespace testing;
+    hwc_procs_t procs;
+    EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(), &procs))
+        .Times(1);
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
+    wrapper.register_hooks(&procs);
+}
+
+TEST_F(HwcWrapper, turns_display_on)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        .Times(2)
+        .WillOnce(Return(0))
+        .WillOnce(Return(-1));
+
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
+    wrapper.display_on();
+    EXPECT_THROW({
+        wrapper.display_on();
+    }, std::runtime_error);
+}
+
+TEST_F(HwcWrapper, turns_display_off)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
+        .Times(2)
+        .WillOnce(Return(0))
+        .WillOnce(Return(-1));
+
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
+    wrapper.display_off();
+    EXPECT_THROW({
+        wrapper.display_off();
+    }, std::runtime_error);
+}
+
+TEST_F(HwcWrapper, turns_vsync_on)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 1))
+        .Times(2)
+        .WillOnce(Return(0))
+        .WillOnce(Return(-1));
+
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
+    wrapper.vsync_signal_on();
+    EXPECT_THROW({
+        wrapper.vsync_signal_on();
+    }, std::runtime_error);
+}
+
+TEST_F(HwcWrapper, turns_vsync_off)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 0))
+        .Times(2)
+        .WillOnce(Return(0))
+        .WillOnce(Return(-1));
+
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
+    wrapper.vsync_signal_off();
+    EXPECT_THROW({
+        wrapper.vsync_signal_off();
+    }, std::runtime_error);
+}

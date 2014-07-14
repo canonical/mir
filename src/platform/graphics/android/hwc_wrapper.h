@@ -27,6 +27,7 @@ namespace graphics
 {
 namespace android
 {
+struct HWCCallbacks;
 class HwcWrapper
 {
 public:
@@ -34,6 +35,11 @@ public:
 
     virtual void prepare(hwc_display_contents_1_t&) const = 0;
     virtual void set(hwc_display_contents_1_t&) const = 0;
+    virtual void register_hooks(hwc_procs_t* callbacks) const = 0;
+    virtual void vsync_signal_on() const = 0;
+    virtual void vsync_signal_off() const = 0;
+    virtual void display_on() const = 0;
+    virtual void display_off() const = 0;
 
 protected:
     HwcWrapper() = default;
