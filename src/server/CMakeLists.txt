@@ -45,7 +45,6 @@ list(APPEND MIRSERVER_ARCHIVES
   mirfrontend
   mirgraphics
   mirinput
-  mirshared
   mirshell
   mirscene
   mirtime
@@ -57,9 +56,9 @@ list(APPEND MIRSERVER_ARCHIVES
 )
 
 list(APPEND MIRSERVER_LINKS
-  mirshared
   mirplatform
   mirclient
+  mirshared
   3rd_party
   xcursorloader
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
