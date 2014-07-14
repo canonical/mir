@@ -24,7 +24,7 @@ add_library(
 
 target_link_libraries(
   mirplatformgraphicscommon
-  mirsharedgeometry
+  mirshared
 
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
 )

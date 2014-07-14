@@ -43,7 +43,7 @@ add_executable(mir_demo_client_basic
 
 target_link_libraries(mir_demo_client_basic
   mirclient
-  mirprotobuf
+  mirshared
 
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
@@ -68,7 +68,7 @@ add_executable(mir_demo_client_flicker
 
 target_link_libraries(mir_demo_client_flicker
   mirclient
-  mirprotobuf
+  mirshared
 
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
@@ -82,7 +82,7 @@ add_executable(mir_demo_client_scroll
 target_link_libraries(mir_demo_client_scroll
   mirdraw
   mirclient
-  mirprotobuf
+  mirshared
 
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
@@ -137,7 +137,7 @@ add_executable(mir_demo_standalone_render_surfaces ${RENDER_SURFACES_SOURCES})
 target_link_libraries(mir_demo_standalone_render_surfaces
     mirserver
     mirshell
-    mirsharedgeometry
+    mirshared
     ${Boost_LIBRARIES}
 )
 

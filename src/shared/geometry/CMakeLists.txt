@@ -22,3 +22,8 @@ add_library(
   ostream.cpp
 )
 
+list(APPEND MIR_COMMON_PLATFORM_LIBRARIES
+  mirsharedgeometry
+)
+
+set(MIR_COMMON_PLATFORM_LIBRARIES ${MIR_COMMON_PLATFORM_LIBRARIES} PARENT_SCOPE)

@@ -5,3 +5,9 @@ add_library(
 
   tracepoint_provider.cpp
 )
+
+list(APPEND MIR_COMMON_PLATFORM_LIBRARIES
+  mirsharedlttng
+)
+
+set(MIR_COMMON_PLATFORM_LIBRARIES ${MIR_COMMON_PLATFORM_LIBRARIES} PARENT_SCOPE)

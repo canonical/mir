@@ -10,7 +10,7 @@ add_library(
 target_link_libraries(
   mirplatform
   mirplatformgraphicscommon
-  mirsharedsharedlibrary
+  mirshared
 
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
 )

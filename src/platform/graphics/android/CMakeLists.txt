@@ -50,8 +50,7 @@ target_link_libraries(
 
   miroptions
   mirplatform
-  mirsharedandroid
-  mirsharedenv
+  mirshared
 
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${LIBHARDWARE_LIBRARIES}

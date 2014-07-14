@@ -45,12 +45,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirfrontend
   mirgraphics
   mirinput
-  mirsharedinput
-  mirsharedgeometry
-  mirsharedlogging
-  mirsharedenv
-  mirsharedsharedlibrary
-  mirsharedthread
+  mirshared
   mirshell
   mirscene
   mirtime
@@ -62,7 +57,7 @@ list(APPEND MIRSERVER_ARCHIVES
 )
 
 list(APPEND MIRSERVER_LINKS
-  mirprotobuf
+  mirshared
   mirplatform
   mirclient
   3rd_party

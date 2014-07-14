@@ -15,11 +15,6 @@ add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
 add_subdirectory(testdraw)
 
-set(
-  MIR_COMMON_PLATFORM_LIBRARIES
-  ${MIR_COMMON_PLATFORM_LIBRARIES}
-  PARENT_SCOPE)
-
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
@@ -34,6 +29,18 @@ set(
   MIR_GENERATED_INCLUDE_DIRECTORIES
   ${MIR_GENERATED_INCLUDE_DIRECTORIES}
   PARENT_SCOPE)
+
+
+add_library(
+  mirshared SHARED
+)
+
+target_link_libraries(
+  mirshared
+  ${MIR_COMMON_PLATFORM_LIBRARIES}
+)
+
+install(TARGETS mirshared LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/shared/mir ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit

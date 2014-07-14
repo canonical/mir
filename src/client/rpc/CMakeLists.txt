@@ -16,6 +16,6 @@ add_library(
 target_link_libraries(
   mirclientrpc
 
-  mirprotobuf
+  mirshared
   ${PROTOBUF_LIBRARIES}
 )
