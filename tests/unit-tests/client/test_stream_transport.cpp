@@ -885,35 +885,6 @@ TYPED_TEST(StreamTransportTest, MismatchedFdExpectationsHaveAppropriateErrorMess
     }
 }
 
-namespace
-{
-class SignalStorm
-{
-public:
-    template<typename rep, typename period>
-    SignalStorm(int signo,
-                std::chrono::duration<rep, period> interval,
-                std::thread::native_handle_type victim_thread)
-        : signaller{[this]() { done.raise(); },
-                    [this, signo, interval, victim_thread]()
-                    {
-                        while(!done.wait_for(interval))
-                        {
-                            pthread_kill(victim_thread, signo);
-                        }
-                    }}
-    {
-    }
-    ~SignalStorm()
-    {
-    }
-private:
-    mir::test::Signal done;
-    mir::test::AutoUnblockThread signaller;
-};
-
-}
-
 TYPED_TEST(StreamTransportTest, SendsFullMessagesWhenInterrupted)
 {
     SocketBlockThreshold socketopt(this->transport_fd, this->test_fd);
@@ -940,30 +911,25 @@ TYPED_TEST(StreamTransportTest, SendsFullMessagesWhenInterrupted)
         EXPECT_TRUE(alarm_raised);
     });
 
-    EXPECT_TRUE(write_now_waiting->wait_for(std::chrono::seconds{1}));
-
+    size_t bytes_read{0};
+    while(bytes_read < received.size())
     {
-        SignalStorm storm{SIGALRM, std::chrono::nanoseconds{100}, writer.native_handle()};
+        pollfd socket_readable;
+        socket_readable.events = POLLIN;
+        socket_readable.fd = this->test_fd;
 
-        size_t bytes_read{0};
-        while(bytes_read < received.size())
-        {
-            pollfd socket_readable;
-            socket_readable.events = POLLIN;
-            socket_readable.fd = this->test_fd;
+        ASSERT_GE(poll(&socket_readable, 1, 10000), 1);
+        ASSERT_EQ(0, socket_readable.revents & (POLLERR | POLLHUP));
 
-            ASSERT_GE(poll(&socket_readable, 1, 10000), 1);
-            ASSERT_EQ(0, socket_readable.revents & (POLLERR | POLLHUP));
+        auto result = read(this->test_fd,
+                           received.data() + bytes_read,
+                           std::min(received.size() - bytes_read, chunk_size));
+        ASSERT_GE(result, 0) << "Failed to read(): " << strerror(errno);
+        bytes_read += result;
 
-            auto result = read(this->test_fd,
-                               received.data() + bytes_read,
-                               std::min(received.size() - bytes_read, chunk_size));
-            ASSERT_GE(result, 0) << "Failed to read(): " << strerror(errno);
-            bytes_read += result;
-
-            // Give our signal spam time to work...
-            std::this_thread::sleep_for(std::chrono::milliseconds{1});
-        }
+        pthread_kill(writer.native_handle(), SIGALRM);
+        std::this_thread::yield();
+        pthread_kill(writer.native_handle(), SIGALRM);
     }
 
     writer.stop();
