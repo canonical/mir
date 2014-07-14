@@ -194,12 +194,12 @@ add_test(GPL-required
 
 add_test(NAME server-ABI-unchanged
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  COMMAND sha1sum -c server-ABI-23-sha1sums
+  COMMAND sha1sum -c server-ABI-sha1sums
 )
 
 add_test(NAME client-ABI-unchanged
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  COMMAND sha1sum -c client-ABI-8-sha1sums
+  COMMAND sha1sum -c client-ABI-sha1sums
 )
 
 enable_coverage_report(mirserver)
