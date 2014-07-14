@@ -945,7 +945,7 @@ TYPED_TEST(StreamTransportTest, SendsFullMessagesWhenInterrupted)
     {
         SignalStorm storm{SIGALRM, std::chrono::nanoseconds{100}, writer.native_handle()};
 
-        ssize_t bytes_read{0};
+        size_t bytes_read{0};
         while(bytes_read < received.size())
         {
             pollfd socket_readable;
