@@ -17,11 +17,11 @@
  */
 #include "mir/fd.h"
 #include <unistd.h>
+#include <algorithm>
 
-mir::Fd::Fd(int&& other_fd) :
+mir::Fd::Fd(int other_fd) :
     fd{other_fd}
 {
-    other_fd = -1;
 }
 
 mir::Fd::Fd(Fd&& other) :
@@ -35,7 +35,7 @@ mir::Fd::~Fd() noexcept
     if (fd >= 0) ::close(fd);
 }
 
-mir::Fd& mir::Fd::operator=(Fd&& other)
+mir::Fd& mir::Fd::operator=(Fd other)
 {
     std::swap(fd, other.fd);
     return *this;

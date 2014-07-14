@@ -25,17 +25,15 @@ class Fd
 public:
     //transfer ownership of the POD-int to the object. The int no longer needs close()ing,
     //and has the lifetime of the Fd object.
-    explicit Fd(int&& fd);
-    explicit Fd(Fd&&);
-    Fd& operator=(Fd&&);
+    explicit Fd(int fd);
+    Fd(Fd&&);
+    Fd& operator=(Fd);
     ~Fd() noexcept;
 
     //bit of a convenient kludge. take care not to close or otherwise destroy the FD.
     operator int() const;
 
 private:
-    Fd(Fd const&) = delete;
-    Fd& operator=(Fd const&) = delete;
     int fd;
 };
 } // namespace mir
