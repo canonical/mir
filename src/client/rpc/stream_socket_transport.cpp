@@ -139,7 +139,7 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes)
 void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes, std::vector<int>& fds)
 {
     size_t bytes_read{0};
-    bool fds_read{false};
+    int fds_read{0};
     while (bytes_read < read_bytes)
     {
         // Store the data in the buffer requested
@@ -150,7 +150,7 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes, 
         // Allocate space for control message
         static auto const builtin_n_fds = 5;
         static auto const builtin_cmsg_space = CMSG_SPACE(builtin_n_fds * sizeof(int));
-        auto const fds_bytes = fds.size() * sizeof(int);
+        auto const fds_bytes = (fds.size() - fds_read) * sizeof(int);
         mir::VariableLengthArray<builtin_cmsg_space> control{CMSG_SPACE(fds_bytes)};
         
         // Message to read
@@ -196,13 +196,6 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes, 
         {
             // NOTE: This relies on the file descriptor cmsg being read
             // (and written) atomically.
-            if (fds_read)
-            {
-                // Presumably these new file descriptors are for a later message.
-                // However, we can't preserve them, so warn now rather than wondering
-                // where the fds went later.
-                BOOST_THROW_EXCEPTION(std::runtime_error("Unexpectedly received file descriptors"));
-            }
             if (cmsg->cmsg_len < CMSG_LEN(fds_bytes))
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error("Receieved fewer fds than expected"));
@@ -216,11 +209,12 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes, 
                 BOOST_THROW_EXCEPTION(fd_reception_error());
             }
             int const* const data = reinterpret_cast<int const*>CMSG_DATA(cmsg);
-            int i = 0;
-            for (auto& fd : fds)
-                fd = data[i++];
+            ptrdiff_t const header_size = reinterpret_cast<char const*>(data) - reinterpret_cast<char const*>(cmsg);
+            int const nfds = (cmsg->cmsg_len - header_size) / sizeof(int);
+            for (int i = 0; i < nfds; i++)
+                fds[fds_read + i] = data[i];
 
-            fds_read = true;
+            fds_read += nfds;
         }
     }
 }
