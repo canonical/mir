@@ -147,7 +147,6 @@ b4e96264b9a57a1f2ceceb700c5379658905ded7  include/shared/mir/thread_name.h
 be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/shared/mir/int_wrapper.h
 101017c17714a57db57d79b7b5e7df40a3568236  include/shared/mir_toolkit/mir_native_buffer.h
 99ef5f3bf548508fae24c60f74be1dea018a6e8c  include/shared/mir_toolkit/mesa/native_display.h
-6d680414a27827e537c6c802701b1588ec4ef3fd  include/shared/mir_toolkit/client_types.h
 92932b3e4f313b42d018345cb09b3a157f098487  include/shared/mir_toolkit/common.h
 bdaceadd56e41d2cb708f7c4da97acf84dfc75b7  include/shared/mir_toolkit/event.h
 5d0213652adc4821a2a180ced74808ca0bbf2c45  include/platform/mir/shared_library_loader.h
@@ -194,7 +193,4 @@ b45f14082c4f8b29efaa1b13de795dcb29deb738  include/platform/mir/options/option.h
 f42afacda33e598f9c29f2f5b72932f75dd7d27c  include/platform/mir/options/program_option.h
 5879da8056f9a4ff8960f586d27117c87b110b2a  include/platform/mir/options/default_configuration.h
 3b5be510366571c992e0927cc5662af9b0611ae1  include/platform/mir/options/configuration.h
-101017c17714a57db57d79b7b5e7df40a3568236  include/shared/mir_toolkit/mir_native_buffer.h
-99ef5f3bf548508fae24c60f74be1dea018a6e8c  include/shared/mir_toolkit/mesa/native_display.h
-92932b3e4f313b42d018345cb09b3a157f098487  include/shared/mir_toolkit/common.h
-bdaceadd56e41d2cb708f7c4da97acf84dfc75b7  include/shared/mir_toolkit/event.h
+
