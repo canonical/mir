@@ -98,7 +98,6 @@ f95c2bddf13d15993ef5d6a0ad7b9106ae550b87  include/server/mir/input/composite_eve
 59e757018c337db25df0c68556664eb7536e4321  include/server/mir/input/input_targets.h
 75d676ad8b49f6883317373b90cb22ebf407a977  include/server/mir/input/input_channel_factory.h
 2331fc402686e862809bf24714a8746cdde97cb1  include/server/mir/input/event_filter.h
-67a1071ade35586b8ce85336d81c5d7c6b998783  include/server/mir/input/input_report.h.~1~
 b703ac51f94b6f9c9edcd6a4587e33d6e2d54269  include/server/mir/input/input_report.h
 574c11e234ba26924ccae8e005fb6f3db921441d  include/server/mir/input/input_configuration.h
 b2ec497c6bec1b3a67c991f31cc7b7c51050ecbb  include/server/mir/input/input_reception_mode.h
