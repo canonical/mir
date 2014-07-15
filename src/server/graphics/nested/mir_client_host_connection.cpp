@@ -42,7 +42,7 @@ void display_config_callback_thunk(MirConnection* /*connection*/, void* context)
 
 static void nested_lifecycle_event_callback_thunk(MirConnection* /*connection*/, MirLifecycleState state, void *context)
 {
-    msh::HostLifecycleEventListener *listener = (msh::HostLifecycleEventListener *) context;
+    msh::HostLifecycleEventListener* listener = static_cast<msh::HostLifecycleEventListener*>(context);
     listener->lifecycle_event_occurred(state);
 }
 

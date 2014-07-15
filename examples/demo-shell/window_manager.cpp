@@ -168,7 +168,7 @@ bool me::WindowManager::handle(MirEvent const& event)
                  focus_controller)
         {
             auto const app = focus_controller->focussed_application().lock();
-            if(app)
+            if (app)
             {
                 app->set_lifecycle_state(mir_lifecycle_state_will_suspend);
             }
