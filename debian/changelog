@@ -11,7 +11,32 @@ mir (0.5.0-0ubuntu1) UNRELEASED; urgency=medium
       . SessionAuthorizer: New functions.
       . ServerConfiguration: New function added: the_prompt_connector().
     - Bugs fixed:
-      . TODO
+      . Nexus 10 leaks during overlay operations (LP: #1331769)
+      . MultiThreadedCompositor deadlocks (LP: #1335311)
+      . Intermittent test failure in ClientSurfaceEvents can client query 
+        orientation (LP: #1335741)
+      . Intermittent test failure in ClientSurfaceEvents/OrientationEvents
+        (LP: #1335752)
+      . Intermittent memory error in ClientSurfaceEvents on
+        orientation query (LP: #1335819)
+      . mir_unit_tests.EventDistributorTest.* SEGFAULT (LP: #1338902)
+      . [regression] Device locks randomly on welcome screen (LP: #1339700)
+      . Intermittent deadlock when switching to session with custom display
+        config & closing other session (LP: #1340669)
+      . clang built mir_unit_tests.ProtobufSocketCommunicatorFD crashes
+        intermittently (LP: #1300653)
+      . g++-4.9 binary incompatibilities with libraries built with g++-4.8
+        (LP: #1329089)
+      . [test regression] SurfaceLoop fails sporadically on deleting surfaces
+        for a disconnecting client (LP: #1335747)
+      . Intermittent test failure ServerShutdown when clients are blocked
+        (LP: #1335873)
+      . [regression] mir_demo_client_multiwin is displayed with obviously
+        wrong colours (LP: #1339471)
+      . Partially onscreen surfaces not occluded when covered by another
+        surface (LP: #1340078)
+      . SurfaceConfigurator::attribute_set always say "unfocused" for focus
+        property changes (LP: #1336548)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 04 Jul 2014 12:45:30 +0800
 
