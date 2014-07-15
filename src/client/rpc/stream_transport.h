@@ -79,6 +79,7 @@ public:
     class Observer
     {
     public:
+        Observer() = default;
         virtual ~Observer() = default;
         /**
          * \brief Called by the Transport when data is available for reading
@@ -90,6 +91,9 @@ public:
          *       during destruction of the Transport, or it may fire multiple times.
          */
         virtual void on_disconnected() = 0;
+
+        Observer(Observer const&) = delete;
+        Observer& operator=(Observer const&) = delete;
     };
 
     /**
