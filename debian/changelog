@@ -10,6 +10,7 @@ mir (0.5.0-0ubuntu1) UNRELEASED; urgency=medium
       . DefaultServerConfiguration: "clock" member is now static.
       . SessionAuthorizer: New functions.
       . ServerConfiguration: New function added: the_prompt_connector().
+      . DefaultServerConfiguration: Lifecycle event listener for nested server. 
     - Bugs fixed:
       . TODO
 
