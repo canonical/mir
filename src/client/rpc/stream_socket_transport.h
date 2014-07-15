@@ -39,8 +39,6 @@ public:
     StreamSocketTransport(std::string const& socket_path);
     ~StreamSocketTransport() override;
 
-    // Transport interface
-public:
     void register_observer(std::shared_ptr<Observer> const& observer) override;
     void receive_data(void* buffer, size_t read_bytes) override;
     void receive_data(void* buffer, size_t read_bytes, std::vector<int>& fds) override;
