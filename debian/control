@@ -146,7 +146,6 @@ Depends: libmircommon1 (= ${binary:Version}),
          ${misc:Depends},
 Replaces: mircommon-dev
 Provides: mircommon-dev
-Conflicts: mircommon-dev
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
