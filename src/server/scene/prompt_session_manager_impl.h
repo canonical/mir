@@ -54,13 +54,6 @@ public:
         std::shared_ptr<PromptSession> const& prompt_session,
         std::shared_ptr<Session> const& prompt_provider) const override;
 
-    void add_prompt_provider_by_pid(
-        std::shared_ptr<PromptSession> const& prompt_session,
-        pid_t process_id) const override;
-
-    void add_expected_session(
-        std::shared_ptr<Session> const& new_session) const override;
-
     void remove_session(
         std::shared_ptr<Session> const& session) const override;
 
@@ -80,11 +73,6 @@ private:
     std::shared_ptr<SessionContainer> const app_container;
 
     std::mutex mutable prompt_sessions_mutex;
-
-    void add_prompt_provider_by_pid_locked(
-        std::lock_guard<std::mutex> const&,
-        std::shared_ptr<PromptSession> const& prompt_session,
-        pid_t process_id) const;
 
     void stop_prompt_session_locked(
         std::lock_guard<std::mutex> const&,

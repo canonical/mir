@@ -572,30 +572,6 @@ void mf::SessionMediator::start_prompt_session(
     done->Run();
 }
 
-void mf::SessionMediator::add_prompt_provider(
-    ::google::protobuf::RpcController*,
-    const ::mir::protobuf::PromptProvider* request,
-    ::mir::protobuf::Void*,
-    ::google::protobuf::Closure* done)
-{
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
-        auto const session = weak_session.lock();
-
-        if (!session)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-        auto const prompt_session = weak_prompt_session.lock();
-
-        if (!prompt_session)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid prompt session"));
-
-        report->session_add_prompt_provider_called(session->name(), request->pid());
-        shell->add_prompt_provider_process_for(prompt_session, request->pid());
-    }
-    done->Run();
-}
-
 void mf::SessionMediator::stop_prompt_session(
     ::google::protobuf::RpcController*,
     const ::mir::protobuf::Void*,

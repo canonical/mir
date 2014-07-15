@@ -328,15 +328,6 @@ typedef void (*mir_screencast_callback)(MirScreencast *screencast, void *client_
 typedef void (*mir_prompt_session_callback)(MirPromptSession* prompt_provider, void* context);
 
 /**
- * Callback member of MirPromptSession for adding prompt providers
- *   \param [in] prompt_provider  The prompt session associated with the callback
- *   \param [in] added            True if the session was added, false otherwise
- *   \param [in,out] context      The context provided by the client
- */
-typedef void (*mir_prompt_session_add_prompt_provider_callback)(
-    MirPromptSession* prompt_provider, MirBool added, void* context);
-
-/**
  * Callback member of MirPromptSession for handling of prompt sessions events.
  *   \param [in] prompt_provider  The prompt session associated with the callback
  *   \param [in] state            The state of the prompt session

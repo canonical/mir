@@ -89,8 +89,6 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
 
     session_listener->starting(new_session);
 
-    prompt_session_manager->add_expected_session(new_session);
-
     set_focus_to(new_session);
 
     return new_session;
@@ -187,15 +185,6 @@ std::shared_ptr<mf::PromptSession> ms::SessionManager::start_prompt_session_for(
     return prompt_session_manager->start_prompt_session_for(
         shell_session, params);
 
-}
-
-void ms::SessionManager::add_prompt_provider_process_for(
-    std::shared_ptr<mf::PromptSession> const& prompt_session,
-    pid_t process_id)
-{
-    auto scene_prompt_session = std::dynamic_pointer_cast<PromptSession>(prompt_session);
-
-    prompt_session_manager->add_prompt_provider_by_pid(scene_prompt_session, process_id);
 }
 
 void ms::SessionManager::add_prompt_provider_for(
