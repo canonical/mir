@@ -53,7 +53,7 @@ public:
 };
 }
 
-template<typename TransportMechanism>
+template <typename TransportMechanism>
 class StreamTransportTest : public ::testing::Test
 {
 public:
@@ -90,8 +90,8 @@ TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnect)
     auto observer = std::make_shared<NiceMock<MockObserver>>();
     auto done = std::make_shared<mir::test::Signal>();
 
-    ON_CALL(*observer, on_disconnected())
-        .WillByDefault(Invoke([done]() { done->raise(); }));
+    ON_CALL(*observer, on_disconnected()).WillByDefault(Invoke([done]()
+                                                               { done->raise(); }));
 
     this->transport->register_observer(observer);
 
@@ -108,16 +108,16 @@ TYPED_TEST(StreamTransportTest, NoticesRemoteDisconnectWhileReadingInIOLoop)
     bool data_notified{false};
     bool finished_read{false};
 
-    ON_CALL(*observer, on_disconnected())
-        .WillByDefault(Invoke([done]() { done->raise(); }));
+    ON_CALL(*observer, on_disconnected()).WillByDefault(Invoke([done]()
+                                                               { done->raise(); }));
     ON_CALL(*observer, on_data_available())
-            .WillByDefault(Invoke([this, &data_notified, &finished_read]()
-    {
-        data_notified = true;
-        char buffer[8];
-        this->transport->receive_data(buffer, sizeof(buffer));
-        finished_read = true;
-    }));
+        .WillByDefault(Invoke([this, &data_notified, &finished_read]()
+                              {
+                                  data_notified = true;
+                                  char buffer[8];
+                                  this->transport->receive_data(buffer, sizeof(buffer));
+                                  finished_read = true;
+                              }));
 
     this->transport->register_observer(observer);
 
@@ -138,8 +138,8 @@ TYPED_TEST(StreamTransportTest, NotifiesOnDataAvailable)
     auto observer = std::make_shared<NiceMock<MockObserver>>();
     auto done = std::make_shared<mir::test::Signal>();
 
-    ON_CALL(*observer, on_data_available())
-        .WillByDefault(Invoke([done]() { done->raise(); }));
+    ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([done]()
+                                                                 { done->raise(); }));
 
     this->transport->register_observer(observer);
 
@@ -156,8 +156,8 @@ TYPED_TEST(StreamTransportTest, DoesntNotifyUntilDataAvailable)
     auto observer = std::make_shared<NiceMock<MockObserver>>();
     auto done = std::make_shared<mir::test::Signal>();
 
-    ON_CALL(*observer, on_data_available())
-        .WillByDefault(Invoke([done]() { done->raise(); }));
+    ON_CALL(*observer, on_data_available()).WillByDefault(Invoke([done]()
+                                                                 { done->raise(); }));
 
     this->transport->register_observer(observer);
 
@@ -184,15 +184,15 @@ TYPED_TEST(StreamTransportTest, KeepsNotifyingOfAvailableDataUntilAllIsRead)
 
     ON_CALL(*observer, on_data_available())
         .WillByDefault(Invoke([done, &bytes_left, this]()
-    {
-        int dummy;
-        this->transport->receive_data(&dummy, sizeof(dummy));
-        bytes_left.fetch_sub(sizeof(dummy));
-        if (bytes_left.load() == 0)
-        {
-            done->raise();
-        }
-    }));
+                              {
+                                  int dummy;
+                                  this->transport->receive_data(&dummy, sizeof(dummy));
+                                  bytes_left.fetch_sub(sizeof(dummy));
+                                  if (bytes_left.load() == 0)
+                                  {
+                                      done->raise();
+                                  }
+                              }));
 
     this->transport->register_observer(observer);
 
@@ -212,15 +212,15 @@ TYPED_TEST(StreamTransportTest, StopsNotifyingOnceAllDataIsRead)
 
     ON_CALL(*observer, on_data_available())
         .WillByDefault(Invoke([this, done]()
-    {
-        if (done->raised())
-        {
-            FAIL() << "on_data_available called without new data available";
-        }
-        uint8_t dummy_buffer[buffer_size];
-        this->transport->receive_data(dummy_buffer, sizeof(dummy_buffer));
-        done->raise();
-    }));
+                              {
+                                  if (done->raised())
+                                  {
+                                      FAIL() << "on_data_available called without new data available";
+                                  }
+                                  uint8_t dummy_buffer[buffer_size];
+                                  this->transport->receive_data(dummy_buffer, sizeof(dummy_buffer));
+                                  done->raise();
+                              }));
     this->transport->register_observer(observer);
 
     EXPECT_FALSE(done->raised());
@@ -245,14 +245,14 @@ TYPED_TEST(StreamTransportTest, DoesntSendDataAvailableNotificationOnDisconnect)
 
     ON_CALL(*observer, on_data_available())
         .WillByDefault(Invoke([this, read_done, &notify_count]()
-    {
-        notify_count++;
-        uint8_t dummy_buffer[buffer_size];
-        this->transport->receive_data(dummy_buffer, sizeof(dummy_buffer));
-        read_done->raise();
-    }));
-    ON_CALL(*observer, on_disconnected())
-        .WillByDefault(Invoke([this, disconnect_done]() { disconnect_done->raise(); }));
+                              {
+                                  notify_count++;
+                                  uint8_t dummy_buffer[buffer_size];
+                                  this->transport->receive_data(dummy_buffer, sizeof(dummy_buffer));
+                                  read_done->raise();
+                              }));
+    ON_CALL(*observer, on_disconnected()).WillByDefault(Invoke([this, disconnect_done]()
+                                                               { disconnect_done->raise(); }));
 
     this->transport->register_observer(observer);
 
@@ -282,10 +282,10 @@ TYPED_TEST(StreamTransportTest, ReadsCorrectData)
 
     ON_CALL(*observer, on_data_available())
         .WillByDefault(Invoke([done, &received, this]()
-    {
-        this->transport->receive_data(received.data(), received.size());
-        done->raise();
-    }));
+                              {
+                                  this->transport->receive_data(received.data(), received.size());
+                                  done->raise();
+                              }));
 
     this->transport->register_observer(observer);
 
@@ -329,9 +329,7 @@ void set_alarm_raised(int /*signo*/)
 class SocketBlockThreshold
 {
 public:
-    SocketBlockThreshold(int send_fd, int recv_fd)
-        : send_fd{send_fd},
-          recv_fd{recv_fd}
+    SocketBlockThreshold(int send_fd, int recv_fd) : send_fd{send_fd}, recv_fd{recv_fd}
     {
         int val{256};
         socklen_t val_size{sizeof(val)};
@@ -367,8 +365,7 @@ private:
 class TemporarySignalHandler
 {
 public:
-    TemporarySignalHandler(int signo, void (*handler)(int))
-        : signo{signo}
+    TemporarySignalHandler(int signo, void (*handler)(int)) : signo{signo}
     {
         struct sigaction alarm_handler;
         sigset_t blocked_signals;
@@ -389,6 +386,7 @@ public:
             throw std::system_error{errno, std::system_category(), "Failed to restore SIGALRM handler"};
         }
     }
+
 private:
     int const signo;
     struct sigaction old_handler;
@@ -408,9 +406,7 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataFromMultipleChunks)
     std::vector<uint8_t> received(expected.size());
 
     mir::test::AutoJoinThread reader([&]()
-    {
-        this->transport->receive_data(received.data(), received.size());
-    });
+                                     { this->transport->receive_data(received.data(), received.size()); });
 
     size_t bytes_written{0};
     while (bytes_written < expected.size())
@@ -447,12 +443,12 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataWhenInterruptedWithSignals)
     auto read_now_waiting = std::make_shared<mir::test::Signal>();
 
     mir::test::AutoJoinThread reader([&]()
-    {
-        alarm_raised = false;
-        read_now_waiting->raise();
-        this->transport->receive_data(received.data(), received.size());
-        EXPECT_TRUE(alarm_raised);
-    });
+                                     {
+                                         alarm_raised = false;
+                                         read_now_waiting->raise();
+                                         this->transport->receive_data(received.data(), received.size());
+                                         EXPECT_TRUE(alarm_raised);
+                                     });
 
     EXPECT_TRUE(read_now_waiting->wait_for(std::chrono::seconds{1}));
 
@@ -483,7 +479,7 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataWhenInterruptedWithSignals)
 
 namespace
 {
-template<std::size_t N>
+template <std::size_t N>
 ssize_t send_with_fds(int socket, std::array<int, N> fds, void* msg_data, size_t msg_size, int flags)
 {
     struct iovec iov;
@@ -506,7 +502,7 @@ ssize_t send_with_fds(int socket, std::array<int, N> fds, void* msg_data, size_t
     header.msg_flags = 0;
 
     // Control message contains file descriptors
-    struct cmsghdr *message = CMSG_FIRSTHDR(&header);
+    struct cmsghdr* message = CMSG_FIRSTHDR(&header);
     message->cmsg_len = CMSG_LEN(fds_bytes);
     message->cmsg_level = SOL_SOCKET;
     message->cmsg_type = SCM_RIGHTS;
@@ -520,19 +516,14 @@ ssize_t send_with_fds(int socket, std::array<int, N> fds, void* msg_data, size_t
     return sent;
 }
 
-::testing::AssertionResult fds_are_equivalent(char const* fd_one_expr,
-                                              char const* fd_two_expr,
-                                              int fd_one,
-                                              int fd_two)
+::testing::AssertionResult fds_are_equivalent(char const* fd_one_expr, char const* fd_two_expr, int fd_one, int fd_two)
 {
-    std::string first_proc_path{"/proc/self/fd/" +
-                                std::to_string(fd_one)};
-    std::string second_proc_path{"/proc/self/fd/" +
-                                 std::to_string(fd_two)};
+    std::string first_proc_path{"/proc/self/fd/" + std::to_string(fd_one)};
+    std::string second_proc_path{"/proc/self/fd/" + std::to_string(fd_two)};
 
     struct stat sb;
 
-    if(lstat(first_proc_path.c_str(), &sb) < 0)
+    if (lstat(first_proc_path.c_str(), &sb) < 0)
     {
         throw std::system_error(errno, std::system_category(), "Failed to stat fd" + std::to_string(fd_one));
     }
@@ -544,7 +535,7 @@ ssize_t send_with_fds(int socket, std::array<int, N> fds, void* msg_data, size_t
         throw std::system_error(errno, std::system_category(), "Failed to find fd's path");
     }
 
-    if(lstat(second_proc_path.c_str(), &sb) < 0)
+    if (lstat(second_proc_path.c_str(), &sb) < 0)
     {
         throw std::system_error(errno, std::system_category(), "Failed to stat fd" + std::to_string(fd_two));
     }
@@ -560,21 +551,19 @@ ssize_t send_with_fds(int socket, std::array<int, N> fds, void* msg_data, size_t
     // This should do, though.
 
     if (first_path == second_path)
-        return testing::AssertionSuccess() << fd_one_expr << " and " << fd_two_expr
-                                           << " both point to " << first_path.data();
+        return testing::AssertionSuccess() << fd_one_expr << " and " << fd_two_expr << " both point to "
+                                           << first_path.data();
 
     return testing::AssertionFailure() << fd_one_expr << " and " << fd_two_expr
-                                       << " are not equivalent: "
-                                       << fd_one_expr << " corresponds to " << first_path.data() << std::endl
-                                       << fd_two_expr << " corresponds to " << second_path.data();
+                                       << " are not equivalent: " << fd_one_expr << " corresponds to "
+                                       << first_path.data() << std::endl << fd_two_expr << " corresponds to "
+                                       << second_path.data();
 }
-
 
 class TestFd
 {
 public:
-    TestFd()
-        : filename(strlen(file_template) + 1, '\0')
+    TestFd() : filename(strlen(file_template) + 1, '\0')
     {
         strncpy(filename.data(), file_template, filename.size());
         fd = mkstemp(filename.data());
@@ -617,9 +606,10 @@ TYPED_TEST(StreamTransportTest, ReadsDataWithFds)
     std::vector<int> received_fds(num_fds);
 
     auto receive_done = std::make_shared<mir::test::Signal>();
-    mir::test::AutoUnblockThread receive_thread{[this]() { ::close(this->test_fd); },
+    mir::test::AutoUnblockThread receive_thread{[this]()
+                                                { ::close(this->test_fd); },
                                                 [&]()
-    {
+                                                {
         try
         {
             this->transport->receive_data(received.data(), received.size(), received_fds);
@@ -631,11 +621,7 @@ TYPED_TEST(StreamTransportTest, ReadsDataWithFds)
         receive_done->raise();
     }};
 
-    EXPECT_EQ(expected.size(), send_with_fds(this->test_fd,
-                                             test_fds,
-                                             expected.data(),
-                                             expected.size(),
-                                             MSG_DONTWAIT));
+    EXPECT_EQ(expected.size(), send_with_fds(this->test_fd, test_fds, expected.data(), expected.size(), MSG_DONTWAIT));
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
     EXPECT_EQ(expected, received);
@@ -674,9 +660,10 @@ TYPED_TEST(StreamTransportTest, ReadsFdsFromMultipleChunks)
     std::vector<int> received_fds(num_fds * 2);
 
     auto receive_done = std::make_shared<mir::test::Signal>();
-    mir::test::AutoUnblockThread receive_thread{[this]() { ::close(this->test_fd); },
+    mir::test::AutoUnblockThread receive_thread{[this]()
+                                                { ::close(this->test_fd); },
                                                 [&]()
-    {
+                                                {
         try
         {
             this->transport->receive_data(received.data(), received.size(), received_fds);
@@ -688,16 +675,10 @@ TYPED_TEST(StreamTransportTest, ReadsFdsFromMultipleChunks)
         receive_done->raise();
     }};
 
-    EXPECT_EQ(expected.size(), send_with_fds(this->test_fd,
-                                             first_test_fds,
-                                             expected.data(),
-                                             expected.size(),
-                                             MSG_DONTWAIT));
-    EXPECT_EQ(expected.size(), send_with_fds(this->test_fd,
-                                             second_test_fds,
-                                             expected.data(),
-                                             expected.size(),
-                                             MSG_DONTWAIT));
+    EXPECT_EQ(expected.size(),
+              send_with_fds(this->test_fd, first_test_fds, expected.data(), expected.size(), MSG_DONTWAIT));
+    EXPECT_EQ(expected.size(),
+              send_with_fds(this->test_fd, second_test_fds, expected.data(), expected.size(), MSG_DONTWAIT));
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
 
@@ -738,9 +719,10 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataAndFdsWhenInterruptedWithSignals)
     TemporarySignalHandler sig_alarm_handler{SIGALRM, &set_alarm_raised};
     auto receive_done = std::make_shared<mir::test::Signal>();
 
-    mir::test::AutoUnblockThread reader{[this]() { ::close(this->test_fd); },
+    mir::test::AutoUnblockThread reader{[this]()
+                                        { ::close(this->test_fd); },
                                         [&]()
-    {
+                                        {
         try
         {
             alarm_raised = false;
@@ -811,8 +793,8 @@ namespace
 constexpr int cmsg_space_boundary(int starting_fd_count)
 {
     return CMSG_SPACE(starting_fd_count * sizeof(int)) != CMSG_SPACE((starting_fd_count + 1) * sizeof(int)) ?
-           starting_fd_count :
-           cmsg_space_boundary(starting_fd_count + 1);
+               starting_fd_count :
+               cmsg_space_boundary(starting_fd_count + 1);
 }
 
 /*
@@ -827,12 +809,9 @@ constexpr int cmsg_space_boundary(int starting_fd_count)
 constexpr int cmsg_space_alias(int starting_fd_count, int max_count)
 {
     return CMSG_SPACE(starting_fd_count * sizeof(int)) == CMSG_SPACE((starting_fd_count + 1) * sizeof(int)) ?
-           starting_fd_count :
-               starting_fd_count >= max_count ?
-               max_count :
-               cmsg_space_alias(starting_fd_count + 1, max_count);
+               starting_fd_count :
+               starting_fd_count >= max_count ? max_count : cmsg_space_alias(starting_fd_count + 1, max_count);
 }
-
 }
 
 TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanExpectedOnCmsgBoundaryIsAnError)
@@ -849,21 +828,17 @@ TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanExpectedOnCmsgBoundaryIsAnEr
     std::vector<int> received_fds(num_fds);
 
     auto receive_done = std::make_shared<mir::test::Signal>();
-    mir::test::AutoUnblockThread reader{[this]() { ::close(this->test_fd); },
+    mir::test::AutoUnblockThread reader{[this]()
+                                        { ::close(this->test_fd); },
                                         [&]()
-    {
+                                        {
         uint32_t dummy;
-        EXPECT_THROW(this->transport->receive_data(&dummy, sizeof(dummy), received_fds),
-                     std::runtime_error);
+        EXPECT_THROW(this->transport->receive_data(&dummy, sizeof(dummy), received_fds), std::runtime_error);
         receive_done->raise();
     }};
 
     int32_t dummy{0};
-    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd,
-                                           test_fds,
-                                           &dummy,
-                                           sizeof(dummy),
-                                           MSG_DONTWAIT));
+    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
 }
@@ -882,21 +857,17 @@ TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanRequestedWithSameCmsgSpaceIs
     std::vector<int> received_fds(num_fds);
 
     auto receive_done = std::make_shared<mir::test::Signal>();
-    mir::test::AutoUnblockThread reader{[this]() { ::close(this->test_fd); },
+    mir::test::AutoUnblockThread reader{[this]()
+                                        { ::close(this->test_fd); },
                                         [&]()
-    {
+                                        {
         uint32_t dummy;
-        EXPECT_THROW(this->transport->receive_data(&dummy, sizeof(dummy), received_fds),
-                     std::runtime_error);
+        EXPECT_THROW(this->transport->receive_data(&dummy, sizeof(dummy), received_fds), std::runtime_error);
         receive_done->raise();
     }};
 
     int32_t dummy{0};
-    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd,
-                                           test_fds,
-                                           &dummy,
-                                           sizeof(dummy),
-                                           MSG_DONTWAIT));
+    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
 }
@@ -938,25 +909,18 @@ TYPED_TEST(StreamTransportTest, DISABLED_ReceivingMoreFdsThanExpectedInMultipleC
     std::vector<int> received_fds(num_fds);
 
     auto receive_done = std::make_shared<mir::test::Signal>();
-    mir::test::AutoUnblockThread receive_thread{[this]() { ::close(this->test_fd); },
+    mir::test::AutoUnblockThread receive_thread{[this]()
+                                                { ::close(this->test_fd); },
                                                 [&]()
-    {
-        EXPECT_THROW(
-            this->transport->receive_data(received.data(), received.size(), received_fds),
-            std::runtime_error);
+                                                {
+        EXPECT_THROW(this->transport->receive_data(received.data(), received.size(), received_fds), std::runtime_error);
         receive_done->raise();
     }};
 
-    EXPECT_EQ(expected.size(), send_with_fds(this->test_fd,
-                                             first_test_fds,
-                                             expected.data(),
-                                             expected.size(),
-                                             MSG_DONTWAIT));
-    EXPECT_EQ(expected.size(), send_with_fds(this->test_fd,
-                                             second_test_fds,
-                                             expected.data(),
-                                             expected.size(),
-                                             MSG_DONTWAIT));
+    EXPECT_EQ(expected.size(),
+              send_with_fds(this->test_fd, first_test_fds, expected.data(), expected.size(), MSG_DONTWAIT));
+    EXPECT_EQ(expected.size(),
+              send_with_fds(this->test_fd, second_test_fds, expected.data(), expected.size(), MSG_DONTWAIT));
 
     EXPECT_TRUE(receive_done->wait_for(std::chrono::seconds{1}));
 
@@ -980,17 +944,9 @@ TYPED_TEST(StreamTransportTest, MismatchedFdExpectationsHaveAppropriateErrorMess
     }
 
     int32_t dummy{0};
-    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd,
-                                           test_fds,
-                                           &dummy,
-                                           sizeof(dummy),
-                                           MSG_DONTWAIT));
+    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
 
-    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd,
-                                           test_fds,
-                                           &dummy,
-                                           sizeof(dummy),
-                                           MSG_DONTWAIT));
+    EXPECT_EQ(sizeof(dummy), send_with_fds(this->test_fd, test_fds, &dummy, sizeof(dummy), MSG_DONTWAIT));
 
     try
     {
@@ -1029,20 +985,19 @@ TYPED_TEST(StreamTransportTest, SendsFullMessagesWhenInterrupted)
     }
     std::vector<uint8_t> received(expected.size());
 
-
     TemporarySignalHandler sig_alarm_handler{SIGALRM, &set_alarm_raised};
     auto write_now_waiting = std::make_shared<mir::test::Signal>();
 
     mir::test::AutoJoinThread writer([&]()
-    {
-        alarm_raised = false;
-        write_now_waiting->raise();
-        this->transport->send_data(expected);
-        EXPECT_TRUE(alarm_raised);
-    });
+                                     {
+                                         alarm_raised = false;
+                                         write_now_waiting->raise();
+                                         this->transport->send_data(expected);
+                                         EXPECT_TRUE(alarm_raised);
+                                     });
 
     size_t bytes_read{0};
-    while(bytes_read < received.size())
+    while (bytes_read < received.size())
     {
         pollfd socket_readable;
         socket_readable.events = POLLIN;
@@ -1051,9 +1006,8 @@ TYPED_TEST(StreamTransportTest, SendsFullMessagesWhenInterrupted)
         ASSERT_GE(poll(&socket_readable, 1, 10000), 1);
         ASSERT_EQ(0, socket_readable.revents & (POLLERR | POLLHUP));
 
-        auto result = read(this->test_fd,
-                           received.data() + bytes_read,
-                           std::min(received.size() - bytes_read, chunk_size));
+        auto result =
+            read(this->test_fd, received.data() + bytes_read, std::min(received.size() - bytes_read, chunk_size));
         ASSERT_GE(result, 0) << "Failed to read(): " << strerror(errno);
         bytes_read += result;
 
