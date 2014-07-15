@@ -1,6 +1,17 @@
 mir (0.5.0-0ubuntu1) UNRELEASED; urgency=medium
 
-  * Under development
+  * New upstream release 0.5.0 (https://launchpad.net/mir/+milestone/0.5.0)
+    - mirclient ABI unchanged at 8. Clients do not need rebuilding.
+    - mirserver ABI bumped to 23. Servers need rebuilding, but probably don't
+      need modification:
+      . DefaultServerConfiguration/Cursor API: Cursor interfaces changed, most
+        notably CursorImages moved from ::mir::graphics to ::mir::input.
+      . DefaultServerConfiguration: New "prompt" API.
+      . DefaultServerConfiguration: "clock" member is now static.
+      . SessionAuthorizer: New functions.
+      . ServerConfiguration: New function added: the_prompt_connector().
+    - Bugs fixed:
+      . TODO
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 04 Jul 2014 12:45:30 +0800
 
