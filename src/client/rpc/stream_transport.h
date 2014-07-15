@@ -71,6 +71,11 @@ public:
      */
     virtual ~StreamTransport() = default;
 
+    /* Delete CopyAssign */
+    StreamTransport() = default;
+    StreamTransport(StreamTransport const&) = delete;
+    StreamTransport& operator=(StreamTransport const&) = delete;
+
     /**
      * \brief Observer of IO status
      * \note The Transport may call Observer members from arbitrary threads.
