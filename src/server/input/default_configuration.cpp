@@ -258,7 +258,7 @@ mir::DefaultServerConfiguration::the_touch_visualizer()
 
 std::shared_ptr<mg::CursorImage>
 mir::DefaultServerConfiguration::the_default_cursor_image()
-
+{
     return default_cursor_image(
         [this]()
         {
@@ -287,6 +287,5 @@ mir::DefaultServerConfiguration::the_cursor_images()
                 return xcursor_loader;
             else
                 return std::make_shared<mi::BuiltinCursorImages>();
->>>>>>> MERGE-SOURCE
         });
 }
