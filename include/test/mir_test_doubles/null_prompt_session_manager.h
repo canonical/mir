@@ -46,15 +46,6 @@ public:
     {
     }
 
-    void add_prompt_provider_by_pid(std::shared_ptr<scene::PromptSession> const&,
-                                    pid_t) const
-    {
-    }
-
-    void add_expected_session(std::shared_ptr<scene::Session> const&) const
-    {
-    }
-
     void remove_session(std::shared_ptr<scene::Session> const&) const
     {
     }
