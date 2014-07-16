@@ -34,7 +34,9 @@ bool renderable_is_occluded(
     Rectangle const& area,
     std::vector<Rectangle>& coverage)
 {
-    static const glm::mat4 identity;
+    static glm::mat4 const identity;
+    static Rectangle const empty{};
+
     if (renderable.transformation() != identity)
         return false;  // Weirdly transformed. Assume never occluded.
 
@@ -44,15 +46,16 @@ bool renderable_is_occluded(
     if (!renderable.visible())
         return true;  //invisible; definitely occluded.
 
-    // Not weirdly transformed but also not on this monitor? Don't care...
-    if (!area.overlaps(renderable.screen_position()))
-        return true;  // Not on the display; definitely occluded.
+    auto const& window = renderable.screen_position();
+    auto const& clipped_window = window.intersection_with(area);
+
+    if (clipped_window == empty)
+        return true;  // Not in the area; definitely occluded.
 
     bool occluded = false;
-    Rectangle const& window = renderable.screen_position();
-    for (const auto &r : coverage)
+    for (auto const& r : coverage)
     {
-        if (r.contains(window))
+        if (r.contains(clipped_window))
         {
             occluded = true;
             break;
@@ -60,7 +63,7 @@ bool renderable_is_occluded(
     }
 
     if (!occluded && renderable.alpha() == 1.0f && !renderable.shaped())
-        coverage.push_back(window);
+        coverage.push_back(clipped_window);
 
     return occluded;
 }

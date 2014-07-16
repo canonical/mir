@@ -143,11 +143,6 @@ public:
                             ::mir::protobuf::Void* response,
                             ::google::protobuf::Closure* done);
 
-    void add_prompt_provider(::google::protobuf::RpcController* controller,
-                             const ::mir::protobuf::PromptProvider* request,
-                             ::mir::protobuf::Void*,
-                             ::google::protobuf::Closure* done);
-
     void stop_prompt_session(::google::protobuf::RpcController* controller,
                             const ::mir::protobuf::Void* request,
                             ::mir::protobuf::Void* response,

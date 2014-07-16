@@ -27,16 +27,6 @@
 namespace
 {
 void null_callback(MirPromptSession*, void*) {}
-
-void add_prompt_provider_callback(
-    MirPromptSession*,
-    MirBool added,
-    void* context)
-{
-    if (context)
-        *(MirBool*)context = added;
-}
-
 }
 
 MirPromptSession *mir_connection_create_prompt_session_sync(
@@ -61,35 +51,6 @@ MirPromptSession *mir_connection_create_prompt_session_sync(
         // TODO callback with an error
         return nullptr;
     }
-}
-
-MirWaitHandle *mir_prompt_session_add_prompt_provider(
-    MirPromptSession *prompt_session,
-    pid_t provider_pid,
-    mir_prompt_session_add_prompt_provider_callback callback,
-    void* context)
-{
-    try
-    {
-        return prompt_session->add_prompt_provider(provider_pid, callback, context);
-    }
-    catch (std::exception const&)
-    {
-        // TODO callback with an error
-        return nullptr;
-    }
-}
-
-MirBool mir_prompt_session_add_prompt_provider_sync(
-    MirPromptSession *prompt_session,
-    pid_t provider_pid)
-{
-    MirBool result;
-    mir_wait_for(mir_prompt_session_add_prompt_provider(prompt_session,
-        provider_pid,
-        add_prompt_provider_callback,
-        &result));
-    return result;
 }
 
 MirWaitHandle* mir_prompt_session_new_fds_for_prompt_providers(

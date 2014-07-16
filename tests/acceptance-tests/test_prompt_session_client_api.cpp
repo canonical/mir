@@ -139,12 +139,6 @@ struct PromptSessionClientAPI : mtf::InProcessServer
     static constexpr pid_t application_session_pid = __LINE__;
     std::shared_ptr<mf::Session> application_session;
 
-    static constexpr pid_t existing_prompt_provider_pid = __LINE__;
-    std::shared_ptr<mf::Session> existing_prompt_provider_session;
-
-    static constexpr pid_t another_prompt_provider_pid = __LINE__;
-    std::shared_ptr<mf::Session> another_existing_prompt_provider;
-
     std::shared_ptr<ms::PromptSession> server_prompt_session;
 
     void SetUp() override
@@ -156,12 +150,6 @@ struct PromptSessionClientAPI : mtf::InProcessServer
 
         application_session = the_frontend_shell->open_session(
             application_session_pid, __PRETTY_FUNCTION__, dummy_event_sink);
-
-        existing_prompt_provider_session = the_frontend_shell->open_session(
-            existing_prompt_provider_pid, __PRETTY_FUNCTION__,  dummy_event_sink);
-
-        another_existing_prompt_provider = the_frontend_shell->open_session(
-            another_prompt_provider_pid, __PRETTY_FUNCTION__,  dummy_event_sink);
     }
 
     void capture_server_prompt_session()
@@ -182,8 +170,6 @@ struct PromptSessionClientAPI : mtf::InProcessServer
         // TODO SessionManager::~SessionManager() in code that the comments claim
         // TODO works around broken ownership.
         auto const the_frontend_shell = server_config().the_frontend_shell();
-        the_frontend_shell->close_session(another_existing_prompt_provider);
-        the_frontend_shell->close_session(existing_prompt_provider_session);
         the_frontend_shell->close_session(application_session);
 
         if (connection) mir_connection_release(connection);
@@ -337,31 +323,6 @@ TEST_F(PromptSessionClientAPI, notifies_start_and_stop)
     mir_prompt_session_release_sync(prompt_session);
 }
 
-TEST_F(PromptSessionClientAPI, can_add_preexisting_prompt_provider)
-{
-    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-
-    {
-        auto const prompt_provider =
-            std::dynamic_pointer_cast<ms::Session>(existing_prompt_provider_session);
-
-        InSequence server_seq;
-        EXPECT_CALL(*the_mock_prompt_session_listener(),
-            prompt_provider_added(_, Eq(prompt_provider)));
-
-        EXPECT_CALL(*the_mock_prompt_session_listener(),
-            prompt_provider_removed(_, Eq(prompt_provider)));
-    }
-
-    MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
-        connection, application_session_pid, null_state_change_callback, this);
-
-    EXPECT_TRUE(mir_prompt_session_add_prompt_provider_sync(
-        prompt_session, existing_prompt_provider_pid));
-
-    mir_prompt_session_release_sync(prompt_session);
-}
-
 TEST_F(PromptSessionClientAPI, can_get_fds_for_prompt_providers)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -467,8 +428,8 @@ TEST_F(PromptSessionClientAPI, after_server_closes_prompt_session_api_isnt_broke
 
     the_prompt_session_manager()->stop_prompt_session(server_prompt_session);
 
-    EXPECT_FALSE(mir_prompt_session_add_prompt_provider_sync(
-        prompt_session, existing_prompt_provider_pid));
+    mir_wait_for(mir_prompt_session_new_fds_for_prompt_providers(
+        prompt_session, no_of_prompt_providers, &client_fd_callback, this));
 
     mir_prompt_session_release_sync(prompt_session);
 }
@@ -500,24 +461,6 @@ TEST_F(PromptSessionClientAPI, server_retrieves_helper_session)
     EXPECT_THAT(
         the_prompt_session_manager()->helper_for(server_prompt_session),
         IsSessionWithPid(getpid()));
-
-    mir_prompt_session_release_sync(prompt_session);
-}
-
-TEST_F(PromptSessionClientAPI, server_retrieves_existing_provider_sessions)
-{
-    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-
-    capture_server_prompt_session();
-
-    MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
-        connection, application_session_pid, null_state_change_callback, this);
-
-    mir_prompt_session_add_prompt_provider_sync(prompt_session, existing_prompt_provider_pid);
-    mir_prompt_session_add_prompt_provider_sync(prompt_session, another_prompt_provider_pid);
-
-    EXPECT_THAT(list_providers_for(server_prompt_session),
-        ElementsAre(existing_prompt_provider_session, another_existing_prompt_provider));
 
     mir_prompt_session_release_sync(prompt_session);
 }
