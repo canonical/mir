@@ -48,9 +48,10 @@ int mir_client_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display
 }
 }
 
+static mclm::MesaNativeDisplayContainer default_display_container;
+
 mcl::EGLNativeDisplayContainer& mcl::EGLNativeDisplayContainer::instance()
 {
-    static mclm::MesaNativeDisplayContainer default_display_container;
     return default_display_container;
 }
 
