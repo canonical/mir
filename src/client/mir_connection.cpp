@@ -64,7 +64,7 @@ private:
 };
 
 std::mutex connection_guard;
-std::unordered_set<MirConnection*> valid_connections;
+MirConnection* valid_connections{nullptr};
 }
 
 MirConnection::MirConnection(std::string const& error_message) :
@@ -89,7 +89,8 @@ MirConnection::MirConnection(
     connect_result.set_error("connect not called");
     {
         std::lock_guard<std::mutex> lock(connection_guard);
-        valid_connections.insert(this);
+        next_valid = valid_connections;
+        valid_connections = this;
     }
 }
 
@@ -101,7 +102,15 @@ MirConnection::~MirConnection() noexcept
 
     {
         std::lock_guard<std::mutex> lock(connection_guard);
-        valid_connections.erase(this);
+
+        for (auto current = &valid_connections; *current; current = &(*current)->next_valid)
+        {
+            if (this == *current)
+            {
+                *current = next_valid;
+                break;
+            }
+        }
     }
 
     std::lock_guard<decltype(mutex)> lock(mutex);
@@ -317,13 +326,18 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
 bool MirConnection::is_valid(MirConnection *connection)
 {
     {
-        std::lock_guard<std::mutex> lock(connection_guard);
-        if (valid_connections.count(connection) == 0)
-           return false;
+        std::unique_lock<std::mutex> lock(connection_guard);
+        for (auto current = valid_connections; current; current = current->next_valid)
+        {
+            if (connection == current)
+            {
+                lock.unlock();
+                std::lock_guard<decltype(connection->mutex)> lock(connection->mutex);
+                return !connection->connect_result.has_error();
+            }
+        }
     }
-
-    std::lock_guard<decltype(connection->mutex)> lock(connection->mutex);
-    return !connection->connect_result.has_error();
+    return false;
 }
 
 void MirConnection::populate(MirPlatformPackage& platform_package)
