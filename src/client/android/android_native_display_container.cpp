@@ -23,9 +23,10 @@
 namespace mcl = mir::client;
 namespace mcla = mcl::android;
 
+static mcla::AndroidNativeDisplayContainer default_display_container;
+
 mcl::EGLNativeDisplayContainer& mcl::EGLNativeDisplayContainer::instance()
 {
-    static mcla::AndroidNativeDisplayContainer default_display_container;
     return default_display_container;
 }
 
