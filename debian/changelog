@@ -34,6 +34,7 @@ mir (0.5.0-0ubuntu1) UNRELEASED; urgency=medium
       . [regression] Device locks randomly on welcome screen (LP: #1339700)
       . Intermittent deadlock when switching to session with custom display
         config & closing other session (LP: #1340669)
+      . Mir cursor has no hotspot setting, assumes (0, 0) (LP: #1189775)
       . clang built mir_unit_tests.ProtobufSocketCommunicatorFD crashes
         intermittently (LP: #1300653)
       . g++-4.9 binary incompatibilities with libraries built with g++-4.8
