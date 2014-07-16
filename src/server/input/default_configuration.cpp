@@ -28,11 +28,12 @@
 #include "android/input_channel_factory.h"
 #include "display_input_region.h"
 #include "event_filter_chain.h"
-#include "nested_input_configuration.h"
 #include "null_input_configuration.h"
 #include "cursor_controller.h"
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
+#include "xcursor_loader.h"
+#include "builtin_cursor_images.h"
 #include "null_input_send_observer.h"
 #include "null_input_channel_factory.h"
 
@@ -51,6 +52,7 @@ namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mr = mir::report;
 namespace ms = mir::scene;
+namespace mg = mir::graphics;
 namespace msh = mir::shell;
 
 std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
@@ -80,11 +82,11 @@ mir::DefaultServerConfiguration::the_input_configuration()
     [this]() -> std::shared_ptr<mi::InputConfiguration>
     {
         auto const options = the_options();
-        if (!options->get<bool>(options::enable_input_opt))
-        {
-            return std::make_shared<mi::NullInputConfiguration>();
-        }
-        else if (!options->is_set(options::host_socket_opt))
+        bool input_reading_required =
+            options->get<bool>(options::enable_input_opt) &&
+            !options->is_set(options::host_socket_opt);
+
+        if (input_reading_required)
         {
             // fallback to standalone if host socket is unset
             return std::make_shared<mia::DefaultInputConfiguration>(
@@ -97,7 +99,7 @@ mir::DefaultServerConfiguration::the_input_configuration()
         }
         else
         {
-            return std::make_shared<mi::NestedInputConfiguration>();
+            return std::make_shared<mi::NullInputConfiguration>();
         }
     });
 }
@@ -251,5 +253,40 @@ mir::DefaultServerConfiguration::the_touch_visualizer()
         [this]()
         {
             return std::make_shared<NullTouchVisualizer>();
+        });
+}
+
+std::shared_ptr<mg::CursorImage>
+mir::DefaultServerConfiguration::the_default_cursor_image()
+
+    return default_cursor_image(
+        [this]()
+        {
+            return the_cursor_images()->image(mir_default_cursor_name, mi::default_cursor_size);
+        });
+}
+
+namespace
+{
+bool has_default_cursor(mi::CursorImages& images)
+{
+    if (images.image(mir_default_cursor_name, mi::default_cursor_size))
+        return true;
+    return false;
+}
+}
+
+std::shared_ptr<mi::CursorImages>
+mir::DefaultServerConfiguration::the_cursor_images()
+{
+    return cursor_images(
+        [this]() -> std::shared_ptr<mi::CursorImages>
+        {
+            auto xcursor_loader = std::make_shared<mi::XCursorLoader>();
+            if (has_default_cursor(*xcursor_loader))
+                return xcursor_loader;
+            else
+                return std::make_shared<mi::BuiltinCursorImages>();
+>>>>>>> MERGE-SOURCE
         });
 }

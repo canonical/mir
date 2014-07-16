@@ -211,6 +211,11 @@ struct StubCursorImage : public mg::CursorImage
     {
         return geom::Size{geom::Width{64}, geom::Height{64}};
     }
+    geom::Displacement hotspot() const 
+    {
+        return geom::Displacement{0, 0};
+    }
+
     static void const* image_data;
 };
 void const* StubCursorImage::image_data = reinterpret_cast<void*>(&StubCursorImage::image_data);
@@ -260,23 +265,64 @@ TEST_F(MesaCursorTest, show_cursor_writes_to_bo)
     cursor.show(image);
 }
 
-TEST_F(MesaCursorTest, show_cursor_throws_on_incorrect_size)
+// When we upload our 1x1 cursor we should upload a single white pixel and then transparency filling a 64x64 buffer.
+MATCHER(ContainsASingleWhitePixel, "")
+{
+    auto pixels = static_cast<uint32_t const*>(arg);
+    if (pixels[0] != 0xffffffff)
+        return false;
+    for (int i = 1; i < 64*64; i++)
+    {
+        if (pixels[i] != 0x0)
+            return false;
+    }
+    return true; 
+}
+
+TEST_F(MesaCursorTest, show_cursor_pads_missing_data)
 {
     using namespace testing;
 
-    struct InvalidlySizedCursorImage : public StubCursorImage
+    struct SinglePixelCursorImage : public StubCursorImage
     {
         geom::Size size() const
         {
-            return invalid_cursor_size;
+            return small_cursor_size;
         }
-        size_t const cursor_side{48};
-        geom::Size const invalid_cursor_size{cursor_side, cursor_side};
+        void const* as_argb_8888() const
+        {
+            static uint32_t const pixel = 0xffffffff;
+            return &pixel;
+        }
+
+        size_t const cursor_side{1};
+        geom::Size const small_cursor_size{cursor_side, cursor_side};
     };
 
-    EXPECT_THROW(
-        cursor.show(InvalidlySizedCursorImage());
-    , std::logic_error);
+    // We expect a full 64x64 pixel write as we will pad missing data with transparency.
+    size_t const buffer_size_bytes{64 * 64 * sizeof(uint32_t)};
+    EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, ContainsASingleWhitePixel(), buffer_size_bytes));
+
+    cursor.show(SinglePixelCursorImage());
+}
+
+TEST_F(MesaCursorTest, throws_when_images_are_too_large)
+{
+    using namespace testing;
+
+    struct LargeCursorImage : public StubCursorImage
+    {
+        geom::Size size() const
+        {
+            return large_cursor_size;
+        }
+        size_t const cursor_side{128};
+        geom::Size const large_cursor_size{cursor_side, cursor_side};
+    };
+
+    EXPECT_THROW({
+        cursor.show(LargeCursorImage());
+    }, std::logic_error);
 }
 
 TEST_F(MesaCursorTest, forces_cursor_state_on_construction)
@@ -504,3 +550,44 @@ TEST_F(MesaCursorTest, hidden_cursor_is_not_shown_after_suspend_resume)
     cursor.resume();
     output_container.verify_and_clear_expectations();
 }
+
+TEST_F(MesaCursorTest, show_cursor_sets_cursor_with_hotspot)
+{
+    using namespace testing;
+
+    static geom::Displacement hotspot_displacement{10, 10};
+    
+    static geom::Point const
+        initial_cursor_location = {0, 0},
+        cursor_location_1 = {20, 20},
+        cursor_location_2 = {40, 12};
+    static geom::Point const initial_buffer_location = initial_cursor_location - hotspot_displacement;
+    static geom::Point const expected_buffer_location_1 = cursor_location_1 - hotspot_displacement;
+    static geom::Point const expected_buffer_location_2 = cursor_location_2 - hotspot_displacement;
+
+    struct HotspotCursor : public StubCursorImage
+    {
+        geom::Displacement hotspot() const override
+        {
+            return hotspot_displacement;
+        }
+    };
+    
+    
+    EXPECT_CALL(mock_gbm, gbm_bo_write(_, _, _)).Times(AnyNumber());
+    EXPECT_CALL(*output_container.outputs[10], set_cursor(_)).Times(AnyNumber());
+
+    // When we set the image with the hotspot, first we should see the cursor move from its initial
+    // location, to account for the displacement. Further movement should be offset by the hotspot.
+    {
+        InSequence seq;
+        EXPECT_CALL(*output_container.outputs[10], move_cursor(initial_buffer_location));
+        EXPECT_CALL(*output_container.outputs[10], move_cursor(expected_buffer_location_1));
+        EXPECT_CALL(*output_container.outputs[10], move_cursor(expected_buffer_location_2));
+    }
+
+    cursor.show(HotspotCursor());
+    cursor.move_to(cursor_location_1);
+    cursor.move_to(cursor_location_2);
+}
+

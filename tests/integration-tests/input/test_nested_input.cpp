@@ -16,7 +16,6 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/server/input/nested_input_configuration.h"
 #include "src/server/report/null/input_report.h"
 #include "mir/input/input_manager.h"
 #include "mir/input/input_dispatcher.h"
@@ -57,13 +56,9 @@ TEST(NestedInputTest, applies_event_filter_on_relayed_event)
 
     mia::AndroidInputDispatcher dispatcher(android_dispatcher, mt::fake_shared(input_thread));
 
-    mi::NestedInputConfiguration input_conf;
-
-    auto const input_manager = input_conf.the_input_manager();
-
-    auto const with_running_input_manager = mir::raii::paired_calls(
-        [&] { input_manager->start(); dispatcher.start();},
-        [&] { dispatcher.stop(); input_manager->stop(); });
+    auto const with_running_input_dispatcher = mir::raii::paired_calls(
+        [&] { dispatcher.start();},
+        [&] { dispatcher.stop(); });
 
     MirEvent e;
     memset(&e, 0, sizeof(MirEvent));

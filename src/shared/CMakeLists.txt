@@ -12,7 +12,7 @@ add_subdirectory(logging)
 add_subdirectory(report/lttng)
 add_subdirectory(env)
 add_subdirectory(sharedlibrary)
-add_subdirectory(threadname)
+add_subdirectory(thread)
 add_subdirectory(testdraw)
 
 set(

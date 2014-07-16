@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,25 +13,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alan Griffiths <alan@octopull.co.uk>
- *              Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "nested_input_configuration.h"
-#include "null_input_manager.h"
+#ifndef MIR_NULL_HOST_LIFECYCLE_EVENT_LISTENER_H_
+#define MIR_NULL_HOST_LIFECYCLE_EVENT_LISTENER_H_
 
-#include "android/input_channel_factory.h"
+#include "mir/shell/host_lifecycle_event_listener.h"
 
-#include <memory>
-
-namespace mi = mir::input;
-namespace mia = mir::input::android;
-
-std::shared_ptr<mi::InputManager> mi::NestedInputConfiguration::the_input_manager()
+namespace mir
 {
-    return input_manager(
-        [this]()
-        {
-            return std::make_shared<NullInputManager>();
-        });
+namespace shell
+{
+
+class NullHostLifecycleEventListener : public HostLifecycleEventListener
+{
+public:
+    virtual void lifecycle_event_occurred(MirLifecycleState /*state*/) override {}
+};
+
 }
+}
+
+#endif /* MIR_NULL_HOST_LIFECYCLE_EVENT_LISTENER_H_ */

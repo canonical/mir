@@ -163,6 +163,17 @@ bool me::WindowManager::handle(MirEvent const& event)
             return true;
         }
         else if ((event.key.modifiers & mir_key_modifier_alt) &&
+                 (event.key.modifiers & mir_key_modifier_ctrl) &&
+                 (event.key.scan_code == KEY_L) &&
+                 focus_controller)
+        {
+            auto const app = focus_controller->focussed_application().lock();
+            if (app)
+            {
+                app->set_lifecycle_state(mir_lifecycle_state_will_suspend);
+            }
+        }
+        else if ((event.key.modifiers & mir_key_modifier_alt) &&
                  (event.key.modifiers & mir_key_modifier_ctrl))
         {
             MirOrientation orientation = mir_orientation_normal;

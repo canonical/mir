@@ -18,6 +18,7 @@
 
 #include "default_ipc_factory.h"
 
+#include "no_prompt_shell.h"
 #include "session_mediator.h"
 #include "unauthorized_display_changer.h"
 #include "unauthorized_screencast.h"
@@ -27,6 +28,7 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
 
 mf::DefaultIpcFactory::DefaultIpcFactory(
     std::shared_ptr<Shell> const& shell,
@@ -36,8 +38,9 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<Screencast> const& screencast,
     std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-    std::shared_ptr<mg::CursorImages> const& cursor_images) :
+    std::shared_ptr<mi::CursorImages> const& cursor_images) :
     shell(shell),
+    no_prompt_shell(std::make_shared<NoPromptShell>(shell)),
     sm_report(sm_report),
     cache(std::make_shared<ResourceCache>()),
     graphics_platform(graphics_platform),
@@ -75,8 +78,13 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
         effective_screencast = std::make_shared<UnauthorizedScreencast>();
     }
 
+    auto const allow_prompt_session =
+        session_authorizer->prompt_session_is_allowed(creds);
+
+    auto const effective_shell = allow_prompt_session ? shell : no_prompt_shell;
+
     return make_mediator(
-        shell,
+        effective_shell,
         graphics_platform,
         changer,
         buffer_allocator,
@@ -100,7 +108,7 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
     std::shared_ptr<EventSink> const& sink,
     std::shared_ptr<Screencast> const& effective_screencast,
     ConnectionContext const& connection_context,
-    std::shared_ptr<mg::CursorImages> const& cursor_images)
+    std::shared_ptr<mi::CursorImages> const& cursor_images)
 {
     return std::make_shared<SessionMediator>(
         shell,

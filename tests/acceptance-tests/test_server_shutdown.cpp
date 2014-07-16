@@ -159,6 +159,10 @@ struct FakeEventHubServerConfig : TestingServerConfiguration
     std::shared_ptr<mtd::FakeEventHubInputConfiguration> input_configuration;
 };
 
+void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
+{
+}
+
 }
 
 using ServerShutdown = BespokeDisplayServerTestFixture;
@@ -195,6 +199,9 @@ TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
 
             ASSERT_TRUE(connection != NULL);
 
+            /* Default lifecycle handler terminates the process on disconnect, so override it */
+            mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
+
             MirSurfaceParameters const request_params =
             {
                 __PRETTY_FUNCTION__,
@@ -214,13 +221,7 @@ TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
             next_buffer_done.set();
             server_done.wait();
 
-            /*
-             * TODO: Releasing the connection to a shut down server blocks
-             * the client. We should handle unexpected server shutdown more
-             * gracefully on the client side.
-             *
-             * mir_connection_release(connection);
-             */
+            mir_connection_release(connection);
         }
 
         Flag& next_buffer_done;

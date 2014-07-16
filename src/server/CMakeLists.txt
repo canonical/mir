@@ -30,6 +30,7 @@ set(
   display_server.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
+  default_emergency_cleanup.cpp
 )
 
 set(MIRSERVER_LINKAGE SHARED)
@@ -49,7 +50,7 @@ list(APPEND MIRSERVER_ARCHIVES
   mirsharedlogging
   mirsharedenv
   mirsharedsharedlibrary
-  mirsharedthreadname
+  mirsharedthread
   mirshell
   mirscene
   mirtime
@@ -65,6 +66,7 @@ list(APPEND MIRSERVER_LINKS
   mirplatform
   mirclient
   3rd_party
+  xcursorloader
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
@@ -96,7 +98,7 @@ else()
   )
 endif()
 
-set(MIRSERVER_ABI 22) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 23) # Be sure to increment MIR_VERSION_MINOR at the same time
 
 set_target_properties(
   mirserver

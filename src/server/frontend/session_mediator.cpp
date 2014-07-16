@@ -29,7 +29,7 @@
 #include "mir_toolkit/common.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer.h"
-#include "mir/graphics/cursor_images.h"
+#include "mir/input/cursor_images.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/geometry/dimensions.h"
 #include "mir/frontend/display_changer.h"
@@ -58,6 +58,7 @@ namespace ms = mir::scene;
 namespace mf = mir::frontend;
 namespace mfd=mir::frontend::detail;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 mf::SessionMediator::SessionMediator(
@@ -70,7 +71,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context,
-    std::shared_ptr<mg::CursorImages> const& cursor_images) :
+    std::shared_ptr<mi::CursorImages> const& cursor_images) :
     client_pid_(0),
     shell(shell),
     graphics_platform(graphics_platform),
@@ -464,7 +465,7 @@ void mf::SessionMediator::configure_cursor(
 
         if (cursor_request->has_name())
         {
-            auto const& image = cursor_images->image(cursor_request->name(), mg::default_cursor_size);
+            auto const& image = cursor_images->image(cursor_request->name(), mi::default_cursor_size);
             surface->set_cursor_image(image);
         }
         else
@@ -567,30 +568,6 @@ void mf::SessionMediator::start_prompt_session(
         report->session_start_prompt_session_called(session->name(), parameters.application_pid);
 
         weak_prompt_session = shell->start_prompt_session_for(session, parameters);
-    }
-    done->Run();
-}
-
-void mf::SessionMediator::add_prompt_provider(
-    ::google::protobuf::RpcController*,
-    const ::mir::protobuf::PromptProvider* request,
-    ::mir::protobuf::Void*,
-    ::google::protobuf::Closure* done)
-{
-    {
-        std::unique_lock<std::mutex> lock(session_mutex);
-        auto const session = weak_session.lock();
-
-        if (!session)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-        auto const prompt_session = weak_prompt_session.lock();
-
-        if (!prompt_session)
-            BOOST_THROW_EXCEPTION(std::logic_error("Invalid prompt session"));
-
-        report->session_add_prompt_provider_called(session->name(), request->pid());
-        shell->add_prompt_provider_process_for(prompt_session, request->pid());
     }
     done->Run();
 }
