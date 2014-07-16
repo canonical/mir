@@ -48,6 +48,8 @@ int mir_client_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display
 }
 }
 
+// TODO making this namespace scope extends its life slightly (and avoids a potential crash)
+// TODO but we should manage it and ensure it is only released after the last connection dies
 static mclm::MesaNativeDisplayContainer default_display_container;
 
 mcl::EGLNativeDisplayContainer& mcl::EGLNativeDisplayContainer::instance()
