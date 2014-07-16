@@ -230,8 +230,6 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_fbtarget)
         false,
         mock_buffer);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
-
-    //TODO: we have to know if the fb target is needed or not. if it is not, we should not copy the fd. 
 }
 
 TEST_F(HWCLayersTest, buffer_fence_updates)

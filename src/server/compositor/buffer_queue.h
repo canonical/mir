@@ -61,11 +61,11 @@ public:
     int buffers_ready_for_compositor() const override;
     int buffers_free_for_client() const override;
     bool framedropping_allowed() const;
+    bool is_a_current_buffer_user(void const* user_id) const;
 
 private:
     void give_buffer_to_client(graphics::Buffer* buffer,
         std::unique_lock<std::mutex> lock);
-    bool is_a_current_buffer_user(void const* user_id) const;
     void release(graphics::Buffer* buffer,
         std::unique_lock<std::mutex> lock);
     void drop_frame(std::unique_lock<std::mutex> lock);
@@ -86,11 +86,14 @@ private:
 
     int nbuffers;
     bool frame_dropping_enabled;
-    std::unique_ptr<FrameDroppingPolicy> framedrop_policy;
     graphics::BufferProperties the_properties;
 
     std::condition_variable snapshot_released;
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
+
+    // Ensure framedrop_policy gets destroyed first so the callback installed
+    // does not access dead objects.
+    std::unique_ptr<FrameDroppingPolicy> framedrop_policy;
 };
 
 }

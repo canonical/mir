@@ -46,11 +46,6 @@ void mir::report::lttng::SessionMediatorReport::session_start_prompt_session_cal
     mir_tracepoint(mir_server_session_mediator, session_start_prompt_session_called, app_name.c_str(), application_process);
 }
 
-void mir::report::lttng::SessionMediatorReport::session_add_prompt_provider_called(std::string const& app_name, pid_t provider_process)
-{
-    mir_tracepoint(mir_server_session_mediator, session_add_prompt_provider_called, app_name.c_str(), provider_process);
-}
-
 void mir::report::lttng::SessionMediatorReport::session_error(std::string const& app_name, char const* method, std::string const& what)
 {
     mir_tracepoint(mir_server_session_mediator, session_error, app_name.c_str(), method, what.c_str());

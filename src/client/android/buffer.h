@@ -22,7 +22,6 @@
 
 #include "mir/graphics/android/android_native_buffer.h"
 #include "../aging_buffer.h"
-#include "android_registrar.h"
 
 #include <system/window.h>
 #include <memory>
@@ -34,11 +33,12 @@ namespace client
 namespace android
 {
 
+class BufferRegistrar;
 class Buffer : public AgingBuffer
 {
 public:
     Buffer(
-        std::shared_ptr<AndroidRegistrar> const&,
+        std::shared_ptr<BufferRegistrar> const&,
         std::shared_ptr<const native_handle_t> const&,
         geometry::Size size,
         MirPixelFormat pf,
@@ -50,13 +50,14 @@ public:
     geometry::Stride stride() const;
     MirPixelFormat pixel_format() const;
     std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const;
+    void update_from(MirBufferPackage const& update_package);
 
     Buffer(const Buffer&) = delete;
     Buffer& operator=(const Buffer&) = delete;
 private:
     void pack_native_window_buffer();
 
-    std::shared_ptr<AndroidRegistrar> buffer_registrar;
+    std::shared_ptr<BufferRegistrar> buffer_registrar;
     std::shared_ptr<graphics::android::AndroidNativeBuffer> native_window_buffer;
     std::shared_ptr<const native_handle_t> native_handle;
     const MirPixelFormat buffer_pf;

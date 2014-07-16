@@ -113,19 +113,6 @@ struct PromptSessionContainer : testing::Test
     {
         return list_prompt_sessions_for(session).size();
     }
-
-    std::vector<std::shared_ptr<ms::PromptSession>> list_prompt_sessions_for(pid_t process)
-    {
-        std::vector<std::shared_ptr<ms::PromptSession>> results;
-        auto list_prompt_sessions = [&results](std::shared_ptr<ms::PromptSession> const& prompt_session)
-        {
-            results.push_back(prompt_session);
-        };
-
-        container.for_each_prompt_session_expecting_process(process, list_prompt_sessions);
-
-        return results;
-    }
 };
 }
 
@@ -239,35 +226,4 @@ TEST_F(PromptSessionContainer, associates_prompt_sessions_with_a_participant_unt
 
     EXPECT_THAT(list_participants_for(prompt_session1), ElementsAre(session2));
     EXPECT_THAT(list_participants_for(prompt_session2), ElementsAre(session1, session2));
-}
-
-TEST_F(PromptSessionContainer, waiting_process_removed_on_insert_matching_session)
-{
-    container.insert_prompt_session(prompt_session1);
-    container.insert_prompt_session(prompt_session2);
-
-    container.insert_waiting_process(prompt_session1.get(), process1);
-    container.insert_waiting_process(prompt_session1.get(), process1);
-    container.insert_waiting_process(prompt_session2.get(), process1);
-    // At this point, we're waiting for:
-    // prompt session 1 -> 2 process with pid = 1
-    // prompt session 2 -> 1 process with pid = 1
-
-    EXPECT_THAT(list_prompt_sessions_for(process1), ElementsAre(prompt_session1, prompt_session1, prompt_session2));
-
-    container.insert_participant(prompt_session1.get(), session3, ms::PromptSessionContainer::ParticipantType::prompt_provider);
-    // inserted session3 into prompt_session1 (pid=2) - wasn't waiting for it. no change.
-    EXPECT_THAT(list_prompt_sessions_for(process1), ElementsAre(prompt_session1, prompt_session1, prompt_session2));
-
-    container.insert_participant(prompt_session1.get(), session1, ms::PromptSessionContainer::ParticipantType::prompt_provider);
-    // inserted session1 into prompt_session1 (pid=1) - was waiting for it. should be 1 left for prompt_session1 & 1 for prompt_session2
-    EXPECT_THAT(list_prompt_sessions_for(process1), ElementsAre(prompt_session1, prompt_session2));
-
-    container.insert_participant(prompt_session2.get(), session1, ms::PromptSessionContainer::ParticipantType::prompt_provider);
-    // inserted session2 into prompt_session2 (pid=1) - was waiting for it. should be 1 left for prompt_session1
-    EXPECT_THAT(list_prompt_sessions_for(process1), ElementsAre(prompt_session1));
-
-    container.insert_participant(prompt_session1.get(), session2, ms::PromptSessionContainer::ParticipantType::prompt_provider);
-    // inserted session2 into prompt_session1 (pid=1) - was waiting for it. none left
-    EXPECT_THAT(list_prompt_sessions_for(process1), ElementsAre());
 }

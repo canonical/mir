@@ -11,6 +11,7 @@ set(
   UNIT_TEST_SOURCES
 
   test_gmock_fixes.cpp
+  test_recursive_read_write_mutex.cpp
   test_asio_main_loop.cpp
   shared_library_test.cpp
   test_raii.cpp
@@ -18,6 +19,7 @@ set(
   test_variable_length_array.cpp
   test_thread_name.cpp
   test_default_emergency_cleanup.cpp
+  test_basic_observers.cpp
 )
 
 add_subdirectory(options/)

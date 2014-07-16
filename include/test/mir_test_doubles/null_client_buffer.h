@@ -39,8 +39,9 @@ public:
     geometry::Stride stride() const { return geometry::Stride(); }
     MirPixelFormat pixel_format() const { return mir_pixel_format_invalid; }
     uint32_t age() const { return 0; }
-    void increment_age() { }
+    void increment_age() {}
     void mark_as_submitted() {}
+    void update_from(MirBufferPackage const&) {}
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const
     {
         return nullptr;
