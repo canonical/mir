@@ -174,6 +174,8 @@ private:
 
     struct SurfaceRelease;
 
+    MirConnection* next_valid{nullptr};
+
     void set_error_message(std::string const& error);
     void done_disconnect();
     void connected(mir_connected_callback callback, void * context);
