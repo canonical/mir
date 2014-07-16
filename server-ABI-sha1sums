@@ -33,7 +33,7 @@ dd8f054f786b9746d9e513f2656e931234b5283a  include/server/mir/scene/surface_creat
 cacb23805002e87fc6c4cb3e28bc77e800854cf1  include/server/mir/scene/null_session_listener.h
 993e9f458ffc4288d304413f3fa0b1dcc95a093d  include/server/mir/scene/surface_observer.h
 7f5f26000fd2312373817d05c488a6a950a47c82  include/server/mir/scene/snapshot.h
-76d292fa8f1d11fea56102aef0c19af8788eec87  include/server/mir/scene/prompt_session_manager.h
+27f614f98ad7c249d9b12dcca30a324220cdd25b  include/server/mir/scene/prompt_session_manager.h
 bbc9e2e2bb71634cd6f1c5c0430093e10e74fa23  include/server/mir/scene/surface_configurator.h
 5edf446380070f567500069e422d293e88468ee5  include/server/mir/scene/session_coordinator.h
 e343cef9f90a0a01f660936b890084ffce02710b  include/server/mir/scene/surface_factory.h
@@ -65,13 +65,13 @@ cb1f73934d150f21e60d4d8de3f15918d993dd98  include/server/mir/frontend/protobuf_c
 24e0ff92e7deb204f68a82de973f51c0ae07c935  include/server/mir/frontend/connector.h
 d21356fe32066c1d6146730c198683d1ad5786bd  include/server/mir/frontend/connector_report.h
 6f23950fef7acd372886ecb3e60b5706e34cbab7  include/server/mir/frontend/surface.h
-94abd2edc64a59cd6ff64f926b3726c6d7e690e0  include/server/mir/frontend/session_mediator_report.h
+0452fd9e7ccf081baf7635d8f699de47c52372ea  include/server/mir/frontend/session_mediator_report.h
 e5ea465ed7e05f0e1d6a837d0d6b3a04c2d7fc19  include/server/mir/frontend/session.h
 e6e92642301fc9bb85e1d38087a5dd84e5d30fd7  include/server/mir/frontend/connections.h
 65db331f1c0e956eced5c9fc73a2b2122dbc8dc7  include/server/mir/frontend/connection_creator.h
 4a09b130832249ae6d76b2d5ec6643ef2a35ff98  include/server/mir/frontend/fd_sets.h
 59d6703def2a0ff840e5eb75390a5af76fd93f58  include/server/mir/frontend/prompt_session.h
-5e5644f1fbe37a6cd2e17b285c109f60033f1f54  include/server/mir/frontend/shell.h
+a9a3d7b65866a7560d953bd02bdddaf28b4e6552  include/server/mir/frontend/shell.h
 fc7f9b93d6c12c6866a8752a1558c6dd19369864  include/server/mir/frontend/connection_context.h
 7fc88a2e39f6b87ecbd89a264612138e8fcfb10a  include/server/mir/frontend/protobuf_message_sender.h
 b729a7710c37d9f1fba56a6f8e8eae1c2559f57a  include/server/mir/frontend/session_authorizer.h
@@ -81,7 +81,7 @@ bbb15c910dbc8d7c9a4cc982890486b7e16197e4  include/server/mir/default_server_stat
 8192727cf5fa0b2b5798b2211c2c8a4ad65c9f60  include/server/mir/run_mir.h
 b74342d8ffab489405a4e12fce0c257ac9f8596c  include/server/mir/shell/focus_setter.h
 4f50c37bb8e36a1aa4918af6aa01b0f032ed0984  include/server/mir/shell/input_targeter.h
-450fd9b3c5c1797dcd07efaa3835a0775c76c999  include/server/mir/shell/session_coordinator_wrapper.h
+e5955e5ced820b68c125c7db1701f395d8375507  include/server/mir/shell/session_coordinator_wrapper.h
 6a2107b01feae13060d5c305804906e53c52e0be  include/server/mir/shell/focus_controller.h
 18e869c5b87ab8be4bc185d2cd55a93d699cde72  include/server/mir/shell/surface_coordinator_wrapper.h
 860c04f32b60e680140148dc9dc2295de145b9c1  include/server/mir/shell/display_layout.h
@@ -115,7 +115,7 @@ bfd87d9fb800c1c1b528c00185570abac569caf2  include/shared/mir/geometry/length.h
 7031270546292995d38e6de165600db21ff51c68  include/shared/mir/geometry/displacement.h
 7d3ede2c85e9febc1c4951a342939e3a6dacb99e  include/shared/mir/geometry/size.h
 b399dc08514751c86e23824612a52378dd9b1e23  include/shared/mir/geometry/dimensions.h
-fc0eae4d664d219343767ee4b908347d6e5a448a  include/shared/mir/geometry/rectangle.h
+65148c6d432950fb07589b6348afc4aab8b5079a  include/shared/mir/geometry/rectangle.h
 d954464ef2d20c2876db68c94512a443186da09b  include/shared/mir/geometry/point.h
 283cb0ecf9d544300681fc2ab86bec568e2d20ff  include/shared/mir/geometry/forward.h
 1b6632a6ee0a8758201739fb16c4eb1ce196344a  include/shared/mir/geometry/rectangles.h
@@ -193,4 +193,3 @@ b45f14082c4f8b29efaa1b13de795dcb29deb738  include/platform/mir/options/option.h
 f42afacda33e598f9c29f2f5b72932f75dd7d27c  include/platform/mir/options/program_option.h
 5879da8056f9a4ff8960f586d27117c87b110b2a  include/platform/mir/options/default_configuration.h
 3b5be510366571c992e0927cc5662af9b0611ae1  include/platform/mir/options/configuration.h
-
