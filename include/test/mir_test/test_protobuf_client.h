@@ -51,7 +51,6 @@ struct TestProtobufClient
     mir::protobuf::DisplayConfiguration disp_config;
     mir::protobuf::DisplayConfiguration disp_config_response;
     mir::protobuf::PromptSessionParameters prompt_session_parameters;
-    mir::protobuf::PromptProvider prompt_provider;
     mir::protobuf::Void prompt_session;
 
     MOCK_METHOD0(connect_done, void());
@@ -62,7 +61,6 @@ struct TestProtobufClient
     MOCK_METHOD0(drm_auth_magic_done, void());
     MOCK_METHOD0(display_configure_done, void());
     MOCK_METHOD0(prompt_session_start_done, void());
-    MOCK_METHOD0(prompt_session_add_prompt_provider_done, void());
     MOCK_METHOD0(prompt_session_stop_done, void());
 
     void on_connect_done();
@@ -103,8 +101,6 @@ struct TestProtobufClient
 
     void wait_for_prompt_session_start_done();
 
-    void wait_for_prompt_session_add_prompt_provider_done();
-
     void wait_for_prompt_session_stop_done();
 
     const int maxwait;
@@ -118,7 +114,6 @@ struct TestProtobufClient
     std::atomic<bool> tfd_done_called;
 
     WaitCondition wc_prompt_session_start;
-    WaitCondition wc_prompt_session_add;
     WaitCondition wc_prompt_session_stop;
 
     std::atomic<int> connect_done_count;

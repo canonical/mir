@@ -62,9 +62,6 @@ public:
     void for_each_prompt_session_with_participant(std::weak_ptr<Session> const& participant, ParticipantType participant_type, std::function<void(std::shared_ptr<PromptSession> const&)> f) const;
     void for_each_prompt_session_with_participant(std::weak_ptr<Session> const& participant, std::function<void(std::shared_ptr<PromptSession> const&, ParticipantType)> f) const;
 
-    void insert_waiting_process(PromptSession* prompt_session, pid_t process_id);
-    void for_each_prompt_session_expecting_process(pid_t process_id, std::function<void(std::shared_ptr<PromptSession> const&)> f) const;
-
 private:
     std::mutex mutable mutex;
 
@@ -116,40 +113,6 @@ private:
     PromptSessionParticipants participant_map;
     participant_by_prompt_session& prompt_session_index;
     participant_by_session& participant_index;
-
-    struct WaitingProcess
-    {
-        PromptSession* prompt_session;
-        pid_t process_id;
-    };
-
-    /**
-     * A multimap for associating PromptSessions <-> process ids
-     * indexed for determining which process ids a Prompt Session is waiting for
-     * and the prompt sessions which are waiting for a speicific process.
-     */
-    typedef multi_index_container<
-        WaitingProcess,
-        indexed_by<
-            ordered_non_unique<
-                composite_key<
-                    WaitingProcess,
-                    member<WaitingProcess, PromptSession*, &WaitingProcess::prompt_session>,
-                    member<WaitingProcess, pid_t, &WaitingProcess::process_id>
-                >
-            >,
-            ordered_non_unique<
-                member<WaitingProcess, pid_t, &WaitingProcess::process_id>
-            >
-        >
-    > WaitingPromptSessionsProcesses;
-
-    typedef nth_index<WaitingPromptSessionsProcesses,0>::type process_by_prompt_session;
-    typedef nth_index<WaitingPromptSessionsProcesses,1>::type prompt_session_by_process;
-
-    WaitingPromptSessionsProcesses waiting_process_map;
-    process_by_prompt_session& waiting_process_prompt_session_index;
-    prompt_session_by_process& waiting_process_index;
 };
 
 }

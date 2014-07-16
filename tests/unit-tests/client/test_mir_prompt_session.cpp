@@ -48,12 +48,6 @@ struct MockProtobufServer : mir::protobuf::DisplayServer
                       ::mir::protobuf::Void* /*response*/,
                       ::google::protobuf::Closure* /*done*/));
 
-    MOCK_METHOD4(add_prompt_provider,
-                 void(::google::protobuf::RpcController* /*controller*/,
-                      const ::mir::protobuf::PromptProvider* /*request*/,
-                      ::mir::protobuf::Void* /*response*/,
-                      ::google::protobuf::Closure* /*done*/));
-
     MOCK_METHOD4(stop_prompt_session,
                  void(::google::protobuf::RpcController* /*controller*/,
                       ::mir::protobuf::Void const* /*request*/,
@@ -77,16 +71,6 @@ public:
                 response->clear_error();
                 done->Run();
             }};
-    }
-
-    void add_prompt_provider(::google::protobuf::RpcController* /*controller*/,
-                             const ::mir::protobuf::PromptProvider* /*request*/,
-                             ::mir::protobuf::Void* /*response*/,
-                             ::google::protobuf::Closure* done)
-    {
-        if (server_thread.joinable())
-            server_thread.join();
-        server_thread = std::thread{[done, this] { done->Run(); }};
     }
 
     void stop_prompt_session(::google::protobuf::RpcController* /*controller*/,

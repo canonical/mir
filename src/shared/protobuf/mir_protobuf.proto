@@ -192,10 +192,6 @@ message SocketFD {
   optional string error = 127;
 }
 
-message PromptProvider {
-  required int32 pid = 1;
-}
-
 message PromptSessionParameters {
   required int32 application_pid = 1;
 }
@@ -222,6 +218,5 @@ service DisplayServer {
   rpc new_fds_for_prompt_providers(SocketFDRequest) returns (SocketFD);
 
   rpc start_prompt_session(PromptSessionParameters) returns (Void);
-  rpc add_prompt_provider(PromptProvider) returns (Void);
   rpc stop_prompt_session(Void) returns (Void);
 }
