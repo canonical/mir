@@ -43,10 +43,11 @@ std::string const log_opt_val{"log"};
 std::string const lttng_opt_val{"lttng"};
 std::string const default_platform_lib{"libmirclientplatform.so"};
 
+static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
+
 mir::SharedLibrary const* load_library(std::string const& libname)
 {
     // There's no point in loading twice, and it isn't safe to unload...
-    static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
 
     if (auto& ptr = libraries_cache[libname])
     {
