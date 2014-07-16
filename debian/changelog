@@ -10,6 +10,17 @@ mir (0.5.0-0ubuntu1) UNRELEASED; urgency=medium
       . DefaultServerConfiguration: "clock" member is now static.
       . SessionAuthorizer: New functions.
       . ServerConfiguration: New function added: the_prompt_connector().
+    - Enhancements:
+      . Add AddressSanitizer cmake build type.
+      . frontend, client API, tests: add support for prompt session
+        permissions and for client detecting errors.
+      . server: Ensure our emergency cleanup handling infrastructure is
+        signal-safe.
+      . Implement and enable an xcursor based image loader for cursors.
+      . Fix warnings raised by the new g++-4.9.
+      . shared, scene: Introduce a generic listener collection.
+      . MirMotionEvent: Define a struct typedef to allow for
+        pointer_coordinates to be used individually.
     - Bugs fixed:
       . Nexus 10 leaks during overlay operations (LP: #1331769)
       . MultiThreadedCompositor deadlocks (LP: #1335311)
