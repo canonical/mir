@@ -20,6 +20,8 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
+#include <mutex>
+
 namespace mcl = mir::client;
 namespace mcla = mcl::android;
 
