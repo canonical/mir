@@ -99,14 +99,14 @@ static bool socket_error_is_transient(int error_code)
     return (error_code == EINTR);
 }
 
-void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes)
+void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested)
 {
     size_t bytes_read{0};
-    while(bytes_read < read_bytes)
+    while(bytes_read < bytes_requested)
     {
         ssize_t const result = recv(socket_fd,
                                     static_cast<uint8_t*>(buffer) + bytes_read,
-                                    read_bytes - bytes_read,
+                                    bytes_requested - bytes_read,
                                     MSG_WAITALL | MSG_NOSIGNAL);
 
         if (result == 0)
@@ -136,16 +136,16 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes)
     }
 }
 
-void mclr::StreamSocketTransport::receive_data(void* buffer, size_t read_bytes, std::vector<int>& fds)
+void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested, std::vector<int>& fds)
 {
     size_t bytes_read{0};
     unsigned fds_read{0};
-    while (bytes_read < read_bytes)
+    while (bytes_read < bytes_requested)
     {
         // Store the data in the buffer requested
         struct iovec iov;
         iov.iov_base = static_cast<uint8_t*>(buffer) + bytes_read;
-        iov.iov_len = read_bytes - bytes_read;
+        iov.iov_len = bytes_requested - bytes_read;
         
         // Allocate space for control message
         static auto const builtin_n_fds = 5;
