@@ -39,8 +39,6 @@
 
 #include <boost/throw_exception.hpp>
 
-#include "builtin_cursor_images.h"
-
 #include <map>
 
 namespace mg = mir::graphics;
@@ -70,22 +68,31 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
     return graphics_platform(
         [this]()->std::shared_ptr<mg::Platform>
         {
-            auto graphics_lib = mir::load_library(the_options()->get<std::string>(options::platform_graphics_lib));
-
             if (!the_options()->is_set(options::host_socket_opt))
             {
                 // fallback to standalone if host socket is unset
+                auto graphics_lib = mir::load_library(the_options()->get<std::string>(options::platform_graphics_lib));
                 auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
                 return create_platform(the_options(), the_emergency_cleanup(), the_display_report());
             }
-
-            auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
 
             return std::make_shared<mir::graphics::nested::NestedPlatform>(
                 the_host_connection(),
                 the_input_dispatcher(),
                 the_display_report(),
-                create_native_platform(the_display_report()));
+                the_graphics_native_platform());
+        });
+}
+
+std::shared_ptr<mg::NativePlatform>  mir::DefaultServerConfiguration::the_graphics_native_platform()
+{
+    return graphics_native_platform(
+        [this]()
+        {
+            auto graphics_lib = mir::load_library(the_options()->get<std::string>(options::platform_graphics_lib));
+            auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
+
+            return create_native_platform(the_display_report());
         });
 }
 
@@ -142,28 +149,6 @@ mir::DefaultServerConfiguration::the_cursor()
                 return hardware_cursor;
             else
                 return std::make_shared<NullCursor>();
-        });
-}
-
-std::shared_ptr<mg::CursorImage>
-mir::DefaultServerConfiguration::the_default_cursor_image()
-{
-    static geometry::Size const default_cursor_size = {geometry::Width{64},
-                                                       geometry::Height{64}};
-    return default_cursor_image(
-        [this]()
-        {
-            return the_cursor_images()->image(mir_default_cursor_name, default_cursor_size);
-        });
-}
-
-std::shared_ptr<mg::CursorImages>
-mir::DefaultServerConfiguration::the_cursor_images()
-{
-    return cursor_images(
-        [this]()
-        {
-            return std::make_shared<mg::BuiltinCursorImages>();
         });
 }
 

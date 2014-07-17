@@ -98,6 +98,7 @@ class PromptSessionManager;
 }
 namespace graphics
 {
+class NativePlatform;
 class Platform;
 class Display;
 class BufferInitializer;
@@ -105,7 +106,6 @@ class DisplayReport;
 class GraphicBufferAllocator;
 class Cursor;
 class CursorImage;
-class CursorImages;
 class GLConfig;
 class GLProgramFactory;
 namespace nested { class HostConnection; }
@@ -124,6 +124,7 @@ class InputSender;
 class InputSendObserver;
 class NestedInputRelay;
 class EventHandler;
+class CursorImages;
 namespace android
 {
 class InputRegistrar;
@@ -157,6 +158,7 @@ public:
      * dependencies of DisplayServer on the rest of the Mir
      *  @{ */
     virtual std::shared_ptr<frontend::Connector>    the_connector();
+    virtual std::shared_ptr<frontend::Connector>    the_prompt_connector();
     virtual std::shared_ptr<graphics::Display>      the_display();
     virtual std::shared_ptr<compositor::Compositor> the_compositor();
     virtual std::shared_ptr<input::InputManager>    the_input_manager();
@@ -164,6 +166,7 @@ public:
     virtual std::shared_ptr<ServerStatusListener>   the_server_status_listener();
     virtual std::shared_ptr<DisplayChanger>         the_display_changer();
     virtual std::shared_ptr<graphics::Platform>     the_graphics_platform();
+    virtual std::shared_ptr<graphics::NativePlatform>  the_graphics_native_platform();
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
     virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher();
     virtual std::shared_ptr<input::InputSender>     the_input_sender();
@@ -187,7 +190,7 @@ public:
     virtual std::shared_ptr<graphics::DisplayReport> the_display_report();
     virtual std::shared_ptr<graphics::Cursor> the_cursor();
     virtual std::shared_ptr<graphics::CursorImage> the_default_cursor_image();
-    virtual std::shared_ptr<graphics::CursorImages> the_cursor_images();
+    virtual std::shared_ptr<input::CursorImages> the_cursor_images();
 
     /** @} */
 
@@ -222,6 +225,7 @@ public:
      * internal dependencies of frontend
      *  @{ */
     virtual std::shared_ptr<frontend::ConnectionCreator>      the_connection_creator();
+    virtual std::shared_ptr<frontend::ConnectionCreator>      the_prompt_connection_creator();
     virtual std::shared_ptr<frontend::ConnectorReport>        the_connector_report();
     /** @} */
     /** @} */
@@ -290,6 +294,12 @@ protected:
     virtual std::shared_ptr<graphics::GLProgramFactory> the_gl_program_factory();
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
+    virtual std::shared_ptr<frontend::ProtobufIpcFactory> new_ipc_factory(
+        std::shared_ptr<frontend::SessionAuthorizer> const& session_authorizer);
+
+    // TODO Remove after 0.5.0 is branched: the_ipc_factory() is used by
+    // TODO clients that use the "PrivateProtobuf" but is it now deprecated
+    // TODO and only retained as a migration aid.
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
         std::shared_ptr<frontend::Shell> const& shell,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
@@ -318,6 +328,7 @@ protected:
     CachedPtr<droidinput::InputDispatcherPolicyInterface> android_dispatcher_policy;
 
     CachedPtr<frontend::Connector>   connector;
+    CachedPtr<frontend::Connector>   prompt_connector;
 
     CachedPtr<input::InputConfiguration> input_configuration;
 
@@ -331,20 +342,23 @@ protected:
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<graphics::Platform>     graphics_platform;
+    CachedPtr<graphics::NativePlatform>    graphics_native_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::Display>      display;
     CachedPtr<graphics::Cursor>       cursor;
     CachedPtr<graphics::CursorImage>  default_cursor_image;
-    CachedPtr<graphics::CursorImages> cursor_images;
+    CachedPtr<input::CursorImages> cursor_images;
 
     CachedPtr<frontend::ConnectorReport>   connector_report;
+    // TODO remove after 0.5.0 is branched - c.f. the_ipc_factory()
     CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
     CachedPtr<frontend::SessionMediatorReport> session_mediator_report;
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<frontend::EventSink> global_event_sink;
     CachedPtr<frontend::ConnectionCreator> connection_creator;
+    CachedPtr<frontend::ConnectionCreator> prompt_connection_creator;
     CachedPtr<frontend::Screencast> screencast;
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
@@ -367,7 +381,8 @@ protected:
     CachedPtr<compositor::CompositorReport> compositor_report;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
-    CachedPtr<time::Clock> clock;
+    // static to workaround the singleton clock in AsioMainLoop when running multiple servers
+    static CachedPtr<time::Clock> clock;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;

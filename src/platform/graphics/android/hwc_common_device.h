@@ -33,6 +33,7 @@ namespace graphics
 namespace android
 {
 
+class HwcWrapper;
 class HWCVsyncCoordinator;
 class HWCCommonDevice;
 struct HWCCallbacks
@@ -51,19 +52,19 @@ public:
     bool apply_orientation(MirOrientation orientation) const;
 
 protected:
-    HWCCommonDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+    HWCCommonDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
                     std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
     std::shared_ptr<HWCVsyncCoordinator> const coordinator;
     std::unique_lock<std::mutex> lock_unblanked();
 
 private:
-    int turn_screen_on() const noexcept(true);
-    int turn_screen_off() const noexcept(true);
+    void turn_screen_on() const;
+    void turn_screen_off() const;
 
     HWCCallbacks callbacks;
 
-    std::shared_ptr<hwc_composer_device_1> const hwc_device;
+    std::shared_ptr<HwcWrapper> const hwc_device;
 
     std::mutex blanked_mutex;
     std::condition_variable blanked_cond;

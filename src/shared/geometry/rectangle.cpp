@@ -18,7 +18,7 @@
 
 #include "mir/geometry/rectangle.h"
 
-#include <cassert>
+#include <algorithm>
 
 namespace geom = mir::geometry;
 
@@ -75,4 +75,17 @@ bool geom::Rectangle::overlaps(Rectangle const& r) const
     {
         return false;
     }
+}
+
+geom::Rectangle geom::Rectangle::intersection_with(Rectangle const& r) const
+{
+    int const a = std::max(top_left.x.as_int(), r.top_left.x.as_int());
+    int const b = std::min(bottom_right().x.as_int(), r.bottom_right().x.as_int());
+    int const c = std::max(top_left.y.as_int(), r.top_left.y.as_int());
+    int const d = std::min(bottom_right().y.as_int(), r.bottom_right().y.as_int());
+
+    if (a < b && c < d)
+        return {{a, c}, {b - a, d - c}};
+    else
+        return geom::Rectangle();
 }

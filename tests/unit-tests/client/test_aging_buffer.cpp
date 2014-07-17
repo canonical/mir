@@ -55,6 +55,10 @@ struct MyAgingBuffer : public mcl::AgingBuffer
     {
         exit(1);
     }
+    
+    void update_from(MirBufferPackage const&) override
+    {
+    }
 };
 
 TEST(MirClientAgingBufferTest, buffer_age_starts_at_zero)

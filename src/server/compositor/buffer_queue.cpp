@@ -245,6 +245,10 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         current_buffer_users.push_back(user_id);
         current_compositor_buffer = pop(ready_to_composite_queue);
     }
+    else if (current_buffer_users.empty())
+    {   // current_buffer_users and ready_to_composite_queue both empty
+        current_buffer_users.push_back(user_id);
+    }
 
     buffers_sent_to_compositor.push_back(current_compositor_buffer);
 

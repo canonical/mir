@@ -23,6 +23,7 @@
 #include "published_socket_connector.h"
 
 #include "mir/frontend/protobuf_connection_creator.h"
+#include "mir/frontend/session_authorizer.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 
@@ -34,9 +35,10 @@ mir::DefaultServerConfiguration::the_connection_creator()
 {
     return connection_creator([this]
         {
+            auto const session_authorizer = the_session_authorizer();
             return std::make_shared<mf::ProtobufConnectionCreator>(
-                the_ipc_factory(the_frontend_shell(), the_buffer_allocator()),
-                the_session_authorizer(),
+                new_ipc_factory(session_authorizer),
+                session_authorizer,
                 the_message_processor_report());
         });
 }
@@ -68,6 +70,72 @@ mir::DefaultServerConfiguration::the_connector()
         });
 }
 
+std::shared_ptr<mf::ConnectionCreator>
+mir::DefaultServerConfiguration::the_prompt_connection_creator()
+{
+    struct PromptSessionAuthorizer : public mf::SessionAuthorizer
+    {
+        bool connection_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
+
+        bool configure_display_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
+
+        bool screencast_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
+
+        bool prompt_session_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
+    };
+
+    return prompt_connection_creator([this]
+        {
+            auto const session_authorizer = std::make_shared<PromptSessionAuthorizer>();
+            return std::make_shared<mf::ProtobufConnectionCreator>(
+                new_ipc_factory(session_authorizer),
+                session_authorizer,
+                the_message_processor_report());
+        });
+}
+
+std::shared_ptr<mf::Connector>
+mir::DefaultServerConfiguration::the_prompt_connector()
+{
+    return prompt_connector(
+        [&,this]() -> std::shared_ptr<mf::Connector>
+        {
+            auto const threads = the_options()->get<int>(options::frontend_threads_opt);
+
+            if (the_options()->is_set(options::prompt_socket_opt))
+            {
+                return std::make_shared<mf::PublishedSocketConnector>(
+                    the_socket_file() + "_trusted",
+                    the_prompt_connection_creator(),
+                    threads,
+                    *the_emergency_cleanup(),
+                    the_connector_report());
+            }
+            else
+            {
+                return std::make_shared<mf::BasicConnector>(
+                    the_prompt_connection_creator(),
+                    threads,
+                    the_connector_report());
+            }
+        });
+}
+
+// TODO Remove after 0.5.0 is branched: the_ipc_factory() is used by
+// TODO clients that use the "PrivateProtobuf" but is it now deprecated
+// TODO and only retained as a migration aid.
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::the_ipc_factory(
     std::shared_ptr<mf::Shell> const& shell,
@@ -86,4 +154,19 @@ mir::DefaultServerConfiguration::the_ipc_factory(
                 the_session_authorizer(),
                 the_cursor_images());
         });
+}
+
+std::shared_ptr<mir::frontend::ProtobufIpcFactory>
+mir::DefaultServerConfiguration::new_ipc_factory(
+    std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer)
+{
+    return std::make_shared<mf::DefaultIpcFactory>(
+        the_frontend_shell(),
+        the_session_mediator_report(),
+        the_graphics_platform(),
+        the_frontend_display_changer(),
+        the_buffer_allocator(),
+        the_screencast(),
+        session_authorizer,
+        the_cursor_images());
 }

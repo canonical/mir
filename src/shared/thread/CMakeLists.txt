@@ -14,10 +14,11 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-add_library(mirsharedthreadname STATIC
+add_library(mirsharedthread STATIC
   thread_name.cpp
+  recursive_read_write_mutex.cpp
 )
 
 target_link_libraries(
-    mirsharedthreadname
+    mirsharedthread
 )

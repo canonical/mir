@@ -44,16 +44,6 @@ MirPromptSession *mir_connection_create_prompt_session_sync(
     void *context);
 
 /**
- * Add a prompt provider process id to the prompt session
- *   \param [in] prompt_session  The prompt session
- *   \param [in] provider_pid    The process id of the prompt provider to add
- *   \return                     True if the process id was added, false otherwise
- */
-MirBool mir_prompt_session_add_prompt_provider_sync(
-    MirPromptSession *prompt_session,
-    pid_t provider_pid);
-
-/**
  * Allocate some FDs for prompt providers to connect on
  *
  * Prompt helpers need to allocate connection FDs it will pass to
@@ -78,6 +68,23 @@ MirWaitHandle* mir_prompt_session_new_fds_for_prompt_providers(
  *   \param [in] prompt_session  The prompt session
  */
 void mir_prompt_session_release_sync(MirPromptSession *prompt_session);
+
+/**
+ * Test for a valid prompt session
+ *   \param [in] prompt_session  The prompt session
+ *   \return                     True if prompt_session is valid, false otherwise
+ */
+MirBool mir_prompt_session_is_valid(MirPromptSession *prompt_session);
+
+/**
+ * Retrieve a text description of the last error. The returned string is owned
+ * by the library and remains valid until the prompt session has been released.
+ *   \param [in] prompt_session  The prompt session
+ *   \return                 A text description of any error resulting in an
+ *                           invalid connection, or the empty string "" if the
+ *                           connection is valid.
+ */
+char const *mir_prompt_session_error_message(MirPromptSession *prompt_session);
 
 #ifdef __cplusplus
 }
