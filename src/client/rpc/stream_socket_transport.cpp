@@ -108,10 +108,22 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_reques
     size_t bytes_read{0};
     while(bytes_read < bytes_requested)
     {
-        ssize_t const result = recv(socket_fd,
-                                    static_cast<uint8_t*>(buffer) + bytes_read,
-                                    bytes_requested - bytes_read,
-                                    MSG_WAITALL | MSG_NOSIGNAL);
+        // Store the data in the buffer requested
+        struct iovec iov;
+        iov.iov_base = static_cast<uint8_t*>(buffer) + bytes_read;
+        iov.iov_len = bytes_requested - bytes_read;
+
+        // Message to read
+        struct msghdr header;
+        header.msg_name = NULL;
+        header.msg_namelen = 0;
+        header.msg_iov = &iov;
+        header.msg_iovlen = 1;
+        header.msg_controllen = 0;
+        header.msg_control = nullptr;
+        header.msg_flags = 0;
+
+        ssize_t const result = recvmsg(socket_fd, &header, MSG_NOSIGNAL | MSG_WAITALL);
 
         if (result == 0)
         {
@@ -136,6 +148,12 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_reques
                         boost::enable_error_info(socket_error("Failed to read message from server"))
                              << boost::errinfo_errno(errno));
         }
+
+        if (header.msg_flags & MSG_CTRUNC)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Unexpectedly received fds"));
+        }
+
         bytes_read += result;
     }
 }
