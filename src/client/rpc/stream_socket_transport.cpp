@@ -101,6 +101,10 @@ static bool socket_error_is_transient(int error_code)
 
 void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested)
 {
+    if (bytes_requested == 0)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Attempted to receive 0 bytes"));
+    }
     size_t bytes_read{0};
     while(bytes_read < bytes_requested)
     {
@@ -138,6 +142,10 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_reques
 
 void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested, std::vector<int>& fds)
 {
+    if (bytes_requested == 0)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Attempted to receive 0 bytes"));
+    }
     size_t bytes_read{0};
     unsigned fds_read{0};
     while (bytes_read < bytes_requested)

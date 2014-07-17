@@ -1020,3 +1020,13 @@ TYPED_TEST(StreamTransportTest, SendsFullMessagesWhenInterrupted)
 
     EXPECT_EQ(expected, received);
 }
+
+TYPED_TEST(StreamTransportTest, ReadingZeroBytesIsAnError)
+{
+    EXPECT_THROW(this->transport->receive_data(nullptr, 0),
+                 std::logic_error);
+
+    std::vector<int> dummy;
+    EXPECT_THROW(this->transport->receive_data(nullptr, 0, dummy),
+                 std::logic_error);
+}
