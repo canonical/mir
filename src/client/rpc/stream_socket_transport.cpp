@@ -101,6 +101,13 @@ static bool socket_error_is_transient(int error_code)
 
 void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested)
 {
+    /*
+     * Explicitly implement this, rather than delegating to receive_data(buffer, size, fds)
+     * so that we can catch when we discard file descriptors.
+     *
+     * See comment for DISABLED_ReceivingMoreFdsThanExpectedInMultipleChunksRaisesException
+     * test in test_stream_transport.cpp for details.
+     */
     if (bytes_requested == 0)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Attempted to receive 0 bytes"));
