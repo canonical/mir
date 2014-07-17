@@ -25,14 +25,28 @@ namespace mcla = mcl::android;
 
 namespace
 {
-// making this namespace scope extends its life until the library is unloaded
-// (and avoids a potential crash)
-mcla::AndroidNativeDisplayContainer default_display_container;
+// default_display_container needs to live until the library is unloaded
+std::mutex default_display_container_mutex;
+mcla::AndroidNativeDisplayContainer* default_display_container{nullptr};
+
+extern "C" int __attribute__((destructor)) destroy()
+{
+    std::lock_guard<std::mutex> lock(default_display_container_mutex);
+
+    delete default_display_container;
+
+    return 0;
+}
 }
 
 mcl::EGLNativeDisplayContainer& mcl::EGLNativeDisplayContainer::instance()
 {
-    return default_display_container;
+    std::lock_guard<std::mutex> lock(default_display_container_mutex);
+
+    if (!default_display_container)
+        default_display_container = new mcla::AndroidNativeDisplayContainer;
+
+    return *default_display_container;
 }
 
 mcla::AndroidNativeDisplayContainer::AndroidNativeDisplayContainer()
