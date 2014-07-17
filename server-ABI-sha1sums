@@ -26,7 +26,7 @@ c7328ef5ea4531c0fa981b3e15a69ea5c8162d09  include/server/mir/compositor/display_
 215f6cf88826381cd3ec37a6d2179a70093c0bc5  include/server/mir/display_changer.h
 8402804d05851f85b613a50b18620d3ce1a4e147  include/server/mir/server_configuration.h
 5ba863e9bb4dc9802aa74a7864f576df25142c2d  include/server/mir/logging/glog_logger.h
-df6962be1080bdb39bdd5a429039fa511db53b2a  include/server/mir/default_server_configuration.h
+9461b406b98c15d66378ff89bcc2ce9a2e0fe767  include/server/mir/default_server_configuration.h
 a35c5495d8fd28fc0e375b17495fc5caab51b329  include/server/mir/emergency_cleanup.h
 e5e4dd7bcaf186810043fa0f05be42d7e49b0843  include/server/mir/scene/surface_coordinator.h
 dd8f054f786b9746d9e513f2656e931234b5283a  include/server/mir/scene/surface_creation_parameters.h
