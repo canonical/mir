@@ -23,9 +23,12 @@
 namespace mcl = mir::client;
 namespace mcla = mcl::android;
 
-// TODO making this namespace scope extends its life slightly (and avoids a potential crash)
-// TODO but we should manage it and ensure it is only released after the last connection dies
-static mcla::AndroidNativeDisplayContainer default_display_container;
+namespace
+{
+// making this namespace scope extends its life until the library is unloaded
+// (and avoids a potential crash)
+mcla::AndroidNativeDisplayContainer default_display_container;
+}
 
 mcl::EGLNativeDisplayContainer& mcl::EGLNativeDisplayContainer::instance()
 {
