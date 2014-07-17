@@ -19,10 +19,10 @@
 #include "cutils/log.h"  // Get the final value of LOG_NDEBUG
 #include <gtest/gtest.h>
 
-TEST(Macros, android_logging_is_disabled)
+TEST(Macros, android_verbose_logging_is_disabled)
 {
-    // Ensure Android logging is disabled. It requires significant
-    // CPU time to constantly format messages...
+    // Ensure verbose logging (ALOGV) is removed. It requires significant
+    // CPU time to constantly format some verbose messages...
     // This is a regression test for performance bug LP: #1343074.
     EXPECT_EQ(1, LOG_NDEBUG);
 }

@@ -88,8 +88,8 @@ else()
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 endif()
 
-# Define LOG_NDEBUG=1 to ensure android logging calls are not compiled in and
-# waste CPU time.
+# Define LOG_NDEBUG=1 to ensure Android ALOGV calls are not compiled in to
+# consume CPU time...
 add_definitions(-DLOG_NDEBUG=1)
 
 enable_testing()
