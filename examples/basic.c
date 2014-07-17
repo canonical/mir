@@ -88,16 +88,9 @@ static void surface_release_callback(MirSurface *old_surface, void *context)
 }
 ///\internal [Callback_tag]
 
-MirDemoState mcd;
-
-void demo_closedown()
-{
-    mir_connection_release(mcd.connection);
-}
-
 void demo_client(const char* server, int buffer_swap_count)
 {  
-    atexit(&demo_closedown);
+    MirDemoState mcd;
 
     mcd.connection = 0;
     mcd.surface = 0;
@@ -193,7 +186,7 @@ void demo_client(const char* server, int buffer_swap_count)
 
     ///\internal [connection_release_tag]
     // We should release our connection
-//    mir_connection_release(mcd.connection);
+    mir_connection_release(mcd.connection);
     puts("Connection released");
     ///\internal [connection_release_tag]
 }
