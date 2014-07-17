@@ -185,7 +185,8 @@ auto mir::DefaultServerConfiguration::the_host_connection()
 
             return std::make_shared<graphics::nested::MirClientHostConnection>(
                 host_socket,
-                my_name);
+                my_name,
+                the_host_lifecycle_event_listener());
         });
 }
 
