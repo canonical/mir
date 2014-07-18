@@ -81,8 +81,14 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
     droidinput::InputEvent *android_event;
     uint32_t event_sequence_id;
 
+    // Input events use CLOCK_REALTIME, and so we must...
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+
+    nsecs_t frame_time = ts.tv_sec * 1000000000LL + ts.tv_nsec;
+
    if(input_consumer->consume(&event_factory, true,
-        -1, &event_sequence_id, &android_event) != droidinput::WOULD_BLOCK)
+        frame_time, &event_sequence_id, &android_event) != droidinput::WOULD_BLOCK)
     {
         mia::Lexicon::translate(android_event, ev);
 
