@@ -223,6 +223,7 @@ TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
             mir_connection_release(connection);
         }
 
+
         Flag& next_buffer_done;
         Flag& server_done;
     };
@@ -290,6 +291,8 @@ TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clie
 
             surface_created.set();
             server_done.wait();
+
+            mir_connection_release(connection);
         }
 
         Flag& surface_created;

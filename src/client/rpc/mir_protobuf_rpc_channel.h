@@ -16,17 +16,17 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_CLIENT_RPC_MIR_SOCKET_RPC_CHANNEL_H_
-#define MIR_CLIENT_RPC_MIR_SOCKET_RPC_CHANNEL_H_
+#ifndef MIR_CLIENT_RPC_MIR_PROTOBUF_RPC_CHANNEL_H_
+#define MIR_CLIENT_RPC_MIR_PROTOBUF_RPC_CHANNEL_H_
 
 #include "mir_basic_rpc_channel.h"
-
-#include <boost/asio.hpp>
+#include "stream_transport.h"
 
 #include <google/protobuf/service.h>
 #include <google/protobuf/descriptor.h>
 
 #include <thread>
+#include <atomic>
 
 namespace mir
 {
@@ -50,56 +50,43 @@ namespace rpc
 
 class RpcReport;
 
-class MirSocketRpcChannel : public MirBasicRpcChannel
+class MirProtobufRpcChannel :
+        public MirBasicRpcChannel,
+        public StreamTransport::Observer
 {
 public:
-    MirSocketRpcChannel(std::string const& endpoint,
-                        std::shared_ptr<SurfaceMap> const& surface_map,
-                        std::shared_ptr<DisplayConfiguration> const& disp_config,
-                        std::shared_ptr<RpcReport> const& rpc_report,
-                        std::shared_ptr<LifecycleControl> const& lifecycle_control,
-                        std::shared_ptr<EventSink> const& event_sink);
+    MirProtobufRpcChannel(std::unique_ptr<StreamTransport> transport,
+                          std::shared_ptr<SurfaceMap> const& surface_map,
+                          std::shared_ptr<DisplayConfiguration> const& disp_config,
+                          std::shared_ptr<RpcReport> const& rpc_report,
+                          std::shared_ptr<LifecycleControl> const& lifecycle_control,
+                          std::shared_ptr<EventSink> const& event_sink);
 
-    MirSocketRpcChannel(int native_socket,
-                        std::shared_ptr<SurfaceMap> const& surface_map,
-                        std::shared_ptr<DisplayConfiguration> const& disp_config,
-                        std::shared_ptr<RpcReport> const& rpc_report,
-                        std::shared_ptr<LifecycleControl> const& lifecycle_control,
-                        std::shared_ptr<EventSink> const& event_sink);
-    ~MirSocketRpcChannel();
+    ~MirProtobufRpcChannel() = default;
 
+    void on_data_available() override;
+    void on_disconnected() override;
 private:
-    void init();
-
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
         const google::protobuf::Message* parameters, google::protobuf::Message* response,
         google::protobuf::Closure* complete);
+
     std::shared_ptr<RpcReport> const rpc_report;
     detail::PendingCallCache pending_calls;
-    std::thread io_service_thread;
-    boost::asio::io_service io_service;
-    boost::asio::io_service::work work;
-    boost::asio::local::stream_protocol::socket socket;
 
-    static size_t const size_of_header = 2;
-    unsigned char header_bytes[size_of_header];
-    std::vector<char> body_bytes;
+    static constexpr size_t size_of_header = 2;
+    detail::SendBuffer header_bytes;
+    detail::SendBuffer body_bytes;
 
     void receive_file_descriptors(google::protobuf::Message* response, google::protobuf::Closure* complete);
-    void receive_file_descriptors(std::vector<int> &fds);
     template<class MessageType>
     void receive_any_file_descriptors_for(MessageType* response);
     void send_message(mir::protobuf::wire::Invocation const& body,
                       mir::protobuf::wire::Invocation const& invocation);
-    void on_header_read(const boost::system::error_code& error);
 
     void read_message();
     void process_event_sequence(std::string const& event);
 
-    size_t read_message_header();
-
-    void read_message_body(mir::protobuf::wire::Result& result,
-                           size_t const body_size);
     void notify_disconnected();
 
     std::shared_ptr<SurfaceMap> surface_map;
@@ -107,10 +94,21 @@ private:
     std::shared_ptr<LifecycleControl> lifecycle_control;
     std::shared_ptr<EventSink> event_sink;
     std::atomic<bool> disconnected;
+    std::mutex read_mutex;
+    std::mutex write_mutex;
+
+    /* We use the guarantee that the transport's destructor blocks until
+     * pending processing has finished to ensure that on_data_available()
+     * isn't called after the members it relies on are destroyed.
+     *
+     * This means the transport field must appear after any field used
+     * by on_data_available. For simplicity, put it last.
+     */
+    std::unique_ptr<StreamTransport> transport;
 };
 
 }
 }
 }
 
-#endif /* MIR_CLIENT_RPC_MIR_SOCKET_RPC_CHANNEL_H_ */
+#endif /* MIR_CLIENT_RPC_MIR_PROTOBUF_RPC_CHANNEL_H_ */
