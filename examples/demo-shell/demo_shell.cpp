@@ -30,6 +30,8 @@
 #include "mir/input/composite_event_filter.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/destination_alpha.h"
+#include "mir/compositor/renderer_factory.h"
+#include "mir/shell/host_lifecycle_event_listener.h"
 
 #include <iostream>
 
@@ -40,6 +42,8 @@ namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace mo = mir::options;
 namespace mc = mir::compositor;
+namespace msh = mir::shell;
+
 namespace mir
 {
 namespace examples
@@ -123,6 +127,24 @@ public:
             composite_filter->append(filter);
 
         return composite_filter;
+    }
+
+    class NestedLifecycleEventListener : public msh::HostLifecycleEventListener
+    {
+    public:
+        virtual void lifecycle_event_occurred(MirLifecycleState state) override
+        {
+            printf("Lifecycle event occurred : state = %d\n", state);
+        }
+    };
+
+    std::shared_ptr<msh::HostLifecycleEventListener> the_host_lifecycle_event_listener() override
+    {
+       return host_lifecycle_event_listener(
+           []()
+           {
+               return std::make_shared<NestedLifecycleEventListener>();
+           });
     }
 
 private:

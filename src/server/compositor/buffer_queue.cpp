@@ -133,7 +133,20 @@ mc::BufferQueue::BufferQueue(
     framedrop_policy = policy_provider.create_policy([this]
     {
        std::unique_lock<decltype(guard)> lock{guard};
-       assert(!pending_client_notifications.empty());
+
+       if (pending_client_notifications.empty())
+       {
+           /*
+            * This framedrop handler may be in the process of being dispatched
+            * when we try to cancel it by calling swap_unblocked() when we
+            * get a buffer to give back to the client. In this case we cannot
+            * cancel and this function may be called without any pending client
+            * notifications. This is a benign race that we can deal with by
+            * just ignoring the framedrop request.
+            */
+           return;
+       }
+
        if (ready_to_composite_queue.empty())
        {
            /*
@@ -244,6 +257,10 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         current_buffer_users.clear();
         current_buffer_users.push_back(user_id);
         current_compositor_buffer = pop(ready_to_composite_queue);
+    }
+    else if (current_buffer_users.empty())
+    {   // current_buffer_users and ready_to_composite_queue both empty
+        current_buffer_users.push_back(user_id);
     }
 
     buffers_sent_to_compositor.push_back(current_compositor_buffer);

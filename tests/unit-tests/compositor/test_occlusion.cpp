@@ -237,6 +237,22 @@ TYPED_TEST(OcclusionFilterTest, some_occluded_and_some_not)
     EXPECT_THAT(renderables_from(elements), ElementsAre(window5, window4, window0));
 }
 
+TYPED_TEST(OcclusionFilterTest,
+       occludes_partially_onscreen_window_when_onscreen_part_is_covered_by_another_window)
+{
+    auto const partially_onscreen = std::make_shared<mtd::FakeRenderable>(-50, 100, 150, 100);
+    auto const covering = std::make_shared<mtd::FakeRenderable>(0, 100, 100, 100);
+    auto elements = scene_elements_from({
+        partially_onscreen,
+        covering
+    });
+
+    auto const& occlusions = filter<TypeParam>(elements, this->monitor_rect);
+
+    EXPECT_THAT(renderables_from(occlusions), ElementsAre(partially_onscreen));
+    EXPECT_THAT(renderables_from(elements), ElementsAre(covering));
+}
+
 //example compositor
 TEST(DecoratedOcclusionFilter, accounts_for_decorations_while_filtering) //lp: 1299977
 {

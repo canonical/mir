@@ -104,32 +104,6 @@ void ms::PromptSessionManagerImpl::stop_prompt_session(std::shared_ptr<PromptSes
     stop_prompt_session_locked(lock, prompt_session);
 }
 
-void ms::PromptSessionManagerImpl::add_prompt_provider_by_pid_locked(std::lock_guard<std::mutex> const&,
-    std::shared_ptr<PromptSession> const& prompt_session,
-    pid_t process_id) const
-{
-    prompt_session_container->insert_waiting_process(prompt_session.get(), process_id);
-
-    app_container->for_each(
-        [&](std::shared_ptr<Session> const& session)
-        {
-            if (session->process_id() == process_id)
-            {
-                if (prompt_session_container->insert_participant(prompt_session.get(), session, PromptSessionContainer::ParticipantType::prompt_provider))
-                    prompt_session_listener->prompt_provider_added(*prompt_session, session);
-            }
-        });
-}
-
-void ms::PromptSessionManagerImpl::add_prompt_provider_by_pid(
-    std::shared_ptr<PromptSession> const& prompt_session,
-    pid_t process_id) const
-{
-    std::lock_guard<std::mutex> lock(prompt_sessions_mutex);
-
-    add_prompt_provider_by_pid_locked(lock, prompt_session, process_id);
-}
-
 std::shared_ptr<ms::PromptSession> ms::PromptSessionManagerImpl::start_prompt_session_for(
     std::shared_ptr<Session> const& session,
     PromptSessionCreationParameters const& params) const
@@ -155,25 +129,6 @@ std::shared_ptr<ms::PromptSession> ms::PromptSessionManagerImpl::start_prompt_se
     });
 
     return prompt_session;
-}
-
-void ms::PromptSessionManagerImpl::add_expected_session(std::shared_ptr<Session> const& session) const
-{
-    std::unique_lock<std::mutex> lock(prompt_sessions_mutex);
-
-    std::vector<std::shared_ptr<PromptSession>> prompt_sessions;
-
-    prompt_session_container->for_each_prompt_session_expecting_process(session->process_id(),
-        [&](std::shared_ptr<PromptSession> const& prompt_session)
-        {
-            prompt_sessions.push_back(prompt_session);
-        });
-
-    for(auto const& prompt_session : prompt_sessions)
-    {
-        if (prompt_session_container->insert_participant(prompt_session.get(), session, PromptSessionContainer::ParticipantType::prompt_provider))
-            prompt_session_listener->prompt_provider_added(*prompt_session, session);
-    }
 }
 
 void ms::PromptSessionManagerImpl::add_prompt_provider(

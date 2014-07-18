@@ -59,20 +59,6 @@ public:
                                      std::shared_ptr<Session> const& prompt_provider) const = 0;
 
     /**
-     * Add a process id to wait for to the prompt session
-     *   \param [in] prompt_session  The prompt session
-     *   \param [in] process_id      The process id to wait for
-     */
-    virtual void add_prompt_provider_by_pid(std::shared_ptr<PromptSession> const& prompt_session,
-                                            pid_t process_id) const = 0;
-
-    /**
-     * Add a session that may have been expected by a prompt session.
-     *   \param [in] session  The new session that was being expected
-     */
-    virtual void add_expected_session(std::shared_ptr<Session> const& new_session) const = 0;
-
-    /**
      * Remove a session from all associated prompt sessions
      *   \param [in] session  The new session that is to be removed
      */

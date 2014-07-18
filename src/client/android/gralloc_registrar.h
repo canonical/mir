@@ -17,11 +17,11 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_GRALLOC_H_
-#define MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_GRALLOC_H_
+#ifndef MIR_CLIENT_ANDROID_GRALLOC_REGISTRAR_H_
+#define MIR_CLIENT_ANDROID_GRALLOC_REGISTRAR_H_
 
 #include "mir_toolkit/common.h"
-#include "android_registrar.h"
+#include "buffer_registrar.h"
 #include <hardware/gralloc.h>
 
 namespace mir
@@ -31,10 +31,10 @@ namespace client
 namespace android
 {
 
-class AndroidRegistrarGralloc : public AndroidRegistrar
+class GrallocRegistrar : public BufferRegistrar
 {
 public:
-    AndroidRegistrarGralloc(const std::shared_ptr<const gralloc_module_t>& gralloc_dev);
+    GrallocRegistrar(const std::shared_ptr<const gralloc_module_t>& gralloc_dev);
 
     std::shared_ptr<const native_handle_t> register_buffer(
         std::shared_ptr<MirBufferPackage> const& package) const;
@@ -47,4 +47,4 @@ private:
 }
 }
 }
-#endif /* MIR_CLIENT_ANDROID_ANDROID_REGISTRAR_GRALLOC_H_ */
+#endif /* MIR_CLIENT_ANDROID_GRALLOC_REGISTRAR_H_ */

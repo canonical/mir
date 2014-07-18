@@ -39,8 +39,6 @@
 
 #include <boost/throw_exception.hpp>
 
-#include "builtin_cursor_images.h"
-
 #include <map>
 
 namespace mg = mir::graphics;
@@ -154,28 +152,6 @@ mir::DefaultServerConfiguration::the_cursor()
         });
 }
 
-std::shared_ptr<mg::CursorImage>
-mir::DefaultServerConfiguration::the_default_cursor_image()
-{
-    static geometry::Size const default_cursor_size = {geometry::Width{64},
-                                                       geometry::Height{64}};
-    return default_cursor_image(
-        [this]()
-        {
-            return the_cursor_images()->image(mir_default_cursor_name, default_cursor_size);
-        });
-}
-
-std::shared_ptr<mg::CursorImages>
-mir::DefaultServerConfiguration::the_cursor_images()
-{
-    return cursor_images(
-        [this]()
-        {
-            return std::make_shared<mg::BuiltinCursorImages>();
-        });
-}
-
 auto mir::DefaultServerConfiguration::the_host_connection()
 -> std::shared_ptr<graphics::nested::HostConnection>
 {
@@ -209,7 +185,8 @@ auto mir::DefaultServerConfiguration::the_host_connection()
 
             return std::make_shared<graphics::nested::MirClientHostConnection>(
                 host_socket,
-                my_name);
+                my_name,
+                the_host_lifecycle_event_listener());
         });
 }
 

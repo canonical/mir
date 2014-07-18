@@ -69,6 +69,7 @@ class InputTargeter;
 class FocusSetter;
 class FocusController;
 class DisplayLayout;
+class HostLifecycleEventListener;
 }
 namespace time
 {
@@ -106,7 +107,6 @@ class DisplayReport;
 class GraphicBufferAllocator;
 class Cursor;
 class CursorImage;
-class CursorImages;
 class GLConfig;
 class GLProgramFactory;
 namespace nested { class HostConnection; }
@@ -125,6 +125,7 @@ class InputSender;
 class InputSendObserver;
 class NestedInputRelay;
 class EventHandler;
+class CursorImages;
 namespace android
 {
 class InputRegistrar;
@@ -190,7 +191,7 @@ public:
     virtual std::shared_ptr<graphics::DisplayReport> the_display_report();
     virtual std::shared_ptr<graphics::Cursor> the_cursor();
     virtual std::shared_ptr<graphics::CursorImage> the_default_cursor_image();
-    virtual std::shared_ptr<graphics::CursorImages> the_cursor_images();
+    virtual std::shared_ptr<input::CursorImages> the_cursor_images();
 
     /** @} */
 
@@ -243,6 +244,8 @@ public:
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     virtual std::shared_ptr<scene::PromptSessionListener> the_prompt_session_listener();
     virtual std::shared_ptr<scene::PromptSessionManager>  the_prompt_session_manager();
+    virtual std::shared_ptr<shell::HostLifecycleEventListener> the_host_lifecycle_event_listener();
+
     /** @} */
 
     /** @name internal scene configuration
@@ -348,7 +351,7 @@ protected:
     CachedPtr<graphics::Display>      display;
     CachedPtr<graphics::Cursor>       cursor;
     CachedPtr<graphics::CursorImage>  default_cursor_image;
-    CachedPtr<graphics::CursorImages> cursor_images;
+    CachedPtr<input::CursorImages> cursor_images;
 
     CachedPtr<frontend::ConnectorReport>   connector_report;
     // TODO remove after 0.5.0 is branched - c.f. the_ipc_factory()
@@ -394,6 +397,7 @@ protected:
     CachedPtr<scene::PromptSessionManager> prompt_session_manager;
     CachedPtr<scene::SessionCoordinator> session_coordinator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
+    CachedPtr<shell::HostLifecycleEventListener> host_lifecycle_event_listener;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

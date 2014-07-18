@@ -107,7 +107,7 @@ TEST_F(SyncSwTest, sync_merge_with_valid_fd)
 
     struct sync_merge_data expected_data_in { dummy_fd2, "name", 0 };
 
-    EXPECT_CALL(*mock_fops, ioctl(dummy_fd, SYNC_IOC_MERGE, MergeMatches(expected_data_in)))
+    EXPECT_CALL(*mock_fops, ioctl(dummy_fd, static_cast<int>(SYNC_IOC_MERGE), MergeMatches(expected_data_in)))
         .Times(1)
         .WillOnce(Invoke(&setter, &IoctlSetter::merge_setter));
 
@@ -119,7 +119,7 @@ TEST_F(SyncSwTest, sync_merge_with_valid_fd)
 TEST_F(SyncSwTest, sync_merge_with_invalid_fd)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_fops, ioctl(dummy_fd, SYNC_IOC_MERGE, _))
+    EXPECT_CALL(*mock_fops, ioctl(dummy_fd, static_cast<int>(SYNC_IOC_MERGE), _))
         .Times(0);
 
     mga::SyncFence fence1(mock_fops, invalid_fd);

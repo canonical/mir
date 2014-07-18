@@ -19,6 +19,7 @@
 #include "mir/graphics/android/android_native_buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "buffer_registrar.h"
 #include "buffer.h"
 #include <hardware/gralloc.h>
 
@@ -28,7 +29,7 @@ namespace geom=mir::geometry;
 namespace mga=mir::graphics::android;
 
 mcla::Buffer::Buffer(
-    std::shared_ptr<AndroidRegistrar> const& registrar,
+    std::shared_ptr<BufferRegistrar> const& registrar,
     std::shared_ptr<const native_handle_t> const& handle,
     geom::Size size,
     MirPixelFormat pf,
@@ -95,4 +96,9 @@ MirPixelFormat mcla::Buffer::pixel_format() const
 std::shared_ptr<mir::graphics::NativeBuffer> mcla::Buffer::native_buffer_handle() const
 {
     return native_window_buffer;
+}
+
+void mcla::Buffer::update_from(MirBufferPackage const& update_package)
+{
+    (void) update_package;
 }
