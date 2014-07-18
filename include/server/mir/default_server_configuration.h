@@ -300,13 +300,6 @@ protected:
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> new_ipc_factory(
         std::shared_ptr<frontend::SessionAuthorizer> const& session_authorizer);
 
-    // TODO Remove after 0.5.0 is branched: the_ipc_factory() is used by
-    // TODO clients that use the "PrivateProtobuf" but is it now deprecated
-    // TODO and only retained as a migration aid.
-    virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
-        std::shared_ptr<frontend::Shell> const& shell,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
-
     /** @name input dispatcher related configuration
      *  @{ */
     virtual std::shared_ptr<input::android::InputRegistrar> the_input_registrar();
@@ -354,8 +347,6 @@ protected:
     CachedPtr<input::CursorImages> cursor_images;
 
     CachedPtr<frontend::ConnectorReport>   connector_report;
-    // TODO remove after 0.5.0 is branched - c.f. the_ipc_factory()
-    CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
     CachedPtr<frontend::SessionMediatorReport> session_mediator_report;
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
