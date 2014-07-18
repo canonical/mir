@@ -59,11 +59,12 @@ bool renderable_is_occluded(
     };
 
     auto const& clipped_decorated_window = decorated_window.intersection_with(area);
+    
     if (clipped_decorated_window == geom::Rectangle{})
         return true;  // Not in the area; definitely occluded.
 
     // Not weirdly transformed but also not on this monitor? Don't care...
-    if (!area.overlaps(decorated_window))
+    if (!area.overlaps(clipped_decorated_window))
         return true;  // Not on the display; definitely occluded.
 
     bool occluded = false;

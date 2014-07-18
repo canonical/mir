@@ -257,10 +257,10 @@ TYPED_TEST(OcclusionFilterTest,
 TEST(DecoratedOcclusionFilter, accounts_for_decorations_while_filtering) //lp: 1299977
 {
     Rectangle monitor_rect{{0,0},{100, 100}};
-    auto window0 = std::make_shared<mtd::FakeRenderable>(-10, 90, 10, 10);
-    auto window1 = std::make_shared<mtd::FakeRenderable>(0, 0, 5, 5);
-    auto window2 = std::make_shared<mtd::FakeRenderable>(0, 20, 1, 1);
-    auto window3 = std::make_shared<mtd::FakeRenderable>(0, 20, 15, 15);
+    auto window0 = std::make_shared<mtd::FakeRenderable>(0, 100, 10, 10);
+    auto window1 = std::make_shared<mtd::FakeRenderable>(-5, -5, 5, 5);
+    auto window2 = std::make_shared<mtd::FakeRenderable>(0, 30, 1, 1);
+    auto window3 = std::make_shared<mtd::FakeRenderable>(0, 30, 15, 15);
     auto elements = scene_elements_from({
         window0, //surface offscreen, but titlebar should still appear
         window1, //surface offscreen, but shadow should still appear
