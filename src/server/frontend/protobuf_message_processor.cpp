@@ -32,7 +32,7 @@ template<class Response>
 std::vector<mir::Fd> extract_fds_from(Response* response)
 {
     std::vector<mir::Fd> fd;
-    for(auto i = 0u; i < response->fd().size(); ++i)
+    for(auto i = 0; i < response->fd().size(); ++i)
         fd.emplace_back(mir::Fd(dup(response->fd().data()[i])));
     response->clear_fd();
     response->set_fds_on_side_channel(fd.size());
