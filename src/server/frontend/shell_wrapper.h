@@ -50,10 +50,6 @@ public:
         std::shared_ptr<Session> const& session,
         scene::PromptSessionCreationParameters const& params) override;
 
-    void add_prompt_provider_process_for(
-        std::shared_ptr<PromptSession> const& prompt_session,
-        pid_t process_id) override;
-
     void add_prompt_provider_for(
         std::shared_ptr<PromptSession> const& prompt_session,
         std::shared_ptr<Session> const& session) override;

@@ -47,7 +47,6 @@ public:
 
     MirWaitHandle* start(pid_t application_pid, mir_prompt_session_callback callback, void* context);
     MirWaitHandle* stop(mir_prompt_session_callback callback, void* context);
-    MirWaitHandle* add_prompt_provider(pid_t provider_pid, mir_prompt_session_add_prompt_provider_callback callback, void* context);
 
     MirWaitHandle* new_fds_for_prompt_providers(
         unsigned int no_of_fds,
@@ -61,7 +60,6 @@ public:
 private:
     std::mutex mutable mutex; // Protects parameters, wait_handles & results
     mir::protobuf::DisplayServer& server;
-    mir::protobuf::PromptProvider prompt_provider;
     mir::protobuf::PromptSessionParameters parameters;
     mir::protobuf::Void add_result;
     mir::protobuf::Void protobuf_void;
@@ -71,7 +69,6 @@ private:
 
     MirWaitHandle start_wait_handle;
     MirWaitHandle stop_wait_handle;
-    MirWaitHandle add_result_wait_handle;
     MirWaitHandle fds_for_prompt_providers_wait_handle;
     std::atomic<MirPromptSessionState> state;
 
@@ -84,7 +81,6 @@ private:
     void set_state(MirPromptSessionState new_state);
     void done_start(mir_prompt_session_callback callback, void* context);
     void done_stop(mir_prompt_session_callback callback, void* context);
-    void done_add_prompt_provider(mir_prompt_session_add_prompt_provider_callback callback, void* context);
     void done_fds_for_prompt_providers(mir_client_fd_callback callback, void* context);
     MirPromptSession(MirPromptSession const&) = delete;
     MirPromptSession& operator=(MirPromptSession const&) = delete;

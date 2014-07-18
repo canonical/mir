@@ -32,6 +32,13 @@ namespace geometry
 
 struct Rectangle
 {
+    Rectangle() = default;
+
+    Rectangle(Point const& top_left, Size const& size)
+        : top_left{top_left}, size{size}
+    {
+    }
+
     Point top_left;
     Size size;
 
@@ -55,6 +62,8 @@ struct Rectangle
     bool contains(Rectangle const& r) const;
 
     bool overlaps(Rectangle const& r) const;
+
+    Rectangle intersection_with(Rectangle const& r) const;
 };
 
 inline bool operator == (Rectangle const& lhs, Rectangle const& rhs)

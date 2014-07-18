@@ -60,3 +60,48 @@ void mga::RealHwcWrapper::set(hwc_display_contents_1_t& display_list) const
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }
+
+void mga::RealHwcWrapper::register_hooks(hwc_procs_t* callbacks) const
+{
+    hwc_device->registerProcs(hwc_device.get(), callbacks);
+}
+
+void mga::RealHwcWrapper::vsync_signal_on() const
+{
+    if (auto rc = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1))
+    {
+        std::stringstream ss;
+        ss << "error turning vsync signal on. rc = " << std::hex << rc;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
+    }
+}
+
+void mga::RealHwcWrapper::vsync_signal_off() const
+{
+    if (auto rc = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0))
+    {
+        std::stringstream ss;
+        ss << "error turning vsync signal off. rc = " << std::hex << rc;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
+    }
+}
+
+void mga::RealHwcWrapper::display_on() const
+{
+    if (auto rc = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0))
+    {
+        std::stringstream ss;
+        ss << "error turning display on. rc = " << std::hex << rc;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
+    }
+}
+
+void mga::RealHwcWrapper::display_off() const
+{
+    if (auto rc = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1))
+    {
+        std::stringstream ss;
+        ss << "error turning display off. rc = " << std::hex << rc;
+        BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
+    }
+}
