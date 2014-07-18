@@ -33,8 +33,6 @@ std::atomic<unsigned> insertion_order{0};
 ms::PromptSessionContainer::PromptSessionContainer()
     : prompt_session_index(participant_map)
     , participant_index(get<1>(participant_map))
-    , waiting_process_prompt_session_index(waiting_process_map)
-    , waiting_process_index(get<1>(waiting_process_map))
 {
 }
 
@@ -52,12 +50,6 @@ void ms::PromptSessionContainer::remove_prompt_session(std::shared_ptr<PromptSes
         participant_by_prompt_session::iterator it, end;
         boost::tie(it, end) = prompt_session_index.equal_range(prompt_session.get());
         prompt_session_index.erase(it, end);
-    }
-
-    {
-        process_by_prompt_session::iterator it, end;
-        boost::tie(it, end) = waiting_process_prompt_session_index.equal_range(prompt_session.get());
-        waiting_process_prompt_session_index.erase(it, end);
     }
 
     prompt_sessions.erase(prompt_session.get());
@@ -82,10 +74,6 @@ bool ms::PromptSessionContainer::insert_participant(PromptSession* prompt_sessio
         if (!valid)
             return false;
 
-        process_by_prompt_session::iterator process_it,end;
-        boost::tie(process_it,end) = waiting_process_prompt_session_index.equal_range(boost::make_tuple(prompt_session, locked_session->process_id()));
-        if (process_it != end)
-            waiting_process_prompt_session_index.erase(process_it);
         return true;
     }
     return false;
@@ -154,36 +142,5 @@ void ms::PromptSessionContainer::for_each_prompt_session_with_participant(
         auto tsit = prompt_sessions.find(participant.prompt_session);
         if (tsit != prompt_sessions.end())
             f(tsit->second, participant.participant_type);
-    }
-}
-
-void ms::PromptSessionContainer::insert_waiting_process(
-    PromptSession* prompt_session,
-    pid_t process_id)
-{
-    std::unique_lock<std::mutex> lk(mutex);
-
-    // the prompt session must have first been added by insert_prompt_session.
-    if (prompt_sessions.find(prompt_session) == prompt_sessions.end())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Prompt Session does not exist"));
-
-    waiting_process_map.insert(WaitingProcess{prompt_session, process_id});
-}
-
-void ms::PromptSessionContainer::for_each_prompt_session_expecting_process(
-    pid_t process_id,
-    std::function<void(std::shared_ptr<PromptSession> const&)> f) const
-{
-    std::unique_lock<std::mutex> lk(mutex);
-
-    prompt_session_by_process::iterator it,end;
-    boost::tie(it,end) = waiting_process_index.equal_range(process_id);
-
-    for (; it != end; ++it)
-    {
-        WaitingProcess const& waiting_process = *it;
-        auto tsit = prompt_sessions.find(waiting_process.prompt_session);
-        if (tsit != prompt_sessions.end())
-            f(tsit->second);
     }
 }

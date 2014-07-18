@@ -54,11 +54,6 @@ struct StubShell : public frontend::Shell
     {
         return std::shared_ptr<frontend::PromptSession>();
     }
-    void add_prompt_provider_process_for(
-        std::shared_ptr<frontend::PromptSession> const&  /* prompt_session */,
-        pid_t /* process_id */)
-    {
-    }
     void add_prompt_provider_for(
         std::shared_ptr<frontend::PromptSession> const&  /* prompt_session */,
         std::shared_ptr<frontend::Session> const& /* session */)
