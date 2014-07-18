@@ -43,10 +43,10 @@ public:
                  void(mir::protobuf::wire::Invocation const&));
     MOCK_METHOD2(invocation_failed,
                  void(mir::protobuf::wire::Invocation const&,
-                      boost::system::error_code const& error));
+                      std::exception const&));
 
     MOCK_METHOD1(header_receipt_failed,
-                 void(boost::system::error_code const&));
+                 void(std::exception const&));
     MOCK_METHOD1(result_receipt_succeeded,
                  void(mir::protobuf::wire::Result const&));
     MOCK_METHOD1(result_receipt_failed,
