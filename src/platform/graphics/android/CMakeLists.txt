@@ -48,7 +48,6 @@ set_target_properties(
 target_link_libraries(
   mirplatformgraphicsandroid
 
-  miroptions
   mirplatform
   mircommon
 

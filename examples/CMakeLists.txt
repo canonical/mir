@@ -119,9 +119,8 @@ add_executable(mir_demo_standalone_render_overlays
 
 target_link_libraries(mir_demo_standalone_render_overlays
     mirserver
-    mirlogging
-    mirdraw
     mirtestdraw
+    mircommon
 )
 
 set(RENDER_SURFACES_SOURCES
