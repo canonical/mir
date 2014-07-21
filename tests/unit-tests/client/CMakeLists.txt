@@ -1,5 +1,6 @@
 list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_aging_buffer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_stream_transport.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_buffer_depository.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_platform.cpp
@@ -8,6 +9,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_wait_handle.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_display_conf.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_mir_screencast.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_protobuf_rpc_channel.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_mir_prompt_session.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_event_distributor.cpp
 )

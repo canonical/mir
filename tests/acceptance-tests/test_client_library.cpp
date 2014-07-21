@@ -610,7 +610,7 @@ TEST_F(ClientLibrary, connect_errors_handled)
 
     if (std::strcmp("connect: No such file or directory", error) &&
         std::strcmp("Can't find MIR server", error) &&
-        std::strcmp("Failed to connect to server socket", error))
+        !std::strstr(error, "Failed to connect to server socket"))
     {
         FAIL() << error;
     }
