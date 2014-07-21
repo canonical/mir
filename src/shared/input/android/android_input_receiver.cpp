@@ -84,11 +84,15 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
     // Input events use CLOCK_REALTIME, and so we must...
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
+    nsecs_t now = ts.tv_sec * 1000000000LL + ts.tv_nsec;
 
-    nsecs_t frame_time = ts.tv_sec * 1000000000LL + ts.tv_nsec;
-
-   if(input_consumer->consume(&event_factory, true,
-        frame_time, &event_sequence_id, &android_event) != droidinput::WOULD_BLOCK)
+    if (input_consumer->consume(&event_factory, false,
+                                now, &event_sequence_id, &android_event)
+                                != droidinput::WOULD_BLOCK
+        ||
+        input_consumer->consume(&event_factory, true,
+                                now, &event_sequence_id, &android_event)
+                                != droidinput::WOULD_BLOCK)
     {
         mia::Lexicon::translate(android_event, ev);
 
@@ -117,11 +121,14 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
     if(try_next_event(ev))
         return true;
 
-    auto result = looper->pollOnce(timeout.count());
-    if (result == ALOOPER_POLL_WAKE)
-        return false;
-    if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
-       return false;
+    if (!input_consumer->hasPendingBatch())
+    {
+        auto result = looper->pollOnce(timeout.count());
+        if (result == ALOOPER_POLL_WAKE)
+            return false;
+        if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
+           return false;
+    }
 
     return try_next_event(ev);
 }
