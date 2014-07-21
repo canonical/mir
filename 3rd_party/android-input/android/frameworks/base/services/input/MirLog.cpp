@@ -154,11 +154,7 @@ static void configureInitialState(struct LogState* logState)
 
 extern "C" int __android_log_print(int prio, const char *tag, const char *fmt, ...)
 {
-    char buffer[1024] = {'0'};
-    va_list ap;
-    va_start(ap, fmt);
-    int result = vsnprintf(buffer, sizeof buffer - 1, fmt, ap);
-    va_end(ap);
+    int result = 0;
 
     if (gLogState.globalMinPriority == ANDROID_LOG_UNKNOWN) {
         configureInitialState(&gLogState);
@@ -177,9 +173,16 @@ extern "C" int __android_log_print(int prio, const char *tag, const char *fmt, .
     }
 
     if (prio >= minPrio) {
-        char taggedBuffer[1024];
-        sprintf(taggedBuffer, "[%s]%s", tag, buffer);
-        mir::write_to_log(prio, taggedBuffer);
+        char buffer[1024];
+        int max = sizeof buffer - 1;
+        int tagend = snprintf(buffer, max, "[%s]", tag);
+
+        va_list ap;
+        va_start(ap, fmt);
+        result = vsnprintf(buffer+tagend, max - tagend, fmt, ap);
+        va_end(ap);
+
+        mir::write_to_log(prio, buffer);
     } else {
         // filter out log message
     }

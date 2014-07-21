@@ -247,32 +247,71 @@ MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
 
 int mir_surface_get_swapinterval(MirSurface* surf)
 {
-    return surf ? surf->attrib(mir_surface_attrib_swapinterval) : -1;
+    int swap_interval = -1;
+
+    try
+    {
+        swap_interval = surf ? surf->attrib(mir_surface_attrib_swapinterval) : -1;
+    }
+    catch (...)
+    {
+    }
+
+    return swap_interval;
 }
 
 int mir_surface_get_dpi(MirSurface* surf)
 {
-    int dpi = 0;
+    int dpi = -1;
 
     try
     {
         if (surf)
         {
             dpi = surf->attrib(mir_surface_attrib_dpi);
-            if (dpi < 0)
-            {
-                // Officially we don't support setting DPI from the client.
-                // But this is a convenient way to query it on startup...
-                surf->configure(mir_surface_attrib_dpi, -1)->wait_for_all();
-                dpi = surf->attrib(mir_surface_attrib_dpi);
-            }
         }
     }
-    catch (std::exception const&)
+    catch (...)
     {
     }
 
     return dpi;
+}
+
+MirSurfaceFocusState mir_surface_get_focus(MirSurface* surf)
+{
+    MirSurfaceFocusState state = mir_surface_unfocused;
+
+    try
+    {
+        if (surf)
+        {
+            state = static_cast<MirSurfaceFocusState>(surf->attrib(mir_surface_attrib_focus));
+        }
+    }
+    catch (...)
+    {
+    }
+
+    return state;
+}
+
+MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
+{
+    MirSurfaceVisibility state = static_cast<MirSurfaceVisibility>(mir_surface_visibility_occluded);
+
+    try
+    {
+        if (surf)
+        {
+            state = static_cast<MirSurfaceVisibility>(surf->attrib(mir_surface_attrib_visibility));
+        }
+    }
+    catch (...)
+    {
+    }
+
+    return state;
 }
 
 MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)

@@ -86,6 +86,7 @@ TEST_F(LifecycleEventTest, lifecycle_event_test)
             mir_connection_set_lifecycle_event_callback(connection, lifecycle_callback, this);
 
             EXPECT_CALL(*handler, state_changed(Eq(mir_lifecycle_state_will_suspend))).Times(1);
+            EXPECT_CALL(*handler, state_changed(Eq(mir_lifecycle_connection_lost))).Times(AtMost(1));
             mir_connection_release(connection);
 
             handler.reset();
