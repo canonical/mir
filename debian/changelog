@@ -1,9 +1,3 @@
-mir (0.5.1-0ubuntu1) UNRELEASED; urgency=medium
-
-  [ Kevin DuBois ]
-  * Bug fix release 0.5.1 (https://launchpad.net/mir/+milestone/0.5.1) fixes:
-    - [regression] Mir fails to start on Nexus 5 as it fails to turn vsync signal on (LP :#1345533)
-
 mir (0.5.0-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release 0.5.0 (https://launchpad.net/mir/+milestone/0.5.0)
