@@ -64,7 +64,7 @@ cb1f73934d150f21e60d4d8de3f15918d993dd98  include/server/mir/frontend/protobuf_c
 46b9a4c7794c29b4bd7822671f9626fc8fc33333  include/server/mir/frontend/event_sink.h
 24e0ff92e7deb204f68a82de973f51c0ae07c935  include/server/mir/frontend/connector.h
 d21356fe32066c1d6146730c198683d1ad5786bd  include/server/mir/frontend/connector_report.h
-6f23950fef7acd372886ecb3e60b5706e34cbab7  include/server/mir/frontend/surface.h
+f67b9788943a4b9121b3891dfbe979d57922ea78  include/server/mir/frontend/surface.h
 0452fd9e7ccf081baf7635d8f699de47c52372ea  include/server/mir/frontend/session_mediator_report.h
 e5ea465ed7e05f0e1d6a837d0d6b3a04c2d7fc19  include/server/mir/frontend/session.h
 e6e92642301fc9bb85e1d38087a5dd84e5d30fd7  include/server/mir/frontend/connections.h
@@ -147,7 +147,7 @@ b4e96264b9a57a1f2ceceb700c5379658905ded7  include/shared/mir/thread_name.h
 be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/shared/mir/int_wrapper.h
 101017c17714a57db57d79b7b5e7df40a3568236  include/shared/mir_toolkit/mir_native_buffer.h
 99ef5f3bf548508fae24c60f74be1dea018a6e8c  include/shared/mir_toolkit/mesa/native_display.h
-92932b3e4f313b42d018345cb09b3a157f098487  include/shared/mir_toolkit/common.h
+7ace229333c4a99151452cf95f0add21fc9ad0f7  include/shared/mir_toolkit/common.h
 bdaceadd56e41d2cb708f7c4da97acf84dfc75b7  include/shared/mir_toolkit/event.h
 5d0213652adc4821a2a180ced74808ca0bbf2c45  include/platform/mir/shared_library_loader.h
 498d728ea1052cb6cadb9de7828ae48eb5a201df  include/platform/mir/emergency_cleanup_registry.h

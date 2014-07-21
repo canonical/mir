@@ -6,10 +6,10 @@ e6185b680533c5fdcf1294a4797d5c3dd01d433f  include/client/mir_toolkit/mir_connect
 731502eaa03d96917817634ea158ee6566dc3275  include/client/mir_toolkit/mir_cursor_configuration.h
 b141c4d79802ad626d969249c0004744e5c2a525  include/client/mir_toolkit/mir_wait.h
 b53736bcb22ddc09aab8275cfdd05c109fdd0f12  include/client/mir_toolkit/mir_client_library_drm.h
-39bc019664b57b16d0510e543e42cbdc89c8021b  include/client/mir_toolkit/mir_surface.h
+8609754db3be20e11e43858dd2c36b5bd480d5ec  include/client/mir_toolkit/mir_surface.h
 1522a5fcdb01c0d9a990364539c4f1255853eef7  include/client/mir_toolkit/mir_client_library.h
 101017c17714a57db57d79b7b5e7df40a3568236  include/shared/mir_toolkit/mir_native_buffer.h
 99ef5f3bf548508fae24c60f74be1dea018a6e8c  include/shared/mir_toolkit/mesa/native_display.h
 9907751d046e4aea81881cf19e5df52c7a6a813e  include/shared/mir_toolkit/client_types.h
-92932b3e4f313b42d018345cb09b3a157f098487  include/shared/mir_toolkit/common.h
+7ace229333c4a99151452cf95f0add21fc9ad0f7  include/shared/mir_toolkit/common.h
 bdaceadd56e41d2cb708f7c4da97acf84dfc75b7  include/shared/mir_toolkit/event.h
