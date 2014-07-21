@@ -1,3 +1,11 @@
+mir (0.5.1-0ubuntu1) UNRELEASED; urgency=medium
+
+  * Bug fix release 0.5.1 (https://launchpad.net/mir/+milestone/0.5.1) fixes:
+    - [regression] Nexus 10 freeze on boot, throwing nonfatal exception
+      (LP: #1345533)
+
+ -- Kevin Gunn <kevin.gunn@canonical.com>  Mon, 21 Jul 2014 17:23:28 -0500
+
 mir (0.5.0+14.10.20140717-0ubuntu1) utopic; urgency=medium
 
   [ Daniel van Vugt ]
