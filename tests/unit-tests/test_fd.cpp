@@ -1,0 +1,63 @@
+/*
+ * Copyright © 2014 Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
+ */
+
+#include "mir/fd.h"
+#include <gtest/gtest.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
+
+namespace
+{
+bool fd_is_open(int fd)
+{
+    return fcntl(fd, F_GETFD) != -1;
+}
+
+struct Fd : public testing::Test
+{
+    Fd() :
+        raw_fd(::open("/dev/null", 0))
+    {
+    }
+
+    ~Fd()
+    {
+        if (fd_is_open(raw_fd))
+            ::close(raw_fd);
+    }
+
+    int const raw_fd;
+};
+}
+
+TEST_F(Fd, closes_when_refcount_is_zero)
+{
+    mir::Fd fd2(-1);
+    {
+        mir::Fd fd(raw_fd);
+        {
+            mir::Fd fd1(fd);
+            fd2 = fd;
+        }
+    }
+
+    EXPECT_THAT(raw_fd, IsNotClosed());
+    fd2 = mir::Fd(-1);
+    EXPECT_THAT(raw_fd, IsClosed());
+}
