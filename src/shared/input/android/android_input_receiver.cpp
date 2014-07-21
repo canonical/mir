@@ -37,6 +37,7 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     looper(new droidinput::Looper(true)),
     fd_added(false),
+    last_seq(0),
     xkb_mapper(std::make_shared<mircv::XKBMapper>())
 {
 }
@@ -79,26 +80,40 @@ static void map_key_event(std::shared_ptr<mircv::XKBMapper> const& xkb_mapper, M
 bool mircva::InputReceiver::try_next_event(MirEvent &ev)
 {
     droidinput::InputEvent *android_event;
-    uint32_t event_sequence_id;
+    uint32_t next_seq;
 
-    // Input events use CLOCK_REALTIME, and so we must...
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-    nsecs_t now = ts.tv_sec * 1000000000LL + ts.tv_nsec;
+    if (last_seq)
+    {
+        input_consumer->sendFinishedSignal(last_seq, true);
+        last_seq = 0;
+    }
 
+    /*
+     * Simulate a frame counter that comes in phase with the present every
+     * 16ms. Not sure how important getting real frame timing is...
+     */
+    nsecs_t last_frame_time = systemTime(SYSTEM_TIME_MONOTONIC);
+    nsecs_t const one_frame = 16000000LL;
+    last_frame_time -= (last_frame_time % one_frame);
+
+    /*
+     * Try to batch input events first, grouping multiple events inside the
+     * duration of a frame so as to return the most current information when
+     * it's needed. 
+     * This also means the client wastes less time immediately reacting
+     * to the oldest motion coordinates in the queue.
+     */
     if (input_consumer->consume(&event_factory, false,
-                                now, &event_sequence_id, &android_event)
-                                != droidinput::WOULD_BLOCK
+            last_frame_time, &next_seq, &android_event) == droidinput::OK
         ||
         input_consumer->consume(&event_factory, true,
-                                now, &event_sequence_id, &android_event)
-                                != droidinput::WOULD_BLOCK)
+            last_frame_time, &next_seq, &android_event) == droidinput::OK)
     {
         mia::Lexicon::translate(android_event, ev);
 
         map_key_event(xkb_mapper, ev);
 
-        input_consumer->sendFinishedSignal(event_sequence_id, true);
+        last_seq = next_seq;
 
         report->received_event(ev);
 
@@ -121,7 +136,8 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
     if(try_next_event(ev))
         return true;
 
-    if (!input_consumer->hasPendingBatch())
+    if (!input_consumer->hasDeferredEvent() &&
+        !input_consumer->hasPendingBatch())
     {
         auto result = looper->pollOnce(timeout.count());
         if (result == ALOOPER_POLL_WAKE)
