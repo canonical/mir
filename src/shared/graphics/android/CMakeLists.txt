@@ -10,9 +10,3 @@ add_library(
   android_native_buffer.cpp
   syncfence.cpp
 )
-
-list(APPEND MIR_COMMON_LIBRARIES
-  mirsharedandroid
-)
-
-set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)
