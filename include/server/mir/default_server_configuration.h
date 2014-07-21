@@ -277,6 +277,7 @@ public:
     virtual std::shared_ptr<scene::SessionCoordinator>  the_session_coordinator();
     /** @} */
 
+
     /** @name input configuration
      *  @{ */
     virtual std::shared_ptr<input::InputReport> the_input_report();
