@@ -90,7 +90,7 @@ static void surface_release_callback(MirSurface *old_surface, void *context)
 
 void demo_client(const char* server, int buffer_swap_count)
 {
-    MirDemoState mcd = {0, 0};
+    MirDemoState mcd;
     mcd.connection = 0;
     mcd.surface = 0;
 
