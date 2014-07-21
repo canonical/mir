@@ -88,25 +88,12 @@ static void surface_release_callback(MirSurface *old_surface, void *context)
 }
 ///\internal [Callback_tag]
 
-MirDemoState mcd = {0, 0};
-
-static void close_connection()
-{
-    if (mcd.connection)
-    {
-        ///\internal [connection_release_tag]
-        mir_connection_release(mcd.connection);
-        puts("Connection released");
-        ///\internal [connection_release_tag]
-    }
-}
 
 void demo_client(const char* server, int buffer_swap_count)
 {
+	MirDemoState mcd = {0, 0};
     mcd.connection = 0;
     mcd.surface = 0;
-    // We should always release our connection
-    atexit(&close_connection);
 
     puts("Starting");
 
@@ -196,6 +183,12 @@ void demo_client(const char* server, int buffer_swap_count)
     mir_wait_for(mir_surface_release(mcd.surface, surface_release_callback, &mcd));
     puts("Surface released");
     ///\internal [surface_release_tag]
+
+    ///\internal [connection_release_tag]
+    // We should release our connection
+    mir_connection_release(mcd.connection);
+    puts("Connection released");
+    ///\internal [connection_release_tag]
 }
 
 // The main() function deals with parsing arguments and defaults
