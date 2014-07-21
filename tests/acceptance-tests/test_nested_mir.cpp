@@ -389,6 +389,8 @@ TEST_F(NestedServer, receives_lifecycle_events_from_host)
         lifecycle_event_occurred(mir_lifecycle_state_resumed)).Times(1);
     EXPECT_CALL(*(nested_config.the_mock_host_lifecycle_event_listener()),
         lifecycle_event_occurred(mir_lifecycle_state_will_suspend)).Times(1);
+    EXPECT_CALL(*(nested_config.the_mock_host_lifecycle_event_listener()),
+        lifecycle_event_occurred(mir_lifecycle_connection_lost)).Times(AtMost(1));
 
     trigger_lifecycle_event(mir_lifecycle_state_resumed);
     trigger_lifecycle_event(mir_lifecycle_state_will_suspend);

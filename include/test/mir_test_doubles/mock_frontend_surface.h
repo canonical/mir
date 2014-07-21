@@ -50,6 +50,7 @@ struct MockFrontendSurface : public frontend::Surface
     MOCK_METHOD1(set_cursor_image, void(std::shared_ptr<graphics::CursorImage> const&));
 
     MOCK_METHOD2(configure, int(MirSurfaceAttrib, int));
+    MOCK_METHOD1(query, int(MirSurfaceAttrib));
 };
 }
 }
