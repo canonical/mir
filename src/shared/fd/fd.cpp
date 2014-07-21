@@ -25,28 +25,46 @@ mir::Fd::Fd() :
 }
 
 mir::Fd::Fd(int other_fd) :
-    fd{other_fd}
+    rfd{new RefcountFd{other_fd, 1}}
 {
 }
 
-mir::Fd::Fd(Fd&& other) :
-    fd{other.fd}
+mir::Fd::Fd(Fd const& other) :
+    rfd{other.rfd}
 {
-    other.fd = invalid;
+    if (rfd) rfd->refcount++;
+}
+
+mir::Fd::Fd(Fd&& other) :
+    rfd{other.rfd}
+{
+    other.rfd = nullptr;
 }
 
 mir::Fd::~Fd() noexcept
 {
-    if (fd > invalid) ::close(fd);
+    if (rfd)
+    {
+        rfd->refcount--;
+        if ((rfd->fd > invalid) &&
+            (rfd->refcount == 0))
+        {
+            ::close(rfd->fd);
+            delete rfd;
+        }
+    }
 }
 
 mir::Fd& mir::Fd::operator=(Fd other)
 {
-    std::swap(fd, other.fd);
+    std::swap(rfd, other.rfd);
     return *this;
 }
 
 mir::Fd::operator int() const
 {
-    return fd;
+    if (rfd)
+        return rfd->fd;
+    else
+        return -1;
 }

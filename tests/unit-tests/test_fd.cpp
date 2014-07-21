@@ -18,12 +18,14 @@
 
 #include "mir/fd.h"
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
 
 namespace
 {
+
 bool fd_is_open(int fd)
 {
     return fcntl(fd, F_GETFD) != -1;
@@ -48,16 +50,21 @@ struct Fd : public testing::Test
 
 TEST_F(Fd, closes_when_refcount_is_zero)
 {
+    EXPECT_TRUE(fd_is_open(raw_fd));
+    printf("1\n");
     mir::Fd fd2(-1);
+    printf("2\n");
     {
         mir::Fd fd(raw_fd);
+        printf("3\n");
         {
             mir::Fd fd1(fd);
             fd2 = fd;
+            printf("4\n");
         }
     }
 
-    EXPECT_THAT(raw_fd, IsNotClosed());
+    EXPECT_TRUE(fd_is_open(raw_fd));
     fd2 = mir::Fd(-1);
-    EXPECT_THAT(raw_fd, IsClosed());
+    EXPECT_FALSE(fd_is_open(raw_fd));
 }

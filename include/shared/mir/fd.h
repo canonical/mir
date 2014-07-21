@@ -29,6 +29,7 @@ public:
     static int const invalid{-1};
     Fd(); //Initializes fd to the mir::Fd::invalid;
     Fd(Fd&&);
+    Fd(Fd const&);
     Fd& operator=(Fd);
     ~Fd() noexcept;
 
@@ -36,7 +37,12 @@ public:
     operator int() const;
 
 private:
-    int fd;
+    struct RefcountFd
+    {
+        int fd;
+        unsigned int refcount;
+    };
+    RefcountFd *rfd;
 };
 } // namespace mir
 
