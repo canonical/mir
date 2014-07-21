@@ -280,6 +280,11 @@ int main (int argc, char **argv)
                 tests.insert(current_test + "*");
                 break;
             case test_suite:
+                auto suite_end = line.find(' ');
+                if (suite_end != std::string::npos)
+                {
+                    line = line.substr(0, suite_end);
+                }
                 current_test = line;
                 break;
         }

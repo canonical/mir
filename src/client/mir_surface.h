@@ -86,7 +86,10 @@ public:
     EGLNativeWindowType generate_native_window();
 
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
+    
+    // Non-blocking
     int attrib(MirSurfaceAttrib a) const;
+
     MirOrientation get_orientation() const;
     
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
