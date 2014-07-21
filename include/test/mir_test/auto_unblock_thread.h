@@ -56,6 +56,11 @@ public:
             thread.join();
     }
 
+    std::thread::native_handle_type native_handle()
+    {
+        return thread.native_handle();
+    }
+
 private:
     std::function<void(void)> unblock;
     std::thread thread;

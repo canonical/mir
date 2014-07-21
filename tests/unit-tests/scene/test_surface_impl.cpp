@@ -186,52 +186,6 @@ TEST_F(Surface, states)
     EXPECT_EQ(mir_surface_state_fullscreen, surf.state());
 }
 
-TEST_F(Surface, dpi_is_initialized)
-{
-    using namespace testing;
-
-    ms::BasicSurface surf(
-        std::string("stub"),
-        geom::Rectangle{{},{}},
-        false,
-        buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_input_sender,
-        null_configurator,
-        std::shared_ptr<mg::CursorImage>(),
-        report);
-
-    EXPECT_EQ(0, surf.dpi()); // The current default. It will change.
-}
-
-TEST_F(Surface, dpi_changes)
-{
-    using namespace testing;
-
-    ms::BasicSurface surf(
-        std::string("stub"),
-        geom::Rectangle{{},{}},
-        false,
-        buffer_stream,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_input_sender,
-        null_configurator,
-        std::shared_ptr<mg::CursorImage>(),
-        report);
-
-    EXPECT_EQ(123, surf.configure(mir_surface_attrib_dpi, 123));
-    EXPECT_EQ(123, surf.dpi());
-
-    EXPECT_EQ(456, surf.configure(mir_surface_attrib_dpi, 456));
-    EXPECT_EQ(456, surf.dpi());
-
-    surf.configure(mir_surface_attrib_dpi, -1);
-    EXPECT_EQ(456, surf.dpi());
-
-    EXPECT_EQ(789, surf.configure(mir_surface_attrib_dpi, 789));
-    EXPECT_EQ(789, surf.dpi());
-}
-
 bool operator==(MirEvent const& a, MirEvent const& b)
 {
     // We will always fill unused bytes with zero, so memcmp is accurate...

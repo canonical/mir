@@ -61,7 +61,11 @@ typedef enum android_LogPriority {
  * Simplified macro to send a verbose log message using the current LOG_TAG.
  */
 #ifndef ALOGV
+#if LOG_NDEBUG // Per Android, optimize out verbose messages when LOG_NDEBUG=1
+#define ALOGV(...) ((void)0)
+#else
 #define ALOGV(...) ((void)ALOG(LOG_VERBOSE, LOG_TAG, __VA_ARGS__))
+#endif
 #endif
 
 /*
