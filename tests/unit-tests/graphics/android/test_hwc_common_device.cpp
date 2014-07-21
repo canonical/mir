@@ -192,3 +192,21 @@ TYPED_TEST(HWCCommon, set_orientation)
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
     EXPECT_FALSE(device->apply_orientation(mir_orientation_left));
 }
+
+TYPED_TEST(HWCCommon, first_unblank_failure_is_not_fatal) //lp:1345533
+{
+    ON_CALL(*this->mock_device, display_on())
+        .WillByDefault(testing::Throw(std::runtime_error("error")));
+    EXPECT_NO_THROW({
+        auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+    });
+}
+
+TYPED_TEST(HWCCommon, first_vsync_failure_is_not_fatal) //lp:1345533
+{
+    ON_CALL(*this->mock_device, vsync_signal_on())
+        .WillByDefault(testing::Throw(std::runtime_error("error")));
+    EXPECT_NO_THROW({
+        auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+    });
+}
