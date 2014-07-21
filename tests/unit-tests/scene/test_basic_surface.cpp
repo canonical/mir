@@ -470,47 +470,149 @@ TEST_F(BasicSurfaceTest, reception_mode_can_be_changed)
     EXPECT_EQ(mi::InputReceptionMode::receives_all_input, surface.reception_mode());
 }
 
-TEST_F(BasicSurfaceTest, notifies_about_visibility_attrib_changes)
+namespace
+{
+
+struct AttributeTestParameters
+{
+    MirSurfaceAttrib attribute;
+    int default_value;
+    int a_valid_value;
+    int an_invalid_value;
+};
+
+struct BasicSurfaceAttributeTest : public BasicSurfaceTest,
+    public ::testing::WithParamInterface<AttributeTestParameters>
+{
+};
+
+AttributeTestParameters const surface_visibility_test_parameters{
+    mir_surface_attrib_visibility,
+    mir_surface_visibility_exposed,
+    mir_surface_visibility_occluded,
+    -1
+};
+
+AttributeTestParameters const surface_type_test_parameters{
+    mir_surface_attrib_type,
+    mir_surface_type_normal,
+    mir_surface_type_freestyle,
+    -1
+};
+
+AttributeTestParameters const surface_state_test_parameters{
+    mir_surface_attrib_state,
+    mir_surface_state_restored,
+    mir_surface_state_fullscreen,
+    1178312
+};
+
+AttributeTestParameters const surface_swapinterval_test_parameters{
+    mir_surface_attrib_swapinterval,
+    1,
+    0,
+    -1
+};
+
+AttributeTestParameters const surface_dpi_test_parameters{
+    mir_surface_attrib_dpi,
+    0,
+    90,
+    -1
+};
+
+AttributeTestParameters const surface_focus_test_parameters{
+    mir_surface_attrib_focus,
+    mir_surface_unfocused,
+    mir_surface_focused,
+    -1
+};
+
+}
+
+TEST_P(BasicSurfaceAttributeTest, default_value)
+{
+    auto const& params = GetParam();
+    auto const& attribute = params.attribute;
+    auto const& default_value = params.default_value;
+    
+    EXPECT_EQ(default_value, surface.query(attribute));
+}
+
+TEST_P(BasicSurfaceAttributeTest, notifies_about_attrib_changes)
 {
     using namespace testing;
+
+    auto const& params = GetParam();
+    auto const& attribute = params.attribute;
+    auto const& value1 = params.a_valid_value;
+    auto const& value2 = params.default_value;
+
     MockSurfaceAttribObserver mock_surface_observer;
 
     InSequence s;
-    EXPECT_CALL(mock_surface_observer, attrib_changed(mir_surface_attrib_visibility, mir_surface_visibility_occluded))
+    EXPECT_CALL(mock_surface_observer, attrib_changed(attribute, value1))
         .Times(1);
-    EXPECT_CALL(mock_surface_observer, attrib_changed(mir_surface_attrib_visibility, mir_surface_visibility_exposed))
+    EXPECT_CALL(mock_surface_observer, attrib_changed(attribute, value2))
         .Times(1);
 
     surface.add_observer(mt::fake_shared(mock_surface_observer));
 
-    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded);
-    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
+    surface.configure(attribute, value1);
+    surface.configure(attribute, value2);
 }
 
-TEST_F(BasicSurfaceTest, does_not_notify_if_visibility_attrib_is_unchanged)
+TEST_P(BasicSurfaceAttributeTest, does_not_notify_if_attrib_is_unchanged)
 {
     using namespace testing;
+
+    auto const& params = GetParam();
+    auto const& attribute = params.attribute;
+    auto const& default_value = params.default_value;
+    auto const& another_value = params.a_valid_value;
+
     MockSurfaceAttribObserver mock_surface_observer;
 
-    EXPECT_CALL(mock_surface_observer, attrib_changed(mir_surface_attrib_visibility, mir_surface_visibility_occluded))
+    EXPECT_CALL(mock_surface_observer, attrib_changed(attribute, another_value))
         .Times(1);
 
     surface.add_observer(mt::fake_shared(mock_surface_observer));
 
-    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed);
-    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded);
-    surface.configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded);
+    surface.configure(attribute, default_value);
+    surface.configure(attribute, another_value);
+    surface.configure(attribute, another_value);
 }
 
-TEST_F(BasicSurfaceTest, throws_on_invalid_visibility_attrib_value)
+TEST_P(BasicSurfaceAttributeTest, throws_on_invalid_value)
 {
     using namespace testing;
-
+    
+    auto const& params = GetParam();
+    auto const& attribute = params.attribute;
+    auto const& invalid_value = params.an_invalid_value;
+    
     EXPECT_THROW({
-        surface.configure(mir_surface_attrib_visibility,
-                          static_cast<int>(mir_surface_visibility_exposed) + 1);
-    }, std::logic_error);
+            surface.configure(attribute, invalid_value);
+        }, std::logic_error);
 }
+
+INSTANTIATE_TEST_CASE_P(SurfaceTypeAttributeTest, BasicSurfaceAttributeTest,
+   ::testing::Values(surface_type_test_parameters));
+
+INSTANTIATE_TEST_CASE_P(SurfaceVisibilityAttributeTest, BasicSurfaceAttributeTest,
+   ::testing::Values(surface_visibility_test_parameters));
+
+INSTANTIATE_TEST_CASE_P(SurfaceStateAttributeTest, BasicSurfaceAttributeTest,
+   ::testing::Values(surface_state_test_parameters));
+
+INSTANTIATE_TEST_CASE_P(SurfaceSwapintervalAttributeTest, BasicSurfaceAttributeTest,
+   ::testing::Values(surface_swapinterval_test_parameters));
+
+INSTANTIATE_TEST_CASE_P(SurfaceDPIAttributeTest, BasicSurfaceAttributeTest,
+   ::testing::Values(surface_dpi_test_parameters));
+
+INSTANTIATE_TEST_CASE_P(SurfaceFocusAttributeTest, BasicSurfaceAttributeTest,
+   ::testing::Values(surface_focus_test_parameters));
 
 TEST_F(BasicSurfaceTest, configure_returns_value_set_by_configurator)
 {
