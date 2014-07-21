@@ -196,6 +196,15 @@ void mf::SessionMediator::create_surface(
 
     if (surface->supports_input())
         response->add_fd(surface->client_input_fd());
+    
+    for (unsigned int i = 0; i < mir_surface_attribs; i++)
+    {
+        auto setting = response->add_attributes();
+        
+        setting->mutable_surfaceid()->set_value(surf_id.as_value());
+        setting->set_attrib(i);
+        setting->set_ivalue(surface->query(static_cast<MirSurfaceAttrib>(i)));
+    }
 
     advance_buffer(surf_id, *surface,
         [lock, this, response, done, session]
