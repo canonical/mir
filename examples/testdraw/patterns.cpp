@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "patterns.h"
 #include "mir_toolkit/common.h"
-#include "testdraw/patterns.h"
 
 namespace mtd=mir::test::draw;
 

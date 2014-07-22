@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "testdraw/graphics_region_factory.h"
+#include "graphics_region_factory.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir_toolkit/common.h"
