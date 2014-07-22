@@ -1,5 +1,12 @@
-mir (0.5.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.5.0-0ubuntu2) UNRELEASED; urgency=medium
 
+  * Fixed: [regression] Mir fails to start on Nexus 5 / Nexus 10 (LP: #1345533)
+
+ -- Kevin Gunn <kevin.gunn@canonical.com>  Mon, 21 Jul 2014 17:23:28 -0500
+
+mir (0.5.0+14.10.20140717-0ubuntu1) utopic; urgency=medium
+
+  [ Daniel van Vugt ]
   * New upstream release 0.5.0 (https://launchpad.net/mir/+milestone/0.5.0)
     - mirclient ABI unchanged at 8. Clients do not need rebuilding.
     - mirserver ABI bumped to 23. Servers need rebuilding, but probably don't
@@ -50,7 +57,7 @@ mir (0.5.0-0ubuntu1) UNRELEASED; urgency=medium
       . SurfaceConfigurator::attribute_set always say "unfocused" for focus
         property changes (LP: #1336548)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 04 Jul 2014 12:45:30 +0800
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 17 Jul 2014 07:58:53 +0000
 
 mir (0.4.1+14.10.20140714-0ubuntu1) utopic; urgency=medium
 
