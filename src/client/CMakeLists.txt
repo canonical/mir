@@ -76,15 +76,9 @@ set(
   ${XKBCOMMON_LIBRARIES}
 
   mirprotobuf
-  mirsharedinput
-  mirsharedlogging
-  mirsharedenv
-  mirsharedgeometry
-  mirsharedsharedlibrary
   mirclientrpc
   mirclientlttngstatic
-
-  ${MIR_COMMON_PLATFORM_LIBRARIES}
+  mircommon
 
   3rd_party
 )

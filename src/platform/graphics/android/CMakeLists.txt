@@ -48,10 +48,9 @@ set_target_properties(
 target_link_libraries(
   mirplatformgraphicsandroid
 
-  miroptions
-  mirplatform
   mirsharedandroid
-  mirsharedenv
+  mirplatform
+  mircommon
 
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${LIBHARDWARE_LIBRARIES}
