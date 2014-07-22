@@ -20,13 +20,35 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
+#include <mutex>
+
 namespace mcl = mir::client;
 namespace mcla = mcl::android;
 
+namespace
+{
+// default_display_container needs to live until the library is unloaded
+std::mutex default_display_container_mutex;
+mcla::AndroidNativeDisplayContainer* default_display_container{nullptr};
+
+extern "C" int __attribute__((destructor)) destroy()
+{
+    std::lock_guard<std::mutex> lock(default_display_container_mutex);
+
+    delete default_display_container;
+
+    return 0;
+}
+}
+
 mcl::EGLNativeDisplayContainer& mcl::EGLNativeDisplayContainer::instance()
 {
-    static mcla::AndroidNativeDisplayContainer default_display_container;
-    return default_display_container;
+    std::lock_guard<std::mutex> lock(default_display_container_mutex);
+
+    if (!default_display_container)
+        default_display_container = new mcla::AndroidNativeDisplayContainer;
+
+    return *default_display_container;
 }
 
 mcla::AndroidNativeDisplayContainer::AndroidNativeDisplayContainer()

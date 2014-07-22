@@ -134,6 +134,10 @@ public:
     mir::protobuf::DisplayServer& display_server();
 
 private:
+    // MUST be first data member so it is destroyed last.
+    struct Deregisterer
+    { MirConnection* const self; ~Deregisterer(); } deregisterer;
+
     std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
     std::shared_ptr<google::protobuf::RpcChannel> const channel;
@@ -173,6 +177,8 @@ private:
     std::vector<int> extra_platform_data;
 
     struct SurfaceRelease;
+
+    MirConnection* next_valid{nullptr};
 
     void set_error_message(std::string const& error);
     void done_disconnect();

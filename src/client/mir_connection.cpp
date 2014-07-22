@@ -63,11 +63,48 @@ private:
     MirDisplayConfiguration* const config;
 };
 
+using LibrariesCache = std::map<std::string, std::shared_ptr<mir::SharedLibrary>>;
+
 std::mutex connection_guard;
-std::unordered_set<MirConnection*> valid_connections;
+MirConnection* valid_connections{nullptr};
+// There's no point in loading twice, and it isn't safe to
+// unload while there are valid connections
+std::map<std::string, std::shared_ptr<mir::SharedLibrary>>* libraries_cache_ptr{nullptr};
+}
+
+std::shared_ptr<mir::SharedLibrary>& mcl::libraries_cache(std::string const& libname)
+{
+    std::lock_guard<std::mutex> lock(connection_guard);
+
+    if (!libraries_cache_ptr)
+        libraries_cache_ptr = new LibrariesCache;
+
+    return (*libraries_cache_ptr)[libname];
+}
+
+MirConnection::Deregisterer::~Deregisterer()
+{
+    std::lock_guard<std::mutex> lock(connection_guard);
+
+    for (auto current = &valid_connections; *current; current = &(*current)->next_valid)
+    {
+        if (self == *current)
+        {
+            *current = self->next_valid;
+            break;
+        }
+    }
+
+    // When the last valid connection goes we can clear the libraries cache
+    if (!valid_connections)
+    {
+        delete libraries_cache_ptr;
+        libraries_cache_ptr = nullptr;
+    }
 }
 
 MirConnection::MirConnection(std::string const& error_message) :
+    deregisterer{this},
     channel(),
     server(0),
     error_message(error_message)
@@ -76,6 +113,7 @@ MirConnection::MirConnection(std::string const& error_message) :
 
 MirConnection::MirConnection(
     mir::client::ConnectionConfiguration& conf) :
+        deregisterer{this},
         channel(conf.the_rpc_channel()),
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         logger(conf.the_logger()),
@@ -89,7 +127,8 @@ MirConnection::MirConnection(
     connect_result.set_error("connect not called");
     {
         std::lock_guard<std::mutex> lock(connection_guard);
-        valid_connections.insert(this);
+        next_valid = valid_connections;
+        valid_connections = this;
     }
 }
 
@@ -98,11 +137,6 @@ MirConnection::~MirConnection() noexcept
     // We don't die while if are pending callbacks (as they touch this).
     // But, if after 500ms we don't get a call, assume it won't happen.
     connect_wait_handle.wait_for_pending(std::chrono::milliseconds(500));
-
-    {
-        std::lock_guard<std::mutex> lock(connection_guard);
-        valid_connections.erase(this);
-    }
 
     std::lock_guard<decltype(mutex)> lock(mutex);
     if (connect_result.has_platform())
@@ -317,13 +351,18 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
 bool MirConnection::is_valid(MirConnection *connection)
 {
     {
-        std::lock_guard<std::mutex> lock(connection_guard);
-        if (valid_connections.count(connection) == 0)
-           return false;
+        std::unique_lock<std::mutex> lock(connection_guard);
+        for (auto current = valid_connections; current; current = current->next_valid)
+        {
+            if (connection == current)
+            {
+                lock.unlock();
+                std::lock_guard<decltype(connection->mutex)> lock(connection->mutex);
+                return !connection->connect_result.has_error();
+            }
+        }
     }
-
-    std::lock_guard<decltype(connection->mutex)> lock(connection->mutex);
-    return !connection->connect_result.has_error();
+    return false;
 }
 
 void MirConnection::populate(MirPlatformPackage& platform_package)
