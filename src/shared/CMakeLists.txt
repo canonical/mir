@@ -1,5 +1,6 @@
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 set(MIR_COMMON_LIBRARIES)
+set(MIR_COMMON_SOURCES)
 add_subdirectory(protobuf/)
 
 if (MIR_BUILD_PLATFORM_ANDROID)
@@ -20,6 +21,10 @@ set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mircommon")
 
+set_property(SOURCE report/lttng/tracepoint_provider.cpp
+  APPEND PROPERTY COMPILE_DEFINITIONS 
+  MIR_TRACEPOINT_LIB_INSTALL_PATH="${CMAKE_INSTALL_PREFIX}/${MIR_TRACEPOINT_LIB_INSTALL_DIR}")
+
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mircommon.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mircommon.pc
@@ -33,6 +38,7 @@ set(
 
 add_library(
   mircommon SHARED
+  ${MIR_COMMON_SOURCES}
 )
 
 target_link_libraries(

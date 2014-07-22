@@ -14,13 +14,9 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-add_library(mirsharedlogging STATIC
-  dumb_console_logger.cpp
-  input_timestamp.cpp
+list(APPEND MIR_COMMON_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/dumb_console_logger.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/input_timestamp.cpp
 )
 
-list(APPEND MIR_COMMON_LIBRARIES
-  mirsharedlogging
-)
-
-set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)
+set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)

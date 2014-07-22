@@ -14,17 +14,13 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-add_library(mirsharedsharedlibrary STATIC
-  shared_library.cpp
-)
-
-target_link_libraries(
-    mirsharedsharedlibrary
-    dl
+list(APPEND MIR_COMMON_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/shared_library.cpp
 )
 
 list(APPEND MIR_COMMON_LIBRARIES
-  mirsharedsharedlibrary
+    dl
 )
 
+set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
 set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)

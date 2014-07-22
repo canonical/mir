@@ -14,16 +14,10 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-add_library(
-  mirsharedgeometry STATIC
-
-  rectangle.cpp
-  rectangles.cpp
-  ostream.cpp
+list(APPEND MIR_COMMON_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/rectangle.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/rectangles.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/ostream.cpp
 )
 
-list(APPEND MIR_COMMON_LIBRARIES
-  mirsharedgeometry
-)
-
-set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)
+set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)

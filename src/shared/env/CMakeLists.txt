@@ -14,12 +14,9 @@
 #
 # Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
 
-add_library(mirsharedenv STATIC
-  default_configuration.cpp
+
+list(APPEND MIR_COMMON_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/default_configuration.cpp
 )
 
-list(APPEND MIR_COMMON_LIBRARIES
-  mirsharedenv
-)
-
-set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)
+set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
