@@ -56,6 +56,9 @@ target_link_libraries(mir_demo_client_basic
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
+add_executable(mir_test_client_release_at_exit release_at_exit.c)
+target_link_libraries(mir_test_client_release_at_exit mirclient)
+
 add_executable(mir_demo_client_multiwin multiwin.c)
 target_link_libraries(mir_demo_client_multiwin mirclient)
 
