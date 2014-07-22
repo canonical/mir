@@ -36,6 +36,12 @@ add_executable(mir_demo_client_eglplasma
 target_link_libraries(mir_demo_client_eglplasma
   eglapp
 )
+add_executable(mir_demo_client_cursors
+  cursors_demo_client.c
+)
+target_link_libraries(mir_demo_client_cursors
+  eglapp
+)
 
 add_executable(mir_demo_client_basic
   basic.c
