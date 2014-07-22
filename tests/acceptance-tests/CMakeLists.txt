@@ -39,6 +39,7 @@ set(
   test_large_messages.cpp
   test_client_surface_visibility.cpp
   test_client_with_custom_display_config_deadlock.cpp
+  test_macros.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )
