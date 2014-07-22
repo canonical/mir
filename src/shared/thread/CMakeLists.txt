@@ -22,3 +22,9 @@ add_library(mirsharedthread STATIC
 target_link_libraries(
     mirsharedthread
 )
+
+list(APPEND MIR_COMMON_LIBRARIES
+  mirsharedthread
+)
+
+set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)

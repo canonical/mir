@@ -22,3 +22,9 @@ target_link_libraries(
     mirsharedsharedlibrary
     dl
 )
+
+list(APPEND MIR_COMMON_LIBRARIES
+  mirsharedsharedlibrary
+)
+
+set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)
