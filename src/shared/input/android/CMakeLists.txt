@@ -15,7 +15,7 @@
 # Authored by: Robert Carr <robert.carr@canonical.com>
 
 list(
-  APPEND ANDROID_SHARED_INPUT_SOURCES
+  APPEND MIR_COMMON_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_lexicon.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_receiver.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/android_input_receiver_thread.cpp
@@ -23,7 +23,7 @@ list(
 )
 
 set(
-  ANDROID_SHARED_INPUT_SOURCES
-  ${ANDROID_SHARED_INPUT_SOURCES}
+  MIR_COMMON_SOURCES
+  ${MIR_COMMON_SOURCES}
   PARENT_SCOPE
 )

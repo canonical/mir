@@ -1,4 +1,5 @@
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
+set(MIR_COMMON_EXTRA_INCLUDE)
 set(MIR_COMMON_LIBRARIES)
 set(MIR_COMMON_SOURCES)
 add_subdirectory(protobuf/)
@@ -35,6 +36,7 @@ set(
   ${MIR_GENERATED_INCLUDE_DIRECTORIES}
   PARENT_SCOPE)
 
+include_directories(${MIR_COMMON_EXTRA_INCLUDE})
 
 add_library(
   mircommon SHARED

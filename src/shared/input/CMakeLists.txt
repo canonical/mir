@@ -14,30 +14,22 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-set(
-  ANDROID_SHARED_INPUT_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/xkb_mapper.cpp
+list(APPEND MIR_COMMON_EXTRA_INCLUDE
+  ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES}
+  ${MIR_ANDROID_INCLUDE_DIRECTORIES}
 )
-
-include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
-include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 
 add_subdirectory(android)
 
-add_library(
-  mirsharedinput STATIC
-  ${ANDROID_SHARED_INPUT_SOURCES}
+list(APPEND MIR_COMMON_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/xkb_mapper.cpp
 )
 
-target_link_libraries(
-  mirsharedinput
-  
+list(APPEND MIR_COMMON_LIBRARIES
   android-input
   ${XKBCOMMON_LIBRARIES}
 )
 
-list(APPEND MIR_COMMON_LIBRARIES
-  mirsharedinput
-)
-
+set(MIR_COMMON_EXTRA_INCLUDE ${MIR_COMMON_EXTRA_INCLUDE} PARENT_SCOPE)
+set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
 set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)
