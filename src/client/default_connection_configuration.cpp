@@ -45,10 +45,8 @@ std::string const default_platform_lib{"libmirclientplatform.so"};
 
 mir::SharedLibrary const* load_library(std::string const& libname)
 {
-    // There's no point in loading twice, and it isn't safe to unload...
-    static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
 
-    if (auto& ptr = libraries_cache[libname])
+    if (auto& ptr = mcl::libraries_cache(libname))
     {
         return ptr.get();
     }
