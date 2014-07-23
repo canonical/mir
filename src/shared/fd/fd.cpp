@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -15,39 +15,38 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+#include "mir/fd.h"
+#include <unistd.h>
+#include <algorithm>
 
-#ifndef MIR_GRAPHICS_ANDROID_FENCE_H_
-#define MIR_GRAPHICS_ANDROID_FENCE_H_
-
-namespace mir
+mir::Fd::Fd() :
+    Fd{invalid}
 {
-namespace graphics
-{
-namespace android
-{
-
-//TODO: (kdub) remove this type in favor of mir::Fd
-typedef int NativeFence;
-
-class Fence
-{
-public:
-    virtual ~Fence() = default;
-
-    virtual void wait() = 0;
-    //TODO: (kdub) use the Fd type instead of NativeFence
-    virtual void merge_with(NativeFence& merge_fd) = 0;
-    virtual NativeFence copy_native_handle() const = 0;
-
-protected:
-    Fence() = default;
-    Fence(Fence const&) = delete;
-    Fence& operator=(Fence const&) = delete;
-};
-
-
-}
-}
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_FENCE_H_ */
+mir::Fd::Fd(int other_fd) :
+    fd{other_fd}
+{
+}
+
+mir::Fd::Fd(Fd&& other) :
+    fd{other.fd}
+{
+    other.fd = invalid;
+}
+
+mir::Fd::~Fd() noexcept
+{
+    if (fd > invalid) ::close(fd);
+}
+
+mir::Fd& mir::Fd::operator=(Fd other)
+{
+    std::swap(fd, other.fd);
+    return *this;
+}
+
+mir::Fd::operator int() const
+{
+    return fd;
+}

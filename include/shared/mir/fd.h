@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -15,39 +15,29 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-
-#ifndef MIR_GRAPHICS_ANDROID_FENCE_H_
-#define MIR_GRAPHICS_ANDROID_FENCE_H_
+#ifndef MIR_FD_H_
+#define MIR_FD_H_
 
 namespace mir
 {
-namespace graphics
-{
-namespace android
-{
-
-//TODO: (kdub) remove this type in favor of mir::Fd
-typedef int NativeFence;
-
-class Fence
+class Fd
 {
 public:
-    virtual ~Fence() = default;
+    //transfer ownership of the POD-int to the object. The int no longer needs close()ing,
+    //and has the lifetime of the Fd object.
+    explicit Fd(int fd);
+    static int const invalid{-1};
+    Fd(); //Initializes fd to the mir::Fd::invalid;
+    Fd(Fd&&);
+    Fd& operator=(Fd);
+    ~Fd() noexcept;
 
-    virtual void wait() = 0;
-    //TODO: (kdub) use the Fd type instead of NativeFence
-    virtual void merge_with(NativeFence& merge_fd) = 0;
-    virtual NativeFence copy_native_handle() const = 0;
+    //bit of a convenient kludge. take care not to close or otherwise destroy the FD.
+    operator int() const;
 
-protected:
-    Fence() = default;
-    Fence(Fence const&) = delete;
-    Fence& operator=(Fence const&) = delete;
+private:
+    int fd;
 };
+} // namespace mir
 
-
-}
-}
-}
-
-#endif /* MIR_GRAPHICS_ANDROID_FENCE_H_ */
+#endif // MIR_FD_H_
