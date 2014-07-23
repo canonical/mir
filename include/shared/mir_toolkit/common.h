@@ -21,6 +21,8 @@
 #ifndef MIR_COMMON_H_
 #define MIR_COMMON_H_
 
+#include <mir_toolkit/cursors.h>
+
 /**
  * \addtogroup mir_toolkit
  * @{
@@ -136,17 +138,6 @@ typedef enum MirOrientation
     mir_orientation_inverted = 180,
     mir_orientation_right = 270
 } MirOrientation;
-
-/**
- * A special cursor name for use with mir_cursor_configuration_from_name
- * representing the system default cursor.
- */
-extern char const *const mir_default_cursor_name;
-/**
- * A special cursor name for use with mir_cursor_configuration_from_name
- * representing a disabled cursor image.
- */
-extern char const *const mir_disabled_cursor_name;
 
 /**@}*/
 
