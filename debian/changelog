@@ -1,5 +1,27 @@
-mir (0.5.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
 
+  * New upstream release 0.6.0 (https://launchpad.net/mir/+milestone/0.6.0)
+    - mirclient ABI unchanged at 8. Clients do not need rebuilding.
+    - mirserver ABI bumped to 24. Servers need rebuilding, but probably don't
+      need modification:
+      . TODO: List API changes here.
+    - Enhancements:
+      . TODO: List enhancements here.
+    - Bugs fixed:
+      . TODO: List bug fixes here.
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 22 Jul 2014 14:17:12 +0800
+
+mir (0.5.0+14.10.20140722-0ubuntu1) utopic; urgency=medium
+
+  [ Kevin Gunn ]
+  * Fixed: [regression] Mir fails to start on Nexus 5 / Nexus 10 (LP: #1345533)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 22 Jul 2014 02:17:22 +0000
+
+mir (0.5.0+14.10.20140717-0ubuntu1) utopic; urgency=medium
+
+  [ Daniel van Vugt ]
   * New upstream release 0.5.0 (https://launchpad.net/mir/+milestone/0.5.0)
     - mirclient ABI unchanged at 8. Clients do not need rebuilding.
     - mirserver ABI bumped to 23. Servers need rebuilding, but probably don't
@@ -10,10 +32,55 @@ mir (0.5.0-0ubuntu1) UNRELEASED; urgency=medium
       . DefaultServerConfiguration: "clock" member is now static.
       . SessionAuthorizer: New functions.
       . ServerConfiguration: New function added: the_prompt_connector().
+    - Enhancements:
+      . Add AddressSanitizer cmake build type.
+      . frontend, client API, tests: add support for prompt session
+        permissions and for client detecting errors.
+      . server: Ensure our emergency cleanup handling infrastructure is
+        signal-safe.
+      . Implement and enable an xcursor based image loader for cursors.
+      . Fix warnings raised by the new g++-4.9.
+      . shared, scene: Introduce a generic listener collection.
+      . MirMotionEvent: Define a struct typedef to allow for
+        pointer_coordinates to be used individually.
     - Bugs fixed:
-      . TODO
+      . Nexus 10 leaks during overlay operations (LP: #1331769)
+      . MultiThreadedCompositor deadlocks (LP: #1335311)
+      . Intermittent test failure in ClientSurfaceEvents can client query 
+        orientation (LP: #1335741)
+      . Intermittent test failure in ClientSurfaceEvents/OrientationEvents
+        (LP: #1335752)
+      . Intermittent memory error in ClientSurfaceEvents on
+        orientation query (LP: #1335819)
+      . mir_unit_tests.EventDistributorTest.* SEGFAULT (LP: #1338902)
+      . [regression] Device locks randomly on welcome screen (LP: #1339700)
+      . Intermittent deadlock when switching to session with custom display
+        config & closing other session (LP: #1340669)
+      . Mir cursor has no hotspot setting, assumes (0, 0) (LP: #1189775)
+      . clang built mir_unit_tests.ProtobufSocketCommunicatorFD crashes
+        intermittently (LP: #1300653)
+      . g++-4.9 binary incompatibilities with libraries built with g++-4.8
+        (LP: #1329089)
+      . [test regression] SurfaceLoop fails sporadically on deleting surfaces
+        for a disconnecting client (LP: #1335747)
+      . Intermittent test failure ServerShutdown when clients are blocked
+        (LP: #1335873)
+      . [regression] mir_demo_client_multiwin is displayed with obviously
+        wrong colours (LP: #1339471)
+      . Partially onscreen surfaces not occluded when covered by another
+        surface (LP: #1340078)
+      . SurfaceConfigurator::attribute_set always say "unfocused" for focus
+        property changes (LP: #1336548)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 04 Jul 2014 12:45:30 +0800
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 17 Jul 2014 07:58:53 +0000
+
+mir (0.4.1+14.10.20140714-0ubuntu1) utopic; urgency=medium
+
+  [ Daniel van Vugt ]
+  * Bug fix release 0.4.1 (https://launchpad.net/mir/+milestone/0.4.1) fixes:
+    - [regression] Device locks randomly on welcome screen (LP: #1339700)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 14 Jul 2014 13:13:37 +0000
 
 mir (0.4.0+14.10.20140701.1-0ubuntu1) utopic; urgency=medium
 
