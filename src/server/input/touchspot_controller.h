@@ -56,6 +56,7 @@ private:
     std::shared_ptr<graphics::Buffer> touchspot_pixels;
     std::shared_ptr<InputTargets> scene;
 
+    unsigned int renderables_in_use;
     std::vector<std::shared_ptr<TouchspotRenderable>> touchspot_renderables;
 };
 

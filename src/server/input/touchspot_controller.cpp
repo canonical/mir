@@ -112,7 +112,8 @@ private:
 mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mi::InputTargets> const& scene)
     : touchspot_pixels(allocator->alloc_buffer({touchspot_size, touchspot_pixel_format, mg::BufferUsage::software})),
-      scene(scene)
+      scene(scene),
+      renderables_in_use(0)
 {
     unsigned int const pixels_size = touchspot_size.width.as_uint32_t()*touchspot_size.height.as_uint32_t() *
         MIR_BYTES_PER_PIXEL(touchspot_pixel_format);
@@ -131,13 +132,17 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
     {
         auto const& renderable = touchspot_renderables[i];
         if (i < touches.size())
-        {
+
             renderable->move_to(touches[i].touch_location);
-            if (renderable.use_count() == 1)
+            if (renderables_in_use < i)
+            {
+                renderables_in_use++;
                 scene->add_overlay(renderable);
+            }
         }
-        else if (renderable.use_count() != 1)
+        else if (i >= renderables_in_use)
         {
+            renderables_in_use--;
             scene->remove_overlay(renderable);
         }
     }
