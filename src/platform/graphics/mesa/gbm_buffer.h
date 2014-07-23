@@ -67,6 +67,8 @@ public:
     virtual void gl_bind_to_texture() override;
 
     bool can_bypass() const override;
+    
+    void write(void const* data, size_t size) override;
 
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;

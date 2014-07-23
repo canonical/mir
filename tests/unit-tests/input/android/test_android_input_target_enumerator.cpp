@@ -26,6 +26,7 @@
 #include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/stub_input_handles.h"
 #include "mir_test_doubles/stub_input_surface.h"
+#include "mir_test_doubles/stub_input_targets.h"
 #include "mir_test_doubles/mock_window_handle_repository.h"
 
 #include <InputDispatcher.h>
@@ -48,7 +49,7 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct StubInputTargets : public mi::InputTargets
+struct StubInputTargets : public mtd::StubInputTargets
 {
     StubInputTargets(std::initializer_list<std::shared_ptr<mi::Surface>> const& target_list)
         : targets(target_list.begin(), target_list.end())

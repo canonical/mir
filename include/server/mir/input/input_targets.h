@@ -30,6 +30,10 @@ namespace scene
 {
 class Observer;
 }
+namespace graphics
+{
+class Renderable;
+}
 
 namespace input
 {
@@ -44,6 +48,9 @@ public:
 
     virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
     virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
+    
+    virtual void add_overlay(std::shared_ptr<graphics::Renderable> const& overlay) = 0;
+    virtual void remove_overlay(std::weak_ptr<graphics::Renderable> const& overlay) = 0;
 
 protected:
     InputTargets() = default;

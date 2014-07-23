@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,30 +16,28 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_INPUT_CURSOR_LISTENER_H_
-#define MIR_INPUT_CURSOR_LISTENER_H_
+#ifndef MIR_TEST_DOUBLES_STUB_TOUCH_VISUALIZER_H_
+#define MIR_TEST_DOUBLES_STUB_TOUCH_VISUALIZER_H_
+
+#include "mir/input/touch_visualizer.h"
 
 namespace mir
 {
-namespace input
+namespace test
+{
+namespace doubles
 {
 
-/// An interface for listening to absolute cursor events (without context): For example to update
-/// the position of the visible cursor.
-class CursorListener
+struct StubTouchVisualizer : public input::TouchVisualizer
 {
-public:
-    virtual ~CursorListener() = default;
-
-    virtual void cursor_moved_to(float abs_x, float abs_y) = 0;
-
-protected:
-    CursorListener() = default;
-    CursorListener(CursorListener const&) = delete;
-    CursorListener& operator=(CursorListener const&) = delete;
+    void visualize_touches(std::vector<Spot> const&) override
+    {
+    }
 };
 
 }
 }
+} // namespace mir
 
-#endif // MIR_INPUT_CURSOR_LISTENER_H_
+#endif // MIR_TEST_DOUBLES_STUB_TOUCH_VISUALIZER_H_
+

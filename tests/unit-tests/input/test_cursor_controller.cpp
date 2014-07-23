@@ -29,6 +29,7 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_scene_surface.h"
+#include "mir_test_doubles/stub_input_targets.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -166,7 +167,7 @@ struct StubInputSurface : public mtd::StubSceneSurface
     std::vector<std::shared_ptr<ms::SurfaceObserver>> observers;
 };
 
-struct StubInputTargets : public mi::InputTargets
+struct StubInputTargets : public mtd::StubInputTargets
 {
     StubInputTargets(std::initializer_list<std::shared_ptr<ms::Surface>> const& targets)
         : targets(targets.begin(), targets.end())

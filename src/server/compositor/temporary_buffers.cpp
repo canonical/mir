@@ -19,6 +19,9 @@
 #include "buffer_bundle.h"
 #include "temporary_buffers.h"
 
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
+
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
@@ -85,4 +88,9 @@ std::shared_ptr<mg::NativeBuffer> mc::TemporaryBuffer::native_buffer_handle() co
 bool mc::TemporaryBuffer::can_bypass() const
 {
     return buffer->can_bypass();
+}
+
+void mc::TemporaryBuffer::write(void const* /* data */, size_t /* size */)
+{
+    BOOST_THROW_EXCEPTION(std::logic_error("Attempting to write to temporary buffer references is invalid"));
 }

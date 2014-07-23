@@ -84,16 +84,18 @@ public:
     {
     }
 
-    virtual geometry::Size size() const { return buf_size; }
+    geometry::Size size() const { return buf_size; }
 
-    virtual geometry::Stride stride() const { return buf_stride; }
+    geometry::Stride stride() const { return buf_stride; }
 
-    virtual MirPixelFormat pixel_format() const { return buf_pixel_format; }
+    MirPixelFormat pixel_format() const { return buf_pixel_format; }
 
-    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const { return native_buffer; }
-    virtual void gl_bind_to_texture() override {}
+    std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const { return native_buffer; }
+    void gl_bind_to_texture() override {}
 
-    virtual bool can_bypass() const override { return true; }
+    bool can_bypass() const override { return true; }
+    
+    void write(void const*, size_t) { }; 
 
     std::shared_ptr<graphics::NativeBuffer> const native_buffer;
     geometry::Size const buf_size;

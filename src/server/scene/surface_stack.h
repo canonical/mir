@@ -36,6 +36,10 @@
 
 namespace mir
 {
+namespace graphics
+{
+class Renderable;
+}
 /// Management of Surface objects. Includes the model (SurfaceStack and Surface
 /// classes) and controller (SurfaceController) elements of an MVC design.
 namespace scene
@@ -85,6 +89,10 @@ public:
     
     void add_observer(std::shared_ptr<Observer> const& observer) override;
     void remove_observer(std::weak_ptr<Observer> const& observer) override;
+    
+    // TODO: Requires test and docs...and remove function
+    void add_overlay(std::shared_ptr<graphics::Renderable> const& overlay);
+    void remove_overlay(std::weak_ptr<graphics::Renderable> const& overlay);
 
 private:
     SurfaceStack(const SurfaceStack&) = delete;
@@ -101,6 +109,8 @@ private:
     std::map<DepthId, Layer> layers_by_depth;
     std::map<Surface*,std::shared_ptr<RenderingTracker>> rendering_trackers;
     std::set<compositor::CompositorID> registered_compositors;
+    
+    std::vector<std::shared_ptr<graphics::Renderable>> overlays;
 
     Observers observers;
 };

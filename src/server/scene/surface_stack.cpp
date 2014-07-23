@@ -73,6 +73,32 @@ private:
     std::shared_ptr<ms::RenderingTracker> const tracker;
 };
 
+class OverlaySceneElement : public mc::SceneElement
+{
+public:
+    OverlaySceneElement(
+        std::shared_ptr<mg::Renderable> renderable)
+        : renderable_{renderable}
+    {
+    }
+
+    std::shared_ptr<mg::Renderable> renderable() const override
+    {
+        return renderable_;
+    }
+
+    void rendered_in(mc::CompositorID /* cid */) override
+    {
+    }
+
+    void occluded_in(mc::CompositorID /* cid */) override
+    {
+    }
+
+private:
+    std::shared_ptr<mg::Renderable> const renderable_;
+};
+
 }
 
 ms::SurfaceStack::SurfaceStack(
@@ -95,6 +121,10 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
             elements.emplace_back(element);
         }
     }
+    for (auto const& renderable : overlays)
+    {
+        elements.emplace_back(std::make_shared<OverlaySceneElement>(renderable));
+    }
     return elements;
 }
 
@@ -114,6 +144,23 @@ void ms::SurfaceStack::unregister_compositor(mc::CompositorID cid)
     registered_compositors.erase(cid);
 
     update_rendering_tracker_compositors();
+}
+
+void ms::SurfaceStack::add_overlay(
+    std::shared_ptr<mg::Renderable> const& overlay)
+{
+    std::lock_guard<decltype(guard)> lg(guard);
+
+    overlays.push_back(overlay);
+}
+
+void ms::SurfaceStack::remove_overlay(
+    std::weak_ptr<mg::Renderable> const& overlay)
+{
+    std::lock_guard<decltype(guard)> lg(guard);
+    
+    (void) overlay;
+    // TODO
 }
 
 void ms::SurfaceStack::add_surface(

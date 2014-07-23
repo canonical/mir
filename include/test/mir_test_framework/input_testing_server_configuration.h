@@ -58,7 +58,7 @@ public:
     InputTestingServerConfiguration();
     explicit InputTestingServerConfiguration(std::vector<geometry::Rectangle> const& display_rects);
 
-    void exec();
+    void on_start();
     void on_exit();
 
     std::shared_ptr<mir::input::InputConfiguration> the_input_configuration() override;
