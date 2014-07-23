@@ -168,6 +168,7 @@ void ms::SurfaceStack::remove_overlay(
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("Attempt to remove an overlay which was never added or which has been previously removed"));
         }
+        overlays.erase(p);
     }
     
     observers.scene_changed();
