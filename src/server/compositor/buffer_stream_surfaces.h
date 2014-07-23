@@ -52,6 +52,7 @@ public:
     void allow_framedropping(bool) override;
     void force_requests_to_complete() override;
     int buffers_ready_for_compositor() const override;
+    void drop_old_buffers() override;
 
 protected:
     BufferStreamSurfaces(const BufferStreamSurfaces&) = delete;
