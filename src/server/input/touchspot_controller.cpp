@@ -132,7 +132,7 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
     {
         auto const& renderable = touchspot_renderables[i];
         if (i < touches.size())
-
+        {
             renderable->move_to(touches[i].touch_location);
             if (renderables_in_use < i)
             {
