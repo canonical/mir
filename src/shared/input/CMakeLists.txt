@@ -26,11 +26,13 @@ list(APPEND MIR_COMMON_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/udev_wrapper.cpp
 )
 
-list(APPEND MIR_COMMON_LIBRARIES
-)
+# The following would be would seem logical but it doesn't work as
+# android-input requires mir::mir::terminate_with_current_exception() from mirserver
+# Instead we put it in MIR_COMMON_REFERENCES
+#list(APPEND MIR_COMMON_LIBRARIES android-input)
+list(APPEND MIR_COMMON_REFERENCES android-input)
 
 list(APPEND MIR_COMMON_REFERENCES
-  android-input
   ${XKBCOMMON_LIBRARIES}
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
 )
