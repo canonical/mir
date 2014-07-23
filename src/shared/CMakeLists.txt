@@ -38,21 +38,19 @@ set(
 
 include_directories(${MIR_COMMON_EXTRA_INCLUDE})
 
-add_library(
-  mircommon SHARED
+add_library(mircommon
+  SHARED
   ${MIR_COMMON_SOURCES}
 )
 
-target_link_libraries(
-  mircommon
-  ${MIR_COMMON_LIBRARIES}
+target_link_libraries(mircommon
+  -Wl,-whole-archive ${MIR_COMMON_LIBRARIES}
 )
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
 set(MIR_SHARED_ABI 1)
 
-set_target_properties(
-  mircommon
+set_target_properties(mircommon
 
   PROPERTIES
   SOVERSION ${MIR_SHARED_ABI}
