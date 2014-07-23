@@ -49,12 +49,14 @@ add_executable(mir_demo_client_basic
 
 target_link_libraries(mir_demo_client_basic
   mirclient
-  mirprotobuf
 
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
+
+add_executable(mir_test_client_release_at_exit release_at_exit.c)
+target_link_libraries(mir_test_client_release_at_exit mirclient)
 
 add_executable(mir_demo_client_multiwin multiwin.c)
 target_link_libraries(mir_demo_client_multiwin mirclient)
@@ -74,7 +76,6 @@ add_executable(mir_demo_client_flicker
 
 target_link_libraries(mir_demo_client_flicker
   mirclient
-  mirprotobuf
 
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
@@ -88,7 +89,6 @@ add_executable(mir_demo_client_scroll
 target_link_libraries(mir_demo_client_scroll
   mirdraw
   mirclient
-  mirprotobuf
 
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
@@ -128,9 +128,8 @@ add_executable(mir_demo_standalone_render_overlays
 
 target_link_libraries(mir_demo_standalone_render_overlays
     mirserver
-    mirlogging
-    mirdraw
     mirtestdraw
+    mircommon
 )
 
 set(RENDER_SURFACES_SOURCES
@@ -143,7 +142,6 @@ add_executable(mir_demo_standalone_render_surfaces ${RENDER_SURFACES_SOURCES})
 target_link_libraries(mir_demo_standalone_render_surfaces
     mirserver
     mirshell
-    mirsharedgeometry
     ${Boost_LIBRARIES}
 )
 

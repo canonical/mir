@@ -17,7 +17,5 @@ add_library(
 target_link_libraries(
   mirclientrpc
 
-  mirprotobuf
-  mirsharedthread
   ${PROTOBUF_LIBRARIES}
 )

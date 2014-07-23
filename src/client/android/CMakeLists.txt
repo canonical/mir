@@ -21,6 +21,7 @@ set_target_properties(
 
 target_link_libraries(
   mirclientplatformandroid
+  mirsharedandroid
   mirclient
 
   ${LIBHARDWARE_LIBRARIES}
