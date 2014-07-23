@@ -28,6 +28,7 @@
 #include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
+#include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/mock_buffer_stream.h"
 #include "mir_test_doubles/null_surface_configurator.h"
 
@@ -678,16 +679,62 @@ TEST_F(SurfaceStack, scene_observer_notified_of_add_and_remove_overlay)
 {
     using namespace ::testing;
 
-/*    MockSceneObserver observer;
+    MockSceneObserver observer;
+    mtd::StubRenderable r;
 
     InSequence seq;
     EXPECT_CALL(observer, scene_changed()).Times(2);
-    EXPECT_CALL(observer, surface_removed(stub_surface1.get()))
-        .Times(1);
 
     stack.add_observer(mt::fake_shared(observer));
 
-    stack.add_overlay(stub_surface1);
-    stack.remove_overlay(stub_surface1);*/
-    // Need to use renderables instead of stub surface
+    stack.add_overlay(mt::fake_shared(r));
+    stack.remove_overlay(mt::fake_shared(r));
+}
+
+TEST_F(SurfaceStack, overlays_do_not_appear_in_input_enumeration)
+{
+    mtd::StubRenderable r;
+    
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
+
+    stack.add_overlay(mt::fake_shared(r));
+
+    unsigned int observed_input_targets = 0;
+    stack.for_each([&observed_input_targets](std::shared_ptr<mi::Surface> const&)
+        {
+            observed_input_targets++;
+        });
+    EXPECT_EQ(2, observed_input_targets);
+}
+
+TEST_F(SurfaceStack, overlays_appear_at_top_of_renderlist)
+{
+    using namespace ::testing;
+
+    mtd::StubRenderable r;
+    
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_overlay(mt::fake_shared(r));
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface1),
+            SceneElementFor(stub_surface2),
+            SceneElementFor(mt::fake_shared(r))));    
+}
+
+TEST_F(SurfaceStack, scene_observers_notified_of_generic_scene_change)
+{
+    MockSceneObserver o1, o2;
+
+    EXPECT_CALL(o1, scene_changed()).Times(1);
+    EXPECT_CALL(o2, scene_changed()).Times(1);
+    
+    stack.add_observer(mt::fake_shared(o1));
+    stack.add_observer(mt::fake_shared(o2));
+    
+    stack.emit_scene_changed();
 }

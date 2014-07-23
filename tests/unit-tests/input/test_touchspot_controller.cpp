@@ -49,11 +49,6 @@ struct MockBufferAllocator : public mg::GraphicBufferAllocator
     MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>(void));
 };
 
-struct MockInputTargets : public mtd::StubInputTargets
-{
-    MOCK_METHOD1(add_overlay, void(std::shared_ptr<mg::Renderable> const&));
-};
-
 struct StubInputTargets : public mtd::StubInputTargets
 {
     void add_overlay(std::shared_ptr<mg::Renderable> const& overlay) override

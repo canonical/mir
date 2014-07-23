@@ -46,6 +46,10 @@ class StubInputTargets : public input::InputTargets
     void remove_overlay(std::weak_ptr<graphics::Renderable> const& /* overlay */)
     {
     }
+    
+    void emit_scene_changed()
+    {
+    }
 };
 
 }

@@ -146,7 +146,6 @@ void ms::SurfaceStack::unregister_compositor(mc::CompositorID cid)
     update_rendering_tracker_compositors();
 }
 
-// TODO: Test
 void ms::SurfaceStack::add_overlay(
     std::shared_ptr<mg::Renderable> const& overlay)
 {
@@ -171,6 +170,11 @@ void ms::SurfaceStack::remove_overlay(
         }
     }
     
+    observers.scene_changed();
+}
+
+void ms::SurfaceStack::emit_scene_changed()
+{
     observers.scene_changed();
 }
 

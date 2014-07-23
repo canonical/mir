@@ -94,6 +94,8 @@ public:
     // TODO: Requires test and docs...and remove function
     void add_overlay(std::shared_ptr<graphics::Renderable> const& overlay);
     void remove_overlay(std::weak_ptr<graphics::Renderable> const& overlay);
+    
+    void emit_scene_changed() override;
 
 private:
     SurfaceStack(const SurfaceStack&) = delete;
