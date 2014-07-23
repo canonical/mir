@@ -89,25 +89,23 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
     }
 
     /*
-     * Simulate a frame counter that comes in phase with the present every
-     * 16ms. Not sure how important getting real frame timing is...
+     * Use the current time as frameTime for batch splitting. This provides
+     * the smoothest and most responsive performance, as InputConsumer will
+     * batch events that are younger than 5ms and consume them as soon as they
+     * reach 5ms in age. While they're being batched, newer events that can
+     * supercede older ones not yet sent to us will do so, resulting in
+     * generally younger events closer to the 5ms age limit coming our way.
      */
-    nsecs_t last_frame_time = systemTime(SYSTEM_TIME_MONOTONIC);
-    nsecs_t const one_frame = 16000000LL;
-    last_frame_time -= (last_frame_time % one_frame);
+    nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
 
-    /*
-     * Try to batch input events first, grouping multiple events inside the
-     * duration of a frame so as to return the most current information when
-     * it's needed. 
-     * This also means the client wastes less time immediately reacting
-     * to the oldest motion coordinates in the queue.
-     */
-    if (input_consumer->consume(&event_factory, false,
-            last_frame_time, &next_seq, &android_event) == droidinput::OK
-        ||
-        input_consumer->consume(&event_factory, true,
-            last_frame_time, &next_seq, &android_event) == droidinput::OK)
+    auto status = input_consumer->consume(&event_factory, false, now,
+                                          &next_seq, &android_event);
+
+    if (status == droidinput::WOULD_BLOCK && input_consumer->hasPendingBatch())
+        status = input_consumer->consume(&event_factory, true, now, &next_seq,
+                                         &android_event);
+
+    if (status == droidinput::OK)
     {
         mia::Lexicon::translate(android_event, ev);
 
@@ -136,8 +134,7 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
     if(try_next_event(ev))
         return true;
 
-    if (!input_consumer->hasDeferredEvent() &&
-        !input_consumer->hasPendingBatch())
+    if (!input_consumer->hasDeferredEvent())
     {
         auto result = looper->pollOnce(timeout.count());
         if (result == ALOOPER_POLL_WAKE)
