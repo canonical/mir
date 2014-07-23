@@ -56,3 +56,8 @@ install(
   DESTINATION share/mir/protocol
 )
 
+list(APPEND MIR_COMMON_LIBRARIES
+  mirprotobuf
+)
+
+set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)
