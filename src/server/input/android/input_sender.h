@@ -88,10 +88,10 @@ private:
         void send(InputSendEntry && item);
         bool used_for_surface(input::Surface const* surface) const;
         void on_surface_disappeared();
-
-    private:
         void subscribe();
         void unsubscribe();
+
+    private:
         void on_finish_signal();
         void on_response_timeout();
         void update_timer();
@@ -107,6 +107,7 @@ private:
         input::Surface * surface;
         std::vector<InputSendEntry> pending_responses;
         std::mutex transfer_mutex;
+        bool subscribed{false};
         std::unique_ptr<time::Alarm> send_timer;
 
         ActiveTransfer& operator=(ActiveTransfer const&) = delete;

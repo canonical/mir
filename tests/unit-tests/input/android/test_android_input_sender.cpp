@@ -255,7 +255,7 @@ TEST_F(AndroidInputSender, first_send_on_surface_registers_server_fd)
     sender.send_event(key_event, channel);
 }
 
-TEST_F(AndroidInputSender, second_send_on_surface_does_not_registers_server_fd)
+TEST_F(AndroidInputSender, second_send_on_surface_does_not_register_server_fd)
 {
     using namespace ::testing;
     register_surface();
@@ -264,6 +264,20 @@ TEST_F(AndroidInputSender, second_send_on_surface_does_not_registers_server_fd)
 
     sender.send_event(key_event, channel);
     sender.send_event(key_event, channel);
+}
+
+TEST_F(AndroidInputSender, removal_of_surface_after_send_unregisters_server_fd)
+{
+    using namespace ::testing;
+    register_surface();
+
+    EXPECT_CALL(loop, unregister_fd_handler(_)).Times(1);
+
+    sender.send_event(key_event, channel);
+    sender.send_event(key_event, channel);
+    deregister_surface();
+
+    Mock::VerifyAndClearExpectations(&loop);
 }
 
 TEST_F(AndroidInputSender, can_send_consumeable_mir_key_events)
@@ -304,16 +318,19 @@ TEST_F(AndroidInputSender, can_send_consumeable_mir_motion_events)
     }
 }
 
-TEST_F(AndroidInputSender, response_unregisters_fd)
+TEST_F(AndroidInputSender, response_keeps_fd_registered)
 {
     using namespace ::testing;
     register_surface();
 
-    EXPECT_CALL(loop, register_fd_handler(ElementsAre(channel->server_fd()),_,_)).Times(1);
-    EXPECT_CALL(loop, unregister_fd_handler(_)).Times(1);
+    EXPECT_CALL(loop, unregister_fd_handler(_)).Times(0);
 
     sender.send_event(key_event, channel);
-    EXPECT_EQ(droidinput::OK, consumer.consume(&event_factory, true, -1, &seq, &event));
+    consumer.consume(&event_factory, true, -1, &seq, &event);
+    consumer.sendFinishedSignal(seq, true);
+    loop.trigger_pending_fds();
+
+    Mock::VerifyAndClearExpectations(&loop);
 }
 
 TEST_F(AndroidInputSender, finish_signal_triggers_success_callback_as_consumed)
