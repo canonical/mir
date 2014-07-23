@@ -45,6 +45,8 @@ public:
     void surface_added(Surface* surface) override;
     void surface_removed(Surface* surface) override;
     void surfaces_reordered() override;
+    
+    void scene_changed() override;
 
     void surface_exists(Surface* surface) override;
     void end_observation() override;

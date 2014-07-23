@@ -130,6 +130,11 @@ struct UpdateCursorOnSceneChanges : ms::Observer
     {
         cursor_controller->update_cursor_image();
     }
+
+    void scene_changed()
+    {
+        cursor_controller->update_cursor_image();
+    }
     
     void surface_exists(ms::Surface *surface)
     {

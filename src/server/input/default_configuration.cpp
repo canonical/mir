@@ -30,6 +30,7 @@
 #include "event_filter_chain.h"
 #include "null_input_configuration.h"
 #include "cursor_controller.h"
+#include "touchspot_controller.h"
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
 #include "xcursor_loader.h"
@@ -252,7 +253,8 @@ mir::DefaultServerConfiguration::the_touch_visualizer()
     return touch_visualizer(
         [this]()
         {
-            return std::make_shared<NullTouchVisualizer>();
+//            return std::make_shared<NullTouchVisualizer>();
+            return std::make_shared<mi::TouchspotController>(the_buffer_allocator(), the_input_targets());
         });
 }
 

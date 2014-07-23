@@ -146,21 +146,32 @@ void ms::SurfaceStack::unregister_compositor(mc::CompositorID cid)
     update_rendering_tracker_compositors();
 }
 
+// TODO: Test
 void ms::SurfaceStack::add_overlay(
     std::shared_ptr<mg::Renderable> const& overlay)
 {
-    std::lock_guard<decltype(guard)> lg(guard);
-
-    overlays.push_back(overlay);
+    {
+        std::lock_guard<decltype(guard)> lg(guard);
+        overlays.push_back(overlay);
+    }
+    observers.scene_changed();
 }
 
+// TODO: Test
 void ms::SurfaceStack::remove_overlay(
-    std::weak_ptr<mg::Renderable> const& overlay)
+    std::weak_ptr<mg::Renderable> const& weak_overlay)
 {
-    std::lock_guard<decltype(guard)> lg(guard);
+    auto overlay = weak_overlay.lock(); // TODO: comment exception something
+    {
+        std::lock_guard<decltype(guard)> lg(guard);
+        auto const p = std::find(overlays.begin(), overlays.end(), overlay);
+        if (p == overlays.end())
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Attempt to remove an overlay which was never added or which has been previously removed"));
+        }
+    }
     
-    (void) overlay;
-    // TODO
+    observers.scene_changed();
 }
 
 void ms::SurfaceStack::add_surface(
@@ -303,6 +314,12 @@ void ms::Observers::surfaces_reordered()
 {
     for_each([&](std::shared_ptr<Observer> const& observer)
         { observer->surfaces_reordered(); });
+}
+
+void ms::Observers::scene_changed()
+{
+   for_each([&](std::shared_ptr<Observer> const& observer)
+        { observer->scene_changed(); });
 }
 
 void ms::Observers::surface_exists(ms::Surface* surface)

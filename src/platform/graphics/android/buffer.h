@@ -56,6 +56,9 @@ public:
     //note, you will get the native representation of an android buffer, including
     //the fences associated with the buffer. You must close these fences
     std::shared_ptr<NativeBuffer> native_buffer_handle() const;
+    
+    // TODO
+    void write(void const* data, size_t size) { (void) data; (void) size; }
 
 private:
     typedef std::pair<EGLDisplay, EGLContext> DispContextPair;

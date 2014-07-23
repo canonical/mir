@@ -103,6 +103,7 @@ struct MockSceneObserver : public ms::Observer
     MOCK_METHOD1(surface_added, void(ms::Surface*));
     MOCK_METHOD1(surface_removed, void(ms::Surface*));
     MOCK_METHOD0(surfaces_reordered, void());
+    MOCK_METHOD0(scene_changed, void());
 
     MOCK_METHOD1(surface_exists, void(ms::Surface*));
     MOCK_METHOD0(end_observation, void());
@@ -671,4 +672,22 @@ TEST_F(SurfaceStack, observer_can_remove_itself_within_notification)
 
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+}
+
+TEST_F(SurfaceStack, scene_observer_notified_of_add_and_remove_overlay)
+{
+    using namespace ::testing;
+
+/*    MockSceneObserver observer;
+
+    InSequence seq;
+    EXPECT_CALL(observer, scene_changed()).Times(2);
+    EXPECT_CALL(observer, surface_removed(stub_surface1.get()))
+        .Times(1);
+
+    stack.add_observer(mt::fake_shared(observer));
+
+    stack.add_overlay(stub_surface1);
+    stack.remove_overlay(stub_surface1);*/
+    // Need to use renderables instead of stub surface
 }
