@@ -216,9 +216,9 @@ public:
     virtual std::shared_ptr<frontend::SessionMediatorReport>  the_session_mediator_report();
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
-    // TODO clients should customize the_session_coordinator() instead of the_frontend_shell();
-    // TODO once the_session_coordinator() has landed and clients updated this should become non-virtual
-    virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
+    // the_frontend_shell() is an adapter for the_session_coordinator().
+    // To customize this behaviour it is recommended you override wrap_session_coordinator().
+    std::shared_ptr<frontend::Shell>                          the_frontend_shell();
     virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
     virtual std::shared_ptr<frontend::Screencast>             the_screencast();
@@ -231,9 +231,9 @@ public:
     /** @} */
     /** @} */
 
-    // TODO clients should customize the_session_coordinator() instead of the_focus_controller();
-    // TODO once the_session_coordinator() has landed and clients updated this should become non-virtual
-    virtual std::shared_ptr<shell::FocusController> the_focus_controller();
+    // the_focus_controller() is an adapter for the_session_coordinator().
+    // To customize this behaviour it is recommended you override wrap_session_coordinator().
+    std::shared_ptr<shell::FocusController> the_focus_controller();
 
     /** @name shell configuration - customization
      * configurable interfaces for modifying shell
@@ -268,6 +268,12 @@ public:
      *  @{ */
     virtual std::shared_ptr<scene::BufferStreamFactory> the_buffer_stream_factory();
     virtual std::shared_ptr<scene::SceneReport>      the_scene_report();
+    /** @} */
+
+    /** @name scene configuration - services
+     * services provided by scene for the rest of Mir
+     *  @{ */
+    // To customize this behaviour it is recommended you override wrap_session_coordinator().
     virtual std::shared_ptr<scene::SessionCoordinator>  the_session_coordinator();
     /** @} */
 
@@ -299,13 +305,6 @@ protected:
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
     virtual std::shared_ptr<frontend::ProtobufIpcFactory> new_ipc_factory(
         std::shared_ptr<frontend::SessionAuthorizer> const& session_authorizer);
-
-    // TODO Remove after 0.5.0 is branched: the_ipc_factory() is used by
-    // TODO clients that use the "PrivateProtobuf" but is it now deprecated
-    // TODO and only retained as a migration aid.
-    virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
-        std::shared_ptr<frontend::Shell> const& shell,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     /** @name input dispatcher related configuration
      *  @{ */
@@ -354,8 +353,6 @@ protected:
     CachedPtr<input::CursorImages> cursor_images;
 
     CachedPtr<frontend::ConnectorReport>   connector_report;
-    // TODO remove after 0.5.0 is branched - c.f. the_ipc_factory()
-    CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
     CachedPtr<frontend::SessionMediatorReport> session_mediator_report;
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;

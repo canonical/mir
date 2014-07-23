@@ -35,3 +35,9 @@ target_link_libraries(
   android-input
   ${XKBCOMMON_LIBRARIES}
 )
+
+list(APPEND MIR_COMMON_LIBRARIES
+  mirsharedinput
+)
+
+set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)

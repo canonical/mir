@@ -27,7 +27,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 5) # This should change at least with every MIRSERVER_ABI
+set(MIR_VERSION_MINOR 6) # This should change at least with every MIRSERVER_ABI
 set(MIR_VERSION_PATCH 0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -87,6 +87,10 @@ else()
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 endif()
+
+# Define LOG_NDEBUG=1 to ensure Android ALOGV calls are not compiled in to
+# consume CPU time...
+add_definitions(-DLOG_NDEBUG=1)
 
 enable_testing()
 
@@ -190,6 +194,16 @@ add_test(LGPL-required
 )
 add_test(GPL-required
   /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/include/test ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
+)
+
+add_test(NAME server-ABI-unchanged
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  COMMAND sha1sum -c server-ABI-sha1sums
+)
+
+add_test(NAME client-ABI-unchanged
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  COMMAND sha1sum -c client-ABI-sha1sums
 )
 
 enable_coverage_report(mirserver)

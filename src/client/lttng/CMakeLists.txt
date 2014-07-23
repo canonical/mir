@@ -24,7 +24,6 @@ set_target_properties(mirclientlttng PROPERTIES
 target_link_libraries(
   mirclientlttngstatic
 
-  mirsharedlttng
   -ldl
 )
 

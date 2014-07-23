@@ -65,7 +65,6 @@ endif()
 target_link_libraries(
   android-input
 
-  mirplatform
   ${Boost_LIBRARIES}
 )
 
