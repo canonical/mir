@@ -134,13 +134,13 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
         if (i < touches.size())
         {
             renderable->move_to(touches[i].touch_location);
-            if (renderables_in_use < i)
+            if (renderables_in_use <= i)
             {
                 renderables_in_use++;
                 scene->add_overlay(renderable);
             }
         }
-        else if (i >= renderables_in_use)
+        else if (i > renderables_in_use)
         {
             renderables_in_use--;
             scene->remove_overlay(renderable);
