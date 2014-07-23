@@ -140,7 +140,7 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
                 scene->add_overlay(renderable);
             }
         }
-        else if (renderables_in_use > i)
+        else if (renderables_in_use > touches.size())
         {
             renderables_in_use--;
             scene->remove_overlay(renderable);
