@@ -2,6 +2,7 @@ set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 set(MIR_COMMON_EXTRA_INCLUDE)
 set(MIR_COMMON_LIBRARIES)
 set(MIR_COMMON_SOURCES)
+set(MIR_COMMON_REFERENCES)
 add_subdirectory(protobuf/)
 
 if (MIR_BUILD_PLATFORM_ANDROID)
@@ -44,7 +45,8 @@ add_library(mircommon
 )
 
 target_link_libraries(mircommon
-  -Wl,-whole-archive ${MIR_COMMON_LIBRARIES}
+  -Wl,-whole-archive    ${MIR_COMMON_LIBRARIES}
+  -Wl,-no-whole-archive ${MIR_COMMON_REFERENCES}
 )
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
