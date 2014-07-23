@@ -141,5 +141,5 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
             scene->remove_overlay(renderable);
         }
     }
-    scene->emit_scene_changed();
+//    scene->emit_scene_changed();
 }
