@@ -436,14 +436,30 @@ void MirSurface::set_event_handler(MirEventDelegate const* delegate)
 
         if (surface.fd_size() > 0 && handle_event_callback)
         {
+            std::function<void(MirEvent *)> self_callback = 
+                std::bind(&MirSurface::handle_input_event, this,
+                          std::placeholders::_1);
+
             input_thread = input_platform->create_input_thread(surface.fd(0),
-                                                        handle_event_callback);
+                                                               self_callback);
             input_thread->start();
         }
     }
 }
 
-void MirSurface::handle_event(MirEvent const& e)
+void MirSurface::handle_input_event(MirEvent const* e)
+{
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    perf_report->event_received(*e);
+    if (handle_event_callback)
+    {
+        auto callback = handle_event_callback;
+        lock.unlock();
+        callback(e);
+    }
+}
+
+void MirSurface::handle_event(MirEvent const& e)  // non-input events come here
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
 

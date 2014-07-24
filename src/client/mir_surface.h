@@ -106,6 +106,7 @@ public:
 private:
     mutable std::mutex mutex; // Protects all members of *this
 
+    void handle_input_event(MirEvent const* e);
     void on_configured();
     void on_cursor_configured();
     void process_incoming_buffer();

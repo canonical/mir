@@ -67,6 +67,7 @@ void PerfReport::end_frame()
     {
         char msg[128];
 
+        // Precision matters. Don't use floats.
         long fps_1000 = frame_count * 1000000L / (interval / 1000000L);
         long render_avg_ms_1000 = render_time_sum / (frame_count * 1000L);
 
