@@ -49,15 +49,10 @@ mir::Fd::Fd(Fd&& other) :
 
 mir::Fd::~Fd() noexcept
 {
-    if (rfd)
+    if ((rfd) && (rfd->refcount-- == 0))
     {
-        rfd->refcount--;
-        if ((rfd->fd > invalid) &&
-            (rfd->refcount == 0))
-        {
-            ::close(rfd->fd);
-            delete rfd;
-        }
+        if (rfd->fd > invalid) ::close(rfd->fd);
+        delete rfd;
     }
 }
 
@@ -69,8 +64,6 @@ mir::Fd& mir::Fd::operator=(Fd other)
 
 mir::Fd::operator int() const
 {
-    if (rfd)
-        return rfd->fd;
-    else
-        return -1;
+    if (rfd) return rfd->fd;
+    return -1;
 }
