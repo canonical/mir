@@ -47,7 +47,8 @@ PerfReport::PerfReport(std::shared_ptr<mir::logging::Logger> const& logger)
       render_time_sum(0),
       first_motion_event(0),
       input_lag_sum(0),
-      frame_count(0)
+      frame_count(0),
+      motion_count(0)
 {
 }
 
@@ -73,20 +74,25 @@ void PerfReport::end_frame()
         char msg[128];
 
         // Precision matters. Don't use floats.
-        long fps_1000 = frame_count * 1000000L / (interval / 1000000L);
-        long render_avg_usec = render_time_sum / (frame_count * 1000L);
-        long lag_avg_usec = input_lag_sum / (frame_count * 1000L);
+        long long interval_ms = interval / 1000000L;
+        long fps_1000 = frame_count * 1000000L / interval_ms;
+        long eps = motion_count * 1000L / interval_ms;
+        long frame_count_1000 = frame_count * 1000L;
+        long render_avg_usec = render_time_sum / frame_count_1000;
+        long lag_avg_usec = input_lag_sum / frame_count_1000;
 
         snprintf(msg, sizeof msg,
-                 "%ld.%03ld FPS, render time %ld.%03ldms, input lag %ld.%03ldms",
+                 "%ld.%03ld FPS, render %ld.%03ldms, lag %ld.%03ldms, %ldev/s",
                  fps_1000 / 1000L, fps_1000 % 1000L,
                  render_avg_usec / 1000L, render_avg_usec % 1000L,
-                 lag_avg_usec / 1000L, lag_avg_usec % 1000L
+                 lag_avg_usec / 1000L, lag_avg_usec % 1000L,
+                 eps
                  );
         logger->log(mir::logging::Logger::informational, msg, component);
 
         last_report_time = now;
         frame_count = 0;
+        motion_count = 0;
         render_time_sum = 0;
         input_lag_sum = 0;
     }
@@ -96,6 +102,7 @@ void PerfReport::event_received(MirEvent const& e)
 {
     if (e.type == mir_event_type_motion)
     {
+        ++motion_count;
         if (!first_motion_event)
             first_motion_event = e.motion.event_time;
     }

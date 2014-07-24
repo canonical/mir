@@ -47,6 +47,7 @@ private:
     nsecs_t first_motion_event;
     nsecs_t input_lag_sum;
     int frame_count;
+    int motion_count;
 };
 
 } // namespace logging
