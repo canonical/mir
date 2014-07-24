@@ -56,7 +56,14 @@ mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<HwcWrapper> const& hwc_dev
 
     hwc_device->register_hooks(&callbacks.hooks);
 
-    turn_screen_on();
+    try
+    {
+        turn_screen_on();
+    } catch (...)
+    {
+        //TODO: log failure here. some drivers will throw if the screen is already on, which
+        //      is not a fatal condition
+    }
 }
 
 mga::HWCCommonDevice::~HWCCommonDevice() noexcept

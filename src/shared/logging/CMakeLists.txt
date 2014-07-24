@@ -18,3 +18,9 @@ add_library(mirsharedlogging STATIC
   dumb_console_logger.cpp
   input_timestamp.cpp
 )
+
+list(APPEND MIR_COMMON_LIBRARIES
+  mirsharedlogging
+)
+
+set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)

@@ -47,7 +47,7 @@ class RpcReport;
 
 namespace detail
 {
-typedef std::vector<char> SendBuffer;
+typedef std::vector<uint8_t> SendBuffer;
 
 class PendingCallCache
 {

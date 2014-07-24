@@ -18,6 +18,8 @@ add_library(mirsharedfd STATIC
   fd.cpp
 )
 
-target_link_libraries(
+list(APPEND MIR_COMMON_LIBRARIES
   mirsharedfd
 )
+
+set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)

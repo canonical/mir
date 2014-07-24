@@ -17,3 +17,9 @@
 add_library(mirsharedenv STATIC
   default_configuration.cpp
 )
+
+list(APPEND MIR_COMMON_LIBRARIES
+  mirsharedenv
+)
+
+set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)

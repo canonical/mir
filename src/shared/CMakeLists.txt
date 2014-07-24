@@ -1,5 +1,5 @@
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
-set(MIR_COMMON_PLATFORM_LIBRARIES)
+set(MIR_COMMON_LIBRARIES)
 add_subdirectory(protobuf/)
 
 if (MIR_BUILD_PLATFORM_ANDROID)
@@ -14,12 +14,6 @@ add_subdirectory(report/lttng)
 add_subdirectory(env)
 add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
-add_subdirectory(testdraw)
-
-set(
-  MIR_COMMON_PLATFORM_LIBRARIES
-  ${MIR_COMMON_PLATFORM_LIBRARIES}
-  PARENT_SCOPE)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -35,6 +29,28 @@ set(
   MIR_GENERATED_INCLUDE_DIRECTORIES
   ${MIR_GENERATED_INCLUDE_DIRECTORIES}
   PARENT_SCOPE)
+
+
+add_library(
+  mircommon SHARED
+)
+
+target_link_libraries(
+  mircommon
+  ${MIR_COMMON_LIBRARIES}
+)
+
+# TODO we need a place to manage ABI and related versioning but use this as placeholder
+set(MIR_SHARED_ABI 1)
+
+set_target_properties(
+  mircommon
+
+  PROPERTIES
+  SOVERSION ${MIR_SHARED_ABI}
+)
+
+install(TARGETS mircommon LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/shared/mir ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit

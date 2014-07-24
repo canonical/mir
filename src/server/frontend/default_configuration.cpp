@@ -133,29 +133,6 @@ mir::DefaultServerConfiguration::the_prompt_connector()
         });
 }
 
-// TODO Remove after 0.5.0 is branched: the_ipc_factory() is used by
-// TODO clients that use the "PrivateProtobuf" but is it now deprecated
-// TODO and only retained as a migration aid.
-std::shared_ptr<mir::frontend::ProtobufIpcFactory>
-mir::DefaultServerConfiguration::the_ipc_factory(
-    std::shared_ptr<mf::Shell> const& shell,
-    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
-{
-    return ipc_factory(
-        [&]()
-        {
-            return std::make_shared<mf::DefaultIpcFactory>(
-                shell,
-                the_session_mediator_report(),
-                the_graphics_platform(),
-                the_frontend_display_changer(),
-                allocator,
-                the_screencast(),
-                the_session_authorizer(),
-                the_cursor_images());
-        });
-}
-
 std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::new_ipc_factory(
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer)
