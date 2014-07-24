@@ -40,7 +40,6 @@ add_library(mirserver ${MIRSERVER_LINKAGE}
 )
 
 list(APPEND MIRSERVER_ARCHIVES
-  miroptions
   mircompositor
   mirfrontend
   mirgraphics
