@@ -82,21 +82,23 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
     uint32_t event_sequence_id;
 
     /*
-     * Use the current time as frameTime for batch splitting. This provides
-     * the smoothest and most responsive performance, as InputConsumer will
-     * batch events that are younger than 5ms and consume them as soon as they
-     * reach 5ms in age. While they're being batched, newer events that can
-     * supercede older ones not yet sent to us will do so, resulting in
-     * generally younger events closer to the 5ms age limit coming our way.
+     * InputConsumer will only immediately consume events from frame_time-5ms.
+     * With an honest frame_time that would add one frame of lag. With a
+     * dishonest frame_time of "now" that would still mean lag is still always
+     * at least 5ms. But we can do better than that -- provide a time in the
+     * future so that the batch is never split. This way we can control
+     * event deferral and grouping, resulting in sub-5ms lag.
+     * This is preferable to providing a frame time of -1, as that is similar
+     * but disables motion predicition and smoothing (which we want).
      */
+    nsecs_t const one_millisec = 1000000LL;
     nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
+    nsecs_t future_frame_time = now + 10 * one_millisec;
 
-    auto status = input_consumer->consume(&event_factory, false, now,
+    auto status = input_consumer->consume(&event_factory,
+                                          input_consumer->hasPendingBatch(),
+                                          future_frame_time,
                                           &event_sequence_id, &android_event);
-
-    if (status == droidinput::WOULD_BLOCK && input_consumer->hasPendingBatch())
-        status = input_consumer->consume(&event_factory, true, now,
-                                         &event_sequence_id, &android_event);
 
     if (status == droidinput::OK)
     {
@@ -115,7 +117,7 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
 
 // TODO: We use a droidinput::Looper here for polling functionality but it might be nice to integrate
 // with the existing client io_service ~racarr ~tvoss
-bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout, MirEvent &ev)
+bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& max_timeout, MirEvent &ev)
 {
     if (!fd_added)
     {
@@ -124,16 +126,29 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
         fd_added = true;
     }
 
-    if(try_next_event(ev))
-        return true;
+    auto timeout = max_timeout;
+    if (input_consumer->hasDeferredEvent())
+    {
+        // consume() didn't finish last time. Retry it immediately.
+        timeout = std::chrono::milliseconds::zero();
+    }
+    else if (input_consumer->hasPendingBatch())
+    {
+        /*
+         * Ensure any pending batch is fully consumed within 32ms (~2 frames).
+         * This actually reduces lag instead of increasing it.
+         * Still have to work out why.
+         */
+        timeout = std::chrono::milliseconds(32);
+    }
 
-    if (!input_consumer->hasDeferredEvent())
+    if (timeout > std::chrono::milliseconds::zero())
     {
         auto result = looper->pollOnce(timeout.count());
         if (result == ALOOPER_POLL_WAKE)
             return false;
         if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
-           return false;
+            return false;
     }
 
     return try_next_event(ev);
