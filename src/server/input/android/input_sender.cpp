@@ -149,6 +149,7 @@ void mia::InputSender::InputSenderState::remove_transfer(int fd)
 
     if (transfer)
     {
+        transfer->unsubscribe();
         transfers.erase(fd);
         lock.unlock();
 
@@ -209,17 +210,22 @@ mia::InputSender::ActiveTransfer::~ActiveTransfer()
 
 void mia::InputSender::ActiveTransfer::unsubscribe()
 {
-    state.main_loop->unregister_fd_handler(this);
+    bool expected = true;
+    if (std::atomic_compare_exchange_strong(&subscribed, &expected, false))
+        state.main_loop->unregister_fd_handler(this);
 }
 
 void mia::InputSender::ActiveTransfer::subscribe()
 {
-    state.main_loop->register_fd_handler({publisher.getChannel()->getFd()},
-                                    this,
-                                    [this](int)
-                                    {
-                                        on_finish_signal();
-                                    });
+    bool expected = false;
+    if (std::atomic_compare_exchange_strong(&subscribed, &expected, true))
+        state.main_loop->register_fd_handler(
+            {publisher.getChannel()->getFd()},
+            this,
+            [this](int)
+            {
+                on_finish_signal();
+            });
 }
 
 droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t seq, MirKeyEvent const& event)
@@ -354,10 +360,11 @@ void mia::InputSender::ActiveTransfer::on_response_timeout()
 
 void mia::InputSender::ActiveTransfer::enqueue_entry(mia::InputSendEntry && entry)
 {
+    subscribe();
+
     std::lock_guard<std::mutex> lock(transfer_mutex);
     if (pending_responses.empty())
     {
-        subscribe();
         update_timer();
     }
 
@@ -379,7 +386,6 @@ mia::InputSendEntry mia::InputSender::ActiveTransfer::unqueue_entry(uint32_t seq
     pending_responses.erase(pos);
     if (pending_responses.empty())
     {
-        unsubscribe();
         cancel_timer();
     }
     else
