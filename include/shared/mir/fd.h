@@ -18,6 +18,8 @@
 #ifndef MIR_FD_H_
 #define MIR_FD_H_
 
+#include <atomic>
+
 namespace mir
 {
 class Fd
@@ -39,8 +41,9 @@ public:
 private:
     struct RefcountFd
     {
-        int fd;
-        unsigned int refcount;
+        RefcountFd(int fd);
+        int const fd;
+        std::atomic<unsigned int> refcount;
     };
     RefcountFd *rfd;
 };

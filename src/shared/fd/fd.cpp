@@ -24,8 +24,14 @@ mir::Fd::Fd() :
 {
 }
 
+mir::Fd::RefcountFd::RefcountFd(int fd) :
+    fd(fd),
+    refcount(1)
+{
+}
+
 mir::Fd::Fd(int other_fd) :
-    rfd{new RefcountFd{other_fd, 1}}
+    rfd{new RefcountFd{other_fd}}
 {
 }
 
