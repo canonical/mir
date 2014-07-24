@@ -74,9 +74,9 @@ void PerfReport::end_frame()
         char msg[128];
 
         // Precision matters. Don't use floats.
-        long long interval_ms = interval / 1000000L;
+        long long interval_ms = interval / MILLISECONDS(1);
         long fps_1000 = frame_count * 1000000L / interval_ms;
-        long eps = motion_count * 1000L / interval_ms;
+        long input_events_hz = motion_count * 1000L / interval_ms;
         long frame_count_1000 = frame_count * 1000L;
         long render_avg_usec = render_time_sum / frame_count_1000;
         long lag_avg_usec = input_lag_sum / frame_count_1000;
@@ -86,7 +86,7 @@ void PerfReport::end_frame()
                  fps_1000 / 1000L, fps_1000 % 1000L,
                  render_avg_usec / 1000L, render_avg_usec % 1000L,
                  lag_avg_usec / 1000L, lag_avg_usec % 1000L,
-                 eps
+                 input_events_hz
                  );
         logger->log(mir::logging::Logger::informational, msg, component);
 
