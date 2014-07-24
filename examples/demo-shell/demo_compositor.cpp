@@ -54,11 +54,12 @@ me::DemoCompositor::DemoCompositor(
 mg::RenderableList me::DemoCompositor::generate_renderables()
 {
     //a simple filtering out of renderables that shouldn't be drawn
+    //the elements should be notified if they are rendered or not
     mg::RenderableList renderable_list;
     auto elements = scene->scene_elements_for(this);
     for(auto const& it : elements)
     {
-        auto renderable = it->renderable(); 
+        auto const& renderable = it->renderable(); 
         if (renderable->visible())
         {
             renderable_list.push_back(renderable);
@@ -66,7 +67,6 @@ mg::RenderableList me::DemoCompositor::generate_renderables()
         }
         else
         {
-            //notify the SceneElement that we're not going to draw
             it->occluded_in(this);
         }
     }
@@ -76,7 +76,7 @@ mg::RenderableList me::DemoCompositor::generate_renderables()
 void me::DemoCompositor::composite()
 {
     report->began_frame(this);
-    auto renderable_list = generate_renderables();
+    auto const& renderable_list = generate_renderables();
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();

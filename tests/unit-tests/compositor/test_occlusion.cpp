@@ -32,39 +32,31 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-
-SceneElementSequence scene_elements_from(
-    std::vector<std::shared_ptr<mg::Renderable>> renderables)
-{
-    SceneElementSequence elements;
-    for (auto const& renderable : renderables)
-        elements.push_back(std::make_shared<mtd::StubSceneElement>(renderable));
-
-    return elements;
-}
-
-mg::RenderableList renderables_from(SceneElementSequence const& elements)
-{
-    mg::RenderableList renderables;
-    for (auto const& element : elements)
-        renderables.push_back(element->renderable());
-
-    return renderables;
-}
-
-template<typename T>
-SceneElementSequence filter(SceneElementSequence& list, Rectangle const& area)
-{
-    T filter;
-    return filter.filter(list, area);
-}
-
 struct OcclusionFilterTest : public Test
 {
     OcclusionFilterTest()
     {
         monitor_rect.top_left = {0, 0};
         monitor_rect.size = {1920, 1200};
+    }
+
+    SceneElementSequence scene_elements_from(
+        std::vector<std::shared_ptr<mg::Renderable>> renderables)
+    {
+        SceneElementSequence elements;
+        for (auto const& renderable : renderables)
+            elements.push_back(std::make_shared<mtd::StubSceneElement>(renderable));
+
+        return elements;
+    }
+
+    mg::RenderableList renderables_from(SceneElementSequence const& elements)
+    {
+        mg::RenderableList renderables;
+        for (auto const& element : elements)
+            renderables.push_back(element->renderable());
+
+        return renderables;
     }
 
     Rectangle monitor_rect;
@@ -76,7 +68,7 @@ TEST_F(OcclusionFilterTest, single_window_not_occluded)
 {
     auto window = std::make_shared<mtd::FakeRenderable>(12, 34, 56, 78);
     auto elements = scene_elements_from({window});
-
+ 
     auto const& occlusions = filter_occlusions_from(elements, monitor_rect);
 
     EXPECT_THAT(renderables_from(occlusions), IsEmpty());
