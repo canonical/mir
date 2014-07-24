@@ -115,12 +115,6 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_creating_screencast)
     ASSERT_EQ(1, protobuf_screencast.buffer().fd_size());
     auto const read_fd = protobuf_screencast.buffer().fd(0);
 
-    // The received FD should be different from the original pipe fd,
-    // since we are sending it over our IPC mechanism, which for
-    // the purposes of this test, lives in the same process.
-    // TODO: Don't depend on IPC implementation details
-    EXPECT_NE(read_fd, server_tool->pipe.read_fd());
-
     std::vector<char> received(cookie.size(), '\0');
     EXPECT_EQ(static_cast<ssize_t>(cookie.size()),
               read(read_fd, received.data(), received.size()));
@@ -152,12 +146,6 @@ TEST_F(MirScreencastTest, gets_buffer_fd_when_getting_screencast_buffer)
 
     ASSERT_EQ(1, protobuf_buffer.fd_size());
     auto const read_fd = protobuf_buffer.fd(0);
-
-    // The received FD should be different from the original pipe fd,
-    // since we are sending it over our IPC mechanism, which, for
-    // the purposes of this test, lives in the same process.
-    // TODO: Don't depend on IPC implementation details
-    EXPECT_NE(read_fd, server_tool->pipe.read_fd());
 
     std::vector<char> received(cookie.size(), '\0');
     EXPECT_EQ(static_cast<ssize_t>(cookie.size()),
