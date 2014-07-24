@@ -54,6 +54,9 @@ MirSurface::MirSurface(
       buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
       input_platform(input_platform)
 {
+    for (int i = 0; i < mir_surface_attribs; i++)
+        attrib_cache[i] = -1;
+
     mir::protobuf::SurfaceParameters message;
     message.set_surface_name(params.name ? params.name : std::string());
     message.set_width(params.width);
@@ -64,9 +67,6 @@ MirSurface::MirSurface(
 
     create_wait_handle.expect_result();
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
-
-    for (int i = 0; i < mir_surface_attribs; i++)
-        attrib_cache[i] = -1;
 
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
