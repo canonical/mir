@@ -41,7 +41,7 @@ mcla::Buffer::Buffer(
     buffer_size(size)
 {
     auto ops = std::make_shared<mga::RealSyncFileOps>();
-    auto fence = std::make_shared<mga::SyncFence>(ops, -1);
+    auto fence = std::make_shared<mga::SyncFence>(ops, mir::Fd());
     auto anwb = std::shared_ptr<mga::RefCountedNativeBuffer>(
         new mga::RefCountedNativeBuffer(handle),
         [](mga::RefCountedNativeBuffer* buffer)
