@@ -109,8 +109,11 @@ int main(int argc, char* argv[])
             swapinterval = 0;
             break;
         case 'q':
-            // Deprecated
-            break;
+            {
+                FILE *unused = freopen("/dev/null", "a", stdout);
+                (void)unused;
+                break;
+            }
         case '?':
         case 'h':
         default:
@@ -118,6 +121,7 @@ int main(int argc, char* argv[])
                    "    -m <Mir server socket>  Connect to a specific Mir socket\n"
                    "    -h  Show this help text\n"
                    "    -n  Don't sync to vblank\n"
+                   "    -q  Quiet mode (no messages output)\n"
                    , argv[0]);
             return -1;
         }
@@ -152,6 +156,10 @@ int main(int argc, char* argv[])
     uint32_t pattern[2] = {0};
     fill_pattern(pattern, pixel_format);
 
+    time_t lasttime = 0;
+    int lastcount = 0;
+    int count = 0;
+
     MirGraphicsRegion graphics_region;
     int i=0;
     while (1)
@@ -160,6 +168,15 @@ int main(int argc, char* argv[])
         i++;
         render_pattern(&graphics_region, pattern[i & 1]);
         mir_surface_swap_buffers_sync(surface);
+
+        count++;
+        time_t now = time(NULL);
+        if (now != lasttime)
+        {
+            printf("%d FPS\n", count - lastcount);
+            lasttime = now;
+            lastcount = count;
+        }
     }
 
     mir_surface_release_sync(surface);
