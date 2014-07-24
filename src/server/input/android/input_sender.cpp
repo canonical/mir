@@ -221,12 +221,13 @@ void mia::InputSender::ActiveTransfer::subscribe()
 {
     if (!subscribed)
     {
-        state.main_loop->register_fd_handler({publisher.getChannel()->getFd()},
-                                        this,
-                                        [this](int)
-                                        {
-                                            on_finish_signal();
-                                        });
+        state.main_loop->register_fd_handler(
+            {publisher.getChannel()->getFd()},
+            this,
+            [this](int)
+            {
+                on_finish_signal();
+            });
         subscribed = true;
     }
 }
