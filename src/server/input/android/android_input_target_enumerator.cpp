@@ -20,7 +20,7 @@
 
 #include "android_window_handle_repository.h"
 
-#include "mir/input/input_targets.h"
+#include "mir/input/scene.h"
 #include "mir/input/surface.h"
 
 #include <InputWindow.h>
@@ -28,7 +28,7 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::InputTargetEnumerator::InputTargetEnumerator(std::shared_ptr<mi::InputTargets> const& targets,
+mia::InputTargetEnumerator::InputTargetEnumerator(std::shared_ptr<mi::Scene> const& targets,
                                                   std::shared_ptr<mia::WindowHandleRepository> const& repository)
     : targets(targets),
       repository(repository)

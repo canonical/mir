@@ -22,7 +22,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/renderable.h"
-#include "mir/input/input_targets.h"
+#include "mir/input/scene.h"
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;
@@ -112,7 +112,7 @@ private:
 
 #include <string.h> // TODO: Remove
 mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<mi::InputTargets> const& scene)
+    std::shared_ptr<mi::Scene> const& scene)
     : touchspot_pixels(allocator->alloc_buffer({touchspot_size, touchspot_pixel_format, mg::BufferUsage::software})),
       scene(scene),
       renderables_in_use(0)

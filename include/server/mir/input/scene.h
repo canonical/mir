@@ -17,8 +17,8 @@
  *              Daniel d'Andradra <daniel.dandrada@canonical.com>
  */
 
-#ifndef MIR_INPUT_INPUT_TARGETS_H_
-#define MIR_INPUT_INPUT_TARGETS_H_
+#ifndef MIR_INPUT_INPUT_SCENE_H_
+#define MIR_INPUT_INPUT_SCENE_H_
 
 #include "mir/input/input_channel_factory.h"
 
@@ -39,10 +39,10 @@ namespace input
 {
 class Surface;
 
-class InputTargets
+class Scene
 {
 public:
-    virtual ~InputTargets() = default;
+    virtual ~Scene() = default;
 
     virtual void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback) = 0;
 
@@ -55,12 +55,12 @@ public:
     virtual void emit_scene_changed() = 0;
 
 protected:
-    InputTargets() = default;
-    InputTargets(InputTargets const&) = delete;
-    InputTargets& operator=(InputTargets const&) = delete;
+    Scene() = default;
+    Scene(Scene const&) = delete;
+    Scene& operator=(Scene const&) = delete;
 };
 
 }
 }
 
-#endif // MIR_INPUT_INPUT_TARGETS
+#endif // MIR_INPUT_INPUT_SCENE

@@ -22,9 +22,9 @@
 #include "mir/graphics/renderable.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/stub_input_targets.h"
+#include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/stub_input_targets.h"
+#include "mir_test_doubles/stub_input_scene.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -49,7 +49,7 @@ struct MockBufferAllocator : public mg::GraphicBufferAllocator
     MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>(void));
 };
 
-struct StubInputTargets : public mtd::StubInputTargets
+struct StubScene : public mtd::StubInputScene
 {
     void add_overlay(std::shared_ptr<mg::Renderable> const& overlay) override
     {
@@ -87,11 +87,11 @@ struct TestTouchspotController : public ::testing::Test
 {
     TestTouchspotController()
         : allocator(std::make_shared<MockBufferAllocator>()),
-          scene(std::make_shared<StubInputTargets>())
+          scene(std::make_shared<StubScene>())
     {
     }
     std::shared_ptr<MockBufferAllocator> const allocator;
-    std::shared_ptr<StubInputTargets> const scene;
+    std::shared_ptr<StubScene> const scene;
 };
 
 MATCHER(SoftwareBuffer, "")

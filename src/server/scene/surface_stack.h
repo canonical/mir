@@ -24,7 +24,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/scene/depth_id.h"
 #include "mir/scene/observer.h"
-#include "mir/input/input_targets.h"
+#include "mir/input/scene.h"
 
 #include "mir/basic_observers.h"
 
@@ -64,7 +64,7 @@ public:
    using BasicObservers<Observer>::remove;
 };
 
-class SurfaceStack : public compositor::Scene, public input::InputTargets, public SurfaceStackModel
+class SurfaceStack : public compositor::Scene, public input::Scene, public SurfaceStackModel
 {
 public:
     explicit SurfaceStack(
@@ -76,7 +76,7 @@ public:
     void register_compositor(compositor::CompositorID id) override;
     void unregister_compositor(compositor::CompositorID id) override;
 
-    // From InputTargets
+    // From Scene
     void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback);
 
     virtual void remove_surface(std::weak_ptr<Surface> const& surface) override;
