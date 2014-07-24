@@ -20,7 +20,7 @@
 
 #include <vector>
 #include <initializer_list>
-#include <stdint.h>
+#include "mir/fd.h" 
 
 namespace mir
 {
@@ -28,7 +28,7 @@ namespace frontend
 {
 namespace detail
 {
-typedef std::initializer_list<std::vector<int32_t>> FdSets;
+typedef std::initializer_list<std::vector<Fd>> FdSets;
 }
 }
 } // namespace mir
