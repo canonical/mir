@@ -41,6 +41,10 @@ public:
     void event_received(MirEvent const&) override;
 private:
     std::shared_ptr<mir::logging::Logger> const logger;
+    nsecs_t last_report_time;
+    nsecs_t frame_begin_time;
+    nsecs_t render_time_sum;
+    int frame_count;
 };
 
 } // namespace logging

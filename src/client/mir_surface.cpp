@@ -245,6 +245,8 @@ void MirSurface::created(mir_surface_callback callback, void * context)
             auto const& attrib = surface.attributes(i);
             attrib_cache[attrib.attrib()] = attrib.ivalue();
         }
+
+        perf_report->begin_frame();
     }
 
     connection->on_surface_created(id(), this);
