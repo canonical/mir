@@ -210,17 +210,15 @@ mia::InputSender::ActiveTransfer::~ActiveTransfer()
 
 void mia::InputSender::ActiveTransfer::unsubscribe()
 {
-    if (subscribed)
-    {
+    bool expected = true;
+    if (std::atomic_compare_exchange_strong(&subscribed, &expected, false))
         state.main_loop->unregister_fd_handler(this);
-        subscribed = false;
-    }
 }
 
 void mia::InputSender::ActiveTransfer::subscribe()
 {
-    if (!subscribed)
-    {
+    bool expected = false;
+    if (std::atomic_compare_exchange_strong(&subscribed, &expected, true))
         state.main_loop->register_fd_handler(
             {publisher.getChannel()->getFd()},
             this,
@@ -228,8 +226,6 @@ void mia::InputSender::ActiveTransfer::subscribe()
             {
                 on_finish_signal();
             });
-        subscribed = true;
-    }
 }
 
 droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t seq, MirKeyEvent const& event)
