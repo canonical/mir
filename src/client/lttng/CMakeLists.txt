@@ -27,7 +27,7 @@ target_link_libraries(
   -ldl
 )
 
-add_dependencies(mirclientlttngstatic mircommon)
+add_dependencies(mirclientlttngstatic mircommonprotobuf)
 
 target_link_libraries(
   mirclientlttng
