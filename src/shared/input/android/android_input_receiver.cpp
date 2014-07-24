@@ -136,8 +136,10 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& max_time
     {
         /*
          * Ensure any pending batch is fully consumed within 32ms (~2 frames).
-         * This actually reduces lag instead of increasing it.
-         * Still have to work out why.
+         * This actually reduces lag instead of increasing it, because it
+         * allows the batch to accumulate more samples, which significantly
+         * improves event currency and prediction in future frames when you're
+         * dragging something for example.
          */
         timeout = std::chrono::milliseconds(32);
     }
