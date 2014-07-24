@@ -179,10 +179,6 @@ TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
 
     flush_channels();
 
-    // Force flushing of the "finished" signal. It's now done at the start
-    // of the next-next_event.
-    receiver.next_event(next_event_timeout, ev);
-
     EXPECT_TRUE (producer.must_receive_handled_signal());
 }
 

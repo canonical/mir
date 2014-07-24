@@ -81,7 +81,6 @@ private:
     droidinput::sp<droidinput::Looper> looper;
 
     bool fd_added;
-    uint32_t last_seq;
 
     std::shared_ptr<XKBMapper> xkb_mapper;
 

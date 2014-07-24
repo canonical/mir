@@ -37,7 +37,6 @@ mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> co
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     looper(new droidinput::Looper(true)),
     fd_added(false),
-    last_seq(0),
     xkb_mapper(std::make_shared<mircv::XKBMapper>())
 {
 }
@@ -80,13 +79,7 @@ static void map_key_event(std::shared_ptr<mircv::XKBMapper> const& xkb_mapper, M
 bool mircva::InputReceiver::try_next_event(MirEvent &ev)
 {
     droidinput::InputEvent *android_event;
-    uint32_t next_seq;
-
-    if (last_seq)
-    {
-        input_consumer->sendFinishedSignal(last_seq, true);
-        last_seq = 0;
-    }
+    uint32_t event_sequence_id;
 
     /*
      * Use the current time as frameTime for batch splitting. This provides
@@ -99,11 +92,11 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
     nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
 
     auto status = input_consumer->consume(&event_factory, false, now,
-                                          &next_seq, &android_event);
+                                          &event_sequence_id, &android_event);
 
     if (status == droidinput::WOULD_BLOCK && input_consumer->hasPendingBatch())
-        status = input_consumer->consume(&event_factory, true, now, &next_seq,
-                                         &android_event);
+        status = input_consumer->consume(&event_factory, true, now,
+                                         &event_sequence_id, &android_event);
 
     if (status == droidinput::OK)
     {
@@ -111,7 +104,7 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
 
         map_key_event(xkb_mapper, ev);
 
-        last_seq = next_seq;
+        input_consumer->sendFinishedSignal(event_sequence_id, true);
 
         report->received_event(ev);
 
