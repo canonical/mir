@@ -14,10 +14,14 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
+add_library(mirsharedgeometry OBJECT
+  rectangle.cpp
+  rectangles.cpp
+  ostream.cpp
+)
+
 list(APPEND MIR_COMMON_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/rectangle.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/rectangles.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/ostream.cpp
+  $<TARGET_OBJECTS:mirsharedgeometry>
 )
 
 set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)

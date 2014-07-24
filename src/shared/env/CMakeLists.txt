@@ -14,9 +14,12 @@
 #
 # Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
 
+add_library(mirsharedenv OBJECT
+  default_configuration.cpp
+)
 
 list(APPEND MIR_COMMON_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/default_configuration.cpp
+  $<TARGET_OBJECTS:mirsharedenv>
 )
 
 set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)

@@ -14,13 +14,15 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-list(APPEND MIR_COMMON_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/shared_library.cpp
+add_library(mirsharedsharedlibrary OBJECT
+  shared_library.cpp
 )
 
-list(APPEND MIR_COMMON_REFERENCES
-    dl
+list(APPEND MIR_COMMON_SOURCES
+  $<TARGET_OBJECTS:mirsharedsharedlibrary>
 )
+
+list(APPEND MIR_COMMON_REFERENCES dl)
 
 set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
 set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)

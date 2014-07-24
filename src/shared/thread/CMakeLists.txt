@@ -14,9 +14,13 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
+add_library(mirsharedthread OBJECT
+  thread_name.cpp
+  recursive_read_write_mutex.cpp
+)
+
 list(APPEND MIR_COMMON_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/thread_name.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/recursive_read_write_mutex.cpp
+  $<TARGET_OBJECTS:mirsharedthread>
 )
 
 set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
