@@ -22,6 +22,7 @@
 #include "mir/input/touch_visualizer.h"
 
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -55,6 +56,8 @@ protected:
 private:
     std::shared_ptr<graphics::Buffer> touchspot_pixels;
     std::shared_ptr<InputTargets> scene;
+    
+    std::mutex guard;
 
     unsigned int renderables_in_use;
     std::vector<std::shared_ptr<TouchspotRenderable>> touchspot_renderables;

@@ -122,6 +122,11 @@ public:
         return 1;
     }
 
+    bool should_be_decorated() const override
+    {
+        return false;
+    }
+
 private:
     std::shared_ptr<graphics::Buffer> buf;
     mir::geometry::Rectangle rect;

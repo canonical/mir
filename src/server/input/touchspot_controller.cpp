@@ -34,7 +34,6 @@ geom::Size const touchspot_size = {32, 32};
 MirPixelFormat const touchspot_pixel_format = mir_pixel_format_argb_8888;
 }
 
-// TODO: Need a strategy for change notifications
 class mi::TouchspotRenderable : public mg::Renderable
 {
 public:
@@ -44,15 +43,14 @@ public:
     {
     }
 
+// mg::Renderable
     mg::Renderable::ID id() const override
     {
-        // TODO: Make sure this is ok
         return this;
     }
     
     std::shared_ptr<mg::Buffer> buffer() const override
     {
-        // TODO: Locking strategy
         return buffer_;
     }
     
@@ -85,16 +83,21 @@ public:
     {
         return true;
     }
-    
+
     int buffers_ready_for_compositor() const
     {
-        // ?
         return 1;
     }
     
+    bool should_be_decorated() const
+    {
+        return false;
+    }
+
+// TouchspotRenderable    
     void move_to(geom::Point pos)
     {
-        // TODO: Notifications
+        std::lock_guard<std::mutex> lg(guard);
         position = pos;
     }
 
@@ -102,12 +105,11 @@ public:
 private:
     std::shared_ptr<mg::Buffer> const buffer_;
     
-    // TODO: Locking
+    std::mutex guard;
     geom::Point position;
 };
 
 
-// TODO: Locking
 #include <string.h> // TODO: Remove
 mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mi::InputTargets> const& scene)
@@ -126,25 +128,41 @@ mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAl
 
 void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches)
 {
+    std::lock_guard<std::mutex> lg(guard);
+
+    // We can assume the maximum number of touches will not grow unreasonably large
+    // and so we just grow a pool of TouchspotRenderables as needed
     while (touchspot_renderables.size() < touches.size())
         touchspot_renderables.push_back(std::make_shared<TouchspotRenderable>(touchspot_pixels));
+
+    // We act on each touchspot renderable, as it may need positioning, to be added to the scene, or removed
+    // entirely.
     for (unsigned int i = 0; i < touchspot_renderables.size(); i++)
     {
         auto const& renderable = touchspot_renderables[i];
+        
+        // We map the touches to the first available renderables.
         if (i < touches.size())
         {
             renderable->move_to(touches[i].touch_location);
+
             if (renderables_in_use <= i)
             {
                 renderables_in_use++;
                 scene->add_overlay(renderable);
             }
         }
+        // If we are using too many touch-spot renderables, we need to remove some from
+        // the scene.
         else if (renderables_in_use > touches.size())
         {
             renderables_in_use--;
             scene->remove_overlay(renderable);
         }
     }
+    
+    // TODO (hackish): We may have just moved renderables which  will not propgate 
+    // through with damage notifications out of compositor in current architecture so 
+    // we need this "emit_scene_changed".
     scene->emit_scene_changed();
 }

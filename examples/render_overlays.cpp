@@ -145,6 +145,11 @@ public:
         return true;
     }
 
+    bool should_be_decorated() const override
+    {
+        return false;
+    }
+
     int buffers_ready_for_compositor() const override
     {
         return 1;

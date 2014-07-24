@@ -665,6 +665,11 @@ public:
  
     mg::Renderable::ID id() const override
     { return id_; }
+    
+    // TODO: Update to use surface type or allow shell to make decision. More likely though
+    // use a different model for decorations that ends in this function dissapearing.
+    bool should_be_decorated() const override
+    { return true; }
 
 private:
     std::shared_ptr<mc::BufferStream> const underlying_buffer_stream;
