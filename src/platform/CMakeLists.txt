@@ -1,5 +1,4 @@
 include_directories(${PROJECT_SOURCE_DIR}/include/platform)
-include_directories(${UDEV_INCLUDE_DIRS})
 
 add_library(
   mirplatform SHARED
