@@ -41,6 +41,7 @@ set(
   mir_surface_api.cpp
   logging/rpc_report.cpp
   logging/input_receiver_report.cpp
+  logging/perf_report.cpp
   default_connection_configuration.cpp
   surface_map.cpp
   lifecycle_control.cpp

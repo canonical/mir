@@ -25,6 +25,7 @@
 #include "mir/input/input_receiver_thread.h"
 #include "mir/input/input_platform.h"
 #include "perf_report.h"
+#include "logging/perf_report.h"
 
 #include <cassert>
 #include <unistd.h>
@@ -72,7 +73,16 @@ MirSurface::MirSurface(
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
 
-    perf_report = std::make_shared<mir::client::NullPerfReport>();
+    const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
+    if (report_target && !strcmp(report_target, "log"))
+    {
+        auto& logger = connection->the_logger();
+        perf_report = std::make_shared<mir::client::logging::PerfReport>(logger);
+    }
+    else
+    {
+        perf_report = std::make_shared<mir::client::NullPerfReport>();
+    }
 }
 
 MirSurface::~MirSurface()
