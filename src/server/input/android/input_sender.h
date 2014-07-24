@@ -28,6 +28,7 @@
 #include <unordered_map>
 #include <mutex>
 #include <vector>
+#include <atomic>
 
 namespace droidinput = android;
 
@@ -107,7 +108,7 @@ private:
         input::Surface * surface;
         std::vector<InputSendEntry> pending_responses;
         std::mutex transfer_mutex;
-        bool subscribed{false};
+        std::atomic<bool> subscribed{false};
         std::unique_ptr<time::Alarm> send_timer;
 
         ActiveTransfer& operator=(ActiveTransfer const&) = delete;
