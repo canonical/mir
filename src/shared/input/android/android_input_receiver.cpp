@@ -142,7 +142,8 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& max_time
         timeout = std::chrono::milliseconds(32);
     }
 
-    if (timeout > std::chrono::milliseconds::zero())
+    // Note timeout may be negative (infinity)
+    if (timeout != std::chrono::milliseconds::zero())
     {
         auto result = looper->pollOnce(timeout.count());
         if (result == ALOOPER_POLL_WAKE)
