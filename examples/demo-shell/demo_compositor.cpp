@@ -22,7 +22,6 @@
 #include "mir/compositor/scene_element.h"
 #include "mir/compositor/destination_alpha.h"
 #include "demo_compositor.h"
-#include "occlusion.h"
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
@@ -45,37 +44,38 @@ me::DemoCompositor::DemoCompositor(
     display_buffer(display_buffer),
     scene(scene),
     report(report),
-    shadow_radius(80),
-    titlebar_height(30),
     renderer(
         factory,
         display_buffer.view_area(),
-        destination_alpha(display_buffer),
-        static_cast<float>(shadow_radius),
-        static_cast<float>(titlebar_height)) 
+        destination_alpha(display_buffer))
 {
 }
 
 mg::RenderableList me::DemoCompositor::generate_renderables()
 {
+    //a simple filtering out of renderables that shouldn't be drawn
     mg::RenderableList renderable_list;
     auto elements = scene->scene_elements_for(this);
-    auto occluded = me::filter_occlusions_from(elements, display_buffer.view_area(), shadow_radius, titlebar_height);
     for(auto const& it : elements)
     {
-        renderable_list.push_back(it->renderable());
-        it->rendered_in(this);
+        auto renderable = it->renderable(); 
+        if (renderable->visible())
+        {
+            renderable_list.push_back(renderable);
+            it->rendered_in(this);
+        }
+        else
+        {
+            //notify the SceneElement that we're not going to draw
+            it->occluded_in(this);
+        }
     }
-    for(auto const& it : occluded)
-        it->occluded_in(this);
-    
     return renderable_list;
 }
 
 void me::DemoCompositor::composite()
 {
     report->began_frame(this);
-
     auto renderable_list = generate_renderables();
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {

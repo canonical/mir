@@ -101,7 +101,7 @@ target_link_libraries(mir_demo_client_scroll
 add_executable(mir_demo_client_prompt_session prompt_session.c)
 target_link_libraries(mir_demo_client_prompt_session mirclient)
 
-add_library(mirdraw STATIC graphics_utils.cpp demo-shell/occlusion.cpp)
+add_library(mirdraw STATIC graphics_utils.cpp)
 target_link_libraries(mirdraw ${GLESv2_LIBRARIES})
 
 include_directories(

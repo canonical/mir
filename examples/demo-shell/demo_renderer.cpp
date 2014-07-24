@@ -139,16 +139,14 @@ GLuint generate_frame_corner_texture(float corner_radius,
 DemoRenderer::DemoRenderer(
     graphics::GLProgramFactory const& program_factory,
     geometry::Rectangle const& display_area,
-    compositor::DestinationAlpha dest_alpha,
-    float shadow_radius,
-    float titlebar_height) :
+    compositor::DestinationAlpha dest_alpha) :
     GLRenderer(program_factory,
         std::unique_ptr<graphics::GLTextureCache>(new compositor::RecentlyUsedCache()),
         display_area,
         dest_alpha),
     corner_radius(0.5f),
-    shadow_radius(shadow_radius),
-    titlebar_height(titlebar_height)
+    shadow_radius(80),
+    titlebar_height(30)
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
     titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
