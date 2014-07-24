@@ -44,6 +44,8 @@ private:
     nsecs_t last_report_time;
     nsecs_t frame_begin_time;
     nsecs_t render_time_sum;
+    nsecs_t first_motion_event;
+    nsecs_t input_lag_sum;
     int frame_count;
 };
 
