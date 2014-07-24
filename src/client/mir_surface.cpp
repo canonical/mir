@@ -24,6 +24,7 @@
 #include "mir_connection.h"
 #include "mir/input/input_receiver_thread.h"
 #include "mir/input/input_platform.h"
+#include "perf_report.h"
 
 #include <cassert>
 #include <unistd.h>
@@ -70,6 +71,8 @@ MirSurface::MirSurface(
 
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
+
+    perf_report = std::make_shared<mir::client::NullPerfReport>();
 }
 
 MirSurface::~MirSurface()
@@ -159,6 +162,7 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * con
     release_cpu_region();
     auto const id = &surface.id();
     auto const mutable_buffer = surface.mutable_buffer();
+    perf_report->end_frame();
     lock.unlock();
 
     next_buffer_wait_handle.expect_result();
@@ -243,6 +247,7 @@ void MirSurface::new_buffer(mir_surface_callback callback, void * context)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         process_incoming_buffer();
+        perf_report->begin_frame();
     }
 
     callback(this, context);
