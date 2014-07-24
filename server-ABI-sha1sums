@@ -105,9 +105,6 @@ b2ec497c6bec1b3a67c991f31cc7b7c51050ecbb  include/server/mir/input/input_recepti
 901b7ef0889385e88c77e9b4f6724c3c56ecdb7a  include/server/mir/input/input_region.h
 c1e96c372d7856d59947f3145d273b1285b569bc  include/server/mir/input/cursor_listener.h
 204089f848c4d63ade96f92a0b8cfc1c33f1ce63  include/server/mir/input/vt_filter.h
-f129b69a55f721bdf4e4164c37d81168be03e043  include/shared/testdraw/draw_pattern_checkered-inl.h
-a048528e4bfbe917431873ed14b47f95dc4b56cf  include/shared/testdraw/patterns.h
-1063ea0451afde157b6f8dd5f1d1420e4727dcb3  include/shared/testdraw/graphics_region_factory.h
 903210453b98267e47c03ab2920c1db047ba0457  include/shared/mir/report/lttng/mir_tracepoint.h
 52b6b60543a361e91dbeaa2549114239f57b6b4e  include/shared/mir/report/lttng/tracepoint_provider.h
 9fd77ab693cc4c9a200e44804f5493733528a674  include/shared/mir/variable_length_array.h
