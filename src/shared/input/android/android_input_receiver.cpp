@@ -149,15 +149,11 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
             reduced_timeout = motion_idle_timeout;
     }
 
-    // Note timeout may be negative (infinity)
-    if (reduced_timeout != std::chrono::milliseconds::zero())
-    {
-        auto result = looper->pollOnce(reduced_timeout.count());
-        if (result == ALOOPER_POLL_WAKE)
-            return false;
-        if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
-            return false;
-    }
+    auto result = looper->pollOnce(reduced_timeout.count());
+    if (result == ALOOPER_POLL_WAKE)
+        return false;
+    if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
+       return false;
 
     return try_next_event(ev);
 }
