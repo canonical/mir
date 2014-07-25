@@ -44,7 +44,7 @@
 namespace mg = mir::graphics;
 namespace mtd = mir::test::doubles;
 #ifndef ANDROID
-namespace mtf = mir::mir_test_framework;
+namespace mtf = mir_test_framework;
 #endif
 
 class DisplayTest : public ::testing::Test
