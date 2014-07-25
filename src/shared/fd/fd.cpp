@@ -65,5 +65,5 @@ mir::Fd& mir::Fd::operator=(Fd other)
 mir::Fd::operator int() const
 {
     if (fd) return fd->raw_fd;
-    return -1;
+    return invalid;
 }
