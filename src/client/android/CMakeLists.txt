@@ -5,6 +5,7 @@ add_library(
   mirclientplatformandroid SHARED
 
   buffer.cpp
+  ../aging_buffer.cpp
   android_client_buffer_factory.cpp
   gralloc_registrar.cpp
   android_client_platform.cpp

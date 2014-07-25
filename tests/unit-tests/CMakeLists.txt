@@ -43,7 +43,6 @@ uses_android_input(mir_unit_tests)
 target_link_libraries(
   mir_unit_tests
 
-  mirclient
   mirserver
   mirplatformgraphics
   mirclientplatform

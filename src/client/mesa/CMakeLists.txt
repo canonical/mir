@@ -6,6 +6,7 @@ include_directories(
 add_library(
   mirclientplatformmesa SHARED
 
+  ../aging_buffer.cpp
   client_platform_factory.cpp
   client_platform.cpp
   client_buffer_factory.cpp

@@ -1,0 +1,4 @@
+MIR_CLIENT_8 {
+ global: mir_*;
+ local: *;
+};
