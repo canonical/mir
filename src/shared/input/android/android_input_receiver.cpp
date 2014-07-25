@@ -82,25 +82,29 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
     uint32_t event_sequence_id;
 
     /*
-     * InputConsumer will only immediately consume events from frame_time-5ms.
-     * With an honest frame_time that would add one frame of lag. With a
-     * dishonest frame_time of "now" that would still mean lag is still always
-     * at least 5ms. But we can do better than that -- provide a time in the
-     * future so that the batch is never split. This way we can control
-     * event deferral and grouping, resulting in sub-5ms lag.
-     * This is preferable to providing a frame time of -1, as that is similar
-     * but disables motion predicition and smoothing (which we want).
+     * Enable Project Butter input resampling:
+     *  1. Only consume batches if a previous call started one. This way
+     *     raw events are allowed time to be grouped and resampled (prediction)
+     *     This effectively means we're scaling the flushing deadline with
+     *     the raw event rate. And under busy conditions, batches are fully
+     *     flushed to the client on every second call. That's the lowest
+     *     latency possible while keeping the resampling code path active.
+     *  2. Set frameTime=INT64_MAX. A positive value is required to enable
+     *     resampling. But giving an honest frame time only results in all
+     *     events being delivered to the client one frame late.
+     *     So give a fake frame time that's always far enough ahead in the
+     *     future that brand new raw events are instantly considered "old"
+     *     enough to get processed and factored into the motion predicition.
+     *
+     * This is actually better than how Project Butter was designed to work.
+     * Doing it this way yields much lower latency and has the benefit of not
+     * having to talk to any graphics code about frame times.
      */
-    nsecs_t const one_millisec = 1000000LL;
-    nsecs_t now = systemTime(SYSTEM_TIME_MONOTONIC);
-    nsecs_t future_frame_time = now + 10 * one_millisec;
 
-    auto status = input_consumer->consume(&event_factory,
-                                          input_consumer->hasPendingBatch(),
-                                          future_frame_time,
-                                          &event_sequence_id, &android_event);
-
-    if (status == droidinput::OK)
+    if (input_consumer->consume(&event_factory,
+                                input_consumer->hasPendingBatch(),
+                                INT64_MAX, &event_sequence_id, &android_event)
+        == droidinput::OK)
     {
         mia::Lexicon::translate(android_event, ev);
 
@@ -135,13 +139,13 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& max_time
     else if (input_consumer->hasPendingBatch())
     {
         /*
-         * Ensure any pending batch is fully consumed within 32ms (~2 frames).
-         * This actually reduces lag instead of increasing it, because it
-         * allows the batch to accumulate more samples, which significantly
-         * improves event currency and prediction in future frames when you're
-         * dragging something for example.
+         * A batch is pending and must be completed or else the client could
+         * be starved of events. But don't hurry. A continuous motion gesture
+         * will wake us up much sooner than 50ms. This timeout is only reached
+         * in the case that motion has ended (fingers lifed).
          */
-        timeout = std::chrono::milliseconds(32);
+        std::chrono::milliseconds const motion_idle_timeout(50);
+        timeout = motion_idle_timeout;
     }
 
     // Note timeout may be negative (infinity)
