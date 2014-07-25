@@ -49,7 +49,7 @@ mir::Fd::Fd(Fd&& other) :
 
 mir::Fd::~Fd() noexcept
 {
-    if ((fd) && (fd->refcount-- == 0))
+    if ((fd) && (--fd->refcount == 0))
     {
         if (fd->raw_fd > invalid) ::close(fd->raw_fd);
         delete fd;

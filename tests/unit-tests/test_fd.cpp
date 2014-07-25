@@ -56,7 +56,7 @@ TEST_F(Fd, closes_when_refcount_is_zero)
         mir::Fd fd(raw_fd);
         {
             mir::Fd fd1(fd);
-            fd2 = fd;
+            fd2 = fd1;
         }
     }
 
