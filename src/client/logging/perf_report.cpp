@@ -55,6 +55,10 @@ void PerfReport::begin_frame(int buffer_id)
 {
     frame_begin_time = current_time();
 
+    auto input_lag = oldest_motion_event ? frame_begin_time - oldest_motion_event : 0;
+    input_lag_sum += input_lag;
+    oldest_motion_event = 0;
+
     if (buffer_end_time.find(buffer_id) != buffer_end_time.end())
     {
         auto buffer_queue_latency = frame_begin_time -
@@ -66,12 +70,10 @@ void PerfReport::begin_frame(int buffer_id)
 void PerfReport::end_frame(int buffer_id)
 {
     auto now = buffer_end_time[buffer_id] = current_time();
-    auto render_time = now - frame_begin_time;
-    auto input_lag = oldest_motion_event ? now - oldest_motion_event : 0;
-    oldest_motion_event = 0;
 
+    auto render_time = now - frame_begin_time;
     render_time_sum += render_time;
-    input_lag_sum += input_lag;
+
     ++frame_count;
 
     nsecs_t interval = now - last_report_time;
@@ -88,29 +90,32 @@ void PerfReport::end_frame(int buffer_id)
         // Frames rendered x 1000
         long frame_count_1000 = frame_count * 1000L;
 
-        // Render time average in microseconds
-        long render_avg_usec = render_time_sum / frame_count_1000;
+        // Input lag average in microseconds (input event -> frame begin)
+        long input_lag_avg_usec = input_lag_sum / frame_count_1000;
 
-        // Input lag average in microseconds (input event -> client swap)
-        long input_avg_usec = input_lag_sum / frame_count_1000;
+        // Client render time average in microseconds
+        long render_time_avg_usec = render_time_sum / frame_count_1000;
 
-        // Buffer queue lag average in microseconds (client swap -> screen)
-        long queue_avg_usec = buffer_queue_latency_sum / frame_count_1000;
+        // Buffer queue lag average in microseconds (frame end -> screen)
+        long queue_lag_avg_usec = buffer_queue_latency_sum / frame_count_1000;
 
-        // Total lag in microseconds (input event -> composited on screen)
-        long lag_avg_usec = input_avg_usec + queue_avg_usec;
+        // Visible lag in microseconds (input lag + render time + queue lag)
+        long visible_lag_avg_usec = input_lag_avg_usec +
+                                    render_time_avg_usec +
+                                    queue_lag_avg_usec;
 
         int nbuffers = buffer_end_time.size();
 
         char msg[256];
         snprintf(msg, sizeof msg,
-                 "%s: %2ld.%02ld FPS, render %2ld.%02ldms, input lag %2ld.%02ldms, buffer lag %2ld.%02ldms, visible input lag %2ld.%02ldms, %3ldev/s, %d buffers",
+                 "%s: %2ld.%02ld FPS, input lag %2ld.%02ldms, render %2ld.%02ldms, compositor lag %2ld.%02ldms, visible lag %2ld.%02ldms, %3ldev/s, %d buffers",
                  nam.c_str(),
                  fps_100 / 100, fps_100 % 100,
-                 render_avg_usec / 1000, (render_avg_usec / 10) % 100,
-                 input_avg_usec / 1000, (input_avg_usec / 10) % 100,
-                 queue_avg_usec / 1000, (queue_avg_usec / 10) % 100,
-                 lag_avg_usec / 1000, (lag_avg_usec / 10) % 100,
+                 // Note: Input lag could go negative with touch prediction
+                 input_lag_avg_usec / 1000, labs(input_lag_avg_usec / 10) % 100,
+                 render_time_avg_usec / 1000, (render_time_avg_usec / 10) % 100,
+                 queue_lag_avg_usec / 1000, (queue_lag_avg_usec / 10) % 100,
+                 visible_lag_avg_usec / 1000, (visible_lag_avg_usec / 10) % 100,
                  input_events_hz,
                  nbuffers
                  );
