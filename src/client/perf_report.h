@@ -30,6 +30,7 @@ class PerfReport
 {
 public:
     virtual ~PerfReport() = default;
+    virtual void name(char const*) = 0;
     virtual void begin_frame() = 0;
     virtual void end_frame() = 0;
     virtual void event_received(MirEvent const&) = 0;
@@ -38,6 +39,7 @@ public:
 class NullPerfReport : public PerfReport
 {
 public:
+    virtual void name(char const*) {}
     void begin_frame() override {}
     void end_frame() override {}
     void event_received(MirEvent const&) override {}

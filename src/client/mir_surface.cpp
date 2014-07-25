@@ -83,6 +83,8 @@ MirSurface::MirSurface(
     {
         perf_report = std::make_shared<mir::client::NullPerfReport>();
     }
+
+    perf_report->name(params.name);
 }
 
 MirSurface::~MirSurface()

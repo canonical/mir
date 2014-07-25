@@ -22,6 +22,7 @@
 #include "../perf_report.h"
 #include "mir_toolkit/event.h"
 #include <memory>
+#include <string>
 
 namespace mir
 {
@@ -36,11 +37,13 @@ class PerfReport : public mir::client::PerfReport
 {
 public:
     PerfReport(std::shared_ptr<mir::logging::Logger> const& logger);
+    void name(char const* s) override;
     void begin_frame() override;
     void end_frame() override;
     void event_received(MirEvent const&) override;
 private:
     std::shared_ptr<mir::logging::Logger> const logger;
+    std::string nam;
     nsecs_t last_report_time;
     nsecs_t frame_begin_time;
     nsecs_t render_time_sum;
