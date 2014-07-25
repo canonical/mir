@@ -42,13 +42,7 @@ const char * const component = "perf"; // Note context is already within client
 
 PerfReport::PerfReport(std::shared_ptr<mir::logging::Logger> const& logger)
     : logger(logger),
-      last_report_time(current_time()),
-      frame_begin_time(0),
-      render_time_sum(0),
-      oldest_motion_event(0),
-      input_lag_sum(0),
-      frame_count(0),
-      motion_count(0)
+      last_report_time(current_time())
 {
 }
 

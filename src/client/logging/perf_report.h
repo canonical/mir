@@ -44,13 +44,13 @@ public:
 private:
     std::shared_ptr<mir::logging::Logger> const logger;
     std::string nam;
-    nsecs_t last_report_time;
-    nsecs_t frame_begin_time;
-    nsecs_t render_time_sum;
-    nsecs_t oldest_motion_event;
-    nsecs_t input_lag_sum;
-    int frame_count;
-    int motion_count;
+    nsecs_t last_report_time = 0;
+    nsecs_t frame_begin_time = 0;
+    nsecs_t render_time_sum = 0;
+    nsecs_t oldest_motion_event = 0;
+    nsecs_t input_lag_sum = 0;
+    int frame_count = 0;
+    int motion_count = 0;
 };
 
 } // namespace logging
