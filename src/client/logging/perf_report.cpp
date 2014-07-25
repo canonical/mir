@@ -21,9 +21,6 @@
 
 using namespace mir::client::logging;
 
-#define MILLISECONDS(n) ((n) * 1000000LL)
-#define SECONDS(n) ((n) * 1000000000LL)
-
 namespace
 {
 
@@ -35,7 +32,9 @@ nsecs_t current_time()
     return systemTime();
 }
 
-nsecs_t const report_interval = SECONDS(1);
+nsecs_t const one_millisecond = 1000000LL;
+nsecs_t const one_second = 1000 * one_millisecond;
+nsecs_t const report_interval = one_second;
 const char * const component = "perf"; // Note context is already within client
 
 } // namespace
@@ -82,7 +81,7 @@ void PerfReport::end_frame(int buffer_id)
     nsecs_t interval = now - last_report_time;
     if (interval >= report_interval)
     {   // Precision matters. Don't use floats.
-        long long interval_ms = interval / MILLISECONDS(1);
+        long long interval_ms = interval / one_millisecond;
 
         // FPS x 100
         long fps_100 = frame_count * 100000L / interval_ms;
