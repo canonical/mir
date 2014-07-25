@@ -36,6 +36,7 @@ add_library(
   anonymous_shm_file.cpp
   shm_buffer.cpp
   bypass.cpp
+  buffer_writer.cpp
 )
 
 set_target_properties(

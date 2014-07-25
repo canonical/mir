@@ -21,6 +21,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer.h"
+#include "mir/graphics/buffer_writer.h"
 #include "mir/graphics/renderable.h"
 #include "mir/input/scene.h"
 
@@ -112,8 +113,9 @@ private:
 
 #include <string.h> // TODO: Remove
 mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<mg::BufferWriter> const& buffer_writer,
     std::shared_ptr<mi::Scene> const& scene)
-    : touchspot_pixels(allocator->alloc_buffer({touchspot_size, touchspot_pixel_format, mg::BufferUsage::software})),
+    : touchspot_buffer(allocator->alloc_buffer({touchspot_size, touchspot_pixel_format, mg::BufferUsage::software})),
       scene(scene),
       renderables_in_use(0)
 {
@@ -122,7 +124,7 @@ mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAl
     
     uint32_t *pixels = new uint32_t[pixels_size];
     memset(pixels, 0, pixels_size);
-    touchspot_pixels->write(pixels, pixels_size);
+    buffer_writer->write(touchspot_buffer, pixels, pixels_size);
     delete[] pixels;
 }
 
@@ -133,7 +135,7 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
     // We can assume the maximum number of touches will not grow unreasonably large
     // and so we just grow a pool of TouchspotRenderables as needed
     while (touchspot_renderables.size() < touches.size())
-        touchspot_renderables.push_back(std::make_shared<TouchspotRenderable>(touchspot_pixels));
+        touchspot_renderables.push_back(std::make_shared<TouchspotRenderable>(touchspot_buffer));
 
     // We act on each touchspot renderable, as it may need positioning, to be added to the scene, or removed
     // entirely.

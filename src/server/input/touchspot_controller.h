@@ -30,6 +30,7 @@ namespace graphics
 {
 class GraphicBufferAllocator;
 class Buffer;
+class BufferWriter;
 class Renderable;
 }
 namespace input
@@ -43,6 +44,7 @@ class TouchspotController : public TouchVisualizer
 {
 public:
     TouchspotController(std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<graphics::BufferWriter> const& writer,
         std::shared_ptr<input::Scene> const& scene);
 
     virtual ~TouchspotController() = default;
@@ -54,7 +56,7 @@ protected:
     TouchspotController& operator=(TouchspotController const&) = delete;
 
 private:
-    std::shared_ptr<graphics::Buffer> touchspot_pixels;
+    std::shared_ptr<graphics::Buffer> touchspot_buffer;
     std::shared_ptr<Scene> scene;
     
     std::mutex guard;

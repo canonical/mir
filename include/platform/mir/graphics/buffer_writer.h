@@ -16,11 +16,6 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_BUFFER_WRITER_H_
-#define MIR_GRAPHICS_MESA_BUFFER_WRITER_H_
-
-#include "mir/graphics/buffer_writer.h"
-
 #include <memory>
 
 namespace mir
@@ -29,17 +24,18 @@ namespace graphics
 {
 class Buffer;
 
-namespace mesa
-{
-class BufferWriter : public graphics::BufferWriter
+class BufferWriter
 {
 public:
-    BufferWriter();
-    
-    void write(std::shared_ptr<graphics::Buffer> const& buffer, void const* data, size_t size) override;
-};
-}
-}
-}
+    virtual ~BufferWriter() = default;
 
-#endif // MIR_GRAPHICS_MESA_BUFFER_WRITER_H_
+    virtual void write(std::shared_ptr<Buffer> const& buffer, void const* data, size_t size) = 0;
+
+protected:
+    BufferWriter() = default;
+    BufferWriter(BufferWriter const&) = delete;
+    BufferWriter& operator=(BufferWriter const&) = delete;
+};
+
+}
+}

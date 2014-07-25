@@ -81,7 +81,7 @@ std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_pla
     geom::Size sz, MirPixelFormat pf, mga::BufferUsage use)
 {
     auto native_handle = alloc_device->alloc_buffer(sz, pf, use);
-    auto buffer = std::make_shared<Buffer>(native_handle, egl_extensions);
+    auto buffer = std::make_shared<Buffer>(native_handle, egl_extensions, static_cast<gralloc_module_t*>(hw_module));
     (*buffer_initializer)(*buffer);
     return buffer;
 }

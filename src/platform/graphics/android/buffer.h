@@ -44,7 +44,8 @@ class Buffer: public BufferBasic
 {
 public:
     Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
-           std::shared_ptr<EGLExtensions> const& extensions);
+           std::shared_ptr<EGLExtensions> const& extensions,
+           gralloc_module_t const* gralloc_module);
     ~Buffer();
 
     geometry::Size size() const;
@@ -67,6 +68,7 @@ private:
     std::mutex mutable content_lock;
     std::shared_ptr<NativeBuffer> native_buffer;
     std::shared_ptr<EGLExtensions> egl_extensions;
+    gralloc_module_t const* const gralloc_module;
 };
 
 }

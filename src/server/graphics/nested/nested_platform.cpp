@@ -80,6 +80,12 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_a
     return native_platform->create_buffer_allocator(buffer_initializer);
 }
 
+std::shared_ptr<mg::BufferWriter> mgn::NestedPlatform::create_buffer_writer()
+{
+    // TODO: ~racarr
+    return std::shared_ptr<mg::BufferWriter>();
+}
+
 std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& conf_policy,
     std::shared_ptr<mg::GLProgramFactory> const&,

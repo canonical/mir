@@ -34,9 +34,11 @@ namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
 mga::Buffer::Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
-                    std::shared_ptr<mg::EGLExtensions> const& extensions)
+                    std::shared_ptr<mg::EGLExtensions> const& extensions,
+                    gralloc_module_t const* gralloc_module)
     : native_buffer(buffer_handle),
-      egl_extensions(extensions)
+      egl_extensions(extensions),
+      gralloc_module(gralloc_module)
 {
 }
 
