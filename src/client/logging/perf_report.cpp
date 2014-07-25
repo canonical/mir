@@ -45,7 +45,7 @@ PerfReport::PerfReport(std::shared_ptr<mir::logging::Logger> const& logger)
       last_report_time(current_time()),
       frame_begin_time(0),
       render_time_sum(0),
-      first_motion_event(0),
+      oldest_motion_event(0),
       input_lag_sum(0),
       frame_count(0),
       motion_count(0)
@@ -61,8 +61,8 @@ void PerfReport::end_frame()
 {
     auto now = current_time();
     auto render_time = now - frame_begin_time;
-    auto input_lag = first_motion_event ? now - first_motion_event : 0;
-    first_motion_event = 0;
+    auto input_lag = oldest_motion_event ? now - oldest_motion_event : 0;
+    oldest_motion_event = 0;
 
     render_time_sum += render_time;
     input_lag_sum += input_lag;
@@ -75,17 +75,17 @@ void PerfReport::end_frame()
 
         // Precision matters. Don't use floats.
         long long interval_ms = interval / MILLISECONDS(1);
-        long fps_1000 = frame_count * 1000000L / interval_ms;
+        long fps_100 = frame_count * 100000L / interval_ms;
         long input_events_hz = motion_count * 1000L / interval_ms;
         long frame_count_1000 = frame_count * 1000L;
         long render_avg_usec = render_time_sum / frame_count_1000;
         long lag_avg_usec = input_lag_sum / frame_count_1000;
 
         snprintf(msg, sizeof msg,
-                 "%ld.%03ld FPS, render %ld.%03ldms, lag %ld.%03ldms, %ldev/s",
-                 fps_1000 / 1000L, fps_1000 % 1000L,
-                 render_avg_usec / 1000L, render_avg_usec % 1000L,
-                 lag_avg_usec / 1000L, lag_avg_usec % 1000L,
+                 "%ld.%02ld FPS, render %ld.%02ldms, lag %ld.%02ldms, %ldev/s",
+                 fps_100 / 100, fps_100 % 100,
+                 render_avg_usec / 1000, (render_avg_usec / 10) % 100,
+                 lag_avg_usec / 1000, (lag_avg_usec / 10) % 100,
                  input_events_hz
                  );
         logger->log(mir::logging::Logger::informational, msg, component);
@@ -103,8 +103,8 @@ void PerfReport::event_received(MirEvent const& e)
     if (e.type == mir_event_type_motion)
     {
         ++motion_count;
-        if (!first_motion_event)
-            first_motion_event = e.motion.event_time;
+        if (!oldest_motion_event)
+            oldest_motion_event = e.motion.event_time;
     }
 }
 
