@@ -82,7 +82,7 @@ void PerfReport::end_frame()
         long lag_avg_usec = input_lag_sum / frame_count_1000;
 
         snprintf(msg, sizeof msg,
-                 "%ld.%02ld FPS, render %ld.%02ldms, lag %ld.%02ldms, %ldev/s",
+                 "%2ld.%02ld FPS, render%3ld.%02ldms, lag%3ld.%02ldms,%4ldev/s",
                  fps_100 / 100, fps_100 % 100,
                  render_avg_usec / 1000, (render_avg_usec / 10) % 100,
                  lag_avg_usec / 1000, (lag_avg_usec / 10) % 100,
