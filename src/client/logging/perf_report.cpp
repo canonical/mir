@@ -51,14 +51,21 @@ void PerfReport::name(char const* s)
     nam = s ? s : "?";
 }
 
-void PerfReport::begin_frame()
+void PerfReport::begin_frame(int buffer_id)
 {
     frame_begin_time = current_time();
+
+    if (buffer_end_time.find(buffer_id) != buffer_end_time.end())
+    {
+        auto buffer_queue_latency = frame_begin_time -
+                                    buffer_end_time[buffer_id];
+        buffer_queue_latency_sum += buffer_queue_latency;
+    }
 }
 
-void PerfReport::end_frame()
+void PerfReport::end_frame(int buffer_id)
 {
-    auto now = current_time();
+    auto now = buffer_end_time[buffer_id] = current_time();
     auto render_time = now - frame_begin_time;
     auto input_lag = oldest_motion_event ? now - oldest_motion_event : 0;
     oldest_motion_event = 0;
@@ -70,7 +77,7 @@ void PerfReport::end_frame()
     nsecs_t interval = now - last_report_time;
     if (interval >= report_interval)
     {
-        char msg[128];
+        char msg[256];
 
         // Precision matters. Don't use floats.
         long long interval_ms = interval / MILLISECONDS(1);
@@ -78,15 +85,21 @@ void PerfReport::end_frame()
         long input_events_hz = motion_count * 1000L / interval_ms;
         long frame_count_1000 = frame_count * 1000L;
         long render_avg_usec = render_time_sum / frame_count_1000;
-        long lag_avg_usec = input_lag_sum / frame_count_1000;
+        long input_avg_usec = input_lag_sum / frame_count_1000;
+        long queue_avg_usec = buffer_queue_latency_sum / frame_count_1000;
+        long lag_avg_usec = input_avg_usec + queue_avg_usec;
+        int nbuffers = buffer_end_time.size();
 
         snprintf(msg, sizeof msg,
-                 "%s: %2ld.%02ld FPS, render%3ld.%02ldms, lag%3ld.%02ldms,%4ldev/s",
+                 "%s: %2ld.%02ld FPS, render %2ld.%02ldms, input lag %2ld.%02ldms, buffer lag %2ld.%02ldms, visible input lag %2ld.%02ldms, %3ldev/s, %d buffers",
                  nam.c_str(),
                  fps_100 / 100, fps_100 % 100,
                  render_avg_usec / 1000, (render_avg_usec / 10) % 100,
+                 input_avg_usec / 1000, (input_avg_usec / 10) % 100,
+                 queue_avg_usec / 1000, (queue_avg_usec / 10) % 100,
                  lag_avg_usec / 1000, (lag_avg_usec / 10) % 100,
-                 input_events_hz
+                 input_events_hz,
+                 nbuffers
                  );
         logger->log(mir::logging::Logger::informational, msg, component);
 
@@ -95,6 +108,17 @@ void PerfReport::end_frame()
         motion_count = 0;
         render_time_sum = 0;
         input_lag_sum = 0;
+        buffer_queue_latency_sum = 0;
+
+        // Remove history of old buffer ids
+        auto i = buffer_end_time.begin();
+        while (i != buffer_end_time.end())
+        {
+            if ((now - i->second) >= report_interval)
+                i = buffer_end_time.erase(i);
+            else
+                ++i;
+        }
     }
 }
 

@@ -174,7 +174,7 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * con
     release_cpu_region();
     auto const id = &surface.id();
     auto const mutable_buffer = surface.mutable_buffer();
-    perf_report->end_frame();
+    perf_report->end_frame(mutable_buffer->buffer_id());
     lock.unlock();
 
     next_buffer_wait_handle.expect_result();
@@ -230,6 +230,8 @@ void MirSurface::process_incoming_buffer()
     {
         // TODO: Report the error
     }
+
+    perf_report->begin_frame(buffer.buffer_id());
 }
 
 void MirSurface::created(mir_surface_callback callback, void * context)
@@ -247,8 +249,6 @@ void MirSurface::created(mir_surface_callback callback, void * context)
             auto const& attrib = surface.attributes(i);
             attrib_cache[attrib.attrib()] = attrib.ivalue();
         }
-
-        perf_report->begin_frame();
     }
 
     connection->on_surface_created(id(), this);
@@ -261,7 +261,6 @@ void MirSurface::new_buffer(mir_surface_callback callback, void * context)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         process_incoming_buffer();
-        perf_report->begin_frame();
     }
 
     callback(this, context);
