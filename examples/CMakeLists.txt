@@ -173,6 +173,7 @@ set (INSTALL_DEMOS
 
 add_subdirectory(demo-inprocess-surface-client)
 add_subdirectory(demo-shell)
+add_subdirectory(testdraw)
 
 install(TARGETS ${INSTALL_DEMOS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 

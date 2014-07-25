@@ -14,7 +14,6 @@ add_subdirectory(report/lttng)
 add_subdirectory(env)
 add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
-add_subdirectory(testdraw)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
