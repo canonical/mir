@@ -76,20 +76,33 @@ void PerfReport::end_frame(int buffer_id)
 
     nsecs_t interval = now - last_report_time;
     if (interval >= report_interval)
-    {
-        char msg[256];
-
-        // Precision matters. Don't use floats.
+    {   // Precision matters. Don't use floats.
         long long interval_ms = interval / MILLISECONDS(1);
+
+        // FPS x 100
         long fps_100 = frame_count * 100000L / interval_ms;
+
+        // Input (motion) events per second
         long input_events_hz = motion_count * 1000L / interval_ms;
+
+        // Frames rendered x 1000
         long frame_count_1000 = frame_count * 1000L;
+
+        // Render time average in microseconds
         long render_avg_usec = render_time_sum / frame_count_1000;
+
+        // Input lag average in microseconds (input event -> client swap)
         long input_avg_usec = input_lag_sum / frame_count_1000;
+
+        // Buffer queue lag average in microseconds (client swap -> screen)
         long queue_avg_usec = buffer_queue_latency_sum / frame_count_1000;
+
+        // Total lag in microseconds (input event -> composited on screen)
         long lag_avg_usec = input_avg_usec + queue_avg_usec;
+
         int nbuffers = buffer_end_time.size();
 
+        char msg[256];
         snprintf(msg, sizeof msg,
                  "%s: %2ld.%02ld FPS, render %2ld.%02ldms, input lag %2ld.%02ldms, buffer lag %2ld.%02ldms, visible input lag %2ld.%02ldms, %3ldev/s, %d buffers",
                  nam.c_str(),
