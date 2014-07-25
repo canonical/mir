@@ -61,7 +61,10 @@ void PerfReport::begin_frame(int buffer_id)
 
     if (buffer_end_time.find(buffer_id) != buffer_end_time.end())
     {
-        auto buffer_queue_latency = frame_begin_time -
+        // Estimate page flip (composition finished) time as the time we
+        // eventually get the same buffer back.
+        auto estimated_page_flip_time = frame_begin_time;
+        auto buffer_queue_latency = estimated_page_flip_time -
                                     buffer_end_time[buffer_id];
         buffer_queue_latency_sum += buffer_queue_latency;
     }
