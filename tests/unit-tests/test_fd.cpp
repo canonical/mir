@@ -64,3 +64,18 @@ TEST_F(Fd, closes_when_refcount_is_zero)
     fd2 = mir::Fd(-1);
     EXPECT_FALSE(fd_is_open(raw_fd));
 }
+
+TEST_F(Fd, moves_around)
+{
+    EXPECT_TRUE(fd_is_open(raw_fd));
+    mir::Fd fd0(-1);
+    fd0 = mir::Fd(raw_fd);
+    mir::Fd fd1(std::move(fd0));
+    mir::Fd fd2(fd1);
+
+    EXPECT_TRUE(fd_is_open(raw_fd));
+    fd1 = mir::Fd(-1);
+    EXPECT_TRUE(fd_is_open(raw_fd));
+    fd2 = mir::Fd(-1);
+    EXPECT_FALSE(fd_is_open(raw_fd));
+}
