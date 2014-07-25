@@ -39,13 +39,13 @@ public:
     operator int() const;
 
 private:
-    struct RefcountFd
+    struct CountedFd
     {
-        RefcountFd(int fd);
-        int const fd;
+        CountedFd(int fd);
+        int const raw_fd;
         std::atomic<unsigned int> refcount;
     };
-    RefcountFd *rfd;
+    CountedFd *fd;
 };
 } // namespace mir
 
