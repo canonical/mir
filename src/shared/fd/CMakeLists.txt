@@ -14,12 +14,12 @@
 #
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-add_library(mirsharedfd STATIC
+add_library(mirsharedfd OBJECT
   fd.cpp
 )
 
-list(APPEND MIR_COMMON_LIBRARIES
-  mirsharedfd
+list(APPEND MIR_COMMON_SOURCES
+  $<TARGET_OBJECTS:mirsharedfd>
 )
 
-set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)
+set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)

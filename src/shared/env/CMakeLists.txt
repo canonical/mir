@@ -14,12 +14,12 @@
 #
 # Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
 
-add_library(mirsharedenv STATIC
+add_library(mirsharedenv OBJECT
   default_configuration.cpp
 )
 
-list(APPEND MIR_COMMON_LIBRARIES
-  mirsharedenv
+list(APPEND MIR_COMMON_SOURCES
+  $<TARGET_OBJECTS:mirsharedenv>
 )
 
-set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)
+set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
