@@ -121,7 +121,7 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
 
 // TODO: We use a droidinput::Looper here for polling functionality but it might be nice to integrate
 // with the existing client io_service ~racarr ~tvoss
-bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& max_timeout, MirEvent &ev)
+bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout, MirEvent &ev)
 {
     if (!fd_added)
     {
@@ -130,11 +130,11 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& max_time
         fd_added = true;
     }
 
-    auto timeout = max_timeout;
+    auto reduced_timeout = timeout;
     if (input_consumer->hasDeferredEvent())
     {
         // consume() didn't finish last time. Retry it immediately.
-        timeout = std::chrono::milliseconds::zero();
+        reduced_timeout = std::chrono::milliseconds::zero();
     }
     else if (input_consumer->hasPendingBatch())
     {
@@ -145,13 +145,14 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& max_time
          * in the case that motion has ended (fingers lifed).
          */
         std::chrono::milliseconds const motion_idle_timeout(50);
-        timeout = motion_idle_timeout;
+        if (timeout.count() < 0 || timeout > motion_idle_timeout)
+            reduced_timeout = motion_idle_timeout;
     }
 
     // Note timeout may be negative (infinity)
-    if (timeout != std::chrono::milliseconds::zero())
+    if (reduced_timeout != std::chrono::milliseconds::zero())
     {
-        auto result = looper->pollOnce(timeout.count());
+        auto result = looper->pollOnce(reduced_timeout.count());
         if (result == ALOOPER_POLL_WAKE)
             return false;
         if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
