@@ -204,3 +204,18 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events_within
     EXPECT_FALSE(receiver.next_event(std::chrono::milliseconds(10), ev));
 }
 
+TEST_F(AndroidInputReceiverSetup, receiver_consumes_no_batched_events_on_first_call)
+{
+    mircva::InputReceiver receiver(client_fd, std::make_shared<mircv::NullInputReceiverReport>());
+    TestingInputProducer producer(server_fd);
+
+    producer.produce_a_motion_event();
+    producer.produce_a_motion_event();
+    producer.produce_a_motion_event();
+
+    flush_channels();
+
+    MirEvent ev;
+    EXPECT_FALSE(receiver.next_event(std::chrono::milliseconds(10), ev));
+}
+
