@@ -142,7 +142,7 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
          * A batch is pending and must be completed or else the client could
          * be starved of events. But don't hurry. A continuous motion gesture
          * will wake us up much sooner than 50ms. This timeout is only reached
-         * in the case that motion has ended (fingers lifed).
+         * in the case that motion has ended (fingers lifted).
          */
         std::chrono::milliseconds const motion_idle_timeout(50);
         if (timeout.count() < 0 || timeout > motion_idle_timeout)
