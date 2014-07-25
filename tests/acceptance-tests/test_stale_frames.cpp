@@ -202,8 +202,5 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
     start_compositor();
 
     auto const new_buffers = wait_for_new_rendered_buffers();
-    for (auto id : new_buffers)
-        std::cerr << id.as_uint32_t() << std::endl;
-
     EXPECT_THAT(new_buffers, Not(AnyOf(Contains(stale_buffer_id1), Contains(stale_buffer_id2))));
 }
