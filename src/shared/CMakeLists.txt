@@ -1,5 +1,6 @@
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
-set(MIR_COMMON_LIBRARIES)
+set(MIR_COMMON_SOURCES)
+set(MIR_COMMON_REFERENCES)
 add_subdirectory(protobuf/)
 
 if (MIR_BUILD_PLATFORM_ANDROID)
@@ -31,20 +32,22 @@ set(
   PARENT_SCOPE)
 
 
-add_library(
-  mircommon SHARED
+MESSAGE( STATUS "MIR_COMMON_SOURCES. . . : ${MIR_COMMON_SOURCES}" )
+MESSAGE( STATUS "MIR_COMMON_REFERENCES . : ${MIR_COMMON_REFERENCES}" )
+
+add_library(mircommon
+  SHARED
+  ${MIR_COMMON_SOURCES}
 )
 
-target_link_libraries(
-  mircommon
-  ${MIR_COMMON_LIBRARIES}
+target_link_libraries(mircommon
+  ${MIR_COMMON_REFERENCES}
 )
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
 set(MIR_SHARED_ABI 1)
 
-set_target_properties(
-  mircommon
+set_target_properties(mircommon
 
   PROPERTIES
   SOVERSION ${MIR_SHARED_ABI}

@@ -583,6 +583,8 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
     {
         attrib_values[mir_surface_attrib_visibility] = new_visibility;
         lg.unlock();
+        if (new_visibility == mir_surface_visibility_exposed)
+            surface_buffer_stream->drop_old_buffers();
         observers.attrib_changed(mir_surface_attrib_visibility, attrib_values[mir_surface_attrib_visibility]);
     }
 
