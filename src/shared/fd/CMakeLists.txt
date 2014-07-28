@@ -12,17 +12,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+# Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
-add_library(mirsharedsharedlibrary OBJECT
-  shared_library.cpp
+add_library(mirsharedfd OBJECT
+  fd.cpp
 )
 
 list(APPEND MIR_COMMON_SOURCES
-  $<TARGET_OBJECTS:mirsharedsharedlibrary>
+  $<TARGET_OBJECTS:mirsharedfd>
 )
 
-list(APPEND MIR_COMMON_REFERENCES dl)
-
 set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
-set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)

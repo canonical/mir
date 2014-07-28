@@ -40,17 +40,10 @@ add_library(mirserver ${MIRSERVER_LINKAGE}
 )
 
 list(APPEND MIRSERVER_ARCHIVES
-  miroptions
   mircompositor
   mirfrontend
   mirgraphics
   mirinput
-  mirsharedinput
-  mirsharedgeometry
-  mirsharedlogging
-  mirsharedenv
-  mirsharedsharedlibrary
-  mirsharedthread
   mirshell
   mirscene
   mirtime
@@ -62,9 +55,9 @@ list(APPEND MIRSERVER_ARCHIVES
 )
 
 list(APPEND MIRSERVER_LINKS
-  mirprotobuf
   mirplatform
   mirclient
+  mircommon
   3rd_party
   xcursorloader
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}

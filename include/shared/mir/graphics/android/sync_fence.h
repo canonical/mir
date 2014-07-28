@@ -19,6 +19,7 @@
 #define MIR_GRAPHICS_ANDROID_SYNC_FENCE_H_
 
 #include "mir/graphics/android/fence.h"
+#include "mir/fd.h"
 #include <memory>
 
 namespace mir
@@ -48,8 +49,7 @@ public:
 class SyncFence : public Fence
 {
 public:
-    SyncFence(std::shared_ptr<SyncFileOps> const&, int fd);
-    ~SyncFence() noexcept;
+    explicit SyncFence(std::shared_ptr<SyncFileOps> const&, Fd fd);
 
     void wait();
     void merge_with(NativeFence& merge_fd);
@@ -59,7 +59,7 @@ private:
     SyncFence(SyncFence const&) = delete;
     SyncFence& operator=(SyncFence const&) = delete;
 
-    int fence_fd;
+    Fd fence_fd;
     std::shared_ptr<SyncFileOps> const ops;
 
     int const infinite_timeout = -1;

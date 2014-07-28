@@ -16,17 +16,9 @@ set(
   tessellation_helpers.cpp
 )
 
-add_library(
-  mirplatformgraphicscommon STATIC
+add_library(mirplatformgraphicscommon OBJECT
 
   ${GRAPHICS_SOURCES}
-)
-
-target_link_libraries(
-  mirplatformgraphicscommon
-  mirsharedgeometry
-
-  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
 )
 
 if (MIR_BUILD_PLATFORM_ANDROID)

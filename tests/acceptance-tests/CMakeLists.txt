@@ -41,6 +41,7 @@ set(
   test_touchspot_visualization.cpp
   test_client_with_custom_display_config_deadlock.cpp
   test_macros.cpp
+  test_stale_frames.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )
