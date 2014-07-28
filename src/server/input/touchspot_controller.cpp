@@ -31,7 +31,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
-geom::Size const touchspot_size = {32, 32};
+geom::Size const touchspot_size = {64, 64};
 MirPixelFormat const touchspot_pixel_format = mir_pixel_format_argb_8888;
 }
 
@@ -123,7 +123,7 @@ mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAl
         MIR_BYTES_PER_PIXEL(touchspot_pixel_format);
     
     uint32_t *pixels = new uint32_t[pixels_size];
-    memset(pixels, 0, pixels_size);
+    memset(pixels, 0xffffffff, pixels_size);
     buffer_writer->write(touchspot_buffer, pixels, pixels_size);
     delete[] pixels;
 }

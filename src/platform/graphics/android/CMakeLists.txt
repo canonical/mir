@@ -37,6 +37,7 @@ add_library(
   device_quirks.cpp
   real_hwc_wrapper.cpp
   hwc_fallback_gl_renderer.cpp
+  android_buffer_writer.cpp
 )
 
 set_target_properties(
