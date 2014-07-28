@@ -60,6 +60,12 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-return-type-c-linkage -Wno-mismatched-tags")
 endif()
 
+# Link time optimization allows leaner, cleaner libraries
+if ("${CMAKE_C_COMPILER}" MATCHES "gcc")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+endif()
+
 string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_lower)
 
 #####################################################################
