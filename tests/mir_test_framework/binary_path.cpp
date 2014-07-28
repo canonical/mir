@@ -19,12 +19,7 @@
 
 #include "mir_test_framework/binary_path.h"
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <libgen.h>
-#include <fstream>
-#include <sstream>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
