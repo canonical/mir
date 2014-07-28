@@ -49,9 +49,9 @@ public:
     virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
     virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
 
-    // An interface which the input stack can use to add certain non interactive input visualizaxtions
+    // An interface which the input stack can use to add certain non interactive input visualizations
     // in to the scene (i.e. cursors, touchspots). Overlay renderables will be rendered above all surfaces.
-    // Within the group of overlays, rendering order is undefined.
+    // Within the set of overlay renderables, rendering order is undefined.
     virtual void add_overlay(std::shared_ptr<graphics::Renderable> const& overlay) = 0;
     virtual void remove_overlay(std::weak_ptr<graphics::Renderable> const& overlay) = 0;
     

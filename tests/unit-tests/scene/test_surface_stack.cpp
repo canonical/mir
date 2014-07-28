@@ -726,6 +726,32 @@ TEST_F(SurfaceStack, overlays_appear_at_top_of_renderlist)
             SceneElementFor(mt::fake_shared(r))));    
 }
 
+TEST_F(SurfaceStack, removed_overlays_are_removed)
+{
+    using namespace ::testing;
+
+    mtd::StubRenderable r;
+    
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_overlay(mt::fake_shared(r));
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface1),
+            SceneElementFor(stub_surface2),
+            SceneElementFor(mt::fake_shared(r))));
+    
+    stack.remove_overlay(mt::fake_shared(r));
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementFor(stub_surface1),
+            SceneElementFor(stub_surface2)));
+}
+
 TEST_F(SurfaceStack, scene_observers_notified_of_generic_scene_change)
 {
     MockSceneObserver o1, o2;

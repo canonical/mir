@@ -43,16 +43,15 @@ mga::AndroidBufferWriter::AndroidBufferWriter()
 
 void mga::AndroidBufferWriter::write(std::shared_ptr<mg::Buffer> const& buffer, void const* data, size_t size)
 {
-    // TODO: Size validation etc...
+    auto buffer_size = buffer->size();
+    if (buffer->stride().as_uint32_t() * buffer_size.height.as_uint32_t() != size)
+        BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
+
     auto mga_buffer = std::dynamic_pointer_cast<mga::Buffer>(buffer);
     if (!mga_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid buffer (did not originate from platform graphics driver)"));
     
     auto handle = buffer->native_buffer_handle();
-    
-    auto buffer_size = buffer->size();
-    if (buffer->stride().as_uint32_t() * buffer_size.height.as_uint32_t() != size)
-        BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
     
     char* vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;

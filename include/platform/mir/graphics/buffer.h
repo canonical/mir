@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_GRAPHICS_BUFFER_H_
-#define MIR_GRAPHICS_BUFFER_H_
+#ifndef MIR_PLATFORM_GRAPHICS_BUFFER_H_
+#define MIR_PLATFORM_GRAPHICS_BUFFER_H_
 
 #include "mir/graphics/native_buffer.h"
 #include "mir/geometry/size.h"
@@ -44,11 +44,10 @@ public:
     virtual void gl_bind_to_texture() = 0;
     /* TODO: remove this function, as it is specific to the mesa platform */
     virtual bool can_bypass() const = 0;
-    
 protected:
     Buffer() = default;
 };
 
 }
 }
-#endif // MIR_GRAPHICS_BUFFER_H_
+#endif // MIR_PLATFORM_GRAPHICS_BUFFER_H_

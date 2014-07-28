@@ -156,11 +156,10 @@ void ms::SurfaceStack::add_overlay(
     observers.scene_changed();
 }
 
-// TODO: Test
 void ms::SurfaceStack::remove_overlay(
     std::weak_ptr<mg::Renderable> const& weak_overlay)
 {
-    auto overlay = weak_overlay.lock(); // TODO: comment exception something
+    auto overlay = weak_overlay.lock();
     {
         std::lock_guard<decltype(guard)> lg(guard);
         auto const p = std::find(overlays.begin(), overlays.end(), overlay);

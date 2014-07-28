@@ -17,6 +17,7 @@
  */
 
 #include "touchspot_controller.h"
+#include "touchspot_image.c"
 
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
@@ -31,7 +32,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
-geom::Size const touchspot_size = {64, 64};
+geom::Size const touchspot_size = {touchspot_image.width, touchspot_image.height};
 MirPixelFormat const touchspot_pixel_format = mir_pixel_format_argb_8888;
 }
 
@@ -111,7 +112,6 @@ private:
 };
 
 
-#include <string.h> // TODO: Remove
 mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mg::BufferWriter> const& buffer_writer,
     std::shared_ptr<mi::Scene> const& scene)
@@ -122,10 +122,7 @@ mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAl
     unsigned int const pixels_size = touchspot_size.width.as_uint32_t()*touchspot_size.height.as_uint32_t() *
         MIR_BYTES_PER_PIXEL(touchspot_pixel_format);
     
-    uint32_t *pixels = new uint32_t[pixels_size];
-    memset(pixels, 0xffffffff, pixels_size);
-    buffer_writer->write(touchspot_buffer, pixels, pixels_size);
-    delete[] pixels;
+    buffer_writer->write(touchspot_buffer, touchspot_image.pixel_data, pixels_size);
 }
 
 void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches)
@@ -163,8 +160,8 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
         }
     }
     
-    // TODO (hackish): We may have just moved renderables which  will not propgate 
-    // through with damage notifications out of compositor in current architecture so 
-    // we need this "emit_scene_changed".
+    // TODO (hackish): We may have just moved renderables which with the current
+    // architecture of surface observers will not trigger a propagation to the
+    // compositor damage callback we need this "emit_scene_changed".
     scene->emit_scene_changed();
 }

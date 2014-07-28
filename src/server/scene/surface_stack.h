@@ -91,7 +91,7 @@ public:
     void add_observer(std::shared_ptr<Observer> const& observer) override;
     void remove_observer(std::weak_ptr<Observer> const& observer) override;
     
-    // TODO: Requires test and docs...and remove function
+    // Intended for input overlays, as described in mir::input::Scene documentation.
     void add_overlay(std::shared_ptr<graphics::Renderable> const& overlay);
     void remove_overlay(std::weak_ptr<graphics::Renderable> const& overlay);
     

@@ -24,6 +24,9 @@ namespace graphics
 {
 class Buffer;
 
+/// An interface provided by the graphics platform which may be used on the server side
+/// to write pixel data to buffers. Currently in use only by cursors and touchspots
+/// (which can be seen as similar to inprocess-software-clients).
 class BufferWriter
 {
 public:

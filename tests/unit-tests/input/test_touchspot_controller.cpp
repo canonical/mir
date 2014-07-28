@@ -124,19 +124,6 @@ TEST_F(TestTouchspotController, allocates_software_buffer_for_touchspots)
     mi::TouchspotController controller(allocator, writer, scene);
 }
 
-// TODO: Reenable
-/*TEST_F(TestTouchspotController, writes_touchspot_to_buffer)
-{
-    using namespace ::testing;
-
-    mtd::MockBuffer mock_buffer;
-    EXPECT_CALL(mock_buffer, write(_, _)).Times(1);
-    EXPECT_CALL(*allocator, alloc_buffer(SoftwareBuffer())).Times(1)
-        .WillOnce(Return(mt::fake_shared(mock_buffer)));
-
-    mi::TouchspotController controller(allocator, writer, scene);
-}
-*/
 TEST_F(TestTouchspotController, touches_result_in_renderables_in_stack)
 {
     using namespace ::testing;

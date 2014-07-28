@@ -82,8 +82,7 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_a
 
 std::shared_ptr<mg::BufferWriter> mgn::NestedPlatform::create_buffer_writer()
 {
-    // TODO: ~racarr
-    return std::shared_ptr<mg::BufferWriter>();
+    return native_platform->create_buffer_writer();
 }
 
 std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(
