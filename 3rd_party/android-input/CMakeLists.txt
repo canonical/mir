@@ -5,7 +5,7 @@ STRING(REGEX REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 STRING(REGEX REPLACE "-W[^ ]*" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
 set(ANDROID_INPUT_COMPILE_FLAGS
-    "-include ${CMAKE_CURRENT_SOURCE_DIR}/android/system/core/include/arch/ubuntu-x86/AndroidConfig.h")
+    "-include ${CMAKE_CURRENT_SOURCE_DIR}/android/system/core/include/arch/ubuntu-x86/AndroidConfig.h -Wno-format")
 
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS
     "${ANDROID_INPUT_COMPILE_FLAGS} -DUSING_STD_CPP11"

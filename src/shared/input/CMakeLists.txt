@@ -24,20 +24,22 @@ include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 
 add_subdirectory(android)
 
-add_library(
-  mirsharedinput STATIC
+add_library(mirsharedinput OBJECT
   ${ANDROID_SHARED_INPUT_SOURCES}
+  udev_wrapper.cpp
 )
 
-target_link_libraries(
-  mirsharedinput
-  
-  android-input
-  ${XKBCOMMON_LIBRARIES}
+list(APPEND MIR_COMMON_SOURCES
+  $<TARGET_OBJECTS:mirsharedinput>
 )
 
-list(APPEND MIR_COMMON_LIBRARIES
-  mirsharedinput
-)
+# As we put android-input in MIR_COMMON_REFERENCES it ends up linked into
+# libmirserver. But linking into libmircommon fails as it in turn needs
+# mir::mir::terminate_with_current_exception() from mirserver
+list(APPEND MIR_COMMON_REFERENCES android-input)
 
-set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)
+list(APPEND MIR_COMMON_REFERENCES ${XKBCOMMON_LIBRARIES})
+list(APPEND MIR_COMMON_REFERENCES ${UDEV_LDFLAGS} ${UDEV_LIBRARIES})
+
+set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
+set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)
