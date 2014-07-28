@@ -9,7 +9,7 @@ bfacab3544a6b1339e6f45353033bdab3c226db7  include/server/mir/time/clock.h
 ba79552edce545fafc9a4f401411c44d0cb3b2cf  include/server/mir/graphics/gl_extensions_base.h
 7ef3e99901168cda296d74d05a979f47bf9c3ff1  include/server/mir/server_action_queue.h
 a3e8658107c0c13d41eaf2ca6a1be71d1dc59df6  include/server/mir/compositor/compositor_report.h
-e439cc4a7fb8e975bed0771756e7949aad968c14  include/server/mir/compositor/buffer_stream.h
+a4c8f0b0c30784ea6930a8ee6651f1d6efa47231  include/server/mir/compositor/buffer_stream.h
 e787879afa46d9c8257ff1f4ae8c7900d4b5f1a4  include/server/mir/compositor/frame_dropping_policy.h
 e0860c43bf5196a792ffd7216826925e16275d07  include/server/mir/compositor/renderer_factory.h
 a9f284ba4b05d58fd3eeb628d1f56fe4ac188526  include/server/mir/compositor/compositor_id.h

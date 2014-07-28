@@ -62,6 +62,7 @@ public:
     int buffers_free_for_client() const override;
     bool framedropping_allowed() const;
     bool is_a_current_buffer_user(void const* user_id) const;
+    void drop_old_buffers() override;
 
 private:
     void give_buffer_to_client(graphics::Buffer* buffer,
@@ -87,6 +88,7 @@ private:
     int nbuffers;
     bool frame_dropping_enabled;
     graphics::BufferProperties the_properties;
+    bool force_new_compositor_buffer;
 
     std::condition_variable snapshot_released;
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
