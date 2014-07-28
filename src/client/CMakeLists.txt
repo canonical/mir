@@ -18,6 +18,10 @@ include_directories(
 add_subdirectory(rpc/)
 add_subdirectory(lttng/)
 
+add_library(mirclient_platformimpl OBJECT
+  aging_buffer.cpp
+)
+
 if(MIR_BUILD_PLATFORM_ANDROID)
 add_subdirectory(android/)
 endif()

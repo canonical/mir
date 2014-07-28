@@ -5,13 +5,13 @@ add_library(
   mirclientplatformandroid SHARED
 
   buffer.cpp
-  ../aging_buffer.cpp
   android_client_buffer_factory.cpp
   gralloc_registrar.cpp
   android_client_platform.cpp
   client_platform_factory.cpp
   client_surface_interpreter.cpp
   android_native_display_container.cpp
+  $<TARGET_OBJECTS:mirclient_platformimpl>
 )
 
 set_target_properties(

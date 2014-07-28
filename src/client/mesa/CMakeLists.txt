@@ -6,13 +6,13 @@ include_directories(
 add_library(
   mirclientplatformmesa SHARED
 
-  ../aging_buffer.cpp
   client_platform_factory.cpp
   client_platform.cpp
   client_buffer_factory.cpp
   client_buffer.cpp
   mesa_native_display_container.cpp
   native_surface.cpp
+  $<TARGET_OBJECTS:mirclient_platformimpl>
 )
 
 set_target_properties(
