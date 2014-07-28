@@ -70,17 +70,13 @@ set_target_properties(
 
 set(
   MIR_CLIENT_LIBRARIES
-  ${Boost_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-  ${PROTOBUF_LIBRARIES}
-  ${XKBCOMMON_LIBRARIES}
-
-  mirprotobuf
   mirclientrpc
   mirclientlttngstatic
   mircommon
 
-  3rd_party
+  ${Boost_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+  ${XKBCOMMON_LIBRARIES}
 )
 
 target_link_libraries(
