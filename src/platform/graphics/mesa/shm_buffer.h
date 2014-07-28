@@ -49,7 +49,7 @@ public:
     void gl_bind_to_texture() override;
     bool can_bypass() const;
 
-    void write(void const* data, size_t size) override;
+    void write(void const* data, size_t size);
 
 private:
     ShmBuffer(ShmBuffer const&) = delete;

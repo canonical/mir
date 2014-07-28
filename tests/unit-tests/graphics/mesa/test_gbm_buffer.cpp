@@ -224,11 +224,3 @@ TEST_F(GBMBufferTest, gl_bind_to_texture_uses_egl_image)
         buffer->gl_bind_to_texture();
     });
 }
-
-TEST_F(GBMBufferTest, write_throws)
-{
-    auto buffer = allocator->alloc_buffer(buffer_properties);
-    EXPECT_THROW({
-        buffer->write(nullptr, 0);
-    }, std::logic_error);
-}

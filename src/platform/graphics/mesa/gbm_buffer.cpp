@@ -144,8 +144,3 @@ bool mgm::GBMBuffer::can_bypass() const
 {
     return bo_flags & GBM_BO_USE_SCANOUT;
 }
-
-void mgm::GBMBuffer::write(void const* /* data */, size_t /* size */) 
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("write only supported for software allocated buffers in Mesa platform"));
-}

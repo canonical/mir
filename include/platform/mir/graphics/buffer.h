@@ -45,8 +45,6 @@ public:
     /* TODO: remove this function, as it is specific to the mesa platform */
     virtual bool can_bypass() const = 0;
     
-    virtual void write(void const* data, size_t size) = 0;
-
 protected:
     Buffer() = default;
 };

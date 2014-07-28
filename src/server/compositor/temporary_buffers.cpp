@@ -89,8 +89,3 @@ bool mc::TemporaryBuffer::can_bypass() const
 {
     return buffer->can_bypass();
 }
-
-void mc::TemporaryBuffer::write(void const* /* data */, size_t /* size */)
-{
-    BOOST_THROW_EXCEPTION(std::logic_error("Attempting to write to temporary buffer references is invalid"));
-}

@@ -95,8 +95,6 @@ public:
 
     bool can_bypass() const override { return true; }
     
-    void write(void const*, size_t) { }; 
-
     std::shared_ptr<graphics::NativeBuffer> const native_buffer;
     geometry::Size const buf_size;
     MirPixelFormat const buf_pixel_format;

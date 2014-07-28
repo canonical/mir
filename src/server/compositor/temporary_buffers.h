@@ -43,8 +43,6 @@ public:
     std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const;
     bool can_bypass() const override;
     
-    void write(void const* data, size_t size) override;
-
 protected:
     explicit TemporaryBuffer(std::shared_ptr<mg::Buffer> const& real_buffer);
     std::shared_ptr<mg::Buffer> const buffer;

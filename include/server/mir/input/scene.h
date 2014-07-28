@@ -48,10 +48,16 @@ public:
 
     virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
     virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
-    
+
+    // An interface which the input stack can use to add certain non interactive input visualizaxtions
+    // in to the scene (i.e. cursors, touchspots). Overlay renderables will be rendered above all surfaces.
+    // Within the group of overlays, rendering order is undefined.
     virtual void add_overlay(std::shared_ptr<graphics::Renderable> const& overlay) = 0;
     virtual void remove_overlay(std::weak_ptr<graphics::Renderable> const& overlay) = 0;
     
+    // As input visualizations added through the overlay system will not use the standard SurfaceObserver
+    // mechanism, we require this method to trigger recomposition.
+    // TODO: How can something like SurfaceObserver be adapted to work with non surface renderables?
     virtual void emit_scene_changed() = 0;
 
 protected:
