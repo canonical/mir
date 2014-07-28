@@ -228,6 +228,25 @@ MATCHER_P2(MotionEventWithPosition, x, y, "")
     return true;
 }
 
+MATCHER_P4(MotionEventInDirection, x0, y0, x1, y1, "")
+{
+    if (to_ref(arg).type != mir_event_type_motion)
+        return false;
+    if (to_ref(arg).motion.action != mir_motion_action_move &&
+        to_ref(arg).motion.action != mir_motion_action_hover_move)
+        return false;
+
+    auto x = to_ref(arg).motion.pointer_coordinates[0].x;
+    auto y = to_ref(arg).motion.pointer_coordinates[0].y;
+
+    // Compare direction approximately (same quadrant)
+    if ((x1 > x0 && x < x0) || (x1 < x0 && x > x0) || 
+        (y1 > y0 && y < y0) || (y1 < y0 && y > y0))
+        return false;
+
+    return true;
+}
+
 MATCHER(MovementEvent, "")
 {
     if (to_ref(arg).type != mir_event_type_motion)
