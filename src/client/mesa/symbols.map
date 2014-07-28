@@ -1,0 +1,6 @@
+MIR_CLIENTPLATFORM_1 {
+  global: 
+    create_client_platform_factory;
+    mir_client_mesa_egl_native_display_is_valid;
+  local: *;
+};
