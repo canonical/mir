@@ -61,7 +61,10 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
 endif()
 
 # Link time optimization allows leaner, cleaner libraries
-if ("${CMAKE_C_COMPILER}" MATCHES "gcc")
+message(STATUS "CMAKE_C_COMPILER: " ${CMAKE_C_COMPILER})
+
+option(MIR_LINK_TIME_OPTIMIZATION "Enables the linker to optimize binaries." OFF)
+if(MIR_LINK_TIME_OPTIMIZATION)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
 endif()
