@@ -1,18 +1,16 @@
 include_directories(${PROJECT_SOURCE_DIR}/include/platform)
-include_directories(${UDEV_INCLUDE_DIRS})
 
 add_library(
   mirplatform SHARED
   shared_library_loader.cpp
-  udev_wrapper.cpp
+  $<TARGET_OBJECTS:mirplatformgraphicscommon>
+  $<TARGET_OBJECTS:miroptions>
 )
 
-target_link_libraries(
-  mirplatform
-  mirplatformgraphicscommon
+target_link_libraries(mirplatform
   mircommon
-
-  ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
+  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
 
 install(TARGETS mirplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

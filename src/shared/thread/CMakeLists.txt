@@ -14,17 +14,13 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-add_library(mirsharedthread STATIC
+add_library(mirsharedthread OBJECT
   thread_name.cpp
   recursive_read_write_mutex.cpp
 )
 
-target_link_libraries(
-    mirsharedthread
+list(APPEND MIR_COMMON_SOURCES
+  $<TARGET_OBJECTS:mirsharedthread>
 )
 
-list(APPEND MIR_COMMON_LIBRARIES
-  mirsharedthread
-)
-
-set(MIR_COMMON_LIBRARIES ${MIR_COMMON_LIBRARIES} PARENT_SCOPE)
+set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)

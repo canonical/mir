@@ -18,6 +18,7 @@
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/drm_authenticator.h"
+#include "mir/graphics/event_handler_register.h"
 #include "src/platform/graphics/mesa/platform.h"
 #include "src/platform/graphics/mesa/internal_client.h"
 #include "src/server/report/null_report_factory.h"
