@@ -25,8 +25,8 @@
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test_framework/cross_process_sync.h"
-#include "testdraw/graphics_region_factory.h"
-#include "testdraw/patterns.h"
+#include "examples/testdraw/graphics_region_factory.h"
+#include "examples/testdraw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
 
@@ -213,7 +213,7 @@ struct StubServerGenerator : public mt::StubServerTool
         response->mutable_buffer()->set_fds_on_side_channel(1);
         native_handle_t const* native_handle = buf->handle();
         for(auto i=0; i<native_handle->numFds; i++)
-            response->mutable_buffer()->add_fd(native_handle->data[i]);
+            response->mutable_buffer()->add_fd(dup(native_handle->data[i]));
         for(auto i=0; i < native_handle->numInts; i++)
             response->mutable_buffer()->add_data(native_handle->data[native_handle->numFds+i]);
 
@@ -245,7 +245,7 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_height(size.height.as_int());
 
         for(auto i=0; i<native_handle->numFds; i++)
-            response->add_fd(native_handle->data[i]);
+            response->add_fd(dup(native_handle->data[i]));
         for(auto i=0; i<native_handle->numInts; i++)
             response->add_data(native_handle->data[native_handle->numFds+i]);
         done->Run();

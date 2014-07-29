@@ -1455,3 +1455,62 @@ TEST_F(BufferQueueTest, first_user_is_recorded)
         q.compositor_release(comp);
     }
 }
+
+TEST_F(BufferQueueTest, gives_compositor_a_valid_buffer_after_dropping_old_buffers_without_clients)
+{
+    int const nbuffers = 3;
+    mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
+
+    q.drop_old_buffers();
+
+    auto comp = q.compositor_acquire(this);
+    ASSERT_THAT(comp->id(), Ne(mg::BufferID{}));
+}
+
+TEST_F(BufferQueueTest, gives_compositor_the_newest_buffer_after_dropping_old_buffers)
+{
+    int const nbuffers = 3;
+    mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
+
+    auto handle1 = client_acquire_async(q);
+    ASSERT_THAT(handle1->has_acquired_buffer(), Eq(true));
+    handle1->release_buffer();
+
+    auto handle2 = client_acquire_async(q);
+    ASSERT_THAT(handle2->has_acquired_buffer(), Eq(true));
+    handle2->release_buffer();
+
+    q.drop_old_buffers();
+
+    auto comp = q.compositor_acquire(this);
+    ASSERT_THAT(comp->id(), Eq(handle2->id()));
+    q.compositor_release(comp);
+
+    comp = q.compositor_acquire(this);
+    ASSERT_THAT(comp->id(), Eq(handle2->id()));
+}
+
+TEST_F(BufferQueueTest, gives_new_compositor_the_newest_buffer_after_dropping_old_buffers)
+{
+    int const nbuffers = 3;
+    void const* const new_compositor_id{&nbuffers};
+
+    mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
+
+    auto handle1 = client_acquire_async(q);
+    ASSERT_THAT(handle1->has_acquired_buffer(), Eq(true));
+    handle1->release_buffer();
+
+    auto comp = q.compositor_acquire(this);
+    ASSERT_THAT(comp->id(), Eq(handle1->id()));
+    q.compositor_release(comp);
+
+    auto handle2 = client_acquire_async(q);
+    ASSERT_THAT(handle2->has_acquired_buffer(), Eq(true));
+    handle2->release_buffer();
+
+    q.drop_old_buffers();
+
+    auto comp2 = q.compositor_acquire(new_compositor_id);
+    ASSERT_THAT(comp2->id(), Eq(handle2->id()));
+}

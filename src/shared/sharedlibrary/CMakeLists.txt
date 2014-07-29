@@ -14,11 +14,15 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-add_library(mirsharedsharedlibrary STATIC
+add_library(mirsharedsharedlibrary OBJECT
   shared_library.cpp
 )
 
-target_link_libraries(
-    mirsharedsharedlibrary
-    dl
+list(APPEND MIR_COMMON_SOURCES
+  $<TARGET_OBJECTS:mirsharedsharedlibrary>
 )
+
+list(APPEND MIR_COMMON_REFERENCES dl)
+
+set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
+set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)

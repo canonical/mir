@@ -21,7 +21,6 @@
 
 #include <memory>
 #include <libudev.h>
-#include <mir/graphics/event_handler_register.h>
 
 namespace mir
 {

@@ -14,11 +14,14 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-add_library(
-  mirsharedgeometry STATIC
-
+add_library(mirsharedgeometry OBJECT
   rectangle.cpp
   rectangles.cpp
   ostream.cpp
 )
 
+list(APPEND MIR_COMMON_SOURCES
+  $<TARGET_OBJECTS:mirsharedgeometry>
+)
+
+set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)

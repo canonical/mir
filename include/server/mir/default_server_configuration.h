@@ -217,9 +217,9 @@ public:
     virtual std::shared_ptr<frontend::SessionMediatorReport>  the_session_mediator_report();
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
-    // TODO clients should customize the_session_coordinator() instead of the_frontend_shell();
-    // TODO once the_session_coordinator() has landed and clients updated this should become non-virtual
-    virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
+    // the_frontend_shell() is an adapter for the_session_coordinator().
+    // To customize this behaviour it is recommended you override wrap_session_coordinator().
+    std::shared_ptr<frontend::Shell>                          the_frontend_shell();
     virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
     virtual std::shared_ptr<frontend::Screencast>             the_screencast();
@@ -232,9 +232,9 @@ public:
     /** @} */
     /** @} */
 
-    // TODO clients should customize the_session_coordinator() instead of the_focus_controller();
-    // TODO once the_session_coordinator() has landed and clients updated this should become non-virtual
-    virtual std::shared_ptr<shell::FocusController> the_focus_controller();
+    // the_focus_controller() is an adapter for the_session_coordinator().
+    // To customize this behaviour it is recommended you override wrap_session_coordinator().
+    std::shared_ptr<shell::FocusController> the_focus_controller();
 
     /** @name shell configuration - customization
      * configurable interfaces for modifying shell
@@ -269,6 +269,12 @@ public:
      *  @{ */
     virtual std::shared_ptr<scene::BufferStreamFactory> the_buffer_stream_factory();
     virtual std::shared_ptr<scene::SceneReport>      the_scene_report();
+    /** @} */
+
+    /** @name scene configuration - services
+     * services provided by scene for the rest of Mir
+     *  @{ */
+    // To customize this behaviour it is recommended you override wrap_session_coordinator().
     virtual std::shared_ptr<scene::SessionCoordinator>  the_session_coordinator();
     /** @} */
 
