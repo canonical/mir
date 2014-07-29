@@ -21,6 +21,7 @@
 
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir_protobuf.pb.h"
+#include <memory>
 
 namespace mir
 {
@@ -30,6 +31,7 @@ class DisplayConfiguration;
 }
 namespace frontend
 {
+class MessageResourceCache;
 namespace detail
 {
 
@@ -39,7 +41,7 @@ void pack_protobuf_display_configuration(protobuf::DisplayConfiguration& protobu
 class ProtobufBufferPacker : public graphics::BufferIPCPacker
 {
 public:
-    ProtobufBufferPacker(protobuf::Buffer*);
+    ProtobufBufferPacker(protobuf::Buffer*, std::shared_ptr<MessageResourceCache> const&);
     void pack_fd(int);
     void pack_data(int);
     void pack_stride(geometry::Stride);
@@ -47,6 +49,7 @@ public:
     void pack_size(geometry::Size const& size);
 private:
     protobuf::Buffer* buffer_response;
+    
 };
 
 }

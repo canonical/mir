@@ -30,8 +30,20 @@ namespace mir
 namespace frontend
 {
 
+class MessageResourceCache
+{
+public:
+    virtual void save_resource(google::protobuf::Message* key, std::shared_ptr<void> const& value) = 0;
+    virtual void free_resource(google::protobuf::Message* key) = 0;
+
+    virtual ~MessageResourceCache() = default;
+    MessageResourceCache() = default;
+    MessageResourceCache(MessageResourceCache const&) = delete;
+    MessageResourceCache& operator=(MessageResourceCache const&) = delete;
+};
+
 // Used to save resources that must be retained until a call completes.
-class ResourceCache
+class ResourceCache : public MessageResourceCache
 {
 public:
     void save_resource(google::protobuf::Message* key, std::shared_ptr<void> const& value);

@@ -89,8 +89,10 @@ void mfd::pack_protobuf_display_configuration(mp::DisplayConfiguration& protobuf
         });
 }
 
-mfd::ProtobufBufferPacker::ProtobufBufferPacker(protobuf::Buffer* response)
-    : buffer_response(response)
+mfd::ProtobufBufferPacker::ProtobufBufferPacker(
+    protobuf::Buffer* response,
+    std::shared_ptr<MessageResourceCache> const& ) :
+    buffer_response(response)
 {
 }
 
