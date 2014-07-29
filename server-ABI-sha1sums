@@ -146,6 +146,7 @@ be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/shared/mir/int_wrapper.h
 99ef5f3bf548508fae24c60f74be1dea018a6e8c  include/shared/mir_toolkit/mesa/native_display.h
 183d9e5e6cfe48b3d9145a28541dd4202ff6137b  include/shared/mir_toolkit/common.h
 bdaceadd56e41d2cb708f7c4da97acf84dfc75b7  include/shared/mir_toolkit/event.h
+fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/shared/mir_toolkit/cursors.h
 5d0213652adc4821a2a180ced74808ca0bbf2c45  include/platform/mir/shared_library_loader.h
 498d728ea1052cb6cadb9de7828ae48eb5a201df  include/platform/mir/emergency_cleanup_registry.h
 5dc095474ef3e294c0aa4008e9ed997bdb21d34c  include/platform/mir/graphics/gl_config.h
