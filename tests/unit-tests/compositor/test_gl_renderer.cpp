@@ -252,7 +252,7 @@ TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
                 auto& p = primitives[i];
                 p.type = 0;
                 p.tex_id = i % 2;
-                p.vertices.clear();
+                p.nvertices = 0;
             }
         }
         unsigned int num_primitives; 

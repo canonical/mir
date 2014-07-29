@@ -170,7 +170,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
                               GL_FALSE, sizeof(mg::GLVertex),
                               &p.vertices[0].texcoord);
 
-        glDrawArrays(p.type, 0, p.vertices.size());
+        glDrawArrays(p.type, 0, p.nvertices);
     }
 
     glDisableVertexAttribArray(texcoord_attr_loc);
