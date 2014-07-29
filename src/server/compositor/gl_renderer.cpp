@@ -113,7 +113,6 @@ void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
 
 void mc::GLRenderer::render(mg::RenderableList const& renderables) const
 {
-    primitives.reserve(renderables.size());  // A sensible minimum allocation
     for (auto const& r : renderables)
         render(*r);
 }
