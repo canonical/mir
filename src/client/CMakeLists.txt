@@ -18,6 +18,10 @@ include_directories(
 add_subdirectory(rpc/)
 add_subdirectory(lttng/)
 
+add_library(mirclient_platformimpl OBJECT
+  aging_buffer.cpp
+)
+
 if(MIR_BUILD_PLATFORM_ANDROID)
 add_subdirectory(android/)
 endif()
@@ -26,10 +30,8 @@ if(MIR_BUILD_PLATFORM_MESA)
 add_subdirectory(mesa/)
 endif()
 
-set(
-  CLIENT_SOURCES
+add_library(mirclientobjects OBJECT
 
-  aging_buffer.cpp
   client_buffer_depository.cpp
   display_configuration.cpp
   error_connections.cpp
@@ -56,16 +58,18 @@ set(
 add_library(
   mirclient SHARED
 
-  ${CLIENT_SOURCES}
+  $<TARGET_OBJECTS:mirclientobjects>
 )
 
 set(MIRCLIENT_ABI 8)
+set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(
   mirclient
 
   PROPERTIES
   SOVERSION ${MIRCLIENT_ABI}
+  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
 set(
