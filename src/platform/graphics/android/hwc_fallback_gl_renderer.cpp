@@ -124,7 +124,7 @@ void mga::HWCFallbackGLRenderer::render(
                               &primitive.vertices[0].texcoord);
 
         texture_cache->load(*renderable)->bind();
-        glDrawArrays(primitive.type, 0, primitive.vertices.size());
+        glDrawArrays(primitive.type, 0, primitive.nvertices);
     }
 
     glDisableVertexAttribArray(texcoord_attr);
