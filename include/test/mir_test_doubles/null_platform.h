@@ -43,12 +43,12 @@ class NullPlatform : public graphics::Platform
         std::shared_ptr<graphics::GLProgramFactory> const&,
         std::shared_ptr<graphics::GLConfig> const&)
     {
-        return nullptr;
+        return std::make_shared<NullDisplay>();
     }
 
     std::shared_ptr<graphics::PlatformIPCPackage> get_ipc_package()
     {
-        return nullptr;
+        return std::make_shared<graphics::PlatformIPCPackage>();
     }
 
     std::shared_ptr<graphics::InternalClient> create_internal_client()
