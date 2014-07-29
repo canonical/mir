@@ -25,8 +25,6 @@
 #include <umockdev.h>
 #include <libudev.h>
 
-namespace mir
-{
 namespace mir_test_framework
 {
 class UdevEnvironment
@@ -59,7 +57,6 @@ public:
     std::string const recordings_path;
 };
 
-}
 }
 
 #endif //MIR_TESTING_UDEV_ENVIRONMENT

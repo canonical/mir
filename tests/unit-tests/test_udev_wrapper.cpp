@@ -31,7 +31,7 @@
 #include <libudev.h>
 #include <poll.h>
 
-namespace mtf=mir::mir_test_framework;
+namespace mtf=mir_test_framework;
 
 namespace
 {
