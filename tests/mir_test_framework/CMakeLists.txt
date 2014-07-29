@@ -34,7 +34,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 add_library(
   mir-test-framework STATIC
   ${TEST_FRAMEWORK_SRCS}
-  $<TARGET_OBJECTS:mirclientobjects>
 )
 uses_android_input(mir-test-framework)
 
@@ -42,6 +41,7 @@ target_link_libraries(
   mir-test-framework
 
   mirserver
+  mirclient
 
   3rd_party
 
