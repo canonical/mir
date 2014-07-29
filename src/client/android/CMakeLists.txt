@@ -1,9 +1,9 @@
 include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
 add_definitions(-DANDROID)
 
-add_library(
-  mirclientplatformandroid SHARED
+set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
+add_library(mirclientplatformandroidobjects OBJECT
   buffer.cpp
   android_client_buffer_factory.cpp
   gralloc_registrar.cpp
@@ -13,10 +13,17 @@ add_library(
   android_native_display_container.cpp
 )
 
+add_library(
+  mirclientplatformandroid SHARED
+  
+  $<TARGET_OBJECTS:mirclientplatformandroidobjects>
+)
+
 set_target_properties(
   mirclientplatformandroid PROPERTIES
   OUTPUT_NAME mirclientplatform
   LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/android
+  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
 target_link_libraries(

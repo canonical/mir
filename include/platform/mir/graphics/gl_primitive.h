@@ -21,7 +21,6 @@
 #define MIR_GRAPHICS_GL_PRIMITIVE_H_
 
 #include <GLES2/gl2.h>
-#include <vector>
 
 namespace mir
 {
@@ -35,9 +34,18 @@ struct GLVertex
 
 struct GLPrimitive
 {
+    enum {max_vertices = 4};
+
+    GLPrimitive()
+        : type(GL_TRIANGLE_FAN), nvertices(4)
+    {
+        // Default is a quad. Just need to assign vertices[] and tex_id.
+    }
+
     GLenum type; // GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES etc
     GLuint tex_id;  // GL texture ID (or 0 to represent the surface itself)
-    std::vector<GLVertex> vertices;
+    int nvertices;
+    GLVertex vertices[max_vertices];
 };
 }
 }

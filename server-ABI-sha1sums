@@ -19,7 +19,7 @@ f4030e400baf8baa9c38e7c6ec6b4a5ad7134aeb  include/server/mir/compositor/composit
 4fcf34e424128b87ddc76733594e32e09ebbd486  include/server/mir/compositor/scene.h
 561e7fdc22c48cf39a19e6f7c2db5e8c1feee772  include/server/mir/compositor/frame_dropping_policy_factory.h
 eebcdfaf8894b387d1a5acd22c2f1bc09b3c2b95  include/server/mir/compositor/destination_alpha.h
-cd16e1e8cf0c56a986cd000a78e3bd2447461b21  include/server/mir/compositor/gl_renderer.h
+e2e3e914a331a7611032860e3c64274aa42339aa  include/server/mir/compositor/gl_renderer.h
 686a839fd0cd5fa469344dc49190ff9d578efc25  include/server/mir/compositor/scene_element.h
 98fe6bde01fb8b25b1bacafcdf572f24c3ade3c3  include/server/mir/compositor/display_buffer_compositor_factory.h
 c7328ef5ea4531c0fa981b3e15a69ea5c8162d09  include/server/mir/compositor/display_buffer_compositor.h
@@ -182,7 +182,7 @@ ffa857f624f1c8cbd50a190107137346fc3204d6  include/platform/mir/graphics/cursor.h
 15f201741a465de33e55ffc1ea775b507a5be950  include/platform/mir/graphics/renderable.h
 748f5c2aab11189aa02c4a89ab900561548e7304  include/platform/mir/graphics/buffer_properties.h
 fc9b3cfa80a1ac57dedb4e8d180c62ae15c0ace8  include/platform/mir/graphics/drm_authenticator.h
-69a0f4d11e14ef67d0cdcca3a243b4ba4a918360  include/platform/mir/graphics/gl_primitive.h
+b8ceb6c770340f63e0114496d4ad102d787fa6f5  include/platform/mir/graphics/gl_primitive.h
 f62525771ca2612959ff88498883630458513235  include/platform/mir/graphics/gl_program.h
 871e609c0fed0d566ddbaaa8ac2d7cd5c06dd09a  include/platform/mir/abnormal_exit.h
 9f646fa12eaca5fc3b7a8fde6208673c071c8ef3  include/shared/mir/udev/wrapper.h
