@@ -35,11 +35,6 @@ mir::Fd::Fd(int raw_fd) :
 {
 }
 
-mir::Fd::Fd(Fd const& other) :
-    fd{other.fd}
-{
-}
-
 mir::Fd::Fd(Fd&& other) :
     fd{std::move(other.fd)}
 {

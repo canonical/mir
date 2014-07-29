@@ -31,7 +31,7 @@ public:
     static int const invalid{-1};
     Fd(); //Initializes fd to the mir::Fd::invalid;
     Fd(Fd&&);
-    Fd(Fd const&);
+    Fd(Fd const&) = default;
     Fd& operator=(Fd);
 
     //bit of a convenient kludge. take care not to close or otherwise destroy the FD.
