@@ -251,11 +251,17 @@ mir::DefaultServerConfiguration::the_touch_visualizer()
         }
     };
     return touch_visualizer(
-        [this]()
+        [this]() -> std::shared_ptr<mi::TouchVisualizer>
         {
-//            return std::make_shared<NullTouchVisualizer>();
-            return std::make_shared<mi::TouchspotController>(the_buffer_allocator(), the_buffer_writer(),
-                the_input_targets());
+            if (the_options()->is_set(options::touchspot_opt))
+            {
+                return std::make_shared<mi::TouchspotController>(the_buffer_allocator(), the_buffer_writer(),
+                    the_input_targets());
+            }
+            else
+            {
+                return std::make_shared<NullTouchVisualizer>();
+            }
         });
 }
 

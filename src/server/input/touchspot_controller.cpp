@@ -58,7 +58,7 @@ public:
     
     bool alpha_enabled() const override
     {
-        return true;
+        return false;
     }
 
     geom::Rectangle screen_position() const
