@@ -35,6 +35,11 @@ struct GLVertex
 
 struct GLPrimitive
 {
+    GLPrimitive()
+    {
+        vertices.reserve(4);  // Optimize for common case. Avoid reallocation.
+    }
+
     GLenum type; // GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN, GL_TRIANGLES etc
     GLuint tex_id;  // GL texture ID (or 0 to represent the surface itself)
     std::vector<GLVertex> vertices;

@@ -113,6 +113,7 @@ void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
 
 void mc::GLRenderer::render(mg::RenderableList const& renderables) const
 {
+    primitives.reserve(renderables.size());  // A sensible minimum allocation
     for (auto const& r : renderables)
         render(*r);
 }
@@ -148,7 +149,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     glEnableVertexAttribArray(position_attr_loc);
     glEnableVertexAttribArray(texcoord_attr_loc);
 
-    std::vector<mg::GLPrimitive> primitives;
+    primitives.clear();
     tessellate(primitives, renderable);
 
     auto surface_tex = texture_cache->load(renderable);
