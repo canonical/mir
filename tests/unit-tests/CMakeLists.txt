@@ -66,6 +66,8 @@ target_link_libraries(
   ${Boost_LIBRARIES}
   ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+  ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
+  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
 
 # Umockdev uses glib, which uses the deprecated "register" allocation specifier

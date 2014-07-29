@@ -1,0 +1,6 @@
+MIR_PLATFORM_1 {
+  global: 
+   add_platform_options;
+   create_platform;
+  local: *;
+};

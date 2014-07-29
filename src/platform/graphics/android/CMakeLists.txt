@@ -8,9 +8,7 @@ include_directories(
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 add_definitions( -DANDROID )
 
-add_library(
-  mirplatformgraphicsandroid SHARED
-
+add_library(mirplatformgraphicsandroidobjects OBJECT
   android_platform.cpp
   android_buffer_allocator.cpp
   buffer.cpp
@@ -38,11 +36,15 @@ add_library(
   real_hwc_wrapper.cpp
   hwc_fallback_gl_renderer.cpp
 )
+add_library(mirplatformgraphicsandroid SHARED
+  $<TARGET_OBJECTS:mirplatformgraphicsandroidobjects>
+)
 
 set_target_properties(
   mirplatformgraphicsandroid PROPERTIES
   OUTPUT_NAME mirplatformgraphics
   LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/android
+  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
 target_link_libraries(
