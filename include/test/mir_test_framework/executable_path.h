@@ -17,12 +17,12 @@
  *  Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_FRAMEWORK_BINARY_PATH_H_
-#define MIR_TEST_FRAMEWORK_BINARY_PATH_H_
+#ifndef MIR_TEST_FRAMEWORK_EXECUTABLE_PATH_H_
+#define MIR_TEST_FRAMEWORK_EXECUTABLE_PATH_H_
 
 #include <string>
 namespace mir_test_framework
 {
-std::string binary_path();
+std::string executable_path();
 }
-#endif /* MIR_TEST_FRAMEWORK_BINARY_PATH_H_ */
+#endif /* MIR_TEST_FRAMEWORK_EXECUTABLE_PATH_H_ */

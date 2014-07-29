@@ -19,7 +19,7 @@
 #include "src/server/input/xcursor_loader.h"
 
 #include "mir/graphics/cursor_image.h"
-#include "mir_test_framework/binary_path.h"
+#include "mir_test_framework/executable_path.h"
 
 #include <mir_toolkit/common.h>
 
@@ -88,7 +88,7 @@ void set_xcursor_path()
     char const* old = getenv("XCURSOR_PATH");
     if (old)
         old_xcursor_path = strdup(old);
-    auto test_cursor_path =mir_test_framework::binary_path() + std::string("/testing-cursor-theme");
+    auto test_cursor_path =mir_test_framework::executable_path() + std::string("/testing-cursor-theme");
     setenv("XCURSOR_PATH", test_cursor_path.c_str(), 1);
 }
 

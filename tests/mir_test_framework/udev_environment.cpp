@@ -18,7 +18,7 @@
  */
 
 #include "mir_test_framework/udev_environment.h"
-#include "mir_test_framework/binary_path.h"
+#include "mir_test_framework/executable_path.h"
 
 #include <umockdev.h>
 
@@ -38,7 +38,7 @@
 namespace mtf = mir_test_framework;
 
 mtf::UdevEnvironment::UdevEnvironment()
-    : recordings_path(mtf::binary_path() + "/udev_recordings")
+    : recordings_path(mtf::executable_path() + "/udev_recordings")
 {
     testbed = umockdev_testbed_new();
 }

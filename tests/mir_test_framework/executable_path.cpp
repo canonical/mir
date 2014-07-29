@@ -18,14 +18,14 @@
  *  Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_framework/binary_path.h"
+#include "mir_test_framework/executable_path.h"
 
 #include <libgen.h>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
-std::string mir_test_framework::binary_path()
+std::string mir_test_framework::executable_path()
 {
     char buf[1024];
     auto tmp = readlink("/proc/self/exe", buf, sizeof buf);

@@ -8,7 +8,7 @@ include_directories(
 set(
   TEST_FRAMEWORK_SRCS
 
-  binary_path.cpp
+  executable_path.cpp
   command_line_server_configuration.cpp
   cross_process_sync.cpp
   server_runner.cpp
