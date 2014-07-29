@@ -1,7 +1,7 @@
 b64b3ca16e4130c838bdca248189f8055804c849  include/client/mir/client/private.h
 6ff12425fed19f2a5aa37390904c14ff6a647bcd  include/client/mir_toolkit/mir_prompt_session.h
 21d07e655e85eeec8a3523e1c6f9c2252176ec01  include/client/mir_toolkit/mir_screencast.h
-59849089629e0d901d4f8307f69f198b12ce0bcb  include/client/mir_toolkit/mir_client_library_debug.h
+cbe1e3ccfea6ab5865510f4f598ec11571fcc852  include/client/mir_toolkit/mir_client_library_debug.h
 e6185b680533c5fdcf1294a4797d5c3dd01d433f  include/client/mir_toolkit/mir_connection.h
 1ef8f51a3e3f8d1559266c5af58fbfde7cfabf0a  include/client/mir_toolkit/mir_cursor_configuration.h
 b141c4d79802ad626d969249c0004744e5c2a525  include/client/mir_toolkit/mir_wait.h
