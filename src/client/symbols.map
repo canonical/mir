@@ -4,7 +4,7 @@ MIR_CLIENT_8 {
    # used by PrivateProtobuf
    mir::client::the_rpc_channel*;
    
-   # used by test framework
+   # used by test framework - see lp:1349788
    MirConnection::MirConnection*;
    MirConnection::connect*;
    MirConnection::disconnect*;
