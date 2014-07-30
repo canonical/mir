@@ -36,7 +36,7 @@ MATCHER_P(RawFdMatcher, value, std::string("raw_fd does not match mir::Fd"))
 }
 MATCHER(RawFdIsValid, std::string("raw_fd is not valid"))
 {
-    return (fcntl(arg, F_GETFD) == -1);
+    return (fcntl(arg, F_GETFD) != -1);
 }
 }
 }

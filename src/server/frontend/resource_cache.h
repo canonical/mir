@@ -54,9 +54,11 @@ public:
 
 private:
     typedef std::map<google::protobuf::Message*, std::shared_ptr<void>> Resources;
+    typedef std::multimap<google::protobuf::Message*, mir::Fd> FdResources;
 
     std::mutex guard;
     Resources resources;
+    FdResources fd_resources;
 };
 
 }

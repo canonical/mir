@@ -30,8 +30,8 @@ void mir::frontend::ResourceCache::save_fd(
     google::protobuf::Message* key,
     mir::Fd const& fd)
 {
-    (void) key; (void) fd;
     std::lock_guard<std::mutex> lock(guard);
+    fd_resources.emplace(FdResources::value_type(key, fd));
 }
 
 void mir::frontend::ResourceCache::free_resource(google::protobuf::Message* key)
@@ -48,5 +48,7 @@ void mir::frontend::ResourceCache::free_resource(google::protobuf::Message* key)
         }
 
         resources.erase(key);
+        fd_resources.erase(key);
     }
+
 }
