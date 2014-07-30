@@ -56,7 +56,7 @@ namespace mgm=mir::graphics::mesa;
 namespace ml=mir::logging;
 namespace mrl=mir::report::logging;
 namespace mtd=mir::test::doubles;
-namespace mtf=mir::mir_test_framework;
+namespace mtf=mir_test_framework;
 namespace mr=mir::report;
 
 namespace

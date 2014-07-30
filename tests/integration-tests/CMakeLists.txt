@@ -43,7 +43,9 @@ endif()
 link_directories(${LIBRARY_OUTPUT_PATH})
 add_executable(
   mir_integration_tests
-  ${INTEGRATION_TESTS_SRCS})
+  ${INTEGRATION_TESTS_SRCS}
+  $<TARGET_OBJECTS:mirclientobjects>
+)
 uses_android_input(mir_integration_tests)
 
 target_link_libraries(
@@ -55,7 +57,6 @@ target_link_libraries(
 
   mirserver
   mirplatformgraphics
-  mirclient
   mirdraw
   mirtestdraw
 

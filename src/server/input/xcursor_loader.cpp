@@ -193,7 +193,8 @@ void mi::XCursorLoader::load_cursor_theme(std::string const& theme_name)
         }, this);
 }
 
-std::shared_ptr<mg::CursorImage> mi::XCursorLoader::image(std::string const& cursor_name,
+std::shared_ptr<mg::CursorImage> mi::XCursorLoader::image(
+    std::string const& cursor_name,
     geom::Size const& size)
 {
     auto xcursor_name = xcursor_name_for_mir_cursor(cursor_name);

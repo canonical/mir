@@ -41,7 +41,7 @@ namespace mg=mir::graphics;
 namespace mgm=mir::graphics::mesa;
 namespace geom=mir::geometry;
 namespace mtd=mir::test::doubles;
-namespace mtf=mir::mir_test_framework;
+namespace mtf=mir_test_framework;
 
 class GBMBufferTest : public ::testing::Test
 {

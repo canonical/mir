@@ -16,8 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_SHELL_CONSUMING_PLACEMENT_STRATEGY_H_
-#define MIR_SHELL_CONSUMING_PLACEMENT_STRATEGY_H_
+#ifndef MIR_SHELL_DEFAULT_PLACEMENT_STRATEGY_H_
+#define MIR_SHELL_DEFAULT_PLACEMENT_STRATEGY_H_
 
 #include "mir/scene/placement_strategy.h"
 
@@ -29,18 +29,18 @@ namespace shell
 {
 class DisplayLayout;
 
-class ConsumingPlacementStrategy : public scene::PlacementStrategy
+class DefaultPlacementStrategy : public scene::PlacementStrategy
 {
 public:
-    explicit ConsumingPlacementStrategy(
+    explicit DefaultPlacementStrategy(
             std::shared_ptr<DisplayLayout> const& display_layout);
-    virtual ~ConsumingPlacementStrategy() {}
+    virtual ~DefaultPlacementStrategy() {}
 
     virtual scene::SurfaceCreationParameters place(scene::Session const& session, scene::SurfaceCreationParameters const& request_parameters);
 
 protected:
-    ConsumingPlacementStrategy(ConsumingPlacementStrategy const&) = delete;
-    ConsumingPlacementStrategy& operator=(ConsumingPlacementStrategy const&) = delete;
+    DefaultPlacementStrategy(DefaultPlacementStrategy const&) = delete;
+    DefaultPlacementStrategy& operator=(DefaultPlacementStrategy const&) = delete;
 
 private:
     std::shared_ptr<DisplayLayout> const display_layout;
@@ -49,4 +49,4 @@ private:
 }
 } // namespace mir
 
-#endif // MIR_SHELL_CONSUMING_PLACEMENT_STRATEGY_H_
+#endif // MIR_SHELL_DEFAULT_PLACEMENT_STRATEGY_H_
