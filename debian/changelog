@@ -4,13 +4,44 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
     - mirclient ABI unchanged at 8. Clients do not need rebuilding.
     - mirserver ABI bumped to 24. Servers need rebuilding, but probably don't
       need modification:
-      . TODO: List API changes here.
+      . Host lifecycle event listener for nested servers introduced.
+      . Add query function to BasicSurface.
+      . The (deprecated) function the_ipc_factory() is now removed.
+      . Removed legacy support for overriding the focus controller or the
+        frontend shell.
+      . Added support for a common type for managing fd's.
+      . Moved testdraw library to examples directory.
+      . Added support for droping stale frames when a surface becomes exposed.
     - Enhancements:
-      . TODO: List enhancements here.
-    - Bugs fixed:
-      . TODO: List bug fixes here.
+      . Split underlying data transport out of MirSocketRpcChannel.
+      . Introduced two new client-side functions : mir_surface_get_focus and
+        mir_surface_get_visibility.
+      . Added symbolic names for cursors.
+      . Added tests to detect server/client ABI breakage.
+      . Made "shared" code a true shared library.
+      . Provide linker scripts to control symbols exported by [mesa|android]
+        libmirclientplatform.
+      . Correct xcursor loader test to fail properly instead of segfaulting.
+      . Miscellaneous packaging related enhancements.
+      . Miscellaneous build related enhancements.
+    - Bugs fixed: (See https://bugs.launchpad.net/mir for details)
+      . LP: #1336553
+      . LP: #1343074
+      . LP: #1345533
+      . LP: #1342694
+      . LP: #1341502
+      . LP: #1348095
+      . LP: #1346952
+      . LP: #1347522
+      . LP: #1348467
+      . LP: #1349698
+      . LP: #1342029
+      . LP: #1349742
+      . LP: #1344024
+      . LP: #1348518
+      . LP: #1297100
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 22 Jul 2014 14:17:12 +0800
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Wed, 30 Jul 2014 16:35:00 +0300
 
 mir (0.5.1+14.10.20140728-0ubuntu1) utopic; urgency=medium
 
