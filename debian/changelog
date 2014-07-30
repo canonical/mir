@@ -12,6 +12,24 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 22 Jul 2014 14:17:12 +0800
 
+mir (0.5.1+14.10.20140728-0ubuntu1) utopic; urgency=medium
+
+  [ Kevin Gunn ]
+  * Fixed: Crash due to racing input registration & surface removal
+    (LP: #1346952)
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 28 Jul 2014 02:49:50 +0000
+
+mir (0.5.0+14.10.20140724-0ubuntu1) utopic; urgency=medium
+
+  [ Kevin Gunn ]
+  * Fixed: Crashing on assert of empty client notification queue (LP: #1335481)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 24 Jul 2014 08:22:05 +0000
+
 mir (0.5.0+14.10.20140722-0ubuntu1) utopic; urgency=medium
 
   [ Kevin Gunn ]
