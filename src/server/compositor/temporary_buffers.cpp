@@ -19,9 +19,6 @@
 #include "buffer_bundle.h"
 #include "temporary_buffers.h"
 
-#include <boost/throw_exception.hpp>
-#include <stdexcept>
-
 namespace mc=mir::compositor;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
