@@ -62,6 +62,7 @@ protected:
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<MockNestedContext> mock_nested_context;
 };
+
 }
 
 TEST_F(MesaNativePlatformTest, auth_magic_is_delegated_to_nested_context)

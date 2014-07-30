@@ -98,6 +98,7 @@ struct SessionManagement : Test
     std::shared_ptr<mf::EventSink> const event_sink = std::make_shared<mtd::NullEventSink>();
     std::shared_ptr<mf::Shell> const session_manager = builder.the_frontend_shell();
     std::shared_ptr<TestSurfaceStack> const& test_surface_stack = builder.test_surface_stack;
+    ms::SurfaceCreationParameters const params = ms::SurfaceCreationParameters().of_size(100,100);
 
     void SetUp()
     {
@@ -117,8 +118,6 @@ MATCHER_P(WeakPtrTo, p, "")
 
 TEST_F(SessionManagement, creating_a_surface_adds_it_to_scene)
 {
-    ms::SurfaceCreationParameters params;
-
     auto const session = session_manager->open_session(0, __PRETTY_FUNCTION__, event_sink);
 
     EXPECT_CALL(*test_surface_stack, add_surface(_,_,_)).Times(1);
@@ -128,8 +127,6 @@ TEST_F(SessionManagement, creating_a_surface_adds_it_to_scene)
 TEST_F(SessionManagement, focus_on_a_session_raises_its_surface)
 {
     EXPECT_CALL(*test_surface_stack, add_surface(_,_,_)).Times(AnyNumber());
-
-    ms::SurfaceCreationParameters params;
 
     auto const session1 = session_manager->open_session(0, __PRETTY_FUNCTION__, event_sink);
     auto const surface1 = session1->create_surface(params);
