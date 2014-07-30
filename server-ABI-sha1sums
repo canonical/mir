@@ -157,7 +157,7 @@ fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/shared/mir_toolkit/cursors.h
 101017c17714a57db57d79b7b5e7df40a3568236  include/shared/mir_toolkit/mir_native_buffer.h
 6ad1f35928df9ffd917fbf17cbcdd533a8b5b27d  include/shared/mir/basic_observers.h
 b4e96264b9a57a1f2ceceb700c5379658905ded7  include/shared/mir/thread_name.h
-4f7be53a0247d8f54d2c5f3af2f2e5cd717bd7e5  include/shared/mir/fd.h
+713d1ed8ce2cbe00b6a66edbd446da118699b6dc  include/shared/mir/fd.h
 3829a4722360d794658ed4db4af005c79f6504c5  include/shared/mir/input/null_input_receiver_report.h
 208cd6aed5ef5f8f39b3eb86604e4133cb840485  include/shared/mir/input/input_receiver_thread.h
 dcf8b8982f138bdde39a241825c610e955cd5e33  include/shared/mir/input/input_platform.h

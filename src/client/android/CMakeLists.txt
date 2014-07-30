@@ -17,6 +17,7 @@ add_library(
   mirclientplatformandroid SHARED
   
   $<TARGET_OBJECTS:mirclientplatformandroidobjects>
+  $<TARGET_OBJECTS:mirclient_platformimpl>
 )
 
 set_target_properties(

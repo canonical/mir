@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "consuming_placement_strategy.h"
+#include "default_placement_strategy.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/display_layout.h"
 #include "mir/geometry/rectangle.h"
@@ -29,13 +29,13 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 
-msh::ConsumingPlacementStrategy::ConsumingPlacementStrategy(
+msh::DefaultPlacementStrategy::DefaultPlacementStrategy(
     std::shared_ptr<msh::DisplayLayout> const& display_layout)
     : display_layout(display_layout)
 {
 }
 
-ms::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(
+ms::SurfaceCreationParameters msh::DefaultPlacementStrategy::place(
     ms::Session const& /* session */,
     ms::SurfaceCreationParameters const& request_parameters)
 {
@@ -48,15 +48,6 @@ ms::SurfaceCreationParameters msh::ConsumingPlacementStrategy::place(
     if (request_parameters.output_id != output_id_invalid)
     {
         display_layout->place_in_output(request_parameters.output_id, rect);
-    }
-    else if (request_parameters.size.width > geom::Width{0} &&
-             request_parameters.size.height > geom::Height{0})
-    {
-        display_layout->clip_to_output(rect);
-    }
-    else
-    {
-        display_layout->size_to_output(rect);
     }
 
     placed_parameters.top_left = rect.top_left;
