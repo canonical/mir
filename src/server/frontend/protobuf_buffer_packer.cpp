@@ -98,9 +98,9 @@ mfd::ProtobufBufferPacker::ProtobufBufferPacker(
 {
 }
 
-void mfd::ProtobufBufferPacker::pack_fd(Fd fd)
+void mfd::ProtobufBufferPacker::pack_fd(Fd const& fd)
 {
-//    resource_cache->save_resource(buffer_response, fd);
+    resource_cache->save_fd(buffer_response, fd);
     buffer_response->add_fd(fd);
 }
 

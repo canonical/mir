@@ -42,7 +42,7 @@ class ProtobufBufferPacker : public graphics::BufferIPCPacker
 {
 public:
     ProtobufBufferPacker(protobuf::Buffer*, std::shared_ptr<MessageResourceCache> const&);
-    void pack_fd(Fd);
+    void pack_fd(Fd const&);
     void pack_data(int);
     void pack_stride(geometry::Stride);
     void pack_flags(unsigned int);

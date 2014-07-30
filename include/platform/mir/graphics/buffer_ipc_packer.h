@@ -32,7 +32,7 @@ class BufferIPCPacker
 {
 public:
     virtual ~BufferIPCPacker() = default;
-    virtual void pack_fd(Fd) = 0;
+    virtual void pack_fd(Fd const&) = 0;
     virtual void pack_data(int) = 0;
     virtual void pack_stride(geometry::Stride) = 0;
     virtual void pack_flags(unsigned int) = 0;

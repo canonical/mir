@@ -57,12 +57,11 @@ TEST_F(ProtobufBufferPacker, packing)
     mfd::ProtobufBufferPacker packer(&response, mock_resource_cache);
 
     int num_fd = 33, num_int = 44;
-    std::vector<int> raw_fds(num_fd);
+    std::vector<mir::Fd> raw_fds;
     for(auto i=0; i < num_fd; i++)
     {
-        auto raw_fd = fileno(tmpfile());
-        raw_fds.emplace_back(raw_fd);
-        packer.pack_fd(mir::Fd(raw_fd));
+        raw_fds.push_back(mir::Fd(fileno(tmpfile())));
+        packer.pack_fd(mir::Fd(mir::IntOwnedFd{raw_fds.back()}));
     }
     for(auto i=0; i < num_int; i++)
         packer.pack_data(i);
