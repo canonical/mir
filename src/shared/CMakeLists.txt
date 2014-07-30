@@ -15,6 +15,12 @@ add_subdirectory(report/lttng)
 add_subdirectory(env)
 add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
+add_subdirectory(fatal)
+
+set(
+  MIR_COMMON_PLATFORM_LIBRARIES
+  ${MIR_COMMON_PLATFORM_LIBRARIES}
+  PARENT_SCOPE)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")

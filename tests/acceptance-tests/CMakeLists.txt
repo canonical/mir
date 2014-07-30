@@ -66,6 +66,7 @@ target_link_libraries(
   mirserver
   mirclient
   mirplatform
+  mirfatal
 
   mir-test
   mir-test-framework
