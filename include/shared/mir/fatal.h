@@ -36,17 +36,6 @@ namespace mir
  *   \param [in] reason  A printf-style format string.
  */
 void abort(char const* reason, ...);
-
-/**
- * Mir-specific assert() function that is NEVER optimized out, always tested
- * even in release builds.
- */
-#define mir_assert(expr) \
-{ \
-    if (!(expr)) ::mir::_fail_assertion(__FILE__, __LINE__, #expr); \
-}
-void _fail_assertion(char const* file, int line, char const* expr);
-
 } // namespace mir
 
 #endif // MIR_FATAL_H_

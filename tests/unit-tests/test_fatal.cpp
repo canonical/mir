@@ -34,16 +34,3 @@ TEST(FatalTest, abort_raises_sigabrt)
                 KilledBySignal(SIGABRT),
                 "Hello world");
 }
-
-TEST(FatalTest, true_assertion_raises_nothing)
-{
-    mir_assert(1 + 1 == 2);
-}
-
-TEST(FatalTest, false_assertion_emits_message_and_aborts)
-{
-    EXPECT_EXIT({mir_assert(2+2==5);},
-                KilledBySignal(SIGABRT),
-                "Mir fatal error: Assertion failed at .* 2\\+2==5");
-}
-
