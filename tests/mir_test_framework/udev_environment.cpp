@@ -18,6 +18,7 @@
  */
 
 #include "mir_test_framework/udev_environment.h"
+#include "mir_test_framework/executable_path.h"
 
 #include <umockdev.h>
 
@@ -34,27 +35,10 @@
 #include <boost/exception/errinfo_errno.hpp>
 
 
-namespace mtf = mir::mir_test_framework;
-
-namespace
-{
-std::string binary_path()
-{
-    char buf[1024];
-    auto tmp = readlink("/proc/self/exe", buf, sizeof buf);
-    if (tmp < 0)
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(
-                                  std::runtime_error("Failed to find our executable path"))
-                              << boost::errinfo_errno(errno));
-    if (tmp > static_cast<ssize_t>(sizeof(buf) - 1))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Path to executable is too long!"));
-    buf[tmp] = '\0';
-    return dirname(buf);
-}
-}
+namespace mtf = mir_test_framework;
 
 mtf::UdevEnvironment::UdevEnvironment()
-    : recordings_path(binary_path() + "/udev_recordings")
+    : recordings_path(mtf::executable_path() + "/udev_recordings")
 {
     testbed = umockdev_testbed_new();
 }

@@ -5,7 +5,6 @@ add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordi
 include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${UMOCKDEV_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
 # TODO: Aim to remove
 include_directories(${MIR_XCURSOR_INCLUDE_DIRECTORIES})
-add_definitions("-DMIR_TESTING_XCURSOR_THEME=\"${CMAKE_CURRENT_SOURCE_DIR}/input/testing-cursor-theme\"")
 
 set(
   UNIT_TEST_SOURCES
@@ -37,16 +36,18 @@ add_subdirectory(draw/)
 
 link_directories(${LIBRARY_OUTPUT_PATH})
 
-add_executable(mir_unit_tests ${UNIT_TEST_SOURCES})
+add_executable(mir_unit_tests 
+  ${UNIT_TEST_SOURCES}
+  $<TARGET_OBJECTS:mirclientobjects>
+)
+
 uses_android_input(mir_unit_tests)
 
 target_link_libraries(
   mir_unit_tests
 
-  mirclient
   mirserver
   mirplatformgraphics
-  mirclientplatform
   mirdraw
   mirtestdraw
 
