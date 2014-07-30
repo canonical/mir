@@ -46,7 +46,6 @@ set_target_properties(
 
 target_link_libraries(mirplatformgraphicsmesa
   mirplatform
-  mirfatal
 
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}

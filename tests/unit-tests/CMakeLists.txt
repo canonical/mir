@@ -52,7 +52,6 @@ target_link_libraries(
   mirplatformgraphics
   mirdraw
   mirtestdraw
-  mirfatal
 
   mir-test
   mir-test-doubles
