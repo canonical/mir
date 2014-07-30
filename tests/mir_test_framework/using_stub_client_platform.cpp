@@ -43,7 +43,7 @@ void mir_connection_release_override(MirConnection *connection)
     try
     {
         auto wait_handle = connection->disconnect();
-        wait_handle->wait_for_all();
+        mir_wait_for(wait_handle);
     }
     catch (std::exception const&)
     {

@@ -201,8 +201,6 @@ void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primiti
 
     auto& right_shadow = primitives[n++];
     right_shadow.tex_id = shadow_corner_tex;
-    right_shadow.type = GL_TRIANGLE_FAN;
-    right_shadow.vertices.resize(4);
     right_shadow.vertices[0] = {{right,  top,    0.0f}, {0.0f, 0.0f}};
     right_shadow.vertices[1] = {{rightr, top,    0.0f}, {1.0f, 0.0f}};
     right_shadow.vertices[2] = {{rightr, bottom, 0.0f}, {1.0f, 0.0f}};
@@ -210,8 +208,6 @@ void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primiti
 
     auto& left_shadow = primitives[n++];
     left_shadow.tex_id = shadow_corner_tex;
-    left_shadow.type = GL_TRIANGLE_FAN;
-    left_shadow.vertices.resize(4);
     left_shadow.vertices[0] = {{leftr, top,    0.0f}, {1.0f, 0.0f}};
     left_shadow.vertices[1] = {{left,  top,    0.0f}, {0.0f, 0.0f}};
     left_shadow.vertices[2] = {{left,  bottom, 0.0f}, {0.0f, 0.0f}};
@@ -219,8 +215,6 @@ void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primiti
 
     auto& top_shadow = primitives[n++];
     top_shadow.tex_id = shadow_corner_tex;
-    top_shadow.type = GL_TRIANGLE_FAN;
-    top_shadow.vertices.resize(4);
     top_shadow.vertices[0] = {{left,  topr, 0.0f}, {1.0f, 0.0f}};
     top_shadow.vertices[1] = {{right, topr, 0.0f}, {1.0f, 0.0f}};
     top_shadow.vertices[2] = {{right, top,  0.0f}, {0.0f, 0.0f}};
@@ -228,8 +222,6 @@ void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primiti
 
     auto& bottom_shadow = primitives[n++];
     bottom_shadow.tex_id = shadow_corner_tex;
-    bottom_shadow.type = GL_TRIANGLE_FAN;
-    bottom_shadow.vertices.resize(4);
     bottom_shadow.vertices[0] = {{left,  bottom,  0.0f}, {0.0f, 0.0f}};
     bottom_shadow.vertices[1] = {{right, bottom,  0.0f}, {0.0f, 0.0f}};
     bottom_shadow.vertices[2] = {{right, bottomr, 0.0f}, {1.0f, 0.0f}};
@@ -237,8 +229,6 @@ void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primiti
 
     auto& tr_shadow = primitives[n++];
     tr_shadow.tex_id = shadow_corner_tex;
-    tr_shadow.type = GL_TRIANGLE_FAN;
-    tr_shadow.vertices.resize(4);
     tr_shadow.vertices[0] = {{right,  top,  0.0f}, {0.0f, 0.0f}};
     tr_shadow.vertices[1] = {{right,  topr, 0.0f}, {1.0f, 0.0f}};
     tr_shadow.vertices[2] = {{rightr, topr, 0.0f}, {1.0f, 1.0f}};
@@ -246,8 +236,6 @@ void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primiti
 
     auto& br_shadow = primitives[n++];
     br_shadow.tex_id = shadow_corner_tex;
-    br_shadow.type = GL_TRIANGLE_FAN;
-    br_shadow.vertices.resize(4);
     br_shadow.vertices[0] = {{right,  bottom,  0.0f}, {0.0f, 0.0f}};
     br_shadow.vertices[1] = {{rightr, bottom,  0.0f}, {1.0f, 0.0f}};
     br_shadow.vertices[2] = {{rightr, bottomr, 0.0f}, {1.0f, 1.0f}};
@@ -255,8 +243,6 @@ void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primiti
 
     auto& bl_shadow = primitives[n++];
     bl_shadow.tex_id = shadow_corner_tex;
-    bl_shadow.type = GL_TRIANGLE_FAN;
-    bl_shadow.vertices.resize(4);
     bl_shadow.vertices[0] = {{left,  bottom,  0.0f}, {0.0f, 0.0f}};
     bl_shadow.vertices[1] = {{left,  bottomr, 0.0f}, {1.0f, 0.0f}};
     bl_shadow.vertices[2] = {{leftr, bottomr, 0.0f}, {1.0f, 1.0f}};
@@ -264,8 +250,6 @@ void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primiti
 
     auto& tl_shadow = primitives[n++];
     tl_shadow.tex_id = shadow_corner_tex;
-    tl_shadow.type = GL_TRIANGLE_FAN;
-    tl_shadow.vertices.resize(4);
     tl_shadow.vertices[0] = {{left,  top,  0.0f}, {0.0f, 0.0f}};
     tl_shadow.vertices[1] = {{leftr, top,  0.0f}, {1.0f, 0.0f}};
     tl_shadow.vertices[2] = {{leftr, topr, 0.0f}, {1.0f, 1.0f}};
@@ -299,8 +283,6 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
 
     auto& top_left_corner = primitives[n++];
     top_left_corner.tex_id = titlebar_corner_tex;
-    top_left_corner.type = GL_TRIANGLE_FAN;
-    top_left_corner.vertices.resize(4);
     top_left_corner.vertices[0] = {{left,   htop, 0.0f}, {0.0f, 0.0f}};
     top_left_corner.vertices[1] = {{inleft, htop, 0.0f}, {1.0f, 0.0f}};
     top_left_corner.vertices[2] = {{inleft, top,  0.0f}, {1.0f, 1.0f}};
@@ -308,8 +290,6 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
 
     auto& top_right_corner = primitives[n++];
     top_right_corner.tex_id = titlebar_corner_tex;
-    top_right_corner.type = GL_TRIANGLE_FAN;
-    top_right_corner.vertices.resize(4);
     top_right_corner.vertices[0] = {{inright, htop, 0.0f}, {1.0f, 0.0f}};
     top_right_corner.vertices[1] = {{right,   htop, 0.0f}, {0.0f, 0.0f}};
     top_right_corner.vertices[2] = {{right,   top,  0.0f}, {0.0f, 1.0f}};
@@ -317,8 +297,6 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
 
     auto& titlebar = primitives[n++];
     titlebar.tex_id = titlebar_corner_tex;
-    titlebar.type = GL_TRIANGLE_FAN;
-    titlebar.vertices.resize(4);
     titlebar.vertices[0] = {{inleft,  htop, 0.0f}, {1.0f, 0.0f}};
     titlebar.vertices[1] = {{inright, htop, 0.0f}, {1.0f, 0.0f}};
     titlebar.vertices[2] = {{inright, top,  0.0f}, {1.0f, 1.0f}};

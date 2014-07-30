@@ -19,6 +19,7 @@
 #include "src/server/input/xcursor_loader.h"
 
 #include "mir/graphics/cursor_image.h"
+#include "mir_test_framework/executable_path.h"
 
 #include <mir_toolkit/common.h>
 
@@ -55,6 +56,12 @@ bool cursor_image_is_solid_color(std::shared_ptr<mg::CursorImage> const& image, 
     return raw_argb_is_only_pixel(raw_argb, size, pixel);
 }
 
+MATCHER(HasLoaded, "cursor image has loaded and is not nullptr."\
+    " Test expects cursor images to be installed to the directory the test is ran from")
+{
+    return arg != nullptr;
+}
+
 MATCHER(IsSolidRed, "")
 {
     return cursor_image_is_solid_color(arg, 0xffff0000);
@@ -81,10 +88,8 @@ void set_xcursor_path()
     char const* old = getenv("XCURSOR_PATH");
     if (old)
         old_xcursor_path = strdup(old);
-    setenv("XCURSOR_PATH",
-           // Defined by CMake
-           MIR_TESTING_XCURSOR_THEME,
-           1);
+    auto test_cursor_path =mir_test_framework::executable_path() + std::string("/testing-cursor-theme");
+    setenv("XCURSOR_PATH", test_cursor_path.c_str(), 1);
 }
 
 void restore_xcursor_path()
@@ -109,6 +114,9 @@ TEST(XCursorLoader, loads_cursors_from_testing_theme)
     auto blue_image = loader.image("blue", size);
     auto green_image = loader.image("green", size);
 
+    ASSERT_THAT(red_image, HasLoaded());
+    ASSERT_THAT(green_image, HasLoaded());
+    ASSERT_THAT(blue_image, HasLoaded());
     EXPECT_THAT(red_image, IsSolidRed());
     EXPECT_THAT(green_image, IsSolidGreen());
     EXPECT_THAT(blue_image, IsSolidBlue());
@@ -136,6 +144,7 @@ TEST(XCursorLoader, default_image_is_arrow_from_xcursor_theme)
 
     // The testing theme uses a solid black image for the "arrow" symbolic
     // name.
+    ASSERT_THAT(arrow_image, HasLoaded());
     EXPECT_THAT(arrow_image, IsSolidBlack());
     
     restore_xcursor_path();

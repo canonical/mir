@@ -22,6 +22,9 @@
 
 /* This header defines debug interfaces that aren't expected to be generally useful
  * and do not have the same API-stability guarantees that the main API has */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * Return the ID of a surface (only useful for debug output).
@@ -39,5 +42,9 @@ int mir_debug_surface_id(MirSurface *surface);
  *                                and would be returned by mir_surface_get_current_buffer.
  */
 uint32_t mir_debug_surface_current_buffer_id(MirSurface *surface);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* MIR_CLIENT_LIBRARY_DEBUG_H */

@@ -148,7 +148,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     glEnableVertexAttribArray(position_attr_loc);
     glEnableVertexAttribArray(texcoord_attr_loc);
 
-    std::vector<mg::GLPrimitive> primitives;
+    primitives.clear();
     tessellate(primitives, renderable);
 
     auto surface_tex = texture_cache->load(renderable);
@@ -170,7 +170,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
                               GL_FALSE, sizeof(mg::GLVertex),
                               &p.vertices[0].texcoord);
 
-        glDrawArrays(p.type, 0, p.vertices.size());
+        glDrawArrays(p.type, 0, p.nvertices);
     }
 
     glDisableVertexAttribArray(texcoord_attr_loc);

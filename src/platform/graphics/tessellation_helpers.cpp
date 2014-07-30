@@ -40,7 +40,6 @@ mg::GLPrimitive mg::tessellate_renderable_into_rectangle(mg::Renderable const& r
                          buf_size.height.as_int();
 
     auto& vertices = rectangle.vertices;
-    vertices.resize(4);
     vertices[0] = {{left,  top,    0.0f}, {0.0f,      0.0f}};
     vertices[1] = {{left,  bottom, 0.0f}, {0.0f,      tex_bottom}};
     vertices[2] = {{right, top,    0.0f}, {tex_right, 0.0f}};
