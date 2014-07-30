@@ -26,6 +26,14 @@ void mir::frontend::ResourceCache::save_resource(
     resources[key] = value;
 }
 
+void mir::frontend::ResourceCache::save_fd(
+    google::protobuf::Message* key,
+    mir::Fd const& fd)
+{
+    (void) key; (void) fd;
+    std::lock_guard<std::mutex> lock(guard);
+}
+
 void mir::frontend::ResourceCache::free_resource(google::protobuf::Message* key)
 {
     std::shared_ptr<void> value;

@@ -35,6 +35,7 @@ namespace
 struct MockResourceCache : public mf::MessageResourceCache
 {
     MOCK_METHOD2(save_resource, void(google::protobuf::Message*, std::shared_ptr<void> const&));
+    MOCK_METHOD2(save_fd, void(google::protobuf::Message*, mir::Fd const&));
     MOCK_METHOD1(free_resource, void(google::protobuf::Message*));
 };
 
@@ -83,24 +84,19 @@ TEST_F(ProtobufBufferPacker, packing)
     EXPECT_EQ(789, response.height());
 }
 
-#if 0
 TEST_F(ProtobufBufferPacker, fd_packing_saves_using_the_resource_cache)
 {
     using namespace testing;
-    mir::Fd fake_fd0{open("/dev/null", "r")};
-    mir::Fd fake_fd1{open("/dev/null", "r")};
+    mir::Fd fake_fd0{fileno(tmpfile())};
+    mir::Fd fake_fd1{fileno(tmpfile())};
 
     mp::Buffer response;
 
-    Sequence seq;
-    EXPECT_CALL(mock_resource_cache, save_resource(&response,_))
-        .InSequence(seq);
-    EXPECT_CALL(mock_resource_cache, save_resource(&response,_))
-        .InSequence(seq);
+    EXPECT_CALL(*mock_resource_cache, save_fd(&response, Ref(fake_fd0)));
+    EXPECT_CALL(*mock_resource_cache, save_fd(&response, Ref(fake_fd1)));
 
     mfd::ProtobufBufferPacker packer(&response, mock_resource_cache);
 
     packer.pack_fd(fake_fd0);
     packer.pack_fd(fake_fd1);
 }
-#endif
