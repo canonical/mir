@@ -152,7 +152,7 @@ fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/shared/mir_toolkit/cursors.h
 5dc095474ef3e294c0aa4008e9ed997bdb21d34c  include/platform/mir/graphics/gl_config.h
 656a7e1ae3b246930431a6174526fbdc2c76649e  include/platform/mir/graphics/platform.h
 6c1d54bc0a77a1e67c6beff097dc4f1527010e67  include/platform/mir/graphics/gl_texture.h
-4ae1e2be7eaa64612e4248d1fbba43fd7de22e01  include/platform/mir/graphics/buffer_ipc_packer.h
+d7507a326f8cfcc4707c1eb28cf7b666420f92fb  include/platform/mir/graphics/buffer_ipc_packer.h
 222160aa8176a111ce05711d90a372c38591ccdb  include/platform/mir/graphics/native_platform.h
 815405c5aee8000bc18c1c9480bac620a451b416  include/platform/mir/graphics/event_handler_register.h
 4610330452052a58d6067004adbd70f4701c11bf  include/platform/mir/graphics/buffer_id.h
