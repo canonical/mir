@@ -18,6 +18,7 @@ add_library(
   mirclientplatformmesa SHARED
 
   $<TARGET_OBJECTS:mirclientplatformmesaobjects>
+  $<TARGET_OBJECTS:mirclient_platformimpl>
 )
 
 set_target_properties(

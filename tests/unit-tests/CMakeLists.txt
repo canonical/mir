@@ -36,13 +36,16 @@ add_subdirectory(draw/)
 
 link_directories(${LIBRARY_OUTPUT_PATH})
 
-add_executable(mir_unit_tests ${UNIT_TEST_SOURCES})
+add_executable(mir_unit_tests 
+  ${UNIT_TEST_SOURCES}
+  $<TARGET_OBJECTS:mirclientobjects>
+)
+
 uses_android_input(mir_unit_tests)
 
 target_link_libraries(
   mir_unit_tests
 
-  mirclient
   mirserver
   mirplatformgraphics
   mirdraw
