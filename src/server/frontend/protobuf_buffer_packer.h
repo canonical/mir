@@ -49,7 +49,7 @@ public:
     void pack_size(geometry::Size const& size);
 private:
     protobuf::Buffer* buffer_response;
-    
+    std::shared_ptr<MessageResourceCache> const resource_cache;    
 };
 
 }

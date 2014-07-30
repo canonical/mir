@@ -20,6 +20,8 @@
 #define MIR_TEST_DOUBLES_FD_MATCHER_H_
 
 #include "mir/fd.h"
+#include <unistd.h>
+#include <fcntl.h>
 #include <gmock/gmock.h>
 
 namespace mir
@@ -31,6 +33,10 @@ namespace doubles
 MATCHER_P(RawFdMatcher, value, std::string("raw_fd does not match mir::Fd"))
 {
     return value == arg; 
+}
+MATCHER(RawFdIsValid, std::string("raw_fd is not valid"))
+{
+    return (fcntl(arg, F_GETFD) == -1);
 }
 }
 }
