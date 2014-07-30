@@ -50,3 +50,12 @@ mir::Fd::operator int() const
 {
     return fd;
 }
+
+mir::IntOwnedFd::IntOwnedFd(int fd) :
+    Fd(fd)
+{
+}
+
+mir::IntOwnedFd::~IntOwnedFd()
+{
+} 

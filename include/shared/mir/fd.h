@@ -30,7 +30,7 @@ public:
     Fd(); //Initializes fd to the mir::Fd::invalid;
     Fd(Fd&&);
     Fd& operator=(Fd);
-    ~Fd() noexcept;
+    virtual ~Fd() noexcept;
 
     //bit of a convenient kludge. take care not to close or otherwise destroy the FD.
     operator int() const;
@@ -38,6 +38,16 @@ public:
 private:
     int fd;
 };
+
+class IntOwnedFd : public Fd 
+{
+    public:
+    //this stores the POD int in an FD object, but will not close() the fd upon
+    //the object's destruction
+    IntOwnedFd(int fd);
+    ~IntOwnedFd() noexcept;
+};
+
 } // namespace mir
 
 #endif // MIR_FD_H_

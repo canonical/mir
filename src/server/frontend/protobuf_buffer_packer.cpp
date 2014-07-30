@@ -96,7 +96,7 @@ mfd::ProtobufBufferPacker::ProtobufBufferPacker(
 {
 }
 
-void mfd::ProtobufBufferPacker::pack_fd(int fd)
+void mfd::ProtobufBufferPacker::pack_fd(Fd fd)
 {
     buffer_response->add_fd(fd);
 }
