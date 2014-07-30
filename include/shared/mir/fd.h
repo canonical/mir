@@ -18,36 +18,37 @@
 #ifndef MIR_FD_H_
 #define MIR_FD_H_
 
+#include <memory>
+
 namespace mir
 {
+//TODO: remove once mir::Fd is used more pervasively.
+//      some existing code does not really allow us to transfer or share the ownership
+//      of the fd. Constructing using mir::Fd(IntOwnedFd(int)) will help transition the existing
+//      code to using the mir::Fd type properly. 
+struct IntOwnedFd
+{
+    int int_owned_fd;
+};
 class Fd
 {
 public:
     //transfer ownership of the POD-int to the object. The int no longer needs close()ing,
     //and has the lifetime of the Fd object.
     explicit Fd(int fd);
+    explicit Fd(IntOwnedFd);
     static int const invalid{-1};
     Fd(); //Initializes fd to the mir::Fd::invalid;
     Fd(Fd&&);
+    Fd(Fd const&) = default;
     Fd& operator=(Fd);
-    virtual ~Fd() noexcept;
 
     //bit of a convenient kludge. take care not to close or otherwise destroy the FD.
     operator int() const;
 
 private:
-    int fd;
+    std::shared_ptr<int> fd;
 };
-
-class IntOwnedFd : public Fd 
-{
-    public:
-    //this stores the POD int in an FD object, but will not close() the fd upon
-    //the object's destruction
-    IntOwnedFd(int fd);
-    ~IntOwnedFd() noexcept;
-};
-
 } // namespace mir
 
 #endif // MIR_FD_H_
