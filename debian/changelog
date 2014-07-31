@@ -22,6 +22,7 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
       . Provide linker scripts to control symbols exported by [mesa|android]
         libmirclientplatform.
       . Correct xcursor loader test to fail properly instead of segfaulting.
+      . Make mir::Fd type copy constructible.
       . Miscellaneous packaging related enhancements.
       . Miscellaneous build related enhancements.
     - Bugs fixed: (See https://bugs.launchpad.net/mir for details)
@@ -40,6 +41,7 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
       . LP: #1344024
       . LP: #1348518
       . LP: #1297100
+      . LP: #1350163
 
  -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Wed, 30 Jul 2014 16:35:00 +0300
 
