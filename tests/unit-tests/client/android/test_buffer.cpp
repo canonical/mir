@@ -39,7 +39,7 @@ struct AndroidClientBuffer : public ::testing::Test
         native_handle{std::make_shared<native_handle_t>()},
         mock_native_buffer{std::make_shared<mtd::MockAndroidNativeBuffer>(size)}
     {
-        ON_CALL(*mock_registrar, register_buffer(testing::_))
+        ON_CALL(*mock_registrar, register_buffer(testing::_, testing::_))
             .WillByDefault(testing::Return(mock_native_buffer));
         package.height = height.as_int();
         package.width = width.as_int();
@@ -59,7 +59,7 @@ struct AndroidClientBuffer : public ::testing::Test
 
 TEST_F(AndroidClientBuffer, registers_native_handle_with_correct_size)
 {
-    EXPECT_CALL(*mock_registrar, register_buffer(testing::_))
+    EXPECT_CALL(*mock_registrar, register_buffer(testing::_, testing::_))
         .WillOnce(testing::Return(mock_native_buffer));
 
     mcla::Buffer buffer(mock_registrar, package, pf);

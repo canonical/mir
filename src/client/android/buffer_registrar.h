@@ -20,6 +20,7 @@
 #ifndef MIR_CLIENT_ANDROID_BUFFER_REGISTRAR_H_
 #define MIR_CLIENT_ANDROID_BUFFER_REGISTRAR_H_
 
+#include "mir_toolkit/common.h"
 #include <mir_toolkit/mir_native_buffer.h>
 #include "mir/graphics/native_buffer.h"
 #include "mir/geometry/rectangle.h"
@@ -39,7 +40,8 @@ class BufferRegistrar
 public:
     virtual ~BufferRegistrar() = default;
     virtual std::shared_ptr<graphics::NativeBuffer> register_buffer(
-        MirBufferPackage const& package) const = 0;
+        MirBufferPackage const& package,
+        MirPixelFormat pf) const = 0;
     virtual std::shared_ptr<char> secure_for_cpu(
         std::shared_ptr<graphics::NativeBuffer> const& handle,
         geometry::Rectangle const) = 0;

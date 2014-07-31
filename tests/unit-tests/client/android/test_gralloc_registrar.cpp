@@ -84,7 +84,7 @@ struct GrallocRegistrar : public ::testing::Test
 {
     GrallocRegistrar() :
         mock_module(std::make_shared<testing::NiceMock<MockRegistrarDevice>>()),
-        mock_native_buffer(std::make_shared<mtd::MockAndroidNativeBuffer>())
+        mock_native_buffer(std::make_shared<testing::NiceMock<mtd::MockAndroidNativeBuffer>>())
     {
         stub_package.width = width;
         stub_package.height = height;
@@ -102,6 +102,7 @@ struct GrallocRegistrar : public ::testing::Test
     uint32_t const top{0};
     uint32_t const left{1};
     uint32_t const stride{11235};
+    MirPixelFormat const pf{mir_pixel_format_abgr_8888};
     geom::Rectangle const rect{geom::Point{top, left}, geom::Size{width, height}};
 
     std::shared_ptr<MockRegistrarDevice> const mock_module;
@@ -112,7 +113,7 @@ struct GrallocRegistrar : public ::testing::Test
 TEST_F(GrallocRegistrar, client_buffer_converts_stub_package)
 {
     mcla::GrallocRegistrar registrar(mock_module);
-    auto buffer = registrar.register_buffer(stub_package);
+    auto buffer = registrar.register_buffer(stub_package, pf);
 
     auto handle = buffer->handle();
     ASSERT_NE(nullptr, handle);
@@ -127,7 +128,7 @@ TEST_F(GrallocRegistrar, client_buffer_converts_stub_package)
 TEST_F(GrallocRegistrar, client_sets_correct_version)
 {
     mcla::GrallocRegistrar registrar(mock_module);
-    auto buffer = registrar.register_buffer(stub_package);
+    auto buffer = registrar.register_buffer(stub_package, pf);
     EXPECT_EQ(buffer->handle()->version, static_cast<int>(sizeof(native_handle_t)));
 }
 
@@ -146,7 +147,7 @@ TEST_F(GrallocRegistrar, registrar_registers_using_module)
 
     mcla::GrallocRegistrar registrar(mock_module);
     {
-        auto buffer = registrar.register_buffer(stub_package);
+        auto buffer = registrar.register_buffer(stub_package, pf);
         EXPECT_EQ(handle1, buffer->handle());
     }
     EXPECT_EQ(handle1, handle2);
@@ -162,7 +163,7 @@ TEST_F(GrallocRegistrar, registrar_frees_fds)
 
     {
         mcla::GrallocRegistrar registrar(mock_module);
-        auto buffer = registrar.register_buffer(stub_package);
+        auto buffer = registrar.register_buffer(stub_package, pf);
     }
     EXPECT_EQ(-1, fcntl(stub_package.fd[0], F_GETFD));
     EXPECT_EQ(-1, fcntl(stub_package.fd[1], F_GETFD));
@@ -180,7 +181,7 @@ TEST_F(GrallocRegistrar, register_failure)
 
     mcla::GrallocRegistrar registrar(mock_module);
     EXPECT_THROW({
-        registrar.register_buffer(stub_package);
+        registrar.register_buffer(stub_package, pf);
     }, std::runtime_error);
 }
 
@@ -263,13 +264,12 @@ TEST_F(GrallocRegistrar, unlock_failure_doesnt_throw)
 TEST_F(GrallocRegistrar, produces_valid_anwb)
 {
     using namespace testing;
-    MirPixelFormat const pf{mir_pixel_format_abgr_8888};
     mcla::GrallocRegistrar registrar(mock_module);
 
     int correct_usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     int32_t const expected_stride_in_pixels = static_cast<int32_t>(stride / MIR_BYTES_PER_PIXEL(pf));
 
-    auto native_handle = registrar.register_buffer(stub_package);
+    auto native_handle = registrar.register_buffer(stub_package, pf);
     ASSERT_THAT(native_handle, Ne(nullptr));
     auto anwb = native_handle->anwb();
     ASSERT_THAT(anwb, Ne(nullptr));

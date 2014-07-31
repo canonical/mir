@@ -20,6 +20,7 @@
 #include "src/platform/graphics/android/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
+#include "mir_toolkit/common.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_fence.h"
 #include "mir_test/fake_shared.h"

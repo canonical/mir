@@ -61,7 +61,7 @@ mcla::GrallocRegistrar::GrallocRegistrar(const std::shared_ptr<const gralloc_mod
 namespace
 {
 std::shared_ptr<mg::NativeBuffer> gen_native(
-    std::shared_ptr<const native_handle_t> const& handle)
+    std::shared_ptr<const native_handle_t> const& handle, MirBufferPackage const& package, MirPixelFormat pf)
 {
     auto ops = std::make_shared<mga::RealSyncFileOps>();
     auto fence = std::make_shared<mga::SyncFence>(ops, mir::Fd());
@@ -72,11 +72,11 @@ std::shared_ptr<mg::NativeBuffer> gen_native(
             buffer->mir_dereference();
         });
 
-//    anwb->height = static_cast<int32_t>(buffer_size.height.as_uint32_t());
-//    anwb->width =  static_cast<int32_t>(buffer_size.width.as_uint32_t());
+    anwb->width = package.width;
+    anwb->height = package.height;
     //note: mir uses stride in bytes, ANativeWindowBuffer needs it in pixel units. some drivers care
     //about byte-stride, they will pass stride via ANativeWindowBuffer::handle (which is opaque to us)
-//    anwb->stride = stride.as_uint32_t() / MIR_BYTES_PER_PIXEL(buffer_pf);
+    anwb->stride = package.stride / MIR_BYTES_PER_PIXEL(pf);
     anwb->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     anwb->handle = handle.get();
 
@@ -84,7 +84,8 @@ std::shared_ptr<mg::NativeBuffer> gen_native(
 }
 }
 std::shared_ptr<mg::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
-    MirBufferPackage const& package) const
+    MirBufferPackage const& package,
+    MirPixelFormat pf) const
 {
     int native_handle_header_size = sizeof(native_handle_t);
     int total_size = sizeof(int) *
@@ -111,7 +112,7 @@ std::shared_ptr<mg::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
     }
 
     NativeHandleDeleter del(gralloc_module);
-    return gen_native(std::shared_ptr<const native_handle_t>(handle, del));
+    return gen_native(std::shared_ptr<const native_handle_t>(handle, del), package, pf);
 }
 
 std::shared_ptr<char> mcla::GrallocRegistrar::secure_for_cpu(

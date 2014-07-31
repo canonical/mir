@@ -20,7 +20,6 @@
 #ifndef MIR_CLIENT_ANDROID_GRALLOC_REGISTRAR_H_
 #define MIR_CLIENT_ANDROID_GRALLOC_REGISTRAR_H_
 
-#include "mir_toolkit/common.h"
 #include "buffer_registrar.h"
 #include <hardware/gralloc.h>
 
@@ -34,9 +33,11 @@ namespace android
 class GrallocRegistrar : public BufferRegistrar
 {
 public:
-    GrallocRegistrar(const std::shared_ptr<const gralloc_module_t>& gralloc_dev);
+    GrallocRegistrar(std::shared_ptr<const gralloc_module_t> const& gralloc_dev);
 
-    std::shared_ptr<graphics::NativeBuffer> register_buffer(MirBufferPackage const& package) const;
+    std::shared_ptr<graphics::NativeBuffer> register_buffer(
+        MirBufferPackage const& package,
+        MirPixelFormat pf) const;
     std::shared_ptr<char> secure_for_cpu(
         std::shared_ptr<graphics::NativeBuffer> const& handle,
         geometry::Rectangle const);

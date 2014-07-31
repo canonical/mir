@@ -33,7 +33,7 @@ mcla::Buffer::Buffer(
     MirBufferPackage const& package,
     MirPixelFormat pf) :
     buffer_registrar{registrar},
-    native_buffer{registrar->register_buffer(package)},
+    native_buffer{registrar->register_buffer(package, pf)},
     buffer_pf(pf),
     buffer_stride{package.stride},
     buffer_size{package.width, package.height}
