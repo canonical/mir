@@ -6,7 +6,6 @@ add_library(
   $<TARGET_OBJECTS:mirplatformgraphicscommon>
   $<TARGET_OBJECTS:miroptions>
   $<TARGET_OBJECTS:mirfatal>
-
 )
 
 target_link_libraries(mirplatform

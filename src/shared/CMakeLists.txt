@@ -16,11 +16,6 @@ add_subdirectory(env)
 add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
 
-set(
-  MIR_COMMON_PLATFORM_LIBRARIES
-  ${MIR_COMMON_PLATFORM_LIBRARIES}
-  PARENT_SCOPE)
-
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
