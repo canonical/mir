@@ -92,7 +92,7 @@ bool mgm::ShmBuffer::can_bypass() const
     return false;
 }
 
-void mgm::ShmBuffer::write(void const* data, size_t data_size)
+void mgm::ShmBuffer::write(unsigned char const* data, size_t data_size)
 {
     if (data_size != stride_.as_uint32_t()*size().height.as_uint32_t())
         BOOST_THROW_EXCEPTION(std::logic_error("Size is not equal to number of pixels in buffer"));

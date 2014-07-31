@@ -36,7 +36,7 @@ class BufferWriter : public graphics::BufferWriter
 public:
     BufferWriter();
     
-    void write(std::shared_ptr<graphics::Buffer> const& buffer, void const* data, size_t size) override;
+    void write(std::shared_ptr<graphics::Buffer> const& buffer, unsigned char const* data, size_t size) override;
 };
 }
 }

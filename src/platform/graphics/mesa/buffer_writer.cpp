@@ -30,7 +30,7 @@ mgm::BufferWriter::BufferWriter()
 {
 }
 
-void mgm::BufferWriter::write(std::shared_ptr<mg::Buffer> const& buffer, void const* data, size_t size)
+void mgm::BufferWriter::write(std::shared_ptr<mg::Buffer> const& buffer, unsigned char const* data, size_t size)
 {
     auto shm_buffer = std::dynamic_pointer_cast<mgm::ShmBuffer>(buffer);
     if (!shm_buffer)

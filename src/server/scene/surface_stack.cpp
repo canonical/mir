@@ -146,7 +146,7 @@ void ms::SurfaceStack::unregister_compositor(mc::CompositorID cid)
     update_rendering_tracker_compositors();
 }
 
-void ms::SurfaceStack::add_overlay(
+void ms::SurfaceStack::add_input_visualization(
     std::shared_ptr<mg::Renderable> const& overlay)
 {
     {
@@ -156,7 +156,7 @@ void ms::SurfaceStack::add_overlay(
     observers.scene_changed();
 }
 
-void ms::SurfaceStack::remove_overlay(
+void ms::SurfaceStack::remove_input_visualization(
     std::weak_ptr<mg::Renderable> const& weak_overlay)
 {
     auto overlay = weak_overlay.lock();

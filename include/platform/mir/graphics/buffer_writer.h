@@ -32,7 +32,7 @@ class BufferWriter
 public:
     virtual ~BufferWriter() = default;
 
-    virtual void write(std::shared_ptr<Buffer> const& buffer, void const* data, size_t size) = 0;
+    virtual void write(std::shared_ptr<Buffer> const& buffer, unsigned char const* data, size_t size) = 0;
 
 protected:
     BufferWriter() = default;

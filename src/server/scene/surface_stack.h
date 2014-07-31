@@ -92,8 +92,8 @@ public:
     void remove_observer(std::weak_ptr<Observer> const& observer) override;
     
     // Intended for input overlays, as described in mir::input::Scene documentation.
-    void add_overlay(std::shared_ptr<graphics::Renderable> const& overlay);
-    void remove_overlay(std::weak_ptr<graphics::Renderable> const& overlay);
+    void add_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay);
+    void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& overlay);
     
     void emit_scene_changed() override;
 

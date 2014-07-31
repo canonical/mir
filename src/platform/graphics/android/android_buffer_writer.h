@@ -38,7 +38,7 @@ class AndroidBufferWriter : public graphics::BufferWriter
 public:
      AndroidBufferWriter();
 
-     void write(std::shared_ptr<graphics::Buffer> const& buffer, void const* pixels, size_t size) override;
+     void write(std::shared_ptr<graphics::Buffer> const& buffer, unsigned char const* pixels, size_t size) override;
      
 private:
      gralloc_module_t const* hw_module;

@@ -53,19 +53,19 @@ struct MockBufferAllocator : public mg::GraphicBufferAllocator
 struct StubBufferWriter : public mg::BufferWriter
 {
     void write(std::shared_ptr<mg::Buffer> const& /* buffer */,
-        void const* /* data */, size_t /* size */) override
+        unsigned char const* /* data */, size_t /* size */) override
     {
     }
 };
 
 struct StubScene : public mtd::StubInputScene
 {
-    void add_overlay(std::shared_ptr<mg::Renderable> const& overlay) override
+    void add_input_visualization(std::shared_ptr<mg::Renderable> const& overlay) override
     {
         overlays.push_back(overlay);
     }
 
-    void remove_overlay(std::weak_ptr<mg::Renderable> const& overlay) override
+    void remove_input_visualization(std::weak_ptr<mg::Renderable> const& overlay) override
     {
         auto l = overlay.lock();
         assert(l);

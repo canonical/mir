@@ -675,7 +675,7 @@ TEST_F(SurfaceStack, observer_can_remove_itself_within_notification)
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
 }
 
-TEST_F(SurfaceStack, scene_observer_notified_of_add_and_remove_overlay)
+TEST_F(SurfaceStack, scene_observer_notified_of_add_and_remove_input_visualization)
 {
     using namespace ::testing;
 
@@ -687,8 +687,8 @@ TEST_F(SurfaceStack, scene_observer_notified_of_add_and_remove_overlay)
 
     stack.add_observer(mt::fake_shared(observer));
 
-    stack.add_overlay(mt::fake_shared(r));
-    stack.remove_overlay(mt::fake_shared(r));
+    stack.add_input_visualization(mt::fake_shared(r));
+    stack.remove_input_visualization(mt::fake_shared(r));
 }
 
 TEST_F(SurfaceStack, overlays_do_not_appear_in_input_enumeration)
@@ -698,7 +698,7 @@ TEST_F(SurfaceStack, overlays_do_not_appear_in_input_enumeration)
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
 
-    stack.add_overlay(mt::fake_shared(r));
+    stack.add_input_visualization(mt::fake_shared(r));
 
     unsigned int observed_input_targets = 0;
     stack.for_each([&observed_input_targets](std::shared_ptr<mi::Surface> const&)
@@ -715,7 +715,7 @@ TEST_F(SurfaceStack, overlays_appear_at_top_of_renderlist)
     mtd::StubRenderable r;
     
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
-    stack.add_overlay(mt::fake_shared(r));
+    stack.add_input_visualization(mt::fake_shared(r));
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
 
     EXPECT_THAT(
@@ -733,7 +733,7 @@ TEST_F(SurfaceStack, removed_overlays_are_removed)
     mtd::StubRenderable r;
     
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
-    stack.add_overlay(mt::fake_shared(r));
+    stack.add_input_visualization(mt::fake_shared(r));
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
 
     EXPECT_THAT(
@@ -743,7 +743,7 @@ TEST_F(SurfaceStack, removed_overlays_are_removed)
             SceneElementFor(stub_surface2),
             SceneElementFor(mt::fake_shared(r))));
     
-    stack.remove_overlay(mt::fake_shared(r));
+    stack.remove_input_visualization(mt::fake_shared(r));
 
     EXPECT_THAT(
         stack.scene_elements_for(compositor_id),

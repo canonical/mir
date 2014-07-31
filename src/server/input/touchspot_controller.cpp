@@ -148,7 +148,7 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
             if (renderables_in_use <= i)
             {
                 renderables_in_use++;
-                scene->add_overlay(renderable);
+                scene->add_input_visualization(renderable);
             }
         }
         // If we are using too many touch-spot renderables, we need to remove some from
@@ -156,7 +156,7 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
         else if (renderables_in_use > touches.size())
         {
             renderables_in_use--;
-            scene->remove_overlay(renderable);
+            scene->remove_input_visualization(renderable);
         }
     }
     
