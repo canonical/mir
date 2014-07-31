@@ -56,7 +56,6 @@ target_link_libraries(
   mir-test-doubles
 
   mirserver
-  mirplatformgraphics
   mirdraw
   mirtestdraw
 
@@ -69,6 +68,13 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
+
+if (MIR_TEST_PLATFORM STREQUAL "android")
+target_link_libraries(mir_integration_tests
+  mirsharedandroid
+  ${ANDROID_PROPERTIES_LIBRARIES}
+)
+endif()
 
 CMAKE_DEPENDENT_OPTION(
   MIR_RUN_INTEGRATION_TESTS
