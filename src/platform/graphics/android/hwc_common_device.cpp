@@ -124,10 +124,15 @@ void mga::HWCCommonDevice::turn_screen_on() const
     hwc_device->vsync_signal_on();
 }
 
-void mga::HWCCommonDevice::turn_screen_off() const
+void mga::HWCCommonDevice::turn_screen_off()
 {
     hwc_device->vsync_signal_off();
     hwc_device->display_off();
+    turned_screen_off();
+}
+
+void mga::HWCCommonDevice::turned_screen_off()
+{
 }
 
 bool mga::HWCCommonDevice::apply_orientation(MirOrientation) const
