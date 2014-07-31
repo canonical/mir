@@ -17,7 +17,6 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
       . Introduced two new client-side functions : mir_surface_get_focus and
         mir_surface_get_visibility.
       . Added symbolic names for cursors.
-      . Added tests to detect server/client ABI breakage.
       . Made "shared" code a true shared library.
       . Provide linker scripts to control symbols exported by [mesa|android]
         libmirclientplatform.
