@@ -24,13 +24,13 @@ using namespace testing;
 
 TEST(FatalTest, abort_formats_message_to_stderr)
 {
-    EXPECT_DEATH({mir::abort("%s had %d %s %s", "Mary", 1, "little", "lamb");},
+    EXPECT_DEATH({mir::fatal_error("%s had %d %s %s", "Mary", 1, "little", "lamb");},
                  "Mary had 1 little lamb");
 }
 
 TEST(FatalTest, abort_raises_sigabrt)
 {
-    EXPECT_EXIT({mir::abort("Hello world");},
+    EXPECT_EXIT({mir::fatal_error("Hello world");},
                 KilledBySignal(SIGABRT),
                 "Hello world");
 }

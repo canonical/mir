@@ -162,7 +162,7 @@ void mgm::RealKMSOutput::reset()
     connector = resources.connector(connector_id);
 
     if (!connector)
-        mir::abort("No DRM connector found");
+        fatal_error("No DRM connector found");
 
     // TODO: What if we can't locate the DPMS property?
     for (int i = 0; i < connector->count_props; i++)
@@ -199,7 +199,7 @@ bool mgm::RealKMSOutput::set_crtc(uint32_t fb_id)
 {
     if (!ensure_crtc())
     {
-        mir::abort("Output %s has no associated CRTC to set a framebuffer on",
+        fatal_error("Output %s has no associated CRTC to set a framebuffer on",
                     connector_name(connector.get()).c_str());
     }
 
@@ -232,7 +232,7 @@ void mgm::RealKMSOutput::clear_crtc()
                                  0, 0, 0, nullptr, 0, nullptr);
     if (result)
     {
-        mir::abort("Couldn't clear output %s (drmModeSetCrtc = %d)",
+        fatal_error("Couldn't clear output %s (drmModeSetCrtc = %d)",
                    connector_name(connector.get()).c_str(), result);
     }
 
@@ -246,7 +246,7 @@ bool mgm::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
         return true;
     if (!current_crtc)
     {
-        mir::abort("Output %s has no associated CRTC to schedule page flips on",
+        fatal_error("Output %s has no associated CRTC to schedule page flips on",
                    connector_name(connector.get()).c_str());
     }
     return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id);
@@ -259,7 +259,7 @@ void mgm::RealKMSOutput::wait_for_page_flip()
         return;
     if (!current_crtc)
     {
-        mir::abort("Output %s has no associated CRTC to wait on",
+        fatal_error("Output %s has no associated CRTC to wait on",
                    connector_name(connector.get()).c_str());
     }
     page_flipper->wait_for_flip(current_crtc->crtc_id);
@@ -276,7 +276,7 @@ void mgm::RealKMSOutput::set_cursor(gbm_bo* buffer)
                 gbm_bo_get_width(buffer),
                 gbm_bo_get_height(buffer)))
         {
-            mir::abort("drmModeSetCursor failed (returned %d)", result);
+            fatal_error("drmModeSetCursor failed (returned %d)", result);
         }
 
         has_cursor_ = true;
@@ -291,7 +291,7 @@ void mgm::RealKMSOutput::move_cursor(geometry::Point destination)
                                             destination.x.as_uint32_t(),
                                             destination.y.as_uint32_t()))
         {
-            mir::abort("drmModeMoveCursor failed (returned %d)", result);
+            fatal_error("drmModeMoveCursor failed (returned %d)", result);
         }
     }
 }

@@ -420,14 +420,14 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
     });
 }
 
-TEST_F(ServerShutdown, server_removes_endpoint_on_mir_abort)
+TEST_F(ServerShutdown, server_removes_endpoint_on_mir_fatal_error)
 {   // Even fatal errors sometimes need to be caught for critical cleanup...
     struct ServerConfig : TestingServerConfiguration
     {
         void on_start() override
         {
             sync.wait_for_signal_ready_for();
-            mir::abort("Bang");
+            mir::fatal_error("Bang");
         }
 
         mtf::CrossProcessSync sync;

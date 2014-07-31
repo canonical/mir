@@ -144,18 +144,18 @@ mgm::DisplayBuffer::DisplayBuffer(
     glClear(GL_COLOR_BUFFER_BIT);
 
     if (!egl.swap_buffers())
-        mir::abort("Failed to perform initial surface buffer swap");
+        fatal_error("Failed to perform initial surface buffer swap");
 
     listener->report_successful_egl_buffer_swap_on_construction();
 
     scheduled_bufobj = get_front_buffer_object();
     if (!scheduled_bufobj)
-        mir::abort("Failed to get frontbuffer");
+        fatal_error("Failed to get frontbuffer");
 
     for (auto& output : outputs)
     {
         if (!output->set_crtc(scheduled_bufobj->get_drm_fb_id()))
-            mir::abort("Failed to set DRM crtc");
+            fatal_error("Failed to set DRM crtc");
     }
 
     egl.release_current();
@@ -257,7 +257,7 @@ void mgm::DisplayBuffer::post_update(
      * corresponding to the front buffer.
      */
     if (!bypass_buf && !egl.swap_buffers())
-        mir::abort("Failed to perform initial surface buffer swap");
+        fatal_error("Failed to perform initial surface buffer swap");
 
     mgm::BufferObject *bufobj;
     if (bypass_buf)
@@ -272,7 +272,7 @@ void mgm::DisplayBuffer::post_update(
     }
 
     if (!bufobj)
-        mir::abort("Failed to get front buffer object");
+        fatal_error("Failed to get front buffer object");
 
     /*
      * Schedule the current front buffer object for display, and wait
@@ -285,14 +285,14 @@ void mgm::DisplayBuffer::post_update(
     {
         if (!bypass_buf)
             bufobj->release();
-        mir::abort("Failed to schedule page flip");
+        fatal_error("Failed to schedule page flip");
     }
     else if (needs_set_crtc)
     {
         for (auto& output : outputs)
         {
             if (!output->set_crtc(bufobj->get_drm_fb_id()))
-                mir::abort("Failed to set DRM crtc");
+                fatal_error("Failed to set DRM crtc");
         }
         needs_set_crtc = false;
     }
@@ -398,7 +398,7 @@ void mgm::DisplayBuffer::make_current()
 {
     if (!egl.make_current())
     {
-        mir::abort("Failed to make EGL surface current");
+        fatal_error("Failed to make EGL surface current");
     }
 }
 
