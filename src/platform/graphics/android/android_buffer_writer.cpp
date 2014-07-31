@@ -49,7 +49,7 @@ void mga::AndroidBufferWriter::write(std::shared_ptr<mg::Buffer> const& buffer, 
 
     auto mga_buffer = std::dynamic_pointer_cast<mga::Buffer>(buffer);
     if (!mga_buffer)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid buffer (did not originate from platform graphics driver)"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid buffer"));
     
     auto handle = buffer->native_buffer_handle();
     
