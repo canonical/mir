@@ -1,0 +1,16 @@
+MIR_CLIENT_8 {
+ global: mir_*;
+  extern "C++" { 
+   # used by PrivateProtobuf
+   mir::client::the_rpc_channel*;
+   
+   # used by test framework - see lp:1349788
+   MirConnection::MirConnection*;
+   MirConnection::connect*;
+   MirConnection::disconnect*;
+   mir::client::DefaultConnectionConfiguration::*;
+   vtable?for?mir::client::DefaultConnectionConfiguration;
+   typeinfo?for?mir::client::DefaultConnectionConfiguration;
+  }; 
+ local: *;
+};

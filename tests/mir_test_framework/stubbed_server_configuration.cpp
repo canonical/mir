@@ -116,6 +116,13 @@ class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
  public:
     std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties) override
     {
+        if (properties.size.width == geom::Width{0} ||
+            properties.size.height == geom::Height{0})
+        {
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error("Request for allocation of buffer with invalid size"));
+        }
+
         return std::make_shared<StubFDBuffer>(properties);
     }
 };

@@ -93,6 +93,8 @@ private:
     float rotation;
     DestinationAlpha const dest_alpha;
     geometry::Rectangle viewport;
+
+    std::vector<graphics::GLPrimitive> mutable primitives;
 };
 
 }
