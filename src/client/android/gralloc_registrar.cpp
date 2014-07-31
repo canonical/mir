@@ -60,7 +60,7 @@ mcla::GrallocRegistrar::GrallocRegistrar(const std::shared_ptr<const gralloc_mod
 
 namespace
 {
-std::shared_ptr<mg::NativeBuffer> gen_native(
+std::shared_ptr<mg::NativeBuffer> create_native_buffer(
     std::shared_ptr<const native_handle_t> const& handle, MirBufferPackage const& package, MirPixelFormat pf)
 {
     auto ops = std::make_shared<mga::RealSyncFileOps>();
@@ -95,24 +95,18 @@ std::shared_ptr<mg::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
     handle->numFds  = package.fd_items;
     handle->numInts = package.data_items;
     for (auto i=0; i< handle->numFds; i++)
-    {
         handle->data[i] = package.fd[i];
-    }
-
-    int offset_i = handle->numFds;
     for (auto i=0; i< handle->numInts; i++)
-    {
-        handle->data[offset_i+i] = package.data[i];
-    }
+        handle->data[handle->numFds+i] = package.data[i];
 
-    if ( gralloc_module->registerBuffer(gralloc_module.get(), handle) )
+    if (gralloc_module->registerBuffer(gralloc_module.get(), handle))
     {
         ::operator delete(const_cast<native_handle_t*>(handle));
         BOOST_THROW_EXCEPTION(std::runtime_error("error registering graphics buffer for client use\n"));
     }
 
     NativeHandleDeleter del(gralloc_module);
-    return gen_native(std::shared_ptr<const native_handle_t>(handle, del), package, pf);
+    return create_native_buffer(std::shared_ptr<const native_handle_t>(handle, del), package, pf);
 }
 
 std::shared_ptr<char> mcla::GrallocRegistrar::secure_for_cpu(
