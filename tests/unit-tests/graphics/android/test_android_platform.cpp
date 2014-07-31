@@ -89,7 +89,7 @@ protected:
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_with_fence)
 {
     using namespace ::testing;
-    int fake_fence{33};
+    int fake_fence{333};
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(fake_fence));
 
@@ -114,9 +114,6 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     EXPECT_CALL(mock_packer, pack_size(_))
         .Times(1);
 
-    EXPECT_CALL(*native_buffer, ensure_available_for(mga::BufferAccess::write))
-        .Times(1);
-
     platform.fill_buffer_package(
         &mock_packer, mock_buffer.get(), mg::BufferIpcMsgType::full_msg);
 }
@@ -131,7 +128,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
 
     mtd::MockPacker mock_packer;
     int offset = 0;
-    EXPECT_CALL(mock_packer, pack_data(static_cast<int>(mga::BufferFlag::fenced)));
+    EXPECT_CALL(mock_packer, pack_data(static_cast<int>(mga::BufferFlag::unfenced)));
     EXPECT_CALL(mock_packer, pack_fd(mtd::RawFdMatcher(-1)))
         .Times(0);
     for(auto i=0u; i<num_fds; i++)
@@ -153,9 +150,6 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     EXPECT_CALL(*mock_buffer, size())
         .WillOnce(Return(mir::geometry::Size{123, 456}));
     EXPECT_CALL(mock_packer, pack_size(_))
-        .Times(1);
-
-    EXPECT_CALL(*native_buffer, ensure_available_for(mga::BufferAccess::write))
         .Times(1);
 
     platform.fill_buffer_package(
