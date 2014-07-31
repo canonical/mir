@@ -420,7 +420,42 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
     });
 }
 
-TEST_F(ServerShutdown, server_removes_endpoint_on_mir_fatal_error)
+TEST_F(ServerShutdown, server_removes_endpoint_on_mir_fatal_error_abort)
+{   // Even fatal errors sometimes need to be caught for critical cleanup...
+    struct ServerConfig : TestingServerConfiguration
+    {
+        void on_start() override
+        {
+            sync.wait_for_signal_ready_for();
+            mir::fatal_error("Bang");
+        }
+
+        mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
+        mtf::CrossProcessSync sync;
+    };
+
+    ServerConfig server_config;
+    launch_server_process(server_config);
+
+    run_in_test_process([&]
+    {
+        ASSERT_TRUE(file_exists(server_config.the_socket_file()));
+
+        server_config.sync.signal_ready();
+
+        auto result = wait_for_shutdown_server_process();
+        EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal, result.reason);
+        // Under valgrind the server process is reported as being terminated
+        // by SIGKILL because of multithreading madness.
+        // TODO: Investigate if we can do better than this workaround
+        EXPECT_TRUE(result.signal == SIGABRT || result.signal == SIGKILL);
+
+        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
+    });
+}
+
+
+TEST_F(ServerShutdown, server_removes_endpoint_on_mir_fatal_error_except)
 {   // Even fatal errors sometimes need to be caught for critical cleanup...
     struct ServerConfig : TestingServerConfiguration
     {
@@ -443,11 +478,7 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_mir_fatal_error)
         server_config.sync.signal_ready();
 
         auto result = wait_for_shutdown_server_process();
-        EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal, result.reason);
-        // Under valgrind the server process is reported as being terminated
-        // by SIGKILL because of multithreading madness.
-        // TODO: Investigate if we can do better than this workaround
-        EXPECT_TRUE(result.signal == SIGABRT || result.signal == SIGKILL);
+        EXPECT_EQ(mtf::TerminationReason::child_terminated_normally, result.reason);
 
         EXPECT_FALSE(file_exists(server_config.the_socket_file()));
     });

@@ -18,19 +18,41 @@
 
 #include "mir/fatal.h"
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <csignal>
 
 using namespace testing;
 
 TEST(FatalTest, abort_formats_message_to_stderr)
 {
+    mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
+
     EXPECT_DEATH({mir::fatal_error("%s had %d %s %s", "Mary", 1, "little", "lamb");},
                  "Mary had 1 little lamb");
 }
 
 TEST(FatalTest, abort_raises_sigabrt)
 {
+    mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
+
     EXPECT_EXIT({mir::fatal_error("Hello world");},
                 KilledBySignal(SIGABRT),
                 "Hello world");
 }
+
+TEST(FatalTest, throw_formats_message_to_what)
+{
+    EXPECT_THROW(
+        mir::fatal_error("%s had %d %s %s", "Mary", 1, "little", "lamb"),
+        std::runtime_error);
+
+    try
+    {
+        mir::fatal_error("%s had %d %s %s", "Mary", 1, "little", "lamb");
+    }
+    catch (std::exception const& x)
+    {
+        EXPECT_THAT(x.what(), StrEq("Mary had 1 little lamb"));
+    }
+}
+
