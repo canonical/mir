@@ -25,23 +25,38 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
       . Make mir::Fd type copy constructible.
       . Miscellaneous packaging related enhancements.
       . Miscellaneous build related enhancements.
-    - Bugs fixed: (See https://bugs.launchpad.net/mir for details)
-      . LP: #1336553
-      . LP: #1343074
-      . LP: #1345533
-      . LP: #1342694
-      . LP: #1341502
-      . LP: #1348095
-      . LP: #1346952
-      . LP: #1347522
-      . LP: #1348467
-      . LP: #1349698
-      . LP: #1342029
-      . LP: #1349742
-      . LP: #1344024
-      . LP: #1348518
-      . LP: #1297100
-      . LP: #1350163
+    - Bugs fixed:
+      . Mir servers crash with SIGABRT - assertion failed at
+        buffer_queue.cpp:136 - "!pending_client_notifications.empty()"
+        (LP: #1335481)
+      . [regression][hammerhead] Mir fails to start on Nexus 5 & 10 as it
+        fails to turn vsync signal on (LP: #1345533)
+      . [qtcomp] Random crash in Mir input when running AP tests: [terminate
+        called after throwing an instance of '...' what(): assign: File exists]
+        when constructing a mir::AsioMainLoop::FDHandler (LP: #1346952)
+      . CI builds fail when trying to install libmircommon-dev (LP: #1348518)
+      . [regression] Mir 0.6 GL clients crash immediately on startup (Mesa is
+        trying to use X11 instead of Mir) (LP: #1350163)
+      . qmlscene crashed with SIGSEGV in _M_release() on quit (LP: #1342694)
+      . Clients cannot create surfaces when the screen is off (LP: #1344024)
+      . The packaging of headers and libraries is confused (LP: #1347522)
+      . [regression] Intermittent CI failure in
+        ClientLibrary.receives_surface_dpi_value (LP: #1348095)
+      . Installing mir-demos also unexpectedly installs *-dev packages
+        (LP: #1297100)
+      . mir_unit_tests: XCursorLoader.loads_cursors_from_testing_theme crashes
+        on N4 (LP: #1342029)
+      . [performance] Mir is spending at least 8% of its time in
+         __android_log_print() (LP: #1343074)
+      . [performance] Mir demo shell spends ~12% of its time in vector
+        allocation under DemoRenderer::tessellate_*() (LP: #1349698)
+      . mir_client_library_debug.h functions do not have C linkage
+        (LP: #1349742)
+      . mir client API is missing getters for some surface attributes
+        (LP: #1336553)
+      . Building Mir outputs lots of warnings about Android logging functions
+        in 3rd_party/ (LP: #1348467)
+      . The "shared" code should be a shared library (LP: #1341502)
 
  -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Wed, 30 Jul 2014 16:35:00 +0300
 
