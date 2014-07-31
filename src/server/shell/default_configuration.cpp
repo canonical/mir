@@ -20,7 +20,7 @@
 #include "null_host_lifecycle_event_listener.h"
 
 
-#include "consuming_placement_strategy.h"
+#include "default_placement_strategy.h"
 #include "default_focus_mechanism.h"
 #include "graphics_display_layout.h"
 
@@ -34,7 +34,7 @@ mir::DefaultServerConfiguration::the_placement_strategy()
     return shell_placement_strategy(
         [this]
         {
-            return std::make_shared<msh::ConsumingPlacementStrategy>(
+            return std::make_shared<msh::DefaultPlacementStrategy>(
                 the_shell_display_layout());
         });
 }
