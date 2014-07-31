@@ -48,7 +48,6 @@ target_link_libraries(
   mir_unit_tests
 
   mirserver
-  mirplatformgraphics
   mirdraw
   mirtestdraw
 
@@ -69,6 +68,13 @@ target_link_libraries(
   ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
+
+if (MIR_TEST_PLATFORM STREQUAL "android")
+target_link_libraries(mir_unit_tests 
+  mirsharedandroid
+  ${ANDROID_PROPERTIES_LIBRARIES}
+)
+endif()
 
 # Umockdev uses glib, which uses the deprecated "register" allocation specifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
