@@ -18,6 +18,8 @@
 #ifndef MIR_FD_H_
 #define MIR_FD_H_
 
+#include <memory>
+
 namespace mir
 {
 class Fd
@@ -29,14 +31,14 @@ public:
     static int const invalid{-1};
     Fd(); //Initializes fd to the mir::Fd::invalid;
     Fd(Fd&&);
+    Fd(Fd const&) = default;
     Fd& operator=(Fd);
-    ~Fd() noexcept;
 
     //bit of a convenient kludge. take care not to close or otherwise destroy the FD.
     operator int() const;
 
 private:
-    int fd;
+    std::shared_ptr<int> fd;
 };
 } // namespace mir
 

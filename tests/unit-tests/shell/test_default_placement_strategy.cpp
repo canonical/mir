@@ -19,7 +19,7 @@
 #include "mir_test_doubles/mock_display_layout.h"
 #include "mir_test_doubles/stub_scene_session.h"
 
-#include "src/server/shell/consuming_placement_strategy.h"
+#include "src/server/shell/default_placement_strategy.h"
 #include "mir/scene/surface_creation_parameters.h"
 
 #include "mir/geometry/rectangle.h"
@@ -35,7 +35,7 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct ConsumingPlacementStrategySetup : public testing::Test
+struct DefaultPlacementStrategySetup : public testing::Test
 {
     void SetUp()
     {
@@ -48,37 +48,7 @@ struct ConsumingPlacementStrategySetup : public testing::Test
 };
 }
 
-
-TEST_F(ConsumingPlacementStrategySetup, parameters_with_no_geometry_are_made_fullscreen)
-{
-    using namespace ::testing;
-
-    ms::SurfaceCreationParameters input_params;
-    geom::Rectangle rect{input_params.top_left, input_params.size};
-
-    EXPECT_CALL(*display_layout, size_to_output(rect)).Times(1);
-
-    msh::ConsumingPlacementStrategy placement_strategy(display_layout);
-
-    placement_strategy.place(session, input_params);
-}
-
-TEST_F(ConsumingPlacementStrategySetup, parameters_with_geometry_are_clipped)
-{
-    using namespace ::testing;
-
-    ms::SurfaceCreationParameters input_params;
-    input_params.size = geom::Size{100, 200};
-    geom::Rectangle rect{input_params.top_left, input_params.size};
-
-    EXPECT_CALL(*display_layout, clip_to_output(rect)).Times(1);
-
-    msh::ConsumingPlacementStrategy placement_strategy(display_layout);
-
-    placement_strategy.place(session, input_params);
-}
-
-TEST_F(ConsumingPlacementStrategySetup, parameters_with_output_id_are_placed_in_output)
+TEST_F(DefaultPlacementStrategySetup, parameters_with_output_id_are_placed_in_output)
 {
     using namespace ::testing;
 
@@ -91,7 +61,7 @@ TEST_F(ConsumingPlacementStrategySetup, parameters_with_output_id_are_placed_in_
                 place_in_output(input_params.output_id, rect))
         .Times(1);
 
-    msh::ConsumingPlacementStrategy placement_strategy(display_layout);
+    msh::DefaultPlacementStrategy placement_strategy(display_layout);
 
     placement_strategy.place(session, input_params);
 }

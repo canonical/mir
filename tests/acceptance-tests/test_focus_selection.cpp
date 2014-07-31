@@ -19,7 +19,6 @@
 #include "clients.h"
 
 #include "src/server/scene/session_container.h"
-#include "src/server/shell/consuming_placement_strategy.h"
 #include "src/server/scene/session_manager.h"
 #include "mir/graphics/display.h"
 #include "mir/shell/input_targeter.h"
