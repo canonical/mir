@@ -29,7 +29,6 @@ Build-Depends: cmake,
                libgles2-mesa-dev,
                libgbm-dev,
                libglm-dev,
-               libprotobuf-dev,
                pkg-config,
                android-headers (>=4.4.2) [i386 amd64 armhf],
                libhardware-dev [i386 amd64 armhf],
@@ -130,7 +129,6 @@ Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirserver24 (= ${binary:Version}),
-         libmirprotobuf-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,
          libboost-program-options-dev,
@@ -162,7 +160,6 @@ Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirclient8 (= ${binary:Version}),
-         libmirprotobuf-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          ${misc:Depends},
 Description: Display server for Ubuntu - development headers
