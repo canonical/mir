@@ -19,6 +19,7 @@ set(
   test_thread_name.cpp
   test_default_emergency_cleanup.cpp
   test_basic_observers.cpp
+  test_fd.cpp
 )
 
 add_subdirectory(options/)
