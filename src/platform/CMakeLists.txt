@@ -17,3 +17,15 @@ install(TARGETS mirplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 add_subdirectory(graphics/)
 add_subdirectory(options)
+
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/mirplatform.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/mirplatform.pc
+)
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/mirplatform.pc
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+)
+
