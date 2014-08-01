@@ -30,6 +30,7 @@
 namespace mtd = mir::test::doubles;
 namespace mcla = mir::client::android;
 namespace mg = mir::graphics;
+namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 
 struct AndroidClientBuffer : public ::testing::Test
@@ -53,7 +54,7 @@ struct AndroidClientBuffer : public ::testing::Test
     MirPixelFormat const pf{mir_pixel_format_abgr_8888};
     std::shared_ptr<mtd::MockBufferRegistrar> const mock_registrar;
     std::shared_ptr<native_handle_t const> const native_handle;
-    std::shared_ptr<mg::NativeBuffer> const mock_native_buffer;
+    std::shared_ptr<mtd::MockAndroidNativeBuffer> const mock_native_buffer;
     MirBufferPackage package;
 };
 
@@ -73,7 +74,8 @@ TEST_F(AndroidClientBuffer, packs_memory_region_correctly)
     using namespace testing;
     geom::Rectangle rect{{0,0}, size};
     std::shared_ptr<char> empty_char = std::make_shared<char>();
-    EXPECT_CALL(*mock_registrar, secure_for_cpu(mock_native_buffer,rect))
+    EXPECT_CALL(*mock_registrar, secure_for_cpu(
+        std::dynamic_pointer_cast<mg::NativeBuffer>(mock_native_buffer),rect))
         .Times(1)
         .WillOnce(Return(empty_char));
 
@@ -84,4 +86,19 @@ TEST_F(AndroidClientBuffer, packs_memory_region_correctly)
     EXPECT_EQ(height, region->height);
     EXPECT_EQ(stride, region->stride);
     EXPECT_EQ(pf, region->format);
+}
+
+TEST_F(AndroidClientBuffer, update_from_package_merges_fence_in_when_present)
+{
+    mga::NativeFence fake_fence{213};
+    EXPECT_CALL(*mock_native_buffer, update_usage(fake_fence, mga::BufferAccess::read))
+        .Times(1);
+    mcla::Buffer buffer(mock_registrar, package, pf);
+
+    package.data[0] = static_cast<int>(mga::BufferFlag::fenced);
+    package.fd[1] = fake_fence;
+    buffer.update_from(package);
+ 
+    package.data[0] = static_cast<int>(mga::BufferFlag::unfenced);
+    buffer.update_from(package);
 }
