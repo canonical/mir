@@ -54,6 +54,7 @@ mclm::NativeSurface::NativeSurface(ClientSurface& surface)
 }
 
 int mclm::NativeSurface::advance_buffer(MirBufferPackage* buffer_package)
+try
 {
     /*
      * At present dri2_create_mir_window_surface will trigger
@@ -72,19 +73,33 @@ int mclm::NativeSurface::advance_buffer(MirBufferPackage* buffer_package)
     memcpy(buffer_package, buffer_to_driver.get(), sizeof(MirBufferPackage));
     return MIR_MESA_TRUE;
 }
+catch (...)
+{
+    return MIR_MESA_FALSE;
+}
 
 int mclm::NativeSurface::get_parameters(MirSurfaceParameters* surface_parameters)
+try
 {
     auto params = surface.get_parameters();
     memcpy(surface_parameters, &params, sizeof(MirSurfaceParameters));
     return MIR_MESA_TRUE;
 }
+catch (...)
+{
+    return MIR_MESA_FALSE;
+}
 
 int mclm::NativeSurface::set_swapinterval(int interval)
+try
 {
     if ((interval < 0) || (interval > 1))
         return MIR_MESA_FALSE;
 
     surface.request_and_wait_for_configure(mir_surface_attrib_swapinterval, interval);
     return MIR_MESA_TRUE;
+}
+catch (...)
+{
+    return MIR_MESA_FALSE;
 }

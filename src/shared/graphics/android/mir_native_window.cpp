@@ -158,6 +158,7 @@ int mga::MirNativeWindow::setSwapInterval(int interval)
 }
 
 int mga::MirNativeWindow::dequeueBuffer(struct ANativeWindowBuffer** buffer_to_driver, int* fence_fd)
+try
 {
     auto buffer = driver_interpreter->driver_requests_buffer();
 
@@ -166,34 +167,59 @@ int mga::MirNativeWindow::dequeueBuffer(struct ANativeWindowBuffer** buffer_to_d
     *buffer_to_driver = buffer->anwb();
     return 0;
 }
+catch (...)
+{
+    return -1;
+}
 
 int mga::MirNativeWindow::dequeueBufferAndWait(struct ANativeWindowBuffer** buffer_to_driver)
+try
 {
     auto buffer = driver_interpreter->driver_requests_buffer();
     *buffer_to_driver = buffer->anwb();
     buffer->ensure_available_for(mga::BufferAccess::write);
     return 0;
 }
+catch (...)
+{
+    return -1;
+}
 
 int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, int fence)
+try
 {
     driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;
+}
+catch (...)
+{
+    return -1;
 }
 
 int mga::MirNativeWindow::cancelBuffer(struct ANativeWindowBuffer* buffer, int fence)
+try
 {
     driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;
 }
+catch (...)
+{
+    return -1;
+}
 
 int mga::MirNativeWindow::query(int key, int* value) const
+try
 {
     *value = driver_interpreter->driver_requests_info(key);
     return 0;
 }
+catch (...)
+{
+    return -1;
+}
 
 int mga::MirNativeWindow::perform(int key, va_list arg_list )
+try
 {
     int ret = 0;
     va_list args;
@@ -213,4 +239,7 @@ int mga::MirNativeWindow::perform(int key, va_list arg_list )
     va_end(args);
     return ret;
 }
-
+catch (...)
+{
+    return -1;
+}
