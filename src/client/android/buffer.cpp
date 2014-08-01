@@ -53,8 +53,7 @@ mcla::Buffer::Buffer(
     anwb->width =  static_cast<int32_t>(buffer_size.width.as_uint32_t());
     //note: mir uses stride in bytes, ANativeWindowBuffer needs it in pixel units. some drivers care
     //about byte-stride, they will pass stride via ANativeWindowBuffer::handle (which is opaque to us)
-    anwb->stride = stride.as_uint32_t() /
-                                   MIR_BYTES_PER_PIXEL(buffer_pf);
+    anwb->stride = stride.as_uint32_t() / MIR_BYTES_PER_PIXEL(buffer_pf);
     anwb->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
     anwb->handle = native_handle.get();
 

@@ -107,3 +107,11 @@ TEST_F(AndroidClientBuffer, produces_valid_anwb)
     anwb->common.incRef(&anwb->common);
     anwb->common.decRef(&anwb->common);
 }
+
+TEST_F(AndroidClientBuffer, returns_properties_from_constructor)
+{
+    mcla::Buffer buffer(mock_registrar, package, size, pf, stride);
+    EXPECT_EQ(size, buffer.size());
+    EXPECT_EQ(pf, buffer.pixel_format());
+    EXPECT_EQ(stride, buffer.stride());
+}
