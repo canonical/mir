@@ -60,6 +60,7 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
       . Building Mir outputs lots of warnings about Android logging functions
         in 3rd_party/ (LP: #1348467)
       . The "shared" code should be a shared library (LP: #1341502)
+      . Finish the removal of mirprotobuf library (LP: #1381133)
 
  -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Wed, 30 Jul 2014 16:35:00 +0300
 
