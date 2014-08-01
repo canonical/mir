@@ -12,7 +12,6 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
       . Added support for a common type for managing fd's.
       . Moved testdraw library to examples directory.
       . Added support for droping stale frames when a surface becomes exposed.
-    - libmirprotobuf folded into new libmircommon library.
     - Enhancements:
       . Split underlying data transport out of MirSocketRpcChannel.
       . Introduced two new client-side functions : mir_surface_get_focus and
@@ -28,6 +27,7 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
       . Added automated test cases for detecting ABI breakage.
       . examples/fingerpaint: Enable frame dropping so it's faster and more
         responsive.
+      . mirprotobuf folded into new libmircommon
     - Bugs fixed:
       . Mir servers crash with SIGABRT - assertion failed at
         buffer_queue.cpp:136 - "!pending_client_notifications.empty()"
@@ -60,7 +60,7 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
       . Building Mir outputs lots of warnings about Android logging functions
         in 3rd_party/ (LP: #1348467)
       . The "shared" code should be a shared library (LP: #1341502)
-      . Finish the removal of mirprotobuf library (LP: #1381133)
+      . Finish the removal of mirprotobuf library (LP: #1351133)
 
  -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Wed, 30 Jul 2014 16:35:00 +0300
 
