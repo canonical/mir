@@ -120,11 +120,11 @@ TEST_F(GrallocRegistrar, client_buffer_converts_stub_package)
     auto handle = buffer->handle();
     ASSERT_NE(nullptr, handle);
     ASSERT_EQ(stub_package.fd_items, handle->numFds);
-    ASSERT_EQ(stub_package.data_items, handle->numInts);
+    ASSERT_EQ(stub_package.data_items - 1, handle->numInts);
     for(auto i = 0; i < stub_package.fd_items; i++)
         EXPECT_EQ(stub_package.fd[i], handle->data[i]);
-    for(auto i = 0; i < stub_package.data_items; i++)
-        EXPECT_EQ(stub_package.data[i], handle->data[i + flag_offset + stub_package.fd_items]);
+    for(auto i = 0; i < stub_package.data_items - 1; i++)
+        EXPECT_EQ(stub_package.data[i + flag_offset], handle->data[i + stub_package.fd_items]);
 }
 
 TEST_F(GrallocRegistrar, client_sets_correct_version)
