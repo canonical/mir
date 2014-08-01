@@ -173,3 +173,8 @@ bool mga::HwcDevice::post_overlays(
     mir::Fd retire_fd(hwc_list.retirement_fence());
     return true;
 }
+
+void mga::HwcDevice::turned_screen_off()
+{
+    onscreen_overlay_buffers.clear();
+}
