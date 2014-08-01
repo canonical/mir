@@ -95,8 +95,10 @@ TEST_F(AndroidClientBuffer, update_from_package_merges_fence_in_when_present)
         .Times(1);
     mcla::Buffer buffer(mock_registrar, package, pf);
 
+    package.data_items = 1;
+    package.fd_items = 1;
     package.data[0] = static_cast<int>(mga::BufferFlag::fenced);
-    package.fd[1] = fake_fence;
+    package.fd[0] = fake_fence;
     buffer.update_from(package);
  
     package.data[0] = static_cast<int>(mga::BufferFlag::unfenced);
