@@ -31,7 +31,7 @@ void mir::frontend::ResourceCache::save_fd(
     mir::Fd const& fd)
 {
     std::lock_guard<std::mutex> lock(guard);
-    fd_resources.emplace(FdResources::value_type(key, fd));
+    fd_resources.emplace(key, fd);
 }
 
 void mir::frontend::ResourceCache::free_resource(google::protobuf::Message* key)
