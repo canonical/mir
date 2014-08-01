@@ -214,6 +214,7 @@ struct StubServerGenerator : public mt::StubServerTool
         native_handle_t const* native_handle = buf->handle();
         for(auto i=0; i<native_handle->numFds; i++)
             response->mutable_buffer()->add_fd(dup(native_handle->data[i]));
+        response->mutable_buffer()->add_data(static_cast<int>(mga::BufferFlag::unfenced));
         for(auto i=0; i < native_handle->numInts; i++)
             response->mutable_buffer()->add_data(native_handle->data[native_handle->numFds+i]);
 
@@ -246,6 +247,7 @@ struct StubServerGenerator : public mt::StubServerTool
 
         for(auto i=0; i<native_handle->numFds; i++)
             response->add_fd(dup(native_handle->data[i]));
+        response->add_data(static_cast<int>(mga::BufferFlag::unfenced));
         for(auto i=0; i<native_handle->numInts; i++)
             response->add_data(native_handle->data[native_handle->numFds+i]);
         done->Run();
