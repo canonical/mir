@@ -189,5 +189,5 @@ f62525771ca2612959ff88498883630458513235  include/platform/mir/graphics/gl_progr
 9f646fa12eaca5fc3b7a8fde6208673c071c8ef3  include/shared/mir/udev/wrapper.h
 b45f14082c4f8b29efaa1b13de795dcb29deb738  include/platform/mir/options/option.h
 1133726e66a246bd3988616e205e186278a64731  include/platform/mir/options/program_option.h
-5879da8056f9a4ff8960f586d27117c87b110b2a  include/platform/mir/options/default_configuration.h
+b798efa3ef1af5f3bf3ce291ca9c1ee735d5e83a  include/platform/mir/options/default_configuration.h
 3b5be510366571c992e0927cc5662af9b0611ae1  include/platform/mir/options/configuration.h
