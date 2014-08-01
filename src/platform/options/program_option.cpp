@@ -43,9 +43,17 @@ void mo::ProgramOption::parse_arguments(
     int argc,
     char const* argv[])
 {
+    auto parsed_command_line = po::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
     // TODO: Don't allow unregistered options, once we allow better overriding of option parsing
-    po::store(po::command_line_parser(argc, argv).options(desc).allow_unregistered().run(), options);
+    po::store(parsed_command_line, options);
     po::notify(options);
+
+    unparsed_tokens = collect_unrecognized(parsed_command_line.options, po::include_positional);
+}
+
+std::vector<std::string> mo::ProgramOption::unparsed_command_line() const
+{
+    return unparsed_tokens;
 }
 
 void mo::ProgramOption::parse_environment(
