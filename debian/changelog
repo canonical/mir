@@ -12,6 +12,7 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
       . Added support for a common type for managing fd's.
       . Moved testdraw library to examples directory.
       . Added support for droping stale frames when a surface becomes exposed.
+    - libmirprotobuf folded into new libmircommon library.
     - Enhancements:
       . Split underlying data transport out of MirSocketRpcChannel.
       . Introduced two new client-side functions : mir_surface_get_focus and
