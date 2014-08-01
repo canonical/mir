@@ -44,7 +44,6 @@ void mo::ProgramOption::parse_arguments(
     char const* argv[])
 {
     auto parsed_command_line = po::command_line_parser(argc, argv).options(desc).allow_unregistered().run();
-    // TODO: Don't allow unregistered options, once we allow better overriding of option parsing
     po::store(parsed_command_line, options);
     po::notify(options);
 
