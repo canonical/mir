@@ -42,16 +42,15 @@ set(
   test_macros.cpp
   test_stale_frames.cpp
   test_server_without_active_outputs.cpp
+  test_client_input.cpp
+  test_server_startup.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )
 
-list(APPEND SOURCES
-  test_client_input.cpp)
-
-list(APPEND SOURCES
-  test_server_startup.cpp
-)
+if (MIR_TEST_PLATFORM STREQUAL "mesa")
+  list(APPEND SOURCES test_symbols_required_by_mesa.cpp)
+endif()
 
 add_executable(
   mir_acceptance_tests
