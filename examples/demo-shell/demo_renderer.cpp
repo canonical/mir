@@ -24,6 +24,7 @@
 
 using namespace mir;
 using namespace mir::examples;
+using namespace mir::geometry;
 
 namespace
 {
@@ -138,7 +139,7 @@ GLuint generate_frame_corner_texture(float corner_radius,
 
 DemoRenderer::DemoRenderer(
     graphics::GLProgramFactory const& program_factory,
-    geometry::Rectangle const& display_area,
+    Rectangle const& display_area,
     compositor::DestinationAlpha dest_alpha,
     float const titlebar_height,
     float const shadow_radius) :
@@ -147,7 +148,7 @@ DemoRenderer::DemoRenderer(
         display_area,
         dest_alpha),
     titlebar_height{titlebar_height},
-    shadow_radius{shadow_radius}
+    shadow_radius{shadow_radius},
     corner_radius{0.5f}
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
@@ -305,5 +306,38 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
     titlebar.vertices[1] = {{inright, htop, 0.0f}, {1.0f, 0.0f}};
     titlebar.vertices[2] = {{inright, top,  0.0f}, {1.0f, 1.0f}};
     titlebar.vertices[3] = {{inleft,  top,  0.0f}, {1.0f, 1.0f}};
+}
+
+bool DemoRenderer::would_render_decorations_on(
+    graphics::RenderableList const& renderables,
+    Rectangle const& display_area) const
+{
+    for(auto const& r : renderables)
+    {
+        auto const& window = r->screen_position();
+        Height const full_height{2*shadow_radius + titlebar_height + window.size.height.as_int()}; 
+        Width const side_trim{shadow_radius};
+        Y const topmost_y{window.top_left.y.as_int() - shadow_radius - titlebar_height};
+        X const leftmost_x{window.top_left.x.as_int() - shadow_radius};
+        Rectangle const left{
+            Point{leftmost_x, topmost_y},
+            Size{side_trim, full_height}};
+        Rectangle const right{
+            Point{window.top_right().x, topmost_y},
+            Size{side_trim, full_height}};
+        Rectangle const bottom{
+            window.bottom_left(),
+            Size{window.size.width.as_int(), shadow_radius}};
+        Rectangle const top{
+            Point{window.top_left.x, topmost_y},
+            Size{window.size.width.as_int(), shadow_radius + titlebar_height}};
+
+        if (display_area.overlaps(left) ||
+            display_area.overlaps(right) ||
+            display_area.overlaps(top) ||
+            display_area.overlaps(bottom))
+            return true;
+    }
+    return false;
 }
 

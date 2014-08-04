@@ -17,22 +17,30 @@
  */
 
 #include "mir/graphics/renderable.h"
+#include "mir/compositor/destination_alpha.h"
 #include "mir_test_doubles/fake_renderable.h"
-#include "examples/demo-shell/demo_compositor.h"
+#include "mir_test_doubles/stub_gl_program_factory.h"
+#include "examples/demo-shell/demo_renderer.h"
 #include <gtest/gtest.h>
-
-#include <iostream>
 
 namespace mtd = mir::test::doubles;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace me = mir::examples;
+namespace mc = mir::compositor;
 
-TEST(DemoShadowDetection, detects_shadows_in_list)
+struct DemoRenderer : public testing::Test
 {
+    mtd::StubGLProgramFactory stub_factory;
+    geom::Rectangle region{{0, 0}, {100, 100}};
+    mc::DestinationAlpha dest_alpha{mc::DestinationAlpha::opaque};
     int const shadow_radius{20};
     int const titlebar_height{5};
-    geom::Rectangle region{{0, 0}, {100, 100}};
+};
+
+TEST_F(DemoRenderer, detects_shadows_in_list)
+{
+    me::DemoRenderer demo_renderer(stub_factory, region, dest_alpha, titlebar_height, shadow_radius);
 
     mg::RenderableList fullscreen_surface
         { std::make_shared<mtd::FakeRenderable>(region) };
@@ -49,12 +57,11 @@ TEST(DemoShadowDetection, detects_shadows_in_list)
     mg::RenderableList only_titlebar
         { std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 5}, {100, 95}}) };
 
-    EXPECT_TRUE(me::shadows_or_titlebar_in_region(top_shadow, region, shadow_radius, titlebar_height));
-    EXPECT_TRUE(me::shadows_or_titlebar_in_region(right_shadow, region, shadow_radius, titlebar_height));
-    EXPECT_TRUE(me::shadows_or_titlebar_in_region(bottom_shadow, region, shadow_radius, titlebar_height));
-    EXPECT_TRUE(me::shadows_or_titlebar_in_region(left_shadow, region, shadow_radius, titlebar_height));
-    EXPECT_TRUE(me::shadows_or_titlebar_in_region(only_titlebar, region, shadow_radius, titlebar_height));
-
-    EXPECT_FALSE(me::shadows_or_titlebar_in_region(fullscreen_surface, region, shadow_radius, titlebar_height));
-    EXPECT_FALSE(me::shadows_or_titlebar_in_region(oversized_surface, region, shadow_radius, titlebar_height));
+    EXPECT_TRUE(demo_renderer.would_render_decorations_on(top_shadow, region));
+    EXPECT_TRUE(demo_renderer.would_render_decorations_on(right_shadow, region));
+    EXPECT_TRUE(demo_renderer.would_render_decorations_on(bottom_shadow, region));
+    EXPECT_TRUE(demo_renderer.would_render_decorations_on(left_shadow, region));
+    EXPECT_TRUE(demo_renderer.would_render_decorations_on(only_titlebar, region));
+    EXPECT_FALSE(demo_renderer.would_render_decorations_on(fullscreen_surface, region));
+    EXPECT_FALSE(demo_renderer.would_render_decorations_on(oversized_surface, region));
 }

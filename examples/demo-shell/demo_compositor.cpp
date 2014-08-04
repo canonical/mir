@@ -36,41 +36,6 @@ mc::DestinationAlpha destination_alpha(mg::DisplayBuffer const& db)
 }
 }
 
-bool me::shadows_or_titlebar_in_region(
-    mg::RenderableList const& renderables,
-    geom::Rectangle const region,
-    unsigned int shadow_radius,
-    unsigned int titlebar_height)
-{
-    for(auto const& r : renderables)
-    {
-        auto const& window = r->screen_position();
-        geom::Height const full_height{2*shadow_radius + titlebar_height + window.size.height.as_int()}; 
-        geom::Width const side_trim{shadow_radius};
-        geom::Y const topmost_y{window.top_left.y.as_int() - shadow_radius - titlebar_height};
-        geom::X const leftmost_x{window.top_left.x.as_int() - shadow_radius};
-        geom::Rectangle const left{
-            geom::Point{leftmost_x, topmost_y},
-            geom::Size{side_trim, full_height}};
-        geom::Rectangle const right{
-            geom::Point{window.top_right().x, topmost_y},
-            geom::Size{side_trim, full_height}};
-        geom::Rectangle const bottom{
-            window.bottom_left(),
-            geom::Size{window.size.width.as_int(), shadow_radius}};
-        geom::Rectangle const top{
-            geom::Point{window.top_left.x, topmost_y},
-            geom::Size{window.size.width.as_int(), shadow_radius + titlebar_height}};
-
-        if (region.overlaps(left) ||
-            region.overlaps(right) ||
-            region.overlaps(top) ||
-            region.overlaps(bottom))
-            return true;
-    }
-    return false;
-}
-
 me::DemoCompositor::DemoCompositor(
     mg::DisplayBuffer& display_buffer,
     std::shared_ptr<mc::Scene> const& scene,
@@ -79,14 +44,12 @@ me::DemoCompositor::DemoCompositor(
     display_buffer(display_buffer),
     scene(scene),
     report(report),
-    titlebar_height(30),
-    shadow_radius(80),
     renderer(
         factory,
         display_buffer.view_area(),
         destination_alpha(display_buffer),
-        static_cast<float>(titlebar_height),
-        static_cast<float>(shadow_radius))
+        30.0f, //titlebar_height
+        80.0f) //shadow_radius
 {
 }
 
@@ -119,8 +82,7 @@ void me::DemoCompositor::composite()
 
     //if we are not adding additional draws to the renderlist (eg, shadows, titlebar), try to
     //use the optimized posting path.
-    if (!shadows_or_titlebar_in_region(
-            renderable_list, display_buffer.view_area(), shadow_radius, titlebar_height) && 
+    if (!renderer.would_render_decorations_on(renderable_list, display_buffer.view_area()) && 
         display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();

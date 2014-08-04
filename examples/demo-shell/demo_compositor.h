@@ -38,12 +38,6 @@ class DisplayBuffer;
 namespace examples
 {
 
-bool shadows_or_titlebar_in_region(
-    graphics::RenderableList const& renderables,
-    geometry::Rectangle const region,
-    unsigned int shadow_radius,
-    unsigned int titlebar_height);
-
 class DemoCompositor : public compositor::DisplayBufferCompositor
 {
 public:
@@ -60,8 +54,6 @@ private:
     graphics::DisplayBuffer& display_buffer;
     std::shared_ptr<compositor::Scene> const scene;
     std::shared_ptr<compositor::CompositorReport> const report;
-    int const titlebar_height;
-    int const shadow_radius;
     DemoRenderer renderer;
 };
 

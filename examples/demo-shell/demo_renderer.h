@@ -29,21 +29,29 @@ namespace examples
 class DemoRenderer : public compositor::GLRenderer
 {
 public:
-    DemoRenderer(graphics::GLProgramFactory const& factory, geometry::Rectangle const& display_area,
+    DemoRenderer(
+        graphics::GLProgramFactory const& factory,
+        geometry::Rectangle const& display_area,
         compositor::DestinationAlpha dest_alpha,
         float const titlebar_height,
         float const shadow_radius);
     ~DemoRenderer();
 
     void begin() const override;
-    void tessellate(std::vector<graphics::GLPrimitive>& primitives,
-                    graphics::Renderable const& renderable) const override;
-    void tessellate_shadow(std::vector<graphics::GLPrimitive>& primitives,
-                    graphics::Renderable const& renderable,
-                    float radius) const;
-    void tessellate_frame(std::vector<graphics::GLPrimitive>& primitives,
-                    graphics::Renderable const& renderable,
-                    float titlebar_height) const;
+    void tessellate(
+        std::vector<graphics::GLPrimitive>& primitives,
+        graphics::Renderable const& renderable) const override;
+    void tessellate_shadow(
+        std::vector<graphics::GLPrimitive>& primitives,
+        graphics::Renderable const& renderable,
+        float radius) const;
+    void tessellate_frame(
+        std::vector<graphics::GLPrimitive>& primitives,
+        graphics::Renderable const& renderable,
+        float titlebar_height) const;
+    bool would_render_decorations_on(
+        graphics::RenderableList const& list,
+        geometry::Rectangle const&) const;
 
 private:
     float const titlebar_height;
