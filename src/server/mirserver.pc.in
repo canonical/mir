@@ -7,4 +7,4 @@ Name: mirserver
 Description: Mir server library
 Version: @MIR_VERSION_MAJOR@.@MIR_VERSION_MINOR@.@MIR_VERSION_PATCH@
 Libs: -L@LIBDIR@ -lmirserver -lmirplatform -lmircommon -Wl,-rpath-link,@LIBDIR@
-Cflags: -I@PLATFORM_INCLUDEDIR@ -I@INCLUDEDIR@
+Cflags: -I@INCLUDEDIR@ -I@PLATFORM_INCLUDEDIR@ -I@COMMON_INCLUDEDIR@ 
