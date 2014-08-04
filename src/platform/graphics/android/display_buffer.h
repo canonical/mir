@@ -66,10 +66,8 @@ private:
     std::shared_ptr<ANativeWindow> const native_window;
     FramebufferGLContext gl_context;
     HWCFallbackGLRenderer overlay_program;
-    bool prepared;
     bool overlay_enabled;
     DisplayConfigurationOutput current_configuration;
-    MirOrientation rotation;
 };
 
 }

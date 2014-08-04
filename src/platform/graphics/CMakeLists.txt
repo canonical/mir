@@ -21,6 +21,8 @@ add_library(mirplatformgraphicscommon OBJECT
   ${GRAPHICS_SOURCES}
 )
 
+set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
+
 if (MIR_BUILD_PLATFORM_ANDROID)
   add_subdirectory(android/)
 endif()

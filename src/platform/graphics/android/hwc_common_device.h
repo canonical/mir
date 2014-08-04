@@ -60,7 +60,8 @@ protected:
 
 private:
     void turn_screen_on() const;
-    void turn_screen_off() const;
+    void turn_screen_off();
+    virtual void turned_screen_off();
 
     HWCCallbacks callbacks;
 
