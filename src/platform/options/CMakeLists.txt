@@ -5,8 +5,7 @@ set(
   default_configuration.cpp
 )
 
-add_library(
-  miroptions STATIC
+add_library(miroptions OBJECT
 
   ${CHOICE_SOURCES}
 )

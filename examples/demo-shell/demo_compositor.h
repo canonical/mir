@@ -60,6 +60,8 @@ private:
     graphics::DisplayBuffer& display_buffer;
     std::shared_ptr<compositor::Scene> const scene;
     std::shared_ptr<compositor::CompositorReport> const report;
+    int const titlebar_height;
+    int const shadow_radius;
     DemoRenderer renderer;
 };
 

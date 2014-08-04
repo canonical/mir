@@ -246,9 +246,14 @@ TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
         void tessellate(std::vector<mg::GLPrimitive>& primitives,
                         mg::Renderable const&) const override
         {
-            primitives.clear();
+            primitives.resize(num_primitives);
             for(GLuint i=0; i < num_primitives; i++)
-                primitives.push_back({0,i%2,{}});
+            {
+                auto& p = primitives[i];
+                p.type = 0;
+                p.tex_id = i % 2;
+                p.nvertices = 0;
+            }
         }
         unsigned int num_primitives; 
     };

@@ -24,20 +24,20 @@ mir::Fd::Fd() :
 {
 }
 
-mir::Fd::Fd(int other_fd) :
-    fd{other_fd}
+mir::Fd::Fd(int raw_fd) :
+    fd{new int{raw_fd},
+        [](int* fd)
+        {
+            if (!fd) return;
+            if (*fd > mir::Fd::invalid) ::close(*fd);
+            delete fd;
+        }} 
 {
 }
 
 mir::Fd::Fd(Fd&& other) :
-    fd{other.fd}
+    fd{std::move(other.fd)}
 {
-    other.fd = invalid;
-}
-
-mir::Fd::~Fd() noexcept
-{
-    if (fd > invalid) ::close(fd);
 }
 
 mir::Fd& mir::Fd::operator=(Fd other)
@@ -48,5 +48,6 @@ mir::Fd& mir::Fd::operator=(Fd other)
 
 mir::Fd::operator int() const
 {
-    return fd;
+    if (fd) return *fd;
+    return invalid;
 }

@@ -79,10 +79,14 @@ me::DemoCompositor::DemoCompositor(
     display_buffer(display_buffer),
     scene(scene),
     report(report),
+    titlebar_height(30),
+    shadow_radius(80),
     renderer(
         factory,
         display_buffer.view_area(),
-        destination_alpha(display_buffer))
+        destination_alpha(display_buffer),
+        static_cast<float>(titlebar_height),
+        static_cast<float>(shadow_radius))
 {
 }
 
@@ -113,8 +117,10 @@ void me::DemoCompositor::composite()
     report->began_frame(this);
     auto const& renderable_list = generate_renderables();
 
-    auto const& view_area = display_buffer.view_area();
-    if (!shadows_or_titlebar_in_region(renderable_list, view_area, 80, 30) && 
+    //if we are not adding additional draws to the renderlist (eg, shadows, titlebar), try to
+    //use the optimized posting path.
+    if (!shadows_or_titlebar_in_region(
+            renderable_list, display_buffer.view_area(), shadow_radius, titlebar_height) && 
         display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();

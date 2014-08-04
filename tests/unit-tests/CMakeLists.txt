@@ -5,7 +5,6 @@ add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordi
 include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${UMOCKDEV_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
 # TODO: Aim to remove
 include_directories(${MIR_XCURSOR_INCLUDE_DIRECTORIES})
-add_definitions("-DMIR_TESTING_XCURSOR_THEME=\"${CMAKE_CURRENT_SOURCE_DIR}/input/testing-cursor-theme\"")
 
 set(
   UNIT_TEST_SOURCES
@@ -20,6 +19,7 @@ set(
   test_thread_name.cpp
   test_default_emergency_cleanup.cpp
   test_basic_observers.cpp
+  test_fd.cpp
 )
 
 add_subdirectory(options/)
@@ -38,16 +38,17 @@ add_subdirectory(examples/)
 
 link_directories(${LIBRARY_OUTPUT_PATH})
 
-add_executable(mir_unit_tests ${UNIT_TEST_SOURCES})
+add_executable(mir_unit_tests 
+  ${UNIT_TEST_SOURCES}
+  $<TARGET_OBJECTS:mirclientobjects>
+)
+
 uses_android_input(mir_unit_tests)
 
 target_link_libraries(
   mir_unit_tests
 
-  mirclient
   mirserver
-  mirplatformgraphics
-  mirclientplatform
   mirdraw
   mirtestdraw
   demo-shell
@@ -66,7 +67,16 @@ target_link_libraries(
   ${Boost_LIBRARIES}
   ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+  ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
+  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
+
+if (MIR_TEST_PLATFORM STREQUAL "android")
+target_link_libraries(mir_unit_tests 
+  mirsharedandroid
+  ${ANDROID_PROPERTIES_LIBRARIES}
+)
+endif()
 
 # Umockdev uses glib, which uses the deprecated "register" allocation specifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")

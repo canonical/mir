@@ -30,7 +30,9 @@ class DemoRenderer : public compositor::GLRenderer
 {
 public:
     DemoRenderer(graphics::GLProgramFactory const& factory, geometry::Rectangle const& display_area,
-        compositor::DestinationAlpha dest_alpha);
+        compositor::DestinationAlpha dest_alpha,
+        float const titlebar_height,
+        float const shadow_radius);
     ~DemoRenderer();
 
     void begin() const override;
@@ -44,6 +46,8 @@ public:
                     float titlebar_height) const;
 
 private:
+    float const titlebar_height;
+    float const shadow_radius;
     float const corner_radius;
     GLuint shadow_corner_tex;
     GLuint titlebar_corner_tex;
