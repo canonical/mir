@@ -57,7 +57,10 @@ bool me::shadows_contained_in_region(
         if (region.contains(shadow_right) ||
             region.contains(shadow_bottom) ||
             region.contains(shadow_corner))
+        {
+            printf("ONSCREEN shadowns\n");
             return true;
+        }
     }
     return false;
 }
@@ -75,7 +78,10 @@ bool me::titlebar_contained_in_region(
             geom::Size{window.size.width.as_int(), titlebar_height}
         };
         if (region.contains(titlebar))
+        {
+            printf("ONSCREEN TITLES\n");
             return true;
+        }
     }
     return false; 
 }

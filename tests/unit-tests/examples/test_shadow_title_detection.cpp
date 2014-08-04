@@ -78,8 +78,13 @@ TEST(DemoTitleDetection, detects_titlebar_in_list)
     {
         std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 0}, {100, 100}})
     };
+    mg::RenderableList only_titlebar_visible
+    {
+        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 100}, {100, 10}})
+    };
 
     EXPECT_TRUE(me::titlebar_contained_in_region(titlebar, region, titlebar_height));
+    EXPECT_TRUE(me::titlebar_contained_in_region(only_titlebar_visible, region, titlebar_height));
     EXPECT_FALSE(me::titlebar_contained_in_region(offscreen_titlebar, region, titlebar_height));
     
 }
