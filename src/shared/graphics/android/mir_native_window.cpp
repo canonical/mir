@@ -20,6 +20,9 @@
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "mir/graphics/android/sync_fence.h"
 
+#include <iostream>
+#include <boost/exception/diagnostic_information.hpp> 
+
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
@@ -162,13 +165,15 @@ try
 {
     auto buffer = driver_interpreter->driver_requests_buffer();
 
-    //driver is responsible for closing this native handle
+    //EGL driver is responsible for closing this native handle
     *fence_fd = buffer->copy_fence();
     *buffer_to_driver = buffer->anwb();
     return 0;
 }
-catch (...)
+catch (std::exception const& e)
 {
+    std::cerr << "Caught exception at Mir/EGL driver boundary: "
+              << boost::diagnostic_information(e) << std::endl;
     return -1;
 }
 
@@ -180,8 +185,10 @@ try
     buffer->ensure_available_for(mga::BufferAccess::write);
     return 0;
 }
-catch (...)
+catch (std::exception const& e)
 {
+    std::cerr << "Caught exception at Mir/EGL driver boundary: "
+              << boost::diagnostic_information(e) << std::endl;
     return -1;
 }
 
@@ -191,8 +198,10 @@ try
     driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;
 }
-catch (...)
+catch (std::exception const& e)
 {
+    std::cerr << "Caught exception at Mir/EGL driver boundary: "
+              << boost::diagnostic_information(e) << std::endl;
     return -1;
 }
 
@@ -202,8 +211,10 @@ try
     driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;
 }
-catch (...)
+catch (std::exception const& e)
 {
+    std::cerr << "Caught exception at Mir/EGL driver boundary: "
+              << boost::diagnostic_information(e) << std::endl;
     return -1;
 }
 
@@ -213,8 +224,10 @@ try
     *value = driver_interpreter->driver_requests_info(key);
     return 0;
 }
-catch (...)
+catch (std::exception const& e)
 {
+    std::cerr << "Caught exception at Mir/EGL driver boundary: "
+              << boost::diagnostic_information(e) << std::endl;
     return -1;
 }
 
@@ -239,7 +252,9 @@ try
     va_end(args);
     return ret;
 }
-catch (...)
+catch (std::exception const& e)
 {
+    std::cerr << "Caught exception at Mir/EGL driver boundary: "
+              << boost::diagnostic_information(e) << std::endl;
     return -1;
 }
