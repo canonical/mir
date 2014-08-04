@@ -3,8 +3,9 @@ exec_prefix=@EXEC_PREFIX@
 libdir=@LIBDIR@
 includedir=@INCLUDEDIR@
 
-Name: mircommon
-Description: Mir common headers
+Name: libmircommon
+Description: Mir common library
 Version: @MIR_VERSION_MAJOR@.@MIR_VERSION_MINOR@.@MIR_VERSION_PATCH@
-Libs:
+Requires.private: protobuf >= 2.4.1
+Libs: -L@LIBDIR@ -lmircommon -lprotobuf
 Cflags: -I@INCLUDEDIR@

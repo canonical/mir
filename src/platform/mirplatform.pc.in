@@ -3,10 +3,9 @@ exec_prefix=@EXEC_PREFIX@
 libdir=@LIBDIR@
 includedir=@INCLUDEDIR@
 
-Name: mirserver
-Description: Mir server library
+Name: mirplatform
+Description: Mir platform library
 Version: @MIR_VERSION_MAJOR@.@MIR_VERSION_MINOR@.@MIR_VERSION_PATCH@
 Requires: mircommon
-Requires: mirplatform
-Libs: -L@LIBDIR@ -lmirserver -Wl,-rpath-link,@LIBDIR@
-Cflags: -I@PLATFORM_INCLUDEDIR@ -I@INCLUDEDIR@
+Libs: -L@LIBDIR@ -lmirplatform -lmircommon
+Cflags: -I@INCLUDEDIR@
