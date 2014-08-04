@@ -23,6 +23,7 @@
 #include "mir/compositor/scene.h"
 #include "mir/graphics/renderable.h"
 #include "demo_renderer.h"
+#include <tuple>
 
 namespace mir
 {
@@ -50,8 +51,6 @@ public:
     void composite() override;
 
 private:
-    graphics::RenderableList generate_renderables();
-    bool would_renderer_decorations(graphics::RenderableList const& list) const;
     graphics::DisplayBuffer& display_buffer;
     std::shared_ptr<compositor::Scene> const scene;
     std::shared_ptr<compositor::CompositorReport> const report;

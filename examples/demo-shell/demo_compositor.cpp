@@ -53,27 +53,21 @@ me::DemoCompositor::DemoCompositor(
 {
 }
 
-bool me::DemoCompositor::would_renderer_decorations(mg::RenderableList const& list) const
+void me::DemoCompositor::composite()
 {
-    for(auto const& r : list)
-        if (renderer.would_render_decorations_on(*r, display_buffer.view_area()))
-            return true;
-    return false;
-}
-
-mg::RenderableList me::DemoCompositor::generate_renderables()
-{
+    report->began_frame(this);
     //a simple filtering out of renderables that shouldn't be drawn
     //the elements should be notified if they are rendered or not
+    bool decorated{false};
     auto const& view_area = display_buffer.view_area();
     mg::RenderableList renderable_list;
     auto elements = scene->scene_elements_for(this);
     for(auto const& it : elements)
     {
-        auto const& renderable = it->renderable(); 
+        auto const& renderable = it->renderable();
+        auto this_decorated = renderer.would_render_decorations_on(*renderable, view_area);
         if (renderable->visible() &&
-           (view_area.overlaps(renderable->screen_position()) ||
-            renderer.would_render_decorations_on(*renderable, display_buffer.view_area())))
+           (view_area.overlaps(renderable->screen_position()) || this_decorated))
         {
             renderable_list.push_back(renderable);
             it->rendered_in(this);
@@ -82,16 +76,10 @@ mg::RenderableList me::DemoCompositor::generate_renderables()
         {
             it->occluded_in(this);
         }
+        decorated |= this_decorated;
     }
-    return renderable_list;
-}
 
-void me::DemoCompositor::composite()
-{
-    report->began_frame(this);
-    auto const& renderable_list = generate_renderables();
-
-    if (!would_renderer_decorations(renderable_list) && 
+    if (!decorated &&
         display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();
