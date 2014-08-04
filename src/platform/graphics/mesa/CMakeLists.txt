@@ -11,10 +11,7 @@ include_directories(
 string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 add_definitions(-D__GBM__)
 
-
-add_library(
-  mirplatformgraphicsmesa SHARED
-
+add_library(mirplatformgraphicsmesaobjects OBJECT
   platform.cpp
   buffer_allocator.cpp
   gbm_buffer.cpp
@@ -39,10 +36,15 @@ add_library(
   buffer_writer.cpp
 )
 
+add_library(mirplatformgraphicsmesa SHARED
+  $<TARGET_OBJECTS:mirplatformgraphicsmesaobjects>
+)
+
 set_target_properties(
   mirplatformgraphicsmesa PROPERTIES
   OUTPUT_NAME mirplatformgraphics
   LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/mesa
+  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
 target_link_libraries(
