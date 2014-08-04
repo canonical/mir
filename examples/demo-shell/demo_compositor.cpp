@@ -45,14 +45,16 @@ bool me::shadows_or_titlebar_in_region(
     for(auto const& r : renderables)
     {
         auto const& window = r->screen_position();
-        int height = window.size.height.as_int() + 2*shadow_radius + titlebar_height;
-        geom::Y topmost_y{window.top_left.y.as_int() - shadow_radius - titlebar_height};
+        geom::Height const full_height{2*shadow_radius + titlebar_height + window.size.height.as_int()}; 
+        geom::Width const side_trim{shadow_radius};
+        geom::Y const topmost_y{window.top_left.y.as_int() - shadow_radius - titlebar_height};
+        geom::X const leftmost_x{window.top_left.x.as_int() - shadow_radius};
         geom::Rectangle const left{
-            geom::Point{window.top_left.x.as_int() - shadow_radius, topmost_y},
-            geom::Size{shadow_radius, height}};
+            geom::Point{leftmost_x, topmost_y},
+            geom::Size{side_trim, full_height}};
         geom::Rectangle const right{
             geom::Point{window.top_right().x, topmost_y},
-            geom::Size{shadow_radius, height}};
+            geom::Size{side_trim, full_height}};
         geom::Rectangle const bottom{
             window.bottom_left(),
             geom::Size{window.size.width.as_int(), shadow_radius}};
