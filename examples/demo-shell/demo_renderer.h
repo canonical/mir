@@ -50,7 +50,7 @@ public:
         graphics::Renderable const& renderable,
         float titlebar_height) const;
     bool would_render_decorations_on(
-        graphics::RenderableList const& list,
+        graphics::Renderable const& renderable,
         geometry::Rectangle const&) const;
 
 private:

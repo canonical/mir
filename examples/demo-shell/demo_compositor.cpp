@@ -57,12 +57,15 @@ mg::RenderableList me::DemoCompositor::generate_renderables()
 {
     //a simple filtering out of renderables that shouldn't be drawn
     //the elements should be notified if they are rendered or not
+    auto const& view_area = display_buffer.view_area();
     mg::RenderableList renderable_list;
     auto elements = scene->scene_elements_for(this);
     for(auto const& it : elements)
     {
         auto const& renderable = it->renderable(); 
-        if (renderable->visible())
+        if (renderable->visible() &&
+            (view_area.contains(renderable->screen_position()) ||
+             renderer.would_render_decorations_on(*renderable, view_area)))
         {
             renderable_list.push_back(renderable);
             it->rendered_in(this);
@@ -80,10 +83,7 @@ void me::DemoCompositor::composite()
     report->began_frame(this);
     auto const& renderable_list = generate_renderables();
 
-    //if we are not adding additional draws to the renderlist (eg, shadows, titlebar), try to
-    //use the optimized posting path.
-    if (!renderer.would_render_decorations_on(renderable_list, display_buffer.view_area()) && 
-        display_buffer.post_renderables_if_optimizable(renderable_list))
+    if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();
         report->finished_frame(true, this);

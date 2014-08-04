@@ -20,17 +20,18 @@
 #include "mir/compositor/destination_alpha.h"
 #include "mir_test_doubles/fake_renderable.h"
 #include "mir_test_doubles/stub_gl_program_factory.h"
+#include "mir_test_doubles/mock_gl.h"
 #include "examples/demo-shell/demo_renderer.h"
 #include <gtest/gtest.h>
 
 namespace mtd = mir::test::doubles;
-namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace me = mir::examples;
 namespace mc = mir::compositor;
 
 struct DemoRenderer : public testing::Test
 {
+    testing::NiceMock<mtd::MockGL> mock_gl;
     mtd::StubGLProgramFactory stub_factory;
     geom::Rectangle region{{0, 0}, {100, 100}};
     mc::DestinationAlpha dest_alpha{mc::DestinationAlpha::opaque};
@@ -42,20 +43,13 @@ TEST_F(DemoRenderer, detects_shadows_in_list)
 {
     me::DemoRenderer demo_renderer(stub_factory, region, dest_alpha, titlebar_height, shadow_radius);
 
-    mg::RenderableList fullscreen_surface
-        { std::make_shared<mtd::FakeRenderable>(region) };
-    mg::RenderableList oversized_surface
-        { std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{-10, -10}, {120, 120}}) };
-    mg::RenderableList top_shadow
-        { std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 105}, {10, 10}}) };
-    mg::RenderableList right_shadow
-        { std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{-10, 0}, {10, 10}}) };
-    mg::RenderableList left_shadow
-        { std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{100, 0}, {10, 10}}) };
-    mg::RenderableList bottom_shadow
-        { std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{-10, 0}, {10, 10}}) };
-    mg::RenderableList only_titlebar
-        { std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 5}, {100, 95}}) };
+    mtd::FakeRenderable fullscreen_surface(region);
+    mtd::FakeRenderable oversized_surface(geom::Rectangle{{-10, -10}, {120, 120}});
+    mtd::FakeRenderable top_shadow(geom::Rectangle{{0, 105}, {10, 10}});
+    mtd::FakeRenderable right_shadow(geom::Rectangle{{-10, 0}, {10, 10}});
+    mtd::FakeRenderable left_shadow(geom::Rectangle{{100, 0}, {10, 10}});
+    mtd::FakeRenderable bottom_shadow(geom::Rectangle{{-10, 0}, {10, 10}});
+    mtd::FakeRenderable only_titlebar(geom::Rectangle{{0, 5}, {100, 95}});
 
     EXPECT_TRUE(demo_renderer.would_render_decorations_on(top_shadow, region));
     EXPECT_TRUE(demo_renderer.would_render_decorations_on(right_shadow, region));
