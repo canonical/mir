@@ -31,60 +31,30 @@ namespace me = mir::examples;
 TEST(DemoShadowDetection, detects_shadows_in_list)
 {
     int const shadow_radius{20};
-    geom::Rectangle region{{0, 0}, {100, 100}};
-
-    mg::RenderableList shadow_present 
-    {
-        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{10, 10}, {10, 10}})
-    };
-    mg::RenderableList shadow_not_present
-    {
-        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{90, 90}, {10, 10}})
-    };
-    mg::RenderableList oversized_surface
-    {
-        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{-10, -10}, {120, 120}})
-    };
-    mg::RenderableList right_shadow
-    {
-        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{10, 90}, {10, 10}})
-    };
-    mg::RenderableList bottom_shadow
-    {
-        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{90, 10}, {10, 10}})
-    };
-    mg::RenderableList corner_shadow
-    {
-        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{-8, -8}, {10, 10}})
-    };
-
-    EXPECT_TRUE(me::shadows_contained_in_region(shadow_present, region, shadow_radius));
-    EXPECT_TRUE(me::shadows_contained_in_region(right_shadow, region, shadow_radius));
-    EXPECT_TRUE(me::shadows_contained_in_region(bottom_shadow, region, shadow_radius));
-    EXPECT_TRUE(me::shadows_contained_in_region(corner_shadow, region, shadow_radius));
-    EXPECT_FALSE(me::shadows_contained_in_region(shadow_not_present, region, shadow_radius));
-    EXPECT_FALSE(me::shadows_contained_in_region(oversized_surface, region, shadow_radius));
-}
-
-TEST(DemoTitleDetection, detects_titlebar_in_list)
-{
-    geom::Rectangle region{{0, 0}, {100, 100}};
     int const titlebar_height{5};
-    mg::RenderableList titlebar
-    {
-        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{10, 10}, {10, 10}})
-    };
-    mg::RenderableList offscreen_titlebar
-    {
-        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 0}, {100, 100}})
-    };
-    mg::RenderableList only_titlebar_visible
-    {
-        std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 100}, {100, 10}})
-    };
+    geom::Rectangle region{{0, 0}, {100, 100}};
 
-    EXPECT_TRUE(me::titlebar_contained_in_region(titlebar, region, titlebar_height));
-    EXPECT_TRUE(me::titlebar_contained_in_region(only_titlebar_visible, region, titlebar_height));
-    EXPECT_FALSE(me::titlebar_contained_in_region(offscreen_titlebar, region, titlebar_height));
-    
+    mg::RenderableList fullscreen_surface
+        { std::make_shared<mtd::FakeRenderable>(region) };
+    mg::RenderableList oversized_surface
+        { std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{-10, -10}, {120, 120}}) };
+    mg::RenderableList top_shadow
+        { std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 105}, {10, 10}}) };
+    mg::RenderableList right_shadow
+        { std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{-10, 0}, {10, 10}}) };
+    mg::RenderableList left_shadow
+        { std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{100, 0}, {10, 10}}) };
+    mg::RenderableList bottom_shadow
+        { std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{-10, 0}, {10, 10}}) };
+    mg::RenderableList only_titlebar
+        { std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0, 5}, {100, 95}}) };
+
+    EXPECT_TRUE(me::shadows_or_titlebar_in_region(top_shadow, region, shadow_radius, titlebar_height));
+    EXPECT_TRUE(me::shadows_or_titlebar_in_region(right_shadow, region, shadow_radius, titlebar_height));
+    EXPECT_TRUE(me::shadows_or_titlebar_in_region(bottom_shadow, region, shadow_radius, titlebar_height));
+    EXPECT_TRUE(me::shadows_or_titlebar_in_region(left_shadow, region, shadow_radius, titlebar_height));
+    EXPECT_TRUE(me::shadows_or_titlebar_in_region(only_titlebar, region, titlebar_height));
+
+    EXPECT_FALSE(me::shadows_or_titlebar_in_region(fullscreen_surface, region, shadow_radius, titlebar_height));
+    EXPECT_FALSE(me::shadows_or_titlebar_in_region(oversized_surface, region, shadow_radius, titlebar_height));
 }

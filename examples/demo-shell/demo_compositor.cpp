@@ -36,54 +36,40 @@ mc::DestinationAlpha destination_alpha(mg::DisplayBuffer const& db)
 }
 }
 
-bool me::shadows_contained_in_region(
+bool me::shadows_or_titlebar_in_region(
     mg::RenderableList const& renderables,
     geom::Rectangle const region,
-    unsigned int shadow_radius)
+    unsigned int shadow_radius,
+    unsigned int titlebar_height)
 {
     for(auto const& r : renderables)
     {
         auto const& window = r->screen_position();
-        geom::Rectangle const shadow_right{
-            window.top_right(),
-            geom::Size{shadow_radius, window.size.height.as_int()}};
-        geom::Rectangle const shadow_bottom{
+        int height = window.size.height.as_int() + 2*shadow_radius + titlebar_height;
+        geom::Y topmost_y{window.top_left.y.as_int() - shadow_radius - titlebar_height};
+        geom::Rectangle const left{
+            geom::Point{window.top_left.x.as_int() - shadow_radius, topmost_y},
+            geom::Size{shadow_radius, height}};
+        geom::Rectangle const right{
+            geom::Point{window.top_right().x, topmost_y},
+            geom::Size{shadow_radius, height}};
+        geom::Rectangle const bottom{
             window.bottom_left(),
             geom::Size{window.size.width.as_int(), shadow_radius}};
-        geom::Rectangle const shadow_corner{
-            window.bottom_right(),
-            geom::Size{shadow_radius, shadow_radius}};
+        geom::Rectangle const top{
+            geom::Point{window.top_left.x, topmost_y},
+            geom::Size{window.size.width.as_int(), height}};
 
-        if (region.contains(shadow_right) ||
-            region.contains(shadow_bottom) ||
-            region.contains(shadow_corner))
+        if (region.overlaps(right) ||
+            region.overlaps(bottom) ||
+            region.overlaps(left) ||
+            region.overlaps(top))
         {
             printf("ONSCREEN shadowns\n");
             return true;
         }
     }
     return false;
-}
-
-bool me::titlebar_contained_in_region(
-    mg::RenderableList const& renderables,
-    geom::Rectangle const region,
-    unsigned int titlebar_height)
-{
-    for(auto const& r : renderables)
-    {
-        auto const& window = r->screen_position();
-        geom::Rectangle const titlebar{
-            geom::Point{(window.top_left.x.as_int() - titlebar_height), window.top_left.y},
-            geom::Size{window.size.width.as_int(), titlebar_height}
-        };
-        if (region.contains(titlebar))
-        {
-            printf("ONSCREEN TITLES\n");
-            return true;
-        }
-    }
-    return false; 
 }
 
 me::DemoCompositor::DemoCompositor(
@@ -129,8 +115,7 @@ void me::DemoCompositor::composite()
     auto const& renderable_list = generate_renderables();
 
     auto const& view_area = display_buffer.view_area();
-    if (!shadows_contained_in_region(renderable_list, view_area, 80) && 
-        !titlebar_contained_in_region(renderable_list, view_area, 30) &&
+    if (!shadows_or_titlebar_in_region(renderable_list, view_area, 80, 30) && 
         display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();
