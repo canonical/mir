@@ -52,6 +52,7 @@ public:
         RenderableListCompositor const& list_compositor);
 
 private:
+    void turned_screen_off() override;
     LayerList hwc_list;
     std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
 
