@@ -53,7 +53,7 @@ TEST(DemoShadowDetection, detects_shadows_in_list)
     EXPECT_TRUE(me::shadows_or_titlebar_in_region(right_shadow, region, shadow_radius, titlebar_height));
     EXPECT_TRUE(me::shadows_or_titlebar_in_region(bottom_shadow, region, shadow_radius, titlebar_height));
     EXPECT_TRUE(me::shadows_or_titlebar_in_region(left_shadow, region, shadow_radius, titlebar_height));
-    EXPECT_TRUE(me::shadows_or_titlebar_in_region(only_titlebar, region, titlebar_height));
+    EXPECT_TRUE(me::shadows_or_titlebar_in_region(only_titlebar, region, shadow_radius, titlebar_height));
 
     EXPECT_FALSE(me::shadows_or_titlebar_in_region(fullscreen_surface, region, shadow_radius, titlebar_height));
     EXPECT_FALSE(me::shadows_or_titlebar_in_region(oversized_surface, region, shadow_radius, titlebar_height));

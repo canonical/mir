@@ -58,16 +58,13 @@ bool me::shadows_or_titlebar_in_region(
             geom::Size{window.size.width.as_int(), shadow_radius}};
         geom::Rectangle const top{
             geom::Point{window.top_left.x, topmost_y},
-            geom::Size{window.size.width.as_int(), height}};
+            geom::Size{window.size.width.as_int(), shadow_radius + titlebar_height}};
 
-        if (region.overlaps(right) ||
-            region.overlaps(bottom) ||
-            region.overlaps(left) ||
-            region.overlaps(top))
-        {
-            printf("ONSCREEN shadowns\n");
+        if (region.overlaps(left) ||
+            region.overlaps(right) ||
+            region.overlaps(top) ||
+            region.overlaps(bottom))
             return true;
-        }
     }
     return false;
 }
