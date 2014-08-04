@@ -1,5 +1,7 @@
 include_directories(${PROJECT_SOURCE_DIR}/include/platform)
 
+set(MIRPLATFORM_ABI 1)
+
 add_library(
   mirplatform SHARED
   shared_library_loader.cpp
@@ -13,11 +15,18 @@ target_link_libraries(mirplatform
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
 
+set_target_properties(mirplatform
+  PROPERTIES
+  SOVERSION ${MIRPLATFORM_ABI}
+)
+
+
 install(TARGETS mirplatform LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 add_subdirectory(graphics/)
 add_subdirectory(options)
 
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirplatform")
 set(COMMON_INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mircommon")
 
 configure_file(
