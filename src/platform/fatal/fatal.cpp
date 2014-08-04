@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
- * Author: Alan Griffiths <alan@octopull.co.uk>
+ * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
 #include "mir/fatal.h"
