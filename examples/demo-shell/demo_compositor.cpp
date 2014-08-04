@@ -53,6 +53,14 @@ me::DemoCompositor::DemoCompositor(
 {
 }
 
+bool me::DemoCompositor::would_renderer_decorations(mg::RenderableList const& list) const
+{
+    for(auto const& r : list)
+        if (renderer.would_render_decorations_on(*r, display_buffer.view_area()))
+            return true;
+    return false;
+}
+
 mg::RenderableList me::DemoCompositor::generate_renderables()
 {
     //a simple filtering out of renderables that shouldn't be drawn
@@ -64,8 +72,8 @@ mg::RenderableList me::DemoCompositor::generate_renderables()
     {
         auto const& renderable = it->renderable(); 
         if (renderable->visible() &&
-            (view_area.contains(renderable->screen_position()) ||
-             renderer.would_render_decorations_on(*renderable, view_area)))
+           (view_area.overlaps(renderable->screen_position()) ||
+            renderer.would_render_decorations_on(*renderable, display_buffer.view_area())))
         {
             renderable_list.push_back(renderable);
             it->rendered_in(this);
@@ -83,7 +91,8 @@ void me::DemoCompositor::composite()
     report->began_frame(this);
     auto const& renderable_list = generate_renderables();
 
-    if (display_buffer.post_renderables_if_optimizable(renderable_list))
+    if (!would_renderer_decorations(renderable_list) && 
+        display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();
         report->finished_frame(true, this);
