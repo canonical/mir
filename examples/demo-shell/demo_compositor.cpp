@@ -121,7 +121,11 @@ void me::DemoCompositor::composite()
 {
     report->began_frame(this);
     auto const& renderable_list = generate_renderables();
-    if (display_buffer.post_renderables_if_optimizable(renderable_list))
+
+    auto const& view_area = display_buffer.view_area();
+    if (!shadows_contained_in_region(renderable_list, view_area, 80) && 
+        !titlebar_contained_in_region(renderable_list, view_area, 30) &&
+        display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();
         report->finished_frame(true, this);
