@@ -56,7 +56,7 @@ struct MockRenderable : public graphics::Renderable
     MOCK_CONST_METHOD0(visible, bool());
     MOCK_CONST_METHOD0(shaped, bool());
     MOCK_CONST_METHOD0(buffers_ready_for_compositor, int());
-    MOCK_CONST_METHOD0(should_be_decorated, bool());
+    MOCK_CONST_METHOD0(is_a_surface, bool());
 };
 }
 }

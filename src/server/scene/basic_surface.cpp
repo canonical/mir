@@ -670,7 +670,7 @@ public:
     
     // TODO: Update to use surface type or allow shell to make decision. More likely though
     // use a different model for decorations that ends in this function dissapearing.
-    bool should_be_decorated() const override
+    bool is_a_surface() const override
     { return true; }
 
 private:

@@ -82,7 +82,7 @@ public:
     /**
      * Returns whether the renderable should be drawn with decoration (frame, shadow).
      */
-    virtual bool should_be_decorated() const = 0;
+    virtual bool is_a_surface() const = 0;
 
 protected:
     Renderable() = default;

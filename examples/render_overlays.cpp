@@ -145,7 +145,7 @@ public:
         return true;
     }
 
-    bool should_be_decorated() const override
+    bool is_a_surface() const override
     {
         return false;
     }

@@ -91,7 +91,7 @@ public:
         return 1;
     }
     
-    bool should_be_decorated() const
+    bool is_a_surface() const
     {
         return false;
     }

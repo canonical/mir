@@ -178,7 +178,7 @@ void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
 {
     GLRenderer::tessellate(primitives, renderable);
     
-    if (renderable.should_be_decorated())
+    if (renderable.is_a_surface())
     {
         tessellate_shadow(primitives, renderable, 80.0f);
         tessellate_frame(primitives, renderable, 30.0f);
