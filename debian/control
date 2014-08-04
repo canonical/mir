@@ -130,8 +130,8 @@ Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirserver24 (= ${binary:Version}),
-         libmirprotobuf-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
+         libprotobuf-dev (>= 2.4.1),
          libglm-dev,
          libboost-program-options-dev,
          ${misc:Depends},
@@ -162,8 +162,8 @@ Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirclient8 (= ${binary:Version}),
-         libmirprotobuf-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
+         libprotobuf-dev (>= 2.4.1),
          ${misc:Depends},
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
