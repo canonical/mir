@@ -38,6 +38,15 @@ class DisplayBuffer;
 namespace examples
 {
 
+bool shadows_contained_in_region(
+    graphics::RenderableList const& renderables,
+    geometry::Rectangle const region,
+    unsigned int shadow_radius);
+bool titlebar_contained_in_region(
+    graphics::RenderableList const& renderables,
+    geometry::Rectangle const region,
+    unsigned int titlebar_height);
+
 class DemoCompositor : public compositor::DisplayBufferCompositor
 {
 public:

@@ -36,6 +36,50 @@ mc::DestinationAlpha destination_alpha(mg::DisplayBuffer const& db)
 }
 }
 
+bool me::shadows_contained_in_region(
+    mg::RenderableList const& renderables,
+    geom::Rectangle const region,
+    unsigned int shadow_radius)
+{
+    for(auto const& r : renderables)
+    {
+        auto const& window = r->screen_position();
+        geom::Rectangle const shadow_right{
+            window.top_right(),
+            geom::Size{shadow_radius, window.size.height.as_int()}};
+        geom::Rectangle const shadow_bottom{
+            window.bottom_left(),
+            geom::Size{window.size.width.as_int(), shadow_radius}};
+        geom::Rectangle const shadow_corner{
+            window.bottom_right(),
+            geom::Size{shadow_radius, shadow_radius}};
+
+        if (region.contains(shadow_right) ||
+            region.contains(shadow_bottom) ||
+            region.contains(shadow_corner))
+            return true;
+    }
+    return false;
+}
+
+bool me::titlebar_contained_in_region(
+    mg::RenderableList const& renderables,
+    geom::Rectangle const region,
+    unsigned int titlebar_height)
+{
+    for(auto const& r : renderables)
+    {
+        auto const& window = r->screen_position();
+        geom::Rectangle const titlebar{
+            geom::Point{(window.top_left.x.as_int() - titlebar_height), window.top_left.y},
+            geom::Size{window.size.width.as_int(), titlebar_height}
+        };
+        if (region.contains(titlebar))
+            return true;
+    }
+    return false; 
+}
+
 me::DemoCompositor::DemoCompositor(
     mg::DisplayBuffer& display_buffer,
     std::shared_ptr<mc::Scene> const& scene,

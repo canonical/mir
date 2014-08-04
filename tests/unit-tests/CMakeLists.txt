@@ -50,6 +50,7 @@ target_link_libraries(
   mirclientplatform
   mirdraw
   mirtestdraw
+  demo-shell
 
   mir-test
   mir-test-doubles

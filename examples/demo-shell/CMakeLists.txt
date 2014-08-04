@@ -1,4 +1,4 @@
-add_library(demo_shell STATIC
+add_library(demo-shell STATIC
   demo_compositor.cpp
   demo_renderer.cpp
   fullscreen_placement_strategy.cpp
@@ -11,7 +11,7 @@ add_executable(mir_demo_server_shell
 )
 
 target_link_libraries(mir_demo_server_shell
-  demo_shell
+  demo-shell
   mirserver
 )
 
