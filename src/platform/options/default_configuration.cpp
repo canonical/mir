@@ -65,14 +65,14 @@ char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
 mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
     DefaultConfiguration(
         argc, argv,
-        [](std::vector<char const*> const& unparsed_arguments)
+        [](int argc, char const* const* argv)
         {
-            if (!unparsed_arguments.empty())
+            if (argc)
             {
                 std::ostringstream help_text;
                 help_text << "Unknown command line options:";
-                for (auto const& opt : unparsed_arguments)
-                    help_text << ' ' << opt;
+                for (auto opt = argv; opt != argv+argc ; ++opt)
+                    help_text << ' ' << *opt;
                 BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
             }
         })
@@ -82,7 +82,7 @@ mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
 mo::DefaultConfiguration::DefaultConfiguration(
     int argc,
     char const* argv[],
-    std::function<void(std::vector<char const*> const& unparsed_arguments)> const& handler) :
+    std::function<void(int argc, char const* const* argv)> const& handler) :
     argc(argc),
     argv(argv),
     unparsed_arguments_handler{handler},
@@ -212,7 +212,7 @@ void mo::DefaultConfiguration::parse_arguments(
         std::vector<char const*> tokens;
         for (auto const& token : unparsed_arguments)
             tokens.push_back(token.c_str());
-        unparsed_arguments_handler(tokens);
+        unparsed_arguments_handler(tokens.size(), tokens.data());
 
         if (options.is_set("help"))
         {

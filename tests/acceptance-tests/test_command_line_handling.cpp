@@ -31,6 +31,14 @@ struct CommandLineHandling : Test
 {
     MOCK_METHOD1(callback, void(std::vector<char const*> const&));
 
+    std::function<void(int argc, char const* const* argv)> callback_functor =
+        [this](int argc, char const* const* argv)
+        {
+            // Copy to a vector as ElementsAre() is convenient for checking
+            std::vector<char const*> const copy{argv, argv+argc};
+            callback(copy);
+        };
+
     void invoke_parsing(mo::Configuration& config) { config.the_options(); }
 
 };
@@ -68,8 +76,7 @@ TEST_F(CommandLineHandling, valid_options_are_not_passed_to_callback)
 
     EXPECT_CALL(*this, callback(ElementsAre()));
 
-    mo::DefaultConfiguration config{argc, argv,
-        [this](std::vector<char const*> const& tokens) { callback(tokens); }};
+    mo::DefaultConfiguration config{argc, argv, callback_functor};
 
     invoke_parsing(config);
 }
@@ -83,8 +90,7 @@ TEST_F(CommandLineHandling, unrecognised_tokens_are_passed_to_callback)
 
     EXPECT_CALL(*this, callback(ElementsAre(StrEq("--hello"), StrEq("world"))));
 
-    mo::DefaultConfiguration config{argc, argv,
-        [this](std::vector<char const*> const& tokens) { callback(tokens); }};
+    mo::DefaultConfiguration config{argc, argv, callback_functor};
 
     invoke_parsing(config);
 }
