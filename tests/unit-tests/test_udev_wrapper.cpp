@@ -22,7 +22,6 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <stdexcept>
-#include <regex.h>
 #include <umockdev.h>
 #include <libudev.h>
 #include <poll.h>
@@ -259,15 +258,14 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
 
     devices.match_sysname("card[0-9]");
     devices.scan_devices();
-    regex_t regex;
-    int err = regcomp(&regex, ".*card[0-9].*", 0);
-    ASSERT_EQ(0, err);
     for (auto& device : devices)
     {
-        EXPECT_EQ(0, regexec(&regex, device.devpath(), 0, NULL, 0))
+        const char *start = strstr(device.devpath(), "card");
+        ASSERT_TRUE(start);
+        char num[32] = "";
+        EXPECT_EQ(1, sscanf(start, "card%31[0-9]", num))
             << "Unexpected device with devpath:" << device.devpath();
     }
-    regfree(&regex);
 }
 
 typedef UdevWrapperTest UdevWrapperDeathTest;
