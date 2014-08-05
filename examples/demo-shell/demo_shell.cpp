@@ -18,7 +18,7 @@
 
 /// \example demo_shell.cpp A simple mir shell
 
-#include "demo_renderer.h"
+#include "demo_compositor.h"
 #include "window_manager.h"
 #include "fullscreen_placement_strategy.h"
 #include "../server_configuration.h"
@@ -28,6 +28,8 @@
 #include "mir/report_exception.h"
 #include "mir/graphics/display.h"
 #include "mir/input/composite_event_filter.h"
+#include "mir/compositor/display_buffer_compositor_factory.h"
+#include "mir/compositor/destination_alpha.h"
 #include "mir/compositor/renderer_factory.h"
 #include "mir/shell/host_lifecycle_event_listener.h"
 
@@ -39,6 +41,7 @@ namespace mg = mir::graphics;
 namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace mo = mir::options;
+namespace mc = mir::compositor;
 namespace msh = mir::shell;
 
 namespace mir
@@ -46,22 +49,30 @@ namespace mir
 namespace examples
 {
 
-class DemoRendererFactory : public compositor::RendererFactory
+class DisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
 public:
-    DemoRendererFactory(std::shared_ptr<graphics::GLProgramFactory> const& gl_program_factory) :
-        gl_program_factory(gl_program_factory)
+    DisplayBufferCompositorFactory(
+        std::shared_ptr<mc::Scene> const& scene,
+        std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
+        std::shared_ptr<mc::CompositorReport> const& report) :
+        scene(scene),
+        gl_program_factory(gl_program_factory),
+        report(report)
     {
     }
 
-    std::unique_ptr<compositor::Renderer> create_renderer_for(
-        geometry::Rectangle const& rect,
-        mir::compositor::DestinationAlpha dest_alpha) override
+    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(
+        mg::DisplayBuffer& display_buffer) override
     {
-        return std::unique_ptr<compositor::Renderer>(new DemoRenderer(*gl_program_factory, rect, dest_alpha));
+        return std::unique_ptr<mc::DisplayBufferCompositor>(
+            new me::DemoCompositor{display_buffer, scene, *gl_program_factory, report});
     }
+
 private:
-    std::shared_ptr<graphics::GLProgramFactory> const gl_program_factory;
+    std::shared_ptr<mc::Scene> const scene;
+    std::shared_ptr<mg::GLProgramFactory> const gl_program_factory;
+    std::shared_ptr<mc::CompositorReport> const report;
 };
 
 class DemoServerConfiguration : public mir::examples::ServerConfiguration
@@ -84,6 +95,19 @@ public:
     {
     }
 
+
+    std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory()
+    {
+        return display_buffer_compositor_factory(
+            [this]()
+            {
+                return std::make_shared<me::DisplayBufferCompositorFactory>(
+                    the_scene(),
+                    the_gl_program_factory(),
+                    the_compositor_report());
+            });
+    }
+
     std::shared_ptr<ms::PlacementStrategy> the_placement_strategy() override
     {
         return shell_placement_strategy(
@@ -103,11 +127,6 @@ public:
             composite_filter->append(filter);
 
         return composite_filter;
-    }
-
-    std::shared_ptr<compositor::RendererFactory> the_renderer_factory() override
-    {
-        return std::make_shared<DemoRendererFactory>(the_gl_program_factory());
     }
 
     class NestedLifecycleEventListener : public msh::HostLifecycleEventListener
