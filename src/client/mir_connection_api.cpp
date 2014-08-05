@@ -119,9 +119,15 @@ public:
     }
 };
 
+mcl::MirConnectionAPI* mir_connection_api_impl_default()
+{
+    static DefaultMirConnectionAPI default_api;
+    return &default_api;
 }
 
-std::unique_ptr<mcl::MirConnectionAPI> mir_connection_api_impl{new DefaultMirConnectionAPI()};
+}
+
+mcl::MirConnectionAPI* mir_connection_api_impl{mir_connection_api_impl_default()};
 
 MirWaitHandle* mir_connect(
     char const* socket_file,

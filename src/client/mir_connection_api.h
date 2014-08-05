@@ -54,7 +54,6 @@ protected:
 }
 }
 
-//extern mir::client::MirConnectionAPI* mir_connection_api_impl;
-extern std::unique_ptr<mir::client::MirConnectionAPI> mir_connection_api_impl;
+extern "C" mir::client::MirConnectionAPI* mir_connection_api_impl;
 
 #endif

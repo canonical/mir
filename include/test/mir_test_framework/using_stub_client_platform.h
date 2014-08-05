@@ -42,7 +42,8 @@ private:
     UsingStubClientPlatform(UsingStubClientPlatform const&) = delete;
     UsingStubClientPlatform operator=(UsingStubClientPlatform const&) = delete;
 
-    std::unique_ptr<mir::client::MirConnectionAPI> prev_api;
+    mir::client::MirConnectionAPI* prev_api;
+    std::unique_ptr<mir::client::MirConnectionAPI> stub_api;
 };
 
 }

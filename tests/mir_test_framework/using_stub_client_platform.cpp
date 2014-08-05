@@ -61,14 +61,13 @@ private:
 }
 
 mtf::UsingStubClientPlatform::UsingStubClientPlatform()
-    : prev_api{std::move(mir_connection_api_impl)}
+    : prev_api{mir_connection_api_impl},
+      stub_api{new StubMirConnectionAPI{prev_api}}
 {
-    mir_connection_api_impl =
-        std::unique_ptr<mcl::MirConnectionAPI>{
-            new StubMirConnectionAPI{prev_api.get()}};
+    mir_connection_api_impl = stub_api.get();
 }
 
 mtf::UsingStubClientPlatform::~UsingStubClientPlatform()
 {
-    mir_connection_api_impl = std::move(prev_api);
+    mir_connection_api_impl = prev_api;
 }
