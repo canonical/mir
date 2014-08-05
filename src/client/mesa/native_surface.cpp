@@ -46,6 +46,12 @@ static int set_swapinterval_static(MirMesaEGLNativeSurface* surface, int interva
     auto s = static_cast<mclm::NativeSurface*>(surface);
     return s->set_swapinterval(interval);
 }
+
+void report_exception_at_driver_boundary(std::exception const& e)
+{
+    std::cerr << "Caught exception at Mir/EGL driver boundary: "
+              << boost::diagnostic_information(e) << std::endl;
+}
 }
 
 mclm::NativeSurface::NativeSurface(ClientSurface& surface)
@@ -78,8 +84,7 @@ try
 }
 catch (std::exception const& e)
 {
-    std::cerr << "Caught exception at Mir/EGL driver boundary: "
-              << boost::diagnostic_information(e) << std::endl;
+    report_exception_at_driver_boundary(e);
     return MIR_MESA_FALSE;
 }
 
@@ -92,8 +97,7 @@ try
 }
 catch (std::exception const& e)
 {
-    std::cerr << "Caught exception at Mir/EGL driver boundary: "
-              << boost::diagnostic_information(e) << std::endl;
+    report_exception_at_driver_boundary(e);
     return MIR_MESA_FALSE;
 }
 
@@ -108,7 +112,6 @@ try
 }
 catch (std::exception const& e)
 {
-    std::cerr << "Caught exception at Mir/EGL driver boundary: "
-              << boost::diagnostic_information(e) << std::endl;
+    report_exception_at_driver_boundary(e);
     return MIR_MESA_FALSE;
 }

@@ -29,7 +29,6 @@ namespace mga=mir::graphics::android;
 namespace
 {
 
-
 static int query_static(const ANativeWindow* anw, int key, int* value);
 static int perform_static(ANativeWindow* anw, int key, ...);
 static int setSwapInterval_static (struct ANativeWindow* window, int interval);
@@ -124,6 +123,12 @@ int cancelBuffer_static(struct ANativeWindow* window,
     return self->cancelBuffer(buffer, fence_fd);
 }
 
+void report_exception_at_driver_boundary(std::exception const& e)
+{
+    std::cerr << "Caught exception at Mir/EGL driver boundary: "
+              << boost::diagnostic_information(e) << std::endl;
+}
+
 }
 
 mga::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> const& interpreter)
@@ -172,8 +177,7 @@ try
 }
 catch (std::exception const& e)
 {
-    std::cerr << "Caught exception at Mir/EGL driver boundary: "
-              << boost::diagnostic_information(e) << std::endl;
+    report_exception_at_driver_boundary(e);
     return -1;
 }
 
@@ -187,8 +191,7 @@ try
 }
 catch (std::exception const& e)
 {
-    std::cerr << "Caught exception at Mir/EGL driver boundary: "
-              << boost::diagnostic_information(e) << std::endl;
+    report_exception_at_driver_boundary(e);
     return -1;
 }
 
@@ -200,8 +203,7 @@ try
 }
 catch (std::exception const& e)
 {
-    std::cerr << "Caught exception at Mir/EGL driver boundary: "
-              << boost::diagnostic_information(e) << std::endl;
+    report_exception_at_driver_boundary(e);
     return -1;
 }
 
@@ -213,8 +215,7 @@ try
 }
 catch (std::exception const& e)
 {
-    std::cerr << "Caught exception at Mir/EGL driver boundary: "
-              << boost::diagnostic_information(e) << std::endl;
+    report_exception_at_driver_boundary(e);
     return -1;
 }
 
@@ -226,8 +227,7 @@ try
 }
 catch (std::exception const& e)
 {
-    std::cerr << "Caught exception at Mir/EGL driver boundary: "
-              << boost::diagnostic_information(e) << std::endl;
+    report_exception_at_driver_boundary(e);
     return -1;
 }
 
@@ -254,7 +254,6 @@ try
 }
 catch (std::exception const& e)
 {
-    std::cerr << "Caught exception at Mir/EGL driver boundary: "
-              << boost::diagnostic_information(e) << std::endl;
+    report_exception_at_driver_boundary(e);
     return -1;
 }
