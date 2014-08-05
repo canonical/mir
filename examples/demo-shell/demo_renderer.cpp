@@ -308,7 +308,7 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
     titlebar.vertices[3] = {{inleft,  top,  0.0f}, {1.0f, 1.0f}};
 }
 
-bool DemoRenderer::would_render_decorations_on(
+bool DemoRenderer::would_embellish(
     graphics::Renderable const& renderable,
     Rectangle const& display_area) const
 {

@@ -39,7 +39,7 @@ struct DemoRenderer : public testing::Test
     int const titlebar_height{5};
 };
 
-TEST_F(DemoRenderer, detects_shadows_in_list)
+TEST_F(DemoRenderer, detects_embellishments_on_renderables)
 {
     me::DemoRenderer demo_renderer(stub_factory, region, dest_alpha, titlebar_height, shadow_radius);
 
@@ -51,11 +51,11 @@ TEST_F(DemoRenderer, detects_shadows_in_list)
     mtd::FakeRenderable bottom_shadow(geom::Rectangle{{-10, 0}, {10, 10}});
     mtd::FakeRenderable only_titlebar(geom::Rectangle{{0, 5}, {100, 95}});
 
-    EXPECT_TRUE(demo_renderer.would_render_decorations_on(top_shadow, region));
-    EXPECT_TRUE(demo_renderer.would_render_decorations_on(right_shadow, region));
-    EXPECT_TRUE(demo_renderer.would_render_decorations_on(bottom_shadow, region));
-    EXPECT_TRUE(demo_renderer.would_render_decorations_on(left_shadow, region));
-    EXPECT_TRUE(demo_renderer.would_render_decorations_on(only_titlebar, region));
-    EXPECT_FALSE(demo_renderer.would_render_decorations_on(fullscreen_surface, region));
-    EXPECT_FALSE(demo_renderer.would_render_decorations_on(oversized_surface, region));
+    EXPECT_TRUE(demo_renderer.would_embellish(top_shadow, region));
+    EXPECT_TRUE(demo_renderer.would_embellish(right_shadow, region));
+    EXPECT_TRUE(demo_renderer.would_embellish(bottom_shadow, region));
+    EXPECT_TRUE(demo_renderer.would_embellish(left_shadow, region));
+    EXPECT_TRUE(demo_renderer.would_embellish(only_titlebar, region));
+    EXPECT_FALSE(demo_renderer.would_embellish(fullscreen_surface, region));
+    EXPECT_FALSE(demo_renderer.would_embellish(oversized_surface, region));
 }

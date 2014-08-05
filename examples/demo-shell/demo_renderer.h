@@ -49,7 +49,7 @@ public:
         std::vector<graphics::GLPrimitive>& primitives,
         graphics::Renderable const& renderable,
         float titlebar_height) const;
-    bool would_render_decorations_on(
+    bool would_embellish(
         graphics::Renderable const& renderable,
         geometry::Rectangle const&) const;
 

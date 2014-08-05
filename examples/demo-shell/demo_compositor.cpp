@@ -58,16 +58,16 @@ void me::DemoCompositor::composite()
     report->began_frame(this);
     //a simple filtering out of renderables that shouldn't be drawn
     //the elements should be notified if they are rendered or not
-    bool decorated{false};
-    auto const& view_area = display_buffer.view_area();
+    bool nonrenderlist_elements{false};
     mg::RenderableList renderable_list;
     auto elements = scene->scene_elements_for(this);
     for(auto const& it : elements)
     {
         auto const& renderable = it->renderable();
-        auto this_decorated = renderer.would_render_decorations_on(*renderable, view_area);
-        if (renderable->visible() &&
-           (view_area.overlaps(renderable->screen_position()) || this_decorated))
+        auto const& view_area = display_buffer.view_area();
+        auto embellished = renderer.would_embellish(*renderable, view_area);
+        auto any_part_drawn = (view_area.overlaps(renderable->screen_position()) || embellished);
+        if (renderable->visible() && any_part_drawn)
         {
             renderable_list.push_back(renderable);
             it->rendered_in(this);
@@ -76,10 +76,10 @@ void me::DemoCompositor::composite()
         {
             it->occluded_in(this);
         }
-        decorated |= this_decorated;
+        nonrenderlist_elements |= embellished;
     }
 
-    if (!decorated &&
+    if (!nonrenderlist_elements &&
         display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();
