@@ -37,15 +37,12 @@ protected:
        
         std::string line;
         std::ofstream glmark2_output;
-        std::string score;
+        int score = -1;
         glmark2_output.open(output_filename);
         while (p.get_line(line))
         {
-            const char *start = strstr(line.c_str(), "glmark2 ");
-            ASSERT_TRUE(start);
-            char match[32] = "";
-            if (sscanf(start, " Score: %31[0-9]", match) == 1
-                && score.length() == 0)
+            int match;
+            if (sscanf(line.c_str(), " glmark2 Score: %d", &match) == 1)
             {
                 score = match;
             }
@@ -56,17 +53,15 @@ protected:
             }
         }
         
-        ASSERT_THAT(score.length(), ::testing::Gt(0u));
-
         auto const minimum_acceptable_score = 52;
-        EXPECT_THAT(stoi(score), ::testing::Ge(minimum_acceptable_score));
+        EXPECT_THAT(score, ::testing::Ge(minimum_acceptable_score));
 
         if (file_type == json)
         {
             std::string json =  "{";
                 json += "\"benchmark_name\":\"glmark2-es2-mir\"";
                 json += ",";
-                json += "\"score\":\"" + score + "\"";
+                json += "\"score\":\"" + std::to_string(score) + "\"";
                 json += "}";
             glmark2_output << json;
         }
