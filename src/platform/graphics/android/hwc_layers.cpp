@@ -171,3 +171,8 @@ void mga::HWCLayer::set_acquirefence_from(mg::Buffer const& buffer)
         hwc_layer->acquireFenceFd = native_buffer->copy_fence();
     }
 }
+
+bool mga::HWCLayer::buffer_check(Buffer const& buffer) const
+{
+    return (buffer.native_buffer_handle()->handle() == hwc_layer->handle);
+}

@@ -22,6 +22,7 @@
 #include "mir/graphics/android/native_buffer.h"
 #include "hwc_layerlist.h"
 
+#include <algorithm>
 #include <cstring>
 
 namespace mg=mir::graphics;
@@ -61,6 +62,7 @@ void mga::LayerList::update_list(RenderableList const& renderlist, size_t additi
 {
     size_t needed_size = renderlist.size() + additional_layers; 
 
+    auto old_rep = hwc_representation; 
     if ((!hwc_representation) || hwc_representation->numHwLayers != needed_size)
     {
         hwc_representation = generate_hwc_list(needed_size);
@@ -85,13 +87,23 @@ void mga::LayerList::update_list(RenderableList const& renderlist, size_t additi
         auto i = 0u;
         for(auto const& renderable : renderlist)
         {
+            //if the buffer handle is already present in the list, we must
+            //know not to copy the buffer fence
+            bool match{
+                std::count_if(layers.begin(), layers.end(),
+                [&renderable](HwcLayerEntry const& entry)
+                {
+                    return entry.layer.buffer_check(*renderable->buffer());
+
+                })== 0};
+
             new_layers.emplace_back(
                 mga::HWCLayer(
                     mga::LayerType::gl_rendered,
                     renderable->screen_position(),
                     renderable->alpha_enabled(),
                     *renderable->buffer(),
-                    hwc_representation, i++), true);
+                    hwc_representation, i++), match);
         }
 
         for(; i < needed_size; i++)
