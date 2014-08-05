@@ -262,8 +262,8 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
     {
         const char *start = strstr(device.devpath(), "card");
         ASSERT_TRUE(start);
-        char num[32] = "";
-        EXPECT_EQ(1, sscanf(start, "card%31[0-9]", num))
+        int num;
+        EXPECT_EQ(1, sscanf(start, "card%d", &num))
             << "Unexpected device with devpath:" << device.devpath();
     }
 }
