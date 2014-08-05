@@ -23,7 +23,6 @@
 #include "mir/compositor/scene.h"
 #include "mir/graphics/renderable.h"
 #include "demo_renderer.h"
-#include <tuple>
 
 namespace mir
 {
