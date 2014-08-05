@@ -63,7 +63,7 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
       . Finish the removal of mirprotobuf library (LP: #1351133)
       . Release overlay buffers when screen is turned off (LP: #1350961)
       . mir_demo_server_shell --disable-overlays false renders incorrectly
-        on android (LP: #1348330)
+        on android (partial fix for LP: #1348330)
 
  -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Wed, 30 Jul 2014 16:35:00 +0300
 
