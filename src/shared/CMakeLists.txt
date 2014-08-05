@@ -21,11 +21,6 @@ set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mircommon")
 
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/mircommon.pc.in
-  ${CMAKE_CURRENT_BINARY_DIR}/mircommon.pc
-)
-
 set(
   MIR_GENERATED_INCLUDE_DIRECTORIES
   ${MIR_GENERATED_INCLUDE_DIRECTORIES}
@@ -58,8 +53,4 @@ install(TARGETS mircommon LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/shared/mir ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit
   DESTINATION "include/mircommon"
-)
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mircommon.pc
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
