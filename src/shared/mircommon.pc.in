@@ -5,6 +5,6 @@ includedir=@INCLUDEDIR@
 
 Name: mircommon
 Description: Mir common headers
-Version: @MIR_VERSION_MAJOR@.@MIR_VERSION_MINOR@.@MIR_VERSION_PATCH@
+Version: @MIR_VERSION@
 Libs:
 Cflags: -I@INCLUDEDIR@

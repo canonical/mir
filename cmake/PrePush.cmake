@@ -63,7 +63,7 @@ add_custom_target(
 
   COMMAND rm -rf pre-push-build-area
   COMMAND mkdir pre-push-build-area
-  COMMAND bzr export --root mir-pre-push pre-push-build-area/mir_${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}.orig.tar.bz2 ${CMAKE_SOURCE_DIR}
+  COMMAND bzr export --root mir-pre-push pre-push-build-area/mir_${MIR_VERSION}.orig.tar.bz2 ${CMAKE_SOURCE_DIR}
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   COMMENT "Preparing source tarball for pre-push build & test"
 )
@@ -73,7 +73,7 @@ add_custom_target(
 #######################################################################
 add_custom_target(
   extract-pre-push-tarball
-  COMMAND tar -xf mir_${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH}.orig.tar.bz2
+  COMMAND tar -xf mir_${MIR_VERSION}.orig.tar.bz2
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/pre-push-build-area VERBATIM
 )
 
