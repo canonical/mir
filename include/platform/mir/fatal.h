@@ -20,6 +20,7 @@
  * stack trace to maximize the chances of it being readable.
  *
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ *         Alan Griffiths <alan@octopull.co.uk>
  */
 
 #ifndef MIR_FATAL_H_
