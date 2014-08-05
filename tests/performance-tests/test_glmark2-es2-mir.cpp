@@ -8,7 +8,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <boost/regex.hpp>
+#include <regex.h>
 #include <cstdlib>
 #include <cstdio>
 #include <fstream>
@@ -36,18 +36,22 @@ protected:
         auto const cmd = "MIR_SOCKET=" + new_connection() + " glmark2-es2-mir --fullscreen";
         mir::test::Popen p(cmd);
        
-        boost::cmatch matches;
-        boost::regex re_glmark2_score(".*glmark2\\s+Score:\\s+(\\d+).*");
+        regex_t re_glmark2_score;
+        int err = regcomp(&re_glmark2_score, ".*glmark2\\s+Score:\\s+(\\d+).*", 0);
+        ASSERT_EQ(0, err);
+
         std::string line;
         std::ofstream glmark2_output;
         std::string score;
         glmark2_output.open(output_filename);
         while (p.get_line(line))
         {
-            if(boost::regex_match(line.c_str(), matches, re_glmark2_score)
+            regmatch_t matches[2];
+            if (!regexec(&re_glmark2_score, line.c_str(), 2, matches, 0)
                 && score.length() == 0)
             {
-                score = matches[1];
+                score = line.substr(matches[1].rm_so,
+                                    matches[1].rm_eo - matches[1].rm_so);
             }
 
             if (file_type == raw)
@@ -55,6 +59,7 @@ protected:
                 glmark2_output << line << std::endl;
             }
         }
+        regfree(&re_glmark2_score);
         
         ASSERT_THAT(score.length(), ::testing::Gt(0u));
 
