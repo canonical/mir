@@ -536,10 +536,10 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
 
     server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
-            server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position(abs_touch_x_1, abs_touch_y_1));
+            server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position({abs_touch_x_1, abs_touch_y_1}));
             // Sleep here to trigger more failures (simulate slow machine)
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position(abs_touch_x_2, abs_touch_y_2));
+            server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position({abs_touch_x_2, abs_touch_y_2}));
         };
     server_configuration.client_geometries[arbitrary_client_name] = ServerConfiguration::display_bounds;
     start_server();

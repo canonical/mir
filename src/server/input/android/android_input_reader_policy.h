@@ -28,6 +28,8 @@ namespace input
 {
 class CursorListener;
 class InputRegion;
+class TouchVisualizer;
+
 namespace android
 {
 
@@ -35,7 +37,8 @@ class InputReaderPolicy : public RudimentaryInputReaderPolicy
 {
 public:
     explicit InputReaderPolicy(std::shared_ptr<InputRegion> const& input_region,
-                               std::shared_ptr<CursorListener> const& cursor_listener);
+                               std::shared_ptr<CursorListener> const& cursor_listener,
+                               std::shared_ptr<TouchVisualizer> const& touch_visualizer);
 
     virtual ~InputReaderPolicy() {}
 

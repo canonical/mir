@@ -26,9 +26,10 @@ namespace mi = mir::input;
 namespace mia = mir::input::android;
 
 mia::InputReaderPolicy::InputReaderPolicy(std::shared_ptr<mi::InputRegion> const& input_region,
-    std::shared_ptr<CursorListener> const& cursor_listener)
+                                          std::shared_ptr<CursorListener> const& cursor_listener,
+                                          std::shared_ptr<TouchVisualizer> const& touch_visualizer)
     : input_region(input_region),
-      pointer_controller(new mia::PointerController(input_region, cursor_listener))
+      pointer_controller(new mia::PointerController(input_region, cursor_listener, touch_visualizer))
 {
 }
 
@@ -50,6 +51,10 @@ void mia::InputReaderPolicy::getReaderConfiguration(droidinput::InputReaderConfi
         default_display_orientation);
 
     out_config->pointerVelocityControlParameters.acceleration = 1.0;
+    
+    // This only enables passing through the touch coordinates from the InputReader to the TouchVisualizer
+    // the touch visualizer still decides whether or not to render anything.
+    out_config->showTouches = true;
 }
 
 droidinput::sp<droidinput::PointerControllerInterface> mia::InputReaderPolicy::obtainPointerController(int32_t /*device_id*/)
