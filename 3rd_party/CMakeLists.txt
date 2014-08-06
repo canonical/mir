@@ -11,6 +11,7 @@ add_library(
   3rd_party 
 
   ${MIR_3RD_PARTY_SOURCES}
+  $<TARGET_OBJECTS:xcursorloader>
 )
 
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES} PARENT_SCOPE)
@@ -38,5 +39,4 @@ target_link_libraries(
   3rd_party
 
   android-input
-  xcursorloader
 )

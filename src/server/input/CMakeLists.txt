@@ -24,9 +24,6 @@ add_library(
   mirinput STATIC
 
   ${INPUT_SOURCES}
+  $<TARGET_OBJECTS:xcursorloader>
 )
 uses_android_input(mirinput)
-target_link_libraries(
-  mirinput
-  xcursorloader
-)
