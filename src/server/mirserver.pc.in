@@ -7,4 +7,5 @@ Name: mirserver
 Description: Mir server library
 Version: @MIR_VERSION@
 Requires: mirplatform
-Libs: -L@LIBDIR@ -lmirserver -Wl,-rpath-link,@LIBDIR@
+Libs: -L@LIBDIR@ -lmirserver
+Cflags: -I@INCLUDEDIR@
