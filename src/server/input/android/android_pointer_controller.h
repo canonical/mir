@@ -30,22 +30,27 @@ namespace mir
 {
 namespace input
 {
+class TouchVisualizer;
 class InputRegion;
+
 namespace android
 {
 class PointerController : public DummyPointerController
 {
   public:
-    explicit PointerController(std::shared_ptr<InputRegion> const& input_region);
     explicit PointerController(std::shared_ptr<InputRegion> const& input_region,
-                               std::shared_ptr<CursorListener> const& cursor_listener);
+        std::shared_ptr<CursorListener> const& cursor_listener,
+        std::shared_ptr<TouchVisualizer> const& touch_visualizer);
 
-    virtual bool getBounds(float* out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const;
-    virtual void move(float delta_x, float delta_y);
-    virtual void setButtonState(int32_t button_state);
-    virtual int32_t getButtonState() const;
-    virtual void setPosition(float x, float y);
-    virtual void getPosition(float *out_x, float *out_y) const;
+    bool getBounds(float* out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const;
+    void move(float delta_x, float delta_y);
+    void setButtonState(int32_t button_state);
+    int32_t getButtonState() const;
+    void setPosition(float x, float y);
+    void getPosition(float *out_x, float *out_y) const;
+
+    void setSpots(const droidinput::PointerCoords* spot_coords, uint32_t spot_count);
+    void clearSpots();
 
   private:
     bool get_bounds_locked(float *out_min_x, float* out_min_y, float* out_max_x, float* out_max_y) const;
@@ -57,6 +62,7 @@ class PointerController : public DummyPointerController
 
     std::shared_ptr<InputRegion> const input_region;
     std::shared_ptr<CursorListener> cursor_listener;
+    std::shared_ptr<TouchVisualizer> const touch_visualizer;
 };
 }
 }

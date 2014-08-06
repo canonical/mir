@@ -5,8 +5,6 @@ includedir=@INCLUDEDIR@
 
 Name: mirserver
 Description: Mir server library
-Version: @MIR_VERSION_MAJOR@.@MIR_VERSION_MINOR@.@MIR_VERSION_PATCH@
-Requires.private: protobuf >= 2.4.1
-Requires: mircommon
-Libs: -L@LIBDIR@ -lmirserver -Wl,-rpath-link,@LIBDIR@
-Cflags: -I@PLATFORM_INCLUDEDIR@ -I@INCLUDEDIR@
+Version: @MIR_VERSION@
+Libs: -L@LIBDIR@ -lmirserver -lmirplatform -lmircommon -Wl,-rpath-link,@LIBDIR@
+Cflags: -I@INCLUDEDIR@ -I@PLATFORM_INCLUDEDIR@ -I@COMMON_INCLUDEDIR@ 
