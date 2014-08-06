@@ -146,7 +146,9 @@ bool mga::HwcDevice::post_overlays(
             auto buffer = renderable->buffer();
             if (onscreen_overlay_buffers.end() == 
                 std::find(onscreen_overlay_buffers.begin(), onscreen_overlay_buffers.end(), buffer))
+            {
                 it->layer.set_acquirefence_from(*buffer);
+            }
             next_onscreen_overlay_buffers.push_back(buffer);
         }
         it++;
