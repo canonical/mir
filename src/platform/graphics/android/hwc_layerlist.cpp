@@ -22,7 +22,6 @@
 #include "mir/graphics/android/native_buffer.h"
 #include "hwc_layerlist.h"
 
-#include <algorithm>
 #include <cstring>
 
 namespace mg=mir::graphics;
@@ -58,25 +57,14 @@ mga::HwcLayerEntry::HwcLayerEntry(HWCLayer && layer, bool needs_commit) :
 {
 }
 
-
-//IF
-//  1) list reordered
-//  2) list size changed
-//  3) any list element position updated
-//  4) any list buffer updated
-//THEN
-//  allow commit
-
-//IF
-//  1) list element has been committed
-//THEN
-//  do not copy fence
-
 void mga::LayerList::update_list(RenderableList const& renderlist, size_t additional_layers)
 {
     size_t needed_size = renderlist.size() + additional_layers; 
-    if (hwc_representation->numHwLayers != needed_size)
+
+    if ((!hwc_representation) || hwc_representation->numHwLayers != needed_size)
+    {
         hwc_representation = generate_hwc_list(needed_size);
+    }
 
     if (layers.size() == needed_size)
     {
@@ -151,8 +139,7 @@ mga::NativeFence mga::LayerList::retirement_fence()
 
 mga::LayerList::LayerList(
     RenderableList const& renderlist,
-    size_t additional_layers) :
-    hwc_representation(generate_hwc_list(0))
+    size_t additional_layers)
 {
     update_list(renderlist, additional_layers);
 }

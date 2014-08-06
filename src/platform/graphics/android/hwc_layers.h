@@ -72,12 +72,8 @@ public:
         bool alpha_enabled,
         Buffer const& buffer);
     bool needs_gl_render() const;
-
     void set_acquirefence_from(Buffer const& buffer);
     void update_from_releasefence(Buffer const& buffer);
-
-    bool buffer_check(Buffer const& buffer) const;
-
 private:
     hwc_layer_1_t* hwc_layer;
     std::shared_ptr<hwc_display_contents_1_t> hwc_list;
