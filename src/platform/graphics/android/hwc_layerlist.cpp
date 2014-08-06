@@ -58,15 +58,25 @@ mga::HwcLayerEntry::HwcLayerEntry(HWCLayer && layer, bool needs_commit) :
 {
 }
 
+
+//IF
+//  1) list reordered
+//  2) list size changed
+//  3) any list element position updated
+//  4) any list buffer updated
+//THEN
+//  allow commit
+
+//IF
+//  1) list element has been committed
+//THEN
+//  do not copy fence
+
 void mga::LayerList::update_list(RenderableList const& renderlist, size_t additional_layers)
 {
     size_t needed_size = renderlist.size() + additional_layers; 
-
-    auto old_rep = hwc_representation; 
-    if ((!hwc_representation) || hwc_representation->numHwLayers != needed_size)
-    {
+    if (hwc_representation->numHwLayers != needed_size)
         hwc_representation = generate_hwc_list(needed_size);
-    }
 
     if (layers.size() == needed_size)
     {
@@ -87,23 +97,13 @@ void mga::LayerList::update_list(RenderableList const& renderlist, size_t additi
         auto i = 0u;
         for(auto const& renderable : renderlist)
         {
-            //if the buffer handle is already present in the list, we must
-            //know not to copy the buffer fence
-            bool match{
-                std::count_if(layers.begin(), layers.end(),
-                [&renderable](HwcLayerEntry const& entry)
-                {
-                    return entry.layer.buffer_check(*renderable->buffer());
-
-                })== 0};
-
             new_layers.emplace_back(
                 mga::HWCLayer(
                     mga::LayerType::gl_rendered,
                     renderable->screen_position(),
                     renderable->alpha_enabled(),
                     *renderable->buffer(),
-                    hwc_representation, i++), match);
+                    hwc_representation, i++), true);
         }
 
         for(; i < needed_size; i++)
@@ -151,7 +151,8 @@ mga::NativeFence mga::LayerList::retirement_fence()
 
 mga::LayerList::LayerList(
     RenderableList const& renderlist,
-    size_t additional_layers)
+    size_t additional_layers) :
+    hwc_representation(generate_hwc_list(0))
 {
     update_list(renderlist, additional_layers);
 }

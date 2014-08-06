@@ -26,6 +26,7 @@
 #include "buffer.h"
 #include "hwc_fallback_gl_renderer.h"
 #include <limits>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
@@ -142,9 +143,11 @@ bool mga::HwcDevice::post_overlays(
         }
         else
         {
-            if (it->needs_commit)
-                it->layer.set_acquirefence_from(*renderable->buffer());
-            next_onscreen_overlay_buffers.push_back(renderable->buffer());
+            auto buffer = renderable->buffer();
+            if (onscreen_overlay_buffers.end() == 
+                std::find(onscreen_overlay_buffers.begin(), onscreen_overlay_buffers.end(), buffer))
+                it->layer.set_acquirefence_from(*buffer);
+            next_onscreen_overlay_buffers.push_back(buffer);
         }
         it++;
     }
