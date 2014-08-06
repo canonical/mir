@@ -8,7 +8,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <boost/regex.hpp>
 #include <cstdlib>
 #include <cstdio>
 #include <fstream>
@@ -36,18 +35,16 @@ protected:
         auto const cmd = "MIR_SOCKET=" + new_connection() + " glmark2-es2-mir --fullscreen";
         mir::test::Popen p(cmd);
        
-        boost::cmatch matches;
-        boost::regex re_glmark2_score(".*glmark2\\s+Score:\\s+(\\d+).*");
         std::string line;
         std::ofstream glmark2_output;
-        std::string score;
+        int score = -1;
         glmark2_output.open(output_filename);
         while (p.get_line(line))
         {
-            if(boost::regex_match(line.c_str(), matches, re_glmark2_score)
-                && score.length() == 0)
+            int match;
+            if (sscanf(line.c_str(), " glmark2 Score: %d", &match) == 1)
             {
-                score = matches[1];
+                score = match;
             }
 
             if (file_type == raw)
@@ -56,17 +53,15 @@ protected:
             }
         }
         
-        ASSERT_THAT(score.length(), ::testing::Gt(0u));
-
         auto const minimum_acceptable_score = 52;
-        EXPECT_THAT(stoi(score), ::testing::Ge(minimum_acceptable_score));
+        EXPECT_THAT(score, ::testing::Ge(minimum_acceptable_score));
 
         if (file_type == json)
         {
             std::string json =  "{";
                 json += "\"benchmark_name\":\"glmark2-es2-mir\"";
                 json += ",";
-                json += "\"score\":\"" + score + "\"";
+                json += "\"score\":\"" + std::to_string(score) + "\"";
                 json += "}";
             glmark2_output << json;
         }
