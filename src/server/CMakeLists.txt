@@ -39,17 +39,19 @@ set(MIRSERVER_LINKAGE SHARED)
 add_library(mirserver ${MIRSERVER_LINKAGE}
   ${SRCS}
   $<TARGET_OBJECTS:mirinput>
+  $<TARGET_OBJECTS:mirscene>
+  $<TARGET_OBJECTS:mircompositor>
+  $<TARGET_OBJECTS:mirgraphics>
+  $<TARGET_OBJECTS:mirfrontend>
+  $<TARGET_OBJECTS:mirshell>
+  $<TARGET_OBJECTS:mirtime>
+  $<TARGET_OBJECTS:mirlttng>
+  $<TARGET_OBJECTS:mirreport>
+  $<TARGET_OBJECTS:mirlogging>
+  $<TARGET_OBJECTS:mirnullreport>
 )
 
 list(APPEND MIRSERVER_ARCHIVES
-  mircompositor
-  mirfrontend
-  mirgraphics
-  mirshell
-  mirscene
-  mirtime
-  mirlttng
-  mirreport
   mirlogger
   mirnestedgraphics
   miroffscreengraphics
@@ -60,6 +62,8 @@ list(APPEND MIRSERVER_LINKS
   mirclient
   mircommon
   3rd_party
+  ${GLog_LIBRARY}
+  ${GFlags_LIBRARY}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
