@@ -19,6 +19,8 @@
 #ifndef MIR_TEST_EVENT_FACTORY_H
 #define MIR_TEST_EVENT_FACTORY_H
 
+#include "mir/geometry/point.h"
+
 namespace mir
 {
 namespace input
@@ -78,13 +80,22 @@ MotionParameters a_motion_event();
 class TouchParameters
 {
 public:
+    enum class Action
+    {
+        Tap = 0,
+        Move,
+        Release
+    };
+
     TouchParameters();
     TouchParameters& from_device(int device_id);
-    TouchParameters& at_position(int abs_x, int abs_y);
+    TouchParameters& at_position(geometry::Point abs_pos);
+    TouchParameters& with_action(Action touch_action);
     
     int device_id;
     int abs_x;
     int abs_y;
+    Action action;
 };
 TouchParameters a_touch_event();
 

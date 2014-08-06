@@ -17,6 +17,7 @@
  */
 
 #include "mir_test_doubles/mock_input_region.h"
+#include "mir_test_doubles/stub_touch_visualizer.h"
 #include "mir_test/fake_shared.h"
 
 #include "src/server/input/android/android_input_reader_policy.h"
@@ -45,7 +46,8 @@ public:
     {
         reader_policy = std::make_shared<mia::InputReaderPolicy>(
             mt::fake_shared(input_region),
-            std::shared_ptr<mi::CursorListener>());
+            std::shared_ptr<mi::CursorListener>(),
+            std::make_shared<mtd::StubTouchVisualizer>());
 
         ON_CALL(input_region, bounding_rectangle()).WillByDefault(Return(default_view_area));
     }

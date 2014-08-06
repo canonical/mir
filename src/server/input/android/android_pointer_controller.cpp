@@ -17,6 +17,7 @@
  */
 
 #include "mir/input/input_region.h"
+#include "mir/input/touch_visualizer.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/point.h"
 
@@ -29,24 +30,15 @@ namespace mia = mi::android;
 namespace geom = mir::geometry;
 
 mia::PointerController::PointerController(
-    std::shared_ptr<mi::InputRegion> const& input_region)
-        : state(0),
-          x(0.0),
-          y(0.0),
-          input_region(input_region),
-          cursor_listener(std::shared_ptr<mi::CursorListener>())
-{
-}
-
-mia::PointerController::PointerController(
     std::shared_ptr<mi::InputRegion> const& input_region,
-    std::shared_ptr<mi::CursorListener> const& cursor_listener)
+    std::shared_ptr<mi::CursorListener> const& cursor_listener,
+    std::shared_ptr<mi::TouchVisualizer> const& touch_visualizer)
         : state(0),
           x(0.0),
           y(0.0),
           input_region(input_region),
-          cursor_listener(cursor_listener)
-
+          cursor_listener(cursor_listener),
+          touch_visualizer(touch_visualizer)
 {
 }
 
@@ -116,4 +108,26 @@ void mia::PointerController::getPosition(float *out_x, float *out_y) const
     std::lock_guard<std::mutex> lg(guard);
     *out_x = x;
     *out_y = y;
+}
+
+void mia::PointerController::setSpots(const droidinput::PointerCoords* spot_coords, uint32_t spot_count)
+{
+    std::vector<mi::TouchVisualizer::Spot> touches;
+    for (uint32_t i = 0; i < spot_count; i++)
+    {
+        droidinput::PointerCoords const& coords = spot_coords[i];
+        
+        auto x = coords.getX();
+        auto y = coords.getY();
+        auto pressure = coords.getAxisValue(AMOTION_EVENT_AXIS_PRESSURE);
+        
+        touches.push_back({{x, y}, pressure});
+    }
+    
+    touch_visualizer->visualize_touches(touches);
+}
+
+void mia::PointerController::clearSpots()
+{
+    touch_visualizer->visualize_touches({});
 }
