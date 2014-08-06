@@ -17,6 +17,7 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/native_buffer.h"
 #include "swapping_gl_context.h"
 #include "hwc_device.h"
 #include "hwc_layerlist.h"
@@ -27,6 +28,8 @@
 #include "hwc_fallback_gl_renderer.h"
 #include <limits>
 #include <algorithm>
+
+#include <iostream>
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
@@ -99,6 +102,7 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
         layer.layer.set_acquirefence_from(*buffer);
 
     hwc_wrapper->set(*hwc_list.native_list().lock());
+    printf("CLEAR BUFFERS from posting gl\n");
     onscreen_overlay_buffers.clear();
 
     for(auto& layer : hwc_list)
@@ -113,7 +117,10 @@ bool mga::HwcDevice::post_overlays(
     RenderableListCompositor const& list_compositor)
 {
     if (renderable_list_is_hwc_incompatible(renderables))
+    {
+        printf("REJECT. incompatible\n");
         return false;
+    }
 
     hwc_list.update_list(renderables, fbtarget_size);
 
@@ -121,7 +128,10 @@ bool mga::HwcDevice::post_overlays(
     for(auto& layer : hwc_list)
         needs_commit |= layer.needs_commit;
     if (!needs_commit)
+    {
+        printf("REJECT DOUBLe\n");
         return false;
+    }
 
     auto lg = lock_unblanked();
     auto& fbtarget = *hwc_list.additional_layers_begin();
@@ -145,9 +155,20 @@ bool mga::HwcDevice::post_overlays(
         {
             auto buffer = renderable->buffer();
             if (onscreen_overlay_buffers.end() == 
-                std::find(onscreen_overlay_buffers.begin(), onscreen_overlay_buffers.end(), buffer))
+                std::find_if(onscreen_overlay_buffers.begin(), onscreen_overlay_buffers.end(),
+                [&buffer](std::shared_ptr<mg::Buffer> const& b)
+                {
+                    printf("TRYING TO MATCHe.\n");
+                    auto h1 = buffer->native_buffer_handle()->handle();
+                    auto h2 = b->native_buffer_handle()->handle();
+                    return (h1 == h2); }))
             {
+                std::cout << "COPY FENCE. " << buffer.get() << std::endl;
                 it->layer.set_acquirefence_from(*buffer);
+            }
+            else
+            {
+                printf("AVERT DEADLOCK.\n");
             }
             next_onscreen_overlay_buffers.push_back(buffer);
         }
@@ -163,8 +184,13 @@ bool mga::HwcDevice::post_overlays(
         fbtarget.layer.set_acquirefence_from(*buffer);
     }
 
+    printf("attempting set.\n");
     hwc_wrapper->set(*hwc_list.native_list().lock());
     onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
+    printf("REPLACE ONSCREEN BUFFERS (%i)\n", onscreen_overlay_buffers.size());
+    for(auto const& b : onscreen_overlay_buffers)
+        std::cout << "( " << b.get() << " )";
+    std::cout << std::endl;
 
     it = hwc_list.begin();
     for(auto const& renderable : renderables)
@@ -181,5 +207,6 @@ bool mga::HwcDevice::post_overlays(
 
 void mga::HwcDevice::turned_screen_off()
 {
+    printf("CLEAR screen off.\n");
     onscreen_overlay_buffers.clear();
 }
