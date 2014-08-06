@@ -30,6 +30,7 @@ add_subdirectory(fatal)
 
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirplatform")
 set(COMMON_INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mircommon")
+set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirplatform.pc.in
