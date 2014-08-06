@@ -120,6 +120,7 @@ class CompositeEventFilter;
 class InputChannelFactory;
 class InputConfiguration;
 class CursorListener;
+class TouchVisualizer;
 class InputRegion;
 class InputSender;
 class InputSendObserver;
@@ -285,6 +286,7 @@ public:
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
     virtual std::shared_ptr<input::InputTargets>  the_input_targets();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
+    virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     /** @} */
 
@@ -343,6 +345,7 @@ protected:
     CachedPtr<input::InputRegion>     input_region;
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
+    CachedPtr<input::TouchVisualizer> touch_visualizer;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::NativePlatform>    graphics_native_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
