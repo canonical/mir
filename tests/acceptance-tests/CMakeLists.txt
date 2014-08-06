@@ -38,6 +38,7 @@ set(
   test_client_cursor_api.cpp
   test_large_messages.cpp
   test_client_surface_visibility.cpp
+  test_touchspot_visualization.cpp
   test_client_with_custom_display_config_deadlock.cpp
   test_macros.cpp
   test_stale_frames.cpp

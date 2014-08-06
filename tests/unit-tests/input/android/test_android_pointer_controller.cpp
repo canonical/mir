@@ -19,6 +19,7 @@
 #include "src/server/input/android/android_pointer_controller.h"
 
 #include "mir_test_doubles/mock_input_region.h"
+#include "mir_test_doubles/stub_touch_visualizer.h"
 #include "mir_test/event_factory.h"
 #include "mir_test/fake_shared.h"
 
@@ -45,7 +46,8 @@ class AndroidPointerControllerSetup : public testing::Test
 public:
     void SetUp()
     {
-        controller = std::make_shared<mia::PointerController>(mt::fake_shared(input_region));
+        controller = std::make_shared<mia::PointerController>(mt::fake_shared(input_region), std::shared_ptr<mi::CursorListener>(),
+                                                              std::make_shared<mtd::StubTouchVisualizer>());
     }
 protected:
     mtd::MockInputRegion input_region;

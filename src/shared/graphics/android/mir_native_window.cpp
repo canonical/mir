@@ -20,12 +20,14 @@
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "mir/graphics/android/sync_fence.h"
 
+#include <iostream>
+#include <boost/exception/diagnostic_information.hpp> 
+
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 
 namespace
 {
-
 
 static int query_static(const ANativeWindow* anw, int key, int* value);
 static int perform_static(ANativeWindow* anw, int key, ...);
@@ -121,6 +123,12 @@ int cancelBuffer_static(struct ANativeWindow* window,
     return self->cancelBuffer(buffer, fence_fd);
 }
 
+void report_exception_at_driver_boundary(std::exception const& e)
+{
+    std::cerr << "Caught exception at Mir/EGL driver boundary: "
+              << boost::diagnostic_information(e) << std::endl;
+}
+
 }
 
 mga::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> const& interpreter)
@@ -158,42 +166,73 @@ int mga::MirNativeWindow::setSwapInterval(int interval)
 }
 
 int mga::MirNativeWindow::dequeueBuffer(struct ANativeWindowBuffer** buffer_to_driver, int* fence_fd)
+try
 {
     auto buffer = driver_interpreter->driver_requests_buffer();
 
-    //driver is responsible for closing this native handle
+    //EGL driver is responsible for closing this native handle
     *fence_fd = buffer->copy_fence();
     *buffer_to_driver = buffer->anwb();
     return 0;
 }
+catch (std::exception const& e)
+{
+    report_exception_at_driver_boundary(e);
+    return -1;
+}
 
 int mga::MirNativeWindow::dequeueBufferAndWait(struct ANativeWindowBuffer** buffer_to_driver)
+try
 {
     auto buffer = driver_interpreter->driver_requests_buffer();
     *buffer_to_driver = buffer->anwb();
     buffer->ensure_available_for(mga::BufferAccess::write);
     return 0;
 }
+catch (std::exception const& e)
+{
+    report_exception_at_driver_boundary(e);
+    return -1;
+}
 
 int mga::MirNativeWindow::queueBuffer(struct ANativeWindowBuffer* buffer, int fence)
+try
 {
     driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;
+}
+catch (std::exception const& e)
+{
+    report_exception_at_driver_boundary(e);
+    return -1;
 }
 
 int mga::MirNativeWindow::cancelBuffer(struct ANativeWindowBuffer* buffer, int fence)
+try
 {
     driver_interpreter->driver_returns_buffer(buffer, fence);
     return 0;
 }
+catch (std::exception const& e)
+{
+    report_exception_at_driver_boundary(e);
+    return -1;
+}
 
 int mga::MirNativeWindow::query(int key, int* value) const
+try
 {
     *value = driver_interpreter->driver_requests_info(key);
     return 0;
 }
+catch (std::exception const& e)
+{
+    report_exception_at_driver_boundary(e);
+    return -1;
+}
 
 int mga::MirNativeWindow::perform(int key, va_list arg_list )
+try
 {
     int ret = 0;
     va_list args;
@@ -213,4 +252,8 @@ int mga::MirNativeWindow::perform(int key, va_list arg_list )
     va_end(args);
     return ret;
 }
-
+catch (std::exception const& e)
+{
+    report_exception_at_driver_boundary(e);
+    return -1;
+}

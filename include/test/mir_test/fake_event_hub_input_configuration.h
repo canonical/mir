@@ -35,6 +35,7 @@ namespace mir
 namespace input
 {
 class CursorListener;
+class TouchVisualizer;
 class EventFilter;
 class InputReport;
 
@@ -55,6 +56,7 @@ public:
         std::shared_ptr<input::InputDispatcher> const& input_dispatcher,
         std::shared_ptr<input::InputRegion> const& input_region,
         std::shared_ptr<input::CursorListener> const& cursor_listener,
+        std::shared_ptr<input::TouchVisualizer> const& touch_visualizer,
         std::shared_ptr<input::InputReport> const& input_report);
 
     virtual ~FakeEventHubInputConfiguration();
