@@ -18,11 +18,7 @@
 
 #include "real_kms_output.h"
 #include "page_flipper.h"
-
-#include <boost/throw_exception.hpp>
-#include <boost/exception/info.hpp>
-
-#include <stdexcept>
+#include "mir/fatal.h"
 #include <vector>
 #include <string.h> // strcmp
 
@@ -166,7 +162,7 @@ void mgm::RealKMSOutput::reset()
     connector = resources.connector(connector_id);
 
     if (!connector)
-        BOOST_THROW_EXCEPTION(std::runtime_error("No DRM connector found\n"));
+        fatal_error("No DRM connector found");
 
     // TODO: What if we can't locate the DPMS property?
     for (int i = 0; i < connector->count_props; i++)
@@ -202,9 +198,10 @@ void mgm::RealKMSOutput::configure(geom::Displacement offset, size_t kms_mode_in
 bool mgm::RealKMSOutput::set_crtc(uint32_t fb_id)
 {
     if (!ensure_crtc())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Output " +
-            connector_name(connector.get()) +
-            " has no associated CRTC to set a framebuffer on"));
+    {
+        fatal_error("Output %s has no associated CRTC to set a framebuffer on",
+                    connector_name(connector.get()).c_str());
+    }
 
     auto ret = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
                               fb_id, fb_offset.dx.as_int(), fb_offset.dy.as_int(),
@@ -235,12 +232,8 @@ void mgm::RealKMSOutput::clear_crtc()
                                  0, 0, 0, nullptr, 0, nullptr);
     if (result)
     {
-        std::string const msg =
-            "Couldn't clear output " + connector_name(connector.get());
-
-        BOOST_THROW_EXCEPTION(
-            ::boost::enable_error_info(std::runtime_error(msg))
-                << (boost::error_info<KMSOutput, decltype(result)>(result)));
+        fatal_error("Couldn't clear output %s (drmModeSetCrtc = %d)",
+                   connector_name(connector.get()).c_str(), result);
     }
 
     current_crtc = nullptr;
@@ -252,10 +245,10 @@ bool mgm::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
     if (power_mode != mir_power_mode_on)
         return true;
     if (!current_crtc)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Output " +
-            connector_name(connector.get()) +
-            " has no associated CRTC to schedule page flips on"));
-
+    {
+        fatal_error("Output %s has no associated CRTC to schedule page flips on",
+                   connector_name(connector.get()).c_str());
+    }
     return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id);
 }
 
@@ -265,10 +258,10 @@ void mgm::RealKMSOutput::wait_for_page_flip()
     if (power_mode != mir_power_mode_on)
         return;
     if (!current_crtc)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Output " +
-            connector_name(connector.get()) +
-            " has no associated CRTC to wait on"));
-
+    {
+        fatal_error("Output %s has no associated CRTC to wait on",
+                   connector_name(connector.get()).c_str());
+    }
     page_flipper->wait_for_flip(current_crtc->crtc_id);
 }
 
@@ -283,9 +276,7 @@ void mgm::RealKMSOutput::set_cursor(gbm_bo* buffer)
                 gbm_bo_get_width(buffer),
                 gbm_bo_get_height(buffer)))
         {
-            BOOST_THROW_EXCEPTION(
-                ::boost::enable_error_info(std::runtime_error("drmModeSetCursor() failed"))
-                    << (boost::error_info<KMSOutput, decltype(result)>(result)));
+            fatal_error("drmModeSetCursor failed (returned %d)", result);
         }
 
         has_cursor_ = true;
@@ -300,9 +291,7 @@ void mgm::RealKMSOutput::move_cursor(geometry::Point destination)
                                             destination.x.as_uint32_t(),
                                             destination.y.as_uint32_t()))
         {
-            BOOST_THROW_EXCEPTION(
-                ::boost::enable_error_info(std::runtime_error("drmModeMoveCursor() failed"))
-                    << (boost::error_info<KMSOutput, decltype(result)>(result)));
+            fatal_error("drmModeMoveCursor failed (returned %d)", result);
         }
     }
 }
