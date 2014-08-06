@@ -695,9 +695,9 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_across_list_rearrange)
     //the renderable ptr or the buffer ptr could change, while still referencing the same buffer_handle_t
     mg::RenderableList renderlist2{
         std::make_shared<mtd::StubRenderable>(
-            std::make_shared<mtd::StubBuffer>(mock_native_buffer2, size2)),
+            std::make_shared<mtd::StubBuffer>(mock_native_buffer2, size2), position2),
         std::make_shared<mtd::StubRenderable>(
-            std::make_shared<mtd::StubBuffer>(mock_native_buffer1, size1)),
+            std::make_shared<mtd::StubBuffer>(mock_native_buffer1, size1), position1),
     };
 
     layer.acquireFenceFd = acquire_fence1;
