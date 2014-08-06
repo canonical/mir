@@ -130,7 +130,8 @@ Depends: libmirplatform1 (= ${binary:Version}),
          libmircommon-dev,
          libboost-program-options-dev,
          ${misc:Depends},
-Conflicts: libmirplatform (<=0.5.1+14.10.20140728-0ubuntu1)
+Breaks: libmirplatform (<=0.5.1+14.10.20140728-0ubuntu1)
+Replaces: libmirplatform (<=0.5.1+14.10.20140728-0ubuntu1)
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
