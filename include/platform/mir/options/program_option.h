@@ -54,8 +54,11 @@ public:
     boost::any const& get(char const* name) const override;
     using Option::get;
 
+    std::vector<std::string> unparsed_command_line() const;
+
 private:
     boost::program_options::variables_map options;
+    std::vector<std::string> unparsed_tokens;
 };
 }
 }
