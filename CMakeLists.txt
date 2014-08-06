@@ -108,7 +108,7 @@ enable_testing()
 include_directories(include/shared)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread program_options regex iostreams REQUIRED)
+find_package(Boost 1.48.0 COMPONENTS date_time system program_options regex iostreams REQUIRED)
 include_directories (
   ${Boost_INCLUDE_DIRS}
 )
@@ -188,33 +188,34 @@ include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 option(MIR_ENABLE_TESTS "Build tests" ON)
 
-if (MIR_ENABLE_TESTS)
-   find_package(Gtest REQUIRED)
-   include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
-   add_subdirectory(tests/)
-endif ()
 add_subdirectory(benchmarks/)
 add_subdirectory(tools/)
 add_subdirectory(examples/)
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
 
-# There's no nice way to format this. Thanks CMake.
-add_test(LGPL-required
-  /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/shared ${PROJECT_SOURCE_DIR}/include/shared ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform"
-)
-add_test(GPL-required
-  /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/include/test ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
-)
+if (MIR_ENABLE_TESTS)
+  find_package(Gtest REQUIRED)
+  include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
+  add_subdirectory(tests/)
 
-add_test(NAME server-ABI-unchanged
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  COMMAND sha1sum -c server-ABI-sha1sums
-)
-
-add_test(NAME client-ABI-unchanged
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  COMMAND sha1sum -c client-ABI-sha1sums
-)
+  # There's no nice way to format this. Thanks CMake.
+  add_test(LGPL-required
+    /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/shared ${PROJECT_SOURCE_DIR}/include/shared ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform"
+  )
+  add_test(GPL-required
+    /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/include/test ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
+  )
+  
+  add_test(NAME server-ABI-unchanged
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    COMMAND sha1sum -c server-ABI-sha1sums
+  )
+  
+  add_test(NAME client-ABI-unchanged
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    COMMAND sha1sum -c client-ABI-sha1sums
+  )
+endif ()
 
 enable_coverage_report(mirserver)

@@ -53,7 +53,7 @@ mtf::InputTestingServerConfiguration::InputTestingServerConfiguration(
 {
 }
 
-void mtf::InputTestingServerConfiguration::exec()
+void mtf::InputTestingServerConfiguration::on_start()
 {
     input_injection_thread = std::thread(std::mem_fn(&mtf::InputTestingServerConfiguration::inject_input), this);
 }
@@ -86,6 +86,7 @@ std::shared_ptr<mi::InputConfiguration> mtf::InputTestingServerConfiguration::th
             the_input_dispatcher(),
             the_input_region(),
             the_cursor_listener(),
+            the_touch_visualizer(),
             the_input_report());
         fake_event_hub = input_configuration->the_fake_event_hub();
 
