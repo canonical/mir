@@ -193,7 +193,8 @@ std::shared_ptr<mir::EmergencyCleanup> mir::DefaultServerConfiguration::the_emer
         });
 }
 
-void (*mir::DefaultServerConfiguration::the_fatal_error_strategy())(char const* reason, ...)
+auto mir::DefaultServerConfiguration::the_fatal_error_strategy()
+-> void (*)(char const* reason, ...)
 {
     if (the_options()->is_set(options::fatal_abort_opt))
         return &fatal_error_abort;

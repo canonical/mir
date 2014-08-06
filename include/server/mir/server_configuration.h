@@ -71,7 +71,7 @@ public:
     virtual std::shared_ptr<graphics::Platform>  the_graphics_platform() = 0;
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration() = 0;
     virtual std::shared_ptr<EmergencyCleanup> the_emergency_cleanup() = 0;
-    virtual void (*the_fatal_error_strategy())(char const* reason, ...) = 0;
+    virtual auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) = 0;
 
 protected:
     ServerConfiguration() = default;

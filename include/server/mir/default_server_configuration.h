@@ -170,7 +170,7 @@ public:
     std::shared_ptr<input::InputConfiguration> the_input_configuration() override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<EmergencyCleanup>  the_emergency_cleanup() override;
-    void (*the_fatal_error_strategy())(char const* reason, ...) override;
+    auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) override;
     /** @} */
 
     /** @name graphics configuration - customization
