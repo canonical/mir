@@ -38,13 +38,13 @@ set(MIRSERVER_LINKAGE SHARED)
 
 add_library(mirserver ${MIRSERVER_LINKAGE}
   ${SRCS}
+  $<TARGET_OBJECTS:mirinput>
 )
 
 list(APPEND MIRSERVER_ARCHIVES
   mircompositor
   mirfrontend
   mirgraphics
-  mirinput
   mirshell
   mirscene
   mirtime

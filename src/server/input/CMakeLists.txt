@@ -21,9 +21,8 @@ set(
 add_subdirectory(android)
 
 add_library(
-  mirinput STATIC
+  mirinput OBJECT
 
   ${INPUT_SOURCES}
-  $<TARGET_OBJECTS:xcursorloader>
 )
 uses_android_input(mirinput)
