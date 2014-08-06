@@ -17,7 +17,6 @@
  *   Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/android/native_buffer.h"
 #include "swapping_gl_context.h"
 #include "hwc_device.h"
 #include "hwc_layerlist.h"
@@ -28,8 +27,6 @@
 #include "hwc_fallback_gl_renderer.h"
 #include <limits>
 #include <algorithm>
-
-#include <iostream>
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;

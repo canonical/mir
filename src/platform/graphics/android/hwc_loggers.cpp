@@ -181,8 +181,6 @@ void mga::HwcFormattedLogger::log_set_list(hwc_display_contents_1_t const& list)
         std::cout << LayerNumber{i}
                   << separator
                   << list.hwLayers[i].handle
-                  << separator
-                  << list.hwLayers[i].acquireFenceFd
                   << std::endl;
 }
 
