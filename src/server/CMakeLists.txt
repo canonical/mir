@@ -49,12 +49,9 @@ add_library(mirserver ${MIRSERVER_LINKAGE}
   $<TARGET_OBJECTS:mirreport>
   $<TARGET_OBJECTS:mirlogging>
   $<TARGET_OBJECTS:mirnullreport>
-)
-
-list(APPEND MIRSERVER_ARCHIVES
-  mirlogger
-  mirnestedgraphics
-  miroffscreengraphics
+  $<TARGET_OBJECTS:mirlogger>
+  $<TARGET_OBJECTS:mirnestedgraphics>
+  $<TARGET_OBJECTS:miroffscreengraphics>
 )
 
 list(APPEND MIRSERVER_LINKS
@@ -69,15 +66,9 @@ list(APPEND MIRSERVER_LINKS
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
 )
 
+target_link_libraries(mirserver LINK_PUBLIC ${MIRSERVER_LINKS})
+
 if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
-  target_link_libraries(mirserver
-    LINK_PRIVATE
-      -Wl,-whole-archive
-      ${MIRSERVER_ARCHIVES}
-      -Wl,-no-whole-archive
-    LINK_PUBLIC
-      ${MIRSERVER_LINKS}
-  )
   install(TARGETS mirserver
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
@@ -86,12 +77,6 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
   )
   install(DIRECTORY
     ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
-  )
-else()
-  target_link_libraries(mirserver
-    LINK_PUBLIC
-      ${MIRSERVER_ARCHIVES}
-      ${MIRSERVER_LINKS}
   )
 endif()
 
