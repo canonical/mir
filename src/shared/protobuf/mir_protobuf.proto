@@ -221,4 +221,5 @@ service DisplayServer {
 
   rpc start_prompt_session(PromptSessionParameters) returns (Void);
   rpc stop_prompt_session(Void) returns (Void);
+  rpc exchange_buffer(Buffer) returns (Buffer);
 }
