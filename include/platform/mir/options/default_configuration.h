@@ -30,6 +30,10 @@ class DefaultConfiguration : public Configuration
 {
 public:
     DefaultConfiguration(int argc, char const* argv[]);
+    DefaultConfiguration(
+        int argc,
+        char const* argv[],
+        std::function<void(int argc, char const* const* argv)> const& handler);
     virtual ~DefaultConfiguration() = default;
 
     // add_options() allows users to add their own options. This MUST be called
@@ -57,6 +61,7 @@ private:
 
     int const argc;
     char const** const argv;
+    std::function<void(int argc, char const* const* argv)> const unparsed_arguments_handler;
     std::shared_ptr<boost::program_options::options_description> const program_options;
     std::shared_ptr<Option> mutable options;
 };

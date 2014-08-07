@@ -37,9 +37,9 @@ c9730cac4a3a101f9706ec6f444958abe047fd88  include/platform/mir/graphics/internal
 15f201741a465de33e55ffc1ea775b507a5be950  include/platform/mir/graphics/renderable.h
 4b640ec72b04cc2de7671afd7c78942fb9e775a7  include/platform/mir/graphics/tessellation_helpers.h
 3b5be510366571c992e0927cc5662af9b0611ae1  include/platform/mir/options/configuration.h
-5879da8056f9a4ff8960f586d27117c87b110b2a  include/platform/mir/options/default_configuration.h
+3a961c5e85b0b9d20eadddd938677776288c06c6  include/platform/mir/options/default_configuration.h
 b45f14082c4f8b29efaa1b13de795dcb29deb738  include/platform/mir/options/option.h
-f42afacda33e598f9c29f2f5b72932f75dd7d27c  include/platform/mir/options/program_option.h
+1133726e66a246bd3988616e205e186278a64731  include/platform/mir/options/program_option.h
 5d0213652adc4821a2a180ced74808ca0bbf2c45  include/platform/mir/shared_library_loader.h
 505444aeb61d0f55893a7ba0998b25c2041f76c4  include/server/mir/asio_main_loop.h
 a4c8f0b0c30784ea6930a8ee6651f1d6efa47231  include/server/mir/compositor/buffer_stream.h
