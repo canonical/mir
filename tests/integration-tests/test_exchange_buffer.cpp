@@ -170,6 +170,7 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
                 mir_display_output_id_invalid
             };
             auto surface = mir_connection_create_surface_sync(connection, &request_params);
+            current_buffer.set_buffer_id(buffer_id_seq.begin()->as_uint32_t());
 
             auto rpc_channel = connection->rpc_channel();
             mir::protobuf::DisplayServer::Stub server(
@@ -177,9 +178,10 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
 
             for(auto const& id : buffer_id_seq)
             { 
-                ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
                 EXPECT_THAT(id.as_uint32_t(), testing::Eq(current_buffer.buffer_id()));
+                ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
             }
+//            EXPECT_THAT(id.as_uint32_t(), testing::Eq(current_buffer.buffer_id()));
 
             mir_surface_release_sync(surface);
             mir_connection_release(connection);
