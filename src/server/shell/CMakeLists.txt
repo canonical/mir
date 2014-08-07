@@ -10,7 +10,7 @@ set(
 )
 
 add_library(
-  mirshell STATIC
+  mirshell OBJECT
 
   ${SHELL_SOURCES}
 )

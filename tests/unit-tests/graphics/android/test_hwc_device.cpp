@@ -567,3 +567,19 @@ TEST_F(HwcDevice, rejects_list_containing_plane_alpha)
     mg::RenderableList renderlist{std::make_shared<mtd::PlaneAlphaRenderable>()};
     EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
 }
+
+TEST_F(HwcDevice, does_not_own_overlay_buffers_after_screen_off)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, prepare(_))
+        .WillOnce(Invoke(set_all_layers_to_overlay));
+
+    mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
+
+    auto use_count_before = stub_buffer1.use_count();
+    EXPECT_TRUE(device.post_overlays(stub_context, {stub_renderable1}, stub_compositor));
+    EXPECT_THAT(stub_buffer1.use_count(), Gt(use_count_before));
+
+    device.mode(MirPowerMode::mir_power_mode_off);
+    EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
+}

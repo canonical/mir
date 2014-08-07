@@ -16,7 +16,6 @@ target_link_libraries(
   mir-test
   mir-test-framework
 
-  ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
 )
 
