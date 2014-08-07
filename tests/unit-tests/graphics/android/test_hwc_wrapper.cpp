@@ -181,7 +181,7 @@ TEST_F(HwcWrapper, turns_display_off)
     EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
         .InSequence(seq)
         .WillOnce(Return(0));
-    EXPECT_CALL(*mock_logger, log_display_on()) 
+    EXPECT_CALL(*mock_logger, log_display_off()) 
         .InSequence(seq);
     EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
         .InSequence(seq)
