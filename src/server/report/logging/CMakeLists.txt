@@ -14,16 +14,8 @@ set(
 )
 
 add_library(
-  mirlogging STATIC
+  mirlogging OBJECT
 
   ${LOGGING_SOURCES}
 )
 
-target_link_libraries(
-  mirlogging
-
-  mirplatform
-
-  ${GLog_LIBRARY}
-  ${GFlags_LIBRARY}
-)

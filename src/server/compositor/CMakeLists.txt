@@ -19,12 +19,8 @@ set(
 )
 
 ADD_LIBRARY(
-  mircompositor STATIC
+  mircompositor OBJECT
 
   ${MIR_COMPOSITOR_SRCS}
-)
-
-target_link_libraries(mircompositor
-  ${Boost_LIBRARIES}
 )
 

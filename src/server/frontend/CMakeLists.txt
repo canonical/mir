@@ -26,7 +26,7 @@ set(
 )
 
 add_library(
-  mirfrontend STATIC
+  mirfrontend OBJECT
 
   ${FRONTEND_SOURCES}
 )
@@ -34,11 +34,3 @@ add_library(
 # Fix build race condition - ensure the protobuf header is built before us.
 add_dependencies(mirfrontend mircommonprotobuf)
 
-target_link_libraries(
-  mirfrontend
-
-  mirshell
-  mirlogging
-  3rd_party
-  ${Boost_LIBRARIES}
-)

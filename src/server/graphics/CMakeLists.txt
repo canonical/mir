@@ -1,7 +1,7 @@
 include_directories(${GLESv2_INCLUDE_DIRS})
 
 add_library(
-  mirgraphics STATIC
+  mirgraphics OBJECT
 
   default_configuration.cpp
   default_display_configuration_policy.cpp
