@@ -167,22 +167,22 @@ TEST_F(HwcLogger, log_vsync_off)
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
 
-TEST_F(HwcLogger, log_blanked)
+TEST_F(HwcLogger, log_display_off)
 {
     std::stringstream str;
-    str << "HWC: display off (blanked)" << std::endl;
+    str << "HWC: display off" << std::endl;
 
     mga::HwcFormattedLogger logger;
-    logger.log_vsync_off();
+    logger.log_display_off();
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
 
-TEST_F(HwcLogger, log_blanked)
+TEST_F(HwcLogger, log_display_on)
 {
     std::stringstream str;
-    str << "HWC: display on (unblanked)" << std::endl;
+    str << "HWC: display on" << std::endl;
 
     mga::HwcFormattedLogger logger;
-    logger.log_vsync_off();
+    logger.log_display_on();
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
