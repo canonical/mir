@@ -1,11 +1,8 @@
 add_library(
-  miroffscreengraphics STATIC
+  miroffscreengraphics OBJECT
 
   display.cpp
   display_configuration.cpp
   display_buffer.cpp
 )
 
-target_link_libraries(
-  miroffscreengraphics
-)
