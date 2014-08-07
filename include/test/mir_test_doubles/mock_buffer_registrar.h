@@ -36,9 +36,12 @@ namespace doubles
 struct MockBufferRegistrar : public client::android::BufferRegistrar
 {
     ~MockBufferRegistrar() noexcept {}
-    MOCK_CONST_METHOD1(register_buffer,
-        std::shared_ptr<const native_handle_t>(std::shared_ptr<MirBufferPackage> const&));
-    MOCK_METHOD2(secure_for_cpu, std::shared_ptr<char>(std::shared_ptr<const native_handle_t>, geometry::Rectangle));
+    MOCK_CONST_METHOD2(register_buffer,
+        std::shared_ptr<graphics::NativeBuffer>(MirBufferPackage const&,
+        MirPixelFormat));
+    MOCK_METHOD2(secure_for_cpu, std::shared_ptr<char>(
+        std::shared_ptr<graphics::NativeBuffer> const&,
+        geometry::Rectangle const));
 };
 }
 }

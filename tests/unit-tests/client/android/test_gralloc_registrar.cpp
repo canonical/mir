@@ -16,14 +16,17 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/native_buffer.h"
 #include "src/client/android/gralloc_registrar.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 #include <stdexcept>
 #include <fcntl.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mcla=mir::client::android;
-namespace geom=mir::geometry;
+namespace mcla = mir::client::android;
+namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 class MockRegistrarDevice : public gralloc_module_t
 {
@@ -81,47 +84,52 @@ struct GrallocRegistrar : public ::testing::Test
 {
     GrallocRegistrar() :
         mock_module(std::make_shared<testing::NiceMock<MockRegistrarDevice>>()),
-        stub_package(std::make_shared<MirBufferPackage>()),
-        stub_handle(std::make_shared<native_handle_t>())
+        mock_native_buffer(std::make_shared<testing::NiceMock<mtd::MockAndroidNativeBuffer>>())
     {
-        stub_package->fd_items = 4;
-        stub_package->data_items = 21;
-        for(auto i=0; i < stub_package->fd_items; i++)
-            stub_package->fd[i] = (i*4);
-        for(auto i=0; i < stub_package->data_items; i++)
-            stub_package->fd[i] = (i*3);
+        stub_package.width = width;
+        stub_package.height = height;
+        stub_package.stride = stride;
+        stub_package.fd_items = 4;
+        stub_package.data_items = 21;
+        for(auto i=0; i < stub_package.fd_items; i++)
+            stub_package.fd[i] = (i*4);
+        for(auto i=0; i < stub_package.data_items; i++)
+            stub_package.data[i] = (i*3);
     }
 
     uint32_t const width{41};
     uint32_t const height{43};
     uint32_t const top{0};
     uint32_t const left{1};
+    uint32_t const stride{11235};
+    MirPixelFormat const pf{mir_pixel_format_abgr_8888};
     geom::Rectangle const rect{geom::Point{top, left}, geom::Size{width, height}};
 
     std::shared_ptr<MockRegistrarDevice> const mock_module;
-    std::shared_ptr<MirBufferPackage> const stub_package;
-    std::shared_ptr<native_handle_t> const stub_handle;
+    MirBufferPackage stub_package;
+    std::shared_ptr<mtd::MockAndroidNativeBuffer> const mock_native_buffer;
 };
 
 TEST_F(GrallocRegistrar, client_buffer_converts_stub_package)
 {
     mcla::GrallocRegistrar registrar(mock_module);
-    auto handle = registrar.register_buffer(stub_package);
+    auto buffer = registrar.register_buffer(stub_package, pf);
 
+    auto handle = buffer->handle();
     ASSERT_NE(nullptr, handle);
-    ASSERT_EQ(stub_package->fd_items, handle->numFds);
-    ASSERT_EQ(stub_package->data_items, handle->numInts);
-    for(auto i = 0; i < stub_package->fd_items; i++)
-        EXPECT_EQ(stub_package->fd[i], handle->data[i]);
-    for(auto i = 0; i < stub_package->data_items; i++)
-        EXPECT_EQ(stub_package->data[i], handle->data[i + stub_package->fd_items]);
+    ASSERT_EQ(stub_package.fd_items, handle->numFds);
+    ASSERT_EQ(stub_package.data_items, handle->numInts);
+    for(auto i = 0; i < stub_package.fd_items; i++)
+        EXPECT_EQ(stub_package.fd[i], handle->data[i]);
+    for(auto i = 0; i < stub_package.data_items; i++)
+        EXPECT_EQ(stub_package.data[i], handle->data[i + stub_package.fd_items]);
 }
 
 TEST_F(GrallocRegistrar, client_sets_correct_version)
 {
     mcla::GrallocRegistrar registrar(mock_module);
-    auto handle = registrar.register_buffer(stub_package);
-    EXPECT_EQ(handle->version, static_cast<int>(sizeof(native_handle_t)));
+    auto buffer = registrar.register_buffer(stub_package, pf);
+    EXPECT_EQ(buffer->handle()->version, static_cast<int>(sizeof(native_handle_t)));
 }
 
 TEST_F(GrallocRegistrar, registrar_registers_using_module)
@@ -139,8 +147,8 @@ TEST_F(GrallocRegistrar, registrar_registers_using_module)
 
     mcla::GrallocRegistrar registrar(mock_module);
     {
-        auto handle = registrar.register_buffer(stub_package);
-        EXPECT_EQ(handle1, handle.get());
+        auto buffer = registrar.register_buffer(stub_package, pf);
+        EXPECT_EQ(handle1, buffer->handle());
     }
     EXPECT_EQ(handle1, handle2);
 }
@@ -148,19 +156,17 @@ TEST_F(GrallocRegistrar, registrar_registers_using_module)
 TEST_F(GrallocRegistrar, registrar_frees_fds)
 {
     using namespace testing;
-    auto stub_package = std::make_shared<MirBufferPackage>();
-    stub_package->data_items = 0;
-    stub_package->fd_items = 2;
+    MirBufferPackage stub_package;
+    stub_package.data_items = 0;
+    stub_package.fd_items = 2;
+    EXPECT_EQ(0, pipe(static_cast<int*>(stub_package.fd)));
 
-    int ret = pipe(static_cast<int*>(stub_package->fd));
     {
         mcla::GrallocRegistrar registrar(mock_module);
-        auto handle = registrar.register_buffer(stub_package);
+        auto buffer = registrar.register_buffer(stub_package, pf);
     }
-
-    EXPECT_EQ(0, ret);
-    EXPECT_EQ(-1, fcntl(stub_package->fd[0], F_GETFD));
-    EXPECT_EQ(-1, fcntl(stub_package->fd[1], F_GETFD));
+    EXPECT_EQ(-1, fcntl(stub_package.fd[0], F_GETFD));
+    EXPECT_EQ(-1, fcntl(stub_package.fd[1], F_GETFD));
 }
 
 
@@ -175,9 +181,8 @@ TEST_F(GrallocRegistrar, register_failure)
 
     mcla::GrallocRegistrar registrar(mock_module);
     EXPECT_THROW({
-        registrar.register_buffer(stub_package);
+        registrar.register_buffer(stub_package, pf);
     }, std::runtime_error);
-
 }
 
 TEST_F(GrallocRegistrar, region_is_cleaned_up_correctly)
@@ -204,7 +209,7 @@ TEST_F(GrallocRegistrar, region_is_cleaned_up_correctly)
             SaveArg<1>(&handle_freed),
             Return(0)));
 
-    registrar.secure_for_cpu(stub_handle, rect);
+    registrar.secure_for_cpu(mock_native_buffer, rect);
 
     EXPECT_EQ(gralloc_dev_freed, gralloc_dev_alloc);
     EXPECT_EQ(handle_alloc, handle_freed);
@@ -214,7 +219,7 @@ TEST_F(GrallocRegistrar, maps_buffer_for_cpu_correctly)
 {
     EXPECT_CALL(*mock_module, lock_interface(
         mock_module.get(),
-        stub_handle.get(),
+        mock_native_buffer->handle(),
         GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN,
         top,
         left,
@@ -224,7 +229,7 @@ TEST_F(GrallocRegistrar, maps_buffer_for_cpu_correctly)
         .Times(1);
 
     mcla::GrallocRegistrar registrar(mock_module);
-    registrar.secure_for_cpu(stub_handle, rect);
+    registrar.secure_for_cpu(mock_native_buffer, rect);
 }
 
 TEST_F(GrallocRegistrar, lock_failure_throws)
@@ -237,7 +242,7 @@ TEST_F(GrallocRegistrar, lock_failure_throws)
     mcla::GrallocRegistrar registrar(mock_module);
 
     EXPECT_THROW({
-        registrar.secure_for_cpu(stub_handle, rect);
+        registrar.secure_for_cpu(mock_native_buffer, rect);
     }, std::runtime_error);
 }
 
@@ -250,8 +255,32 @@ TEST_F(GrallocRegistrar, unlock_failure_doesnt_throw)
         .WillOnce(Return(-1));
     mcla::GrallocRegistrar registrar(mock_module);
 
-    auto region = registrar.secure_for_cpu(stub_handle, rect);
+    auto region = registrar.secure_for_cpu(mock_native_buffer, rect);
     EXPECT_NO_THROW({
         region.reset();
     });
+}
+
+TEST_F(GrallocRegistrar, produces_valid_anwb)
+{
+    using namespace testing;
+    mcla::GrallocRegistrar registrar(mock_module);
+
+    int correct_usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
+    int32_t const expected_stride_in_pixels = static_cast<int32_t>(stride / MIR_BYTES_PER_PIXEL(pf));
+
+    auto native_handle = registrar.register_buffer(stub_package, pf);
+    ASSERT_THAT(native_handle, Ne(nullptr));
+    auto anwb = native_handle->anwb();
+    ASSERT_THAT(anwb, Ne(nullptr));
+    EXPECT_THAT(native_handle->handle(), Ne(nullptr));
+    EXPECT_THAT(native_handle->handle(), Eq(native_handle->anwb()->handle));
+    EXPECT_EQ(width, static_cast<uint32_t>(anwb->width));
+    EXPECT_EQ(height, static_cast<uint32_t>(anwb->height));
+    EXPECT_EQ(correct_usage, anwb->usage);
+    EXPECT_EQ(expected_stride_in_pixels, anwb->stride);
+    ASSERT_THAT(anwb->common.incRef, Ne(nullptr));
+    ASSERT_THAT(anwb->common.decRef, Ne(nullptr));
+    anwb->common.incRef(&anwb->common);
+    anwb->common.decRef(&anwb->common);
 }
