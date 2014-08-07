@@ -40,10 +40,7 @@ c9730cac4a3a101f9706ec6f444958abe047fd88  include/platform/mir/graphics/internal
 9c7712af84b6fde1970ff802ad2ea78f892c7b7e  include/platform/mir/graphics/platform_ipc_package.h
 e9cb6643ac8b40532bb15cd4a5d76f27ea23d92a  include/platform/mir/graphics/renderable.h
 4b640ec72b04cc2de7671afd7c78942fb9e775a7  include/platform/mir/graphics/tessellation_helpers.h
-45f509992567a80d7c0e197fe566039ea405b00c  include/platform/mir/options/configuration.h
-3b5be510366571c992e0927cc5662af9b0611ae1  include/platform/mir/options/configuration.h.BASE
-8f172d1449f9aa7bbcb1eebb463b0cab4cab38fe  include/platform/mir/options/configuration.h.OTHER
-fbe68ae8f860e552155c62cb16bc689c85de13da  include/platform/mir/options/configuration.h.THIS
+7735089aed78227d0c1386f8efbbf5a2de7b7f1a  include/platform/mir/options/configuration.h
 3a961c5e85b0b9d20eadddd938677776288c06c6  include/platform/mir/options/default_configuration.h
 b45f14082c4f8b29efaa1b13de795dcb29deb738  include/platform/mir/options/option.h
 1133726e66a246bd3988616e205e186278a64731  include/platform/mir/options/program_option.h
