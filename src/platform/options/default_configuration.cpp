@@ -63,8 +63,29 @@ char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
 }
 
 mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
+    DefaultConfiguration(
+        argc, argv,
+        [](int argc, char const* const* argv)
+        {
+            if (argc)
+            {
+                std::ostringstream help_text;
+                help_text << "Unknown command line options:";
+                for (auto opt = argv; opt != argv+argc ; ++opt)
+                    help_text << ' ' << *opt;
+                BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
+            }
+        })
+{
+}
+
+mo::DefaultConfiguration::DefaultConfiguration(
+    int argc,
+    char const* argv[],
+    std::function<void(int argc, char const* const* argv)> const& handler) :
     argc(argc),
     argv(argv),
+    unparsed_arguments_handler{handler},
     program_options(std::make_shared<boost::program_options::options_description>(
     "Command-line options.\n"
     "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\""))
@@ -186,6 +207,12 @@ void mo::DefaultConfiguration::parse_arguments(
             ("help,h", "this help text");
 
         options.parse_arguments(desc, argc, argv);
+
+        auto const unparsed_arguments = options.unparsed_command_line();
+        std::vector<char const*> tokens;
+        for (auto const& token : unparsed_arguments)
+            tokens.push_back(token.c_str());
+        unparsed_arguments_handler(tokens.size(), tokens.data());
 
         if (options.is_set("help"))
         {

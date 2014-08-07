@@ -38,18 +38,15 @@ class Buffer : public AgingBuffer
 {
 public:
     Buffer(
-        std::shared_ptr<BufferRegistrar> const&,
-        std::shared_ptr<const native_handle_t> const&,
-        geometry::Size size,
-        MirPixelFormat pf,
-        geometry::Stride stride);
-    ~Buffer() noexcept;
+        std::shared_ptr<BufferRegistrar> const& registrar,
+        MirBufferPackage const& package,
+        MirPixelFormat pf);
 
     std::shared_ptr<MemoryRegion> secure_for_cpu_write();
     geometry::Size size() const;
     geometry::Stride stride() const;
     MirPixelFormat pixel_format() const;
-    std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const;
+    std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const;
     void update_from(MirBufferPackage const& update_package);
 
     Buffer(const Buffer&) = delete;
@@ -57,10 +54,9 @@ public:
 private:
     void pack_native_window_buffer();
 
-    std::shared_ptr<BufferRegistrar> buffer_registrar;
-    std::shared_ptr<graphics::android::AndroidNativeBuffer> native_window_buffer;
-    std::shared_ptr<const native_handle_t> native_handle;
-    const MirPixelFormat buffer_pf;
+    std::shared_ptr<BufferRegistrar> const buffer_registrar;
+    std::shared_ptr<graphics::NativeBuffer> const native_buffer;
+    MirPixelFormat const buffer_pf;
     geometry::Stride const buffer_stride;
     geometry::Size const buffer_size;
 };

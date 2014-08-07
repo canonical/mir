@@ -192,6 +192,28 @@ TEST_F(ProgramOption, test_boost_any_overload)
     EXPECT_THROW(po.get<int>("flag-yes,y"), std::bad_cast);
 }
 
+TEST_F(ProgramOption, unparsed_command_line_returns_unprocessed_tokens)
+{
+    using namespace testing;
+
+    mir::options::ProgramOption po;
+
+    const int argc = 11;
+    char const* argv[argc] = {
+        __PRETTY_FUNCTION__,
+        "--flag-yes", "yes",
+        "--hello",
+        "-f", "test_file",
+        "world",
+        "-c", "27",
+        "--answer", "42"
+    };
+
+    po.parse_arguments(desc, argc, argv);
+
+    EXPECT_THAT(po.unparsed_command_line(), ElementsAre("--hello", "world", "--answer", "42"));
+}
+
 TEST(ProgramOptionEnv, parse_environment)
 {
     // Env variables should be uppercase and "_" delimited
