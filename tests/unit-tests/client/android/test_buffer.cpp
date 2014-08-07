@@ -17,6 +17,7 @@
  */
 
 #include "mir_test_doubles/mock_buffer_registrar.h"
+#include "mir_test_doubles/mock_android_native_buffer.h"
 #include "src/client/android/buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 
@@ -28,14 +29,21 @@
 
 namespace mtd = mir::test::doubles;
 namespace mcla = mir::client::android;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
 struct AndroidClientBuffer : public ::testing::Test
 {
     AndroidClientBuffer() :
-    mock_registrar{std::make_shared<testing::NiceMock<mtd::MockBufferRegistrar>>()},
-    package{std::make_shared<native_handle_t>()}
+        mock_registrar{std::make_shared<testing::NiceMock<mtd::MockBufferRegistrar>>()},
+        native_handle{std::make_shared<native_handle_t>()},
+        mock_native_buffer{std::make_shared<mtd::MockAndroidNativeBuffer>(size)}
     {
+        ON_CALL(*mock_registrar, register_buffer(testing::_, testing::_))
+            .WillByDefault(testing::Return(mock_native_buffer));
+        package.height = height.as_int();
+        package.width = width.as_int();
+        package.stride = stride.as_int();
     }
 
     geom::Height const height{124};
@@ -44,66 +52,36 @@ struct AndroidClientBuffer : public ::testing::Test
     geom::Stride const stride{66};
     MirPixelFormat const pf{mir_pixel_format_abgr_8888};
     std::shared_ptr<mtd::MockBufferRegistrar> const mock_registrar;
-    std::shared_ptr<native_handle_t const> const package;
+    std::shared_ptr<native_handle_t const> const native_handle;
+    std::shared_ptr<mg::NativeBuffer> const mock_native_buffer;
+    MirBufferPackage package;
 };
 
-TEST_F(AndroidClientBuffer, returns_properties_from_constructor)
+TEST_F(AndroidClientBuffer, registers_native_handle_with_correct_size)
 {
-    mcla::Buffer buffer(mock_registrar, package, size, pf, stride);
+    EXPECT_CALL(*mock_registrar, register_buffer(testing::_, testing::_))
+        .WillOnce(testing::Return(mock_native_buffer));
+
+    mcla::Buffer buffer(mock_registrar, package, pf);
     EXPECT_EQ(size, buffer.size());
     EXPECT_EQ(pf, buffer.pixel_format());
     EXPECT_EQ(stride, buffer.stride());
 }
 
-TEST_F(AndroidClientBuffer, secures_for_cpu_with_correct_rect_and_handle)
-{
-    geom::Point point{0, 0};
-    geom::Rectangle rect{point, size};
-
-    EXPECT_CALL(*mock_registrar, secure_for_cpu(package,rect))
-        .Times(1)
-        .WillOnce(testing::Return(std::make_shared<char>()));
-
-    mcla::Buffer buffer(mock_registrar, package, size, pf, stride);
-    buffer.secure_for_cpu_write();
-}
-
 TEST_F(AndroidClientBuffer, packs_memory_region_correctly)
 {
     using namespace testing;
+    geom::Rectangle rect{{0,0}, size};
     std::shared_ptr<char> empty_char = std::make_shared<char>();
-    EXPECT_CALL(*mock_registrar, secure_for_cpu(_,_))
+    EXPECT_CALL(*mock_registrar, secure_for_cpu(mock_native_buffer,rect))
         .Times(1)
         .WillOnce(Return(empty_char));
 
-    mcla::Buffer buffer(mock_registrar, package, size, pf, stride);
+    mcla::Buffer buffer(mock_registrar, package, pf);
     auto region = buffer.secure_for_cpu_write();
     EXPECT_EQ(empty_char, region->vaddr);
     EXPECT_EQ(width, region->width);
     EXPECT_EQ(height, region->height);
     EXPECT_EQ(stride, region->stride);
     EXPECT_EQ(pf, region->format);
-}
-
-TEST_F(AndroidClientBuffer, produces_valid_anwb)
-{
-    using namespace testing;
-    int correct_usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
-    int32_t const expected_stride_in_pixels =
-        static_cast<int32_t>(stride.as_uint32_t() / MIR_BYTES_PER_PIXEL(pf));
-    mcla::Buffer buffer(mock_registrar, package, size, pf, stride);
-    auto native_handle = buffer.native_buffer_handle();
-
-    ASSERT_THAT(native_handle, Ne(nullptr));
-    auto anwb = native_handle->anwb();
-    ASSERT_THAT(anwb, Ne(nullptr));
-    EXPECT_EQ(package.get(), anwb->handle);
-    EXPECT_EQ(width.as_uint32_t(), static_cast<uint32_t>(anwb->width));
-    EXPECT_EQ(height.as_uint32_t(), static_cast<uint32_t>(anwb->height));
-    EXPECT_EQ(correct_usage, anwb->usage);
-    EXPECT_EQ(expected_stride_in_pixels, anwb->stride);
-    ASSERT_THAT(anwb->common.incRef, Ne(nullptr));
-    ASSERT_THAT(anwb->common.decRef, Ne(nullptr));
-    anwb->common.incRef(&anwb->common);
-    anwb->common.decRef(&anwb->common);
 }
