@@ -160,7 +160,7 @@ TEST_F(HwcWrapper, turns_display_on)
     Sequence seq;
     EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
         .InSequence(seq)
-        .WillOnce(Return(0))
+        .WillOnce(Return(0));
     EXPECT_CALL(*mock_logger, log_display_on()) 
         .InSequence(seq);
     EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
@@ -180,7 +180,7 @@ TEST_F(HwcWrapper, turns_display_off)
     Sequence seq;
     EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
         .InSequence(seq)
-        .WillOnce(Return(0))
+        .WillOnce(Return(0));
     EXPECT_CALL(*mock_logger, log_display_on()) 
         .InSequence(seq);
     EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
@@ -200,7 +200,7 @@ TEST_F(HwcWrapper, turns_vsync_on)
     Sequence seq;
     EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 1))
         .InSequence(seq)
-        .WillOnce(Return(0))
+        .WillOnce(Return(0));
     EXPECT_CALL(*mock_logger, log_vsync_on()) 
         .InSequence(seq);
     EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 1))
@@ -220,7 +220,7 @@ TEST_F(HwcWrapper, turns_vsync_off)
     Sequence seq;
     EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 0))
         .InSequence(seq)
-        .WillOnce(Return(0))
+        .WillOnce(Return(0));
     EXPECT_CALL(*mock_logger, log_vsync_off()) 
         .InSequence(seq);
     EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 0))
