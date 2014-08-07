@@ -16,15 +16,19 @@
  * Authored by: Kevin DuBois<kevin.dubois@canonical.com>
  */
 
+#include "mir/graphics/android/android_native_buffer.h"
+#include "mir/graphics/android/sync_fence.h"
 #include "gralloc_registrar.h"
 #include "../client_buffer.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-namespace mcl=mir::client;
-namespace mcla=mir::client::android;
-namespace geom=mir::geometry;
+namespace mg = mir::graphics;
+namespace mga = mir::graphics::android;
+namespace mcl = mir::client;
+namespace mcla = mir::client::android;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -47,64 +51,67 @@ private:
     const std::shared_ptr<const gralloc_module_t> module;
 };
 
-struct MemoryRegionDeleter
-{
-    MemoryRegionDeleter(const std::shared_ptr<const gralloc_module_t>& mod,
-                        const std::shared_ptr<const native_handle_t>&  han)
-     : handle(han),
-       module(mod)
-    {}
-
-    void operator()(char *)
-    {
-        module->unlock(module.get(), handle.get());
-        //we didn't alloc region(just mapped it), so we don't delete
-    }
-private:
-    const std::shared_ptr<const native_handle_t>  handle;
-    const std::shared_ptr<const gralloc_module_t> module;
-};
 }
 
-mcla::GrallocRegistrar::GrallocRegistrar(const std::shared_ptr<const gralloc_module_t>& gr_module)
-: gralloc_module(gr_module)
+mcla::GrallocRegistrar::GrallocRegistrar(const std::shared_ptr<const gralloc_module_t>& gr_module) :
+    gralloc_module(gr_module)
 {
 }
 
-std::shared_ptr<const native_handle_t> mcla::GrallocRegistrar::register_buffer(
-    std::shared_ptr<MirBufferPackage> const& package) const
+namespace
+{
+std::shared_ptr<mg::NativeBuffer> create_native_buffer(
+    std::shared_ptr<const native_handle_t> const& handle, MirBufferPackage const& package, MirPixelFormat pf)
+{
+    auto ops = std::make_shared<mga::RealSyncFileOps>();
+    auto fence = std::make_shared<mga::SyncFence>(ops, mir::Fd());
+    auto anwb = std::shared_ptr<mga::RefCountedNativeBuffer>(
+        new mga::RefCountedNativeBuffer(handle),
+        [](mga::RefCountedNativeBuffer* buffer)
+        {
+            buffer->mir_dereference();
+        });
+
+    anwb->width = package.width;
+    anwb->height = package.height;
+    //note: mir uses stride in bytes, ANativeWindowBuffer needs it in pixel units. some drivers care
+    //about byte-stride, they will pass stride via ANativeWindowBuffer::handle (which is opaque to us)
+    anwb->stride = package.stride / MIR_BYTES_PER_PIXEL(pf);
+    anwb->usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_HW_RENDER;
+    anwb->handle = handle.get();
+
+    return std::make_shared<mga::AndroidNativeBuffer>(anwb, fence, mga::BufferAccess::read);
+}
+}
+std::shared_ptr<mg::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
+    MirBufferPackage const& package,
+    MirPixelFormat pf) const
 {
     int native_handle_header_size = sizeof(native_handle_t);
     int total_size = sizeof(int) *
-                     (package->fd_items + package->data_items + native_handle_header_size);
+                     (package.fd_items + package.data_items + native_handle_header_size);
     native_handle_t* handle = static_cast<native_handle_t*>(::operator new(total_size));
     handle->version = native_handle_header_size;
-    handle->numFds  = package->fd_items;
-    handle->numInts = package->data_items;
+    handle->numFds  = package.fd_items;
+    handle->numInts = package.data_items;
     for (auto i=0; i< handle->numFds; i++)
-    {
-        handle->data[i] = package->fd[i];
-    }
-
-    int offset_i = handle->numFds;
+        handle->data[i] = package.fd[i];
     for (auto i=0; i< handle->numInts; i++)
-    {
-        handle->data[offset_i+i] = package->data[i];
-    }
+        handle->data[handle->numFds+i] = package.data[i];
 
-    if ( gralloc_module->registerBuffer(gralloc_module.get(), handle) )
+    if (gralloc_module->registerBuffer(gralloc_module.get(), handle))
     {
         ::operator delete(const_cast<native_handle_t*>(handle));
         BOOST_THROW_EXCEPTION(std::runtime_error("error registering graphics buffer for client use\n"));
     }
 
     NativeHandleDeleter del(gralloc_module);
-    return std::shared_ptr<const native_handle_t>(handle, del);
+    return create_native_buffer(std::shared_ptr<const native_handle_t>(handle, del), package, pf);
 }
 
 std::shared_ptr<char> mcla::GrallocRegistrar::secure_for_cpu(
-    std::shared_ptr<const native_handle_t> handle,
-    const geometry::Rectangle rect)
+    std::shared_ptr<mg::NativeBuffer> const& handle,
+    geometry::Rectangle const rect)
 {
     char* vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
@@ -112,10 +119,14 @@ std::shared_ptr<char> mcla::GrallocRegistrar::secure_for_cpu(
     int height = rect.size.height.as_uint32_t();
     int top = rect.top_left.x.as_uint32_t();
     int left = rect.top_left.y.as_uint32_t();
-    if ( gralloc_module->lock(gralloc_module.get(), handle.get(),
+    if ( gralloc_module->lock(gralloc_module.get(), handle->handle(),
                               usage, top, left, width, height, (void**) &vaddr) )
         BOOST_THROW_EXCEPTION(std::runtime_error("error securing buffer for client cpu use"));
 
-    MemoryRegionDeleter del(gralloc_module, handle);
-    return std::shared_ptr<char>(vaddr, del);
+    auto module = gralloc_module;
+    return std::shared_ptr<char>(vaddr, [module, handle](char*)
+        {
+            module->unlock(module.get(), handle->handle());
+            //we didn't alloc region(just mapped it), so we don't delete
+        });
 }

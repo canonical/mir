@@ -17,6 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/fatal.h"
 #include "mir/options/default_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/asio_main_loop.h"
@@ -190,4 +191,13 @@ std::shared_ptr<mir::EmergencyCleanup> mir::DefaultServerConfiguration::the_emer
         {
             return std::make_shared<DefaultEmergencyCleanup>();
         });
+}
+
+auto mir::DefaultServerConfiguration::the_fatal_error_strategy()
+-> void (*)(char const* reason, ...)
+{
+    if (the_options()->is_set(options::fatal_abort_opt))
+        return &fatal_error_abort;
+    else
+        return fatal_error;
 }

@@ -34,11 +34,5 @@ mcla::AndroidClientBufferFactory::AndroidClientBufferFactory(
 std::shared_ptr<mcl::ClientBuffer> mcla::AndroidClientBufferFactory::create_buffer(std::shared_ptr<MirBufferPackage> const& package, geom::Size size, MirPixelFormat pf)
 {
     (void)size; // TODO: remove this unused parameter
-    auto handle = registrar->register_buffer(package);
-    return std::make_shared<mcla::Buffer>(
-        registrar,
-        handle,
-        geometry::Size{package->width, package->height},
-        pf,
-        geometry::Stride{package->stride});
+    return std::make_shared<mcla::Buffer>(registrar, *package, pf);
 }
