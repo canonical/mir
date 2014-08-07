@@ -171,7 +171,15 @@ public:
     std::shared_ptr<input::InputConfiguration> the_input_configuration() override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<EmergencyCleanup>  the_emergency_cleanup() override;
-    auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) override;
+    /**
+     * Function to call when a "fatal" error occurs. This implementation allows
+     * the default strategy to be overridden by --on-fatal-error-abort to force a
+     * core. (This behavior is useful for diagnostic purposes during development.)
+     * To change the default strategy used FatalErrorStrategy. See acceptance test
+     * ServerShutdown.fatal_error_default_can_be_changed_to_abort
+     * for an example.
+     */
+    auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) override final;
     /** @} */
 
     /** @name graphics configuration - customization
