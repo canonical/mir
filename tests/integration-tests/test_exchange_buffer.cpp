@@ -17,7 +17,12 @@
  */
 
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
+#include "mir_test_doubles/null_platform.h"
+#include "mir_test_doubles/mock_buffer.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/scene/buffer_stream_factory.h"
+#include "mir/compositor/buffer_stream.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "src/client/mir_connection.h"
 #include "mir_protobuf.pb.h"
@@ -28,7 +33,11 @@
 #include <gtest/gtest.h>
 
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 namespace mg = mir::graphics;
+namespace msc = mir::scene;
+namespace mc = mir::compositor;
+namespace geom = mir::geometry;
 
 namespace
 {
@@ -36,25 +45,77 @@ MATCHER(DidNotTimeOut, "did not time out")
 {
     return !arg;
 }
-
 struct ExchangeBufferTest : BespokeDisplayServerTestFixture
 {
     std::vector<mg::BufferID> const buffer_id_exchange_seq{
         mg::BufferID{4}, mg::BufferID{8}, mg::BufferID{9}};
 };
+
+struct StubStream : public mc::BufferStream
+{
+    StubStream(std::vector<mg::BufferID> const& ids) :
+        buffer_id_seq(ids),
+        current{buffer_id_seq.begin()}
+    {
+    }
+
+    void acquire_client_buffer(std::function<void(mg::Buffer* buffer)> complete)
+    {
+        auto b = std::make_shared<testing::NiceMock<mtd::MockBuffer>>();
+        auto id = *current;
+        if (current + 1 != buffer_id_seq.end())
+            current++;
+        ON_CALL(*b, id())
+            .WillByDefault(testing::Return(id));
+        client_buffer = b;
+        complete(client_buffer.get());
+    }
+
+    void release_client_buffer(mg::Buffer*) {}
+    std::shared_ptr<mg::Buffer> lock_compositor_buffer(void const*)
+    { return std::make_shared<mtd::StubBuffer>(); }
+    std::shared_ptr<mg::Buffer> lock_snapshot_buffer()
+    { return std::make_shared<mtd::StubBuffer>(); }
+    MirPixelFormat get_stream_pixel_format() { return mir_pixel_format_abgr_8888; }
+    geom::Size stream_size() { return geom::Size{1,212121}; }
+    void resize(geom::Size const&) {};
+    void allow_framedropping(bool) {};
+    void force_requests_to_complete() {};
+    int buffers_ready_for_compositor() const { return -5; }
+    void drop_old_buffers() {}
+
+    std::shared_ptr<mg::Buffer> client_buffer;
+    std::vector<mg::BufferID> const buffer_id_seq;
+    std::vector<mg::BufferID>::const_iterator current;
+};
+
+struct StubStreamFactory : public msc::BufferStreamFactory
+{
+    StubStreamFactory(std::vector<mg::BufferID> const& ids) :
+        buffer_id_seq(ids)
+    {}
+
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(mg::BufferProperties const&) override
+    { return std::make_shared<StubStream>(buffer_id_seq); }
+    std::vector<mg::BufferID> const buffer_id_seq;
+};
 }
 
 TEST_F(ExchangeBufferTest, exchanges_happen)
 {
-
     struct ServerConfig : TestingServerConfiguration
     {
-        ServerConfig(std::vector<mg::BufferID> const& id_exchange_sequence)
-            : buffer_id_seq{id_exchange_sequence}
+        ServerConfig(std::vector<mg::BufferID> const& id_seq) :
+           stream_factory{std::make_shared<StubStreamFactory>(id_seq)}
         {
         }
 
-        std::vector<mg::BufferID> const buffer_id_seq;
+        std::shared_ptr<msc::BufferStreamFactory> the_buffer_stream_factory() override
+        {
+            return stream_factory;
+        }
+
+        std::shared_ptr<msc::BufferStreamFactory> const stream_factory;
     } server_config{buffer_id_exchange_seq};
 
     launch_server_process(server_config);
