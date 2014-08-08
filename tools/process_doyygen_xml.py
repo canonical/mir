@@ -24,10 +24,10 @@ def getLocationFile(node):
 def printAttribs(node, attribs):
     for attrib in attribs : print ' ', attrib, '=', node.attributes[attrib].value
 
-def printTextFromTags(parent, tagnames):
-    tmp = []
-    for tag in tagnames : tmp.append(getTextForElement(parent, tag))
-    print ''.join(tmp)
+def concatTextFromTags(parent, tagnames):
+    rc = []
+    for tag in tagnames : rc.append(getTextForElement(parent, tag))
+    return ''.join(rc)
     
 def printLocation(node):
     print ' ', 'location', '=', getLocationFile(node)
@@ -38,17 +38,21 @@ def getAttribs(node):
     prot =  node.attributes['prot'].value
     return (kind, static, prot)
 
+def report(publish, symbol):
+    if publish: print "  PUBLISH:", symbol
+    else      : print "NOPUBLISH:", symbol
+
 def parseMemberDef(node):
     (kind, static, prot) = getAttribs(node)
     texttags = ['definition']
     if kind == 'function': texttags.append('argsstring')
-    printTextFromTags(node, texttags)
-    printAttribs(node, ['kind', 'prot', 'static'])
-    printLocation(node)
+    symbol = concatTextFromTags(node, texttags)
     publish = '/include/' in getLocationFile(node)
     if publish: publish = prot != 'private'
     if publish: publish = kind == 'function' or static == 'yes'
-    print "  PUBLISH:", publish
+    report(publish, symbol)
+    printAttribs(node, ['kind', 'prot', 'static'])
+    printLocation(node)
     print
 
 def parseCompoundDefs(xmldoc):
@@ -59,13 +63,13 @@ def parseCompoundDefs(xmldoc):
         if kind in ['page', 'file']: continue
 
         if kind in ['class', 'struct']:
+            symbol = concatTextFromTags(node, ['compoundname'])
             prot =  node.attributes['prot'].value
-            printTextFromTags(node, ['compoundname'])
-            printAttribs(node, ['kind', 'prot'])
-            printLocation(node)
             publish = '/include/' in getLocationFile(node)
             if publish: publish = prot != 'private'
-            print "  PUBLISH:", publish
+            report(publish, symbol)
+            printAttribs(node, ['kind', 'prot'])
+            printLocation(node)
             print
 
         for member in node.getElementsByTagName('memberdef') : 
