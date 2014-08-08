@@ -27,7 +27,13 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
       . Added automated test cases for detecting ABI breakage.
       . examples/fingerpaint: Enable frame dropping so it's faster and more
         responsive.
-      . mirprotobuf folded into new libmircommon
+      . mirprotobuf folded into new libmircommon.
+      . Don't propagate exceptions to graphics driver code.
+      . Dropped unused/minimally used dependencies : boost-filesystem,
+        boost-thread, boost-chrono, boost-regex.
+      . platform: provide support for customizing Mir's behavior when a
+        fatal_error occurs.
+      . Expose an interface for touch visualization.
     - Bugs fixed:
       . Mir servers crash with SIGABRT - assertion failed at
         buffer_queue.cpp:136 - "!pending_client_notifications.empty()"
@@ -64,6 +70,14 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
       . Release overlay buffers when screen is turned off (LP: #1350961)
       . mir_demo_server_shell --disable-overlays false renders incorrectly
         on android (partial fix for LP: #1348330)
+      . Remember to honor MIR_ENABLE_TESTS and not emit tests if it's disabled
+        (LP: #1352800)
+      . Expose an interface for touch visualization (LP: #1323522)
+      . Make it easier to separate command line options used by Mir from those
+        used elsewhere (LP: #1351255)
+      . Expose create_native_platform in libmirplatformgraphics.so
+        (LP: #1353658)
+      . Add versioning and pkg config to libmirplatform (LP: #1293944)
 
  -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Wed, 30 Jul 2014 16:35:00 +0300
 
