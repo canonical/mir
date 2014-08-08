@@ -46,8 +46,7 @@ set_target_properties(
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
-target_link_libraries(
-  mirplatformgraphicsmesa
+target_link_libraries(mirplatformgraphicsmesa
   mirplatform
 
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
