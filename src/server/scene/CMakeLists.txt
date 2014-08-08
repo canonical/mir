@@ -1,5 +1,5 @@
 ADD_LIBRARY(
-  mirscene STATIC
+  mirscene OBJECT
 
   application_session.cpp
   basic_surface.cpp
