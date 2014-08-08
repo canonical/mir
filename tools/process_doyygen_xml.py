@@ -16,11 +16,10 @@ def getTextForElement(parent, tagname):
     return ''.join(rc)
 
 def getLocationFile(node):
-    rc = []
     for node in node.childNodes:
         if node.nodeType == node.ELEMENT_NODE and node.tagName == 'location':
-            rc.append(node.attributes['file'].value)
-    return ''.join(rc)
+            return node.attributes['file'].value
+    return None
 
 def printAttribs(node, attribs):
     for attrib in attribs : print ' ', attrib, '=', node.attributes[attrib].value
@@ -52,15 +51,13 @@ def parseMemberDef(node):
     print "  PUBLISH:", publish
     print
 
-def parseMemberDefs(parent):
-    for member in parent.getElementsByTagName('memberdef') : 
-        parseMemberDef(member)
-
 def parseCompoundDefs(xmldoc):
     compounddefs = xmldoc.getElementsByTagName('compounddef') 
     for node in compounddefs :
         kind = node.attributes['kind'].value
+
         if kind in ['page', 'file']: continue
+
         if kind in ['class', 'struct']:
             prot =  node.attributes['prot'].value
             printTextFromTags(node, ['compoundname'])
@@ -70,7 +67,9 @@ def parseCompoundDefs(xmldoc):
             if publish: publish = prot != 'private'
             print "  PUBLISH:", publish
             print
-        parseMemberDefs(node)
+
+        for member in node.getElementsByTagName('memberdef') : 
+            parseMemberDef(member)
 
 if __name__ == "__main__":
     for arg in argv[1:]:
