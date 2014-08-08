@@ -51,7 +51,6 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         libmirplatform (= ${binary:Version}),
          libmirplatformgraphics-mesa (= ${binary:Version}) |
            libmirplatformgraphics-android (= ${binary:Version}),
 Description: Display server for Ubuntu - server library
@@ -60,14 +59,13 @@ Description: Display server for Ubuntu - server library
  .
  Contains the shared library needed by server applications for Mir.
 
-Package: libmirplatform
+Package: libmirplatform1
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-Replaces: libmirserver0
 Description: Display server for Ubuntu - platform library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -82,7 +80,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         libmirplatform (= ${binary:Version}),
+         libmirplatform1 (= ${binary:Version}),
 Description: Display server for Ubuntu - platform library for Mesa
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -97,7 +95,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         libmirplatform (= ${binary:Version}),
+         libmirplatform1 (= ${binary:Version}),
 Description: Display server for Ubuntu - platform library for Android
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -111,6 +109,7 @@ Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmircommon1 (= ${binary:Version}), 
+         libprotobuf-dev (>= 2.4.1),
          ${misc:Depends},
 Breaks: mircommon-dev (<= 0.5.0+14.10.20140722-0ubuntu1)
 Replaces: mircommon-dev (<= 0.5.0+14.10.20140722-0ubuntu1)
@@ -120,16 +119,32 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required for server and/or client development.
 
+Package: libmirplatform-dev
+Section: libdevel
+Architecture: i386 amd64 armhf arm64
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libmirplatform1 (= ${binary:Version}), 
+         libmircommon-dev,
+         libboost-program-options-dev,
+         ${misc:Depends},
+Breaks: libmirplatform (<=0.5.1+14.10.20140728-0ubuntu1)
+Replaces: libmirplatform (<=0.5.1+14.10.20140728-0ubuntu1)
+Description: Display server for Ubuntu - development headers
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains header files required for hardware/driver support development.
+
 Package: libmirserver-dev
 Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirserver24 (= ${binary:Version}),
+         libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
-         libprotobuf-dev (>= 2.4.1),
          libglm-dev,
-         libboost-program-options-dev,
          ${misc:Depends},
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
