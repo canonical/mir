@@ -57,7 +57,7 @@ e0860c43bf5196a792ffd7216826925e16275d07  include/server/mir/compositor/renderer
 51391bd29f7499f8cbb89e4ba33acf2b72d93592  include/server/mir/compositor/renderer.h
 686a839fd0cd5fa469344dc49190ff9d578efc25  include/server/mir/compositor/scene_element.h
 4fcf34e424128b87ddc76733594e32e09ebbd486  include/server/mir/compositor/scene.h
-4aa04639e1fd20395aa33ab15c5ce21c60bb79e9  include/server/mir/default_server_configuration.h
+488dcb1e275e32b5dde03cdfdb1538d3694cb8fe  include/server/mir/default_server_configuration.h
 bbb15c910dbc8d7c9a4cc982890486b7e16197e4  include/server/mir/default_server_status_listener.h
 215f6cf88826381cd3ec37a6d2179a70093c0bc5  include/server/mir/display_changer.h
 af1ff0714be973ac76d56006a2e5991f68cd1dec  include/server/mir/display_server.h
@@ -86,7 +86,7 @@ f67b9788943a4b9121b3891dfbe979d57922ea78  include/server/mir/frontend/surface.h
 5aa4c4db5468d9b9fe8e98a64444538aadd6e17b  include/server/mir/frontend/template_protobuf_message_processor.h
 ba79552edce545fafc9a4f401411c44d0cb3b2cf  include/server/mir/graphics/gl_extensions_base.h
 2489a0e7922b6c7abe383726a30e17edbee51048  include/server/mir/graphics/surfaceless_egl_context.h
-2997940c93db57b1c4d51b1786ff65503de9d013  include/server/mir/input/android/default_android_input_configuration.h
+36ad5c3d722a5c8f252eb7538a5fb2bff46d2189  include/server/mir/input/android/default_android_input_configuration.h
 f95c2bddf13d15993ef5d6a0ad7b9106ae550b87  include/server/mir/input/composite_event_filter.h
 67719acb03b35d383dfefd65e8dfb872c42bcc11  include/server/mir/input/cursor_images.h
 c1e96c372d7856d59947f3145d273b1285b569bc  include/server/mir/input/cursor_listener.h
@@ -103,6 +103,7 @@ b703ac51f94b6f9c9edcd6a4587e33d6e2d54269  include/server/mir/input/input_report.
 51cda18e314f1e36177a7ebfab0d1dd12867cdf0  include/server/mir/input/input_send_observer.h
 59e757018c337db25df0c68556664eb7536e4321  include/server/mir/input/input_targets.h
 15119bf95b4512c8b91df7c20edf56a3c0734957  include/server/mir/input/surface.h
+d647ce6beffdc31a597769587bb3ab17ec679491  include/server/mir/input/touch_visualizer.h
 204089f848c4d63ade96f92a0b8cfc1c33f1ce63  include/server/mir/input/vt_filter.h
 5ba863e9bb4dc9802aa74a7864f576df25142c2d  include/server/mir/logging/glog_logger.h
 964069b241f1e8211386bb8735ee0f752b666949  include/server/mir/main_loop.h

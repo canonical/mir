@@ -128,7 +128,8 @@ struct FakeEventHubServerConfig : TestingServerConfiguration
                 std::make_shared<mtd::FakeEventHubInputConfiguration>(
                     the_input_dispatcher(),
                     the_input_region(),
-                    std::shared_ptr<mi::CursorListener>(),
+                    the_cursor_listener(),
+                    the_touch_visualizer(),
                     the_input_report());
         }
 

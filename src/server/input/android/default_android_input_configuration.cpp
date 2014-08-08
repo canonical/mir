@@ -52,10 +52,12 @@ mia::DefaultInputConfiguration::DefaultInputConfiguration(
     std::shared_ptr<mi::InputDispatcher> const& input_dispatcher,
     std::shared_ptr<mi::InputRegion> const& input_region,
     std::shared_ptr<CursorListener> const& cursor_listener,
+    std::shared_ptr<TouchVisualizer> const& touch_visualizer,
     std::shared_ptr<mi::InputReport> const& input_report) :
     input_dispatcher(input_dispatcher),
     input_region(input_region),
     cursor_listener(cursor_listener),
+    touch_visualizer(touch_visualizer),
     input_report(input_report)
 {
 }
@@ -78,7 +80,7 @@ std::shared_ptr<droidinput::InputReaderPolicyInterface> mia::DefaultInputConfigu
     return reader_policy(
         [this]()
         {
-            return std::make_shared<mia::InputReaderPolicy>(input_region, cursor_listener);
+            return std::make_shared<mia::InputReaderPolicy>(input_region, cursor_listener, touch_visualizer);
         });
 }
 
