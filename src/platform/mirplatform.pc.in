@@ -1,0 +1,10 @@
+prefix=@PREFIX@
+exec_prefix=@EXEC_PREFIX@
+libdir=@LIBDIR@
+includedir=@INCLUDEDIR@
+
+Name: mirplatform
+Description: Mir platform library
+Version: @MIR_VERSION@
+Libs: -L@LIBDIR@ -lmirplatform -lmircommon
+Cflags: -I@INCLUDEDIR@ -I@COMMON_INCLUDEDIR@

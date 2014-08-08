@@ -1,0 +1,3 @@
+usr/include/mirplatform
+usr/lib/*/pkgconfig/mirplatform.pc
+usr/lib/*/libmirplatform.so
