@@ -159,21 +159,27 @@ public:
     /** @name DisplayServer dependencies
      * dependencies of DisplayServer on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<frontend::Connector>    the_connector();
-    virtual std::shared_ptr<frontend::Connector>    the_prompt_connector();
-    virtual std::shared_ptr<graphics::Display>      the_display();
-    virtual std::shared_ptr<compositor::Compositor> the_compositor();
-    virtual std::shared_ptr<input::InputManager>    the_input_manager();
-    virtual std::shared_ptr<MainLoop>               the_main_loop();
-    virtual std::shared_ptr<ServerStatusListener>   the_server_status_listener();
-    virtual std::shared_ptr<DisplayChanger>         the_display_changer();
-    virtual std::shared_ptr<graphics::Platform>     the_graphics_platform();
-    virtual std::shared_ptr<graphics::NativePlatform>  the_graphics_native_platform();
-    virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
-    virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher();
-    virtual std::shared_ptr<input::InputSender>     the_input_sender();
-    virtual std::shared_ptr<input::InputSendObserver> the_input_send_observer();
-    virtual std::shared_ptr<EmergencyCleanup>  the_emergency_cleanup();
+    std::shared_ptr<frontend::Connector>    the_connector() override;
+    std::shared_ptr<frontend::Connector>    the_prompt_connector() override;
+    std::shared_ptr<graphics::Display>      the_display() override;
+    std::shared_ptr<compositor::Compositor> the_compositor() override;
+    std::shared_ptr<input::InputManager>    the_input_manager() override;
+    std::shared_ptr<MainLoop>               the_main_loop() override;
+    std::shared_ptr<ServerStatusListener>   the_server_status_listener() override;
+    std::shared_ptr<DisplayChanger>         the_display_changer() override;
+    std::shared_ptr<graphics::Platform>     the_graphics_platform() override;
+    std::shared_ptr<input::InputConfiguration> the_input_configuration() override;
+    std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
+    std::shared_ptr<EmergencyCleanup>  the_emergency_cleanup() override;
+    /**
+     * Function to call when a "fatal" error occurs. This implementation allows
+     * the default strategy to be overridden by --on-fatal-error-abort to force a
+     * core. (This behavior is useful for diagnostic purposes during development.)
+     * To change the default strategy used FatalErrorStrategy. See acceptance test
+     * ServerShutdown.fatal_error_default_can_be_changed_to_abort
+     * for an example.
+     */
+    auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) override final;
     /** @} */
 
     /** @name graphics configuration - customization
@@ -184,6 +190,7 @@ public:
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
     virtual std::shared_ptr<graphics::GLConfig> the_gl_config();
+    virtual std::shared_ptr<graphics::NativePlatform>  the_graphics_native_platform();
     /** @} */
 
     /** @name graphics configuration - dependencies
@@ -288,6 +295,8 @@ public:
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
     virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
+    virtual std::shared_ptr<input::InputSender>    the_input_sender();
+    virtual std::shared_ptr<input::InputSendObserver> the_input_send_observer();
     /** @} */
 
     /** @name logging configuration - customization
