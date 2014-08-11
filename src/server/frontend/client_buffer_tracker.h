@@ -20,6 +20,7 @@
  #define MIR_FRONTEND_CLIENT_BUFFER_TRACKER_H_
 
 #include "surface_tracker.h"
+#include <unordered_map>
 #include <stdint.h>
 #include <list>
 
@@ -70,6 +71,9 @@ public:
     bool surface_has_buffer(SurfaceId, graphics::Buffer*) const override;
 private:
     size_t const client_cache_size;
+
+    std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
+    std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
 };
 
 }

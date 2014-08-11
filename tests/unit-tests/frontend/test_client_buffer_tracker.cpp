@@ -135,18 +135,15 @@ TEST_F(SurfaceTracker, only_returns_true_if_surface_has_buffer)
 TEST_F(SurfaceTracker, removals_remove_buffer_instances)
 {
     mf::SessionSurfaceTracker tracker{client_cache_size};
-
     tracker.add_buffer_to_surface(surf_id0, &stub_buffer0);
     tracker.add_buffer_to_surface(surf_id1, &stub_buffer0);
 
     EXPECT_TRUE(tracker.surface_has_buffer(surf_id0, &stub_buffer0));
     EXPECT_TRUE(tracker.surface_has_buffer(surf_id1, &stub_buffer0));
+
     tracker.remove_surface(surf_id0);
 
-    EXPECT_THROW({
-        tracker.surface_has_buffer(surf_id0, &stub_buffer0);
-    }, std::runtime_error);
-
+    EXPECT_FALSE(tracker.surface_has_buffer(surf_id0, &stub_buffer0));
     EXPECT_TRUE(tracker.surface_has_buffer(surf_id1, &stub_buffer0));
 }
 

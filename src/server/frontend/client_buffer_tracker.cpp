@@ -17,6 +17,8 @@
  */
 
 #include <algorithm>
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 #include "client_buffer_tracker.h"
 #include "mir/graphics/buffer_id.h"
@@ -57,20 +59,32 @@ mf::SessionSurfaceTracker::SessionSurfaceTracker(size_t client_cache_size) :
 {
 }
 
-void mf::SessionSurfaceTracker::add_buffer_to_surface(SurfaceId, mg::Buffer*)
+void mf::SessionSurfaceTracker::add_buffer_to_surface(SurfaceId surface_id, mg::Buffer* buffer)
 {
+    auto& tracker = client_buffer_tracker[surface_id];
+    if (!tracker) tracker = std::make_shared<ClientBufferTracker>(client_cache_size);
+    tracker->add(buffer->id());
 }
 
-void mf::SessionSurfaceTracker::remove_surface(SurfaceId)
+void mf::SessionSurfaceTracker::remove_surface(SurfaceId surface_id)
 {
+    auto it = client_buffer_tracker.find(surface_id);
+    if (it != client_buffer_tracker.end())
+        client_buffer_tracker.erase(it);
 }
 
-mg::Buffer* mf::SessionSurfaceTracker::last_buffer(SurfaceId) const
+mg::Buffer* mf::SessionSurfaceTracker::last_buffer(SurfaceId surface_id) const
 {
+    (void)surface_id;
+//    auto& client_buffer = client_buffer_resource[surface_id];
     return nullptr;
 }
 
-bool mf::SessionSurfaceTracker::surface_has_buffer(SurfaceId, mg::Buffer*) const
+bool mf::SessionSurfaceTracker::surface_has_buffer(SurfaceId surface_id, mg::Buffer* buffer) const
 {
-    return true;
+    auto it = client_buffer_tracker.find(surface_id);
+    if (it == client_buffer_tracker.end())
+        return false;
+
+    return it->second->client_has(buffer->id());
 }
