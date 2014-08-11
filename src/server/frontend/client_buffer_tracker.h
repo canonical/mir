@@ -69,7 +69,7 @@ public:
     graphics::Buffer* last_buffer(SurfaceId) const override;
     bool surface_has_buffer(SurfaceId, graphics::Buffer*) const override;
 private:
-
+    size_t const client_cache_size;
 };
 
 }

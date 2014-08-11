@@ -51,3 +51,26 @@ bool mf::ClientBufferTracker::client_has(mg::BufferID const& id) const
 {
     return std::find(ids.begin(), ids.end(), id) != ids.end();
 }
+
+mf::SessionSurfaceTracker::SessionSurfaceTracker(size_t client_cache_size) :
+    client_cache_size{client_cache_size}
+{
+}
+
+void mf::SessionSurfaceTracker::add_buffer_to_surface(SurfaceId, mg::Buffer*)
+{
+}
+
+void mf::SessionSurfaceTracker::remove_surface(SurfaceId)
+{
+}
+
+mg::Buffer* mf::SessionSurfaceTracker::last_buffer(SurfaceId) const
+{
+    return nullptr;
+}
+
+bool mf::SessionSurfaceTracker::surface_has_buffer(SurfaceId, mg::Buffer*) const
+{
+    return true;
+}
