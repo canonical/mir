@@ -19,6 +19,7 @@
  #ifndef MIR_FRONTEND_CLIENT_BUFFER_TRACKER_H_
  #define MIR_FRONTEND_CLIENT_BUFFER_TRACKER_H_
 
+#include "surface_tracker.h"
 #include <stdint.h>
 #include <list>
 
@@ -56,7 +57,22 @@ private:
     unsigned int const cache_size;
 };
 
+class SessionSurfaceTracker : public SurfaceTracker
+{
+public:
+    SessionSurfaceTracker(size_t client_cache_size);
+    SessionSurfaceTracker(SessionSurfaceTracker const&) = delete;
+    SessionSurfaceTracker& operator=(SessionSurfaceTracker const&) = delete;
+
+    void add_buffer_to_surface(SurfaceId, graphics::Buffer*) override;
+    void remove_surface(SurfaceId) override;
+    graphics::Buffer* last_buffer(SurfaceId) const override;
+    bool surface_has_buffer(SurfaceId, graphics::Buffer*) const override;
+private:
+
+};
+
 }
 }
 
- #endif // MIR_FRONTEND_CLIENT_BUFFER_TRACKER_H_
+#endif // MIR_FRONTEND_CLIENT_BUFFER_TRACKER_H_
