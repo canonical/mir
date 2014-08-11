@@ -106,11 +106,3 @@ TEST(ClientBufferTracker, tracks_correct_number_of_buffers)
             EXPECT_TRUE(tracker.client_has(ids[i]));
     }
 }
-
-struct SurfaceTracker : public testing::Test
-{
-};
-
-TEST_F(SurfaceTracker, tracks)
-{
-}

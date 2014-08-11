@@ -44,7 +44,6 @@
 #include "mir/scene/prompt_session_creation_parameters.h"
 
 #include "mir/geometry/rectangles.h"
-#include "surface_tracker.h"
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
 
@@ -72,8 +71,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context,
-    std::shared_ptr<mi::CursorImages> const& cursor_images,
-    std::unique_ptr<SurfaceTracker> tracker) :
+    std::shared_ptr<mi::CursorImages> const& cursor_images) :
     client_pid_(0),
     shell(shell),
     graphics_platform(graphics_platform),
@@ -84,8 +82,7 @@ mf::SessionMediator::SessionMediator(
     resource_cache(resource_cache),
     screencast(screencast),
     connection_context(connection_context),
-    cursor_images(cursor_images),
-    surface_tracker(std::move(tracker))
+    cursor_images(cursor_images)
 {
 }
 
@@ -198,10 +195,8 @@ void mf::SessionMediator::create_surface(
     response->set_buffer_usage(request->buffer_usage());
 
     if (surface->supports_input())
-    {
         response->add_fd(surface->client_input_fd());
-    }
- 
+    
     for (unsigned int i = 0; i < mir_surface_attribs; i++)
     {
         auto setting = response->add_attributes();

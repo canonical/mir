@@ -20,7 +20,6 @@
 #include "src/server/frontend/session_mediator.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/frontend/resource_cache.h"
-#include "src/server/frontend/surface_tracker.h"
 #include "src/server/scene/application_session.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
@@ -38,7 +37,6 @@
 #include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_surface_tracker.h"
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
@@ -212,7 +210,6 @@ struct SessionMediator : public ::testing::Test
           report{mr::null_session_mediator_report()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           stub_screencast{std::make_shared<StubScreencast>()},
-          mock_tracker{std::move(std::unique_ptr<mtd::MockSurfaceTracker>(new mtd::MockSurfaceTracker))},
           stubbed_session{std::make_shared<StubbedSession>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
@@ -236,7 +233,6 @@ struct SessionMediator : public ::testing::Test
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     std::shared_ptr<StubScreencast> const stub_screencast;
-    std::unique_ptr<mtd::MockSurfaceTracker> mock_tracker;
     std::shared_ptr<StubbedSession> const stubbed_session;
     std::unique_ptr<google::protobuf::Closure> null_callback;
 
@@ -262,7 +258,7 @@ TEST_F(SessionMediator, disconnect_releases_session)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, {}, std::move(mock_tracker)};
+        resource_cache, stub_screencast, &connector, {}};
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
@@ -282,7 +278,7 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, context, nullptr, std::move(mock_tracker)};
+        resource_cache, stub_screencast, context, nullptr};
 
     EXPECT_THAT(connects_handled_count, Eq(0));
 
@@ -299,7 +295,7 @@ TEST_F(SessionMediator, calling_methods_before_connect_throws)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, nullptr, std::move(mock_tracker)};
+        resource_cache, stub_screencast, &connector, nullptr};
 
     EXPECT_THROW({
         mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
@@ -329,7 +325,7 @@ TEST_F(SessionMediator, calling_methods_after_connect_works)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, nullptr, std::move(mock_tracker)};
+        resource_cache, stub_screencast, &connector, nullptr};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
@@ -349,7 +345,7 @@ TEST_F(SessionMediator, calling_methods_after_disconnect_throws)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, nullptr, std::move(mock_tracker)};
+        resource_cache, stub_screencast, &connector, nullptr};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
@@ -382,7 +378,7 @@ TEST_F(SessionMediator, can_reconnect_after_disconnect)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, nullptr, std::move(mock_tracker)};
+        resource_cache, stub_screencast, &connector, nullptr};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
@@ -402,7 +398,7 @@ TEST_F(SessionMediator, connect_packs_display_configuration)
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
         resource_cache, std::make_shared<mtd::NullScreencast>(),
-        nullptr, nullptr, std::move(mock_tracker));
+        nullptr, nullptr);
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     EXPECT_THAT(connection.display_configuration(), mt::DisplayConfigMatches(std::cref(config)));
@@ -414,7 +410,7 @@ TEST_F(SessionMediator, creating_surface_packs_response_with_input_fds)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, nullptr, std::move(mock_tracker)};
+        resource_cache, stub_screencast, &connector, nullptr};
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
@@ -438,7 +434,7 @@ TEST_F(SessionMediator, no_input_channel_returns_no_fds)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, nullptr, std::move(mock_tracker)};
+        resource_cache, stub_screencast, &connector, nullptr};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
@@ -486,7 +482,7 @@ TEST_F(SessionMediator, session_only_sends_mininum_information_for_buffers)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, nullptr, std::move(mock_tracker)};
+        resource_cache, stub_screencast, &connector, nullptr};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
@@ -526,7 +522,7 @@ TEST_F(SessionMediator, session_with_multiple_surfaces_only_sends_needed_buffers
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, nullptr, std::move(mock_tracker)};
+        resource_cache, stub_screencast, &connector, nullptr};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
@@ -558,7 +554,7 @@ TEST_F(SessionMediator, buffer_resource_for_surface_unaffected_by_other_surfaces
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, nullptr, std::move(mock_tracker)};
+        resource_cache, stub_screencast, &connector, nullptr};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mp::SurfaceParameters surface_request;
@@ -623,7 +619,7 @@ TEST_F(SessionMediator, display_config_request)
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(), resource_cache,
         std::make_shared<mtd::NullScreencast>(),
-          nullptr, nullptr, std::move(mock_tracker)};
+          nullptr, nullptr};
 
     session_mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
@@ -671,7 +667,7 @@ TEST_F(SessionMediator, fully_packs_buffer_for_create_screencast)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, nullptr, std::move(mock_tracker)};
+        resource_cache, stub_screencast, &connector, nullptr};
     mediator.create_screencast(nullptr, &screencast_parameters,
                                &screencast, null_callback.get());
     EXPECT_EQ(stub_buffer.id().as_uint32_t(), screencast.buffer().buffer_id());
@@ -694,7 +690,7 @@ TEST_F(SessionMediator, partially_packs_buffer_for_screencast_buffer)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, nullptr, std::move(mock_tracker)};
+        resource_cache, stub_screencast, &connector, nullptr};
 
     mediator.screencast_buffer(nullptr, &screencast_id,
                                &protobuf_buffer, null_callback.get());
@@ -718,7 +714,7 @@ TEST_F(SessionMediator, new_fds_for_prompt_providers_allocates_requested_number_
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, nullptr, std::move(mock_tracker)};
+        resource_cache, stub_screencast, &connector, nullptr};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
