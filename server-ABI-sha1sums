@@ -9,7 +9,6 @@ e2d0d1e1d0611eb1d0b02ddcb07814226d934d51  include/platform/mir/graphics/buffer.h
 4ae1e2be7eaa64612e4248d1fbba43fd7de22e01  include/platform/mir/graphics/buffer_ipc_packer.h
 748f5c2aab11189aa02c4a89ab900561548e7304  include/platform/mir/graphics/buffer_properties.h
 8cbeac82032d54ba86cfb094e6ed0a35132075b7  include/platform/mir/graphics/buffer_writer.h
-74e5c6773f0c1e78e37443542ee1d4452dae8b54  include/platform/mir/graphics/buffer_writer.h~
 ffa857f624f1c8cbd50a190107137346fc3204d6  include/platform/mir/graphics/cursor.h
 fe2b5f13ccd3ec6b78d90d3abbb7d88b48238578  include/platform/mir/graphics/cursor_image.h
 986f5d0d8ea2c6a42cc320f468e682f81fec46ae  include/platform/mir/graphics/display_buffer.h
@@ -35,7 +34,6 @@ c9730cac4a3a101f9706ec6f444958abe047fd88  include/platform/mir/graphics/internal
 590572a9d86a9481b4531ad44414c6f76352fe7a  include/platform/mir/graphics/nested_context.h
 27807b8ba288590f3749cfb32512eda4d0de6c7d  include/platform/mir/graphics/overlapping_output_grouping.h
 32c70ee44b8dc9372dec0c54471aa8d831adcb1c  include/platform/mir/graphics/pixel_format_utils.h
-2fae02fae3d47f2e3b1b660ea51c400b4fd7f493  include/platform/mir/graphics/#platform.h#
 2fae02fae3d47f2e3b1b660ea51c400b4fd7f493  include/platform/mir/graphics/platform.h
 9c7712af84b6fde1970ff802ad2ea78f892c7b7e  include/platform/mir/graphics/platform_ipc_package.h
 e9cb6643ac8b40532bb15cd4a5d76f27ea23d92a  include/platform/mir/graphics/renderable.h
@@ -107,8 +105,6 @@ b703ac51f94b6f9c9edcd6a4587e33d6e2d54269  include/server/mir/input/input_report.
 51cda18e314f1e36177a7ebfab0d1dd12867cdf0  include/server/mir/input/input_send_observer.h
 5bd014a4d075437402e515b56a7ff446c3b1bba2  include/server/mir/input/scene.h
 15119bf95b4512c8b91df7c20edf56a3c0734957  include/server/mir/input/surface.h
-8c1f9046b94f8441b1f5b196a3a8be1e994f6fd6  include/server/mir/input/touchspot_image.c~
-d647ce6beffdc31a597769587bb3ab17ec679491  include/server/mir/input/#touch_visualizer.h#
 d647ce6beffdc31a597769587bb3ab17ec679491  include/server/mir/input/touch_visualizer.h
 204089f848c4d63ade96f92a0b8cfc1c33f1ce63  include/server/mir/input/vt_filter.h
 5ba863e9bb4dc9802aa74a7864f576df25142c2d  include/server/mir/logging/glog_logger.h
