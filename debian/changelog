@@ -77,6 +77,8 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
       . Expose create_native_platform in libmirplatformgraphics.so
         (LP: #1353658)
       . Add versioning and pkg config to libmirplatform (LP: #1293944)
+      . unity-system-compositor FTBFS against Mir: undefined reference to
+        `...@MIR_CLIENT_8' (LP: #1355021)
 
  -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Wed, 30 Jul 2014 16:35:00 +0300
 
