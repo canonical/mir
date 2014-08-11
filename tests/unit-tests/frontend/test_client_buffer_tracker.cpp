@@ -179,7 +179,7 @@ TEST_F(SurfaceTracker, buffers_expire_if_they_overrun_cache)
     EXPECT_TRUE(tracker.surface_has_buffer(surf_id0, &stub_buffer0));
     EXPECT_TRUE(tracker.surface_has_buffer(surf_id0, &stub_buffer1));
     EXPECT_TRUE(tracker.surface_has_buffer(surf_id0, &stub_buffer2));
-    EXPECT_FALSE(tracker.surface_has_buffer(surf_id0, &stub_buffer2));
+    EXPECT_FALSE(tracker.surface_has_buffer(surf_id0, &stub_buffer3));
 
     tracker.add_buffer_to_surface(surf_id0, &stub_buffer0);
     tracker.add_buffer_to_surface(surf_id0, &stub_buffer3);
@@ -201,8 +201,10 @@ TEST_F(SurfaceTracker, buffers_only_affect_associated_surfaces)
     EXPECT_EQ(&stub_buffer2, tracker.last_buffer(surf_id0));
     
     tracker.add_buffer_to_surface(surf_id1, &stub_buffer0);
-    EXPECT_EQ(&stub_buffer2, tracker.last_buffer(surf_id1));
+    EXPECT_EQ(&stub_buffer2, tracker.last_buffer(surf_id0));
+    EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id1));
 
     tracker.add_buffer_to_surface(surf_id0, &stub_buffer3);
     EXPECT_EQ(&stub_buffer3, tracker.last_buffer(surf_id0));
+    EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id1));
 }
