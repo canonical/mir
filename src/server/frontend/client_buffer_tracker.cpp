@@ -73,13 +73,19 @@ void mf::SessionSurfaceTracker::remove_surface(SurfaceId surface_id)
     auto it = client_buffer_tracker.find(surface_id);
     if (it != client_buffer_tracker.end())
         client_buffer_tracker.erase(it);
+
+    auto last_buffer_it = client_buffer_resource.find(surface_id);
+    if (last_buffer_it != client_buffer_resource.end())
+        client_buffer_resource.erase(last_buffer_it);
 }
 
 mg::Buffer* mf::SessionSurfaceTracker::last_buffer(SurfaceId surface_id) const
 {
-    (void)surface_id;
-//    auto& client_buffer = client_buffer_resource[surface_id];
-    return nullptr;
+    auto it = client_buffer_resource.find(surface_id);
+    if (it != client_buffer_resource.end())
+        return it->second;
+    else
+        BOOST_THROW_EXCEPTION(std::runtime_error("SurfaceId has no last buffer"));
 }
 
 bool mf::SessionSurfaceTracker::surface_has_buffer(SurfaceId surface_id, mg::Buffer* buffer) const
