@@ -72,7 +72,6 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
         on android (partial fix for LP: #1348330)
       . Remember to honor MIR_ENABLE_TESTS and not emit tests if it's disabled
         (LP: #1352800)
-      . Expose an interface for touch visualization (LP: #1323522)
       . Make it easier to separate command line options used by Mir from those
         used elsewhere (LP: #1351255)
       . Expose create_native_platform in libmirplatformgraphics.so
