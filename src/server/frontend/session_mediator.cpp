@@ -73,7 +73,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context,
     std::shared_ptr<mi::CursorImages> const& cursor_images,
-    std::unique_ptr<SurfaceTracker> tracker) :
+    std::shared_ptr<SurfaceTracker> const& tracker) :
     client_pid_(0),
     shell(shell),
     graphics_platform(graphics_platform),
@@ -85,7 +85,7 @@ mf::SessionMediator::SessionMediator(
     screencast(screencast),
     connection_context(connection_context),
     cursor_images(cursor_images),
-    surface_tracker(std::move(tracker))
+    surface_tracker(tracker)
 {
 }
 

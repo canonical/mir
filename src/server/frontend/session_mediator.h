@@ -77,7 +77,7 @@ public:
         std::shared_ptr<Screencast> const& screencast,
         ConnectionContext const& connection_context,
         std::shared_ptr<input::CursorImages> const& cursor_images,
-        std::unique_ptr<SurfaceTracker> tracker);
+        std::shared_ptr<SurfaceTracker> const& tracker);
 
     ~SessionMediator() noexcept;
 
@@ -191,7 +191,7 @@ private:
     ConnectionContext const connection_context;
     std::shared_ptr<input::CursorImages> const cursor_images;
 
-    std::unique_ptr<SurfaceTracker> surface_tracker;
+    std::shared_ptr<SurfaceTracker> const surface_tracker;
     std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
     std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
 

@@ -131,5 +131,5 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         effective_screencast,
         connection_context,
         cursor_images,
-        std::unique_ptr<mf::SurfaceTracker>(new FlubTracker()));
+        std::make_shared<FlubTracker>());
 }
