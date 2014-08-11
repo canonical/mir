@@ -1,5 +1,6 @@
-mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.6.0+14.10.20140811-0ubuntu1) utopic; urgency=medium
 
+  [ Cemil Azizoglu ]
   * New upstream release 0.6.0 (https://launchpad.net/mir/+milestone/0.6.0)
     - mirclient ABI unchanged at 8. Clients do not need rebuilding.
     - mirserver ABI bumped to 24. Servers need rebuilding, but probably don't
@@ -80,7 +81,10 @@ mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
       . unity-system-compositor FTBFS against Mir: undefined reference to
         `...@MIR_CLIENT_8' (LP: #1355021)
 
- -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Wed, 30 Jul 2014 16:35:00 +0300
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 11 Aug 2014 19:52:06 +0000
 
 mir (0.5.1+14.10.20140728-0ubuntu1) utopic; urgency=medium
 
