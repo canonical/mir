@@ -188,6 +188,7 @@ void mf::SessionMediator::create_surface(
         .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
         .of_pixel_format(static_cast<MirPixelFormat>(request->pixel_format()))
         .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id())));
+    printf("CREATE SURFACE id %i\n", surf_id.as_value());
 
     auto surface = session->get_surface(surf_id);
     auto const& client_size = surface->client_size();
@@ -198,7 +199,10 @@ void mf::SessionMediator::create_surface(
     response->set_buffer_usage(request->buffer_usage());
 
     if (surface->supports_input())
+    {
+        printf("INPUT SUPPORT\n");
         response->add_fd(surface->client_input_fd());
+    } else {printf("NO INPUT SUPPORT\n"); }
     
     for (unsigned int i = 0; i < mir_surface_attribs; i++)
     {
@@ -209,12 +213,14 @@ void mf::SessionMediator::create_surface(
         setting->set_ivalue(surface->query(static_cast<MirSurfaceAttrib>(i)));
     }
 
+    printf("oshuo\n");
     advance_buffer(surf_id, *surface,
         [lock, this, response, done, session]
         (graphics::Buffer* client_buffer, graphics::BufferIpcMsgType msg_type)
         {
             lock->unlock();
 
+    printf("ont\n");
             auto buffer = response->mutable_buffer();
             pack_protobuf_buffer(*buffer, client_buffer, msg_type);
 
