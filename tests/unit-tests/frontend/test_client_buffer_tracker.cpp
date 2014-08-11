@@ -140,11 +140,15 @@ TEST_F(SurfaceTracker, removals_remove_buffer_instances)
 
     EXPECT_TRUE(tracker.surface_has_buffer(surf_id0, &stub_buffer0));
     EXPECT_TRUE(tracker.surface_has_buffer(surf_id1, &stub_buffer0));
+    EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id0));
 
     tracker.remove_surface(surf_id0);
 
     EXPECT_FALSE(tracker.surface_has_buffer(surf_id0, &stub_buffer0));
     EXPECT_TRUE(tracker.surface_has_buffer(surf_id1, &stub_buffer0));
+    EXPECT_THROW({
+        tracker.last_buffer(surf_id0);
+    }, std::runtime_error);
 }
 
 TEST_F(SurfaceTracker, last_client_buffer)

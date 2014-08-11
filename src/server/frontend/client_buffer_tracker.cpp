@@ -64,6 +64,8 @@ void mf::SessionSurfaceTracker::add_buffer_to_surface(SurfaceId surface_id, mg::
     auto& tracker = client_buffer_tracker[surface_id];
     if (!tracker) tracker = std::make_shared<ClientBufferTracker>(client_cache_size);
     tracker->add(buffer->id());
+
+    client_buffer_resource[surface_id] = buffer; 
 }
 
 void mf::SessionSurfaceTracker::remove_surface(SurfaceId surface_id)
