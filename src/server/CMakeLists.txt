@@ -22,20 +22,13 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
 )
 
-set(
-  SRCS
+add_library(mirserver SHARED
   run_mir.cpp
   report_exception.cpp
   display_server.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
   default_emergency_cleanup.cpp
-)
-
-set(MIRSERVER_LINKAGE SHARED)
-
-add_library(mirserver ${MIRSERVER_LINKAGE}
-  ${SRCS}
   $<TARGET_OBJECTS:mirinput>
   $<TARGET_OBJECTS:mirscene>
   $<TARGET_OBJECTS:mircompositor>
@@ -52,7 +45,7 @@ add_library(mirserver ${MIRSERVER_LINKAGE}
   $<TARGET_OBJECTS:miroffscreengraphics>
 )
 
-list(APPEND MIRSERVER_LINKS
+target_link_libraries(mirserver LINK_PUBLIC
   mirplatform
   mirclient
   mircommon
@@ -65,19 +58,15 @@ list(APPEND MIRSERVER_LINKS
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
 )
 
-target_link_libraries(mirserver LINK_PUBLIC ${MIRSERVER_LINKS})
-
-if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
-  install(TARGETS mirserver
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  )
-  install(DIRECTORY
-    ${CMAKE_SOURCE_DIR}/include/platform/mir DESTINATION "include/mirplatform"
-  )
-  install(DIRECTORY
-    ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
-  )
-endif()
+install(TARGETS mirserver
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(DIRECTORY
+  ${CMAKE_SOURCE_DIR}/include/platform/mir DESTINATION "include/mirplatform"
+)
+install(DIRECTORY
+  ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
+)
 
 set(MIRSERVER_ABI 24) # Be sure to increment MIR_VERSION_MINOR at the same time
 
