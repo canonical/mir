@@ -32,12 +32,12 @@ void mclr::NullRpcReport::invocation_succeeded(
 
 void mclr::NullRpcReport::invocation_failed(
     mir::protobuf::wire::Invocation const& /*invocation*/,
-    boost::system::error_code const& /*error*/)
+    std::exception const& /*error*/)
 {
 }
 
 void mclr::NullRpcReport::header_receipt_failed(
-    boost::system::error_code const& /*error*/)
+    std::exception const& /*error*/)
 {
 }
 

@@ -1,5 +1,5 @@
 ADD_LIBRARY(
-  mirtime STATIC
+  mirtime OBJECT
 
   high_resolution_clock.cpp
 )

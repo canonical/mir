@@ -43,15 +43,10 @@ std::string const log_opt_val{"log"};
 std::string const lttng_opt_val{"lttng"};
 std::string const default_platform_lib{"libmirclientplatform.so"};
 
-// TODO making this namespace scope extends its life slightly (and avoids a potential crash)
-// TODO but we should manage it and ensure it is only released after the last connection dies
-static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
-
 mir::SharedLibrary const* load_library(std::string const& libname)
 {
-    // There's no point in loading twice, and it isn't safe to unload...
 
-    if (auto& ptr = libraries_cache[libname])
+    if (auto& ptr = mcl::libraries_cache(libname))
     {
         return ptr.get();
     }

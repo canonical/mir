@@ -38,7 +38,7 @@ using namespace mir;
 using namespace std;
 using namespace mir::test;
 using namespace mir::test::doubles;
-using namespace mir::mir_test_framework;
+using namespace mir_test_framework;
 using namespace mir::graphics;
 using mir::report::null_display_report;
 

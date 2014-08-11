@@ -99,6 +99,7 @@ mc::BufferQueue::BufferQueue(
     : nbuffers{nbuffers},
       frame_dropping_enabled{false},
       the_properties{props},
+      force_new_compositor_buffer{false},
       gralloc{gralloc}
 {
     if (nbuffers < 1)
@@ -240,7 +241,16 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         use_current_buffer = true;
         current_buffer_users.push_back(user_id);
     }
-    use_current_buffer |= ready_to_composite_queue.empty();
+
+    if (ready_to_composite_queue.empty())
+    {
+        use_current_buffer = true;
+    }
+    else if (force_new_compositor_buffer)
+    {
+        use_current_buffer = false;
+        force_new_compositor_buffer = false;
+    }
 
     mg::Buffer* buffer_to_release = nullptr;
     if (!use_current_buffer)
@@ -472,4 +482,23 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
        std::swap(buffer_to_give, current_compositor_buffer);
     }
     give_buffer_to_client(buffer_to_give, std::move(lock));
+}
+
+void mc::BufferQueue::drop_old_buffers()
+{
+    std::vector<mg::Buffer*> to_release;
+
+    {
+        std::lock_guard<decltype(guard)> lock{guard};
+        force_new_compositor_buffer = true;
+
+        while (ready_to_composite_queue.size() > 1)
+            to_release.push_back(pop(ready_to_composite_queue));
+    }
+
+    for (auto buffer : to_release)
+    {
+       std::unique_lock<decltype(guard)> lock{guard};
+       release(buffer, std::move(lock));
+    }
 }

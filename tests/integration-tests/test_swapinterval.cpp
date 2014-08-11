@@ -28,6 +28,7 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_buffer_stream.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -48,21 +49,11 @@ namespace
 {
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class CountingBufferStream : public mc::BufferStream
+class CountingBufferStream : public mtd::StubBufferStream
 {
 public:
     CountingBufferStream(int render_operations_fd)
      : render_operations_fd(render_operations_fd)
-    {
-    }
-
-    void acquire_client_buffer(
-        std::function<void(mg::Buffer* buffer)> complete) override
-    {
-        complete(&stub_buffer);
-    }
-
-    void release_client_buffer(mg::Buffer*) override
     {
     }
 
@@ -75,18 +66,13 @@ public:
     MirPixelFormat get_stream_pixel_format() override
         { return mir_pixel_format_abgr_8888; }
 
-    geom::Size stream_size() override { return geom::Size{}; }
-    void resize(geom::Size const&) override {}
-    void force_requests_to_complete() override {}
     void allow_framedropping(bool) override
     {
         while (write(render_operations_fd, "a", 1) != 1) continue;
     }
-    int buffers_ready_for_compositor() const override { return 1; }
 
 private:
     int render_operations_fd;
-    mtd::StubBuffer stub_buffer;
 };
 
 class StubStreamFactory : public ms::BufferStreamFactory

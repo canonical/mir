@@ -16,7 +16,6 @@ set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
 set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirserver")
-set(PLATFORM_INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirplatform")
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirserver.pc.in
@@ -37,50 +36,38 @@ set(MIRSERVER_LINKAGE SHARED)
 
 add_library(mirserver ${MIRSERVER_LINKAGE}
   ${SRCS}
-)
-
-list(APPEND MIRSERVER_ARCHIVES
-  miroptions
-  mircompositor
-  mirfrontend
-  mirgraphics
-  mirinput
-  mirsharedinput
-  mirsharedgeometry
-  mirsharedlogging
-  mirsharedenv
-  mirsharedsharedlibrary
-  mirsharedthread
-  mirshell
-  mirscene
-  mirtime
-  mirlttng
-  mirreport
-  mirlogger
-  mirnestedgraphics
-  miroffscreengraphics
+  $<TARGET_OBJECTS:mirinput>
+  $<TARGET_OBJECTS:mirscene>
+  $<TARGET_OBJECTS:mircompositor>
+  $<TARGET_OBJECTS:mirgraphics>
+  $<TARGET_OBJECTS:mirfrontend>
+  $<TARGET_OBJECTS:mirshell>
+  $<TARGET_OBJECTS:mirtime>
+  $<TARGET_OBJECTS:mirlttng>
+  $<TARGET_OBJECTS:mirreport>
+  $<TARGET_OBJECTS:mirlogging>
+  $<TARGET_OBJECTS:mirnullreport>
+  $<TARGET_OBJECTS:mirlogger>
+  $<TARGET_OBJECTS:mirnestedgraphics>
+  $<TARGET_OBJECTS:miroffscreengraphics>
 )
 
 list(APPEND MIRSERVER_LINKS
-  mirprotobuf
   mirplatform
   mirclient
+  mircommon
   3rd_party
   xcursorloader
+  ${GLog_LIBRARY}
+  ${GFlags_LIBRARY}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
 )
 
+target_link_libraries(mirserver LINK_PUBLIC ${MIRSERVER_LINKS})
+
 if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
-  target_link_libraries(mirserver
-    LINK_PRIVATE
-      -Wl,-whole-archive
-      ${MIRSERVER_ARCHIVES}
-      -Wl,-no-whole-archive
-    LINK_PUBLIC
-      ${MIRSERVER_LINKS}
-  )
   install(TARGETS mirserver
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
@@ -90,15 +77,9 @@ if(${MIRSERVER_LINKAGE} STREQUAL SHARED)
   install(DIRECTORY
     ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
   )
-else()
-  target_link_libraries(mirserver
-    LINK_PUBLIC
-      ${MIRSERVER_ARCHIVES}
-      ${MIRSERVER_LINKS}
-  )
 endif()
 
-set(MIRSERVER_ABI 23) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 24) # Be sure to increment MIR_VERSION_MINOR at the same time
 
 set_target_properties(
   mirserver

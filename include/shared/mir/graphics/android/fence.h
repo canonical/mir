@@ -26,6 +26,7 @@ namespace graphics
 namespace android
 {
 
+//TODO: (kdub) remove this type in favor of mir::Fd
 typedef int NativeFence;
 
 class Fence
@@ -34,6 +35,7 @@ public:
     virtual ~Fence() = default;
 
     virtual void wait() = 0;
+    //TODO: (kdub) use the Fd type instead of NativeFence
     virtual void merge_with(NativeFence& merge_fd) = 0;
     virtual NativeFence copy_native_handle() const = 0;
 

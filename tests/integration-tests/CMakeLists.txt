@@ -43,7 +43,9 @@ endif()
 link_directories(${LIBRARY_OUTPUT_PATH})
 add_executable(
   mir_integration_tests
-  ${INTEGRATION_TESTS_SRCS})
+  ${INTEGRATION_TESTS_SRCS}
+  $<TARGET_OBJECTS:mirclientobjects>
+)
 uses_android_input(mir_integration_tests)
 
 target_link_libraries(
@@ -54,8 +56,6 @@ target_link_libraries(
   mir-test-doubles
 
   mirserver
-  mirplatformgraphics
-  mirclient
   mirdraw
   mirtestdraw
 
@@ -67,7 +67,16 @@ target_link_libraries(
   ${GMOCK_LIBRARY}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+  ${DRM_LDFLAGS} ${DRM_LIBRARIES}
+  ${GBM_LDFLAGS} ${GBM_LIBRARIES}
 )
+
+if (MIR_TEST_PLATFORM STREQUAL "android")
+target_link_libraries(mir_integration_tests
+  mirsharedandroid
+  ${ANDROID_PROPERTIES_LIBRARIES}
+)
+endif()
 
 CMAKE_DEPENDENT_OPTION(
   MIR_RUN_INTEGRATION_TESTS

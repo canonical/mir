@@ -1,5 +1,10 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LTTNG_UST_INCLUDE_DIRS})
 
+# Don't treat missing-field-initializers as an error, since
+# the LTTng macros contain code that triggers this (but it's
+# harmless; it concerns a padding field)
+add_compile_options(-Wno-error=missing-field-initializers -Wno-error=unused-function)
+
 set(
   LTTNG_SOURCES
 
@@ -15,30 +20,12 @@ set(
 )
 
 add_library(
-  mirlttng STATIC
+  mirlttng OBJECT
 
   ${LTTNG_SOURCES}
 )
 
 add_library(mirserverlttng SHARED tracepoints.c)
-
-# Don't treat missing-field-initializers as an error, since
-# the LTTng macros contain code that triggers this (but it's
-# harmless; it concerns a padding field)
-set_target_properties(mirlttng PROPERTIES
-  COMPILE_FLAGS "-Wno-error=missing-field-initializers -Wno-error=unused-function"
-)
-
-set_target_properties(mirserverlttng PROPERTIES
-  COMPILE_FLAGS "-Wno-error=unused-function"
-)
-
-target_link_libraries(
-  mirlttng
-
-  mirsharedlttng
-  -ldl
-)
 
 target_link_libraries(
   mirserverlttng

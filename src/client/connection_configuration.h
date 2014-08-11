@@ -39,8 +39,11 @@ namespace logging
 class Logger;
 }
 
+class SharedLibrary;
+
 namespace client
 {
+std::shared_ptr<SharedLibrary>& libraries_cache(std::string const& lib_name);
 
 class ConnectionSurfaceMap;
 class Logger;
@@ -70,7 +73,6 @@ protected:
     ConnectionConfiguration(ConnectionConfiguration const&) = delete;
     ConnectionConfiguration& operator=(ConnectionConfiguration const&) = delete;
 };
-
 }
 }
 
