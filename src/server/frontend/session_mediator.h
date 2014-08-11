@@ -24,6 +24,7 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/graphics/platform.h"
 #include "mir_toolkit/common.h"
+#include "surface_tracker.h"
 
 #include <functional>
 #include <unordered_map>
@@ -75,7 +76,8 @@ public:
         std::shared_ptr<ResourceCache> const& resource_cache,
         std::shared_ptr<Screencast> const& screencast,
         ConnectionContext const& connection_context,
-        std::shared_ptr<input::CursorImages> const& cursor_images);
+        std::shared_ptr<input::CursorImages> const& cursor_images,
+        std::unique_ptr<SurfaceTracker> tracker);
 
     ~SessionMediator() noexcept;
 
@@ -160,6 +162,9 @@ public:
         ::mir::protobuf::SocketFD* response,
         ::google::protobuf::Closure* done) override;
 
+    //SessionMediator(SessionMediator const&) = delete;
+    //SessionMediator(SessionMediator const&) = delete;
+
 private:
     void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
                               graphics::Buffer* graphics_buffer,
@@ -186,6 +191,7 @@ private:
     ConnectionContext const connection_context;
     std::shared_ptr<input::CursorImages> const cursor_images;
 
+    std::unique_ptr<SurfaceTracker> surface_tracker;
     std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
     std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
 

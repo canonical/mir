@@ -99,6 +99,16 @@ std::shared_ptr<mf::ResourceCache> mf::DefaultIpcFactory::resource_cache()
     return cache;
 }
 
+namespace{
+struct FlubTracker : public mf::SurfaceTracker
+{
+    void add_buffer_to_surface(mf::SurfaceId, mg::Buffer*) {}
+    void remove_surface(mf::SurfaceId) {}
+    mg::Buffer* last_buffer(mf::SurfaceId) const {return nullptr;}
+    bool surface_has_buffer(mf::SurfaceId, mg::Buffer*) const {return false;}
+};
+}
+
 std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
     std::shared_ptr<Shell> const& shell,
     std::shared_ptr<mg::Platform> const& graphics_platform,
@@ -120,5 +130,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         resource_cache(),
         effective_screencast,
         connection_context,
-        cursor_images);
+        cursor_images,
+        std::unique_ptr<mf::SurfaceTracker>(new FlubTracker()));
 }
