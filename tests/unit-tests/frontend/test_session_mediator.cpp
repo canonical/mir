@@ -122,7 +122,8 @@ public:
         if (mock_surfaces.end() == mock_surfaces.find(id))
         {
             mock_surfaces[id] = 
-                std::make_shared<mtd::MockFrontendSurface>(mock_buffer, testing_client_input_fd);
+                std::make_shared<testing::NiceMock<mtd::MockFrontendSurface>>(
+                    mock_buffer, testing_client_input_fd);
         }
         return mock_surfaces.at(id);
     }
@@ -132,7 +133,8 @@ public:
         mf::SurfaceId id{last_surface_id};
         if (mock_surfaces.end() == mock_surfaces.find(id))
         {
-            mock_surfaces[id] = std::make_shared<mtd::MockFrontendSurface>(mock_buffer, testing_client_input_fd);
+            mock_surfaces[id] = std::make_shared<testing::NiceMock<mtd::MockFrontendSurface>>(
+                mock_buffer, testing_client_input_fd);
         }
         last_surface_id++;
         return id;
@@ -391,7 +393,7 @@ TEST_F(SessionMediator, connect_packs_display_configuration)
 {
     using namespace testing;
     mtd::StubDisplayConfig config;
-    auto mock_display = std::make_shared<mtd::MockDisplayChanger>();
+    auto mock_display = std::make_shared<NiceMock<mtd::MockDisplayChanger>>();
     ON_CALL(*mock_display, active_configuration())
         .WillByDefault(Return(mt::fake_shared(config)));
 
