@@ -421,6 +421,38 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
     });
 }
 
+TEST_F(ServerShutdown, the_fatal_error_default_can_be_changed_to_abort)
+{
+    // Change the fatal error strategy before starting the Mir server
+    mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
+
+    struct ServerConfig : TestingServerConfiguration
+    {
+        void on_start() override
+        {
+            sync.wait_for_signal_ready_for();
+            mir::fatal_error("Bang");
+        }
+
+        mtf::CrossProcessSync sync;
+    };
+
+    ServerConfig server_config;
+    launch_server_process(server_config);
+
+    run_in_test_process([&]
+    {
+        server_config.sync.signal_ready();
+
+        auto result = wait_for_shutdown_server_process();
+        EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal, result.reason);
+        // Under valgrind the server process is reported as being terminated
+        // by SIGKILL because of multithreading madness.
+        // TODO: Investigate if we can do better than this workaround
+        EXPECT_TRUE(result.signal == SIGABRT || result.signal == SIGKILL);
+    });
+}
+
 TEST_F(ServerShutdown, server_removes_endpoint_on_mir_fatal_error_abort)
 {   // Even fatal errors sometimes need to be caught for critical cleanup...
     struct ServerConfig : TestingServerConfiguration
@@ -444,17 +476,46 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_mir_fatal_error_abort)
 
         server_config.sync.signal_ready();
 
+        wait_for_shutdown_server_process();
+
+        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
+    });
+}
+
+TEST_F(ServerShutdown, setting_on_fatal_error_abort_option_causes_abort_on_fatal_error)
+{
+    static auto const env_on_fatal_error_abort = "MIR_SERVER_ON_FATAL_ERROR_ABORT";
+    auto const old_env(getenv(env_on_fatal_error_abort));
+    if (!old_env) setenv(env_on_fatal_error_abort, "", true);
+
+    struct ServerConfig : TestingServerConfiguration
+    {
+        void on_start() override
+        {
+            sync.wait_for_signal_ready_for();
+            mir::fatal_error("Bang");
+        }
+
+        mtf::CrossProcessSync sync;
+    };
+
+    ServerConfig server_config;
+    launch_server_process(server_config);
+
+    run_in_test_process([&]
+    {
+        server_config.sync.signal_ready();
+
         auto result = wait_for_shutdown_server_process();
         EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal, result.reason);
         // Under valgrind the server process is reported as being terminated
         // by SIGKILL because of multithreading madness.
         // TODO: Investigate if we can do better than this workaround
         EXPECT_TRUE(result.signal == SIGABRT || result.signal == SIGKILL);
-
-        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
     });
-}
 
+    if (!old_env) unsetenv(env_on_fatal_error_abort);
+}
 
 TEST_F(ServerShutdown, server_removes_endpoint_on_mir_fatal_error_except)
 {   // Even fatal errors sometimes need to be caught for critical cleanup...

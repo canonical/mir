@@ -206,9 +206,7 @@ mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
  * can define the 'p' member variable as a unique_ptr to an
  * incomplete type (DisplayServerPrivate) in the header.
  */
-mir::DisplayServer::~DisplayServer()
-{
-}
+mir::DisplayServer::~DisplayServer() = default;
 
 void mir::DisplayServer::run()
 {
