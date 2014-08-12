@@ -2,7 +2,7 @@
 from xml.dom import minidom
 from sys import argv
 
-debug = True
+debug = False
 
 def getText(node):
     rc = []
@@ -49,10 +49,23 @@ def getAttribs(node):
     prot =  node.attributes['prot'].value
     return (kind, static, prot)
 
+component_map = {}
+
 def report(component, publish, symbol):
+    symbols = component_map.get(component, {'public' : [], 'private' : []})
+    if publish: symbols['public'].append(symbol)
+    else:       symbols['private'].append(symbol)
+    component_map[component] = symbols
+    if not debug: return
     if publish: print '  PUBLISH in {}: {}'.format(component, symbol)
     else      : print 'NOPUBLISH in {}: {}'.format(component, symbol)
-    
+
+def printReport():
+    for component, symbols in component_map.iteritems():
+        print 'COMPONENT:', component
+        for symbol in symbols['public']: print ' ', 'public:', symbol
+        for symbol in symbols['private']: print ' ', 'private:', symbol
+
 def printDebugInfo(node, attributes):
     if not debug: return
     print
@@ -136,3 +149,5 @@ if __name__ == "__main__":
             parseCompoundDefs(xmldoc)
         except Exception as error:
             print 'Error:', arg, error
+
+    printReport()
