@@ -144,24 +144,19 @@ void mf::SessionMediator::advance_buffer(
     Surface& surface,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    auto& tracker = client_buffer_tracker[surf_id];
-    if (!tracker) tracker = std::make_shared<ClientBufferTracker>(client_buffer_cache_size);
-
-    auto& client_buffer = client_buffer_resource[surf_id];
-    surface.swap_buffers(client_buffer,
-        [&tracker, &client_buffer, complete](mg::Buffer* new_buffer)
+    auto tracker = surface_tracker;
+    surface.swap_buffers(
+        tracker->last_buffer(surf_id),
+        [tracker, surf_id, complete](mg::Buffer* new_buffer)
         {
+            auto need_full_ipc = !tracker->surface_has_buffer(surf_id, new_buffer);
 
-            client_buffer = new_buffer;
-            auto id = client_buffer->id();
-            auto need_full_ipc = !tracker->client_has(id);
-            
-            tracker->add(id);
+            tracker->add_buffer_to_surface(surf_id, new_buffer);
 
             if (need_full_ipc)
-                complete(client_buffer, mg::BufferIpcMsgType::full_msg);
+                complete(new_buffer, mg::BufferIpcMsgType::full_msg);
             else
-                complete(client_buffer, mg::BufferIpcMsgType::update_msg);
+                complete(new_buffer, mg::BufferIpcMsgType::update_msg);
         });
 }
 
@@ -279,7 +274,7 @@ void mf::SessionMediator::release_surface(
         auto const id = SurfaceId(request->value());
 
         session->destroy_surface(id);
-        client_buffer_tracker.erase(id);
+        surface_tracker->remove_surface(id);
     }
 
     // TODO: We rely on this sending responses synchronously.

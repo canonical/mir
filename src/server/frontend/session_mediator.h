@@ -27,7 +27,6 @@
 #include "surface_tracker.h"
 
 #include <functional>
-#include <unordered_map>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -192,8 +191,6 @@ private:
     std::shared_ptr<input::CursorImages> const cursor_images;
 
     std::shared_ptr<SurfaceTracker> const surface_tracker;
-    std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
-    std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
 
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;

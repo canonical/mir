@@ -120,51 +120,51 @@ struct SurfaceTracker : public testing::Test
     size_t const client_cache_size{3};
 };
 
-TEST_F(SurfaceTracker, only_returns_true_if_surface_has_buffer)
+TEST_F(SurfaceTracker, only_returns_true_if_track_buffer)
 {
     mf::SessionSurfaceTracker tracker{client_cache_size};
 
-    tracker.add_buffer_to_surface(surf_id0, &stub_buffer0);
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
+    EXPECT_TRUE(tracker.track_buffer(surf_id0, &stub_buffer0));
 
-    EXPECT_TRUE(tracker.surface_has_buffer(surf_id0, &stub_buffer0));
-    EXPECT_FALSE(tracker.surface_has_buffer(surf_id0, &stub_buffer1));
-    EXPECT_FALSE(tracker.surface_has_buffer(surf_id1, &stub_buffer0));
-    EXPECT_FALSE(tracker.surface_has_buffer(surf_id1, &stub_buffer1));
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer1));
+    EXPECT_FALSE(tracker.track_buffer(surf_id1, &stub_buffer0));
+    EXPECT_FALSE(tracker.track_buffer(surf_id1, &stub_buffer1));
 }
 
 TEST_F(SurfaceTracker, removals_remove_buffer_instances)
 {
     mf::SessionSurfaceTracker tracker{client_cache_size};
-    tracker.add_buffer_to_surface(surf_id0, &stub_buffer0);
-    tracker.add_buffer_to_surface(surf_id1, &stub_buffer0);
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
+    EXPECT_FALSE(tracker.track_buffer(surf_id1, &stub_buffer0));
 
-    EXPECT_TRUE(tracker.surface_has_buffer(surf_id0, &stub_buffer0));
-    EXPECT_TRUE(tracker.surface_has_buffer(surf_id1, &stub_buffer0));
+    EXPECT_TRUE(tracker.track_buffer(surf_id0, &stub_buffer0));
+    EXPECT_TRUE(tracker.track_buffer(surf_id1, &stub_buffer0));
     EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id0));
 
     tracker.remove_surface(surf_id0);
-
-    EXPECT_FALSE(tracker.surface_has_buffer(surf_id0, &stub_buffer0));
-    EXPECT_TRUE(tracker.surface_has_buffer(surf_id1, &stub_buffer0));
     EXPECT_THROW({
         tracker.last_buffer(surf_id0);
     }, std::runtime_error);
+
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
+    EXPECT_TRUE(tracker.track_buffer(surf_id1, &stub_buffer0));
 }
 
 TEST_F(SurfaceTracker, last_client_buffer)
 {
     mf::SessionSurfaceTracker tracker{client_cache_size};
 
-    tracker.add_buffer_to_surface(surf_id0, &stub_buffer0);
+    tracker.track_buffer(surf_id0, &stub_buffer0);
     EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id0));
-    tracker.add_buffer_to_surface(surf_id0, &stub_buffer1);
+    tracker.track_buffer(surf_id0, &stub_buffer1);
     EXPECT_EQ(&stub_buffer1, tracker.last_buffer(surf_id0));
 
     EXPECT_THROW({
         tracker.last_buffer(surf_id1);
     }, std::runtime_error);
 
-    tracker.add_buffer_to_surface(surf_id1, &stub_buffer0);
+    tracker.track_buffer(surf_id1, &stub_buffer0);
     EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id1));
 }
 
@@ -172,39 +172,36 @@ TEST_F(SurfaceTracker, buffers_expire_if_they_overrun_cache)
 {
     mf::SessionSurfaceTracker tracker{client_cache_size};
 
-    tracker.add_buffer_to_surface(surf_id0, &stub_buffer0);
-    tracker.add_buffer_to_surface(surf_id0, &stub_buffer1);
-    tracker.add_buffer_to_surface(surf_id0, &stub_buffer2);
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer1));
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer2));
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer3));
 
-    EXPECT_TRUE(tracker.surface_has_buffer(surf_id0, &stub_buffer0));
-    EXPECT_TRUE(tracker.surface_has_buffer(surf_id0, &stub_buffer1));
-    EXPECT_TRUE(tracker.surface_has_buffer(surf_id0, &stub_buffer2));
-    EXPECT_FALSE(tracker.surface_has_buffer(surf_id0, &stub_buffer3));
-
-    tracker.add_buffer_to_surface(surf_id0, &stub_buffer0);
-    tracker.add_buffer_to_surface(surf_id0, &stub_buffer3);
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
+    EXPECT_TRUE(tracker.track_buffer(surf_id0, &stub_buffer3));
 
     EXPECT_EQ(&stub_buffer3, tracker.last_buffer(surf_id0));
-    EXPECT_TRUE(tracker.surface_has_buffer(surf_id0, &stub_buffer3));
-    EXPECT_TRUE(tracker.surface_has_buffer(surf_id0, &stub_buffer0));
-    EXPECT_TRUE(tracker.surface_has_buffer(surf_id0, &stub_buffer2));
-    EXPECT_FALSE(tracker.surface_has_buffer(surf_id0, &stub_buffer1));
+
+    EXPECT_TRUE(tracker.track_buffer(surf_id0, &stub_buffer3));
+    EXPECT_TRUE(tracker.track_buffer(surf_id0, &stub_buffer0));
+    EXPECT_TRUE(tracker.track_buffer(surf_id0, &stub_buffer2));
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer1));
 }
 
 TEST_F(SurfaceTracker, buffers_only_affect_associated_surfaces)
 {
     mf::SessionSurfaceTracker tracker{client_cache_size};
 
-    tracker.add_buffer_to_surface(surf_id0, &stub_buffer0);
-    tracker.add_buffer_to_surface(surf_id0, &stub_buffer1);
-    tracker.add_buffer_to_surface(surf_id0, &stub_buffer2);
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer1));
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer2));
     EXPECT_EQ(&stub_buffer2, tracker.last_buffer(surf_id0));
     
-    tracker.add_buffer_to_surface(surf_id1, &stub_buffer0);
+    EXPECT_FALSE(tracker.track_buffer(surf_id1, &stub_buffer0));
     EXPECT_EQ(&stub_buffer2, tracker.last_buffer(surf_id0));
     EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id1));
 
-    tracker.add_buffer_to_surface(surf_id0, &stub_buffer3);
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer3));
     EXPECT_EQ(&stub_buffer3, tracker.last_buffer(surf_id0));
     EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id1));
 }

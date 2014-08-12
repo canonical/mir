@@ -483,6 +483,8 @@ TEST_F(SessionMediator, session_only_sends_mininum_information_for_buffers)
     EXPECT_CALL(*mock_tracker, surface_has_buffer(surf_id, &buffer1))
         .InSequence(seq)
         .WillOnce(Return(false));
+    EXPECT_CALL(*mock_tracker, add_buffer_to_surface(surf_id, &buffer1))
+        .InSequence(seq);
     EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer1, mg::BufferIpcMsgType::full_msg))
         .InSequence(seq);
 #if 0
@@ -506,7 +508,6 @@ TEST_F(SessionMediator, session_only_sends_mininum_information_for_buffers)
         resource_cache, stub_screencast, &connector, nullptr, mock_tracker};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
-
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
     surface_id_request = surface_response.id();
     mediator.next_buffer(nullptr, &surface_id_request, &buffer_response[0], null_callback.get());
