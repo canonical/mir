@@ -515,6 +515,7 @@ TEST_F(SessionMediator, session_only_sends_mininum_information_for_buffers)
         resource_cache, stub_screencast, &connector, nullptr, mock_tracker};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
     surface_id_request = surface_response.id();
     mediator.next_buffer(nullptr, &surface_id_request, &buffer_response[0], null_callback.get());
@@ -608,6 +609,7 @@ TEST_F(SessionMediator, buffer_resource_for_surface_unaffected_by_other_surfaces
 
     /* Getting the next buffer of our surface should post the original */
     EXPECT_CALL(*surface1, swap_buffers(_/*Eq(&buffer)*/, _)).Times(1);
+
     mediator.next_buffer(nullptr, &our_surface, &buffer_response, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
