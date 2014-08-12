@@ -2,7 +2,7 @@
 from xml.dom import minidom
 from sys import argv
 
-debug = False
+debug = True
 
 def getText(node):
     rc = []
@@ -49,19 +49,24 @@ def report(component, publish, symbol):
     
 def printDebugInfo(node, attributes):
     if not debug: return
+    print
     printAttribs(node, attributes)
     printLocation(node)
-    print
 
 def parseMemberDef(context_name, node):
     library = mappedPhysicalComponent(getLocationFile(node))
     (kind, static, prot) = getAttribs(node)
+    if kind in ['enum']: return
     name = concatTextFromTags(node, ['name'])
+    if name in ['__attribute__']:
+        if debug: print '  ignoring doxygen mis-parsing:', concatTextFromTags(node, ['argsstring'])
+        return
     if not context_name == None: symbol = context_name + '::' + name
     else: symbol = name
     publish = '/include/' in getLocationFile(node)
     if publish: publish = prot != 'private'
     if publish: publish = kind == 'function' or static == 'yes'
+    if publish: publish = kind != 'define'
     printDebugInfo(node, ['kind', 'prot', 'static'])
     report(library, publish, symbol+'*')
 
@@ -84,7 +89,7 @@ def parseCompoundDefs(xmldoc):
     for node in compounddefs:
         kind = node.attributes['kind'].value
 
-        if kind in ['page', 'file', 'example']: continue
+        if kind in ['page', 'file', 'example', 'union']: continue
 
         if kind == 'group': 
             for member in node.getElementsByTagName('memberdef') : 
