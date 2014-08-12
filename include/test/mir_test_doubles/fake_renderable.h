@@ -122,11 +122,6 @@ public:
         return 1;
     }
 
-    bool is_a_surface() const override
-    {
-        return false;
-    }
-
 private:
     std::shared_ptr<graphics::Buffer> buf;
     mir::geometry::Rectangle rect;

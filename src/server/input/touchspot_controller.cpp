@@ -91,11 +91,6 @@ public:
         return 1;
     }
     
-    bool is_a_surface() const
-    {
-        return false;
-    }
-
 // TouchspotRenderable    
     void move_to(geom::Point pos)
     {

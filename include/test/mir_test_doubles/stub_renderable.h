@@ -98,11 +98,6 @@ public:
         return 1;
     }
 
-    bool is_a_surface() const override
-    {
-        return false;
-    }
-
 private:
     std::shared_ptr<graphics::Buffer> make_stub_buffer(geometry::Rectangle const& rect)
     {

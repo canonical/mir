@@ -79,11 +79,6 @@ public:
     virtual bool shaped() const = 0;  // meaning the pixel format has alpha
     virtual int buffers_ready_for_compositor() const = 0;
 
-    /**
-     * Returns whether the renderable should be drawn with decoration (frame, shadow).
-     */
-    virtual bool is_a_surface() const = 0;
-
 protected:
     Renderable() = default;
     Renderable(Renderable const&) = delete;

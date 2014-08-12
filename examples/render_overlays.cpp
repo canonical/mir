@@ -145,11 +145,6 @@ public:
         return true;
     }
 
-    bool is_a_surface() const override
-    {
-        return false;
-    }
-
     int buffers_ready_for_compositor() const override
     {
         return 1;
