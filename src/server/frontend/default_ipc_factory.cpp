@@ -101,15 +101,6 @@ std::shared_ptr<mf::ResourceCache> mf::DefaultIpcFactory::resource_cache()
     return cache;
 }
 
-namespace{
-struct FlubTracker : public mf::SurfaceTracker
-{
-    bool track_buffer(mf::SurfaceId, mg::Buffer*) { return false; }
-    void remove_surface(mf::SurfaceId) {}
-    mg::Buffer* last_buffer(mf::SurfaceId) const {return nullptr;}
-};
-}
-
 std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
     std::shared_ptr<Shell> const& shell,
     std::shared_ptr<mg::Platform> const& graphics_platform,

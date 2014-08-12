@@ -161,9 +161,6 @@ public:
         ::mir::protobuf::SocketFD* response,
         ::google::protobuf::Closure* done) override;
 
-    //SessionMediator(SessionMediator const&) = delete;
-    //SessionMediator(SessionMediator const&) = delete;
-
 private:
     void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
                               graphics::Buffer* graphics_buffer,

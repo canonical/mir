@@ -16,12 +16,13 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include "mir/graphics/buffer.h"
+#include "mir/graphics/buffer_id.h"
+#include "client_buffer_tracker.h"
 #include <algorithm>
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
-#include "client_buffer_tracker.h"
-#include "mir/graphics/buffer_id.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;

@@ -64,8 +64,6 @@ class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthe
     MOCK_METHOD1(drm_auth_magic, void(unsigned int));
 };
 
-}
-#if 0
 struct SessionMediatorMesaTest : public ::testing::Test
 {
     SessionMediatorMesaTest()
@@ -75,10 +73,12 @@ struct SessionMediatorMesaTest : public ::testing::Test
           surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
           report{mr::null_session_mediator_report()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
+          mock_tracker{std::make_shared<mtd::MockSurfaceTracker>()},
           mediator{shell, mock_platform, display_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
-                   resource_cache, std::make_shared<mtd::NullScreencast>(), nullptr, nullptr},
+                   resource_cache, std::make_shared<mtd::NullScreencast>(), nullptr, nullptr,
+                   mock_tracker},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
@@ -89,6 +89,7 @@ struct SessionMediatorMesaTest : public ::testing::Test
     std::vector<MirPixelFormat> const surface_pixel_formats;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
+    std::shared_ptr<mtd::MockSurfaceTracker> mock_tracker;
     mf::SessionMediator mediator;
 
     std::unique_ptr<google::protobuf::Closure> null_callback;
@@ -142,4 +143,3 @@ TEST_F(SessionMediatorMesaTest, drm_auth_magic_sets_status_code_on_error)
 
     EXPECT_EQ(error_number, status.status_code());
 }
-#endif

@@ -19,11 +19,14 @@
 #ifndef MIR_FRONTEND_SURFACE_TRACKER_H_
 #define MIR_FRONTEND_SURFACE_TRACKER_H_
 
-#include "mir/graphics/buffer.h"
 #include "mir/frontend/surface_id.h"
 
 namespace mir
 {
+namespace graphics
+{
+class Buffer;
+}
 namespace frontend
 {
 class SurfaceTracker

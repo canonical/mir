@@ -21,6 +21,7 @@
 
 #include "surface_tracker.h"
 #include <unordered_map>
+#include <memory>
 #include <stdint.h>
 #include <list>
 
