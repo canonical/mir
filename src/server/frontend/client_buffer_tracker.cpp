@@ -20,9 +20,6 @@
 #include "mir/graphics/buffer_id.h"
 #include "client_buffer_tracker.h"
 #include <algorithm>
-#include <boost/throw_exception.hpp>
-#include <stdexcept>
-
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -91,6 +88,6 @@ mg::Buffer* mf::SessionSurfaceTracker::last_buffer(SurfaceId surface_id) const
     if (it != client_buffer_resource.end())
         return it->second;
     else
+        //should really throw, but that is difficult with the way the code curerntly works
         return nullptr;
-//        BOOST_THROW_EXCEPTION(std::runtime_error("SurfaceId has no last buffer"));
 }
