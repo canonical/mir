@@ -68,6 +68,11 @@ public:
         tracker->occluded_in(cid);
     }
 
+    bool is_a_surface() const override
+    {
+        return true;
+    }
+
 private:
     std::shared_ptr<mg::Renderable> const renderable_;
     std::shared_ptr<ms::RenderingTracker> const tracker;
@@ -93,6 +98,11 @@ public:
 
     void occluded_in(mc::CompositorID /* cid */) override
     {
+    }
+    
+    bool is_a_surface() const override
+    {
+        return false;
     }
 
 private:
