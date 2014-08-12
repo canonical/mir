@@ -189,6 +189,26 @@ void mga::HwcFormattedLogger::log_overlay_optimization(OverlayOptimization overl
     std::cout << "HWC overlay optimizations are " << overlay_optimization << std::endl;
 }
 
+void mga::HwcFormattedLogger::log_display_on() const
+{
+    std::cout << "HWC: display on" << std::endl;
+}
+
+void mga::HwcFormattedLogger::log_display_off() const
+{
+    std::cout << "HWC: display off" << std::endl;
+}
+
+void mga::HwcFormattedLogger::log_vsync_on() const
+{
+    std::cout << "HWC: vsync signal on" << std::endl;
+}
+
+void mga::HwcFormattedLogger::log_vsync_off() const
+{
+    std::cout << "HWC: vsync signal off" << std::endl;
+}
+
 void mga::NullHwcLogger::log_list_submitted_to_prepare(hwc_display_contents_1_t const&) const
 {
 }
@@ -202,5 +222,21 @@ void mga::NullHwcLogger::log_set_list(hwc_display_contents_1_t const&) const
 }
 
 void mga::NullHwcLogger::log_overlay_optimization(OverlayOptimization) const
+{
+}
+
+void mga::NullHwcLogger::log_display_on() const
+{
+}
+
+void mga::NullHwcLogger::log_display_off() const
+{
+}
+
+void mga::NullHwcLogger::log_vsync_on() const
+{
+}
+
+void mga::NullHwcLogger::log_vsync_off() const
 {
 }
