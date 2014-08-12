@@ -65,10 +65,9 @@ public:
     SessionSurfaceTracker(SessionSurfaceTracker const&) = delete;
     SessionSurfaceTracker& operator=(SessionSurfaceTracker const&) = delete;
 
-    void add_buffer_to_surface(SurfaceId, graphics::Buffer*) override;
+    bool track_buffer(SurfaceId, graphics::Buffer*) override;
     void remove_surface(SurfaceId) override;
     graphics::Buffer* last_buffer(SurfaceId) const override;
-    bool surface_has_buffer(SurfaceId, graphics::Buffer*) const override;
 private:
     size_t const client_cache_size;
 

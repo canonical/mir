@@ -59,13 +59,18 @@ mf::SessionSurfaceTracker::SessionSurfaceTracker(size_t client_cache_size) :
 {
 }
 
-void mf::SessionSurfaceTracker::add_buffer_to_surface(SurfaceId surface_id, mg::Buffer* buffer)
+bool mf::SessionSurfaceTracker::track_buffer(SurfaceId surface_id, mg::Buffer* buffer)
 {
     auto& tracker = client_buffer_tracker[surface_id];
-    if (!tracker) tracker = std::make_shared<ClientBufferTracker>(client_cache_size);
+    if (!tracker)
+    {
+        tracker = std::make_shared<ClientBufferTracker>(client_cache_size);
+    }
+    auto already_tracked = tracker->client_has(buffer->id());
     tracker->add(buffer->id());
 
-    client_buffer_resource[surface_id] = buffer; 
+    client_buffer_resource[surface_id] = buffer;
+    return already_tracked;
 }
 
 void mf::SessionSurfaceTracker::remove_surface(SurfaceId surface_id)
@@ -86,13 +91,4 @@ mg::Buffer* mf::SessionSurfaceTracker::last_buffer(SurfaceId surface_id) const
         return it->second;
     else
         BOOST_THROW_EXCEPTION(std::runtime_error("SurfaceId has no last buffer"));
-}
-
-bool mf::SessionSurfaceTracker::surface_has_buffer(SurfaceId surface_id, mg::Buffer* buffer) const
-{
-    auto it = client_buffer_tracker.find(surface_id);
-    if (it == client_buffer_tracker.end())
-        return false;
-
-    return it->second->client_has(buffer->id());
 }

@@ -29,10 +29,9 @@ namespace doubles
 {
 struct MockSurfaceTracker : public frontend::SurfaceTracker
 {
-    MOCK_METHOD2(add_buffer_to_surface, void(frontend::SurfaceId, graphics::Buffer*));
+    MOCK_METHOD2(track_buffer, bool(frontend::SurfaceId, graphics::Buffer*));
     MOCK_METHOD1(remove_surface, void(frontend::SurfaceId));
     MOCK_CONST_METHOD1(last_buffer, graphics::Buffer*(frontend::SurfaceId));
-    MOCK_CONST_METHOD2(surface_has_buffer, bool(frontend::SurfaceId, graphics::Buffer*));
 };
 }
 }

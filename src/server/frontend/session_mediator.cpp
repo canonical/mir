@@ -149,14 +149,10 @@ void mf::SessionMediator::advance_buffer(
         tracker->last_buffer(surf_id),
         [tracker, surf_id, complete](mg::Buffer* new_buffer)
         {
-            auto need_full_ipc = !tracker->surface_has_buffer(surf_id, new_buffer);
-
-            tracker->add_buffer_to_surface(surf_id, new_buffer);
-
-            if (need_full_ipc)
-                complete(new_buffer, mg::BufferIpcMsgType::full_msg);
-            else
+            if (tracker->track_buffer(surf_id, new_buffer))
                 complete(new_buffer, mg::BufferIpcMsgType::update_msg);
+            else
+                complete(new_buffer, mg::BufferIpcMsgType::full_msg);
         });
 }
 

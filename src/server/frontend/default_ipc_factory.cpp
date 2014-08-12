@@ -102,10 +102,9 @@ std::shared_ptr<mf::ResourceCache> mf::DefaultIpcFactory::resource_cache()
 namespace{
 struct FlubTracker : public mf::SurfaceTracker
 {
-    void add_buffer_to_surface(mf::SurfaceId, mg::Buffer*) {}
+    bool track_buffer(mf::SurfaceId, mg::Buffer*) { return false; }
     void remove_surface(mf::SurfaceId) {}
     mg::Buffer* last_buffer(mf::SurfaceId) const {return nullptr;}
-    bool surface_has_buffer(mf::SurfaceId, mg::Buffer*) const {return false;}
 };
 }
 

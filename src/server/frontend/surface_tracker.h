@@ -29,10 +29,18 @@ namespace frontend
 class SurfaceTracker
 {
 public:
-    virtual void add_buffer_to_surface(SurfaceId, graphics::Buffer*) = 0;
+    /* track a buffer as associated with a surface 
+     * \param surface_id id that the the buffer is associated with
+     * \param buffer     buffer to be tracked (TODO: should be a shared_ptr)
+     * \returns          true if the buffer is already tracked
+     *                   false if the buffer is not tracked
+     */
+    virtual bool track_buffer(SurfaceId, graphics::Buffer*) = 0;
+    /* removes the surface id from all tracking */
     virtual void remove_surface(SurfaceId) = 0;
+    /* accesses the last buffer given to track_buffer() for the given SurfaceId */
     virtual graphics::Buffer* last_buffer(SurfaceId) const = 0;
-    virtual bool surface_has_buffer(SurfaceId, graphics::Buffer*) const = 0;
+
     virtual ~SurfaceTracker() = default;
     SurfaceTracker() = default;
 private:
