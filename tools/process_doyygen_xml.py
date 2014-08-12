@@ -63,8 +63,9 @@ def report(component, publish, symbol):
 def printReport():
     for component, symbols in component_map.iteritems():
         print 'COMPONENT:', component
-        for symbol in symbols['public']: print ' ', 'public:', symbol
-        for symbol in symbols['private']: print ' ', 'private:', symbol
+        for symbol in symbols['public']: print component, 'public:', symbol
+        for symbol in symbols['private']: print component, 'private:', symbol
+        print
 
 def printDebugInfo(node, attributes):
     if not debug: return
