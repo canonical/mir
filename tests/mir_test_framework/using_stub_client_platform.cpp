@@ -18,54 +18,56 @@
 
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/stub_client_connection_configuration.h"
-#include "src/client/mir_wait_handle.h"
-#include "src/client/mir_connection.h"
-#include "src/client/api_impl.h"
+#include "src/client/mir_connection_api.h"
 
 namespace mtf = mir_test_framework;
+namespace mcl = mir::client;
 
 namespace
 {
 
-MirWaitHandle* mir_connect_override(
-    char const *socket_file,
-    char const *app_name,
-    mir_connected_callback callback,
-    void *context)
+class StubMirConnectionAPI : public mcl::MirConnectionAPI
 {
-    mtf::StubConnectionConfiguration conf(socket_file);
-    auto connection = new MirConnection(conf);
-    return connection->connect(app_name, callback, context);
-}
+public:
+    StubMirConnectionAPI(mcl::MirConnectionAPI* prev_api)
+        : prev_api{prev_api}
+    {
+    }
 
-void mir_connection_release_override(MirConnection *connection)
-{
-    try
+    MirWaitHandle* connect(
+        char const* socket_file,
+        char const* name,
+        mir_connected_callback callback,
+        void* context) override
     {
-        auto wait_handle = connection->disconnect();
-        mir_wait_for(wait_handle);
+        return prev_api->connect(socket_file, name, callback, context);
     }
-    catch (std::exception const&)
+
+    void release(MirConnection* connection) override
     {
-        // Really, we want try/finally, but that's not C++11
-        delete connection;
-        throw;
+        return prev_api->release(connection);
     }
-    delete connection;
-}
+
+    std::unique_ptr<mcl::ConnectionConfiguration> configuration(std::string const& socket) override
+    {
+        return std::unique_ptr<mcl::ConnectionConfiguration>{
+            new mtf::StubConnectionConfiguration{socket}};
+    }
+
+private:
+    mcl::MirConnectionAPI* const prev_api;
+};
 
 }
 
 mtf::UsingStubClientPlatform::UsingStubClientPlatform()
-    : prev_mir_connect_impl{mir_connect_impl},
-      prev_mir_connection_release_impl{mir_connection_release_impl}
+    : prev_api{mir_connection_api_impl},
+      stub_api{new StubMirConnectionAPI{prev_api}}
 {
-    mir_connect_impl = mir_connect_override;
-    mir_connection_release_impl = mir_connection_release_override;
+    mir_connection_api_impl = stub_api.get();
 }
 
 mtf::UsingStubClientPlatform::~UsingStubClientPlatform()
 {
-    mir_connect_impl = prev_mir_connect_impl;
-    mir_connection_release_impl = prev_mir_connection_release_impl;
+    mir_connection_api_impl = prev_api;
 }
