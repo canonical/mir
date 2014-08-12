@@ -90,5 +90,6 @@ mg::Buffer* mf::SessionSurfaceTracker::last_buffer(SurfaceId surface_id) const
     if (it != client_buffer_resource.end())
         return it->second;
     else
-        BOOST_THROW_EXCEPTION(std::runtime_error("SurfaceId has no last buffer"));
+        return nullptr;
+//        BOOST_THROW_EXCEPTION(std::runtime_error("SurfaceId has no last buffer"));
 }

@@ -23,7 +23,9 @@
 #include "unauthorized_display_changer.h"
 #include "unauthorized_screencast.h"
 #include "resource_cache.h"
+#include "client_buffer_tracker.h"
 #include "mir/frontend/session_authorizer.h"
+#include "mir/frontend/client_constants.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
 namespace mf = mir::frontend;
@@ -130,5 +132,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         effective_screencast,
         connection_context,
         cursor_images,
-        std::make_shared<FlubTracker>());
+        std::make_shared<mf::SessionSurfaceTracker>(
+            static_cast<size_t>(client_buffer_cache_size)));
 }
