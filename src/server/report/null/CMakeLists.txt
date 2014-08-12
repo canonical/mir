@@ -1,5 +1,5 @@
 add_library(
-    mirnullreport STATIC
+    mirnullreport OBJECT
 
     compositor_report.cpp
     connector_report.cpp

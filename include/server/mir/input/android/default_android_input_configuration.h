@@ -40,6 +40,7 @@ namespace input
 {
 class InputRegion;
 class CursorListener;
+class TouchVisualizer;
 class InputReport;
 class InputDispatcher;
 
@@ -53,6 +54,7 @@ public:
     DefaultInputConfiguration(std::shared_ptr<input::InputDispatcher> const& dispatcher,
                               std::shared_ptr<input::InputRegion> const& input_region,
                               std::shared_ptr<CursorListener> const& cursor_listener,
+                              std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                               std::shared_ptr<input::InputReport> const& input_report);
     virtual ~DefaultInputConfiguration();
 
@@ -78,6 +80,7 @@ private:
     std::shared_ptr<input::InputDispatcher> const input_dispatcher;
     std::shared_ptr<input::InputRegion> const input_region;
     std::shared_ptr<CursorListener> const cursor_listener;
+    std::shared_ptr<TouchVisualizer> const touch_visualizer;
     std::shared_ptr<input::InputReport> const input_report;
 };
 }

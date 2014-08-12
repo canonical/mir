@@ -18,6 +18,7 @@
 #include "mir_test/event_factory.h"
 
 namespace mis = mir::input::synthesis;
+namespace geom = mir::geometry;
 
 mis::KeyParameters::KeyParameters() :
     device_id(0),
@@ -117,7 +118,8 @@ mis::MotionParameters mis::a_motion_event()
 mis::TouchParameters::TouchParameters() :
     device_id(0),
     abs_x(0),
-    abs_y(0)
+    abs_y(0),
+    action(Action::Tap)
 {
 }
 
@@ -127,10 +129,16 @@ mis::TouchParameters& mis::TouchParameters::from_device(int new_device_id)
     return *this;
 }
 
-mis::TouchParameters& mis::TouchParameters::at_position(int new_abs_x, int new_abs_y)
+mis::TouchParameters& mis::TouchParameters::at_position(geom::Point abs_pos)
 {
-    abs_x = new_abs_x;
-    abs_y = new_abs_y;
+    abs_x = abs_pos.x.as_int();
+    abs_y = abs_pos.y.as_int();
+    return *this;
+}
+
+mis::TouchParameters& mis::TouchParameters::with_action(Action touch_action)
+{
+    action = touch_action;
     return *this;
 }
 

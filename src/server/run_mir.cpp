@@ -18,6 +18,7 @@
 
 #include "mir/run_mir.h"
 #include "mir/display_server.h"
+#include "mir/fatal.h"
 #include "mir/main_loop.h"
 #include "mir/server_configuration.h"
 #include "mir/frontend/connector.h"
@@ -77,6 +78,8 @@ void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&
             assert(server_ptr);
             server_ptr->stop();
         });
+
+    FatalErrorStrategy fatal_error_strategy{config.the_fatal_error_strategy()};
 
     DisplayServer server(config);
     server_ptr = &server;

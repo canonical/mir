@@ -33,6 +33,10 @@ struct MockHwcLogger : public mga::HwcLogger
     MOCK_CONST_METHOD1(log_prepare_done, void(hwc_display_contents_1_t const&));
     MOCK_CONST_METHOD1(log_set_list, void(hwc_display_contents_1_t const&));
     MOCK_CONST_METHOD1(log_overlay_optimization, void(mga::OverlayOptimization));
+    MOCK_CONST_METHOD0(log_display_on, void());
+    MOCK_CONST_METHOD0(log_display_off, void());
+    MOCK_CONST_METHOD0(log_vsync_on, void());
+    MOCK_CONST_METHOD0(log_vsync_off, void());
 };
 }
 
@@ -153,9 +157,14 @@ TEST_F(HwcWrapper, register_procs)
 TEST_F(HwcWrapper, turns_display_on)
 {
     using namespace testing;
+    Sequence seq;
     EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
-        .Times(2)
-        .WillOnce(Return(0))
+        .InSequence(seq)
+        .WillOnce(Return(0));
+    EXPECT_CALL(*mock_logger, log_display_on()) 
+        .InSequence(seq);
+    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+        .InSequence(seq)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
@@ -168,9 +177,14 @@ TEST_F(HwcWrapper, turns_display_on)
 TEST_F(HwcWrapper, turns_display_off)
 {
     using namespace testing;
+    Sequence seq;
     EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
-        .Times(2)
-        .WillOnce(Return(0))
+        .InSequence(seq)
+        .WillOnce(Return(0));
+    EXPECT_CALL(*mock_logger, log_display_off()) 
+        .InSequence(seq);
+    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
+        .InSequence(seq)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
@@ -183,9 +197,14 @@ TEST_F(HwcWrapper, turns_display_off)
 TEST_F(HwcWrapper, turns_vsync_on)
 {
     using namespace testing;
+    Sequence seq;
     EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 1))
-        .Times(2)
-        .WillOnce(Return(0))
+        .InSequence(seq)
+        .WillOnce(Return(0));
+    EXPECT_CALL(*mock_logger, log_vsync_on()) 
+        .InSequence(seq);
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 1))
+        .InSequence(seq)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
@@ -198,9 +217,14 @@ TEST_F(HwcWrapper, turns_vsync_on)
 TEST_F(HwcWrapper, turns_vsync_off)
 {
     using namespace testing;
+    Sequence seq;
     EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 0))
-        .Times(2)
-        .WillOnce(Return(0))
+        .InSequence(seq)
+        .WillOnce(Return(0));
+    EXPECT_CALL(*mock_logger, log_vsync_off()) 
+        .InSequence(seq);
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 0))
+        .InSequence(seq)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);

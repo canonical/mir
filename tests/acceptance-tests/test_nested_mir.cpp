@@ -92,13 +92,13 @@ struct HostServerConfiguration : mtf::StubbedServerConfiguration
 
 struct FakeCommandLine
 {
-    static int const argc = 6;
+    static int const argc = 7;
     char const* argv[argc];
 
     FakeCommandLine(std::string const& host_socket)
     {
         char const** to = argv;
-        for(auto from : { "--file", "NestedServer", "--host-socket", host_socket.c_str(), "--enable-input", "off"})
+        for(auto from : { "dummy-exe-name", "--file", "NestedServer", "--host-socket", host_socket.c_str(), "--enable-input", "off"})
         {
             *to++ = from;
         }
