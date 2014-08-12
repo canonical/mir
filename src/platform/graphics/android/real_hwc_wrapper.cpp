@@ -74,6 +74,7 @@ void mga::RealHwcWrapper::vsync_signal_on() const
         ss << "error turning vsync signal on. rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
+    logger->log_vsync_on();
 }
 
 void mga::RealHwcWrapper::vsync_signal_off() const
@@ -84,6 +85,7 @@ void mga::RealHwcWrapper::vsync_signal_off() const
         ss << "error turning vsync signal off. rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
+    logger->log_vsync_off();
 }
 
 void mga::RealHwcWrapper::display_on() const
@@ -94,6 +96,7 @@ void mga::RealHwcWrapper::display_on() const
         ss << "error turning display on. rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
+    logger->log_display_on();
 }
 
 void mga::RealHwcWrapper::display_off() const
@@ -104,4 +107,5 @@ void mga::RealHwcWrapper::display_off() const
         ss << "error turning display off. rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
+    logger->log_display_off();
 }
