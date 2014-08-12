@@ -2,11 +2,15 @@
 from xml.dom import minidom
 from sys import argv
 
+debug = False
+
 def getText(node):
     rc = []
     for node in node.childNodes:
         if node.nodeType == node.TEXT_NODE:
             rc.append(node.data)
+        elif node.nodeType == node.ELEMENT_NODE:
+            rc.append(getText(node))
     return ''.join(rc)
 
 def getTextForElement(parent, tagname):
@@ -19,6 +23,7 @@ def getLocationFile(node):
     for node in node.childNodes:
         if node.nodeType == node.ELEMENT_NODE and node.tagName == 'location':
             return node.attributes['file'].value
+    if debug: print 'no location in:', node
     return None
 
 def printAttribs(node, attribs):
@@ -38,46 +43,75 @@ def getAttribs(node):
     prot =  node.attributes['prot'].value
     return (kind, static, prot)
 
-def report(publish, symbol):
-    if publish: print "  PUBLISH:", symbol
-    else      : print "NOPUBLISH:", symbol
-
-def parseMemberDef(node):
-    (kind, static, prot) = getAttribs(node)
-    texttags = ['definition']
-    if kind == 'function': texttags.append('argsstring')
-    symbol = concatTextFromTags(node, texttags)
-    publish = '/include/' in getLocationFile(node)
-    if publish: publish = prot != 'private'
-    if publish: publish = kind == 'function' or static == 'yes'
-    report(publish, symbol)
-    printAttribs(node, ['kind', 'prot', 'static'])
+def report(component, publish, symbol):
+    if publish: print '  PUBLISH in {}: {}'.format(component, symbol)
+    else      : print 'NOPUBLISH in {}: {}'.format(component, symbol)
+    
+def printDebugInfo(node, attributes):
+    if not debug: return
+    printAttribs(node, attributes)
     printLocation(node)
     print
 
+def parseMemberDef(context_name, node):
+    library = mappedPhysicalComponent(getLocationFile(node))
+    (kind, static, prot) = getAttribs(node)
+    name = concatTextFromTags(node, ['name'])
+    if not context_name == None: symbol = context_name + '::' + name
+    else: symbol = name
+    publish = '/include/' in getLocationFile(node)
+    if publish: publish = prot != 'private'
+    if publish: publish = kind == 'function' or static == 'yes'
+    printDebugInfo(node, ['kind', 'prot', 'static'])
+    report(library, publish, symbol+'*')
+
+def findPhysicalComponent(location_file):
+    path_elements = location_file.split('/')
+    found = False
+    for element in path_elements:
+        if found: return element
+        found = element in ['include', 'src']
+    if debug: print 'no component in:', location_file
+    return None
+    
+def mappedPhysicalComponent(location_file):
+    location = findPhysicalComponent(location_file)
+    if location == 'shared': location = 'common'
+    return 'mir' + location
+
 def parseCompoundDefs(xmldoc):
     compounddefs = xmldoc.getElementsByTagName('compounddef') 
-    for node in compounddefs :
+    for node in compounddefs:
         kind = node.attributes['kind'].value
 
-        if kind in ['page', 'file']: continue
+        if kind in ['page', 'file', 'example']: continue
+
+        if kind == 'group': 
+            for member in node.getElementsByTagName('memberdef') : 
+                parseMemberDef(None, member)
+            continue
+        
+        file = getLocationFile(node)
+        if '/examples/' in file or '/test/' in file or '[generated]' in file or '[STL]' in file: continue
+
+        library = mappedPhysicalComponent(file)
+        symbol = concatTextFromTags(node, ['compoundname'])
 
         if kind in ['class', 'struct']:
-            symbol = concatTextFromTags(node, ['compoundname'])
             prot =  node.attributes['prot'].value
             publish = '/include/' in getLocationFile(node)
             if publish: publish = prot != 'private'
-            report(publish, symbol)
-            printAttribs(node, ['kind', 'prot'])
-            printLocation(node)
-            print
+            printDebugInfo(node, ['kind', 'prot'])
+            report(library, publish, 'vtable?for?' + symbol)
+            report(library, publish, 'typeinfo?for?' + symbol)
 
         for member in node.getElementsByTagName('memberdef') : 
-            parseMemberDef(member)
+            parseMemberDef(symbol, member)
 
 if __name__ == "__main__":
     for arg in argv[1:]:
         try:
+            if debug: print 'Processing:', arg
             xmldoc = minidom.parse(arg)
             parseCompoundDefs(xmldoc)
         except Exception as error:
