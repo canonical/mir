@@ -6,6 +6,7 @@ includedir=@INCLUDEDIR@
 Name: mirserver
 Description: Mir server library
 Version: @MIR_VERSION@
+Requires.private: mirclient
 Requires: mirplatform
 Libs: -L@LIBDIR@ -lmirserver
 Cflags: -I@INCLUDEDIR@

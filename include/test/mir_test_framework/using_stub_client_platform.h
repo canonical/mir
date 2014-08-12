@@ -19,7 +19,15 @@
 #ifndef MIR_TEST_FRAMEWORK_USING_STUB_CLIENT_PLATFORM_H_
 #define MIR_TEST_FRAMEWORK_USING_STUB_CLIENT_PLATFORM_H_
 
-#include "src/client/api_impl_types.h"
+#include <memory>
+
+namespace mir
+{
+namespace client
+{
+class MirConnectionAPI;
+}
+}
 
 namespace mir_test_framework
 {
@@ -34,8 +42,8 @@ private:
     UsingStubClientPlatform(UsingStubClientPlatform const&) = delete;
     UsingStubClientPlatform operator=(UsingStubClientPlatform const&) = delete;
 
-    mir_connect_impl_func const prev_mir_connect_impl;
-    mir_connection_release_impl_func const prev_mir_connection_release_impl;
+    mir::client::MirConnectionAPI* prev_api;
+    std::unique_ptr<mir::client::MirConnectionAPI> stub_api;
 };
 
 }
