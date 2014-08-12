@@ -44,7 +44,10 @@ mtf::ServerRunner::ServerRunner() :
 void mtf::ServerRunner::start_server()
 {
     display_server = start_mir_server();
-    ASSERT_TRUE(display_server);
+    if (display_server == nullptr)
+    {
+        throw std::runtime_error{"Failed to start server thread"};
+    }
 }
 
 std::string mtf::ServerRunner::new_connection()
