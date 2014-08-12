@@ -25,6 +25,12 @@ def getLocationFile(node):
             return node.attributes['file'].value
     if debug: print 'no location in:', node
     return None
+    
+def hasElement(node, tagname):
+    for node in node.childNodes:
+        if node.nodeType == node.ELEMENT_NODE and node.tagName in tagname:
+            return True
+    return False
 
 def printAttribs(node, attribs):
     for attrib in attribs : print ' ', attrib, '=', node.attributes[attrib].value
@@ -56,13 +62,18 @@ def printDebugInfo(node, attributes):
 def parseMemberDef(context_name, node):
     library = mappedPhysicalComponent(getLocationFile(node))
     (kind, static, prot) = getAttribs(node)
+    
     if kind in ['enum']: return
+    if hasElement(node, ['templateparamlist']): return
+    
     name = concatTextFromTags(node, ['name'])
     if name in ['__attribute__']:
         if debug: print '  ignoring doxygen mis-parsing:', concatTextFromTags(node, ['argsstring'])
         return
+
     if not context_name == None: symbol = context_name + '::' + name
     else: symbol = name
+
     publish = '/include/' in getLocationFile(node)
     if publish: publish = prot != 'private'
     if publish: publish = kind == 'function' or static == 'yes'
@@ -99,19 +110,23 @@ def parseCompoundDefs(xmldoc):
         file = getLocationFile(node)
         if '/examples/' in file or '/test/' in file or '[generated]' in file or '[STL]' in file: continue
 
+        if hasElement(node, ['templateparamlist']): continue
+
         library = mappedPhysicalComponent(file)
         symbol = concatTextFromTags(node, ['compoundname'])
+        publish = '/include/' in getLocationFile(node)
 
-        if kind in ['class', 'struct']:
-            prot =  node.attributes['prot'].value
-            publish = '/include/' in getLocationFile(node)
-            if publish: publish = prot != 'private'
-            printDebugInfo(node, ['kind', 'prot'])
-            report(library, publish, 'vtable?for?' + symbol)
-            report(library, publish, 'typeinfo?for?' + symbol)
+        if publish: 
+            if kind in ['class', 'struct']:
+                prot =  node.attributes['prot'].value
+                publish = prot != 'private'
+                printDebugInfo(node, ['kind', 'prot'])
+                report(library, publish, 'vtable?for?' + symbol)
+                report(library, publish, 'typeinfo?for?' + symbol)
 
-        for member in node.getElementsByTagName('memberdef') : 
-            parseMemberDef(symbol, member)
+        if publish: 
+            for member in node.getElementsByTagName('memberdef') : 
+                parseMemberDef(symbol, member)
 
 if __name__ == "__main__":
     for arg in argv[1:]:
