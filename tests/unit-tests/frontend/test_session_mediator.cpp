@@ -573,6 +573,30 @@ TEST_F(SessionMediator, session_with_multiple_surfaces_only_sends_needed_buffers
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
+TEST_F(SessionMediator, destroys_tracker_associated_with_destroyed_surface)
+{
+    using namespace testing;
+    mf::SurfaceId first_id{0};
+    mp::Surface surface_response;
+
+    EXPECT_CALL(*mock_tracker, remove_surface(first_id))
+        .Times(1);
+
+    mf::SessionMediator mediator{
+        shell, graphics_platform, graphics_changer,
+        surface_pixel_formats, report,
+        std::make_shared<mtd::NullEventSink>(),
+        resource_cache, stub_screencast, &connector, nullptr, mock_tracker};
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+
+    mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
+    surface_id_request.set_value(first_id.as_value());
+    mediator.release_surface(nullptr, &surface_id_request, nullptr, null_callback.get());
+
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+}
+
 TEST_F(SessionMediator, buffer_resource_for_surface_unaffected_by_other_surfaces)
 {
     using namespace testing;
