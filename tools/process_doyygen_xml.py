@@ -89,6 +89,7 @@ def parseMemberDef(context_name, node, is_class):
     
     if kind in ['enum', 'typedef']: return
     if hasElement(node, ['templateparamlist']): return
+    if kind in ['function'] and node.attributes['inline'].value == 'yes': return
     
     name = concatTextFromTags(node, ['name'])
     if name in ['__attribute__']:
