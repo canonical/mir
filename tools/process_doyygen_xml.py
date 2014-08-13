@@ -121,7 +121,9 @@ def parse_member_def(context_name, node, is_class):
     else: symbol = name
 
     file_location = get_file_location(node)
-    publish = '/include/' in file_location or 'build/src' in file_location
+    publish = '/include/' in file_location \
+              or 'build/src' in file_location \
+              or 'src/shared/input/android/' in file_location
 
     if publish: publish = prot != 'private'
     if publish and is_class: publish = kind == 'function' or static == 'yes'
@@ -159,7 +161,9 @@ def parse_compound_defs(xmldoc):
         symbol = concat_text_from_tags(node, ['compoundname'])
         
         file_location = get_file_location(node)
-        publish = '/include/' in file_location or 'build/src' in file_location
+        publish = '/include/' in file_location \
+                  or 'build/src' in file_location \
+                  or 'src/shared/input/android/' in file_location
 
         if publish: 
             if kind in ['class', 'struct']:
