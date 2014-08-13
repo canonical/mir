@@ -57,7 +57,10 @@ publish_special_cases = {
     
     # Although private this is called by a template wrapper function that instantiates
     # in client code
-    'mir::SharedLibrary::load_symbol*'
+    'mir::SharedLibrary::load_symbol*',
+    
+    # Not sure why, but this is needed
+    'mir::DefaultServerConfiguration::the_socket_file*'
 }
 
 component_map = {}

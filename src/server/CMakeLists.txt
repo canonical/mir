@@ -69,12 +69,14 @@ install(DIRECTORY
 )
 
 set(MIRSERVER_ABI 24) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(
   mirserver
 
   PROPERTIES
   SOVERSION ${MIRSERVER_ABI}
+  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
