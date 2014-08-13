@@ -4,46 +4,46 @@ from sys import argv
 
 debug = False
 
-def getText(node):
+def get_text(node):
     rc = []
     for node in node.childNodes:
         if node.nodeType == node.TEXT_NODE:
             rc.append(node.data)
         elif node.nodeType == node.ELEMENT_NODE:
-            rc.append(getText(node))
+            rc.append(get_text(node))
     return ''.join(rc)
 
-def getTextForElement(parent, tagname):
+def get_text_for_element(parent, tagname):
     rc = []
     nodes = parent.getElementsByTagName(tagname);
-    for node in nodes : rc.append(getText(node))
+    for node in nodes : rc.append(get_text(node))
     return ''.join(rc)
 
-def getLocationFile(node):
+def get_file_location(node):
     for node in node.childNodes:
         if node.nodeType == node.ELEMENT_NODE and node.tagName == 'location':
             return node.attributes['file'].value
     if debug: print 'no location in:', node
     return None
     
-def hasElement(node, tagname):
+def has_element(node, tagname):
     for node in node.childNodes:
         if node.nodeType == node.ELEMENT_NODE and node.tagName in tagname:
             return True
     return False
 
-def printAttribs(node, attribs):
+def print_attribs(node, attribs):
     for attrib in attribs : print ' ', attrib, '=', node.attributes[attrib].value
 
-def concatTextFromTags(parent, tagnames):
+def concat_text_from_tags(parent, tagnames):
     rc = []
-    for tag in tagnames : rc.append(getTextForElement(parent, tag))
+    for tag in tagnames : rc.append(get_text_for_element(parent, tag))
     return ''.join(rc)
     
-def printLocation(node):
-    print ' ', 'location', '=', getLocationFile(node)
+def print_location(node):
+    print ' ', 'location', '=', get_file_location(node)
 
-def getAttribs(node):
+def get_attribs(node):
     kind = node.attributes['kind'].value
     static = node.attributes['static'].value
     prot =  node.attributes['prot'].value
@@ -69,7 +69,7 @@ def report(component, publish, symbol):
     if publish: print '  PUBLISH in {}: {}'.format(component, symbol)
     else      : print 'NOPUBLISH in {}: {}'.format(component, symbol)
 
-def printReport():
+def print_report():
     format = '{} {}: {};'
     for component, symbols in component_map.iteritems():
         print 'COMPONENT:', component
@@ -77,38 +77,13 @@ def printReport():
             for symbol in symbols[key]: print format.format(component, key, symbol)
         print
 
-def printDebugInfo(node, attributes):
+def print_debug_info(node, attributes):
     if not debug: return
     print
-    printAttribs(node, attributes)
-    printLocation(node)
+    print_attribs(node, attributes)
+    print_location(node)
 
-def parseMemberDef(context_name, node, is_class):
-    library = mappedPhysicalComponent(getLocationFile(node))
-    (kind, static, prot) = getAttribs(node)
-    
-    if kind in ['enum', 'typedef']: return
-    if hasElement(node, ['templateparamlist']): return
-    if kind in ['function'] and node.attributes['inline'].value == 'yes': return
-    
-    name = concatTextFromTags(node, ['name'])
-    if name in ['__attribute__']:
-        if debug: print '  ignoring doxygen mis-parsing:', concatTextFromTags(node, ['argsstring'])
-        return
-
-    if name.startswith('operator'): name = 'operator'
-    if not context_name == None: symbol = context_name + '::' + name
-    else: symbol = name
-
-    publish = '/include/' in getLocationFile(node)
-    if publish: publish = prot != 'private'
-    if publish and is_class: publish = kind == 'function' or static == 'yes'
-    if publish: publish = kind != 'define'
-    printDebugInfo(node, ['kind', 'prot', 'static'])
-    if debug: print '  is_class:', is_class
-    report(library, publish, symbol+'*')
-
-def findPhysicalComponent(location_file):
+def find_physical_component(location_file):
     path_elements = location_file.split('/')
     found = False
     for element in path_elements:
@@ -117,12 +92,37 @@ def findPhysicalComponent(location_file):
     if debug: print 'no component in:', location_file
     return None
     
-def mappedPhysicalComponent(location_file):
-    location = findPhysicalComponent(location_file)
+def mapped_physical_component(location_file):
+    location = find_physical_component(location_file)
     if location == 'shared': location = 'common'
     return 'mir' + location
 
-def parseCompoundDefs(xmldoc):
+def parse_member_def(context_name, node, is_class):
+    library = mapped_physical_component(get_file_location(node))
+    (kind, static, prot) = get_attribs(node)
+    
+    if kind in ['enum', 'typedef']: return
+    if has_element(node, ['templateparamlist']): return
+    if kind in ['function'] and node.attributes['inline'].value == 'yes': return
+    
+    name = concat_text_from_tags(node, ['name'])
+    if name in ['__attribute__']:
+        if debug: print '  ignoring doxygen mis-parsing:', concat_text_from_tags(node, ['argsstring'])
+        return
+
+    if name.startswith('operator'): name = 'operator'
+    if not context_name == None: symbol = context_name + '::' + name
+    else: symbol = name
+
+    publish = '/include/' in get_file_location(node)
+    if publish: publish = prot != 'private'
+    if publish and is_class: publish = kind == 'function' or static == 'yes'
+    if publish: publish = kind != 'define'
+    print_debug_info(node, ['kind', 'prot', 'static'])
+    if debug: print '  is_class:', is_class
+    report(library, publish, symbol+'*')
+
+def parse_compound_defs(xmldoc):
     compounddefs = xmldoc.getElementsByTagName('compounddef') 
     for node in compounddefs:
         kind = node.attributes['kind'].value
@@ -131,45 +131,45 @@ def parseCompoundDefs(xmldoc):
 
         if kind in ['group']: 
             for member in node.getElementsByTagName('memberdef') : 
-                parseMemberDef(None, member, False)
+                parse_member_def(None, member, False)
             continue
 
         if kind in ['namespace']: 
-            symbol = concatTextFromTags(node, ['compoundname'])
+            symbol = concat_text_from_tags(node, ['compoundname'])
             for member in node.getElementsByTagName('memberdef') : 
-                parseMemberDef(symbol, member, False)
+                parse_member_def(symbol, member, False)
             continue
         
-        file = getLocationFile(node)
+        file = get_file_location(node)
         if debug: print '  from file:', file 
         if '/examples/' in file or '/test/' in file or '[generated]' in file or '[STL]' in file:
             continue
 
-        if hasElement(node, ['templateparamlist']): continue
+        if has_element(node, ['templateparamlist']): continue
 
-        library = mappedPhysicalComponent(file)
-        symbol = concatTextFromTags(node, ['compoundname'])
-        publish = '/include/' in getLocationFile(node)
+        library = mapped_physical_component(file)
+        symbol = concat_text_from_tags(node, ['compoundname'])
+        publish = '/include/' in get_file_location(node)
 
         if publish: 
             if kind in ['class', 'struct']:
                 prot =  node.attributes['prot'].value
                 publish = prot != 'private'
-                printDebugInfo(node, ['kind', 'prot'])
+                print_debug_info(node, ['kind', 'prot'])
                 report(library, publish, 'vtable?for?' + symbol)
                 report(library, publish, 'typeinfo?for?' + symbol)
 
         if publish: 
             for member in node.getElementsByTagName('memberdef') : 
-                parseMemberDef(symbol, member, kind in ['class', 'struct'])
+                parse_member_def(symbol, member, kind in ['class', 'struct'])
 
 if __name__ == "__main__":
     for arg in argv[1:]:
         try:
             if debug: print 'Processing:', arg
             xmldoc = minidom.parse(arg)
-            parseCompoundDefs(xmldoc)
+            parse_compound_defs(xmldoc)
         except Exception as error:
             print 'Error:', arg, error
 
-    printReport()
+    print_report()
