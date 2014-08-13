@@ -5,7 +5,6 @@ MIR_COMMON_1 {
     mir::input::android::*;
     mir::input::receiver::android::*;
     typeinfo?for?mir::input::receiver::android::InputReceiver;
-    vtable?for?mir::protobuf::DisplayServer;
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doyygen_xml.py doc/xml/*.xml | grep "^mircommon public" | sed "s/mircommon public: /    /" | sort  
     mir_arrow_cursor_name*;
