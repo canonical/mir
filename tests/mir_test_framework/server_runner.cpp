@@ -98,7 +98,7 @@ mir::DisplayServer* mtf::ServerRunner::start_mir_server()
     });
 
     std::unique_lock<std::mutex> lock(mutex);
-    started.wait_for(lock, std::chrono::seconds(2), [&]{ return !!result; });
+    started.wait_for(lock, std::chrono::seconds{10}, [&]{ return !!result; });
 
     return result;
 }
