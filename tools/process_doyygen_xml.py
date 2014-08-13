@@ -52,19 +52,21 @@ def getAttribs(node):
 component_map = {}
 
 def report(component, publish, symbol):
-    symbols = component_map.get(component, {'public' : [], 'private' : []})
-    if publish: symbols['public'].append(symbol)
-    else:       symbols['private'].append(symbol)
+    symbol = symbol.replace('~', '?')
+    symbols = component_map.get(component, {'public' : set(), 'private' : set()})
+    if publish: symbols['public'].add(symbol)
+    else:       symbols['private'].add(symbol)
     component_map[component] = symbols
     if not debug: return
     if publish: print '  PUBLISH in {}: {}'.format(component, symbol)
     else      : print 'NOPUBLISH in {}: {}'.format(component, symbol)
 
 def printReport():
+    format = '{} {}: {};'
     for component, symbols in component_map.iteritems():
         print 'COMPONENT:', component
-        for symbol in symbols['public']: print component, 'public:', symbol
-        for symbol in symbols['private']: print component, 'private:', symbol
+        for key in symbols.keys():
+            for symbol in symbols[key]: print format.format(component, key, symbol)
         print
 
 def printDebugInfo(node, attributes):
@@ -73,7 +75,7 @@ def printDebugInfo(node, attributes):
     printAttribs(node, attributes)
     printLocation(node)
 
-def parseMemberDef(context_name, node):
+def parseMemberDef(context_name, node, has_privacy):
     library = mappedPhysicalComponent(getLocationFile(node))
     (kind, static, prot) = getAttribs(node)
     
@@ -85,11 +87,12 @@ def parseMemberDef(context_name, node):
         if debug: print '  ignoring doxygen mis-parsing:', concatTextFromTags(node, ['argsstring'])
         return
 
+    if name.startswith('operator'): name = 'operator'
     if not context_name == None: symbol = context_name + '::' + name
     else: symbol = name
 
     publish = '/include/' in getLocationFile(node)
-    if publish: publish = prot != 'private'
+    if publish and has_privacy: publish = prot != 'private'
     if publish: publish = kind == 'function' or static == 'yes'
     if publish: publish = kind != 'define'
     printDebugInfo(node, ['kind', 'prot', 'static'])
@@ -118,7 +121,7 @@ def parseCompoundDefs(xmldoc):
 
         if kind == 'group': 
             for member in node.getElementsByTagName('memberdef') : 
-                parseMemberDef(None, member)
+                parseMemberDef(None, member, False)
             continue
         
         file = getLocationFile(node)
@@ -140,7 +143,7 @@ def parseCompoundDefs(xmldoc):
 
         if publish: 
             for member in node.getElementsByTagName('memberdef') : 
-                parseMemberDef(symbol, member)
+                parseMemberDef(symbol, member, kind in ['class', 'struct'])
 
 if __name__ == "__main__":
     for arg in argv[1:]:
