@@ -50,9 +50,15 @@ def get_attribs(node):
     return (kind, static, prot)
 
 # Special cases for publishing anyway:
-# In test_command_line_handling.cpp g++ sucessfully converts a virtual function call
-# to a direct call to a private function: mir::options::DefaultConfiguration::the_options()
-publish_special_cases = {'mir::options::DefaultConfiguration::the_options*'}
+publish_special_cases = {
+    # In test_command_line_handling.cpp g++ sucessfully converts a virtual function call
+    # to a direct call to a private function: mir::options::DefaultConfiguration::the_options()
+    'mir::options::DefaultConfiguration::the_options*',
+    
+    # Although private this is called by a template wrapper function that instantiates
+    # in client code
+    'mir::SharedLibrary::load_symbol*'
+}
 
 component_map = {}
 

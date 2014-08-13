@@ -4,7 +4,6 @@ MIR_COMMON_1 {
 # These symbols are "missed" by the script
     mir::protobuf::*;
     typeinfo?for?mir::protobuf::*;
-    mir::SharedLibrary::load_symbol*;
     mir::input::android::*;
     mir::input::receiver::android::*;
     typeinfo?for?mir::input::receiver::android::InputReceiver;
@@ -96,6 +95,7 @@ MIR_COMMON_1 {
     mir::report::lttng::TracepointProvider::?TracepointProvider*;
     mir::report::lttng::TracepointProvider::TracepointProvider*;
     mir::set_thread_name*;
+    mir::SharedLibrary::load_symbol*;
     mir::SharedLibrary::?SharedLibrary*;
     mir::SharedLibrary::SharedLibrary*;
     mir::udev::Context::?Context*;
