@@ -87,7 +87,7 @@ def parseMemberDef(context_name, node, is_class):
     library = mappedPhysicalComponent(getLocationFile(node))
     (kind, static, prot) = getAttribs(node)
     
-    if kind in ['enum']: return
+    if kind in ['enum', 'typedef']: return
     if hasElement(node, ['templateparamlist']): return
     
     name = concatTextFromTags(node, ['name'])
