@@ -120,7 +120,9 @@ def parse_member_def(context_name, node, is_class):
     if not context_name == None: symbol = context_name + '::' + name
     else: symbol = name
 
-    publish = '/include/' in get_file_location(node)
+    file_location = get_file_location(node)
+    publish = '/include/' in file_location or 'build/src' in file_location
+
     if publish: publish = prot != 'private'
     if publish and is_class: publish = kind == 'function' or static == 'yes'
     if publish: publish = kind != 'define'
@@ -155,7 +157,9 @@ def parse_compound_defs(xmldoc):
 
         library = mapped_physical_component(file)
         symbol = concat_text_from_tags(node, ['compoundname'])
-        publish = '/include/' in get_file_location(node)
+        
+        file_location = get_file_location(node)
+        publish = '/include/' in file_location or 'build/src' in file_location
 
         if publish: 
             if kind in ['class', 'struct']:
