@@ -28,6 +28,7 @@
 
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test/barrier.h"
 
 #include "mir_test_doubles/mock_egl.h"
 
@@ -293,6 +294,11 @@ struct NestedServer : mtf::InProcessServer, HostServerConfiguration
 
     std::string connection_string;
 };
+
+ACTION_P(UnblockBarrier, barrier)
+{
+    barrier->ready();
+}
 }
 
 TEST_F(NestedServer, nested_platform_connects_and_disconnects)
@@ -384,14 +390,19 @@ TEST_F(NestedServer, receives_lifecycle_events_from_host)
 
     NestedMirRunner nested_mir{nested_config};
 
+    mir::test::Barrier event_barrier{2};
+
     InSequence seq;
     EXPECT_CALL(*(nested_config.the_mock_host_lifecycle_event_listener()),
         lifecycle_event_occurred(mir_lifecycle_state_resumed)).Times(1);
     EXPECT_CALL(*(nested_config.the_mock_host_lifecycle_event_listener()),
-        lifecycle_event_occurred(mir_lifecycle_state_will_suspend)).Times(1);
+        lifecycle_event_occurred(mir_lifecycle_state_will_suspend))
+        .WillOnce(UnblockBarrier(&event_barrier));
     EXPECT_CALL(*(nested_config.the_mock_host_lifecycle_event_listener()),
         lifecycle_event_occurred(mir_lifecycle_connection_lost)).Times(AtMost(1));
 
     trigger_lifecycle_event(mir_lifecycle_state_resumed);
     trigger_lifecycle_event(mir_lifecycle_state_will_suspend);
+
+    event_barrier.ready();
 }
