@@ -49,10 +49,18 @@ def getAttribs(node):
     prot =  node.attributes['prot'].value
     return (kind, static, prot)
 
+# Special cases for publishing anyway:
+# In test_command_line_handling.cpp g++ sucessfully converts a virtual function call
+# to a direct call to a private function: mir::options::DefaultConfiguration::the_options()
+publish_special_cases = {'mir::options::DefaultConfiguration::the_options*'}
+
 component_map = {}
 
 def report(component, publish, symbol):
     symbol = symbol.replace('~', '?')
+
+    if symbol in publish_special_cases: publish = True
+
     symbols = component_map.get(component, {'public' : set(), 'private' : set()})
     if publish: symbols['public'].add(symbol)
     else:       symbols['private'].add(symbol)
@@ -75,7 +83,7 @@ def printDebugInfo(node, attributes):
     printAttribs(node, attributes)
     printLocation(node)
 
-def parseMemberDef(context_name, node, has_privacy):
+def parseMemberDef(context_name, node, is_class):
     library = mappedPhysicalComponent(getLocationFile(node))
     (kind, static, prot) = getAttribs(node)
     
@@ -92,10 +100,11 @@ def parseMemberDef(context_name, node, has_privacy):
     else: symbol = name
 
     publish = '/include/' in getLocationFile(node)
-    if publish and has_privacy: publish = prot != 'private'
-    if publish: publish = kind == 'function' or static == 'yes'
+    if publish: publish = prot != 'private'
+    if publish and is_class: publish = kind == 'function' or static == 'yes'
     if publish: publish = kind != 'define'
     printDebugInfo(node, ['kind', 'prot', 'static'])
+    if debug: print '  is_class:', is_class
     report(library, publish, symbol+'*')
 
 def findPhysicalComponent(location_file):
@@ -119,13 +128,21 @@ def parseCompoundDefs(xmldoc):
 
         if kind in ['page', 'file', 'example', 'union']: continue
 
-        if kind == 'group': 
+        if kind in ['group']: 
             for member in node.getElementsByTagName('memberdef') : 
                 parseMemberDef(None, member, False)
             continue
+
+        if kind in ['namespace']: 
+            symbol = concatTextFromTags(node, ['compoundname'])
+            for member in node.getElementsByTagName('memberdef') : 
+                parseMemberDef(symbol, member, False)
+            continue
         
         file = getLocationFile(node)
-        if '/examples/' in file or '/test/' in file or '[generated]' in file or '[STL]' in file: continue
+        if debug: print '  from file:', file 
+        if '/examples/' in file or '/test/' in file or '[generated]' in file or '[STL]' in file:
+            continue
 
         if hasElement(node, ['templateparamlist']): continue
 
