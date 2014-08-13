@@ -101,7 +101,8 @@ typedef enum {
 } MirMotionAction;
 
 typedef enum {
-    mir_motion_flag_window_is_obscured = 0x1
+    mir_motion_flag_window_is_obscured = 0x1,
+    mir_motion_flag_resampled = 0x2
 } MirMotionFlag;
 
 typedef enum {

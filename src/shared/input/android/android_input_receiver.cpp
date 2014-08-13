@@ -102,11 +102,25 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
      */
 
     if (input_consumer->consume(&event_factory,
-                                input_consumer->hasPendingBatch(),
-                                INT64_MAX, &event_sequence_id, &android_event)
+            input_consumer->hasPendingBatch() || already_resampled,
+            INT64_MAX, &event_sequence_id, &android_event)
         == droidinput::OK)
     {
         mia::Lexicon::translate(android_event, ev);
+
+        if (ev.type == mir_event_type_motion)
+        {
+            /*
+             * Already resampled? Remember that because it means we're in
+             * a nested server or similar. We don't want to resample already
+             * resampled motion events. That would reduce the event throughput
+             * to clients of nested servers too much.
+             */
+            already_resampled = (ev.motion.flags & mir_motion_flag_resampled);
+
+            ev.motion.flags = static_cast<MirMotionFlag>(
+                ev.motion.flags | mir_motion_flag_resampled);
+        }
 
         map_key_event(xkb_mapper, ev);
 
