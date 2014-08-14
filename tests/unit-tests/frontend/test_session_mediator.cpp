@@ -713,7 +713,7 @@ TEST_F(SessionMediatorTest, fully_packs_buffer_for_create_screencast)
     mediator.create_screencast(nullptr, &screencast_parameters,
                                &screencast, null_callback.get());
 
-    EXPECT_EQ(stub_buffer.id().as_uint32_t(),
+    EXPECT_EQ(stub_buffer.id().as_value(),
               screencast.buffer().buffer_id());
 }
 
@@ -733,7 +733,7 @@ TEST_F(SessionMediatorTest, partially_packs_buffer_for_screencast_buffer)
     mediator.screencast_buffer(nullptr, &screencast_id,
                                &protobuf_buffer, null_callback.get());
 
-    EXPECT_EQ(stub_buffer.id().as_uint32_t(),
+    EXPECT_EQ(stub_buffer.id().as_value(),
               protobuf_buffer.buffer_id());
 }
 

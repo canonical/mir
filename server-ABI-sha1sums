@@ -3,8 +3,8 @@
 8f47feb6d983aa5c9ebd58e9d1524361c9f5e651  include/platform/mir/fatal.h
 e9e97ba2db4c6aeb269630547bf5a558da17d896  include/platform/mir/graphics/basic_platform.h
 05c154bbfa81e16795c18f27000711741d5592e0  include/platform/mir/graphics/buffer_basic.h
-885192f0da197f60f683e70b1bc6c838e6cfd82a  include/platform/mir/graphics/buffer.h
-4610330452052a58d6067004adbd70f4701c11bf  include/platform/mir/graphics/buffer_id.h
+54328767ca330ba166160a486bd0688406ab0222  include/platform/mir/graphics/buffer.h
+5875f13f5b029a4b5291e9baec3ae434b72be27c  include/platform/mir/graphics/buffer_id.h
 827cbc0ecbcea21dd794ab4b8119a5710bb266d3  include/platform/mir/graphics/buffer_initializer.h
 d7507a326f8cfcc4707c1eb28cf7b666420f92fb  include/platform/mir/graphics/buffer_ipc_packer.h
 748f5c2aab11189aa02c4a89ab900561548e7304  include/platform/mir/graphics/buffer_properties.h
