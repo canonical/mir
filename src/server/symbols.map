@@ -1,6 +1,12 @@
 MIR_SERVER_24 {
  global:
   extern "C++" {
+# Symbols not yet picked up by script
+    non-virtual?thunk?to?mir::shell::SessionCoordinatorWrapper::focussed_application???const;
+    non-virtual?thunk?to?mir::shell::SessionCoordinatorWrapper::set_focus_to?std::shared_ptr?mir::scene::Session??const??;
+    vtable?for?mir::input::NullInputDispatcher;
+    vtable?for?mir::input::NullInputConfiguration;
+    
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doyygen_xml.py doc/xml/*.xml | grep "^mirserver public" | sed "s/mirserver public: /    /" | sort  
     mir::AsioMainLoop::?AsioMainLoop*;

@@ -22,13 +22,17 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
 )
 
-add_library(mirserver SHARED
+add_library(mirserverobjects OBJECT
   run_mir.cpp
   report_exception.cpp
   display_server.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
   default_emergency_cleanup.cpp
+)
+
+set(MIR_SERVER_OBJECTS
+  $<TARGET_OBJECTS:mirserverobjects>
   $<TARGET_OBJECTS:mirinput>
   $<TARGET_OBJECTS:mirscene>
   $<TARGET_OBJECTS:mircompositor>
@@ -43,6 +47,12 @@ add_library(mirserver SHARED
   $<TARGET_OBJECTS:mirlogger>
   $<TARGET_OBJECTS:mirnestedgraphics>
   $<TARGET_OBJECTS:miroffscreengraphics>
+)
+
+set(MIR_SERVER_OBJECTS ${MIR_SERVER_OBJECTS} PARENT_SCOPE)
+
+add_library(mirserver SHARED
+  ${MIR_SERVER_OBJECTS}
 )
 
 target_link_libraries(mirserver LINK_PUBLIC
