@@ -213,6 +213,9 @@ MIRPLATFORM_1 {
     mir::options::DefaultConfiguration::add_options*;
     mir::options::DefaultConfiguration::?DefaultConfiguration*;
     mir::options::DefaultConfiguration::DefaultConfiguration*;
+    mir::options::DefaultConfiguration::parse_arguments*;
+    mir::options::DefaultConfiguration::parse_config_file*;
+    mir::options::DefaultConfiguration::parse_environment*;
     mir::options::DefaultConfiguration::the_options*;
     mir::options::display_report_opt*;
     mir::options::enable_input_opt*;
