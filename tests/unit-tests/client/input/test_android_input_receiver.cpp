@@ -182,7 +182,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_handles_events)
     EXPECT_TRUE (producer.must_receive_handled_signal());
 }
 
-TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events_within_two_requests)
+TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
 {
     mircva::InputReceiver receiver(client_fd, std::make_shared<mircv::NullInputReceiverReport>());
     TestingInputProducer producer(server_fd);
@@ -195,27 +195,9 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events_within
     flush_channels();
 
     MirEvent ev;
-
-    // Start the batching. Don't care if it's finished yet.
-    receiver.next_event(next_event_timeout, ev);
-    // Second call: Guarantee the batch is finished
-    EXPECT_TRUE(receiver.next_event(std::chrono::milliseconds(10), ev));
-    // Third call: Nothing left to consume
-    EXPECT_FALSE(receiver.next_event(std::chrono::milliseconds(10), ev));
-}
-
-TEST_F(AndroidInputReceiverSetup, receiver_consumes_no_batched_events_on_first_call)
-{
-    mircva::InputReceiver receiver(client_fd, std::make_shared<mircv::NullInputReceiverReport>());
-    TestingInputProducer producer(server_fd);
-
-    producer.produce_a_motion_event();
-    producer.produce_a_motion_event();
-    producer.produce_a_motion_event();
-
-    flush_channels();
-
-    MirEvent ev;
-    EXPECT_FALSE(receiver.next_event(std::chrono::milliseconds(10), ev));
+    // Handle all three events as a batched event
+    EXPECT_TRUE(receiver.next_event(next_event_timeout, ev));
+    // Now there should be no events
+    EXPECT_FALSE(receiver.next_event(std::chrono::milliseconds(1), ev)); // Minimal timeout needed for valgrind
 }
 
