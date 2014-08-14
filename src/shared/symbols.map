@@ -803,6 +803,7 @@ MIR_COMMON_1 {
     typeinfo?for?mir::input::receiver::InputReceiverThread;
     typeinfo?for?mir::input::receiver::NullInputReceiverReport;
     typeinfo?for?mir::input::receiver::XKBMapper;
+    typeinfo?for?mir::IntOwnedFd;
     typeinfo?for?MirKeyEvent;
     typeinfo?for?mir::logging::DumbConsoleLogger;
     typeinfo?for?mir::logging::Logger;
@@ -894,6 +895,7 @@ MIR_COMMON_1 {
     vtable?for?mir::input::receiver::InputReceiverThread;
     vtable?for?mir::input::receiver::NullInputReceiverReport;
     vtable?for?mir::input::receiver::XKBMapper;
+    vtable?for?mir::IntOwnedFd;
     vtable?for?MirKeyEvent;
     vtable?for?mir::logging::DumbConsoleLogger;
     vtable?for?mir::logging::Logger;
