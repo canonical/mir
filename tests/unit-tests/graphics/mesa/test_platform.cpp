@@ -37,6 +37,7 @@
 
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
+#include "mir_test_doubles/fd_matcher.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -168,7 +169,7 @@ TEST_F(MesaGraphicsPlatform, test_ipc_data_packed_correctly)
     mtd::MockPacker mock_packer;
     for(auto i=0; i < native_handle->fd_items; i++)
     {
-        EXPECT_CALL(mock_packer, pack_fd(native_handle->fd[i]))
+        EXPECT_CALL(mock_packer, pack_fd(mtd::RawFdMatcher(native_handle->fd[i])))
             .Times(Exactly(1));
     }
     for(auto i=0; i < native_handle->data_items; i++)

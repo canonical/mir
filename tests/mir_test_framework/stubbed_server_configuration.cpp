@@ -161,7 +161,8 @@ public:
             }
             for(auto i=0; i<native_handle->fd_items; i++)
             {
-                packer->pack_fd(native_handle->fd[i]);
+                using namespace mir;
+                packer->pack_fd(Fd(IntOwnedFd{native_handle->fd[i]}));
             }
 
             packer->pack_flags(native_handle->flags);
