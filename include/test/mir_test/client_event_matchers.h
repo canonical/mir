@@ -236,15 +236,18 @@ MATCHER_P4(MotionEventInDirection, x0, y0, x1, y1, "")
         to_ref(arg).motion.action != mir_motion_action_hover_move)
         return false;
 
-    auto x = to_ref(arg).motion.pointer_coordinates[0].x;
-    auto y = to_ref(arg).motion.pointer_coordinates[0].y;
+    auto x2 = to_ref(arg).motion.pointer_coordinates[0].x;
+    auto y2 = to_ref(arg).motion.pointer_coordinates[0].y;
 
-    // Compare direction approximately (same quadrant)
-    if ((x1 > x0 && x < x0) || (x1 < x0 && x > x0) || 
-        (y1 > y0 && y < y0) || (y1 < y0 && y > y0))
-        return false;
+    float dx1 = x1 - x0;
+    float dy1 = y1 - y0;
 
-    return true;
+    float dx2 = x2 - x0;
+    float dy2 = y2 - y0;
+
+    float dot_product = dx1 * dx2 + dy1 + dy2;
+
+    return dot_product > 0.0f;
 }
 
 MATCHER(MovementEvent, "")
