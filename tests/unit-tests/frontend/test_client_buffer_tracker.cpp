@@ -120,7 +120,7 @@ struct SurfaceTracker : public testing::Test
     size_t const client_cache_size{3};
 };
 
-TEST_F(SurfaceTracker, only_returns_true_if_track_buffer)
+TEST_F(SurfaceTracker, only_returns_true_if_buffer_already_tracked)
 {
     mf::SessionSurfaceTracker tracker{client_cache_size};
 
@@ -147,6 +147,8 @@ TEST_F(SurfaceTracker, removals_remove_buffer_instances)
 
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
     EXPECT_TRUE(tracker.track_buffer(surf_id1, &stub_buffer0));
+
+    tracker.remove_surface(mf::SurfaceId{33});
 }
 
 TEST_F(SurfaceTracker, last_client_buffer)
@@ -164,15 +166,16 @@ TEST_F(SurfaceTracker, last_client_buffer)
     EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id1));
 }
 
-TEST_F(SurfaceTracker, buffers_expire_if_they_overrun_cache)
+TEST_F(SurfaceTracker, buffers_expire_if_they_overrun_cache_size)
 {
     mf::SessionSurfaceTracker tracker{client_cache_size};
 
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer1));
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer2));
+    //stub_buffer0 forced out
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer3));
-
+    //tracker reports its never seen stub_buffer0
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
     EXPECT_TRUE(tracker.track_buffer(surf_id0, &stub_buffer3));
 
