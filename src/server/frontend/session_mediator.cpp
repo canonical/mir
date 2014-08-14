@@ -615,6 +615,6 @@ void mf::SessionMediator::pack_protobuf_buffer(
 {
     protobuf_buffer.set_buffer_id(graphics_buffer->id().as_uint32_t());
 
-    mfd::ProtobufBufferPacker packer{&protobuf_buffer};
+    mfd::ProtobufBufferPacker packer{&protobuf_buffer, resource_cache};
     graphics_platform->fill_buffer_package(&packer, graphics_buffer, buffer_msg_type);
 }
