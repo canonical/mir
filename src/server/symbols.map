@@ -404,6 +404,7 @@ MIR_SERVER_24 {
     mir::input::TouchVisualizer::visualize_touches*;
     mir::input::VTFilter::handle*;
     mir::logging::GlogLogger::GlogLogger*;
+    mir::logging::GlogLogger::log*;
     mir::MainLoop::run*;
     mir::MainLoop::stop*;
     mir::report_exception*;
