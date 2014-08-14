@@ -43,13 +43,6 @@ void msh::SessionCoordinatorWrapper::close_session(
     wrapped->close_session(session);
 }
 
-mf::SurfaceId msh::SessionCoordinatorWrapper::create_surface_for(
-    std::shared_ptr<mf::Session> const& session,
-    ms::SurfaceCreationParameters const& params)
-{
-    return wrapped->create_surface_for(session, params);
-}
-
 void msh::SessionCoordinatorWrapper::focus_next()
 {
     wrapped->focus_next();

@@ -33,13 +33,6 @@ void mf::ShellWrapper::close_session(std::shared_ptr<Session> const& session)
     wrapped->close_session(session);
 }
 
-mf::SurfaceId mf::ShellWrapper::create_surface_for(
-    std::shared_ptr<Session> const& session,
-    scene::SurfaceCreationParameters const& params)
-{
-    return wrapped->create_surface_for(session, params);
-}
-
 void mf::ShellWrapper::handle_surface_created(
     std::shared_ptr<Session> const& session)
 {
