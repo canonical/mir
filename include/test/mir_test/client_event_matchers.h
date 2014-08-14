@@ -247,6 +247,8 @@ MATCHER_P4(MotionEventInDirection, x0, y0, x1, y1, "")
 
     float dot_product = dx1 * dx2 + dy1 + dy2;
 
+    // Return true if both vectors are roughly the same direction (within
+    // 90 degrees).
     return dot_product > 0.0f;
 }
 
