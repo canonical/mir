@@ -5,6 +5,7 @@ mir (0.6.1-0ubuntu1) UNRELEASED; urgency=medium
       . libmircommon-dev 0.6.0+14.10.20140811-0ubuntu1 fails to
         install/upgrade, does not replace mircommon-dev
         0.5.1+14.10.20140728-0ubuntu1 (LP: #1348515)
+      . Nexus 4 client lock up observed (LP: #1352883)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 14 Aug 2014 11:52:30 +0800
 
