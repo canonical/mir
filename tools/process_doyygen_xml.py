@@ -57,7 +57,7 @@ publish_special_cases = {
     
     # Although private this is called by a template wrapper function that instantiates
     # in client code
-    'mir::SharedLibrary::load_symbol*'
+    'mir::SharedLibrary::load_symbol*',
 }
 
 component_map = {}
@@ -125,9 +125,11 @@ def parse_member_def(context_name, node, is_class):
               or 'build/src' in file_location \
               or 'src/shared/input/android/' in file_location
 
-    if publish: publish = prot != 'private'
-    if publish and is_class: publish = kind == 'function' or static == 'yes'
     if publish: publish = kind != 'define'
+    if publish and is_class: publish = kind == 'function' or static == 'yes'
+    if publish and prot == 'private':
+        if kind == 'function': publish = node.attributes['virt'].value == 'virtual'
+        else: publish =  False
     print_debug_info(node, ['kind', 'prot', 'static'])
     if debug: print '  is_class:', is_class
     report(library, publish, symbol+'*')
