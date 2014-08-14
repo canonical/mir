@@ -1,3 +1,13 @@
+mir (0.6.1-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.6.1 (https://launchpad.net/mir/+milestone/0.6.1)
+    - Bugs fixed:
+      . libmircommon-dev 0.6.0+14.10.20140811-0ubuntu1 fails to
+        install/upgrade, does not replace mircommon-dev
+        0.5.1+14.10.20140728-0ubuntu1 (LP: #1348515)
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 14 Aug 2014 11:52:30 +0800
+
 mir (0.6.0+14.10.20140811-0ubuntu1) utopic; urgency=medium
 
   [ Cemil Azizoglu ]
