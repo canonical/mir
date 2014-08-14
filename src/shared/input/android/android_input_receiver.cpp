@@ -81,46 +81,16 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
     droidinput::InputEvent *android_event;
     uint32_t event_sequence_id;
 
-    /*
-     * Enable Project Butter input resampling:
-     *  1. Only consume batches if a previous call started one. This way
-     *     raw events are allowed time to be grouped and resampled (prediction)
-     *     This effectively means we're scaling the flushing deadline with
-     *     the raw event rate. And under busy conditions, batches are fully
-     *     flushed to the client on every second call. That's the lowest
-     *     latency possible while keeping the resampling code path active.
-     *  2. Set frameTime=INT64_MAX. A positive value is required to enable
-     *     resampling. But giving an honest frame time only results in all
-     *     events being delivered to the client one frame late.
-     *     So give a fake frame time that's always far enough ahead in the
-     *     future that brand new raw events are instantly considered "old"
-     *     enough to get processed and factored into the motion predicition.
-     *
-     * This is actually better than how Project Butter was designed to work.
-     * Doing it this way yields much lower latency and has the benefit of not
-     * having to talk to any graphics code about frame times.
-     */
+    nsecs_t const now = systemTime();
+    int const minimum_event_rate_hz = 60;
+    nsecs_t const one_frame = 1000000000ULL / minimum_event_rate_hz;
+    nsecs_t const frame_time = (now / one_frame) * one_frame;
 
-    if (input_consumer->consume(&event_factory,
-            input_consumer->hasPendingBatch() || already_resampled,
-            INT64_MAX, &event_sequence_id, &android_event)
+    if (input_consumer->consume(&event_factory, true, frame_time,
+                                &event_sequence_id, &android_event)
         == droidinput::OK)
     {
         mia::Lexicon::translate(android_event, ev);
-
-        if (ev.type == mir_event_type_motion)
-        {
-            /*
-             * Already resampled? Remember that because it means we're in
-             * a nested server or similar. We don't want to resample already
-             * resampled motion events. That would reduce the event throughput
-             * to clients of nested servers too much.
-             */
-            already_resampled = (ev.motion.flags & mir_motion_flag_resampled);
-
-            ev.motion.flags = static_cast<MirMotionFlag>(
-                ev.motion.flags | mir_motion_flag_resampled);
-        }
 
         map_key_event(xkb_mapper, ev);
 
