@@ -111,8 +111,8 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: libmircommon1 (= ${binary:Version}), 
          libprotobuf-dev (>= 2.4.1),
          ${misc:Depends},
-Breaks: mircommon-dev (<= 0.5.0+14.10.20140722-0ubuntu1)
-Replaces: mircommon-dev (<= 0.5.0+14.10.20140722-0ubuntu1)
+Breaks: mircommon-dev (<< 0.6)
+Replaces: mircommon-dev (<< 0.6)
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -128,8 +128,8 @@ Depends: libmirplatform1 (= ${binary:Version}),
          libmircommon-dev,
          libboost-program-options-dev,
          ${misc:Depends},
-Breaks: libmirplatform (<=0.5.1+14.10.20140728-0ubuntu1)
-Replaces: libmirplatform (<=0.5.1+14.10.20140728-0ubuntu1)
+Breaks: libmirplatform (<< 0.6)
+Replaces: libmirplatform (<< 0.6)
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.

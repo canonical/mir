@@ -1,16 +1,90 @@
-mir (0.6.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.6.0+14.10.20140811-0ubuntu1) utopic; urgency=medium
 
+  [ Cemil Azizoglu ]
   * New upstream release 0.6.0 (https://launchpad.net/mir/+milestone/0.6.0)
     - mirclient ABI unchanged at 8. Clients do not need rebuilding.
     - mirserver ABI bumped to 24. Servers need rebuilding, but probably don't
       need modification:
-      . TODO: List API changes here.
+      . Host lifecycle event listener for nested servers introduced.
+      . Add query function to BasicSurface.
+      . The (deprecated) function the_ipc_factory() is now removed.
+      . Removed legacy support for overriding the focus controller or the
+        frontend shell.
+      . Added support for a common type for managing fd's.
+      . Moved testdraw library to examples directory.
+      . Added support for droping stale frames when a surface becomes exposed.
     - Enhancements:
-      . TODO: List enhancements here.
+      . Split underlying data transport out of MirSocketRpcChannel.
+      . Introduced two new client-side functions : mir_surface_get_focus and
+        mir_surface_get_visibility.
+      . Added symbolic names for cursors.
+      . Made "shared" code a true shared library.
+      . Provide linker scripts to control symbols exported by [mesa|android]
+        libmirclientplatform.
+      . Correct xcursor loader test to fail properly instead of segfaulting.
+      . Make mir::Fd type copy constructible.
+      . Miscellaneous packaging related enhancements.
+      . Miscellaneous build related enhancements.
+      . Added automated test cases for detecting ABI breakage.
+      . examples/fingerpaint: Enable frame dropping so it's faster and more
+        responsive.
+      . mirprotobuf folded into new libmircommon.
+      . Don't propagate exceptions to graphics driver code.
+      . Dropped unused/minimally used dependencies : boost-filesystem,
+        boost-thread, boost-chrono, boost-regex.
+      . platform: provide support for customizing Mir's behavior when a
+        fatal_error occurs.
+      . Expose an interface for touch visualization.
     - Bugs fixed:
-      . TODO: List bug fixes here.
+      . Mir servers crash with SIGABRT - assertion failed at
+        buffer_queue.cpp:136 - "!pending_client_notifications.empty()"
+        (LP: #1335481)
+      . [regression][hammerhead] Mir fails to start on Nexus 5 & 10 as it
+        fails to turn vsync signal on (LP: #1345533)
+      . [qtcomp] Random crash in Mir input when running AP tests: [terminate
+        called after throwing an instance of '...' what(): assign: File exists]
+        when constructing a mir::AsioMainLoop::FDHandler (LP: #1346952)
+      . CI builds fail when trying to install libmircommon-dev (LP: #1348518)
+      . [regression] Mir 0.6 GL clients crash immediately on startup (Mesa is
+        trying to use X11 instead of Mir) (LP: #1350163)
+      . qmlscene crashed with SIGSEGV in _M_release() on quit (LP: #1342694)
+      . Clients cannot create surfaces when the screen is off (LP: #1344024)
+      . The packaging of headers and libraries is confused (LP: #1347522)
+      . [regression] Intermittent CI failure in
+        ClientLibrary.receives_surface_dpi_value (LP: #1348095)
+      . Installing mir-demos also unexpectedly installs *-dev packages
+        (LP: #1297100)
+      . mir_unit_tests: XCursorLoader.loads_cursors_from_testing_theme crashes
+        on N4 (LP: #1342029)
+      . [performance] Mir is spending at least 8% of its time in
+         __android_log_print() (LP: #1343074)
+      . [performance] Mir demo shell spends ~12% of its time in vector
+        allocation under DemoRenderer::tessellate_*() (LP: #1349698)
+      . mir_client_library_debug.h functions do not have C linkage
+        (LP: #1349742)
+      . mir client API is missing getters for some surface attributes
+        (LP: #1336553)
+      . Building Mir outputs lots of warnings about Android logging functions
+        in 3rd_party/ (LP: #1348467)
+      . The "shared" code should be a shared library (LP: #1341502)
+      . Finish the removal of mirprotobuf library (LP: #1351133)
+      . Release overlay buffers when screen is turned off (LP: #1350961)
+      . mir_demo_server_shell --disable-overlays false renders incorrectly
+        on android (partial fix for LP: #1348330)
+      . Remember to honor MIR_ENABLE_TESTS and not emit tests if it's disabled
+        (LP: #1352800)
+      . Make it easier to separate command line options used by Mir from those
+        used elsewhere (LP: #1351255)
+      . Expose create_native_platform in libmirplatformgraphics.so
+        (LP: #1353658)
+      . Add versioning and pkg config to libmirplatform (LP: #1293944)
+      . unity-system-compositor FTBFS against Mir: undefined reference to
+        `...@MIR_CLIENT_8' (LP: #1355021)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 22 Jul 2014 14:17:12 +0800
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 11 Aug 2014 19:52:06 +0000
 
 mir (0.5.1+14.10.20140728-0ubuntu1) utopic; urgency=medium
 
