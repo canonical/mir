@@ -104,3 +104,25 @@ install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
+
+add_library(
+  mirclient-debug SHARED
+
+  mir_debug_api.cpp
+  $<TARGET_OBJECTS:mirclientobjects>
+)
+
+target_link_libraries(
+  mirclient-debug
+
+  ${MIR_CLIENT_LIBRARIES}
+)
+
+set(debug_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-debug.map)
+
+set_target_properties(
+  mirclient-debug
+
+  PROPERTIES
+  LINK_FLAGS "-Wl,--version-script,${debug_symbol_map}"
+)
