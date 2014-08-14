@@ -26,6 +26,7 @@
 #include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/stub_display_builder.h"
+#include "mir_test_doubles/fd_matcher.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include <system/window.h>
@@ -94,7 +95,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc)
     int offset = 0;
     for(auto i=0u; i<num_fds; i++)
     {
-        EXPECT_CALL(mock_packer, pack_fd(native_buffer_handle->data[offset++]))
+        EXPECT_CALL(mock_packer, pack_fd(mtd::RawFdMatcher(native_buffer_handle->data[offset++])))
             .Times(1);
     }
     for(auto i=0u; i<num_ints; i++)
