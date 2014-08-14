@@ -127,7 +127,7 @@ void mga::AndroidPlatform::fill_buffer_package(
 
         for(auto i=0; i<buffer_handle->numFds; i++)
         {
-            packer->pack_fd(buffer_handle->data[offset++]);
+            packer->pack_fd(mir::Fd(IntOwnedFd{buffer_handle->data[offset++]}));
         }
         for(auto i=0; i<buffer_handle->numInts; i++)
         {

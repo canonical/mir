@@ -22,12 +22,21 @@
 
 namespace mir
 {
+//TODO: remove once mir::Fd is used more pervasively.
+//      some existing code does not really allow us to transfer or share the ownership
+//      of the fd. Constructing using mir::Fd(IntOwnedFd(int)) will help transition the existing
+//      code to using the mir::Fd type properly. 
+struct IntOwnedFd
+{
+    int int_owned_fd;
+};
 class Fd
 {
 public:
     //transfer ownership of the POD-int to the object. The int no longer needs close()ing,
     //and has the lifetime of the Fd object.
     explicit Fd(int fd);
+    explicit Fd(IntOwnedFd);
     static int const invalid{-1};
     Fd(); //Initializes fd to the mir::Fd::invalid;
     Fd(Fd&&);

@@ -42,6 +42,7 @@
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
+#include "mir/fd.h"
 
 #include "mir/geometry/rectangles.h"
 #include "client_buffer_tracker.h"
@@ -510,6 +511,7 @@ void mf::SessionMediator::new_fds_for_prompt_providers(
         {
             auto const fd = connection_context.fd_for_new_client(connect_handler);
             response->add_fd(fd);
+            resource_cache->save_fd(response, mir::Fd{fd});
         }
     }
 
@@ -615,6 +617,6 @@ void mf::SessionMediator::pack_protobuf_buffer(
 {
     protobuf_buffer.set_buffer_id(graphics_buffer->id().as_uint32_t());
 
-    mfd::ProtobufBufferPacker packer{&protobuf_buffer};
+    mfd::ProtobufBufferPacker packer{&protobuf_buffer, resource_cache};
     graphics_platform->fill_buffer_package(&packer, graphics_buffer, buffer_msg_type);
 }
