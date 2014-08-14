@@ -157,21 +157,6 @@ std::weak_ptr<ms::Session> ms::SessionManager::focussed_application() const
     return focus_application;
 }
 
-// TODO: We use this to work around the lack of a SessionMediator-like object for internal clients.
-// we could have an internal client mediator which acts as a factory for internal clients, taking responsibility
-// for invoking handle_surface_created.
-mf::SurfaceId ms::SessionManager::create_surface_for(
-    std::shared_ptr<mf::Session> const& session,
-    SurfaceCreationParameters const& params)
-{
-    auto scene_session = std::dynamic_pointer_cast<Session>(session);
-    auto id = scene_session->create_surface(params);
-
-    handle_surface_created(session);
-
-    return id;
-}
-
 void ms::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> const& session)
 {
     set_focus_to(std::dynamic_pointer_cast<Session>(session));
