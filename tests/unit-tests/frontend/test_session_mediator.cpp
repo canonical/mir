@@ -47,7 +47,6 @@
 #include "mir_test/fake_shared.h"
 #include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
-#include "mir/raii.h"
 
 #include "gmock_set_arg.h"
 #include <gtest/gtest.h>
@@ -545,13 +544,9 @@ TEST_F(SessionMediator, buffer_resource_for_surface_unaffected_by_other_surfaces
     mp::Surface surface_response;
 
     auto surface1 = stubbed_session->mock_surface_at(mf::SurfaceId{0});
-    ON_CALL(*surface1, swap_buffers(_, _))
-        .WillByDefault(InvokeArgument<1>(&buffer));
 
-    //first surface
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     mp::SurfaceId our_surface{surface_response.id()};
-    Mock::VerifyAndClearExpectations(surface1.get());
 
     /* Creating a new surface should not affect our surfaces' buffers */
     EXPECT_CALL(*surface1, swap_buffers(_, _)).Times(0);
@@ -562,10 +557,10 @@ TEST_F(SessionMediator, buffer_resource_for_surface_unaffected_by_other_surfaces
 
     /* Getting the next buffer of new surface should not affect our surfaces' buffers */
     mediator.next_buffer(nullptr, &new_surface, &buffer_response, null_callback.get());
-    Mock::VerifyAndClearExpectations(surface1.get());
 
     /* Getting the next buffer of our surface should post the original */
-    EXPECT_CALL(*surface1, swap_buffers(_/*Eq(&buffer)*/, _)).Times(1);
+    EXPECT_CALL(*mock_tracker, last_buffer(_)).WillOnce(Return(&buffer));
+    EXPECT_CALL(*surface1, swap_buffers(Eq(&buffer), _)).Times(1);
 
     mediator.next_buffer(nullptr, &our_surface, &buffer_response, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());

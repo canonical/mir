@@ -144,7 +144,7 @@ void mf::SessionMediator::advance_buffer(
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
     auto tracker = surface_tracker;
-    surface.swap_buffers(
+    surface.swap_buffers( 
         tracker->last_buffer(surf_id),
         [tracker, surf_id, complete](mg::Buffer* new_buffer)
         {

@@ -16,10 +16,11 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir/graphics/buffer.h"
-#include "mir/graphics/buffer_id.h"
-#include "client_buffer_tracker.h"
 #include <algorithm>
+
+#include "client_buffer_tracker.h"
+#include "mir/graphics/buffer_id.h"
+#include "mir/graphics/buffer.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -61,9 +62,8 @@ bool mf::SessionSurfaceTracker::track_buffer(SurfaceId surface_id, mg::Buffer* b
 {
     auto& tracker = client_buffer_tracker[surface_id];
     if (!tracker)
-    {
         tracker = std::make_shared<ClientBufferTracker>(client_cache_size);
-    }
+
     auto already_tracked = tracker->client_has(buffer->id());
     tracker->add(buffer->id());
 
@@ -88,6 +88,6 @@ mg::Buffer* mf::SessionSurfaceTracker::last_buffer(SurfaceId surface_id) const
     if (it != client_buffer_resource.end())
         return it->second;
     else
-        //should really throw, but that is difficult with the way the code curerntly works
+        //should really throw, but that is difficult with the way the code currently works
         return nullptr;
 }
