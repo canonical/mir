@@ -6,7 +6,7 @@ e9e97ba2db4c6aeb269630547bf5a558da17d896  include/platform/mir/graphics/basic_pl
 885192f0da197f60f683e70b1bc6c838e6cfd82a  include/platform/mir/graphics/buffer.h
 4610330452052a58d6067004adbd70f4701c11bf  include/platform/mir/graphics/buffer_id.h
 827cbc0ecbcea21dd794ab4b8119a5710bb266d3  include/platform/mir/graphics/buffer_initializer.h
-4ae1e2be7eaa64612e4248d1fbba43fd7de22e01  include/platform/mir/graphics/buffer_ipc_packer.h
+d7507a326f8cfcc4707c1eb28cf7b666420f92fb  include/platform/mir/graphics/buffer_ipc_packer.h
 748f5c2aab11189aa02c4a89ab900561548e7304  include/platform/mir/graphics/buffer_properties.h
 ffa857f624f1c8cbd50a190107137346fc3204d6  include/platform/mir/graphics/cursor.h
 fe2b5f13ccd3ec6b78d90d3abbb7d88b48238578  include/platform/mir/graphics/cursor_image.h
@@ -154,7 +154,7 @@ a134c7b86e9c3b191f1004abe7bbdceed8ac42ee  include/server/mir/time/timer.h
 6ad1f35928df9ffd917fbf17cbcdd533a8b5b27d  include/shared/mir/basic_observers.h
 3329ada91412ded2f127aee9a92f065e57b81cb2  include/shared/mir/cached_ptr.h
 691278e8b89265fa7f11db78dc8a9b530cef6e99  include/shared/mir/default_configuration.h
-713d1ed8ce2cbe00b6a66edbd446da118699b6dc  include/shared/mir/fd.h
+82ff9499ef62739379616e02164dc98f9914c329  include/shared/mir/fd.h
 15dd88e8de39d195c3a4e7c166678cd9b6951994  include/shared/mir/frontend/client_constants.h
 b399dc08514751c86e23824612a52378dd9b1e23  include/shared/mir/geometry/dimensions.h
 7031270546292995d38e6de165600db21ff51c68  include/shared/mir/geometry/displacement.h
