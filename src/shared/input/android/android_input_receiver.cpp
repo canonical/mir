@@ -31,24 +31,28 @@ namespace mircva = mircv::android;
 namespace mia = mir::input::android;
 
 mircva::InputReceiver::InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel,
-                                     std::shared_ptr<mircv::InputReceiverReport> const& report)
+                                     std::shared_ptr<mircv::InputReceiverReport> const& report,
+                                     AndroidClock clock)
   : input_channel(input_channel),
     report(report),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     looper(new droidinput::Looper(true)),
     fd_added(false),
-    xkb_mapper(std::make_shared<mircv::XKBMapper>())
+    xkb_mapper(std::make_shared<mircv::XKBMapper>()),
+    android_clock(clock)
 {
 }
 
 mircva::InputReceiver::InputReceiver(int fd,
-                                     std::shared_ptr<mircv::InputReceiverReport> const& report)
+                                     std::shared_ptr<mircv::InputReceiverReport> const& report,
+                                     AndroidClock clock)
   : input_channel(new droidinput::InputChannel(droidinput::String8(""), fd)),
     report(report),
     input_consumer(std::make_shared<droidinput::InputConsumer>(input_channel)),
     looper(new droidinput::Looper(true)),
     fd_added(false),
-    xkb_mapper(std::make_shared<mircv::XKBMapper>())
+    xkb_mapper(std::make_shared<mircv::XKBMapper>()),
+    android_clock(clock)
 {
 }
 
@@ -84,7 +88,7 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
     /*
      * Enable "Project Butter" input resampling in InputConsumer::consume():
      *   consumeBatches = true, so as to ensure the "cooked" event rate that
-     *      clients experience is at least the minimum of minimum_event_rate_hz
+     *      clients experience is at least the minimum of event_rate_hz
      *      and the raw device event rate.
      *   frame_time = A regular interval of 60Hz. This provides a virtual frame
      *      interval during which InputConsumer will collect raw events,
@@ -95,10 +99,11 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
      *      graphics logic (which is messy) does not appear to be necessary to
      *      gain significant benefit.
      */
-    nsecs_t const now = systemTime();
-    int const minimum_event_rate_hz = 60;
-    nsecs_t const one_frame = 1000000000ULL / minimum_event_rate_hz;
-    nsecs_t const frame_time = (now / one_frame) * one_frame;
+
+    nsecs_t const now = android_clock(0);
+    int const event_rate_hz = 60;
+    nsecs_t const one_frame = 1000000000ULL / event_rate_hz;
+    nsecs_t frame_time = (now / one_frame) * one_frame;
 
     if (input_consumer->consume(&event_factory, true, frame_time,
                                 &event_sequence_id, &android_event)
