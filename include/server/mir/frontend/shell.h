@@ -50,10 +50,6 @@ public:
 
     virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
 
-    virtual SurfaceId create_surface_for(
-        std::shared_ptr<Session> const& session,
-        scene::SurfaceCreationParameters const& params) = 0;
-
     virtual void handle_surface_created(std::shared_ptr<Session> const& session) = 0;
 
     virtual std::shared_ptr<PromptSession> start_prompt_session_for(std::shared_ptr<Session> const& session,

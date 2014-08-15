@@ -105,6 +105,7 @@ public:
                  void(GLuint, GLint, GLenum, GLboolean, GLsizei,
                       const GLvoid *));
     MOCK_METHOD4(glViewport, void(GLint, GLint, GLsizei, GLsizei));
+    MOCK_METHOD1(glGenerateMipmap, void(GLenum target));
 };
 
 }
