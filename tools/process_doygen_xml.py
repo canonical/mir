@@ -51,10 +51,6 @@ def get_attribs(node):
 
 # Special cases for publishing anyway:
 publish_special_cases = {
-    # In test_command_line_handling.cpp g++ sucessfully converts a virtual function call
-    # to a direct call to a private function: mir::options::DefaultConfiguration::the_options()
-    'mir::options::DefaultConfiguration::the_options*',
-    
     # Although private this is called by a template wrapper function that instantiates
     # in client code
     'mir::SharedLibrary::load_symbol*',
