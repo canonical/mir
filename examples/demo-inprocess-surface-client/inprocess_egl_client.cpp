@@ -98,7 +98,7 @@ void me::InprocessEGLClient::thread_loop()
         .of_pixel_format(mir_pixel_format_argb_8888);
     auto session = shell->open_session(getpid(), "Inprocess client", std::make_shared<NullEventSink>());
     // TODO: Why do we get an ID? ~racarr
-    auto surface = session->get_surface(shell->create_surface_for(session, params));
+    auto surface = session->get_surface(session->create_surface(params));
 
     auto input_platform = mircv::InputPlatform::create();
     input_thread = input_platform->create_input_thread(

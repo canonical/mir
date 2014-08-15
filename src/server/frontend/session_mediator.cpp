@@ -42,6 +42,7 @@
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
+#include "mir/fd.h"
 
 #include "mir/geometry/rectangles.h"
 #include "client_buffer_tracker.h"
@@ -510,6 +511,7 @@ void mf::SessionMediator::new_fds_for_prompt_providers(
         {
             auto const fd = connection_context.fd_for_new_client(connect_handler);
             response->add_fd(fd);
+            resource_cache->save_fd(response, mir::Fd{fd});
         }
     }
 
