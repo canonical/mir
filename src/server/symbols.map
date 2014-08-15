@@ -6,6 +6,7 @@ MIR_SERVER_24 {
     non-virtual?thunk?to?mir::shell::SessionCoordinatorWrapper::set_focus_to?std::shared_ptr?mir::scene::Session??const??;
     vtable?for?mir::input::NullInputDispatcher;
     vtable?for?mir::input::NullInputConfiguration;
+    VTT?for?mir::DefaultServerConfiguration;
     
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doygen_xml.py doc/xml/*.xml | grep "^mirserver public" | sed "s/mirserver public: /    /" | sort  
