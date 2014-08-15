@@ -23,7 +23,6 @@
 #include "unauthorized_display_changer.h"
 #include "unauthorized_screencast.h"
 #include "resource_cache.h"
-#include "client_buffer_tracker.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 

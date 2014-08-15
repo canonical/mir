@@ -19,8 +19,6 @@
  #ifndef MIR_FRONTEND_CLIENT_BUFFER_TRACKER_H_
  #define MIR_FRONTEND_CLIENT_BUFFER_TRACKER_H_
 
-#include <unordered_map>
-#include <memory>
 #include <stdint.h>
 #include <list>
 
@@ -61,4 +59,4 @@ private:
 }
 }
 
-#endif // MIR_FRONTEND_CLIENT_BUFFER_TRACKER_H_
+ #endif // MIR_FRONTEND_CLIENT_BUFFER_TRACKER_H_
