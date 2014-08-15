@@ -38,7 +38,6 @@
 #include "mir_test_doubles/mock_frontend_surface.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_surface_tracker.h"
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
@@ -212,14 +211,13 @@ struct SessionMediator : public ::testing::Test
           report{mr::null_session_mediator_report()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           stub_screencast{std::make_shared<StubScreencast>()},
-          mock_tracker{std::make_shared<testing::NiceMock<mtd::MockSurfaceTracker>>()},
           stubbed_session{std::make_shared<StubbedSession>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)},
           mediator{
             shell, graphics_platform, graphics_changer,
             surface_pixel_formats, report,
             std::make_shared<mtd::NullEventSink>(),
-            resource_cache, stub_screencast, &connector, nullptr, mock_tracker}
+            resource_cache, stub_screencast, &connector, nullptr}
     {
         using namespace ::testing;
 
@@ -241,7 +239,6 @@ struct SessionMediator : public ::testing::Test
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     std::shared_ptr<StubScreencast> const stub_screencast;
-    std::shared_ptr<mtd::MockSurfaceTracker> mock_tracker;
     std::shared_ptr<StubbedSession> const stubbed_session;
     std::unique_ptr<google::protobuf::Closure> null_callback;
     mf::SessionMediator mediator;
@@ -255,6 +252,16 @@ struct SessionMediator : public ::testing::Test
     mp::DRMMagic drm_request;
     mp::DRMAuthMagicStatus drm_response;
 
+    mtd::StubBuffer buffer1;
+    mtd::StubBuffer buffer2;
+
+    void toggle_buffers(mg::Buffer* b, std::function<void(mg::Buffer* new_buffer)> complete)
+    {
+        if ((!b) || (b == &buffer1))
+            complete(&buffer2);
+        if (b == &buffer2)
+            complete(&buffer1); 
+    }
 };
 }
 
@@ -283,7 +290,7 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, context, nullptr, mock_tracker};
+        resource_cache, stub_screencast, context, nullptr};
 
     EXPECT_THAT(connects_handled_count, Eq(0));
 
@@ -378,7 +385,7 @@ TEST_F(SessionMediator, connect_packs_display_configuration)
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
         resource_cache, std::make_shared<mtd::NullScreencast>(),
-        nullptr, nullptr, mock_tracker);
+        nullptr, nullptr);
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     EXPECT_THAT(connection.display_configuration(), mt::DisplayConfigMatches(std::cref(config)));
@@ -417,54 +424,21 @@ TEST_F(SessionMediator, session_only_sends_mininum_information_for_buffers)
 {
     using namespace testing;
     mf::SurfaceId surf_id{0};
-    mtd::StubBuffer buffer1;
-    mtd::StubBuffer buffer2;
     auto surface = stubbed_session->mock_surface_at(surf_id);
     ON_CALL(*surface, swap_buffers(_,_))
-        .WillByDefault(Invoke(
-        [&buffer1, &buffer2](mg::Buffer* b, std::function<void(mg::Buffer* new_buffer)> complete)
-        {
-            if ((!b) || (b == &buffer1))
-                complete(&buffer2);
-            if (b == &buffer2)
-                complete(&buffer1); 
-        }));
+        .WillByDefault(Invoke(this, &SessionMediator::toggle_buffers));
 
     //create
     Sequence seq;
-    EXPECT_CALL(*mock_tracker, last_buffer(surf_id))
-        .InSequence(seq)
-        .WillOnce(Return(nullptr));
-    EXPECT_CALL(*mock_tracker, track_buffer(surf_id, &buffer2))
-        .InSequence(seq)
-        .WillOnce(Return(false));
     EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer2, mg::BufferIpcMsgType::full_msg))
         .InSequence(seq);
     //swap1
-    EXPECT_CALL(*mock_tracker, last_buffer(surf_id))
-        .InSequence(seq)
-        .WillOnce(Return(&buffer2));
-    EXPECT_CALL(*mock_tracker, track_buffer(surf_id, &buffer1))
-        .InSequence(seq)
-        .WillOnce(Return(false));
     EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer1, mg::BufferIpcMsgType::full_msg))
         .InSequence(seq);
     //swap2
-    EXPECT_CALL(*mock_tracker, last_buffer(surf_id))
-        .InSequence(seq)
-        .WillOnce(Return(&buffer1));
-    EXPECT_CALL(*mock_tracker, track_buffer(surf_id, &buffer2))
-        .InSequence(seq)
-        .WillOnce(Return(true));
     EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer2, mg::BufferIpcMsgType::update_msg))
         .InSequence(seq);
     //swap3
-    EXPECT_CALL(*mock_tracker, last_buffer(surf_id))
-        .InSequence(seq)
-        .WillOnce(Return(&buffer2));
-    EXPECT_CALL(*mock_tracker, track_buffer(surf_id, &buffer1))
-        .InSequence(seq)
-        .WillOnce(Return(true));
     EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer1, mg::BufferIpcMsgType::update_msg))
         .InSequence(seq);
 
@@ -481,13 +455,12 @@ TEST_F(SessionMediator, session_only_sends_mininum_information_for_buffers)
 TEST_F(SessionMediator, session_with_multiple_surfaces_only_sends_needed_buffers)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_tracker, track_buffer(_,_))
-        .Times(8)
-        .WillOnce(Return(false))
-        .WillOnce(Return(false))
-        .WillOnce(Return(false))
-        .WillOnce(Return(false))
-        .WillRepeatedly(Return(true));
+    auto surface0 = stubbed_session->mock_surface_at(mf::SurfaceId{0});
+    auto surface1 = stubbed_session->mock_surface_at(mf::SurfaceId{1});
+    ON_CALL(*surface0, swap_buffers(_,_))
+        .WillByDefault(Invoke(this, &SessionMediator::toggle_buffers));
+    ON_CALL(*surface1, swap_buffers(_,_))
+        .WillByDefault(Invoke(this, &SessionMediator::toggle_buffers));
     EXPECT_CALL(*graphics_platform, fill_buffer_package(_,_,mg::BufferIpcMsgType::full_msg))
         .Times(4);
     EXPECT_CALL(*graphics_platform, fill_buffer_package(_,_,mg::BufferIpcMsgType::update_msg))
@@ -518,16 +491,16 @@ TEST_F(SessionMediator, destroys_tracker_associated_with_destroyed_surface)
     mf::SurfaceId first_id{0};
     mp::Surface surface_response;
 
-    EXPECT_CALL(*mock_tracker, remove_surface(first_id))
-        .Times(1);
-
-    mf::SessionMediator mediator{
-        shell, graphics_platform, graphics_changer,
-        surface_pixel_formats, report,
-        std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, nullptr, mock_tracker};
+    EXPECT_CALL(*graphics_platform, fill_buffer_package(_,_,mg::BufferIpcMsgType::full_msg))
+        .Times(2);
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
+    surface_id_request.set_value(first_id.as_value());
+    mediator.release_surface(nullptr, &surface_id_request, nullptr, null_callback.get());
+
+    stubbed_session->last_surface_id = first_id.as_value();
+
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
     surface_id_request.set_value(first_id.as_value());
     mediator.release_surface(nullptr, &surface_id_request, nullptr, null_callback.get());
@@ -543,6 +516,8 @@ TEST_F(SessionMediator, buffer_resource_for_surface_unaffected_by_other_surfaces
     mp::Surface surface_response;
 
     auto surface1 = stubbed_session->mock_surface_at(mf::SurfaceId{0});
+    ON_CALL(*surface1, swap_buffers(_,_))
+        .WillByDefault(InvokeArgument<1>(&buffer));
 
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     mp::SurfaceId our_surface{surface_response.id()};
@@ -550,6 +525,7 @@ TEST_F(SessionMediator, buffer_resource_for_surface_unaffected_by_other_surfaces
     /* Creating a new surface should not affect our surfaces' buffers */
     EXPECT_CALL(*surface1, swap_buffers(_, _)).Times(0);
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
+    Mock::VerifyAndClearExpectations(surface1.get());
 
     mp::SurfaceId new_surface{surface_response.id()};
     mp::Buffer buffer_response;
@@ -558,8 +534,7 @@ TEST_F(SessionMediator, buffer_resource_for_surface_unaffected_by_other_surfaces
     mediator.next_buffer(nullptr, &new_surface, &buffer_response, null_callback.get());
 
     /* Getting the next buffer of our surface should post the original */
-    EXPECT_CALL(*mock_tracker, last_buffer(_)).WillOnce(Return(&buffer));
-    EXPECT_CALL(*surface1, swap_buffers(Eq(&buffer), _)).Times(1);
+    EXPECT_CALL(*surface1, swap_buffers(Eq(&buffer),_)).Times(1);
 
     mediator.next_buffer(nullptr, &our_surface, &buffer_response, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
@@ -600,7 +575,7 @@ TEST_F(SessionMediator, display_config_request)
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(), resource_cache,
         std::make_shared<mtd::NullScreencast>(),
-         nullptr, nullptr, mock_tracker};
+         nullptr, nullptr};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 

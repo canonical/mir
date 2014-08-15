@@ -20,6 +20,7 @@
 #define MIR_FRONTEND_SURFACE_TRACKER_H_
 
 #include "mir/frontend/surface_id.h"
+#include "client_buffer_tracker.h"
 
 namespace mir
 {
@@ -29,26 +30,30 @@ class Buffer;
 }
 namespace frontend
 {
+
 class SurfaceTracker
 {
 public:
+    SurfaceTracker(size_t client_cache_size);
+    SurfaceTracker(SurfaceTracker const&) = delete;
+    SurfaceTracker& operator=(SurfaceTracker const&) = delete;
+
     /* track a buffer as associated with a surface 
      * \param surface_id id that the the buffer is associated with
      * \param buffer     buffer to be tracked (TODO: should be a shared_ptr)
      * \returns          true if the buffer is already tracked
      *                   false if the buffer is not tracked
      */
-    virtual bool track_buffer(SurfaceId, graphics::Buffer*) = 0;
+    bool track_buffer(SurfaceId, graphics::Buffer*);
     /* removes the surface id from all tracking */
-    virtual void remove_surface(SurfaceId) = 0;
+    void remove_surface(SurfaceId);
     /* accesses the last buffer given to track_buffer() for the given SurfaceId */
-    virtual graphics::Buffer* last_buffer(SurfaceId) const = 0;
-
-    virtual ~SurfaceTracker() = default;
-    SurfaceTracker() = default;
+    graphics::Buffer* last_buffer(SurfaceId) const;
 private:
-    SurfaceTracker(SurfaceTracker const&) = delete;
-    SurfaceTracker& operator=(SurfaceTracker const&) = delete;
+    size_t const client_cache_size;
+
+    std::unordered_map<SurfaceId, graphics::Buffer*> client_buffer_resource;
+    std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
 };
 
 }

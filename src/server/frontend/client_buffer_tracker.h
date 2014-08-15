@@ -19,7 +19,6 @@
  #ifndef MIR_FRONTEND_CLIENT_BUFFER_TRACKER_H_
  #define MIR_FRONTEND_CLIENT_BUFFER_TRACKER_H_
 
-#include "surface_tracker.h"
 #include <unordered_map>
 #include <memory>
 #include <stdint.h>
@@ -57,23 +56,6 @@ private:
 
     std::list<graphics::BufferID> ids;
     unsigned int const cache_size;
-};
-
-class SessionSurfaceTracker : public SurfaceTracker
-{
-public:
-    SessionSurfaceTracker(size_t client_cache_size);
-    SessionSurfaceTracker(SessionSurfaceTracker const&) = delete;
-    SessionSurfaceTracker& operator=(SessionSurfaceTracker const&) = delete;
-
-    bool track_buffer(SurfaceId, graphics::Buffer*) override;
-    void remove_surface(SurfaceId) override;
-    graphics::Buffer* last_buffer(SurfaceId) const override;
-private:
-    size_t const client_cache_size;
-
-    std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
-    std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
 };
 
 }

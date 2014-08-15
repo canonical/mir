@@ -75,8 +75,7 @@ public:
         std::shared_ptr<ResourceCache> const& resource_cache,
         std::shared_ptr<Screencast> const& screencast,
         ConnectionContext const& connection_context,
-        std::shared_ptr<input::CursorImages> const& cursor_images,
-        std::shared_ptr<SurfaceTracker> const& tracker);
+        std::shared_ptr<input::CursorImages> const& cursor_images);
 
     ~SessionMediator() noexcept;
 
@@ -187,7 +186,7 @@ private:
     ConnectionContext const connection_context;
     std::shared_ptr<input::CursorImages> const cursor_images;
 
-    std::shared_ptr<SurfaceTracker> const surface_tracker;
+    SurfaceTracker surface_tracker;
 
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;

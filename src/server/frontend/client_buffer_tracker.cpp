@@ -20,7 +20,6 @@
 
 #include "client_buffer_tracker.h"
 #include "mir/graphics/buffer_id.h"
-#include "mir/graphics/buffer.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -51,43 +50,4 @@ void mf::ClientBufferTracker::add(mg::BufferID const& id)
 bool mf::ClientBufferTracker::client_has(mg::BufferID const& id) const
 {
     return std::find(ids.begin(), ids.end(), id) != ids.end();
-}
-
-mf::SessionSurfaceTracker::SessionSurfaceTracker(size_t client_cache_size) :
-    client_cache_size{client_cache_size}
-{
-}
-
-bool mf::SessionSurfaceTracker::track_buffer(SurfaceId surface_id, mg::Buffer* buffer)
-{
-    auto& tracker = client_buffer_tracker[surface_id];
-    if (!tracker)
-        tracker = std::make_shared<ClientBufferTracker>(client_cache_size);
-
-    auto already_tracked = tracker->client_has(buffer->id());
-    tracker->add(buffer->id());
-
-    client_buffer_resource[surface_id] = buffer;
-    return already_tracked;
-}
-
-void mf::SessionSurfaceTracker::remove_surface(SurfaceId surface_id)
-{
-    auto it = client_buffer_tracker.find(surface_id);
-    if (it != client_buffer_tracker.end())
-        client_buffer_tracker.erase(it);
-
-    auto last_buffer_it = client_buffer_resource.find(surface_id);
-    if (last_buffer_it != client_buffer_resource.end())
-        client_buffer_resource.erase(last_buffer_it);
-}
-
-mg::Buffer* mf::SessionSurfaceTracker::last_buffer(SurfaceId surface_id) const
-{
-    auto it = client_buffer_resource.find(surface_id);
-    if (it != client_buffer_resource.end())
-        return it->second;
-    else
-        //should really throw, but that is difficult with the way the code currently works
-        return nullptr;
 }

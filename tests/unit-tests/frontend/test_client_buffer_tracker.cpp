@@ -17,6 +17,7 @@
  */
 
 #include "src/server/frontend/client_buffer_tracker.h"
+#include "src/server/frontend/surface_tracker.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir_test_doubles/stub_buffer.h"
 
@@ -122,7 +123,7 @@ struct SurfaceTracker : public testing::Test
 
 TEST_F(SurfaceTracker, only_returns_true_if_buffer_already_tracked)
 {
-    mf::SessionSurfaceTracker tracker{client_cache_size};
+    mf::SurfaceTracker tracker{client_cache_size};
 
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
     EXPECT_TRUE(tracker.track_buffer(surf_id0, &stub_buffer0));
@@ -134,7 +135,7 @@ TEST_F(SurfaceTracker, only_returns_true_if_buffer_already_tracked)
 
 TEST_F(SurfaceTracker, removals_remove_buffer_instances)
 {
-    mf::SessionSurfaceTracker tracker{client_cache_size};
+    mf::SurfaceTracker tracker{client_cache_size};
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
     EXPECT_FALSE(tracker.track_buffer(surf_id1, &stub_buffer0));
 
@@ -153,7 +154,7 @@ TEST_F(SurfaceTracker, removals_remove_buffer_instances)
 
 TEST_F(SurfaceTracker, last_client_buffer)
 {
-    mf::SessionSurfaceTracker tracker{client_cache_size};
+    mf::SurfaceTracker tracker{client_cache_size};
 
     tracker.track_buffer(surf_id0, &stub_buffer0);
     EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id0));
@@ -168,7 +169,7 @@ TEST_F(SurfaceTracker, last_client_buffer)
 
 TEST_F(SurfaceTracker, buffers_expire_if_they_overrun_cache_size)
 {
-    mf::SessionSurfaceTracker tracker{client_cache_size};
+    mf::SurfaceTracker tracker{client_cache_size};
 
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer1));
@@ -189,7 +190,7 @@ TEST_F(SurfaceTracker, buffers_expire_if_they_overrun_cache_size)
 
 TEST_F(SurfaceTracker, buffers_only_affect_associated_surfaces)
 {
-    mf::SessionSurfaceTracker tracker{client_cache_size};
+    mf::SurfaceTracker tracker{client_cache_size};
 
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer1));

@@ -37,7 +37,6 @@
 #include "mir_test_doubles/mock_session.h"
 #include "mir_test_doubles/stub_shell.h"
 #include "mir_test_doubles/null_screencast.h"
-#include "mir_test_doubles/mock_surface_tracker.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -73,12 +72,10 @@ struct SessionMediatorMesaTest : public ::testing::Test
           surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
           report{mr::null_session_mediator_report()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
-          mock_tracker{std::make_shared<mtd::MockSurfaceTracker>()},
           mediator{shell, mock_platform, display_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
-                   resource_cache, std::make_shared<mtd::NullScreencast>(), nullptr, nullptr,
-                   mock_tracker},
+                   resource_cache, std::make_shared<mtd::NullScreencast>(), nullptr, nullptr},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }
@@ -89,7 +86,6 @@ struct SessionMediatorMesaTest : public ::testing::Test
     std::vector<MirPixelFormat> const surface_pixel_formats;
     std::shared_ptr<mf::SessionMediatorReport> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
-    std::shared_ptr<mtd::MockSurfaceTracker> mock_tracker;
     mf::SessionMediator mediator;
 
     std::unique_ptr<google::protobuf::Closure> null_callback;

@@ -41,6 +41,7 @@
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
+#include "mir/frontend/client_constants.h"
 #include "mir/fd.h"
 
 #include "mir/geometry/rectangles.h"
@@ -72,8 +73,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context,
-    std::shared_ptr<mi::CursorImages> const& cursor_images,
-    std::shared_ptr<SurfaceTracker> const& tracker) :
+    std::shared_ptr<mi::CursorImages> const& cursor_images) :
     client_pid_(0),
     shell(shell),
     graphics_platform(graphics_platform),
@@ -85,7 +85,7 @@ mf::SessionMediator::SessionMediator(
     screencast(screencast),
     connection_context(connection_context),
     cursor_images(cursor_images),
-    surface_tracker(tracker)
+    surface_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
 
@@ -144,12 +144,11 @@ void mf::SessionMediator::advance_buffer(
     Surface& surface,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    auto tracker = surface_tracker;
     surface.swap_buffers( 
-        tracker->last_buffer(surf_id),
-        [tracker, surf_id, complete](mg::Buffer* new_buffer)
+        surface_tracker.last_buffer(surf_id),
+        [this, surf_id, complete](mg::Buffer* new_buffer)
         {
-            if (tracker->track_buffer(surf_id, new_buffer))
+            if (surface_tracker.track_buffer(surf_id, new_buffer))
                 complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
                 complete(new_buffer, mg::BufferIpcMsgType::full_msg);
@@ -268,7 +267,7 @@ void mf::SessionMediator::release_surface(
         auto const id = SurfaceId(request->value());
 
         session->destroy_surface(id);
-        surface_tracker->remove_surface(id);
+        surface_tracker.remove_surface(id);
     }
 
     // TODO: We rely on this sending responses synchronously.
