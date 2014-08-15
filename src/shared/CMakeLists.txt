@@ -56,3 +56,6 @@ install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/shared/mir ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit
   DESTINATION "include/mircommon"
 )
+
+set(MIR_COMMON_OBJECTS ${MIR_COMMON_SOURCES} PARENT_SCOPE)
+set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)
