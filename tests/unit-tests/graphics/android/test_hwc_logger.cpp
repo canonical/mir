@@ -146,3 +146,43 @@ TEST_F(HwcLogger, log_optimization)
     logger.log_overlay_optimization(mga::OverlayOptimization::disabled);
     EXPECT_EQ(disabled_str.str(), test_stream.str()); 
 }
+
+TEST_F(HwcLogger, log_vsync_on)
+{
+    std::stringstream str;
+    str << "HWC: vsync signal on" << std::endl;
+
+    mga::HwcFormattedLogger logger;
+    logger.log_vsync_on();
+    EXPECT_EQ(str.str(), test_stream.str()); 
+}
+
+TEST_F(HwcLogger, log_vsync_off)
+{
+    std::stringstream str;
+    str << "HWC: vsync signal off" << std::endl;
+
+    mga::HwcFormattedLogger logger;
+    logger.log_vsync_off();
+    EXPECT_EQ(str.str(), test_stream.str()); 
+}
+
+TEST_F(HwcLogger, log_display_off)
+{
+    std::stringstream str;
+    str << "HWC: display off" << std::endl;
+
+    mga::HwcFormattedLogger logger;
+    logger.log_display_off();
+    EXPECT_EQ(str.str(), test_stream.str()); 
+}
+
+TEST_F(HwcLogger, log_display_on)
+{
+    std::stringstream str;
+    str << "HWC: display on" << std::endl;
+
+    mga::HwcFormattedLogger logger;
+    logger.log_display_on();
+    EXPECT_EQ(str.str(), test_stream.str()); 
+}

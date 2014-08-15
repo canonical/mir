@@ -26,6 +26,7 @@
 #include "buffer.h"
 #include "hwc_fallback_gl_renderer.h"
 #include <limits>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
@@ -72,6 +73,19 @@ mga::HwcDevice::HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
       hwc_wrapper(hwc_wrapper), 
       sync_ops(sync_ops)
 {
+}
+
+bool mga::HwcDevice::buffer_is_onscreen(mg::Buffer const& buffer) const
+{
+    /* check the handles, as the buffer ptrs might change between sets */
+    auto const handle = buffer.native_buffer_handle().get();
+    auto it = std::find_if(
+        onscreen_overlay_buffers.begin(), onscreen_overlay_buffers.end(),
+        [&handle](std::shared_ptr<mg::Buffer> const& b)
+        {
+            return (handle == b->native_buffer_handle().get());
+        });
+    return it != onscreen_overlay_buffers.end();
 }
 
 void mga::HwcDevice::post_gl(SwappingGLContext const& context)
@@ -142,9 +156,11 @@ bool mga::HwcDevice::post_overlays(
         }
         else
         {
-            if (it->needs_commit)
-                it->layer.set_acquirefence_from(*renderable->buffer());
-            next_onscreen_overlay_buffers.push_back(renderable->buffer());
+            auto buffer = renderable->buffer();
+            if (!buffer_is_onscreen(*buffer))
+                it->layer.set_acquirefence_from(*buffer);
+
+            next_onscreen_overlay_buffers.push_back(buffer);
         }
         it++;
     }
