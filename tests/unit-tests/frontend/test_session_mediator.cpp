@@ -317,17 +317,16 @@ TEST_F(SessionMediator, calling_methods_before_connect_throws)
     }, std::logic_error);
 }
 
-//How does this test fail? consider removal
 TEST_F(SessionMediator, calling_methods_after_connect_works)
 {
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
-    {
+    EXPECT_NO_THROW({
         mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
         surface_id_request = surface_response.id();
         mediator.next_buffer(nullptr, &surface_id_request, &buffer_response, null_callback.get());
         mediator.release_surface(nullptr, &surface_id_request, nullptr, null_callback.get());
-    }
+    });
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
@@ -668,7 +667,7 @@ TEST_F(SessionMediator, partially_packs_buffer_for_screencast_buffer)
     EXPECT_EQ(stub_buffer.id().as_uint32_t(), protobuf_buffer.buffer_id());
 }
 
-TEST_F(SessionMediator, new_fds_for_prompt_providers_allocates_requested_number_of_fds)
+TEST_F(SessionMediator, prompt_provider_fds_allocated_by_connector)
 {
     using namespace ::testing;
     int const fd_count{11};
