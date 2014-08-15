@@ -8,7 +8,7 @@ MIR_SERVER_24 {
     vtable?for?mir::input::NullInputConfiguration;
     
 # The following symbols come from running a script over the generated docs. Vis:
-# ../tools/process_doyygen_xml.py doc/xml/*.xml | grep "^mirserver public" | sed "s/mirserver public: /    /" | sort  
+# ../tools/process_doygen_xml.py doc/xml/*.xml | grep "^mirserver public" | sed "s/mirserver public: /    /" | sort  
     mir::AsioMainLoop::?AsioMainLoop*;
     mir::AsioMainLoop::AsioMainLoop*;
     mir::AsioMainLoop::create_alarm*;
