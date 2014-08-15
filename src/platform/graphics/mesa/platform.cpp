@@ -195,7 +195,7 @@ void mgm::Platform::fill_buffer_package(
         }
         for(auto i=0; i<native_handle->fd_items; i++)
         {
-            packer->pack_fd(native_handle->fd[i]);
+            packer->pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
         }
 
         packer->pack_stride(buffer->stride());
