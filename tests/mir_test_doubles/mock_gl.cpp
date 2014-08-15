@@ -415,3 +415,9 @@ void glFinish()
     CHECK_GLOBAL_VOID_MOCK();
     global_mock_gl->glFinish();
 }
+
+void glGenerateMipmap(GLenum target)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glGenerateMipmap(target);
+}

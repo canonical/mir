@@ -222,13 +222,6 @@ struct SessionMediator : public ::testing::Test
         using namespace ::testing;
 
         ON_CALL(*shell, open_session(_, _, _)).WillByDefault(Return(stubbed_session));
-        ON_CALL(*shell, create_surface_for(_, _))
-            .WillByDefault(WithArg<1>(Invoke(stubbed_session.get(), &StubbedSession::create_surface)));
-
-        connection.clear_platform();
-        connection.clear_display_info();
-        connection.clear_display_output();
-        connection.clear_display_configuration();
     }
 
     MockConnector connector;
