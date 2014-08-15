@@ -41,11 +41,6 @@ struct StubShell : public frontend::Shell
     void close_session(std::shared_ptr<frontend::Session> const& /* session */) override
     {
     }
-    frontend::SurfaceId create_surface_for(std::shared_ptr<frontend::Session> const& /* session */,
-                                        scene::SurfaceCreationParameters const& /* params */) override
-    {
-        return frontend::SurfaceId{0};
-    }
     void handle_surface_created(std::shared_ptr<frontend::Session> const& /* session */) override
     {
     }
