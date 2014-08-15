@@ -38,10 +38,6 @@ public:
 
     virtual void close_session(std::shared_ptr<frontend::Session> const& session) override;
 
-    frontend::SurfaceId create_surface_for(
-        std::shared_ptr<frontend::Session> const& session,
-        scene::SurfaceCreationParameters const& params) override;
-
     void focus_next() override;
     std::weak_ptr<scene::Session> focussed_application() const;
     void set_focus_to(std::shared_ptr<scene::Session> const& focus) override;
