@@ -46,7 +46,10 @@ add_executable(
   ${INTEGRATION_TESTS_SRCS}
   ${MIR_SERVER_OBJECTS}
   $<TARGET_OBJECTS:mirclientobjects>
+  ${MIR_PLATFORM_OBJECTS}
+  ${MIR_COMMON_OBJECTS}
 )
+
 uses_android_input(mir_integration_tests)
 
 target_link_libraries(
@@ -58,6 +61,8 @@ target_link_libraries(
 
   mirdraw
   mirtestdraw
+  mirclientrpc
+  mirclientlttngstatic
 
   3rd_party
 
@@ -69,6 +74,9 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
+  ${MIR_PLATFORM_REFERENCES}
+  ${MIR_COMMON_REFERENCES}
+  ${MIR_SERVER_REFERENCES}
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "android")
