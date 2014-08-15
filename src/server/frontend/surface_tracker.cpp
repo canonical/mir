@@ -61,3 +61,19 @@ mg::Buffer* mf::SurfaceTracker::last_buffer(SurfaceId surface_id) const
         //should really throw, but that is difficult with the way the code currently works
         return nullptr;
 }
+
+mf::SurfaceId mf::SurfaceTracker::surface_from(mg::BufferID) const
+{
+    return mf::SurfaceId{1121212};
+}
+
+mg::Buffer* mf::SurfaceTracker::buffer_from(mg::BufferID buffer_id) const
+{
+//    auto it = buffer_lookup.find(buffer_id);
+//    if (it != buffer_lookup.end())
+//        return it->second;
+//    else
+//        BOOST_THROW_EXCEPTION(std::runtime_error("Buffer id not present in buffer tracker"));
+    (void)buffer_id;
+    return nullptr;
+}

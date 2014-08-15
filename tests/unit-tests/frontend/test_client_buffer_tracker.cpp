@@ -21,6 +21,7 @@
 #include "mir/graphics/buffer_id.h"
 #include "mir_test_doubles/stub_buffer.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mtd = mir::test::doubles;
@@ -204,4 +205,56 @@ TEST_F(SurfaceTracker, buffers_only_affect_associated_surfaces)
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer3));
     EXPECT_EQ(&stub_buffer3, tracker.last_buffer(surf_id0));
     EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id1));
+}
+
+TEST_F(SurfaceTracker, can_lookup_a_buffer_from_a_buffer_id)
+{
+    using namespace testing;
+    mf::SurfaceTracker tracker{client_cache_size};
+
+    tracker.track_buffer(surf_id0, &stub_buffer1);
+    tracker.track_buffer(surf_id1, &stub_buffer0);
+
+    EXPECT_THAT(tracker.surface_from(stub_buffer0.id()), Eq(surf_id1));
+    EXPECT_THAT(tracker.surface_from(stub_buffer1.id()), Eq(surf_id0));
+    EXPECT_THROW({
+        tracker.surface_from(stub_buffer2.id());
+    }, std::runtime_error);
+
+    tracker.track_buffer(surf_id0, &stub_buffer0);
+    tracker.track_buffer(surf_id0, &stub_buffer1);
+    tracker.track_buffer(surf_id0, &stub_buffer2);
+    tracker.track_buffer(surf_id0, &stub_buffer3);
+
+    EXPECT_THROW({
+        //buffer0 was kicked out
+        tracker.surface_from(stub_buffer0.id());
+    }, std::runtime_error);
+    EXPECT_THAT(tracker.surface_from(stub_buffer1.id()), Eq(surf_id0));
+    EXPECT_THAT(tracker.surface_from(stub_buffer2.id()), Eq(surf_id0));
+    EXPECT_THAT(tracker.surface_from(stub_buffer3.id()), Eq(surf_id0));
+
+}
+
+TEST_F(SurfaceTracker, can_lookup_the_surfaceid_a_buffer_is_associated_with)
+{
+    using namespace testing;
+    mf::SurfaceTracker tracker{client_cache_size};
+
+    tracker.track_buffer(surf_id0, &stub_buffer0);
+    tracker.track_buffer(surf_id0, &stub_buffer1);
+    tracker.track_buffer(surf_id0, &stub_buffer2);
+
+    EXPECT_THAT(tracker.buffer_from(stub_buffer0.id()), Eq(&stub_buffer0));
+    EXPECT_THAT(tracker.buffer_from(stub_buffer1.id()), Eq(&stub_buffer1));
+    EXPECT_THAT(tracker.buffer_from(stub_buffer2.id()), Eq(&stub_buffer2));
+    EXPECT_THROW({
+        tracker.buffer_from(stub_buffer3.id());
+    }, std::runtime_error);
+
+    tracker.track_buffer(surf_id0, &stub_buffer3);
+    EXPECT_THAT(tracker.buffer_from(stub_buffer3.id()), Eq(&stub_buffer3));
+    EXPECT_THROW({
+        tracker.buffer_from(stub_buffer0.id());
+    }, std::runtime_error);
 }

@@ -51,6 +51,9 @@ public:
     void remove_surface(SurfaceId);
     /* accesses the last buffer given to track_buffer() for the given SurfaceId */
     graphics::Buffer* last_buffer(SurfaceId) const;
+
+    SurfaceId surface_from(graphics::BufferID) const;
+    graphics::Buffer* buffer_from(graphics::BufferID) const;
 private:
     size_t const client_cache_size;
 
