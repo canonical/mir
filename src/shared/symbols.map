@@ -1,4 +1,4 @@
-MIR_COMMON_1 {
+MIR_COMMON_2 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
