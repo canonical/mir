@@ -17,6 +17,7 @@
  */
 
 #include "src/server/frontend/resource_cache.h"
+#include "mir_test_doubles/fd_matcher.h"
 
 #include <thread>
 #include <atomic>
@@ -67,10 +68,10 @@ TEST_F(ResourceCache, resources_are_saved)
 
     mir::protobuf::Void keys[a_few];
 
-    for (auto p = keys+0; p != keys+a_few; ++p)
+    for (auto& p : keys)
     {
         auto sp = std::make_shared<TestResource>();
-        cache.save_resource(p, sp);
+        cache.save_resource(&p, sp);
     }
 
     EXPECT_EQ(a_few, TestResource::instances.load());
@@ -82,16 +83,48 @@ TEST_F(ResourceCache, resources_are_freed)
 
     mir::protobuf::Void keys[a_few];
 
-    for (auto p = keys+0; p != keys+a_few; ++p)
+    for (auto& p : keys)
     {
         auto sp = std::make_shared<TestResource>();
-        cache.save_resource(p, sp);
+        cache.save_resource(&p, sp);
     }
 
-    for (auto p = keys+0; p != keys+a_few; ++p)
+    for (auto& p : keys)
     {
-        cache.free_resource(p);
+        cache.free_resource(&p);
     }
 
     EXPECT_EQ(0, TestResource::instances.load());
+}
+
+TEST_F(ResourceCache, fds_are_saved)
+{
+    using namespace mir::test::doubles;
+    using namespace testing;
+
+    int const a_few = 3;
+    int const fds_per_key = 3;
+
+    mir::protobuf::Void keys[a_few];
+    std::vector<int> raw_fds;
+
+    for (auto& p : keys)
+    {
+        for(auto fake_fd = 0; fake_fd < fds_per_key; fake_fd++)
+        {
+            auto raw_fd = fileno(tmpfile());
+            raw_fds.push_back(raw_fd); 
+            cache.save_fd(&p, mir::Fd(raw_fd));
+        }
+    }
+
+    //resource_cache should be the only owner 
+    for(auto raw_fd : raw_fds)
+        EXPECT_THAT(raw_fd, RawFdIsValid());
+
+    for (auto& p : keys)
+        cache.free_resource(&p);
+
+    for(auto raw_fd : raw_fds)
+        EXPECT_THAT(raw_fd, Not(RawFdIsValid()));
 }

@@ -29,21 +29,33 @@ namespace examples
 class DemoRenderer : public compositor::GLRenderer
 {
 public:
-    DemoRenderer(graphics::GLProgramFactory const& factory, geometry::Rectangle const& display_area,
-        compositor::DestinationAlpha dest_alpha);
+    DemoRenderer(
+        graphics::GLProgramFactory const& factory,
+        geometry::Rectangle const& display_area,
+        compositor::DestinationAlpha dest_alpha,
+        float const titlebar_height,
+        float const shadow_radius);
     ~DemoRenderer();
 
     void begin() const override;
-    void tessellate(std::vector<graphics::GLPrimitive>& primitives,
-                    graphics::Renderable const& renderable) const override;
-    void tessellate_shadow(std::vector<graphics::GLPrimitive>& primitives,
-                    graphics::Renderable const& renderable,
-                    float radius) const;
-    void tessellate_frame(std::vector<graphics::GLPrimitive>& primitives,
-                    graphics::Renderable const& renderable,
-                    float titlebar_height) const;
+    void tessellate(
+        std::vector<graphics::GLPrimitive>& primitives,
+        graphics::Renderable const& renderable) const override;
+    void tessellate_shadow(
+        std::vector<graphics::GLPrimitive>& primitives,
+        graphics::Renderable const& renderable,
+        float radius) const;
+    void tessellate_frame(
+        std::vector<graphics::GLPrimitive>& primitives,
+        graphics::Renderable const& renderable,
+        float titlebar_height) const;
+    bool would_embellish(
+        graphics::Renderable const& renderable,
+        geometry::Rectangle const&) const;
 
 private:
+    float const titlebar_height;
+    float const shadow_radius;
     float const corner_radius;
     GLuint shadow_corner_tex;
     GLuint titlebar_corner_tex;

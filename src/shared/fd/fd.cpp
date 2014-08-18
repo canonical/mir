@@ -24,6 +24,11 @@ mir::Fd::Fd() :
 {
 }
 
+mir::Fd::Fd(IntOwnedFd fd) :
+    fd{std::make_shared<int>(fd.int_owned_fd)}
+{
+}
+
 mir::Fd::Fd(int raw_fd) :
     fd{new int{raw_fd},
         [](int* fd)

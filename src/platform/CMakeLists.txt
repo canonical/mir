@@ -1,6 +1,6 @@
 include_directories(${PROJECT_SOURCE_DIR}/include/platform)
 
-set(MIRPLATFORM_ABI 1)
+set(MIRPLATFORM_ABI 2)
 
 add_library(
   mirplatform SHARED
