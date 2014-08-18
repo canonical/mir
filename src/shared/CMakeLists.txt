@@ -40,13 +40,13 @@ target_link_libraries(mircommon
 )
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIR_SHARED_ABI 1)
+set(MIRCOMMON_ABI 2)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(mircommon
 
   PROPERTIES
-  SOVERSION ${MIR_SHARED_ABI}
+  SOVERSION ${MIRCOMMON_ABI}
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
