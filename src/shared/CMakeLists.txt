@@ -40,12 +40,12 @@ target_link_libraries(mircommon
 )
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIR_SHARED_ABI 1)
+set(MIRCOMMON_ABI 2)
 
 set_target_properties(mircommon
 
   PROPERTIES
-  SOVERSION ${MIR_SHARED_ABI}
+  SOVERSION ${MIRCOMMON_ABI}
 )
 
 install(TARGETS mircommon LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
