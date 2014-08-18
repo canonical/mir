@@ -77,7 +77,7 @@ GLuint generate_shadow_corner_texture(float opacity)
     return corner;
 }
 
-GLuint generate_frame_corner_texture(int corner_radius,
+GLuint generate_frame_corner_texture(float corner_radius,
                                      Color const& color,
                                      GLubyte highlight)
 {
