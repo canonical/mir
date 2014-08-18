@@ -106,7 +106,7 @@ public:
     {
         using namespace ::testing;
 
-        mock_surface = std::make_shared<mtd::MockFrontendSurface>();
+        mock_surface = std::make_shared<NiceMock<mtd::MockFrontendSurface>>();
         mock_surfaces[mf::SurfaceId{1}] = mock_surface;
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(geom::Size(), geom::Stride(), MirPixelFormat());
 
@@ -129,7 +129,7 @@ public:
         using namespace ::testing;
         auto id = mf::SurfaceId{last_surface_id};
         if (last_surface_id != 1) {
-            mock_surfaces[id] = std::make_shared<mtd::MockFrontendSurface>();
+            mock_surfaces[id] = std::make_shared<NiceMock<mtd::MockFrontendSurface>>();
 
             EXPECT_CALL(*mock_surfaces[id], client_size()).Times(AnyNumber()).WillRepeatedly(Return(geom::Size()));
             EXPECT_CALL(*mock_surfaces[id], pixel_format()).Times(AnyNumber()).WillRepeatedly(Return(MirPixelFormat()));
