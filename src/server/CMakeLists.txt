@@ -68,7 +68,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
 )
 
-set(MIRSERVER_ABI 24) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 25) # Be sure to increment MIR_VERSION_MINOR at the same time
 
 set_target_properties(
   mirserver
