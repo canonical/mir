@@ -396,11 +396,15 @@ bool MirSurface::translate_to_screen_coordinates(int x, int y, int *screen_x, in
     MirWaitHandle signal;
     signal.expect_result();
 
-    debug->translate_surface_to_screen(
-        nullptr,
-        &request,
-        &response,
-        google::protobuf::NewCallback(&signal_response_received, &signal));
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+
+        debug->translate_surface_to_screen(
+            nullptr,
+            &request,
+            &response,
+            google::protobuf::NewCallback(&signal_response_received, &signal));
+    }
 
     signal.wait_for_one();
 
