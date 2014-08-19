@@ -81,8 +81,8 @@ void ensure_egl_image_extensions()
     if (exts)
         ext_string = exts;
 
-    if (ext_string.find("EGL_MESA_drm_image") == std::string::npos)
-        BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGL_MESA_drm_image extension"));
+    if (ext_string.find("EGL_KHR_image_pixmap") == std::string::npos)
+        BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGL_KHR_image_pixmap extension"));
 
     exts = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
     if (exts)

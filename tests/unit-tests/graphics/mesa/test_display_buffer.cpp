@@ -56,7 +56,7 @@ public:
         ON_CALL(mock_egl, eglQueryString(_,EGL_EXTENSIONS))
             .WillByDefault(Return("EGL_KHR_image "
                                   "EGL_KHR_image_base "
-                                  "EGL_MESA_drm_image"));
+                                  "EGL_KHR_image_pixmap"));
 
         ON_CALL(mock_gl, glGetString(GL_EXTENSIONS))
             .WillByDefault(Return(reinterpret_cast<const GLubyte*>(

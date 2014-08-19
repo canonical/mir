@@ -97,7 +97,7 @@ public:
                              SetArgPointee<4>(1),
                              Return(EGL_TRUE)));
 
-        const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_MESA_drm_image";
+        const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_KHR_image_pixmap";
         const char* gl_exts = "GL_OES_texture_npot GL_OES_EGL_image";
 
         ON_CALL(mock_egl, eglQueryString(_,EGL_EXTENSIONS))
@@ -583,7 +583,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_
     reporter->report_successful_drm_mode_set_crtc_on_construction();
 }
 
-TEST_F(MesaDisplayTest, constructor_throws_if_egl_mesa_drm_image_not_supported)
+TEST_F(MesaDisplayTest, constructor_throws_if_egl_khr_image_pixmap_not_supported)
 {
     using namespace ::testing;
 

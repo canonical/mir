@@ -76,7 +76,7 @@ public:
                              SetArgPointee<4>(1),
                              Return(EGL_TRUE)));
 
-        const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_MESA_drm_image";
+        const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_KHR_image_pixmap";
         const char* gl_exts = "GL_OES_texture_npot GL_OES_EGL_image";
 
         ON_CALL(mock_egl, eglQueryString(_,EGL_EXTENSIONS))
