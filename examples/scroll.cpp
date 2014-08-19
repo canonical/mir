@@ -71,6 +71,7 @@ void create_and_run_scroll_surface(MirConnection *connection)
     assert(native_window != (EGLNativeWindowType)NULL);
 
     rc = eglInitialize(disp, &major, &minor);
+    (void)rc;
     assert(rc == EGL_TRUE);
     assert(major == 1);
     assert(minor == 4);
