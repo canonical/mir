@@ -61,7 +61,7 @@ class Screencast;
 class PromptSession;
 
 // SessionMediator relays requests from the client process into the server.
-class SessionMediator : public detail::DisplayServer
+class SessionMediator : public detail::DisplayServer, public mir::protobuf::Debug
 {
 public:
 
@@ -159,6 +159,13 @@ public:
         ::mir::protobuf::SocketFDRequest const* parameters,
         ::mir::protobuf::SocketFD* response,
         ::google::protobuf::Closure* done) override;
+
+    // TODO: Split this into a separate thing
+    void translate_surface_to_screen(
+        ::google::protobuf::RpcController* controller,
+        ::mir::protobuf::CoordinateTranslationRequest const* request,
+        ::mir::protobuf::CoordinateTranslationResponse* response,
+        ::google::protobuf::Closure *done) override;
 
 private:
     void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,

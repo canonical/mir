@@ -107,6 +107,7 @@ MirConnection::MirConnection(std::string const& error_message) :
     deregisterer{this},
     channel(),
     server(0),
+    debug(0),
     error_message(error_message)
 {
 }
@@ -116,6 +117,7 @@ MirConnection::MirConnection(
         deregisterer{this},
         channel(conf.the_rpc_channel()),
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
+        debug(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         logger(conf.the_logger()),
         client_platform_factory(conf.the_client_platform_factory()),
         input_platform(conf.the_input_platform()),
@@ -152,7 +154,7 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_callback callback,
     void * context)
 {
-    auto surface = new MirSurface(this, server, platform->create_buffer_factory(), input_platform, params, callback, context);
+    auto surface = new MirSurface(this, server, &debug, platform->create_buffer_factory(), input_platform, params, callback, context);
 
     return surface->get_create_wait_handle();
 }

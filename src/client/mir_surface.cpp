@@ -49,7 +49,27 @@ MirSurface::MirSurface(
     std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirSurfaceParameters const & params,
     mir_surface_callback callback, void * context)
+    : MirSurface(allocating_connection,
+                 server,
+                 nullptr,
+                 factory,
+                 input_platform,
+                 params,
+                 callback, context)
+{
+}
+
+
+MirSurface::MirSurface(
+    MirConnection *allocating_connection,
+    mp::DisplayServer::Stub & server,
+    mp::Debug::Stub* debug,
+    std::shared_ptr<mcl::ClientBufferFactory> const& factory,
+    std::shared_ptr<mircv::InputPlatform> const& input_platform,
+    MirSurfaceParameters const & params,
+    mir_surface_callback callback, void * context)
     : server(server),
+      debug{debug},
       connection(allocating_connection),
       buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
       input_platform(input_platform)
@@ -354,6 +374,39 @@ MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
               google::protobuf::NewCallback(this, &MirSurface::on_configured));
 
     return &configure_wait_handle;
+}
+
+namespace
+{
+void signal_response_received(MirWaitHandle* handle)
+{
+    handle->result_received();
+}
+}
+
+bool MirSurface::translate_to_screen_coordinates(int x, int y, int *screen_x, int *screen_y)
+{
+    mp::CoordinateTranslationRequest request;
+
+    request.set_x(x);
+    request.set_y(y);
+    *request.mutable_surfaceid() = surface.id();
+    mp::CoordinateTranslationResponse response;
+
+    MirWaitHandle signal;
+    signal.expect_result();
+
+    debug->translate_surface_to_screen(
+        nullptr,
+        &request,
+        &response,
+        google::protobuf::NewCallback(&signal_response_received, &signal));
+
+    signal.wait_for_one();
+
+    *screen_x = response.x();
+    *screen_y = response.y();
+    return true;
 }
 
 void MirSurface::on_configured()

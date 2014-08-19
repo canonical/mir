@@ -198,6 +198,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
             invoke(this, display_server.get(), &DisplayServer::disconnect, invocation);
             result = false;
         }
+        else if ("translate_surface_to_screen" == invocation.method_name())
+        {
+            invoke(this, dynamic_cast<mir::protobuf::Debug*>(display_server.get()), &mir::protobuf::Debug::translate_surface_to_screen, invocation);
+        }
         else
         {
             report->unknown_method(display_server.get(), invocation.id(), invocation.method_name());

@@ -24,6 +24,7 @@
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
+#include "../scene/basic_surface.h"
 #include "mir/frontend/display_changer.h"
 #include "resource_cache.h"
 #include "mir_toolkit/common.h"
@@ -513,6 +514,29 @@ void mf::SessionMediator::new_fds_for_prompt_providers(
         }
     }
 
+    done->Run();
+}
+
+void mir::frontend::SessionMediator::translate_surface_to_screen(
+    ::google::protobuf::RpcController* ,
+    ::mir::protobuf::CoordinateTranslationRequest const* request,
+    ::mir::protobuf::CoordinateTranslationResponse* response,
+    ::google::protobuf::Closure *done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        auto const id = frontend::SurfaceId(request->surfaceid().value());
+        auto const surface = std::dynamic_pointer_cast<ms::BasicSurface>(session->get_surface(id));
+
+        response->set_x(request->x() + surface->top_left().x.as_int());
+        response->set_y(request->y() + surface->top_left().y.as_int());
+    }
     done->Run();
 }
 
