@@ -100,7 +100,7 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
      *      gain significant benefit.
      */
 
-    nsecs_t const now = android_clock(0);
+    nsecs_t const now = android_clock(SYSTEM_TIME_MONOTONIC);
     int const event_rate_hz = 60;
     nsecs_t const one_frame = 1000000000ULL / event_rate_hz;
     nsecs_t frame_time = (now / one_frame) * one_frame;
