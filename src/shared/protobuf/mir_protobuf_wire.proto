@@ -1,5 +1,3 @@
-option optimize_for = LITE_RUNTIME;
-
 package mir.protobuf.wire;
 
 message Invocation {

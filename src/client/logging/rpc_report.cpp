@@ -121,7 +121,7 @@ void mcll::RpcReport::orphaned_result(
     mir::protobuf::wire::Result const& result)
 {
     std::stringstream ss;
-    ss << "Orphaned result: " << result.GetTypeName();
+    ss << "Orphaned result: " << result.ShortDebugString();
 
     logger->log(ml::Logger::error, ss.str(), component);
 }
