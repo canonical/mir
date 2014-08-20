@@ -102,12 +102,16 @@ void demo_client(const char* server, int buffer_swap_count)
     puts("Connected");
     ///\internal [connect_tag]
 
-    // We expect a connection handle;
-    // we expect it to be valid; and,
-    // we don't expect an error description
-    assert(mcd.connection != NULL);
-    assert(mir_connection_is_valid(mcd.connection));
-    assert(strcmp(mir_connection_get_error_message(mcd.connection), "") == 0);
+    if (mcd.connection == NULL || !mir_connection_is_valid(mcd.connection))
+    {
+        const char *error = "Unknown error";
+        if (mcd.connection != NULL)
+            error = mir_connection_get_error_message(mcd.connection);
+
+        fprintf(stderr, "Failed to connect to server `%s': %s\n",
+                server, error);
+        return;
+    }
 
     // We can query information about the platform we're running on
     {
