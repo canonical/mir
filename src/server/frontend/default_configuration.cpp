@@ -20,6 +20,7 @@
 #include "mir/emergency_cleanup.h"
 
 #include "default_ipc_factory.h"
+#include "debugging_ipc_factory.h"
 #include "published_socket_connector.h"
 
 #include "mir/frontend/protobuf_connection_creator.h"
@@ -137,13 +138,28 @@ std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::new_ipc_factory(
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer)
 {
-    return std::make_shared<mf::DefaultIpcFactory>(
-        the_frontend_shell(),
-        the_session_mediator_report(),
-        the_graphics_platform(),
-        the_frontend_display_changer(),
-        the_buffer_allocator(),
-        the_screencast(),
-        session_authorizer,
-        the_cursor_images());
+    if (the_options()->is_set(options::debug_opt))
+    {
+        return std::make_shared<mf::DebuggingIpcFactory>(
+                    the_frontend_shell(),
+                    the_session_mediator_report(),
+                    the_graphics_platform(),
+                    the_frontend_display_changer(),
+                    the_buffer_allocator(),
+                    the_screencast(),
+                    session_authorizer,
+                    the_cursor_images());
+    }
+    else
+    {
+        return std::make_shared<mf::DefaultIpcFactory>(
+                    the_frontend_shell(),
+                    the_session_mediator_report(),
+                    the_graphics_platform(),
+                    the_frontend_display_changer(),
+                    the_buffer_allocator(),
+                    the_screencast(),
+                    session_authorizer,
+                    the_cursor_images());
+    }
 }

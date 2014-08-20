@@ -21,6 +21,8 @@ set(
   session_credentials.cpp
   default_configuration.cpp
   default_ipc_factory.cpp
+  debugging_session_mediator.cpp
+  debugging_ipc_factory.cpp
 
   ${PROTO_HDRS}
 )

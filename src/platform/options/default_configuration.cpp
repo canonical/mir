@@ -42,6 +42,7 @@ char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
 char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::fatal_abort_opt             = "on-fatal-error-abort";
+char const* const mo::debug_opt                   = "debug";
 
 
 char const* const mo::glog                 = "glog";
@@ -144,7 +145,9 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (offscreen_opt,
             "Render to offscreen buffers instead of the real outputs.")
         (fatal_abort_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
-            "in unexpected ways] abort (to get a core dump)");
+            "in unexpected ways] abort (to get a core dump)")
+        (debug_opt, "Enable extra development debugging. "
+            "This is only interesting for people doing Mir server or client development.");
 
         add_platform_options();
 }

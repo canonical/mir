@@ -35,7 +35,6 @@
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_shell.h"
 #include "mir_test_doubles/mock_frontend_surface.h"
-#include "mir_test_doubles/mock_surface.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_session.h"
 #include "mir_test_doubles/stub_display_configuration.h"
@@ -45,8 +44,6 @@
 #include "mir_test/fake_shared.h"
 #include "mir/frontend/connector.h"
 #include "mir/frontend/event_sink.h"
-
-#include "mir_protobuf.pb.h"
 
 #include "gmock_set_arg.h"
 #include <gtest/gtest.h>
@@ -787,99 +784,4 @@ TEST_F(SessionMediatorTest, new_fds_for_prompt_providers_allocates_requested_num
     EXPECT_THAT(response.fd_size(), Eq(fd_count));
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
-}
-
-namespace
-{
-class StubbedDebuggableSession : public mtd::StubSession
-{
-public:
-    StubbedDebuggableSession() : last_surface_id{1}
-    {
-        using namespace ::testing;
-
-        mock_surface = std::make_shared<NiceMock<mtd::MockSurface>>();
-        mock_surfaces[mf::SurfaceId{1}] = mock_surface;
-        mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>(geom::Size(),
-                                                                  geom::Stride(),
-                                                                  MirPixelFormat());
-
-        ON_CALL(*mock_surface, size())
-            .WillByDefault(Return(geom::Size()));
-        ON_CALL(*mock_surface, pixel_format())
-            .WillByDefault(Return(MirPixelFormat()));
-        ON_CALL(*mock_surface, advance_client_buffer())
-            .WillByDefault(Return(mock_buffer));
-    }
-
-    std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const
-    {
-        return mock_surfaces.at(surface);
-    }
-
-    mf::SurfaceId create_surface(ms::SurfaceCreationParameters const& /* params */) override
-    {
-        using namespace ::testing;
-        auto id = mf::SurfaceId{last_surface_id};
-        if (last_surface_id != 1) {
-            mock_surfaces[id] = std::make_shared<NiceMock<mtd::MockSurface>>();
-        }
-        last_surface_id++;
-        return id;
-    }
-
-    void destroy_surface(mf::SurfaceId surface) override
-    {
-        mock_surfaces.erase(surface);
-    }
-
-    std::shared_ptr<mtd::MockSurface> mock_surface;
-    std::map<mf::SurfaceId, std::shared_ptr<mtd::MockSurface>> mock_surfaces;
-    std::shared_ptr<mtd::MockBuffer> mock_buffer;
-    int last_surface_id;
-};
-
-}
-
-TEST_F(SessionMediatorTest, debug_surface_to_screen_looks_up_appropriate_surface)
-{
-    using namespace testing;
-
-    auto debug_session = std::make_shared<StubbedDebuggableSession>();
-
-    ON_CALL(*shell, open_session(_, _, _)).WillByDefault(Return(debug_session));
-    ON_CALL(*shell, create_surface_for(_, _))
-        .WillByDefault(WithArg<1>(Invoke(debug_session.get(), &StubbedDebuggableSession::create_surface)));
-
-    mtd::StubBuffer buffer;
-    mp::ConnectParameters connect_parameters;
-    mp::Connection connection;
-
-    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
-    mp::SurfaceParameters surface_request;
-    mp::Surface surface_response;
-
-    mir::geometry::Point surface_location;
-    surface_location.x = mir::geometry::X{256};
-    surface_location.y = mir::geometry::Y{331};
-    debug_session->mock_surface->move_to(surface_location);
-
-    mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
-    mp::SurfaceId our_surface{surface_response.id()};
-
-    mp::CoordinateTranslationRequest translate_request;
-    mp::CoordinateTranslationResponse translate_response;
-    translate_request.set_x(20);
-    translate_request.set_y(40);
-    *translate_request.mutable_surfaceid() = our_surface;
-
-    mediator.translate_surface_to_screen(nullptr,
-                                         &translate_request,
-                                         &translate_response,
-                                         null_callback.get());
-
-    EXPECT_EQ(surface_location.x.as_int() + translate_request.x(),
-              translate_response.x());
-    EXPECT_EQ(surface_location.y.as_int() + translate_request.y(),
-              translate_response.y());
 }

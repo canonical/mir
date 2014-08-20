@@ -386,6 +386,11 @@ void signal_response_received(MirWaitHandle* handle)
 
 bool MirSurface::translate_to_screen_coordinates(int x, int y, int *screen_x, int *screen_y)
 {
+    if (!debug)
+    {
+        return false;
+    }
+
     mp::CoordinateTranslationRequest request;
 
     request.set_x(x);
@@ -410,7 +415,7 @@ bool MirSurface::translate_to_screen_coordinates(int x, int y, int *screen_x, in
 
     *screen_x = response.x();
     *screen_y = response.y();
-    return true;
+    return !response.has_error();
 }
 
 void MirSurface::on_configured()

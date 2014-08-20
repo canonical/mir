@@ -96,6 +96,8 @@ public:
 
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
 
+    // TODO: Some sort of extension mechanism so that this can be moved
+    //       out into a separate class in the libmirclient-debug DSO.
     bool translate_to_screen_coordinates(int x, int y,
                                          int* screen_x, int* screen_y);
     
