@@ -49,7 +49,7 @@ public:
     /// Typically this should be done just prior to or just after sending the buffer information
     void add(graphics::Buffer* id);
     bool client_has(graphics::BufferID const& id) const;
-    graphics::Buffer* buffer_from(graphics::BufferID id);
+    graphics::Buffer* buffer_from(graphics::BufferID const& id) const;
 private:
 
     std::list<graphics::Buffer*> buffers;

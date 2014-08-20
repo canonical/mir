@@ -41,40 +41,33 @@ public:
     SurfaceTracker(SurfaceTracker const&) = delete;
     SurfaceTracker& operator=(SurfaceTracker const&) = delete;
 
-    /* track a buffer as associated with a surface 
+    /* track a buffer as associated with a surface
+     * \warning the buffer must correspond to a single surface_id
      * \param surface_id id that the the buffer is associated with
      * \param buffer     buffer to be tracked (TODO: should be a shared_ptr)
      * \returns          true if the buffer is already tracked
      *                   false if the buffer is not tracked
      */
-    bool track_buffer(SurfaceId, graphics::Buffer*);
+    bool track_buffer(SurfaceId surface_id, graphics::Buffer* buffer);
     /* removes the surface id from all tracking */
     void remove_surface(SurfaceId);
-    /* accesses the last buffer given to track_buffer() for the given SurfaceId */
 
+    /* Accesses the Surface that the buffer is associated with */
     SurfaceId surface_from(graphics::BufferID) const;
+    /* Access the buffer resource that the id corresponds to.
+       TODO: should really be a weak or shared ptr */
     graphics::Buffer* buffer_from(graphics::BufferID) const;
 
-    graphics::Buffer* last_buffer(SurfaceId) const;
-
-    //addd to 
-
-
-    //SID->vec3{B*,B*,B*}
-
-    //multimap?
-    //SID->{BID, BID, BID}
-    //BID->{B*,SID}
-
-    //SID->B*
 private:
     size_t const client_cache_size;
-
-    //DEPRECATE SOON
-    std::unordered_map<SurfaceId, graphics::Buffer*> client_buffer_resource;
-    //dont dep
     std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
-//    std::unordered_map<graphics::BufferID, std::tuple<graphics::Buffer*, SurfaceId>> buffer_lookup;
+
+//TODO: deprecate below this line once exchange_buffer is the normal way to request a new buffer
+public:
+    /* accesses the last buffer given to track_buffer() for the given SurfaceId */
+    graphics::Buffer* last_buffer(SurfaceId) const;
+private:
+    std::unordered_map<SurfaceId, graphics::Buffer*> client_buffer_resource;
 };
 
 }

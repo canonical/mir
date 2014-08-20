@@ -50,29 +50,21 @@ void mf::ClientBufferTracker::add(mg::Buffer* buffer)
     }
 }
 
-bool mf::ClientBufferTracker::client_has(mg::BufferID const& buffer_id) const
+mg::Buffer* mf::ClientBufferTracker::buffer_from(mg::BufferID const& buffer_id) const
 {
-    return std::find_if(buffers.begin(), buffers.end(),
-    [&buffer_id](mg::Buffer* buffer)
-    {
-        return (buffer->id() == buffer_id);
-    }) != buffers.end();
+    auto it = std::find_if(buffers.begin(), buffers.end(),
+        [&buffer_id](mg::Buffer* buffer)
+        {
+            return (buffer->id() == buffer_id);
+        });
+
+    if (it == buffers.end())
+        return nullptr;
+    else
+        return *it;
 }
 
-mg::Buffer* mf::ClientBufferTracker::buffer_from(mg::BufferID buffer_id)
+bool mf::ClientBufferTracker::client_has(mg::BufferID const& buffer_id) const
 {
-    mg::Buffer* b{nullptr};
-    std::find_if(buffers.begin(), buffers.end(),
-    [&buffer_id, &b](mg::Buffer* buffer)
-    {
-        printf("SCAN.\n");
-        if (buffer->id() == buffer_id)
-        {
-            printf("FOUND.\n");
-            b = buffer;
-        }
-        return false;
-    });
-
-    return b;
+    return (nullptr != buffer_from(buffer_id));
 }

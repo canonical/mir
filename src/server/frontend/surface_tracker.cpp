@@ -77,25 +77,18 @@ mf::SurfaceId mf::SurfaceTracker::surface_from(mg::BufferID buffer_id) const
     for(auto it = client_buffer_tracker.begin(); it != client_buffer_tracker.end(); it++)
     {
         if (it->second->client_has(buffer_id))
-        {
             return it->first;
-        }
     }
     BOOST_THROW_EXCEPTION(std::runtime_error("Buffer is not associated with a surface"));
 }
 
 mg::Buffer* mf::SurfaceTracker::buffer_from(mg::BufferID buffer_id) const
 {
-    mg::Buffer* buffer{nullptr};
     for(auto const& tracker : client_buffer_tracker)
     {
-        auto buf = tracker.second->buffer_from(buffer_id);
-        if (buf != nullptr)
-            buffer = buf;
+        auto buffer = tracker.second->buffer_from(buffer_id);
+        if (buffer != nullptr)
+            return buffer;
     }
-
-    if (buffer == nullptr)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Buffer is not tracked"));
-    else
-        return buffer;
+    BOOST_THROW_EXCEPTION(std::runtime_error("Buffer is not tracked"));
 }
