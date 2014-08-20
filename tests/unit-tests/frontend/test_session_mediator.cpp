@@ -247,6 +247,8 @@ struct SessionMediator : public ::testing::Test
 
     mtd::StubBuffer buffer1;
     mtd::StubBuffer buffer2;
+    mtd::StubBuffer buffer3;
+    mtd::StubBuffer buffer4;
 
     void toggle_buffers(mg::Buffer* b, std::function<void(mg::Buffer* new_buffer)> complete)
     {
@@ -254,6 +256,13 @@ struct SessionMediator : public ::testing::Test
             complete(&buffer2);
         if (b == &buffer2)
             complete(&buffer1); 
+    }
+    void toggle_buffers2(mg::Buffer* b, std::function<void(mg::Buffer* new_buffer)> complete)
+    {
+        if ((!b) || (b == &buffer3))
+            complete(&buffer4);
+        if (b == &buffer4)
+            complete(&buffer3); 
     }
 };
 }
@@ -453,7 +462,7 @@ TEST_F(SessionMediator, session_with_multiple_surfaces_only_sends_needed_buffers
     ON_CALL(*surface0, swap_buffers(_,_))
         .WillByDefault(Invoke(this, &SessionMediator::toggle_buffers));
     ON_CALL(*surface1, swap_buffers(_,_))
-        .WillByDefault(Invoke(this, &SessionMediator::toggle_buffers));
+        .WillByDefault(Invoke(this, &SessionMediator::toggle_buffers2));
     EXPECT_CALL(*graphics_platform, fill_buffer_package(_,_,mg::BufferIpcMsgType::full_msg))
         .Times(4);
     EXPECT_CALL(*graphics_platform, fill_buffer_package(_,_,mg::BufferIpcMsgType::update_msg))
