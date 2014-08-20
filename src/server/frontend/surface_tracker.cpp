@@ -44,7 +44,7 @@ bool mf::SurfaceTracker::track_buffer(SurfaceId surface_id, mg::Buffer* buffer)
     }
 
     auto already_tracked = tracker->client_has(buffer->id());
-    tracker->add(buffer->id());
+    tracker->add(buffer);
 
     client_buffer_resource[surface_id] = buffer;
 
@@ -86,12 +86,16 @@ mf::SurfaceId mf::SurfaceTracker::surface_from(mg::BufferID buffer_id) const
 
 mg::Buffer* mf::SurfaceTracker::buffer_from(mg::BufferID buffer_id) const
 {
-#if 0
-    auto it = buffer_lookup.find(buffer_id);
-    if (it != buffer_lookup.end())
-        return std::get<0>(it->second);
+    mg::Buffer* buffer{nullptr};
+    for(auto const& tracker : client_buffer_tracker)
+    {
+        auto buf = tracker.second->buffer_from(buffer_id);
+        if (buf != nullptr)
+            buffer = buf;
+    }
+
+    if (buffer == nullptr)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Buffer is not tracked"));
     else
-        BOOST_THROW_EXCEPTION(std::runtime_error("Buffer id not present in buffer tracker"));
-#endif
-    return nullptr;
+        return buffer;
 }

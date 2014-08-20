@@ -25,6 +25,10 @@
 
 namespace mir
 {
+namespace graphics
+{
+class Buffer;
+}
 namespace frontend
 {
 
@@ -40,14 +44,15 @@ public:
     ClientBufferTracker(ClientBufferTracker const&) = delete;
     ClientBufferTracker& operator=(ClientBufferTracker const&) = delete;
 
-    /// Add a BufferID to the list of buffers known by the client.
+    /// Add a Buffer to the list of buffers known by the client.
     ///
     /// Typically this should be done just prior to or just after sending the buffer information
-    void add(graphics::BufferID const& id);
+    void add(graphics::Buffer* id);
     bool client_has(graphics::BufferID const& id) const;
+    graphics::Buffer* buffer_from(graphics::BufferID id);
 private:
 
-    std::list<graphics::BufferID> ids;
+    std::list<graphics::Buffer*> buffers;
     unsigned int const cache_size;
 };
 

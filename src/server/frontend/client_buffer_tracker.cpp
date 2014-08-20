@@ -20,40 +20,59 @@
 
 #include "client_buffer_tracker.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/graphics/buffer.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 
 mf::ClientBufferTracker::ClientBufferTracker(unsigned int client_cache_size)
-    : ids(),
+    : buffers{},
       cache_size{client_cache_size}
 {
 }
 
-void mf::ClientBufferTracker::add(mg::BufferID const& id)
+void mf::ClientBufferTracker::add(mg::Buffer* buffer)
 {
-    auto existing_id = std::find(ids.begin(), ids.end(), id);
+    auto existing_buffer = std::find(buffers.begin(), buffers.end(), buffer);
 
-    if (existing_id != ids.end())
+    if (existing_buffer != buffers.end())
     {
-        ids.push_front(*existing_id);
-        ids.erase(existing_id);
+        buffers.push_front(*existing_buffer);
+        buffers.erase(existing_buffer);
     }
     else
     {
-        ids.push_front(id);
+        buffers.push_front(buffer);
     }
-    if (ids.size() > cache_size)
+    if (buffers.size() > cache_size)
     {
-        printf("POP. %i\n", ids.back().as_value());
-        ids.pop_back();
+        buffers.pop_back();
     }
 }
 
-bool mf::ClientBufferTracker::client_has(mg::BufferID const& id) const
+bool mf::ClientBufferTracker::client_has(mg::BufferID const& buffer_id) const
 {
-    for(auto id : ids)
-        printf("IDS %i\n", id.as_value());
+    return std::find_if(buffers.begin(), buffers.end(),
+    [&buffer_id](mg::Buffer* buffer)
+    {
+        return (buffer->id() == buffer_id);
+    }) != buffers.end();
+}
 
-    return std::find(ids.begin(), ids.end(), id) != ids.end();
+mg::Buffer* mf::ClientBufferTracker::buffer_from(mg::BufferID buffer_id)
+{
+    mg::Buffer* b{nullptr};
+    std::find_if(buffers.begin(), buffers.end(),
+    [&buffer_id, &b](mg::Buffer* buffer)
+    {
+        printf("SCAN.\n");
+        if (buffer->id() == buffer_id)
+        {
+            printf("FOUND.\n");
+            b = buffer;
+        }
+        return false;
+    });
+
+    return b;
 }
