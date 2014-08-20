@@ -21,7 +21,7 @@ target_link_libraries(mirplatform
 set_target_properties(mirplatform
   PROPERTIES
   SOVERSION ${MIRPLATFORM_ABI}
-  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+  LINK_FLAGS "-Wl,--version-script,${symbol_map}"
 )
 
 

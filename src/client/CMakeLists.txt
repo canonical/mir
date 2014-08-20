@@ -70,7 +70,7 @@ set_target_properties(
 
   PROPERTIES
   SOVERSION ${MIRCLIENT_ABI}
-  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+  LINK_FLAGS "-Wl,--version-script,${symbol_map}"
 )
 
 set(

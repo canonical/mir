@@ -43,7 +43,7 @@ set_target_properties(
   mirplatformgraphicsmesa PROPERTIES
   OUTPUT_NAME mirplatformgraphics
   LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/mesa
-  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
+  LINK_FLAGS "-Wl,--version-script,${symbol_map}"
 )
 
 target_link_libraries(mirplatformgraphicsmesa
