@@ -117,6 +117,7 @@ struct SurfaceTracker : public testing::Test
     mtd::StubBuffer stub_buffer1;
     mtd::StubBuffer stub_buffer2;
     mtd::StubBuffer stub_buffer3;
+    mtd::StubBuffer stub_buffer4;
     mf::SurfaceId surf_id0{0};
     mf::SurfaceId surf_id1{1};
     size_t const client_cache_size{3};
@@ -207,7 +208,7 @@ TEST_F(SurfaceTracker, buffers_only_affect_associated_surfaces)
     EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id1));
 }
 
-TEST_F(SurfaceTracker, can_lookup_a_buffer_from_a_buffer_id)
+TEST_F(SurfaceTracker, can_lookup_the_surfaceid_a_buffer_is_associated_with)
 {
     using namespace testing;
     mf::SurfaceTracker tracker{client_cache_size};
@@ -217,26 +218,31 @@ TEST_F(SurfaceTracker, can_lookup_a_buffer_from_a_buffer_id)
 
     EXPECT_THAT(tracker.surface_from(stub_buffer0.id()), Eq(surf_id1));
     EXPECT_THAT(tracker.surface_from(stub_buffer1.id()), Eq(surf_id0));
+
     EXPECT_THROW({
         tracker.surface_from(stub_buffer2.id());
     }, std::runtime_error);
 
-    tracker.track_buffer(surf_id0, &stub_buffer0);
+    EXPECT_THROW({
+        tracker.track_buffer(surf_id0, &stub_buffer0);
+    }, std::runtime_error);
+
     tracker.track_buffer(surf_id0, &stub_buffer1);
     tracker.track_buffer(surf_id0, &stub_buffer2);
     tracker.track_buffer(surf_id0, &stub_buffer3);
+    tracker.track_buffer(surf_id0, &stub_buffer4);
 
     EXPECT_THROW({
-        //buffer0 was kicked out
-        tracker.surface_from(stub_buffer0.id());
+        //buffer1 was kicked out
+        tracker.surface_from(stub_buffer1.id());
     }, std::runtime_error);
-    EXPECT_THAT(tracker.surface_from(stub_buffer1.id()), Eq(surf_id0));
     EXPECT_THAT(tracker.surface_from(stub_buffer2.id()), Eq(surf_id0));
     EXPECT_THAT(tracker.surface_from(stub_buffer3.id()), Eq(surf_id0));
+    EXPECT_THAT(tracker.surface_from(stub_buffer4.id()), Eq(surf_id0));
 
 }
 
-TEST_F(SurfaceTracker, can_lookup_the_surfaceid_a_buffer_is_associated_with)
+TEST_F(SurfaceTracker, can_lookup_a_buffer_from_a_buffer_id)
 {
     using namespace testing;
     mf::SurfaceTracker tracker{client_cache_size};

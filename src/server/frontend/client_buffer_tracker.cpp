@@ -44,10 +44,16 @@ void mf::ClientBufferTracker::add(mg::BufferID const& id)
         ids.push_front(id);
     }
     if (ids.size() > cache_size)
+    {
+        printf("POP. %i\n", ids.back().as_value());
         ids.pop_back();
+    }
 }
 
 bool mf::ClientBufferTracker::client_has(mg::BufferID const& id) const
 {
+    for(auto id : ids)
+        printf("IDS %i\n", id.as_value());
+
     return std::find(ids.begin(), ids.end(), id) != ids.end();
 }

@@ -22,6 +22,7 @@
 #include "mir/frontend/surface_id.h"
 #include "client_buffer_tracker.h"
 #include <unordered_map>
+#include <tuple>
 #include <memory>
 
 namespace mir
@@ -50,15 +51,30 @@ public:
     /* removes the surface id from all tracking */
     void remove_surface(SurfaceId);
     /* accesses the last buffer given to track_buffer() for the given SurfaceId */
-    graphics::Buffer* last_buffer(SurfaceId) const;
 
     SurfaceId surface_from(graphics::BufferID) const;
     graphics::Buffer* buffer_from(graphics::BufferID) const;
+
+    graphics::Buffer* last_buffer(SurfaceId) const;
+
+    //addd to 
+
+
+    //SID->vec3{B*,B*,B*}
+
+    //multimap?
+    //SID->{BID, BID, BID}
+    //BID->{B*,SID}
+
+    //SID->B*
 private:
     size_t const client_cache_size;
 
+    //DEPRECATE SOON
     std::unordered_map<SurfaceId, graphics::Buffer*> client_buffer_resource;
+    //dont dep
     std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
+//    std::unordered_map<graphics::BufferID, std::tuple<graphics::Buffer*, SurfaceId>> buffer_lookup;
 };
 
 }

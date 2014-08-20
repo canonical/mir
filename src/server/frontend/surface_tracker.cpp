@@ -19,6 +19,8 @@
 #include "surface_tracker.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_id.h"
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -34,10 +36,18 @@ bool mf::SurfaceTracker::track_buffer(SurfaceId surface_id, mg::Buffer* buffer)
     if (!tracker)
         tracker = std::make_shared<ClientBufferTracker>(client_cache_size);
 
+    for(auto it = client_buffer_tracker.begin(); it != client_buffer_tracker.end(); it++)
+    {
+        if (it->first == surface_id) continue;
+        if (it->second->client_has(buffer->id()))
+            BOOST_THROW_EXCEPTION(std::runtime_error("buffer already associated with another surface"));
+    }
+
     auto already_tracked = tracker->client_has(buffer->id());
     tracker->add(buffer->id());
 
     client_buffer_resource[surface_id] = buffer;
+
     return already_tracked;
 }
 
@@ -62,18 +72,26 @@ mg::Buffer* mf::SurfaceTracker::last_buffer(SurfaceId surface_id) const
         return nullptr;
 }
 
-mf::SurfaceId mf::SurfaceTracker::surface_from(mg::BufferID) const
+mf::SurfaceId mf::SurfaceTracker::surface_from(mg::BufferID buffer_id) const
 {
-    return mf::SurfaceId{1121212};
+    for(auto it = client_buffer_tracker.begin(); it != client_buffer_tracker.end(); it++)
+    {
+        if (it->second->client_has(buffer_id))
+        {
+            return it->first;
+        }
+    }
+    BOOST_THROW_EXCEPTION(std::runtime_error("Buffer is not associated with a surface"));
 }
 
 mg::Buffer* mf::SurfaceTracker::buffer_from(mg::BufferID buffer_id) const
 {
-//    auto it = buffer_lookup.find(buffer_id);
-//    if (it != buffer_lookup.end())
-//        return it->second;
-//    else
-//        BOOST_THROW_EXCEPTION(std::runtime_error("Buffer id not present in buffer tracker"));
-    (void)buffer_id;
+#if 0
+    auto it = buffer_lookup.find(buffer_id);
+    if (it != buffer_lookup.end())
+        return std::get<0>(it->second);
+    else
+        BOOST_THROW_EXCEPTION(std::runtime_error("Buffer id not present in buffer tracker"));
+#endif
     return nullptr;
 }
