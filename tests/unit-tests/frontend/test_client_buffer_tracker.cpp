@@ -47,81 +47,67 @@ TEST_F(ClientBufferTracker, just_added_buffer_is_known_by_client)
     EXPECT_THAT(tracker.buffer_from(id), testing::Eq(&stub_buffer0));
 }
 
-#if 0
-TEST(ClientBufferTracker, unadded_buffer_is_unknown_by_client)
+TEST_F(ClientBufferTracker, unadded_buffer_is_unknown_by_client)
 {
     mf::ClientBufferTracker tracker(3);
 
-    tracker.add(mg::BufferID{5});
-    EXPECT_FALSE(tracker.client_has(mg::BufferID{6}));
+    tracker.add(&stub_buffer0);
+    EXPECT_FALSE(tracker.client_has(stub_buffer1.id()));
 }
 
-TEST(ClientBufferTracker, tracks_sequence_of_buffers)
-{
-    mf::ClientBufferTracker tracker(3);
-    mg::BufferID const one{1};
-    mg::BufferID const two{2};
-    mg::BufferID const three{3};
-    mg::BufferID const four{4};
-
-    tracker.add(one);
-    tracker.add(two);
-    tracker.add(three);
-
-    EXPECT_TRUE(tracker.client_has(one));
-    EXPECT_TRUE(tracker.client_has(two));
-    EXPECT_TRUE(tracker.client_has(three));
-    EXPECT_FALSE(tracker.client_has(four));
-}
-
-TEST(ClientBufferTracker, old_buffers_expire_from_tracker)
+TEST_F(ClientBufferTracker, tracks_sequence_of_buffers)
 {
     mf::ClientBufferTracker tracker(3);
 
-    mg::BufferID const one{1};
-    mg::BufferID const two{2};
-    mg::BufferID const three{3};
-    mg::BufferID const four{4};
+    tracker.add(&stub_buffer0);
+    tracker.add(&stub_buffer1);
+    tracker.add(&stub_buffer2);
 
-    tracker.add(one);
-    tracker.add(two);
-    tracker.add(three);
-
-    ASSERT_TRUE(tracker.client_has(one));
-    ASSERT_TRUE(tracker.client_has(two));
-    ASSERT_TRUE(tracker.client_has(three));
-
-    tracker.add(two);
-    tracker.add(three);
-    tracker.add(four);
-
-    EXPECT_FALSE(tracker.client_has(one));
-    EXPECT_TRUE(tracker.client_has(two));
-    EXPECT_TRUE(tracker.client_has(three));
-    EXPECT_TRUE(tracker.client_has(four));
+    EXPECT_TRUE(tracker.client_has(stub_buffer0.id()));
+    EXPECT_TRUE(tracker.client_has(stub_buffer1.id()));
+    EXPECT_TRUE(tracker.client_has(stub_buffer2.id()));
+    EXPECT_FALSE(tracker.client_has(stub_buffer3.id()));
 }
 
-TEST(ClientBufferTracker, tracks_correct_number_of_buffers)
+TEST_F(ClientBufferTracker, old_buffers_expire_from_tracker)
 {
-    mg::BufferID ids[10];
-    for (unsigned int i = 0; i < 10; ++i)
-        ids[i] = mg::BufferID{i};
+    mf::ClientBufferTracker tracker(3);
+
+    tracker.add(&stub_buffer0);
+    tracker.add(&stub_buffer1);
+    tracker.add(&stub_buffer2);
+
+    ASSERT_TRUE(tracker.client_has(stub_buffer0.id()));
+    ASSERT_TRUE(tracker.client_has(stub_buffer1.id()));
+    ASSERT_TRUE(tracker.client_has(stub_buffer2.id()));
+
+    tracker.add(&stub_buffer1);
+    tracker.add(&stub_buffer2);
+    tracker.add(&stub_buffer3);
+
+    EXPECT_FALSE(tracker.client_has(stub_buffer0.id()));
+    EXPECT_TRUE(tracker.client_has(stub_buffer1.id()));
+    EXPECT_TRUE(tracker.client_has(stub_buffer2.id()));
+    EXPECT_TRUE(tracker.client_has(stub_buffer3.id()));
+}
+
+TEST_F(ClientBufferTracker, tracks_correct_number_of_buffers)
+{
+    mtd::StubBuffer buffers[10];
 
     for (unsigned int tracker_size = 2; tracker_size < 10; ++tracker_size)
     {
         mf::ClientBufferTracker tracker{tracker_size};
 
-        for (unsigned int i = 0; i < tracker_size; ++i)
-            tracker.add(ids[i]);
+        for (unsigned int i = 0; i <= tracker_size; ++i)
+            tracker.add(&buffers[i]);
 
-        tracker.add(ids[tracker_size]);
-
-        EXPECT_FALSE(tracker.client_has(ids[0]));
+        EXPECT_FALSE(tracker.client_has(buffers[0].id()));
         for (unsigned int i = 1; i <= tracker_size; ++i)
-            EXPECT_TRUE(tracker.client_has(ids[i]));
+            EXPECT_TRUE(tracker.client_has(buffers[i].id()));
     }
 }
-#endif
+
 struct SurfaceTracker : public testing::Test
 {
     mtd::StubBuffer stub_buffer0;
@@ -265,7 +251,6 @@ TEST_F(SurfaceTracker, can_lookup_a_buffer_from_a_buffer_id)
     EXPECT_THAT(tracker.buffer_from(stub_buffer0.id()), Eq(&stub_buffer0));
     EXPECT_THAT(tracker.buffer_from(stub_buffer1.id()), Eq(&stub_buffer1));
     EXPECT_THAT(tracker.buffer_from(stub_buffer2.id()), Eq(&stub_buffer2));
-#if 0
     EXPECT_THROW({
         tracker.buffer_from(stub_buffer3.id());
     }, std::runtime_error);
@@ -275,5 +260,4 @@ TEST_F(SurfaceTracker, can_lookup_a_buffer_from_a_buffer_id)
     EXPECT_THROW({
         tracker.buffer_from(stub_buffer0.id());
     }, std::runtime_error);
-#endif
 }
