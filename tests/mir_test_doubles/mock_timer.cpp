@@ -17,6 +17,7 @@
  */
 
 #include "mir_test_doubles/mock_timer.h"
+#include "mir/time/alarm.h"
 
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;

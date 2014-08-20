@@ -19,7 +19,7 @@
 #ifndef MIR_GEOMETRY_SIZE_H_
 #define MIR_GEOMETRY_SIZE_H_
 
-#include "mir/geometry/dimensions.h"  // FIXME: private
+#include "mir/geometry/dimensions.h"
 #include <iosfwd>
 
 namespace mir
