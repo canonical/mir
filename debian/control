@@ -44,7 +44,7 @@ Homepage: https://launchpad.net/mir
 # just go ahead. ~mir-team will notice and sync up the code again.
 Vcs-Bzr: https://code.launchpad.net/~mir-team/mir/trunk
 
-Package: libmirserver24
+Package: libmirserver25
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -59,7 +59,7 @@ Description: Display server for Ubuntu - server library
  .
  Contains the shared library needed by server applications for Mir.
 
-Package: libmirplatform1
+Package: libmirplatform2
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -80,7 +80,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         libmirplatform1 (= ${binary:Version}),
+         libmirplatform2 (= ${binary:Version}),
 Description: Display server for Ubuntu - platform library for Mesa
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -95,7 +95,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         libmirplatform1 (= ${binary:Version}),
+         libmirplatform2 (= ${binary:Version}),
 Description: Display server for Ubuntu - platform library for Android
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -108,7 +108,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircommon1 (= ${binary:Version}), 
+Depends: libmircommon2 (= ${binary:Version}), 
          libprotobuf-dev (>= 2.4.1),
          ${misc:Depends},
 Breaks: mircommon-dev (<< 0.6)
@@ -124,7 +124,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirplatform1 (= ${binary:Version}), 
+Depends: libmirplatform2 (= ${binary:Version}), 
          libmircommon-dev,
          libboost-program-options-dev,
          ${misc:Depends},
@@ -141,7 +141,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver24 (= ${binary:Version}),
+Depends: libmirserver25 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -252,7 +252,7 @@ Description: Display Server for Ubuntu - stress tests and other test tools
  .
  Contains a tool for stress testing the Mir display server
 
-Package: libmircommon1
+Package: libmircommon2
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
