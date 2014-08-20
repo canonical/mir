@@ -2,6 +2,8 @@ include_directories(${PROJECT_SOURCE_DIR}/include/platform)
 
 set(MIRPLATFORM_ABI 2)
 
+set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
+
 add_library(mirplatformobjects OBJECT
   shared_library_loader.cpp
 )
@@ -33,6 +35,7 @@ target_link_libraries(mirplatform
 set_target_properties(mirplatform
   PROPERTIES
   SOVERSION ${MIRPLATFORM_ABI}
+  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
 
