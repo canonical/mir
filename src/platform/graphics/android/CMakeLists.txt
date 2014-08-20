@@ -51,9 +51,6 @@ target_link_libraries(
   mirplatformgraphicsandroid
 
   mirsharedandroid
-  mirplatform
-  mircommon
-
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${LIBHARDWARE_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
