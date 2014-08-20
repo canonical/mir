@@ -105,7 +105,7 @@ add_definitions(-DLOG_NDEBUG=1)
 
 enable_testing()
 
-include_directories(include/shared)
+include_directories(include/shared include.private/shared)
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS date_time system program_options iostreams REQUIRED)

@@ -1,6 +1,9 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
-  ${PROJECT_SOURCE_DIR}/include/server)
+  ${PROJECT_SOURCE_DIR}/include.private/platform
+  ${PROJECT_SOURCE_DIR}/include/server
+  ${PROJECT_SOURCE_DIR}/include.private/server
+)
 
 add_subdirectory(compositor/)
 add_subdirectory(graphics/)

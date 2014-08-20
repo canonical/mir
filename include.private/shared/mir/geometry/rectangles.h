@@ -19,8 +19,8 @@
 #ifndef MIR_GEOMETRY_RECTANGLES_H_
 #define MIR_GEOMETRY_RECTANGLES_H_
 
-#include "point.h"
-#include "rectangle.h"
+#include "mir/geometry/point.h"
+#include "mir/geometry/rectangle.h"
 
 #include <vector>
 #include <initializer_list>

@@ -1,4 +1,7 @@
-include_directories(${PROJECT_SOURCE_DIR}/include/platform)
+include_directories(
+  ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/include.private/platform
+)
 
 set(MIRPLATFORM_ABI 2)
 
