@@ -32,6 +32,7 @@
 #include "mir_test_framework/input_testing_server_configuration.h"
 #include "mir_test_framework/input_testing_client_configuration.h"
 #include "mir_test_framework/declarative_placement_strategy.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -120,6 +121,7 @@ struct TestClientInput : mtf::DeferredInProcessServer
     mt::Barrier fence{2};
     mt::WaitCondition second_client_done;
     ServerConfiguration server_configuration{fence};
+    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
 
