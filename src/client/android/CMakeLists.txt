@@ -24,7 +24,7 @@ set_target_properties(
   mirclientplatformandroid PROPERTIES
   OUTPUT_NAME mirclientplatform
   LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/android
-  LINK_FLAGS "-Wl,--version-script,${symbol_map}"
+  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
 target_link_libraries(
