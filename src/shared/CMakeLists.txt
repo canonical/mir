@@ -40,7 +40,7 @@ target_link_libraries(mircommon
 )
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIRCOMMON_ABI 2)
+set(MIRCOMMON_ABI 1)
 
 set_target_properties(mircommon
 
