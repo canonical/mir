@@ -20,7 +20,8 @@
 #ifndef MIR_TIME_TIMER_H_
 #define MIR_TIME_TIMER_H_
 
-#include "mir/time/clock.h"
+#include "mir/time/alarm.h"
+
 #include <chrono>
 #include <functional>
 #include <memory>

@@ -64,8 +64,9 @@ b74342d8ffab489405a4e12fce0c257ac9f8596c  include/server/mir/shell/focus_setter.
 4f50c37bb8e36a1aa4918af6aa01b0f032ed0984  include/server/mir/shell/input_targeter.h
 82bc93ea53f03399cb143b9ce936bb51d4366be6  include/server/mir/shell/session_coordinator_wrapper.h
 18e869c5b87ab8be4bc185d2cd55a93d699cde72  include/server/mir/shell/surface_coordinator_wrapper.h
+c3fdfa84a3ae97a0d1057635c5bfcedcf29d007c  include/server/mir/time/alarm.h
 bfacab3544a6b1339e6f45353033bdab3c226db7  include/server/mir/time/clock.h
-a9324eabd8d3ace2678fcb6adab8af13b8d5cc66  include/server/mir/time/timer.h
+a134c7b86e9c3b191f1004abe7bbdceed8ac42ee  include/server/mir/time/timer.h
 3329ada91412ded2f127aee9a92f065e57b81cb2  include/shared/mir/cached_ptr.h
 82ff9499ef62739379616e02164dc98f9914c329  include/shared/mir/fd.h
 b399dc08514751c86e23824612a52378dd9b1e23  include/shared/mir/geometry/dimensions.h

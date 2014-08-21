@@ -17,7 +17,7 @@
  */
 
 #include "mir/asio_main_loop.h"
-#include "mir/time/alarm.h"
+
 #include "boost/date_time/posix_time/conversion.hpp"
 
 #include <cassert>

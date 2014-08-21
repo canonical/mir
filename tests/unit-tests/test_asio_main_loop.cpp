@@ -18,7 +18,6 @@
 
 #include "mir/asio_main_loop.h"
 #include "mir/time/high_resolution_clock.h"
-#include "mir/time/alarm.h"
 #include "mir_test/pipe.h"
 #include "mir_test/auto_unblock_thread.h"
 #include "mir_test/signal.h"

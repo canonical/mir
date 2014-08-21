@@ -23,7 +23,6 @@
 #include "mir/input/input_channel.h"
 #include "mir/input/input_report.h"
 #include "mir/scene/surface.h"
-#include "mir/time/alarm.h"
 #include "mir/compositor/scene.h"
 #include "mir/main_loop.h"
 

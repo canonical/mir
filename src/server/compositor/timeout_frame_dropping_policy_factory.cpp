@@ -17,7 +17,7 @@
  */
 
 #include "mir/compositor/frame_dropping_policy.h"
-#include "mir/time/alarm.h"
+
 #include "timeout_frame_dropping_policy_factory.h"
 
 #include <cassert>
