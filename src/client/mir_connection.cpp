@@ -241,7 +241,12 @@ void default_lifecycle_event_handler(MirLifecycleState transition)
 {
     if (transition == mir_lifecycle_connection_lost)
     {
-        raise(SIGTERM);
+        /*
+         * We need to use kill() instead of raise() to ensure the signal
+         * is dispatched to the process even if it's blocked in the current
+         * thread.
+         */
+        kill(getpid(), SIGTERM);
     }
 }
 }
