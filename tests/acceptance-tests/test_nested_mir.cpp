@@ -28,6 +28,7 @@
 
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test/wait_condition.h"
 
 #include "mir_test_doubles/mock_egl.h"
@@ -268,6 +269,7 @@ struct NestedServer : mtf::InProcessServer, HostServerConfiguration
     NestedServer() : HostServerConfiguration(display_geometry) {}
 
     NestedMockEGL mock_egl;
+    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     virtual mir::DefaultServerConfiguration& server_config()
     {
