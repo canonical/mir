@@ -246,7 +246,7 @@ void default_lifecycle_event_handler(MirLifecycleState transition)
          * is dispatched to the process even if it's blocked in the current
          * thread.
          */
-        kill(getpid(), SIGTERM);
+        kill(getpid(), SIGHUP);
     }
 }
 }
