@@ -26,6 +26,7 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -34,6 +35,7 @@
 
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
+namespace mtf = mir_test_framework;
 
 /*************************************************************************/
 /*************************************************************************/
@@ -136,7 +138,7 @@ struct DemoConnectionCreator : mf::ProtobufConnectionCreator
     }
 };
 
-struct DemoServerConfiguration : mir_test_framework::StubbedServerConfiguration
+struct DemoServerConfiguration : mtf::StubbedServerConfiguration
 {
     std::shared_ptr<mf::ConnectionCreator> the_connection_creator() override
     {
@@ -151,11 +153,12 @@ struct DemoServerConfiguration : mir_test_framework::StubbedServerConfiguration
 
 };
 
-struct DemoPrivateProtobuf : mir_test_framework::InProcessServer
+struct DemoPrivateProtobuf : mtf::InProcessServer
 {
     mir::DefaultServerConfiguration& server_config() override { return my_server_config; }
 
     DemoServerConfiguration my_server_config;
+    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     std::shared_ptr<DemoConnectionCreator> demo_connection_creator;
 
@@ -163,7 +166,7 @@ struct DemoPrivateProtobuf : mir_test_framework::InProcessServer
     {
         ::demo_mir_server = &demo_mir_server;
 
-        mir_test_framework::InProcessServer::SetUp();
+        mtf::InProcessServer::SetUp();
         demo_connection_creator = std::dynamic_pointer_cast<DemoConnectionCreator>(my_server_config.the_connection_creator());
 
         using namespace testing;
