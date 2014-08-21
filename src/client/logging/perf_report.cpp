@@ -54,10 +54,6 @@ void PerfReport::begin_frame(int buffer_id)
 {
     frame_begin_time = current_time();
 
-    auto input_lag = oldest_motion_event ? frame_begin_time - oldest_motion_event : 0;
-    input_lag_sum += input_lag;
-    oldest_motion_event = 0;
-
     if (buffer_end_time.find(buffer_id) != buffer_end_time.end())
     {
         // Estimate page flip (composition finished) time as the time we
@@ -86,14 +82,8 @@ void PerfReport::end_frame(int buffer_id)
         // FPS x 100
         long fps_100 = frame_count * 100000L / interval_ms;
 
-        // Input (motion) events per second
-        long input_events_hz = motion_count * 1000L / interval_ms;
-
         // Frames rendered x 1000
         long frame_count_1000 = frame_count * 1000L;
-
-        // Input lag average in microseconds (input event -> frame begin)
-        long input_lag_avg_usec = input_lag_sum / frame_count_1000;
 
         // Client render time average in microseconds
         long render_time_avg_usec = render_time_sum / frame_count_1000;
@@ -101,33 +91,26 @@ void PerfReport::end_frame(int buffer_id)
         // Buffer queue lag average in microseconds (frame end -> screen)
         long queue_lag_avg_usec = buffer_queue_latency_sum / frame_count_1000;
 
-        // Visible lag in microseconds (input lag + render time + queue lag)
-        long visible_lag_avg_usec = input_lag_avg_usec +
-                                    render_time_avg_usec +
-                                    queue_lag_avg_usec;
+        // Visible lag in microseconds (render time + queue lag)
+        long visible_lag_avg_usec = render_time_avg_usec + queue_lag_avg_usec;
 
         int nbuffers = buffer_end_time.size();
 
         char msg[256];
         snprintf(msg, sizeof msg,
-                 "%s: %2ld.%02ld FPS, input lag %2ld.%02ldms, render %2ld.%02ldms, compositor lag %2ld.%02ldms, visible lag %2ld.%02ldms, %3ldev/s, %d buffers",
+                 "%s: %2ld.%02ld FPS, render %2ld.%02ldms, compositor lag %2ld.%02ldms, visible lag %2ld.%02ldms, %d buffers",
                  nam.c_str(),
                  fps_100 / 100, fps_100 % 100,
-                 // Note: Input lag could go negative with touch prediction
-                 input_lag_avg_usec / 1000, labs(input_lag_avg_usec / 10) % 100,
                  render_time_avg_usec / 1000, (render_time_avg_usec / 10) % 100,
                  queue_lag_avg_usec / 1000, (queue_lag_avg_usec / 10) % 100,
                  visible_lag_avg_usec / 1000, (visible_lag_avg_usec / 10) % 100,
-                 input_events_hz,
                  nbuffers
                  );
         logger->log(mir::logging::Logger::informational, msg, component);
 
         last_report_time = now;
         frame_count = 0;
-        motion_count = 0;
         render_time_sum = 0;
-        input_lag_sum = 0;
         buffer_queue_latency_sum = 0;
 
         // Remove history of old buffer ids
@@ -139,16 +122,6 @@ void PerfReport::end_frame(int buffer_id)
             else
                 ++i;
         }
-    }
-}
-
-void PerfReport::event_received(MirEvent const& e)
-{
-    if (e.type == mir_event_type_motion)
-    {
-        ++motion_count;
-        if (!oldest_motion_event)
-            oldest_motion_event = e.motion.event_time;
     }
 }
 

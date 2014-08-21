@@ -19,8 +19,6 @@
 #ifndef MIR_CLIENT_PERF_REPORT_H_
 #define MIR_CLIENT_PERF_REPORT_H_
 
-#include "mir_toolkit/event.h"
-
 namespace mir
 {
 namespace client
@@ -33,7 +31,6 @@ public:
     virtual void name(char const*) = 0;
     virtual void begin_frame(int buffer_id) = 0;
     virtual void end_frame(int buffer_id) = 0;
-    virtual void event_received(MirEvent const&) = 0;
 };
 
 class NullPerfReport : public PerfReport
@@ -42,7 +39,6 @@ public:
     virtual void name(char const*) {}
     void begin_frame(int) override {}
     void end_frame(int) override {}
-    void event_received(MirEvent const&) override {}
 };
 
 } // namespace client

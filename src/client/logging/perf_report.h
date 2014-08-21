@@ -41,7 +41,6 @@ public:
     void name(char const* s) override;
     void begin_frame(int buffer_id) override;
     void end_frame(int buffer_id) override;
-    void event_received(MirEvent const&) override;
 private:
     std::shared_ptr<mir::logging::Logger> const logger;
     std::string nam;
@@ -49,11 +48,8 @@ private:
     nsecs_t frame_begin_time = 0;
     nsecs_t frame_end_time = 0;
     nsecs_t render_time_sum = 0;
-    nsecs_t oldest_motion_event = 0;
-    nsecs_t input_lag_sum = 0;
     nsecs_t buffer_queue_latency_sum = 0;
     int frame_count = 0;
-    int motion_count = 0;
 
     std::unordered_map<int,nsecs_t> buffer_end_time;
 };
