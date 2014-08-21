@@ -329,6 +329,8 @@ TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clie
 
         /* Notify the clients that we are done (we only need to set the flag once) */
         server_done.set();
+
+        wait_for_shutdown_client_processes();
     });
 
     /*
