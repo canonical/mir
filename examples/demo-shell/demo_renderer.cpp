@@ -77,12 +77,20 @@ GLuint generate_shadow_corner_texture(float opacity)
     return corner;
 }
 
-GLuint generate_frame_corner_texture(int corner_radius,
+GLuint generate_frame_corner_texture(float corner_radius,
                                      Color const& color,
                                      GLubyte highlight)
 {
     int const height = 256;
-    int const width = height * corner_radius;
+/*
+ * GCC 4.9 with optimizations enabled will generate armhf NEON/VFP instructions
+ * here that are not understood/implemented by Valgrind (but are by hardware),
+ * causing Valgrind to crash:
+ *   eebe 0acc       vcvt.s32.f32    s0, s0, #8
+ * So this clumsy expression below tricks the compiler into not using those
+ * optimized ARM instructions that Valgrind doesn't support yet:
+ */
+    int const width = height / (1.0f / corner_radius);
     Color image[height * height]; // Worst case still much faster than the heap
 
     int const cx = width;
