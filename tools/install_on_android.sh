@@ -26,19 +26,24 @@ pushd ${BUILD_DIR} > /dev/null
     adb wait-for-device
     adb root
     adb wait-for-device
-    adb shell mkdir -p ${RUN_DIR}
+    adb shell mkdir -p ${RUN_DIR}/udev_recordings
 
     for x in bin/mir_acceptance_tests \
              bin/mir_integration_tests \
              bin/mir_unit_tests \
              lib/libmirclient.so.* \
-             lib/libmirprotobuf.so.* \
-             lib/libmirplatform.so \
+             lib/libmircommon.so.* \
+             lib/libmirplatform.so.* \
              lib/libmirplatformgraphics.so \
              lib/libmirclientplatform.so \
              lib/libmirserver.so.*
     do
         adb push $x ${RUN_DIR}
+    done
+
+    for x in bin/udev_recordings/*
+    do 
+        adb push $x ${RUN_DIR}/udev_recordings
     done
 
     echo "cd ${RUN_DIR};
