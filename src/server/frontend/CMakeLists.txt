@@ -23,8 +23,6 @@ set(
   default_ipc_factory.cpp
   debugging_session_mediator.cpp
   debugging_ipc_factory.cpp
-
-  ${PROTO_HDRS}
 )
 
 add_library(
@@ -34,5 +32,5 @@ add_library(
 )
 
 # Fix build race condition - ensure the protobuf header is built before us.
-add_dependencies(mirfrontend mircommonprotobuf)
+add_dependencies(mirfrontend mirprotobuf)
 
