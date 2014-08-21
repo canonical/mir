@@ -156,25 +156,6 @@ TEST_F(SessionManagerSetup, new_applications_receive_focus)
     EXPECT_EQ(session, new_session);
 }
 
-TEST_F(SessionManagerSetup, create_surface_for_session_forwards_and_then_focuses_session)
-{
-    using namespace ::testing;
-    ON_CALL(surface_coordinator, add_surface(_, _)).WillByDefault(
-       Return(dummy_surface));
-
-    // Once for session creation and once for surface creation
-    {
-        InSequence seq;
-
-        EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Session creation
-        EXPECT_CALL(surface_coordinator, add_surface(_, _)).Times(1);
-        EXPECT_CALL(focus_setter, set_focus_to(_)).Times(1); // Post Surface creation
-    }
-
-    auto session1 = session_manager.open_session(__LINE__, "Weather Report", std::shared_ptr<mf::EventSink>());
-    session_manager.create_surface_for(session1, ms::a_surface());
-}
-
 namespace
 {
 

@@ -132,8 +132,6 @@ struct DebugSessionMediatorTest : public ::testing::Test
         using namespace ::testing;
 
         ON_CALL(*shell, open_session(_, _, _)).WillByDefault(Return(stubbed_session));
-        ON_CALL(*shell, create_surface_for(_, _))
-            .WillByDefault(WithArg<1>(Invoke(stubbed_session.get(), &StubbedDebuggableSession::create_surface)));
     }
 
     MockConnector connector;
@@ -156,8 +154,6 @@ TEST_F(DebugSessionMediatorTest, debug_surface_to_screen_looks_up_appropriate_su
 {
     using namespace testing;
 
-    auto debug_session = std::make_shared<StubbedDebuggableSession>();
-
     mtd::StubBuffer buffer;
     mp::ConnectParameters connect_parameters;
     mp::Connection connection;
@@ -169,7 +165,7 @@ TEST_F(DebugSessionMediatorTest, debug_surface_to_screen_looks_up_appropriate_su
     mir::geometry::Point surface_location;
     surface_location.x = mir::geometry::X{256};
     surface_location.y = mir::geometry::Y{331};
-    debug_session->mock_surface->move_to(surface_location);
+    stubbed_session->mock_surface->move_to(surface_location);
 
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     mp::SurfaceId our_surface{surface_response.id()};
