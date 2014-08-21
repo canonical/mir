@@ -31,8 +31,19 @@ namespace doubles
 {
 struct MockFrontendSurface : public frontend::Surface
 {
-    MockFrontendSurface()
+    MockFrontendSurface(std::shared_ptr<graphics::Buffer> const& buffer, int input_fd)
     {
+        using namespace testing;
+        ON_CALL(*this, client_size())
+            .WillByDefault(Return(geometry::Size()));
+        ON_CALL(*this, pixel_format())
+            .WillByDefault(Return(MirPixelFormat()));
+        ON_CALL(*this, swap_buffers(_, _))
+            .WillByDefault(InvokeArgument<1>(buffer.get()));
+        ON_CALL(*this, supports_input())
+            .WillByDefault(Return(true));
+        ON_CALL(*this, client_input_fd())
+            .WillByDefault(Return(input_fd));
     }
 
     ~MockFrontendSurface() noexcept {}

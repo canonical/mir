@@ -1,3 +1,39 @@
+mir (0.7.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.7.0 (https://launchpad.net/mir/+milestone/0.7.0)
+    - Enhancements:
+      . Test suite: Reworked mechanism to override Mir client functions
+      . Demo shell: Detect custom rendering (decorations) to make it
+        compatible with overlay optimizations (coming soon).
+    - ABI summary: Servers need rebuilding, but clients do not.
+      . mirclient ABI unchanged at 8.
+      . mircommon ABI bumped to 2.
+      . mirplatform ABI bumped to 2.
+      . mirserver ABI bumped to 25.
+    - API changes:
+      . Deleted function - frontend::Shell::create_surface_for(). If you have
+        the std::shared_ptr<frontend::Session> session, you can just do
+        session->create_surface(params) instead to get a SurfaceId.
+    - Bug fixes:
+      . TODO (list bug fixes after 0.7 is branched)
+ 
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 18 Aug 2014 15:30:37 +0800
+
+mir (0.6.1+14.10.20140814-0ubuntu1) utopic; urgency=medium
+
+  [ Daniel van Vugt ]
+  * New upstream release 0.6.1 (https://launchpad.net/mir/+milestone/0.6.1)
+    - Bugs fixed:
+      . libmircommon-dev 0.6.0+14.10.20140811-0ubuntu1 fails to
+        install/upgrade, does not replace mircommon-dev
+        0.5.1+14.10.20140728-0ubuntu1 (LP: #1348515)
+      . Nexus 4 client lock up observed (LP: #1352883)
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 14 Aug 2014 22:34:18 +0000
+
 mir (0.6.0+14.10.20140811-0ubuntu1) utopic; urgency=medium
 
   [ Cemil Azizoglu ]
