@@ -14,6 +14,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ *
+ * XXX This header is only used externally in one location in QtMir. It could
+ *     possibly be made private with only minor changes.
  */
 
 #ifndef MIR_GEOMETRY_RECTANGLES_H_
