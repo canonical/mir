@@ -182,6 +182,27 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to develop against Mir.
 
+Package: libmirclient-debug
+Section: libs
+Architecture: i386 amd64 armhf arm64
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - optional client debug interfaces
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ This package contains both a shared library containing the client side of
+ various optional debugging interfaces and the development headers required
+ to use them.
+ .
+ This is primarily useful for developing Mir servers, low-level client
+ toolkits, or for automated testing in constrained environments.
+ .
+ Interfaces will come and go; end-user applications SHOULD NOT be linked
+ against this library.
+
 Package: libmirclientplatform-mesa
 Section: libs
 Architecture: i386 amd64 armhf arm64

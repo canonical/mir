@@ -1,12 +1,18 @@
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
-set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirclient")
-set(COMMON_INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mircommon")
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirclient.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
+  @ONLY
+)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/mirclient-debug.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/mirclient-debug.pc
+  @ONLY
 )
 
 include_directories(
@@ -105,6 +111,8 @@ install(
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
+# TODO: Extension apparatus so that mirclient-debug can be a MODULE and not
+#       duplicate (almost) the entirity of mirclient
 add_library(
   mirclient-debug SHARED
 
@@ -126,3 +134,19 @@ set_target_properties(
   PROPERTIES
   LINK_FLAGS "-Wl,--version-script,${debug_symbol_map}"
 )
+
+install(
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/debug
+  DESTINATION "include/mirclient-debug"
+)
+
+install(
+  TARGETS mirclient-debug
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient-debug.pc
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+)
+
