@@ -235,7 +235,7 @@ struct SessionMediator : public ::testing::Test
     }
 
     MockConnector connector;
-    MockBufferPacker mock_buffer_packer;
+    testing::NiceMock<MockBufferPacker> mock_buffer_packer;
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<MockPlatform> const graphics_platform;
     std::shared_ptr<mf::DisplayChanger> const graphics_changer;
