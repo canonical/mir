@@ -252,6 +252,7 @@ MIRPLATFORM_2 {
     mir::options::scene_report_opt*;
     mir::options::server_socket_opt*;
     mir::options::session_mediator_report_opt*;
+    mir::options::touchspot_opt*;
     typeinfo?for?mir::AbnormalExit;
     typeinfo?for?mir::EmergencyCleanupRegistry;
     typeinfo?for?mir::FatalErrorStrategy;
