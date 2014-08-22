@@ -147,6 +147,15 @@ void mf::SessionMediator::advance_buffer(
     if (!tracker) tracker = std::make_shared<ClientBufferTracker>(client_buffer_cache_size);
 
     auto& client_buffer = client_buffer_resource[surf_id];
+
+    if (client_buffer)
+    {
+        //TODO: once we are doing an exchange_buffer, we should use the request buffer
+        static mir::protobuf::Buffer dummy_raw_msg;
+        mfd::ProtobufBufferPacker dummy_msg{&dummy_raw_msg, resource_cache};
+        buffer_packer->unpack_buffer(dummy_msg, *client_buffer);
+    }
+
     surface.swap_buffers(client_buffer,
         [&tracker, &client_buffer, complete](mg::Buffer* new_buffer)
         {
@@ -163,7 +172,6 @@ void mf::SessionMediator::advance_buffer(
                 complete(client_buffer, mg::BufferIpcMsgType::update_msg);
         });
 }
-
 
 void mf::SessionMediator::create_surface(
     google::protobuf::RpcController* /*controller*/,
