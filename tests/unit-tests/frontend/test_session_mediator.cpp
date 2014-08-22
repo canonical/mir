@@ -430,18 +430,24 @@ TEST_F(SessionMediator, session_only_sends_mininum_information_for_buffers)
     EXPECT_CALL(mock_buffer_packer, pack_buffer(_, Ref(buffer2), mg::BufferIpcMsgType::full_msg))
         .InSequence(seq);
     //swap1
+    EXPECT_CALL(mock_buffer_packer, unpack_buffer(_, Ref(buffer2)))
+        .InSequence(seq);
     EXPECT_CALL(*surface, swap_buffers(&buffer2, _))
         .InSequence(seq)
         .WillOnce(InvokeArgument<1>(&buffer1));
     EXPECT_CALL(mock_buffer_packer, pack_buffer(_, Ref(buffer1), mg::BufferIpcMsgType::full_msg))
         .InSequence(seq);
     //swap2
+    EXPECT_CALL(mock_buffer_packer, unpack_buffer(_, Ref(buffer1)))
+        .InSequence(seq);
     EXPECT_CALL(*surface, swap_buffers(&buffer1, _))
         .InSequence(seq)
         .WillOnce(InvokeArgument<1>(&buffer2));
     EXPECT_CALL(mock_buffer_packer, pack_buffer(_, Ref(buffer2), mg::BufferIpcMsgType::update_msg))
         .InSequence(seq);
     //swap3
+    EXPECT_CALL(mock_buffer_packer, unpack_buffer(_, Ref(buffer2)))
+        .InSequence(seq);
     EXPECT_CALL(*surface, swap_buffers(&buffer2, _))
         .InSequence(seq)
         .WillOnce(InvokeArgument<1>(&buffer1));
