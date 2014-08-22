@@ -23,7 +23,7 @@
 #include "mir/frontend/connector.h"
 #include "mir/run_mir.h"
 
-#include <gtest/gtest.h>
+#include <boost/throw_exception.hpp>
 
 #include <condition_variable>
 #include <mutex>
@@ -44,7 +44,10 @@ mtf::ServerRunner::ServerRunner() :
 void mtf::ServerRunner::start_server()
 {
     display_server = start_mir_server();
-    ASSERT_TRUE(display_server);
+    if (display_server == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to start server thread"});
+    }
 }
 
 std::string mtf::ServerRunner::new_connection()
@@ -63,7 +66,10 @@ std::string mtf::ServerRunner::new_prompt_connection()
 
 void mtf::ServerRunner::stop_server()
 {
-    ASSERT_TRUE(display_server);
+    if (display_server == nullptr)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error{"stop_server() called without calling start_server()?"});
+    }
     display_server->stop();
 }
 
