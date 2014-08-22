@@ -163,10 +163,18 @@ public:
     MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
 };
 
+class MockBufferPacker : public mg::BufferPacker
+{
+    MOCK_CONST_METHOD3(pack_buffer,
+        void(mg::BufferIPCPacker*, mg::Buffer const&, mg::BufferIpcMsgType));
+    MOCK_CONST_METHOD2(unpack_buffer,
+        void(mg::BufferIPCPacker*, mg::Buffer const&));
+};
+
 class MockPlatform : public mg::Platform
 {
  public:
-    MockPlatform()
+    MockPlatform(std::shared_ptr<mg::BufferPacker> const& packer)
     {
         using namespace testing;
         ON_CALL(*this, create_buffer_allocator(_))
@@ -175,6 +183,8 @@ class MockPlatform : public mg::Platform
             .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
         ON_CALL(*this, get_ipc_package())
             .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
+        ON_CALL(*this, buffer_packer())
+            .WillByDefault(Return(packer));
     }
 
     MOCK_METHOD1(create_buffer_allocator, std::shared_ptr<mg::GraphicBufferAllocator>(std::shared_ptr<mg::BufferInitializer> const&));
@@ -185,8 +195,7 @@ class MockPlatform : public mg::Platform
                      std::shared_ptr<mg::GLConfig> const&));
     MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
     MOCK_METHOD0(create_internal_client, std::shared_ptr<mg::InternalClient>());
-    MOCK_CONST_METHOD3(fill_buffer_package,
-        void(mg::BufferIPCPacker*, mg::Buffer const*, mg::BufferIpcMsgType));
+    MOCK_CONST_METHOD0(create_buffer_packer, std::shared_ptr<mg::BufferPacker>());
     MOCK_CONST_METHOD0(egl_native_display, EGLNativeDisplayType());
 };
 
@@ -204,7 +213,8 @@ struct SessionMediator : public ::testing::Test
 {
     SessionMediator()
         : shell{std::make_shared<testing::NiceMock<mtd::MockShell>>()},
-          graphics_platform{std::make_shared<testing::NiceMock<MockPlatform>>()},
+          graphics_platform{
+              std::make_shared<testing::NiceMock<MockPlatform>>(mt::fake_shared(mock_buffer_packer))},
           graphics_changer{std::make_shared<mtd::NullDisplayChanger>()},
           surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
           report{mr::null_session_mediator_report()},
@@ -224,6 +234,7 @@ struct SessionMediator : public ::testing::Test
     }
 
     MockConnector connector;
+    MockBufferPacker const mock_buffer_packer;
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<MockPlatform> const graphics_platform;
     std::shared_ptr<mf::DisplayChanger> const graphics_changer;
@@ -415,25 +426,25 @@ TEST_F(SessionMediator, session_only_sends_mininum_information_for_buffers)
     EXPECT_CALL(*surface, swap_buffers(_, _))
         .InSequence(seq)
         .WillOnce(InvokeArgument<1>(&buffer2));
-    EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer2, mg::BufferIpcMsgType::full_msg))
+    EXPECT_CALL(mock_buffer_packer, pack_buffer(_, &buffer2, mg::BufferIpcMsgType::full_msg))
         .InSequence(seq);
     //swap1
     EXPECT_CALL(*surface, swap_buffers(&buffer2, _))
         .InSequence(seq)
         .WillOnce(InvokeArgument<1>(&buffer1));
-    EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer1, mg::BufferIpcMsgType::full_msg))
+    EXPECT_CALL(mock_buffer_packer, pack_buffer(_, &buffer1, mg::BufferIpcMsgType::full_msg))
         .InSequence(seq);
     //swap2
     EXPECT_CALL(*surface, swap_buffers(&buffer1, _))
         .InSequence(seq)
         .WillOnce(InvokeArgument<1>(&buffer2));
-    EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer2, mg::BufferIpcMsgType::update_msg))
+    EXPECT_CALL(mock_buffer_packer, pack_buffer(_, &buffer2, mg::BufferIpcMsgType::update_msg))
         .InSequence(seq);
     //swap3
     EXPECT_CALL(*surface, swap_buffers(&buffer2, _))
         .InSequence(seq)
         .WillOnce(InvokeArgument<1>(&buffer1));
-    EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer1, mg::BufferIpcMsgType::update_msg))
+    EXPECT_CALL(mock_buffer_packer, pack_buffer(_, &buffer1, mg::BufferIpcMsgType::update_msg))
         .InSequence(seq);
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
@@ -477,9 +488,9 @@ TEST_F(SessionMediator, session_with_multiple_surfaces_only_sends_needed_buffers
     mp::Surface surface_response[2];
     mp::Buffer buffer_response[6];
 
-    EXPECT_CALL(*graphics_platform, fill_buffer_package(_,_,mg::BufferIpcMsgType::full_msg))
+    EXPECT_CALL(mock_buffer_packer, pack_buffer(_,_,mg::BufferIpcMsgType::full_msg))
         .Times(4);
-    EXPECT_CALL(*graphics_platform, fill_buffer_package(_,_,mg::BufferIpcMsgType::update_msg))
+    EXPECT_CALL(mock_buffer_packer, pack_buffer(_,_,mg::BufferIpcMsgType::update_msg))
         .Times(4);
 
     mediator.create_surface(nullptr, &surface_parameters, &surface_response[0], null_callback.get());
@@ -602,7 +613,7 @@ TEST_F(SessionMediator, fully_packs_buffer_for_create_screencast)
     mp::Screencast screencast;
     auto const& stub_buffer = stub_screencast->stub_buffer;
 
-    EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &stub_buffer, _));
+    EXPECT_CALL(mock_buffer_packer, pack_buffer(_, &stub_buffer, _));
 
     mediator.create_screencast(nullptr, &screencast_parameters,
                                &screencast, null_callback.get());
@@ -617,8 +628,8 @@ TEST_F(SessionMediator, partially_packs_buffer_for_screencast_buffer)
     mp::Buffer protobuf_buffer;
     auto const& stub_buffer = stub_screencast->stub_buffer;
 
-    EXPECT_CALL(*graphics_platform,
-        fill_buffer_package(
+    EXPECT_CALL(mock_buffer_packer,
+        pack_buffer(
             _, &stub_buffer, mg::BufferIpcMsgType::update_msg))
         .Times(1);
 
