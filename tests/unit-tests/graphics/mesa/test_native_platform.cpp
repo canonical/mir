@@ -24,7 +24,7 @@
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/stub_buffer.h"
-#include "mir_test_doubles/mock_buffer_packer.h"
+#include "mir_test_doubles/mock_buffer_ipc_message.h"
 #include "mir_test_doubles/fd_matcher.h"
 
 #include <gtest/gtest.h>

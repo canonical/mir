@@ -19,13 +19,14 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/event_handler_register.h"
+#include "mir/graphics/buffer_ipc_packer.h"
 #include "src/platform/graphics/mesa/platform.h"
 #include "src/platform/graphics/mesa/internal_client.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/emergency_cleanup_registry.h"
 
 #include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_buffer_packer.h"
+#include "mir_test_doubles/mock_buffer_ipc_message.h"
 #include "mir_test_doubles/platform_factory.h"
 #include "mir_test_doubles/mock_virtual_terminal.h"
 #include "mir_test_doubles/null_virtual_terminal.h"
@@ -184,8 +185,9 @@ TEST_F(MesaGraphicsPlatform, test_ipc_data_packed_correctly)
     EXPECT_CALL(mock_packer, pack_size(testing::_))
         .Times(Exactly(1));
 
-    platform->fill_buffer_package(&mock_packer, &mock_buffer, mg::BufferIpcMsgType::full_msg);
-    platform->fill_buffer_package(&mock_packer, &mock_buffer, mg::BufferIpcMsgType::update_msg);
+    auto packer = platform->create_buffer_packer();
+    packer->pack_buffer(mock_packer, mock_buffer, mg::BufferIpcMsgType::full_msg);
+    packer->pack_buffer(mock_packer, mock_buffer, mg::BufferIpcMsgType::update_msg);
 }
 
 TEST_F(MesaGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)

@@ -76,6 +76,7 @@ mf::SessionMediator::SessionMediator(
     client_pid_(0),
     shell(shell),
     graphics_platform(graphics_platform),
+    buffer_packer(graphics_platform->create_buffer_packer()),
     surface_pixel_formats(surface_pixel_formats),
     display_changer(display_changer),
     report(report),
@@ -618,5 +619,5 @@ void mf::SessionMediator::pack_protobuf_buffer(
     protobuf_buffer.set_buffer_id(graphics_buffer->id().as_uint32_t());
 
     mfd::ProtobufBufferPacker packer{&protobuf_buffer, resource_cache};
-    graphics_platform->fill_buffer_package(&packer, graphics_buffer, buffer_msg_type);
+    buffer_packer->pack_buffer(packer, *graphics_buffer, buffer_msg_type);
 }

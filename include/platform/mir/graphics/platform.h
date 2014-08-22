@@ -53,12 +53,8 @@ class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;
 class GLConfig;
 class GLProgramFactory;
+class BufferIpcPacker;
 
-enum class BufferIpcMsgType
-{
-    full_msg, //pack the full ipc representation of the buffer
-    update_msg //assume the client has a full representation, and pack only updates to the buffer 
-};
 /**
  * \defgroup platform_enablement Mir platform enablement
  *
@@ -103,21 +99,10 @@ public:
     virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
 
     /**
-     * Arranges the IPC package for a buffer that is to be sent through
-     * the frontend. This should be called every time a buffer is to be
-     * sent cross-process.
-     *
-     * The Buffer IPC package will be sent to clients when receiving a buffer.
-     * The implementation must use the provided packer object to perform the packing.
-     *
-     * \param [in] packer   the object providing the packing functionality
-     * \param [in] buffer   the buffer to fill the IPC package for
-     * \param [in] ipc_type what sort of ipc message is needed
+     * Creates an object capable of doing platform specific processing of buffers
+     * before they are sent or after they are recieved accross IPC
      */
-    virtual void fill_buffer_package(
-        BufferIPCPacker* packer,
-        Buffer const* buffer,
-        BufferIpcMsgType msg_type) const = 0;
+    virtual std::shared_ptr<BufferIpcPacker> create_buffer_packer() const = 0;
 
     /**
      * Creates the in-process client support object.

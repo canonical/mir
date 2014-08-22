@@ -19,29 +19,50 @@
 #ifndef MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
 #define MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
 
-#include "mir/geometry/dimensions.h"
-#include "mir/geometry/size.h"
-#include "mir/fd.h"
-
 namespace mir
 {
 namespace graphics
 {
+enum class BufferIpcMsgType
+{
+    full_msg, //pack the full ipc representation of the buffer
+    update_msg //assume the client has a full representation, and pack only updates to the buffer 
+};
+class Buffer;
+class BufferIpcMessage;
 
-class BufferIPCPacker
+class BufferIpcPacker
 {
 public:
-    virtual ~BufferIPCPacker() = default;
-    virtual void pack_fd(Fd const&) = 0;
-    virtual void pack_data(int) = 0;
-    virtual void pack_stride(geometry::Stride) = 0;
-    virtual void pack_flags(unsigned int) = 0;
-    virtual void pack_size(geometry::Size const& size) = 0;
+    virtual ~BufferIpcPacker() = default;
+    /**
+     * Arranges the IPC package for a buffer that is to be sent through
+     * the frontend from server to client. This should be called every
+     * time a buffer is to be sent cross-process.
+     *
+     * The Buffer IPC message will be sent to clients when receiving a buffer.
+     * The implementation must use the provided packer object to perform the packing.
+     *
+     * \param [in] message   the message that will be sent
+     * \param [in] buffer    the buffer to be put in the message
+     * \param [in] ipc_type what sort of ipc message is needed
+     */
+    virtual void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const = 0;
+
+    /**
+     * Arranges the IPC package for a buffer that was sent over IPC
+     * client to server. This must be called every time a buffer is
+     * received, as some platform specific processing has to be done on
+     * the incoming buffer.
+     * \param [in] message   the message that was sent to the server
+     * \param [in] buffer    the buffer associated with the message
+     */
+    virtual void unpack_buffer(BufferIpcMessage& message, Buffer const& buffer) const = 0;
 
 protected:
-    BufferIPCPacker() {}
-    BufferIPCPacker(BufferIPCPacker const&) = delete;
-    BufferIPCPacker& operator=(BufferIPCPacker const&) = delete;
+    BufferIpcPacker() {}
+    BufferIpcPacker(BufferIpcPacker const&) = delete;
+    BufferIpcPacker& operator=(BufferIpcPacker const&) = delete;
 
 };
 

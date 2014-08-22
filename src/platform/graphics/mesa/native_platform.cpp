@@ -21,7 +21,7 @@
 #include "native_platform.h"
 
 #include "buffer_allocator.h"
-#include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/nested_context.h"
 
@@ -97,25 +97,25 @@ std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client(
     return std::make_shared<mgm::InternalClient>(nd);
 }
 
-/* TODO : this is just a duplication of mgm::Platform::fill_buffer_package */
+/* TODO : this is just a duplication of mgm::BufferPacker::pack_buffer */
 void mgm::NativePlatform::fill_buffer_package(
-    BufferIPCPacker* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const
+    BufferIpcMessage* message, Buffer const* buffer, BufferIpcMsgType msg_type) const
 {
     if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
         auto native_handle = buffer->native_buffer_handle();
         for(auto i=0; i<native_handle->data_items; i++)
         {
-            packer->pack_data(native_handle->data[i]);
+            message->pack_data(native_handle->data[i]);
         }
         for(auto i=0; i<native_handle->fd_items; i++)
         {
-            packer->pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
+            message->pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
         }
 
-        packer->pack_stride(buffer->stride());
-        packer->pack_flags(native_handle->flags);
-        packer->pack_size(buffer->size());
+        message->pack_stride(buffer->stride());
+        message->pack_flags(native_handle->flags);
+        message->pack_size(buffer->size());
     }
 }
 

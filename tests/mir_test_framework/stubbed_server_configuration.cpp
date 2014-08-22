@@ -21,6 +21,7 @@
 
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/cursor.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
@@ -134,6 +135,40 @@ class StubCursor : public mg::Cursor
     void move_to(geom::Point) override {}
 };
 
+class StubPacker : public mg::BufferIpcPacker
+{
+    void pack_buffer(
+        mg::BufferIpcMessage& message,
+        mg::Buffer const& buffer,
+        mg::BufferIpcMsgType msg_type) const override
+    {
+        if (msg_type == mg::BufferIpcMsgType::full_msg)
+        {
+#ifndef ANDROID
+            auto native_handle = buffer.native_buffer_handle();
+            for(auto i=0; i<native_handle->data_items; i++)
+            {
+                message.pack_data(native_handle->data[i]);
+            }
+            for(auto i=0; i<native_handle->fd_items; i++)
+            {
+                using namespace mir;
+                message.pack_fd(Fd(IntOwnedFd{native_handle->fd[i]}));
+            }
+
+            message.pack_flags(native_handle->flags);
+#endif
+            message.pack_stride(buffer.stride());
+            message.pack_size(buffer.size());
+        }
+    }
+
+    void unpack_buffer(
+        mg::BufferIpcMessage&, mg::Buffer const&) const override
+    {
+    }
+};
+
 class StubGraphicPlatform : public mtd::NullPlatform
 {
 public:
@@ -148,28 +183,9 @@ public:
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    void fill_buffer_package(
-        mg::BufferIPCPacker* packer, mg::Buffer const* buffer, mg::BufferIpcMsgType msg_type) const override
+    std::shared_ptr<mg::BufferIpcPacker> create_buffer_packer() const override
     {
-        if (msg_type == mg::BufferIpcMsgType::full_msg)
-        {
-#ifndef ANDROID
-            auto native_handle = buffer->native_buffer_handle();
-            for(auto i=0; i<native_handle->data_items; i++)
-            {
-                packer->pack_data(native_handle->data[i]);
-            }
-            for(auto i=0; i<native_handle->fd_items; i++)
-            {
-                using namespace mir;
-                packer->pack_fd(Fd(IntOwnedFd{native_handle->fd[i]}));
-            }
-
-            packer->pack_flags(native_handle->flags);
-#endif
-            packer->pack_stride(buffer->stride());
-            packer->pack_size(buffer->size());
-        }
+        return std::make_shared<StubPacker>();
     }
 
     std::shared_ptr<mg::Display> create_display(

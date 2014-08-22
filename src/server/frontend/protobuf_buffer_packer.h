@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_
 #define MIR_FRONTEND_PROTOBUF_BUFFER_PACKER_H_
 
-#include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "mir_protobuf.pb.h"
 #include <memory>
 
@@ -38,7 +38,7 @@ namespace detail
 void pack_protobuf_display_configuration(protobuf::DisplayConfiguration& protobuf_config,
                                          graphics::DisplayConfiguration const& display_config);
 
-class ProtobufBufferPacker : public graphics::BufferIPCPacker
+class ProtobufBufferPacker : public graphics::BufferIpcMessage
 {
 public:
     ProtobufBufferPacker(protobuf::Buffer*, std::shared_ptr<MessageResourceCache> const&);

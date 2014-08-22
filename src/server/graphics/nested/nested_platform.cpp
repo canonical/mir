@@ -99,10 +99,28 @@ std::shared_ptr<mg::InternalClient> mgn::NestedPlatform::create_internal_client(
     return native_platform->create_internal_client();
 }
 
-void mgn::NestedPlatform::fill_buffer_package(
-    BufferIPCPacker* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const
+namespace
 {
-    native_platform->fill_buffer_package(packer, buffer, msg_type);
+class BufferPacker : public mg::BufferIpcPacker
+{
+public:
+    BufferPacker(std::shared_ptr<mg::NativePlatform> const& native_platform) :
+        native_platform{native_platform}
+    {}
+    void pack_buffer(
+        mg::BufferIpcMessage& message, mg::Buffer const& buffer, mg::BufferIpcMsgType msg_type) const
+    {
+        native_platform->fill_buffer_package(&message, &buffer, msg_type);
+    }
+    void unpack_buffer(mg::BufferIpcMessage&, mg::Buffer const&) const {}
+private:
+    std::shared_ptr<mg::NativePlatform> const native_platform;
+};
+}
+
+std::shared_ptr<mg::BufferIpcPacker> mgn::NestedPlatform::create_buffer_packer() const
+{
+    return std::make_shared<BufferPacker>(native_platform);
 }
 
 EGLNativeDisplayType mgn::NestedPlatform::egl_native_display() const

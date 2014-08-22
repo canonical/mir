@@ -19,6 +19,8 @@
 #define MIR_GRAPHICS_NATIVE_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/buffer_ipc_message.h"
+#include "mir/graphics/buffer_ipc_packer.h"
 #include <memory>
 #include <functional>
 
@@ -34,7 +36,7 @@ class GraphicBufferAllocator;
 class BufferInitializer;
 class PlatformIPCPackage;
 class InternalClient;
-class BufferIPCPacker;
+class BufferIpcMessage;
 class Buffer;
 class DisplayReport;
 class NestedContext;
@@ -54,7 +56,7 @@ public:
     virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
 
     virtual void fill_buffer_package(
-        BufferIPCPacker* packer,
+        BufferIpcMessage* message,
         Buffer const* buffer,
         BufferIpcMsgType msg_type) const = 0;
 

@@ -23,6 +23,7 @@
 #include "internal_client.h"
 #include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
+#include "buffer_packer.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/option.h"
@@ -182,27 +183,6 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::Platform::get_ipc_package()
     return std::make_shared<MesaPlatformIPCPackage>(drm->get_authenticated_fd());
 }
 
-void mgm::Platform::fill_buffer_package(
-    BufferIPCPacker* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const
-{
-    if (msg_type == mg::BufferIpcMsgType::full_msg)
-    {
-        auto native_handle = buffer->native_buffer_handle();
-        for(auto i=0; i<native_handle->data_items; i++)
-        {
-            packer->pack_data(native_handle->data[i]);
-        }
-        for(auto i=0; i<native_handle->fd_items; i++)
-        {
-            packer->pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
-        }
-
-        packer->pack_stride(buffer->stride());
-        packer->pack_flags(native_handle->flags);
-        packer->pack_size(buffer->size());
-    }
-}
-
 void mgm::Platform::drm_auth_magic(unsigned int magic)
 {
     drm->auth_magic(magic);
@@ -214,6 +194,11 @@ std::shared_ptr<mg::InternalClient> mgm::Platform::create_internal_client()
         internal_native_display = std::make_shared<mgm::InternalNativeDisplay>(get_ipc_package());
     internal_display_clients_present = true;
     return std::make_shared<mgm::InternalClient>(internal_native_display);
+}
+
+std::shared_ptr<mg::BufferIpcPacker> mgm::Platform::create_buffer_packer() const
+{
+    return std::make_shared<mgm::BufferPacker>();
 }
 
 EGLNativeDisplayType mgm::Platform::egl_native_display() const

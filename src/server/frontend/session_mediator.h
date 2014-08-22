@@ -23,6 +23,7 @@
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/graphics/platform.h"
+#include "mir/graphics/buffer_ipc_packer.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
@@ -175,6 +176,7 @@ private:
     pid_t client_pid_;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
+    std::shared_ptr<graphics::BufferIpcPacker> const buffer_packer;
 
     std::vector<MirPixelFormat> const surface_pixel_formats;
 
