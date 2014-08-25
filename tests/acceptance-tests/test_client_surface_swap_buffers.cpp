@@ -19,8 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_framework/basic_client_server_fixture.h"
 #include "mir_test_doubles/null_display_buffer_compositor_factory.h"
 #include "mir_test/signal.h"
 
@@ -43,29 +42,19 @@ struct StubServerConfig : mtf::StubbedServerConfiguration
     }
 };
 
-class MirSurfaceSwapBuffersTest : public mir_test_framework::InProcessServer
-{
-public:
-    mir::DefaultServerConfiguration& server_config() override { return server_config_; }
-
-    StubServerConfig server_config_;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
-};
-
 void swap_buffers_callback(MirSurface*, void* ctx)
 {
     auto buffers_swapped = static_cast<mt::Signal*>(ctx);
     buffers_swapped->raise();
 }
 
+using MirSurfaceSwapBuffersTest = mtf::BasicClientServerFixture<StubServerConfig>;
+
 }
 
 TEST_F(MirSurfaceSwapBuffersTest, swap_buffers_does_not_block_when_surface_is_not_composited)
 {
     using namespace testing;
-
-    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    ASSERT_TRUE(mir_connection_is_valid(connection));
 
     MirSurfaceParameters request_params =
     {
@@ -93,5 +82,4 @@ TEST_F(MirSurfaceSwapBuffersTest, swap_buffers_does_not_block_when_surface_is_no
     }
 
     mir_surface_release_sync(surface);
-    mir_connection_release(connection);
 }

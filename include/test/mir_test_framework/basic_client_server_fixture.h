@@ -22,6 +22,9 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/using_stub_client_platform.h"
+
+#include "boost/throw_exception.hpp"
 
 namespace mir_test_framework
 {
@@ -31,6 +34,7 @@ template<class TestServerConfiguration>
 struct BasicClientServerFixture : InProcessServer
 {
     TestServerConfiguration server_configuration;
+    UsingStubClientPlatform using_stub_client_platform;
 
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
 
@@ -38,6 +42,12 @@ struct BasicClientServerFixture : InProcessServer
     {
         InProcessServer::SetUp();
         connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+        if (!mir_connection_is_valid(connection))
+        {
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error{std::string{"Failed to connect to test server: "} +
+                                   mir_connection_get_error_message(connection)});
+        }
     }
 
     void TearDown()

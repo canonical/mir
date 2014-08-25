@@ -25,7 +25,6 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_id.h"
 
-#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
 #include "mir_test_doubles/stub_renderer.h"
@@ -180,7 +179,6 @@ struct StaleFrames : BasicFixture
     }
 
     MirSurface* surface;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 };
 
 }
