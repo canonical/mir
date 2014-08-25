@@ -10,8 +10,8 @@ configure_file(
 )
 
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/mirclient-debug.pc.in
-  ${CMAKE_CURRENT_BINARY_DIR}/mirclient-debug.pc
+  ${CMAKE_CURRENT_SOURCE_DIR}/mirclient-debug-extension.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/mirclient-debug-extension.pc
   @ONLY
 )
 
@@ -111,17 +111,17 @@ install(
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
-# TODO: Extension apparatus so that mirclient-debug can be a MODULE and not
+# TODO: Extension apparatus so that mirclient-debug-extension can be a MODULE and not
 #       duplicate (almost) the entirity of mirclient
 add_library(
-  mirclient-debug SHARED
+  mirclient-debug-extension SHARED
 
   mir_debug_api.cpp
   $<TARGET_OBJECTS:mirclientobjects>
 )
 
 target_link_libraries(
-  mirclient-debug
+  mirclient-debug-extension
 
   ${MIR_CLIENT_LIBRARIES}
 )
@@ -129,24 +129,24 @@ target_link_libraries(
 set(debug_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-debug.map)
 
 set_target_properties(
-  mirclient-debug
+  mirclient-debug-extension
 
   PROPERTIES
   LINK_FLAGS "-Wl,--version-script,${debug_symbol_map}"
 )
 
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/debug
-  DESTINATION "include/mirclient-debug"
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/debug
+  DESTINATION "include/mirclient/mir_toolkit/debug"
 )
 
 install(
-  TARGETS mirclient-debug
+  TARGETS mirclient-debug-extension
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient-debug.pc
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient-debug-extension.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 

@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "debug/mir_client_library_debug.h"
+#include "mir_toolkit/debug/surface.h"
 
 #include "mir_surface.h"
 

@@ -29,7 +29,7 @@
 #include "mir_test_framework/deferred_in_process_server.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 
-#include "debug/mir_client_library_debug.h"
+#include "mir_toolkit/debug/surface.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

@@ -68,7 +68,7 @@ target_link_libraries(
 
   mirserver
   mirclient
-  mirclient-debug
+  mirclient-debug-extension
   mirplatform
 
   mir-test
