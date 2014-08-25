@@ -210,7 +210,7 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_height(test_height);
         surface_pf = MirPixelFormat(request->pixel_format());
         response->set_pixel_format(request->pixel_format());
-        response->mutable_buffer()->set_buffer_id(client_buffer->id().as_uint32_t());
+        response->mutable_buffer()->set_buffer_id(client_buffer->id().as_value());
 
         auto buf = client_buffer->native_buffer_handle();
         //note about the stride. Mir protocol sends stride in bytes, android uses stride in pixels
@@ -243,7 +243,7 @@ struct StubServerGenerator : public mt::StubServerTool
         std::unique_lock<std::mutex> lk(buffer_mutex);
         std::swap(last_posted, client_buffer);
 
-        response->set_buffer_id(client_buffer->id().as_uint32_t());
+        response->set_buffer_id(client_buffer->id().as_value());
 
         auto buf = client_buffer->native_buffer_handle();
         response->set_fds_on_side_channel(1);
