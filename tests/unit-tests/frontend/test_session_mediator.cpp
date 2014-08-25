@@ -686,8 +686,8 @@ TEST_F(SessionMediator, exchange_buffer)
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
-    EXPECT_THAT(surface_response.buffer().buffer_id(), Eq(stub_buffer1.id().as_uint32_t()));
+    EXPECT_THAT(surface_response.buffer().buffer_id(), Eq(stub_buffer1.id().as_value()));
 
     mediator.exchange_buffer(nullptr, &surface_response.buffer(), &exchanged_buffer, null_callback.get());
-    EXPECT_THAT(exchanged_buffer.buffer_id(), Eq(stub_buffer2.id().as_uint32_t()));
+    EXPECT_THAT(exchanged_buffer.buffer_id(), Eq(stub_buffer2.id().as_value()));
 }

@@ -98,6 +98,14 @@ public:
         mir::protobuf::Buffer* response,
         google::protobuf::Closure* done) override;
 
+    //TODO: this doesn't override anything yet, but once the .proto file is changed,
+    //      add the override specifier
+    void exchange_buffer(
+        google::protobuf::RpcController* controller,
+        mir::protobuf::Buffer const* request,
+        mir::protobuf::Buffer* response,
+        google::protobuf::Closure* done);// override;
+
     void release_surface(google::protobuf::RpcController* controller,
                          const mir::protobuf::SurfaceId*,
                          mir::protobuf::Void*,

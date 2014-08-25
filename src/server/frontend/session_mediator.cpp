@@ -248,6 +248,17 @@ void mf::SessionMediator::next_buffer(
         });
 }
 
+void mf::SessionMediator::exchange_buffer(
+    google::protobuf::RpcController*,
+    mir::protobuf::Buffer const* request,
+    mir::protobuf::Buffer* response,
+    google::protobuf::Closure* done)
+{
+    (void) request;
+    (void) response;
+    (void) done;
+}
+
 void mf::SessionMediator::release_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceId* request,
