@@ -54,6 +54,14 @@ function (mir_discover_tests EXECUTABLE)
       ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} --gtest_list_tests > /dev/null
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       COMMENT "Check that discovering Tests in ${EXECUTABLE} works")
+      
+    if (MIR_BUILD_PLATFORM_ANDROID)
+      add_dependencies(${CHECK_TEST_DISCOVERY_TARGET_NAME} mirplatformgraphicsandroid)
+    endif()
+    
+    if (MIR_BUILD_PLATFORM_MESA)
+      add_dependencies(${CHECK_TEST_DISCOVERY_TARGET_NAME} mirplatformgraphicsmesa)
+    endif()
 
     if (${ARGC} GREATER 1)
       foreach (env ${ARGN})
