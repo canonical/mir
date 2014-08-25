@@ -113,6 +113,9 @@ install(
 
 # TODO: Extension apparatus so that mirclient-debug-extension can be a MODULE and not
 #       duplicate (almost) the entirity of mirclient
+
+set(MIRCLIENT_DEBUG_EXTENSION_ABI 1)
+
 add_library(
   mirclient-debug-extension SHARED
 
@@ -132,6 +135,7 @@ set_target_properties(
   mirclient-debug-extension
 
   PROPERTIES
+  SOVERSION ${MIRCLIENT_DEBUG_EXTENSION_ABI}
   LINK_FLAGS "-Wl,--version-script,${debug_symbol_map}"
 )
 
