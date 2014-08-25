@@ -45,6 +45,7 @@
 #include "mir/fd.h"
 
 #include "mir/geometry/rectangles.h"
+#include "surface_tracker.h"
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
 
@@ -83,7 +84,8 @@ mf::SessionMediator::SessionMediator(
     resource_cache(resource_cache),
     screencast(screencast),
     connection_context(connection_context),
-    cursor_images(cursor_images)
+    cursor_images(cursor_images),
+    surface_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
 
@@ -142,24 +144,14 @@ void mf::SessionMediator::advance_buffer(
     Surface& surface,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    auto& tracker = client_buffer_tracker[surf_id];
-    if (!tracker) tracker = std::make_shared<ClientBufferTracker>(client_buffer_cache_size);
-
-    auto& client_buffer = client_buffer_resource[surf_id];
-    surface.swap_buffers(client_buffer,
-        [&tracker, &client_buffer, complete](mg::Buffer* new_buffer)
+    surface.swap_buffers( 
+        surface_tracker.last_buffer(surf_id),
+        [this, surf_id, complete](mg::Buffer* new_buffer)
         {
-
-            client_buffer = new_buffer;
-            auto id = client_buffer->id();
-            auto need_full_ipc = !tracker->client_has(id);
-            
-            tracker->add(id);
-
-            if (need_full_ipc)
-                complete(client_buffer, mg::BufferIpcMsgType::full_msg);
+            if (surface_tracker.track_buffer(surf_id, new_buffer))
+                complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
-                complete(client_buffer, mg::BufferIpcMsgType::update_msg);
+                complete(new_buffer, mg::BufferIpcMsgType::full_msg);
         });
 }
 
@@ -275,7 +267,7 @@ void mf::SessionMediator::release_surface(
         auto const id = SurfaceId(request->value());
 
         session->destroy_surface(id);
-        client_buffer_tracker.erase(id);
+        surface_tracker.remove_surface(id);
     }
 
     // TODO: We rely on this sending responses synchronously.
