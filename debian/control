@@ -200,8 +200,8 @@ Description: Display server for Ubuntu - optional client debug interfaces
  This is primarily useful for developing Mir servers, low-level client
  toolkits, or for automated testing in constrained environments.
  .
- Interfaces will come and go; end-user applications SHOULD NOT be linked
- against this library.
+ Not all Mir servers have the capability to service these APIs; end-user
+ applications SHOULD NOT depend on this library.
 
 Package: libmirclientplatform-mesa
 Section: libs
