@@ -34,6 +34,7 @@
 #include "mir_test_framework/testing_client_configuration.h"
 #include "mir_test_framework/declarative_placement_strategy.h"
 #include "mir_test_framework/deferred_in_process_server.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -234,6 +235,7 @@ struct TestClientCursorAPI : mtf::DeferredInProcessServer
     
     ServerConfiguration server_configuration{cursor_configured_fence, client_may_exit_fence};
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
+    mtf::UsingStubClientPlatform using_stub_client_platform;
     
     ClientConfig client_config_1{client_name_1, cursor_configured_fence, client_may_exit_fence};
     ClientConfig client_config_2{client_name_2, cursor_configured_fence, client_may_exit_fence};
