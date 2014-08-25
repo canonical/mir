@@ -254,9 +254,28 @@ void mf::SessionMediator::exchange_buffer(
     mir::protobuf::Buffer* response,
     google::protobuf::Closure* done)
 {
-    (void) request;
-    (void) response;
-    (void) done;
+    mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer_id())};
+
+    auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
+    auto const session = weak_session.lock();
+    if (session.get() == nullptr)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto surface_id = surface_tracker.surface_from(buffer_id);
+    auto const& surface = session->get_surface(surface_id);
+    surface->swap_buffers(
+        surface_tracker.buffer_from(buffer_id),
+        [this, surface_id, lock, response, done](mg::Buffer* new_buffer)
+        {
+            lock->unlock();
+
+            if (surface_tracker.track_buffer(surface_id, new_buffer))
+                pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::update_msg);
+            else
+                pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::full_msg);
+
+            done->Run();
+        });
 }
 
 void mf::SessionMediator::release_surface(
