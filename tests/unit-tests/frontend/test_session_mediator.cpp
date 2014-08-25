@@ -664,3 +664,30 @@ TEST_F(SessionMediator, prompt_provider_fds_allocated_by_connector)
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
+
+TEST_F(SessionMediator, exchange_buffer)
+{
+    using namespace testing;
+    auto const& mock_surface = stubbed_session->mock_surface_at(mf::SurfaceId{0});
+    mp::Buffer exchanged_buffer;
+    mtd::StubBuffer stub_buffer1;
+    mtd::StubBuffer stub_buffer2;
+    mg::BufferID id{3};
+
+    //create
+    Sequence seq;
+    EXPECT_CALL(*mock_surface, swap_buffers(_, _))
+        .InSequence(seq)
+        .WillOnce(InvokeArgument<1>(&stub_buffer1));
+    //exchange
+    EXPECT_CALL(*mock_surface, swap_buffers(&stub_buffer1,_))
+        .InSequence(seq)
+        .WillOnce(InvokeArgument<1>(&stub_buffer2));
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
+    EXPECT_THAT(surface_response.buffer().buffer_id(), Eq(stub_buffer1.id().as_uint32_t()));
+
+    mediator.exchange_buffer(nullptr, &surface_response.buffer(), &exchanged_buffer, null_callback.get());
+    EXPECT_THAT(exchanged_buffer.buffer_id(), Eq(stub_buffer2.id().as_uint32_t()));
+}
