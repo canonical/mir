@@ -27,7 +27,7 @@
 #include "mir_test_framework/testing_client_configuration.h"
 
 #include <memory>
-#include <list>
+#include <vector>
 #include <functional>
 
 namespace mir
@@ -60,13 +60,14 @@ public:
     Result shutdown_server_process();
     Result kill_server_process();
     Result wait_for_shutdown_server_process();
+    std::vector<Result> wait_for_shutdown_client_processes();
     void kill_client_processes();
     void terminate_client_processes();
     void run_in_test_process(std::function<void()> const& run_code);
 
 private:
     std::shared_ptr<Process> server_process;
-    std::list<std::shared_ptr<Process>> clients;
+    std::vector<std::shared_ptr<Process>> clients;
 
     bool is_test_process;
     bool server_process_was_started;

@@ -16,13 +16,12 @@ set(
   socket_messenger.cpp
   event_sender.cpp
   surface.cpp
+  surface_tracker.cpp
   unauthorized_display_changer.cpp
   unauthorized_screencast.cpp
   session_credentials.cpp
   default_configuration.cpp
   default_ipc_factory.cpp
-
-  ${PROTO_HDRS}
 )
 
 add_library(
@@ -32,5 +31,5 @@ add_library(
 )
 
 # Fix build race condition - ensure the protobuf header is built before us.
-add_dependencies(mirfrontend mircommonprotobuf)
+add_dependencies(mirfrontend mirprotobuf)
 

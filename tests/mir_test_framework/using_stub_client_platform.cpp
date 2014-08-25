@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/stub_client_connection_configuration.h"
+#include "mir_toolkit/mir_client_library.h"
 #include "src/client/mir_connection_api.h"
 
 namespace mtf = mir_test_framework;
@@ -25,6 +26,10 @@ namespace mcl = mir::client;
 
 namespace
 {
+
+void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
+{
+}
 
 class StubMirConnectionAPI : public mcl::MirConnectionAPI
 {
@@ -45,6 +50,9 @@ public:
 
     void release(MirConnection* connection) override
     {
+        // Clear the lifecycle callback in order not to get SIGTERM by the default
+        // lifecycle handler during connection teardown
+        mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
         return prev_api->release(connection);
     }
 

@@ -26,6 +26,7 @@
 
 #include <memory>
 #include <functional>
+#include <vector>
 
 namespace mir_test_framework
 {
@@ -65,6 +66,7 @@ public:
 
     bool shutdown_server_process();
     Result  wait_for_shutdown_server_process();
+    std::vector<Result> wait_for_shutdown_client_processes();
     bool kill_server_process();
     void kill_client_processes();
     void terminate_client_processes();
