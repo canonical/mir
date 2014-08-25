@@ -429,9 +429,9 @@ TEST_F(SessionMediator, session_only_sends_mininum_information_for_buffers)
     auto surface = stubbed_session->mock_surface_at(surf_id);
     ON_CALL(*surface, swap_buffers(_,_))
         .WillByDefault(Invoke(this, &SessionMediator::toggle_buffers));
-    Sequence seq;
 
     //create
+    Sequence seq;
     EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer2, mg::BufferIpcMsgType::full_msg))
         .InSequence(seq);
     //swap1
@@ -536,7 +536,7 @@ TEST_F(SessionMediator, buffer_resource_for_surface_unaffected_by_other_surfaces
     mediator.next_buffer(nullptr, &new_surface, &buffer_response, null_callback.get());
 
     /* Getting the next buffer of our surface should post the original */
-    EXPECT_CALL(*surface1, swap_buffers(Eq(&buffer), _)).Times(1);
+    EXPECT_CALL(*surface1, swap_buffers(Eq(&buffer),_)).Times(1);
 
     mediator.next_buffer(nullptr, &our_surface, &buffer_response, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
@@ -575,8 +575,9 @@ TEST_F(SessionMediator, display_config_request)
     mf::SessionMediator mediator{
         shell, graphics_platform, mock_display_selector,
         surface_pixel_formats, report,
-        std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, &connector, nullptr};
+        std::make_shared<mtd::NullEventSink>(), resource_cache,
+        std::make_shared<mtd::NullScreencast>(),
+         nullptr, nullptr};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
