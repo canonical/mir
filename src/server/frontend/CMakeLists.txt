@@ -22,8 +22,6 @@ set(
   session_credentials.cpp
   default_configuration.cpp
   default_ipc_factory.cpp
-
-  ${PROTO_HDRS}
 )
 
 add_library(
@@ -33,5 +31,5 @@ add_library(
 )
 
 # Fix build race condition - ensure the protobuf header is built before us.
-add_dependencies(mirfrontend mircommonprotobuf)
+add_dependencies(mirfrontend mirprotobuf)
 
