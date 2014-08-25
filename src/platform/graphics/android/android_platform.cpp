@@ -25,11 +25,12 @@
 #include "internal_client.h"
 #include "output_builder.h"
 #include "hwc_loggers.h"
+#include "buffer_packer.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/buffer_id.h"
-#include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/graphics/display_report.h"
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
@@ -112,8 +113,13 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
+std::shared_ptr<mg::BufferIpcPacker> mga::AndroidPlatform::create_buffer_packer() const
+{
+    return std::make_shared<mga::BufferPacker>();
+}
+
 void mga::AndroidPlatform::fill_buffer_package(
-    BufferIPCPacker* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const
+    BufferIpcMessage* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const
 {
     auto native_buffer = buffer->native_buffer_handle();
 

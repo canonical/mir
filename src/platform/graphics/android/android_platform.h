@@ -49,17 +49,20 @@ public:
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/);
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
     std::shared_ptr<InternalClient> create_internal_client();
-    void fill_buffer_package(
-        BufferIPCPacker* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const;
+    std::shared_ptr<BufferIpcPacker> create_buffer_packer() const override;
     EGLNativeDisplayType egl_native_display() const;
+
+    /* From NativePlatform */
+    void fill_buffer_package(
+        BufferIpcMessage* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const;
 
 private:
     std::shared_ptr<Display> create_fb_backup_display();
 
     void initialize(std::shared_ptr<NestedContext> const& nested_context) override;
 
-    virtual std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator(
-        const std::shared_ptr<BufferInitializer>& buffer_initializer);
+    std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator(
+        std::shared_ptr<BufferInitializer> const& buffer_initializer);
 
     std::shared_ptr<DisplayBuilder> const display_builder;
     std::shared_ptr<DisplayReport> const display_report;
