@@ -435,7 +435,7 @@ TEST_F(BufferQueueTest, async_client_cycles_through_all_buffers)
                 auto handle = client_acquire_async(q);
                 handle->wait_for(std::chrono::seconds(1));
                 ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
-                ids_acquired.insert(handle->id().as_uint32_t());
+                ids_acquired.insert(handle->id().as_value());
                 client_buffers.push_back(handle->buffer());
             }
 
@@ -781,7 +781,7 @@ TEST_F(BufferQueueTest, framedropping_clients_get_all_buffers)
         {
             auto handle = client_acquire_async(q);
             ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
-            ids_acquired.insert(handle->id().as_uint32_t());
+            ids_acquired.insert(handle->id().as_value());
             handle->release_buffer();
         }
 
