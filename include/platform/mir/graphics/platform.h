@@ -45,7 +45,6 @@ namespace graphics
 class BufferIPCPacker;
 class Buffer;
 class Display;
-struct PlatformIPCPackage;
 class BufferInitializer;
 class InternalClient;
 class DisplayReport;
@@ -90,13 +89,6 @@ public:
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLProgramFactory> const& gl_program_factory,
         std::shared_ptr<GLConfig> const& gl_config) = 0;
-
-    /**
-     * Gets the IPC package for the platform.
-     *
-     * The IPC package will be sent to clients when they connect.
-     */
-    virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
 
     /**
      * Creates an object capable of doing platform specific processing of buffers

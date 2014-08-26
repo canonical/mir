@@ -18,10 +18,35 @@
 
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_ipc_message.h"
+#include "mir/graphics/platform_ipc_package.h"
+#include "display_helpers.h"
+#include "drm_close_threadsafe.h"
 #include "buffer_packer.h"
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
+
+namespace
+{
+struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
+{
+    MesaPlatformIPCPackage(int drm_auth_fd)
+    {
+        ipc_fds.push_back(drm_auth_fd);
+    }
+
+    ~MesaPlatformIPCPackage()
+    {
+        if (ipc_fds.size() > 0 && ipc_fds[0] >= 0)
+            mgm::drm_close_threadsafe(ipc_fds[0]);
+    }
+};
+}
+
+mgm::BufferPacker::BufferPacker(std::shared_ptr<helpers::DRMHelper> const& drm) :
+    drm{drm}
+{
+}
 
 void mgm::BufferPacker::pack_buffer(
     mg::BufferIpcMessage& packer, Buffer const& buffer, BufferIpcMsgType msg_type) const
@@ -44,7 +69,7 @@ void mgm::BufferPacker::pack_buffer(
     }
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgm::Platform::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mgm::BufferPacker::get_ipc_package()
 {
     return std::make_shared<MesaPlatformIPCPackage>(drm->get_authenticated_fd());
 }

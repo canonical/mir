@@ -100,7 +100,8 @@ TEST_F(MesaGraphicsPlatform, get_ipc_package)
 
     EXPECT_NO_THROW (
         auto platform = create_platform();
-        auto pkg = platform->get_ipc_package();
+        auto packer = platform->create_buffer_packer();
+        auto pkg = packer->get_ipc_package();
 
         ASSERT_TRUE(pkg.get());
         ASSERT_EQ(std::vector<int32_t>::size_type{1}, pkg->ipc_fds.size());
@@ -294,17 +295,18 @@ TEST_F(MesaGraphicsPlatform, drm_close_not_called_concurrently_on_ipc_package_de
                              Return(0)));
 
     auto platform = create_platform();
+    auto packer = platform->create_buffer_packer();
 
     std::vector<std::thread> threads;
 
     for (unsigned int i = 0; i < num_threads; i++)
     {
         threads.push_back(std::thread{
-            [platform]
+            [packer]
             {
                 for (unsigned int i = 0; i < num_iterations; i++)
                 {
-                    platform->get_ipc_package();
+                    packer->get_ipc_package();
                 }
             }});
     }

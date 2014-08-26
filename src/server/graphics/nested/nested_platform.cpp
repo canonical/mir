@@ -89,11 +89,6 @@ std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(
         connection, dispatcher, display_report, conf_policy, gl_config);
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgn::NestedPlatform::get_ipc_package()
-{
-    return native_platform->get_ipc_package();
-}
-
 std::shared_ptr<mg::InternalClient> mgn::NestedPlatform::create_internal_client()
 {
     return native_platform->create_internal_client();
@@ -113,6 +108,11 @@ public:
         native_platform->fill_buffer_package(&message, &buffer, msg_type);
     }
     void unpack_buffer(mg::BufferIpcMessage&, mg::Buffer const&) const {}
+
+    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
+    {
+        return native_platform->get_ipc_package();
+    }
 private:
     std::shared_ptr<mg::NativePlatform> const native_platform;
 };

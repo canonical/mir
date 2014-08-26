@@ -25,9 +25,9 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir_toolkit/common.h"
+#include "surface_tracker.h"
 
 #include <functional>
-#include <unordered_map>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -188,8 +188,7 @@ private:
     ConnectionContext const connection_context;
     std::shared_ptr<input::CursorImages> const cursor_images;
 
-    std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
-    std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
+    SurfaceTracker surface_tracker;
 
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;

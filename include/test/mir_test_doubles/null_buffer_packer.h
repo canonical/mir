@@ -33,8 +33,12 @@ class NullBufferPacker : public graphics::BufferIpcPacker
     void pack_buffer(graphics::BufferIpcMessage&, graphics::Buffer const&, graphics::BufferIpcMsgType) const override
     {
     }
-    virtual void unpack_buffer(graphics::BufferIpcMessage&, graphics::Buffer const&) const override
+    void unpack_buffer(graphics::BufferIpcMessage&, graphics::Buffer const&) const override
     {
+    }
+    std::shared_ptr<graphics::PlatformIPCPackage> get_ipc_package() override
+    {
+        return std::make_shared<graphics::PlatformIPCPackage>();
     }
 };
 }

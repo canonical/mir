@@ -112,7 +112,10 @@ struct FakeCommandLine
 struct NativePlatformAdapter : mg::NativePlatform
 {
     NativePlatformAdapter(std::shared_ptr<mg::Platform> const& adaptee) :
-        adaptee(adaptee) {}
+        adaptee(adaptee),
+        packer(adaptee->create_buffer_packer())
+    {
+    }
 
     void initialize(std::shared_ptr<mg::NestedContext> const& /*nested_context*/) override {}
 
@@ -133,14 +136,15 @@ struct NativePlatformAdapter : mg::NativePlatform
     }
 
     void fill_buffer_package(
-        mg::BufferIPCPacker* packer,
+        mg::BufferIpcMessage* message,
         mg::Buffer const* buffer,
         mg::BufferIpcMsgType msg_type) const override
     {
-        return adaptee->fill_buffer_package(packer, buffer, msg_type);
+        return packer->pack_buffer(*message, *buffer, msg_type);
     }
 
     std::shared_ptr<mg::Platform> const adaptee;
+    std::shared_ptr<mg::BufferIpcPacker> const packer;
 };
 
 struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener

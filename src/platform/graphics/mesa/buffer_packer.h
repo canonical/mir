@@ -20,19 +20,25 @@
 #define MIR_GRAPHICS_MESA_BUFFER_PACKER_H_
 
 #include "mir/graphics/buffer_ipc_packer.h"
-
 namespace mir
 {
 namespace graphics
 {
 namespace mesa
 {
+namespace helpers
+{
+class DRMHelper;
+}
 class BufferPacker : public BufferIpcPacker
 {
 public:
+    BufferPacker(std::shared_ptr<helpers::DRMHelper> const&);
     void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const override;
     void unpack_buffer(BufferIpcMessage& message, Buffer const& buffer) const override;
     std::shared_ptr<PlatformIPCPackage> get_ipc_package() override;
+private:
+    std::shared_ptr<helpers::DRMHelper> const drm;
 };
 }
 }

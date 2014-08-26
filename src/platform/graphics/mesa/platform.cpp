@@ -24,13 +24,11 @@
 #include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
 #include "buffer_packer.h"
-#include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/option.h"
 #include "mir/graphics/native_buffer.h"
 #include "mir/emergency_cleanup_registry.h"
 
-#include "drm_close_threadsafe.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -46,20 +44,6 @@ namespace
 {
 char const* bypass_option_name{"bypass"};
 char const* vt_option_name{"vt"};
-
-struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
-{
-    MesaPlatformIPCPackage(int drm_auth_fd)
-    {
-        ipc_fds.push_back(drm_auth_fd);
-    }
-
-    ~MesaPlatformIPCPackage()
-    {
-        if (ipc_fds.size() > 0 && ipc_fds[0] >= 0)
-            mgm::drm_close_threadsafe(ipc_fds[0]);
-    }
-};
 
 struct RealVTFileOperations : public mgm::VTFileOperations
 {
@@ -178,11 +162,6 @@ std::shared_ptr<mg::Display> mgm::Platform::create_display(
         listener);
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgm::Platform::get_ipc_package()
-{
-    return std::make_shared<MesaPlatformIPCPackage>(drm->get_authenticated_fd());
-}
-
 void mgm::Platform::drm_auth_magic(unsigned int magic)
 {
     drm->auth_magic(magic);
@@ -190,15 +169,16 @@ void mgm::Platform::drm_auth_magic(unsigned int magic)
 
 std::shared_ptr<mg::InternalClient> mgm::Platform::create_internal_client()
 {
+    auto packer = create_buffer_packer();
     if (!internal_native_display)
-        internal_native_display = std::make_shared<mgm::InternalNativeDisplay>(get_ipc_package());
+        internal_native_display = std::make_shared<mgm::InternalNativeDisplay>(packer->get_ipc_package());
     internal_display_clients_present = true;
     return std::make_shared<mgm::InternalClient>(internal_native_display);
 }
 
 std::shared_ptr<mg::BufferIpcPacker> mgm::Platform::create_buffer_packer() const
 {
-    return std::make_shared<mgm::BufferPacker>();
+    return std::make_shared<mgm::BufferPacker>(drm);
 }
 
 EGLNativeDisplayType mgm::Platform::egl_native_display() const

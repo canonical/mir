@@ -19,6 +19,8 @@
 #ifndef MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
 #define MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
 
+#include <memory>
+
 namespace mir
 {
 namespace graphics
@@ -30,6 +32,7 @@ enum class BufferIpcMsgType
 };
 class Buffer;
 class BufferIpcMessage;
+struct PlatformIPCPackage;
 
 class BufferIpcPacker
 {
@@ -58,6 +61,13 @@ public:
      * \param [in] buffer    the buffer associated with the message
      */
     virtual void unpack_buffer(BufferIpcMessage& message, Buffer const& buffer) const = 0;
+
+    /**
+     * Gets the connection package for the platform.
+     *
+     * The IPC package will be sent to clients when they connect.
+     */
+    virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
 
 protected:
     BufferIpcPacker() {}
