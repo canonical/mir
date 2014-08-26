@@ -28,6 +28,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/input/cursor_images.h"
+#include "mir/graphics/buffer_ipc_packer.h"
 #include "src/server/scene/basic_surface.h"
 #include "mir_test_doubles/mock_display.h"
 #include "mir_test_doubles/mock_display_changer.h"
@@ -43,7 +44,6 @@
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_screencast.h"
-#include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test/display_config_matchers.h"
 #include "mir_test/fake_shared.h"
 #include "mir/frontend/connector.h"
@@ -102,6 +102,15 @@ public:
     int client_socket_fd() const override { return 0; }
 
     MOCK_CONST_METHOD1(client_socket_fd, int (std::function<void(std::shared_ptr<mf::Session> const&)> const&));
+};
+
+struct MockBufferPacker : public mg::BufferIpcPacker
+{
+    MOCK_CONST_METHOD3(pack_buffer,
+        void(mg::BufferIpcMessage&, mg::Buffer const&, mg::BufferIpcMsgType));
+    MOCK_CONST_METHOD2(unpack_buffer,
+        void(mg::BufferIpcMessage&, mg::Buffer const&));
+    MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
 };
 
 class StubbedSession : public mtd::StubSession
@@ -230,7 +239,7 @@ struct SessionMediator : public ::testing::Test
     }
 
     MockConnector connector;
-    testing::NiceMock<mtd::MockBufferPacker> mock_buffer_packer;
+    testing::NiceMock<MockBufferPacker> mock_buffer_packer;
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
     std::shared_ptr<MockPlatform> const graphics_platform;
     std::shared_ptr<mf::DisplayChanger> const graphics_changer;
