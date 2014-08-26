@@ -106,6 +106,12 @@ public:
 
 struct MockBufferPacker : public mg::BufferIpcPacker
 {
+    MockBufferPacker()
+    {
+        using namespace testing;
+        ON_CALL(*this, get_ipc_package())
+            .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
+    }
     MOCK_CONST_METHOD3(pack_buffer,
         void(mg::BufferIpcMessage&, mg::Buffer const&, mg::BufferIpcMsgType));
     MOCK_CONST_METHOD2(unpack_buffer,
