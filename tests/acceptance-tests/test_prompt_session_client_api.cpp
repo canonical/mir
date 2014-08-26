@@ -28,6 +28,7 @@
 #include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test/popen.h"
 
 #include <gtest/gtest.h>
@@ -141,6 +142,7 @@ struct PromptSessionClientAPI : mtf::InProcessServer
     std::shared_ptr<mf::Session> application_session;
 
     std::shared_ptr<ms::PromptSession> server_prompt_session;
+    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     void SetUp() override
     {

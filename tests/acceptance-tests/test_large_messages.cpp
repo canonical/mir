@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test/wait_object.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_display_configuration.h"
@@ -66,6 +67,8 @@ struct LargeMessages : mir_test_framework::InProcessServer
     {
         return large_messages_server_config;
     }
+
+    mir_test_framework::UsingStubClientPlatform using_stub_client_platform;
 };
 
 struct ConnectionContext
