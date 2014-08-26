@@ -24,6 +24,7 @@
 
 using namespace mir;
 using namespace mir::examples;
+using namespace mir::geometry;
 
 namespace
 {
@@ -76,7 +77,7 @@ GLuint generate_shadow_corner_texture(float opacity)
     return corner;
 }
 
-GLuint generate_frame_corner_texture(float corner_radius,
+GLuint generate_frame_corner_texture(int corner_radius,
                                      Color const& color,
                                      GLubyte highlight)
 {
@@ -138,13 +139,17 @@ GLuint generate_frame_corner_texture(float corner_radius,
 
 DemoRenderer::DemoRenderer(
     graphics::GLProgramFactory const& program_factory,
-    geometry::Rectangle const& display_area,
-    compositor::DestinationAlpha dest_alpha)
-    : GLRenderer(program_factory,
+    Rectangle const& display_area,
+    compositor::DestinationAlpha dest_alpha,
+    float const titlebar_height,
+    float const shadow_radius) :
+    GLRenderer(program_factory,
         std::unique_ptr<graphics::GLTextureCache>(new compositor::RecentlyUsedCache()),
         display_area,
-        dest_alpha)
-    , corner_radius(0.5f)
+        dest_alpha),
+    titlebar_height{titlebar_height},
+    shadow_radius{shadow_radius},
+    corner_radius{0.5f}
 {
     shadow_corner_tex = generate_shadow_corner_texture(0.4f);
     titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
@@ -177,8 +182,8 @@ void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
                               graphics::Renderable const& renderable) const
 {
     GLRenderer::tessellate(primitives, renderable);
-    tessellate_shadow(primitives, renderable, 80.0f);
-    tessellate_frame(primitives, renderable, 30.0f);
+    tessellate_shadow(primitives, renderable, shadow_radius);
+    tessellate_frame(primitives, renderable, titlebar_height);
 }
 
 void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primitives,
@@ -303,3 +308,30 @@ void DemoRenderer::tessellate_frame(std::vector<graphics::GLPrimitive>& primitiv
     titlebar.vertices[3] = {{inleft,  top,  0.0f}, {1.0f, 1.0f}};
 }
 
+bool DemoRenderer::would_embellish(
+    graphics::Renderable const& renderable,
+    Rectangle const& display_area) const
+{
+    auto const& window = renderable.screen_position();
+    Height const full_height{2*shadow_radius + titlebar_height + window.size.height.as_int()}; 
+    Width const side_trim{shadow_radius};
+    Y const topmost_y{window.top_left.y.as_int() - shadow_radius - titlebar_height};
+    X const leftmost_x{window.top_left.x.as_int() - shadow_radius};
+    Rectangle const left{
+        Point{leftmost_x, topmost_y},
+        Size{side_trim, full_height}};
+    Rectangle const right{
+        Point{window.top_right().x, topmost_y},
+        Size{side_trim, full_height}};
+    Rectangle const bottom{
+        window.bottom_left(),
+        Size{window.size.width.as_int(), shadow_radius}};
+    Rectangle const top{
+        Point{window.top_left.x, topmost_y},
+        Size{window.size.width.as_int(), shadow_radius + titlebar_height}};
+
+    return (display_area.overlaps(left) ||
+            display_area.overlaps(right) ||
+            display_area.overlaps(top) ||
+            display_area.overlaps(bottom));
+}
