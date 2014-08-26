@@ -66,6 +66,7 @@ private:
 
     std::shared_ptr<DisplayBuilder> const display_builder;
     std::shared_ptr<DisplayReport> const display_report;
+    std::shared_ptr<BufferIpcPacker> const buffer_packer;
 };
 
 }
