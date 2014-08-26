@@ -127,7 +127,7 @@ struct NativePlatformAdapter : mg::NativePlatform
 
     std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package() override
     {
-        return adaptee->get_ipc_package();
+        return packer->get_ipc_package();
     }
 
     std::shared_ptr<mg::InternalClient> create_internal_client() override
