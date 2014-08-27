@@ -132,7 +132,7 @@ void report_exception_at_driver_boundary(std::exception const& e)
 }
 
 mga::MirNativeWindow::MirNativeWindow(std::shared_ptr<AndroidDriverInterpreter> const& interpreter)
- : driver_interpreter(interpreter)
+ : driver_interpreter(interpreter), sync_ops(std::make_shared<mga::RealSyncFileOps>())
 {
     ANativeWindow::query = &query_static;
     ANativeWindow::perform = &perform_static;
@@ -168,11 +168,20 @@ int mga::MirNativeWindow::setSwapInterval(int interval)
 int mga::MirNativeWindow::dequeueBuffer(struct ANativeWindowBuffer** buffer_to_driver, int* fence_fd)
 try
 {
-    auto buffer = driver_interpreter->driver_requests_buffer();
+    if (cancelled_buffers.size() != 0)
+    {
+        *buffer_to_driver = cancelled_buffers.back();
+        cancelled_buffers.pop_back();
+        *fence_fd = -1; //no fence associated with cancelled buffers
+    }
+    else
+    {
+        auto buffer = driver_interpreter->driver_requests_buffer();
 
-    //EGL driver is responsible for closing this native handle
-    *fence_fd = buffer->copy_fence();
-    *buffer_to_driver = buffer->anwb();
+        //EGL driver is responsible for closing this native handle
+        *fence_fd = buffer->copy_fence();
+        *buffer_to_driver = buffer->anwb();
+    }
     return 0;
 }
 catch (std::exception const& e)
@@ -184,9 +193,17 @@ catch (std::exception const& e)
 int mga::MirNativeWindow::dequeueBufferAndWait(struct ANativeWindowBuffer** buffer_to_driver)
 try
 {
-    auto buffer = driver_interpreter->driver_requests_buffer();
-    *buffer_to_driver = buffer->anwb();
-    buffer->ensure_available_for(mga::BufferAccess::write);
+    if (cancelled_buffers.size() != 0)
+    {
+        *buffer_to_driver = cancelled_buffers.back();
+        cancelled_buffers.pop_back();
+    }
+    else
+    {
+        auto buffer = driver_interpreter->driver_requests_buffer();
+        *buffer_to_driver = buffer->anwb();
+        buffer->ensure_available_for(mga::BufferAccess::write);
+    }
     return 0;
 }
 catch (std::exception const& e)
@@ -210,7 +227,10 @@ catch (std::exception const& e)
 int mga::MirNativeWindow::cancelBuffer(struct ANativeWindowBuffer* buffer, int fence)
 try
 {
-    driver_interpreter->driver_returns_buffer(buffer, fence);
+    mga::SyncFence sync_fence(sync_ops, mir::Fd(fence));
+    sync_fence.wait();
+
+    cancelled_buffers.push_back(buffer);
     return 0;
 }
 catch (std::exception const& e)
