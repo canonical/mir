@@ -6,7 +6,7 @@ If the device is crashing or hanging in a mir library when you try to start unit
 
 ##Mir Tests##
 The android platform of Mir has a variety of tests and tools that help the Mir team troubleshoot
-new devices. There are thousands of tests, but certain tests exercise the driver and have proven useful in diagnosing driver problems.
+new devices. There are thousands of tests, but certain tests exercise the driver and have proven useful in diagnosing driver problems. These tests are available in the 'mir-test-tools' debian package.
 
 ###Mir Client Software Rendering###
 
@@ -35,7 +35,7 @@ This will test that mir can access the gralloc module and allocate GPU buffers.
 Mir Demos
 ---------
 The mir team ships certain demos that are useful for developing and improving mir, as they operate with 
-less complexity than the full unity stack.
+less complexity than the full unity stack. These are available in the 'mir-demos' debian package.
 
 ###Visual check of posting to the display using GLES###
 
