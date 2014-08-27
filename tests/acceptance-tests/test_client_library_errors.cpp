@@ -19,6 +19,8 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_debug.h"
 
+#include "src/client/client_platform_factory.h"
+
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/using_stub_client_platform.h"
@@ -45,6 +47,25 @@ class ExceptionThrowingConfiguration : public mtf::StubConnectionConfiguration
     }
 };
 
+class BoobytrappedPlatformFactory : public mir::client::ClientPlatformFactory
+{
+    std::shared_ptr<mir::client::ClientPlatform>
+    create_client_platform(mir::client::ClientContext* /*context*/) override
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+    }
+};
+
+class BoobytrappedPlatformFactoryConfiguration : public mtf::StubConnectionConfiguration
+{
+    using mtf::StubConnectionConfiguration::StubConnectionConfiguration;
+
+    std::shared_ptr<mir::client::ClientPlatformFactory> the_client_platform_factory() override
+    {
+        return std::make_shared<BoobytrappedPlatformFactory>();
+    }
+};
+
 
 class ClientLibraryErrors : public mtf::InProcessServer
 {
@@ -67,3 +88,12 @@ TEST_F(ClientLibraryErrors, ExceptionInClientConfigurationConstructorGeneratesEr
     EXPECT_THAT(mir_connection_get_error_message(connection), testing::HasSubstr("Ducks!"));
 }
 
+TEST_F(ClientLibraryErrors, ExceptionInPlatformConstructionGeneratesError)
+{
+    mtf::UsingClientPlatform<BoobytrappedPlatformFactoryConfiguration> stubby;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    EXPECT_FALSE(mir_connection_is_valid(connection));
+    EXPECT_THAT(mir_connection_get_error_message(connection), testing::HasSubstr("Ducks!"));
+}
