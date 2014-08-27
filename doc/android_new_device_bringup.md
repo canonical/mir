@@ -4,8 +4,6 @@ Android New Device Bringup {#android_new_device_bringup}
 Mir is a library, and is the building block that unity-system-compositor and unity8 are build upon.
 If the device is crashing or hanging in a mir library when you try to start unity, the information listed below will help the mir team diagnose and fix the issues that are seen.
 
-
-
 ##Mir Tests##
 The android platform of Mir has a variety of tests and tools that help the Mir team troubleshoot
 new devices. There are thousands of tests, but certain tests exercise the driver and have proven useful in diagnosing driver problems.
@@ -34,7 +32,6 @@ This test checks that the display can post content to the screen. It should flas
 
 This will test that mir can access the gralloc module and allocate GPU buffers.
 
-
 Mir Demos
 ---------
 The mir team ships certain demos that are useful for developing and improving mir, as they operate with 
@@ -42,7 +39,7 @@ less complexity than the full unity stack.
 
 ###Visual check of posting to the display using GLES###
 
-        mir_demo_standalone_render_to_fb
+    mir_demo_standalone_render_to_fb
 
 This will use the HWC module to drive the display. The program will display an animation to the screen until the program is stopped with Ctl-C. This program forces HWC to display the OpenGLES 2.0 rendered image without using overlays.
 
@@ -54,7 +51,7 @@ The animation should:
 
 ###Visual check of posting to the display using Overlays###
 
-        mir_demo_standalone_render_to_fb --disable-overlays false
+    mir_demo_standalone_render_to_fb --disable-overlays false
 
 This will use the HWC module to drive the display by displaying overlays.
 The animation should:
@@ -68,11 +65,11 @@ The animation should:
 The demo servers provide a good way to check visually that clients can connect and display to the screen.
 In one terminal, run
 
-        mir_demo_server_shell
+    mir_demo_server_shell
 
 and in another terminal, run
 
-        mir_demo_client_egltriangle
+    mir_demo_client_egltriangle
 
 You should see:
  - an orange triangle smoothly rotating on a purple background on screen
@@ -87,33 +84,33 @@ Mir has a some android specific options for watching HWC. This option is availab
 
 If you run 
 
-        mir_demo_server_shell --hwc-report log
+    mir_demo_server_shell --hwc-report log
 
 You will get output similar to this:
 
-        before prepare():
-         # | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending | 
-         0 | {   0,   0, 512, 512} | {   0,   0, 512, 512} | NONE      | NONE     | 
-         1 | {  80,  80, 592, 592} | {   0,   0, 512, 512} | NONE      | NONE     | 
-         2 | {   0,   0, 768,1280} | {   0,   0, 768,1280} | NONE      | NONE     | 
-        after prepare():
-         # | Type      | 
-         0 | OVERLAY   | 
-         1 | OVERLAY   | 
-         2 | FB_TARGET | 
-        set list():
-         # | handle
-         0 | 0x2183540
-         1 | 0x2183a00
-         2 | 0x202ea40
-        HWC: vsync signal off
-        HWC: display off
+    before prepare():
+     # | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending | 
+     0 | {   0,   0, 512, 512} | {   0,   0, 512, 512} | NONE      | NONE     | 
+     1 | {  80,  80, 592, 592} | {   0,   0, 512, 512} | NONE      | NONE     | 
+     2 | {   0,   0, 768,1280} | {   0,   0, 768,1280} | NONE      | NONE     | 
+    after prepare():
+     # | Type      | 
+     0 | OVERLAY   | 
+     1 | OVERLAY   | 
+     2 | FB_TARGET | 
+    set list():
+     # | handle
+     0 | 0x2183540
+     1 | 0x2183a00
+     2 | 0x202ea40
+    HWC: vsync signal off
+    HWC: display off
 
 This is the list that mir submits to HWC, the decision of hwc (overlay or GLES), and the final handles submitted to HWC during the display post. The vsync signal and the blanking are also logged.
 
 If you run
 
-        mir_demo_standalone_render_overlays --display-report log
+    mir_demo_standalone_render_overlays --display-report log
 
 You will get the EGL configuration that was selected for the framebuffer EGL context, as well as the HWC version. 
 
