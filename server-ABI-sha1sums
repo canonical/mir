@@ -5,8 +5,7 @@ e9e97ba2db4c6aeb269630547bf5a558da17d896  include/platform/mir/graphics/basic_pl
 05c154bbfa81e16795c18f27000711741d5592e0  include/platform/mir/graphics/buffer_basic.h
 54328767ca330ba166160a486bd0688406ab0222  include/platform/mir/graphics/buffer.h
 5875f13f5b029a4b5291e9baec3ae434b72be27c  include/platform/mir/graphics/buffer_id.h
-827cbc0ecbcea21dd794ab4b8119a5710bb266d3  include/platform/mir/graphics/buffer_initializer.h
-d7507a326f8cfcc4707c1eb28cf7b666420f92fb  include/platform/mir/graphics/buffer_ipc_packer.h
+85dc8023406fb8e61ca3c2d602777f8fee7750f1  include/platform/mir/graphics/buffer_ipc_message.h
 748f5c2aab11189aa02c4a89ab900561548e7304  include/platform/mir/graphics/buffer_properties.h
 ffa857f624f1c8cbd50a190107137346fc3204d6  include/platform/mir/graphics/cursor.h
 fe2b5f13ccd3ec6b78d90d3abbb7d88b48238578  include/platform/mir/graphics/cursor_image.h
@@ -29,11 +28,11 @@ f62525771ca2612959ff88498883630458513235  include/platform/mir/graphics/gl_progr
 979d2c1ac723ccef538d9a378228a02b0f173bd7  include/platform/mir/graphics/graphic_buffer_allocator.h
 f90a35371e236a6cfec8e9a8474dbb3305c7621e  include/platform/mir/graphics/internal_client.h
 c9730cac4a3a101f9706ec6f444958abe047fd88  include/platform/mir/graphics/internal_surface.h
-222160aa8176a111ce05711d90a372c38591ccdb  include/platform/mir/graphics/native_platform.h
+677acb202775a0d777a74773ff01391e9ce3405a  include/platform/mir/graphics/native_platform.h
 590572a9d86a9481b4531ad44414c6f76352fe7a  include/platform/mir/graphics/nested_context.h
 27807b8ba288590f3749cfb32512eda4d0de6c7d  include/platform/mir/graphics/overlapping_output_grouping.h
 32c70ee44b8dc9372dec0c54471aa8d831adcb1c  include/platform/mir/graphics/pixel_format_utils.h
-656a7e1ae3b246930431a6174526fbdc2c76649e  include/platform/mir/graphics/platform.h
+7e9e6bbe74d4fda343fefe9b47009a23566af21e  include/platform/mir/graphics/platform.h
 9c7712af84b6fde1970ff802ad2ea78f892c7b7e  include/platform/mir/graphics/platform_ipc_package.h
 15f201741a465de33e55ffc1ea775b507a5be950  include/platform/mir/graphics/renderable.h
 4b640ec72b04cc2de7671afd7c78942fb9e775a7  include/platform/mir/graphics/tessellation_helpers.h
