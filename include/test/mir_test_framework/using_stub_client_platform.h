@@ -33,16 +33,15 @@ namespace mir_test_framework
 class StubMirConnectionAPI : public mcl::MirConnectionAPI
 {
 public:
-    StubMirConnectionAPI(
-        mcl::MirConnectionAPI* prev_api,
-        std::function<std::unique_ptr<mcl::ConnectionConfiguration>(std::string const&)> configuration_factory
-    )
+    StubMirConnectionAPI(mcl::MirConnectionAPI* prev_api,
+                         mcl::ConfigurationFactory factory)
         : prev_api{prev_api},
-          configuration_factory{configuration_factory}
+          factory{factory}
     {
     }
 
     MirWaitHandle* connect(
+        mcl::ConfigurationFactory configuration,
         char const* socket_file,
         char const* name,
         mir_connected_callback callback,
@@ -50,11 +49,11 @@ public:
 
     void release(MirConnection* connection) override;
 
-    std::unique_ptr<mcl::ConnectionConfiguration> configuration(std::string const& socket) override;
+    mcl::ConfigurationFactory configuration_factory() override;
 
 private:
     mcl::MirConnectionAPI* const prev_api;
-    std::function<std::unique_ptr<mcl::ConnectionConfiguration>(std::string const&)> configuration_factory;
+    mcl::ConfigurationFactory factory;
 };
 
 template<class ClientConfig>
@@ -80,8 +79,7 @@ private:
     mir::client::MirConnectionAPI* prev_api;
     std::unique_ptr<mir::client::MirConnectionAPI> stub_api;
 
-    std::function<std::unique_ptr<mir::client::ConnectionConfiguration>(std::string const&)>
-        make_configuration_factory()
+    mcl::ConfigurationFactory make_configuration_factory()
     {
         return [](std::string const& socket) {
             return std::unique_ptr<mir::client::ConnectionConfiguration>{

@@ -30,12 +30,13 @@ void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
 }
 
 MirWaitHandle* mtf::StubMirConnectionAPI::connect(
+        mcl::ConfigurationFactory /*configuration*/,
         char const* socket_file,
         char const* name,
         mir_connected_callback callback,
         void* context)
 {
-    return prev_api->connect(socket_file, name, callback, context);
+    return prev_api->connect(configuration_factory(), socket_file, name, callback, context);
 }
 
 void mtf::StubMirConnectionAPI::release(MirConnection* connection)
@@ -46,8 +47,7 @@ void mtf::StubMirConnectionAPI::release(MirConnection* connection)
     return prev_api->release(connection);
 }
 
-std::unique_ptr<mcl::ConnectionConfiguration>
-mtf::StubMirConnectionAPI::configuration(std::string const& socket)
+mcl::ConfigurationFactory mtf::StubMirConnectionAPI::configuration_factory()
 {
-    return configuration_factory(socket);
+    return factory;
 }
