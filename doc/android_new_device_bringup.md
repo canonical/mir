@@ -41,7 +41,7 @@ less complexity than the full unity stack.
 
     mir_demo_standalone_render_to_fb
 
-This will use the HWC module to drive the display. The program will display an animation to the screen until the program is stopped with Ctl-C. This program forces HWC to display the OpenGLES 2.0 rendered image without using overlays.
+This will use the HWC module to drive the display. The program will display an animation to the screen until the program is stopped with Ctrl-C. This program forces HWC to display the OpenGLES 2.0 rendered image without using overlays.
 
 The animation should:
  - be a black, white, and purple image of the mir space station scrolling on a green background
