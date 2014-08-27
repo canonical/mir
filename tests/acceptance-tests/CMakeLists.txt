@@ -16,6 +16,7 @@ set(
   server_configuration_wrapping.cpp
   clients.cpp
   test_client_library.cpp
+  test_client_library_errors.cpp
   test_client_library_old.cpp
   test_client_surface_events.cpp
   test_command_line_handling.cpp
