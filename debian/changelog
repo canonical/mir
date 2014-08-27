@@ -4,18 +4,45 @@ mir (0.7.0-0ubuntu1) UNRELEASED; urgency=medium
     - Enhancements:
       . Test suite: Reworked mechanism to override Mir client functions
       . Demo shell: Detect custom rendering (decorations) to make it
-        compatible with overlay optimizations (coming soon).
-    - ABI summary: Servers need rebuilding, but clients do not.
-      . mirclient ABI unchanged at 8.
-      . mircommon ABI bumped to 2.
-      . mirplatform ABI bumped to 2.
-      . mirserver ABI bumped to 25.
-    - API changes:
+        compatible with overlay optimizations
+      . Make sure to preserve fd resources until the end of the sending
+        of the message
+      . Add test cases and script for tracking changes to the new ABIs:
+        libmircommon, libmirplatform
+      . Symbols file for libmirplatform
+      . Symbols file for libmircommon
+      . Various improvements to the SessionMediator test
+      . Various build related improvements
+      . Print testcase output during package build
+      . Abort test when InProcessServer startup fails
+      . Link the integration and unit tests against the server objects
+    - ABI summary: Servers need rebuilding, but clients do not
+      . Mirclient ABI unchanged at 8
+      . Mircommon ABI bumped to 1
+      . Mirplatform ABI bumped to 2
+      . Mirserver ABI bumped to 25
+    - API changes
       . Deleted function - frontend::Shell::create_surface_for(). If you have
         the std::shared_ptr<frontend::Session> session, you can just do
-        session->create_surface(params) instead to get a SurfaceId.
+        session->create_surface(params) instead to get a SurfaceId
     - Bug fixes:
-      . TODO (list bug fixes after 0.7 is branched)
+      . Ensure we process lifecycle events before the nested server is torn
+        down (LP: #1353465)
+      . Fix race in InputTestingServerConfiguration (LP: #1354446)
+      . Fix fd leaks in prompt session frontend code and tests (LP: #1353461)
+      . Detect the additional things the demo shell draws on the renderable
+        list and avoid calling the optimized post function if they are being
+        drawn (LP: #1348330)
+      . client: Fix SIGTERM dispatch in our default lifecycle event handler
+        (LP: #1353867)
+      . DemoRenderer: Don't try to create a texture of width zero. 
+        (LP: #1358210)
+      . Fix CI failures (LP: #1358698)
+      . Fix build failure: "variable ‘rc’ set but not used" which happens in
+        release mode when NDEBUG is set (LP: #1358625)
+      . Only enumerate exposed input surfaces to avoid delivering events to
+        occluded surfaces (LP: #1359264)
+      . Android: do not post driver cancelled buffers (LP: #1359406)
  
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 18 Aug 2014 15:30:37 +0800
 
