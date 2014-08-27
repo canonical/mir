@@ -43,12 +43,12 @@ struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
 };
 }
 
-mgm::BufferPacker::BufferPacker(std::shared_ptr<helpers::DRMHelper> const& drm) :
+mgm::IpcOperations::IpcOperations(std::shared_ptr<helpers::DRMHelper> const& drm) :
     drm{drm}
 {
 }
 
-void mgm::BufferPacker::pack_buffer(
+void mgm::IpcOperations::pack_buffer(
     mg::BufferIpcMessage& packer, Buffer const& buffer, BufferIpcMsgType msg_type) const
 {
     if (msg_type == mg::BufferIpcMsgType::full_msg)
@@ -69,11 +69,11 @@ void mgm::BufferPacker::pack_buffer(
     }
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgm::BufferPacker::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::get_ipc_package()
 {
     return std::make_shared<MesaPlatformIPCPackage>(drm->get_authenticated_fd());
 }
 
-void mgm::BufferPacker::unpack_buffer(BufferIpcMessage&, Buffer const&) const
+void mgm::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 {
 }

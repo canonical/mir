@@ -48,7 +48,7 @@ public:
         std::shared_ptr<graphics::GLProgramFactory> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/);
     std::shared_ptr<InternalClient> create_internal_client();
-    std::shared_ptr<BufferIpcPacker> create_buffer_packer() const override;
+    std::shared_ptr<PlatformIpcOperations> create_ipc_operations() const override;
     EGLNativeDisplayType egl_native_display() const;
 
     /* From NativePlatform */
@@ -66,7 +66,7 @@ private:
 
     std::shared_ptr<DisplayBuilder> const display_builder;
     std::shared_ptr<DisplayReport> const display_report;
-    std::shared_ptr<BufferIpcPacker> const buffer_packer;
+    std::shared_ptr<PlatformIpcOperations> const ipc_operations;
 };
 
 }

@@ -20,12 +20,12 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/android/android_native_buffer.h"
-#include "buffer_packer.h"
+#include "ipc_operations.h"
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 
-void mga::BufferPacker::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer, BufferIpcMsgType msg_type) const
+void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer, BufferIpcMsgType msg_type) const
 {
     auto native_buffer = buffer.native_buffer_handle();
 
@@ -51,11 +51,11 @@ void mga::BufferPacker::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer,
     }
 }
 
-void mga::BufferPacker::unpack_buffer(BufferIpcMessage&, Buffer const&) const
+void mga::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 {
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mga::BufferPacker::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mga::IpcOperations::get_ipc_package()
 {
     return std::make_shared<mg::PlatformIPCPackage>();
 }

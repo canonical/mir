@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_BUFFER_PACKER_H_
 #define MIR_GRAPHICS_ANDROID_BUFFER_PACKER_H_
 
-#include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/platform_ipc_operations.h"
 
 namespace mir
 {
@@ -27,7 +27,7 @@ namespace graphics
 {
 namespace android
 {
-class BufferPacker : public BufferIpcPacker
+class IpcOperations : public PlatformIpcOperations
 {
 public:
     void pack_buffer(BufferIpcMessage&, Buffer const&, BufferIpcMsgType) const override;

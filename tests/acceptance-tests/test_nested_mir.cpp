@@ -113,7 +113,7 @@ struct NativePlatformAdapter : mg::NativePlatform
 {
     NativePlatformAdapter(std::shared_ptr<mg::Platform> const& adaptee) :
         adaptee(adaptee),
-        packer(adaptee->create_buffer_packer())
+        ipc_ops(adaptee->create_ipc_operations())
     {
     }
 
@@ -127,7 +127,7 @@ struct NativePlatformAdapter : mg::NativePlatform
 
     std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package() override
     {
-        return packer->get_ipc_package();
+        return ipc_ops->get_ipc_package();
     }
 
     std::shared_ptr<mg::InternalClient> create_internal_client() override
@@ -140,11 +140,11 @@ struct NativePlatformAdapter : mg::NativePlatform
         mg::Buffer const* buffer,
         mg::BufferIpcMsgType msg_type) const override
     {
-        return packer->pack_buffer(*message, *buffer, msg_type);
+        return ipc_ops->pack_buffer(*message, *buffer, msg_type);
     }
 
     std::shared_ptr<mg::Platform> const adaptee;
-    std::shared_ptr<mg::BufferIpcPacker> const packer;
+    std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
 };
 
 struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener

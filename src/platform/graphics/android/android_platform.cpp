@@ -25,7 +25,7 @@
 #include "internal_client.h"
 #include "output_builder.h"
 #include "hwc_loggers.h"
-#include "buffer_packer.h"
+#include "ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/android/native_buffer.h"
@@ -84,7 +84,7 @@ mga::AndroidPlatform::AndroidPlatform(
     std::shared_ptr<mg::DisplayReport> const& display_report)
     : display_builder(display_builder),
       display_report(display_report),
-      buffer_packer(std::make_shared<mga::BufferPacker>())
+      ipc_operations(std::make_shared<mga::IpcOperations>())
 {
 }
 
@@ -114,15 +114,15 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-std::shared_ptr<mg::BufferIpcPacker> mga::AndroidPlatform::create_buffer_packer() const
+std::shared_ptr<mg::PlatformIpcOperations> mga::AndroidPlatform::create_ipc_operations() const
 {
-    return buffer_packer;
+    return ipc_operations;
 }
 
 void mga::AndroidPlatform::fill_buffer_package(
     BufferIpcMessage* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const
 {
-    buffer_packer->pack_buffer(*packer, *buffer, msg_type);
+    ipc_operations->pack_buffer(*packer, *buffer, msg_type);
 }
 
 EGLNativeDisplayType mga::AndroidPlatform::egl_native_display() const

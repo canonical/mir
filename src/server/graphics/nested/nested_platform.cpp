@@ -96,7 +96,7 @@ std::shared_ptr<mg::InternalClient> mgn::NestedPlatform::create_internal_client(
 
 namespace
 {
-class BufferPacker : public mg::BufferIpcPacker
+class BufferPacker : public mg::PlatformIpcOperations
 {
 public:
     BufferPacker(std::shared_ptr<mg::NativePlatform> const& native_platform) :
@@ -118,7 +118,7 @@ private:
 };
 }
 
-std::shared_ptr<mg::BufferIpcPacker> mgn::NestedPlatform::create_buffer_packer() const
+std::shared_ptr<mg::PlatformIpcOperations> mgn::NestedPlatform::create_ipc_operations() const
 {
     return std::make_shared<BufferPacker>(native_platform);
 }

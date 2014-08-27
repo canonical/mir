@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
-#define MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
+#ifndef MIR_GRAPHICS_PLATFORM_IPC_OPERATIONS_H_
+#define MIR_GRAPHICS_PLATFORM_IPC_OPERATIONS_H_
 
 #include <memory>
 
@@ -34,10 +34,10 @@ class Buffer;
 class BufferIpcMessage;
 struct PlatformIPCPackage;
 
-class BufferIpcPacker
+class PlatformIpcOperations
 {
 public:
-    virtual ~BufferIpcPacker() = default;
+    virtual ~PlatformIpcOperations() = default;
     /**
      * Arranges the IPC package for a buffer that is to be sent through
      * the frontend from server to client. This should be called every
@@ -70,9 +70,9 @@ public:
     virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
 
 protected:
-    BufferIpcPacker() {}
-    BufferIpcPacker(BufferIpcPacker const&) = delete;
-    BufferIpcPacker& operator=(BufferIpcPacker const&) = delete;
+    PlatformIpcOperations() {}
+    PlatformIpcOperations(PlatformIpcOperations const&) = delete;
+    PlatformIpcOperations& operator=(PlatformIpcOperations const&) = delete;
 
 };
 

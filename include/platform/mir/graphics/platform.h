@@ -42,7 +42,6 @@ class Option;
 /// the graphics environment.
 namespace graphics
 {
-class BufferIPCPacker;
 class Buffer;
 class Display;
 class BufferInitializer;
@@ -52,7 +51,7 @@ class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;
 class GLConfig;
 class GLProgramFactory;
-class BufferIpcPacker;
+class PlatformIpcOperations;
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -94,7 +93,7 @@ public:
      * Creates an object capable of doing platform specific processing of buffers
      * before they are sent or after they are recieved accross IPC
      */
-    virtual std::shared_ptr<BufferIpcPacker> create_buffer_packer() const = 0;
+    virtual std::shared_ptr<PlatformIpcOperations> create_ipc_operations() const = 0;
 
     /**
      * Creates the in-process client support object.

@@ -20,7 +20,7 @@
 #include "mir_test_framework/command_line_server_configuration.h"
 
 #include "mir/options/default_configuration.h"
-#include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/cursor.h"
 #include "mir/input/input_channel.h"
@@ -135,7 +135,7 @@ class StubCursor : public mg::Cursor
     void move_to(geom::Point) override {}
 };
 
-class StubPacker : public mg::BufferIpcPacker
+class StubIpcOps : public mg::PlatformIpcOperations
 {
     void pack_buffer(
         mg::BufferIpcMessage& message,
@@ -188,9 +188,9 @@ public:
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    std::shared_ptr<mg::BufferIpcPacker> create_buffer_packer() const override
+    std::shared_ptr<mg::PlatformIpcOperations> create_ipc_operations() const override
     {
-        return std::make_shared<StubPacker>();
+        return std::make_shared<StubIpcOps>();
     }
 
     std::shared_ptr<mg::Display> create_display(

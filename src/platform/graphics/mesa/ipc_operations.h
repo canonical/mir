@@ -30,10 +30,10 @@ namespace helpers
 {
 class DRMHelper;
 }
-class BufferPacker : public BufferIpcPacker
+class IpcOperations : public PlatformIpcOperations
 {
 public:
-    BufferPacker(std::shared_ptr<helpers::DRMHelper> const&);
+    IpcOperations(std::shared_ptr<helpers::DRMHelper> const&);
     void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const override;
     void unpack_buffer(BufferIpcMessage& message, Buffer const& buffer) const override;
     std::shared_ptr<PlatformIPCPackage> get_ipc_package() override;

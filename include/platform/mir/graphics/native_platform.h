@@ -20,7 +20,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/buffer_ipc_message.h"
-#include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/platform_ipc_operations.h"
 #include <memory>
 #include <functional>
 

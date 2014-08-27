@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_BUFFER_PACKER_H_
-#define MIR_TEST_DOUBLES_NULL_BUFFER_PACKER_H_
+#ifndef MIR_TEST_DOUBLES_NULL_PLATFORM_IPC_OPERATIONS_H_
+#define MIR_TEST_DOUBLES_NULL_PLATFORM_IPC_OPERATIONS_H_
 
-#include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/platform_ipc_operations.h"
 
 namespace mir
 {
@@ -27,7 +27,7 @@ namespace test
 {
 namespace doubles
 {
-class NullBufferPacker : public graphics::BufferIpcPacker
+class NullPlatformIpcOperations : public graphics::PlatformIpcOperations
 {
  public:
     void pack_buffer(graphics::BufferIpcMessage&, graphics::Buffer const&, graphics::BufferIpcMsgType) const override
@@ -45,4 +45,5 @@ class NullBufferPacker : public graphics::BufferIpcPacker
 }
 } // namespace mir
 
-#endif // MIR_TEST_DOUBLES_NULL_BUFFER_PACKER_
+#endif // MIR_TEST_DOUBLES_NULL_PLATFORM_IPC_OPERATIONS_H_
+
