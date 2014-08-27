@@ -60,7 +60,6 @@ struct ClientLibrary : mir_test_framework::InProcessServer
 {
     mtf::StubbedServerConfiguration server_configuration;
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
-    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     std::set<MirSurface*> surfaces;
     MirConnection* connection = nullptr;
