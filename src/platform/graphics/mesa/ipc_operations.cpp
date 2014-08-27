@@ -21,7 +21,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "display_helpers.h"
 #include "drm_close_threadsafe.h"
-#include "buffer_packer.h"
+#include "ipc_operations.h"
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;

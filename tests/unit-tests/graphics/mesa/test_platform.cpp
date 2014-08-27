@@ -19,7 +19,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/event_handler_register.h"
-#include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/platform_ipc_operations.h"
 #include "src/platform/graphics/mesa/platform.h"
 #include "src/platform/graphics/mesa/internal_client.h"
 #include "src/server/report/null_report_factory.h"
@@ -100,8 +100,8 @@ TEST_F(MesaGraphicsPlatform, get_ipc_package)
 
     EXPECT_NO_THROW (
         auto platform = create_platform();
-        auto packer = platform->create_buffer_packer();
-        auto pkg = packer->get_ipc_package();
+        auto ipc_ops = platform->create_ipc_operations();
+        auto pkg = ipc_ops->get_ipc_package();
 
         ASSERT_TRUE(pkg.get());
         ASSERT_EQ(std::vector<int32_t>::size_type{1}, pkg->ipc_fds.size());
@@ -168,27 +168,27 @@ TEST_F(MesaGraphicsPlatform, test_ipc_data_packed_correctly)
 
     auto platform = create_platform();
 
-    mtd::MockPacker mock_packer;
+    mtd::MockBufferIpcMessage mock_buffer_msg;
     for(auto i=0; i < native_handle->fd_items; i++)
     {
-        EXPECT_CALL(mock_packer, pack_fd(mtd::RawFdMatcher(native_handle->fd[i])))
+        EXPECT_CALL(mock_buffer_msg, pack_fd(mtd::RawFdMatcher(native_handle->fd[i])))
             .Times(Exactly(1));
     }
     for(auto i=0; i < native_handle->data_items; i++)
     {
-        EXPECT_CALL(mock_packer, pack_data(native_handle->data[i]))
+        EXPECT_CALL(mock_buffer_msg, pack_data(native_handle->data[i]))
             .Times(Exactly(1));
     }
-    EXPECT_CALL(mock_packer, pack_stride(dummy_stride))
+    EXPECT_CALL(mock_buffer_msg, pack_stride(dummy_stride))
         .Times(Exactly(1));
-    EXPECT_CALL(mock_packer, pack_flags(testing::_))
+    EXPECT_CALL(mock_buffer_msg, pack_flags(testing::_))
         .Times(Exactly(1));
-    EXPECT_CALL(mock_packer, pack_size(testing::_))
+    EXPECT_CALL(mock_buffer_msg, pack_size(testing::_))
         .Times(Exactly(1));
 
-    auto packer = platform->create_buffer_packer();
-    packer->pack_buffer(mock_packer, mock_buffer, mg::BufferIpcMsgType::full_msg);
-    packer->pack_buffer(mock_packer, mock_buffer, mg::BufferIpcMsgType::update_msg);
+    auto ipc_ops = platform->create_ipc_operations();
+    ipc_ops->pack_buffer(mock_buffer_msg, mock_buffer, mg::BufferIpcMsgType::full_msg);
+    ipc_ops->pack_buffer(mock_buffer_msg, mock_buffer, mg::BufferIpcMsgType::update_msg);
 }
 
 TEST_F(MesaGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
@@ -295,18 +295,18 @@ TEST_F(MesaGraphicsPlatform, drm_close_not_called_concurrently_on_ipc_package_de
                              Return(0)));
 
     auto platform = create_platform();
-    auto packer = platform->create_buffer_packer();
+    auto ipc_ops = platform->create_ipc_operations();
 
     std::vector<std::thread> threads;
 
     for (unsigned int i = 0; i < num_threads; i++)
     {
         threads.push_back(std::thread{
-            [packer]
+            [ipc_ops]
             {
                 for (unsigned int i = 0; i < num_iterations; i++)
                 {
-                    packer->get_ipc_package();
+                    ipc_ops->get_ipc_package();
                 }
             }});
     }

@@ -194,7 +194,7 @@ class MockPlatform : public mg::Platform
             .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
         ON_CALL(*this, get_ipc_package())
             .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
-        ON_CALL(*this, create_buffer_ipc_ops())
+        ON_CALL(*this, create_ipc_operations())
             .WillByDefault(Return(ipc_ops));
     }
 
@@ -206,7 +206,7 @@ class MockPlatform : public mg::Platform
                      std::shared_ptr<mg::GLConfig> const&));
     MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
     MOCK_METHOD0(create_internal_client, std::shared_ptr<mg::InternalClient>());
-    MOCK_CONST_METHOD0(create_buffer_ipc_ops, std::shared_ptr<mg::PlatformIpcOperations>());
+    MOCK_CONST_METHOD0(create_ipc_operations, std::shared_ptr<mg::PlatformIpcOperations>());
     MOCK_CONST_METHOD0(egl_native_display, EGLNativeDisplayType());
 };
 

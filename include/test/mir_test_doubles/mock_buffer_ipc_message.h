@@ -30,9 +30,9 @@ namespace test
 namespace doubles
 {
 
-struct MockPacker : public graphics::BufferIpcMessage
+struct MockBufferIpcMessage : public graphics::BufferIpcMessage
 {
-    ~MockPacker() noexcept {}
+    ~MockBufferIpcMessage() noexcept {}
     MOCK_METHOD1(pack_fd, void(Fd const&));
     MOCK_METHOD1(pack_data, void(int));
     MOCK_METHOD1(pack_stride, void(geometry::Stride));

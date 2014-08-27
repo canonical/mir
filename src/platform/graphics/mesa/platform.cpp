@@ -23,8 +23,8 @@
 #include "internal_client.h"
 #include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
-#include "buffer_packer.h"
-#include "mir/graphics/buffer_ipc_packer.h"
+#include "ipc_operations.h"
+#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/options/option.h"
 #include "mir/graphics/native_buffer.h"
 #include "mir/emergency_cleanup_registry.h"
@@ -169,16 +169,16 @@ void mgm::Platform::drm_auth_magic(unsigned int magic)
 
 std::shared_ptr<mg::InternalClient> mgm::Platform::create_internal_client()
 {
-    auto packer = create_buffer_packer();
+    auto packer = create_ipc_operations();
     if (!internal_native_display)
         internal_native_display = std::make_shared<mgm::InternalNativeDisplay>(packer->get_ipc_package());
     internal_display_clients_present = true;
     return std::make_shared<mgm::InternalClient>(internal_native_display);
 }
 
-std::shared_ptr<mg::BufferIpcPacker> mgm::Platform::create_buffer_packer() const
+std::shared_ptr<mg::PlatformIpcOperations> mgm::Platform::create_ipc_operations() const
 {
-    return std::make_shared<mgm::BufferPacker>(drm);
+    return std::make_shared<mgm::IpcOperations>(drm);
 }
 
 EGLNativeDisplayType mgm::Platform::egl_native_display() const

@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_MESA_BUFFER_PACKER_H_
 #define MIR_GRAPHICS_MESA_BUFFER_PACKER_H_
 
-#include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/platform_ipc_operations.h"
 namespace mir
 {
 namespace graphics
