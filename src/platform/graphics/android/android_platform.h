@@ -47,14 +47,13 @@ public:
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLProgramFactory> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/);
-    std::shared_ptr<InternalClient> create_internal_client();
     std::shared_ptr<PlatformIpcOperations> create_ipc_operations() const override;
-    EGLNativeDisplayType egl_native_display() const;
 
-    /* From NativePlatform */
     std::shared_ptr<PlatformIPCPackage> get_ipc_package();
+    std::shared_ptr<InternalClient> create_internal_client();
     void fill_buffer_package(
         BufferIpcMessage* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const;
+    EGLNativeDisplayType egl_native_display() const;
 
 private:
     std::shared_ptr<Display> create_fb_backup_display();

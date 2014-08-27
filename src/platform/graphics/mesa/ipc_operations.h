@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_BUFFER_PACKER_H_
-#define MIR_GRAPHICS_MESA_BUFFER_PACKER_H_
+#ifndef MIR_GRAPHICS_MESA_IPC_OPERATIONS_H_
+#define MIR_GRAPHICS_MESA_IPC_OPERATIONS_H_
 
 #include "mir/graphics/platform_ipc_operations.h"
 namespace mir
@@ -43,4 +43,4 @@ private:
 }
 }
 }
-#endif /* MIR_GRAPHICS_MESA_BUFFER_PACKER_H_ */
+#endif /* MIR_GRAPHICS_MESA_IPC_OPERATIONS_H_ */

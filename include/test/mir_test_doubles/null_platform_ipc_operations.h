@@ -46,4 +46,3 @@ class NullPlatformIpcOperations : public graphics::PlatformIpcOperations
 } // namespace mir
 
 #endif // MIR_TEST_DOUBLES_NULL_PLATFORM_IPC_OPERATIONS_H_
-

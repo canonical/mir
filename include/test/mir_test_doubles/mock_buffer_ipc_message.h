@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_
-#define MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_IPC_MESSAGE_H_
+#define MIR_TEST_DOUBLES_MOCK_BUFFER_IPC_MESSAGE_H_
 
 #include "mir/graphics/buffer_ipc_message.h"
 
@@ -44,4 +44,4 @@ struct MockBufferIpcMessage : public graphics::BufferIpcMessage
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_BUFFER_IPC_MESSAGE_H_ */
