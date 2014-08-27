@@ -250,18 +250,18 @@ void mf::SessionMediator::next_buffer(
 
 void mf::SessionMediator::exchange_buffer(
     google::protobuf::RpcController*,
-    mir::protobuf::Buffer const* request,
+    mir::protobuf::BufferRequest const* request,
     mir::protobuf::Buffer* response,
     google::protobuf::Closure* done)
 {
-    mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer_id())};
+    mf::SurfaceId const surface_id{request->id().value()};
+    mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
 
     auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
     auto const session = weak_session.lock();
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    auto surface_id = surface_tracker.surface_from(buffer_id);
     auto const& surface = session->get_surface(surface_id);
     surface->swap_buffers(
         surface_tracker.buffer_from(buffer_id),

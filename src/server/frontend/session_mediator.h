@@ -100,7 +100,7 @@ public:
 
     void exchange_buffer(
         google::protobuf::RpcController* controller,
-        mir::protobuf::Buffer const* request,
+        mir::protobuf::BufferRequest const* request,
         mir::protobuf::Buffer* response,
         google::protobuf::Closure* done) override;
 

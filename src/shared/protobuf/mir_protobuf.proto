@@ -26,9 +26,9 @@ message SurfaceId {
 };
 
 message BufferRequest {
-  optional SurfaceId = 1
-  optional Buffer = 2;
-}
+  optional SurfaceId id = 1;
+  optional Buffer buffer = 2;
+};
 
 message Buffer {
   optional int32 buffer_id = 1;
