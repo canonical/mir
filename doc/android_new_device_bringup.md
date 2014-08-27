@@ -80,7 +80,7 @@ There are a variety of demos that should all work with each other. The demo shel
 
 Collecting Additional Android Information From Mir
 --------------------------------------------------
-Mir has a some android specific options for watching HWC. This option is available with mir_demo_standalone_* and mir_demo_server_*
+Mir has some android specific options for watching HWC interactions. This option is available with mir_demo_standalone_* and mir_demo_server_*
 
 If you run 
 
