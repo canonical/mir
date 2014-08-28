@@ -2,8 +2,8 @@ Android New Device Bringup {#android_new_device_bringup}
 ===============================
 
 Mir is a library, and is the building block that unity-system-compositor and
-unity8 are build upon. If the device is crashing or hanging in a mir library
-when you try to start unity, the information listed below will help the mir
+unity8 are build upon. If the device is crashing or hanging in a Mir library
+when you try to start unity, the information listed below will help the Mir
 team diagnose and fix the issues that are seen.
 
 ##Mir Tests##
@@ -42,12 +42,12 @@ mir_demo_standalone_render_to_fb
 
     mir_integration_tests --gtest-filter="AndroidBufferIntegration.*"
 
-This will test that mir can access the gralloc module and allocate GPU buffers.
+This will test that Mir can access the gralloc module and allocate GPU buffers.
 
 Mir Demos
 ---------
-The mir team ships certain demos that are useful for developing and improving
-mir, as they operate with less complexity than the full unity stack. These are
+The Mir team ships certain demos that are useful for developing and improving
+Mir, as they operate with less complexity than the full unity stack. These are
 available in the 'mir-demos' debian package.
 
 ###Visual check of posting to the display using GLES###
@@ -59,7 +59,7 @@ animation to the screen until the program is stopped with Ctrl-C. This program
 forces HWC to display the OpenGLES 2.0 rendered image without using overlays.
 
 The animation should:
- - be a black, white, and purple image of the mir space station scrolling on a
+ - be a black, white, and purple image of the Mir space station scrolling on a
 green background
  - be smooth
  - be checked against visual artifacts (flickering, blockiness, tearing)
@@ -127,7 +127,7 @@ You will get output similar to this:
     HWC: vsync signal off
     HWC: display off
 
-This is the list that mir submits to HWC, the decision of hwc (overlay or GLES),
+This is the list that Mir submits to HWC, the decision of hwc (overlay or GLES),
 and the final handles submitted to HWC during the display post. The vsync signal
 and the blanking are also logged.
 
@@ -140,11 +140,11 @@ context, as well as the HWC version.
 
 Reporting Problems
 -----------------
-If any of the above tests crash, hang, or experience a problem, the mir team
+If any of the above tests crash, hang, or experience a problem, the Mir team
 wants to help fix it.
 When diagnosing an android problem, these logs are most helpful:
- - The log of the mir program when it crashes with the "Additional Android
+ - The log of the Mir program when it crashes with the "Additional Android
 Information".
- - A stacktrace from where mir has crashed or hung.
+ - A stacktrace from where Mir has crashed or hung.
  - The logcat from /system/bin/logcat at the time of the problem
  - The kernel log from dmesg at the time of the problem.
