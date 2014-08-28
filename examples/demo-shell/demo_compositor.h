@@ -46,11 +46,11 @@ public:
         std::shared_ptr<compositor::Scene> const& scene,
         graphics::GLProgramFactory const& factory,
         std::shared_ptr<compositor::CompositorReport> const& report);
+    ~DemoCompositor();
 
     void composite() override;
 
 private:
-    graphics::RenderableList generate_renderables();
     graphics::DisplayBuffer& display_buffer;
     std::shared_ptr<compositor::Scene> const scene;
     std::shared_ptr<compositor::CompositorReport> const report;

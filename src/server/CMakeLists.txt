@@ -22,13 +22,17 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
 )
 
-add_library(mirserver SHARED
+add_library(mirserverobjects OBJECT
   run_mir.cpp
   report_exception.cpp
   display_server.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
   default_emergency_cleanup.cpp
+)
+
+set(MIR_SERVER_OBJECTS
+  $<TARGET_OBJECTS:mirserverobjects>
   $<TARGET_OBJECTS:mirinput>
   $<TARGET_OBJECTS:mirscene>
   $<TARGET_OBJECTS:mircompositor>
@@ -43,6 +47,21 @@ add_library(mirserver SHARED
   $<TARGET_OBJECTS:mirlogger>
   $<TARGET_OBJECTS:mirnestedgraphics>
   $<TARGET_OBJECTS:miroffscreengraphics>
+)
+
+set(MIR_SERVER_REFERENCES
+  ${GLog_LIBRARY}
+  ${GFlags_LIBRARY}
+  ${EGL_LDFLAGS} ${EGL_LIBRARIES}
+  ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
+  ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
+)
+
+set(MIR_SERVER_OBJECTS ${MIR_SERVER_OBJECTS} PARENT_SCOPE)
+set(MIR_SERVER_REFERENCES ${MIR_SERVER_REFERENCES} PARENT_SCOPE)
+
+add_library(mirserver SHARED
+  ${MIR_SERVER_OBJECTS}
 )
 
 target_link_libraries(mirserver LINK_PUBLIC
@@ -68,7 +87,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
 )
 
-set(MIRSERVER_ABI 24) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 25) # Be sure to increment MIR_VERSION_MINOR at the same time
 
 set_target_properties(
   mirserver

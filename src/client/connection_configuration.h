@@ -43,8 +43,6 @@ class SharedLibrary;
 
 namespace client
 {
-std::shared_ptr<SharedLibrary>& libraries_cache(std::string const& lib_name);
-
 class ConnectionSurfaceMap;
 class Logger;
 class ClientPlatformFactory;
@@ -67,6 +65,7 @@ public:
     virtual std::shared_ptr<LifecycleControl> the_lifecycle_control() = 0;
     virtual std::shared_ptr<EventSink> the_event_sink() = 0;
     virtual std::shared_ptr<EventHandlerRegister> the_event_handler_register() = 0;
+    virtual std::shared_ptr<SharedLibrary> the_platform_library() = 0;
 
 protected:
     ConnectionConfiguration() = default;

@@ -17,6 +17,7 @@
  */
 
 #include "protobuf_buffer_packer.h"
+#include "resource_cache.h"
 
 #include "mir/graphics/display_configuration.h"
 #include "mir_protobuf.pb.h"
@@ -89,13 +90,17 @@ void mfd::pack_protobuf_display_configuration(mp::DisplayConfiguration& protobuf
         });
 }
 
-mfd::ProtobufBufferPacker::ProtobufBufferPacker(protobuf::Buffer* response)
-    : buffer_response(response)
+mfd::ProtobufBufferPacker::ProtobufBufferPacker(
+    protobuf::Buffer* response,
+    std::shared_ptr<MessageResourceCache> const& resource_cache) :
+    buffer_response(response),
+    resource_cache(resource_cache)
 {
 }
 
-void mfd::ProtobufBufferPacker::pack_fd(int fd)
+void mfd::ProtobufBufferPacker::pack_fd(Fd const& fd)
 {
+    resource_cache->save_fd(buffer_response, fd);
     buffer_response->add_fd(fd);
 }
 
