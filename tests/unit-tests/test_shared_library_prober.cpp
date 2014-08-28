@@ -46,7 +46,7 @@ class SharedLibraryProber : public testing::Test
 {
 public:
     SharedLibraryProber()
-        : library_path{binary_path() + "/../lib"}
+        : library_path{binary_path() + "/test_data"}
     {
     }
 
