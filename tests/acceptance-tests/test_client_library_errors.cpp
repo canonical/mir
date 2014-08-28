@@ -21,6 +21,7 @@
 
 #include "src/client/client_platform_factory.h"
 #include "src/client/client_platform.h"
+#include "src/client/client_buffer_factory.h"
 
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
@@ -54,6 +55,16 @@ struct ShouldFail
     enum { result = (name & failure_set) };
 };
 
+class StubClientBufferFactory : public mir::client::ClientBufferFactory
+{
+    std::shared_ptr<mir::client::ClientBuffer> create_buffer(const std::shared_ptr<MirBufferPackage>&,
+                                                             mir::geometry::Size,
+                                                             MirPixelFormat)
+    {
+        return std::shared_ptr<mir::client::ClientBuffer>{};
+    }
+};
+
 template<Method failure_set>
 class ConfigurableFailurePlatform : public mir::client::ClientPlatform
 {
@@ -76,7 +87,7 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
         }
-        return std::shared_ptr<mir::client::ClientBufferFactory>{};
+        return std::make_shared<StubClientBufferFactory>();
     }
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
     {
@@ -171,6 +182,29 @@ TEST_F(ClientLibraryErrors, ConnectingToGarbageSocketReturnsAppropriateError)
 TEST_F(ClientLibraryErrors, CreateSurfaceReturnsErrorObjectOnFailure)
 {
     mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_buffer_factory>> stubby;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    ASSERT_TRUE(mir_connection_is_valid(connection)) << mir_connection_get_error_message(connection);
+
+    MirSurfaceParameters const request_params =
+    {
+        __PRETTY_FUNCTION__,
+        640, 480,
+        mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware,
+        mir_display_output_id_invalid
+    };
+
+    auto surface = mir_connection_create_surface_sync(connection, &request_params);
+    ASSERT_NE(surface, nullptr);
+    EXPECT_FALSE(mir_surface_is_valid(surface));
+    EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr("Ducks!"));
+}
+
+TEST_F(ClientLibraryErrors, CreateSurfaceReturnsErrorObjectOnFailureInReplyProcessing)
+{
+    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_egl_native_window>> stubby;
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 

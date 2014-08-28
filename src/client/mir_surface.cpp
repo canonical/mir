@@ -28,6 +28,8 @@
 #include <cassert>
 #include <unistd.h>
 
+#include <boost/exception/diagnostic_information.hpp>
+
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
 namespace mircv = mir::input::receiver;
@@ -231,20 +233,29 @@ void MirSurface::created(mir_surface_callback callback, void * context)
 {
     auto platform = connection->get_client_platform();
 
+    try
     {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-
-        process_incoming_buffer();
-        accelerated_window = platform->create_egl_native_window(this);
-        
-        for(int i = 0; i < surface.attributes_size(); i++)
         {
-            auto const& attrib = surface.attributes(i);
-            attrib_cache[attrib.attrib()] = attrib.ivalue();
+            std::lock_guard<decltype(mutex)> lock(mutex);
+
+            process_incoming_buffer();
+            accelerated_window = platform->create_egl_native_window(this);
+
+            for(int i = 0; i < surface.attributes_size(); i++)
+            {
+                auto const& attrib = surface.attributes(i);
+                attrib_cache[attrib.attrib()] = attrib.ivalue();
+            }
         }
+
+        connection->on_surface_created(id(), this);
+    }
+    catch (std::exception const& error)
+    {
+        surface.set_error(std::string{"Error processing Surface creating response:"} +
+                          boost::diagnostic_information(error));
     }
 
-    connection->on_surface_created(id(), this);
     callback(this, context);
     create_wait_handle.result_received();
 }
