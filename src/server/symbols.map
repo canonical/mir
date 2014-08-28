@@ -199,6 +199,7 @@ MIR_SERVER_25 {
     mir::DisplayServer::stop*;
     mir::EmergencyCleanup::operator*;
     mir::frontend::as_internal_surface*;
+    mir::frontend::ConnectionContext::ConnectionContext*;
     mir::frontend::ConnectionContext::fd_for_new_client*;
     mir::frontend::ConnectionCreator::?ConnectionCreator*;
     mir::frontend::ConnectionCreator::ConnectionCreator*;
@@ -296,7 +297,6 @@ MIR_SERVER_25 {
     mir::frontend::Session::show*;
     mir::frontend::Shell::add_prompt_provider_for*;
     mir::frontend::Shell::close_session*;
-    mir::frontend::Shell::create_surface_for*;
     mir::frontend::Shell::handle_surface_created*;
     mir::frontend::Shell::open_session*;
     mir::frontend::Shell::operator*;
@@ -631,7 +631,6 @@ MIR_SERVER_25 {
     mir::shell::InputTargeter::operator*;
     mir::shell::SessionCoordinatorWrapper::add_prompt_provider_for*;
     mir::shell::SessionCoordinatorWrapper::close_session*;
-    mir::shell::SessionCoordinatorWrapper::create_surface_for*;
     mir::shell::SessionCoordinatorWrapper::focus_next*;
     mir::shell::SessionCoordinatorWrapper::focussed_application*;
     mir::shell::SessionCoordinatorWrapper::handle_surface_created*;
