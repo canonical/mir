@@ -59,6 +59,9 @@ add_executable(
 
   ${SOURCES}
 )
+
+add_dependencies(mir_acceptance_tests GMock)
+
 uses_android_input(mir_acceptance_tests)
 
 
