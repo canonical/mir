@@ -77,3 +77,10 @@ TEST_F(SharedLibraryProber, NonExistentPathRaisesENOENTError)
         EXPECT_EQ(err.code(), std::error_code(ENOENT, std::system_category()));
     }
 }
+
+TEST_F(SharedLibraryProber, PathWithNoSharedLibrariesReturnsEmptyList)
+{
+    // /usr is guaranteed to exist, and shouldn't contain any libraries
+    auto libraries = mir::libraries_for_path("/usr");
+    EXPECT_EQ(0, libraries.size());
+}
