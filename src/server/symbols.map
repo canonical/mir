@@ -7,7 +7,7 @@ MIR_SERVER_25 {
     VTT?for?mir::DefaultServerConfiguration;
     
 # The following symbols come from running a script over the generated docs. Vis:
-# ../tools/process_doygen_xml.py doc/xml/*.xml | grep "^mirserver public" | sed "s/mirserver public: /    /" | sort  
+# ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirserver public" | sed "s/mirserver public: /    /" | sort  
     mir::AsioMainLoop::?AsioMainLoop*;
     mir::AsioMainLoop::AsioMainLoop*;
     mir::AsioMainLoop::create_alarm*;

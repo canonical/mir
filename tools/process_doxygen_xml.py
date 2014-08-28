@@ -9,7 +9,7 @@ on symbols that Mir intends to make public.
 To use:
 
 1. Go to your build folder and run "make doc"
-2. Create summary by running "../tools/process_doygen_xml.py doc/xml/*.xml > raw-output"
+2. Create summary by running "../tools/process_doxygen_xml.py doc/xml/*.xml > raw-output"
 3. For each symbol map (e.g. mirserver)
 3.1. cat raw-output | grep "^mirserver public" | sed "s/mirserver public: /    /" | sort > mirserver-public-symbols
 3.2. vi -d mirserver-public-symbols ../src/server/symbols.map"""
