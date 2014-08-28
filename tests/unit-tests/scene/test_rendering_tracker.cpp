@@ -141,3 +141,14 @@ TEST_F(RenderingTrackerTest, occludes_surface_when_occluded_in_remaining_composi
     compositors.erase(compositor_id3);
     tracker.active_compositors(compositors);
 }
+
+TEST_F(RenderingTrackerTest, throws_when_passed_inactive_compositor_id)
+{
+    EXPECT_THROW({
+        tracker.occluded_in(compositor_id1);
+    }, std::logic_error);
+
+    EXPECT_THROW({
+        tracker.rendered_in(compositor_id2);
+    }, std::logic_error);
+}
