@@ -15,6 +15,7 @@ target_link_libraries(
 
   mir-test
   mir-test-framework
+  mirserver
 
   ${GTEST_BOTH_LIBRARIES}
 )

@@ -19,17 +19,12 @@
  #ifndef MIR_FRONTEND_CLIENT_BUFFER_TRACKER_H_
  #define MIR_FRONTEND_CLIENT_BUFFER_TRACKER_H_
 
+#include "mir/graphics/buffer_id.h"
 #include <stdint.h>
 #include <list>
 
 namespace mir
 {
-
-namespace graphics
-{
-class BufferID;
-}
-
 namespace frontend
 {
 
