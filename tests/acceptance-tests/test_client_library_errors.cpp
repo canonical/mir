@@ -49,6 +49,8 @@ enum Method : uint64_t
     create_buffer_factory       = 1<<3
 };
 
+std::string const exception_text{"Ducks!"};
+
 template<Method name, Method failure_set>
 struct ShouldFail
 {
@@ -72,20 +74,20 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
     {
         if (ShouldFail<Method::create_egl_native_window, failure_set>::result)
         {
-            BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+            BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
         return std::shared_ptr<EGLNativeWindowType>{};
     }
     MirPlatformType platform_type() const
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+        BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         return MirPlatformType::mir_platform_type_gbm;
     }
     std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory()
     {
         if (ShouldFail<Method::create_buffer_factory, failure_set>::result)
         {
-            BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+            BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
         return std::make_shared<StubClientBufferFactory>();
     }
@@ -95,7 +97,7 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
     }
     MirNativeBuffer *convert_native_buffer(mir::graphics::NativeBuffer*) const
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+        BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         return nullptr;
     }
 };
@@ -108,7 +110,7 @@ class ConfigurableFailureFactory: public mir::client::ClientPlatformFactory
     {
         if (ShouldFail<Method::create_client_platform, failure_set>::result)
         {
-            BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+            BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
         return std::make_shared<ConfigurableFailurePlatform<failure_set>>();
     }
@@ -123,7 +125,7 @@ class ConfigurableFailureConfiguration : public mtf::StubConnectionConfiguration
     {
         if (ShouldFail<Method::the_client_platform_factory, failure_set>::result)
         {
-            BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+            BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
         return std::make_shared<ConfigurableFailureFactory<failure_set>>();
     }
@@ -148,7 +150,7 @@ TEST_F(ClientLibraryErrors, ExceptionInClientConfigurationConstructorGeneratesEr
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     EXPECT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_THAT(mir_connection_get_error_message(connection), testing::HasSubstr("Ducks!"));
+    EXPECT_THAT(mir_connection_get_error_message(connection), testing::HasSubstr(exception_text));
 }
 
 TEST_F(ClientLibraryErrors, ExceptionInPlatformConstructionGeneratesError)
@@ -158,7 +160,7 @@ TEST_F(ClientLibraryErrors, ExceptionInPlatformConstructionGeneratesError)
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     EXPECT_FALSE(mir_connection_is_valid(connection));
-    EXPECT_THAT(mir_connection_get_error_message(connection), testing::HasSubstr("Ducks!"));
+    EXPECT_THAT(mir_connection_get_error_message(connection), testing::HasSubstr(exception_text));
 }
 
 TEST_F(ClientLibraryErrors, ConnectingToGarbageSocketReturnsAppropriateError)
@@ -199,7 +201,7 @@ TEST_F(ClientLibraryErrors, CreateSurfaceReturnsErrorObjectOnFailure)
     auto surface = mir_connection_create_surface_sync(connection, &request_params);
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
-    EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr("Ducks!"));
+    EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
 }
 
 TEST_F(ClientLibraryErrors, CreateSurfaceReturnsErrorObjectOnFailureInReplyProcessing)
@@ -222,7 +224,7 @@ TEST_F(ClientLibraryErrors, CreateSurfaceReturnsErrorObjectOnFailureInReplyProce
     auto surface = mir_connection_create_surface_sync(connection, &request_params);
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
-    EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr("Ducks!"));
+    EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
 }
 
 using ClientLibraryErrorsDeathTest = ClientLibraryErrors;
