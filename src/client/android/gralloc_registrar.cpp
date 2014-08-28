@@ -87,17 +87,34 @@ std::shared_ptr<mg::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
     MirBufferPackage const& package,
     MirPixelFormat pf) const
 {
+    bool const fence_present{package.data[0] == static_cast<int>(mga::BufferFlag::fenced)};
+    int const mir_flag_offset{1};
+
     int native_handle_header_size = sizeof(native_handle_t);
     int total_size = sizeof(int) *
                      (package.fd_items + package.data_items + native_handle_header_size);
     native_handle_t* handle = static_cast<native_handle_t*>(::operator new(total_size));
     handle->version = native_handle_header_size;
-    handle->numFds  = package.fd_items;
-    handle->numInts = package.data_items;
-    for (auto i=0; i< handle->numFds; i++)
-        handle->data[i] = package.fd[i];
-    for (auto i=0; i< handle->numInts; i++)
-        handle->data[handle->numFds+i] = package.data[i];
+
+    std::shared_ptr<mga::Fence> fence;
+    if (fence_present)
+    {
+        auto ops = std::make_shared<mga::RealSyncFileOps>();
+        fence = std::make_shared<mga::SyncFence>(ops, mir::Fd(package.fd[0]));
+        handle->numFds  = package.fd_items - 1;
+        for (auto i = 1; i < handle->numFds; i++)
+            handle->data[i - 1] = package.fd[i];
+    }
+    else
+    {
+        handle->numFds  = package.fd_items;
+        for (auto i = 0; i < handle->numFds; i++)
+            handle->data[i] = package.fd[i];
+    }
+
+    handle->numInts = package.data_items - mir_flag_offset;
+    for (auto i=0; i < handle->numInts; i++)
+        handle->data[handle->numFds+i] = package.data[i + mir_flag_offset];
 
     if (gralloc_module->registerBuffer(gralloc_module.get(), handle))
     {
