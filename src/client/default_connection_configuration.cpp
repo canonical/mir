@@ -26,13 +26,17 @@
 #include "mir/input/null_input_receiver_report.h"
 #include "logging/rpc_report.h"
 #include "logging/input_receiver_report.h"
+#include "mir/logging/shared_library_prober_report.h"
+#include "mir/logging/null_shared_library_prober_report.h"
 #include "lttng/rpc_report.h"
 #include "lttng/input_receiver_report.h"
+#include "lttng/shared_library_prober_report.h"
 #include "connection_surface_map.h"
 #include "lifecycle_control.h"
 #include "mir/shared_library.h"
 #include "client_platform_factory.h"
 #include "mir_event_distributor.h"
+#include "mir/shared_library_prober.h"
 
 namespace mcl = mir::client;
 
@@ -197,5 +201,22 @@ std::shared_ptr<mcl::EventHandlerRegister> mcl::DefaultConnectionConfiguration::
         []
         {
             return std::make_shared<MirEventDistributor>();
+        });
+}
+
+std::shared_ptr<mir::SharedLibraryProberReport> mir::client::DefaultConnectionConfiguration::the_shared_library_prober_report()
+{
+    return shared_library_prober_report(
+        [this] () -> std::shared_ptr<mir::SharedLibraryProberReport>
+        {
+            auto val_raw = getenv("MIR_CLIENT_SHARED_LIBRARY_PROBER_REPORT");
+            std::string const val{val_raw ? val_raw : off_opt_val};
+
+            if (val == log_opt_val)
+                return std::make_shared<mir::logging::SharedLibraryProberReport>(the_logger());
+            else if (val == lttng_opt_val)
+                return std::make_shared<mcl::lttng::SharedLibraryProberReport>();
+            else
+                return std::make_shared<mir::logging::NullSharedLibraryProberReport>();
         });
 }

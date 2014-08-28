@@ -19,6 +19,8 @@
 #ifndef MIR_SHARED_LIBRARY_PROBER_H_
 #define MIR_SHARED_LIBRARY_PROBER_H_
 
+#include "shared_library_prober_report.h"
+
 #include <string>
 #include <vector>
 #include <memory>
@@ -27,7 +29,7 @@ namespace mir
 {
 class SharedLibrary;
 
-std::vector<std::shared_ptr<SharedLibrary>> libraries_for_path(std::string const& path);
+std::vector<std::shared_ptr<SharedLibrary>> libraries_for_path(std::string const& path, SharedLibraryProberReport& report);
 }
 
 

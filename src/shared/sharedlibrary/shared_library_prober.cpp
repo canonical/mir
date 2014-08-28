@@ -22,8 +22,10 @@
 #include <system_error>
 #include <boost/filesystem.hpp>
 
-std::vector<std::shared_ptr<mir::SharedLibrary>> mir::libraries_for_path(std::string const& path)
+std::vector<std::shared_ptr<mir::SharedLibrary>>
+mir::libraries_for_path(std::string const& path, mir::SharedLibraryProberReport& report)
 {
+    report.probing_path(path);
     // We use the error_code overload because we want to throw a std::system_error
     boost::system::error_code ec;
     boost::filesystem::directory_iterator iterator{path, ec};
@@ -32,7 +34,9 @@ std::vector<std::shared_ptr<mir::SharedLibrary>> mir::libraries_for_path(std::st
         // *Of course* there's no good way to go from a boost::error_code to a std::error_code
         if (ec.category() == boost::system::system_category())
         {
-            throw std::system_error{ec.value(), std::system_category()};
+            std::system_error error{ec.value(), std::system_category()};
+            report.probing_failed(path, error);
+            throw error;
         }
         else
         {
@@ -46,10 +50,12 @@ std::vector<std::shared_ptr<mir::SharedLibrary>> mir::libraries_for_path(std::st
         {
             try
             {
+                report.loading_library(iterator->path());
                 libraries.emplace_back(std::make_shared<mir::SharedLibrary>(iterator->path().string()));
             }
-            catch (std::runtime_error)
+            catch (std::runtime_error const& err)
             {
+                report.loading_failed(iterator->path(), err);
             }
         }
     }
