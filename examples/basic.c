@@ -88,7 +88,7 @@ static void surface_release_callback(MirSurface *old_surface, void *context)
 }
 ///\internal [Callback_tag]
 
-void demo_client(const char* server, int buffer_swap_count)
+int demo_client(const char* server, int buffer_swap_count)
 {
     MirDemoState mcd;
     mcd.connection = 0;
@@ -109,8 +109,8 @@ void demo_client(const char* server, int buffer_swap_count)
             error = mir_connection_get_error_message(mcd.connection);
 
         fprintf(stderr, "Failed to connect to server `%s': %s\n",
-                server, error);
-        return;
+                server == NULL ? "<default>" : server, error);
+        return 1;
     }
 
     // We can query information about the platform we're running on
@@ -192,6 +192,8 @@ void demo_client(const char* server, int buffer_swap_count)
     mir_connection_release(mcd.connection);
     puts("Connection released");
     ///\internal [connection_release_tag]
+
+    return 0;
 }
 
 // The main() function deals with parsing arguments and defaults
@@ -228,6 +230,5 @@ int main(int argc, char* argv[])
         }
     }
 
-    demo_client(server, buffer_swap_count);
-    return 0;
+    return demo_client(server, buffer_swap_count);
 }
