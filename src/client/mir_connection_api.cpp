@@ -119,15 +119,10 @@ public:
     }
 };
 
-mcl::MirConnectionAPI* mir_connection_api_impl_default()
-{
-    static DefaultMirConnectionAPI default_api;
-    return &default_api;
+DefaultMirConnectionAPI default_api;
 }
 
-}
-
-mcl::MirConnectionAPI* mir_connection_api_impl{mir_connection_api_impl_default()};
+mcl::MirConnectionAPI* mir_connection_api_impl{&default_api};
 
 MirWaitHandle* mir_connect(
     char const* socket_file,
