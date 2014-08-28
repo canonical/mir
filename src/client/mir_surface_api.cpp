@@ -44,7 +44,7 @@ MirWaitHandle* mir_connection_create_surface(
     mir_surface_callback callback,
     void* context)
 {
-    if (mcl::ErrorConnections::instance().contains(connection)) return 0;
+    if (!mir_connection_is_valid(connection)) abort();
 
     try
     {

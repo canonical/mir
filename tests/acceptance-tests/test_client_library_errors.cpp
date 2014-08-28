@@ -31,6 +31,7 @@
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
+#include <cstring>
 
 namespace mcl = mir::client;
 namespace mtf = mir_test_framework;
@@ -96,4 +97,81 @@ TEST_F(ClientLibraryErrors, ExceptionInPlatformConstructionGeneratesError)
 
     EXPECT_FALSE(mir_connection_is_valid(connection));
     EXPECT_THAT(mir_connection_get_error_message(connection), testing::HasSubstr("Ducks!"));
+}
+
+TEST_F(ClientLibraryErrors, ConnectingToGarbageSocketReturnsAppropriateError)
+{
+    using namespace testing;
+    auto connection = mir_connect_sync("garbage", __PRETTY_FUNCTION__);
+    ASSERT_THAT(connection, NotNull());
+
+    char const* error = mir_connection_get_error_message(connection);
+
+    if (std::strcmp("connect: No such file or directory", error) &&
+        std::strcmp("Can't find MIR server", error) &&
+        !std::strstr(error, "Failed to connect to server socket"))
+    {
+        FAIL() << error;
+    }
+}
+
+using ClientLibraryErrorsDeathTest = ClientLibraryErrors;
+
+
+TEST_F(ClientLibraryErrorsDeathTest, CreateingSurfaceOnGarbageConnectionIsFatal)
+{
+    mtf::UsingStubClientPlatform stubby;
+
+    auto connection = mir_connect_sync("garbage", __PRETTY_FUNCTION__);
+
+    MirSurfaceParameters const request_params =
+    {
+        __PRETTY_FUNCTION__,
+        640, 480,
+        mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware,
+        mir_display_output_id_invalid
+    };
+
+    ASSERT_FALSE(mir_connection_is_valid(connection));
+    EXPECT_DEATH(mir_connection_create_surface_sync(connection, &request_params), "");
+}
+
+
+TEST_F(ClientLibraryErrorsDeathTest, CreatingSurfaceSynchronoslyOnMalconstructedConnectionIsFatal)
+{
+    MirSurfaceParameters const request_params =
+    {
+        __PRETTY_FUNCTION__,
+        640, 480,
+        mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware,
+        mir_display_output_id_invalid
+    };
+
+    mtf::UsingClientPlatform<ExceptionThrowingConfiguration> stubby;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    ASSERT_FALSE(mir_connection_is_valid(connection));
+    EXPECT_DEATH(mir_connection_create_surface_sync(connection, &request_params), "");
+}
+
+TEST_F(ClientLibraryErrorsDeathTest, CreatingSurfaceSynchronoslyOnInvalidConnectionIsFatal)
+{
+    MirSurfaceParameters const request_params =
+    {
+        __PRETTY_FUNCTION__,
+        640, 480,
+        mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware,
+        mir_display_output_id_invalid
+    };
+
+    mtf::UsingClientPlatform<BoobytrappedPlatformFactoryConfiguration> stubby;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    ASSERT_FALSE(mir_connection_is_valid(connection));
+    EXPECT_DEATH(mir_connection_create_surface_sync(connection, &request_params), "");
 }
