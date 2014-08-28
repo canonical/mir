@@ -107,7 +107,7 @@ enable_testing()
 include_directories(include/shared)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS date_time system program_options iostreams REQUIRED)
+find_package(Boost 1.48.0 COMPONENTS date_time system program_options iostreams filesystem REQUIRED)
 include_directories (
   ${Boost_INCLUDE_DIRS}
 )
