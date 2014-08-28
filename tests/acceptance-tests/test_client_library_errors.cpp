@@ -52,10 +52,10 @@ enum Method : uint64_t
 std::string const exception_text{"Ducks!"};
 
 template<Method name, Method failure_set>
-struct ShouldFail
+bool should_fail()
 {
-    enum { result = (name & failure_set) };
-};
+    return (name & failure_set);
+}
 
 class StubClientBufferFactory : public mir::client::ClientBufferFactory
 {
@@ -72,7 +72,7 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
 {
     std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mir::client::ClientSurface *)
     {
-        if (ShouldFail<Method::create_egl_native_window, failure_set>::result)
+        if (should_fail<Method::create_egl_native_window, failure_set>())
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
@@ -85,7 +85,7 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
     }
     std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory()
     {
-        if (ShouldFail<Method::create_buffer_factory, failure_set>::result)
+        if (should_fail<Method::create_buffer_factory, failure_set>())
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
@@ -108,7 +108,7 @@ class ConfigurableFailureFactory: public mir::client::ClientPlatformFactory
     std::shared_ptr<mir::client::ClientPlatform>
     create_client_platform(mir::client::ClientContext* /*context*/) override
     {
-        if (ShouldFail<Method::create_client_platform, failure_set>::result)
+        if (should_fail<Method::create_client_platform, failure_set>())
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
@@ -123,7 +123,7 @@ class ConfigurableFailureConfiguration : public mtf::StubConnectionConfiguration
 
     std::shared_ptr<mir::client::ClientPlatformFactory> the_client_platform_factory() override
     {
-        if (ShouldFail<Method::the_client_platform_factory, failure_set>::result)
+        if (should_fail<Method::the_client_platform_factory, failure_set>())
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
