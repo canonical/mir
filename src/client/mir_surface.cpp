@@ -37,9 +37,20 @@ namespace gp = google::protobuf;
 namespace
 {
 void null_callback(MirSurface*, void*) {}
+mp::DisplayServer::Stub null_server{nullptr};
 
 std::mutex handle_mutex;
 std::unordered_set<MirSurface*> valid_surfaces;
+}
+
+MirSurface::MirSurface(std::string const& error)
+    : server{null_server},
+      connection{nullptr}
+{
+    surface.set_error(error);
+
+    std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
+    valid_surfaces.insert(this);
 }
 
 MirSurface::MirSurface(

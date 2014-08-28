@@ -20,6 +20,7 @@
 #include "mir_toolkit/mir_client_library_debug.h"
 
 #include "src/client/client_platform_factory.h"
+#include "src/client/client_platform.h"
 
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
@@ -67,15 +68,59 @@ class BoobytrappedPlatformFactoryConfiguration : public mtf::StubConnectionConfi
     }
 };
 
+class FailingPlatform : public mir::client::ClientPlatform
+{
+    std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mir::client::ClientSurface *)
+    {
+        return std::shared_ptr<EGLNativeWindowType>{};
+    }
+    MirPlatformType platform_type() const
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+    }
+    std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory()
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+    }
+    std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
+    {
+        return std::shared_ptr<EGLNativeDisplayType>{};
+    }
+    MirNativeBuffer *convert_native_buffer(mir::graphics::NativeBuffer*) const
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+    }
+};
+
+class FailingPlatformProducingFactory : public mir::client::ClientPlatformFactory
+{
+    std::shared_ptr<mir::client::ClientPlatform>
+    create_client_platform(mir::client::ClientContext* /*context*/) override
+    {
+        return std::make_shared<FailingPlatform >();
+    }
+};
+
+class FailingPlatformProducingFactoryConfiguration : public mtf::StubConnectionConfiguration
+{
+    using mtf::StubConnectionConfiguration::StubConnectionConfiguration;
+
+    std::shared_ptr<mir::client::ClientPlatformFactory> the_client_platform_factory() override
+    {
+        return std::make_shared<FailingPlatformProducingFactory>();
+    }
+};
+
 
 class ClientLibraryErrors : public mtf::InProcessServer
 {
 private:
+    mtf::StubbedServerConfiguration config;
+
     mir::DefaultServerConfiguration &server_config() override
     {
         return config;
     }
-    mtf::StubbedServerConfiguration config;
 };
 }
 
@@ -113,6 +158,29 @@ TEST_F(ClientLibraryErrors, ConnectingToGarbageSocketReturnsAppropriateError)
     {
         FAIL() << error;
     }
+}
+
+TEST_F(ClientLibraryErrors, CreateSurfaceReturnsErrorObjectOnFailure)
+{
+    mtf::UsingClientPlatform<FailingPlatformProducingFactoryConfiguration> stubby;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    ASSERT_TRUE(mir_connection_is_valid(connection)) << mir_connection_get_error_message(connection);
+
+    MirSurfaceParameters const request_params =
+    {
+        __PRETTY_FUNCTION__,
+        640, 480,
+        mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware,
+        mir_display_output_id_invalid
+    };
+
+    auto surface = mir_connection_create_surface_sync(connection, &request_params);
+    ASSERT_NE(surface, nullptr);
+    EXPECT_FALSE(mir_surface_is_valid(surface));
+    EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr("Ducks!"));
 }
 
 using ClientLibraryErrorsDeathTest = ClientLibraryErrors;

@@ -24,6 +24,8 @@
 #include "mir_surface.h"
 #include "error_connections.h"
 
+#include <boost/exception/diagnostic_information.hpp>
+
 namespace mcl = mir::client;
 
 namespace
@@ -50,9 +52,11 @@ MirWaitHandle* mir_connection_create_surface(
     {
         return connection->create_surface(*params, callback, context);
     }
-    catch (std::exception const&)
+    catch (std::exception const& error)
     {
-        // TODO callback with an error surface
+        auto error_surf = new MirSurface{std::string{"Failed to create surface: "} +
+                                         boost::diagnostic_information(error)};
+        (*callback)(error_surf, context);
         return nullptr;
     }
 }
