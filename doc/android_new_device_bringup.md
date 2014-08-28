@@ -1,30 +1,42 @@
 Android New Device Bringup {#android_new_device_bringup}
 ===============================
 
-Mir is a library, and is the building block that unity-system-compositor and unity8 are build upon.
-If the device is crashing or hanging in a mir library when you try to start unity, the information listed below will help the mir team diagnose and fix the issues that are seen.
+Mir is a library, and is the building block that unity-system-compositor and
+unity8 are build upon. If the device is crashing or hanging in a mir library
+when you try to start unity, the information listed below will help the mir
+team diagnose and fix the issues that are seen.
 
 ##Mir Tests##
-The android platform of Mir has a variety of tests and tools that help the Mir team troubleshoot
-new devices. There are thousands of tests, but certain tests exercise the driver and have proven useful in diagnosing driver problems. These tests are available in the 'mir-test-tools' debian package.
+The android platform of Mir has a variety of tests and tools that help the Mir
+team troubleshoot new devices. There are thousands of tests, but certain tests
+exercise the driver and have proven useful in diagnosing driver problems. These
+tests are available in the 'mir-test-tools' debian package.
 
 ###Mir Client Software Rendering###
 
     mir_integration_tests --gtest-filter="TestClientIPCRender.test_render_double"
 
-This test checks that a buffer can travel from the server to the client accross the interprocess communication channel. It then renders some pixels using software and the server will check that the pixels are present in the buffer. 
+This test checks that a buffer can travel from the server to the client accross
+the interprocess communication channel. It then renders some pixels using
+software and the server will check that the pixels are present in the buffer. 
 
 ###Mir Client OpenGLES 2.0 Rendering (Android EGLNativeWindowType test)###
 
     mir_integration_tests --gtest-filter="TestClientIPCRender.test_accelerated_render_double"
 
-This test checks that a buffer can travel from the server to the client accross the interprocess communication channel. It then renders some pixels using OpenGLES 2.0 and the server will check that the pixels are present in the buffer. 
+This test checks that a buffer can travel from the server to the client accross
+the interprocess communication channel. It then renders some pixels using
+OpenGLES 2.0 and the server will check that the pixels are present in the
+buffer. 
 
 ###Mir Display posting (HWC tests)###
 
     mir_integration_tests --gtest-filter="AndroidDisplay.display_can_post"
 
-This test checks that the display can post content to the screen. It should flash the screen briefly and run without error. Since it is important that screen looks flawless, a visual inspection should also be perfomed using mir_demo_standalone_render_to_fb 
+This test checks that the display can post content to the screen. It should
+flash the screen briefly and run without error. Since it is important that
+screen looks flawless, a visual inspection should also be perfomed using
+mir_demo_standalone_render_to_fb 
 
 ###Mir GPU buffer allocations (gralloc tests)###
 
@@ -34,17 +46,21 @@ This will test that mir can access the gralloc module and allocate GPU buffers.
 
 Mir Demos
 ---------
-The mir team ships certain demos that are useful for developing and improving mir, as they operate with 
-less complexity than the full unity stack. These are available in the 'mir-demos' debian package.
+The mir team ships certain demos that are useful for developing and improving
+mir, as they operate with less complexity than the full unity stack. These are
+available in the 'mir-demos' debian package.
 
 ###Visual check of posting to the display using GLES###
 
     mir_demo_standalone_render_to_fb
 
-This will use the HWC module to drive the display. The program will display an animation to the screen until the program is stopped with Ctrl-C. This program forces HWC to display the OpenGLES 2.0 rendered image without using overlays.
+This will use the HWC module to drive the display. The program will display an
+animation to the screen until the program is stopped with Ctrl-C. This program
+forces HWC to display the OpenGLES 2.0 rendered image without using overlays.
 
 The animation should:
- - be a black, white, and purple image of the mir space station scrolling on a green background
+ - be a black, white, and purple image of the mir space station scrolling on a
+green background
  - be smooth
  - be checked against visual artifacts (flickering, blockiness, tearing)
  - run indefinitely
@@ -55,14 +71,16 @@ The animation should:
 
 This will use the HWC module to drive the display by displaying overlays.
 The animation should:
- - be a blue square on top of a red square. Both squares will quickly fade to white, reset to their respective colors, and repeat.
+ - be a blue square on top of a red square. Both squares will quickly fade to
+white, reset to their respective colors, and repeat.
  - be smooth
  - be checked against visual artifacts (flickering, blockiness, tearing)
  - run indefinitely
 
 ###Visual check of demo servers###
 
-The demo servers provide a good way to check visually that clients can connect and display to the screen.
+The demo servers provide a good way to check visually that clients can connect
+and display to the screen.
 In one terminal, run
 
     mir_demo_server_shell
@@ -73,14 +91,17 @@ and in another terminal, run
 
 You should see:
  - an orange triangle smoothly rotating on a purple background on screen
- - the client terminal reporting an FPS that is close to the vsync rate of the system.
+ - the client terminal reporting an FPS that is close to the vsync rate of the
+system.
  - both client and server continuing to run until stopped with Ctrl-C.
 
-There are a variety of demos that should all work with each other. The demo shell is talked about further in \ref demo_shell_controls
+There are a variety of demos that should all work with each other. The demo
+shell is talked about further in \ref demo_shell_controls
 
 Collecting Additional Android Information From Mir
 --------------------------------------------------
-Mir has some android specific options for watching HWC interactions. This option is available with mir_demo_standalone_* and mir_demo_server_*
+Mir has some android specific options for watching HWC interactions. This
+option is available with mir_demo_standalone_* and mir_demo_server_*
 
 If you run 
 
@@ -106,19 +127,24 @@ You will get output similar to this:
     HWC: vsync signal off
     HWC: display off
 
-This is the list that mir submits to HWC, the decision of hwc (overlay or GLES), and the final handles submitted to HWC during the display post. The vsync signal and the blanking are also logged.
+This is the list that mir submits to HWC, the decision of hwc (overlay or GLES),
+and the final handles submitted to HWC during the display post. The vsync signal
+and the blanking are also logged.
 
 If you run
 
     mir_demo_standalone_render_overlays --display-report log
 
-You will get the EGL configuration that was selected for the framebuffer EGL context, as well as the HWC version. 
+You will get the EGL configuration that was selected for the framebuffer EGL
+context, as well as the HWC version. 
 
 Reporting Problems
 -----------------
-If any of the above tests crash, hang, or experience a problem, the mir team wants to help fix it.
+If any of the above tests crash, hang, or experience a problem, the mir team
+wants to help fix it.
 When diagnosing an android problem, these logs are most helpful:
- - The log of the mir program when it crashes with the "Additional Android Information".
+ - The log of the mir program when it crashes with the "Additional Android
+Information".
  - A stacktrace from where mir has crashed or hung.
  - The logcat from /system/bin/logcat at the time of the problem
  - The kernel log from dmesg at the time of the problem.
