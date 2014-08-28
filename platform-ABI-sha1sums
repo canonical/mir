@@ -3,8 +3,8 @@
 8f47feb6d983aa5c9ebd58e9d1524361c9f5e651  include/platform/mir/fatal.h
 e9e97ba2db4c6aeb269630547bf5a558da17d896  include/platform/mir/graphics/basic_platform.h
 05c154bbfa81e16795c18f27000711741d5592e0  include/platform/mir/graphics/buffer_basic.h
-885192f0da197f60f683e70b1bc6c838e6cfd82a  include/platform/mir/graphics/buffer.h
-4610330452052a58d6067004adbd70f4701c11bf  include/platform/mir/graphics/buffer_id.h
+54328767ca330ba166160a486bd0688406ab0222  include/platform/mir/graphics/buffer.h
+5875f13f5b029a4b5291e9baec3ae434b72be27c  include/platform/mir/graphics/buffer_id.h
 827cbc0ecbcea21dd794ab4b8119a5710bb266d3  include/platform/mir/graphics/buffer_initializer.h
 d7507a326f8cfcc4707c1eb28cf7b666420f92fb  include/platform/mir/graphics/buffer_ipc_packer.h
 748f5c2aab11189aa02c4a89ab900561548e7304  include/platform/mir/graphics/buffer_properties.h
@@ -58,7 +58,7 @@ d954464ef2d20c2876db68c94512a443186da09b  include/shared/mir/geometry/point.h
 76d576231de039e25f4cf30829504552dcb9fc53  include/shared/mir/graphics/android/android_driver_interpreter.h
 c02a1e68d5a8ccfd8710440e166c9e32bc974f1e  include/shared/mir/graphics/android/android_native_buffer.h
 05e7b043ccf49582a78e880967b3bc1f3512e010  include/shared/mir/graphics/android/fence.h
-9956c408e05c5785143c491f868d8be5c17ea40c  include/shared/mir/graphics/android/mir_native_window.h
+0168b68dea12355c22cd39fbfc50bca0e21fd6e5  include/shared/mir/graphics/android/mir_native_window.h
 8f6d9dc681f3e0d212e6a74f9170ea7b3eb2607f  include/shared/mir/graphics/android/native_buffer.h
 424d1ff5b9bc299fc43f0afe961c4dafc3227992  include/shared/mir/graphics/android/sync_fence.h
 e1be9faee8b844ca2ce617f8fd82c9ee08d56bed  include/shared/mir/graphics/native_buffer.h

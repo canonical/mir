@@ -170,7 +170,13 @@ void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::Surface> 
     for (auto &layer : layers_by_depth)
     {
         for (auto it = layer.second.begin(); it != layer.second.end(); ++it)
-            callback(*it);
+        {
+            if ((*it)->query(mir_surface_attrib_visibility) ==
+                MirSurfaceVisibility::mir_surface_visibility_exposed)
+            {
+                callback(*it);
+            }
+        }
     }
 }
 

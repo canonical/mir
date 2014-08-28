@@ -41,11 +41,13 @@ target_link_libraries(mircommon
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
 set(MIRCOMMON_ABI 1)
+set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(mircommon
 
   PROPERTIES
   SOVERSION ${MIRCOMMON_ABI}
+  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
 install(TARGETS mircommon LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -54,3 +56,6 @@ install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/shared/mir ${CMAKE_SOURCE_DIR}/include/shared/mir_toolkit
   DESTINATION "include/mircommon"
 )
+
+set(MIR_COMMON_OBJECTS ${MIR_COMMON_SOURCES} PARENT_SCOPE)
+set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)
