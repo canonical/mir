@@ -39,48 +39,44 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-class ExceptionThrowingConfiguration : public mtf::StubConnectionConfiguration
+enum Method : uint64_t
 {
-    using mtf::StubConnectionConfiguration::StubConnectionConfiguration;
-
-    std::shared_ptr<mir::client::ClientPlatformFactory> the_client_platform_factory() override
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
-    }
+    none = 0,
+    the_client_platform_factory = 1<<0,
+    create_client_platform      = 1<<1,
+    create_egl_native_window    = 1<<2,
+    create_buffer_factory       = 1<<3
 };
 
-class BoobytrappedPlatformFactory : public mir::client::ClientPlatformFactory
+template<Method name, Method failure_set>
+struct ShouldFail
 {
-    std::shared_ptr<mir::client::ClientPlatform>
-    create_client_platform(mir::client::ClientContext* /*context*/) override
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
-    }
+    enum { result = (name & failure_set) };
 };
 
-class BoobytrappedPlatformFactoryConfiguration : public mtf::StubConnectionConfiguration
-{
-    using mtf::StubConnectionConfiguration::StubConnectionConfiguration;
-
-    std::shared_ptr<mir::client::ClientPlatformFactory> the_client_platform_factory() override
-    {
-        return std::make_shared<BoobytrappedPlatformFactory>();
-    }
-};
-
-class FailingPlatform : public mir::client::ClientPlatform
+template<Method failure_set>
+class ConfigurableFailurePlatform : public mir::client::ClientPlatform
 {
     std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mir::client::ClientSurface *)
     {
+        if (ShouldFail<Method::create_egl_native_window, failure_set>::result)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+        }
         return std::shared_ptr<EGLNativeWindowType>{};
     }
     MirPlatformType platform_type() const
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+        return MirPlatformType::mir_platform_type_gbm;
     }
     std::shared_ptr<mir::client::ClientBufferFactory> create_buffer_factory()
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+        if (ShouldFail<Method::create_buffer_factory, failure_set>::result)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+        }
+        return std::shared_ptr<mir::client::ClientBufferFactory>{};
     }
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
     {
@@ -89,28 +85,38 @@ class FailingPlatform : public mir::client::ClientPlatform
     MirNativeBuffer *convert_native_buffer(mir::graphics::NativeBuffer*) const
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+        return nullptr;
     }
 };
 
-class FailingPlatformProducingFactory : public mir::client::ClientPlatformFactory
+template<Method failure_set>
+class ConfigurableFailureFactory: public mir::client::ClientPlatformFactory
 {
     std::shared_ptr<mir::client::ClientPlatform>
     create_client_platform(mir::client::ClientContext* /*context*/) override
     {
-        return std::make_shared<FailingPlatform >();
+        if (ShouldFail<Method::create_client_platform, failure_set>::result)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+        }
+        return std::make_shared<ConfigurableFailurePlatform<failure_set>>();
     }
 };
 
-class FailingPlatformProducingFactoryConfiguration : public mtf::StubConnectionConfiguration
+template<Method failure_set>
+class ConfigurableFailureConfiguration : public mtf::StubConnectionConfiguration
 {
     using mtf::StubConnectionConfiguration::StubConnectionConfiguration;
 
     std::shared_ptr<mir::client::ClientPlatformFactory> the_client_platform_factory() override
     {
-        return std::make_shared<FailingPlatformProducingFactory>();
+        if (ShouldFail<Method::the_client_platform_factory, failure_set>::result)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"});
+        }
+        return std::make_shared<ConfigurableFailureFactory<failure_set>>();
     }
 };
-
 
 class ClientLibraryErrors : public mtf::InProcessServer
 {
@@ -126,7 +132,7 @@ private:
 
 TEST_F(ClientLibraryErrors, ExceptionInClientConfigurationConstructorGeneratesError)
 {
-    mtf::UsingClientPlatform<ExceptionThrowingConfiguration> stubby;
+    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::the_client_platform_factory>> stubby;
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -136,7 +142,7 @@ TEST_F(ClientLibraryErrors, ExceptionInClientConfigurationConstructorGeneratesEr
 
 TEST_F(ClientLibraryErrors, ExceptionInPlatformConstructionGeneratesError)
 {
-    mtf::UsingClientPlatform<BoobytrappedPlatformFactoryConfiguration> stubby;
+    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_client_platform>> stubby;
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -147,6 +153,8 @@ TEST_F(ClientLibraryErrors, ExceptionInPlatformConstructionGeneratesError)
 TEST_F(ClientLibraryErrors, ConnectingToGarbageSocketReturnsAppropriateError)
 {
     using namespace testing;
+    mtf::UsingStubClientPlatform stubby;
+
     auto connection = mir_connect_sync("garbage", __PRETTY_FUNCTION__);
     ASSERT_THAT(connection, NotNull());
 
@@ -162,7 +170,7 @@ TEST_F(ClientLibraryErrors, ConnectingToGarbageSocketReturnsAppropriateError)
 
 TEST_F(ClientLibraryErrors, CreateSurfaceReturnsErrorObjectOnFailure)
 {
-    mtf::UsingClientPlatform<FailingPlatformProducingFactoryConfiguration> stubby;
+    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_buffer_factory>> stubby;
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -217,7 +225,7 @@ TEST_F(ClientLibraryErrorsDeathTest, CreatingSurfaceSynchronoslyOnMalconstructed
         mir_display_output_id_invalid
     };
 
-    mtf::UsingClientPlatform<ExceptionThrowingConfiguration> stubby;
+    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::the_client_platform_factory>> stubby;
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -236,7 +244,7 @@ TEST_F(ClientLibraryErrorsDeathTest, CreatingSurfaceSynchronoslyOnInvalidConnect
         mir_display_output_id_invalid
     };
 
-    mtf::UsingClientPlatform<BoobytrappedPlatformFactoryConfiguration> stubby;
+    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_client_platform>> stubby;
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
