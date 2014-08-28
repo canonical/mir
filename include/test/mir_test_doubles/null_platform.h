@@ -22,6 +22,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "null_display.h"
+#include "null_platform_ipc_operations.h"
 
 namespace mir
 {
@@ -56,9 +57,9 @@ class NullPlatform : public graphics::Platform
         return std::shared_ptr<graphics::InternalClient>();
     }
 
-    void fill_buffer_package(
-        graphics::BufferIPCPacker*, graphics::Buffer const*, graphics::BufferIpcMsgType) const
+    std::shared_ptr<graphics::PlatformIpcOperations> create_ipc_operations() const override
     {
+        return std::make_shared<NullPlatformIpcOperations>();
     }
 
     EGLNativeDisplayType egl_native_display() const

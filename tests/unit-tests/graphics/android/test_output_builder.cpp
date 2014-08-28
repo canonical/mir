@@ -22,7 +22,6 @@
 #include "src/platform/graphics/android/resource_factory.h"
 #include "src/platform/graphics/android/graphic_buffer_allocator.h"
 #include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_buffer_packer.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_android_hw.h"

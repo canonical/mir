@@ -66,7 +66,7 @@ public:
     }
 
     void fill_buffer_package(
-        mg::BufferIPCPacker*, mg::Buffer const*, mg::BufferIpcMsgType) const override {}
+        mg::BufferIpcMessage*, mg::Buffer const*, mg::BufferIpcMsgType) const override {}
 };
 
 TEST(NestedGraphicsPlatform, egl_native_display_is_host_connection_native_display)

@@ -25,11 +25,12 @@
 #include "internal_client.h"
 #include "output_builder.h"
 #include "hwc_loggers.h"
+#include "ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/buffer_id.h"
-#include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/graphics/display_report.h"
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
@@ -82,7 +83,8 @@ mga::AndroidPlatform::AndroidPlatform(
     std::shared_ptr<mga::DisplayBuilder> const& display_builder,
     std::shared_ptr<mg::DisplayReport> const& display_report)
     : display_builder(display_builder),
-      display_report(display_report)
+      display_report(display_report),
+      ipc_operations(std::make_shared<mga::IpcOperations>())
 {
 }
 
@@ -112,40 +114,15 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-void mga::AndroidPlatform::fill_buffer_package(
-    BufferIPCPacker* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const
+std::shared_ptr<mg::PlatformIpcOperations> mga::AndroidPlatform::create_ipc_operations() const
 {
-    auto native_buffer = buffer->native_buffer_handle();
+    return ipc_operations;
+}
 
-    mir::Fd fence_fd(native_buffer->copy_fence());
-    if (fence_fd != mir::Fd::invalid)
-    {
-        packer->pack_data(static_cast<int>(mga::BufferFlag::fenced));
-        packer->pack_fd(fence_fd);
-    }
-    else
-    {
-        packer->pack_data(static_cast<int>(mga::BufferFlag::unfenced));
-    }
-
-    if (msg_type == mg::BufferIpcMsgType::full_msg)
-    {
-        auto buffer_handle = native_buffer->handle();
-
-        int offset = 0;
-
-        for(auto i=0; i<buffer_handle->numFds; i++)
-        {
-            packer->pack_fd(mir::Fd(IntOwnedFd{buffer_handle->data[offset++]}));
-        }
-        for(auto i=0; i<buffer_handle->numInts; i++)
-        {
-            packer->pack_data(buffer_handle->data[offset++]);
-        }
-
-        packer->pack_stride(buffer->stride());
-        packer->pack_size(buffer->size());
-    }
+void mga::AndroidPlatform::fill_buffer_package(
+    BufferIpcMessage* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const
+{
+    ipc_operations->pack_buffer(*packer, *buffer, msg_type);
 }
 
 EGLNativeDisplayType mga::AndroidPlatform::egl_native_display() const

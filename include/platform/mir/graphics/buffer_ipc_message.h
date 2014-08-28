@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013,2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
-#define MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
+#ifndef MIR_GRAPHICS_BUFFER_IPC_MESSAGE_H_
+#define MIR_GRAPHICS_BUFFER_IPC_MESSAGE_H_
 
 #include "mir/geometry/dimensions.h"
 #include "mir/geometry/size.h"
@@ -28,10 +28,10 @@ namespace mir
 namespace graphics
 {
 
-class BufferIPCPacker
+class BufferIpcMessage
 {
 public:
-    virtual ~BufferIPCPacker() = default;
+    virtual ~BufferIpcMessage() = default;
     virtual void pack_fd(Fd const&) = 0;
     virtual void pack_data(int) = 0;
     virtual void pack_stride(geometry::Stride) = 0;
@@ -39,13 +39,13 @@ public:
     virtual void pack_size(geometry::Size const& size) = 0;
 
 protected:
-    BufferIPCPacker() {}
-    BufferIPCPacker(BufferIPCPacker const&) = delete;
-    BufferIPCPacker& operator=(BufferIPCPacker const&) = delete;
+    BufferIpcMessage() {}
+    BufferIpcMessage(BufferIpcMessage const&) = delete;
+    BufferIpcMessage& operator=(BufferIpcMessage const&) = delete;
 
 };
 
 }
 }
 
-#endif /* MIR_GRAPHICS_BUFFER_IPC_PACKER_H_ */
+#endif /* MIR_GRAPHICS_BUFFER_IPC_MESSAGE_H_ */

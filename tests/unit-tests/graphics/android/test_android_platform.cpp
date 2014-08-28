@@ -18,13 +18,17 @@
 
 #include "src/server/report/null_report_factory.h"
 #include "mir/graphics/native_platform.h"
-#include "mir/graphics/native_buffer.h"
-#include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/platform_ipc_operations.h"
+//<<<<<<< TREE
+//#include "mir/graphics/native_buffer.h"
+//#include "mir/graphics/buffer_ipc_packer.h"
+//=======
+//>>>>>>> MERGE-SOURCE
 #include "mir/options/program_option.h"
 #include "src/platform/graphics/android/android_platform.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_android_hw.h"
-#include "mir_test_doubles/mock_buffer_packer.h"
+#include "mir_test_doubles/mock_buffer_ipc_message.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/stub_display_builder.h"
 #include "mir_test_doubles/fd_matcher.h"
@@ -95,27 +99,27 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
 
     mga::AndroidPlatform platform(stub_display_builder, stub_display_report);
 
-    mtd::MockPacker mock_packer;
+    mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
-    EXPECT_CALL(mock_packer, pack_data(static_cast<int>(mga::BufferFlag::fenced)));
-    EXPECT_CALL(mock_packer, pack_fd(mtd::RawFdMatcher(fake_fence)));
+    EXPECT_CALL(mock_ipc_msg, pack_data(static_cast<int>(mga::BufferFlag::fenced)));
+    EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(fake_fence)));
     for(auto i=0u; i<num_fds; i++)
-        EXPECT_CALL(mock_packer, pack_fd(mtd::RawFdMatcher(native_buffer_handle->data[offset++])));
+        EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(native_buffer_handle->data[offset++])));
     for(auto i=0u; i<num_ints; i++)
-        EXPECT_CALL(mock_packer, pack_data(native_buffer_handle->data[offset++]));
+        EXPECT_CALL(mock_ipc_msg, pack_data(native_buffer_handle->data[offset++]));
 
     EXPECT_CALL(*mock_buffer, stride())
         .WillOnce(Return(stride));
-    EXPECT_CALL(mock_packer, pack_stride(stride))
+    EXPECT_CALL(mock_ipc_msg, pack_stride(stride))
         .Times(1);
 
     EXPECT_CALL(*mock_buffer, size())
         .WillOnce(Return(mir::geometry::Size{123, 456}));
-    EXPECT_CALL(mock_packer, pack_size(_))
+    EXPECT_CALL(mock_ipc_msg, pack_size(_))
         .Times(1);
 
     platform.fill_buffer_package(
-        &mock_packer, mock_buffer.get(), mg::BufferIpcMsgType::full_msg);
+        &mock_ipc_msg, mock_buffer.get(), mg::BufferIpcMsgType::full_msg);
 }
 
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_without_fence)
@@ -126,34 +130,70 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
 
     mga::AndroidPlatform platform(stub_display_builder, stub_display_report);
 
-    mtd::MockPacker mock_packer;
+    mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
-    EXPECT_CALL(mock_packer, pack_data(static_cast<int>(mga::BufferFlag::unfenced)));
-    EXPECT_CALL(mock_packer, pack_fd(mtd::RawFdMatcher(-1)))
+    EXPECT_CALL(mock_ipc_msg, pack_data(static_cast<int>(mga::BufferFlag::unfenced)));
+    EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(-1)))
         .Times(0);
+
     for(auto i=0u; i<num_fds; i++)
     {
-        EXPECT_CALL(mock_packer, pack_fd(mtd::RawFdMatcher(native_buffer_handle->data[offset++])))
+        EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(native_buffer_handle->data[offset++])))
             .Times(1);
     }
     for(auto i=0u; i<num_ints; i++)
     {
-        EXPECT_CALL(mock_packer, pack_data(native_buffer_handle->data[offset++]))
+        EXPECT_CALL(mock_ipc_msg, pack_data(native_buffer_handle->data[offset++]))
             .Times(1);
     }
 
     EXPECT_CALL(*mock_buffer, stride())
         .WillOnce(Return(stride));
-    EXPECT_CALL(mock_packer, pack_stride(stride))
+    EXPECT_CALL(mock_ipc_msg, pack_stride(stride))
         .Times(1);
 
     EXPECT_CALL(*mock_buffer, size())
         .WillOnce(Return(mir::geometry::Size{123, 456}));
-    EXPECT_CALL(mock_packer, pack_size(_))
+    EXPECT_CALL(mock_ipc_msg, pack_size(_))
         .Times(1);
 
     platform.fill_buffer_package(
-        &mock_packer, mock_buffer.get(), mg::BufferIpcMsgType::full_msg);
+        &mock_ipc_msg, mock_buffer.get(), mg::BufferIpcMsgType::full_msg);
+}
+
+TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
+{
+    using namespace ::testing;
+    EXPECT_CALL(*native_buffer, copy_fence())
+        .WillOnce(Return(-1));
+
+    mga::AndroidPlatform platform(stub_display_builder, stub_display_report);
+
+    mtd::MockBufferIpcMessage mock_ipc_msg;
+    int offset = 0;
+    for(auto i=0u; i<num_fds; i++)
+    {
+        EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(native_buffer_handle->data[offset++])))
+            .Times(1);
+    }
+    EXPECT_CALL(mock_ipc_msg, pack_data(static_cast<int>(mga::BufferFlag::unfenced)));
+    for(auto i=0u; i<num_ints; i++)
+    {
+        EXPECT_CALL(mock_ipc_msg, pack_data(native_buffer_handle->data[offset++]))
+            .Times(1);
+    }
+
+    EXPECT_CALL(*mock_buffer, stride())
+        .WillOnce(Return(stride));
+    EXPECT_CALL(mock_ipc_msg, pack_stride(stride))
+        .Times(1);
+
+    EXPECT_CALL(*mock_buffer, size())
+        .WillOnce(Return(mir::geometry::Size{123, 456}));
+    EXPECT_CALL(mock_ipc_msg, pack_size(_))
+        .Times(1);
+
+    platform.fill_buffer_package(&mock_ipc_msg, mock_buffer.get(), mg::BufferIpcMsgType::full_msg);
 }
 
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ipc)
@@ -162,19 +202,20 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
 
     int fake_fence{33};
     mga::AndroidPlatform platform(stub_display_builder, stub_display_report);
+    auto ipc_ops = platform.create_ipc_operations();
 
-    mtd::MockPacker mock_packer;
+    mtd::MockBufferIpcMessage mock_ipc_msg;
 
     Sequence seq;
-    EXPECT_CALL(mock_packer, pack_data(static_cast<int>(mga::BufferFlag::fenced)))
+    EXPECT_CALL(mock_ipc_msg, pack_data(static_cast<int>(mga::BufferFlag::fenced)))
         .InSequence(seq);
-    EXPECT_CALL(mock_packer, pack_fd(mtd::RawFdMatcher(fake_fence)))
+    EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(fake_fence)))
         .InSequence(seq);
-    EXPECT_CALL(mock_packer, pack_data(static_cast<int>(mga::BufferFlag::unfenced)))
+    EXPECT_CALL(mock_ipc_msg, pack_data(static_cast<int>(mga::BufferFlag::unfenced)))
         .InSequence(seq);
-    EXPECT_CALL(mock_packer, pack_stride(_))
+    EXPECT_CALL(mock_ipc_msg, pack_stride(_))
         .Times(0);
-    EXPECT_CALL(mock_packer, pack_size(_))
+    EXPECT_CALL(mock_ipc_msg, pack_size(_))
         .Times(0);
 
     EXPECT_CALL(*native_buffer, copy_fence())
@@ -182,8 +223,8 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
         .WillOnce(Return(fake_fence))
         .WillOnce(Return(-1));
 
-    platform.fill_buffer_package(&mock_packer, mock_buffer.get(), mg::BufferIpcMsgType::update_msg);
-    platform.fill_buffer_package(&mock_packer, mock_buffer.get(), mg::BufferIpcMsgType::update_msg);
+    ipc_ops->pack_buffer(mock_ipc_msg, *mock_buffer, mg::BufferIpcMsgType::update_msg);
+    ipc_ops->pack_buffer(mock_ipc_msg, *mock_buffer, mg::BufferIpcMsgType::update_msg);
 }
 
 TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
