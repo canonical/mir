@@ -672,3 +672,24 @@ TEST_F(SurfaceStack, observer_can_remove_itself_within_notification)
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
 }
+
+TEST_F(SurfaceStack, only_enumerates_exposed_input_surfaces)
+{
+    using namespace ::testing;
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
+
+    stub_surface1->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_exposed);
+    stub_surface2->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_occluded);
+    stub_surface3->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_occluded);
+
+    int num_exposed_surfaces = 0;
+    auto const count_exposed_surfaces = [&num_exposed_surfaces](std::shared_ptr<mi::Surface> const&){
+        num_exposed_surfaces++;
+    };
+
+    stack.for_each(count_exposed_surfaces);
+    EXPECT_THAT(num_exposed_surfaces, Eq(1));
+}

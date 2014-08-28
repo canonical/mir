@@ -16,7 +16,7 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "src/server/input/android/input_translator.cpp"
+#include "src/server/input/android/input_translator.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/client_event_matchers.h"
@@ -27,6 +27,7 @@
 #include <cstring>
 
 namespace droidinput = android;
+namespace mia = mir::input::android;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 

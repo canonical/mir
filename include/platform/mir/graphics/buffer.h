@@ -20,6 +20,7 @@
 #define MIR_COMPOSITOR_BUFFER_H_
 
 #include "mir/graphics/native_buffer.h"
+#include "mir/graphics/buffer_id.h"
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
 
@@ -29,7 +30,6 @@ namespace mir
 {
 namespace graphics
 {
-class BufferID;
 
 class Buffer
 {
