@@ -421,7 +421,7 @@ struct MirClientSurfaceTest : public testing::Test
 
     ~MirClientSurfaceTest()
     {
-        // Clear the lifecycle callback in order not to get SIGHUP by the
+        // Clear the lifecycle callback in order not to get SIGPIPE by the
         // default lifecycle handler during connection teardown
         connection->register_lifecycle_event_callback(null_lifecycle_callback, nullptr);
     }
