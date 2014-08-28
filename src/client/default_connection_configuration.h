@@ -57,12 +57,16 @@ public:
     std::shared_ptr<LifecycleControl> the_lifecycle_control();
     std::shared_ptr<EventSink> the_event_sink();
     std::shared_ptr<EventHandlerRegister> the_event_handler_register();
+    std::shared_ptr<SharedLibrary> the_platform_library() override;
 
     virtual std::string the_socket_file();
     virtual std::shared_ptr<rpc::RpcReport> the_rpc_report();
     virtual std::shared_ptr<input::receiver::InputReceiverReport> the_input_receiver_report();
 
 protected:
+    // MUST be first data member so it is destroyed last.
+    std::shared_ptr<mir::SharedLibrary> platform_library;
+
     CachedPtr<google::protobuf::RpcChannel> rpc_channel;
     CachedPtr<mir::logging::Logger> logger;
     CachedPtr<ClientPlatformFactory> client_platform_factory;
