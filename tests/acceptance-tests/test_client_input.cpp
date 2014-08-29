@@ -31,6 +31,7 @@
 #include "mir_test/wait_condition.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/client_event_matchers.h"
+#include "mir_test/spin_wait.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -89,6 +90,9 @@ struct InputClient
 
         MirEventDelegate const event_delegate { handle_input, this };
         mir_surface_set_event_handler(surface, &event_delegate);
+        mir_surface_swap_buffers_sync(surface);
+
+        wait_for_surface_to_become_focused_and_exposed(surface);
 
         ready_to_accept_events.wake_up_everyone();
         all_events_received.wait_for_at_most_seconds(10);
@@ -105,6 +109,20 @@ struct InputClient
             return;
 
         client->handler.handle_input(ev);
+    }
+
+    void wait_for_surface_to_become_focused_and_exposed(MirSurface* surface)
+    {
+        bool success = mt::spin_wait_for_condition_or_timeout(
+            [surface]
+            {
+                return mir_surface_get_visibility(surface) == mir_surface_visibility_exposed &&
+                       mir_surface_get_focus(surface) == mir_surface_focused;
+            },
+            std::chrono::seconds{5});
+
+        if (!success)
+            throw std::runtime_error("Timeout waiting for surface to become focused and exposed");
     }
 
     static int const surface_width = 100;

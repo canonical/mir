@@ -755,6 +755,7 @@ const FakeEventHub::FakeDevice* FakeEventHub::getDevice(int32_t deviceId) const
 
 size_t FakeEventHub::eventsQueueSize() const
 {
+    std::lock_guard<std::mutex> lg(guard);
     return events_available.size();
 }
 
