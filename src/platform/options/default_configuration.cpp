@@ -23,6 +23,8 @@
 #include "mir/default_configuration.h"
 #include "mir/abnormal_exit.h"
 
+#include <dlfcn.h>
+
 namespace mo = mir::options;
 
 char const* const mo::server_socket_opt           = "file,f";
@@ -62,6 +64,15 @@ int const glog_minloglevel_default     = 0;
 char const* const glog_log_dir_default = "";
 bool const enable_input_default        = true;
 char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
+
+// Hack around the way Qt loads mir
+void ensure_loaded_with_rtld_global()
+{
+    Dl_info info;
+
+    dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global), &info);
+    dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
+}
 }
 
 mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
@@ -169,6 +180,8 @@ void mo::DefaultConfiguration::add_platform_options()
     {
         graphics_libname = options.get<std::string>(platform_graphics_lib);
     }
+
+    ensure_loaded_with_rtld_global();
 
     auto graphics_lib = load_library(graphics_libname);
     auto add_platform_options = graphics_lib->load_function<mir::graphics::AddPlatformOptions>(std::string("add_platform_options"));
