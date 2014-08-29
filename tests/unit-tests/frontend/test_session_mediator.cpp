@@ -246,6 +246,7 @@ struct SessionMediator : public ::testing::Test
     mp::Buffer buffer_response;
     mp::DRMMagic drm_request;
     mp::DRMAuthMagicStatus drm_response;
+    mp::BufferRequest buffer_request;
 
     mtd::StubBuffer buffer1;
     mtd::StubBuffer buffer2;
@@ -313,6 +314,10 @@ TEST_F(SessionMediator, calling_methods_before_connect_throws)
 
     EXPECT_THROW({
         mediator.next_buffer(nullptr, &surface_id_request, &buffer_response, null_callback.get());
+    }, std::logic_error);
+
+    EXPECT_THROW({
+        mediator.exchange_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
     }, std::logic_error);
 
     EXPECT_THROW({
@@ -689,7 +694,6 @@ TEST_F(SessionMediator, exchange_buffer)
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
     EXPECT_THAT(surface_response.buffer().buffer_id(), Eq(stub_buffer1.id().as_value()));
 
-    mp::BufferRequest buffer_request;
     *buffer_request.mutable_id() = surface_response.id();
     buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer().buffer_id());
     mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
@@ -711,7 +715,6 @@ TEST_F(SessionMediator, exchange_buffer_throws_if_client_submits_bad_request)
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
     EXPECT_THAT(surface_response.buffer().buffer_id(), Eq(stub_buffer1.id().as_value()));
 
-    mp::BufferRequest buffer_request;
     *buffer_request.mutable_id() = surface_response.id();
     //client doesnt own stub_buffer2
     buffer_request.mutable_buffer()->set_buffer_id(stub_buffer2.id().as_value());

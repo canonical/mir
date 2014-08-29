@@ -259,7 +259,7 @@ void mf::SessionMediator::exchange_buffer(
 
     auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
     auto const session = weak_session.lock();
-    if (session.get() == nullptr)
+    if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     auto const& surface = session->get_surface(surface_id);
