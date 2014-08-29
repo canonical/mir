@@ -46,6 +46,11 @@ struct MockFrontendSurface : public frontend::Surface
             .WillByDefault(Return(input_fd));
     }
 
+    MockFrontendSurface(int input_fd) :
+        MockFrontendSurface(nullptr, input_fd)
+    {
+    }
+
     ~MockFrontendSurface() noexcept {}
 
     MOCK_METHOD0(destroy, void());
