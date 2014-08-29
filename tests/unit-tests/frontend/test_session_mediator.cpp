@@ -113,6 +113,8 @@ public:
 
     std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const
     {
+        if (mock_surfaces.find(surface) == mock_surfaces.end())
+            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SurfaceId"));
         return mock_surfaces.at(surface);
     }
 
@@ -672,7 +674,6 @@ TEST_F(SessionMediator, exchange_buffer)
     mp::Buffer exchanged_buffer;
     mtd::StubBuffer stub_buffer1;
     mtd::StubBuffer stub_buffer2;
-    mg::BufferID id{3};
 
     //create
     Sequence seq;
@@ -693,4 +694,35 @@ TEST_F(SessionMediator, exchange_buffer)
     buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer().buffer_id());
     mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
     EXPECT_THAT(exchanged_buffer.buffer_id(), Eq(stub_buffer2.id().as_value()));
+}
+
+TEST_F(SessionMediator, exchange_buffer_throws_if_client_submits_bad_request)
+{
+    using namespace testing;
+    auto const& mock_surface = stubbed_session->mock_surface_at(mf::SurfaceId{0});
+    mp::Buffer exchanged_buffer;
+    mtd::StubBuffer stub_buffer1;
+    mtd::StubBuffer stub_buffer2;
+
+    EXPECT_CALL(*mock_surface, swap_buffers(_, _))
+        .WillOnce(InvokeArgument<1>(&stub_buffer1));
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
+    EXPECT_THAT(surface_response.buffer().buffer_id(), Eq(stub_buffer1.id().as_value()));
+
+    mp::BufferRequest buffer_request;
+    *buffer_request.mutable_id() = surface_response.id();
+    //client doesnt own stub_buffer2
+    buffer_request.mutable_buffer()->set_buffer_id(stub_buffer2.id().as_value());
+    EXPECT_THROW({
+        mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
+    }, std::runtime_error);
+
+    //client made up its own surface id.
+    buffer_request.mutable_id()->set_value(surface_response.id().value() + 2); 
+    buffer_request.mutable_buffer()->set_buffer_id(stub_buffer1.id().as_value());
+    EXPECT_THROW({
+        mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
+    }, std::runtime_error);
 }
