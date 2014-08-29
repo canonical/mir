@@ -1,8 +1,8 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
-  ${PROJECT_SOURCE_DIR}/include.private/platform
+  ${PROJECT_SOURCE_DIR}/src/platform
   ${PROJECT_SOURCE_DIR}/include/server
-  ${PROJECT_SOURCE_DIR}/include.private/server
+  ${PROJECT_SOURCE_DIR}/src/server
 )
 
 add_subdirectory(compositor/)
