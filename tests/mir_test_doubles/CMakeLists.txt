@@ -38,6 +38,9 @@ endif()
 add_library(
   mir-test-doubles STATIC
   ${TEST_UTILS_SRCS})
+
+add_dependencies(mir-test-doubles GMock)
+
 uses_android_input(mir-test-doubles)
 
 target_link_libraries(
