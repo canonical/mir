@@ -219,11 +219,11 @@ TEST_F(SurfaceTracker, can_lookup_a_buffer_from_a_buffer_id)
     EXPECT_THAT(tracker.buffer_from(stub_buffer2.id()), Eq(&stub_buffer2));
     EXPECT_THROW({
         tracker.buffer_from(stub_buffer3.id());
-    }, std::runtime_error);
+    }, std::logic_error);
 
     tracker.track_buffer(surf_id0, &stub_buffer3);
     EXPECT_THAT(tracker.buffer_from(stub_buffer3.id()), Eq(&stub_buffer3));
     EXPECT_THROW({
         tracker.buffer_from(stub_buffer0.id());
-    }, std::runtime_error);
+    }, std::logic_error);
 }
