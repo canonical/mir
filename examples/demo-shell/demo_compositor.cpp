@@ -47,20 +47,33 @@ me::DemoCompositor::DemoCompositor(
     renderer(
         factory,
         display_buffer.view_area(),
-        destination_alpha(display_buffer))
+        destination_alpha(display_buffer),
+        30.0f, //titlebar_height
+        80.0f) //shadow_radius
 {
+    scene->register_compositor(this);
 }
 
-mg::RenderableList me::DemoCompositor::generate_renderables()
+me::DemoCompositor::~DemoCompositor()
 {
+    scene->unregister_compositor(this);
+}
+
+void me::DemoCompositor::composite()
+{
+    report->began_frame(this);
     //a simple filtering out of renderables that shouldn't be drawn
     //the elements should be notified if they are rendered or not
+    bool nonrenderlist_elements{false};
     mg::RenderableList renderable_list;
     auto elements = scene->scene_elements_for(this);
     for(auto const& it : elements)
     {
-        auto const& renderable = it->renderable(); 
-        if (renderable->visible())
+        auto const& renderable = it->renderable();
+        auto const& view_area = display_buffer.view_area();
+        auto embellished = renderer.would_embellish(*renderable, view_area);
+        auto any_part_drawn = (view_area.overlaps(renderable->screen_position()) || embellished);
+        if (renderable->visible() && any_part_drawn)
         {
             renderable_list.push_back(renderable);
             it->rendered_in(this);
@@ -69,15 +82,11 @@ mg::RenderableList me::DemoCompositor::generate_renderables()
         {
             it->occluded_in(this);
         }
+        nonrenderlist_elements |= embellished;
     }
-    return renderable_list;
-}
 
-void me::DemoCompositor::composite()
-{
-    report->began_frame(this);
-    auto const& renderable_list = generate_renderables();
-    if (display_buffer.post_renderables_if_optimizable(renderable_list))
+    if (!nonrenderlist_elements &&
+        display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();
         report->finished_frame(true, this);

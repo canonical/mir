@@ -22,8 +22,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/in_process_server.h"
-#include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_framework/basic_client_server_fixture.h"
 
 #include "mir_test_doubles/null_display_changer.h"
 #include "mir_test_doubles/stub_display_configuration.h"
@@ -84,15 +83,10 @@ struct StubServerConfig : mir_test_framework::StubbedServerConfiguration
     mtd::MockScreencast mock_screencast;
 };
 
-class MirScreencastTest : public mir_test_framework::InProcessServer
+struct MirScreencastTest : mtf::BasicClientServerFixture<StubServerConfig>
 {
-public:
-    mir::DefaultServerConfiguration& server_config() override { return server_config_; }
+    mtd::MockScreencast& mock_screencast() { return server_configuration.mock_screencast; }
 
-    mtd::MockScreencast& mock_screencast() { return server_config_.mock_screencast; }
-
-    StubServerConfig server_config_;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
     MirScreencastParameters default_screencast_params {
         {0, 0, 1, 1}, 1, 1, mir_pixel_format_abgr_8888};
 };
@@ -111,9 +105,6 @@ TEST_F(MirScreencastTest, contacts_server_screencast_for_create_and_release)
 {
     using namespace testing;
 
-    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    ASSERT_TRUE(mir_connection_is_valid(connection));
-
     mf::ScreencastSessionId const screencast_session_id{99};
 
     InSequence seq;
@@ -130,16 +121,11 @@ TEST_F(MirScreencastTest, contacts_server_screencast_for_create_and_release)
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
     ASSERT_NE(nullptr, screencast);
     mir_screencast_release_sync(screencast);
-
-    mir_connection_release(connection);
 }
 
 TEST_F(MirScreencastTest, contacts_server_screencast_with_provided_params)
 {
     using namespace testing;
-
-    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    ASSERT_TRUE(mir_connection_is_valid(connection));
 
     mf::ScreencastSessionId const screencast_session_id{99};
 
@@ -164,16 +150,11 @@ TEST_F(MirScreencastTest, contacts_server_screencast_with_provided_params)
     ASSERT_NE(nullptr, screencast);
 
     mir_screencast_release_sync(screencast);
-
-    mir_connection_release(connection);
 }
 
 TEST_F(MirScreencastTest, creation_with_invalid_params_fails)
 {
     using namespace testing;
-
-    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    ASSERT_TRUE(mir_connection_is_valid(connection));
 
     MirScreencastParameters params = default_screencast_params;
     params.width = params.height = 0;
@@ -190,16 +171,11 @@ TEST_F(MirScreencastTest, creation_with_invalid_params_fails)
 
     screencast = mir_connection_create_screencast_sync(connection, &params);
     ASSERT_EQ(nullptr, screencast);
-
-    mir_connection_release(connection);
 }
 
 TEST_F(MirScreencastTest, gets_valid_egl_native_window)
 {
     using namespace testing;
-
-    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    ASSERT_TRUE(mir_connection_is_valid(connection));
 
     mf::ScreencastSessionId const screencast_session_id{99};
 
@@ -217,24 +193,17 @@ TEST_F(MirScreencastTest, gets_valid_egl_native_window)
     EXPECT_NE(MirEGLNativeWindowType(), egl_native_window);
 
     mir_screencast_release_sync(screencast);
-
-    mir_connection_release(connection);
 }
 
 TEST_F(MirScreencastTest, fails_on_client_when_server_request_fails)
 {
     using namespace testing;
 
-    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    ASSERT_TRUE(mir_connection_is_valid(connection));
-
     EXPECT_CALL(mock_screencast(), create_session(_, _, _))
         .WillOnce(Throw(std::runtime_error("")));
 
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
     ASSERT_EQ(nullptr, screencast);
-
-    mir_connection_release(connection);
 }
 
 namespace
@@ -255,15 +224,10 @@ struct MockAuthorizerServerConfig : mir_test_framework::StubbedServerConfigurati
     MockSessionAuthorizer mock_authorizer;
 };
 
-class UnauthorizedMirScreencastTest : public mir_test_framework::InProcessServer
+struct UnauthorizedMirScreencastTest : mtf::BasicClientServerFixture<MockAuthorizerServerConfig>
 {
-public:
-    mir::DefaultServerConfiguration& server_config() override { return server_config_; }
+    MockSessionAuthorizer& mock_authorizer() { return server_configuration.mock_authorizer; }
 
-    MockSessionAuthorizer& mock_authorizer() { return server_config_.mock_authorizer; }
-
-    MockAuthorizerServerConfig server_config_;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
     MirScreencastParameters default_screencast_params {
         {0, 0, 1, 1}, 1, 1, mir_pixel_format_abgr_8888};
 };

@@ -33,7 +33,7 @@ namespace doubles
 struct MockPacker : public graphics::BufferIPCPacker
 {
     ~MockPacker() noexcept {}
-    MOCK_METHOD1(pack_fd, void(int));
+    MOCK_METHOD1(pack_fd, void(Fd const&));
     MOCK_METHOD1(pack_data, void(int));
     MOCK_METHOD1(pack_stride, void(geometry::Stride));
     MOCK_METHOD1(pack_flags, void(unsigned int));

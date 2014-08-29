@@ -45,7 +45,6 @@ if(use_debflags)
 endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
-include (cmake/Doxygen.cmake)
 include (cmake/PrePush.cmake)
 include (GNUInstallDirs)
 
@@ -216,6 +215,17 @@ if (MIR_ENABLE_TESTS)
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     COMMAND sha1sum -c client-ABI-sha1sums
   )
+
+  add_test(NAME common-ABI-unchanged
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    COMMAND sha1sum -c common-ABI-sha1sums
+  )
+
+  add_test(NAME platform-ABI-unchanged
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    COMMAND sha1sum -c platform-ABI-sha1sums
+  )
 endif ()
 
 enable_coverage_report(mirserver)
+include (cmake/Doxygen.cmake)

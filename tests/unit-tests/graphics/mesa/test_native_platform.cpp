@@ -25,6 +25,7 @@
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
+#include "mir_test_doubles/fd_matcher.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -102,7 +103,7 @@ TEST_F(MesaNativePlatformTest, packs_buffer_ipc_package_correctly)
     auto const native_buffer = stub_buffer.native_buffer_handle();
 
     for(auto i = 0; i < native_buffer->fd_items; i++)
-        EXPECT_CALL(mock_packer, pack_fd(native_buffer->fd[i]))
+        EXPECT_CALL(mock_packer, pack_fd(mtd::RawFdMatcher(native_buffer->fd[i])))
             .Times(Exactly(1));
 
     for(auto i = 0; i < native_buffer->data_items; i++)
