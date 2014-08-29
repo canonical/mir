@@ -31,10 +31,10 @@ Mir Device Support
 ------------------
 
 In theory, all devices with that use the normal Android drivers abstractions
-should run Mir. Currently, we support HWC (hardware composer) version 1.1
-(JB/ICS devices). The other HWC versions should use the backup mode to draw to
-the screen. Development focus is currently on the Nexus line of devices, so
-these should be more thoroughly tested. If you have another sort of device,
-give Mir a try! If it doesn't work,
-<a href="https://bugs.launchpad.net/mir">please file a bug,</a> being very
-specific about the chipset, GPU, and driver versions that your phone has.  
+should run Mir. Currently, we support HWC (hardware composer) version 1.0 and
+later. The deprecated FB HAL module from android's libhardware should also work.
+If you are attempting to get mir to work on a new device, check out
+\subpage android_new_device_bringup "this page" for suggestions on
+troubleshooting. You can also 
+<a href="https://bugs.launchpad.net/mir">file a bug,</a> being very specific
+about the chipset, GPU, and driver versions that your phone has. 
