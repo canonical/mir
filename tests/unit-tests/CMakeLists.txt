@@ -47,6 +47,8 @@ add_executable(mir_unit_tests
   ${MIR_COMMON_OBJECTS}
 )
 
+add_dependencies(mir_unit_tests GMock)
+
 uses_android_input(mir_unit_tests)
 
 target_link_libraries(
