@@ -19,7 +19,7 @@
 #ifndef MIR_DEFAULT_EMERGENCY_CLEANUP_H_
 #define MIR_DEFAULT_EMERGENCY_CLEANUP_H_
 
-#include "emergency_cleanup.h"
+#include <mir/emergency_cleanup.h>
 
 #include <memory>
 #include <atomic>

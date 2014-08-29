@@ -21,11 +21,11 @@ endif()
 include_directories(
   include
   ${PROJECT_SOURCE_DIR}/include/platform
-  ${PROJECT_SOURCE_DIR}/src/platform
+  ${PROJECT_SOURCE_DIR}/include.private/platform
   ${PROJECT_SOURCE_DIR}/include/server
-  ${PROJECT_SOURCE_DIR}/src/server
+  ${PROJECT_SOURCE_DIR}/include.private/server
   ${PROJECT_SOURCE_DIR}/include/client
-  ${PROJECT_SOURCE_DIR}/src/client
+  ${PROJECT_SOURCE_DIR}/include.private/client
 )
 
 option(MIR_BUILD_ACCEPTANCE_TESTS "Build acceptance tests" ON)
