@@ -689,6 +689,8 @@ TEST_F(SessionMediator, exchange_buffer)
     EXPECT_THAT(surface_response.buffer().buffer_id(), Eq(stub_buffer1.id().as_value()));
 
     mp::BufferRequest buffer_request;
+    *buffer_request.mutable_id() = surface_response.id();
+    buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer().buffer_id());
     mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
     EXPECT_THAT(exchanged_buffer.buffer_id(), Eq(stub_buffer2.id().as_value()));
 }
