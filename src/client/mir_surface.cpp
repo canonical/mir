@@ -280,7 +280,13 @@ MirWaitHandle* MirSurface::release_surface(
         valid_surfaces.erase(this);
     }
 
-    return connection->release_surface(this, callback, context);
+    MirWaitHandle* wait_handle{nullptr};
+    if (connection)
+    {
+        wait_handle = connection->release_surface(this, callback, context);
+    }
+
+    return wait_handle;
 }
 
 MirNativeBuffer* MirSurface::get_current_buffer_package()
