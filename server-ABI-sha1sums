@@ -33,7 +33,6 @@ eebcdfaf8894b387d1a5acd22c2f1bc09b3c2b95  include/server/mir/compositor/destinat
 98fe6bde01fb8b25b1bacafcdf572f24c3ade3c3  include/server/mir/compositor/display_buffer_compositor_factory.h
 c7328ef5ea4531c0fa981b3e15a69ea5c8162d09  include/server/mir/compositor/display_buffer_compositor.h
 e2e3e914a331a7611032860e3c64274aa42339aa  include/server/mir/compositor/gl_renderer.h
-270ddebc5580f6fcd18fcf852e72f78b85f90c7b  include/server/mir/compositor/gl_renderer.h.~1~
 4088fb037aa1bbae897145caca99314ea6cc2aa6  include/server/mir/compositor/recently_used_cache.h
 e0860c43bf5196a792ffd7216826925e16275d07  include/server/mir/compositor/renderer_factory.h
 51391bd29f7499f8cbb89e4ba33acf2b72d93592  include/server/mir/compositor/renderer.h
