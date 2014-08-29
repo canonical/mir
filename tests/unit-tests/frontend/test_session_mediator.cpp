@@ -361,6 +361,10 @@ TEST_F(SessionMediator, calling_methods_after_disconnect_throws)
     }, std::logic_error);
 
     EXPECT_THROW({
+        mediator.exchange_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
+    }, std::logic_error);
+
+    EXPECT_THROW({
         mediator.release_surface(nullptr, &surface_id_request, nullptr, null_callback.get());
     }, std::logic_error);
 
@@ -698,6 +702,45 @@ TEST_F(SessionMediator, exchange_buffer)
     buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer().buffer_id());
     mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
     EXPECT_THAT(exchanged_buffer.buffer_id(), Eq(stub_buffer2.id().as_value()));
+}
+
+TEST_F(SessionMediator, session_exchange_buffer_sends_minimum_information)
+{
+    using namespace testing;
+    mf::SurfaceId surf_id{0};
+    mp::Buffer exchanged_buffer;
+    auto surface = stubbed_session->mock_surface_at(surf_id);
+    ON_CALL(*surface, swap_buffers(_,_))
+        .WillByDefault(Invoke(this, &SessionMediator::toggle_buffers));
+
+    //create
+    Sequence seq;
+    EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer2, mg::BufferIpcMsgType::full_msg))
+        .InSequence(seq);
+    //swap1
+    EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer1, mg::BufferIpcMsgType::full_msg))
+        .InSequence(seq);
+    //swap2
+    EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer2, mg::BufferIpcMsgType::update_msg))
+        .InSequence(seq);
+    //swap3
+    EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer1, mg::BufferIpcMsgType::update_msg))
+        .InSequence(seq);
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+
+    mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
+    *buffer_request.mutable_id() = surface_response.id();
+    buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer().buffer_id());
+
+    mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
+    buffer_request.mutable_buffer()->set_buffer_id(exchanged_buffer.buffer_id());
+
+    mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
+    buffer_request.mutable_buffer()->set_buffer_id(exchanged_buffer.buffer_id());
+
+    mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
 TEST_F(SessionMediator, exchange_buffer_throws_if_client_submits_bad_request)
