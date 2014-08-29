@@ -46,7 +46,6 @@ std::shared_ptr<mg::GLTexture> mc::RecentlyUsedCache::load(mg::Renderable const&
 
 void mc::RecentlyUsedCache::invalidate()
 {
-    mg::BufferID invalid_id;
     for (auto &t : textures)
         t.second.valid_binding = false;
 }
