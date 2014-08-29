@@ -65,7 +65,11 @@ char const* const glog_log_dir_default = "";
 bool const enable_input_default        = true;
 char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
 
-// Hack around the way Qt loads mir
+// Hack around the way Qt loads mir:
+// platform_api and therefore Mir are loaded via dlopen(..., RTLD_LOCAL).
+// While this is sensible for a plugin it would mean that some symbols
+// cannot be resolved by the Mir platform plugins. This hack makes the
+// necessary symbols global.
 void ensure_loaded_with_rtld_global()
 {
     Dl_info info;

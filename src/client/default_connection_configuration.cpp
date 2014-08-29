@@ -45,8 +45,11 @@ std::string const log_opt_val{"log"};
 std::string const lttng_opt_val{"lttng"};
 std::string const default_platform_lib{"libmirclientplatform.so"};
 
-
-// Hack around the way Qt loads mir
+// Hack around the way Qt loads mir:
+// qtmir and therefore Mir are loaded via dlopen(..., RTLD_LOCAL).
+// While this is sensible for a plugin it would mean that some symbols
+// cannot be resolved by the Mir platform plugins. This hack makes the
+// necessary symbols global.
 void ensure_loaded_with_rtld_global()
 {
     Dl_info info;
