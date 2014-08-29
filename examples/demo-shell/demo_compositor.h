@@ -46,6 +46,7 @@ public:
         std::shared_ptr<compositor::Scene> const& scene,
         graphics::GLProgramFactory const& factory,
         std::shared_ptr<compositor::CompositorReport> const& report);
+    ~DemoCompositor();
 
     void composite() override;
 

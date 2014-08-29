@@ -46,20 +46,6 @@ std::string const off_opt_val{"off"};
 std::string const log_opt_val{"log"};
 std::string const lttng_opt_val{"lttng"};
 std::string const default_platform_lib{"libmirclientplatform.so"};
-
-mir::SharedLibrary const* load_library(std::string const& libname)
-{
-
-    if (auto& ptr = mcl::libraries_cache(libname))
-    {
-        return ptr.get();
-    }
-    else
-    {
-        ptr = std::make_shared<mir::SharedLibrary>(libname);
-        return ptr.get();
-    }
-}
 }
 
 mcl::DefaultConnectionConfiguration::DefaultConnectionConfiguration(
@@ -102,14 +88,10 @@ std::shared_ptr<mcl::ClientPlatformFactory>
 mcl::DefaultConnectionConfiguration::the_client_platform_factory()
 {
     return client_platform_factory(
-        []
+        [this]
         {
-            auto const val_raw = getenv("MIR_CLIENT_PLATFORM_LIB");
-            std::string const val{val_raw ? val_raw : default_platform_lib};
-            auto const platform_lib = ::load_library(val);
-
             auto const create_client_platform_factory =
-                platform_lib->load_function<mcl::CreateClientPlatformFactory>(
+                the_platform_library()->load_function<mcl::CreateClientPlatformFactory>(
                     "create_client_platform_factory");
 
             return create_client_platform_factory();
@@ -211,7 +193,6 @@ std::shared_ptr<mir::SharedLibraryProberReport> mir::client::DefaultConnectionCo
         {
             auto val_raw = getenv("MIR_CLIENT_SHARED_LIBRARY_PROBER_REPORT");
             std::string const val{val_raw ? val_raw : off_opt_val};
-
             if (val == log_opt_val)
                 return std::make_shared<mir::logging::SharedLibraryProberReport>(the_logger());
             else if (val == lttng_opt_val)
@@ -219,4 +200,15 @@ std::shared_ptr<mir::SharedLibraryProberReport> mir::client::DefaultConnectionCo
             else
                 return std::make_shared<mir::logging::NullSharedLibraryProberReport>();
         });
+}
+
+std::shared_ptr<mir::SharedLibrary> mcl::DefaultConnectionConfiguration::the_platform_library()
+{
+    if (!platform_library)
+    {
+        auto const val_raw = getenv("MIR_CLIENT_PLATFORM_LIB");
+        std::string const libname{val_raw ? val_raw : default_platform_lib};
+        platform_library = std::make_shared<mir::SharedLibrary>(libname);
+    }
+    return platform_library;
 }
