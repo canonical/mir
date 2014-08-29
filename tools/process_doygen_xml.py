@@ -121,14 +121,18 @@ def parse_member_def(context_name, node, is_class):
               or 'build/src' in file_location \
               or 'src/shared/input/android/' in file_location
 
+    is_function = kind == 'function'
     if publish: publish = kind != 'define'
-    if publish and is_class: publish = kind == 'function' or static == 'yes'
+    if publish and is_class: publish = is_function or static == 'yes'
     if publish and prot == 'private':
-        if kind == 'function': publish = node.attributes['virt'].value == 'virtual'
+        if is_function: publish = node.attributes['virt'].value == 'virtual'
         else: publish =  False
-    print_debug_info(node, ['kind', 'prot', 'static'])
+    
+    if is_function: print_debug_info(node, ['kind', 'prot', 'static', 'virt'])
+    else: print_debug_info(node, ['kind', 'prot', 'static'])
     if debug: print '  is_class:', is_class
     report(library, publish, symbol+'*')
+    if is_function and node.attributes['virt'].value == 'virtual': report(library, publish, 'non-virtual?thunk?to?'+symbol+'*')
 
 def parse_compound_defs(xmldoc):
     compounddefs = xmldoc.getElementsByTagName('compounddef') 

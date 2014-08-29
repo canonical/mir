@@ -228,6 +228,30 @@ MATCHER_P2(MotionEventWithPosition, x, y, "")
     return true;
 }
 
+MATCHER_P4(MotionEventInDirection, x0, y0, x1, y1, "")
+{
+    if (to_ref(arg).type != mir_event_type_motion)
+        return false;
+    if (to_ref(arg).motion.action != mir_motion_action_move &&
+        to_ref(arg).motion.action != mir_motion_action_hover_move)
+        return false;
+
+    auto x2 = to_ref(arg).motion.pointer_coordinates[0].x;
+    auto y2 = to_ref(arg).motion.pointer_coordinates[0].y;
+
+    float dx1 = x1 - x0;
+    float dy1 = y1 - y0;
+
+    float dx2 = x2 - x0;
+    float dy2 = y2 - y0;
+
+    float dot_product = dx1 * dx2 + dy1 + dy2;
+
+    // Return true if both vectors are roughly the same direction (within
+    // 90 degrees).
+    return dot_product > 0.0f;
+}
+
 MATCHER(MovementEvent, "")
 {
     if (to_ref(arg).type != mir_event_type_motion)
