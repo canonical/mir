@@ -5,7 +5,7 @@ set(SOURCES
  )
 
 include_directories(
-  ${Mir_SOURCE_DIR}/include.private/test
+  ${Mir_SOURCE_DIR}/tests/include
   ${Mir_SOURCE_DIR}/include/platform
 )
 
