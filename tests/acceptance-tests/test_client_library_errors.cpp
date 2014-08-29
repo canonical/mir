@@ -151,6 +151,7 @@ TEST_F(ClientLibraryErrors, ExceptionInClientConfigurationConstructorGeneratesEr
 
     EXPECT_FALSE(mir_connection_is_valid(connection));
     EXPECT_THAT(mir_connection_get_error_message(connection), testing::HasSubstr(exception_text));
+    mir_connection_release(connection);
 }
 
 TEST_F(ClientLibraryErrors, ExceptionInPlatformConstructionGeneratesError)
@@ -161,6 +162,7 @@ TEST_F(ClientLibraryErrors, ExceptionInPlatformConstructionGeneratesError)
 
     EXPECT_FALSE(mir_connection_is_valid(connection));
     EXPECT_THAT(mir_connection_get_error_message(connection), testing::HasSubstr(exception_text));
+    mir_connection_release(connection);
 }
 
 TEST_F(ClientLibraryErrors, ConnectingToGarbageSocketReturnsAppropriateError)
@@ -179,6 +181,7 @@ TEST_F(ClientLibraryErrors, ConnectingToGarbageSocketReturnsAppropriateError)
     {
         FAIL() << error;
     }
+    mir_connection_release(connection);
 }
 
 TEST_F(ClientLibraryErrors, CreateSurfaceReturnsErrorObjectOnFailure)
@@ -202,6 +205,9 @@ TEST_F(ClientLibraryErrors, CreateSurfaceReturnsErrorObjectOnFailure)
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
 }
 
 TEST_F(ClientLibraryErrors, CreateSurfaceReturnsErrorObjectOnFailureInReplyProcessing)
@@ -225,6 +231,9 @@ TEST_F(ClientLibraryErrors, CreateSurfaceReturnsErrorObjectOnFailureInReplyProce
     ASSERT_NE(surface, nullptr);
     EXPECT_FALSE(mir_surface_is_valid(surface));
     EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
 }
 
 using ClientLibraryErrorsDeathTest = ClientLibraryErrors;
