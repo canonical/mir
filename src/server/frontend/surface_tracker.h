@@ -52,8 +52,6 @@ public:
     /* removes the surface id from all tracking */
     void remove_surface(SurfaceId);
 
-    /* Accesses the Surface that the buffer is associated with */
-    SurfaceId surface_from(graphics::BufferID) const;
     /* Access the buffer resource that the id corresponds to.
        TODO: should really be a weak or shared ptr */
     graphics::Buffer* buffer_from(graphics::BufferID) const;

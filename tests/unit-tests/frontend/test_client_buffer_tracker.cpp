@@ -205,40 +205,6 @@ TEST_F(SurfaceTracker, buffers_only_affect_associated_surfaces)
     EXPECT_EQ(&stub_buffer3, tracker.last_buffer(surf_id1));
 }
 
-TEST_F(SurfaceTracker, can_lookup_the_surfaceid_a_buffer_is_associated_with)
-{
-    using namespace testing;
-    mf::SurfaceTracker tracker{client_cache_size};
-
-    tracker.track_buffer(surf_id0, &stub_buffer1);
-    tracker.track_buffer(surf_id1, &stub_buffer0);
-
-    EXPECT_THAT(tracker.surface_from(stub_buffer0.id()), Eq(surf_id1));
-    EXPECT_THAT(tracker.surface_from(stub_buffer1.id()), Eq(surf_id0));
-
-    EXPECT_THROW({
-        tracker.surface_from(stub_buffer2.id());
-    }, std::runtime_error);
-
-    EXPECT_THROW({
-        tracker.track_buffer(surf_id0, &stub_buffer0);
-    }, std::runtime_error);
-
-    tracker.track_buffer(surf_id0, &stub_buffer1);
-    tracker.track_buffer(surf_id0, &stub_buffer2);
-    tracker.track_buffer(surf_id0, &stub_buffer3);
-    tracker.track_buffer(surf_id0, &stub_buffer4);
-
-    EXPECT_THROW({
-        //buffer1 was kicked out
-        tracker.surface_from(stub_buffer1.id());
-    }, std::runtime_error);
-    EXPECT_THAT(tracker.surface_from(stub_buffer2.id()), Eq(surf_id0));
-    EXPECT_THAT(tracker.surface_from(stub_buffer3.id()), Eq(surf_id0));
-    EXPECT_THAT(tracker.surface_from(stub_buffer4.id()), Eq(surf_id0));
-
-}
-
 TEST_F(SurfaceTracker, can_lookup_a_buffer_from_a_buffer_id)
 {
     using namespace testing;
