@@ -23,6 +23,7 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_doubles/stub_session_authorizer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -36,25 +37,11 @@
 namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
-    char const* const mir_test_socket = mtf::test_socket_file().c_str();
-}
-
-namespace
-{
-struct ConnectingClient : TestingClientConfiguration
-{
-    MirConnection *connection;
-    void exec()
-    {
-        connection = mir_connect_sync(
-            mir_test_socket,
-            __PRETTY_FUNCTION__);
-        mir_connection_release(connection);
-    }
-};
+char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
 struct ClientCredsTestFixture : BespokeDisplayServerTestFixture
 {
@@ -144,6 +131,10 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
                 screencast_is_allowed(Truly(matches_creds)))
                 .Times(1)
                 .WillOnce(Return(false));
+            EXPECT_CALL(mock_authorizer,
+                prompt_session_is_allowed(Truly(matches_creds)))
+                .Times(1)
+                .WillOnce(Return(false));
             connect_sync.try_signal_ready_for();
         }
 
@@ -159,7 +150,7 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
     launch_server_process(server_config);
 
 
-    struct ClientConfiguration : ConnectingClient
+    struct ClientConfiguration : TestingClientConfiguration
     {
         ClientConfiguration(ClientCredsTestFixture::SharedRegion *shared_region,
                             mtf::CrossProcessSync const& connect_sync)
@@ -172,7 +163,9 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
         {
             shared_region->post_client_creds();
             connect_sync.wait_for_signal_ready_for();
-            ConnectingClient::exec();
+            auto const connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+            mir_connection_release(connection);
         }
 
         ClientCredsTestFixture::SharedRegion* shared_region;
@@ -181,83 +174,38 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
     launch_client_process(client_config);
 }
 
-// TODO this test exposes a race condition when the client processes both an error
-// TODO from connect and the socket being dropped. RAOF is doing some rework that
-// TODO should fix this a side effect. It should be re-enabled when that is done.
-TEST_F(ClientCredsTestFixture, DISABLED_authorizer_may_prevent_connection_of_clients)
+// This test is also a regression test for https://bugs.launchpad.net/mir/+bug/1358191
+TEST_F(ClientCredsTestFixture, authorizer_may_prevent_connection_of_clients)
 {
     using namespace ::testing;
 
     struct ServerConfiguration : TestingServerConfiguration
     {
-        ServerConfiguration(ClientCredsTestFixture::SharedRegion *shared_region)
-            : shared_region(shared_region)
-        {
-        }
-
-        void exec() override
-        {
-            using namespace ::testing;
-
-            EXPECT_TRUE(shared_region->wait_for_client_creds());
-            auto matches_creds = [&](mf::SessionCredentials const& creds)
-            {
-                return shared_region->matches_client_process_creds(creds);
-            };
-
-            EXPECT_CALL(mock_authorizer,
-                connection_is_allowed(Truly(matches_creds)))
-                .Times(1)
-                .WillOnce(Return(false));
-        }
-
         std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer() override
         {
-            return mt::fake_shared(mock_authorizer);
-        }
+            struct StubAuthorizer : mtd::StubSessionAuthorizer
+            {
+                bool connection_is_allowed(mir::frontend::SessionCredentials const&) override
+                {
+                    return false;
+                }
+            };
 
-        ClientCredsTestFixture::SharedRegion* shared_region;
-        MockSessionAuthorizer mock_authorizer;
-    } server_config(shared_region);
+            return std::make_shared<StubAuthorizer>();
+        }
+    } server_config;
+
     launch_server_process(server_config);
 
-
-    struct ClientConfiguration : ConnectingClient
+    struct ClientConfiguration : TestingClientConfiguration
     {
-        ClientConfiguration(ClientCredsTestFixture::SharedRegion *shared_region)
-            : shared_region(shared_region)
-        {
-        }
-
         void exec() override
         {
-            shared_region->post_client_creds();
-
-            connection = mir_connect_sync(
-                mir_test_socket,
-                __PRETTY_FUNCTION__);
-
-            MirSurfaceParameters const parameters =
-            {
-                __PRETTY_FUNCTION__,
-                1, 1,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-            mir_connection_create_surface_sync(connection, &parameters);
-            EXPECT_GT(strlen(mir_connection_get_error_message(connection)), static_cast<unsigned int>(0));
+            auto const connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            EXPECT_FALSE(mir_connection_is_valid(connection));
             mir_connection_release(connection);
         }
+    } client_config;
 
-        //we are testing the connect function itself, without getting to the
-        // point where drivers are used, so force using production config
-        bool use_real_graphics(mir::options::Option const&) override
-        {
-            return true;
-        }
-
-        ClientCredsTestFixture::SharedRegion* shared_region;
-    } client_config(shared_region);
     launch_client_process(client_config);
 }

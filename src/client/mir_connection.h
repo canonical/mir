@@ -37,6 +37,8 @@
 
 namespace mir
 {
+class SharedLibrary;
+
 /// The client-side library implementation namespace
 namespace client
 {
@@ -132,12 +134,15 @@ public:
     }
 
     mir::protobuf::DisplayServer& display_server();
-    std::shared_ptr<mir::logging::Logger> const& the_logger() const;
 
 private:
     // MUST be first data member so it is destroyed last.
     struct Deregisterer
     { MirConnection* const self; ~Deregisterer(); } deregisterer;
+
+    // MUST be placed before any variables for components that are loaded
+    // from a shared library, e.g., the ClientPlatform* objects.
+    std::shared_ptr<mir::SharedLibrary> const platform_library;
 
     std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
