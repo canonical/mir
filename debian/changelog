@@ -26,10 +26,12 @@ mir (0.7.0-0ubuntu1) UNRELEASED; urgency=medium
       . Mircommon ABI bumped to 1
       . Mirplatform ABI bumped to 2
       . Mirserver ABI bumped to 25
-    - API changes
-      . Deleted function - frontend::Shell::create_surface_for(). If you have
-        the std::shared_ptr<frontend::Session> session, you can just do
-        session->create_surface(params) instead to get a SurfaceId
+    - API changes between Mir 0.6 and 0.7:
+      . mirserver: Deleted function - frontend::Shell::create_surface_for().
+        If you have the std::shared_ptr<frontend::Session> session, you can
+        just do session->create_surface(params) instead to get a SurfaceId.
+      . mirplatform: class BufferID has been replaced with a typedef. Also,
+        the BufferIPCPacker interface has changed slightly [pack_fd()].
     - Bug fixes:
       . Ensure we process lifecycle events before the nested server is torn
         down (LP: #1353465)
