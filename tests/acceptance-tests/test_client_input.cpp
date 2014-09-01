@@ -539,6 +539,8 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
     server_configuration.produce_events = [&](mtf::InputTestingServerConfiguration& server)
         {
             server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position({abs_touch_x_1, abs_touch_y_1}));
+            // Sleep here to trigger more failures (simulate slow machine)
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             server.fake_event_hub->synthesize_event(mis::a_touch_event().at_position({abs_touch_x_2, abs_touch_y_2}));
         };
     server_configuration.client_geometries[arbitrary_client_name] = ServerConfiguration::display_bounds;
@@ -550,7 +552,11 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
             EXPECT_CALL(handler, handle_input(
                 mt::TouchEvent(expected_motion_x_1, expected_motion_y_1))).Times(1);
             EXPECT_CALL(handler, handle_input(
-                mt::MotionEventWithPosition(expected_motion_x_2, expected_motion_y_2))).Times(1)
+                mt::MotionEventInDirection(expected_motion_x_1,
+                                           expected_motion_y_1,
+                                           expected_motion_x_2,
+                                           expected_motion_y_2)))
+                .Times(1)
                 .WillOnce(mt::WakeUp(&events_received));
         };
     start_client(client_config);

@@ -21,6 +21,9 @@
 
 #include <algorithm>
 
+#include <stdexcept>
+#include <boost/throw_exception.hpp>
+
 namespace ms = mir::scene;
 namespace mc = mir::compositor;
 
@@ -34,6 +37,8 @@ void ms::RenderingTracker::rendered_in(mc::CompositorID cid)
 {
     std::lock_guard<std::mutex> lock{guard};
 
+    ensure_is_active_compositor(cid);
+
     occlusions.erase(cid);
 
     configure_visibility(mir_surface_visibility_exposed);
@@ -42,6 +47,8 @@ void ms::RenderingTracker::rendered_in(mc::CompositorID cid)
 void ms::RenderingTracker::occluded_in(mc::CompositorID cid)
 {
     std::lock_guard<std::mutex> lock{guard};
+
+    ensure_is_active_compositor(cid);
 
     occlusions.insert(cid);
 
@@ -82,4 +89,10 @@ void ms::RenderingTracker::remove_occlusions_for_inactive_compositors()
         std::inserter(new_occlusions, new_occlusions.begin()));
 
     occlusions = std::move(new_occlusions);
+}
+
+void ms::RenderingTracker::ensure_is_active_compositor(compositor::CompositorID cid) const
+{
+    if (active_compositors_.find(cid) == active_compositors_.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("No active compositor with supplied id"));
 }
