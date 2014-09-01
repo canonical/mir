@@ -45,6 +45,7 @@ private:
         std::shared_ptr<graphics::GLTexture> texture;
         graphics::BufferID last_bound_buffer;
         bool used{true};
+        bool valid_binding{false};
         std::shared_ptr<graphics::Buffer> resource;
     };
 

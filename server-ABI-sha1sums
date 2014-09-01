@@ -53,7 +53,7 @@ c7328ef5ea4531c0fa981b3e15a69ea5c8162d09  include/server/mir/compositor/display_
 561e7fdc22c48cf39a19e6f7c2db5e8c1feee772  include/server/mir/compositor/frame_dropping_policy_factory.h
 e787879afa46d9c8257ff1f4ae8c7900d4b5f1a4  include/server/mir/compositor/frame_dropping_policy.h
 e2e3e914a331a7611032860e3c64274aa42339aa  include/server/mir/compositor/gl_renderer.h
-4088fb037aa1bbae897145caca99314ea6cc2aa6  include/server/mir/compositor/recently_used_cache.h
+ffb2f4f2b89412129cc5be42be3850ee2bfdcee0  include/server/mir/compositor/recently_used_cache.h
 e0860c43bf5196a792ffd7216826925e16275d07  include/server/mir/compositor/renderer_factory.h
 51391bd29f7499f8cbb89e4ba33acf2b72d93592  include/server/mir/compositor/renderer.h
 686a839fd0cd5fa469344dc49190ff9d578efc25  include/server/mir/compositor/scene_element.h
