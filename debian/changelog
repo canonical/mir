@@ -52,10 +52,11 @@ mir (0.7.0-0ubuntu1) UNRELEASED; urgency=medium
         needed by other objects (LP: #1358191)
       . Examples: Register the DemoCompositor with the Scene to properly
         process visibility events (LP: #1359487)
-      . Mir_demo_client_basic: Don't assert on user errors like failing to
+      . mir_demo_client_basic: Don't assert on user errors like failing to
         connect to a Mir server (LP: #1331958)
       . Tests: Explicitly depend on GMock target to avoid build races
         (LP: #1362646)
+      . Some Mir clients spin at 100% CPU if the server dies (LP: #1340120)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 18 Aug 2014 15:30:37 +0800
 
