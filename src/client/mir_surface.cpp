@@ -56,6 +56,18 @@ MirSurface::MirSurface(
       buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
       input_platform(input_platform)
 {
+    const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
+    if (report_target && !strcmp(report_target, "log"))
+    {
+        auto& logger = connection->the_logger();
+        perf_report = std::make_shared<mir::client::logging::PerfReport>(logger);
+    }
+    else
+    {
+        perf_report = std::make_shared<mir::client::NullPerfReport>();
+    }
+    perf_report->name(params.name);
+
     for (int i = 0; i < mir_surface_attribs; i++)
         attrib_cache[i] = -1;
 
@@ -72,19 +84,6 @@ MirSurface::MirSurface(
 
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
-
-    const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
-    if (report_target && !strcmp(report_target, "log"))
-    {
-        auto& logger = connection->the_logger();
-        perf_report = std::make_shared<mir::client::logging::PerfReport>(logger);
-    }
-    else
-    {
-        perf_report = std::make_shared<mir::client::NullPerfReport>();
-    }
-
-    perf_report->name(params.name);
 }
 
 MirSurface::~MirSurface()
@@ -225,13 +224,12 @@ void MirSurface::process_incoming_buffer()
         buffer_depository->deposit_package(std::move(ipc_package),
                                            buffer.buffer_id(),
                                            surface_size, surface_pf);
+        perf_report->begin_frame(buffer.buffer_id());
     }
     catch (const std::runtime_error& err)
     {
         // TODO: Report the error
     }
-
-    perf_report->begin_frame(buffer.buffer_id());
 }
 
 void MirSurface::created(mir_surface_callback callback, void * context)
