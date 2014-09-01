@@ -35,6 +35,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
+#include "mir_test/validity_matchers.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -237,8 +238,7 @@ TEST_F(ErrorReporting, c_api_returns_surface_creation_error)
 
             wait_for_connect();
 
-            ASSERT_TRUE(connection != NULL);
-            EXPECT_TRUE(mir_connection_is_valid(connection));
+            ASSERT_THAT(connection, IsValid());
 
             MirSurfaceParameters const request_params =
             {
