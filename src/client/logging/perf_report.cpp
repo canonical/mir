@@ -20,6 +20,7 @@
 #include "mir/logging/logger.h"
 
 using namespace mir::client::logging;
+using namespace std::chrono;
 
 namespace
 {
@@ -34,7 +35,7 @@ PerfReport::PerfReport(std::shared_ptr<mir::logging::Logger> const& logger)
 
 PerfReport::Timestamp PerfReport::current_time() const
 {
-    return std::chrono::high_resolution_clock::now();
+    return high_resolution_clock::now();
 }
 
 void PerfReport::name(char const* s)
@@ -67,23 +68,22 @@ void PerfReport::end_frame(int buffer_id)
     ++frame_count;
 
     Duration interval = now - last_report_time;
-    const Duration report_interval = std::chrono::seconds(1);
+    const Duration report_interval = seconds(1);
     if (interval >= report_interval)
     {   // Precision matters. Don't use floats.
-        long long interval_ms =  // I hate std::chrono
-            std::chrono::duration_cast<std::chrono::milliseconds>(interval)
-            .count();
+        long long interval_ms = duration_cast<milliseconds>(interval).count();
 
         // FPS x 100
         long fps_100 = frame_count * 100000L / interval_ms;
 
         // Client render time average in microseconds
         long render_time_avg_usec =
-            std::chrono::duration_cast<std::chrono::microseconds>(render_time_sum).count() / frame_count;
+            duration_cast<microseconds>(render_time_sum).count() / frame_count;
 
         // Buffer queue lag average in microseconds (frame end -> screen)
         long queue_lag_avg_usec =
-            std::chrono::duration_cast<std::chrono::microseconds>(buffer_queue_latency_sum).count() / frame_count;
+            duration_cast<microseconds>(buffer_queue_latency_sum).count() /
+            frame_count;
 
         // Visible lag in microseconds (render time + queue lag)
         long visible_lag_avg_usec = render_time_avg_usec + queue_lag_avg_usec;
