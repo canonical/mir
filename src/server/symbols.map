@@ -108,6 +108,7 @@ MIR_SERVER_25 {
     mir::DefaultServerConfiguration::the_buffer_allocator*;
     mir::DefaultServerConfiguration::the_buffer_initializer*;
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
+    mir::DefaultServerConfiguration::the_buffer_writer*;
     mir::DefaultServerConfiguration::the_clock*;
     mir::DefaultServerConfiguration::the_composite_event_filter*;
     mir::DefaultServerConfiguration::the_compositor*;

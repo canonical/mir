@@ -698,6 +698,10 @@ TEST_F(SurfaceStack, overlays_do_not_appear_in_input_enumeration)
     stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
     stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
 
+    // Configure surface1 and surface2 to appear in input enumeration.
+    stub_surface1->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_exposed);
+    stub_surface2->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_exposed);
+
     stack.add_input_visualization(mt::fake_shared(r));
 
     unsigned int observed_input_targets = 0;
