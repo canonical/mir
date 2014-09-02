@@ -27,7 +27,7 @@ namespace
 const char * const component = "perf"; // Note context is already within client
 } // namespace
 
-PeriodicPerfReport::PeriodicPerfReport(milliseconds period)
+PeriodicPerfReport::PeriodicPerfReport(Duration period)
     : report_interval(period),
       last_report_time(current_time())
 {

@@ -39,7 +39,7 @@ class PeriodicPerfReport : public mir::client::PerfReport
 public:
     typedef std::chrono::high_resolution_clock::duration Duration;
 
-    PeriodicPerfReport(std::chrono::milliseconds period);
+    PeriodicPerfReport(Duration period);
     void name_surface(char const*) override;
     void begin_frame(int buffer_id) override;
     void end_frame(int buffer_id) override;
@@ -49,7 +49,7 @@ public:
 private:
     typedef std::chrono::high_resolution_clock::time_point Timestamp;
     Timestamp current_time() const;
-    std::chrono::milliseconds const report_interval;
+    Duration const report_interval;
     std::string name;
     Timestamp last_report_time;
     Timestamp frame_begin_time;
