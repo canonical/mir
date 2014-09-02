@@ -72,14 +72,8 @@ void PeriodicPerfReport::end_frame(int buffer_id)
         long fps_100 = frame_count * 100000L /
                        duration_cast<milliseconds>(interval).count();
 
-        // Client render time average in microseconds
-        long render_time_avg_usec =
-            duration_cast<microseconds>(render_time_sum).count() / frame_count;
-
-        // Buffer queue lag average in microseconds (frame end -> screen)
-        long queue_lag_avg_usec =
-            duration_cast<microseconds>(buffer_queue_latency_sum).count() /
-            frame_count;
+        auto render_time_avg = render_time_sum / frame_count;
+        auto queue_lag_avg = buffer_queue_latency_sum / frame_count;
 
         // Remove history of old buffer ids
         auto i = buffer_end_time.begin();
@@ -97,8 +91,8 @@ void PeriodicPerfReport::end_frame(int buffer_id)
         render_time_sum = Duration::zero();
         buffer_queue_latency_sum = Duration::zero();
 
-        display(name.c_str(), fps_100, render_time_avg_usec,
-                queue_lag_avg_usec, nbuffers);
+        display(name.c_str(), fps_100, render_time_avg, queue_lag_avg,
+                nbuffers);
     }
 }
 
@@ -107,9 +101,12 @@ PerfReport::PerfReport(std::shared_ptr<mir::logging::Logger> const& logger)
 {
 }
 
-void PerfReport::display(const char *name, long fps100, long rendertime1000,
-                         long lag1000, int nbuffers) const
+void PerfReport::display(const char *name, long fps100, Duration rendertime,
+                         Duration lag, int nbuffers) const
 {
+    long rendertime1000 = duration_cast<microseconds>(rendertime).count();
+    long lag1000 = duration_cast<microseconds>(lag).count();
+
     char msg[256];
     snprintf(msg, sizeof msg,
              "%s: %2ld.%02ld FPS, render time %ld.%02ldms, buffer lag %ld.%02ldms (%d buffers)",
@@ -119,5 +116,6 @@ void PerfReport::display(const char *name, long fps100, long rendertime1000,
              lag1000 / 1000, (lag1000 / 10) % 100,
              nbuffers
              );
+
     logger->log(mir::logging::Logger::informational, msg, component);
 }
