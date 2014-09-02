@@ -20,6 +20,7 @@
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/stub_buffer.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/scene/buffer_stream_factory.h"
 #include "mir/compositor/buffer_stream.h"
@@ -43,12 +44,12 @@ namespace
 {
 MATCHER(DidNotTimeOut, "did not time out")
 {
-    return !arg;
+    return arg;
 }
 struct ExchangeBufferTest : BespokeDisplayServerTestFixture
 {
     std::vector<mg::BufferID> const buffer_id_exchange_seq{
-        mg::BufferID{4}, mg::BufferID{8}, mg::BufferID{9}};
+        mg::BufferID{0}, mg::BufferID{1}, mg::BufferID{2}};
 };
 
 struct StubStream : public mc::BufferStream
@@ -61,14 +62,15 @@ struct StubStream : public mc::BufferStream
 
     void acquire_client_buffer(std::function<void(mg::Buffer* buffer)> complete)
     {
-        auto b = std::make_shared<testing::NiceMock<mtd::MockBuffer>>();
-        auto id = *current;
-        if (current + 1 != buffer_id_seq.end())
-            current++;
-        ON_CALL(*b, id())
-            .WillByDefault(testing::Return(id));
-        client_buffer = b;
-        complete(client_buffer.get());
+    //    auto b = std::make_shared<testing::NiceMock<mtd::MockBuffer>>();
+    //    auto id = *current;
+     //   if (current + 1 != buffer_id_seq.end())
+     //       current++;
+      //  ON_CALL(*b, id())
+      //      .WillByDefault(testing::Return(id));
+        auto b = std::make_shared<mtd::StubBuffer>();
+        client_buffers.push_back(b);
+        complete(b.get());
     }
 
     void release_client_buffer(mg::Buffer*) {}
@@ -84,7 +86,7 @@ struct StubStream : public mc::BufferStream
     int buffers_ready_for_compositor() const { return -5; }
     void drop_old_buffers() {}
 
-    std::shared_ptr<mg::Buffer> client_buffer;
+    std::vector<std::shared_ptr<mg::Buffer>> client_buffers;
     std::vector<mg::BufferID> const buffer_id_seq;
     std::vector<mg::BufferID>::const_iterator current;
 };
@@ -131,14 +133,14 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
         {
             std::unique_lock<decltype(mutex)> lk(mutex);
             arrived = true;
+            cv.notify_all();
         }
 
         bool wait_on_buffer(std::unique_lock<std::mutex>& lk)
         {
-            if (!cv.wait_for(lk, std::chrono::seconds(1), [this]() {return arrived;}))
-                return false;
-
             arrived = false;
+            if (!cv.wait_for(lk, std::chrono::seconds(100), [this]() {return arrived;}))
+                return false;
             return true;
         }
 
@@ -150,6 +152,7 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
             mir::protobuf::Buffer next;
             server.exchange_buffer(0, &current_buffer, &next,
                            google::protobuf::NewCallback(this, &Client::buffer_arrival));
+
             if (!wait_on_buffer(lk))
                 return false;
             
@@ -160,7 +163,6 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
         void exec()
         {
             auto connection = mir_connect_sync(mtf::test_socket_file().c_str(), __PRETTY_FUNCTION__);
-
             MirSurfaceParameters const request_params =
             {
                 __PRETTY_FUNCTION__,
@@ -170,18 +172,15 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
                 mir_display_output_id_invalid
             };
             auto surface = mir_connection_create_surface_sync(connection, &request_params);
-            current_buffer.mutable_buffer()->set_buffer_id(buffer_id_seq.begin()->as_value());
-
             auto rpc_channel = connection->rpc_channel();
             mir::protobuf::DisplayServer::Stub server(
                 rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
 
             for(auto const& id : buffer_id_seq)
-            { 
-                EXPECT_THAT(id.as_value(), testing::Eq(current_buffer.buffer().buffer_id()));
+            {
+                current_buffer.mutable_buffer()->set_buffer_id(id.as_value());
                 ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
             }
-//            EXPECT_THAT(id.as_uint32_t(), testing::Eq(current_buffer.buffer_id()));
 
             mir_surface_release_sync(surface);
             mir_connection_release(connection);
