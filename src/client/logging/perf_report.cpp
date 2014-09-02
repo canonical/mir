@@ -71,10 +71,9 @@ void PerfReport::end_frame(int buffer_id)
     const Duration report_interval = seconds(1);
     if (interval >= report_interval)
     {   // Precision matters. Don't use floats.
-        long long interval_ms = duration_cast<milliseconds>(interval).count();
-
-        // FPS x 100
-        long fps_100 = frame_count * 100000L / interval_ms;
+        // FPS x 100, remembering to keep millisecond accuracy.
+        long fps_100 = frame_count * 100000L /
+                       duration_cast<milliseconds>(interval).count();
 
         // Client render time average in microseconds
         long render_time_avg_usec =
