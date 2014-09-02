@@ -2,7 +2,7 @@ MIR_COMMON_1 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
-# ../tools/process_doygen_xml.py doc/xml/*.xml | grep "^mircommon public" | sed "s/mircommon public: /    /" | sort  
+# ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mircommon public" | sed "s/mircommon public: /    /" | sort  
     mir_arrow_cursor_name*;
     mir_busy_cursor_name*;
     mir_caret_cursor_name*;

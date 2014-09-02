@@ -41,17 +41,23 @@ link_directories(${LIBRARY_OUTPUT_PATH})
 
 add_executable(mir_unit_tests 
   ${UNIT_TEST_SOURCES}
+  ${MIR_SERVER_OBJECTS}
   $<TARGET_OBJECTS:mirclientobjects>
+  ${MIR_PLATFORM_OBJECTS}
+  ${MIR_COMMON_OBJECTS}
 )
+
+add_dependencies(mir_unit_tests GMock)
 
 uses_android_input(mir_unit_tests)
 
 target_link_libraries(
   mir_unit_tests
 
-  mirserver
   mirdraw
   mirtestdraw
+  mirclientrpc
+  mirclientlttngstatic
   demo-shell
 
   mir-test
@@ -70,6 +76,9 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
   ${LIBHARDWARE_LDFLAGS} ${LIBHARDWARE_LIBRARIES}
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
+  ${MIR_PLATFORM_REFERENCES}
+  ${MIR_COMMON_REFERENCES}
+  ${MIR_SERVER_REFERENCES}
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "android")
