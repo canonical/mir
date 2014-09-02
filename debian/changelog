@@ -1,5 +1,6 @@
-mir (0.7.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.7.0+14.10.20140829-0ubuntu1) utopic; urgency=medium
 
+  [ Daniel van Vugt ]
   * New upstream release 0.7.0 (https://launchpad.net/mir/+milestone/0.7.0)
     - Enhancements:
       . Test suite: Reworked mechanism to override Mir client functions
@@ -60,7 +61,10 @@ mir (0.7.0-0ubuntu1) UNRELEASED; urgency=medium
         (LP: #1362646)
       . Some Mir clients spin at 100% CPU if the server dies (LP: #1340120)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 18 Aug 2014 15:30:37 +0800
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 29 Aug 2014 16:12:54 +0000
 
 mir (0.6.1+14.10.20140814-0ubuntu1) utopic; urgency=medium
 
