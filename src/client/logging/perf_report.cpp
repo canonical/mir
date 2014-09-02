@@ -84,19 +84,15 @@ void PerfReport::end_frame(int buffer_id)
             duration_cast<microseconds>(buffer_queue_latency_sum).count() /
             frame_count;
 
-        // Visible lag in microseconds (render time + queue lag)
-        long visible_lag_avg_usec = render_time_avg_usec + queue_lag_avg_usec;
-
         int nbuffers = buffer_end_time.size();
 
         char msg[256];
         snprintf(msg, sizeof msg,
-                 "%s: %2ld.%02ld FPS, render %2ld.%02ldms, compositor lag %2ld.%02ldms, visible lag %2ld.%02ldms, %d buffers",
+                 "%s: %2ld.%02ld FPS, render time %ld.%02ldms, buffer lag %ld.%02ldms (%d buffers)",
                  nam.c_str(),
                  fps_100 / 100, fps_100 % 100,
                  render_time_avg_usec / 1000, (render_time_avg_usec / 10) % 100,
                  queue_lag_avg_usec / 1000, (queue_lag_avg_usec / 10) % 100,
-                 visible_lag_avg_usec / 1000, (visible_lag_avg_usec / 10) % 100,
                  nbuffers
                  );
         logger->log(mir::logging::Logger::informational, msg, component);
