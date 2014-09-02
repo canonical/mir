@@ -49,7 +49,7 @@ MATCHER(DidNotTimeOut, "did not time out")
 struct ExchangeBufferTest : BespokeDisplayServerTestFixture
 {
     std::vector<mg::BufferID> const buffer_id_exchange_seq{
-        mg::BufferID{0}, mg::BufferID{1}, mg::BufferID{2}};
+        mg::BufferID{4}, mg::BufferID{8}, mg::BufferID{9}};
 };
 
 struct StubStream : public mc::BufferStream
@@ -62,13 +62,12 @@ struct StubStream : public mc::BufferStream
 
     void acquire_client_buffer(std::function<void(mg::Buffer* buffer)> complete)
     {
-    //    auto b = std::make_shared<testing::NiceMock<mtd::MockBuffer>>();
-    //    auto id = *current;
-     //   if (current + 1 != buffer_id_seq.end())
-     //       current++;
-      //  ON_CALL(*b, id())
-      //      .WillByDefault(testing::Return(id));
-        auto b = std::make_shared<mtd::StubBuffer>();
+        auto b = std::make_shared<testing::NiceMock<mtd::MockBuffer>>();
+        auto id = *current;
+        if (current + 1 != buffer_id_seq.end())
+            current++;
+        ON_CALL(*b, id())
+            .WillByDefault(testing::Return(id));
         client_buffers.push_back(b);
         complete(b.get());
     }
