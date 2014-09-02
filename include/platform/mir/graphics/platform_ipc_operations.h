@@ -43,8 +43,7 @@ public:
      * the frontend from server to client. This should be called every
      * time a buffer is to be sent cross-process.
      *
-     * The Buffer IPC message will be sent to clients when receiving a buffer.
-     * The implementation must use the provided packer object to perform the packing.
+     * Pack the platform specific contents of Buffer into BufferIpcMessage for sending to the client
      *
      * \param [in] message   the message that will be sent
      * \param [in] buffer    the buffer to be put in the message
