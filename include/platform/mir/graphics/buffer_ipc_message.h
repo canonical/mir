@@ -39,7 +39,7 @@ public:
     virtual void pack_size(geometry::Size const& size) = 0;
 
 protected:
-    BufferIpcMessage() {}
+    BufferIpcMessage() = default;
     BufferIpcMessage(BufferIpcMessage const&) = delete;
     BufferIpcMessage& operator=(BufferIpcMessage const&) = delete;
 
