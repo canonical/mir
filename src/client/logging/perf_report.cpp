@@ -65,7 +65,7 @@ void PeriodicPerfReport::end_frame(int buffer_id)
     render_time_sum += render_time;
     ++frame_count;
 
-    Duration interval = now - last_report_time;
+    auto interval = now - last_report_time;
     if (interval >= report_interval)
     {   // Precision matters. Don't use floats.
         // FPS x 100, remembering to keep millisecond accuracy.
@@ -93,8 +93,8 @@ void PeriodicPerfReport::end_frame(int buffer_id)
 
         last_report_time = now;
         frame_count = 0;
-        render_time_sum = Duration::zero();
-        buffer_queue_latency_sum = Duration::zero();
+        render_time_sum = render_time_sum.zero();
+        buffer_queue_latency_sum = buffer_queue_latency_sum.zero();
     }
 }
 
