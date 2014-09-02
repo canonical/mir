@@ -84,6 +84,15 @@ void PerfReport::end_frame(int buffer_id)
             duration_cast<microseconds>(buffer_queue_latency_sum).count() /
             frame_count;
 
+        // Remove history of old buffer ids
+        auto i = buffer_end_time.begin();
+        while (i != buffer_end_time.end())
+        {
+            if ((now - i->second) >= report_interval)
+                i = buffer_end_time.erase(i);
+            else
+                ++i;
+        }
         int nbuffers = buffer_end_time.size();
 
         char msg[256];
@@ -101,16 +110,6 @@ void PerfReport::end_frame(int buffer_id)
         frame_count = 0;
         render_time_sum = Duration::zero();
         buffer_queue_latency_sum = Duration::zero();
-
-        // Remove history of old buffer ids
-        auto i = buffer_end_time.begin();
-        while (i != buffer_end_time.end())
-        {
-            if ((now - i->second) >= report_interval)
-                i = buffer_end_time.erase(i);
-            else
-                ++i;
-        }
     }
 }
 
