@@ -91,9 +91,9 @@ TEST(ClientBufferTracker, old_buffers_expire_from_tracker)
 
 TEST(ClientBufferTracker, tracks_correct_number_of_buffers)
 {
-    mg::BufferID ids[10];
+    std::vector<mg::BufferID> ids;
     for (unsigned int i = 0; i < 10; ++i)
-        ids[i] = mg::BufferID{i};
+        ids.emplace_back(mg::BufferID{i});
 
     for (unsigned int tracker_size = 2; tracker_size < 10; ++tracker_size)
     {
