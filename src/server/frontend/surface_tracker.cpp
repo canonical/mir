@@ -36,7 +36,7 @@ bool mf::SurfaceTracker::track_buffer(SurfaceId surface_id, mg::Buffer* buffer)
     if (!tracker)
         tracker = std::make_shared<ClientBufferTracker>(client_cache_size);
 
-    for(auto it = client_buffer_tracker.begin(); it != client_buffer_tracker.end(); it++)
+    for (auto it = client_buffer_tracker.begin(); it != client_buffer_tracker.end(); it++)
     {
         if (it->first == surface_id) continue;
         if (it->second->client_has(buffer->id()))
@@ -74,7 +74,7 @@ mg::Buffer* mf::SurfaceTracker::last_buffer(SurfaceId surface_id) const
 
 mg::Buffer* mf::SurfaceTracker::buffer_from(mg::BufferID buffer_id) const
 {
-    for(auto const& tracker : client_buffer_tracker)
+    for (auto const& tracker : client_buffer_tracker)
     {
         auto buffer = tracker.second->buffer_from(buffer_id);
         if (buffer != nullptr)
