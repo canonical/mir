@@ -40,7 +40,7 @@ bool mf::SurfaceTracker::track_buffer(SurfaceId surface_id, mg::Buffer* buffer)
     {
         if (it->first == surface_id) continue;
         if (it->second->client_has(buffer->id()))
-            BOOST_THROW_EXCEPTION(std::runtime_error("buffer already associated with another surface"));
+            BOOST_THROW_EXCEPTION(std::logic_error("buffer already associated with another surface"));
     }
 
     auto already_tracked = tracker->client_has(buffer->id());
@@ -80,5 +80,5 @@ mg::Buffer* mf::SurfaceTracker::buffer_from(mg::BufferID buffer_id) const
         if (buffer != nullptr)
             return buffer;
     }
-    BOOST_THROW_EXCEPTION(std::runtime_error("Buffer is not tracked"));
+    BOOST_THROW_EXCEPTION(std::logic_error("Buffer is not tracked"));
 }
