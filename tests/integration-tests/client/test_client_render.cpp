@@ -57,6 +57,10 @@ static mtd::DrawPatternCheckered<2,2> draw_pattern0(pattern0);
 static mtd::DrawPatternCheckered<2,2> draw_pattern1(pattern1);
 static const char socket_file[] = "./test_client_ipc_render_socket";
 
+void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
+{
+}
+
 struct TestClient
 {
     static MirPixelFormat select_format_for_visual_id(int visual_id)
@@ -110,6 +114,9 @@ struct TestClient
         }
 
         mir_surface_release_sync(surface);
+        // Clear the lifecycle callback in order not to get SIGHUP by the
+        // default lifecycle handler during connection teardown
+        mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
         mir_connection_release(connection);
         return 0;
     }
@@ -167,6 +174,9 @@ struct TestClient
         }
 
         mir_surface_release_sync(mir_surface);
+        // Clear the lifecycle callback in order not to get SIGHUP by the
+        // default lifecycle handler during connection teardown
+        mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
         mir_connection_release(connection);
         return 0;
     }
@@ -200,7 +210,7 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_height(test_height);
         surface_pf = MirPixelFormat(request->pixel_format());
         response->set_pixel_format(request->pixel_format());
-        response->mutable_buffer()->set_buffer_id(client_buffer->id().as_uint32_t());
+        response->mutable_buffer()->set_buffer_id(client_buffer->id().as_value());
 
         auto buf = client_buffer->native_buffer_handle();
         //note about the stride. Mir protocol sends stride in bytes, android uses stride in pixels
@@ -233,7 +243,7 @@ struct StubServerGenerator : public mt::StubServerTool
         std::unique_lock<std::mutex> lk(buffer_mutex);
         std::swap(last_posted, client_buffer);
 
-        response->set_buffer_id(client_buffer->id().as_uint32_t());
+        response->set_buffer_id(client_buffer->id().as_value());
 
         auto buf = client_buffer->native_buffer_handle();
         response->set_fds_on_side_channel(1);

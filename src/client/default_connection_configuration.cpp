@@ -34,6 +34,8 @@
 #include "client_platform_factory.h"
 #include "mir_event_distributor.h"
 
+#include <dlfcn.h>
+
 namespace mcl = mir::client;
 
 namespace
@@ -43,18 +45,17 @@ std::string const log_opt_val{"log"};
 std::string const lttng_opt_val{"lttng"};
 std::string const default_platform_lib{"libmirclientplatform.so"};
 
-mir::SharedLibrary const* load_library(std::string const& libname)
+// Hack around the way Qt loads mir:
+// qtmir and therefore Mir are loaded via dlopen(..., RTLD_LOCAL).
+// While this is sensible for a plugin it would mean that some symbols
+// cannot be resolved by the Mir platform plugins. This hack makes the
+// necessary symbols global.
+void ensure_loaded_with_rtld_global()
 {
+    Dl_info info;
 
-    if (auto& ptr = mcl::libraries_cache(libname))
-    {
-        return ptr.get();
-    }
-    else
-    {
-        ptr = std::make_shared<mir::SharedLibrary>(libname);
-        return ptr.get();
-    }
+    dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global), &info);
+    dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
 }
 }
 
@@ -98,14 +99,10 @@ std::shared_ptr<mcl::ClientPlatformFactory>
 mcl::DefaultConnectionConfiguration::the_client_platform_factory()
 {
     return client_platform_factory(
-        []
+        [this]
         {
-            auto const val_raw = getenv("MIR_CLIENT_PLATFORM_LIB");
-            std::string const val{val_raw ? val_raw : default_platform_lib};
-            auto const platform_lib = ::load_library(val);
-
             auto const create_client_platform_factory =
-                platform_lib->load_function<mcl::CreateClientPlatformFactory>(
+                the_platform_library()->load_function<mcl::CreateClientPlatformFactory>(
                     "create_client_platform_factory");
 
             return create_client_platform_factory();
@@ -198,4 +195,17 @@ std::shared_ptr<mcl::EventHandlerRegister> mcl::DefaultConnectionConfiguration::
         {
             return std::make_shared<MirEventDistributor>();
         });
+}
+
+std::shared_ptr<mir::SharedLibrary> mcl::DefaultConnectionConfiguration::the_platform_library()
+{
+    if (!platform_library)
+    {
+        ensure_loaded_with_rtld_global();
+        auto const val_raw = getenv("MIR_CLIENT_PLATFORM_LIB");
+        std::string const libname{val_raw ? val_raw : default_platform_lib};
+        platform_library = std::make_shared<mir::SharedLibrary>(libname);
+    }
+
+    return platform_library;
 }

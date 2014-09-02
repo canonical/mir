@@ -36,13 +36,13 @@ add_library(
   mir-test-framework STATIC
   ${TEST_FRAMEWORK_SRCS}
 )
+
+add_dependencies(mir-test-framework GMock)
+
 uses_android_input(mir-test-framework)
 
 target_link_libraries(
   mir-test-framework
-
-  mirserver
-  mirclient
 
   3rd_party
 

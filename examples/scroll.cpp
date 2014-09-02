@@ -19,6 +19,10 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "graphics.h"
 
+#ifdef NDEBUG
+// We have no error handling so rely on assert() always being present.
+#undef NDEBUG
+#endif
 #include <assert.h>
 #include <signal.h>
 #include <string.h>

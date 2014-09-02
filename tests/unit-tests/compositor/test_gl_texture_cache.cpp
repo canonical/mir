@@ -122,3 +122,18 @@ TEST_F(RecentlyUsedCache, holds_buffers_till_the_end)
     cache.drop_unused();
     EXPECT_EQ(old_use_count, mock_buffer.use_count());
 }
+
+//LP: #1362444
+TEST_F(RecentlyUsedCache, invalidated_buffers_are_reloaded)
+{
+    ON_CALL(*mock_buffer, id())
+        .WillByDefault(testing::Return(mg::BufferID(0)));
+    EXPECT_CALL(*mock_buffer,gl_bind_to_texture())
+        .Times(2);
+
+    mc::RecentlyUsedCache cache;
+    cache.load(*renderable);
+    cache.load(*renderable);
+    cache.invalidate();
+    cache.load(*renderable);
+}
