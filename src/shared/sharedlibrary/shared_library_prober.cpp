@@ -22,27 +22,38 @@
 #include <system_error>
 #include <boost/filesystem.hpp>
 
+namespace
+{
+std::error_code boost_to_std_error(boost::system::error_code const& ec)
+{
+    if (ec)
+    {
+        if (ec.category() != boost::system::system_category())
+        {
+            throw std::logic_error{"Boost error from unexpected category: " +
+                                   ec.message()};
+        }
+        return std::error_code{ec.value(), std::system_category()};
+    }
+    return std::error_code{};
+}
+}
+
 std::vector<std::shared_ptr<mir::SharedLibrary>>
 mir::libraries_for_path(std::string const& path, mir::SharedLibraryProberReport& report)
 {
     report.probing_path(path);
     // We use the error_code overload because we want to throw a std::system_error
     boost::system::error_code ec;
+
     boost::filesystem::directory_iterator iterator{path, ec};
     if (ec)
     {
-        // *Of course* there's no good way to go from a boost::error_code to a std::error_code
-        if (ec.category() == boost::system::system_category())
-        {
-            std::system_error error{ec.value(), std::system_category()};
-            report.probing_failed(path, error);
-            throw error;
-        }
-        else
-        {
-            throw std::runtime_error{"Boost error from unknown category"};
-        }
+        std::system_error error{boost_to_std_error(ec)};
+        report.probing_failed(path, error);
+        throw error;
     }
+
     std::vector<std::shared_ptr<mir::SharedLibrary>> libraries;
     for (; iterator != boost::filesystem::directory_iterator() ; ++iterator)
     {
