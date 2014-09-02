@@ -37,7 +37,7 @@ namespace logging
 class PeriodicPerfReport : public mir::client::PerfReport
 {
 public:
-    PeriodicPerfReport();
+    PeriodicPerfReport(std::chrono::milliseconds period);
     void name_surface(char const*) override;
     void begin_frame(int buffer_id) override;
     void end_frame(int buffer_id) override;
@@ -47,6 +47,7 @@ private:
     typedef std::chrono::high_resolution_clock::time_point Timestamp;
     typedef std::chrono::high_resolution_clock::duration Duration;
     Timestamp current_time() const;
+    std::chrono::milliseconds const report_interval;
     std::string name;
     Timestamp last_report_time;
     Timestamp frame_begin_time;

@@ -27,8 +27,9 @@ namespace
 const char * const component = "perf"; // Note context is already within client
 } // namespace
 
-PeriodicPerfReport::PeriodicPerfReport()
-    : last_report_time(current_time())
+PeriodicPerfReport::PeriodicPerfReport(milliseconds period)
+    : report_interval(period),
+      last_report_time(current_time())
 {
 }
 
@@ -60,14 +61,11 @@ void PeriodicPerfReport::begin_frame(int buffer_id)
 void PeriodicPerfReport::end_frame(int buffer_id)
 {
     auto now = buffer_end_time[buffer_id] = current_time();
-
     auto render_time = now - frame_begin_time;
     render_time_sum += render_time;
-
     ++frame_count;
 
     Duration interval = now - last_report_time;
-    const Duration report_interval = seconds(1);
     if (interval >= report_interval)
     {   // Precision matters. Don't use floats.
         // FPS x 100, remembering to keep millisecond accuracy.
@@ -105,7 +103,7 @@ void PeriodicPerfReport::end_frame(int buffer_id)
 }
 
 PerfReport::PerfReport(std::shared_ptr<mir::logging::Logger> const& logger)
-    : logger(logger)
+    : PeriodicPerfReport(seconds(1)), logger(logger)
 {
 }
 
