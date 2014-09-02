@@ -34,18 +34,19 @@ namespace client
 namespace logging
 {
 
-class PerfReport : public mir::client::PerfReport
+class PeriodicPerfReport : public mir::client::PerfReport
 {
 public:
-    PerfReport(std::shared_ptr<mir::logging::Logger> const& logger);
+    PeriodicPerfReport();
     void name_surface(char const*) override;
     void begin_frame(int buffer_id) override;
     void end_frame(int buffer_id) override;
+    virtual void display(const char *name, long fps100, long rendertime1000,
+                         long lag1000, int nbuffers) const = 0;
 private:
     typedef std::chrono::high_resolution_clock::time_point Timestamp;
     typedef std::chrono::high_resolution_clock::duration Duration;
     Timestamp current_time() const;
-    std::shared_ptr<mir::logging::Logger> const logger;
     std::string name;
     Timestamp last_report_time;
     Timestamp frame_begin_time;
@@ -54,6 +55,16 @@ private:
     Duration buffer_queue_latency_sum = Duration::zero();
     int frame_count = 0;
     std::unordered_map<int,Timestamp> buffer_end_time;
+};
+
+class PerfReport : public PeriodicPerfReport
+{
+public:
+    PerfReport(std::shared_ptr<mir::logging::Logger> const& logger);
+    void display(const char *name, long fps100, long rendertime1000,
+                 long lag1000, int nbuffers) const override;
+private:
+    std::shared_ptr<mir::logging::Logger> const logger;
 };
 
 } // namespace logging

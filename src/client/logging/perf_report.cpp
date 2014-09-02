@@ -27,23 +27,22 @@ namespace
 const char * const component = "perf"; // Note context is already within client
 } // namespace
 
-PerfReport::PerfReport(std::shared_ptr<mir::logging::Logger> const& logger)
-    : logger(logger),
-      last_report_time(current_time())
+PeriodicPerfReport::PeriodicPerfReport()
+    : last_report_time(current_time())
 {
 }
 
-PerfReport::Timestamp PerfReport::current_time() const
+PeriodicPerfReport::Timestamp PeriodicPerfReport::current_time() const
 {
     return high_resolution_clock::now();
 }
 
-void PerfReport::name_surface(char const* s)
+void PeriodicPerfReport::name_surface(char const* s)
 {
     name = s ? s : "?";
 }
 
-void PerfReport::begin_frame(int buffer_id)
+void PeriodicPerfReport::begin_frame(int buffer_id)
 {
     frame_begin_time = current_time();
 
@@ -58,7 +57,7 @@ void PerfReport::begin_frame(int buffer_id)
     }
 }
 
-void PerfReport::end_frame(int buffer_id)
+void PeriodicPerfReport::end_frame(int buffer_id)
 {
     auto now = buffer_end_time[buffer_id] = current_time();
 
@@ -95,21 +94,32 @@ void PerfReport::end_frame(int buffer_id)
         }
         int nbuffers = buffer_end_time.size();
 
-        char msg[256];
-        snprintf(msg, sizeof msg,
-                 "%s: %2ld.%02ld FPS, render time %ld.%02ldms, buffer lag %ld.%02ldms (%d buffers)",
-                 name.c_str(),
-                 fps_100 / 100, fps_100 % 100,
-                 render_time_avg_usec / 1000, (render_time_avg_usec / 10) % 100,
-                 queue_lag_avg_usec / 1000, (queue_lag_avg_usec / 10) % 100,
-                 nbuffers
-                 );
-        logger->log(mir::logging::Logger::informational, msg, component);
-
         last_report_time = now;
         frame_count = 0;
         render_time_sum = Duration::zero();
         buffer_queue_latency_sum = Duration::zero();
+
+        display(name.c_str(), fps_100, render_time_avg_usec,
+                queue_lag_avg_usec, nbuffers);
     }
 }
 
+PerfReport::PerfReport(std::shared_ptr<mir::logging::Logger> const& logger)
+    : logger(logger)
+{
+}
+
+void PerfReport::display(const char *name, long fps100, long rendertime1000,
+                         long lag1000, int nbuffers) const
+{
+    char msg[256];
+    snprintf(msg, sizeof msg,
+             "%s: %2ld.%02ld FPS, render time %ld.%02ldms, buffer lag %ld.%02ldms (%d buffers)",
+             name,
+             fps100 / 100, fps100 % 100,
+             rendertime1000 / 1000, (rendertime1000 / 10) % 100,
+             lag1000 / 1000, (lag1000 / 10) % 100,
+             nbuffers
+             );
+    logger->log(mir::logging::Logger::informational, msg, component);
+}
