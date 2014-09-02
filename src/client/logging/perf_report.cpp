@@ -23,26 +23,18 @@ using namespace mir::client::logging;
 
 namespace
 {
-
-// Use the Android clock. We have to in order to make sense of motion event
-// times.
-extern "C" nsecs_t systemTime(int clock = 0);
-nsecs_t current_time()
-{
-    return systemTime();
-}
-
-nsecs_t const one_millisecond = 1000000LL;
-nsecs_t const one_second = 1000 * one_millisecond;
-nsecs_t const report_interval = one_second;
 const char * const component = "perf"; // Note context is already within client
-
 } // namespace
 
 PerfReport::PerfReport(std::shared_ptr<mir::logging::Logger> const& logger)
     : logger(logger),
       last_report_time(current_time())
 {
+}
+
+PerfReport::Timestamp PerfReport::current_time() const
+{
+    return std::chrono::high_resolution_clock::now();
 }
 
 void PerfReport::name(char const* s)
@@ -74,22 +66,24 @@ void PerfReport::end_frame(int buffer_id)
 
     ++frame_count;
 
-    nsecs_t interval = now - last_report_time;
+    Duration interval = now - last_report_time;
+    const Duration report_interval = std::chrono::seconds(1);
     if (interval >= report_interval)
     {   // Precision matters. Don't use floats.
-        long long interval_ms = interval / one_millisecond;
+        long long interval_ms =  // I hate std::chrono
+            std::chrono::duration_cast<std::chrono::milliseconds>(interval)
+            .count();
 
         // FPS x 100
         long fps_100 = frame_count * 100000L / interval_ms;
 
-        // Frames rendered x 1000
-        long frame_count_1000 = frame_count * 1000L;
-
         // Client render time average in microseconds
-        long render_time_avg_usec = render_time_sum / frame_count_1000;
+        long render_time_avg_usec =
+            std::chrono::duration_cast<std::chrono::microseconds>(render_time_sum).count() / frame_count;
 
         // Buffer queue lag average in microseconds (frame end -> screen)
-        long queue_lag_avg_usec = buffer_queue_latency_sum / frame_count_1000;
+        long queue_lag_avg_usec =
+            std::chrono::duration_cast<std::chrono::microseconds>(buffer_queue_latency_sum).count() / frame_count;
 
         // Visible lag in microseconds (render time + queue lag)
         long visible_lag_avg_usec = render_time_avg_usec + queue_lag_avg_usec;
@@ -110,8 +104,8 @@ void PerfReport::end_frame(int buffer_id)
 
         last_report_time = now;
         frame_count = 0;
-        render_time_sum = 0;
-        buffer_queue_latency_sum = 0;
+        render_time_sum = Duration::zero();
+        buffer_queue_latency_sum = Duration::zero();
 
         // Remove history of old buffer ids
         auto i = buffer_end_time.begin();

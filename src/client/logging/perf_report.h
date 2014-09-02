@@ -20,7 +20,7 @@
 #define MIR_CLIENT_LOGGING_PERF_REPORT_H_
 
 #include "../perf_report.h"
-#include "mir_toolkit/event.h"
+#include <chrono>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -42,16 +42,18 @@ public:
     void begin_frame(int buffer_id) override;
     void end_frame(int buffer_id) override;
 private:
+    typedef std::chrono::high_resolution_clock::time_point Timestamp;
+    typedef std::chrono::high_resolution_clock::duration Duration;
+    Timestamp current_time() const;
     std::shared_ptr<mir::logging::Logger> const logger;
     std::string nam;
-    nsecs_t last_report_time = 0;
-    nsecs_t frame_begin_time = 0;
-    nsecs_t frame_end_time = 0;
-    nsecs_t render_time_sum = 0;
-    nsecs_t buffer_queue_latency_sum = 0;
+    Timestamp last_report_time;
+    Timestamp frame_begin_time;
+    Timestamp frame_end_time;
+    Duration render_time_sum = Duration::zero();
+    Duration buffer_queue_latency_sum = Duration::zero();
     int frame_count = 0;
-
-    std::unordered_map<int,nsecs_t> buffer_end_time;
+    std::unordered_map<int,Timestamp> buffer_end_time;
 };
 
 } // namespace logging
