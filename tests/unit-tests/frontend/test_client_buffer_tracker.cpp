@@ -93,8 +93,7 @@ TEST_F(ClientBufferTracker, old_buffers_expire_from_tracker)
 
 TEST_F(ClientBufferTracker, tracks_correct_number_of_buffers)
 {
-    mtd::StubBuffer buffers[10];
-
+    std::vector<mtd::StubBuffer> buffers(10);
     for (unsigned int tracker_size = 2; tracker_size < 10; ++tracker_size)
     {
         mf::ClientBufferTracker tracker{tracker_size};
