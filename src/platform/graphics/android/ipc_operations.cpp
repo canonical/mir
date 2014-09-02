@@ -37,11 +37,11 @@ void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer
 
         int offset = 0;
 
-        for(auto i=0; i<buffer_handle->numFds; i++)
+        for(auto i = 0; i < buffer_handle->numFds; i++)
         {
             msg.pack_fd(mir::Fd(IntOwnedFd{buffer_handle->data[offset++]}));
         }
-        for(auto i=0; i<buffer_handle->numInts; i++)
+        for(auto i = 0; i < buffer_handle->numInts; i++)
         {
             msg.pack_data(buffer_handle->data[offset++]);
         }
