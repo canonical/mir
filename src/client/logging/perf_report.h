@@ -44,7 +44,7 @@ public:
     void begin_frame(int buffer_id) override;
     void end_frame(int buffer_id) override;
     virtual void display(const char *name, long fps100,
-                         Duration rendertime, Duration lag,
+                         long rendertime_usec, long lag_usec,
                          int nbuffers) const = 0;
 private:
     typedef std::chrono::high_resolution_clock::time_point Timestamp;
@@ -64,8 +64,8 @@ class PerfReport : public PeriodicPerfReport
 {
 public:
     PerfReport(std::shared_ptr<mir::logging::Logger> const& logger);
-    void display(const char *name, long fps100, Duration rendertime,
-                 Duration lag, int nbuffers) const override;
+    void display(const char *name, long fps100, long rendertime_usec,
+                 long lag_usec, int nbuffers) const override;
 private:
     std::shared_ptr<mir::logging::Logger> const logger;
 };

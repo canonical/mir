@@ -86,13 +86,15 @@ void PeriodicPerfReport::end_frame(int buffer_id)
         }
         int nbuffers = buffer_end_time.size();
 
+        display(name.c_str(), fps_100,
+                duration_cast<microseconds>(render_time_avg).count(),
+                duration_cast<microseconds>(queue_lag_avg).count(),
+                nbuffers);
+
         last_report_time = now;
         frame_count = 0;
         render_time_sum = Duration::zero();
         buffer_queue_latency_sum = Duration::zero();
-
-        display(name.c_str(), fps_100, render_time_avg, queue_lag_avg,
-                nbuffers);
     }
 }
 
@@ -101,19 +103,16 @@ PerfReport::PerfReport(std::shared_ptr<mir::logging::Logger> const& logger)
 {
 }
 
-void PerfReport::display(const char *name, long fps100, Duration rendertime,
-                         Duration lag, int nbuffers) const
+void PerfReport::display(const char *name, long fps100, long rendertime_usec,
+                         long lag_usec, int nbuffers) const
 {
-    long rendertime1000 = duration_cast<microseconds>(rendertime).count();
-    long lag1000 = duration_cast<microseconds>(lag).count();
-
     char msg[256];
     snprintf(msg, sizeof msg,
              "%s: %2ld.%02ld FPS, render time %ld.%02ldms, buffer lag %ld.%02ldms (%d buffers)",
              name,
              fps100 / 100, fps100 % 100,
-             rendertime1000 / 1000, (rendertime1000 / 10) % 100,
-             lag1000 / 1000, (lag1000 / 10) % 100,
+             rendertime_usec / 1000, (rendertime_usec / 10) % 100,
+             lag_usec / 1000, (lag_usec / 10) % 100,
              nbuffers
              );
 
