@@ -66,7 +66,7 @@ MirSurface::MirSurface(
     {
         perf_report = std::make_shared<mir::client::NullPerfReport>();
     }
-    perf_report->name(params.name);
+    perf_report->name_surface(params.name);
 
     for (int i = 0; i < mir_surface_attribs; i++)
         attrib_cache[i] = -1;

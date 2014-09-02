@@ -38,9 +38,9 @@ PerfReport::Timestamp PerfReport::current_time() const
     return high_resolution_clock::now();
 }
 
-void PerfReport::name(char const* s)
+void PerfReport::name_surface(char const* s)
 {
-    nam = s ? s : "?";
+    name = s ? s : "?";
 }
 
 void PerfReport::begin_frame(int buffer_id)
@@ -98,7 +98,7 @@ void PerfReport::end_frame(int buffer_id)
         char msg[256];
         snprintf(msg, sizeof msg,
                  "%s: %2ld.%02ld FPS, render time %ld.%02ldms, buffer lag %ld.%02ldms (%d buffers)",
-                 nam.c_str(),
+                 name.c_str(),
                  fps_100 / 100, fps_100 % 100,
                  render_time_avg_usec / 1000, (render_time_avg_usec / 10) % 100,
                  queue_lag_avg_usec / 1000, (queue_lag_avg_usec / 10) % 100,

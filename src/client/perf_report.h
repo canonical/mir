@@ -28,7 +28,7 @@ class PerfReport
 {
 public:
     virtual ~PerfReport() = default;
-    virtual void name(char const*) = 0;
+    virtual void name_surface(char const*) = 0;
     virtual void begin_frame(int buffer_id) = 0;
     virtual void end_frame(int buffer_id) = 0;
 };
@@ -36,7 +36,7 @@ public:
 class NullPerfReport : public PerfReport
 {
 public:
-    virtual void name(char const*) {}
+    virtual void name_surface(char const*) {}
     void begin_frame(int) override {}
     void end_frame(int) override {}
 };

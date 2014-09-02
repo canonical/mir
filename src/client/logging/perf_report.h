@@ -38,7 +38,7 @@ class PerfReport : public mir::client::PerfReport
 {
 public:
     PerfReport(std::shared_ptr<mir::logging::Logger> const& logger);
-    void name(char const* s) override;
+    void name_surface(char const*) override;
     void begin_frame(int buffer_id) override;
     void end_frame(int buffer_id) override;
 private:
@@ -46,7 +46,7 @@ private:
     typedef std::chrono::high_resolution_clock::duration Duration;
     Timestamp current_time() const;
     std::shared_ptr<mir::logging::Logger> const logger;
-    std::string nam;
+    std::string name;
     Timestamp last_report_time;
     Timestamp frame_begin_time;
     Timestamp frame_end_time;
