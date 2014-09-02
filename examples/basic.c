@@ -88,7 +88,7 @@ static void surface_release_callback(MirSurface *old_surface, void *context)
 }
 ///\internal [Callback_tag]
 
-void demo_client(const char* server, int buffer_swap_count)
+int demo_client(const char* server, int buffer_swap_count)
 {
     MirDemoState mcd;
     mcd.connection = 0;
@@ -102,12 +102,16 @@ void demo_client(const char* server, int buffer_swap_count)
     puts("Connected");
     ///\internal [connect_tag]
 
-    // We expect a connection handle;
-    // we expect it to be valid; and,
-    // we don't expect an error description
-    assert(mcd.connection != NULL);
-    assert(mir_connection_is_valid(mcd.connection));
-    assert(strcmp(mir_connection_get_error_message(mcd.connection), "") == 0);
+    if (mcd.connection == NULL || !mir_connection_is_valid(mcd.connection))
+    {
+        const char *error = "Unknown error";
+        if (mcd.connection != NULL)
+            error = mir_connection_get_error_message(mcd.connection);
+
+        fprintf(stderr, "Failed to connect to server `%s': %s\n",
+                server == NULL ? "<default>" : server, error);
+        return 1;
+    }
 
     // We can query information about the platform we're running on
     {
@@ -188,6 +192,8 @@ void demo_client(const char* server, int buffer_swap_count)
     mir_connection_release(mcd.connection);
     puts("Connection released");
     ///\internal [connection_release_tag]
+
+    return 0;
 }
 
 // The main() function deals with parsing arguments and defaults
@@ -224,6 +230,5 @@ int main(int argc, char* argv[])
         }
     }
 
-    demo_client(server, buffer_swap_count);
-    return 0;
+    return demo_client(server, buffer_swap_count);
 }

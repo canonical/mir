@@ -4,18 +4,32 @@ set(MIRPLATFORM_ABI 2)
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
-add_library(
-  mirplatform SHARED
+add_library(mirplatformobjects OBJECT
   shared_library_loader.cpp
+)
+
+set(MIR_PLATFORM_OBJECTS
+  $<TARGET_OBJECTS:mirplatformobjects>
   $<TARGET_OBJECTS:mirplatformgraphicscommon>
   $<TARGET_OBJECTS:miroptions>
   $<TARGET_OBJECTS:mirfatal>
 )
 
-target_link_libraries(mirplatform
-  mircommon
+set(MIR_PLATFORM_REFERENCES
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
+)
+
+set(MIR_PLATFORM_OBJECTS ${MIR_PLATFORM_OBJECTS} PARENT_SCOPE)
+set(MIR_PLATFORM_REFERENCES ${MIR_PLATFORM_REFERENCES} PARENT_SCOPE)
+
+add_library(mirplatform SHARED
+  ${MIR_PLATFORM_OBJECTS}
+)
+
+target_link_libraries(mirplatform
+  mircommon
+  ${MIR_PLATFORM_REFERENCES}
 )
 
 set_target_properties(mirplatform

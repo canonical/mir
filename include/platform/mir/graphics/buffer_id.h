@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012, 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -15,42 +15,18 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
+
 #ifndef MIR_GRAPHICS_BUFFER_ID_H_
 #define MIR_GRAPHICS_BUFFER_ID_H_
 
-#include <cstdint>
+#include "mir/int_wrapper.h"
 
 namespace mir
 {
 namespace graphics
 {
-class BufferID
-{
-public:
-    BufferID() noexcept: value(id_invalid){}
-    explicit BufferID(uint32_t val) : value(val) {}
-    bool is_valid() const { return (id_invalid != value); }
-    uint32_t as_uint32_t() const { return value; };
-
-private:
-    uint32_t value;
-    static const uint32_t id_invalid = 0;
-};
-
-inline bool operator < (BufferID const& lhs, BufferID const& rhs)
-{
-    return lhs.as_uint32_t() < rhs.as_uint32_t();
-}
-
-inline bool operator == (BufferID const& lhs, BufferID const& rhs)
-{
-    return lhs.as_uint32_t() == rhs.as_uint32_t();
-}
-inline bool operator != (BufferID const& lhs, BufferID const& rhs)
-{
-    return lhs.as_uint32_t() != rhs.as_uint32_t();
-}
-
+struct BufferIdTag;
+typedef IntWrapper<BufferIdTag, uint32_t> BufferID;
 }
 }
 #endif /* MIR_GRAPHICS_BUFFER_ID_H_ */

@@ -51,6 +51,12 @@ me::DemoCompositor::DemoCompositor(
         30.0f, //titlebar_height
         80.0f) //shadow_radius
 {
+    scene->register_compositor(this);
+}
+
+me::DemoCompositor::~DemoCompositor()
+{
+    scene->unregister_compositor(this);
 }
 
 void me::DemoCompositor::composite()
