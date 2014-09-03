@@ -69,7 +69,7 @@ public:
     virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
 
 protected:
-    PlatformIpcOperations() {}
+    PlatformIpcOperations() = default;
     PlatformIpcOperations(PlatformIpcOperations const&) = delete;
     PlatformIpcOperations& operator=(PlatformIpcOperations const&) = delete;
 
