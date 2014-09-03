@@ -34,7 +34,6 @@ void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer
     if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
         auto buffer_handle = native_buffer->handle();
-
         int offset = 0;
 
         for(auto i = 0; i < buffer_handle->numFds; i++)
