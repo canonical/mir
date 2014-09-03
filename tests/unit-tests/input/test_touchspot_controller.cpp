@@ -131,6 +131,7 @@ TEST_F(TestTouchspotController, touches_result_in_renderables_in_stack)
     EXPECT_CALL(*allocator, alloc_buffer(SoftwareBuffer())).Times(1)
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     mi::TouchspotController controller(allocator, writer, scene);
+    controller.enable();
     
     controller.visualize_touches({ {{0,0}, 1} });
 
@@ -144,6 +145,7 @@ TEST_F(TestTouchspotController, spots_move)
     EXPECT_CALL(*allocator, alloc_buffer(SoftwareBuffer())).Times(1)
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     mi::TouchspotController controller(allocator, writer, scene);
+    controller.enable();
     
     controller.visualize_touches({ {{0,0}, 1} });
     scene->expect_spots_at({{0, 0}});
@@ -158,6 +160,7 @@ TEST_F(TestTouchspotController, multiple_spots)
     EXPECT_CALL(*allocator, alloc_buffer(SoftwareBuffer())).Times(1)
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     mi::TouchspotController controller(allocator, writer, scene);
+    controller.enable();
     
     controller.visualize_touches({ {{0,0}, 1}, {{1, 1}, 1}, {{3, 3}, 1} });
     scene->expect_spots_at({{0, 0}, {1, 1}, {3, 3}});
@@ -179,6 +182,7 @@ TEST_F(TestTouchspotController, touches_do_not_result_in_renderables_in_stack_wh
     EXPECT_CALL(*allocator, alloc_buffer(SoftwareBuffer())).Times(1)
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     mi::TouchspotController controller(allocator, writer, scene);
+    controller.enable();
     
     controller.disable();
     controller.visualize_touches({ {{0,0}, 1} });
