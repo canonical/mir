@@ -15,6 +15,7 @@ bdaceadd56e41d2cb708f7c4da97acf84dfc75b7  include/common/mir_toolkit/event.h
 101017c17714a57db57d79b7b5e7df40a3568236  include/common/mir_toolkit/mir_native_buffer.h
 871e609c0fed0d566ddbaaa8ac2d7cd5c06dd09a  include/platform/mir/abnormal_exit.h
 54328767ca330ba166160a486bd0688406ab0222  include/platform/mir/graphics/buffer.h
+5875f13f5b029a4b5291e9baec3ae434b72be27c  include/platform/mir/graphics/buffer_id.h
 748f5c2aab11189aa02c4a89ab900561548e7304  include/platform/mir/graphics/buffer_properties.h
 986f5d0d8ea2c6a42cc320f468e682f81fec46ae  include/platform/mir/graphics/display_buffer.h
 f53a0020b8f1bd4a941a201eb26271cffee0a7dd  include/platform/mir/graphics/display_configuration.h
