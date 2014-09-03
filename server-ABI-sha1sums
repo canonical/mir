@@ -35,6 +35,8 @@ bb27ec04b2861d128f420698491941f71e1aefc0  include/common/mir/recursive_read_writ
 52b6b60543a361e91dbeaa2549114239f57b6b4e  include/common/mir/report/lttng/tracepoint_provider.h
 dc80f8a57f133276dd5a72f4d0360a7b71154d16  include/common/mir/shared_library.h
 b4e96264b9a57a1f2ceceb700c5379658905ded7  include/common/mir/thread_name.h
+6bb8715336020864626cc8355a0d130db6613ff4  include/common/mir/time/clock.h
+675f213b0bf299e2280be52ea1bad241c7957382  include/common/mir/time/high_resolution_clock.h
 9907751d046e4aea81881cf19e5df52c7a6a813e  include/common/mir_toolkit/client_types.h
 183d9e5e6cfe48b3d9145a28541dd4202ff6137b  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
@@ -193,6 +195,4 @@ f8d415af54b4a477338fb9dbe20db01aa4544029  include/server/mir/shell/host_lifecycl
 82bc93ea53f03399cb143b9ce936bb51d4366be6  include/server/mir/shell/session_coordinator_wrapper.h
 18e869c5b87ab8be4bc185d2cd55a93d699cde72  include/server/mir/shell/surface_coordinator_wrapper.h
 c3fdfa84a3ae97a0d1057635c5bfcedcf29d007c  include/server/mir/time/alarm.h
-bfacab3544a6b1339e6f45353033bdab3c226db7  include/server/mir/time/clock.h
-3476f05e60e00fd637b36fb1e4417762082e0486  include/server/mir/time/high_resolution_clock.h
 a134c7b86e9c3b191f1004abe7bbdceed8ac42ee  include/server/mir/time/timer.h
