@@ -50,7 +50,7 @@ public:
     virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
 
-    virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
+    virtual std::shared_ptr<PlatformIPCPackage> connection_ipc_package() = 0;
 
     virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
 

@@ -119,7 +119,7 @@ void mf::SessionMediator::connect(
     }
     connection_context.handle_client_connect(session);
 
-    auto ipc_package = ipc_operations->get_ipc_package();
+    auto ipc_package = ipc_operations->connection_ipc_package();
     auto platform = response->mutable_platform();
 
     for (auto& data : ipc_package->ipc_data)

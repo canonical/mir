@@ -49,7 +49,7 @@ public:
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/);
     std::shared_ptr<PlatformIpcOperations> create_ipc_operations() const override;
 
-    std::shared_ptr<PlatformIPCPackage> get_ipc_package();
+    std::shared_ptr<PlatformIPCPackage> connection_ipc_package();
     std::shared_ptr<InternalClient> create_internal_client();
     void fill_buffer_package(
         BufferIpcMessage* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const;

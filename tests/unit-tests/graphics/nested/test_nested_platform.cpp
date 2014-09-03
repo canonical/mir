@@ -55,7 +55,7 @@ public:
         return {};
     }
 
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package() override
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
         return {};
     }

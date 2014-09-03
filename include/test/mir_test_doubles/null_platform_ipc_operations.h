@@ -36,7 +36,7 @@ class NullPlatformIpcOperations : public graphics::PlatformIpcOperations
     void unpack_buffer(graphics::BufferIpcMessage&, graphics::Buffer const&) const override
     {
     }
-    std::shared_ptr<graphics::PlatformIPCPackage> get_ipc_package() override
+    std::shared_ptr<graphics::PlatformIPCPackage> connection_ipc_package() override
     {
         return std::make_shared<graphics::PlatformIPCPackage>();
     }

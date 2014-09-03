@@ -55,7 +55,7 @@ void mga::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 {
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mga::IpcOperations::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mga::IpcOperations::connection_ipc_package()
 {
     return std::make_shared<mg::PlatformIPCPackage>();
 }

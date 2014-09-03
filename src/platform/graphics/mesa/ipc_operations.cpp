@@ -69,7 +69,7 @@ void mgm::IpcOperations::pack_buffer(
     }
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()
 {
     return std::make_shared<MesaPlatformIPCPackage>(drm->get_authenticated_fd());
 }

@@ -47,7 +47,7 @@ class NullPlatform : public graphics::Platform
         return std::make_shared<NullDisplay>();
     }
 
-    std::shared_ptr<graphics::PlatformIPCPackage> get_ipc_package()
+    std::shared_ptr<graphics::PlatformIPCPackage> connection_ipc_package()
     {
         return std::make_shared<graphics::PlatformIPCPackage>();
     }

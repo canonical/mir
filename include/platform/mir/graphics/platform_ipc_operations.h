@@ -66,7 +66,7 @@ public:
      *
      * The IPC package will be sent to clients when they connect.
      */
-    virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
+    virtual std::shared_ptr<PlatformIPCPackage> connection_ipc_package() = 0;
 
 protected:
     PlatformIpcOperations() = default;

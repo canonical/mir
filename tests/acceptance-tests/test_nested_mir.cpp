@@ -125,9 +125,9 @@ struct NativePlatformAdapter : mg::NativePlatform
         return adaptee->create_buffer_allocator(buffer_initializer);
     }
 
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package() override
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
-        return ipc_ops->get_ipc_package();
+        return ipc_ops->connection_ipc_package();
     }
 
     std::shared_ptr<mg::InternalClient> create_internal_client() override

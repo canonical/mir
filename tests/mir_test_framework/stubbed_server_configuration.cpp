@@ -168,7 +168,7 @@ class StubIpcOps : public mg::PlatformIpcOperations
     {
     }
 
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package() override
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
         return std::make_shared<mg::PlatformIPCPackage>();
     }

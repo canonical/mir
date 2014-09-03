@@ -109,14 +109,14 @@ struct MockBufferPacker : public mg::PlatformIpcOperations
     MockBufferPacker()
     {
         using namespace testing;
-        ON_CALL(*this, get_ipc_package())
+        ON_CALL(*this, connection_ipc_package())
             .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
     }
     MOCK_CONST_METHOD3(pack_buffer,
         void(mg::BufferIpcMessage&, mg::Buffer const&, mg::BufferIpcMsgType));
     MOCK_CONST_METHOD2(unpack_buffer,
         void(mg::BufferIpcMessage&, mg::Buffer const&));
-    MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
+    MOCK_METHOD0(connection_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
 };
 
 class StubbedSession : public mtd::StubSession
@@ -192,7 +192,7 @@ class MockPlatform : public mg::Platform
             .WillByDefault(Return(std::shared_ptr<mg::GraphicBufferAllocator>()));
         ON_CALL(*this, create_display(_,_,_))
             .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
-        ON_CALL(*this, get_ipc_package())
+        ON_CALL(*this, connection_ipc_package())
             .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
         ON_CALL(*this, create_ipc_operations())
             .WillByDefault(Return(ipc_ops));
@@ -204,7 +204,7 @@ class MockPlatform : public mg::Platform
                      std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
                      std::shared_ptr<mg::GLProgramFactory> const&,
                      std::shared_ptr<mg::GLConfig> const&));
-    MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
+    MOCK_METHOD0(connection_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
     MOCK_METHOD0(create_internal_client, std::shared_ptr<mg::InternalClient>());
     MOCK_CONST_METHOD0(create_ipc_operations, std::shared_ptr<mg::PlatformIpcOperations>());
     MOCK_CONST_METHOD0(egl_native_display, EGLNativeDisplayType());

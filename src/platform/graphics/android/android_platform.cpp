@@ -109,7 +109,7 @@ std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display(
         display_builder, gl_program_factory, gl_config, display_report);
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::connection_ipc_package()
 {
     return std::make_shared<mg::PlatformIPCPackage>();
 }

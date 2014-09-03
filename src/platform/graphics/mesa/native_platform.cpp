@@ -59,7 +59,7 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_a
         gbm.device, buffer_initializer, mgm::BypassOption::prohibited);
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::connection_ipc_package()
 {
     struct MesaNativePlatformIPCPackage : public mg::PlatformIPCPackage
     {
@@ -93,7 +93,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
 
 std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
 {
-    auto nd = ensure_internal_native_display(get_ipc_package());
+    auto nd = ensure_internal_native_display(connection_ipc_package());
     return std::make_shared<mgm::InternalClient>(nd);
 }
 

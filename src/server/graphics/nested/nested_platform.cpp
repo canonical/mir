@@ -109,9 +109,9 @@ public:
     }
     void unpack_buffer(mg::BufferIpcMessage&, mg::Buffer const&) const {}
 
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package()
     {
-        return native_platform->get_ipc_package();
+        return native_platform->connection_ipc_package();
     }
 private:
     std::shared_ptr<mg::NativePlatform> const native_platform;
