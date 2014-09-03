@@ -30,6 +30,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <system_error>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
@@ -43,9 +44,10 @@ std::string binary_path()
     char buf[1024];
     auto tmp = readlink("/proc/self/exe", buf, sizeof buf);
     if (tmp < 0)
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(
-                                  std::runtime_error("Failed to find our executable path"))
-                              << boost::errinfo_errno(errno));
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(std::system_error(errno,
+                                                       std::system_category(),
+                                                       "Failed to find our executable path")));
     if (tmp > static_cast<ssize_t>(sizeof(buf) - 1))
         BOOST_THROW_EXCEPTION(std::runtime_error("Path to executable is too long!"));
     buf[tmp] = '\0';

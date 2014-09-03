@@ -18,8 +18,7 @@
 
 #include "mir_test_framework/cross_process_sync.h"
 
-#include <boost/exception/errinfo_errno.hpp>
-
+#include <system_error>
 #include <poll.h>
 #include <unistd.h>
 
@@ -38,9 +37,9 @@ mtf::CrossProcessSync::CrossProcessSync() : counter(0)
 {
     if (::pipe(fds) < 0)
     {
-        BOOST_THROW_EXCEPTION(
-            ::boost::enable_error_info(std::runtime_error("Failed to create pipe"))
-            << boost::errinfo_errno(errno));
+        BOOST_THROW_EXCEPTION(std::system_error(errno,
+                                                std::system_category(),
+                                                "Failed to create pipe"));
     }
 }
 
@@ -81,9 +80,9 @@ void mtf::CrossProcessSync::try_signal_ready_for(const std::chrono::milliseconds
 
     if ((rc = ::poll(poll_fd, 1, duration.count())) < 0)
     {
-        BOOST_THROW_EXCEPTION(
-            ::boost::enable_error_info(std::runtime_error("Error while polling pipe to become writable"))
-            << boost::errinfo_errno(errno));
+        BOOST_THROW_EXCEPTION(std::system_error(errno,
+                                                std::system_category(),
+                                                "Error while polling pipe to become writable"));
     }
     else if (rc == 0)
     {
@@ -93,9 +92,9 @@ void mtf::CrossProcessSync::try_signal_ready_for(const std::chrono::milliseconds
     int value = 1;
     if (sizeof(value) != write(fds[write_fd], std::addressof(value), sizeof(value)))
     {
-        BOOST_THROW_EXCEPTION(
-            ::boost::enable_error_info(std::runtime_error("Error while writing to pipe"))
-            << boost::errinfo_errno(errno));
+        BOOST_THROW_EXCEPTION(std::system_error(errno,
+                                                std::system_category(),
+                                                "Error while writing to pipe"));
     }
 }
 
@@ -112,9 +111,9 @@ unsigned int mtf::CrossProcessSync::wait_for_signal_ready_for(const std::chrono:
 
     if ((rc = ::poll(poll_fd, 1, duration.count())) < 0)
     {
-        BOOST_THROW_EXCEPTION(
-            ::boost::enable_error_info(std::runtime_error("Error while polling pipe to become readable"))
-            << boost::errinfo_errno(errno));
+        BOOST_THROW_EXCEPTION(std::system_error(errno,
+                                                std::system_category(),
+                                                "Error while polling pipe to become readable"));
     }
     else if (rc == 0)
     {
@@ -124,9 +123,9 @@ unsigned int mtf::CrossProcessSync::wait_for_signal_ready_for(const std::chrono:
     int value;
     if (sizeof(value) != read(fds[read_fd], std::addressof(value), sizeof(value)))
     {
-        BOOST_THROW_EXCEPTION(
-            ::boost::enable_error_info(std::runtime_error("Error while reading from pipe"))
-            << boost::errinfo_errno(errno));
+        BOOST_THROW_EXCEPTION(std::system_error(errno,
+                                                std::system_category(),
+                                                "Error while reading from pipe"));
     }
 
     if (value != 1)
