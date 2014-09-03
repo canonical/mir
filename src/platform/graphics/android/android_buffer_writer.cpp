@@ -47,8 +47,6 @@ void mga::AndroidBufferWriter::write(std::shared_ptr<mg::Buffer> const& buffer, 
     if (buffer->stride().as_uint32_t() * buffer_size.height.as_uint32_t() != size)
         BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
 
-    auto mga_buffer = std::static_pointer_cast<mga::Buffer>(buffer);
-    
     auto const& handle = buffer->native_buffer_handle();
     
     char* vaddr;
