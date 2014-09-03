@@ -108,7 +108,6 @@ def find_physical_component(location_file):
     
 def mapped_physical_component(location_file):
     location = find_physical_component(location_file)
-    if location == 'shared': location = 'common'
     return 'mir' + location
 
 def parse_member_def(context_name, node, is_class):
@@ -131,7 +130,7 @@ def parse_member_def(context_name, node, is_class):
     file_location = get_file_location(node)
     publish = '/include/' in file_location \
               or 'build/src' in file_location \
-              or 'src/shared/input/android/' in file_location
+              or 'src/common/input/android/' in file_location
 
     is_function = kind == 'function'
     if publish: publish = kind != 'define'
@@ -177,7 +176,7 @@ def parse_compound_defs(xmldoc):
         file_location = get_file_location(node)
         publish = '/include/' in file_location \
                   or 'build/src' in file_location \
-                  or 'src/shared/input/android/' in file_location
+                  or 'src/common/input/android/' in file_location
 
         if publish: 
             if kind in ['class', 'struct']:
