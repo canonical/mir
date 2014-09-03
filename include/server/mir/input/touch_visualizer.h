@@ -44,6 +44,11 @@ public:
         float pressure;
     };
     
+    // Toggle visualization of touches
+    virtual void enable() = 0;
+    virtual void disable() = 0;
+    
+    // Visualize a describe set of touches (replacing the previous set of visualized touches)
     virtual void visualize_touches(std::vector<Spot> const& touches) = 0;
 
 protected:

@@ -105,7 +105,7 @@ b703ac51f94b6f9c9edcd6a4587e33d6e2d54269  include/server/mir/input/input_report.
 51cda18e314f1e36177a7ebfab0d1dd12867cdf0  include/server/mir/input/input_send_observer.h
 5bd014a4d075437402e515b56a7ff446c3b1bba2  include/server/mir/input/scene.h
 15119bf95b4512c8b91df7c20edf56a3c0734957  include/server/mir/input/surface.h
-d647ce6beffdc31a597769587bb3ab17ec679491  include/server/mir/input/touch_visualizer.h
+fd113137ce709322830e9915eea80774da44dca1  include/server/mir/input/touch_visualizer.h
 204089f848c4d63ade96f92a0b8cfc1c33f1ce63  include/server/mir/input/vt_filter.h
 5ba863e9bb4dc9802aa74a7864f576df25142c2d  include/server/mir/logging/glog_logger.h
 964069b241f1e8211386bb8735ee0f752b666949  include/server/mir/main_loop.h

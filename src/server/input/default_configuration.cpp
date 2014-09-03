@@ -244,24 +244,21 @@ mir::DefaultServerConfiguration::the_cursor_listener()
 std::shared_ptr<mi::TouchVisualizer>
 mir::DefaultServerConfiguration::the_touch_visualizer()
 {
-    struct NullTouchVisualizer : public mi::TouchVisualizer
-    {
-        void visualize_touches(std::vector<Spot> const& /* touches */) override
-        {
-        }
-    };
     return touch_visualizer(
         [this]() -> std::shared_ptr<mi::TouchVisualizer>
         {
+            auto visualizer = std::make_shared<mi::TouchspotController>(the_buffer_allocator(), the_buffer_writer(),
+                the_input_targets());
+
+            // The visualizer is disabled by default and can be enabled statically via
+            // the MIR_SERVER_ENABLE_TOUCHSPOTS option. In the USC/unity8/autopilot case
+            // it will be toggled at runtime via com.canonical.Unity.Screen DBus interface
             if (the_options()->is_set(options::touchspot_opt))
             {
-                return std::make_shared<mi::TouchspotController>(the_buffer_allocator(), the_buffer_writer(),
-                    the_input_targets());
+                visualizer->enable();
             }
-            else
-            {
-                return std::make_shared<NullTouchVisualizer>();
-            }
+            
+            return visualizer;
         });
 }
 

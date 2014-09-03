@@ -112,6 +112,7 @@ mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAl
     std::shared_ptr<mi::Scene> const& scene)
     : touchspot_buffer(allocator->alloc_buffer({touchspot_size, touchspot_pixel_format, mg::BufferUsage::software})),
       scene(scene),
+      enabled(false),
       renderables_in_use(0)
 {
     unsigned int const pixels_size = touchspot_size.width.as_uint32_t()*touchspot_size.height.as_uint32_t() *
@@ -123,7 +124,7 @@ mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAl
 void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches)
 {
     std::lock_guard<std::mutex> lg(guard);
-
+    
     // We can assume the maximum number of touches will not grow unreasonably large
     // and so we just grow a pool of TouchspotRenderables as needed
     while (touchspot_renderables.size() < touches.size())
@@ -140,7 +141,10 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
         {
             renderable->move_to(touches[i].touch_location);
 
-            if (renderables_in_use <= i)
+            // We will only add new visualizations when "enabled", however we still wish to run the main
+            // logic when disabled, such that we can remove spots from a gesture which was active at the 
+            // time ::disable was called.
+            if (renderables_in_use <= i && enabled)
             {
                 renderables_in_use++;
                 scene->add_input_visualization(renderable);
@@ -159,4 +163,16 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
     // architecture of surface observers will not trigger a propagation to the
     // compositor damage callback we need this "emit_scene_changed".
     scene->emit_scene_changed();
+}
+
+void mi::TouchspotController::enable()
+{
+    std::lock_guard<std::mutex> lg(guard);
+    enabled = true;
+}
+
+void mi::TouchspotController::disable()
+{
+    std::lock_guard<std::mutex> lg(guard);
+    enabled = false;
 }

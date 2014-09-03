@@ -168,3 +168,25 @@ TEST_F(TestTouchspotController, multiple_spots)
     controller.visualize_touches({});
     scene->expect_spots_at({});
 }
+
+// This leaves some semantics undefined, i,e. if the touchspot controller is enabled/disabled
+// during a gesture do the spots appear/dissapear? I've been unable to develop a strong opinion
+// on this semantic, so I am leaving it unspecified ~racarr
+TEST_F(TestTouchspotController, touches_do_not_result_in_renderables_in_stack_when_disabled)
+{
+    using namespace ::testing;
+    
+    EXPECT_CALL(*allocator, alloc_buffer(SoftwareBuffer())).Times(1)
+        .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
+    mi::TouchspotController controller(allocator, writer, scene);
+    
+    controller.disable();
+    controller.visualize_touches({ {{0,0}, 1} });
+
+    scene->expect_spots_at({});
+
+    controller.enable();
+    controller.visualize_touches({ {{0,0}, 1} });
+
+    scene->expect_spots_at({{0, 0}});
+}

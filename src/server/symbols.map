@@ -408,6 +408,8 @@ MIR_SERVER_25 {
     mir::input::TouchVisualizer::?TouchVisualizer*;
     mir::input::TouchVisualizer::TouchVisualizer*;
     mir::input::TouchVisualizer::visualize_touches*;
+    mir::input::TouchVisualizer::enable*;
+    mir::input::TouchVisualizer::disable*;
     mir::input::VTFilter::handle*;
     mir::logging::GlogLogger::GlogLogger*;
     mir::logging::GlogLogger::log*;
