@@ -169,14 +169,14 @@ void mgm::Platform::drm_auth_magic(unsigned int magic)
 
 std::shared_ptr<mg::InternalClient> mgm::Platform::create_internal_client()
 {
-    auto packer = create_ipc_operations();
+    auto packer = make_ipc_operations();
     if (!internal_native_display)
         internal_native_display = std::make_shared<mgm::InternalNativeDisplay>(packer->connection_ipc_package());
     internal_display_clients_present = true;
     return std::make_shared<mgm::InternalClient>(internal_native_display);
 }
 
-std::shared_ptr<mg::PlatformIpcOperations> mgm::Platform::create_ipc_operations() const
+std::shared_ptr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
 {
     return std::make_shared<mgm::IpcOperations>(drm);
 }

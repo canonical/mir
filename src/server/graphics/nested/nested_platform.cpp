@@ -118,7 +118,7 @@ private:
 };
 }
 
-std::shared_ptr<mg::PlatformIpcOperations> mgn::NestedPlatform::create_ipc_operations() const
+std::shared_ptr<mg::PlatformIpcOperations> mgn::NestedPlatform::make_ipc_operations() const
 {
     return std::make_shared<BufferPacker>(native_platform);
 }

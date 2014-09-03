@@ -33,7 +33,7 @@ c2d384f17732db7e533b11220935709fdf062851  include/platform/mir/graphics/native_p
 590572a9d86a9481b4531ad44414c6f76352fe7a  include/platform/mir/graphics/nested_context.h
 27807b8ba288590f3749cfb32512eda4d0de6c7d  include/platform/mir/graphics/overlapping_output_grouping.h
 32c70ee44b8dc9372dec0c54471aa8d831adcb1c  include/platform/mir/graphics/pixel_format_utils.h
-7e9e6bbe74d4fda343fefe9b47009a23566af21e  include/platform/mir/graphics/platform.h
+9a23e20efb960de448995fe327900235b69f1220  include/platform/mir/graphics/platform.h
 1fbe488b4581486fd01e2f03e504f31b72c09040  include/platform/mir/graphics/platform_ipc_operations.h
 9c7712af84b6fde1970ff802ad2ea78f892c7b7e  include/platform/mir/graphics/platform_ipc_package.h
 15f201741a465de33e55ffc1ea775b507a5be950  include/platform/mir/graphics/renderable.h

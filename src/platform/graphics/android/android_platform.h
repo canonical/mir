@@ -47,7 +47,7 @@ public:
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLProgramFactory> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/);
-    std::shared_ptr<PlatformIpcOperations> create_ipc_operations() const override;
+    std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
 
     std::shared_ptr<PlatformIPCPackage> connection_ipc_package();
     std::shared_ptr<InternalClient> create_internal_client();

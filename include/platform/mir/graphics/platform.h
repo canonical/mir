@@ -93,7 +93,7 @@ public:
      * Creates an object capable of doing platform specific processing of buffers
      * before they are sent or after they are recieved accross IPC
      */
-    virtual std::shared_ptr<PlatformIpcOperations> create_ipc_operations() const = 0;
+    virtual std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const = 0;
 
     /**
      * Creates the in-process client support object.

@@ -188,7 +188,7 @@ public:
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    std::shared_ptr<mg::PlatformIpcOperations> create_ipc_operations() const override
+    std::shared_ptr<mg::PlatformIpcOperations> make_ipc_operations() const override
     {
         return std::make_shared<StubIpcOps>();
     }

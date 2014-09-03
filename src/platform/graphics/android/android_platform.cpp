@@ -114,7 +114,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::connection_ipc_pac
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-std::shared_ptr<mg::PlatformIpcOperations> mga::AndroidPlatform::create_ipc_operations() const
+std::shared_ptr<mg::PlatformIpcOperations> mga::AndroidPlatform::make_ipc_operations() const
 {
     return ipc_operations;
 }

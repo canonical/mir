@@ -57,7 +57,7 @@ class NullPlatform : public graphics::Platform
         return std::shared_ptr<graphics::InternalClient>();
     }
 
-    std::shared_ptr<graphics::PlatformIpcOperations> create_ipc_operations() const override
+    std::shared_ptr<graphics::PlatformIpcOperations> make_ipc_operations() const override
     {
         return std::make_shared<NullPlatformIpcOperations>();
     }

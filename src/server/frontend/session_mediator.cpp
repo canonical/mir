@@ -77,7 +77,7 @@ mf::SessionMediator::SessionMediator(
     client_pid_(0),
     shell(shell),
     graphics_platform(graphics_platform),
-    ipc_operations(graphics_platform->create_ipc_operations()),
+    ipc_operations(graphics_platform->make_ipc_operations()),
     surface_pixel_formats(surface_pixel_formats),
     display_changer(display_changer),
     report(report),

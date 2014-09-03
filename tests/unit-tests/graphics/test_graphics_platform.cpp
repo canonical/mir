@@ -125,7 +125,7 @@ TEST_F(GraphicsPlatform, buffer_creation)
 TEST_F(GraphicsPlatform, connection_ipc_package)
 {
     auto platform = create_platform();
-    auto ipc_ops = platform->create_ipc_operations();
+    auto ipc_ops = platform->make_ipc_operations();
     auto pkg = ipc_ops->connection_ipc_package();
 
     ASSERT_TRUE(pkg.get() != NULL);

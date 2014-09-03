@@ -100,7 +100,7 @@ TEST_F(MesaGraphicsPlatform, connection_ipc_package)
 
     EXPECT_NO_THROW (
         auto platform = create_platform();
-        auto ipc_ops = platform->create_ipc_operations();
+        auto ipc_ops = platform->make_ipc_operations();
         auto pkg = ipc_ops->connection_ipc_package();
 
         ASSERT_TRUE(pkg.get());
@@ -186,7 +186,7 @@ TEST_F(MesaGraphicsPlatform, test_ipc_data_packed_correctly)
     EXPECT_CALL(mock_buffer_msg, pack_size(testing::_))
         .Times(Exactly(1));
 
-    auto ipc_ops = platform->create_ipc_operations();
+    auto ipc_ops = platform->make_ipc_operations();
     ipc_ops->pack_buffer(mock_buffer_msg, mock_buffer, mg::BufferIpcMsgType::full_msg);
     ipc_ops->pack_buffer(mock_buffer_msg, mock_buffer, mg::BufferIpcMsgType::update_msg);
 }
@@ -295,7 +295,7 @@ TEST_F(MesaGraphicsPlatform, drm_close_not_called_concurrently_on_ipc_package_de
                              Return(0)));
 
     auto platform = create_platform();
-    auto ipc_ops = platform->create_ipc_operations();
+    auto ipc_ops = platform->make_ipc_operations();
 
     std::vector<std::thread> threads;
 

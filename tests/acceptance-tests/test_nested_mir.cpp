@@ -113,7 +113,7 @@ struct NativePlatformAdapter : mg::NativePlatform
 {
     NativePlatformAdapter(std::shared_ptr<mg::Platform> const& adaptee) :
         adaptee(adaptee),
-        ipc_ops(adaptee->create_ipc_operations())
+        ipc_ops(adaptee->make_ipc_operations())
     {
     }
 

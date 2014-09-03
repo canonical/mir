@@ -60,7 +60,7 @@ public:
         std::shared_ptr<GLConfig> const& gl_config);
     std::shared_ptr<InternalClient> create_internal_client();
 
-    std::shared_ptr<PlatformIpcOperations> create_ipc_operations() const override;
+    std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
 
     EGLNativeDisplayType egl_native_display() const;
 
