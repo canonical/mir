@@ -56,7 +56,6 @@ void mtd::MockGL::provide_gles_extensions()
         .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
 }
 
-
 mtd::MockGL::~MockGL()
 {
     global_mock_gl = NULL;
