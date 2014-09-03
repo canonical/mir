@@ -47,7 +47,7 @@ public:
      *
      * \param [in] message   the message that will be sent
      * \param [in] buffer    the buffer to be put in the message
-     * \param [in] ipc_type what sort of ipc message is needed
+     * \param [in] ipc_type  what sort of ipc message is needed
      */
     virtual void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const = 0;
 
