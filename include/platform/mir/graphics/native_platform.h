@@ -59,7 +59,7 @@ public:
         Buffer const* buffer,
         BufferIpcMsgType msg_type) const = 0;
 
-    virtual std::shared_ptr<BufferWriter> create_buffer_writer() = 0;
+    virtual std::shared_ptr<BufferWriter> make_buffer_writer() = 0;
 
     virtual ~NativePlatform() = default;
     NativePlatform(NativePlatform const&) = delete;

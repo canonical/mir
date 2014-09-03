@@ -112,7 +112,7 @@ mir::DefaultServerConfiguration::the_buffer_writer()
     return buffer_writer(
         [&]()
         {
-            return the_graphics_platform()->create_buffer_writer();
+            return the_graphics_platform()->make_buffer_writer();
         });
 }
 

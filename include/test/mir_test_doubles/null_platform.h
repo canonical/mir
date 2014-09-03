@@ -56,7 +56,7 @@ class NullPlatform : public graphics::Platform
         return nullptr;
     }
     
-    std::shared_ptr<graphics::BufferWriter> create_buffer_writer()
+    std::shared_ptr<graphics::BufferWriter> make_buffer_writer()
     {
         return nullptr;
     }

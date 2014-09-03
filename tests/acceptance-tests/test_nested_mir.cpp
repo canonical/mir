@@ -132,9 +132,9 @@ struct NativePlatformAdapter : mg::NativePlatform
         return adaptee->create_internal_client();
     }
 
-    std::shared_ptr<mg::BufferWriter> create_buffer_writer() override
+    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
     {
-        return adaptee->create_buffer_writer();
+        return adaptee->make_buffer_writer();
     }
 
     void fill_buffer_package(

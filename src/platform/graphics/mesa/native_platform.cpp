@@ -158,7 +158,7 @@ void mgm::NativePlatform::finish_internal_native_display()
     native_display.reset();
 }
 
-std::shared_ptr<mg::BufferWriter> mgm::NativePlatform::create_buffer_writer()
+std::shared_ptr<mg::BufferWriter> mgm::NativePlatform::make_buffer_writer()
 {
     return std::make_shared<mgm::BufferWriter>();
 }

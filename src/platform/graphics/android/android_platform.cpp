@@ -154,7 +154,7 @@ std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client
     return std::make_shared<mga::InternalClient>();
 }
 
-std::shared_ptr<mg::BufferWriter> mga::AndroidPlatform::create_buffer_writer()
+std::shared_ptr<mg::BufferWriter> mga::AndroidPlatform::make_buffer_writer()
 {
     return std::make_shared<mga::AndroidBufferWriter>();
 }

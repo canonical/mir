@@ -217,7 +217,7 @@ std::shared_ptr<mg::InternalClient> mgm::Platform::create_internal_client()
     return std::make_shared<mgm::InternalClient>(internal_native_display);
 }
 
-std::shared_ptr<mg::BufferWriter> mgm::Platform::create_buffer_writer()
+std::shared_ptr<mg::BufferWriter> mgm::Platform::make_buffer_writer()
 {
     return std::make_shared<mgm::BufferWriter>();
 }
