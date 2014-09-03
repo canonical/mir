@@ -118,7 +118,7 @@ mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAl
     unsigned int const pixels_size = touchspot_size.width.as_uint32_t()*touchspot_size.height.as_uint32_t() *
         MIR_BYTES_PER_PIXEL(touchspot_pixel_format);
     
-    buffer_writer->write(touchspot_buffer, touchspot_image.pixel_data, pixels_size);
+    buffer_writer->write(*touchspot_buffer, touchspot_image.pixel_data, pixels_size);
 }
 
 void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches)

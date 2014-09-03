@@ -52,7 +52,7 @@ struct MockBufferAllocator : public mg::GraphicBufferAllocator
 
 struct StubBufferWriter : public mg::BufferWriter
 {
-    void write(std::shared_ptr<mg::Buffer> const& /* buffer */,
+    void write(mg::Buffer& /* buffer */,
         unsigned char const* /* data */, size_t /* size */) override
     {
     }

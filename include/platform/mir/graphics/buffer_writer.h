@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include <memory>
+#include <cstddef>
 
 namespace mir
 {
@@ -32,7 +32,7 @@ class BufferWriter
 public:
     virtual ~BufferWriter() = default;
 
-    virtual void write(std::shared_ptr<Buffer> const& buffer, unsigned char const* data, size_t size) = 0;
+    virtual void write(Buffer& buffer, unsigned char const* data, size_t size) = 0;
 
 protected:
     BufferWriter() = default;

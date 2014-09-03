@@ -34,25 +34,23 @@ namespace mga = mg::android;
 
 mga::AndroidBufferWriter::AndroidBufferWriter()
 {
-    int err;
-
-    err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, (hw_module_t const **)(&hw_module));
+    auto err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, (hw_module_t const **)(&hw_module));
     if (err < 0)
         BOOST_THROW_EXCEPTION(std::runtime_error("Could not open hardware module"));
 }
 
-void mga::AndroidBufferWriter::write(std::shared_ptr<mg::Buffer> const& buffer, unsigned char const* data, size_t size)
+void mga::AndroidBufferWriter::write(mg::Buffer& buffer, unsigned char const* data, size_t size)
 {
-    auto buffer_size = buffer->size();
-    if (buffer->stride().as_uint32_t() * buffer_size.height.as_uint32_t() != size)
+    auto buffer_size = buffer.size();
+    if (buffer.stride().as_uint32_t() * buffer_size.height.as_uint32_t() != size)
         BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
 
-    auto const& handle = buffer->native_buffer_handle();
+    auto const& handle = buffer.native_buffer_handle();
     
     char* vaddr;
-    int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
-    int width = buffer->size().width.as_uint32_t();
-    int height = buffer->size().height.as_uint32_t();
+    int usage = GRALLOC_USAGE_SW_WRITE_OFTEN;
+    int width = buffer.size().width.as_uint32_t();
+    int height = buffer.size().height.as_uint32_t();
     int top = 0;
     int left = 0;
     if ( hw_module->lock(hw_module, handle->handle(),

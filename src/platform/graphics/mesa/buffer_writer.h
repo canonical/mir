@@ -21,8 +21,6 @@
 
 #include "mir/graphics/buffer_writer.h"
 
-#include <memory>
-
 namespace mir
 {
 namespace graphics
@@ -36,7 +34,7 @@ class BufferWriter : public graphics::BufferWriter
 public:
     BufferWriter();
     
-    void write(std::shared_ptr<graphics::Buffer> const& buffer, unsigned char const* data, size_t size) override;
+    void write(graphics::Buffer& buffer, unsigned char const* data, size_t size) override;
 };
 }
 }
