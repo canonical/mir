@@ -50,6 +50,7 @@ protected:
     GLContext(GLContext const& shared_gl_context);
 
     void release_current() const override;
+    using graphics::GLContext::make_current;
     void make_current(EGLSurface) const;
 
     EGLDisplay const egl_display;

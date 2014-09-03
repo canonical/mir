@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/cross_process_sync.h"
 
+#include <boost/exception/info.hpp>
 #include <system_error>
 #include <poll.h>
 #include <unistd.h>

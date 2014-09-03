@@ -27,8 +27,10 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 5) # This should change at least with every MIRSERVER_ABI
+set(MIR_VERSION_MINOR 7) # This should change at least with every MIRSERVER_ABI
 set(MIR_VERSION_PATCH 0)
+
+set(MIR_VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH})
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 execute_process(
@@ -43,7 +45,6 @@ if(use_debflags)
 endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
-include (cmake/Doxygen.cmake)
 include (cmake/PrePush.cmake)
 include (GNUInstallDirs)
 
@@ -58,6 +59,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -g -std=c++0x -Werror -Wall -fn
 
 if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-return-type-c-linkage -Wno-mismatched-tags")
+endif()
+
+# Link time optimization allows leaner, cleaner libraries
+message(STATUS "CMAKE_C_COMPILER: " ${CMAKE_C_COMPILER})
+
+option(MIR_LINK_TIME_OPTIMIZATION "Enables the linker to optimize binaries." OFF)
+if(MIR_LINK_TIME_OPTIMIZATION)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
 endif()
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_lower)
@@ -88,12 +98,16 @@ else()
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
 endif()
 
+# Define LOG_NDEBUG=1 to ensure Android ALOGV calls are not compiled in to
+# consume CPU time...
+add_definitions(-DLOG_NDEBUG=1)
+
 enable_testing()
 
 include_directories(include/shared)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS chrono date_time filesystem system thread program_options regex iostreams REQUIRED)
+find_package(Boost 1.48.0 COMPONENTS date_time system program_options iostreams REQUIRED)
 include_directories (
   ${Boost_INCLUDE_DIRS}
 )
@@ -158,6 +172,7 @@ endif()
 
 set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
 set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
+set(MIR_XCURSOR_INCLUDE_DIRECTORIES)
 set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
 add_subdirectory(3rd_party/)
 
@@ -172,23 +187,45 @@ include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 option(MIR_ENABLE_TESTS "Build tests" ON)
 
-if (MIR_ENABLE_TESTS)
-   find_package(Gtest REQUIRED)
-   include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
-   add_subdirectory(tests/)
-endif ()
 add_subdirectory(benchmarks/)
 add_subdirectory(tools/)
 add_subdirectory(examples/)
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
 
-# There's no nice way to format this. Thanks CMake.
-add_test(LGPL-required
-  /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/shared ${PROJECT_SOURCE_DIR}/include/shared ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform"
-)
-add_test(GPL-required
-  /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/include/test ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
-)
+if (MIR_ENABLE_TESTS)
+  find_package(Gtest REQUIRED)
+  include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
+  add_subdirectory(tests/)
+
+  # There's no nice way to format this. Thanks CMake.
+  add_test(LGPL-required
+    /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/shared ${PROJECT_SOURCE_DIR}/include/shared ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform"
+  )
+  add_test(GPL-required
+    /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/include/test ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
+  )
+  
+  add_test(NAME server-ABI-unchanged
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    COMMAND sha1sum -c server-ABI-sha1sums
+  )
+  
+  add_test(NAME client-ABI-unchanged
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    COMMAND sha1sum -c client-ABI-sha1sums
+  )
+
+  add_test(NAME common-ABI-unchanged
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    COMMAND sha1sum -c common-ABI-sha1sums
+  )
+
+  add_test(NAME platform-ABI-unchanged
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    COMMAND sha1sum -c platform-ABI-sha1sums
+  )
+endif ()
 
 enable_coverage_report(mirserver)
+include (cmake/Doxygen.cmake)

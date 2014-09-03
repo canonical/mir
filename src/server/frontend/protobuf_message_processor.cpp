@@ -29,9 +29,11 @@ namespace mfd = mir::frontend::detail;
 namespace
 {
 template<class Response>
-std::vector<int32_t> extract_fds_from(Response* response)
+std::vector<mir::Fd> extract_fds_from(Response* response)
 {
-    std::vector<int32_t> fd(response->fd().data(), response->fd().data() + response->fd().size());
+    std::vector<mir::Fd> fd;
+    for(auto i = 0; i < response->fd().size(); ++i)
+        fd.emplace_back(mir::Fd(dup(response->fd().data()[i])));
     response->clear_fd();
     response->set_fds_on_side_channel(fd.size());
     return fd;
@@ -151,10 +153,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         {
             invoke(this, display_server.get(), &DisplayServer::release_surface, invocation);
         }
-        else if ("test_file_descriptors" == invocation.method_name())
-        {
-            invoke(this, display_server.get(), &DisplayServer::test_file_descriptors, invocation);
-        }
         else if ("drm_auth_magic" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::drm_auth_magic, invocation);
@@ -191,10 +189,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::start_prompt_session, invocation);
         }
-        else if ("add_prompt_provider" == invocation.method_name())
-        {
-            invoke(this, display_server.get(), &protobuf::DisplayServer::add_prompt_provider, invocation);
-        }
         else if ("stop_prompt_session" == invocation.method_name())
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::stop_prompt_session, invocation);
@@ -228,8 +222,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
 {
-    const auto& fd = extract_fds_from(response);
-    sender->send_response(id, response, {fd});
+    sender->send_response(id, response, {extract_fds_from(response)});
 }
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::Buffer> response)
@@ -239,35 +232,30 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Connection* response)
 {
-    const auto& fd = response->has_platform() ?
-        extract_fds_from(response->mutable_platform()) :
-        std::vector<int32_t>();
-
-    sender->send_response(id, response, {fd});
+    if (response->has_platform())
+        sender->send_response(id, response, {extract_fds_from(response->mutable_platform())});
+    else
+        sender->send_response(id, response, {});
 }
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Surface* response)
 {
-    auto const& surface_fd = extract_fds_from(response);
-    const auto& buffer_fd = response->has_buffer() ?
-        extract_fds_from(response->mutable_buffer()) :
-        std::vector<int32_t>();
-
-    sender->send_response(id, response, {surface_fd, buffer_fd});
+    if (response->has_buffer())
+        sender->send_response(id, response, {extract_fds_from(response), extract_fds_from(response->mutable_buffer())});
+    else
+        sender->send_response(id, response, {extract_fds_from(response)});
 }
 
 void mfd::ProtobufMessageProcessor::send_response(
     ::google::protobuf::uint32 id, mir::protobuf::Screencast* response)
 {
-    auto const& buffer_fd = response->has_buffer() ?
-        extract_fds_from(response->mutable_buffer()) :
-        std::vector<int32_t>();
-
-    sender->send_response(id, response, {buffer_fd});
+    if (response->has_buffer())
+        sender->send_response(id, response, {extract_fds_from(response->mutable_buffer())});
+    else
+        sender->send_response(id, response, {});
 }
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::SocketFD* response)
 {
-    const auto& fd = extract_fds_from(response);
-    sender->send_response(id, response, {fd});
+    sender->send_response(id, response, {extract_fds_from(response)});
 }

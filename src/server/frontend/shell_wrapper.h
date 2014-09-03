@@ -40,19 +40,11 @@ public:
 
     void close_session(std::shared_ptr<Session> const& session)  override;
 
-    SurfaceId create_surface_for(
-        std::shared_ptr<Session> const& session,
-        scene::SurfaceCreationParameters const& params) override;
-
     void handle_surface_created(std::shared_ptr<Session> const& session) override;
 
     std::shared_ptr<PromptSession> start_prompt_session_for(
         std::shared_ptr<Session> const& session,
         scene::PromptSessionCreationParameters const& params) override;
-
-    void add_prompt_provider_process_for(
-        std::shared_ptr<PromptSession> const& prompt_session,
-        pid_t process_id) override;
 
     void add_prompt_provider_for(
         std::shared_ptr<PromptSession> const& prompt_session,

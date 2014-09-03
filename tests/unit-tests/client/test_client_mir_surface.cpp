@@ -36,10 +36,11 @@
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"
 
-#include <cstring>
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+
+#include <cstring>
+#include <map>
 
 #include <fcntl.h>
 
@@ -96,6 +97,8 @@ struct MockServerPackageGenerator : public mt::StubServerTool
     int pf_sent;
     int stride_sent;
 
+    static std::map<int, int> sent_surface_attributes;
+
 private:
     void generate_unique_buffer()
     {
@@ -143,16 +146,26 @@ private:
         response->set_width(server_package.width);
         response->set_height(server_package.height);
     }
-
+    
     void create_surface_response(mir::protobuf::Surface* response)
     {
+        unsigned int const id = 2;
+
         response->set_fds_on_side_channel(1);
 
-        response->mutable_id()->set_value(2);
+        response->mutable_id()->set_value(id);
         response->set_width(width_sent);
         response->set_height(height_sent);
         response->set_pixel_format(pf_sent);
         response->add_fd(input_fd);
+        
+        for (auto const& kv : sent_surface_attributes)
+        {
+            auto setting = response->add_attributes();
+            setting->mutable_surfaceid()->set_value(id);
+            setting->set_attrib(kv.first);
+            setting->set_ivalue(kv.second);            
+        }
 
         create_buffer_response(response->mutable_buffer());
     }
@@ -165,6 +178,15 @@ private:
 
     int input_fd;
     int global_buffer_id;
+};
+
+std::map<int, int> MockServerPackageGenerator::sent_surface_attributes = {
+    { mir_surface_attrib_type, mir_surface_type_normal },
+    { mir_surface_attrib_state, mir_surface_state_restored },
+    { mir_surface_attrib_swapinterval, 1 },
+    { mir_surface_attrib_focus, mir_surface_focused },
+    { mir_surface_attrib_dpi, 19 },
+    { mir_surface_attrib_visibility, mir_surface_visibility_exposed }
 };
 
 struct MockBuffer : public mcl::ClientBuffer
@@ -184,6 +206,7 @@ struct MockBuffer : public mcl::ClientBuffer
     MOCK_METHOD0(increment_age, void());
     MOCK_METHOD0(mark_as_submitted, void());
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mg::NativeBuffer>());
+    MOCK_METHOD1(update_from, void(MirBufferPackage const&));
 };
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory
@@ -322,6 +345,7 @@ struct StubBuffer : public mcl::ClientBuffer
     {
         return std::shared_ptr<mg::NativeBuffer>();
     }
+    void update_from(MirBufferPackage const&) {}
 
     std::shared_ptr<MirBufferPackage> const package;
     geom::Size size_;
@@ -368,6 +392,10 @@ void null_event_callback(MirSurface*, MirEvent const*, void*)
 {
 }
 
+void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
+{
+}
+
 MATCHER_P(BufferPackageMatches, package, "")
 {
     // Can't simply use memcmp() on the whole struct because age is not sent over the wire
@@ -389,6 +417,13 @@ struct MirClientSurfaceTest : public testing::Test
     {
         start_test_server();
         connect_to_test_server();
+    }
+
+    ~MirClientSurfaceTest()
+    {
+        // Clear the lifecycle callback in order not to get SIGHUP by the
+        // default lifecycle handler during connection teardown
+        connection->register_lifecycle_event_callback(null_lifecycle_callback, nullptr);
     }
 
     void start_test_server()
@@ -467,6 +502,18 @@ TEST_F(MirClientSurfaceTest, client_buffer_created_on_surface_creation)
         .Times(1);
 
     create_and_wait_for_surface_with(*client_comm_channel, mock_buffer_factory);
+}
+
+TEST_F(MirClientSurfaceTest, attributes_set_on_surface_creation)
+{
+    using namespace testing;
+
+    auto surface = create_and_wait_for_surface_with(*client_comm_channel, mock_buffer_factory);
+    
+    for (int i = 0; i < mir_surface_attribs; i++)
+    {
+        EXPECT_EQ(MockServerPackageGenerator::sent_surface_attributes[i], surface->attrib(static_cast<MirSurfaceAttrib>(i)));
+    }
 }
 
 TEST_F(MirClientSurfaceTest, create_wait_handle_really_blocks)
@@ -628,28 +675,6 @@ TEST_F(MirClientSurfaceTest, surface_resizes_with_latest_buffer)
     auto const& after = surface->get_parameters();
     EXPECT_THAT(after.width, Eq(new_width));
     EXPECT_THAT(after.height, Eq(new_height));
-}
-
-TEST_F(MirClientSurfaceTest, default_surface_type)
-{
-    using namespace testing;
-
-    auto const surface = create_and_wait_for_surface_with(*client_comm_channel, stub_buffer_factory);
-
-    EXPECT_THAT(surface->attrib(mir_surface_attrib_type),
-                Eq(mir_surface_type_normal));
-}
-
-TEST_F(MirClientSurfaceTest, default_surface_state)
-{
-    using namespace testing;
-
-    auto const surface = create_and_wait_for_surface_with(*client_comm_channel, stub_buffer_factory);
-
-    // Test the default cached state value. It is always unknown until we
-    // get a real answer from the server.
-    EXPECT_THAT(surface->attrib(mir_surface_attrib_state),
-                Eq(mir_surface_state_unknown));
 }
 
 TEST_F(MirClientSurfaceTest, get_cpu_region_returns_correct_data)

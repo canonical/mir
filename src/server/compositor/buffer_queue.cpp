@@ -99,6 +99,7 @@ mc::BufferQueue::BufferQueue(
     : nbuffers{nbuffers},
       frame_dropping_enabled{false},
       the_properties{props},
+      force_new_compositor_buffer{false},
       gralloc{gralloc}
 {
     if (nbuffers < 1)
@@ -133,7 +134,20 @@ mc::BufferQueue::BufferQueue(
     framedrop_policy = policy_provider.create_policy([this]
     {
        std::unique_lock<decltype(guard)> lock{guard};
-       assert(!pending_client_notifications.empty());
+
+       if (pending_client_notifications.empty())
+       {
+           /*
+            * This framedrop handler may be in the process of being dispatched
+            * when we try to cancel it by calling swap_unblocked() when we
+            * get a buffer to give back to the client. In this case we cannot
+            * cancel and this function may be called without any pending client
+            * notifications. This is a benign race that we can deal with by
+            * just ignoring the framedrop request.
+            */
+           return;
+       }
+
        if (ready_to_composite_queue.empty())
        {
            /*
@@ -227,7 +241,16 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         use_current_buffer = true;
         current_buffer_users.push_back(user_id);
     }
-    use_current_buffer |= ready_to_composite_queue.empty();
+
+    if (ready_to_composite_queue.empty())
+    {
+        use_current_buffer = true;
+    }
+    else if (force_new_compositor_buffer)
+    {
+        use_current_buffer = false;
+        force_new_compositor_buffer = false;
+    }
 
     mg::Buffer* buffer_to_release = nullptr;
     if (!use_current_buffer)
@@ -244,6 +267,10 @@ mc::BufferQueue::compositor_acquire(void const* user_id)
         current_buffer_users.clear();
         current_buffer_users.push_back(user_id);
         current_compositor_buffer = pop(ready_to_composite_queue);
+    }
+    else if (current_buffer_users.empty())
+    {   // current_buffer_users and ready_to_composite_queue both empty
+        current_buffer_users.push_back(user_id);
     }
 
     buffers_sent_to_compositor.push_back(current_compositor_buffer);
@@ -455,4 +482,23 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
        std::swap(buffer_to_give, current_compositor_buffer);
     }
     give_buffer_to_client(buffer_to_give, std::move(lock));
+}
+
+void mc::BufferQueue::drop_old_buffers()
+{
+    std::vector<mg::Buffer*> to_release;
+
+    {
+        std::lock_guard<decltype(guard)> lock{guard};
+        force_new_compositor_buffer = true;
+
+        while (ready_to_composite_queue.size() > 1)
+            to_release.push_back(pop(ready_to_composite_queue));
+    }
+
+    for (auto buffer : to_release)
+    {
+       std::unique_lock<decltype(guard)> lock{guard};
+       release(buffer, std::move(lock));
+    }
 }

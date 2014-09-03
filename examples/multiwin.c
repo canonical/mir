@@ -44,6 +44,13 @@ static void shutdown(int signum)
     }
 }
 
+static void premultiply_alpha(Color *c)
+{
+    c->r = (unsigned)c->r * c->a / 255U;
+    c->g = (unsigned)c->g * c->a / 255U;
+    c->b = (unsigned)c->b * c->a / 255U;
+}
+
 static void put_pixels(void *where, int count, MirPixelFormat format,
                        const Color *color)
 {
@@ -187,6 +194,7 @@ int main(int argc, char *argv[])
     win[0].fill.g = 0x00;
     win[0].fill.b = 0x00;
     win[0].fill.a = 0x50;
+    premultiply_alpha(&win[0].fill);
 
     parm.name = "green";
     parm.width = 300;
@@ -196,6 +204,7 @@ int main(int argc, char *argv[])
     win[1].fill.g = 0xff;
     win[1].fill.b = 0x00;
     win[1].fill.a = 0x50;
+    premultiply_alpha(&win[1].fill);
 
     parm.name = "blue";
     parm.width = 150;
@@ -205,9 +214,11 @@ int main(int argc, char *argv[])
     win[2].fill.g = 0x00;
     win[2].fill.b = 0xff;
     win[2].fill.a = 0x50;
+    premultiply_alpha(&win[2].fill);
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
+    signal(SIGHUP, shutdown);
 
     while (running)
     {

@@ -52,10 +52,14 @@ namespace android
 class InputReceiver
 {
 public:
+    typedef std::function<nsecs_t(int)> AndroidClock;
+
     InputReceiver(droidinput::sp<droidinput::InputChannel> const& input_channel,
-                  std::shared_ptr<InputReceiverReport> const& report);
+                  std::shared_ptr<InputReceiverReport> const& report,
+                  AndroidClock clock = systemTime);
     InputReceiver(int fd,
-                  std::shared_ptr<InputReceiverReport> const& report);
+                  std::shared_ptr<InputReceiverReport> const& report,
+                  AndroidClock clock = systemTime);
 
     virtual ~InputReceiver();
     int fd() const;
@@ -83,6 +87,8 @@ private:
     bool fd_added;
 
     std::shared_ptr<XKBMapper> xkb_mapper;
+
+    AndroidClock const android_clock;
 
     bool try_next_event(MirEvent &ev);
 };

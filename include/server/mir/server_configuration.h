@@ -60,6 +60,7 @@ public:
     // TODO most of these interfaces are wider DisplayServer needs...
     // TODO ...some or all of them need narrowing
     virtual std::shared_ptr<frontend::Connector> the_connector() = 0;
+    virtual std::shared_ptr<frontend::Connector> the_prompt_connector() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
@@ -70,10 +71,11 @@ public:
     virtual std::shared_ptr<graphics::Platform>  the_graphics_platform() = 0;
     virtual std::shared_ptr<input::InputConfiguration> the_input_configuration() = 0;
     virtual std::shared_ptr<EmergencyCleanup> the_emergency_cleanup() = 0;
+    virtual auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) = 0;
 
 protected:
     ServerConfiguration() = default;
-    virtual ~ServerConfiguration() { /* TODO: make nothrow */ }
+    virtual ~ServerConfiguration() = default;
 
     ServerConfiguration(ServerConfiguration const&) = delete;
     ServerConfiguration& operator=(ServerConfiguration const&) = delete;

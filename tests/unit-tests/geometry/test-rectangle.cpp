@@ -21,6 +21,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <vector>
+
 namespace geom = mir::geometry;
 
 TEST(geometry, rectangle)
@@ -194,4 +196,40 @@ TEST(geometry, rectangle_overlaps)
     EXPECT_TRUE(rect1.overlaps(rect4));
     EXPECT_TRUE(rect4.overlaps(rect3));
     EXPECT_TRUE(rect3.overlaps(rect3));
+}
+
+TEST(geometry, rectangle_intersection)
+{
+    using namespace testing;
+    using namespace geom;
+
+    Rectangle const rect_base{{5,5}, {5,5}};
+
+    struct TestData
+    {
+        Rectangle const rect;
+        Rectangle const intersection;
+    };
+
+    std::vector<TestData> const test_data
+    {
+        { rect_base, rect_base },
+        { Rectangle(), Rectangle() },
+        { {{4,4}, {2,2}}, {{5,5}, {1,1}} },
+        { {{5,4}, {5,2}}, {{5,5}, {5,1}} },
+        { {{6,6}, {3,3}}, {{6,6}, {3,3}} },
+        { {{9,9}, {1,1}}, {{9,9}, {1,1}} },
+        { {{4,6}, {8,2}}, {{5,6}, {5,2}} }
+    };
+
+    for (auto const& test_case : test_data)
+    {
+        EXPECT_THAT(rect_base.intersection_with(test_case.rect),
+                    Eq(test_case.intersection))
+            << "test_case.rect = " << test_case.rect;
+
+        EXPECT_THAT(test_case.rect.intersection_with(rect_base),
+                    Eq(test_case.intersection))
+            << "test_case.rect = " << test_case.rect;
+    }
 }

@@ -3,7 +3,7 @@ include_directories(
 )
 
 add_library(
-  mirnestedgraphics STATIC
+  mirnestedgraphics OBJECT
 
   nested_display.cpp
   nested_display_configuration.cpp
@@ -12,6 +12,3 @@ add_library(
   mir_client_host_connection.cpp
 )
 
-target_link_libraries(
-  mirnestedgraphics
-)

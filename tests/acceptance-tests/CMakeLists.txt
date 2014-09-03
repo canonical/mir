@@ -18,6 +18,7 @@ set(
   test_client_library.cpp
   test_client_library_old.cpp
   test_client_surface_events.cpp
+  test_command_line_handling.cpp
   test_custom_input_dispatcher.cpp
   test_client_surfaces.cpp
   test_test_framework.cpp
@@ -38,22 +39,29 @@ set(
   test_client_cursor_api.cpp
   test_large_messages.cpp
   test_client_surface_visibility.cpp
+  test_touchspot_visualization.cpp
+  test_client_with_custom_display_config_deadlock.cpp
+  test_macros.cpp
+  test_stale_frames.cpp
+  test_server_without_active_outputs.cpp
+  test_client_input.cpp
+  test_server_startup.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )
 
-list(APPEND SOURCES
-  test_client_input.cpp)
-
-list(APPEND SOURCES
-  test_server_startup.cpp
-)
+if (MIR_TEST_PLATFORM STREQUAL "mesa")
+  list(APPEND SOURCES test_symbols_required_by_mesa.cpp)
+endif()
 
 add_executable(
   mir_acceptance_tests
 
   ${SOURCES}
 )
+
+add_dependencies(mir_acceptance_tests GMock)
+
 uses_android_input(mir_acceptance_tests)
 
 

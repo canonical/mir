@@ -1,8 +1,258 @@
-mir (0.5.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.7.0+14.10.20140829-0ubuntu1) utopic; urgency=medium
 
-  * Under development
+  [ Daniel van Vugt ]
+  * New upstream release 0.7.0 (https://launchpad.net/mir/+milestone/0.7.0)
+    - Enhancements:
+      . Test suite: Reworked mechanism to override Mir client functions
+      . Demo shell: Detect custom rendering (decorations) to make it
+        compatible with overlay optimizations
+      . Make sure to preserve fd resources until the end of the sending
+        of the message
+      . Add test cases and script for tracking changes to the new ABIs:
+        libmircommon, libmirplatform
+      . Symbols file for libmirplatform
+      . Symbols file for libmircommon
+      . Symbols file for libmirserver
+      . Various improvements to the SessionMediator test
+      . Various build related improvements
+      . Print testcase output during package build
+      . Abort test when InProcessServer startup fails
+      . Link the integration and unit tests against the server objects
+      . Add a document detailing the useful tests to run and the useful
+        logs to collect when troubleshooting a new android chipset
+      . Enable motion event resampling and prediction for a more responsive
+        touch experience.
+    - ABI summary: Servers need rebuilding, but clients do not
+      . Mirclient ABI unchanged at 8
+      . Mircommon ABI bumped to 1
+      . Mirplatform ABI bumped to 2
+      . Mirserver ABI bumped to 25
+    - API changes
+      . Deleted function - frontend::Shell::create_surface_for(). If you have
+        the std::shared_ptr<frontend::Session> session, you can just do
+        session->create_surface(params) instead to get a SurfaceId
+    - Bug fixes:
+      . Ensure we process lifecycle events before the nested server is torn
+        down (LP: #1353465)
+      . Fix race in InputTestingServerConfiguration (LP: #1354446)
+      . Fix fd leaks in prompt session frontend code and tests (LP: #1353461)
+      . Detect the additional things the demo shell draws on the renderable
+        list and avoid calling the optimized post function if they are being
+        drawn (LP: #1348330)
+      . Client: Fix SIGTERM dispatch in our default lifecycle event handler
+        (LP: #1353867)
+      . DemoRenderer: Don't try to create a texture of width zero. 
+        (LP: #1358210)
+      . Fix CI failures (LP: #1358698)
+      . Fix build failure: "variable ‘rc’ set but not used" which happens in
+        release mode when NDEBUG is set (LP: #1358625)
+      . Only enumerate exposed input surfaces to avoid delivering events to
+        occluded surfaces (LP: #1359264)
+      . Android: do not post driver cancelled buffers (LP: #1359406)
+      . Client: Ensure our platform library stays loaded for as long as it is
+        needed by other objects (LP: #1358191)
+      . Examples: Register the DemoCompositor with the Scene to properly
+        process visibility events (LP: #1359487)
+      . Mir_demo_client_basic: Don't assert on user errors like failing to
+        connect to a Mir server (LP: #1331958)
+      . Tests: Explicitly depend on GMock target to avoid build races
+        (LP: #1362646)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 04 Jul 2014 12:45:30 +0800
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 29 Aug 2014 16:12:54 +0000
+
+mir (0.6.1+14.10.20140814-0ubuntu1) utopic; urgency=medium
+
+  [ Daniel van Vugt ]
+  * New upstream release 0.6.1 (https://launchpad.net/mir/+milestone/0.6.1)
+    - Bugs fixed:
+      . libmircommon-dev 0.6.0+14.10.20140811-0ubuntu1 fails to
+        install/upgrade, does not replace mircommon-dev
+        0.5.1+14.10.20140728-0ubuntu1 (LP: #1348515)
+      . Nexus 4 client lock up observed (LP: #1352883)
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 14 Aug 2014 22:34:18 +0000
+
+mir (0.6.0+14.10.20140811-0ubuntu1) utopic; urgency=medium
+
+  [ Cemil Azizoglu ]
+  * New upstream release 0.6.0 (https://launchpad.net/mir/+milestone/0.6.0)
+    - mirclient ABI unchanged at 8. Clients do not need rebuilding.
+    - mirserver ABI bumped to 24. Servers need rebuilding, but probably don't
+      need modification:
+      . Host lifecycle event listener for nested servers introduced.
+      . Add query function to BasicSurface.
+      . The (deprecated) function the_ipc_factory() is now removed.
+      . Removed legacy support for overriding the focus controller or the
+        frontend shell.
+      . Added support for a common type for managing fd's.
+      . Moved testdraw library to examples directory.
+      . Added support for droping stale frames when a surface becomes exposed.
+    - Enhancements:
+      . Split underlying data transport out of MirSocketRpcChannel.
+      . Introduced two new client-side functions : mir_surface_get_focus and
+        mir_surface_get_visibility.
+      . Added symbolic names for cursors.
+      . Made "shared" code a true shared library.
+      . Provide linker scripts to control symbols exported by [mesa|android]
+        libmirclientplatform.
+      . Correct xcursor loader test to fail properly instead of segfaulting.
+      . Make mir::Fd type copy constructible.
+      . Miscellaneous packaging related enhancements.
+      . Miscellaneous build related enhancements.
+      . Added automated test cases for detecting ABI breakage.
+      . examples/fingerpaint: Enable frame dropping so it's faster and more
+        responsive.
+      . mirprotobuf folded into new libmircommon.
+      . Don't propagate exceptions to graphics driver code.
+      . Dropped unused/minimally used dependencies : boost-filesystem,
+        boost-thread, boost-chrono, boost-regex.
+      . platform: provide support for customizing Mir's behavior when a
+        fatal_error occurs.
+      . Expose an interface for touch visualization.
+    - Bugs fixed:
+      . Mir servers crash with SIGABRT - assertion failed at
+        buffer_queue.cpp:136 - "!pending_client_notifications.empty()"
+        (LP: #1335481)
+      . [regression][hammerhead] Mir fails to start on Nexus 5 & 10 as it
+        fails to turn vsync signal on (LP: #1345533)
+      . [qtcomp] Random crash in Mir input when running AP tests: [terminate
+        called after throwing an instance of '...' what(): assign: File exists]
+        when constructing a mir::AsioMainLoop::FDHandler (LP: #1346952)
+      . CI builds fail when trying to install libmircommon-dev (LP: #1348518)
+      . [regression] Mir 0.6 GL clients crash immediately on startup (Mesa is
+        trying to use X11 instead of Mir) (LP: #1350163)
+      . qmlscene crashed with SIGSEGV in _M_release() on quit (LP: #1342694)
+      . Clients cannot create surfaces when the screen is off (LP: #1344024)
+      . The packaging of headers and libraries is confused (LP: #1347522)
+      . [regression] Intermittent CI failure in
+        ClientLibrary.receives_surface_dpi_value (LP: #1348095)
+      . Installing mir-demos also unexpectedly installs *-dev packages
+        (LP: #1297100)
+      . mir_unit_tests: XCursorLoader.loads_cursors_from_testing_theme crashes
+        on N4 (LP: #1342029)
+      . [performance] Mir is spending at least 8% of its time in
+         __android_log_print() (LP: #1343074)
+      . [performance] Mir demo shell spends ~12% of its time in vector
+        allocation under DemoRenderer::tessellate_*() (LP: #1349698)
+      . mir_client_library_debug.h functions do not have C linkage
+        (LP: #1349742)
+      . mir client API is missing getters for some surface attributes
+        (LP: #1336553)
+      . Building Mir outputs lots of warnings about Android logging functions
+        in 3rd_party/ (LP: #1348467)
+      . The "shared" code should be a shared library (LP: #1341502)
+      . Finish the removal of mirprotobuf library (LP: #1351133)
+      . Release overlay buffers when screen is turned off (LP: #1350961)
+      . mir_demo_server_shell --disable-overlays false renders incorrectly
+        on android (partial fix for LP: #1348330)
+      . Remember to honor MIR_ENABLE_TESTS and not emit tests if it's disabled
+        (LP: #1352800)
+      . Make it easier to separate command line options used by Mir from those
+        used elsewhere (LP: #1351255)
+      . Expose create_native_platform in libmirplatformgraphics.so
+        (LP: #1353658)
+      . Add versioning and pkg config to libmirplatform (LP: #1293944)
+      . unity-system-compositor FTBFS against Mir: undefined reference to
+        `...@MIR_CLIENT_8' (LP: #1355021)
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 11 Aug 2014 19:52:06 +0000
+
+mir (0.5.1+14.10.20140728-0ubuntu1) utopic; urgency=medium
+
+  [ Kevin Gunn ]
+  * Fixed: Crash due to racing input registration & surface removal
+    (LP: #1346952)
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 28 Jul 2014 02:49:50 +0000
+
+mir (0.5.0+14.10.20140724-0ubuntu1) utopic; urgency=medium
+
+  [ Kevin Gunn ]
+  * Fixed: Crashing on assert of empty client notification queue (LP: #1335481)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 24 Jul 2014 08:22:05 +0000
+
+mir (0.5.0+14.10.20140722-0ubuntu1) utopic; urgency=medium
+
+  [ Kevin Gunn ]
+  * Fixed: [regression] Mir fails to start on Nexus 5 / Nexus 10 (LP: #1345533)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 22 Jul 2014 02:17:22 +0000
+
+mir (0.5.0+14.10.20140717-0ubuntu1) utopic; urgency=medium
+
+  [ Daniel van Vugt ]
+  * New upstream release 0.5.0 (https://launchpad.net/mir/+milestone/0.5.0)
+    - mirclient ABI unchanged at 8. Clients do not need rebuilding.
+    - mirserver ABI bumped to 23. Servers need rebuilding, but probably don't
+      need modification:
+      . DefaultServerConfiguration/Cursor API: Cursor interfaces changed, most
+        notably CursorImages moved from ::mir::graphics to ::mir::input.
+      . DefaultServerConfiguration: New "prompt" API.
+      . DefaultServerConfiguration: "clock" member is now static.
+      . SessionAuthorizer: New functions.
+      . ServerConfiguration: New function added: the_prompt_connector().
+    - Enhancements:
+      . Add AddressSanitizer cmake build type.
+      . frontend, client API, tests: add support for prompt session
+        permissions and for client detecting errors.
+      . server: Ensure our emergency cleanup handling infrastructure is
+        signal-safe.
+      . Implement and enable an xcursor based image loader for cursors.
+      . Fix warnings raised by the new g++-4.9.
+      . shared, scene: Introduce a generic listener collection.
+      . MirMotionEvent: Define a struct typedef to allow for
+        pointer_coordinates to be used individually.
+    - Bugs fixed:
+      . Nexus 10 leaks during overlay operations (LP: #1331769)
+      . MultiThreadedCompositor deadlocks (LP: #1335311)
+      . Intermittent test failure in ClientSurfaceEvents can client query 
+        orientation (LP: #1335741)
+      . Intermittent test failure in ClientSurfaceEvents/OrientationEvents
+        (LP: #1335752)
+      . Intermittent memory error in ClientSurfaceEvents on
+        orientation query (LP: #1335819)
+      . mir_unit_tests.EventDistributorTest.* SEGFAULT (LP: #1338902)
+      . [regression] Device locks randomly on welcome screen (LP: #1339700)
+      . Intermittent deadlock when switching to session with custom display
+        config & closing other session (LP: #1340669)
+      . Mir cursor has no hotspot setting, assumes (0, 0) (LP: #1189775)
+      . clang built mir_unit_tests.ProtobufSocketCommunicatorFD crashes
+        intermittently (LP: #1300653)
+      . g++-4.9 binary incompatibilities with libraries built with g++-4.8
+        (LP: #1329089)
+      . [test regression] SurfaceLoop fails sporadically on deleting surfaces
+        for a disconnecting client (LP: #1335747)
+      . Intermittent test failure ServerShutdown when clients are blocked
+        (LP: #1335873)
+      . [regression] mir_demo_client_multiwin is displayed with obviously
+        wrong colours (LP: #1339471)
+      . Partially onscreen surfaces not occluded when covered by another
+        surface (LP: #1340078)
+      . SurfaceConfigurator::attribute_set always say "unfocused" for focus
+        property changes (LP: #1336548)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 17 Jul 2014 07:58:53 +0000
+
+mir (0.4.1+14.10.20140714-0ubuntu1) utopic; urgency=medium
+
+  [ Daniel van Vugt ]
+  * Bug fix release 0.4.1 (https://launchpad.net/mir/+milestone/0.4.1) fixes:
+    - [regression] Device locks randomly on welcome screen (LP: #1339700)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 14 Jul 2014 13:13:37 +0000
 
 mir (0.4.0+14.10.20140701.1-0ubuntu1) utopic; urgency=medium
 
@@ -11,7 +261,6 @@ mir (0.4.0+14.10.20140701.1-0ubuntu1) utopic; urgency=medium
       . Add surface attribute for visibility.
       . Add surface orientation API.
     - mirserver ABI bumped to 22. Shells need rebuilding.
-      . Allow setting the orientation of a server surface.
       . Change compositor::Scene to expose compositor::SceneElements instead
         of graphics::Renderables.
       . Change various input and Surface classes to support the client cursor
@@ -22,18 +271,29 @@ mir (0.4.0+14.10.20140701.1-0ubuntu1) utopic; urgency=medium
         mg::Renderables.
       . Add visibility tracking to mc::SceneElement interface and
         implementations.
-      . Unregister FD Handler from EventHandlerRegister.
-      . Sending user input events through Surfaces.
       . Move InputChannelFactory into DefaultServerConfiguration.
-      . Ensure default input region is updated when surface is resized. (LP: #1332632)
-    - android: support alpha blending overlays together in HWC. Bumps
-      android-headers version requirement from 4.2.2 to 4.4.2. (LP: #1329879)
-    - android: designate the buffer usage when attempting to access or
-      update the fence associated with the native buffer. (LP: #1329868)
+    - Unregister FD Handler from EventHandlerRegister.
+    - Sending user input events through Surfaces.
+    - Allow setting the orientation of a server surface.
     - Enable client cursor API.
     - Enable support for USB touchscreens.
     - Various test improvements.
-    - Ensure the_cursor() is not null. (LP: #1334010)
+    - Bugs fixed:
+      . can't display toolbar after dismissing it (LP: #1332632)
+      . [regression] demo client connection crashes the server (LP: #1334010)
+      . demo server locks up in certain scenarios with --disable-overlays
+        false when starting/stopping second clients (LP: #1329868)
+      . MultiThreadedCompositor deadlocks (LP: #1335311)
+      . Intermittent memory error in
+        ClientSurfaceEvents.client_can_query_current_orientation (LP: #1335819)
+      . Intermittent hang & fail in mir_acceptance_tests.TestClientCursorAPI.*
+        (LP: #1332011)
+      . MirClientSurfaceTests tests leak fds and eventually hang when ran
+        repeatedly (LP: #1333673)
+      . [testfail] Intermittent "Invalid read" in MirSurfaceSwapBuffersTest.
+        swap_buffers_does_not_block_when_surface_is_not_composited
+        (LP: #1334287)
+      . android: support alpha blending during hwc overlay (LP: #1329879)
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 01 Jul 2014 15:54:36 +0000
 

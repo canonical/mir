@@ -89,8 +89,6 @@ std::shared_ptr<mf::Session> ms::SessionManager::open_session(
 
     session_listener->starting(new_session);
 
-    prompt_session_manager->add_expected_session(new_session);
-
     set_focus_to(new_session);
 
     return new_session;
@@ -159,21 +157,6 @@ std::weak_ptr<ms::Session> ms::SessionManager::focussed_application() const
     return focus_application;
 }
 
-// TODO: We use this to work around the lack of a SessionMediator-like object for internal clients.
-// we could have an internal client mediator which acts as a factory for internal clients, taking responsibility
-// for invoking handle_surface_created.
-mf::SurfaceId ms::SessionManager::create_surface_for(
-    std::shared_ptr<mf::Session> const& session,
-    SurfaceCreationParameters const& params)
-{
-    auto scene_session = std::dynamic_pointer_cast<Session>(session);
-    auto id = scene_session->create_surface(params);
-
-    handle_surface_created(session);
-
-    return id;
-}
-
 void ms::SessionManager::handle_surface_created(std::shared_ptr<mf::Session> const& session)
 {
     set_focus_to(std::dynamic_pointer_cast<Session>(session));
@@ -187,15 +170,6 @@ std::shared_ptr<mf::PromptSession> ms::SessionManager::start_prompt_session_for(
     return prompt_session_manager->start_prompt_session_for(
         shell_session, params);
 
-}
-
-void ms::SessionManager::add_prompt_provider_process_for(
-    std::shared_ptr<mf::PromptSession> const& prompt_session,
-    pid_t process_id)
-{
-    auto scene_prompt_session = std::dynamic_pointer_cast<PromptSession>(prompt_session);
-
-    prompt_session_manager->add_prompt_provider_by_pid(scene_prompt_session, process_id);
 }
 
 void ms::SessionManager::add_prompt_provider_for(

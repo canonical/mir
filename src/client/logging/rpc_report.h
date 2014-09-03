@@ -44,9 +44,9 @@ public:
     void invocation_requested(mir::protobuf::wire::Invocation const& invocation) override;
     void invocation_succeeded(mir::protobuf::wire::Invocation const& invocation) override;
     void invocation_failed(mir::protobuf::wire::Invocation const& invocation,
-                           boost::system::error_code const& error) override;
+                           std::exception const& ex) override;
 
-    void header_receipt_failed(boost::system::error_code const& error) override;
+    void header_receipt_failed(std::exception const& ex) override;
     void result_receipt_succeeded(mir::protobuf::wire::Result const& result) override;
     void result_receipt_failed(std::exception const& ex) override;
 

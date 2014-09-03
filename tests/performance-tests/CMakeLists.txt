@@ -10,13 +10,15 @@ add_executable(
   ${PERFORMANCE_TESTS_SOURCES}
 )
 
+add_dependencies(mir_performance_tests GMock)
+
 target_link_libraries(
   mir_performance_tests
 
   mir-test
   mir-test-framework
+  mirserver
 
-  ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
 )
 

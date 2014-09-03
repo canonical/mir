@@ -16,6 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "mir_connection_api.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir_toolkit/mir_client_library_drm.h"
 #include "mir/default_configuration.h"
@@ -25,7 +26,6 @@
 //#include "egl_native_display_container.h"
 #include "default_connection_configuration.h"
 #include "display_configuration.h"
-#include "api_impl_types.h"
 #include "error_connections.h"
 
 
@@ -49,78 +49,80 @@ size_t division_ceiling(size_t a, size_t b)
     return ((a - 1) / b) + 1;
 }
 
-
-MirWaitHandle* mir_default_connect(
-    char const* socket_file,
-    char const* name,
-    mir_connected_callback callback,
-    void* context)
+class DefaultMirConnectionAPI : public mcl::MirConnectionAPI
 {
-
-    try
-    {
-        std::string sock;
-        if (socket_file)
-            sock = socket_file;
-        else
-        {
-            auto socket_env = getenv("MIR_SOCKET");
-            if (socket_env)
-                sock = socket_env;
-            else
-                sock = mir::default_server_socket;
-        }
-
-        mcl::DefaultConnectionConfiguration conf{sock};
-
-        std::unique_ptr<MirConnection> connection{new MirConnection(conf)};
-        auto const result = connection->connect(name, callback, context);
-        connection.release();
-        return result;
-    }
-    catch (std::exception const& x)
-    {
-        MirConnection* error_connection = new MirConnection(x.what());
-        mcl::ErrorConnections::instance().insert(error_connection);
-        callback(error_connection, context);
-        return nullptr;
-    }
-}
-
-
-void mir_default_connection_release(MirConnection* connection)
-{
-    if (!mcl::ErrorConnections::instance().contains(connection))
+public:
+    MirWaitHandle* connect(
+        char const* socket_file,
+        char const* name,
+        mir_connected_callback callback,
+        void* context) override
     {
         try
         {
-            auto wait_handle = connection->disconnect();
-            wait_handle->wait_for_all();
+            std::string sock;
+            if (socket_file)
+                sock = socket_file;
+            else
+            {
+                auto socket_env = getenv("MIR_SOCKET");
+                if (socket_env)
+                    sock = socket_env;
+                else
+                    sock = mir::default_server_socket;
+            }
+
+            auto const conf = configuration(sock);
+
+            std::unique_ptr<MirConnection> connection{new MirConnection(*conf)};
+            auto const result = connection->connect(name, callback, context);
+            connection.release();
+            return result;
         }
-        catch (std::exception const&)
+        catch (std::exception const& x)
         {
-            // We're implementing a C API so no exceptions are to be
-            // propagated. And that's OK because if disconnect() fails,
-            // we don't care why. We're finished with the connection anyway.
+            MirConnection* error_connection = new MirConnection(x.what());
+            mcl::ErrorConnections::instance().insert(error_connection);
+            callback(error_connection, context);
+            return nullptr;
         }
     }
-    else
+
+    void release(MirConnection* connection) override
     {
-        mcl::ErrorConnections::instance().remove(connection);
+        if (!mcl::ErrorConnections::instance().contains(connection))
+        {
+            try
+            {
+                auto wait_handle = connection->disconnect();
+                wait_handle->wait_for_all();
+            }
+            catch (std::exception const&)
+            {
+                // We're implementing a C API so no exceptions are to be
+                // propagated. And that's OK because if disconnect() fails,
+                // we don't care why. We're finished with the connection anyway.
+            }
+        }
+        else
+        {
+            mcl::ErrorConnections::instance().remove(connection);
+        }
+
+        delete connection;
     }
 
-    delete connection;
+    std::unique_ptr<mcl::ConnectionConfiguration> configuration(std::string const& socket) override
+    {
+        return std::unique_ptr<mcl::ConnectionConfiguration>{
+            new mcl::DefaultConnectionConfiguration{socket}};
+    }
+};
+
+DefaultMirConnectionAPI default_api;
 }
 
-}
-
-//mir_connect and mir_connection_release can be overridden by test code that sets these function
-//pointers to do things like stub out the graphics drivers or change the connection configuration.
-
-//TODO: we could have a more comprehensive solution that allows us to substitute any of the functions
-//for test purposes, not just the connect functions
-mir_connect_impl_func mir_connect_impl = mir_default_connect;
-mir_connection_release_impl_func mir_connection_release_impl = mir_default_connection_release;
+mcl::MirConnectionAPI* mir_connection_api_impl{&default_api};
 
 MirWaitHandle* mir_connect(
     char const* socket_file,
@@ -130,7 +132,7 @@ MirWaitHandle* mir_connect(
 {
     try
     {
-        return mir_connect_impl(socket_file, name, callback, context);
+        return mir_connection_api_impl->connect(socket_file, name, callback, context);
     }
     catch (std::exception const&)
     {
@@ -164,7 +166,7 @@ void mir_connection_release(MirConnection* connection)
 {
     try
     {
-        return mir_connection_release_impl(connection);
+        return mir_connection_api_impl->release(connection);
     }
     catch (std::exception const&)
     {

@@ -77,6 +77,7 @@ struct mir::DisplayServer::Private
           input_configuration{config.the_input_configuration()},
           compositor{config.the_compositor()},
           connector{config.the_connector()},
+          prompt_connector{config.the_prompt_connector()},
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()},
           server_status_listener{config.the_server_status_listener()},
@@ -112,6 +113,10 @@ struct mir::DisplayServer::Private
                 [this] { compositor->stop(); },
                 [this] { compositor->start(); }};
 
+            TryButRevertIfUnwinding prompt{
+                [this] { prompt_connector->stop(); },
+                [this] { prompt_connector->start(); }};
+
             TryButRevertIfUnwinding comm{
                 [this] { connector->stop(); },
                 [this] { connector->start(); }};
@@ -139,6 +144,10 @@ struct mir::DisplayServer::Private
             TryButRevertIfUnwinding comm{
                 [this] { connector->start(); },
                 [this] { connector->stop(); }};
+
+            TryButRevertIfUnwinding prompt{
+                [this] { prompt_connector->start(); },
+                [this] { prompt_connector->stop(); }};
 
             TryButRevertIfUnwinding display_config_processing{
                 [this] { display_changer->resume_display_config_processing(); },
@@ -180,6 +189,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<input::InputConfiguration> const input_configuration;
     std::shared_ptr<mc::Compositor> const compositor;
     std::shared_ptr<mf::Connector> const connector;
+    std::shared_ptr<mf::Connector> const prompt_connector;
     std::shared_ptr<mi::InputManager> const input_manager;
     std::shared_ptr<mir::MainLoop> const main_loop;
     std::shared_ptr<mir::ServerStatusListener> const server_status_listener;
@@ -196,13 +206,12 @@ mir::DisplayServer::DisplayServer(ServerConfiguration& config) :
  * can define the 'p' member variable as a unique_ptr to an
  * incomplete type (DisplayServerPrivate) in the header.
  */
-mir::DisplayServer::~DisplayServer()
-{
-}
+mir::DisplayServer::~DisplayServer() = default;
 
 void mir::DisplayServer::run()
 {
     p->connector->start();
+    p->prompt_connector->start();
     p->compositor->start();
     p->input_manager->start();
     p->input_dispatcher->start();
@@ -214,6 +223,7 @@ void mir::DisplayServer::run()
     p->input_dispatcher->stop();
     p->input_manager->stop();
     p->compositor->stop();
+    p->prompt_connector->stop();
     p->connector->stop();
 }
 

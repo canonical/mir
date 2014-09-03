@@ -43,13 +43,6 @@ void msh::SessionCoordinatorWrapper::close_session(
     wrapped->close_session(session);
 }
 
-mf::SurfaceId msh::SessionCoordinatorWrapper::create_surface_for(
-    std::shared_ptr<mf::Session> const& session,
-    ms::SurfaceCreationParameters const& params)
-{
-    return wrapped->create_surface_for(session, params);
-}
-
 void msh::SessionCoordinatorWrapper::focus_next()
 {
     wrapped->focus_next();
@@ -77,13 +70,6 @@ std::shared_ptr<mf::PromptSession> msh::SessionCoordinatorWrapper::start_prompt_
     scene::PromptSessionCreationParameters const& params)
 {
     return wrapped->start_prompt_session_for(session, params);
-}
-
-void msh::SessionCoordinatorWrapper::add_prompt_provider_process_for(
-    std::shared_ptr<mf::PromptSession> const& prompt_session,
-    pid_t process_id)
-{
-    wrapped->add_prompt_provider_process_for(prompt_session, process_id);
 }
 
 void msh::SessionCoordinatorWrapper::add_prompt_provider_for(

@@ -88,15 +88,6 @@ struct ErrorServer : mf::detail::DisplayServer
     {
         throw std::runtime_error(test_exception_text);
     }
-
-    void test_file_descriptors(
-        google::protobuf::RpcController*,
-        const mir::protobuf::Void*,
-        mir::protobuf::Buffer*,
-        google::protobuf::Closure*)
-    {
-        throw std::runtime_error(test_exception_text);
-    }
 };
 
 std::string const ErrorServer::test_exception_text{"test exception text"};
@@ -207,9 +198,8 @@ TEST_F(ErrorReporting, c_api_returns_error)
 
     struct ServerConfig : TestingServerConfiguration
     {
-        std::shared_ptr<mf::ProtobufIpcFactory> the_ipc_factory(
-            std::shared_ptr<mir::frontend::Shell> const&,
-            std::shared_ptr<mg::GraphicBufferAllocator> const&) override
+        std::shared_ptr<mf::ProtobufIpcFactory> new_ipc_factory(
+            std::shared_ptr<mf::SessionAuthorizer> const&) override
         {
             static auto error_server = std::make_shared<ErrorServer>();
             return std::make_shared<mtd::StubIpcFactory>(*error_server);

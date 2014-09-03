@@ -18,54 +18,64 @@
 
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/stub_client_connection_configuration.h"
-#include "src/client/mir_wait_handle.h"
-#include "src/client/mir_connection.h"
-#include "src/client/api_impl.h"
+#include "mir_toolkit/mir_client_library.h"
+#include "src/client/mir_connection_api.h"
 
 namespace mtf = mir_test_framework;
+namespace mcl = mir::client;
 
 namespace
 {
 
-MirWaitHandle* mir_connect_override(
-    char const *socket_file,
-    char const *app_name,
-    mir_connected_callback callback,
-    void *context)
+void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
 {
-    mtf::StubConnectionConfiguration conf(socket_file);
-    auto connection = new MirConnection(conf);
-    return connection->connect(app_name, callback, context);
 }
 
-void mir_connection_release_override(MirConnection *connection)
+class StubMirConnectionAPI : public mcl::MirConnectionAPI
 {
-    try
+public:
+    StubMirConnectionAPI(mcl::MirConnectionAPI* prev_api)
+        : prev_api{prev_api}
     {
-        auto wait_handle = connection->disconnect();
-        wait_handle->wait_for_all();
     }
-    catch (std::exception const&)
+
+    MirWaitHandle* connect(
+        char const* socket_file,
+        char const* name,
+        mir_connected_callback callback,
+        void* context) override
     {
-        // Really, we want try/finally, but that's not C++11
-        delete connection;
-        throw;
+        return prev_api->connect(socket_file, name, callback, context);
     }
-    delete connection;
-}
+
+    void release(MirConnection* connection) override
+    {
+        // Clear the lifecycle callback in order not to get SIGHUP by the
+        // default lifecycle handler during connection teardown
+        mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
+        return prev_api->release(connection);
+    }
+
+    std::unique_ptr<mcl::ConnectionConfiguration> configuration(std::string const& socket) override
+    {
+        return std::unique_ptr<mcl::ConnectionConfiguration>{
+            new mtf::StubConnectionConfiguration{socket}};
+    }
+
+private:
+    mcl::MirConnectionAPI* const prev_api;
+};
 
 }
 
 mtf::UsingStubClientPlatform::UsingStubClientPlatform()
-    : prev_mir_connect_impl{mir_connect_impl},
-      prev_mir_connection_release_impl{mir_connection_release_impl}
+    : prev_api{mir_connection_api_impl},
+      stub_api{new StubMirConnectionAPI{prev_api}}
 {
-    mir_connect_impl = mir_connect_override;
-    mir_connection_release_impl = mir_connection_release_override;
+    mir_connection_api_impl = stub_api.get();
 }
 
 mtf::UsingStubClientPlatform::~UsingStubClientPlatform()
 {
-    mir_connect_impl = prev_mir_connect_impl;
-    mir_connection_release_impl = prev_mir_connection_release_impl;
+    mir_connection_api_impl = prev_api;
 }

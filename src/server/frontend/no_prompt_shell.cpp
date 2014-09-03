@@ -35,13 +35,6 @@ std::shared_ptr<mf::PromptSession> mf::NoPromptShell::start_prompt_session_for(
     BOOST_THROW_EXCEPTION(std::runtime_error(prompt_sessions_disabled));
 }
 
-void mf::NoPromptShell::add_prompt_provider_process_for(
-    std::shared_ptr<PromptSession> const& /*prompt_session*/,
-    pid_t /*process_id*/)
-{
-    BOOST_THROW_EXCEPTION(std::runtime_error(prompt_sessions_disabled));
-}
-
 void mf::NoPromptShell::add_prompt_provider_for(
     std::shared_ptr<PromptSession> const& /*prompt_session*/,
     std::shared_ptr<Session> const& /*session*/)

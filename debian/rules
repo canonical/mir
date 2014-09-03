@@ -6,12 +6,19 @@ EXACT_PACKAGE_VERSION = $(shell dpkg-parsechangelog | grep Version | cut -d' ' -
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
+include /usr/share/dpkg/default.mk
+
+# Explicitly selecting a G{CC,++}-version here to avoid accidental
+# ABI breaks introduced by toolchain updates.
+export CC=$(DEB_HOST_GNU_TYPE)-gcc-4.9
+export CXX=$(DEB_HOST_GNU_TYPE)-g++-4.9
+
 %:
 	dh $@ --parallel --fail-missing
 
 #overrding dh_auto_test to get rid of --parallel during testing
 override_dh_auto_test:
-	GTEST_OUTPUT=xml:./ dh_auto_test --max-parallel=1
+	GTEST_OUTPUT=xml:./ dh_auto_test --max-parallel=1 -- ARGS="-V"
 
 COMMON_CONFIGURE_OPTIONS = \
   -DBUILD_DOXYGEN=YES \

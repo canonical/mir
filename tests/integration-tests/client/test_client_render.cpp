@@ -25,8 +25,8 @@
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test_framework/cross_process_sync.h"
-#include "testdraw/graphics_region_factory.h"
-#include "testdraw/patterns.h"
+#include "examples/testdraw/graphics_region_factory.h"
+#include "examples/testdraw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
 
@@ -56,6 +56,10 @@ static uint32_t pattern1 [2][2] = {{0xFFFFFFFF, 0xFFFF0000},
 static mtd::DrawPatternCheckered<2,2> draw_pattern0(pattern0);
 static mtd::DrawPatternCheckered<2,2> draw_pattern1(pattern1);
 static const char socket_file[] = "./test_client_ipc_render_socket";
+
+void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
+{
+}
 
 struct TestClient
 {
@@ -110,6 +114,9 @@ struct TestClient
         }
 
         mir_surface_release_sync(surface);
+        // Clear the lifecycle callback in order not to get SIGHUP by the
+        // default lifecycle handler during connection teardown
+        mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
         mir_connection_release(connection);
         return 0;
     }
@@ -167,6 +174,9 @@ struct TestClient
         }
 
         mir_surface_release_sync(mir_surface);
+        // Clear the lifecycle callback in order not to get SIGHUP by the
+        // default lifecycle handler during connection teardown
+        mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
         mir_connection_release(connection);
         return 0;
     }
@@ -200,7 +210,7 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_height(test_height);
         surface_pf = MirPixelFormat(request->pixel_format());
         response->set_pixel_format(request->pixel_format());
-        response->mutable_buffer()->set_buffer_id(client_buffer->id().as_uint32_t());
+        response->mutable_buffer()->set_buffer_id(client_buffer->id().as_value());
 
         auto buf = client_buffer->native_buffer_handle();
         //note about the stride. Mir protocol sends stride in bytes, android uses stride in pixels
@@ -213,7 +223,7 @@ struct StubServerGenerator : public mt::StubServerTool
         response->mutable_buffer()->set_fds_on_side_channel(1);
         native_handle_t const* native_handle = buf->handle();
         for(auto i=0; i<native_handle->numFds; i++)
-            response->mutable_buffer()->add_fd(native_handle->data[i]);
+            response->mutable_buffer()->add_fd(dup(native_handle->data[i]));
         for(auto i=0; i < native_handle->numInts; i++)
             response->mutable_buffer()->add_data(native_handle->data[native_handle->numFds+i]);
 
@@ -233,7 +243,7 @@ struct StubServerGenerator : public mt::StubServerTool
         std::unique_lock<std::mutex> lk(buffer_mutex);
         std::swap(last_posted, client_buffer);
 
-        response->set_buffer_id(client_buffer->id().as_uint32_t());
+        response->set_buffer_id(client_buffer->id().as_value());
 
         auto buf = client_buffer->native_buffer_handle();
         response->set_fds_on_side_channel(1);
@@ -245,7 +255,7 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_height(size.height.as_int());
 
         for(auto i=0; i<native_handle->numFds; i++)
-            response->add_fd(native_handle->data[i]);
+            response->add_fd(dup(native_handle->data[i]));
         for(auto i=0; i<native_handle->numInts; i++)
             response->add_data(native_handle->data[native_handle->numFds+i]);
         done->Run();

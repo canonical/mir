@@ -92,26 +92,6 @@ MirWaitHandle* MirPromptSession::stop(mir_prompt_session_callback callback, void
     return &stop_wait_handle;
 }
 
-MirWaitHandle* MirPromptSession::add_prompt_provider(pid_t provider_pid,
-    mir_prompt_session_add_prompt_provider_callback callback,
-    void* context)
-{
-    {
-        std::lock_guard<decltype(mutex)> lock(mutex);
-        prompt_provider.set_pid(provider_pid);
-    }
-
-    add_result_wait_handle.expect_result();
-    server.add_prompt_provider(
-        0,
-        &prompt_provider,
-        &add_result,
-        google::protobuf::NewCallback(this, &MirPromptSession::done_add_prompt_provider,
-                                      callback, context));
-
-    return &add_result_wait_handle;
-}
-
 void MirPromptSession::register_prompt_session_state_change_callback(
     mir_prompt_session_state_change_callback callback,
     void* context)
@@ -143,17 +123,6 @@ void MirPromptSession::done_stop(mir_prompt_session_callback callback, void* con
 
     callback(this, context);
     stop_wait_handle.result_received();
-}
-
-void MirPromptSession::done_add_prompt_provider(mir_prompt_session_add_prompt_provider_callback callback, void* context)
-{
-    MirBool added = mir_true;
-    if (add_result.has_error())
-    {
-        added = mir_false;
-    }
-    callback(this, added, context);
-    add_result_wait_handle.result_received();
 }
 
 char const* MirPromptSession::get_error_message()

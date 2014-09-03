@@ -37,6 +37,8 @@
 
 namespace mir
 {
+class SharedLibrary;
+
 /// The client-side library implementation namespace
 namespace client
 {
@@ -134,6 +136,14 @@ public:
     mir::protobuf::DisplayServer& display_server();
 
 private:
+    // MUST be first data member so it is destroyed last.
+    struct Deregisterer
+    { MirConnection* const self; ~Deregisterer(); } deregisterer;
+
+    // MUST be placed before any variables for components that are loaded
+    // from a shared library, e.g., the ClientPlatform* objects.
+    std::shared_ptr<mir::SharedLibrary> const platform_library;
+
     std::mutex mutex; // Protects all members of *this (except release_wait_handles)
 
     std::shared_ptr<google::protobuf::RpcChannel> const channel;
@@ -173,6 +183,8 @@ private:
     std::vector<int> extra_platform_data;
 
     struct SurfaceRelease;
+
+    MirConnection* next_valid{nullptr};
 
     void set_error_message(std::string const& error);
     void done_disconnect();

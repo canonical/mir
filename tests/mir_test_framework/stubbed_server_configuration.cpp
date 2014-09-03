@@ -117,6 +117,13 @@ class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
  public:
     std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties) override
     {
+        if (properties.size.width == geom::Width{0} ||
+            properties.size.height == geom::Height{0})
+        {
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error("Request for allocation of buffer with invalid size"));
+        }
+
         return std::make_shared<StubFDBuffer>(properties);
     }
 };
@@ -155,7 +162,8 @@ public:
             }
             for(auto i=0; i<native_handle->fd_items; i++)
             {
-                packer->pack_fd(native_handle->fd[i]);
+                using namespace mir;
+                packer->pack_fd(Fd(IntOwnedFd{native_handle->fd[i]}));
             }
 
             packer->pack_flags(native_handle->flags);

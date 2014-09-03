@@ -38,6 +38,7 @@
 #include <stdexcept>
 #include <thread>
 #include <atomic>
+#include <future>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -615,4 +616,80 @@ TEST_F(SurfaceStack, occludes_surface_when_unregistering_all_compositors_that_re
 
     stack.unregister_compositor(compositor_id2);
     stack.unregister_compositor(compositor_id3);
+}
+
+TEST_F(SurfaceStack, observer_can_trigger_state_change_within_notification)
+{
+    using namespace ::testing;
+
+    MockSceneObserver observer;
+
+    auto const state_changer = [&]{
+        stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    };
+
+    //Make sure another thread can also change state
+    auto const async_state_changer = [&]{
+        std::async(std::launch::async, state_changer);
+    };
+
+    EXPECT_CALL(observer, surface_added(stub_surface1.get())).Times(3)
+        .WillOnce(InvokeWithoutArgs(state_changer))
+        .WillOnce(InvokeWithoutArgs(async_state_changer))
+        .WillOnce(Return());
+
+    stack.add_observer(mt::fake_shared(observer));
+
+    state_changer();
+}
+
+TEST_F(SurfaceStack, observer_can_remove_itself_within_notification)
+{
+    using namespace testing;
+
+    MockSceneObserver observer1;
+    MockSceneObserver observer2;
+    MockSceneObserver observer3;
+
+    auto const remove_observer = [&]{
+        stack.remove_observer(mt::fake_shared(observer2));
+    };
+
+    //Both of these observers should still get their notifications
+    //regardless of the removal of observer2
+    EXPECT_CALL(observer1, surface_added(stub_surface1.get())).Times(2);
+    EXPECT_CALL(observer3, surface_added(stub_surface1.get())).Times(2);
+
+    InSequence seq;
+    EXPECT_CALL(observer2, surface_added(stub_surface1.get())).Times(1)
+         .WillOnce(InvokeWithoutArgs(remove_observer));
+    EXPECT_CALL(observer2, end_observation()).Times(1);
+
+    stack.add_observer(mt::fake_shared(observer1));
+    stack.add_observer(mt::fake_shared(observer2));
+    stack.add_observer(mt::fake_shared(observer3));
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+}
+
+TEST_F(SurfaceStack, only_enumerates_exposed_input_surfaces)
+{
+    using namespace ::testing;
+
+    stack.add_surface(stub_surface1, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.depth, default_params.input_mode);
+    stack.add_surface(stub_surface3, default_params.depth, default_params.input_mode);
+
+    stub_surface1->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_exposed);
+    stub_surface2->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_occluded);
+    stub_surface3->configure(mir_surface_attrib_visibility, MirSurfaceVisibility::mir_surface_visibility_occluded);
+
+    int num_exposed_surfaces = 0;
+    auto const count_exposed_surfaces = [&num_exposed_surfaces](std::shared_ptr<mi::Surface> const&){
+        num_exposed_surfaces++;
+    };
+
+    stack.for_each(count_exposed_surfaces);
+    EXPECT_THAT(num_exposed_surfaces, Eq(1));
 }

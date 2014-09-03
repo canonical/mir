@@ -103,6 +103,8 @@ message Surface {
 
   repeated sint32 fd = 7;
   optional int32 fds_on_side_channel = 8;
+  
+  repeated SurfaceSetting attributes = 9;
 
   optional string error = 127;
 }
@@ -192,10 +194,6 @@ message SocketFD {
   optional string error = 127;
 }
 
-message PromptProvider {
-  required int32 pid = 1;
-}
-
 message PromptSessionParameters {
   required int32 application_pid = 1;
 }
@@ -211,8 +209,6 @@ service DisplayServer {
   // Platform specific requests
   rpc drm_auth_magic(DRMMagic) returns (DRMAuthMagicStatus);
 
-  rpc test_file_descriptors(Void) returns (Buffer);
-
   rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
   rpc configure_display(DisplayConfiguration) returns (DisplayConfiguration);
 
@@ -224,6 +220,5 @@ service DisplayServer {
   rpc new_fds_for_prompt_providers(SocketFDRequest) returns (SocketFD);
 
   rpc start_prompt_session(PromptSessionParameters) returns (Void);
-  rpc add_prompt_provider(PromptProvider) returns (Void);
   rpc stop_prompt_session(Void) returns (Void);
 }

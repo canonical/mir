@@ -39,9 +39,10 @@ namespace logging
 class Logger;
 }
 
+class SharedLibrary;
+
 namespace client
 {
-
 class ConnectionSurfaceMap;
 class Logger;
 class ClientPlatformFactory;
@@ -64,13 +65,13 @@ public:
     virtual std::shared_ptr<LifecycleControl> the_lifecycle_control() = 0;
     virtual std::shared_ptr<EventSink> the_event_sink() = 0;
     virtual std::shared_ptr<EventHandlerRegister> the_event_handler_register() = 0;
+    virtual std::shared_ptr<SharedLibrary> the_platform_library() = 0;
 
 protected:
     ConnectionConfiguration() = default;
     ConnectionConfiguration(ConnectionConfiguration const&) = delete;
     ConnectionConfiguration& operator=(ConnectionConfiguration const&) = delete;
 };
-
 }
 }
 

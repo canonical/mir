@@ -35,7 +35,7 @@ class EventHubDeviceEnumerationTest : public ::testing::TestWithParam<std::strin
 
 TEST_P(EventHubDeviceEnumerationTest, ScansOnConstruction)
 {
-    mir::mir_test_framework::UdevEnvironment env;
+    mir_test_framework::UdevEnvironment env;
     env.add_standard_device(GetParam());
 
     auto hub = android::sp<android::EventHub>{new android::EventHub{mir::report::null_input_report()}};
@@ -54,7 +54,7 @@ TEST_P(EventHubDeviceEnumerationTest, ScansOnConstruction)
 
 TEST_P(EventHubDeviceEnumerationTest, GeneratesDeviceAddedOnHotplug)
 {
-    mir::mir_test_framework::UdevEnvironment env;
+    mir_test_framework::UdevEnvironment env;
 
     auto hub = android::sp<android::EventHub>{new android::EventHub{mir::report::null_input_report()}};
 
@@ -80,7 +80,7 @@ TEST_P(EventHubDeviceEnumerationTest, GeneratesDeviceAddedOnHotplug)
 
 TEST_P(EventHubDeviceEnumerationTest, GeneratesDeviceRemovedOnHotunplug)
 {
-    mir::mir_test_framework::UdevEnvironment env;
+    mir_test_framework::UdevEnvironment env;
     env.add_standard_device(GetParam());
 
     auto hub = android::sp<android::EventHub>{new android::EventHub{mir::report::null_input_report()}};

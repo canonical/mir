@@ -170,7 +170,13 @@ void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::Surface> 
     for (auto &layer : layers_by_depth)
     {
         for (auto it = layer.second.begin(); it != layer.second.end(); ++it)
-            callback(*it);
+        {
+            if ((*it)->query(mir_surface_attrib_visibility) ==
+                MirSurfaceVisibility::mir_surface_visibility_exposed)
+            {
+                callback(*it);
+            }
+        }
     }
 }
 
@@ -216,7 +222,7 @@ void ms::SurfaceStack::update_rendering_tracker_compositors()
 
 void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observer)
 {
-    observers.add_observer(observer);
+    observers.add(observer);
 
     // Notify observer of existing surfaces
     {
@@ -237,63 +243,35 @@ void ms::SurfaceStack::remove_observer(std::weak_ptr<ms::Observer> const& observ
     
     o->end_observation();
     
-    observers.remove_observer(o);
+    observers.remove(o);
 }
 
 void ms::Observers::surface_added(ms::Surface* surface) 
 {
-    std::unique_lock<decltype(mutex)> lg(mutex);
-    
-    for (auto observer : observers)
-        observer->surface_added(surface);
+    for_each([&](std::shared_ptr<Observer> const& observer)
+        { observer->surface_added(surface); });
 }
 
 void ms::Observers::surface_removed(ms::Surface* surface)
 {
-    std::unique_lock<decltype(mutex)> lg(mutex);
-
-    for (auto observer : observers)
-        observer->surface_removed(surface);
+    for_each([&](std::shared_ptr<Observer> const& observer)
+        { observer->surface_removed(surface); });
 }
 
 void ms::Observers::surfaces_reordered()
 {
-    std::unique_lock<decltype(mutex)> lg(mutex);
-    
-    for (auto observer : observers)
-        observer->surfaces_reordered();
+    for_each([&](std::shared_ptr<Observer> const& observer)
+        { observer->surfaces_reordered(); });
 }
 
 void ms::Observers::surface_exists(ms::Surface* surface)
 {
-    std::unique_lock<decltype(mutex)> lg(mutex);
-    
-    for (auto observer : observers)
-        observer->surface_exists(surface);
+    for_each([&](std::shared_ptr<Observer> const& observer)
+        { observer->surface_exists(surface); });
 }
 
 void ms::Observers::end_observation()
 {
-    std::unique_lock<decltype(mutex)> lg(mutex);
-    
-    for (auto observer : observers)
-        observer->end_observation();
-}
-
-void ms::Observers::add_observer(std::shared_ptr<ms::Observer> const& observer)
-{
-    std::unique_lock<decltype(mutex)> lg(mutex);
-
-    observers.push_back(observer);
-}
-
-void ms::Observers::remove_observer(std::shared_ptr<ms::Observer> const& observer)
-{
-    std::unique_lock<decltype(mutex)> lg(mutex);
-    
-    auto it = std::find(observers.begin(), observers.end(), observer);
-    if (it == observers.end())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (not previously added)"));
-    
-    observers.erase(it);
+    for_each([&](std::shared_ptr<Observer> const& observer)
+        { observer->end_observation(); });
 }

@@ -18,25 +18,21 @@
  */
 
 #include "android_client_buffer_factory.h"
+#include "buffer_registrar.h"
 #include "buffer.h"
 
 namespace mcl=mir::client;
 namespace mcla=mir::client::android;
 namespace geom=mir::geometry;
 
-mcla::AndroidClientBufferFactory::AndroidClientBufferFactory(std::shared_ptr<AndroidRegistrar> const& buffer_registrar)
- : registrar(buffer_registrar)
+mcla::AndroidClientBufferFactory::AndroidClientBufferFactory(
+    std::shared_ptr<BufferRegistrar> const& buffer_registrar) :
+    registrar(buffer_registrar)
 {
 }
 
 std::shared_ptr<mcl::ClientBuffer> mcla::AndroidClientBufferFactory::create_buffer(std::shared_ptr<MirBufferPackage> const& package, geom::Size size, MirPixelFormat pf)
 {
     (void)size; // TODO: remove this unused parameter
-    auto handle = registrar->register_buffer(package);
-    return std::make_shared<mcla::Buffer>(
-        registrar,
-        handle,
-        geometry::Size{package->width, package->height},
-        pf,
-        geometry::Stride{package->stride});
+    return std::make_shared<mcla::Buffer>(registrar, *package, pf);
 }

@@ -26,6 +26,7 @@
 #include "buffer.h"
 #include "hwc_fallback_gl_renderer.h"
 #include <limits>
+#include <algorithm>
 
 namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
@@ -64,15 +65,27 @@ bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
 }
 }
 
-mga::HwcDevice::HwcDevice(std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-                          std::shared_ptr<HwcWrapper> const& hwc_wrapper,
+mga::HwcDevice::HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
                           std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
                           std::shared_ptr<SyncFileOps> const& sync_ops)
-    : HWCCommonDevice(hwc_device, coordinator),
+    : HWCCommonDevice(hwc_wrapper, coordinator),
       hwc_list{{}, fbtarget_plus_skip_size},
       hwc_wrapper(hwc_wrapper), 
       sync_ops(sync_ops)
 {
+}
+
+bool mga::HwcDevice::buffer_is_onscreen(mg::Buffer const& buffer) const
+{
+    /* check the handles, as the buffer ptrs might change between sets */
+    auto const handle = buffer.native_buffer_handle().get();
+    auto it = std::find_if(
+        onscreen_overlay_buffers.begin(), onscreen_overlay_buffers.end(),
+        [&handle](std::shared_ptr<mg::Buffer> const& b)
+        {
+            return (handle == b->native_buffer_handle().get());
+        });
+    return it != onscreen_overlay_buffers.end();
 }
 
 void mga::HwcDevice::post_gl(SwappingGLContext const& context)
@@ -104,7 +117,7 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
     for(auto& layer : hwc_list)
         layer.layer.update_from_releasefence(*buffer);
 
-    mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
+    mir::Fd retire_fd(hwc_list.retirement_fence());
 }
 
 bool mga::HwcDevice::post_overlays(
@@ -143,18 +156,23 @@ bool mga::HwcDevice::post_overlays(
         }
         else
         {
-            if (it->needs_commit)
-                it->layer.set_acquirefence_from(*renderable->buffer());
-            next_onscreen_overlay_buffers.push_back(renderable->buffer());
+            auto buffer = renderable->buffer();
+            if (!buffer_is_onscreen(*buffer))
+                it->layer.set_acquirefence_from(*buffer);
+
+            next_onscreen_overlay_buffers.push_back(buffer);
         }
         it++;
     }
 
-    list_compositor.render(rejected_renderables, context);
+    if (!rejected_renderables.empty())
+    {
+        list_compositor.render(rejected_renderables, context);
 
-    buffer = context.last_rendered_buffer();
-    fbtarget.layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *buffer);
-    fbtarget.layer.set_acquirefence_from(*buffer);
+        buffer = context.last_rendered_buffer();
+        fbtarget.layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *buffer);
+        fbtarget.layer.set_acquirefence_from(*buffer);
+    }
 
     hwc_wrapper->set(*hwc_list.native_list().lock());
     onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
@@ -165,8 +183,14 @@ bool mga::HwcDevice::post_overlays(
         it->layer.update_from_releasefence(*renderable->buffer());
         it++;
     }
-    fbtarget.layer.update_from_releasefence(*buffer);
+    if (!rejected_renderables.empty())
+        fbtarget.layer.update_from_releasefence(*buffer);
 
-    mga::SyncFence retire_fence(sync_ops, hwc_list.retirement_fence());
+    mir::Fd retire_fd(hwc_list.retirement_fence());
     return true;
+}
+
+void mga::HwcDevice::turned_screen_off()
+{
+    onscreen_overlay_buffers.clear();
 }

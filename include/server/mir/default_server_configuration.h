@@ -69,6 +69,7 @@ class InputTargeter;
 class FocusSetter;
 class FocusController;
 class DisplayLayout;
+class HostLifecycleEventListener;
 }
 namespace time
 {
@@ -106,7 +107,6 @@ class DisplayReport;
 class GraphicBufferAllocator;
 class Cursor;
 class CursorImage;
-class CursorImages;
 class GLConfig;
 class GLProgramFactory;
 namespace nested { class HostConnection; }
@@ -120,11 +120,13 @@ class CompositeEventFilter;
 class InputChannelFactory;
 class InputConfiguration;
 class CursorListener;
+class TouchVisualizer;
 class InputRegion;
 class InputSender;
 class InputSendObserver;
 class NestedInputRelay;
 class EventHandler;
+class CursorImages;
 namespace android
 {
 class InputRegistrar;
@@ -157,20 +159,27 @@ public:
     /** @name DisplayServer dependencies
      * dependencies of DisplayServer on the rest of the Mir
      *  @{ */
-    virtual std::shared_ptr<frontend::Connector>    the_connector();
-    virtual std::shared_ptr<graphics::Display>      the_display();
-    virtual std::shared_ptr<compositor::Compositor> the_compositor();
-    virtual std::shared_ptr<input::InputManager>    the_input_manager();
-    virtual std::shared_ptr<MainLoop>               the_main_loop();
-    virtual std::shared_ptr<ServerStatusListener>   the_server_status_listener();
-    virtual std::shared_ptr<DisplayChanger>         the_display_changer();
-    virtual std::shared_ptr<graphics::Platform>     the_graphics_platform();
-    virtual std::shared_ptr<graphics::NativePlatform>  the_graphics_native_platform();
-    virtual std::shared_ptr<input::InputConfiguration> the_input_configuration();
-    virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher();
-    virtual std::shared_ptr<input::InputSender>     the_input_sender();
-    virtual std::shared_ptr<input::InputSendObserver> the_input_send_observer();
-    virtual std::shared_ptr<EmergencyCleanup>  the_emergency_cleanup();
+    std::shared_ptr<frontend::Connector>    the_connector() override;
+    std::shared_ptr<frontend::Connector>    the_prompt_connector() override;
+    std::shared_ptr<graphics::Display>      the_display() override;
+    std::shared_ptr<compositor::Compositor> the_compositor() override;
+    std::shared_ptr<input::InputManager>    the_input_manager() override;
+    std::shared_ptr<MainLoop>               the_main_loop() override;
+    std::shared_ptr<ServerStatusListener>   the_server_status_listener() override;
+    std::shared_ptr<DisplayChanger>         the_display_changer() override;
+    std::shared_ptr<graphics::Platform>     the_graphics_platform() override;
+    std::shared_ptr<input::InputConfiguration> the_input_configuration() override;
+    std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
+    std::shared_ptr<EmergencyCleanup>  the_emergency_cleanup() override;
+    /**
+     * Function to call when a "fatal" error occurs. This implementation allows
+     * the default strategy to be overridden by --on-fatal-error-abort to force a
+     * core. (This behavior is useful for diagnostic purposes during development.)
+     * To change the default strategy used FatalErrorStrategy. See acceptance test
+     * ServerShutdown.fatal_error_default_can_be_changed_to_abort
+     * for an example.
+     */
+    auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) override final;
     /** @} */
 
     /** @name graphics configuration - customization
@@ -181,6 +190,7 @@ public:
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
     virtual std::shared_ptr<graphics::GLConfig> the_gl_config();
+    virtual std::shared_ptr<graphics::NativePlatform>  the_graphics_native_platform();
     /** @} */
 
     /** @name graphics configuration - dependencies
@@ -189,7 +199,7 @@ public:
     virtual std::shared_ptr<graphics::DisplayReport> the_display_report();
     virtual std::shared_ptr<graphics::Cursor> the_cursor();
     virtual std::shared_ptr<graphics::CursorImage> the_default_cursor_image();
-    virtual std::shared_ptr<graphics::CursorImages> the_cursor_images();
+    virtual std::shared_ptr<input::CursorImages> the_cursor_images();
 
     /** @} */
 
@@ -214,9 +224,9 @@ public:
     virtual std::shared_ptr<frontend::SessionMediatorReport>  the_session_mediator_report();
     virtual std::shared_ptr<frontend::MessageProcessorReport> the_message_processor_report();
     virtual std::shared_ptr<frontend::SessionAuthorizer>      the_session_authorizer();
-    // TODO clients should customize the_session_coordinator() instead of the_frontend_shell();
-    // TODO once the_session_coordinator() has landed and clients updated this should become non-virtual
-    virtual std::shared_ptr<frontend::Shell>                  the_frontend_shell();
+    // the_frontend_shell() is an adapter for the_session_coordinator().
+    // To customize this behaviour it is recommended you override wrap_session_coordinator().
+    std::shared_ptr<frontend::Shell>                          the_frontend_shell();
     virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
     virtual std::shared_ptr<frontend::Screencast>             the_screencast();
@@ -224,13 +234,14 @@ public:
      * internal dependencies of frontend
      *  @{ */
     virtual std::shared_ptr<frontend::ConnectionCreator>      the_connection_creator();
+    virtual std::shared_ptr<frontend::ConnectionCreator>      the_prompt_connection_creator();
     virtual std::shared_ptr<frontend::ConnectorReport>        the_connector_report();
     /** @} */
     /** @} */
 
-    // TODO clients should customize the_session_coordinator() instead of the_focus_controller();
-    // TODO once the_session_coordinator() has landed and clients updated this should become non-virtual
-    virtual std::shared_ptr<shell::FocusController> the_focus_controller();
+    // the_focus_controller() is an adapter for the_session_coordinator().
+    // To customize this behaviour it is recommended you override wrap_session_coordinator().
+    std::shared_ptr<shell::FocusController> the_focus_controller();
 
     /** @name shell configuration - customization
      * configurable interfaces for modifying shell
@@ -241,6 +252,8 @@ public:
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
     virtual std::shared_ptr<scene::PromptSessionListener> the_prompt_session_listener();
     virtual std::shared_ptr<scene::PromptSessionManager>  the_prompt_session_manager();
+    virtual std::shared_ptr<shell::HostLifecycleEventListener> the_host_lifecycle_event_listener();
+
     /** @} */
 
     /** @name internal scene configuration
@@ -263,6 +276,12 @@ public:
      *  @{ */
     virtual std::shared_ptr<scene::BufferStreamFactory> the_buffer_stream_factory();
     virtual std::shared_ptr<scene::SceneReport>      the_scene_report();
+    /** @} */
+
+    /** @name scene configuration - services
+     * services provided by scene for the rest of Mir
+     *  @{ */
+    // To customize this behaviour it is recommended you override wrap_session_coordinator().
     virtual std::shared_ptr<scene::SessionCoordinator>  the_session_coordinator();
     /** @} */
 
@@ -274,7 +293,10 @@ public:
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
     virtual std::shared_ptr<input::InputTargets>  the_input_targets();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
+    virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
+    virtual std::shared_ptr<input::InputSender>    the_input_sender();
+    virtual std::shared_ptr<input::InputSendObserver> the_input_send_observer();
     /** @} */
 
     /** @name logging configuration - customization
@@ -292,9 +314,8 @@ protected:
     virtual std::shared_ptr<graphics::GLProgramFactory> the_gl_program_factory();
     virtual std::shared_ptr<input::InputChannelFactory> the_input_channel_factory();
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
-    virtual std::shared_ptr<frontend::ProtobufIpcFactory> the_ipc_factory(
-        std::shared_ptr<frontend::Shell> const& shell,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
+    virtual std::shared_ptr<frontend::ProtobufIpcFactory> new_ipc_factory(
+        std::shared_ptr<frontend::SessionAuthorizer> const& session_authorizer);
 
     /** @name input dispatcher related configuration
      *  @{ */
@@ -320,6 +341,7 @@ protected:
     CachedPtr<droidinput::InputDispatcherPolicyInterface> android_dispatcher_policy;
 
     CachedPtr<frontend::Connector>   connector;
+    CachedPtr<frontend::Connector>   prompt_connector;
 
     CachedPtr<input::InputConfiguration> input_configuration;
 
@@ -332,6 +354,7 @@ protected:
     CachedPtr<input::InputRegion>     input_region;
     CachedPtr<shell::InputTargeter> input_targeter;
     CachedPtr<input::CursorListener> cursor_listener;
+    CachedPtr<input::TouchVisualizer> touch_visualizer;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::NativePlatform>    graphics_native_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
@@ -339,15 +362,15 @@ protected:
     CachedPtr<graphics::Display>      display;
     CachedPtr<graphics::Cursor>       cursor;
     CachedPtr<graphics::CursorImage>  default_cursor_image;
-    CachedPtr<graphics::CursorImages> cursor_images;
+    CachedPtr<input::CursorImages> cursor_images;
 
     CachedPtr<frontend::ConnectorReport>   connector_report;
-    CachedPtr<frontend::ProtobufIpcFactory>  ipc_factory;
     CachedPtr<frontend::SessionMediatorReport> session_mediator_report;
     CachedPtr<frontend::MessageProcessorReport> message_processor_report;
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<frontend::EventSink> global_event_sink;
     CachedPtr<frontend::ConnectionCreator> connection_creator;
+    CachedPtr<frontend::ConnectionCreator> prompt_connection_creator;
     CachedPtr<frontend::Screencast> screencast;
     CachedPtr<compositor::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
@@ -383,6 +406,7 @@ protected:
     CachedPtr<scene::PromptSessionManager> prompt_session_manager;
     CachedPtr<scene::SessionCoordinator> session_coordinator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
+    CachedPtr<shell::HostLifecycleEventListener> host_lifecycle_event_listener;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

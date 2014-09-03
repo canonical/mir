@@ -20,6 +20,9 @@
 #include "../client_buffer.h"
 #include "native_surface.h"
 
+#include <iostream>
+#include <boost/exception/diagnostic_information.hpp> 
+
 namespace mclm=mir::client::mesa;
 
 namespace
@@ -43,6 +46,12 @@ static int set_swapinterval_static(MirMesaEGLNativeSurface* surface, int interva
     auto s = static_cast<mclm::NativeSurface*>(surface);
     return s->set_swapinterval(interval);
 }
+
+void report_exception_at_driver_boundary(std::exception const& e)
+{
+    std::cerr << "Caught exception at Mir/EGL driver boundary: "
+              << boost::diagnostic_information(e) << std::endl;
+}
 }
 
 mclm::NativeSurface::NativeSurface(ClientSurface& surface)
@@ -54,6 +63,7 @@ mclm::NativeSurface::NativeSurface(ClientSurface& surface)
 }
 
 int mclm::NativeSurface::advance_buffer(MirBufferPackage* buffer_package)
+try
 {
     /*
      * At present dri2_create_mir_window_surface will trigger
@@ -72,19 +82,36 @@ int mclm::NativeSurface::advance_buffer(MirBufferPackage* buffer_package)
     memcpy(buffer_package, buffer_to_driver.get(), sizeof(MirBufferPackage));
     return MIR_MESA_TRUE;
 }
+catch (std::exception const& e)
+{
+    report_exception_at_driver_boundary(e);
+    return MIR_MESA_FALSE;
+}
 
 int mclm::NativeSurface::get_parameters(MirSurfaceParameters* surface_parameters)
+try
 {
     auto params = surface.get_parameters();
     memcpy(surface_parameters, &params, sizeof(MirSurfaceParameters));
     return MIR_MESA_TRUE;
 }
+catch (std::exception const& e)
+{
+    report_exception_at_driver_boundary(e);
+    return MIR_MESA_FALSE;
+}
 
 int mclm::NativeSurface::set_swapinterval(int interval)
+try
 {
     if ((interval < 0) || (interval > 1))
         return MIR_MESA_FALSE;
 
     surface.request_and_wait_for_configure(mir_surface_attrib_swapinterval, interval);
     return MIR_MESA_TRUE;
+}
+catch (std::exception const& e)
+{
+    report_exception_at_driver_boundary(e);
+    return MIR_MESA_FALSE;
 }

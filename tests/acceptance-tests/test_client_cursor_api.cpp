@@ -18,7 +18,11 @@
 
 #include "mir/graphics/cursor.h"
 #include "mir/graphics/cursor_image.h"
-#include "mir/graphics/cursor_images.h"
+#include "mir/input/cursor_images.h"
+#include "mir/scene/surface.h"
+#include "mir/scene/surface_factory.h"
+#include "mir/scene/null_observer.h"
+#include "mir/scene/null_surface_observer.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -30,6 +34,7 @@
 #include "mir_test_framework/testing_client_configuration.h"
 #include "mir_test_framework/declarative_placement_strategy.h"
 #include "mir_test_framework/deferred_in_process_server.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -37,6 +42,7 @@
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
+namespace mi = mir::input;
 namespace mis = mir::input::synthesis;
 namespace geom = mir::geometry;
 
@@ -67,11 +73,12 @@ struct NamedCursorImage : public mg::CursorImage
 
     void const* as_argb_8888() const { return nullptr; }
     geom::Size size() const { return geom::Size{}; }
+    geom::Displacement hotspot() const { return geom::Displacement{0, 0}; }
 
     std::string const cursor_name;
 };
 
-struct NamedCursorImages : public mg::CursorImages
+struct NamedCursorImages : public mi::CursorImages
 {
    std::shared_ptr<mg::CursorImage> image(std::string const& name, geom::Size const& /* size */)
    {
@@ -183,7 +190,7 @@ struct ServerConfiguration : mtf::InputTestingServerConfiguration
         return mt::fake_shared(cursor);
     }
     
-    std::shared_ptr<mg::CursorImages> the_cursor_images() override
+    std::shared_ptr<mi::CursorImages> the_cursor_images() override
     {
         return std::make_shared<NamedCursorImages>();
     }
@@ -228,6 +235,7 @@ struct TestClientCursorAPI : mtf::DeferredInProcessServer
     
     ServerConfiguration server_configuration{cursor_configured_fence, client_may_exit_fence};
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
+    mtf::UsingStubClientPlatform using_stub_client_platform;
     
     ClientConfig client_config_1{client_name_1, cursor_configured_fence, client_may_exit_fence};
     ClientConfig client_config_2{client_name_2, cursor_configured_fence, client_may_exit_fence};

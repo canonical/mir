@@ -38,10 +38,6 @@ public:
 
     virtual void close_session(std::shared_ptr<frontend::Session> const& session) override;
 
-    frontend::SurfaceId create_surface_for(
-        std::shared_ptr<frontend::Session> const& session,
-        scene::SurfaceCreationParameters const& params) override;
-
     void focus_next() override;
     std::weak_ptr<scene::Session> focussed_application() const;
     void set_focus_to(std::shared_ptr<scene::Session> const& focus) override;
@@ -51,10 +47,6 @@ public:
     std::shared_ptr<frontend::PromptSession> start_prompt_session_for(
         std::shared_ptr<frontend::Session> const& session,
         scene::PromptSessionCreationParameters const& params) override;
-
-    void add_prompt_provider_process_for(
-        std::shared_ptr<frontend::PromptSession> const& prompt_session,
-        pid_t process_id) override;
 
     void add_prompt_provider_for(
         std::shared_ptr<frontend::PromptSession> const& prompt_session,
