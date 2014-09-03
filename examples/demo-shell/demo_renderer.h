@@ -40,7 +40,7 @@ public:
     ~DemoRenderer();
 
     void begin() const override { GLRenderer::begin(); }
-    void begin(std::unordered_set<graphics::Renderable::ID> &&renderables_not_to_decorate) const;
+    void begin(std::unordered_set<graphics::Renderable::ID> renderables_not_to_decorate) const;
     
     void tessellate(
         std::vector<graphics::GLPrimitive>& primitives,

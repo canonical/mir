@@ -171,7 +171,7 @@ DemoRenderer::~DemoRenderer()
     glDeleteTextures(1, &titlebar_corner_tex);
 }
 
-void DemoRenderer::begin(std::unordered_set<graphics::Renderable::ID> &&decoration_skip_list_) const
+void DemoRenderer::begin(std::unordered_set<graphics::Renderable::ID> decoration_skip_list_) const
 {
     bool const opaque = destination_alpha() == compositor::DestinationAlpha::opaque;
     if (opaque)
