@@ -10,7 +10,6 @@ add_subdirectory(logging/)
 add_subdirectory(scene/)
 add_subdirectory(frontend/)
 add_subdirectory(shell/)
-add_subdirectory(time/)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -39,7 +38,6 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirgraphics>
   $<TARGET_OBJECTS:mirfrontend>
   $<TARGET_OBJECTS:mirshell>
-  $<TARGET_OBJECTS:mirtime>
   $<TARGET_OBJECTS:mirlttng>
   $<TARGET_OBJECTS:mirreport>
   $<TARGET_OBJECTS:mirlogging>
