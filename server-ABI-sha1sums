@@ -55,7 +55,7 @@ de6807967abf81031ea1c57015018c0ddc57fe61  include/platform/mir/graphics/buffer.h
 827cbc0ecbcea21dd794ab4b8119a5710bb266d3  include/platform/mir/graphics/buffer_initializer.h
 d7507a326f8cfcc4707c1eb28cf7b666420f92fb  include/platform/mir/graphics/buffer_ipc_packer.h
 748f5c2aab11189aa02c4a89ab900561548e7304  include/platform/mir/graphics/buffer_properties.h
-8cbeac82032d54ba86cfb094e6ed0a35132075b7  include/platform/mir/graphics/buffer_writer.h
+a53898a0ec1a90d6438275cdaaa5844a4e6d5aca  include/platform/mir/graphics/buffer_writer.h
 ffa857f624f1c8cbd50a190107137346fc3204d6  include/platform/mir/graphics/cursor.h
 fe2b5f13ccd3ec6b78d90d3abbb7d88b48238578  include/platform/mir/graphics/cursor_image.h
 986f5d0d8ea2c6a42cc320f468e682f81fec46ae  include/platform/mir/graphics/display_buffer.h
@@ -77,11 +77,11 @@ f62525771ca2612959ff88498883630458513235  include/platform/mir/graphics/gl_progr
 979d2c1ac723ccef538d9a378228a02b0f173bd7  include/platform/mir/graphics/graphic_buffer_allocator.h
 f90a35371e236a6cfec8e9a8474dbb3305c7621e  include/platform/mir/graphics/internal_client.h
 c9730cac4a3a101f9706ec6f444958abe047fd88  include/platform/mir/graphics/internal_surface.h
-10014643ffe6da039e9d6a94ac9b54b8f14fb349  include/platform/mir/graphics/native_platform.h
+2aa2c0368568cbe8f2be6570a69e301c4e3e1659  include/platform/mir/graphics/native_platform.h
 590572a9d86a9481b4531ad44414c6f76352fe7a  include/platform/mir/graphics/nested_context.h
 27807b8ba288590f3749cfb32512eda4d0de6c7d  include/platform/mir/graphics/overlapping_output_grouping.h
 32c70ee44b8dc9372dec0c54471aa8d831adcb1c  include/platform/mir/graphics/pixel_format_utils.h
-2fae02fae3d47f2e3b1b660ea51c400b4fd7f493  include/platform/mir/graphics/platform.h
+c775727ea15fd8affa5b4dc9cd226d782e436001  include/platform/mir/graphics/platform.h
 9c7712af84b6fde1970ff802ad2ea78f892c7b7e  include/platform/mir/graphics/platform_ipc_package.h
 15f201741a465de33e55ffc1ea775b507a5be950  include/platform/mir/graphics/renderable.h
 4b640ec72b04cc2de7671afd7c78942fb9e775a7  include/platform/mir/graphics/tessellation_helpers.h
