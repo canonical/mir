@@ -20,6 +20,7 @@
 #define MIR_CLIENT_LOGGING_PERF_REPORT_H_
 
 #include "../perf_report.h"
+#include "mir/time/clock.h"
 #include <chrono>
 #include <memory>
 #include <string>
@@ -37,7 +38,8 @@ namespace logging
 class PeriodicPerfReport : public mir::client::PerfReport
 {
 public:
-    PeriodicPerfReport(std::chrono::milliseconds period);
+    PeriodicPerfReport(mir::time::Duration period,
+                       std::shared_ptr<mir::time::Clock> const& clock);
     void name_surface(char const*) override;
     void begin_frame(int buffer_id) override;
     void end_frame(int buffer_id) override;
@@ -45,9 +47,10 @@ public:
                          long rendertime_usec, long lag_usec,
                          int nbuffers) const = 0;
 private:
-    typedef std::chrono::high_resolution_clock::duration Duration;
-    typedef std::chrono::high_resolution_clock::time_point Timestamp;
+    typedef mir::time::Duration Duration;
+    typedef mir::time::Timestamp Timestamp;
     Timestamp current_time() const;
+    std::shared_ptr<mir::time::Clock> const clock;
     Duration const report_interval;
     std::string name;
     Timestamp last_report_time;

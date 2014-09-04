@@ -18,24 +18,26 @@
 
 #include "perf_report.h"
 #include "mir/logging/logger.h"
+#include "mir/time/high_resolution_clock.h"
 
 using namespace mir::client::logging;
-using namespace std::chrono;
 
 namespace
 {
 const char * const component = "perf"; // Note context is already within client
 } // namespace
 
-PeriodicPerfReport::PeriodicPerfReport(milliseconds period)
-    : report_interval(period),
-      last_report_time(current_time())
+PeriodicPerfReport::PeriodicPerfReport(mir::time::Duration period,
+              std::shared_ptr<mir::time::Clock> const& clock)
+    : clock(clock)
+    , report_interval(period)
+    , last_report_time(current_time())
 {
 }
 
 PeriodicPerfReport::Timestamp PeriodicPerfReport::current_time() const
 {
-    return high_resolution_clock::now();
+    return clock->sample();
 }
 
 void PeriodicPerfReport::name_surface(char const* s)
@@ -68,6 +70,8 @@ void PeriodicPerfReport::end_frame(int buffer_id)
     auto interval = now - last_report_time;
     if (interval >= report_interval)
     {   // Precision matters. Don't use floats.
+        using namespace std::chrono;
+
         // FPS x 100, remembering to keep millisecond accuracy.
         long fps_100 = frame_count * 100000L /
                        duration_cast<milliseconds>(interval).count();
@@ -99,7 +103,9 @@ void PeriodicPerfReport::end_frame(int buffer_id)
 }
 
 PerfReport::PerfReport(std::shared_ptr<mir::logging::Logger> const& logger)
-    : PeriodicPerfReport(seconds(1)), logger(logger)
+    : PeriodicPerfReport(std::chrono::seconds(1),
+                         std::make_shared<mir::time::HighResolutionClock>())
+    , logger(logger)
 {
 }
 

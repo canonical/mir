@@ -27,6 +27,7 @@ namespace time
 {
 
 typedef std::chrono::high_resolution_clock::time_point Timestamp;
+typedef std::chrono::high_resolution_clock::duration Duration;
 
 class Clock
 {
