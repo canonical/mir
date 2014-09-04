@@ -63,13 +63,12 @@ private:
     void turn_screen_off();
     virtual void turned_screen_off();
 
+    std::shared_ptr<HWCCallbacks> const callbacks;
     std::shared_ptr<HwcWrapper> const hwc_device;
 
     std::mutex blanked_mutex;
     std::condition_variable blanked_cond;
     MirPowerMode current_mode;
-
-    std::shared_ptr<HWCCallbacks> const callbacks;
 };
 
 }
