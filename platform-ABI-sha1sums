@@ -77,7 +77,7 @@ f199066a30882b22be901de0c4e6aa62e320e593  include/shared/mir/protobuf/google_pro
 bb27ec04b2861d128f420698491941f71e1aefc0  include/shared/mir/recursive_read_write_mutex.h
 903210453b98267e47c03ab2920c1db047ba0457  include/shared/mir/report/lttng/mir_tracepoint.h
 52b6b60543a361e91dbeaa2549114239f57b6b4e  include/shared/mir/report/lttng/tracepoint_provider.h
-dc80f8a57f133276dd5a72f4d0360a7b71154d16  include/shared/mir/shared_library.h
+fbeab165a0079e66a9f5c61e491f4956f0ddfff7  include/shared/mir/shared_library.h
 b4e96264b9a57a1f2ceceb700c5379658905ded7  include/shared/mir/thread_name.h
 9907751d046e4aea81881cf19e5df52c7a6a813e  include/shared/mir_toolkit/client_types.h
 183d9e5e6cfe48b3d9145a28541dd4202ff6137b  include/shared/mir_toolkit/common.h
