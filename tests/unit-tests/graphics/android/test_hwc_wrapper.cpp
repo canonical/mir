@@ -144,14 +144,20 @@ TEST_F(HwcWrapper, throws_on_set_failure)
     }, std::runtime_error);
 }
 
-TEST_F(HwcWrapper, register_procs)
+TEST_F(HwcWrapper, register_procs_registers_and_preserves_hooks_until_destruction)
 {
     using namespace testing;
-    hwc_procs_t procs;
-    EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(), &procs))
+    auto procs = std::make_shared<hwc_procs_t>();
+    EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(), procs.get()))
         .Times(1);
-    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.register_hooks(&procs);
+
+    auto use_count = procs.use_count();
+    {
+        mga::RealHwcWrapper wrapper(mock_device, mock_logger);
+        wrapper.register_hooks(procs);
+        EXPECT_THAT(procs.use_count, Eq(use_count+1));
+    }
+    EXPECT_THAT(procs.use_count, Eq(use_count));
 }
 
 TEST_F(HwcWrapper, turns_display_on)
