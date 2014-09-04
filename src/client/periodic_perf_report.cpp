@@ -61,6 +61,7 @@ void PeriodicPerfReport::end_frame(int buffer_id)
     ++frame_count;
 
     auto interval = now - last_report_time;
+
     if (interval >= report_interval)
     {   // Precision matters. Don't use floats.
         using namespace std::chrono;
