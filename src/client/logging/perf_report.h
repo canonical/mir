@@ -19,12 +19,8 @@
 #ifndef MIR_CLIENT_LOGGING_PERF_REPORT_H_
 #define MIR_CLIENT_LOGGING_PERF_REPORT_H_
 
-#include "../perf_report.h"
-#include "mir/time/clock.h"
-#include <chrono>
+#include "../periodic_perf_report.h"
 #include <memory>
-#include <string>
-#include <unordered_map>
 
 namespace mir
 {
@@ -34,33 +30,6 @@ namespace client
 {
 namespace logging
 {
-
-class PeriodicPerfReport : public mir::client::PerfReport
-{
-public:
-    PeriodicPerfReport(mir::time::Duration period,
-                       std::shared_ptr<mir::time::Clock> const& clock);
-    void name_surface(char const*) override;
-    void begin_frame(int buffer_id) override;
-    void end_frame(int buffer_id) override;
-    virtual void display(const char *name, long fps100,
-                         long rendertime_usec, long lag_usec,
-                         int nbuffers) const = 0;
-private:
-    typedef mir::time::Duration Duration;
-    typedef mir::time::Timestamp Timestamp;
-    Timestamp current_time() const;
-    std::shared_ptr<mir::time::Clock> const clock;
-    Duration const report_interval;
-    std::string name;
-    Timestamp last_report_time;
-    Timestamp frame_begin_time;
-    Timestamp frame_end_time;
-    Duration render_time_sum = Duration::zero();
-    Duration buffer_queue_latency_sum = Duration::zero();
-    int frame_count = 0;
-    std::unordered_map<int,Timestamp> buffer_end_time;
-};
 
 class PerfReport : public PeriodicPerfReport
 {
