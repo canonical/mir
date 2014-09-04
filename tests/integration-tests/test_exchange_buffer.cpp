@@ -39,6 +39,7 @@ namespace mg = mir::graphics;
 namespace msc = mir::scene;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mp = mir::protobuf;
 
 namespace
 {
@@ -135,27 +136,19 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
             cv.notify_all();
         }
 
-        bool wait_on_buffer(std::unique_lock<std::mutex>& lk)
-        {
-            arrived = false;
-            if (!cv.wait_for(lk, std::chrono::seconds(100), [this]() {return arrived;}))
-                return false;
-            return true;
-        }
-
         //TODO: once the next_buffer rpc is deprecated, change this code out for the
         //      mir_surface_next_buffer() api call
-        bool exchange_buffer(mir::protobuf::DisplayServer& server)
+        bool exchange_buffer(mp::DisplayServer& server)
         {
             std::unique_lock<decltype(mutex)> lk(mutex);
-            mir::protobuf::Buffer next;
-            server.exchange_buffer(0, &current_buffer, &next,
+            mp::Buffer next;
+            server.exchange_buffer(0, &buffer_request, &next,
                            google::protobuf::NewCallback(this, &Client::buffer_arrival));
 
-            if (!wait_on_buffer(lk))
-                return false;
-            *current_buffer.mutable_buffer() = next;
-            return true;
+            arrived = false;
+            auto completed = cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
+            *buffer_request.mutable_buffer() = next;
+            return completed;
         }
  
         void exec()
@@ -171,13 +164,13 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
             };
             auto surface = mir_connection_create_surface_sync(connection, &request_params);
             auto rpc_channel = connection->rpc_channel();
-            mir::protobuf::DisplayServer::Stub server(
+            mp::DisplayServer::Stub server(
                 rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
-            current_buffer.mutable_buffer()->set_buffer_id(buffer_id_seq.begin()->as_value());
+            buffer_request.mutable_buffer()->set_buffer_id(buffer_id_seq.begin()->as_value());
 
             for(auto const& id : buffer_id_seq)
             {
-                EXPECT_THAT(current_buffer.buffer().buffer_id(), testing::Eq(id.as_value()));
+                EXPECT_THAT(buffer_request.buffer().buffer_id(), testing::Eq(id.as_value()));
                 ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
             }
 
@@ -189,7 +182,7 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
             std::mutex mutex;
             std::condition_variable cv;
             bool arrived{false};
-            mir::protobuf::BufferRequest current_buffer; 
+            mp::BufferRequest buffer_request; 
             std::vector<mg::BufferID> const buffer_id_seq;
     } client_config{buffer_id_exchange_seq};
     launch_client_process(client_config);
