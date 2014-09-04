@@ -56,7 +56,7 @@ public:
 
 } // namespace
 
-TEST(PeriodicPerfReport, foo)
+TEST(PeriodicPerfReport, reports_the_right_numbers)
 {
     int const fps = 50;
     int const nbuffers = 3;
@@ -70,12 +70,14 @@ TEST(PeriodicPerfReport, foo)
     report.name_surface(name);
 
     int const nframes = 1000;
+    long const expected_render_time = render_time.count();
+//    long const expected_lag = nbuffers * frame_time.count();
 
     using namespace testing;
     EXPECT_CALL(report, display(StrEq(name),
                                 fps*100,
-                                render_time.count(),
-                                _,
+                                expected_render_time,
+                                _, //expected_lag,
                                 nbuffers))
                 .Times(nframes / fps);
 
@@ -83,10 +85,10 @@ TEST(PeriodicPerfReport, foo)
     {
         int const buffer_id = f % nbuffers;
 
+        clock->elapse(frame_time - render_time);
         report.begin_frame(buffer_id);
         clock->elapse(render_time);
         report.end_frame(buffer_id);
-        clock->elapse(frame_time - render_time);
     }
 }
 
