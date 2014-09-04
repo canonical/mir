@@ -18,31 +18,16 @@
 
 #include "mir/shared_library_prober.h"
 
-#include <unistd.h>
-#include <libgen.h>
+#include "mir_test_framework/executable_path.h"
 
 #include <system_error>
-#include <boost/throw_exception.hpp>
-#include <boost/exception/errinfo_errno.hpp>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+namespace mtf = mir_test_framework;
+
 namespace
 {
-std::string binary_path()
-{
-    char buf[1024];
-    auto tmp = readlink("/proc/self/exe", buf, sizeof buf);
-    if (tmp < 0)
-        BOOST_THROW_EXCEPTION(boost::enable_error_info(
-                                  std::runtime_error("Failed to find our executable path"))
-                              << boost::errinfo_errno(errno));
-    if (tmp > static_cast<ssize_t>(sizeof(buf) - 1))
-        BOOST_THROW_EXCEPTION(std::runtime_error("Path to executable is too long!"));
-    buf[tmp] = '\0';
-    return dirname(buf);
-}
-
 class MockSharedLibraryProberReport : public mir::SharedLibraryProberReport
 {
 public:
@@ -56,7 +41,7 @@ class SharedLibraryProber : public testing::Test
 {
 public:
     SharedLibraryProber()
-        : library_path{binary_path() + "/test_data"}
+        : library_path{mtf::executable_path() + "/test_data"}
     {
     }
 
