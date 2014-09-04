@@ -31,7 +31,6 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include <system_error>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
