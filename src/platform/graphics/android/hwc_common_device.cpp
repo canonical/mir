@@ -47,14 +47,15 @@ mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<HwcWrapper> const& hwc_dev
                                       std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : coordinator(coordinator),
       hwc_device(hwc_device),
-      current_mode(mir_power_mode_on)
+      current_mode(mir_power_mode_on),
+      callbacks(std::make_shared<mga::HWCCallbacks>())
 {
-    callbacks.hooks.invalidate = invalidate_hook;
-    callbacks.hooks.vsync = vsync_hook;
-    callbacks.hooks.hotplug = hotplug_hook;
-    callbacks.self = this;
+    callbacks->hooks.invalidate = invalidate_hook;
+    callbacks->hooks.vsync = vsync_hook;
+    callbacks->hooks.hotplug = hotplug_hook;
+    callbacks->self = this;
 
-    hwc_device->register_hooks(&callbacks.hooks);
+    hwc_device->register_hooks(callbacks);
 
     try
     {
