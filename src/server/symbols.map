@@ -649,10 +649,6 @@ MIR_SERVER_25 {
     mir::time::Alarm::reschedule_for*;
     mir::time::Alarm::reschedule_in*;
     mir::time::Alarm::state*;
-    mir::time::Clock::?Clock*;
-    mir::time::Clock::Clock*;
-    mir::time::Clock::sample*;
-    mir::time::HighResolutionClock::sample*;
     mir::time::Timer::create_alarm*;
     mir::time::Timer::notify_at*;
     mir::time::Timer::notify_in*;
@@ -864,8 +860,6 @@ MIR_SERVER_25 {
     non-virtual?thunk?to?mir::shell::SurfaceCoordinatorWrapper::raise*;
     non-virtual?thunk?to?mir::shell::SurfaceCoordinatorWrapper::remove_surface*;
     non-virtual?thunk?to?mir::time::Alarm::?Alarm*;
-    non-virtual?thunk?to?mir::time::Clock::?Clock*;
-    non-virtual?thunk?to?mir::time::HighResolutionClock::sample*;
     non-virtual?thunk?to?mir::time::Timer::?Timer*;
     typeinfo?for?mir::AsioMainLoop;
     typeinfo?for?mir::compositor::BufferStream;
@@ -964,8 +958,6 @@ MIR_SERVER_25 {
     typeinfo?for?mir::shell::SessionCoordinatorWrapper;
     typeinfo?for?mir::shell::SurfaceCoordinatorWrapper;
     typeinfo?for?mir::time::Alarm;
-    typeinfo?for?mir::time::Clock;
-    typeinfo?for?mir::time::HighResolutionClock;
     typeinfo?for?mir::time::Timer;
     vtable?for?mir::AsioMainLoop;
     vtable?for?mir::compositor::BufferStream;
@@ -1064,8 +1056,6 @@ MIR_SERVER_25 {
     vtable?for?mir::shell::SessionCoordinatorWrapper;
     vtable?for?mir::shell::SurfaceCoordinatorWrapper;
     vtable?for?mir::time::Alarm;
-    vtable?for?mir::time::Clock;
-    vtable?for?mir::time::HighResolutionClock;
     vtable?for?mir::time::Timer;
   };
  local: *;

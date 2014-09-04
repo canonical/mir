@@ -954,6 +954,18 @@ MIR_COMMON_1 {
     vtable?for?mir::udev::Enumerator;
     vtable?for?mir::udev::Enumerator::iterator;
     vtable?for?mir::udev::Monitor;
+
+    mir::time::Clock::?Clock*;
+    mir::time::Clock::Clock*;
+    mir::time::Clock::sample*;
+    non-virtual?thunk?to?mir::time::Clock::?Clock*;
+    typeinfo?for?mir::time::Clock;
+    vtable?for?mir::time::Clock;
+
+    mir::time::HighResolutionClock::sample*;
+    non-virtual?thunk?to?mir::time::HighResolutionClock::sample*;
+    typeinfo?for?mir::time::HighResolutionClock;
+    vtable?for?mir::time::HighResolutionClock;
   };
  local: *;
 };
