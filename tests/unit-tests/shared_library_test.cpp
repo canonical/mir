@@ -21,8 +21,11 @@
 #include <gtest/gtest.h>
 
 #include <boost/exception/diagnostic_information.hpp>
-
 #include <stdexcept>
+
+#include "mir_test_framework/executable_path.h"
+
+namespace mtf = mir_test_framework;
 
 namespace
 {
@@ -30,6 +33,7 @@ class HasSubstring
 {
 public:
     HasSubstring(char const* substring) : substring(substring) {}
+    HasSubstring(std::string const& substring) : substring{substring.c_str()} {}
 
     friend::testing::AssertionResult operator,(std::string const& target, HasSubstring const& match)
     {
@@ -50,18 +54,31 @@ private:
 
 #define EXPECT_THAT(target, condition) EXPECT_TRUE((target, condition))
 
-char const* const nonexistent_library  = "nonexistent_library";
-char const* const existing_library     = "libmirplatformgraphics.so";
-char const* const nonexistent_function = "nonexistent_library";
-char const* const existing_function    = "create_platform";
+class SharedLibrary : public testing::Test
+{
+public:
+    SharedLibrary()
+        : nonexistent_library{"imma_totally_not_a_library"},
+          existing_library{mtf::library_path() + "/libmirclientplatform.so"},
+          nonexistent_function{"yo_dawg"},
+          existing_function{"create_client_platform_factory"}
+    {
+    }
+
+    std::string const nonexistent_library;
+    std::string const existing_library;
+    std::string const nonexistent_function;
+    std::string const existing_function;
+};
+
 }
 
-TEST(SharedLibrary, load_nonexistent_library_fails)
+TEST_F(SharedLibrary, load_nonexistent_library_fails)
 {
     EXPECT_THROW({ mir::SharedLibrary nonexistent(nonexistent_library); }, std::runtime_error);
 }
 
-TEST(SharedLibrary, load_nonexistent_library_fails_with_useful_info)
+TEST_F(SharedLibrary, load_nonexistent_library_fails_with_useful_info)
 {
     try
     {
@@ -76,19 +93,19 @@ TEST(SharedLibrary, load_nonexistent_library_fails_with_useful_info)
     }
 }
 
-TEST(SharedLibrary, load_valid_library_works)
+TEST_F(SharedLibrary, load_valid_library_works)
 {
     mir::SharedLibrary existing(existing_library);
 }
 
-TEST(SharedLibrary, load_nonexistent_function_fails)
+TEST_F(SharedLibrary, load_nonexistent_function_fails)
 {
     mir::SharedLibrary existing(existing_library);
 
     EXPECT_THROW({ existing.load_function<void(*)()>(nonexistent_function); }, std::runtime_error);
 }
 
-TEST(SharedLibrary, load_nonexistent_function_fails_with_useful_info)
+TEST_F(SharedLibrary, load_nonexistent_function_fails_with_useful_info)
 {
     mir::SharedLibrary existing(existing_library);
 
@@ -106,7 +123,7 @@ TEST(SharedLibrary, load_nonexistent_function_fails_with_useful_info)
     }
 }
 
-TEST(SharedLibrary, load_valid_function_works)
+TEST_F(SharedLibrary, load_valid_function_works)
 {
     mir::SharedLibrary existing(existing_library);
     existing.load_function<void(*)()>(existing_function);
