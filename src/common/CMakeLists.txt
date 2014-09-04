@@ -15,6 +15,8 @@ add_subdirectory(report/lttng)
 add_subdirectory(env)
 add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
+add_subdirectory(time)
+list(APPEND MIR_COMMON_SOURCES $<TARGET_OBJECTS:mirtime>)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
