@@ -21,92 +21,119 @@
 #include "mir/graphics/buffer_id.h"
 #include "mir_test_doubles/stub_buffer.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 
-TEST(ClientBufferTracker, just_added_buffer_is_known_by_client)
+struct ClientBufferTracker : public testing::Test
+{
+    mtd::StubBuffer stub_buffer0;
+    mtd::StubBuffer stub_buffer1;
+    mtd::StubBuffer stub_buffer2;
+    mtd::StubBuffer stub_buffer3;
+    mtd::StubBuffer stub_buffer4;
+};
+
+TEST_F(ClientBufferTracker, just_added_buffer_is_known_by_client)
 {
     mf::ClientBufferTracker tracker(3);
-    mg::BufferID const id{5};
+    mg::BufferID const id{stub_buffer0.id()};
 
-    tracker.add(id);
+    tracker.add(&stub_buffer0);
     EXPECT_TRUE(tracker.client_has(id));
+    EXPECT_THAT(tracker.buffer_from(id), testing::Eq(&stub_buffer0));
 }
 
-TEST(ClientBufferTracker, unadded_buffer_is_unknown_by_client)
+TEST_F(ClientBufferTracker, nullptrs_dont_affect_owned_buffers)
+{
+    mf::ClientBufferTracker tracker(3);
+    mg::BufferID const id{stub_buffer0.id()};
+
+    tracker.add(&stub_buffer0);
+    tracker.add(nullptr);
+    tracker.add(nullptr);
+    tracker.add(nullptr);
+    EXPECT_TRUE(tracker.client_has(id));
+    EXPECT_THAT(tracker.buffer_from(id), testing::Eq(&stub_buffer0));
+}
+
+TEST_F(ClientBufferTracker, dead_buffers_are_still_tracked)
+{
+    mf::ClientBufferTracker tracker(3);
+    mg::BufferID id{stub_buffer0.id()};
+    mg::Buffer* dead_buffer_ptr{nullptr};
+
+    {
+        mtd::StubBuffer dead_buffer;
+        tracker.add(&dead_buffer);
+        id = dead_buffer.id();
+        dead_buffer_ptr = &dead_buffer;
+    }
+
+    EXPECT_TRUE(tracker.client_has(id));
+    EXPECT_THAT(tracker.buffer_from(id), testing::Eq(dead_buffer_ptr));
+}
+
+TEST_F(ClientBufferTracker, unadded_buffer_is_unknown_by_client)
 {
     mf::ClientBufferTracker tracker(3);
 
-    tracker.add(mg::BufferID{5});
-    EXPECT_FALSE(tracker.client_has(mg::BufferID{6}));
+    tracker.add(&stub_buffer0);
+    EXPECT_FALSE(tracker.client_has(stub_buffer1.id()));
 }
 
-TEST(ClientBufferTracker, tracks_sequence_of_buffers)
-{
-    mf::ClientBufferTracker tracker(3);
-    mg::BufferID const one{1};
-    mg::BufferID const two{2};
-    mg::BufferID const three{3};
-    mg::BufferID const four{4};
-
-    tracker.add(one);
-    tracker.add(two);
-    tracker.add(three);
-
-    EXPECT_TRUE(tracker.client_has(one));
-    EXPECT_TRUE(tracker.client_has(two));
-    EXPECT_TRUE(tracker.client_has(three));
-    EXPECT_FALSE(tracker.client_has(four));
-}
-
-TEST(ClientBufferTracker, old_buffers_expire_from_tracker)
+TEST_F(ClientBufferTracker, tracks_sequence_of_buffers)
 {
     mf::ClientBufferTracker tracker(3);
 
-    mg::BufferID const one{1};
-    mg::BufferID const two{2};
-    mg::BufferID const three{3};
-    mg::BufferID const four{4};
+    tracker.add(&stub_buffer0);
+    tracker.add(&stub_buffer1);
+    tracker.add(&stub_buffer2);
 
-    tracker.add(one);
-    tracker.add(two);
-    tracker.add(three);
-
-    ASSERT_TRUE(tracker.client_has(one));
-    ASSERT_TRUE(tracker.client_has(two));
-    ASSERT_TRUE(tracker.client_has(three));
-
-    tracker.add(two);
-    tracker.add(three);
-    tracker.add(four);
-
-    EXPECT_FALSE(tracker.client_has(one));
-    EXPECT_TRUE(tracker.client_has(two));
-    EXPECT_TRUE(tracker.client_has(three));
-    EXPECT_TRUE(tracker.client_has(four));
+    EXPECT_TRUE(tracker.client_has(stub_buffer0.id()));
+    EXPECT_TRUE(tracker.client_has(stub_buffer1.id()));
+    EXPECT_TRUE(tracker.client_has(stub_buffer2.id()));
+    EXPECT_FALSE(tracker.client_has(stub_buffer3.id()));
 }
 
-TEST(ClientBufferTracker, tracks_correct_number_of_buffers)
+TEST_F(ClientBufferTracker, old_buffers_expire_from_tracker)
 {
-    std::vector<mg::BufferID> ids;
-    for (unsigned int i = 0; i < 10; ++i)
-        ids.emplace_back(mg::BufferID{i});
+    mf::ClientBufferTracker tracker(3);
 
+    tracker.add(&stub_buffer0);
+    tracker.add(&stub_buffer1);
+    tracker.add(&stub_buffer2);
+
+    ASSERT_TRUE(tracker.client_has(stub_buffer0.id()));
+    ASSERT_TRUE(tracker.client_has(stub_buffer1.id()));
+    ASSERT_TRUE(tracker.client_has(stub_buffer2.id()));
+
+    tracker.add(&stub_buffer1);
+    tracker.add(&stub_buffer2);
+    tracker.add(&stub_buffer3);
+
+    EXPECT_FALSE(tracker.client_has(stub_buffer0.id()));
+    EXPECT_TRUE(tracker.client_has(stub_buffer1.id()));
+    EXPECT_TRUE(tracker.client_has(stub_buffer2.id()));
+    EXPECT_TRUE(tracker.client_has(stub_buffer3.id()));
+}
+
+TEST_F(ClientBufferTracker, tracks_correct_number_of_buffers)
+{
+    std::vector<mtd::StubBuffer> buffers(10);
     for (unsigned int tracker_size = 2; tracker_size < 10; ++tracker_size)
     {
         mf::ClientBufferTracker tracker{tracker_size};
 
-        for (unsigned int i = 0; i < tracker_size; ++i)
-            tracker.add(ids[i]);
+        for (unsigned int i = 0; i <= tracker_size; ++i)
+            tracker.add(&buffers[i]);
 
-        tracker.add(ids[tracker_size]);
-
-        EXPECT_FALSE(tracker.client_has(ids[0]));
+        EXPECT_FALSE(tracker.client_has(buffers[0].id()));
         for (unsigned int i = 1; i <= tracker_size; ++i)
-            EXPECT_TRUE(tracker.client_has(ids[i]));
+            EXPECT_TRUE(tracker.client_has(buffers[i].id()));
     }
 }
 
@@ -116,6 +143,7 @@ struct SurfaceTracker : public testing::Test
     mtd::StubBuffer stub_buffer1;
     mtd::StubBuffer stub_buffer2;
     mtd::StubBuffer stub_buffer3;
+    mtd::StubBuffer stub_buffer4;
     mf::SurfaceId surf_id0{0};
     mf::SurfaceId surf_id1{1};
     size_t const client_cache_size{3};
@@ -129,25 +157,25 @@ TEST_F(SurfaceTracker, only_returns_true_if_buffer_already_tracked)
     EXPECT_TRUE(tracker.track_buffer(surf_id0, &stub_buffer0));
 
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer1));
-    EXPECT_FALSE(tracker.track_buffer(surf_id1, &stub_buffer0));
-    EXPECT_FALSE(tracker.track_buffer(surf_id1, &stub_buffer1));
+    EXPECT_FALSE(tracker.track_buffer(surf_id1, &stub_buffer2));
+    EXPECT_FALSE(tracker.track_buffer(surf_id1, &stub_buffer3));
 }
 
 TEST_F(SurfaceTracker, removals_remove_buffer_instances)
 {
     mf::SurfaceTracker tracker{client_cache_size};
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
-    EXPECT_FALSE(tracker.track_buffer(surf_id1, &stub_buffer0));
+    EXPECT_FALSE(tracker.track_buffer(surf_id1, &stub_buffer1));
 
     EXPECT_TRUE(tracker.track_buffer(surf_id0, &stub_buffer0));
-    EXPECT_TRUE(tracker.track_buffer(surf_id1, &stub_buffer0));
+    EXPECT_TRUE(tracker.track_buffer(surf_id1, &stub_buffer1));
     EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id0));
 
     tracker.remove_surface(surf_id0);
     EXPECT_EQ(nullptr, tracker.last_buffer(surf_id0));
 
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer0));
-    EXPECT_TRUE(tracker.track_buffer(surf_id1, &stub_buffer0));
+    EXPECT_TRUE(tracker.track_buffer(surf_id1, &stub_buffer1));
 
     tracker.remove_surface(mf::SurfaceId{33});
 }
@@ -163,8 +191,8 @@ TEST_F(SurfaceTracker, last_client_buffer)
 
     EXPECT_EQ(nullptr, tracker.last_buffer(surf_id1));
 
-    tracker.track_buffer(surf_id1, &stub_buffer0);
-    EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id1));
+    tracker.track_buffer(surf_id1, &stub_buffer2);
+    EXPECT_EQ(&stub_buffer2, tracker.last_buffer(surf_id1));
 }
 
 TEST_F(SurfaceTracker, buffers_expire_if_they_overrun_cache_size)
@@ -197,11 +225,34 @@ TEST_F(SurfaceTracker, buffers_only_affect_associated_surfaces)
     EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer2));
     EXPECT_EQ(&stub_buffer2, tracker.last_buffer(surf_id0));
     
-    EXPECT_FALSE(tracker.track_buffer(surf_id1, &stub_buffer0));
+    EXPECT_FALSE(tracker.track_buffer(surf_id1, &stub_buffer3));
     EXPECT_EQ(&stub_buffer2, tracker.last_buffer(surf_id0));
-    EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id1));
+    EXPECT_EQ(&stub_buffer3, tracker.last_buffer(surf_id1));
 
-    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer3));
-    EXPECT_EQ(&stub_buffer3, tracker.last_buffer(surf_id0));
-    EXPECT_EQ(&stub_buffer0, tracker.last_buffer(surf_id1));
+    EXPECT_FALSE(tracker.track_buffer(surf_id0, &stub_buffer4));
+    EXPECT_EQ(&stub_buffer4, tracker.last_buffer(surf_id0));
+    EXPECT_EQ(&stub_buffer3, tracker.last_buffer(surf_id1));
+}
+
+TEST_F(SurfaceTracker, can_lookup_a_buffer_from_a_buffer_id)
+{
+    using namespace testing;
+    mf::SurfaceTracker tracker{client_cache_size};
+
+    tracker.track_buffer(surf_id0, &stub_buffer0);
+    tracker.track_buffer(surf_id0, &stub_buffer1);
+    tracker.track_buffer(surf_id0, &stub_buffer2);
+
+    EXPECT_THAT(tracker.buffer_from(stub_buffer0.id()), Eq(&stub_buffer0));
+    EXPECT_THAT(tracker.buffer_from(stub_buffer1.id()), Eq(&stub_buffer1));
+    EXPECT_THAT(tracker.buffer_from(stub_buffer2.id()), Eq(&stub_buffer2));
+    EXPECT_THROW({
+        tracker.buffer_from(stub_buffer3.id());
+    }, std::logic_error);
+
+    tracker.track_buffer(surf_id0, &stub_buffer3);
+    EXPECT_THAT(tracker.buffer_from(stub_buffer3.id()), Eq(&stub_buffer3));
+    EXPECT_THROW({
+        tracker.buffer_from(stub_buffer0.id());
+    }, std::logic_error);
 }

@@ -20,7 +20,8 @@
 #define MIR_OPTIONS_DEFAULT_CONFIGURATION_H_
 
 #include "mir/options/configuration.h"
-
+#include "mir/options/program_option.h"
+#include <boost/program_options/options_description.hpp>
 
 namespace mir
 {

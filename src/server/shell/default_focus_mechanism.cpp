@@ -48,14 +48,16 @@ void msh::DefaultFocusMechanism::set_focus_to(std::shared_ptr<ms::Session> const
     if (surface)
     {
         std::lock_guard<std::mutex> lg(surface_focus_lock);
+
+        // Ensure the surface has really taken the focus before notifying it that it is focused
+        surface_coordinator->raise(surface);
+        surface->take_input_focus(input_targeter);
+
         auto current_focus = currently_focused_surface.lock();
         if (current_focus)
             current_focus->configure(mir_surface_attrib_focus, mir_surface_unfocused);
         surface->configure(mir_surface_attrib_focus, mir_surface_focused);
         currently_focused_surface = surface;
-
-        surface_coordinator->raise(surface);
-        surface->take_input_focus(input_targeter);
     }
     else
     {
