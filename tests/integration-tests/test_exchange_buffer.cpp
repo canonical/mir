@@ -17,8 +17,6 @@
  */
 
 #include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_doubles/stub_buffer_allocator.h"
-#include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir/graphics/buffer_id.h"
@@ -26,7 +24,6 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "src/client/mir_connection.h"
-#include "mir_protobuf.pb.h"
 #include <chrono>
 #include <mutex>
 #include <condition_variable>
