@@ -64,7 +64,7 @@ void mga::RealHwcWrapper::set(hwc_display_contents_1_t& display_list) const
 
 void mga::RealHwcWrapper::register_hooks(std::shared_ptr<HWCCallbacks> const& callbacks)
 {
-    hwc_device->registerProcs(hwc_device.get(), &callbacks->hooks);
+    hwc_device->registerProcs(hwc_device.get(), reinterpret_cast<hwc_procs_t*>(callbacks.get()));
     registered_callbacks = callbacks;
 }
 

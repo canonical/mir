@@ -149,7 +149,8 @@ TEST_F(HwcWrapper, register_procs_registers_and_preserves_hooks_until_destructio
 {
     using namespace testing;
     auto procs = std::make_shared<mga::HWCCallbacks>();
-    EXPECT_CALL(*mock_device, registerProcs_interface(mock_device.get(), &procs->hooks))
+    EXPECT_CALL(*mock_device, registerProcs_interface(
+        mock_device.get(), reinterpret_cast<hwc_procs_t*>(procs.get())))
         .Times(1);
 
     auto use_count = procs.use_count();
