@@ -103,6 +103,22 @@ TYPED_TEST(HWCCommon, test_proc_registration)
     EXPECT_THAT(callbacks->hooks.hotplug, Ne(nullptr));
 }
 
+TYPED_TEST(HWCCommon, test_device_destruction_unregisters_self_from_hooks)
+{
+    using namespace testing;
+    std::shared_ptr<mga::HWCCallbacks> callbacks;
+    EXPECT_CALL(*(this->mock_device), register_hooks(_))
+        .Times(1)
+        .WillOnce(SaveArg<0>(&callbacks));
+
+    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+
+    ASSERT_THAT(callbacks, Ne(nullptr));
+    EXPECT_THAT(callbacks->self, Eq(device.get()));
+    device = nullptr;
+    EXPECT_THAT(callbacks->self, Eq(nullptr));    
+}
+
 TYPED_TEST(HWCCommon, registerst_hooks_and_turns_on_display)
 {
     using namespace testing;
