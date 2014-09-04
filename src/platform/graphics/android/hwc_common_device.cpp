@@ -79,6 +79,7 @@ mga::HWCCommonDevice::~HWCCommonDevice() noexcept
         {
         }
     }
+    callbacks->self = nullptr;
 }
 
 void mga::HWCCommonDevice::notify_vsync()

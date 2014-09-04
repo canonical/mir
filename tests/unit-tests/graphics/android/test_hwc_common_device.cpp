@@ -200,6 +200,9 @@ TYPED_TEST(HWCCommon, callback_calls_hwcvsync)
         .Times(1);
     ASSERT_THAT(callbacks, Ne(nullptr));
     callbacks->hooks.vsync(&callbacks->hooks, 0, 0);
+
+    callbacks->self = nullptr;
+    callbacks->hooks.vsync(&callbacks->hooks, 0, 0);
 }
 
 TYPED_TEST(HWCCommon, set_orientation)
