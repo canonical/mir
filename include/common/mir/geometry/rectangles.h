@@ -14,13 +14,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ *
+ * XXX This header is only used externally in one location in QtMir. It could
+ *     possibly be made private with only minor changes.
  */
 
 #ifndef MIR_GEOMETRY_RECTANGLES_H_
 #define MIR_GEOMETRY_RECTANGLES_H_
 
-#include "point.h"
-#include "rectangle.h"
+#include "mir/geometry/point.h"
+#include "mir/geometry/rectangle.h"
 
 #include <vector>
 #include <initializer_list>

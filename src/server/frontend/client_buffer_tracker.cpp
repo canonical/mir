@@ -20,34 +20,55 @@
 
 #include "client_buffer_tracker.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/graphics/buffer.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 
 mf::ClientBufferTracker::ClientBufferTracker(unsigned int client_cache_size)
-    : ids(),
+    : buffers{},
       cache_size{client_cache_size}
 {
 }
 
-void mf::ClientBufferTracker::add(mg::BufferID const& id)
+void mf::ClientBufferTracker::add(mg::Buffer* buffer)
 {
-    auto existing_id = std::find(ids.begin(), ids.end(), id);
+    if (!buffer)
+        return;
 
-    if (existing_id != ids.end())
+    IdBufferAssociation buf_id{buffer->id(), buffer};
+    auto existing_buffer = std::find(buffers.begin(), buffers.end(), buf_id);
+
+    if (existing_buffer != buffers.end())
     {
-        ids.push_front(*existing_id);
-        ids.erase(existing_id);
+        buffers.push_front(*existing_buffer);
+        buffers.erase(existing_buffer);
     }
     else
     {
-        ids.push_front(id);
+        buffers.push_front(buf_id);
     }
-    if (ids.size() > cache_size)
-        ids.pop_back();
+    if (buffers.size() > cache_size)
+    {
+        buffers.pop_back();
+    }
 }
 
-bool mf::ClientBufferTracker::client_has(mg::BufferID const& id) const
+mg::Buffer* mf::ClientBufferTracker::buffer_from(mg::BufferID const& buffer_id) const
 {
-    return std::find(ids.begin(), ids.end(), id) != ids.end();
+    auto it = std::find_if(buffers.begin(), buffers.end(),
+        [&buffer_id](IdBufferAssociation b)
+        {
+            return (std::get<0>(b) == buffer_id);
+        });
+
+    if (it == buffers.end())
+        return nullptr;
+    else
+        return std::get<1>(*it);
+}
+
+bool mf::ClientBufferTracker::client_has(mg::BufferID const& buffer_id) const
+{
+    return (nullptr != buffer_from(buffer_id));
 }
