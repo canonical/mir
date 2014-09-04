@@ -47,6 +47,36 @@ TEST_F(ClientBufferTracker, just_added_buffer_is_known_by_client)
     EXPECT_THAT(tracker.buffer_from(id), testing::Eq(&stub_buffer0));
 }
 
+TEST_F(ClientBufferTracker, nullptrs_dont_affect_owned_buffers)
+{
+    mf::ClientBufferTracker tracker(3);
+    mg::BufferID const id{stub_buffer0.id()};
+
+    tracker.add(&stub_buffer0);
+    tracker.add(nullptr);
+    tracker.add(nullptr);
+    tracker.add(nullptr);
+    EXPECT_TRUE(tracker.client_has(id));
+    EXPECT_THAT(tracker.buffer_from(id), testing::Eq(&stub_buffer0));
+}
+
+TEST_F(ClientBufferTracker, dead_buffers_are_still_tracked)
+{
+    mf::ClientBufferTracker tracker(3);
+    mg::BufferID id{stub_buffer0.id()};
+    mg::Buffer* dead_buffer_ptr{nullptr};
+
+    {
+        mtd::StubBuffer dead_buffer;
+        tracker.add(&dead_buffer);
+        id = dead_buffer.id();
+        dead_buffer_ptr = &dead_buffer;
+    }
+
+    EXPECT_TRUE(tracker.client_has(id));
+    EXPECT_THAT(tracker.buffer_from(id), testing::Eq(dead_buffer_ptr));
+}
+
 TEST_F(ClientBufferTracker, unadded_buffer_is_unknown_by_client)
 {
     mf::ClientBufferTracker tracker(3);

@@ -21,6 +21,7 @@
 
 #include "mir/graphics/buffer_id.h"
 #include <stdint.h>
+#include <tuple>
 #include <list>
 
 namespace mir
@@ -51,8 +52,8 @@ public:
     bool client_has(graphics::BufferID const& id) const;
     graphics::Buffer* buffer_from(graphics::BufferID const& id) const;
 private:
-
-    std::list<graphics::Buffer*> buffers;
+    typedef std::tuple<graphics::BufferID, graphics::Buffer*> IdBufferAssociation;
+    std::list<IdBufferAssociation> buffers;
     unsigned int const cache_size;
 };
 

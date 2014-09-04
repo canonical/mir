@@ -21,7 +21,7 @@
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
-#include <stdexcept>
+#include <system_error>
 
 #include <unistd.h>
 
@@ -32,8 +32,9 @@ mt::Pipe::Pipe()
     if (pipe(pipefd))
     {
         BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(std::runtime_error("Failed to create pipe"))
-                << boost::errinfo_errno(errno));
+            boost::enable_error_info(std::system_error(errno,
+                                                       std::system_category(),
+                                                       "Failed to create pipe")));
     }
 }
 
