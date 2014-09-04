@@ -151,7 +151,7 @@ public:
     void throw_exception_in_next_get_events();
 
     // list of RawEvents available for consumption via getEvents
-    std::mutex guard;
+    mutable std::mutex guard;
     std::list<droidinput::RawEvent> events_available;
 
 

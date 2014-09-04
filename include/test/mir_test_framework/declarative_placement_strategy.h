@@ -56,8 +56,8 @@ protected:
 private:
     std::shared_ptr<mir::scene::PlacementStrategy> const default_strategy;
 
-    SurfaceGeometries surface_geometries_by_name;
-    SurfaceDepths surface_depths_by_name;
+    SurfaceGeometries const& surface_geometries_by_name;
+    SurfaceDepths const& surface_depths_by_name;
 };
 }
 
