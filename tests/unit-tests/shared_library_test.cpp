@@ -61,7 +61,9 @@ public:
         : nonexistent_library{"imma_totally_not_a_library"},
           existing_library{mtf::library_path() + "/libmirclientplatform.so"},
           nonexistent_function{"yo_dawg"},
-          existing_function{"create_client_platform_factory"}
+          existing_function{"create_client_platform_factory"},
+          existent_version{"MIR_CLIENTPLATFORM_1"},
+          nonexistent_version{"GOATS_ON_THE_GREEN"}
     {
     }
 
@@ -69,6 +71,8 @@ public:
     std::string const existing_library;
     std::string const nonexistent_function;
     std::string const existing_function;
+    std::string const existent_version;
+    std::string const nonexistent_version;
 };
 
 }
@@ -129,3 +133,27 @@ TEST_F(SharedLibrary, load_valid_function_works)
     existing.load_function<void(*)()>(existing_function);
 }
 
+TEST_F(SharedLibrary, load_valid_versioned_function_works)
+{
+    mir::SharedLibrary existing{existing_library};
+    existing.load_function<void(*)()>(existing_function, existent_version);
+}
+
+TEST_F(SharedLibrary, load_invalid_versioned_function_fails_with_appropriate_error)
+{
+    mir::SharedLibrary existing{existing_library};
+
+    try
+    {
+        existing.load_function<void(*)()>(existing_function, nonexistent_version);
+    }
+    catch (std::exception const& error)
+    {
+        auto info = boost::diagnostic_information(error);
+
+        EXPECT_THAT(info, HasSubstring("undefined symbol")) << "What went wrong";
+        EXPECT_THAT(info, HasSubstring(nonexistent_version)) << "Version info";
+        EXPECT_THAT(info, HasSubstring(existing_library)) << "Name of library";
+        EXPECT_THAT(info, HasSubstring(existing_function)) << "Name of function";
+    }
+}
