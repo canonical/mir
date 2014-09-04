@@ -154,7 +154,6 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
 
             if (!wait_on_buffer(lk))
                 return false;
-            
             *current_buffer.mutable_buffer() = next;
             return true;
         }
@@ -174,10 +173,11 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
             auto rpc_channel = connection->rpc_channel();
             mir::protobuf::DisplayServer::Stub server(
                 rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
+            current_buffer.mutable_buffer()->set_buffer_id(buffer_id_seq.begin()->as_value());
 
             for(auto const& id : buffer_id_seq)
             {
-                current_buffer.mutable_buffer()->set_buffer_id(id.as_value());
+                EXPECT_THAT(current_buffer.buffer().buffer_id(), testing::Eq(id.as_value()));
                 ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
             }
 
