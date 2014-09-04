@@ -47,6 +47,36 @@ TEST_F(ClientBufferTracker, just_added_buffer_is_known_by_client)
     EXPECT_THAT(tracker.buffer_from(id), testing::Eq(&stub_buffer0));
 }
 
+TEST_F(ClientBufferTracker, nullptrs_dont_affect_owned_buffers)
+{
+    mf::ClientBufferTracker tracker(3);
+    mg::BufferID const id{stub_buffer0.id()};
+
+    tracker.add(&stub_buffer0);
+    tracker.add(nullptr);
+    tracker.add(nullptr);
+    tracker.add(nullptr);
+    EXPECT_TRUE(tracker.client_has(id));
+    EXPECT_THAT(tracker.buffer_from(id), testing::Eq(&stub_buffer0));
+}
+
+TEST_F(ClientBufferTracker, dead_buffers_are_still_tracked)
+{
+    mf::ClientBufferTracker tracker(3);
+    mg::BufferID id{stub_buffer0.id()};
+    mg::Buffer* dead_buffer_ptr{nullptr};
+
+    {
+        mtd::StubBuffer dead_buffer;
+        tracker.add(&dead_buffer);
+        id = dead_buffer.id();
+        dead_buffer_ptr = &dead_buffer;
+    }
+
+    EXPECT_TRUE(tracker.client_has(id));
+    EXPECT_THAT(tracker.buffer_from(id), testing::Eq(dead_buffer_ptr));
+}
+
 TEST_F(ClientBufferTracker, unadded_buffer_is_unknown_by_client)
 {
     mf::ClientBufferTracker tracker(3);
@@ -93,8 +123,7 @@ TEST_F(ClientBufferTracker, old_buffers_expire_from_tracker)
 
 TEST_F(ClientBufferTracker, tracks_correct_number_of_buffers)
 {
-    mtd::StubBuffer buffers[10];
-
+    std::vector<mtd::StubBuffer> buffers(10);
     for (unsigned int tracker_size = 2; tracker_size < 10; ++tracker_size)
     {
         mf::ClientBufferTracker tracker{tracker_size};
@@ -219,11 +248,11 @@ TEST_F(SurfaceTracker, can_lookup_a_buffer_from_a_buffer_id)
     EXPECT_THAT(tracker.buffer_from(stub_buffer2.id()), Eq(&stub_buffer2));
     EXPECT_THROW({
         tracker.buffer_from(stub_buffer3.id());
-    }, std::runtime_error);
+    }, std::logic_error);
 
     tracker.track_buffer(surf_id0, &stub_buffer3);
     EXPECT_THAT(tracker.buffer_from(stub_buffer3.id()), Eq(&stub_buffer3));
     EXPECT_THROW({
         tracker.buffer_from(stub_buffer0.id());
-    }, std::runtime_error);
+    }, std::logic_error);
 }

@@ -404,6 +404,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
+    signal(SIGHUP, shutdown);
 
     *width = surfaceparm.width;
     *height = surfaceparm.height;

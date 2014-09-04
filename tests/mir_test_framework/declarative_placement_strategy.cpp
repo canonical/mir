@@ -42,13 +42,13 @@ ms::SurfaceCreationParameters mtf::DeclarativePlacementStrategy::place(ms::Sessi
     
     if (surface_geometries_by_name.find(name) != surface_geometries_by_name.end())
     {
-        auto const& geometry = surface_geometries_by_name[name];
+        auto const& geometry = surface_geometries_by_name.at(name);
         placed.top_left = geometry.top_left;
         placed.size = geometry.size;        
     }
     if (surface_depths_by_name.find(name) != surface_depths_by_name.end())
     {
-        placed.depth = surface_depths_by_name[name];
+        placed.depth = surface_depths_by_name.at(name);
     }
 
     return placed;

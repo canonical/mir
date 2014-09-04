@@ -91,7 +91,7 @@ struct DisconnectingTestingClientConfiguration : mtf::TestingClientConfiguration
             EXPECT_TRUE(mir_connection_is_valid(connection));
             /*
              * Set a null callback to avoid killing the process
-             * (default callback raises SIGTERM).
+             * (default callback raises SIGHUP).
              */
             mir_connection_set_lifecycle_event_callback(connection,
                                                         null_lifecycle_callback,
@@ -226,5 +226,7 @@ TEST_F(ServerDisconnect, causes_client_to_terminate_by_default)
         ASSERT_EQ(1, client_results.size());
         EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal,
                   client_results[0].reason);
+        int sig = client_results[0].signal;
+        EXPECT_TRUE(sig == SIGHUP || sig == SIGKILL /* (Valgrind) */);
     });
 }

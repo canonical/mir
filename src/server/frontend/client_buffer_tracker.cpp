@@ -33,7 +33,11 @@ mf::ClientBufferTracker::ClientBufferTracker(unsigned int client_cache_size)
 
 void mf::ClientBufferTracker::add(mg::Buffer* buffer)
 {
-    auto existing_buffer = std::find(buffers.begin(), buffers.end(), buffer);
+    if (!buffer)
+        return;
+
+    IdBufferAssociation buf_id{buffer->id(), buffer};
+    auto existing_buffer = std::find(buffers.begin(), buffers.end(), buf_id);
 
     if (existing_buffer != buffers.end())
     {
@@ -42,7 +46,7 @@ void mf::ClientBufferTracker::add(mg::Buffer* buffer)
     }
     else
     {
-        buffers.push_front(buffer);
+        buffers.push_front(buf_id);
     }
     if (buffers.size() > cache_size)
     {
@@ -53,15 +57,15 @@ void mf::ClientBufferTracker::add(mg::Buffer* buffer)
 mg::Buffer* mf::ClientBufferTracker::buffer_from(mg::BufferID const& buffer_id) const
 {
     auto it = std::find_if(buffers.begin(), buffers.end(),
-        [&buffer_id](mg::Buffer* buffer)
+        [&buffer_id](IdBufferAssociation b)
         {
-            return (buffer->id() == buffer_id);
+            return (std::get<0>(b) == buffer_id);
         });
 
     if (it == buffers.end())
         return nullptr;
     else
-        return *it;
+        return std::get<1>(*it);
 }
 
 bool mf::ClientBufferTracker::client_has(mg::BufferID const& buffer_id) const

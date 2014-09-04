@@ -27,7 +27,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 7) # This should change at least with every MIRSERVER_ABI
+set(MIR_VERSION_MINOR 8) # This should change at least with every MIRSERVER_ABI
 set(MIR_VERSION_PATCH 0)
 
 set(MIR_VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH})
@@ -104,7 +104,7 @@ add_definitions(-DLOG_NDEBUG=1)
 
 enable_testing()
 
-include_directories(include/shared)
+include_directories(include/common include.private/common)
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS date_time system program_options iostreams REQUIRED)
@@ -200,7 +200,7 @@ if (MIR_ENABLE_TESTS)
 
   # There's no nice way to format this. Thanks CMake.
   add_test(LGPL-required
-    /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/shared ${PROJECT_SOURCE_DIR}/include/shared ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform"
+    /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/common ${PROJECT_SOURCE_DIR}/include/common ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform"
   )
   add_test(GPL-required
     /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/include/test ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"

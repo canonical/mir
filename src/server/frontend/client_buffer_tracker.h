@@ -21,6 +21,7 @@
 
 #include "mir/graphics/buffer_id.h"
 #include <stdint.h>
+#include <tuple>
 #include <list>
 
 namespace mir
@@ -47,12 +48,12 @@ public:
     /// Add a Buffer to the list of buffers known by the client.
     ///
     /// Typically this should be done just prior to or just after sending the buffer information
-    void add(graphics::Buffer* id);
+    void add(graphics::Buffer* buffer);
     bool client_has(graphics::BufferID const& id) const;
     graphics::Buffer* buffer_from(graphics::BufferID const& id) const;
 private:
-
-    std::list<graphics::Buffer*> buffers;
+    typedef std::tuple<graphics::BufferID, graphics::Buffer*> IdBufferAssociation;
+    std::list<IdBufferAssociation> buffers;
     unsigned int const cache_size;
 };
 
