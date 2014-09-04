@@ -71,15 +71,24 @@ TEST(PeriodicPerfReport, reports_the_right_numbers)
 
     int const nframes = 1000;
     long const expected_render_time = render_time.count();
-//    long const expected_lag = nbuffers * frame_time.count();
+    long const expected_lag =
+        nbuffers * frame_time.count() - expected_render_time;
 
     using namespace testing;
+
+    int const nreports = nframes / (period.count() * fps);
     EXPECT_CALL(report, display(StrEq(name),
                                 fps*100,
                                 expected_render_time,
-                                _, //expected_lag,
+                                Le(expected_lag), // first report is less
                                 nbuffers))
-                .Times(nframes / fps);
+                .Times(1);
+    EXPECT_CALL(report, display(StrEq(name),
+                                fps*100,
+                                expected_render_time,
+                                expected_lag, // exact, after first report
+                                nbuffers))
+                .Times(nreports - 1);
 
     for (int f = 0; f < nframes; ++f)
     {
