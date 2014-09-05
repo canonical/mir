@@ -22,7 +22,6 @@
 #include "android_graphic_buffer_allocator.h"
 #include "resource_factory.h"
 #include "android_display.h"
-#include "internal_client.h"
 #include "output_builder.h"
 #include "hwc_loggers.h"
 #include "mir/graphics/platform_ipc_package.h"
