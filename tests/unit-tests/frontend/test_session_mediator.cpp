@@ -197,7 +197,6 @@ class MockPlatform : public mg::Platform
                      std::shared_ptr<mg::GLProgramFactory> const&,
                      std::shared_ptr<mg::GLConfig> const&));
     MOCK_METHOD0(get_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
-    MOCK_METHOD0(create_internal_client, std::shared_ptr<mg::InternalClient>());
     MOCK_CONST_METHOD3(fill_buffer_package,
         void(mg::BufferIPCPacker*, mg::Buffer const*, mg::BufferIpcMsgType));
     MOCK_CONST_METHOD0(egl_native_display, EGLNativeDisplayType());

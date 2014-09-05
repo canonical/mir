@@ -20,7 +20,6 @@
 #include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/event_handler_register.h"
 #include "src/platform/graphics/mesa/platform.h"
-#include "src/platform/graphics/mesa/internal_client.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/emergency_cleanup_registry.h"
 
@@ -217,19 +216,6 @@ TEST_F(MesaGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
     EXPECT_THROW({
         authenticator->drm_auth_magic(magic);
     }, std::runtime_error);
-}
-
-TEST_F(MesaGraphicsPlatform, platform_provides_validation_of_display_for_internal_clients)
-{
-    MirMesaEGLNativeDisplay* native_display = nullptr;
-    EXPECT_EQ(MIR_MESA_FALSE, mgm::mir_server_mesa_egl_native_display_is_valid(native_display));
-    {
-        auto platform = create_platform();
-        auto client = platform->create_internal_client();
-        native_display = reinterpret_cast<MirMesaEGLNativeDisplay*>(client->egl_native_display());
-        EXPECT_EQ(MIR_MESA_TRUE, mgm::mir_server_mesa_egl_native_display_is_valid(native_display));
-    }
-    EXPECT_EQ(MIR_MESA_FALSE, mgm::mir_server_mesa_egl_native_display_is_valid(native_display));
 }
 
 TEST_F(MesaGraphicsPlatform, egl_native_display_is_gbm_device)

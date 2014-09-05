@@ -94,11 +94,6 @@ std::shared_ptr<mg::PlatformIPCPackage> mgn::NestedPlatform::get_ipc_package()
     return native_platform->get_ipc_package();
 }
 
-std::shared_ptr<mg::InternalClient> mgn::NestedPlatform::create_internal_client()
-{
-    return native_platform->create_internal_client();
-}
-
 void mgn::NestedPlatform::fill_buffer_package(
     BufferIPCPacker* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const
 {

@@ -169,7 +169,6 @@ set (INSTALL_DEMOS
   mir_demo_standalone_render_surfaces
 )
 
-add_subdirectory(demo-inprocess-surface-client)
 add_subdirectory(demo-shell)
 add_subdirectory(testdraw)
 

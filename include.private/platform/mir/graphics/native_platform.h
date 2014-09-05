@@ -51,8 +51,6 @@ public:
 
     virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
 
-    virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
-
     virtual void fill_buffer_package(
         BufferIPCPacker* packer,
         Buffer const* buffer,

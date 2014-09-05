@@ -20,7 +20,6 @@
 #include "native_platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
-#include "internal_client.h"
 #include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -206,14 +205,6 @@ void mgm::Platform::fill_buffer_package(
 void mgm::Platform::drm_auth_magic(unsigned int magic)
 {
     drm->auth_magic(magic);
-}
-
-std::shared_ptr<mg::InternalClient> mgm::Platform::create_internal_client()
-{
-    if (!internal_native_display)
-        internal_native_display = std::make_shared<mgm::InternalNativeDisplay>(get_ipc_package());
-    internal_display_clients_present = true;
-    return std::make_shared<mgm::InternalClient>(internal_native_display);
 }
 
 EGLNativeDisplayType mgm::Platform::egl_native_display() const

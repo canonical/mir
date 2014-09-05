@@ -196,7 +196,6 @@ MIR_SERVER_25 {
     mir::DisplayServer::run*;
     mir::DisplayServer::stop*;
     mir::EmergencyCleanup::operator*;
-    mir::frontend::as_internal_surface*;
     mir::frontend::ConnectionContext::ConnectionContext*;
     mir::frontend::ConnectionContext::fd_for_new_client*;
     mir::frontend::ConnectionCreator::?ConnectionCreator*;

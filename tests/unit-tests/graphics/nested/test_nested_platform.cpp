@@ -60,11 +60,6 @@ public:
         return {};
     }
 
-    std::shared_ptr<mg::InternalClient> create_internal_client() override
-    {
-        return {};
-    }
-
     void fill_buffer_package(
         mg::BufferIPCPacker*, mg::Buffer const*, mg::BufferIpcMsgType) const override {}
 };

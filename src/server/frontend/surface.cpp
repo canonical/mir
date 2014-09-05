@@ -17,8 +17,6 @@
  */
 
 #include "mir/frontend/surface.h"
-
-#include "mir/graphics/internal_surface.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/frontend/client_constants.h"
@@ -31,28 +29,6 @@
 
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
-
-auto mf::as_internal_surface(std::shared_ptr<Surface> const& surface)
-    -> std::shared_ptr<graphics::InternalSurface>
-{
-    class ForwardingInternalSurface : public mg::InternalSurface
-    {
-    public:
-        ForwardingInternalSurface(std::shared_ptr<Surface> const& surface) : surface(surface) {}
-
-    private:
-        void swap_buffers(graphics::Buffer*& buffer)
-        {
-            surface->swap_buffers_blocking(buffer);
-        }
-        virtual mir::geometry::Size size() const { return surface->client_size(); }
-        virtual MirPixelFormat pixel_format() const { return surface->pixel_format(); }
-
-        std::shared_ptr<Surface> const surface;
-    };
-
-    return std::make_shared<ForwardingInternalSurface>(surface);
-}
 
 void mf::Surface::swap_buffers_blocking(graphics::Buffer*& buffer)
 {

@@ -118,11 +118,6 @@ public:
         BufferIPCPacker* packer,
         Buffer const* buffer,
         BufferIpcMsgType msg_type) const = 0;
-
-    /**
-     * Creates the in-process client support object.
-     */
-    virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
 };
 
 /**

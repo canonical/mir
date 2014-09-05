@@ -25,7 +25,6 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/nested_context.h"
 
-#include "internal_client.h"
 #include "internal_native_display.h"
 
 #include <boost/exception/errinfo_errno.hpp>
@@ -89,12 +88,6 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
     nested_context->drm_auth_magic(magic);
 
     return std::make_shared<MesaNativePlatformIPCPackage>(auth_fd);
-}
-
-std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
-{
-    auto nd = ensure_internal_native_display(get_ipc_package());
-    return std::make_shared<mgm::InternalClient>(nd);
 }
 
 /* TODO : this is just a duplication of mgm::Platform::fill_buffer_package */
