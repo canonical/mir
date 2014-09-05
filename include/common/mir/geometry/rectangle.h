@@ -20,7 +20,7 @@
 #ifndef MIR_GEOMETRY_RECTANGLE_H_
 #define MIR_GEOMETRY_RECTANGLE_H_
 
-#include "point.h"
+#include "mir/geometry/point.h"
 #include "size.h"
 
 #include <iosfwd>

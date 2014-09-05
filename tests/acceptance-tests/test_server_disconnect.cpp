@@ -226,6 +226,7 @@ TEST_F(ServerDisconnect, causes_client_to_terminate_by_default)
         ASSERT_EQ(1, client_results.size());
         EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal,
                   client_results[0].reason);
-        EXPECT_EQ(SIGHUP, client_results[0].signal);
+        int sig = client_results[0].signal;
+        EXPECT_TRUE(sig == SIGHUP || sig == SIGKILL /* (Valgrind) */);
     });
 }
