@@ -106,7 +106,6 @@ class StubbedSession : public mtd::StubSession
 {
 public:
     StubbedSession() :
-        mock_buffer{std::make_shared<mtd::StubBuffer>()},
         last_surface_id{0}
     {
     }
@@ -120,11 +119,26 @@ public:
     {
         if (mock_surfaces.end() == mock_surfaces.find(id))
         {
-            mock_surfaces[id] = 
-                std::make_shared<testing::NiceMock<mtd::MockFrontendSurface>>(
-                    mock_buffer, testing_client_input_fd);
+            mock_surfaces[id] = create_mock_surface(); 
         }
         return mock_surfaces.at(id);
+    }
+
+    std::shared_ptr<mtd::MockFrontendSurface> create_mock_surface()
+    {
+        auto surface = std::make_shared<testing::NiceMock<mtd::MockFrontendSurface>>(testing_client_input_fd);
+        auto buffer1 = std::make_shared<mtd::StubBuffer>();
+        auto buffer2 = std::make_shared<mtd::StubBuffer>();
+        ON_CALL(*surface, swap_buffers(testing::_,testing::_))
+            .WillByDefault(testing::Invoke(
+            [buffer1, buffer2](mg::Buffer* b, std::function<void(mg::Buffer* new_buffer)> complete)
+            {
+                if ((!b) || (b == buffer1.get()))
+                    complete(buffer2.get());
+                if (b == buffer2.get())
+                    complete(buffer1.get()); 
+            }));
+        return surface;
     }
 
     mf::SurfaceId create_surface(ms::SurfaceCreationParameters const& /* params */) override
@@ -132,8 +146,7 @@ public:
         mf::SurfaceId id{last_surface_id};
         if (mock_surfaces.end() == mock_surfaces.find(id))
         {
-            mock_surfaces[id] = std::make_shared<testing::NiceMock<mtd::MockFrontendSurface>>(
-                mock_buffer, testing_client_input_fd);
+            mock_surfaces[id] = create_mock_surface(); 
         }
         last_surface_id++;
         return id;
@@ -145,7 +158,6 @@ public:
     }
 
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
-    std::shared_ptr<mtd::StubBuffer> mock_buffer;
     static int const testing_client_input_fd;
     int last_surface_id;
 };
@@ -244,17 +256,6 @@ struct SessionMediator : public ::testing::Test
     mp::Buffer buffer_response;
     mp::DRMMagic drm_request;
     mp::DRMAuthMagicStatus drm_response;
-
-    mtd::StubBuffer buffer1;
-    mtd::StubBuffer buffer2;
-
-    void toggle_buffers(mg::Buffer* b, std::function<void(mg::Buffer* new_buffer)> complete)
-    {
-        if ((!b) || (b == &buffer1))
-            complete(&buffer2);
-        if (b == &buffer2)
-            complete(&buffer1); 
-    }
 };
 }
 
@@ -417,9 +418,15 @@ TEST_F(SessionMediator, session_only_sends_mininum_information_for_buffers)
 {
     using namespace testing;
     mf::SurfaceId surf_id{0};
+    mtd::StubBuffer buffer1;
+    mtd::StubBuffer buffer2;
     auto surface = stubbed_session->mock_surface_at(surf_id);
-    ON_CALL(*surface, swap_buffers(_,_))
-        .WillByDefault(Invoke(this, &SessionMediator::toggle_buffers));
+    ON_CALL(*surface, swap_buffers(nullptr,_))
+        .WillByDefault(InvokeArgument<1>(&buffer2));
+    ON_CALL(*surface, swap_buffers(&buffer1,_))
+        .WillByDefault(InvokeArgument<1>(&buffer2));
+    ON_CALL(*surface, swap_buffers(&buffer2,_))
+        .WillByDefault(InvokeArgument<1>(&buffer1));
 
     //create
     Sequence seq;
@@ -448,12 +455,6 @@ TEST_F(SessionMediator, session_only_sends_mininum_information_for_buffers)
 TEST_F(SessionMediator, session_with_multiple_surfaces_only_sends_needed_buffers)
 {
     using namespace testing;
-    auto surface0 = stubbed_session->mock_surface_at(mf::SurfaceId{0});
-    auto surface1 = stubbed_session->mock_surface_at(mf::SurfaceId{1});
-    ON_CALL(*surface0, swap_buffers(_,_))
-        .WillByDefault(Invoke(this, &SessionMediator::toggle_buffers));
-    ON_CALL(*surface1, swap_buffers(_,_))
-        .WillByDefault(Invoke(this, &SessionMediator::toggle_buffers));
     EXPECT_CALL(*graphics_platform, fill_buffer_package(_,_,mg::BufferIpcMsgType::full_msg))
         .Times(4);
     EXPECT_CALL(*graphics_platform, fill_buffer_package(_,_,mg::BufferIpcMsgType::update_msg))

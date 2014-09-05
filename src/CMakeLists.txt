@@ -1,5 +1,5 @@
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
-add_subdirectory(shared/)
+add_subdirectory(common/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(platform/)

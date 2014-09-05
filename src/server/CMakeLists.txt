@@ -1,6 +1,9 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
-  ${PROJECT_SOURCE_DIR}/include/server)
+  ${PROJECT_SOURCE_DIR}/include.private/platform
+  ${PROJECT_SOURCE_DIR}/include/server
+  ${PROJECT_SOURCE_DIR}/include.private/server
+)
 
 add_subdirectory(compositor/)
 add_subdirectory(graphics/)
@@ -10,7 +13,6 @@ add_subdirectory(logging/)
 add_subdirectory(scene/)
 add_subdirectory(frontend/)
 add_subdirectory(shell/)
-add_subdirectory(time/)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -39,7 +41,6 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirgraphics>
   $<TARGET_OBJECTS:mirfrontend>
   $<TARGET_OBJECTS:mirshell>
-  $<TARGET_OBJECTS:mirtime>
   $<TARGET_OBJECTS:mirlttng>
   $<TARGET_OBJECTS:mirreport>
   $<TARGET_OBJECTS:mirlogging>
@@ -88,12 +89,14 @@ install(DIRECTORY
 )
 
 set(MIRSERVER_ABI 25) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(
   mirserver
 
   PROPERTIES
   SOVERSION ${MIRSERVER_ABI}
+  LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
