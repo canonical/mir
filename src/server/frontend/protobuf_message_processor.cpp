@@ -149,6 +149,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         {
             invoke(this, display_server.get(), &DisplayServer::next_buffer, invocation);
         }
+        else if ("exchange_buffer" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::exchange_buffer, invocation);
+        }
         else if ("release_surface" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::release_surface, invocation);
