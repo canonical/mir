@@ -43,6 +43,7 @@
 #include "src/server/input/null_input_dispatcher.h"
 #include "src/server/input/null_input_targeter.h"
 
+#include <system_error>
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -72,7 +73,7 @@ public:
         if (fd < 0)
             BOOST_THROW_EXCEPTION(
                 boost::enable_error_info(
-                    std::runtime_error("Failed to open dummy fd")) << boost::errinfo_errno(errno));
+                    std::system_error(errno, std::system_category(), "Failed to open dummy fd")));
     }
 
     std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override

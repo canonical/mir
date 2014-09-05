@@ -19,8 +19,8 @@
 #ifndef MIR_GEOMETRY_DISPLACEMENT_H_
 #define MIR_GEOMETRY_DISPLACEMENT_H_
 
-#include "dimensions.h"
-#include "point.h"
+#include "mir/geometry/dimensions.h"
+#include "mir/geometry/point.h"
 
 #include <iosfwd>
 

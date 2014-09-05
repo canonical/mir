@@ -61,7 +61,6 @@ public:
     Result kill_server_process();
     Result wait_for_shutdown_server_process();
     std::vector<Result> wait_for_shutdown_client_processes();
-    void kill_client_processes();
     void terminate_client_processes();
     void run_in_test_process(std::function<void()> const& run_code);
 

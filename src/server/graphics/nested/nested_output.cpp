@@ -19,6 +19,7 @@
 #include "nested_output.h"
 #include "host_connection.h"
 #include "mir/input/input_dispatcher.h"
+#include "mir/graphics/pixel_format_utils.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
