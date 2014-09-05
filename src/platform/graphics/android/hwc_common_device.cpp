@@ -34,7 +34,7 @@ static void invalidate_hook(const struct hwc_procs* /*procs*/)
 
 static void vsync_hook(const struct hwc_procs* procs, int /*disp*/, int64_t /*timestamp*/)
 {
-    auto self = reinterpret_cast<mga::HWCCallbacks const*>(procs)->self;
+    auto self = reinterpret_cast<mga::HWCCallbacks const*>(procs)->self.load();
     if (!self)
         return;
     self->notify_vsync();

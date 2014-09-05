@@ -25,6 +25,7 @@
 #include <memory>
 #include <mutex>
 #include <condition_variable>
+#include <atomic>
 
 namespace mir
 {
@@ -39,7 +40,7 @@ class HWCCommonDevice;
 struct HWCCallbacks
 {
     hwc_procs_t hooks;
-    HWCCommonDevice* self;
+    std::atomic<HWCCommonDevice*> self;
 };
 
 class HWCCommonDevice : public DisplayDevice
