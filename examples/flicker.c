@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
             swapinterval = 0;
             break;
         case 'q':
-            // Deprecated
+            /* Deprecated */
             break;
         case '?':
         case 'h':

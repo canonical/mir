@@ -260,7 +260,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                     cursor_name = argv[++i];
                     break;
                 case 'q':
-                    // Deprecated. Ignore.
+                    /* Deprecated. Ignore. */
                     break;
                 case 'h':
                 default:
