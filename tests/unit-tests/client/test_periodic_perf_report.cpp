@@ -31,7 +31,6 @@ class FakeClock : public time::Clock
 public:
     void elapse(time::Duration delta)
     {
-        //fprintf(stderr, "elapse %ld\n", (long)delta.count());
         now += delta;
     }
     time::Timestamp sample() const override
