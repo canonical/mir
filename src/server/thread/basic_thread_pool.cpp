@@ -35,6 +35,11 @@ public:
     {
     }
 
+    ~Worker()
+    {
+        exit();
+    }
+
     void operator()() noexcept
     try
     {
@@ -139,6 +144,8 @@ mt::BasicThreadPool::~BasicThreadPool() = default;
 
 std::future<void> mt::BasicThreadPool::run(std::function<void()> const& task)
 {
+    std::lock_guard<decltype(mutex)> lock{mutex};
+
     TaskId const generic_id = nullptr;
     WorkerThread* no_preferred_thread = nullptr;
     return run(no_preferred_thread, task, generic_id);
@@ -146,10 +153,12 @@ std::future<void> mt::BasicThreadPool::run(std::function<void()> const& task)
 
 std::future<void> mt::BasicThreadPool::run(std::function<void()> const& task, TaskId id)
 {
+    std::lock_guard<decltype(mutex)> lock{mutex};
     return run(find_thread_by(id), task, id);
 }
 
-std::future<void> mt::BasicThreadPool::run(WorkerThread* worker_thread, std::function<void()> const& task, TaskId id)
+std::future<void> mt::BasicThreadPool::run(WorkerThread* worker_thread,
+                                           std::function<void()> const& task, TaskId id)
 {
     // No pre-selected thread to execute task, find an idle thread
     if (worker_thread == nullptr)
@@ -172,6 +181,8 @@ std::future<void> mt::BasicThreadPool::run(WorkerThread* worker_thread, std::fun
 
 void mt::BasicThreadPool::shrink()
 {
+    std::lock_guard<decltype(mutex)> lock{mutex};
+
     int max_threads_to_remove = threads.size() - min_threads;
     auto it = std::remove_if(threads.begin(), threads.end(),
         [&max_threads_to_remove](std::unique_ptr<WorkerThread> const& worker_thread)

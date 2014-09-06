@@ -23,6 +23,7 @@
 #include <future>
 #include <vector>
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -51,8 +52,8 @@ private:
     WorkerThread *find_thread_by(TaskId id);
     WorkerThread *find_idle_thread();
 
+    std::mutex mutex;
     int const min_threads;
-
     std::vector<std::unique_ptr<WorkerThread>> threads;
 };
 
