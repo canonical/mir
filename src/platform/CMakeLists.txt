@@ -5,6 +5,10 @@ include_directories(
 
 set(MIRPLATFORM_ABI 2)
 
+set(MIR_GRAPHICS_DRIVER mirplatform${MIRPLATFORM_ABI}graphics)
+set(MIR_GRAPHICS_DRIVER_BINARY libmirplatform${MIRPLATFORM_ABI}graphics.so)
+add_definitions(-DMIR_GRAPHICS_DRIVER_BINARY="${MIR_GRAPHICS_DRIVER_BINARY}")
+
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_library(mirplatformobjects OBJECT
