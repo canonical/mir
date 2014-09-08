@@ -7,7 +7,9 @@ include_directories(
   system/extras/ext4_utils
 
   ${PROJECT_SOURCE_DIR}/include/server
+  ${PROJECT_SOURCE_DIR}/include.private/server
   ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/include.private/platform
 )
 
 add_definitions(

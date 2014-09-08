@@ -47,6 +47,15 @@ mtd::MockGL::MockGL()
             }));
 }
 
+void mtd::MockGL::provide_gles_extensions()
+{
+    using namespace testing;
+    const char* gl_exts = "GL_OES_EGL_image";
+
+    ON_CALL(*this, glGetString(GL_EXTENSIONS))
+        .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
+}
+
 mtd::MockGL::~MockGL()
 {
     global_mock_gl = NULL;

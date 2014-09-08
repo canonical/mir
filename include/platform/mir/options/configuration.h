@@ -19,7 +19,7 @@
 #ifndef MIR_OPTIONS_CONFIGURATION_H_
 #define MIR_OPTIONS_CONFIGURATION_H_
 
-#include "mir/options/program_option.h"
+#include "mir/options/option.h"
 
 #include <memory>
 

@@ -59,11 +59,11 @@ TEST(DefaultFocusMechanism, mechanism_notifies_default_surface_of_focus_changes)
         surface_coordinator);
 
     InSequence seq;
+    EXPECT_CALL(*surface_coordinator, raise(_)).Times(1);
     EXPECT_CALL(*mock_surface1, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
     EXPECT_CALL(*surface_coordinator, raise(_)).Times(1);
     EXPECT_CALL(*mock_surface1, configure(mir_surface_attrib_focus, mir_surface_unfocused)).Times(1);
     EXPECT_CALL(*mock_surface2, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
-    EXPECT_CALL(*surface_coordinator, raise(_)).Times(1);
 
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
     focus_mechanism.set_focus_to(mt::fake_shared(app2));
@@ -86,7 +86,7 @@ TEST(DefaultFocusMechanism, sets_input_focus)
     }
 
     NiceMock<mtd::MockInputTargeter> targeter;
-    
+
     msh::DefaultFocusMechanism focus_mechanism(mt::fake_shared(targeter), surface_coordinator);
 
     {
@@ -102,4 +102,25 @@ TEST(DefaultFocusMechanism, sets_input_focus)
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
     focus_mechanism.set_focus_to(mt::fake_shared(app1));
     focus_mechanism.set_focus_to(std::shared_ptr<ms::Session>());
+}
+
+TEST(DefaultFocusMechanism, notifies_surface_of_focus_change_after_it_has_taken_the_focus)
+{
+    using namespace ::testing;
+
+    NiceMock<mtd::MockSceneSession> app;
+    auto const mock_surface = std::make_shared<NiceMock<mtd::MockSurface>>();
+    auto const surface_coordinator = std::make_shared<NiceMock<mtd::MockSurfaceCoordinator>>();
+
+    ON_CALL(app, default_surface()).WillByDefault(Return(mock_surface));
+
+    msh::DefaultFocusMechanism focus_mechanism(
+        std::make_shared<mtd::StubInputTargeter>(),
+        surface_coordinator);
+
+    InSequence seq;
+    EXPECT_CALL(*mock_surface, take_input_focus(_));
+    EXPECT_CALL(*mock_surface, configure(mir_surface_attrib_focus, mir_surface_focused)).Times(1);
+
+    focus_mechanism.set_focus_to(mt::fake_shared(app));
 }

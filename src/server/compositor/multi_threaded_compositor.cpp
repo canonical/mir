@@ -195,7 +195,8 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       display_buffer_compositor_factory{db_compositor_factory},
       report{compositor_report},
       state{CompositorState::stopped},
-      compose_on_start{compose_on_start}
+      compose_on_start{compose_on_start},
+      thread_pool{1}
 {
     observer = std::make_shared<ms::LegacySceneChangeNotification>(
     [this]()
@@ -289,9 +290,11 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
         auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, buffer, report};
         auto thread_functor = std::unique_ptr<mc::CompositingFunctor>(thread_functor_raw);
 
-        threads.push_back(std::thread{std::ref(*thread_functor)});
+        futures.push_back(thread_pool.run(std::ref(*thread_functor), &buffer));
         thread_functors.push_back(std::move(thread_functor));
     });
+
+    thread_pool.shrink();
 
     state = CompositorState::started;
 }
@@ -307,11 +310,11 @@ void mc::MultiThreadedCompositor::destroy_compositing_threads(std::unique_lock<s
     for (auto& f : thread_functors)
         f->stop();
 
-    for (auto& t : threads)
-        t.join();
+    for (auto& f : futures)
+        f.wait();
 
     thread_functors.clear();
-    threads.clear();
+    futures.clear();
 
     report->stopped();
 
