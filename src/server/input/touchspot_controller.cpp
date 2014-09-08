@@ -125,6 +125,19 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
 {
     std::lock_guard<std::mutex> lg(guard);
     
+    if (!enabled)
+    {
+        int i = 0;
+        while (renderables_in_use)
+        {
+            auto const& renderable = touchspot_renderables[i];
+            scene->remove_input_visualization(renderable);
+            renderables_in_use--;
+            i++;
+        }
+        return;
+    }
+    
     // We can assume the maximum number of touches will not grow unreasonably large
     // and so we just grow a pool of TouchspotRenderables as needed
     while (touchspot_renderables.size() < touches.size())
@@ -144,7 +157,7 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
             // We will only add new visualizations when "enabled", however we still wish to run the main
             // logic when disabled, such that we can remove spots from a gesture which was active at the 
             // time ::disable was called.
-            if (renderables_in_use <= i && enabled)
+            if (renderables_in_use <= i)
             {
                 renderables_in_use++;
                 scene->add_input_visualization(renderable);
