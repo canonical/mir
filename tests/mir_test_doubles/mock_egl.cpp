@@ -122,6 +122,15 @@ mtd::MockEGL::MockEGL()
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(extension_glEGLImageTargetTexture2DOES)));
 }
 
+void mtd::MockEGL::provide_egl_extensions()
+{
+    using namespace testing;
+
+    const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_KHR_image_pixmap";
+    ON_CALL(*this, eglQueryString(_,EGL_EXTENSIONS))
+        .WillByDefault(Return(egl_exts));
+}
+
 mtd::MockEGL::~MockEGL()
 {
     global_mock_egl = NULL;

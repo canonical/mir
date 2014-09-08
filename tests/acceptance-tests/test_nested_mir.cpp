@@ -194,10 +194,8 @@ struct NestedMockEGL : mir::test::doubles::MockEGL
         EXPECT_CALL(*this, eglDestroySurface(_, _)).Times(AnyNumber());
 
         EXPECT_CALL(*this, eglQueryString(_, _)).Times(AnyNumber());
-        ON_CALL(*this, eglQueryString(_,EGL_EXTENSIONS))
-            .WillByDefault(Return("EGL_KHR_image "
-                                  "EGL_KHR_image_base "
-                                  "EGL_MESA_drm_image"));
+
+        provide_egl_extensions();
 
         EXPECT_CALL(*this, eglChooseConfig(_, _, _, _, _)).Times(AnyNumber()).WillRepeatedly(
             DoAll(WithArgs<2, 4>(Invoke(this, &NestedMockEGL::egl_choose_config)), Return(EGL_TRUE)));
