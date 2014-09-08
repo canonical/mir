@@ -37,7 +37,6 @@ f90a35371e236a6cfec8e9a8474dbb3305c7621e  include/platform/mir/graphics/internal
 c9730cac4a3a101f9706ec6f444958abe047fd88  include/platform/mir/graphics/internal_surface.h
 32c70ee44b8dc9372dec0c54471aa8d831adcb1c  include/platform/mir/graphics/pixel_format_utils.h
 9a23e20efb960de448995fe327900235b69f1220  include/platform/mir/graphics/platform.h
-1fbe488b4581486fd01e2f03e504f31b72c09040  include/platform/mir/graphics/platform_ipc_operations.h
 15f201741a465de33e55ffc1ea775b507a5be950  include/platform/mir/graphics/renderable.h
 b0014e8c4f44f831c9d178f995efb172417aaee4  include/platform/mir/options/configuration.h
 47007c783c174f8e94d332c4b13c6b01358b48fb  include/platform/mir/options/default_configuration.h
