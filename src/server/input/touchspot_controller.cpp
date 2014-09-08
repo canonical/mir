@@ -123,6 +123,7 @@ mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAl
 
 void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches)
 {
+    {
     std::lock_guard<std::mutex> lg(guard);
     
     if (!enabled)
@@ -171,7 +172,8 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
             scene->remove_input_visualization(renderable);
         }
     }
-    
+    } // release mutex
+
     // TODO (hackish): We may have just moved renderables which with the current
     // architecture of surface observers will not trigger a propagation to the
     // compositor damage callback we need this "emit_scene_changed".
