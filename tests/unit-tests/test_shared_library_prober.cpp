@@ -49,7 +49,8 @@ public:
         : library_path{mtf::executable_path() + "/test_data"}
     {
         // Can't use std::string, as mkdtemp mutates its argument.
-        auto tmp_name = std::unique_ptr<char[]>{strdup("/tmp/mir_empty_directory_XXXXXX")};
+        auto tmp_name = std::unique_ptr<char[], std::function<void(char*)>>{strdup("/tmp/mir_empty_directory_XXXXXX"),
+                                                                            [](char* data) {free(data);}};
         if (mkdtemp(tmp_name.get()) == NULL)
         {
             throw std::system_error{errno, std::system_category(), "Failed to create temporary directory"};
