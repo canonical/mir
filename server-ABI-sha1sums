@@ -68,7 +68,6 @@ b729a7710c37d9f1fba56a6f8e8eae1c2559f57a  include/server/mir/frontend/session_au
 e5ea465ed7e05f0e1d6a837d0d6b3a04c2d7fc19  include/server/mir/frontend/session.h
 68468aa2298c4e2cdc1bbb7cb5f250a914ae16c9  include/server/mir/frontend/shell.h
 45004ac94e3c8c4e73b59ce30671fd142306b7da  include/server/mir/frontend/surface.h
-5fe89aeec86d0fe2055c1b90ccf5f3314dfcc165  include/server/mir/frontend/surface.h.~1~
 618b43a84cce0ad671ed68fe2ba796fbc7b79e31  include/server/mir/frontend/surface_id.h
 5aa4c4db5468d9b9fe8e98a64444538aadd6e17b  include/server/mir/frontend/template_protobuf_message_processor.h
 f95c2bddf13d15993ef5d6a0ad7b9106ae550b87  include/server/mir/input/composite_event_filter.h
