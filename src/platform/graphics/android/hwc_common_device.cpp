@@ -34,7 +34,9 @@ static void invalidate_hook(const struct hwc_procs* /*procs*/)
 
 static void vsync_hook(const struct hwc_procs* procs, int /*disp*/, int64_t /*timestamp*/)
 {
-    auto self = reinterpret_cast<mga::HWCCallbacks const*>(procs)->self;
+    auto self = reinterpret_cast<mga::HWCCallbacks const*>(procs)->self.load();
+    if (!self)
+        return;
     self->notify_vsync();
 }
 
@@ -46,15 +48,16 @@ static void hotplug_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int /*
 mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<HwcWrapper> const& hwc_device,
                                       std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : coordinator(coordinator),
+      callbacks(std::make_shared<mga::HWCCallbacks>()),
       hwc_device(hwc_device),
       current_mode(mir_power_mode_on)
 {
-    callbacks.hooks.invalidate = invalidate_hook;
-    callbacks.hooks.vsync = vsync_hook;
-    callbacks.hooks.hotplug = hotplug_hook;
-    callbacks.self = this;
+    callbacks->hooks.invalidate = invalidate_hook;
+    callbacks->hooks.vsync = vsync_hook;
+    callbacks->hooks.hotplug = hotplug_hook;
+    callbacks->self = this;
 
-    hwc_device->register_hooks(&callbacks.hooks);
+    hwc_device->register_hooks(callbacks);
 
     try
     {
@@ -78,6 +81,7 @@ mga::HWCCommonDevice::~HWCCommonDevice() noexcept
         {
         }
     }
+    callbacks->self = nullptr;
 }
 
 void mga::HWCCommonDevice::notify_vsync()

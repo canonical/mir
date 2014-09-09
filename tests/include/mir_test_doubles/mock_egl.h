@@ -86,6 +86,8 @@ public:
     MockEGL();
     ~MockEGL();
 
+    void provide_egl_extensions();
+
     typedef void (*generic_function_pointer_t)(void);
 
     MOCK_METHOD1(eglGetDisplay, EGLDisplay(NativeDisplayType));

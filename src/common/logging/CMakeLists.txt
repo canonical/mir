@@ -17,6 +17,7 @@
 add_library(mirsharedlogging OBJECT
   dumb_console_logger.cpp
   input_timestamp.cpp
+  shared_library_prober_report.cpp
 )
 
 list(APPEND MIR_COMMON_SOURCES

@@ -61,8 +61,6 @@ TRACEPOINT_EVENT(TRACEPOINT_PROVIDER,
                  TP_ARGS(char const*, diagnostics),
                  TP_FIELDS(ctf_string(diagnostics, diagnostics)))
 
-#include "lttng_utils_pop.h"
-
 #endif /* MIR_LTTNG_CONNECTOR_REPORT_TP_H_ */
 
 #include <lttng/tracepoint-event.h>
