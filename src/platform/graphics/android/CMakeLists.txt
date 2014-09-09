@@ -59,7 +59,7 @@ target_link_libraries(
   ${ANDROID_PROPERTIES_LDFLAGS}
 )
 
-install(TARGETS mirplatformgraphicsandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/platformgraphics/android)
+install(TARGETS mirplatformgraphicsandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/${PLATFORM_GRAPHICS}/android)
 
 if (MIR_TEST_PLATFORM STREQUAL "android")
   add_custom_command(TARGET mirplatformgraphicsandroid
@@ -71,7 +71,7 @@ if (MIR_TEST_PLATFORM STREQUAL "android")
 
   install(CODE
     "execute_process(
-       COMMAND ln -sf mir/platformgraphics/android/${MIR_GRAPHICS_DRIVER_BINARY}
+       COMMAND ln -sf mir/${PLATFORM_GRAPHICS}/android/${MIR_GRAPHICS_DRIVER_BINARY}
        WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
      )"
   )

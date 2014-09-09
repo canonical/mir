@@ -34,7 +34,7 @@ pushd ${BUILD_DIR} > /dev/null
              lib/libmirclient.so.* \
              lib/libmircommon.so.* \
              lib/libmirplatform.so.* \
-             lib/libmirplatformgraphics.so \
+             lib/libmirplatform*graphics.so \
              lib/libmirclientplatform.so \
              lib/libmirserver.so.*
     do

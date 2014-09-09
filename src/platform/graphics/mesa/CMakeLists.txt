@@ -55,7 +55,7 @@ target_link_libraries(mirplatformgraphicsmesa
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
 
-install(TARGETS mirplatformgraphicsmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/platformgraphics/mesa)
+install(TARGETS mirplatformgraphicsmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/${PLATFORM_GRAPHICS}/mesa)
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa")
   add_custom_command(TARGET mirplatformgraphicsmesa
@@ -67,7 +67,7 @@ if (MIR_TEST_PLATFORM STREQUAL "mesa")
 
   install(CODE
     "execute_process(
-       COMMAND ln -sf mir/platformgraphics/mesa/${MIR_GRAPHICS_DRIVER_BINARY}
+       COMMAND ln -sf mir/${PLATFORM_GRAPHICS}/mesa/${MIR_GRAPHICS_DRIVER_BINARY}
        WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
      )"
   )
