@@ -1,3 +1,11 @@
+mir (0.7.1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.7.1 (https://launchpad.net/mir/+milestone/0.7.1)
+    - Bug fixes
+      . Recycle compositor threads by using a thread pool (LP: #1362841) 
+
+ -- Alberto Aguirre <alberto.aguirre@canonical.com>  Tue, 09 Sep 2014 11:35:26 -0500
+
 mir (0.7.0+14.10.20140829-0ubuntu1) utopic; urgency=medium
 
   [ Daniel van Vugt ]
