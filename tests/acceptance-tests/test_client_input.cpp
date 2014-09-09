@@ -167,8 +167,8 @@ struct RegionApplyingSurfaceCoordinator : msh::SurfaceCoordinatorWrapper
 struct TestServerConfiguration : mtf::FakeEventHubServerConfiguration
 {
     TestServerConfiguration(geom::Rectangle const& screen_geometry)
-        : mtf::FakeEventHubServerConfiguration{
-              std::vector<geom::Rectangle>{screen_geometry}}
+        : mtf::FakeEventHubServerConfiguration(
+              std::vector<geom::Rectangle>{screen_geometry})
     {
     }
 

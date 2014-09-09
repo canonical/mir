@@ -27,6 +27,8 @@
 
 namespace mir
 {
+class SharedLibraryProberReport;
+
 namespace input
 {
 namespace receiver
@@ -57,6 +59,7 @@ public:
     std::shared_ptr<LifecycleControl> the_lifecycle_control();
     std::shared_ptr<EventSink> the_event_sink();
     std::shared_ptr<EventHandlerRegister> the_event_handler_register();
+    std::shared_ptr<mir::SharedLibraryProberReport> the_shared_library_prober_report();
     std::shared_ptr<SharedLibrary> the_platform_library() override;
 
     virtual std::string the_socket_file();
@@ -78,6 +81,7 @@ protected:
 
     CachedPtr<rpc::RpcReport> rpc_report;
     CachedPtr<input::receiver::InputReceiverReport> input_receiver_report;
+    CachedPtr<mir::SharedLibraryProberReport>  shared_library_prober_report;
 
 private:
     std::string const socket_file;
