@@ -77,18 +77,9 @@ void bo_user_data_destroy(gbm_bo* /*bo*/, void *data)
 void ensure_egl_image_extensions()
 {
     std::string ext_string;
-    const char* exts = eglQueryString(eglGetCurrentDisplay(), EGL_EXTENSIONS);
+    const char* exts = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
     if (exts)
         ext_string = exts;
-
-    if (ext_string.find("EGL_MESA_drm_image") == std::string::npos)
-        BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGL_MESA_drm_image extension"));
-
-    exts = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
-    if (exts)
-        ext_string = exts;
-    else
-        ext_string.clear();
 
     if (ext_string.find("GL_OES_EGL_image") == std::string::npos)
         BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support GL_OES_EGL_image extension"));
