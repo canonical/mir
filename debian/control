@@ -19,6 +19,7 @@ Build-Depends: cmake,
                libboost-program-options-dev,
                libboost-system-dev,
                libboost-iostreams-dev,
+               libboost-filesystem-dev,
                protobuf-compiler,
                libdrm-dev,
                libegl1-mesa-dev,
@@ -80,7 +81,6 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         libmirplatform2 (= ${binary:Version}),
 Description: Display server for Ubuntu - platform library for Mesa
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -95,7 +95,6 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         libmirplatform2 (= ${binary:Version}),
 Description: Display server for Ubuntu - platform library for Android
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.

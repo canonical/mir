@@ -16,6 +16,7 @@
 
 add_library(mirsharedsharedlibrary OBJECT
   shared_library.cpp
+  shared_library_prober.cpp
 )
 
 list(APPEND MIR_COMMON_SOURCES
