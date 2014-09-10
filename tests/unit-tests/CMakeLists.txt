@@ -21,6 +21,7 @@ set(
   test_basic_observers.cpp
   test_fatal.cpp
   test_fd.cpp
+  test_shared_library_prober.cpp
 )
 
 add_subdirectory(options/)
@@ -36,6 +37,7 @@ add_subdirectory(android_input/)
 add_subdirectory(scene/)
 add_subdirectory(draw/)
 add_subdirectory(examples/)
+add_subdirectory(thread/)
 
 link_directories(${LIBRARY_OUTPUT_PATH})
 
@@ -46,6 +48,8 @@ add_executable(mir_unit_tests
   ${MIR_PLATFORM_OBJECTS}
   ${MIR_COMMON_OBJECTS}
 )
+
+add_dependencies(mir_unit_tests GMock)
 
 uses_android_input(mir_unit_tests)
 
@@ -103,4 +107,10 @@ endif (MIR_RUN_UNIT_TESTS)
 install(
     TARGETS mir_unit_tests
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+add_custom_command(TARGET mir_unit_tests POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_data ${CMAKE_BINARY_DIR}/bin/test_data
+  COMMENT "Copying test data to build dir..."
 )

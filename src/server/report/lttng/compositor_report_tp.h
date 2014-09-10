@@ -69,8 +69,6 @@ TRACEPOINT_EVENT(
     )
 )
 
-#include "lttng_utils_pop.h"
-
 #endif /* MIR_LTTNG_COMPOSITOR_REPORT_TP_H_ */
 
 #include <lttng/tracepoint-event.h>

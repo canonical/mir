@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "src/shared/input/android/android_input_receiver.h"
+#include "src/common/input/android/android_input_receiver.h"
 #include "mir/input/null_input_receiver_report.h"
 #include "mir_toolkit/event.h"
 
@@ -65,13 +65,16 @@ public:
             0 /* down_time */,
             0 /* event_time */);
     }
-    void produce_a_motion_event()
+    void produce_a_motion_event(float x, float y, nsecs_t t)
     {
         droidinput::PointerProperties filler_pointer_properties;
         droidinput::PointerCoords filler_pointer_coordinates;
 
         memset(&filler_pointer_properties, 0, sizeof(droidinput::PointerProperties));
         memset(&filler_pointer_coordinates, 0, sizeof(droidinput::PointerCoords));
+
+        filler_pointer_coordinates.setAxisValue(AMOTION_EVENT_AXIS_X, x);
+        filler_pointer_coordinates.setAxisValue(AMOTION_EVENT_AXIS_Y, y);
 
         input_publisher->publishMotionEvent(
             incrementing_seq_id,
@@ -85,7 +88,7 @@ public:
             0 /* x_offset */, 0 /* y_offset */,
             0 /* x_precision */, 0 /* y_precision */,
             0 /* down_time */,
-            0 /* event_time */,
+            t,
             default_pointer_count,
             &filler_pointer_properties,
             &filler_pointer_coordinates);
@@ -188,9 +191,9 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     TestingInputProducer producer(server_fd);
 
     // Produce 3 motion events before client handles any.
-    producer.produce_a_motion_event();
-    producer.produce_a_motion_event();
-    producer.produce_a_motion_event();
+    producer.produce_a_motion_event(0, 0, 0);
+    producer.produce_a_motion_event(0, 0, 0);
+    producer.produce_a_motion_event(0, 0, 0);
 
     flush_channels();
 
@@ -199,5 +202,53 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     EXPECT_TRUE(receiver.next_event(next_event_timeout, ev));
     // Now there should be no events
     EXPECT_FALSE(receiver.next_event(std::chrono::milliseconds(1), ev)); // Minimal timeout needed for valgrind
+}
+
+TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
+{
+    using namespace testing;
+
+    nsecs_t t = 0;
+
+    mircva::InputReceiver receiver(
+        client_fd, std::make_shared<mircv::NullInputReceiverReport>(),
+        [&t](int) { return t; }
+        );
+    TestingInputProducer producer(server_fd);
+
+    nsecs_t const one_millisecond = 1000000ULL;
+    nsecs_t const one_second = 1000 * one_millisecond;
+    nsecs_t const device_sample_interval = one_second / 250;
+    nsecs_t const frame_interval = one_second / 60;
+    nsecs_t const gesture_duration = 1 * one_second;
+
+    nsecs_t last_produced = 0;
+    int frames_triggered = 0;
+
+    for (t = 0; t < gesture_duration; t += one_millisecond)
+    {
+        if (!t || t >= (last_produced + device_sample_interval))
+        {
+            last_produced = t;
+            float a = t * M_PI / 1000000.0f;
+            float x = 500.0f * sinf(a);
+            float y = 1000.0f * cosf(a);
+            producer.produce_a_motion_event(x, y, t);
+            flush_channels();
+        }
+
+        MirEvent ev;
+        if (receiver.next_event(std::chrono::milliseconds(0), ev))
+            ++frames_triggered;
+    }
+
+    // If the rendering time resulting from the gesture is longer than the
+    // gesture itself then that's laggy...
+    nsecs_t render_duration = frame_interval * frames_triggered;
+    EXPECT_THAT(render_duration, Le(gesture_duration));
+
+    int average_lag_milliseconds = (render_duration - gesture_duration) /
+                                   (frames_triggered * one_millisecond);
+    EXPECT_THAT(average_lag_milliseconds, Le(1));
 }
 
