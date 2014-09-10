@@ -1,0 +1,6 @@
+The Playground
+
+These are mir demos that excercise private in-flux mir functionality.
+As such functionality matures, related headers become public and the playground
+code may become an example of how to use such feature.
+

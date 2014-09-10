@@ -13,7 +13,7 @@ include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${PROJECT_SOURCE_DIR}/include/client
-  ${PROJECT_SOURCE_DIR}/include.private/client
+  ${PROJECT_SOURCE_DIR}/src/include/client
   ${DRM_INCLUDE_DIRS}
 )
 
