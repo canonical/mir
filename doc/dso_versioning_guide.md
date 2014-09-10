@@ -87,7 +87,7 @@ For example, if you wanted to change the signature of `mir_connection_create_sur
     /* The old implementation */
 
     /* The @@ specifies that this is the default version */
-    __asm__(".symver mir_connection_create_surface,mir_connection_create_surface@@MIR_CLIENT_8.1");
+    __asm__(".symver mir_connection_create_surface,mir_connection_create_surface@@@MIR_CLIENT_8.1");
     MirWaitHandle* mir_connection_create_surface(...)
     /* The new implementation */
 
