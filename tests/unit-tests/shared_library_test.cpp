@@ -51,7 +51,7 @@ private:
 #define EXPECT_THAT(target, condition) EXPECT_TRUE((target, condition))
 
 char const* const nonexistent_library  = "nonexistent_library";
-char const* const existing_library     = "libmirplatformgraphics.so";
+char const* const existing_library     = MIR_GRAPHICS_DRIVER_BINARY;
 char const* const nonexistent_function = "nonexistent_library";
 char const* const existing_function    = "create_platform";
 }
