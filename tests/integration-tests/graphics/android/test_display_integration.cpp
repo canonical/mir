@@ -66,7 +66,7 @@ protected:
         auto null_display_report = mir::report::null_display_report();
         auto stub_gl_config = std::make_shared<mtd::StubGLConfig>();
         auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
-            buffer_allocator, display_resource_factory, null_display_report, mga::OverlayOptimization::disabled);
+            buffer_allocator, display_resource_factory, null_display_report, mga::OverlayOptimization::enabled);
         auto program_factory = std::make_shared<mg::ProgramFactory>();
         display = std::make_shared<mga::AndroidDisplay>(
             display_buffer_factory, program_factory, stub_gl_config, null_display_report);
@@ -78,16 +78,15 @@ protected:
         display.reset();
         buffer_allocator.reset();
     }
-
-    md::glAnimationBasic gl_animation;
 };
 }
 
 TEST_F(AndroidDisplay, display_can_post)
 {
-    display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
+    display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
         buffer.make_current();
+        md::glAnimationBasic gl_animation;
         gl_animation.init_gl();
 
         gl_animation.render_gl();
@@ -100,7 +99,7 @@ TEST_F(AndroidDisplay, display_can_post)
 
 TEST_F(AndroidDisplay, display_can_post_overlay)
 {
-    display->for_each_display_buffer([this](mg::DisplayBuffer& db)
+    display->for_each_display_buffer([](mg::DisplayBuffer& db)
     {
         db.make_current();
         auto area = db.view_area();
