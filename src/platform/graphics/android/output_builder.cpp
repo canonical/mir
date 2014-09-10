@@ -22,6 +22,7 @@
 #include "display_buffer.h"
 #include "display_device.h"
 #include "framebuffers.h"
+#include "real_hwc_wrapper.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_report.h"
@@ -35,7 +36,8 @@ mga::OutputBuilder::OutputBuilder(
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mga::DisplayResourceFactory> const& res_factory,
     std::shared_ptr<mg::DisplayReport> const& display_report,
-    mga::OverlayOptimization overlay_optimization)
+    mga::OverlayOptimization overlay_optimization,
+    std::shared_ptr<HwcLogger> const& logger)
     : buffer_allocator(buffer_allocator),
       res_factory(res_factory),
       display_report(display_report),
@@ -45,6 +47,7 @@ mga::OutputBuilder::OutputBuilder(
     try
     {
         hwc_native = res_factory->create_hwc_native_device();
+        hwc_wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native, logger);
     } catch (...)
     {
         force_backup_display = true;
@@ -83,11 +86,11 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
     {
         if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
         {
-            device = res_factory->create_hwc_fb_device(hwc_native, fb_native);
+            device = res_factory->create_hwc_fb_device(hwc_wrapper, fb_native);
         }
         else //versions 1.1, 1.2
         {
-            device = res_factory->create_hwc_device(hwc_native);
+            device = res_factory->create_hwc_device(hwc_wrapper);
         }
 
         switch (hwc_native->common.version)

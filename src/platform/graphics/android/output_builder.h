@@ -35,6 +35,8 @@ class FramebufferBundle;
 class DisplayResourceFactory;
 class GraphicBufferAllocator;
 class DisplayDevice;
+class HwcWrapper;
+class HwcLogger;
 
 class OutputBuilder : public DisplayBuilder
 {
@@ -43,7 +45,8 @@ public:
         std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<DisplayResourceFactory> const& res_factory,
         std::shared_ptr<DisplayReport> const& display_report,
-        OverlayOptimization overlay_option);
+        OverlayOptimization overlay_option,
+        std::shared_ptr<HwcLogger> const& logger);
 
     MirPixelFormat display_format();
     std::unique_ptr<ConfigurableDisplayBuffer> create_display_buffer(
@@ -58,6 +61,7 @@ private:
     std::shared_ptr<FramebufferBundle> framebuffers;
     bool force_backup_display;
 
+    std::shared_ptr<HwcWrapper> hwc_wrapper;
     std::shared_ptr<hwc_composer_device_1> hwc_native;
     std::shared_ptr<framebuffer_device_t> fb_native;
     OverlayOptimization overlay_optimization;

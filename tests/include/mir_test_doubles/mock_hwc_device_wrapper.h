@@ -34,7 +34,7 @@ struct MockHWCDeviceWrapper : public graphics::android::HwcWrapper
 {
     MOCK_CONST_METHOD1(prepare, void(hwc_display_contents_1_t&));
     MOCK_CONST_METHOD1(set, void(hwc_display_contents_1_t&));
-    MOCK_CONST_METHOD1(register_hooks, void(hwc_procs_t*));
+    MOCK_METHOD1(register_hooks, void(std::shared_ptr<graphics::android::HWCCallbacks> const&));
     MOCK_CONST_METHOD0(vsync_signal_on, void());
     MOCK_CONST_METHOD0(vsync_signal_off, void());
     MOCK_CONST_METHOD0(display_on, void());
