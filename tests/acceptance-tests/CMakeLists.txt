@@ -5,6 +5,8 @@ include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR})
 
+add_definitions(-DMIR_GRAPHICS_DRIVER_BINARY="${MIR_GRAPHICS_DRIVER_BINARY}")
+
 protobuf_generate_cpp(
   GENERATED_PROTOBUF_SRCS GENERATED_PROTOBUF_HDRS
   test_protobuf.proto
