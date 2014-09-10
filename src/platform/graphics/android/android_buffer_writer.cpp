@@ -42,7 +42,7 @@ mga::AndroidBufferWriter::AndroidBufferWriter()
 void mga::AndroidBufferWriter::write(mg::Buffer& buffer, unsigned char const* data, size_t size)
 {
     auto buffer_size = buffer.size();
-    if (MIR_BYTES_PER_PIXEL(buffer.pixel_format) * buffer_size.width.as_uint32_t() * buffer_size.height.as_uint32_t() != size)
+    if (MIR_BYTES_PER_PIXEL(buffer.pixel_format()) * buffer_size.width.as_uint32_t() * buffer_size.height.as_uint32_t() != size)
         BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
 
     auto const& handle = buffer.native_buffer_handle();
