@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,33 +13,35 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#ifndef MIR_TIME_CLOCK_H_
-#define MIR_TIME_CLOCK_H_
-
-#include <chrono>
+#ifndef MIR_CLIENT_PERF_REPORT_H_
+#define MIR_CLIENT_PERF_REPORT_H_
 
 namespace mir
 {
-namespace time
+namespace client
 {
 
-typedef std::chrono::high_resolution_clock::time_point Timestamp;
-typedef std::chrono::high_resolution_clock::duration Duration;
-
-class Clock
+class PerfReport
 {
 public:
-    virtual ~Clock() = default;
-
-    virtual Timestamp sample() const = 0;
-
-protected:
-    Clock() = default;
+    virtual ~PerfReport() = default;
+    virtual void name_surface(char const*) = 0;
+    virtual void begin_frame(int buffer_id) = 0;
+    virtual void end_frame(int buffer_id) = 0;
 };
-}
-}
 
-#endif // MIR_TIME_CLOCK_H_
+class NullPerfReport : public PerfReport
+{
+public:
+    virtual void name_surface(char const*) {}
+    void begin_frame(int) override {}
+    void end_frame(int) override {}
+};
+
+} // namespace client
+} // namespace mir
+
+#endif // MIR_CLIENT_PERF_REPORT_H_
