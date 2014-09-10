@@ -23,6 +23,18 @@ Mir uses the ELF symbol versioning support. This provides three advantages:
  - We can drop or change the behaviour of symbols without breaking ABI by exposing multiple different implementations under different versions, and
  - We can (modulo protobuf singletons in our current implementation, and with some care) safely load multiple different versions of Mir libraries into the same process.
 
+When should I bump SONAME?
+--------------------------
+
+There are varying standards for when to bump SONAME. In Mir we choose to bump the SONAME of a library whenever we make a change that could cause a binary linked to the library to fail _as long as_ the binary is using only public interfaces and (where applicable) relying on documented behaviour. In general, changes that make an interface work as described by its documentation will not result in SONAME bumps.
+
+With that explanation, you _should_ bump SONAME when:
+
+ - You drop a public symbol from a library
+ - You change the behaviour of a public symbol _without_ retaining the previous implementation with the old versioning. (See the later section of this document for details)
+
+If you are changing the behaviour of an interface, think about whether it's easy to maintain the old interface in parallel. If it is, you should consider providing both under different versions. This will become more useful over time as the Mir ABI becomes more stable and more widely used.
+
 Load-time version detection
 ---------------------------
 When using versioned symbols the linker adds an extra, special symbol containing the version(s) exported from the library. Consumers of the library resolve this on library load. For example:
