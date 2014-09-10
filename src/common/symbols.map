@@ -130,12 +130,19 @@ MIR_COMMON_2 {
     mir::input::receiver::XKBMapper::update_state_and_map_event*;
     mir::input::receiver::XKBMapper::?XKBMapper*;
     mir::input::receiver::XKBMapper::XKBMapper*;
+    mir::libraries_for_path*;
     mir::logging::DumbConsoleLogger::log*;
     mir::logging::input_timestamp*;
     mir::logging::Logger::log*;
     mir::logging::Logger::?Logger*;
     mir::logging::Logger::Logger*;
     mir::logging::Logger::operator*;
+    mir::logging::SharedLibraryProberReport::?SharedLibraryProberReport*;
+    mir::logging::SharedLibraryProberReport::SharedLibraryProberReport*;
+    mir::logging::SharedLibraryProberReport::probing_path*;
+    mir::logging::SharedLibraryProberReport::probing_failed*;
+    mir::logging::SharedLibraryProberReport::loading_library*;
+    mir::logging::SharedLibraryProberReport::loading_failed*;
     mir_omnidirectional_resize_cursor_name*;
     mir_open_hand_cursor_name*;
     mir_pointing_hand_cursor_name*;
@@ -807,6 +814,7 @@ MIR_COMMON_2 {
     typeinfo?for?MirKeyEvent;
     typeinfo?for?mir::logging::DumbConsoleLogger;
     typeinfo?for?mir::logging::Logger;
+    typeinfo?for?mir::logging::SharedLibraryProberReport;
     typeinfo?for?MirMesaEGLNativeDisplay;
     typeinfo?for?MirMesaEGLNativeSurface;
     typeinfo?for?MirMotionEvent;
@@ -899,6 +907,7 @@ MIR_COMMON_2 {
     vtable?for?MirKeyEvent;
     vtable?for?mir::logging::DumbConsoleLogger;
     vtable?for?mir::logging::Logger;
+    vtable?for?mir::logging::SharedLibraryProberReport;
     vtable?for?MirMesaEGLNativeDisplay;
     vtable?for?MirMesaEGLNativeSurface;
     vtable?for?MirMotionEvent;
