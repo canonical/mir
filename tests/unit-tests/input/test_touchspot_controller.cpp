@@ -76,12 +76,15 @@ struct StubScene : public mtd::StubInputScene
         overlays.erase(it);
     }
     
-    void expect_spots_at(std::vector<geom::Point> spots)
+    void expect_spots_centered_at(std::vector<geom::Point> spots)
     {
+        int const touchspot_side_in_pixels = 64;
         for (auto overlay : overlays)
         {
-            auto pos = overlay->screen_position().top_left;
-            auto it = std::find(spots.begin(), spots.end(), pos);
+            auto top_left_pos = overlay->screen_position().top_left;
+            auto center_pos = geom::Point{top_left_pos.x.as_int() + touchspot_side_in_pixels/2,
+                top_left_pos.y.as_int() + touchspot_side_in_pixels/2};
+            auto it = std::find(spots.begin(), spots.end(), center_pos);
             EXPECT_FALSE(it == spots.end());
             spots.erase(it);
         }
@@ -135,7 +138,7 @@ TEST_F(TestTouchspotController, touches_result_in_renderables_in_stack)
     
     controller.visualize_touches({ {{0,0}, 1} });
 
-    scene->expect_spots_at({{0, 0}});
+    scene->expect_spots_centered_at({{0, 0}});
 }
 
 TEST_F(TestTouchspotController, spots_move)
@@ -148,9 +151,9 @@ TEST_F(TestTouchspotController, spots_move)
     controller.enable();
     
     controller.visualize_touches({ {{0,0}, 1} });
-    scene->expect_spots_at({{0, 0}});
+    scene->expect_spots_centered_at({{0, 0}});
     controller.visualize_touches({ {{1,1}, 1} });
-    scene->expect_spots_at({{1, 1}});
+    scene->expect_spots_centered_at({{1, 1}});
 }
 
 TEST_F(TestTouchspotController, multiple_spots)
@@ -163,13 +166,13 @@ TEST_F(TestTouchspotController, multiple_spots)
     controller.enable();
     
     controller.visualize_touches({ {{0,0}, 1}, {{1, 1}, 1}, {{3, 3}, 1} });
-    scene->expect_spots_at({{0, 0}, {1, 1}, {3, 3}});
+    scene->expect_spots_centered_at({{0, 0}, {1, 1}, {3, 3}});
     controller.visualize_touches({ {{0,0}, 1}, {{1, 1}, 1}, {{3, 3}, 1}, {{5, 5}, 1} });
-    scene->expect_spots_at({{0, 0}, {1, 1}, {3, 3}, {5, 5}});
+    scene->expect_spots_centered_at({{0, 0}, {1, 1}, {3, 3}, {5, 5}});
     controller.visualize_touches({ {{1,1}, 1} });
-    scene->expect_spots_at({{1, 1}});
+    scene->expect_spots_centered_at({{1, 1}});
     controller.visualize_touches({});
-    scene->expect_spots_at({});
+    scene->expect_spots_centered_at({});
 }
 
 // This leaves some semantics undefined, i,e. if the touchspot controller is enabled/disabled
@@ -187,10 +190,10 @@ TEST_F(TestTouchspotController, touches_do_not_result_in_renderables_in_stack_wh
     controller.disable();
     controller.visualize_touches({ {{0,0}, 1} });
 
-    scene->expect_spots_at({});
+    scene->expect_spots_centered_at({});
 
     controller.enable();
     controller.visualize_touches({ {{0,0}, 1} });
 
-    scene->expect_spots_at({{0, 0}});
+    scene->expect_spots_centered_at({{0, 0}});
 }
