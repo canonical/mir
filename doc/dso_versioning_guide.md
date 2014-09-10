@@ -30,10 +30,11 @@ There are varying standards for when to bump SONAME. In Mir we choose to bump th
 
 With that explanation, you _should_ bump SONAME when:
 
- - You drop a public symbol from a library
- - You change the behaviour of a public symbol _without_ retaining the previous implementation with the old versioning. (See the later section of this document for details)
+ - You remove a public symbol from a library
+ - You change the signature of a public symbol _without_ retaining the previous signature exposed under the old versioning.
+ - You change the behaviour of a public symbol _without_ retaining the previous behaviour exposed with the old versioning.
 
-If you are changing the behaviour of an interface, think about whether it's easy to maintain the old interface in parallel. If it is, you should consider providing both under different versions. This will become more useful over time as the Mir ABI becomes more stable and more widely used.
+If you are changing the behaviour of an interface, think about whether it's easy to maintain the old interface in parallel. If it is, you should consider providing both under different versions. This should become easier over time as the Mir ABI becomes more stable and also more valuable over time as the Mir libraries become more widely used.
 
 Load-time version detection
 ---------------------------
