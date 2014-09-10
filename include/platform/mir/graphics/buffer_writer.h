@@ -32,6 +32,7 @@ class BufferWriter
 public:
     virtual ~BufferWriter() = default;
 
+    // Expects data to be an unstrided array containing buffer.width*buffer.height pixels.
     virtual void write(Buffer& buffer, unsigned char const* data, size_t size) = 0;
 
 protected:

@@ -24,6 +24,7 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_writer.h"
 #include "mir/graphics/renderable.h"
+#include "mir/geometry/dimensions.h"
 #include "mir/input/scene.h"
 
 namespace mi = mir::input;
@@ -92,10 +93,10 @@ public:
     }
     
 // TouchspotRenderable    
-    void move_to(geom::Point pos)
+    void move_center_to(geom::Point pos)
     {
         std::lock_guard<std::mutex> lg(guard);
-        position = pos;
+        position = {pos.x.as_int() - touchspot_image.width/2, pos.y.as_int() - touchspot_image.height/2};
     }
 
     
@@ -153,7 +154,7 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
         // We map the touches to the first available renderables.
         if (i < touches.size())
         {
-            renderable->move_to(touches[i].touch_location);
+            renderable->move_center_to(touches[i].touch_location);
 
             // We will only add new visualizations when "enabled", however we still wish to run the main
             // logic when disabled, such that we can remove spots from a gesture which was active at the 

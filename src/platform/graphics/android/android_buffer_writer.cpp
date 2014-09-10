@@ -42,7 +42,7 @@ mga::AndroidBufferWriter::AndroidBufferWriter()
 void mga::AndroidBufferWriter::write(mg::Buffer& buffer, unsigned char const* data, size_t size)
 {
     auto buffer_size = buffer.size();
-    if (buffer.stride().as_uint32_t() * buffer_size.height.as_uint32_t() != size)
+    if (buffer_size.width.as_uint32_t() * buffer_size.height.as_uint32_t() != size)
         BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
 
     auto const& handle = buffer.native_buffer_handle();
@@ -57,7 +57,13 @@ void mga::AndroidBufferWriter::write(mg::Buffer& buffer, unsigned char const* da
                               usage, top, left, width, height, (void**) &vaddr) )
         BOOST_THROW_EXCEPTION(std::runtime_error("error securing buffer for client cpu use"));
 
-    memcpy(vaddr, data, size);
+    // Copy line by line in case of stride != width*bpp
+    for (int i = 0; i < height; i++)
+    {
+        int line_offset_in_buffer = buffer.stride().as_uint32_t()*i;
+        int line_offset_in_source = width*i;
+        memcpy(vaddr + line_offset_in_buffer, data + line_offset_in_source, width);
+    }
     
     hw_module->unlock(hw_module, handle->handle());
 }
