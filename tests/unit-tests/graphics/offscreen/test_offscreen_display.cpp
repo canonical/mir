@@ -49,14 +49,9 @@ public:
             .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
                                  SetArgPointee<4>(1),
                                  Return(EGL_TRUE)));
+        mock_egl.provide_egl_extensions();
+        mock_gl.provide_gles_extensions();
 
-        const char* const egl_exts = "EGL_KHR_image EGL_KHR_image_base";
-        const char* const gl_exts = "GL_OES_EGL_image";
-
-        ON_CALL(mock_egl, eglQueryString(_,EGL_EXTENSIONS))
-            .WillByDefault(Return(egl_exts));
-        ON_CALL(mock_gl, glGetString(GL_EXTENSIONS))
-            .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
         ON_CALL(mock_gl, glCheckFramebufferStatus(_))
             .WillByDefault(Return(GL_FRAMEBUFFER_COMPLETE));
     }

@@ -6,6 +6,7 @@ add_library(
   client_tracepoint_provider.cpp
   rpc_report.cpp
   input_receiver_report.cpp
+  shared_library_prober_report.cpp
 )
 
 add_library(mirclientlttng SHARED tracepoints.c)
