@@ -122,22 +122,6 @@ mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAl
     buffer_writer->write(*touchspot_buffer, touchspot_image.pixel_data, pixels_size);
 }
 
-// Here we assign a set of touchspots to a set of renderables we maintain. This function requires
-// and maintains the following invariant:
-//    For each member of touchspot_renderables with index i (T_i), 
-//    T_i is present in the scene if i < renderables_in_use, and
-//    not present in the scene otherwise.
-// Our assignment algorithm proceeds as follows:
-//    1. If we are not enabled, ensure no renderables are in use, and return.
-//    2. Otherwise, ensure we have enough prepared renderables to represent each
-//       touch spot.
-//    3. For each renderable we have prepared:
-//       a. Is the renderable index less than the number of touches we are trying to visualize?
-//          If so assign the renderable to the touch. If the index is >= renderables_in_use
-//          add the renderable to the scene and update renderables in use.
-//       b. Otherwise, if renderables_in_use is greater than the number of touches
-//          we are trying to visualize, remove the renderable from the scene and
-//          update renderables in use.
 void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches)
 {
     {
