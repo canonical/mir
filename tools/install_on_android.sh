@@ -35,7 +35,7 @@ pushd ${BUILD_DIR} > /dev/null
              lib/libmircommon.so.* \
              lib/libmirplatform.so.* \
              lib/libmirplatform*graphics.so \
-             lib/libmirclientplatform.so \
+             lib/libmirclient*platform.so \
              lib/libmirserver.so.*
     do
         adb push $x ${RUN_DIR}
