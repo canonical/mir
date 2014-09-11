@@ -9,7 +9,7 @@ e1be9faee8b844ca2ce617f8fd82c9ee08d56bed  include/common/mir/graphics/native_buf
 be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
 4d80544bf59ef452979b934d664ac592aff58c82  include/common/mir/shared_library_prober.h
 53e4159f2a0b564cb39a7785b4e229f6f7424779  include/common/mir/shared_library_prober_report.h
-6bb8715336020864626cc8355a0d130db6613ff4  include/common/mir/time/clock.h
+48015c67ddc4998ed5a2e8bb04ff3a4bfdd6a613  include/common/mir/time/clock.h
 9907751d046e4aea81881cf19e5df52c7a6a813e  include/common/mir_toolkit/client_types.h
 183d9e5e6cfe48b3d9145a28541dd4202ff6137b  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
@@ -20,7 +20,7 @@ bdaceadd56e41d2cb708f7c4da97acf84dfc75b7  include/common/mir_toolkit/event.h
 de6807967abf81031ea1c57015018c0ddc57fe61  include/platform/mir/graphics/buffer.h
 5875f13f5b029a4b5291e9baec3ae434b72be27c  include/platform/mir/graphics/buffer_id.h
 748f5c2aab11189aa02c4a89ab900561548e7304  include/platform/mir/graphics/buffer_properties.h
-a53898a0ec1a90d6438275cdaaa5844a4e6d5aca  include/platform/mir/graphics/buffer_writer.h
+1cf55e3f578db8d0828cb91b1f6b0c3bf6f462a2  include/platform/mir/graphics/buffer_writer.h
 986f5d0d8ea2c6a42cc320f468e682f81fec46ae  include/platform/mir/graphics/display_buffer.h
 f53a0020b8f1bd4a941a201eb26271cffee0a7dd  include/platform/mir/graphics/display_configuration.h
 41ea906d208b761e3d5d5056095de9de2d4ffa17  include/platform/mir/graphics/display.h
@@ -56,6 +56,7 @@ cef18b7215fbe00550d18c0aa0f79b641cff494e  include/server/mir/input/cursor_listen
 6f1d9cf83bbb1256f0b4d1ba1d94d95af98c52f0  include/server/mir/input/input_dispatcher.h
 b2ec497c6bec1b3a67c991f31cc7b7c51050ecbb  include/server/mir/input/input_reception_mode.h
 15119bf95b4512c8b91df7c20edf56a3c0734957  include/server/mir/input/surface.h
+fd113137ce709322830e9915eea80774da44dca1  include/server/mir/input/touch_visualizer.h
 964069b241f1e8211386bb8735ee0f752b666949  include/server/mir/main_loop.h
 edd5a0a6be0be57ef64c5af89fc5a65dc558648c  include/server/mir/report_exception.h
 8192727cf5fa0b2b5798b2211c2c8a4ad65c9f60  include/server/mir/run_mir.h
