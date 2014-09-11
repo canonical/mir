@@ -179,6 +179,10 @@ struct DemoPrivateProtobuf : mtf::InProcessServer
     testing::NiceMock<DemoMirServer> demo_mir_server;
 };
 
+void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
+{
+}
+
 void callback(std::atomic<bool>* called_back) { called_back->store(true); }
 char const* const nothing_returned = "Nothing returned";
 }
@@ -190,6 +194,9 @@ TEST_F(DemoPrivateProtobuf, client_calls_server)
 
     auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     ASSERT_TRUE(mir_connection_is_valid(connection));
+    // Override the default lifecycle callback to avoid sending a signal to the process
+    // when the connection is dropped, due to the invalid server RPC call (see below)
+    mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
 
     auto const rpc_channel = mir::client::the_rpc_channel(connection);
 

@@ -527,3 +527,8 @@ mir::protobuf::DisplayServer& MirConnection::display_server()
 {
     return server;
 }
+
+std::shared_ptr<mir::logging::Logger> const& MirConnection::the_logger() const
+{
+    return logger;
+}
