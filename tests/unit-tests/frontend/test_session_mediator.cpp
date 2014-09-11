@@ -112,6 +112,8 @@ public:
 
     std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const
     {
+        if (mock_surfaces.find(surface) == mock_surfaces.end())
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid SurfaceId"));
         return mock_surfaces.at(surface);
     }
 
@@ -256,6 +258,7 @@ struct SessionMediator : public ::testing::Test
     mp::Buffer buffer_response;
     mp::DRMMagic drm_request;
     mp::DRMAuthMagicStatus drm_response;
+    mp::BufferRequest buffer_request;
 };
 }
 
@@ -306,6 +309,10 @@ TEST_F(SessionMediator, calling_methods_before_connect_throws)
     }, std::logic_error);
 
     EXPECT_THROW({
+        mediator.exchange_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
+    }, std::logic_error);
+
+    EXPECT_THROW({
         mediator.release_surface(nullptr, &surface_id_request, nullptr, null_callback.get());
     }, std::logic_error);
 
@@ -343,6 +350,10 @@ TEST_F(SessionMediator, calling_methods_after_disconnect_throws)
 
     EXPECT_THROW({
         mediator.next_buffer(nullptr, &surface_id_request, &buffer_response, null_callback.get());
+    }, std::logic_error);
+
+    EXPECT_THROW({
+        mediator.exchange_buffer(nullptr, &buffer_request, &buffer_response, null_callback.get());
     }, std::logic_error);
 
     EXPECT_THROW({
@@ -655,4 +666,107 @@ TEST_F(SessionMediator, prompt_provider_fds_allocated_by_connector)
     EXPECT_THAT(response.fd_size(), Eq(fd_count));
 
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+}
+
+TEST_F(SessionMediator, exchange_buffer)
+{
+    using namespace testing;
+    auto const& mock_surface = stubbed_session->mock_surface_at(mf::SurfaceId{0});
+    mp::Buffer exchanged_buffer;
+    mtd::StubBuffer stub_buffer1;
+    mtd::StubBuffer stub_buffer2;
+
+    //create
+    Sequence seq;
+    EXPECT_CALL(*mock_surface, swap_buffers(_, _))
+        .InSequence(seq)
+        .WillOnce(InvokeArgument<1>(&stub_buffer1));
+    //exchange
+    EXPECT_CALL(*mock_surface, swap_buffers(&stub_buffer1,_))
+        .InSequence(seq)
+        .WillOnce(InvokeArgument<1>(&stub_buffer2));
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
+    EXPECT_THAT(surface_response.buffer().buffer_id(), Eq(stub_buffer1.id().as_value()));
+
+    *buffer_request.mutable_id() = surface_response.id();
+    buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer().buffer_id());
+    mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
+    EXPECT_THAT(exchanged_buffer.buffer_id(), Eq(stub_buffer2.id().as_value()));
+}
+
+TEST_F(SessionMediator, session_exchange_buffer_sends_minimum_information)
+{
+    using namespace testing;
+    mp::Buffer exchanged_buffer;
+    mf::SurfaceId surf_id{0};
+    mtd::StubBuffer buffer1;
+    mtd::StubBuffer buffer2;
+    auto surface = stubbed_session->mock_surface_at(surf_id);
+    ON_CALL(*surface, swap_buffers(nullptr,_))
+        .WillByDefault(InvokeArgument<1>(&buffer2));
+    ON_CALL(*surface, swap_buffers(&buffer1,_))
+        .WillByDefault(InvokeArgument<1>(&buffer2));
+    ON_CALL(*surface, swap_buffers(&buffer2,_))
+        .WillByDefault(InvokeArgument<1>(&buffer1));
+
+    //create
+    Sequence seq;
+    EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer2, mg::BufferIpcMsgType::full_msg))
+        .InSequence(seq);
+    //swap1
+    EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer1, mg::BufferIpcMsgType::full_msg))
+        .InSequence(seq);
+    //swap2
+    EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer2, mg::BufferIpcMsgType::update_msg))
+        .InSequence(seq);
+    //swap3
+    EXPECT_CALL(*graphics_platform, fill_buffer_package(_, &buffer1, mg::BufferIpcMsgType::update_msg))
+        .InSequence(seq);
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+
+    mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
+    *buffer_request.mutable_id() = surface_response.id();
+    buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer().buffer_id());
+
+    mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
+    buffer_request.mutable_buffer()->set_buffer_id(exchanged_buffer.buffer_id());
+
+    mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
+    buffer_request.mutable_buffer()->set_buffer_id(exchanged_buffer.buffer_id());
+
+    mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+}
+
+TEST_F(SessionMediator, exchange_buffer_throws_if_client_submits_bad_request)
+{
+    using namespace testing;
+    auto const& mock_surface = stubbed_session->mock_surface_at(mf::SurfaceId{0});
+    mp::Buffer exchanged_buffer;
+    mtd::StubBuffer stub_buffer1;
+    mtd::StubBuffer stub_buffer2;
+
+    EXPECT_CALL(*mock_surface, swap_buffers(_, _))
+        .WillOnce(InvokeArgument<1>(&stub_buffer1));
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
+    EXPECT_THAT(surface_response.buffer().buffer_id(), Eq(stub_buffer1.id().as_value()));
+
+    *buffer_request.mutable_id() = surface_response.id();
+    //client doesnt own stub_buffer2
+    buffer_request.mutable_buffer()->set_buffer_id(stub_buffer2.id().as_value());
+    EXPECT_THROW({
+        mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
+    }, std::logic_error);
+
+    //client made up its own surface id.
+    buffer_request.mutable_id()->set_value(surface_response.id().value() + 2); 
+    buffer_request.mutable_buffer()->set_buffer_id(stub_buffer1.id().as_value());
+    EXPECT_THROW({
+        mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
+    }, std::logic_error);
 }

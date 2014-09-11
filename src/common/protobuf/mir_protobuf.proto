@@ -25,6 +25,11 @@ message SurfaceId {
   required int32 value = 1;
 };
 
+message BufferRequest {
+  optional SurfaceId id = 1;
+  optional Buffer buffer = 2;
+};
+
 message Buffer {
   optional int32 buffer_id = 1;
   repeated sint32 fd = 2;
@@ -221,4 +226,5 @@ service DisplayServer {
 
   rpc start_prompt_session(PromptSessionParameters) returns (Void);
   rpc stop_prompt_session(Void) returns (Void);
+  rpc exchange_buffer(BufferRequest) returns (Buffer);
 }
