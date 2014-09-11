@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "examples/testdraw/graphics_region_factory.h"
+#include "graphics_region_factory.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
