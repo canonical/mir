@@ -23,6 +23,7 @@ de6807967abf81031ea1c57015018c0ddc57fe61  include/platform/mir/graphics/buffer.h
 1cf55e3f578db8d0828cb91b1f6b0c3bf6f462a2  include/platform/mir/graphics/buffer_writer.h
 986f5d0d8ea2c6a42cc320f468e682f81fec46ae  include/platform/mir/graphics/display_buffer.h
 f53a0020b8f1bd4a941a201eb26271cffee0a7dd  include/platform/mir/graphics/display_configuration.h
+6fe08da318c920b0d20ea8b8f560f5ac7ed389fe  include/platform/mir/graphics/display_configuration_policy.h
 41ea906d208b761e3d5d5056095de9de2d4ffa17  include/platform/mir/graphics/display.h
 815405c5aee8000bc18c1c9480bac620a451b416  include/platform/mir/graphics/event_handler_register.h
 5dc095474ef3e294c0aa4008e9ed997bdb21d34c  include/platform/mir/graphics/gl_config.h

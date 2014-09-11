@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "examples/demo-shell/demo_compositor.h"
+#include "playground/demo-shell/demo_compositor.h"
 
 #include "mir/geometry/rectangle.h"
 #include "src/server/scene/surface_stack.h"
