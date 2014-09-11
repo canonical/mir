@@ -70,28 +70,12 @@ mir_eglapp_bool mir_eglapp_running(void)
 
 void mir_eglapp_swap_buffers(void)
 {
-    static time_t lasttime = 0;
-    static int lastcount = 0;
-    static int count = 0;
-    time_t now = time(NULL);
-    time_t dtime;
-    int dcount;
     EGLint width, height;
 
     if (!running)
         return;
 
     eglSwapBuffers(egldisplay, eglsurface);
-
-    count++;
-    dcount = count - lastcount;
-    dtime = now - lasttime;
-    if (dtime)
-    {
-        printf("%d FPS\n", dcount);
-        lasttime = now;
-        lastcount = count;
-    }
 
     /*
      * Querying the surface (actually the current buffer) dimensions here is
@@ -276,11 +260,8 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                     cursor_name = argv[++i];
                     break;
                 case 'q':
-                    {
-                        FILE *unused = freopen("/dev/null", "a", stdout);
-                        (void)unused;
-                        break;
-                    }
+                    /* Deprecated. Ignore. */
+                    break;
                 case 'h':
                 default:
                     help = 1;
@@ -303,7 +284,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                        "  -m socket        Mir server socket\n"
                        "  -s WIDTHxHEIGHT  Force surface size\n"
                        "  -c name          Request cursor image by name\n"
-                       "  -q               Quiet mode (no messages output)\n"
                        , argv[0]);
                 return 0;
             }

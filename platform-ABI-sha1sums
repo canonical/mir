@@ -7,7 +7,7 @@ dc7c62d3916eec025e8e7deaf57e06077ce38928  include/common/mir/geometry/rectangle.
 42646c2367b9821e3aa71feff6e31cf50526acaa  include/common/mir/geometry/size.h
 e1be9faee8b844ca2ce617f8fd82c9ee08d56bed  include/common/mir/graphics/native_buffer.h
 be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
-6bb8715336020864626cc8355a0d130db6613ff4  include/common/mir/time/clock.h
+48015c67ddc4998ed5a2e8bb04ff3a4bfdd6a613  include/common/mir/time/clock.h
 9907751d046e4aea81881cf19e5df52c7a6a813e  include/common/mir_toolkit/client_types.h
 183d9e5e6cfe48b3d9145a28541dd4202ff6137b  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
