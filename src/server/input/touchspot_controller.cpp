@@ -143,49 +143,24 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
     {
     std::lock_guard<std::mutex> lg(guard);
     
-    if (!enabled)
-    {
-        int i = 0;
-        while (renderables_in_use)
-        {
-            auto const& renderable = touchspot_renderables[i];
-            scene->remove_input_visualization(renderable);
-            renderables_in_use--;
-            i++;
-        }
-        return;
-    }
-    
-    // We can assume the maximum number of touches will not grow unreasonably large
-    // and so we just grow a pool of TouchspotRenderables as needed
-    while (touchspot_renderables.size() < touches.size())
-        touchspot_renderables.push_back(std::make_shared<TouchspotRenderable>(touchspot_buffer));
+    unsigned int const num_touches = enabled ? touches.size() : 0;
 
-    // We act on each touchspot renderable, as it may need positioning, to be added to the scene, or removed
-    // entirely.
-    for (unsigned int i = 0; i < touchspot_renderables.size(); i++)
+    while (touchspot_renderables.size() < num_touches)
+        touchspot_renderables.push_back(std::make_shared<TouchspotRenderable>(touchspot_buffer));
+    
+    for (unsigned int i = 0; i < num_touches; i++)
     {
         auto const& renderable = touchspot_renderables[i];
         
-        // We map the touches to the first available renderables.
-        if (i < touches.size())
-        {
-            renderable->move_center_to(touches[i].touch_location);
-
-            if (renderables_in_use <= i)
-            {
-                renderables_in_use++;
-                scene->add_input_visualization(renderable);
-            }
-        }
-        // If we are using too many touch-spot renderables, we need to remove some from
-        // the scene.
-        else if (renderables_in_use > touches.size())
-        {
-            renderables_in_use--;
-            scene->remove_input_visualization(renderable);
-        }
+        renderable->move_center_to(touches[i].touch_location);
+        if (i >= renderables_in_use)
+            scene->add_input_visualization(renderable);
     }
+    
+    for (unsigned int i = num_touches; i < renderables_in_use; i++)
+        scene->remove_input_visualization(touchspot_renderables[i]);
+    
+    renderables_in_use = num_touches;
     } // release mutex
 
     // TODO (hackish): We may have just moved renderables which with the current
