@@ -157,8 +157,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         libmirclientplatform-mesa (= ${binary:Version}) |
-           libmirclientplatform-android (= ${binary:Version}),
+         libmirclient8platform-mesa | libmirclient8platform-android,
 Description: Display server for Ubuntu - client library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -180,14 +179,13 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to develop against Mir.
 
-Package: libmirclientplatform-mesa
+Package: libmirclient8platform-mesa
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends}
-Replaces: libmirclientplatform
 Description: Display server for Ubuntu - client platform library for Mesa
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -195,14 +193,13 @@ Description: Display server for Ubuntu - client platform library for Mesa
  Contains the shared libraries required for the Mir clients to interact with
  the underlying hardware platform using the Mesa drivers.
 
-Package: libmirclientplatform-android
+Package: libmirclient8platform-android
 Section: libs
 Architecture: i386 amd64 armhf
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends}
-Replaces: libmirclientplatform
 Description: Display server for Ubuntu - client platform library for Android
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
