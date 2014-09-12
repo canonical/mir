@@ -17,7 +17,6 @@
  */
 
 #include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/scene/buffer_stream_factory.h"
@@ -47,27 +46,26 @@ MATCHER(DidNotTimeOut, "did not time out")
 struct ExchangeBufferTest : BespokeDisplayServerTestFixture
 {
     std::vector<mg::BufferID> const buffer_id_exchange_seq{
-        mg::BufferID{4}, mg::BufferID{8}, mg::BufferID{9}};
+        mg::BufferID{4}, mg::BufferID{8}, mg::BufferID{9}, mg::BufferID{3}, mg::BufferID{4}};
 };
 
 struct StubStream : public mc::BufferStream
 {
     StubStream(std::vector<mg::BufferID> const& ids) :
-        buffer_id_seq(ids),
-        current{buffer_id_seq.begin()}
+        buffer_id_seq(ids)
     {
     }
 
     void acquire_client_buffer(std::function<void(mg::Buffer* buffer)> complete)
     {
-        auto b = std::make_shared<testing::NiceMock<mtd::MockBuffer>>();
-        auto id = *current;
-        if (current + 1 != buffer_id_seq.end())
-            current++;
-        ON_CALL(*b, id())
-            .WillByDefault(testing::Return(id));
-        client_buffers.push_back(b);
-        complete(b.get());
+        std::shared_ptr<mg::Buffer> stub_buffer;
+        if (buffers_acquired < buffer_id_seq.size())
+            stub_buffer = std::make_shared<mtd::StubBuffer>(buffer_id_seq.at(buffers_acquired++));
+        else
+            stub_buffer = std::make_shared<mtd::StubBuffer>(buffer_id_seq.back());
+
+        client_buffers.push_back(stub_buffer);
+        complete(stub_buffer.get());
     }
 
     void release_client_buffer(mg::Buffer*) {}
@@ -85,7 +83,7 @@ struct StubStream : public mc::BufferStream
 
     std::vector<std::shared_ptr<mg::Buffer>> client_buffers;
     std::vector<mg::BufferID> const buffer_id_seq;
-    std::vector<mg::BufferID>::const_iterator current;
+    unsigned int buffers_acquired{0};
 };
 
 struct StubStreamFactory : public msc::BufferStreamFactory
