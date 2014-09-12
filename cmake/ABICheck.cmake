@@ -29,7 +29,7 @@ function(make_lib_descriptor name)
 
   list(FIND ARGN "INCLUDE_PRIVATE" include_private)
   if (include_private GREATER -1)
-    set(private_headers "${CMAKE_SOURCE_DIR}/include.private/${name}")
+    set(private_headers "${CMAKE_SOURCE_DIR}/src/include/${name}")
   endif()
   
   set(LIB_DESC_HEADERS "${CMAKE_SOURCE_DIR}/include/${name}
@@ -47,7 +47,7 @@ function(make_lib_descriptor name)
 endfunction()
 
 #These headers are not part of the libmircommon interface
-set(android-platform-headers "${CMAKE_SOURCE_DIR}/include.private/common/mir/graphics/android")
+set(android-platform-headers "${CMAKE_SOURCE_DIR}/src/include/common/mir/graphics/android")
 
 make_lib_descriptor(client)
 make_lib_descriptor(server)
