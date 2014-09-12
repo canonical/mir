@@ -21,8 +21,6 @@
 
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/compositor_report.h"
-#include "mir/compositor/zoomable.h"
-#include "mir/geometry/rectangle.h"
 #include <memory>
 
 namespace mir
@@ -37,8 +35,7 @@ namespace compositor
 class Scene;
 class Renderer;
 
-class DefaultDisplayBufferCompositor : public DisplayBufferCompositor,
-                                       public Zoomable
+class DefaultDisplayBufferCompositor : public DisplayBufferCompositor
 {
 public:
     DefaultDisplayBufferCompositor(
@@ -49,23 +46,13 @@ public:
     ~DefaultDisplayBufferCompositor();
 
     void composite() override;
-    std::weak_ptr<graphics::Cursor> cursor() const override;
-    void zoom(float mag) override;
-    void on_cursor_movement(geometry::Point const& p);
 
 private:
-    void update_viewport();
-
     graphics::DisplayBuffer& display_buffer;
 
     std::shared_ptr<Scene> const scene;
     std::shared_ptr<Renderer> const renderer;
     std::shared_ptr<CompositorReport> const report;
-    std::shared_ptr<graphics::Cursor> const soft_cursor;
-
-    geometry::Rectangle viewport;
-    geometry::Point cursor_pos;
-    float zoom_mag;
 };
 
 }

@@ -21,12 +21,14 @@
 #include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/compositor/destination_alpha.h"
+#include "mir/graphics/cursor.h"
 #include "demo_compositor.h"
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+using namespace mir;
 
 namespace
 {
@@ -34,6 +36,32 @@ mc::DestinationAlpha destination_alpha(mg::DisplayBuffer const& db)
 {
     return db.uses_alpha() ? mc::DestinationAlpha::generate_from_source : mc::DestinationAlpha::opaque;
 }
+
+class SoftCursor : public mg::Cursor
+{
+public:
+    SoftCursor(me::DemoCompositor& compositor)
+        : compositor(compositor)
+    {
+    }
+
+    void show(mg::CursorImage const&) override
+    {
+        // TODO: Implement software cursor image setting later
+    }
+
+    void hide() override
+    {
+    }
+
+    void move_to(geometry::Point position) override
+    {
+        compositor.on_cursor_movement(position);
+    }
+
+private:
+    me::DemoCompositor& compositor;
+};
 }
 
 me::DemoCompositor::DemoCompositor(
@@ -44,6 +72,9 @@ me::DemoCompositor::DemoCompositor(
     display_buffer(display_buffer),
     scene(scene),
     report(report),
+    soft_cursor{std::make_shared<SoftCursor>(*this)},
+    viewport(display_buffer.view_area()),
+    zoom_mag{1.0f},
     renderer(
         factory,
         display_buffer.view_area(),
@@ -70,9 +101,9 @@ void me::DemoCompositor::composite()
     for(auto const& it : elements)
     {
         auto const& renderable = it->renderable();
-        auto const& view_area = display_buffer.view_area();
-        auto embellished = renderer.would_embellish(*renderable, view_area);
-        auto any_part_drawn = (view_area.overlaps(renderable->screen_position()) || embellished);
+
+        auto embellished = renderer.would_embellish(*renderable, viewport);
+        auto any_part_drawn = (viewport.overlaps(renderable->screen_position()) || embellished);
         if (renderable->visible() && any_part_drawn)
         {
             renderable_list.push_back(renderable);
@@ -96,10 +127,68 @@ void me::DemoCompositor::composite()
         display_buffer.make_current();
 
         renderer.set_rotation(display_buffer.orientation());
+        renderer.set_viewport(viewport);
         renderer.begin();
         renderer.render(renderable_list);
         display_buffer.post_update();
         renderer.end();
         report->finished_frame(false, this);
+    }
+}
+
+std::weak_ptr<graphics::Cursor>
+me::DemoCompositor::cursor() const
+{
+    return soft_cursor;
+}
+
+void me::DemoCompositor::on_cursor_movement(
+    geometry::Point const& p)
+{
+    cursor_pos = p;
+    if (zoom_mag != 1.0f)
+        update_viewport();
+}
+
+void me::DemoCompositor::zoom(float mag)
+{
+    zoom_mag = mag;
+    update_viewport();
+}
+
+void me::DemoCompositor::update_viewport()
+{
+    auto const& view_area = display_buffer.view_area();
+
+    if (zoom_mag == 1.0f)
+    {
+        // The below calculations should yield the same result as this, but
+        // just in case there are any floating point precision errors,
+        // set it precisely:
+        viewport = view_area;
+    }
+    else
+    {
+        int db_width = view_area.size.width.as_int();
+        int db_height = view_area.size.height.as_int();
+        int db_x = view_area.top_left.x.as_int();
+        int db_y = view_area.top_left.y.as_int();
+    
+        float zoom_width = db_width / zoom_mag;
+        float zoom_height = db_height / zoom_mag;
+    
+        float screen_x = cursor_pos.x.as_int() - db_x;
+        float screen_y = cursor_pos.y.as_int() - db_y;
+
+        float normal_x = screen_x / db_width;
+        float normal_y = screen_y / db_height;
+    
+        // Position the viewport so the cursor location matches up.
+        // This assumes the hardware cursor still traverses the physical
+        // screen and isn't being warped.
+        int zoom_x = db_x + (db_width - zoom_width) * normal_x;
+        int zoom_y = db_y + (db_height - zoom_height) * normal_y;
+
+        viewport = {{zoom_x, zoom_y}, {zoom_width, zoom_height}};
     }
 }
