@@ -36,7 +36,7 @@ TEST(SymbolsRequiredByMesa, are_exported_by_libmirclientplatform)
 
 TEST(SymbolsRequiredByMesa, are_exported_by_libmirplatformgraphics)
 {
-    auto const handle = dlopen(MIR_GRAPHICS_DRIVER_BINARY, RTLD_LAZY);
+    auto const handle = dlopen(MIR_PLATFORM_DRIVER_BINARY, RTLD_LAZY);
     ASSERT_THAT(handle, NotNull());
 
     auto const sym = dlsym(handle, "mir_server_mesa_egl_native_display_is_valid");

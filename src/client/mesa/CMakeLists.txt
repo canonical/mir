@@ -36,7 +36,7 @@ target_link_libraries(
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
 
-install(TARGETS mirclientplatformmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/${CLIENT_PLATFORM}/mesa)
+install(TARGETS mirclientplatformmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/${CLIENT_DRIVER}/mesa)
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa")
   add_custom_command(TARGET mirclientplatformmesa
@@ -48,7 +48,7 @@ if (MIR_TEST_PLATFORM STREQUAL "mesa")
 
   install(CODE
     "execute_process(
-       COMMAND ln -sf mir/${CLIENT_PLATFORM}/mesa/${MIR_CLIENT_DRIVER_BINARY}
+       COMMAND ln -sf mir/${CLIENT_DRIVER}/mesa/${MIR_CLIENT_DRIVER_BINARY}
        WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
      )"
   )

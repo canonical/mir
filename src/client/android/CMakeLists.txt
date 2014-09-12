@@ -35,7 +35,7 @@ target_link_libraries(
   ${LIBHARDWARE_LIBRARIES}
 )
 
-install(TARGETS mirclientplatformandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/${CLIENT_PLATFORM}/android)
+install(TARGETS mirclientplatformandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/${CLIENT_DRIVER}/android)
 
 if (MIR_TEST_PLATFORM STREQUAL "android")
   add_custom_command(TARGET mirclientplatformandroid
@@ -47,7 +47,7 @@ if (MIR_TEST_PLATFORM STREQUAL "android")
 
   install(CODE
     "execute_process(
-       COMMAND ln -sf mir/${CLIENT_PLATFORM}/android/${MIR_CLIENT_DRIVER_BINARY}
+       COMMAND ln -sf mir/${CLIENT_DRIVER}/android/${MIR_CLIENT_DRIVER_BINARY}
        WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
      )"
   )

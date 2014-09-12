@@ -52,7 +52,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         libmirplatform2graphics-mesa | libmirplatform2graphics-android,
+         libmirplatform2driver-mesa | libmirplatform2driver-android,
 Description: Display server for Ubuntu - server library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -73,7 +73,7 @@ Description: Display server for Ubuntu - platform library
  Contains the shared libraries required for the Mir server to interact with
  the underlying hardware platform.
 
-Package: libmirplatform2graphics-mesa
+Package: libmirplatform2driver-mesa
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -87,7 +87,7 @@ Description: Display server for Ubuntu - platform library for Mesa
  Contains the shared libraries required for the Mir server to interact with
  the hardware platform using the Mesa drivers.
 
-Package: libmirplatform2graphics-android
+Package: libmirplatform2driver-android
 Section: libs
 Architecture: i386 amd64 armhf
 Multi-Arch: same
@@ -157,7 +157,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         libmirclient8platform-mesa | libmirclient8platform-android,
+         libmirclient8driver-mesa | libmirclient8driver-android,
 Description: Display server for Ubuntu - client library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -179,7 +179,7 @@ Description: Display server for Ubuntu - development headers
  .
  Contains header files required to develop against Mir.
 
-Package: libmirclient8platform-mesa
+Package: libmirclient8driver-mesa
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -193,7 +193,7 @@ Description: Display server for Ubuntu - client platform library for Mesa
  Contains the shared libraries required for the Mir clients to interact with
  the underlying hardware platform using the Mesa drivers.
 
-Package: libmirclient8platform-android
+Package: libmirclient8driver-android
 Section: libs
 Architecture: i386 amd64 armhf
 Multi-Arch: same
