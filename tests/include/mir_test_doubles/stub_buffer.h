@@ -77,12 +77,35 @@ public:
     StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer,
                graphics::BufferProperties const& properties,
                geometry::Stride stride)
+        : StubBuffer(native_buffer, properties, stride, graphics::BufferBasic::id())
+    {
+    }
+
+    StubBuffer(graphics::BufferID id) :
+        StubBuffer{
+            create_native_buffer(),
+            graphics::BufferProperties{
+                geometry::Size{},
+                mir_pixel_format_abgr_8888,
+                graphics::BufferUsage::hardware},
+            geometry::Stride{}, id}
+    {
+    }
+
+    StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer,
+               graphics::BufferProperties const& properties,
+               geometry::Stride stride,
+               graphics::BufferID id)
         : native_buffer(native_buffer),
           buf_size{properties.size},
           buf_pixel_format{properties.format},
-          buf_stride{stride}
+          buf_stride{stride},
+          buf_id{id}
     {
     }
+
+
+    virtual graphics::BufferID id() const { return buf_id; }
 
     virtual geometry::Size size() const { return buf_size; }
 
@@ -99,6 +122,7 @@ public:
     geometry::Size const buf_size;
     MirPixelFormat const buf_pixel_format;
     geometry::Stride const buf_stride;
+    graphics::BufferID const buf_id;
 
     std::shared_ptr<graphics::NativeBuffer> create_native_buffer()
     {
