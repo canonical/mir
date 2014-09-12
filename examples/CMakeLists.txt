@@ -1,12 +1,14 @@
 
-#its a bit troubling that these need to be included for demo_input_filter
-include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
-include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
 add_library(eglapp STATIC
   eglapp.c
 )
+
+add_library(exampleserverconfig STATIC
+  server_configuration.cpp
+)
+
 target_link_libraries(eglapp
   mirclient
   ${EGL_LIBRARIES}
@@ -106,10 +108,8 @@ target_link_libraries(mirdraw ${GLESv2_LIBRARIES})
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/server
-  ${PROJECT_SOURCE_DIR}/include.private/server     # XXX Examples shouldn't
-  ${PROJECT_SOURCE_DIR}/include/client             #  need private symbols but
-  ${PROJECT_SOURCE_DIR}/include/platform           #  this is better than
-  ${PROJECT_SOURCE_DIR}/include.private/platform   #  making them public.
+  ${PROJECT_SOURCE_DIR}/include/client
+  ${PROJECT_SOURCE_DIR}/include/platform
   ${GLESv2_INCLUDE_DIRS}
 )
 
@@ -123,35 +123,13 @@ target_link_libraries(mir_demo_standalone_render_to_fb
     ${Boost_LIBRARIES}
 )
 
-add_executable(mir_demo_standalone_render_overlays
-    render_overlays.cpp
-)
-
-target_link_libraries(mir_demo_standalone_render_overlays
-    mirserver
-    mirtestdraw
-    mircommon
-)
-
-set(RENDER_SURFACES_SOURCES
-    render_surfaces.cpp
-    buffer_render_target.cpp
-    image_renderer.cpp
-    server_configuration.cpp
-)
-add_executable(mir_demo_standalone_render_surfaces ${RENDER_SURFACES_SOURCES})
-target_link_libraries(mir_demo_standalone_render_surfaces
-    mirserver
-    ${Boost_LIBRARIES}
-)
-
 add_executable(mir_demo_standalone_input_filter
   demo_input_filter.cpp
-  server_configuration.cpp
 )
 
 target_link_libraries(mir_demo_standalone_input_filter
   mirserver
+  exampleserverconfig
 )
 
 set (INSTALL_DEMOS
@@ -161,6 +139,7 @@ set (INSTALL_DEMOS
   mir_demo_client_eglflash
   mir_demo_client_egltriangle
   mir_demo_client_eglplasma
+  mir_demo_client_eglcounter
   mir_demo_client_fingerpaint
   mir_demo_client_multiwin
   mir_demo_client_display_config
@@ -168,23 +147,18 @@ set (INSTALL_DEMOS
   mir_demo_client_prompt_session
   mir_demo_standalone_input_filter
   mir_demo_standalone_render_to_fb
-  mir_demo_standalone_render_surfaces
 )
-
-add_subdirectory(demo-inprocess-surface-client)
-add_subdirectory(demo-shell)
-add_subdirectory(testdraw)
 
 install(TARGETS ${INSTALL_DEMOS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_executable(mir_demo_server_basic
   basic_server.cpp
   basic_server_configuration.cpp
-  server_configuration.cpp
 )
 
 target_link_libraries(mir_demo_server_basic
   mirserver
+  exampleserverconfig
   ${Boost_LIBRARIES}
 )
 
@@ -203,11 +177,11 @@ add_executable(mir_demo_server_translucent
   translucent_server_configuration.cpp
   pixel_format_selector.cpp
   basic_server_configuration.cpp
-  server_configuration.cpp
 )
 
 target_link_libraries(mir_demo_server_translucent
   mirserver
+  exampleserverconfig
   ${Boost_LIBRARIES}
 )
 
