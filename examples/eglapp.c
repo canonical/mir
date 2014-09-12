@@ -260,8 +260,11 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                     cursor_name = argv[++i];
                     break;
                 case 'q':
-                    /* Deprecated. Ignore. */
-                    break;
+                    {
+                        FILE *unused = freopen("/dev/null", "a", stdout);
+                        (void)unused;
+                        break;
+                    }
                 case 'h':
                 default:
                     help = 1;
@@ -284,6 +287,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                        "  -m socket        Mir server socket\n"
                        "  -s WIDTHxHEIGHT  Force surface size\n"
                        "  -c name          Request cursor image by name\n"
+                       "  -q               Quiet mode (no messages output)\n"
                        , argv[0]);
                 return 0;
             }
