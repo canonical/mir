@@ -78,6 +78,6 @@ pushd ${BUILD_DIR} > /dev/null
       -DMIR_PLATFORM=android\;mesa \
       .. 
 
-    make -j${NUM_JOBS}
+    make -j${NUM_JOBS} $@
 
 popd > /dev/null 
