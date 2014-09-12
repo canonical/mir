@@ -54,7 +54,10 @@ void ensure_loaded_with_rtld_global()
 {
     Dl_info info;
 
-    dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global), &info);
+    // Cast dladdr itself to work around g++-4.8 warnings (LP: #1366134)
+    typedef int (safe_dladdr_t)(void(*func)(), Dl_info *info);
+    safe_dladdr_t *safe_dladdr = (safe_dladdr_t*)&dladdr;
+    safe_dladdr(&ensure_loaded_with_rtld_global, &info);
     dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
 }
 }
