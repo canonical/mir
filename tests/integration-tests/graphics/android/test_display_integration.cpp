@@ -53,8 +53,7 @@ protected:
         /* note about fb_device: OMAP4 drivers seem to only be able to open fb once
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
            figure out why, we can remove fb_device in the test fixture */
-        auto logger = std::make_shared<mga::NullHwcLogger>();
-        display_resource_factory = std::make_shared<mga::ResourceFactory>(logger);
+        display_resource_factory = std::make_shared<mga::ResourceFactory>();
     }
 
     static void TearDownTestCase()
@@ -79,8 +78,9 @@ TEST_F(AndroidDisplay, display_can_post)
     auto stub_gl_config = std::make_shared<mtd::StubGLConfig>();
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
+    auto logger = std::make_shared<mga::NullHwcLogger>();
     auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, null_display_report, mga::OverlayOptimization::disabled);
+        fb_allocator, display_resource_factory, null_display_report, mga::OverlayOptimization::disabled, logger);
 
     auto program_factory = std::make_shared<mg::ProgramFactory>();
     mga::AndroidDisplay display{display_buffer_factory, program_factory, stub_gl_config, null_display_report};

@@ -22,11 +22,12 @@
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/zoomable.h"
 #include "mir/geometry/point.h"
+#include "mir/thread/basic_thread_pool.h"
 
 #include <mutex>
 #include <memory>
 #include <vector>
-#include <thread>
+#include <future>
 
 namespace mir
 {
@@ -82,7 +83,7 @@ private:
     std::shared_ptr<CompositorReport> const report;
 
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
-    std::vector<std::thread> threads;
+    std::vector<std::future<void>> futures;
 
     std::shared_ptr<graphics::Cursor> const vcursor;
     std::mutex state_guard;
@@ -90,8 +91,9 @@ private:
     bool compose_on_start;
 
     void schedule_compositing(int number_composites);
-    
+
     std::shared_ptr<mir::scene::Observer> observer;
+    mir::thread::BasicThreadPool thread_pool;
 };
 
 }

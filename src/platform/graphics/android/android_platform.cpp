@@ -127,7 +127,7 @@ void mga::AndroidPlatform::fill_buffer_package(
 
         for(auto i=0; i<buffer_handle->numFds; i++)
         {
-            packer->pack_fd(buffer_handle->data[offset++]);
+            packer->pack_fd(mir::Fd(IntOwnedFd{buffer_handle->data[offset++]}));
         }
         for(auto i=0; i<buffer_handle->numInts; i++)
         {
@@ -162,10 +162,10 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
     auto overlay_option = should_use_overlay_optimization(*options);
     logger->log_overlay_optimization(overlay_option);
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto display_resource_factory = std::make_shared<mga::ResourceFactory>(logger);
+    auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
     auto display_builder = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, display_report, overlay_option);
+        fb_allocator, display_resource_factory, display_report, overlay_option, logger);
     return std::make_shared<mga::AndroidPlatform>(display_builder, display_report);
 }
 

@@ -24,38 +24,6 @@
 
 namespace mg = mir::graphics;
 
-TEST(buffer_id, value_set )
-{
-    unsigned int id_as_int = 44;
-    mg::BufferID id{id_as_int};
-    EXPECT_EQ(id_as_int, id.as_uint32_t());
-}
-
-TEST(buffer_id, equality_testable)
-{
-    unsigned int id_as_int0 = 44;
-    unsigned int id_as_int1 = 41;
-
-    mg::BufferID id0{id_as_int0};
-    mg::BufferID id1{id_as_int1};
-
-    EXPECT_EQ(id0, id0);
-    EXPECT_EQ(id1, id1);
-    EXPECT_NE(id0, id1);
-    EXPECT_NE(id1, id0);
-}
-
-TEST(buffer_id, less_than_testable)
-{
-    unsigned int id_as_int0 = 44;
-    unsigned int id_as_int1 = 41;
-
-    mg::BufferID id0{id_as_int0};
-    mg::BufferID id1{id_as_int1};
-
-    EXPECT_LT(id1, id0);
-}
-
 TEST(unique_generator, generate_unique)
 {
     using mir::test::doubles::StubBuffer;

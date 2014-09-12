@@ -23,7 +23,6 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/geometry/point.h"
-#include "mir/graphics/pixel_format_utils.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>

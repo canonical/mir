@@ -59,13 +59,8 @@ public:
                                  SetArgPointee<4>(1),
                                  Return(EGL_TRUE)));
 
-        const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_MESA_drm_image";
-        const char* gl_exts = "GL_OES_texture_npot GL_OES_EGL_image";
-
-        ON_CALL(mock_egl, eglQueryString(_,EGL_EXTENSIONS))
-            .WillByDefault(Return(egl_exts));
-        ON_CALL(mock_gl, glGetString(GL_EXTENSIONS))
-            .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
+        mock_egl.provide_egl_extensions();
+        mock_gl.provide_gles_extensions();
 
 #ifndef ANDROID
         fake_devices.add_standard_device("standard-drm-devices");

@@ -203,6 +203,18 @@ mtf::Result mtf::TestingProcessManager::wait_for_shutdown_server_process()
     return result;
 }
 
+std::vector<mtf::Result> mtf::TestingProcessManager::wait_for_shutdown_client_processes()
+{
+    std::vector<Result> results;
+
+    for (auto const& client : clients)
+        results.push_back(client->wait_for_termination());
+
+    clients.clear();
+
+    return results;
+}
+
 void mtf::TestingProcessManager::terminate_client_processes()
 {
     if (is_test_process)
@@ -211,19 +223,6 @@ void mtf::TestingProcessManager::terminate_client_processes()
         {
             client->terminate();
         }
-    }
-}
-
-void mtf::TestingProcessManager::kill_client_processes()
-{
-    if (is_test_process)
-    {
-        for(auto client : clients)
-        {
-            client->kill();
-        }
-
-        clients.clear();
     }
 }
 

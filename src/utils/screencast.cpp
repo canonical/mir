@@ -379,6 +379,7 @@ try
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
+    signal(SIGHUP, shutdown);
 
     char const* socket_name = vm.count("mir-socket-file") ? socket_filename.c_str() : nullptr;
     auto const connection = mir::raii::deleter_for(

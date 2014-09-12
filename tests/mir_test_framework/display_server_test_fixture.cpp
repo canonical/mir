@@ -87,15 +87,14 @@ mtf::Result BespokeDisplayServerTestFixture::wait_for_shutdown_server_process()
     return process_manager.wait_for_shutdown_server_process();
 }
 
+std::vector<mtf::Result> BespokeDisplayServerTestFixture::wait_for_shutdown_client_processes()
+{
+    return process_manager.wait_for_shutdown_client_processes();
+}
+
 void BespokeDisplayServerTestFixture::terminate_client_processes()
 {
     process_manager.terminate_client_processes();
-}
-
-
-void BespokeDisplayServerTestFixture::kill_client_processes()
-{
-    process_manager.kill_client_processes();
 }
 
 void BespokeDisplayServerTestFixture::run_in_test_process(
