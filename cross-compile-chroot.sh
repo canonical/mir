@@ -24,9 +24,11 @@ do
     case $OPTNAME in
       c )
         clean_build_dir ${BUILD_DIR}
+        shift
         ;;
       u )
         _do_update_chroot=1
+        shift
         ;;
       h )
         usage
