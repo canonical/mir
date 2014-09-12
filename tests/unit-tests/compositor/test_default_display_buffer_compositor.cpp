@@ -505,6 +505,7 @@ TEST_F(DefaultDisplayBufferCompositor, ignores_invisible_scene_elements)
     compositor.composite();
 }
 
+#if 0
 TEST_F(DefaultDisplayBufferCompositor, zooms_to_correct_region)
 {
     using namespace testing;
@@ -590,3 +591,4 @@ TEST_F(DefaultDisplayBufferCompositor, zoom_disables_bypass)
     compositor.zoom(5.0f);
     compositor.composite();
 }
+#endif
