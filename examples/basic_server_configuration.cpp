@@ -20,7 +20,6 @@
 #include "mir/options/default_configuration.h"
 
 #include "mir/abnormal_exit.h"
-#include "mir/frontend/connector.h"
 #include "mir/options/option.h"
 
 #include <cstdlib>
@@ -54,9 +53,6 @@ void BasicServerConfiguration::launch_client()
 {
     if (the_options()->is_set(launch_child_opt))
     {
-        char buffer[128] = {0};
-        sprintf(buffer, "fd://%d", the_connector()->client_socket_fd());
-        setenv("MIR_SOCKET", buffer, 1);
         auto ignore = std::system((the_options()->get<std::string>(launch_child_opt) + "&").c_str());
         (void)ignore;
     }

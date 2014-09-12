@@ -25,8 +25,8 @@
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test_framework/cross_process_sync.h"
-#include "examples/testdraw/graphics_region_factory.h"
-#include "examples/testdraw/patterns.h"
+#include "playground/testdraw/graphics_region_factory.h"
+#include "playground/testdraw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
 

@@ -19,7 +19,7 @@
 #include "inprocess_egl_client.h"
 
 #include "mir/run_mir.h"
-#include "../server_configuration.h"
+#include "server_configuration.h"
 
 #include "mir/report_exception.h"
 
