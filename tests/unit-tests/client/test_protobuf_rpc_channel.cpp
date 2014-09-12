@@ -243,9 +243,9 @@ TEST_F(MirProtobufRpcChannelTest, ReadsFds)
 {
     mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
     mir::protobuf::Buffer reply;
-    mir::protobuf::SurfaceId request;
+    mir::protobuf::BufferRequest request;
 
-    channel_user.next_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){}));
+    channel_user.exchange_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){}));
 
     std::initializer_list<int> fds = {2, 3, 5};
 
@@ -310,10 +310,10 @@ TEST_F(MirProtobufRpcChannelTest, NotifiesOfDisconnectOnWriteError)
 
     mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
     mir::protobuf::Buffer reply;
-    mir::protobuf::SurfaceId request;
+    mir::protobuf::BufferRequest request;
 
     EXPECT_THROW(
-        channel_user.next_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){})),
+        channel_user.exchange_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){})),
         std::runtime_error);
 
     EXPECT_TRUE(disconnected);
@@ -371,10 +371,10 @@ TEST_F(MirProtobufRpcChannelTest, NotifiesOfDisconnectOnlyOnce)
 
     mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
     mir::protobuf::Buffer reply;
-    mir::protobuf::SurfaceId request;
+    mir::protobuf::BufferRequest request;
 
     EXPECT_THROW(
-        channel_user.next_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){})),
+        channel_user.exchange_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){})),
         std::runtime_error);
 
     EXPECT_TRUE(disconnected);
