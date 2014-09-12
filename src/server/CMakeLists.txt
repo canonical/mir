@@ -1,8 +1,8 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
-  ${PROJECT_SOURCE_DIR}/include.private/platform
+  ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/include/server
-  ${PROJECT_SOURCE_DIR}/include.private/server
+  ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 add_subdirectory(compositor/)
@@ -13,6 +13,7 @@ add_subdirectory(logging/)
 add_subdirectory(scene/)
 add_subdirectory(frontend/)
 add_subdirectory(shell/)
+add_subdirectory(thread/)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -48,6 +49,7 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirlogger>
   $<TARGET_OBJECTS:mirnestedgraphics>
   $<TARGET_OBJECTS:miroffscreengraphics>
+  $<TARGET_OBJECTS:mirthread>
 )
 
 set(MIR_SERVER_REFERENCES

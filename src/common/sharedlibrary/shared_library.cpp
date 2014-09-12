@@ -53,3 +53,15 @@ void* mir::SharedLibrary::load_symbol(char const* function_name) const
         BOOST_THROW_EXCEPTION(std::runtime_error(dlerror()));
     }
 }
+
+void* mir::SharedLibrary::load_symbol(char const* function_name, char const* version) const
+{
+    if (void* result = dlvsym(so, function_name, version))
+    {
+        return result;
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error(dlerror()));
+    }
+}

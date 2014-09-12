@@ -34,6 +34,7 @@ class MockGL
 public:
     MockGL();
     ~MockGL();
+    void provide_gles_extensions();
 
     // Please keep these ordered by name
     MOCK_METHOD1(glActiveTexture, void(GLenum));

@@ -98,6 +98,14 @@
 }
 
 {
+    dlvsym_value4
+    Memcheck:Addr4
+    ...
+    fun:dlvsym
+    ...
+}
+
+{
     dlsym_cond
     Memcheck:Cond
     ...
