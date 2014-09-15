@@ -16,7 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/scene/buffer_stream_factory.h"
@@ -43,11 +45,6 @@ MATCHER(DidNotTimeOut, "did not time out")
 {
     return arg;
 }
-struct ExchangeBufferTest : BespokeDisplayServerTestFixture
-{
-    std::vector<mg::BufferID> const buffer_id_exchange_seq{
-        mg::BufferID{4}, mg::BufferID{8}, mg::BufferID{9}, mg::BufferID{3}, mg::BufferID{4}};
-};
 
 struct StubStream : public mc::BufferStream
 {
@@ -96,89 +93,82 @@ struct StubStreamFactory : public msc::BufferStreamFactory
     { return std::make_shared<StubStream>(buffer_id_seq); }
     std::vector<mg::BufferID> const buffer_id_seq;
 };
+
+struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
+{
+    ExchangeServerConfiguration(std::vector<mg::BufferID> const& id_seq) :
+       stream_factory{std::make_shared<StubStreamFactory>(id_seq)}
+    {
+    }
+
+    std::shared_ptr<msc::BufferStreamFactory> the_buffer_stream_factory() override
+    {
+        return stream_factory;
+    }
+
+    std::shared_ptr<msc::BufferStreamFactory> const stream_factory;
+};
+
+struct ExchangeBufferTest : mir_test_framework::InProcessServer
+{
+    std::vector<mg::BufferID> const buffer_id_exchange_seq{
+        mg::BufferID{4}, mg::BufferID{8}, mg::BufferID{9}, mg::BufferID{3}, mg::BufferID{4}};
+    ExchangeServerConfiguration server_configuration{buffer_id_exchange_seq};
+    mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
+    mtf::UsingStubClientPlatform using_stub_client_platform;
+
+    void buffer_arrival()
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        arrived = true;
+        cv.notify_all();
+    }
+
+    //TODO: once the next_buffer rpc is deprecated, change this code out for the
+    //      mir_surface_next_buffer() api call
+    bool exchange_buffer(mp::DisplayServer& server)
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        mp::Buffer next;
+        server.exchange_buffer(0, &buffer_request, &next,
+                       google::protobuf::NewCallback(this, &ExchangeBufferTest::buffer_arrival));
+
+        arrived = false;
+        auto completed = cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
+        *buffer_request.mutable_buffer() = next;
+        return completed;
+    }
+
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool arrived{false};
+    mp::BufferRequest buffer_request; 
+};
 }
 
 TEST_F(ExchangeBufferTest, exchanges_happen)
 {
-    struct ServerConfig : TestingServerConfiguration
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    MirSurfaceParameters const request_params =
     {
-        ServerConfig(std::vector<mg::BufferID> const& id_seq) :
-           stream_factory{std::make_shared<StubStreamFactory>(id_seq)}
-        {
-        }
+        __PRETTY_FUNCTION__,
+        640, 480,
+        mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware,
+        mir_display_output_id_invalid
+    };
+    auto surface = mir_connection_create_surface_sync(connection, &request_params);
+    auto rpc_channel = connection->rpc_channel();
+    mp::DisplayServer::Stub server(
+        rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
+    buffer_request.mutable_buffer()->set_buffer_id(buffer_id_exchange_seq.begin()->as_value());
 
-        std::shared_ptr<msc::BufferStreamFactory> the_buffer_stream_factory() override
-        {
-            return stream_factory;
-        }
-
-        std::shared_ptr<msc::BufferStreamFactory> const stream_factory;
-    } server_config{buffer_id_exchange_seq};
-
-    launch_server_process(server_config);
-
-    struct Client : TestingClientConfiguration
+    for(auto const& id : buffer_id_exchange_seq)
     {
-        Client(std::vector<mg::BufferID> const& id_exchange_sequence)
-            : buffer_id_seq{id_exchange_sequence}
-        {
-        }
+        EXPECT_THAT(buffer_request.buffer().buffer_id(), testing::Eq(id.as_value()));
+        ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
+    }
 
-        void buffer_arrival()
-        {
-            std::unique_lock<decltype(mutex)> lk(mutex);
-            arrived = true;
-            cv.notify_all();
-        }
-
-        //TODO: once the next_buffer rpc is deprecated, change this code out for the
-        //      mir_surface_next_buffer() api call
-        bool exchange_buffer(mp::DisplayServer& server)
-        {
-            std::unique_lock<decltype(mutex)> lk(mutex);
-            mp::Buffer next;
-            server.exchange_buffer(0, &buffer_request, &next,
-                           google::protobuf::NewCallback(this, &Client::buffer_arrival));
-
-            arrived = false;
-            auto completed = cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
-            *buffer_request.mutable_buffer() = next;
-            return completed;
-        }
- 
-        void exec()
-        {
-            auto connection = mir_connect_sync(mtf::test_socket_file().c_str(), __PRETTY_FUNCTION__);
-            MirSurfaceParameters const request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-            auto surface = mir_connection_create_surface_sync(connection, &request_params);
-            auto rpc_channel = connection->rpc_channel();
-            mp::DisplayServer::Stub server(
-                rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
-            buffer_request.mutable_buffer()->set_buffer_id(buffer_id_seq.begin()->as_value());
-
-            for(auto const& id : buffer_id_seq)
-            {
-                EXPECT_THAT(buffer_request.buffer().buffer_id(), testing::Eq(id.as_value()));
-                ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
-            }
-
-            mir_surface_release_sync(surface);
-            mir_connection_release(connection);
-        }
-
-        private:
-            std::mutex mutex;
-            std::condition_variable cv;
-            bool arrived{false};
-            mp::BufferRequest buffer_request; 
-            std::vector<mg::BufferID> const buffer_id_seq;
-    } client_config{buffer_id_exchange_seq};
-    launch_client_process(client_config);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
 }
