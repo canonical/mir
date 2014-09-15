@@ -1,3 +1,4 @@
+b64b3ca16e4130c838bdca248189f8055804c849  include/client/mir/client/private.h
 cbe1e3ccfea6ab5865510f4f598ec11571fcc852  include/client/mir_toolkit/mir_client_library_debug.h
 b53736bcb22ddc09aab8275cfdd05c109fdd0f12  include/client/mir_toolkit/mir_client_library_drm.h
 1522a5fcdb01c0d9a990364539c4f1255853eef7  include/client/mir_toolkit/mir_client_library.h

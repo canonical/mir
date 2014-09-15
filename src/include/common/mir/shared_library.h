@@ -43,9 +43,18 @@ public:
     {
         return load_function<FunctionPtr>(function_name.c_str());
     }
+
+    template<typename FunctionPtr>
+    FunctionPtr load_function(std::string const& function_name, std::string const& version) const
+    {
+        FunctionPtr result{};
+        (void*&)result = load_symbol(function_name.c_str(), version.c_str());
+        return result;
+    }
 private:
     void* const so;
     void* load_symbol(char const* function_name) const;
+    void* load_symbol(char const* function_name, char const* version) const;
     SharedLibrary(SharedLibrary const&) = delete;
     SharedLibrary& operator=(SharedLibrary const&) = delete;
 };
