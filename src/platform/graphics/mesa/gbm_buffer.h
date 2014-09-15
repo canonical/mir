@@ -67,7 +67,7 @@ public:
     virtual void gl_bind_to_texture() override;
 
     bool can_bypass() const override;
-    
+
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;
     uint32_t bo_flags;
