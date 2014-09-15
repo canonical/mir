@@ -39,8 +39,7 @@ public:
     {
         geometry::Point touch_location;
         
-        // If pressure is non-zero, it indicates a press at the spot, as
-        // opposed to a hover.
+        // If pressure is zero, the touch-point can be interpreted as a hover.
         float pressure;
     };
     
@@ -48,7 +47,7 @@ public:
     virtual void enable() = 0;
     virtual void disable() = 0;
     
-    // Visualize a describe set of touches (replacing the previous set of visualized touches)
+    // Visualize a given set of touches statelessly.
     virtual void visualize_touches(std::vector<Spot> const& touches) = 0;
 
 protected:
