@@ -150,7 +150,7 @@ MIR_SERVER_25 {
     mir::DefaultServerConfiguration::the_input_sender*;
     mir::DefaultServerConfiguration::the_input_send_observer*;
     mir::DefaultServerConfiguration::the_input_targeter*;
-    mir::DefaultServerConfiguration::the_input_targets*;
+    mir::DefaultServerConfiguration::the_input_scene*;
     mir::DefaultServerConfiguration::the_logger*;
     mir::DefaultServerConfiguration::the_main_loop*;
     mir::DefaultServerConfiguration::the_mediating_display_changer*;

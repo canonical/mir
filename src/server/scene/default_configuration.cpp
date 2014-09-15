@@ -57,7 +57,7 @@ mir::DefaultServerConfiguration::the_scene()
                          { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
 }
 
-std::shared_ptr<mi::Scene> mir::DefaultServerConfiguration::the_input_targets()
+std::shared_ptr<mi::Scene> mir::DefaultServerConfiguration::the_input_scene()
 {
     return surface_stack([this]()
                          { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });

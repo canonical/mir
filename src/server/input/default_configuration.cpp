@@ -115,7 +115,7 @@ mir::DefaultServerConfiguration::the_android_input_dispatcher()
             auto dispatcher = std::make_shared<droidinput::InputDispatcher>(
                 the_dispatcher_policy(),
                 the_input_report(),
-                std::make_shared<mia::InputTargetEnumerator>(the_input_targets(), registrar));
+                std::make_shared<mia::InputTargetEnumerator>(the_input_scene(), registrar));
             registrar->set_dispatcher(dispatcher);
             return dispatcher;
         });
@@ -235,7 +235,7 @@ mir::DefaultServerConfiguration::the_cursor_listener()
     return cursor_listener(
         [this]() -> std::shared_ptr<mi::CursorListener>
         {
-            return std::make_shared<mi::CursorController>(the_input_targets(), 
+            return std::make_shared<mi::CursorController>(the_input_scene(), 
                 the_cursor(), the_default_cursor_image());
         });
 
@@ -248,7 +248,7 @@ mir::DefaultServerConfiguration::the_touch_visualizer()
         [this]() -> std::shared_ptr<mi::TouchVisualizer>
         {
             auto visualizer = std::make_shared<mi::TouchspotController>(the_buffer_allocator(), the_buffer_writer(),
-                the_input_targets());
+                the_input_scene());
 
             // The visualizer is disabled by default and can be enabled statically via
             // the MIR_SERVER_ENABLE_TOUCHSPOTS option. In the USC/unity8/autopilot case
