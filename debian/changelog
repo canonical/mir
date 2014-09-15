@@ -1,3 +1,21 @@
+mir (0.7.2+14.10.20140912-0ubuntu1) utopic; urgency=medium
+
+  [ Alexandros Frantzis ]
+  * New upstream release 0.7.2 (https://launchpad.net/mir/+milestone/0.7.2)
+    - Bug fixes
+      . Restore support for gcc-4.8/trusty (LP: #1366134)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 12 Sep 2014 09:07:49 +0000
+
+mir (0.7.1+14.10.20140909.1-0ubuntu1) utopic; urgency=medium
+
+  [ Alberto Aguirre ]
+  * New upstream release 0.7.1 (https://launchpad.net/mir/+milestone/0.7.1)
+    - Bug fixes
+      . Recycle compositor threads by using a thread pool (LP: #1362841) 
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 09 Sep 2014 18:28:01 +0000
+
 mir (0.7.0+14.10.20140829-0ubuntu1) utopic; urgency=medium
 
   [ Daniel van Vugt ]
@@ -27,10 +45,12 @@ mir (0.7.0+14.10.20140829-0ubuntu1) utopic; urgency=medium
       . Mircommon ABI bumped to 1
       . Mirplatform ABI bumped to 2
       . Mirserver ABI bumped to 25
-    - API changes
-      . Deleted function - frontend::Shell::create_surface_for(). If you have
-        the std::shared_ptr<frontend::Session> session, you can just do
-        session->create_surface(params) instead to get a SurfaceId
+    - API changes between Mir 0.6 and 0.7:
+      . mirserver: Deleted function - frontend::Shell::create_surface_for().
+        If you have the std::shared_ptr<frontend::Session> session, you can
+        just do session->create_surface(params) instead to get a SurfaceId.
+      . mirplatform: class BufferID has been replaced with a typedef. Also,
+        the BufferIPCPacker interface has changed slightly [pack_fd()].
     - Bug fixes:
       . Ensure we process lifecycle events before the nested server is torn
         down (LP: #1353465)
@@ -53,10 +73,11 @@ mir (0.7.0+14.10.20140829-0ubuntu1) utopic; urgency=medium
         needed by other objects (LP: #1358191)
       . Examples: Register the DemoCompositor with the Scene to properly
         process visibility events (LP: #1359487)
-      . Mir_demo_client_basic: Don't assert on user errors like failing to
+      . mir_demo_client_basic: Don't assert on user errors like failing to
         connect to a Mir server (LP: #1331958)
       . Tests: Explicitly depend on GMock target to avoid build races
         (LP: #1362646)
+      . Some Mir clients spin at 100% CPU if the server dies (LP: #1340120)
 
   [ Ubuntu daily release ]
   * New rebuild forced

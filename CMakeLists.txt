@@ -104,7 +104,7 @@ add_definitions(-DLOG_NDEBUG=1)
 
 enable_testing()
 
-include_directories(include/common include.private/common)
+include_directories(include/common src/include/common)
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS date_time system program_options iostreams filesystem REQUIRED)
@@ -190,6 +190,7 @@ option(MIR_ENABLE_TESTS "Build tests" ON)
 add_subdirectory(benchmarks/)
 add_subdirectory(tools/)
 add_subdirectory(examples/)
+add_subdirectory(playground/)
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
 
@@ -200,10 +201,10 @@ if (MIR_ENABLE_TESTS)
 
   # There's no nice way to format this. Thanks CMake.
   add_test(LGPL-required
-    /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/common ${PROJECT_SOURCE_DIR}/include/common ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform"
+    /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/common ${PROJECT_SOURCE_DIR}/include/common ${PROJECT_SOURCE_DIR}/src/include/common ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform ${PROJECT_SOURCE_DIR}/src/include/platform"
   )
   add_test(GPL-required
-    /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/include/test ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
+    /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/src/include/server ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
   )
   
   add_test(NAME server-ABI-unchanged
@@ -229,3 +230,5 @@ endif ()
 
 enable_coverage_report(mirserver)
 include (cmake/Doxygen.cmake)
+include (cmake/ABICheck.cmake)
+

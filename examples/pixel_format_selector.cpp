@@ -19,11 +19,18 @@
 #include "pixel_format_selector.h"
 
 #include "mir/graphics/display_configuration.h"
-#include "mir/graphics/pixel_format_utils.h"
 
 #include <stdexcept>
 #include <algorithm>
 
+namespace
+{
+bool contains_alpha(MirPixelFormat format)
+{
+    return (format == mir_pixel_format_abgr_8888 ||
+            format == mir_pixel_format_argb_8888);
+}
+}
 
 namespace mir
 {
@@ -48,7 +55,7 @@ void PixelFormatSelector::apply_to(graphics::DisplayConfiguration & conf)
                                       conf_output.pixel_formats.end(),
                                       [&](MirPixelFormat format) -> bool
                                           {
-                                              return graphics::contains_alpha(format) == with_alpha;
+                                              return contains_alpha(format) == with_alpha;
                                           }
                                      );
 

@@ -70,28 +70,12 @@ mir_eglapp_bool mir_eglapp_running(void)
 
 void mir_eglapp_swap_buffers(void)
 {
-    static time_t lasttime = 0;
-    static int lastcount = 0;
-    static int count = 0;
-    time_t now = time(NULL);
-    time_t dtime;
-    int dcount;
     EGLint width, height;
 
     if (!running)
         return;
 
     eglSwapBuffers(egldisplay, eglsurface);
-
-    count++;
-    dcount = count - lastcount;
-    dtime = now - lasttime;
-    if (dtime)
-    {
-        printf("%d FPS\n", dcount);
-        lasttime = now;
-        lastcount = count;
-    }
 
     /*
      * Querying the surface (actually the current buffer) dimensions here is
