@@ -24,15 +24,14 @@ namespace graphics
 {
 class Buffer;
 
-/// An interface provided by the graphics platform which may be used on the server side
-/// to write pixel data to buffers. Currently in use only by cursors and touchspots
-/// (which can be seen as similar to inprocess-software-clients).
+/// An interface provided by the graphics platform allowing for writing untiled pixel data into buffers.
 class BufferWriter
 {
 public:
     virtual ~BufferWriter() = default;
 
-    // Expects data to be an unstrided array containing buffer.width*buffer.height pixels.
+    // Expects data to be an unstrided array containing (buffer.width * buffer.height) pixels. Likewise
+    // it is expected that buffer and data match in pixel format.
     virtual void write(Buffer& buffer, unsigned char const* data, size_t size) = 0;
 
 protected:
