@@ -109,8 +109,11 @@ int main(int argc, char* argv[])
             swapinterval = 0;
             break;
         case 'q':
-            /* Deprecated */
-            break;
+            {
+                FILE *unused = freopen("/dev/null", "a", stdout);
+                (void)unused;
+                break;
+            }
         case '?':
         case 'h':
         default:
@@ -118,6 +121,7 @@ int main(int argc, char* argv[])
                    "    -m <Mir server socket>  Connect to a specific Mir socket\n"
                    "    -h  Show this help text\n"
                    "    -n  Don't sync to vblank\n"
+                   "    -q  Quiet mode (no messages output)\n"
                    , argv[0]);
             return -1;
         }

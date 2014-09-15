@@ -21,7 +21,7 @@
 #include "mir_test_doubles/fake_renderable.h"
 #include "mir_test_doubles/stub_gl_program_factory.h"
 #include "mir_test_doubles/mock_gl.h"
-#include "examples/demo-shell/demo_renderer.h"
+#include "playground/demo-shell/demo_renderer.h"
 #include <gtest/gtest.h>
 
 namespace mtd = mir::test::doubles;

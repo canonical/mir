@@ -38,3 +38,8 @@ std::string mir_test_framework::executable_path()
     buf[tmp] = '\0';
     return dirname(buf);
 }
+
+std::string mir_test_framework::library_path()
+{
+    return executable_path() + "/../lib";
+}

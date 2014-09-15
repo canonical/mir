@@ -27,7 +27,6 @@
 #include "mir/compositor/compositor.h"
 
 #include <linux/input.h>
-#include <android/keycodes.h>  // TODO remove this dependency
 
 #include <cassert>
 #include <cstdlib>
@@ -124,6 +123,7 @@ bool me::WindowManager::handle(MirEvent const& event)
     assert(compositor);
 
     bool handled = false;
+    static int const ANDROID_KEYCODE_POWER = 26;
 
     if (event.key.type == mir_event_type_key &&
         event.key.action == mir_key_action_down)
@@ -136,7 +136,7 @@ bool me::WindowManager::handle(MirEvent const& event)
         }
         else if ((event.key.modifiers & mir_key_modifier_alt &&
                   event.key.scan_code == KEY_P) ||
-                 (event.key.key_code == AKEYCODE_POWER))
+                 (event.key.key_code == ANDROID_KEYCODE_POWER))
         {
             compositor->stop();
             auto conf = display->configuration();

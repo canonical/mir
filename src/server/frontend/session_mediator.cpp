@@ -248,6 +248,36 @@ void mf::SessionMediator::next_buffer(
         });
 }
 
+void mf::SessionMediator::exchange_buffer(
+    google::protobuf::RpcController*,
+    mir::protobuf::BufferRequest const* request,
+    mir::protobuf::Buffer* response,
+    google::protobuf::Closure* done)
+{
+    mf::SurfaceId const surface_id{request->id().value()};
+    mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
+
+    auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
+    auto const session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto const& surface = session->get_surface(surface_id);
+    surface->swap_buffers(
+        surface_tracker.buffer_from(buffer_id),
+        [this, surface_id, lock, response, done](mg::Buffer* new_buffer)
+        {
+            lock->unlock();
+
+            if (surface_tracker.track_buffer(surface_id, new_buffer))
+                pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::update_msg);
+            else
+                pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::full_msg);
+
+            done->Run();
+        });
+}
+
 void mf::SessionMediator::release_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceId* request,
