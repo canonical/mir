@@ -20,6 +20,7 @@
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/scene/buffer_stream_factory.h"
 #include "mir/compositor/buffer_stream.h"
@@ -133,8 +134,13 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         server.exchange_buffer(0, &buffer_request, &next,
                        google::protobuf::NewCallback(this, &ExchangeBufferTest::buffer_arrival));
 
+
         arrived = false;
         auto completed = cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
+        for(auto i = 0; i < next.fd().size(); i++)
+            ::close(next.fd(i));
+        next.set_fds_on_side_channel(0);
+
         *buffer_request.mutable_buffer() = next;
         return completed;
     }
@@ -162,6 +168,8 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
     mp::DisplayServer::Stub server(
         rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
     buffer_request.mutable_buffer()->set_buffer_id(buffer_id_exchange_seq.begin()->as_value());
+    for(auto i = 0; i < buffer_request.buffer().fd().size(); i++)
+        ::close(buffer_request.buffer().fd(i));
 
     for(auto const& id : buffer_id_exchange_seq)
     {
