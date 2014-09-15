@@ -34,7 +34,7 @@ void mgm::BufferWriter::write(mg::Buffer& buffer, unsigned char const* data, siz
 {
     auto shm_buffer = dynamic_cast<mgm::ShmBuffer*>(&buffer);
     if (!shm_buffer)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Direct CPU write is only supported to software allocated buffers on mesa platform"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Direct CPU write is only supported to software allocated buffers on mesa platform"));
     
     shm_buffer->write(data, size);
 }
