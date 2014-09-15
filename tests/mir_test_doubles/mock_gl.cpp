@@ -20,6 +20,8 @@
 #include "mir_test_doubles/mock_gl.h"
 #include <gtest/gtest.h>
 
+#include <cstring>
+
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -36,6 +38,22 @@ mtd::MockGL::MockGL()
 
     ON_CALL(*this, glCheckFramebufferStatus(_))
         .WillByDefault(Return(GL_FRAMEBUFFER_COMPLETE));
+
+    ON_CALL(*this, glGenTextures(_, _))
+        .WillByDefault(Invoke(
+            [] (GLsizei n, GLuint *textures)
+            {
+                std::memset(textures, 0, n * sizeof(*textures));
+            }));
+}
+
+void mtd::MockGL::provide_gles_extensions()
+{
+    using namespace testing;
+    const char* gl_exts = "GL_OES_EGL_image";
+
+    ON_CALL(*this, glGetString(GL_EXTENSIONS))
+        .WillByDefault(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
 }
 
 mtd::MockGL::~MockGL()
