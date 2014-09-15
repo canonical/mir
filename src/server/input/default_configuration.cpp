@@ -253,7 +253,7 @@ mir::DefaultServerConfiguration::the_touch_visualizer()
             // The visualizer is disabled by default and can be enabled statically via
             // the MIR_SERVER_ENABLE_TOUCHSPOTS option. In the USC/unity8/autopilot case
             // it will be toggled at runtime via com.canonical.Unity.Screen DBus interface
-            if (the_options()->is_set(options::touchspot_opt))
+            if (the_options()->is_set(options::touchspots_opt))
             {
                 visualizer->enable();
             }
