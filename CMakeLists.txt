@@ -230,3 +230,5 @@ endif ()
 
 enable_coverage_report(mirserver)
 include (cmake/Doxygen.cmake)
+include (cmake/ABICheck.cmake)
+
