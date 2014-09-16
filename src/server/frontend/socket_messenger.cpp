@@ -153,7 +153,7 @@ bs::error_code mfd::SocketMessenger::receive_msg(
     bs::error_code e;
     size_t nread = 0;
 
-    while (nread != ba::buffer_size(buffer))
+    while (nread < ba::buffer_size(buffer))
     {
         nread += boost::asio::read(
              *socket,
