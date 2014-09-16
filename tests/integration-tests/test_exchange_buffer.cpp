@@ -25,6 +25,7 @@
 #include "mir/scene/buffer_stream_factory.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_client_library_debug.h"
 #include "src/client/mir_connection.h"
 #include <chrono>
 #include <mutex>
@@ -118,37 +119,23 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
     mtf::UsingStubClientPlatform using_stub_client_platform;
 
-    void buffer_arrival()
+    void buffer_arrival(MirSurface*, void*)
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         arrived = true;
         cv.notify_all();
     }
 
-    //TODO: once the next_buffer rpc is deprecated, change this code out for the
-    //      mir_surface_next_buffer() api call
-    bool exchange_buffer(mp::DisplayServer& server)
+    bool exchange_buffer()
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
-        mp::Buffer next;
-        server.exchange_buffer(0, &buffer_request, &next,
-                       google::protobuf::NewCallback(this, &ExchangeBufferTest::buffer_arrival));
-
-
         arrived = false;
-        auto completed = cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
-        for(auto i = 0; i < next.fd().size(); i++)
-            ::close(next.fd(i));
-        next.set_fds_on_side_channel(0);
-
-        *buffer_request.mutable_buffer() = next;
-        return completed;
+        return cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
     }
 
     std::mutex mutex;
     std::condition_variable cv;
     bool arrived{false};
-    mp::BufferRequest buffer_request; 
 };
 }
 
@@ -164,17 +151,11 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
         mir_display_output_id_invalid
     };
     auto surface = mir_connection_create_surface_sync(connection, &request_params);
-    auto rpc_channel = connection->rpc_channel();
-    mp::DisplayServer::Stub server(
-        rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
-    buffer_request.mutable_buffer()->set_buffer_id(buffer_id_exchange_seq.begin()->as_value());
-    for(auto i = 0; i < buffer_request.buffer().fd().size(); i++)
-        ::close(buffer_request.buffer().fd(i));
-
     for(auto const& id : buffer_id_exchange_seq)
     {
-        EXPECT_THAT(buffer_request.buffer().buffer_id(), testing::Eq(id.as_value()));
-        ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
+        EXPECT_THAT(mir_debug_surface_current_buffer_id(surface), testing::Eq(id.as_value()));
+        mir_surface_swap_buffers_sync(surface);//(surface, std::bind(this, &ExchangeBufferTest::buffer_arrival));
+//        ASSERT_THAT(wait_for_exchange(), DidNotTimeout());
     }
 
     mir_surface_release_sync(surface);
