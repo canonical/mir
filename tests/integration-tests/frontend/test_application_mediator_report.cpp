@@ -248,13 +248,20 @@ TEST_F(ApplicationMediatorReport, session_exchange_buffer_called)
                 google::protobuf::NewCallback(&client, &mt::TestProtobufClient::create_surface_done));
             client.wait_for_create_surface();
 
+            mir::protobuf::BufferRequest request;
+            *request.mutable_id() =  client.surface.id();
+            *request.mutable_buffer() =  client.surface.buffer();
+
+        printf("hmm..\n");
+#if 0
             client.display_server.exchange_buffer(
                 0,
-                &client.surface.id(),
+                &request,
                 client.surface.mutable_buffer(),
                 google::protobuf::NewCallback(&client, &mt::TestProtobufClient::exchange_buffer_done));
 
             client.wait_for_exchange_buffer();
+#endif
         }
     } client_process;
 
@@ -283,7 +290,7 @@ TEST_F(ApplicationMediatorReport, session_release_surface_called)
     {
         void exec()
         {
-            testing::NiceMock<mt::TestProtobufClient> client(mtf::test_socket_file(), rpc_timeout_ms);
+            mt::TestProtobufClient client(mtf::test_socket_file(), rpc_timeout_ms);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
 
@@ -345,7 +352,7 @@ TEST_F(ApplicationMediatorReport, session_disconnect_called)
     {
         void exec()
         {
-            testing::NiceMock<mt::TestProtobufClient> client(mtf::test_socket_file(), rpc_timeout_ms);
+            mt::TestProtobufClient client(mtf::test_socket_file(), rpc_timeout_ms);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
 
@@ -415,7 +422,7 @@ TEST_F(ApplicationMediatorReport, prompt_session_start_called)
     {
         void exec()
         {
-            testing::NiceMock<mt::TestProtobufClient> client(mtf::test_socket_file(), rpc_timeout_ms);
+            mt::TestProtobufClient client(mtf::test_socket_file(), rpc_timeout_ms);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
 
@@ -462,7 +469,7 @@ TEST_F(ApplicationMediatorReport, prompt_session_stop_called)
     {
         void exec()
         {
-            testing::NiceMock<mt::TestProtobufClient> client(mtf::test_socket_file(), rpc_timeout_ms);
+            mt::TestProtobufClient client(mtf::test_socket_file(), rpc_timeout_ms);
 
             client.connect_parameters.set_application_name(__PRETTY_FUNCTION__);
 
@@ -492,5 +499,3 @@ TEST_F(ApplicationMediatorReport, prompt_session_stop_called)
 
     launch_client_process(client_process);
 }
-
-
