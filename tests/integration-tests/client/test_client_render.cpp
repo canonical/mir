@@ -234,9 +234,9 @@ struct StubServerGenerator : public mt::StubServerTool
         done->Run();
     }
 
-    virtual void next_buffer(
+    virtual void exchange_buffer(
         ::google::protobuf::RpcController* /*controller*/,
-        ::mir::protobuf::SurfaceId const* /*request*/,
+        ::mir::protobuf::BufferRequest const* /*request*/,
         ::mir::protobuf::Buffer* response,
         ::google::protobuf::Closure* done)
     {

@@ -68,6 +68,47 @@ void invoke(
     DisplayServer* server,
     void (mir::protobuf::DisplayServer::*function)(
         ::google::protobuf::RpcController* controller,
+        const protobuf::BufferRequest* request,
+        protobuf::Buffer* response,
+        ::google::protobuf::Closure* done),
+        Invocation const& invocation)
+{
+    protobuf::BufferRequest parameter_message;
+    parameter_message.ParseFromString(invocation.parameters());
+    auto const result_message = std::make_shared<protobuf::Buffer>();
+
+    auto const callback =
+        google::protobuf::NewCallback<
+            ProtobufMessageProcessor,
+            ::google::protobuf::uint32,
+             std::shared_ptr<protobuf::Buffer>>(
+                self,
+                &ProtobufMessageProcessor::send_response,
+                invocation.id(),
+                result_message);
+
+    try
+    {
+        (server->*function)(
+            0,
+            &parameter_message,
+            result_message.get(),
+            callback);
+    }
+    catch (std::exception const& x)
+    {
+        delete callback;
+        result_message->set_error(boost::diagnostic_information(x));
+        self->send_response(invocation.id(), result_message);
+    }
+}
+
+template<>
+void invoke(
+    ProtobufMessageProcessor* self,
+    DisplayServer* server,
+    void (mir::protobuf::DisplayServer::*function)(
+        ::google::protobuf::RpcController* controller,
         const protobuf::SurfaceId* request,
         protobuf::Buffer* response,
         ::google::protobuf::Closure* done),
