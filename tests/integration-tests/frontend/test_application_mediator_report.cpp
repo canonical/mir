@@ -59,16 +59,17 @@ TEST_F(ApplicationMediatorReport, session_connect_called)
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::SessionMediatorReport>
-        the_session_mediator_report() override
+        std::shared_ptr<mf::SessionMediatorReport> the_session_mediator_report() override
         {
-            auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
-
-            EXPECT_CALL(*result, session_connect_called(testing::_)).
-                Times(1);
-
-            return result;
+            if (!report)
+            {
+                report = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
+                EXPECT_CALL(*report, session_connect_called(testing::_)).
+                    Times(1);
+            }
+            return report;
         }
+        std::shared_ptr<MockApplicationMediatorReport> report;
     } server_processing;
 
     launch_server_process(server_processing);
@@ -100,18 +101,18 @@ TEST_F(ApplicationMediatorReport, session_create_surface_called)
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::SessionMediatorReport>
-        the_session_mediator_report() override
+        std::shared_ptr<mf::SessionMediatorReport> the_session_mediator_report() override
         {
-            auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
-
-            EXPECT_CALL(*result, session_create_surface_called(testing::_)).
-                Times(1);
-
-            return result;
+            if (!report)
+            {
+                report = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
+                EXPECT_CALL(*report, session_create_surface_called(testing::_)).
+                    Times(1);
+            }
+            return report;
         }
+        std::shared_ptr<MockApplicationMediatorReport> report;
     } server_processing;
-
     launch_server_process(server_processing);
 
     struct Client: TestingClientConfiguration
@@ -151,18 +152,18 @@ TEST_F(ApplicationMediatorReport, session_next_buffer_called)
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::SessionMediatorReport>
-        the_session_mediator_report() override
+        std::shared_ptr<mf::SessionMediatorReport> the_session_mediator_report() override
         {
-            auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
-
-            EXPECT_CALL(*result, session_next_buffer_called(testing::_)).
-                Times(1);
-
-            return result;
+            if (!report)
+            {
+                report = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
+                EXPECT_CALL(*report, session_next_buffer_called(testing::_)).
+                    Times(1);
+            }
+            return report;
         }
+        std::shared_ptr<MockApplicationMediatorReport> report;
     } server_processing;
-
     launch_server_process(server_processing);
 
     struct Client: TestingClientConfiguration
@@ -208,18 +209,18 @@ TEST_F(ApplicationMediatorReport, session_exchange_buffer_called)
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::SessionMediatorReport>
-        the_session_mediator_report() override
+        std::shared_ptr<mf::SessionMediatorReport> the_session_mediator_report() override
         {
-            auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
-
-            EXPECT_CALL(*result, session_exchange_buffer_called(testing::_)).
-                Times(1);
-
-            return result;
+            if (!report)
+            {
+                report = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
+                EXPECT_CALL(*report, session_exchange_buffer_called(testing::_)).
+                    Times(1);
+            }
+            return report;
         }
+        std::shared_ptr<MockApplicationMediatorReport> report;
     } server_processing;
-
     launch_server_process(server_processing);
 
     struct Client: TestingClientConfiguration
@@ -269,18 +270,18 @@ TEST_F(ApplicationMediatorReport, session_release_surface_called)
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::SessionMediatorReport>
-        the_session_mediator_report() override
+        std::shared_ptr<mf::SessionMediatorReport> the_session_mediator_report() override
         {
-            auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
-
-            EXPECT_CALL(*result, session_release_surface_called(testing::_)).
-                Times(1);
-
-            return result;
+            if (!report)
+            {
+                report = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
+                EXPECT_CALL(*report, session_release_surface_called(testing::_)).
+                    Times(1);
+            }
+            return report;
         }
+        std::shared_ptr<MockApplicationMediatorReport> report;
     } server_processing;
-
     launch_server_process(server_processing);
 
     struct Client: TestingClientConfiguration
@@ -331,18 +332,18 @@ TEST_F(ApplicationMediatorReport, session_disconnect_called)
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::SessionMediatorReport>
-        the_session_mediator_report() override
+        std::shared_ptr<mf::SessionMediatorReport> the_session_mediator_report() override
         {
-            auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
-
-            EXPECT_CALL(*result, session_disconnect_called(testing::_)).
-                Times(1);
-
-            return result;
+            if (!report)
+            {
+                report = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
+                EXPECT_CALL(*report, session_disconnect_called(testing::_)).
+                    Times(1);
+            }
+            return report;
         }
+        std::shared_ptr<MockApplicationMediatorReport> report;
     } server_processing;
-
     launch_server_process(server_processing);
 
     struct Client: TestingClientConfiguration
@@ -401,18 +402,18 @@ TEST_F(ApplicationMediatorReport, prompt_session_start_called)
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::SessionMediatorReport>
-        the_session_mediator_report() override
+        std::shared_ptr<mf::SessionMediatorReport> the_session_mediator_report() override
         {
-            auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
-
-            EXPECT_CALL(*result, session_start_prompt_session_called(testing::_, testing::_)).
-                Times(1);
-
-            return result;
+            if (!report)
+            {
+                report = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
+                EXPECT_CALL(*report, session_start_prompt_session_called(testing::_, testing::_)).
+                    Times(1);
+            }
+            return report;
         }
+        std::shared_ptr<MockApplicationMediatorReport> report;
     } server_processing;
-
     launch_server_process(server_processing);
 
     struct Client: TestingClientConfiguration
@@ -448,18 +449,18 @@ TEST_F(ApplicationMediatorReport, prompt_session_stop_called)
 {
     struct Server : TestingServerConfiguration
     {
-        std::shared_ptr<mf::SessionMediatorReport>
-        the_session_mediator_report() override
+        std::shared_ptr<mf::SessionMediatorReport> the_session_mediator_report() override
         {
-            auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
-
-            EXPECT_CALL(*result, session_stop_prompt_session_called(testing::_)).
-                Times(1);
-
-            return result;
+            if (!report)
+            {
+                report = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
+                EXPECT_CALL(*report, session_stop_prompt_session_called(testing::_)).
+                    Times(1);
+            }
+            return report;
         }
+        std::shared_ptr<MockApplicationMediatorReport> report;
     } server_processing;
-
     launch_server_process(server_processing);
 
     struct Client: TestingClientConfiguration

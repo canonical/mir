@@ -109,6 +109,7 @@ void mf::SessionMediator::connect(
     ::mir::protobuf::Connection* response,
     ::google::protobuf::Closure* done)
 {
+    printf("CONNECt.\n");
     report->session_connect_called(request->application_name());
 
     auto const session = shell->open_session(client_pid_, request->application_name(), event_sink);
@@ -261,6 +262,8 @@ void mf::SessionMediator::exchange_buffer(
     auto const session = weak_session.lock();
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    report->session_exchange_buffer_called(session->name());
 
     auto const& surface = session->get_surface(surface_id);
     surface->swap_buffers(
