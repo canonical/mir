@@ -46,6 +46,7 @@ set(
   test_server_without_active_outputs.cpp
   test_client_input.cpp
   test_server_startup.cpp
+  test_unresponsive_client.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )
