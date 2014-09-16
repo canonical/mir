@@ -51,7 +51,7 @@ public:
     ~TestingProcessManager();
 
     void launch_server_process(TestingServerConfiguration& config);
-    void launch_client_process(TestingClientConfiguration& config,
+    pid_t launch_client_process(TestingClientConfiguration& config,
                                mir::options::Option const& test_options);
 
     void tear_down_clients();
