@@ -123,13 +123,13 @@ FUNCTION(ENABLE_COVERAGE_REPORT)
             FILE(WRITE ${COVERAGE_XML_COMMAND_FILE}
                  "SET(ENV{LANG} en)\n")
             FILE(APPEND ${COVERAGE_XML_COMMAND_FILE}
-                "EXECUTE_PROCESS(COMMAND \"${GCOVR_EXECUTABLE}\" --exclude=3rd_party.* --exclude=tests.* --exclude=obj-.* --exclude=cmake.* --exclude=include.mir_test.* --exclude=include.mir_test_doubles.* --exclude=include.mir_test_framework.* -c \"${CMAKE_GCOV}\" -x -r \"${CMAKE_SOURCE_DIR}\" OUTPUT_FILE \"${COVERAGE_XML_FILE}\" WORKING_DIRECTORY \"${CMAKE_BINARY_DIR}\")\n")
+                "EXECUTE_PROCESS(COMMAND \"${GCOVR_EXECUTABLE}\" --exclude=3rd_party.* --exclude=tests.* --exclude=obj-.* --exclude=cmake.* --exclude=include.mir_test.* --exclude=include.mir_test_doubles.* --exclude=include.mir_test_framework.* -x -r \"${CMAKE_BINARY_DIR}\" OUTPUT_FILE \"${COVERAGE_XML_FILE}\" WORKING_DIRECTORY \"${CMAKE_BINARY_DIR}\")\n")
         
             ADD_CUSTOM_COMMAND(OUTPUT ${COVERAGE_XML_FILE}
                                COMMAND ${CMAKE_COMMAND} ARGS -P ${COVERAGE_XML_COMMAND_FILE}
                                COMMENT "Generating coverage XML report"
                                VERBATIM)
-                               
+                              
             ADD_CUSTOM_TARGET(coverage-xml
                               DEPENDS ${COVERAGE_XML_FILE})
         
