@@ -1,3 +1,12 @@
+mir (0.7.2+14.10.20140912-0ubuntu1) utopic; urgency=medium
+
+  [ Alexandros Frantzis ]
+  * New upstream release 0.7.2 (https://launchpad.net/mir/+milestone/0.7.2)
+    - Bug fixes
+      . Restore support for gcc-4.8/trusty (LP: #1366134)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 12 Sep 2014 09:07:49 +0000
+
 mir (0.7.1+14.10.20140909.1-0ubuntu1) utopic; urgency=medium
 
   [ Alberto Aguirre ]
