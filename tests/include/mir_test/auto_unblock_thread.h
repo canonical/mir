@@ -41,7 +41,8 @@ public:
     explicit AutoUnblockThread(std::function<void(void)> const& unblock,
         Callable&& f,
         Args&&... args)
-        : unblock{unblock}, thread{f, args...}
+        : unblock{unblock},
+          thread{std::forward<Callable>(f), std::forward<Args>(args)...}
     {}
 
     ~AutoUnblockThread()
@@ -75,7 +76,7 @@ public:
     template<typename Callable, typename... Args>
     explicit AutoJoinThread(Callable&& f,
         Args&&... args)
-        : AutoUnblockThread{[]{}, f, args...}
+        : AutoUnblockThread{[]{}, std::forward<Callable>(f), std::forward<Args>(args)...}
     {}
 };
 

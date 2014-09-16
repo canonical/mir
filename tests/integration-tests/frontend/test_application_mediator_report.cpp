@@ -60,7 +60,7 @@ TEST_F(ApplicationMediatorReport, session_connect_called)
     struct Server : TestingServerConfiguration
     {
         std::shared_ptr<mf::SessionMediatorReport>
-        the_application_mediator_report()
+        the_session_mediator_report() override
         {
             auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
 
@@ -101,7 +101,7 @@ TEST_F(ApplicationMediatorReport, session_create_surface_called)
     struct Server : TestingServerConfiguration
     {
         std::shared_ptr<mf::SessionMediatorReport>
-        the_application_mediator_report()
+        the_session_mediator_report() override
         {
             auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
 
@@ -152,7 +152,7 @@ TEST_F(ApplicationMediatorReport, session_next_buffer_called)
     struct Server : TestingServerConfiguration
     {
         std::shared_ptr<mf::SessionMediatorReport>
-        the_application_mediator_report()
+        the_session_mediator_report() override
         {
             auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
 
@@ -209,7 +209,7 @@ TEST_F(ApplicationMediatorReport, session_exchange_buffer_called)
     struct Server : TestingServerConfiguration
     {
         std::shared_ptr<mf::SessionMediatorReport>
-        the_application_mediator_report()
+        the_session_mediator_report() override
         {
             auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
 
@@ -252,8 +252,6 @@ TEST_F(ApplicationMediatorReport, session_exchange_buffer_called)
             *request.mutable_id() =  client.surface.id();
             *request.mutable_buffer() =  client.surface.buffer();
 
-        printf("hmm..\n");
-#if 0
             client.display_server.exchange_buffer(
                 0,
                 &request,
@@ -261,7 +259,6 @@ TEST_F(ApplicationMediatorReport, session_exchange_buffer_called)
                 google::protobuf::NewCallback(&client, &mt::TestProtobufClient::exchange_buffer_done));
 
             client.wait_for_exchange_buffer();
-#endif
         }
     } client_process;
 
@@ -273,7 +270,7 @@ TEST_F(ApplicationMediatorReport, session_release_surface_called)
     struct Server : TestingServerConfiguration
     {
         std::shared_ptr<mf::SessionMediatorReport>
-        the_application_mediator_report()
+        the_session_mediator_report() override
         {
             auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
 
@@ -335,7 +332,7 @@ TEST_F(ApplicationMediatorReport, session_disconnect_called)
     struct Server : TestingServerConfiguration
     {
         std::shared_ptr<mf::SessionMediatorReport>
-        the_application_mediator_report()
+        the_session_mediator_report() override
         {
             auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
 
@@ -405,7 +402,7 @@ TEST_F(ApplicationMediatorReport, prompt_session_start_called)
     struct Server : TestingServerConfiguration
     {
         std::shared_ptr<mf::SessionMediatorReport>
-        the_application_mediator_report()
+        the_session_mediator_report() override
         {
             auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
 
@@ -452,7 +449,7 @@ TEST_F(ApplicationMediatorReport, prompt_session_stop_called)
     struct Server : TestingServerConfiguration
     {
         std::shared_ptr<mf::SessionMediatorReport>
-        the_application_mediator_report()
+        the_session_mediator_report() override
         {
             auto result = std::make_shared<testing::NiceMock<MockApplicationMediatorReport>>();
 
