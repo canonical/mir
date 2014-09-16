@@ -36,6 +36,14 @@ namespace ba = boost::asio;
 mfd::SocketMessenger::SocketMessenger(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
     : socket(socket)
 {
+    // Make the socket non-blocking to avoid hanging the server when a client
+    // is unresponsive. Also increase the send buffer size to 64KiB to allow
+    // more leeway for transient client freezes.
+    // See https://bugs.launchpad.net/mir/+bug/1350207
+    // TODO: Rework the messenger to support asynchronous sends
+    socket->non_blocking(true);
+    boost::asio::socket_base::send_buffer_size option(64*1024);
+    socket->set_option(option);
 }
 
 mf::SessionCredentials mfd::SocketMessenger::creator_creds() const
@@ -143,11 +151,19 @@ bs::error_code mfd::SocketMessenger::receive_msg(
     ba::mutable_buffers_1 const& buffer)
 {
     bs::error_code e;
-    boost::asio::read(
-         *socket,
-         buffer,
-         boost::asio::transfer_exactly(ba::buffer_size(buffer)),
-         e);
+    size_t nread = 0;
+
+    while (nread < ba::buffer_size(buffer))
+    {
+        nread += boost::asio::read(
+             *socket,
+             ba::mutable_buffers_1{buffer + nread},
+             e);
+
+        if (e && e != ba::error::would_block)
+            break;
+    }
+
     return e;
 }
 
