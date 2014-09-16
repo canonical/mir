@@ -109,7 +109,6 @@ void mf::SessionMediator::connect(
     ::mir::protobuf::Connection* response,
     ::google::protobuf::Closure* done)
 {
-    printf("CONNECt.\n");
     report->session_connect_called(request->application_name());
 
     auto const session = shell->open_session(client_pid_, request->application_name(), event_sink);
