@@ -27,8 +27,8 @@ void mt::CrossProcessAction::exec(std::function<void()> const& f)
     finish_sync.signal_ready();
 }
 
-void mt::CrossProcessAction::operator()()
+void mt::CrossProcessAction::operator()(std::chrono::milliseconds timeout)
 {
     start_sync.signal_ready();
-    finish_sync.wait_for_signal_ready();
+    finish_sync.wait_for_signal_ready_for(timeout);
 }
