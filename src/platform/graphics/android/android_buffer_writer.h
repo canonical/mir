@@ -33,10 +33,10 @@ namespace graphics
 namespace android
 {
 
-class AndroidBufferWriter : public graphics::BufferWriter
+class BufferWriter : public graphics::BufferWriter
 {
 public:
-     AndroidBufferWriter();
+     BufferWriter();
 
      void write(graphics::Buffer& buffer, unsigned char const* pixels, size_t size) override;
 private:

@@ -32,14 +32,14 @@
 namespace mg = mir::graphics;
 namespace mga = mg::android;
 
-mga::AndroidBufferWriter::AndroidBufferWriter()
+mga::BufferWriter::BufferWriter()
 {
     auto err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, (hw_module_t const **)(&hw_module));
     if (err < 0)
         BOOST_THROW_EXCEPTION(std::runtime_error("Could not open hardware module"));
 }
 
-void mga::AndroidBufferWriter::write(mg::Buffer& buffer, unsigned char const* data, size_t size)
+void mga::BufferWriter::write(mg::Buffer& buffer, unsigned char const* data, size_t size)
 {
     auto buffer_size = buffer.size();
     auto bpp = MIR_BYTES_PER_PIXEL(buffer.pixel_format());
