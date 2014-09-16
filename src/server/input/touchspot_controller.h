@@ -39,8 +39,8 @@ class Scene;
 class TouchspotRenderable;
 
 /// Receives touchspot events out of the input stack and manages appearance
-/// of touchspot renderables for visualization. Touchspot visualization
-/// and must be enabled through a call to ::enable
+/// of touchspot renderables for visualization. Touchspot visualization is 
+/// disabled by default and must be enabled through a call to ::enable.
 class TouchspotController : public TouchVisualizer
 {
 public:
