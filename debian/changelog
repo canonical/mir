@@ -1,12 +1,13 @@
-mir (0.7.3) UNRELEASED; urgency=medium
+mir (0.7.3-0ubuntu1) UNRELEASED; urgency=medium
 
+  [ Andreas Pokorny ]
   * New upstream release 0.7.3 (https://launchpad.net/mir/+milestone/0.7.3)
     - Bug fixes
       . Fix constructor syntax errors (LP: #1369389)
       . server: Workaround for unresponsive clients causing the server to hang 
         (LP: #1350207)
 
- -- Andreas Pokorny <andreas.pokorny@canonical.com>  Tue, 16 Sep 2014 10:25:01 +0200
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 17 Sep 2014 11:23:23 +0800
 
 mir (0.7.2+14.10.20140912-0ubuntu1) utopic; urgency=medium
 
