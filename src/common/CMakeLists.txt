@@ -42,7 +42,7 @@ target_link_libraries(mircommon
 )
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIRCOMMON_ABI 2)
+set(MIRCOMMON_ABI 3)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(mircommon
