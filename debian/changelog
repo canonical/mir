@@ -6,6 +6,7 @@ mir (0.7.3-0ubuntu1) UNRELEASED; urgency=medium
       . Fix constructor syntax errors (LP: #1369389)
       . server: Workaround for unresponsive clients causing the server to hang 
         (LP: #1350207)
+      . Update cmake scripts to current version of gcovr
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 17 Sep 2014 11:23:23 +0800
 
