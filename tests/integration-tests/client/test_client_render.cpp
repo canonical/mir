@@ -25,8 +25,8 @@
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test_framework/cross_process_sync.h"
-#include "examples/testdraw/graphics_region_factory.h"
-#include "examples/testdraw/patterns.h"
+#include "playground/testdraw/graphics_region_factory.h"
+#include "playground/testdraw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
 
@@ -114,8 +114,8 @@ struct TestClient
         }
 
         mir_surface_release_sync(surface);
-        // Clear the lifecycle callback in order not to get SIGTERM by the default
-        // lifecycle handler during connection teardown
+        // Clear the lifecycle callback in order not to get SIGHUP by the
+        // default lifecycle handler during connection teardown
         mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
         mir_connection_release(connection);
         return 0;
@@ -174,8 +174,8 @@ struct TestClient
         }
 
         mir_surface_release_sync(mir_surface);
-        // Clear the lifecycle callback in order not to get SIGTERM by the default
-        // lifecycle handler during connection teardown
+        // Clear the lifecycle callback in order not to get SIGHUP by the
+        // default lifecycle handler during connection teardown
         mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
         mir_connection_release(connection);
         return 0;
@@ -210,7 +210,7 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_height(test_height);
         surface_pf = MirPixelFormat(request->pixel_format());
         response->set_pixel_format(request->pixel_format());
-        response->mutable_buffer()->set_buffer_id(client_buffer->id().as_uint32_t());
+        response->mutable_buffer()->set_buffer_id(client_buffer->id().as_value());
 
         auto buf = client_buffer->native_buffer_handle();
         //note about the stride. Mir protocol sends stride in bytes, android uses stride in pixels
@@ -243,7 +243,7 @@ struct StubServerGenerator : public mt::StubServerTool
         std::unique_lock<std::mutex> lk(buffer_mutex);
         std::swap(last_posted, client_buffer);
 
-        response->set_buffer_id(client_buffer->id().as_uint32_t());
+        response->set_buffer_id(client_buffer->id().as_value());
 
         auto buf = client_buffer->native_buffer_handle();
         response->set_fds_on_side_channel(1);

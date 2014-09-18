@@ -16,6 +16,7 @@ set(
   socket_messenger.cpp
   event_sender.cpp
   surface.cpp
+  surface_tracker.cpp
   unauthorized_display_changer.cpp
   unauthorized_screencast.cpp
   session_credentials.cpp

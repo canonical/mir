@@ -24,9 +24,9 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/graphics/platform.h"
 #include "mir_toolkit/common.h"
+#include "surface_tracker.h"
 
 #include <functional>
-#include <unordered_map>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -95,6 +95,12 @@ public:
     void next_buffer(
         google::protobuf::RpcController* controller,
         mir::protobuf::SurfaceId const* request,
+        mir::protobuf::Buffer* response,
+        google::protobuf::Closure* done) override;
+
+    void exchange_buffer(
+        google::protobuf::RpcController* controller,
+        mir::protobuf::BufferRequest const* request,
         mir::protobuf::Buffer* response,
         google::protobuf::Closure* done) override;
 
@@ -186,8 +192,7 @@ private:
     ConnectionContext const connection_context;
     std::shared_ptr<input::CursorImages> const cursor_images;
 
-    std::unordered_map<SurfaceId,graphics::Buffer*> client_buffer_resource;
-    std::unordered_map<SurfaceId, std::shared_ptr<ClientBufferTracker>> client_buffer_tracker;
+    SurfaceTracker surface_tracker;
 
 protected:
     std::mutex session_mutex;

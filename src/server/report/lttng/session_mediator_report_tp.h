@@ -73,8 +73,6 @@ TRACEPOINT_EVENT(
 
 #undef MIR_SESSION_MEDIATOR_EVENT
 
-#include "lttng_utils_pop.h"
-
 #endif /* MIR_LTTNG_SESSION_MEDIATOR_REPORT_TP_H_ */
 
 #include <lttng/tracepoint-event.h>

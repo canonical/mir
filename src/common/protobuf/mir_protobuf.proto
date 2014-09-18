@@ -1,0 +1,247 @@
+option cc_generic_services = true;
+
+package mir.protobuf;
+
+// Outside of the IPC code no-one should care as this is all wrapped up.
+// But for the following result messages we either populate the "real"
+// attributes or, in the case of an error, the error attribute. So the
+// attributes are all "optional" (or "repeated").
+
+message ConnectParameters {
+  required string application_name = 1;
+}
+
+message SurfaceParameters {
+  required int32 width = 1;
+  required int32 height = 2;
+  required int32 pixel_format = 3;
+  required int32 buffer_usage = 4;
+  // TODO: Make required when we bump protobuf and server ABI
+  optional string surface_name = 5;
+  optional uint32 output_id = 6;
+}
+
+message SurfaceId {
+  required int32 value = 1;
+};
+
+message BufferRequest {
+  optional SurfaceId id = 1;
+  optional Buffer buffer = 2;
+};
+
+message Buffer {
+  optional int32 buffer_id = 1;
+  repeated sint32 fd = 2;
+  repeated int32  data = 3;
+  optional int32  fds_on_side_channel = 4;
+  optional int32  stride = 5;
+  optional uint32 flags = 6;
+  optional int32  width = 7;
+  optional int32  height = 8;
+
+  optional string error = 127;
+}
+
+message Platform {
+  repeated sint32 fd = 1;
+  repeated int32  data = 2;
+  optional int32  fds_on_side_channel = 3;
+
+  optional string error = 127;
+}
+
+message DisplayCard {
+    required uint32 card_id = 1;
+    required uint32 max_simultaneous_outputs = 2;
+}
+
+message DisplayMode {
+    optional uint32 vertical_resolution = 1;
+    optional uint32 horizontal_resolution = 2;
+    optional double refresh_rate = 3;
+}
+
+message DisplayOutput {
+  repeated uint32 pixel_format = 1;
+  optional uint32 current_format = 2;
+  repeated DisplayMode mode = 3;
+  optional uint32 current_mode = 4;
+  optional sint32 position_x = 5;
+  optional sint32 position_y = 6;
+  optional uint32 card_id = 7;
+  optional uint32 output_id = 8;
+  optional uint32 connected = 9;
+  optional uint32 used = 10;
+  optional uint32 physical_width_mm = 11;
+  optional uint32 physical_height_mm = 12;
+  optional uint32 type = 13;
+  optional uint32 preferred_mode = 14;
+  optional uint32 power_mode = 15;
+  optional sint32 orientation = 16;
+}
+
+// DEPRECATED
+message DisplayInfo {
+  required uint32 width = 1;
+  required uint32 height = 2;
+  repeated uint32 supported_pixel_format = 3;
+}
+
+message Connection {
+  optional Platform platform = 1;
+  optional DisplayInfo display_info = 2;
+  repeated DisplayOutput display_output = 3;
+  optional DisplayConfiguration display_configuration = 4;
+  repeated uint32 surface_pixel_format = 5;
+
+  optional string error = 127;
+}
+
+message Surface {
+  optional SurfaceId id = 1;
+  optional int32 width = 2;
+  optional int32 height = 3;
+  optional int32 pixel_format = 4;
+  optional int32 buffer_usage = 5;
+  optional Buffer buffer = 6;
+
+  repeated sint32 fd = 7;
+  optional int32 fds_on_side_channel = 8;
+  
+  repeated SurfaceSetting attributes = 9;
+
+  optional string error = 127;
+}
+
+message DRMMagic {
+  optional uint32 magic = 1;
+  optional string error = 127;
+}
+
+message DRMAuthMagicStatus {
+  optional int32 status_code = 1;
+  optional string error = 127;
+}
+
+message Void {
+  optional string error = 127;
+}
+
+message SurfaceSetting {
+  optional SurfaceId surfaceid = 1;
+  optional int32     attrib = 2;
+  optional int32     ivalue = 3;
+  // optional string    svalue = 4;  // Expected for future use
+  optional string error = 127;
+}
+
+message Event {
+  optional bytes raw = 1;  // MirEvent structure
+}
+
+message DisplayConfiguration {
+  repeated DisplayOutput display_output = 1;
+  repeated DisplayCard   display_card = 2;
+  optional string error = 127;
+}
+
+message LifecycleEvent {
+  required uint32 new_state = 1; // State transition
+  optional string error = 127;
+}
+
+message EventSequence {
+  repeated Event event = 1;
+  optional DisplayConfiguration display_configuration = 2;
+  optional LifecycleEvent lifecycle_event = 3;
+  optional string error = 127;
+}
+
+message Rectangle {
+  required int32 left = 1;
+  required int32 top = 2;
+  required uint32 width = 3;
+  required uint32 height = 4;
+}
+
+message ScreencastParameters {
+  required Rectangle region = 1;
+  required uint32 width = 2;
+  required uint32 height = 3;
+  required int32 pixel_format = 4;
+}
+
+message ScreencastId {
+  required uint32 value = 1;
+}
+
+message Screencast {
+  optional ScreencastId screencast_id = 1;
+  optional Buffer buffer = 2;
+  optional string error = 127;
+}
+
+message CursorSetting {
+  required SurfaceId surfaceid = 1;
+  // No name is interpreted as disabled cursor.
+  optional string name = 2;
+}
+
+message SocketFDRequest {
+  required int32 number = 1;
+}
+
+message SocketFD {
+  repeated sint32 fd = 1;
+  optional int32  fds_on_side_channel = 2;
+
+  optional string error = 127;
+}
+
+message PromptSessionParameters {
+  required int32 application_pid = 1;
+}
+
+service DisplayServer {
+  // Platform independent requests
+  rpc connect(ConnectParameters) returns (Connection);
+  rpc disconnect(Void) returns (Void);
+  rpc create_surface(SurfaceParameters) returns (Surface);
+  rpc next_buffer(SurfaceId) returns (Buffer);
+  rpc release_surface(SurfaceId) returns (Void);
+
+  // Platform specific requests
+  rpc drm_auth_magic(DRMMagic) returns (DRMAuthMagicStatus);
+
+  rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
+  rpc configure_display(DisplayConfiguration) returns (DisplayConfiguration);
+
+  rpc create_screencast(ScreencastParameters) returns (Screencast);
+  rpc screencast_buffer(ScreencastId) returns (Buffer);
+  rpc release_screencast(ScreencastId) returns (Void);
+
+  rpc configure_cursor(CursorSetting) returns (Void);
+  rpc new_fds_for_prompt_providers(SocketFDRequest) returns (SocketFD);
+
+  rpc start_prompt_session(PromptSessionParameters) returns (Void);
+  rpc stop_prompt_session(Void) returns (Void);
+  rpc exchange_buffer(BufferRequest) returns (Buffer);
+}
+
+message CoordinateTranslationRequest {
+  required SurfaceId surfaceid = 1;
+  required int32 x = 2;
+  required int32 y = 3;
+}
+
+message CoordinateTranslationResponse {
+  optional int32 x = 1;
+  optional int32 y = 2;
+
+  optional string error = 127;
+}
+
+service Debug {
+  rpc translate_surface_to_screen(CoordinateTranslationRequest) returns (CoordinateTranslationResponse);
+}

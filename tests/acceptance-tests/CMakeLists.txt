@@ -47,6 +47,7 @@ set(
   test_client_input.cpp
   test_server_startup.cpp
   test_debug_api.cpp
+  test_unresponsive_client.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )
@@ -60,6 +61,9 @@ add_executable(
 
   ${SOURCES}
 )
+
+add_dependencies(mir_acceptance_tests GMock)
+
 uses_android_input(mir_acceptance_tests)
 
 

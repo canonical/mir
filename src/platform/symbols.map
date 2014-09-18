@@ -2,7 +2,7 @@ MIRPLATFORM_2 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
-# ../tools/process_doygen_xml.py doc/xml/*.xml | grep "^mirplatform public" | sed "s/mirplatform public: /    /" | sort  
+# ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mirplatform public" | sed "s/mirplatform public: /    /" | sort  
     mir::EmergencyCleanupRegistry::add*;
     mir::EmergencyCleanupRegistry::?EmergencyCleanupRegistry*;
     mir::EmergencyCleanupRegistry::EmergencyCleanupRegistry*;

@@ -47,6 +47,7 @@ private:
     bool occluded_in_all_active_compositors();
     void configure_visibility(MirSurfaceVisibility visibility);
     void remove_occlusions_for_inactive_compositors();
+    void ensure_is_active_compositor(compositor::CompositorID cid) const;
 
     std::weak_ptr<Surface> const weak_surface;
     std::set<compositor::CompositorID> occlusions;

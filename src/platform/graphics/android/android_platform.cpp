@@ -68,7 +68,7 @@ std::shared_ptr<mga::HwcLogger> make_logger(mo::Option const& options)
 mga::OverlayOptimization should_use_overlay_optimization(mo::Option const& options)
 {
     if (!options.is_set(hwc_overlay_opt))
-        return mga::OverlayOptimization::disabled;
+        return mga::OverlayOptimization::enabled;
 
     if (options.get<bool>(hwc_overlay_opt))
         return mga::OverlayOptimization::disabled;
@@ -162,10 +162,10 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
     auto overlay_option = should_use_overlay_optimization(*options);
     logger->log_overlay_optimization(overlay_option);
     auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto display_resource_factory = std::make_shared<mga::ResourceFactory>(logger);
+    auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
     auto display_builder = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, display_report, overlay_option);
+        fb_allocator, display_resource_factory, display_report, overlay_option, logger);
     return std::make_shared<mga::AndroidPlatform>(display_builder, display_report);
 }
 
@@ -184,6 +184,6 @@ extern "C" void add_platform_options(
          boost::program_options::value<std::string>()->default_value(std::string{mo::off_opt_value}),
          "[platform-specific] How to handle the HWC logging report. [{log,off}]")
         (hwc_overlay_opt,
-         boost::program_options::value<bool>()->default_value(true), //TODO: switch default to false 
+         boost::program_options::value<bool>()->default_value(false),
          "[platform-specific] Whether to disable overlay optimizations [{on,off}]");
 }

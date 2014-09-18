@@ -14,7 +14,6 @@ set(
   server_runner.cpp
   testing_server_options.cpp
   input_testing_server_options.cpp
-  input_testing_client_configuration.cpp
   stubbed_server_configuration.cpp
   testing_process_manager.cpp
   testing_client_options.cpp
@@ -23,6 +22,7 @@ set(
   using_stub_client_platform.cpp
   udev_environment.cpp
   declarative_placement_strategy.cpp
+  fake_event_hub_server_configuration.cpp
 )
 
 list(APPEND TEST_FRAMEWORK_SRCS
@@ -36,13 +36,13 @@ add_library(
   mir-test-framework STATIC
   ${TEST_FRAMEWORK_SRCS}
 )
+
+add_dependencies(mir-test-framework GMock)
+
 uses_android_input(mir-test-framework)
 
 target_link_libraries(
   mir-test-framework
-
-  mirserver
-  mirclient
 
   3rd_party
 

@@ -67,19 +67,6 @@ using LibrariesCache = std::map<std::string, std::shared_ptr<mir::SharedLibrary>
 
 std::mutex connection_guard;
 MirConnection* valid_connections{nullptr};
-// There's no point in loading twice, and it isn't safe to
-// unload while there are valid connections
-std::map<std::string, std::shared_ptr<mir::SharedLibrary>>* libraries_cache_ptr{nullptr};
-}
-
-std::shared_ptr<mir::SharedLibrary>& mcl::libraries_cache(std::string const& libname)
-{
-    std::lock_guard<std::mutex> lock(connection_guard);
-
-    if (!libraries_cache_ptr)
-        libraries_cache_ptr = new LibrariesCache;
-
-    return (*libraries_cache_ptr)[libname];
 }
 
 MirConnection::Deregisterer::~Deregisterer()
@@ -93,13 +80,6 @@ MirConnection::Deregisterer::~Deregisterer()
             *current = self->next_valid;
             break;
         }
-    }
-
-    // When the last valid connection goes we can clear the libraries cache
-    if (!valid_connections)
-    {
-        delete libraries_cache_ptr;
-        libraries_cache_ptr = nullptr;
     }
 }
 
@@ -115,6 +95,7 @@ MirConnection::MirConnection(std::string const& error_message) :
 MirConnection::MirConnection(
     mir::client::ConnectionConfiguration& conf) :
         deregisterer{this},
+        platform_library{conf.the_platform_library()},
         channel(conf.the_rpc_channel()),
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         debug(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
@@ -248,7 +229,7 @@ void default_lifecycle_event_handler(MirLifecycleState transition)
          * is dispatched to the process even if it's blocked in the current
          * thread.
          */
-        kill(getpid(), SIGTERM);
+        kill(getpid(), SIGHUP);
     }
 }
 }
@@ -547,4 +528,9 @@ bool MirConnection::set_extra_platform_data(
 mir::protobuf::DisplayServer& MirConnection::display_server()
 {
     return server;
+}
+
+std::shared_ptr<mir::logging::Logger> const& MirConnection::the_logger() const
+{
+    return logger;
 }
