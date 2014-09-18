@@ -62,18 +62,20 @@ template<> struct result_ptr_t<::mir::protobuf::Surface>    { typedef ::mir::pro
 template<> struct result_ptr_t<::mir::protobuf::Screencast> { typedef ::mir::protobuf::Screencast* type; };
 template<> struct result_ptr_t<mir::protobuf::SocketFD>     { typedef ::mir::protobuf::SocketFD* type; };
 
-template<>
-void invoke(
+//The exchange_buffer and next_buffer calls can complete on a different thread than the
+//one the invocation was called on. Make sure to preserve the result resource. 
+template<class ParameterMessage>
+void invoke_for_multithreaded_dispatch(
     ProtobufMessageProcessor* self,
     DisplayServer* server,
     void (mir::protobuf::DisplayServer::*function)(
         ::google::protobuf::RpcController* controller,
-        const protobuf::BufferRequest* request,
+        const ParameterMessage* request,
         protobuf::Buffer* response,
         ::google::protobuf::Closure* done),
         Invocation const& invocation)
 {
-    protobuf::BufferRequest parameter_message;
+    ParameterMessage parameter_message;
     parameter_message.ParseFromString(invocation.parameters());
     auto const result_message = std::make_shared<protobuf::Buffer>();
 
@@ -86,7 +88,6 @@ void invoke(
                 &ProtobufMessageProcessor::send_response,
                 invocation.id(),
                 result_message);
-
     try
     {
         (server->*function)(
@@ -97,48 +98,6 @@ void invoke(
     }
     catch (std::exception const& x)
     {
-        delete callback;
-        result_message->set_error(boost::diagnostic_information(x));
-        self->send_response(invocation.id(), result_message);
-    }
-}
-
-template<>
-void invoke(
-    ProtobufMessageProcessor* self,
-    DisplayServer* server,
-    void (mir::protobuf::DisplayServer::*function)(
-        ::google::protobuf::RpcController* controller,
-        const protobuf::SurfaceId* request,
-        protobuf::Buffer* response,
-        ::google::protobuf::Closure* done),
-        Invocation const& invocation)
-{
-    protobuf::SurfaceId parameter_message;
-    parameter_message.ParseFromString(invocation.parameters());
-    auto const result_message = std::make_shared<protobuf::Buffer>();
-
-    auto const callback =
-        google::protobuf::NewCallback<
-            ProtobufMessageProcessor,
-            ::google::protobuf::uint32,
-             std::shared_ptr<protobuf::Buffer>>(
-                self,
-                &ProtobufMessageProcessor::send_response,
-                invocation.id(),
-                result_message);
-
-    try
-    {
-        (server->*function)(
-            0,
-            &parameter_message,
-            result_message.get(),
-            callback);
-    }
-    catch (std::exception const& x)
-    {
-        delete callback;
         result_message->set_error(boost::diagnostic_information(x));
         self->send_response(invocation.id(), result_message);
     }
@@ -188,11 +147,11 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         }
         else if ("next_buffer" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &DisplayServer::next_buffer, invocation);
+            invoke_for_multithreaded_dispatch(this, display_server.get(), &DisplayServer::next_buffer, invocation);
         }
         else if ("exchange_buffer" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &DisplayServer::exchange_buffer, invocation);
+            invoke_for_multithreaded_dispatch(this, display_server.get(), &DisplayServer::exchange_buffer, invocation);
         }
         else if ("release_surface" == invocation.method_name())
         {
