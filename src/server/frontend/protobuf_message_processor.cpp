@@ -88,6 +88,7 @@ void invoke_for_multithreaded_dispatch(
                 &ProtobufMessageProcessor::send_response,
                 invocation.id(),
                 result_message);
+
     try
     {
         (server->*function)(
@@ -98,6 +99,7 @@ void invoke_for_multithreaded_dispatch(
     }
     catch (std::exception const& x)
     {
+        delete callback;
         result_message->set_error(boost::diagnostic_information(x));
         self->send_response(invocation.id(), result_message);
     }

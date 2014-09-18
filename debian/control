@@ -13,6 +13,7 @@ Build-Depends: cmake,
 # We rely on C++11 features, and to prevent from ABI breaks
 # in libstdc++ causing us issues, we explicitly select a G++
 # version.
+               g++-4.9,
                libboost-dev,
                libboost-date-time-dev,
                libboost-program-options-dev,

@@ -265,7 +265,6 @@ void mf::SessionMediator::exchange_buffer(
     report->session_exchange_buffer_called(session->name());
 
     auto const& surface = session->get_surface(surface_id);
-
     surface->swap_buffers(
         surface_tracker.buffer_from(buffer_id),
         [this, surface_id, lock, response, done](mg::Buffer* new_buffer)
