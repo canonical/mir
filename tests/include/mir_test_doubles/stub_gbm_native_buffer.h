@@ -21,6 +21,8 @@
 
 #include "src/platform/graphics/mesa/gbm_buffer.h"
 #include "mir/geometry/size.h"
+#include <unistd.h>
+#include <fcntl.h>
 
 namespace mir
 {
@@ -34,7 +36,8 @@ struct StubGBMNativeBuffer : public graphics::mesa::GBMNativeBuffer
     StubGBMNativeBuffer(geometry::Size const& size)
     {
         data_items = 4;
-        fd_items = 2;
+        //note: the client platform will only close the 1st fd, so lets not put more than one in here
+        fd_items = 1;
         width = size.width.as_int();
         height = size.height.as_int();
         flags = 0x66;
@@ -42,9 +45,14 @@ struct StubGBMNativeBuffer : public graphics::mesa::GBMNativeBuffer
         bo = reinterpret_cast<gbm_bo*>(&fake_bo); //gbm_bo is opaque, so test code shouldn't dereference.
         for(auto i = 0; i < data_items; i++)
             data[i] = i;
-        for(auto i = 0; i < fd_items; i++)
-            fd[i] = i;
+        fd[0] = open("/dev/null", 0);
     }
+
+    ~StubGBMNativeBuffer()
+    {
+        close(fd[0]);
+    }
+
     int fake_bo{0}; 
 };
 
