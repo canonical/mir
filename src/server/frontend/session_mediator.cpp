@@ -262,6 +262,8 @@ void mf::SessionMediator::exchange_buffer(
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
+    report->session_exchange_buffer_called(session->name());
+
     auto const& surface = session->get_surface(surface_id);
 
     printf("RESPONSE 0x%X\n", (int)(long)response);
