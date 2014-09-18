@@ -266,14 +266,10 @@ void mf::SessionMediator::exchange_buffer(
 
     auto const& surface = session->get_surface(surface_id);
 
-    printf("RESPONSE 0x%X\n", (int)(long)response);
-    printf("FDS %i\n", response->fd().size());
     surface->swap_buffers(
         surface_tracker.buffer_from(buffer_id),
         [this, surface_id, lock, response, done](mg::Buffer* new_buffer)
         {
-            printf("RESPONSE2 0x%X\n", (int)(long)response);
-            printf("FDS3 %i\n", response->fd().size());
             lock->unlock();
 
             if (surface_tracker.track_buffer(surface_id, new_buffer))
@@ -281,8 +277,6 @@ void mf::SessionMediator::exchange_buffer(
             else
                 pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::full_msg);
 
-            printf("RESPID %i\n", response->buffer_id());
-            printf("FDS %i\n", response->fd().size());
             done->Run();
         });
 }

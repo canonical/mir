@@ -177,7 +177,6 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * con
     perf_report->end_frame(surface.buffer().buffer_id());
     lock.unlock();
 
-    printf("oo.\n");
     next_buffer_wait_handle.expect_result();
     server.exchange_buffer(
         0,
