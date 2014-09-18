@@ -29,6 +29,7 @@
 #include "mir_test_framework/deferred_in_process_server.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 
+#include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 
 #include <gtest/gtest.h>
@@ -84,6 +85,10 @@ private:
 
 char const* debugenv = "MIR_SERVER_DEBUG";
 
+void dont_kill_me_bro(MirConnection* /*unused*/, MirLifecycleState /*unused*/, void* /*unused*/)
+{
+}
+
 class TestDebugAPI : public mtf::DeferredInProcessServer
 {
 public:
@@ -131,6 +136,7 @@ public:
             throw std::runtime_error{std::string{"Failed to connect to test server:"} +
                                      mir_connection_get_error_message(connection)};
         }
+        mir_connection_set_lifecycle_event_callback(connection, dont_kill_me_bro, nullptr);
     }
 
     void TearDown() override
@@ -167,6 +173,8 @@ TEST_F(TestDebugAPI, TranslatesSurfaceCoordinatesToScreenCoordinates)
 
     server_configuration.set_surface_placement(surface_location);
 
+    ASSERT_TRUE(mir_connection_is_valid(connection));
+
     MirSurfaceParameters const creation_parameters = {
         __PRETTY_FUNCTION__,
         800, 600,
@@ -197,6 +205,8 @@ TEST_F(TestDebugAPI, TranslatesSurfaceCoordinatesToScreenCoordinates)
     ASSERT_TRUE(mir_debug_surface_coords_to_screen(surf, x, y, &screen_x, &screen_y));
     EXPECT_EQ(x + surface_location.top_left.x.as_int(), screen_x);
     EXPECT_EQ(y + surface_location.top_left.y.as_int(), screen_y);
+
+    mir_surface_release_sync(surf);
 }
 
 TEST_F(TestDebugAPI, ApiIsUnavaliableWhenServerNotStartedWithDebug)
@@ -216,4 +226,6 @@ TEST_F(TestDebugAPI, ApiIsUnavaliableWhenServerNotStartedWithDebug)
     int screen_x, screen_y;
 
     EXPECT_FALSE(mir_debug_surface_coords_to_screen(surf, 0, 0, &screen_x, &screen_y));
+
+    mir_surface_release_sync(surf);
 }

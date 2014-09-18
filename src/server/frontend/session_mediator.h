@@ -59,9 +59,10 @@ class EventSink;
 class DisplayChanger;
 class Screencast;
 class PromptSession;
+class CoordinateTranslator;
 
 // SessionMediator relays requests from the client process into the server.
-class SessionMediator : public detail::DisplayServer
+class SessionMediator : public detail::DisplayServer, public mir::protobuf::Debug
 {
 public:
 
@@ -75,7 +76,8 @@ public:
         std::shared_ptr<ResourceCache> const& resource_cache,
         std::shared_ptr<Screencast> const& screencast,
         ConnectionContext const& connection_context,
-        std::shared_ptr<input::CursorImages> const& cursor_images);
+        std::shared_ptr<input::CursorImages> const& cursor_images,
+        std::shared_ptr<CoordinateTranslator> const& translator);
 
     ~SessionMediator() noexcept;
 
@@ -166,6 +168,13 @@ public:
         ::mir::protobuf::SocketFD* response,
         ::google::protobuf::Closure* done) override;
 
+    // TODO: Split this into a separate thing
+    void translate_surface_to_screen(
+        ::google::protobuf::RpcController* controller,
+        ::mir::protobuf::CoordinateTranslationRequest const* request,
+        ::mir::protobuf::CoordinateTranslationResponse* response,
+        ::google::protobuf::Closure *done) override;
+
 private:
     void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
                               graphics::Buffer* graphics_buffer,
@@ -191,10 +200,10 @@ private:
     std::shared_ptr<Screencast> const screencast;
     ConnectionContext const connection_context;
     std::shared_ptr<input::CursorImages> const cursor_images;
+    std::shared_ptr<CoordinateTranslator> const translator;
 
     SurfaceTracker surface_tracker;
 
-protected:
     std::mutex session_mutex;
     std::weak_ptr<Session> weak_session;
     std::weak_ptr<PromptSession> weak_prompt_session;

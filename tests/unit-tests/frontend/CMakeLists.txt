@@ -11,7 +11,6 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_event_sender.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_unauthorized_display_changer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_basic_connector.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_debug_session_mediator.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "android")

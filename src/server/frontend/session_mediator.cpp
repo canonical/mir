@@ -17,7 +17,6 @@
  */
 
 #include "session_mediator.h"
-#include "client_buffer_tracker.h"
 
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/shell.h"
@@ -49,6 +48,7 @@
 #include "surface_tracker.h"
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
+#include "coordinate_translator.h"
 
 #include <boost/exception/get_error_info.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -74,7 +74,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<ResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context,
-    std::shared_ptr<mi::CursorImages> const& cursor_images) :
+    std::shared_ptr<mi::CursorImages> const& cursor_images,
+    std::shared_ptr<CoordinateTranslator> const& translator) :
     client_pid_(0),
     shell(shell),
     graphics_platform(graphics_platform),
@@ -86,6 +87,7 @@ mf::SessionMediator::SessionMediator(
     screencast(screencast),
     connection_context(connection_context),
     cursor_images(cursor_images),
+    translator{translator},
     surface_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
@@ -538,6 +540,32 @@ void mf::SessionMediator::new_fds_for_prompt_providers(
         }
     }
 
+    done->Run();
+}
+
+void mir::frontend::SessionMediator::translate_surface_to_screen(
+    ::google::protobuf::RpcController* ,
+    ::mir::protobuf::CoordinateTranslationRequest const* request,
+    ::mir::protobuf::CoordinateTranslationResponse* response,
+    ::google::protobuf::Closure *done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        auto const id = frontend::SurfaceId(request->surfaceid().value());
+
+        auto const coords = translator->surface_to_screen(session->get_surface(id),
+                                                          request->x(),
+                                                          request->y());
+
+        response->set_x(coords.x.as_uint32_t());
+        response->set_y(coords.y.as_uint32_t());
+    }
     done->Run();
 }
 

@@ -21,6 +21,7 @@
 #include "mir/frontend/message_processor_report.h"
 #include "mir/frontend/protobuf_message_sender.h"
 #include "mir/frontend/template_protobuf_message_processor.h"
+#include "mir/frontend/unsupported_feature_exception.h"
 
 #include "mir_protobuf_wire.pb.h"
 
@@ -218,12 +219,12 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         }
         else if ("translate_surface_to_screen" == invocation.method_name())
         {
-            auto debug_interface = dynamic_cast<mir::protobuf::Debug*>(display_server.get());
-            if (debug_interface)
+            try
             {
+                auto debug_interface = dynamic_cast<mir::protobuf::Debug*>(display_server.get());
                 invoke(this, debug_interface, &mir::protobuf::Debug::translate_surface_to_screen, invocation);
             }
-            else
+            catch (mir::frontend::unsupported_feature const&)
             {
                 std::string message{"Server does not support the client debugging interface"};
                 invoke(this,
