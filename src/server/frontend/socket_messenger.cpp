@@ -35,7 +35,8 @@ namespace bs = boost::system;
 namespace ba = boost::asio;
 
 mfd::SocketMessenger::SocketMessenger(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
-    : socket(socket)
+    : socket(socket),
+      socket_fd{IntOwnedFd{socket->native_handle()}}
 {
     // Make the socket non-blocking to avoid hanging the server when a client
     // is unresponsive. Also increase the send buffer size to 64KiB to allow
@@ -52,7 +53,7 @@ mf::SessionCredentials mfd::SocketMessenger::creator_creds() const
     struct ucred cr;
     socklen_t cl = sizeof(cr);
 
-    auto status = getsockopt(socket->native_handle(), SOL_SOCKET, SO_PEERCRED, &cr, &cl);
+    auto status = getsockopt(socket_fd, SOL_SOCKET, SO_PEERCRED, &cr, &cl);
 
     if (status)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
@@ -94,7 +95,7 @@ void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& f
 
 void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, std::vector<mir::Fd> const& fds)
 {
-    mir::send_fds(*socket, fds);
+    mir::send_fds(socket_fd, fds);
 }
 
 void mfd::SocketMessenger::async_receive_msg(
@@ -159,7 +160,7 @@ void mfd::SocketMessenger::update_session_creds()
     msgh.msg_control = control_un.control;
     msgh.msg_controllen = sizeof(control_un.control);
 
-    if (recvmsg(socket->native_handle(), &msgh, MSG_PEEK) != -1)
+    if (recvmsg(socket_fd, &msgh, MSG_PEEK) != -1)
     {
         auto const ucredp = reinterpret_cast<ucred*>(CMSG_DATA(CMSG_FIRSTHDR(&msgh)));
         session_creds = {ucredp->pid, ucredp->uid, ucredp->gid};

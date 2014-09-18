@@ -19,11 +19,10 @@
 #ifndef MIR_FD_SOCKET_TRANSMISSION_H_
 #define MIR_FD_SOCKET_TRANSMISSION_H_
 #include "mir/fd.h"
-#include <boost/asio.hpp>
 #include <vector>
 
 namespace mir
 {
-void send_fds(boost::asio::local::stream_protocol::socket& socket, std::vector<mir::Fd> const& fd);
+void send_fds(mir::Fd const& socket, std::vector<mir::Fd> const& fd);
 }
 #endif /* MIR_FD_SOCKET_TRANSMISSION_H_ */

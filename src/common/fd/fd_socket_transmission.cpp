@@ -18,9 +18,14 @@
 
 #include "mir/fd_socket_transmission.h"
 #include "mir/variable_length_array.h"
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <string.h>
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 void mir::send_fds(
-    boost::asio::local::stream_protocol::socket& socket,
+    mir::Fd const& socket,
     std::vector<mir::Fd> const& fds)
 {
     if (fds.size() > 0)
@@ -60,7 +65,7 @@ void mir::send_fds(
         for (auto& fd : fds)
             data[i++] = fd;
 
-        auto const sent = sendmsg(socket.native_handle(), &header, 0);
+        auto const sent = sendmsg(socket, &header, 0);
         if (sent < 0)
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send fds: " + std::string(strerror(errno))));
     }
