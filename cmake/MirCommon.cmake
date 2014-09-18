@@ -127,8 +127,19 @@ endfunction()
 function (mir_precompiled_header TARGET HEADER)
   if (MIR_USE_PRECOMPILED_HEADERS)
     get_property(TARGET_COMPILE_FLAGS TARGET ${TARGET} PROPERTY COMPILE_FLAGS)
-    add_custom_target(${TARGET}_pch DEPENDS ${TARGET}_precompiled.hpp.gch)
-    separate_arguments(PCH_CXX_FLAGS UNIX_COMMAND "${CMAKE_CXX_FLAGS} ${TARGET_COMPILE_FLAGS}")
+    get_property(TARGET_INCLUDE_DIRECTORIES TARGET ${TARGET} PROPERTY INCLUDE_DIRECTORIES)
+    foreach(dir ${TARGET_INCLUDE_DIRECTORIES})
+      if (${dir} MATCHES "usr/include")
+        set(TARGET_INCLUDE_DIRECTORIES_STRING "${TARGET_INCLUDE_DIRECTORIES_STRING} -isystem ${dir}")
+      else()
+        set(TARGET_INCLUDE_DIRECTORIES_STRING "${TARGET_INCLUDE_DIRECTORIES_STRING} -I${dir}")
+      endif()
+    endforeach()
+
+    separate_arguments(
+      PCH_CXX_FLAGS UNIX_COMMAND
+      "${CMAKE_CXX_FLAGS} ${TARGET_COMPILE_FLAGS} ${TARGET_INCLUDE_DIRECTORIES_STRING}"
+    )
 
     add_custom_command(
       OUTPUT ${TARGET}_precompiled.hpp.gch
@@ -138,6 +149,7 @@ function (mir_precompiled_header TARGET HEADER)
 
     set_property(TARGET ${TARGET} APPEND_STRING PROPERTY COMPILE_FLAGS " -include ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_precompiled.hpp -Winvalid-pch ")
 
+    add_custom_target(${TARGET}_pch DEPENDS ${TARGET}_precompiled.hpp.gch)
     add_dependencies(${TARGET} ${TARGET}_pch)
   endif()
 endfunction()
