@@ -24,6 +24,7 @@
 #include "android_display.h"
 #include "internal_client.h"
 #include "output_builder.h"
+#include "android_buffer_writer.h"
 #include "hwc_loggers.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/android/native_buffer.h"
@@ -151,6 +152,11 @@ void mga::AndroidPlatform::initialize(std::shared_ptr<NestedContext> const&)
 std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client()
 {
     return std::make_shared<mga::InternalClient>();
+}
+
+std::shared_ptr<mg::BufferWriter> mga::AndroidPlatform::make_buffer_writer()
+{
+    return std::make_shared<mga::BufferWriter>();
 }
 
 extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
