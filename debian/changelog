@@ -1,4 +1,4 @@
-mir (0.7.3-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.7.3+14.10.20140918.1-0ubuntu1) utopic; urgency=medium
 
   [ Andreas Pokorny ]
   * New upstream release 0.7.3 (https://launchpad.net/mir/+milestone/0.7.3)
@@ -10,7 +10,10 @@ mir (0.7.3-0ubuntu1) UNRELEASED; urgency=medium
         of the libmirplatform2 package. It's blocking CI. (LP: #1370866)
       . Update cmake scripts to current version of gcovr.
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Wed, 17 Sep 2014 11:23:23 +0800
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 18 Sep 2014 14:54:51 +0000
 
 mir (0.7.2+14.10.20140912-0ubuntu1) utopic; urgency=medium
 
