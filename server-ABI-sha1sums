@@ -1,4 +1,4 @@
-3329ada91412ded2f127aee9a92f065e57b81cb2  include/common/mir/cached_ptr.h
+e59ebaa305b2db11e02aa7149c74202f56194ebc  include/common/mir/cached_ptr.h
 82ff9499ef62739379616e02164dc98f9914c329  include/common/mir/fd.h
 b399dc08514751c86e23824612a52378dd9b1e23  include/common/mir/geometry/dimensions.h
 d954464ef2d20c2876db68c94512a443186da09b  include/common/mir/geometry/point.h
@@ -37,7 +37,8 @@ f5746dab3336266cfd410ce4e4d01333df6e5b99  include/platform/mir/options/configura
 47007c783c174f8e94d332c4b13c6b01358b48fb  include/platform/mir/options/default_configuration.h
 b45f14082c4f8b29efaa1b13de795dcb29deb738  include/platform/mir/options/option.h
 3c37cc31e8b290b89c311d82f02e07d342766451  include/platform/mir/options/program_option.h
-f4030e400baf8baa9c38e7c6ec6b4a5ad7134aeb  include/server/mir/compositor/compositor.h
+2ce95db232b7a6174ecf5947773a6504f475d5b7  include/server/mir/compositor/compositor.h
+ef5136eb08c08d39bcac8a8b5b8400a7fe0ca3c5  include/server/mir/compositor/zoomable.h
 ef0b6f26fb40a72e4a4744e4d9c4bd044142de47  include/server/mir/default_server_configuration.h
 af1ff0714be973ac76d56006a2e5991f68cd1dec  include/server/mir/display_server.h
 65db331f1c0e956eced5c9fc73a2b2122dbc8dc7  include/server/mir/frontend/connection_creator.h
