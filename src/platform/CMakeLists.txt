@@ -3,7 +3,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/platform
 )
 
-set(MIRPLATFORM_ABI 3)
+set(MIRPLATFORM_ABI 4)
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
