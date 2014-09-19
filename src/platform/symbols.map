@@ -1,4 +1,4 @@
-MIRPLATFORM_2 {
+MIRPLATFORM_3 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
@@ -252,6 +252,7 @@ MIRPLATFORM_2 {
     mir::options::scene_report_opt*;
     mir::options::server_socket_opt*;
     mir::options::session_mediator_report_opt*;
+    mir::options::touchspots_opt*;
     typeinfo?for?mir::AbnormalExit;
     typeinfo?for?mir::EmergencyCleanupRegistry;
     typeinfo?for?mir::FatalErrorStrategy;

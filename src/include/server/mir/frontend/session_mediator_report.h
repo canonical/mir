@@ -40,6 +40,8 @@ public:
 
     virtual void session_next_buffer_called(std::string const& app_name) = 0;
 
+    virtual void session_exchange_buffer_called(std::string const& app_name) = 0;
+
     virtual void session_release_surface_called(std::string const& app_name) = 0;
 
     virtual void session_disconnect_called(std::string const& app_name) = 0;

@@ -82,6 +82,8 @@ MATCHER_P(TouchedSpotsAt, positions, "")
 struct MockTouchVisualizer : public mi::TouchVisualizer
 {
     MOCK_METHOD1(visualize_touches, void(std::vector<mi::TouchVisualizer::Spot> const&));
+    MOCK_METHOD0(enable, void());
+    MOCK_METHOD0(disable, void());
 };
 
 struct ServerConfiguration : mtf::InputTestingServerConfiguration

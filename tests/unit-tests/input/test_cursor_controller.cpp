@@ -19,7 +19,7 @@
 #include "src/server/input/cursor_controller.h"
 
 #include "mir/input/surface.h"
-#include "mir/input/input_targets.h"
+#include "mir/input/scene.h"
 #include "mir/scene/observer.h"
 #include "mir/scene/surface_observer.h"
 #include "mir/graphics/cursor_image.h"
@@ -29,6 +29,7 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_scene_surface.h"
+#include "mir_test_doubles/stub_input_scene.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -166,9 +167,9 @@ struct StubInputSurface : public mtd::StubSceneSurface
     std::vector<std::shared_ptr<ms::SurfaceObserver>> observers;
 };
 
-struct StubInputTargets : public mi::InputTargets
+struct StubScene : public mtd::StubInputScene
 {
-    StubInputTargets(std::initializer_list<std::shared_ptr<ms::Surface>> const& targets)
+    StubScene(std::initializer_list<std::shared_ptr<ms::Surface>> const& targets)
         : targets(targets.begin(), targets.end())
     {
     }
@@ -243,7 +244,7 @@ TEST_F(TestCursorController, moves_cursor)
 {
     using namespace ::testing;
 
-    StubInputTargets targets({});
+    StubScene targets({});
     
     mi::CursorController controller(mt::fake_shared(targets),
         mt::fake_shared(cursor), default_cursor_image);
@@ -262,7 +263,7 @@ TEST_F(TestCursorController, updates_cursor_image_when_entering_surface)
 
     StubInputSurface surface{rect_1_1_1_1,
         std::make_shared<NamedCursorImage>(cursor_name_1)};
-    StubInputTargets targets({mt::fake_shared(surface)});
+    StubScene targets({mt::fake_shared(surface)});
     
     mi::CursorController controller(mt::fake_shared(targets),
         mt::fake_shared(cursor), default_cursor_image);
@@ -279,7 +280,7 @@ TEST_F(TestCursorController, surface_with_no_cursor_image_hides_cursor)
 
     StubInputSurface surface{rect_1_1_1_1,
         nullptr};
-    StubInputTargets targets({mt::fake_shared(surface)});
+    StubScene targets({mt::fake_shared(surface)});
     
     mi::CursorController controller(mt::fake_shared(targets),
         mt::fake_shared(cursor), default_cursor_image);
@@ -296,7 +297,7 @@ TEST_F(TestCursorController, takes_cursor_image_from_topmost_surface)
 
     StubInputSurface surface_1{rect_1_1_1_1, std::make_shared<NamedCursorImage>(cursor_name_1)};
     StubInputSurface surface_2{rect_1_1_1_1, std::make_shared<NamedCursorImage>(cursor_name_2)};
-    StubInputTargets targets({mt::fake_shared(surface_1), mt::fake_shared(surface_2)});
+    StubScene targets({mt::fake_shared(surface_1), mt::fake_shared(surface_2)});
     
     mi::CursorController controller(mt::fake_shared(targets),
         mt::fake_shared(cursor), default_cursor_image);
@@ -313,7 +314,7 @@ TEST_F(TestCursorController, restores_cursor_when_leaving_surface)
 
     StubInputSurface surface{rect_1_1_1_1,
         std::make_shared<NamedCursorImage>(cursor_name_1)};
-    StubInputTargets targets({mt::fake_shared(surface)});
+    StubScene targets({mt::fake_shared(surface)});
     
     mi::CursorController controller(mt::fake_shared(targets),
         mt::fake_shared(cursor), default_cursor_image);
@@ -336,7 +337,7 @@ TEST_F(TestCursorController, change_in_cursor_request_triggers_image_update_with
 
     StubInputSurface surface{rect_1_1_1_1,
         std::make_shared<NamedCursorImage>(cursor_name_1)};
-    StubInputTargets targets({mt::fake_shared(surface)});
+    StubScene targets({mt::fake_shared(surface)});
     
     mi::CursorController controller(mt::fake_shared(targets),
         mt::fake_shared(cursor), default_cursor_image);
@@ -359,7 +360,7 @@ TEST_F(TestCursorController, change_in_scene_triggers_image_update)
     // Here we also demonstrate that the cursor begins at 0,0.
     StubInputSurface surface{rect_0_0_1_1,
         std::make_shared<NamedCursorImage>(cursor_name_1)};
-    StubInputTargets targets({});
+    StubScene targets({});
     
     mi::CursorController controller(mt::fake_shared(targets),
         mt::fake_shared(cursor), default_cursor_image);
@@ -379,7 +380,7 @@ TEST_F(TestCursorController, cursor_image_not_reset_needlessly)
     // Here we also demonstrate that the cursor begins at 0,0.
     StubInputSurface surface1{rect_0_0_1_1, image};
     StubInputSurface surface2{rect_0_0_1_1, image};
-    StubInputTargets targets({});
+    StubScene targets({});
     
     mi::CursorController controller(mt::fake_shared(targets),
         mt::fake_shared(cursor), default_cursor_image);

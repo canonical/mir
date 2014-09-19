@@ -35,8 +35,8 @@ public:
 
 protected:
     CursorListener() = default;
-    CursorListener(const CursorListener&) = delete;
-    CursorListener& operator=(const CursorListener&) = delete;
+    CursorListener(CursorListener const&) = delete;
+    CursorListener& operator=(CursorListener const&) = delete;
 };
 
 }
