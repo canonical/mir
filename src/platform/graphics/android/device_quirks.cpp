@@ -52,3 +52,8 @@ unsigned int mga::DeviceQuirks::num_framebuffers() const
 {
     return num_framebuffers_;
 }
+
+bool mga::DeviceQuirks::gralloc_reopenable_after_close() const
+{
+    return false;
+}

@@ -57,6 +57,7 @@ public:
     DeviceQuirks(PropertiesWrapper const& properties);
 
     unsigned int num_framebuffers() const;
+    bool gralloc_reopenable_after_close() const;
 private:
     DeviceQuirks(DeviceQuirks const&) = delete;
     DeviceQuirks & operator=(DeviceQuirks const&) = delete;
