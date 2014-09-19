@@ -106,6 +106,16 @@ mir::DefaultServerConfiguration::the_buffer_allocator()
         });
 }
 
+std::shared_ptr<mg::BufferWriter>
+mir::DefaultServerConfiguration::the_buffer_writer()
+{
+    return buffer_writer(
+        [&]()
+        {
+            return the_graphics_platform()->make_buffer_writer();
+        });
+}
+
 std::shared_ptr<mg::Display>
 mir::DefaultServerConfiguration::the_display()
 {

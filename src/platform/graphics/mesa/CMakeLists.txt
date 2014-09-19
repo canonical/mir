@@ -34,6 +34,7 @@ add_library(mirplatformgraphicsmesaobjects OBJECT
   shm_buffer.cpp
   bypass.cpp
   ipc_operations.cpp
+  buffer_writer.cpp
 )
 
 add_library(mirplatformgraphicsmesa SHARED

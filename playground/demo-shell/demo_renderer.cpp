@@ -171,7 +171,7 @@ DemoRenderer::~DemoRenderer()
     glDeleteTextures(1, &titlebar_corner_tex);
 }
 
-void DemoRenderer::begin() const
+void DemoRenderer::begin(std::unordered_set<graphics::Renderable::ID> decoration_skip_list_) const
 {
     bool const opaque = destination_alpha() == compositor::DestinationAlpha::opaque;
     if (opaque)
@@ -184,14 +184,19 @@ void DemoRenderer::begin() const
 
     if (opaque)
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+    
+    decoration_skip_list = decoration_skip_list_;
 }
 
 void DemoRenderer::tessellate(std::vector<graphics::GLPrimitive>& primitives,
                               graphics::Renderable const& renderable) const
 {
     GLRenderer::tessellate(primitives, renderable);
-    tessellate_shadow(primitives, renderable, shadow_radius);
-    tessellate_frame(primitives, renderable, titlebar_height);
+    if (decoration_skip_list.find(renderable.id()) == decoration_skip_list.end())
+    {
+        tessellate_shadow(primitives, renderable, shadow_radius);
+        tessellate_frame(primitives, renderable, titlebar_height);
+    }
 }
 
 void DemoRenderer::tessellate_shadow(std::vector<graphics::GLPrimitive>& primitives,

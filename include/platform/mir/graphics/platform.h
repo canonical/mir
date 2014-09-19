@@ -52,6 +52,7 @@ class GraphicBufferAllocator;
 class GLConfig;
 class GLProgramFactory;
 class PlatformIpcOperations;
+class BufferWriter;
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -80,6 +81,8 @@ public:
 
     virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
         std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
+    
+    virtual std::shared_ptr<BufferWriter> make_buffer_writer() = 0;
 
     /**
      * Creates the display subsystem.

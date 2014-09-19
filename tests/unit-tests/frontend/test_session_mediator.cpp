@@ -222,6 +222,7 @@ class MockPlatform : public mg::Platform
     MOCK_METHOD0(create_internal_client, std::shared_ptr<mg::InternalClient>());
     MOCK_CONST_METHOD0(make_ipc_operations, std::shared_ptr<mg::PlatformIpcOperations>());
     MOCK_CONST_METHOD0(egl_native_display, EGLNativeDisplayType());
+    MOCK_METHOD0(make_buffer_writer, std::shared_ptr<mg::BufferWriter>());
 };
 
 struct StubScreencast : mtd::NullScreencast

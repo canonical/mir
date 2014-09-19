@@ -82,6 +82,11 @@ void ms::LegacySceneChangeNotification::surfaces_reordered()
     scene_notify_change();
 }
 
+void ms::LegacySceneChangeNotification::scene_changed()
+{
+    scene_notify_change();
+}
+
 void ms::LegacySceneChangeNotification::end_observation()
 {
     std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);

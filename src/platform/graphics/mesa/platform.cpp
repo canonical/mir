@@ -25,6 +25,7 @@
 #include "linux_virtual_terminal.h"
 #include "ipc_operations.h"
 #include "mir/graphics/platform_ipc_operations.h"
+#include "buffer_writer.h"
 #include "mir/options/option.h"
 #include "mir/graphics/native_buffer.h"
 #include "mir/emergency_cleanup_registry.h"
@@ -179,6 +180,11 @@ std::shared_ptr<mg::InternalClient> mgm::Platform::create_internal_client()
 std::shared_ptr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
 {
     return std::make_shared<mgm::IpcOperations>(drm);
+}
+
+std::shared_ptr<mg::BufferWriter> mgm::Platform::make_buffer_writer()
+{
+    return std::make_shared<mgm::BufferWriter>();
 }
 
 EGLNativeDisplayType mgm::Platform::egl_native_display() const

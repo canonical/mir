@@ -108,6 +108,7 @@ MIR_SERVER_25 {
     mir::DefaultServerConfiguration::the_buffer_allocator*;
     mir::DefaultServerConfiguration::the_buffer_initializer*;
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
+    mir::DefaultServerConfiguration::the_buffer_writer*;
     mir::DefaultServerConfiguration::the_clock*;
     mir::DefaultServerConfiguration::the_composite_event_filter*;
     mir::DefaultServerConfiguration::the_compositor*;
@@ -149,7 +150,7 @@ MIR_SERVER_25 {
     mir::DefaultServerConfiguration::the_input_sender*;
     mir::DefaultServerConfiguration::the_input_send_observer*;
     mir::DefaultServerConfiguration::the_input_targeter*;
-    mir::DefaultServerConfiguration::the_input_targets*;
+    mir::DefaultServerConfiguration::the_input_scene*;
     mir::DefaultServerConfiguration::the_logger*;
     mir::DefaultServerConfiguration::the_main_loop*;
     mir::DefaultServerConfiguration::the_mediating_display_changer*;
@@ -407,6 +408,8 @@ MIR_SERVER_25 {
     mir::input::TouchVisualizer::?TouchVisualizer*;
     mir::input::TouchVisualizer::TouchVisualizer*;
     mir::input::TouchVisualizer::visualize_touches*;
+    mir::input::TouchVisualizer::enable*;
+    mir::input::TouchVisualizer::disable*;
     mir::input::VTFilter::handle*;
     mir::logging::GlogLogger::GlogLogger*;
     mir::logging::GlogLogger::log*;
