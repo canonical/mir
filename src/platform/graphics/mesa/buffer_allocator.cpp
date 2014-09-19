@@ -39,7 +39,7 @@
 #include <cassert>
 
 namespace mg  = mir::graphics;
-namespace mgm = mir::graphics::mesa;
+namespace mgm = mg::mesa;
 namespace geom = mir::geometry;
 
 namespace

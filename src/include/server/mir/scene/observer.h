@@ -36,6 +36,10 @@ public:
     virtual void surface_added(Surface* surface) = 0;
     virtual void surface_removed(Surface* surface) = 0;
     virtual void surfaces_reordered() = 0;
+    
+    // Used to indicate the scene has changed in some way beyond the present surfaces
+    // and will require full recomposition.
+    virtual void scene_changed() = 0;
 
     // Called at observer registration to notify of already existing surfaces.
     virtual void surface_exists(Surface* surface) = 0;

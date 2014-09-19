@@ -54,6 +54,7 @@ public:
     /* From Platform */
     std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator(
             const std::shared_ptr<BufferInitializer>& buffer_initializer);
+    std::shared_ptr<graphics::BufferWriter> make_buffer_writer();
     std::shared_ptr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLProgramFactory> const& program_factory,

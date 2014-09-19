@@ -127,6 +127,11 @@ struct NativePlatformAdapter : mg::NativePlatform
         return adaptee->get_ipc_package();
     }
 
+    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
+    {
+        return adaptee->make_buffer_writer();
+    }
+
     void fill_buffer_package(
         mg::BufferIPCPacker* packer,
         mg::Buffer const* buffer,
@@ -134,7 +139,7 @@ struct NativePlatformAdapter : mg::NativePlatform
     {
         return adaptee->fill_buffer_package(packer, buffer, msg_type);
     }
-
+    
     std::shared_ptr<mg::Platform> const adaptee;
 };
 

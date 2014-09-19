@@ -48,6 +48,11 @@ public:
     void occluded_in(compositor::CompositorID) override
     {
     }
+    
+    bool is_a_surface() const override
+    {
+        return false;
+    }
 
 private:
     std::shared_ptr<graphics::Renderable> const renderable_;

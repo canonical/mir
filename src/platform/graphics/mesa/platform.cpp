@@ -22,6 +22,7 @@
 #include "display.h"
 #include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
+#include "buffer_writer.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/option.h"
@@ -205,6 +206,11 @@ void mgm::Platform::fill_buffer_package(
 void mgm::Platform::drm_auth_magic(unsigned int magic)
 {
     drm->auth_magic(magic);
+}
+
+std::shared_ptr<mg::BufferWriter> mgm::Platform::make_buffer_writer()
+{
+    return std::make_shared<mgm::BufferWriter>();
 }
 
 EGLNativeDisplayType mgm::Platform::egl_native_display() const
