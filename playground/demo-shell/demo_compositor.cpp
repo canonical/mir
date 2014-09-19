@@ -66,6 +66,8 @@ void me::DemoCompositor::composite()
     //the elements should be notified if they are rendered or not
     bool nonrenderlist_elements{false};
     mg::RenderableList renderable_list;
+    std::unordered_set<mg::Renderable::ID> decoration_skip_list;
+
     auto elements = scene->scene_elements_for(this);
     for(auto const& it : elements)
     {
@@ -73,6 +75,9 @@ void me::DemoCompositor::composite()
         auto const& view_area = display_buffer.view_area();
         auto embellished = renderer.would_embellish(*renderable, view_area);
         auto any_part_drawn = (view_area.overlaps(renderable->screen_position()) || embellished);
+        
+        if (!it->is_a_surface())
+            decoration_skip_list.insert(renderable->id());
         if (renderable->visible() && any_part_drawn)
         {
             renderable_list.push_back(renderable);
@@ -96,7 +101,7 @@ void me::DemoCompositor::composite()
         display_buffer.make_current();
 
         renderer.set_rotation(display_buffer.orientation());
-        renderer.begin();
+        renderer.begin(std::move(decoration_skip_list));
         renderer.render(renderable_list);
         display_buffer.post_update();
         renderer.end();

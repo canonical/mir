@@ -667,7 +667,6 @@ public:
  
     mg::Renderable::ID id() const override
     { return id_; }
-
 private:
     std::shared_ptr<mc::BufferStream> const underlying_buffer_stream;
     std::shared_ptr<mg::Buffer> mutable compositor_buffer;
