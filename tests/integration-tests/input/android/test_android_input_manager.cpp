@@ -38,7 +38,7 @@
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test_doubles/stub_scene_surface.h"
 #include "mir_test_doubles/stub_input_channel.h"
-#include "mir_test_doubles/stub_input_targets.h"
+#include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/stub_input_enumerator.h"
 #include "mir_test_doubles/stub_touch_visualizer.h"

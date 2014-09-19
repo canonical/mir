@@ -20,7 +20,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/input/input_targets.h"
+#include "mir/input/scene.h"
 #include "mir/abnormal_exit.h"
 #include "mir/scene/session.h"
 
@@ -57,7 +57,7 @@ mir::DefaultServerConfiguration::the_scene()
                          { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
 }
 
-std::shared_ptr<mi::InputTargets> mir::DefaultServerConfiguration::the_input_targets()
+std::shared_ptr<mi::Scene> mir::DefaultServerConfiguration::the_input_scene()
 {
     return surface_stack([this]()
                          { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
