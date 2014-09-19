@@ -759,7 +759,6 @@ MIR_COMMON_2 {
     mir::RecursiveReadWriteMutex::write_unlock*;
     mir::report::lttng::TracepointProvider::?TracepointProvider*;
     mir::report::lttng::TracepointProvider::TracepointProvider*;
-    mir::send_fds*;
     mir::set_thread_name*;
     mir::SharedLibrary::load_symbol*;
     mir::SharedLibrary::?SharedLibrary*;
@@ -995,6 +994,14 @@ MIR_COMMON_2 {
     non-virtual?thunk?to?mir::time::HighResolutionClock::sample*;
     typeinfo?for?mir::time::HighResolutionClock;
     vtable?for?mir::time::HighResolutionClock;
+  };
+ local: *;
+};
+
+MIR_COMMON_2.1 {
+ global:
+  extern "C++" {
+    mir::send_fds*;
   };
  local: *;
 };
