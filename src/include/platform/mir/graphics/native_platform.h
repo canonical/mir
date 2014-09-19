@@ -36,6 +36,7 @@ class PlatformIPCPackage;
 class InternalClient;
 class BufferIPCPacker;
 class Buffer;
+class BufferWriter;
 class DisplayReport;
 class NestedContext;
 
@@ -57,6 +58,8 @@ public:
         BufferIPCPacker* packer,
         Buffer const* buffer,
         BufferIpcMsgType msg_type) const = 0;
+
+    virtual std::shared_ptr<BufferWriter> make_buffer_writer() = 0;
 
     virtual ~NativePlatform() = default;
     NativePlatform(NativePlatform const&) = delete;

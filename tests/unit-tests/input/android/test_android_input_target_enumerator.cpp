@@ -19,13 +19,14 @@
 #include "src/server/input/android/android_input_target_enumerator.h"
 
 #include "mir/input/input_channel.h"
-#include "mir/input/input_targets.h"
+#include "mir/input/scene.h"
 #include "mir/input/surface.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/stub_input_channel.h"
 #include "mir_test_doubles/stub_input_handles.h"
 #include "mir_test_doubles/stub_input_surface.h"
+#include "mir_test_doubles/stub_input_scene.h"
 #include "mir_test_doubles/mock_window_handle_repository.h"
 
 #include <InputDispatcher.h>
@@ -48,9 +49,9 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct StubInputTargets : public mi::InputTargets
+struct StubScene : public mtd::StubInputScene
 {
-    StubInputTargets(std::initializer_list<std::shared_ptr<mi::Surface>> const& target_list)
+    StubScene(std::initializer_list<std::shared_ptr<mi::Surface>> const& target_list)
         : targets(target_list.begin(), target_list.end())
     {
     }
@@ -85,7 +86,7 @@ TEST(AndroidInputTargetEnumerator, enumerates_registered_handles_for_surfaces)
     mtd::MockWindowHandleRepository repository;
     droidinput::sp<droidinput::InputWindowHandle> stub_window_handle1 = new mtd::StubWindowHandle;
     droidinput::sp<droidinput::InputWindowHandle> stub_window_handle2 = new mtd::StubWindowHandle;
-    StubInputTargets targets({target1, target2});
+    StubScene targets({target1, target2});
 
     Sequence seq2;
     EXPECT_CALL(repository, handle_for_channel(

@@ -24,6 +24,7 @@
 #include "android_display.h"
 #include "internal_client.h"
 #include "output_builder.h"
+#include "android_buffer_writer.h"
 #include "hwc_loggers.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/android/native_buffer.h"
@@ -68,7 +69,7 @@ std::shared_ptr<mga::HwcLogger> make_logger(mo::Option const& options)
 mga::OverlayOptimization should_use_overlay_optimization(mo::Option const& options)
 {
     if (!options.is_set(hwc_overlay_opt))
-        return mga::OverlayOptimization::disabled;
+        return mga::OverlayOptimization::enabled;
 
     if (options.get<bool>(hwc_overlay_opt))
         return mga::OverlayOptimization::disabled;
@@ -153,6 +154,11 @@ std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client
     return std::make_shared<mga::InternalClient>();
 }
 
+std::shared_ptr<mg::BufferWriter> mga::AndroidPlatform::make_buffer_writer()
+{
+    return std::make_shared<mga::BufferWriter>();
+}
+
 extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
@@ -184,6 +190,6 @@ extern "C" void add_platform_options(
          boost::program_options::value<std::string>()->default_value(std::string{mo::off_opt_value}),
          "[platform-specific] How to handle the HWC logging report. [{log,off}]")
         (hwc_overlay_opt,
-         boost::program_options::value<bool>()->default_value(true), //TODO: switch default to false 
+         boost::program_options::value<bool>()->default_value(false),
          "[platform-specific] Whether to disable overlay optimizations [{on,off}]");
 }

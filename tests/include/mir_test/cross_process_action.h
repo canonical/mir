@@ -23,6 +23,7 @@
 #include "mir_test_framework/cross_process_sync.h"
 
 #include <functional>
+#include <chrono>
 
 namespace mir
 {
@@ -33,7 +34,7 @@ class CrossProcessAction
 {
 public:
     void exec(std::function<void()> const& f);
-    void operator()();
+    void operator()(std::chrono::milliseconds timeout = std::chrono::milliseconds{-1});
 
 private:
     mir_test_framework::CrossProcessSync start_sync;

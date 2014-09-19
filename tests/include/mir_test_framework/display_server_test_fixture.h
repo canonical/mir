@@ -62,7 +62,7 @@ public:
 
     void launch_server_process(TestingServerConfiguration& config);
 
-    void launch_client_process(TestingClientConfiguration& config);
+    pid_t launch_client_process(TestingClientConfiguration& config);
 
     bool shutdown_server_process();
     Result  wait_for_shutdown_server_process();

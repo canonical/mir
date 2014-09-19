@@ -44,6 +44,7 @@ public:
     std::shared_ptr<InternalClient> create_internal_client() override;
     void fill_buffer_package(
         BufferIPCPacker* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const override;
+    std::shared_ptr<graphics::BufferWriter> make_buffer_writer() override;
     
     static std::shared_ptr<InternalNativeDisplay> internal_native_display();
     static bool internal_native_display_in_use();
