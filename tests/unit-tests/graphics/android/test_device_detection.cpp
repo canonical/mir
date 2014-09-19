@@ -95,4 +95,5 @@ TEST(DeviceDetection, reports_gralloc_reopenable_after_close_by_default)
 
     mga::DeviceQuirks quirks(mock_ops);
     EXPECT_TRUE(quirks.gralloc_reopenable_after_close());
+    EXPECT_FALSE(quirks.gralloc_reopenable_after_close());
 }
