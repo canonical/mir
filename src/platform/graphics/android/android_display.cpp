@@ -103,7 +103,7 @@ void mga::AndroidDisplay::resume()
 
 auto mga::AndroidDisplay::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /* initial_image */) -> std::shared_ptr<Cursor>
 {
-    return std::shared_ptr<Cursor>();
+    return nullptr;
 }
 
 std::unique_ptr<mg::GLContext> mga::AndroidDisplay::create_gl_context()

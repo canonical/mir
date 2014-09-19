@@ -21,6 +21,7 @@
 
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/buffer_writer.h"
 #include "mir/graphics/cursor.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
@@ -179,6 +180,18 @@ public:
         std::shared_ptr<mg::GLConfig> const&) override
     {
         return std::make_shared<mtd::StubDisplay>(display_rects);
+    }
+    
+    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
+    {
+        struct NullWriter : mg::BufferWriter 
+        {
+            void write(mg::Buffer& /* buffer */, 
+                unsigned char const* /* data */, size_t /* size */) override
+            {
+            }
+        };
+        return std::make_shared<NullWriter>();
     }
     
     std::vector<geom::Rectangle> const display_rects;

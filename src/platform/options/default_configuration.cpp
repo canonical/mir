@@ -43,9 +43,9 @@ char const* const mo::host_socket_opt             = "host-socket";
 char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
 char const* const mo::offscreen_opt               = "offscreen";
+char const* const mo::touchspots_opt               = "enable-touchspots";
 char const* const mo::fatal_abort_opt             = "on-fatal-error-abort";
 char const* const mo::debug_opt                   = "debug";
-
 
 char const* const mo::glog                 = "glog";
 char const* const mo::glog_stderrthreshold = "glog-stderrthreshold";
@@ -162,6 +162,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "When nested, the name Mir uses when registering with the host.")
         (offscreen_opt,
             "Render to offscreen buffers instead of the real outputs.")
+        (touchspots_opt,
+            "Display visualization of touchspots (e.g. for screencasting).")
         (fatal_abort_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
             "in unexpected ways] abort (to get a core dump)")
         (debug_opt, "Enable extra development debugging. "

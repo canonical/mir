@@ -18,7 +18,7 @@
 
 #include "cursor_controller.h"
 
-#include "mir/input/input_targets.h"
+#include "mir/input/scene.h"
 #include "mir/input/surface.h"
 #include "mir/graphics/cursor.h"
 #include "mir/scene/observer.h"
@@ -130,6 +130,11 @@ struct UpdateCursorOnSceneChanges : ms::Observer
     {
         cursor_controller->update_cursor_image();
     }
+
+    void scene_changed()
+    {
+        cursor_controller->update_cursor_image();
+    }
     
     void surface_exists(ms::Surface *surface)
     {
@@ -157,7 +162,7 @@ private:
 };
 
 std::shared_ptr<mi::Surface> topmost_surface_containing_point(
-    std::shared_ptr<mi::InputTargets> const& targets, geom::Point const& point)
+    std::shared_ptr<mi::Scene> const& targets, geom::Point const& point)
 {
     std::shared_ptr<mi::Surface> top_surface_at_point;
     targets->for_each([&top_surface_at_point, &point]
@@ -171,7 +176,7 @@ std::shared_ptr<mi::Surface> topmost_surface_containing_point(
 
 }
 
-mi::CursorController::CursorController(std::shared_ptr<mi::InputTargets> const& input_targets,
+mi::CursorController::CursorController(std::shared_ptr<mi::Scene> const& input_targets,
     std::shared_ptr<mg::Cursor> const& cursor,
     std::shared_ptr<mg::CursorImage> const& default_cursor_image) :
         input_targets(input_targets),

@@ -203,6 +203,7 @@ class MockPlatform : public mg::Platform
     MOCK_CONST_METHOD3(fill_buffer_package,
         void(mg::BufferIPCPacker*, mg::Buffer const*, mg::BufferIpcMsgType));
     MOCK_CONST_METHOD0(egl_native_display, EGLNativeDisplayType());
+    MOCK_METHOD0(make_buffer_writer, std::shared_ptr<mg::BufferWriter>());
 };
 
 struct StubScreencast : mtd::NullScreencast
