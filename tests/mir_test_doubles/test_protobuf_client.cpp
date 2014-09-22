@@ -46,6 +46,7 @@ mir::test::TestProtobufClient::TestProtobufClient(
     connect_done_called(false),
     create_surface_called(false),
     next_buffer_called(false),
+    exchange_buffer_called(false),
     release_surface_called(false),
     disconnect_done_called(false),
     drm_auth_magic_done_called(false),
@@ -69,6 +70,8 @@ mir::test::TestProtobufClient::TestProtobufClient(
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_create_surface_done));
     ON_CALL(*this, next_buffer_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_next_buffer_done));
+    ON_CALL(*this, exchange_buffer_done())
+        .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_exchange_buffer_done));
     ON_CALL(*this, release_surface_done())
         .WillByDefault(testing::Invoke(this, &TestProtobufClient::on_release_surface_done));
     ON_CALL(*this, disconnect_done())
@@ -104,6 +107,11 @@ void mir::test::TestProtobufClient::on_create_surface_done()
 void mir::test::TestProtobufClient::on_next_buffer_done()
 {
     next_buffer_called.store(true);
+}
+
+void mir::test::TestProtobufClient::on_exchange_buffer_done()
+{
+    exchange_buffer_called.store(true);
 }
 
 void mir::test::TestProtobufClient::on_release_surface_done()
@@ -170,6 +178,16 @@ void mir::test::TestProtobufClient::wait_for_next_buffer()
         std::this_thread::yield();
     }
     next_buffer_called.store(false);
+}
+
+void mir::test::TestProtobufClient::wait_for_exchange_buffer()
+{
+    for (int i = 0; !exchange_buffer_called.load() && i < maxwait; ++i)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::yield();
+    }
+    exchange_buffer_called.store(false);
 }
 
 void mir::test::TestProtobufClient::wait_for_release_surface()
