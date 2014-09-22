@@ -51,6 +51,8 @@ add_executable(
   ${MIR_COMMON_OBJECTS}
 )
 
+mir_precompiled_header(mir_integration_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
+
 add_dependencies(mir_integration_tests GMock)
 
 uses_android_input(mir_integration_tests)

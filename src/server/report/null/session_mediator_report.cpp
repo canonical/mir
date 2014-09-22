@@ -30,6 +30,10 @@ void mir::report::null::SessionMediatorReport::session_next_buffer_called(std::s
 {
 }
 
+void mir::report::null::SessionMediatorReport::session_exchange_buffer_called(std::string const&)
+{
+}
+
 void mir::report::null::SessionMediatorReport::session_release_surface_called(std::string const&)
 {
 }

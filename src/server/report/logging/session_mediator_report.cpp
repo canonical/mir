@@ -48,6 +48,11 @@ void mrl::SessionMediatorReport::session_next_buffer_called(std::string const& a
     log->log(ml::Logger::informational, "session_next_buffer_called(\"" + app_name + "\")", component);
 }
 
+void mrl::SessionMediatorReport::session_exchange_buffer_called(std::string const& app_name)
+{
+    log->log(ml::Logger::informational, "session_exchange_buffer_called(\"" + app_name + "\")", component);
+}
+
 void mrl::SessionMediatorReport::session_release_surface_called(std::string const& app_name)
 {
     log->log(ml::Logger::informational, "session_release_surface_called(\"" + app_name + "\")", component);
