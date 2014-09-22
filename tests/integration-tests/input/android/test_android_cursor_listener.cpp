@@ -26,7 +26,7 @@
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/cursor_listener.h"
-#include "mir/input/input_targets.h"
+#include "mir/input/scene.h"
 #include "mir/input/input_region.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/geometry/rectangle.h"
@@ -36,6 +36,7 @@
 #include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test_doubles/stub_input_enumerator.h"
+#include "mir_test_doubles/stub_touch_visualizer.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
 
@@ -97,6 +98,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
             mt::fake_shared(dispatcher),
             mt::fake_shared(input_region),
             mt::fake_shared(cursor_listener),
+            mt::fake_shared(touch_visualizer),
             null_report);
 
         fake_event_hub = configuration->the_fake_event_hub();
@@ -117,6 +119,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
     mia::FakeEventHub* fake_event_hub;
     std::shared_ptr<mi::InputManager> input_manager;
     MockCursorListener cursor_listener;
+    mtd::StubTouchVisualizer touch_visualizer;
     StubInputRegion input_region;
 };
 

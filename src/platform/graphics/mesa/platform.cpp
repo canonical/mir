@@ -23,6 +23,7 @@
 #include "internal_client.h"
 #include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
+#include "buffer_writer.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/option.h"
@@ -194,7 +195,7 @@ void mgm::Platform::fill_buffer_package(
         }
         for(auto i=0; i<native_handle->fd_items; i++)
         {
-            packer->pack_fd(native_handle->fd[i]);
+            packer->pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
         }
 
         packer->pack_stride(buffer->stride());
@@ -214,6 +215,11 @@ std::shared_ptr<mg::InternalClient> mgm::Platform::create_internal_client()
         internal_native_display = std::make_shared<mgm::InternalNativeDisplay>(get_ipc_package());
     internal_display_clients_present = true;
     return std::make_shared<mgm::InternalClient>(internal_native_display);
+}
+
+std::shared_ptr<mg::BufferWriter> mgm::Platform::make_buffer_writer()
+{
+    return std::make_shared<mgm::BufferWriter>();
 }
 
 EGLNativeDisplayType mgm::Platform::egl_native_display() const

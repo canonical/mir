@@ -28,6 +28,7 @@
 #include <unordered_map>
 #include <mutex>
 #include <vector>
+#include <atomic>
 
 namespace droidinput = android;
 
@@ -75,6 +76,7 @@ private:
         void surface_added(scene::Surface* surface) override;
         void surface_removed(scene::Surface* surface) override;
         void surface_exists(scene::Surface* surface) override;
+        void scene_changed() override;
 
         void remove_transfer_for(input::Surface* surface);
         InputSenderState & state;
@@ -88,10 +90,10 @@ private:
         void send(InputSendEntry && item);
         bool used_for_surface(input::Surface const* surface) const;
         void on_surface_disappeared();
-
-    private:
         void subscribe();
         void unsubscribe();
+
+    private:
         void on_finish_signal();
         void on_response_timeout();
         void update_timer();
@@ -107,6 +109,7 @@ private:
         input::Surface * surface;
         std::vector<InputSendEntry> pending_responses;
         std::mutex transfer_mutex;
+        std::atomic<bool> subscribed{false};
         std::unique_ptr<time::Alarm> send_timer;
 
         ActiveTransfer& operator=(ActiveTransfer const&) = delete;

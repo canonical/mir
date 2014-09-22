@@ -23,6 +23,8 @@
 #include "mir/default_configuration.h"
 #include "mir/abnormal_exit.h"
 
+#include <dlfcn.h>
+
 namespace mo = mir::options;
 
 char const* const mo::server_socket_opt           = "file,f";
@@ -41,6 +43,8 @@ char const* const mo::host_socket_opt             = "host-socket";
 char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
 char const* const mo::offscreen_opt               = "offscreen";
+char const* const mo::touchspots_opt               = "enable-touchspots";
+char const* const mo::fatal_abort_opt             = "on-fatal-error-abort";
 
 char const* const mo::glog                 = "glog";
 char const* const mo::glog_stderrthreshold = "glog-stderrthreshold";
@@ -60,11 +64,48 @@ int const glog_minloglevel_default     = 0;
 char const* const glog_log_dir_default = "";
 bool const enable_input_default        = true;
 char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
+
+// Hack around the way Qt loads mir:
+// platform_api and therefore Mir are loaded via dlopen(..., RTLD_LOCAL).
+// While this is sensible for a plugin it would mean that some symbols
+// cannot be resolved by the Mir platform plugins. This hack makes the
+// necessary symbols global.
+void ensure_loaded_with_rtld_global()
+{
+    Dl_info info;
+
+    // Cast dladdr itself to work around g++-4.8 warnings (LP: #1366134)
+    typedef int (safe_dladdr_t)(void(*func)(), Dl_info *info);
+    safe_dladdr_t *safe_dladdr = (safe_dladdr_t*)&dladdr;
+    safe_dladdr(&ensure_loaded_with_rtld_global, &info);
+    dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
+}
 }
 
 mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
+    DefaultConfiguration(
+        argc, argv,
+        [](int argc, char const* const* argv)
+        {
+            if (argc)
+            {
+                std::ostringstream help_text;
+                help_text << "Unknown command line options:";
+                for (auto opt = argv; opt != argv+argc ; ++opt)
+                    help_text << ' ' << *opt;
+                BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
+            }
+        })
+{
+}
+
+mo::DefaultConfiguration::DefaultConfiguration(
+    int argc,
+    char const* argv[],
+    std::function<void(int argc, char const* const* argv)> const& handler) :
     argc(argc),
     argv(argv),
+    unparsed_arguments_handler{handler},
     program_options(std::make_shared<boost::program_options::options_description>(
     "Command-line options.\n"
     "Environment variables capitalise long form with prefix \"MIR_SERVER_\" and \"_\" in place of \"-\""))
@@ -119,7 +160,11 @@ mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
         (name_opt, po::value<std::string>(),
             "When nested, the name Mir uses when registering with the host.")
         (offscreen_opt,
-            "Render to offscreen buffers instead of the real outputs.");
+            "Render to offscreen buffers instead of the real outputs.")
+        (touchspots_opt,
+            "Display visualization of touchspots (e.g. for screencasting).")
+        (fatal_abort_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
+            "in unexpected ways] abort (to get a core dump)");
 
         add_platform_options();
 }
@@ -144,6 +189,8 @@ void mo::DefaultConfiguration::add_platform_options()
     {
         graphics_libname = options.get<std::string>(platform_graphics_lib);
     }
+
+    ensure_loaded_with_rtld_global();
 
     auto graphics_lib = load_library(graphics_libname);
     auto add_platform_options = graphics_lib->load_function<mir::graphics::AddPlatformOptions>(std::string("add_platform_options"));
@@ -186,6 +233,12 @@ void mo::DefaultConfiguration::parse_arguments(
             ("help,h", "this help text");
 
         options.parse_arguments(desc, argc, argv);
+
+        auto const unparsed_arguments = options.unparsed_command_line();
+        std::vector<char const*> tokens;
+        for (auto const& token : unparsed_arguments)
+            tokens.push_back(token.c_str());
+        unparsed_arguments_handler(tokens.size(), tokens.data());
 
         if (options.is_set("help"))
         {

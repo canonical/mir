@@ -11,3 +11,5 @@ add_library(
   wait_object.cpp
   current_thread_name.cpp
 )
+
+add_dependencies(mir-test mirprotobuf)

@@ -25,6 +25,7 @@
 #include <memory>
 #include <mutex>
 #include <condition_variable>
+#include <atomic>
 
 namespace mir
 {
@@ -39,7 +40,7 @@ class HWCCommonDevice;
 struct HWCCallbacks
 {
     hwc_procs_t hooks;
-    HWCCommonDevice* self;
+    std::atomic<HWCCommonDevice*> self;
 };
 
 class HWCCommonDevice : public DisplayDevice
@@ -60,10 +61,10 @@ protected:
 
 private:
     void turn_screen_on() const;
-    void turn_screen_off() const;
+    void turn_screen_off();
+    virtual void turned_screen_off();
 
-    HWCCallbacks callbacks;
-
+    std::shared_ptr<HWCCallbacks> const callbacks;
     std::shared_ptr<HwcWrapper> const hwc_device;
 
     std::mutex blanked_mutex;

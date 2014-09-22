@@ -1,12 +1,14 @@
 
-#its a bit troubling that these need to be included for demo_input_filter
-include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
-include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
 add_library(eglapp STATIC
   eglapp.c
 )
+
+add_library(exampleserverconfig STATIC
+  server_configuration.cpp
+)
+
 target_link_libraries(eglapp
   mirclient
   ${EGL_LIBRARIES}
@@ -36,6 +38,12 @@ add_executable(mir_demo_client_eglplasma
 target_link_libraries(mir_demo_client_eglplasma
   eglapp
 )
+add_executable(mir_demo_client_cursors
+  cursors_demo_client.c
+)
+target_link_libraries(mir_demo_client_cursors
+  eglapp
+)
 
 add_executable(mir_demo_client_basic
   basic.c
@@ -43,12 +51,14 @@ add_executable(mir_demo_client_basic
 
 target_link_libraries(mir_demo_client_basic
   mirclient
-  mirprotobuf
 
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
+
+add_executable(mir_test_client_release_at_exit release_at_exit.c)
+target_link_libraries(mir_test_client_release_at_exit mirclient)
 
 add_executable(mir_demo_client_multiwin multiwin.c)
 target_link_libraries(mir_demo_client_multiwin mirclient)
@@ -68,7 +78,6 @@ add_executable(mir_demo_client_flicker
 
 target_link_libraries(mir_demo_client_flicker
   mirclient
-  mirprotobuf
 
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
@@ -82,7 +91,6 @@ add_executable(mir_demo_client_scroll
 target_link_libraries(mir_demo_client_scroll
   mirdraw
   mirclient
-  mirprotobuf
 
   ${Boost_LIBRARIES}
   ${PROTOBUF_LIBRARIES}
@@ -111,43 +119,17 @@ add_executable(mir_demo_standalone_render_to_fb
 
 target_link_libraries(mir_demo_standalone_render_to_fb
     mirserver
-    mirlogging
     mirdraw
-    ${Boost_LIBRARIES}
-)
-
-add_executable(mir_demo_standalone_render_overlays
-    render_overlays.cpp
-)
-
-target_link_libraries(mir_demo_standalone_render_overlays
-    mirserver
-    mirlogging
-    mirdraw
-    mirtestdraw
-)
-
-set(RENDER_SURFACES_SOURCES
-    render_surfaces.cpp
-    buffer_render_target.cpp
-    image_renderer.cpp
-    server_configuration.cpp
-)
-add_executable(mir_demo_standalone_render_surfaces ${RENDER_SURFACES_SOURCES})
-target_link_libraries(mir_demo_standalone_render_surfaces
-    mirserver
-    mirshell
-    mirsharedgeometry
     ${Boost_LIBRARIES}
 )
 
 add_executable(mir_demo_standalone_input_filter
   demo_input_filter.cpp
-  server_configuration.cpp
 )
 
 target_link_libraries(mir_demo_standalone_input_filter
   mirserver
+  exampleserverconfig
 )
 
 set (INSTALL_DEMOS
@@ -157,6 +139,7 @@ set (INSTALL_DEMOS
   mir_demo_client_eglflash
   mir_demo_client_egltriangle
   mir_demo_client_eglplasma
+  mir_demo_client_eglcounter
   mir_demo_client_fingerpaint
   mir_demo_client_multiwin
   mir_demo_client_display_config
@@ -164,22 +147,18 @@ set (INSTALL_DEMOS
   mir_demo_client_prompt_session
   mir_demo_standalone_input_filter
   mir_demo_standalone_render_to_fb
-  mir_demo_standalone_render_surfaces
 )
-
-add_subdirectory(demo-inprocess-surface-client)
-add_subdirectory(demo-shell)
 
 install(TARGETS ${INSTALL_DEMOS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_executable(mir_demo_server_basic
   basic_server.cpp
   basic_server_configuration.cpp
-  server_configuration.cpp
 )
 
 target_link_libraries(mir_demo_server_basic
   mirserver
+  exampleserverconfig
   ${Boost_LIBRARIES}
 )
 
@@ -198,11 +177,11 @@ add_executable(mir_demo_server_translucent
   translucent_server_configuration.cpp
   pixel_format_selector.cpp
   basic_server_configuration.cpp
-  server_configuration.cpp
 )
 
 target_link_libraries(mir_demo_server_translucent
   mirserver
+  exampleserverconfig
   ${Boost_LIBRARIES}
 )
 

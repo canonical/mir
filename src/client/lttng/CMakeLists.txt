@@ -6,6 +6,7 @@ add_library(
   client_tracepoint_provider.cpp
   rpc_report.cpp
   input_receiver_report.cpp
+  shared_library_prober_report.cpp
 )
 
 add_library(mirclientlttng SHARED tracepoints.c)
@@ -24,9 +25,10 @@ set_target_properties(mirclientlttng PROPERTIES
 target_link_libraries(
   mirclientlttngstatic
 
-  mirsharedlttng
   -ldl
 )
+
+add_dependencies(mirclientlttngstatic mirprotobuf)
 
 target_link_libraries(
   mirclientlttng

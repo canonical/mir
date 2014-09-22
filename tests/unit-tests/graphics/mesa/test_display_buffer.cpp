@@ -38,7 +38,7 @@ using namespace mir;
 using namespace std;
 using namespace mir::test;
 using namespace mir::test::doubles;
-using namespace mir::mir_test_framework;
+using namespace mir_test_framework;
 using namespace mir::graphics;
 using mir::report::null_display_report;
 
@@ -53,15 +53,8 @@ public:
                                  SetArgPointee<4>(1),
                                  Return(EGL_TRUE)));
 
-        ON_CALL(mock_egl, eglQueryString(_,EGL_EXTENSIONS))
-            .WillByDefault(Return("EGL_KHR_image "
-                                  "EGL_KHR_image_base "
-                                  "EGL_MESA_drm_image"));
-
-        ON_CALL(mock_gl, glGetString(GL_EXTENSIONS))
-            .WillByDefault(Return(reinterpret_cast<const GLubyte*>(
-                                  "GL_OES_texture_npot "
-                                  "GL_OES_EGL_image")));
+        mock_egl.provide_egl_extensions();
+        mock_gl.provide_gles_extensions();
 
         fake_bo = reinterpret_cast<gbm_bo*>(123);
         ON_CALL(mock_gbm, gbm_surface_lock_front_buffer(_))

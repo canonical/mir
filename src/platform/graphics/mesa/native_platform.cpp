@@ -21,6 +21,7 @@
 #include "native_platform.h"
 
 #include "buffer_allocator.h"
+#include "buffer_writer.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/nested_context.h"
@@ -110,7 +111,7 @@ void mgm::NativePlatform::fill_buffer_package(
         }
         for(auto i=0; i<native_handle->fd_items; i++)
         {
-            packer->pack_fd(native_handle->fd[i]);
+            packer->pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
         }
 
         packer->pack_stride(buffer->stride());
@@ -157,3 +158,7 @@ void mgm::NativePlatform::finish_internal_native_display()
     native_display.reset();
 }
 
+std::shared_ptr<mg::BufferWriter> mgm::NativePlatform::make_buffer_writer()
+{
+    return std::make_shared<mgm::BufferWriter>();
+}

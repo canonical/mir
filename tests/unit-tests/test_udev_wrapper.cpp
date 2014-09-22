@@ -22,16 +22,11 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <stdexcept>
-
-// At some point gnu libstdc++ will have a <regex> header that contains
-// actual functions. Until then, Boost to the rescue.
-#include <boost/regex.hpp>
-
 #include <umockdev.h>
 #include <libudev.h>
 #include <poll.h>
 
-namespace mtf=mir::mir_test_framework;
+namespace mtf=mir_test_framework;
 
 namespace
 {
@@ -265,7 +260,10 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
     devices.scan_devices();
     for (auto& device : devices)
     {
-        EXPECT_TRUE(boost::regex_match(device.devpath(), boost::regex(".*card[0-9].*")))
+        const char *start = strstr(device.devpath(), "card");
+        ASSERT_TRUE(start);
+        int num;
+        EXPECT_EQ(1, sscanf(start, "card%d", &num))
             << "Unexpected device with devpath:" << device.devpath();
     }
 }

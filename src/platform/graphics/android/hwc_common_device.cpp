@@ -34,7 +34,9 @@ static void invalidate_hook(const struct hwc_procs* /*procs*/)
 
 static void vsync_hook(const struct hwc_procs* procs, int /*disp*/, int64_t /*timestamp*/)
 {
-    auto self = reinterpret_cast<mga::HWCCallbacks const*>(procs)->self;
+    auto self = reinterpret_cast<mga::HWCCallbacks const*>(procs)->self.load();
+    if (!self)
+        return;
     self->notify_vsync();
 }
 
@@ -46,17 +48,25 @@ static void hotplug_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int /*
 mga::HWCCommonDevice::HWCCommonDevice(std::shared_ptr<HwcWrapper> const& hwc_device,
                                       std::shared_ptr<HWCVsyncCoordinator> const& coordinator)
     : coordinator(coordinator),
+      callbacks(std::make_shared<mga::HWCCallbacks>()),
       hwc_device(hwc_device),
       current_mode(mir_power_mode_on)
 {
-    callbacks.hooks.invalidate = invalidate_hook;
-    callbacks.hooks.vsync = vsync_hook;
-    callbacks.hooks.hotplug = hotplug_hook;
-    callbacks.self = this;
+    callbacks->hooks.invalidate = invalidate_hook;
+    callbacks->hooks.vsync = vsync_hook;
+    callbacks->hooks.hotplug = hotplug_hook;
+    callbacks->self = this;
 
-    hwc_device->register_hooks(&callbacks.hooks);
+    hwc_device->register_hooks(callbacks);
 
-    turn_screen_on();
+    try
+    {
+        turn_screen_on();
+    } catch (...)
+    {
+        //TODO: log failure here. some drivers will throw if the screen is already on, which
+        //      is not a fatal condition
+    }
 }
 
 mga::HWCCommonDevice::~HWCCommonDevice() noexcept
@@ -71,6 +81,7 @@ mga::HWCCommonDevice::~HWCCommonDevice() noexcept
         {
         }
     }
+    callbacks->self = nullptr;
 }
 
 void mga::HWCCommonDevice::notify_vsync()
@@ -117,10 +128,15 @@ void mga::HWCCommonDevice::turn_screen_on() const
     hwc_device->vsync_signal_on();
 }
 
-void mga::HWCCommonDevice::turn_screen_off() const
+void mga::HWCCommonDevice::turn_screen_off()
 {
     hwc_device->vsync_signal_off();
     hwc_device->display_off();
+    turned_screen_off();
+}
+
+void mga::HWCCommonDevice::turned_screen_off()
+{
 }
 
 bool mga::HWCCommonDevice::apply_orientation(MirOrientation) const

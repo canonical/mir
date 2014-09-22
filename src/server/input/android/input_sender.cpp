@@ -83,8 +83,12 @@ void mia::InputSender::SceneObserver::surface_exists(scene::Surface* surface)
     surface_added(surface);
 }
 
+void mia::InputSender::SceneObserver::scene_changed()
+{
+}
 
-void mia::InputSender::SceneObserver::remove_transfer_for(mir::input::Surface * surface)
+
+void mia::InputSender::SceneObserver::remove_transfer_for(mi::Surface * surface)
 {
     std::shared_ptr<InputChannel> closed_channel = surface->input_channel();
 
@@ -96,7 +100,7 @@ void mia::InputSender::SceneObserver::remove_transfer_for(mir::input::Surface * 
 }
 
 mia::InputSender::InputSenderState::InputSenderState(std::shared_ptr<mir::MainLoop> const& main_loop,
-                                                     std::shared_ptr<mir::input::InputSendObserver> const& observer,
+                                                     std::shared_ptr<mi::InputSendObserver> const& observer,
                                                      std::shared_ptr<InputReport> const& report)
     : main_loop{main_loop}, report{report}, observer{observer}, seq{}
 {
@@ -131,7 +135,7 @@ void mia::InputSender::InputSenderState::send_event(std::shared_ptr<InputChannel
     transfer->send(std::move(entry));
 }
 
-void mia::InputSender::InputSenderState::add_transfer(int fd, mir::input::Surface * surface)
+void mia::InputSender::InputSenderState::add_transfer(int fd, mi::Surface * surface)
 {
     std::lock_guard<std::mutex> lock(sender_mutex);
     std::shared_ptr<ActiveTransfer> transfer{get_transfer(fd)};
@@ -149,6 +153,7 @@ void mia::InputSender::InputSenderState::remove_transfer(int fd)
 
     if (transfer)
     {
+        transfer->unsubscribe();
         transfers.erase(fd);
         lock.unlock();
 
@@ -162,7 +167,7 @@ uint32_t mia::InputSender::InputSenderState::next_seq()
     return seq;
 }
 
-mia::InputSender::ActiveTransfer::ActiveTransfer(InputSenderState & state, int server_fd, mir::input::Surface* surface) :
+mia::InputSender::ActiveTransfer::ActiveTransfer(InputSenderState & state, int server_fd, mi::Surface* surface) :
     state(state),
     publisher{droidinput::sp<droidinput::InputChannel>(
             new droidinput::InputChannel(droidinput::String8(surface->name()), server_fd))},
@@ -209,17 +214,22 @@ mia::InputSender::ActiveTransfer::~ActiveTransfer()
 
 void mia::InputSender::ActiveTransfer::unsubscribe()
 {
-    state.main_loop->unregister_fd_handler(this);
+    bool expected = true;
+    if (std::atomic_compare_exchange_strong(&subscribed, &expected, false))
+        state.main_loop->unregister_fd_handler(this);
 }
 
 void mia::InputSender::ActiveTransfer::subscribe()
 {
-    state.main_loop->register_fd_handler({publisher.getChannel()->getFd()},
-                                    this,
-                                    [this](int)
-                                    {
-                                        on_finish_signal();
-                                    });
+    bool expected = false;
+    if (std::atomic_compare_exchange_strong(&subscribed, &expected, true))
+        state.main_loop->register_fd_handler(
+            {publisher.getChannel()->getFd()},
+            this,
+            [this](int)
+            {
+                on_finish_signal();
+            });
 }
 
 droidinput::status_t mia::InputSender::ActiveTransfer::send_key_event(uint32_t seq, MirKeyEvent const& event)
@@ -354,10 +364,11 @@ void mia::InputSender::ActiveTransfer::on_response_timeout()
 
 void mia::InputSender::ActiveTransfer::enqueue_entry(mia::InputSendEntry && entry)
 {
+    subscribe();
+
     std::lock_guard<std::mutex> lock(transfer_mutex);
     if (pending_responses.empty())
     {
-        subscribe();
         update_timer();
     }
 
@@ -379,7 +390,6 @@ mia::InputSendEntry mia::InputSender::ActiveTransfer::unqueue_entry(uint32_t seq
     pending_responses.erase(pos);
     if (pending_responses.empty())
     {
-        unsubscribe();
         cancel_timer();
     }
     else

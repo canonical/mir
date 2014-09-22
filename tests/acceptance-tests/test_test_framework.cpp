@@ -19,6 +19,7 @@
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_framework/testing_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -74,6 +75,7 @@ struct DemoInProcessServer : mir_test_framework::InProcessServer
     virtual mir::DefaultServerConfiguration& server_config() { return server_config_; }
 
     mir_test_framework::StubbedServerConfiguration server_config_;
+    mir_test_framework::UsingStubClientPlatform using_stub_client_platform;
 };
 }
 

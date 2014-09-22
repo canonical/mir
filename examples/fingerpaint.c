@@ -293,6 +293,7 @@ int main(int argc, char *argv[])
     MirGraphicsRegion canvas;
     MirEventDelegate delegate = {&on_event, &canvas};
     unsigned int f;
+    int swap_interval = 0;
 
     char *mir_socket = NULL;
 
@@ -311,6 +312,9 @@ int main(int argc, char *argv[])
                 case 'm':
                     mir_socket = argv[++i];
                     break;
+                case 'w':
+                    swap_interval = 1;
+                    break;
                 case 'h':
                 default:
                     help = 1;
@@ -327,6 +331,7 @@ int main(int argc, char *argv[])
                 printf("Usage: %s [<options>]\n"
                        "  -h               Show this help text\n"
                        "  -m socket        Mir server socket\n"
+                       "  -w               Wait for vblank (don't drop frames)\n"
                        , argv[0]);
                 return 0;
             }
@@ -385,6 +390,7 @@ int main(int argc, char *argv[])
     surf = mir_connection_create_surface_sync(conn, &parm);
     if (surf != NULL)
     {
+        mir_surface_set_swapinterval(surf, swap_interval);
         mir_surface_set_event_handler(surf, &delegate);
     
         canvas.width = parm.width;
@@ -397,6 +403,7 @@ int main(int argc, char *argv[])
         {
             signal(SIGINT, shutdown);
             signal(SIGTERM, shutdown);
+            signal(SIGHUP, shutdown);
         
             clear_region(&canvas, &background);
             redraw(surf, &canvas);

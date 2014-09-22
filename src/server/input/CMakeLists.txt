@@ -16,17 +16,14 @@ set(
   default_configuration.cpp
   xcursor_loader.cpp
   builtin_cursor_images.cpp
+  touchspot_controller.cpp
 )
 
 add_subdirectory(android)
 
 add_library(
-  mirinput STATIC
+  mirinput OBJECT
 
   ${INPUT_SOURCES}
 )
 uses_android_input(mirinput)
-target_link_libraries(
-  mirinput
-  xcursorloader
-)

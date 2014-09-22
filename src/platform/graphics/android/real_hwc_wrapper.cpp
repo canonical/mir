@@ -17,6 +17,7 @@
  */
 
 #include "real_hwc_wrapper.h"
+#include "hwc_common_device.h"
 #include "hwc_logger.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -61,9 +62,10 @@ void mga::RealHwcWrapper::set(hwc_display_contents_1_t& display_list) const
     }
 }
 
-void mga::RealHwcWrapper::register_hooks(hwc_procs_t* callbacks) const
+void mga::RealHwcWrapper::register_hooks(std::shared_ptr<HWCCallbacks> const& callbacks)
 {
-    hwc_device->registerProcs(hwc_device.get(), callbacks);
+    hwc_device->registerProcs(hwc_device.get(), reinterpret_cast<hwc_procs_t*>(callbacks.get()));
+    registered_callbacks = callbacks;
 }
 
 void mga::RealHwcWrapper::vsync_signal_on() const
@@ -74,6 +76,7 @@ void mga::RealHwcWrapper::vsync_signal_on() const
         ss << "error turning vsync signal on. rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
+    logger->log_vsync_on();
 }
 
 void mga::RealHwcWrapper::vsync_signal_off() const
@@ -84,6 +87,7 @@ void mga::RealHwcWrapper::vsync_signal_off() const
         ss << "error turning vsync signal off. rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
+    logger->log_vsync_off();
 }
 
 void mga::RealHwcWrapper::display_on() const
@@ -94,6 +98,7 @@ void mga::RealHwcWrapper::display_on() const
         ss << "error turning display on. rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
+    logger->log_display_on();
 }
 
 void mga::RealHwcWrapper::display_off() const
@@ -104,4 +109,5 @@ void mga::RealHwcWrapper::display_off() const
         ss << "error turning display off. rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
+    logger->log_display_off();
 }

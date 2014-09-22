@@ -91,7 +91,7 @@ struct DisconnectingTestingClientConfiguration : mtf::TestingClientConfiguration
             EXPECT_TRUE(mir_connection_is_valid(connection));
             /*
              * Set a null callback to avoid killing the process
-             * (default callback raises SIGTERM).
+             * (default callback raises SIGHUP).
              */
             mir_connection_set_lifecycle_event_callback(connection,
                                                         null_lifecycle_callback,
@@ -130,6 +130,40 @@ struct DisconnectingTestingClientConfiguration : mtf::TestingClientConfiguration
     mt::CrossProcessAction configure_display;
     mt::CrossProcessAction disconnect;
 };
+
+/*
+ * This client will self-terminate on server connection break (through the default
+ * lifecycle handler).
+ */
+struct TerminatingTestingClientConfiguration : mtf::TestingClientConfiguration
+{
+    void exec() override
+    {
+        MirConnection* connection{nullptr};
+
+        connect.exec([&] {
+            connection = mir_connect_sync(mtf::test_socket_file().c_str() , __PRETTY_FUNCTION__);
+            EXPECT_TRUE(mir_connection_is_valid(connection));
+        });
+
+        create_surface_sync.wait_for_signal_ready_for();
+
+        MirSurfaceParameters const parameters =
+        {
+            __PRETTY_FUNCTION__,
+            1, 1,
+            mir_pixel_format_abgr_8888,
+            mir_buffer_usage_hardware,
+            mir_display_output_id_invalid
+        };
+        mir_connection_create_surface_sync(connection, &parameters);
+
+        mir_connection_release(connection);
+    }
+
+    mt::CrossProcessAction connect;
+    mtf::CrossProcessSync create_surface_sync;
+};
 }
 
 TEST_F(ServerDisconnect, client_detects_server_shutdown)
@@ -166,5 +200,33 @@ TEST_F(ServerDisconnect, client_can_call_connection_functions_after_connection_b
         client_config.configure_display();
         /* Trying to disconnect at this point shouldn't block */
         client_config.disconnect();
+    });
+}
+
+TEST_F(ServerDisconnect, causes_client_to_terminate_by_default)
+{
+    TestingServerConfiguration server_config;
+    launch_server_process(server_config);
+
+    TerminatingTestingClientConfiguration client_config;
+    launch_client_process(client_config);
+
+    run_in_test_process([this, &client_config]
+    {
+        client_config.connect();
+        shutdown_server_process();
+
+        /*
+         * While trying to create a surface the connection break will be detected
+         * and the client should self-terminate.
+         */
+        client_config.create_surface_sync.signal_ready();
+
+        auto const client_results = wait_for_shutdown_client_processes();
+        ASSERT_EQ(1, client_results.size());
+        EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal,
+                  client_results[0].reason);
+        int sig = client_results[0].signal;
+        EXPECT_TRUE(sig == SIGHUP || sig == SIGKILL /* (Valgrind) */);
     });
 }

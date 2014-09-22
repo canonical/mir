@@ -20,7 +20,7 @@
 #ifndef MIR_OPTIONS_PROGRAM_OPTION_H_
 #define MIR_OPTIONS_PROGRAM_OPTION_H_
 
-#include "option.h"
+#include "mir/options/option.h"
 
 #include <boost/program_options/variables_map.hpp>
 #include <boost/program_options/options_description.hpp>
@@ -54,8 +54,11 @@ public:
     boost::any const& get(char const* name) const override;
     using Option::get;
 
+    std::vector<std::string> unparsed_command_line() const;
+
 private:
     boost::program_options::variables_map options;
+    std::vector<std::string> unparsed_tokens;
 };
 }
 }

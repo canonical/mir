@@ -25,6 +25,8 @@
 
 #include <string.h>
 
+#include <mir_toolkit/cursors.h>
+
 // Unforunately this can not be compiled as C++...so we can not namespace
 // these symbols. In order to differentiate from internal symbols
 //  we refer to them via their _ prefixed version, i.e. _XcursorImage
@@ -75,6 +77,71 @@ private:
     _XcursorImage *image;
     std::shared_ptr<_XcursorImages> const save_resource;
 };
+
+std::string const
+xcursor_name_for_mir_cursor(std::string const& mir_cursor_name)
+{
+    if (mir_cursor_name == mir_default_cursor_name)
+    {
+        return "arrow";
+    }
+    else if (mir_cursor_name == mir_arrow_cursor_name)
+    {
+        return "arrow";
+    }
+    else if (mir_cursor_name == mir_busy_cursor_name)
+    {
+        return "watch";
+    }
+    else if (mir_cursor_name == mir_caret_cursor_name)
+    {
+        return "xterm"; // Yep
+    }
+    else if (mir_cursor_name == mir_pointing_hand_cursor_name)
+    {
+        return "hand2";
+    }
+    else if (mir_cursor_name == mir_open_hand_cursor_name)
+    {
+        return "hand";
+    }
+    else if (mir_cursor_name == mir_closed_hand_cursor_name)
+    {
+        return "grabbing";
+    }
+    else if (mir_cursor_name == mir_horizontal_resize_cursor_name)
+    {
+        return "h_double_arrow";
+    }
+    else if (mir_cursor_name == mir_vertical_resize_cursor_name)
+    {
+        return "v_double_arrow";
+    }
+    else if (mir_cursor_name == mir_diagonal_resize_bottom_to_top_cursor_name)
+    {
+        return "top_right_corner";
+    }
+    else if (mir_cursor_name == mir_diagonal_resize_top_to_bottom_cursor_name)
+    {
+        return "bottom_right_corner";
+    }
+    else if (mir_cursor_name == mir_omnidirectional_resize_cursor_name)
+    {
+        return "fleur";
+    }
+    else if (mir_cursor_name == mir_vsplit_resize_cursor_name)
+    {
+        return "v_double_arrow";
+    }
+    else if (mir_cursor_name == mir_hsplit_resize_cursor_name)
+    {
+        return "h_double_arrow";
+    }
+    else
+    {
+        return mir_cursor_name;
+    }
+}
 }
 
 mi::XCursorLoader::XCursorLoader()
@@ -126,12 +193,11 @@ void mi::XCursorLoader::load_cursor_theme(std::string const& theme_name)
         }, this);
 }
 
-std::shared_ptr<mg::CursorImage> mi::XCursorLoader::image(std::string const& cursor_name,
+std::shared_ptr<mg::CursorImage> mi::XCursorLoader::image(
+    std::string const& cursor_name,
     geom::Size const& size)
 {
-    // 'arrow' is the default cursor in XCursor themes.
-    if (cursor_name == "default")
-        return image("arrow", size);
+    auto xcursor_name = xcursor_name_for_mir_cursor(cursor_name);
 
     if (size != mi::default_cursor_size)
         BOOST_THROW_EXCEPTION(
@@ -139,7 +205,7 @@ std::shared_ptr<mg::CursorImage> mi::XCursorLoader::image(std::string const& cur
     
     std::lock_guard<std::mutex> lg(guard);
 
-    auto it = loaded_images.find(cursor_name);
+    auto it = loaded_images.find(xcursor_name);
     if (it != loaded_images.end())
         return it->second;
 

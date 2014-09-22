@@ -571,11 +571,14 @@ void FakeEventHub::synthesize_event(const mis::TouchParameters &parameters)
     event.code = ABS_Y;
     event.value = parameters.abs_y;
     events_available.push_back(event);
-    
-    event.type = EV_KEY;
-    event.code = BTN_TOUCH;
-    event.value = 1;
-    events_available.push_back(event);
+
+    if (parameters.action != mis::TouchParameters::Action::Move)
+    {
+        event.type = EV_KEY;
+        event.code = BTN_TOUCH;
+        event.value = (parameters.action == mis::TouchParameters::Action::Tap);
+        events_available.push_back(event);
+    }
 
     // Cursor motion events require a sync as per droidinput::CursorInputMapper::process
     event.type = EV_SYN;
@@ -752,6 +755,7 @@ const FakeEventHub::FakeDevice* FakeEventHub::getDevice(int32_t deviceId) const
 
 size_t FakeEventHub::eventsQueueSize() const
 {
+    std::lock_guard<std::mutex> lg(guard);
     return events_available.size();
 }
 

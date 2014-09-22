@@ -30,6 +30,7 @@
 #include "event_filter_chain.h"
 #include "null_input_configuration.h"
 #include "cursor_controller.h"
+#include "touchspot_controller.h"
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
 #include "xcursor_loader.h"
@@ -38,6 +39,7 @@
 #include "null_input_channel_factory.h"
 
 #include "mir/input/android/default_android_input_configuration.h"
+#include "mir/input/touch_visualizer.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/compositor/scene.h"
@@ -92,6 +94,7 @@ mir::DefaultServerConfiguration::the_input_configuration()
                 the_input_dispatcher(),
                 the_input_region(),
                 the_cursor_listener(),
+                the_touch_visualizer(),
                 the_input_report()
                 );
         }
@@ -112,7 +115,7 @@ mir::DefaultServerConfiguration::the_android_input_dispatcher()
             auto dispatcher = std::make_shared<droidinput::InputDispatcher>(
                 the_dispatcher_policy(),
                 the_input_report(),
-                std::make_shared<mia::InputTargetEnumerator>(the_input_targets(), registrar));
+                std::make_shared<mia::InputTargetEnumerator>(the_input_scene(), registrar));
             registrar->set_dispatcher(dispatcher);
             return dispatcher;
         });
@@ -232,10 +235,31 @@ mir::DefaultServerConfiguration::the_cursor_listener()
     return cursor_listener(
         [this]() -> std::shared_ptr<mi::CursorListener>
         {
-            return std::make_shared<mi::CursorController>(the_input_targets(), 
+            return std::make_shared<mi::CursorController>(the_input_scene(), 
                 the_cursor(), the_default_cursor_image());
         });
 
+}
+
+std::shared_ptr<mi::TouchVisualizer>
+mir::DefaultServerConfiguration::the_touch_visualizer()
+{
+    return touch_visualizer(
+        [this]() -> std::shared_ptr<mi::TouchVisualizer>
+        {
+            auto visualizer = std::make_shared<mi::TouchspotController>(the_buffer_allocator(), the_buffer_writer(),
+                the_input_scene());
+
+            // The visualizer is disabled by default and can be enabled statically via
+            // the MIR_SERVER_ENABLE_TOUCHSPOTS option. In the USC/unity8/autopilot case
+            // it will be toggled at runtime via com.canonical.Unity.Screen DBus interface
+            if (the_options()->is_set(options::touchspots_opt))
+            {
+                visualizer->enable();
+            }
+            
+            return visualizer;
+        });
 }
 
 std::shared_ptr<mg::CursorImage>

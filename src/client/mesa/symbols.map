@@ -1,0 +1,7 @@
+MIR_CLIENTPLATFORM_1 {
+  global: 
+    create_client_platform_factory;
+    # Needed by our Mesa EGL platform
+    mir_client_mesa_egl_native_display_is_valid;
+  local: *;
+};

@@ -18,6 +18,7 @@
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/drm_authenticator.h"
+#include "mir/graphics/event_handler_register.h"
 #include "src/platform/graphics/mesa/platform.h"
 #include "src/platform/graphics/mesa/internal_client.h"
 #include "src/server/report/null_report_factory.h"
@@ -36,6 +37,7 @@
 
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
+#include "mir_test_doubles/fd_matcher.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -48,7 +50,7 @@
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace mtd = mir::test::doubles;
-namespace mtf = mir::mir_test_framework;
+namespace mtf = mir_test_framework;
 
 namespace
 {
@@ -167,7 +169,7 @@ TEST_F(MesaGraphicsPlatform, test_ipc_data_packed_correctly)
     mtd::MockPacker mock_packer;
     for(auto i=0; i < native_handle->fd_items; i++)
     {
-        EXPECT_CALL(mock_packer, pack_fd(native_handle->fd[i]))
+        EXPECT_CALL(mock_packer, pack_fd(mtd::RawFdMatcher(native_handle->fd[i])))
             .Times(Exactly(1));
     }
     for(auto i=0; i < native_handle->data_items; i++)

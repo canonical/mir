@@ -73,15 +73,16 @@ void mtf::TestingProcessManager::launch_server_process(TestingServerConfiguratio
     }
 }
 
-void mtf::TestingProcessManager::launch_client_process(TestingClientConfiguration& config, mo::Option const& test_options)
+pid_t mtf::TestingProcessManager::launch_client_process(TestingClientConfiguration& config, mo::Option const& test_options)
 {
     if (!is_test_process)
     {
-        return; // We're not in the test process, so just return gracefully
+        return 0; // We're not in the test process, so just return gracefully
     }
 
     // We're in the test process, so make sure we started a service
-    ASSERT_TRUE(server_process_was_started);
+    if (!server_process_was_started)
+        throw std::runtime_error("Trying to launch client process, but server process has not started");
 
     pid_t pid = fork();
 
@@ -121,6 +122,8 @@ void mtf::TestingProcessManager::launch_client_process(TestingClientConfiguratio
     {
         clients.push_back(std::shared_ptr<Process>(new Process(pid)));
     }
+
+    return pid;
 }
 
 void mtf::TestingProcessManager::tear_down_clients()
@@ -203,6 +206,18 @@ mtf::Result mtf::TestingProcessManager::wait_for_shutdown_server_process()
     return result;
 }
 
+std::vector<mtf::Result> mtf::TestingProcessManager::wait_for_shutdown_client_processes()
+{
+    std::vector<Result> results;
+
+    for (auto const& client : clients)
+        results.push_back(client->wait_for_termination());
+
+    clients.clear();
+
+    return results;
+}
+
 void mtf::TestingProcessManager::terminate_client_processes()
 {
     if (is_test_process)
@@ -211,19 +226,6 @@ void mtf::TestingProcessManager::terminate_client_processes()
         {
             client->terminate();
         }
-    }
-}
-
-void mtf::TestingProcessManager::kill_client_processes()
-{
-    if (is_test_process)
-    {
-        for(auto client : clients)
-        {
-            client->kill();
-        }
-
-        clients.clear();
     }
 }
 

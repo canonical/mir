@@ -42,8 +42,10 @@
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
 #include "mir/scene/prompt_session_creation_parameters.h"
+#include "mir/fd.h"
 
 #include "mir/geometry/rectangles.h"
+#include "surface_tracker.h"
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
 
@@ -82,7 +84,8 @@ mf::SessionMediator::SessionMediator(
     resource_cache(resource_cache),
     screencast(screencast),
     connection_context(connection_context),
-    cursor_images(cursor_images)
+    cursor_images(cursor_images),
+    surface_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
 
@@ -141,24 +144,14 @@ void mf::SessionMediator::advance_buffer(
     Surface& surface,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    auto& tracker = client_buffer_tracker[surf_id];
-    if (!tracker) tracker = std::make_shared<ClientBufferTracker>(client_buffer_cache_size);
-
-    auto& client_buffer = client_buffer_resource[surf_id];
-    surface.swap_buffers(client_buffer,
-        [&tracker, &client_buffer, complete](mg::Buffer* new_buffer)
+    surface.swap_buffers( 
+        surface_tracker.last_buffer(surf_id),
+        [this, surf_id, complete](mg::Buffer* new_buffer)
         {
-
-            client_buffer = new_buffer;
-            auto id = client_buffer->id();
-            auto need_full_ipc = !tracker->client_has(id);
-            
-            tracker->add(id);
-
-            if (need_full_ipc)
-                complete(client_buffer, mg::BufferIpcMsgType::full_msg);
+            if (surface_tracker.track_buffer(surf_id, new_buffer))
+                complete(new_buffer, mg::BufferIpcMsgType::update_msg);
             else
-                complete(client_buffer, mg::BufferIpcMsgType::update_msg);
+                complete(new_buffer, mg::BufferIpcMsgType::full_msg);
         });
 }
 
@@ -196,6 +189,15 @@ void mf::SessionMediator::create_surface(
 
     if (surface->supports_input())
         response->add_fd(surface->client_input_fd());
+    
+    for (unsigned int i = 0; i < mir_surface_attribs; i++)
+    {
+        auto setting = response->add_attributes();
+        
+        setting->mutable_surfaceid()->set_value(surf_id.as_value());
+        setting->set_attrib(i);
+        setting->set_ivalue(surface->query(static_cast<MirSurfaceAttrib>(i)));
+    }
 
     advance_buffer(surf_id, *surface,
         [lock, this, response, done, session]
@@ -246,6 +248,38 @@ void mf::SessionMediator::next_buffer(
         });
 }
 
+void mf::SessionMediator::exchange_buffer(
+    google::protobuf::RpcController*,
+    mir::protobuf::BufferRequest const* request,
+    mir::protobuf::Buffer* response,
+    google::protobuf::Closure* done)
+{
+    mf::SurfaceId const surface_id{request->id().value()};
+    mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
+
+    auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
+    auto const session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    report->session_exchange_buffer_called(session->name());
+
+    auto const& surface = session->get_surface(surface_id);
+    surface->swap_buffers(
+        surface_tracker.buffer_from(buffer_id),
+        [this, surface_id, lock, response, done](mg::Buffer* new_buffer)
+        {
+            lock->unlock();
+
+            if (surface_tracker.track_buffer(surface_id, new_buffer))
+                pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::update_msg);
+            else
+                pack_protobuf_buffer(*response, new_buffer, mg::BufferIpcMsgType::full_msg);
+
+            done->Run();
+        });
+}
+
 void mf::SessionMediator::release_surface(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::SurfaceId* request,
@@ -265,7 +299,7 @@ void mf::SessionMediator::release_surface(
         auto const id = SurfaceId(request->value());
 
         session->destroy_surface(id);
-        client_buffer_tracker.erase(id);
+        surface_tracker.remove_surface(id);
     }
 
     // TODO: We rely on this sending responses synchronously.
@@ -501,6 +535,7 @@ void mf::SessionMediator::new_fds_for_prompt_providers(
         {
             auto const fd = connection_context.fd_for_new_client(connect_handler);
             response->add_fd(fd);
+            resource_cache->save_fd(response, mir::Fd{fd});
         }
     }
 
@@ -604,8 +639,8 @@ void mf::SessionMediator::pack_protobuf_buffer(
     graphics::Buffer* graphics_buffer,
     mg::BufferIpcMsgType buffer_msg_type)
 {
-    protobuf_buffer.set_buffer_id(graphics_buffer->id().as_uint32_t());
+    protobuf_buffer.set_buffer_id(graphics_buffer->id().as_value());
 
-    mfd::ProtobufBufferPacker packer{&protobuf_buffer};
+    mfd::ProtobufBufferPacker packer{&protobuf_buffer, resource_cache};
     graphics_platform->fill_buffer_package(&packer, graphics_buffer, buffer_msg_type);
 }

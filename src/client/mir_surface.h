@@ -47,6 +47,7 @@ class InputReceiverThread;
 namespace client
 {
 class ClientBuffer;
+class PerfReport;
 
 struct MemoryRegion;
 }
@@ -86,7 +87,10 @@ public:
     EGLNativeWindowType generate_native_window();
 
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
+    
+    // Non-blocking
     int attrib(MirSurfaceAttrib a) const;
+
     MirOrientation get_orientation() const;
     
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
@@ -136,6 +140,7 @@ private:
 
     std::function<void(MirEvent const*)> handle_event_callback;
     std::shared_ptr<mir::input::receiver::InputReceiverThread> input_thread;
+    std::shared_ptr<mir::client::PerfReport> perf_report;
 };
 
 #endif /* MIR_CLIENT_PRIVATE_MIR_WAIT_HANDLE_H_ */

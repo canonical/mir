@@ -24,6 +24,8 @@
 #include "mir_connection.h"
 #include "mir/input/input_receiver_thread.h"
 #include "mir/input/input_platform.h"
+#include "perf_report.h"
+#include "logging/perf_report.h"
 
 #include <cassert>
 #include <unistd.h>
@@ -54,6 +56,21 @@ MirSurface::MirSurface(
       buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
       input_platform(input_platform)
 {
+    const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
+    if (report_target && !strcmp(report_target, "log"))
+    {
+        auto& logger = connection->the_logger();
+        perf_report = std::make_shared<mir::client::logging::PerfReport>(logger);
+    }
+    else
+    {
+        perf_report = std::make_shared<mir::client::NullPerfReport>();
+    }
+    perf_report->name_surface(params.name);
+
+    for (int i = 0; i < mir_surface_attribs; i++)
+        attrib_cache[i] = -1;
+
     mir::protobuf::SurfaceParameters message;
     message.set_surface_name(params.name ? params.name : std::string());
     message.set_width(params.width);
@@ -64,12 +81,6 @@ MirSurface::MirSurface(
 
     create_wait_handle.expect_result();
     server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
-
-    for (int i = 0; i < mir_surface_attribs; i++)
-        attrib_cache[i] = -1;
-    attrib_cache[mir_surface_attrib_type] = mir_surface_type_normal;
-    attrib_cache[mir_surface_attrib_state] = mir_surface_state_unknown;
-    attrib_cache[mir_surface_attrib_swapinterval] = 1;
 
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
@@ -162,6 +173,7 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * con
     release_cpu_region();
     auto const id = &surface.id();
     auto const mutable_buffer = surface.mutable_buffer();
+    perf_report->end_frame(mutable_buffer->buffer_id());
     lock.unlock();
 
     next_buffer_wait_handle.expect_result();
@@ -212,6 +224,7 @@ void MirSurface::process_incoming_buffer()
         buffer_depository->deposit_package(std::move(ipc_package),
                                            buffer.buffer_id(),
                                            surface_size, surface_pf);
+        perf_report->begin_frame(buffer.buffer_id());
     }
     catch (const std::runtime_error& err)
     {
@@ -228,6 +241,12 @@ void MirSurface::created(mir_surface_callback callback, void * context)
 
         process_incoming_buffer();
         accelerated_window = platform->create_egl_native_window(this);
+        
+        for(int i = 0; i < surface.attributes_size(); i++)
+        {
+            auto const& attrib = surface.attributes(i);
+            attrib_cache[attrib.attrib()] = attrib.ivalue();
+        }
     }
 
     connection->on_surface_created(id(), this);

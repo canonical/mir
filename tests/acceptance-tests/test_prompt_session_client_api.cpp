@@ -23,10 +23,12 @@
 #include "mir/scene/session.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/frontend/shell.h"
+#include "mir/fd.h"
 
 #include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test/popen.h"
 
 #include <gtest/gtest.h>
@@ -140,6 +142,7 @@ struct PromptSessionClientAPI : mtf::InProcessServer
     std::shared_ptr<mf::Session> application_session;
 
     std::shared_ptr<ms::PromptSession> server_prompt_session;
+    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     void SetUp() override
     {
@@ -194,10 +197,8 @@ struct PromptSessionClientAPI : mtf::InProcessServer
     MOCK_METHOD2(prompt_session_state_change,
         void(MirPromptSession* prompt_provider, MirPromptSessionState state));
 
-    static std::size_t const arbritary_fd_request_count = 3;
     std::mutex mutex;
-    std::size_t actual_fd_count = 0;
-    int actual_fds[arbritary_fd_request_count] = {};
+    std::vector<mir::Fd> actual_fds;
     std::condition_variable cv;
     bool called_back = false;
 
@@ -256,9 +257,11 @@ void client_fd_callback(MirPromptSession*, size_t count, int const* fds, void* c
     auto const self = static_cast<PromptSessionClientAPI*>(context);
 
     std::unique_lock<decltype(self->mutex)> lock(self->mutex);
-    self->actual_fd_count = count;
 
-    std::copy(fds, fds+count, self->actual_fds);
+    self->actual_fds.clear();
+    for (size_t i = 0; i != count; ++i)
+        self->actual_fds.push_back(mir::Fd{fds[i]});
+
     self->called_back = true;
     self->cv.notify_one();
 }
@@ -330,11 +333,13 @@ TEST_F(PromptSessionClientAPI, can_get_fds_for_prompt_providers)
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
 
+    static std::size_t const arbritary_fd_request_count = 3;
+
     mir_prompt_session_new_fds_for_prompt_providers(
         prompt_session, arbritary_fd_request_count, &client_fd_callback, this);
 
     EXPECT_TRUE(wait_for_callback(std::chrono::milliseconds(500)));
-    EXPECT_THAT(actual_fd_count, Eq(arbritary_fd_request_count));
+    EXPECT_THAT(actual_fds.size(), Eq(arbritary_fd_request_count));
 
     mir_prompt_session_release_sync(prompt_session);
 }

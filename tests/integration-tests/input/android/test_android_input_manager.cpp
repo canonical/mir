@@ -38,9 +38,10 @@
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test_doubles/stub_scene_surface.h"
 #include "mir_test_doubles/stub_input_channel.h"
-#include "mir_test_doubles/stub_input_targets.h"
+#include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/stub_input_enumerator.h"
+#include "mir_test_doubles/stub_touch_visualizer.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
 #include "mir_test/event_matchers.h"
@@ -107,6 +108,7 @@ public:
                 mt::fake_shared(dispatcher),
                 mt::fake_shared(input_region),
                 null_cursor_listener,
+                mt::fake_shared(touch_visualizer),
                 mr::null_input_report());
 
         fake_event_hub = configuration->the_fake_event_hub();
@@ -128,6 +130,7 @@ public:
     mia::FakeEventHub* fake_event_hub;
     std::shared_ptr<mi::InputManager> input_manager;
     StubInputRegion input_region;
+    mtd::StubTouchVisualizer touch_visualizer;
 };
 
 }
@@ -268,7 +271,8 @@ struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test
     {
         input_registrar->set_dispatcher(android_dispatcher);
         configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
-            mt::fake_shared(dispatcher), mt::fake_shared(input_region), null_cursor_listener, null_report);
+            mt::fake_shared(dispatcher), mt::fake_shared(input_region), null_cursor_listener, 
+            std::make_shared<mtd::StubTouchVisualizer>(), null_report);
         fake_event_hub = configuration->the_fake_event_hub();
 
         input_manager = configuration->the_input_manager();

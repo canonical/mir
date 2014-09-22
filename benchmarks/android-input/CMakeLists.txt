@@ -5,7 +5,7 @@ set(SOURCES
  )
 
 include_directories(
-  ${Mir_SOURCE_DIR}/include/test
+  ${Mir_SOURCE_DIR}/tests/include
   ${Mir_SOURCE_DIR}/include/platform
 )
 
@@ -16,6 +16,7 @@ target_link_libraries(
 
   android-input
   mir-test-doubles
+  mirserver
  )
 
 uses_android_input(input-reader-perf)

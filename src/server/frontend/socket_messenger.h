@@ -47,11 +47,12 @@ private:
     SessionCredentials creator_creds() const;
 
     std::shared_ptr<boost::asio::local::stream_protocol::socket> socket;
+    mir::Fd socket_fd;
 
     std::mutex message_lock;
     SessionCredentials session_creds{0, 0, 0};
 
-    void send_fds_locked(std::unique_lock<std::mutex> const& lock, std::vector<int32_t> const& fds);
+    void send_fds_locked(std::unique_lock<std::mutex> const& lock, std::vector<Fd> const& fds);
 };
 }
 }
