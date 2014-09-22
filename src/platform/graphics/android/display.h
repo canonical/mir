@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_
+#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_H_
+#define MIR_GRAPHICS_ANDROID_DISPLAY_H_
 
 #include "mir/graphics/display.h"
 #include "gl_context.h"
@@ -40,18 +40,18 @@ class DisplayBuilder;
 class DisplaySupportProvider;
 class ConfigurableDisplayBuffer;
 
-class AndroidDisplay : public Display
+class Display : public graphics::Display
 {
 public:
-    explicit AndroidDisplay(std::shared_ptr<DisplayBuilder> const& display_builder,
+    explicit Display(std::shared_ptr<DisplayBuilder> const& display_builder,
                             std::shared_ptr<GLProgramFactory> const& gl_program_factory,
                             std::shared_ptr<GLConfig> const& gl_config,
                             std::shared_ptr<DisplayReport> const& display_report);
 
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f);
 
-    std::unique_ptr<DisplayConfiguration> configuration() const override;
-    void configure(DisplayConfiguration const&) override;
+    std::unique_ptr<graphics::DisplayConfiguration> configuration() const override;
+    void configure(graphics::DisplayConfiguration const&) override;
 
     void register_configuration_change_handler(
         EventHandlerRegister& handlers,
@@ -80,4 +80,4 @@ private:
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_H_ */
