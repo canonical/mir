@@ -87,6 +87,7 @@ mga::AndroidPlatform::AndroidPlatform(
 {
 }
 
+std::shared_ptr<mg::GraphicBufferAllocator> mga::AndroidPlatform::preserved_allocator;
 std::shared_ptr<mg::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
 {

@@ -66,7 +66,7 @@ private:
     std::shared_ptr<DisplayBuilder> const display_builder;
     std::shared_ptr<DisplayReport> const display_report;
     DeviceQuirks quirks{PropertiesOps{}};
-    std::shared_ptr<graphics::GraphicBufferAllocator> preserved_allocator;
+    static std::shared_ptr<graphics::GraphicBufferAllocator> preserved_allocator;
 };
 
 }
