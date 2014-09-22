@@ -47,6 +47,7 @@ private:
     SessionCredentials creator_creds() const;
 
     std::shared_ptr<boost::asio::local::stream_protocol::socket> socket;
+    mir::Fd socket_fd;
 
     std::mutex message_lock;
     SessionCredentials session_creds{0, 0, 0};
