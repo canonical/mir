@@ -60,11 +60,13 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
         EXPECT_CALL(*this, session_create_surface_called(_)).Times(AnyNumber());
         EXPECT_CALL(*this, session_release_surface_called(_)).Times(AnyNumber());
         EXPECT_CALL(*this, session_next_buffer_called(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, session_exchange_buffer_called(_)).Times(AnyNumber());
     }
 
     MOCK_METHOD1(session_connect_called, void (std::string const&));
     MOCK_METHOD1(session_create_surface_called, void (std::string const&));
     MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
+    MOCK_METHOD1(session_exchange_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_release_surface_called, void (std::string const&));
     MOCK_METHOD1(session_disconnect_called, void (std::string const&));
     MOCK_METHOD2(session_start_prompt_session_called, void (std::string const&, pid_t));
