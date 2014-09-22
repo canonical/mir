@@ -23,7 +23,6 @@
 #include "published_socket_connector.h"
 
 #include "unsupported_coordinate_translator.h"
-#include "debug_coordinate_translator.h"
 
 #include "mir/frontend/protobuf_connection_creator.h"
 #include "mir/frontend/session_authorizer.h"
@@ -32,6 +31,7 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace ms = mir::scene;
 
 std::shared_ptr<mf::ConnectionCreator>
 mir::DefaultServerConfiguration::the_connection_creator()
@@ -140,10 +140,10 @@ std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::new_ipc_factory(
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer)
 {
-    std::shared_ptr<mf::CoordinateTranslator> translator;
+    std::shared_ptr<ms::CoordinateTranslator> translator;
     if (the_options()->is_set(options::debug_opt))
     {
-        translator = std::make_shared<mf::DebugCoordinateTranslator>();
+        translator = the_coordinate_translator();
     }
     else
     {

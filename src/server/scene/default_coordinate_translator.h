@@ -16,19 +16,22 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#ifndef MIR_FRONTEND_DEFAULT_COORDINATE_TRANSLATOR_H_
+#define MIR_FRONTEND_DEFAULT_COORDINATE_TRANSLATOR_H_
 
-#include "debug_coordinate_translator.h"
-#include "../scene/basic_surface.h"
+#include "mir/scene/coordinate_translator.h"
 
-namespace geom = mir::geometry;
-namespace mf = mir::frontend;
-namespace ms = mir::scene;
-
-geom::Point mf::DebugCoordinateTranslator::surface_to_screen(
-        std::shared_ptr<mf::Surface> surface, uint32_t x, uint32_t y)
+namespace mir
 {
-    auto const scene_surface = std::dynamic_pointer_cast<ms::BasicSurface>(surface);
+namespace scene
+{
+class DefaultCoordinateTranslator : public CoordinateTranslator
+{
+public:
+    geometry::Point surface_to_screen(std::shared_ptr<frontend::Surface> surface, uint32_t x, uint32_t y);
+};
 
-    return geom::Point{x + scene_surface->top_left().x.as_int(),
-                       y + scene_surface->top_left().y.as_int()};
 }
+}
+
+#endif // MIR_FRONTEND_DEFAULT_COORDINATE_TRANSLATOR_H_

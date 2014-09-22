@@ -45,6 +45,11 @@ namespace input
 class CursorImages;
 }
 
+namespace scene
+{
+class CoordinateTranslator;
+}
+
 /// Frontend interface. Mediates the interaction between client
 /// processes and the core of the mir system.
 namespace frontend
@@ -59,7 +64,6 @@ class EventSink;
 class DisplayChanger;
 class Screencast;
 class PromptSession;
-class CoordinateTranslator;
 
 // SessionMediator relays requests from the client process into the server.
 class SessionMediator : public detail::DisplayServer, public mir::protobuf::Debug
@@ -77,7 +81,7 @@ public:
         std::shared_ptr<Screencast> const& screencast,
         ConnectionContext const& connection_context,
         std::shared_ptr<input::CursorImages> const& cursor_images,
-        std::shared_ptr<CoordinateTranslator> const& translator);
+        std::shared_ptr<scene::CoordinateTranslator> const& translator);
 
     ~SessionMediator() noexcept;
 
@@ -200,7 +204,7 @@ private:
     std::shared_ptr<Screencast> const screencast;
     ConnectionContext const connection_context;
     std::shared_ptr<input::CursorImages> const cursor_images;
-    std::shared_ptr<CoordinateTranslator> const translator;
+    std::shared_ptr<scene::CoordinateTranslator> const translator;
 
     SurfaceTracker surface_tracker;
 

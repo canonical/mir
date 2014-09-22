@@ -23,7 +23,7 @@
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
-#include "../scene/basic_surface.h"
+#include "mir/scene/coordinate_translator.h"
 #include "mir/frontend/display_changer.h"
 #include "resource_cache.h"
 #include "mir_toolkit/common.h"
@@ -48,7 +48,6 @@
 #include "surface_tracker.h"
 #include "client_buffer_tracker.h"
 #include "protobuf_buffer_packer.h"
-#include "coordinate_translator.h"
 
 #include <boost/exception/get_error_info.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -75,7 +74,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context,
     std::shared_ptr<mi::CursorImages> const& cursor_images,
-    std::shared_ptr<CoordinateTranslator> const& translator) :
+    std::shared_ptr<scene::CoordinateTranslator> const& translator) :
     client_pid_(0),
     shell(shell),
     graphics_platform(graphics_platform),

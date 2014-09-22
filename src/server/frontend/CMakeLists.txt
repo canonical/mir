@@ -23,7 +23,6 @@ set(
   default_configuration.cpp
   default_ipc_factory.cpp
   unsupported_coordinate_translator.cpp
-  debug_coordinate_translator.cpp
 )
 
 add_library(

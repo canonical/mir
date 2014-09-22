@@ -33,6 +33,11 @@ namespace input
 class CursorImages;
 }
 
+namespace scene
+{
+class CoordinateTranslator;
+}
+
 namespace frontend
 {
 class Shell;
@@ -40,7 +45,6 @@ class SessionMediatorReport;
 class DisplayChanger;
 class Screencast;
 class SessionAuthorizer;
-class CoordinateTranslator;
 
 class DefaultIpcFactory : public ProtobufIpcFactory
 {
@@ -54,7 +58,7 @@ public:
         std::shared_ptr<Screencast> const& screencast,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<input::CursorImages> const& cursor_images,
-        std::shared_ptr<CoordinateTranslator> const& translator);
+        std::shared_ptr<scene::CoordinateTranslator> const& translator);
 
     std::shared_ptr<detail::DisplayServer> make_ipc_server(
         SessionCredentials const& creds,
@@ -85,7 +89,7 @@ private:
     std::shared_ptr<Screencast> const screencast;
     std::shared_ptr<SessionAuthorizer> const session_authorizer;
     std::shared_ptr<input::CursorImages> const cursor_images;
-    std::shared_ptr<CoordinateTranslator> const translator;
+    std::shared_ptr<scene::CoordinateTranslator> const translator;
 };
 }
 }

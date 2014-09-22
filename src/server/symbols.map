@@ -116,6 +116,7 @@ MIR_SERVER_25 {
     mir::DefaultServerConfiguration::the_connection_creator*;
     mir::DefaultServerConfiguration::the_connector*;
     mir::DefaultServerConfiguration::the_connector_report*;
+    mir::DefaultServerConfiguration::the_coordinate_translator*;
     mir::DefaultServerConfiguration::the_cursor*;
     mir::DefaultServerConfiguration::the_cursor_images*;
     mir::DefaultServerConfiguration::the_cursor_listener*;
@@ -423,6 +424,9 @@ MIR_SERVER_25 {
     mir::scene::BufferStreamFactory::BufferStreamFactory*;
     mir::scene::BufferStreamFactory::create_buffer_stream*;
     mir::scene::BufferStreamFactory::operator*;
+    mir::scene::CoordinateTranslator::?CoordinateTranslator*;
+    mir::scene::CoordinateTranslator::CoordinateTranslator*;
+    mir::scene::CoordinateTranslator::surface_to_screen*;
     mir::scene::LegacySceneChangeNotification::end_observation*;
     mir::scene::LegacySceneChangeNotification::?LegacySceneChangeNotification*;
     mir::scene::LegacySceneChangeNotification::LegacySceneChangeNotification*;
@@ -926,6 +930,7 @@ MIR_SERVER_25 {
     typeinfo?for?mir::logging::GlogLogger;
     typeinfo?for?mir::MainLoop;
     typeinfo?for?mir::scene::BufferStreamFactory;
+    typeinfo?for?mir::scene::CoordinateTranslator;
     typeinfo?for?mir::scene::LegacySceneChangeNotification;
     typeinfo?for?mir::scene::NullObserver;
     typeinfo?for?mir::scene::NullPromptSessionListener;
@@ -1024,6 +1029,7 @@ MIR_SERVER_25 {
     vtable?for?mir::logging::GlogLogger;
     vtable?for?mir::MainLoop;
     vtable?for?mir::scene::BufferStreamFactory;
+    vtable?for?mir::scene::CoordinateTranslator;
     vtable?for?mir::scene::LegacySceneChangeNotification;
     vtable?for?mir::scene::NullObserver;
     vtable?for?mir::scene::NullPromptSessionListener;
