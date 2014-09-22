@@ -23,6 +23,12 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
+#include <boost/throw_exception.hpp>
+
+#include <stdexcept>
+
+#include <string.h>
+
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
@@ -84,4 +90,11 @@ std::shared_ptr<MirNativeBuffer> mgm::ShmBuffer::native_buffer_handle() const
 bool mgm::ShmBuffer::can_bypass() const
 {
     return false;
+}
+
+void mgm::ShmBuffer::write(unsigned char const* data, size_t data_size)
+{
+    if (data_size != stride_.as_uint32_t()*size().height.as_uint32_t())
+        BOOST_THROW_EXCEPTION(std::logic_error("Size is not equal to number of pixels in buffer"));
+    memcpy(pixels, data, data_size);
 }

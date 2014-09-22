@@ -64,6 +64,11 @@ public:
     {
         return {};
     }
+    
+    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
+    {
+        return {};
+    }
 
     void fill_buffer_package(
         mg::BufferIPCPacker*, mg::Buffer const*, mg::BufferIpcMsgType) const override {}
