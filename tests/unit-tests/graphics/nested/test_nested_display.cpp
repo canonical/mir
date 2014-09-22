@@ -27,6 +27,7 @@
 #include "mir_test_doubles/mock_gl_config.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_host_connection.h"
+#include "mir_test_doubles/null_platform.h"
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -63,6 +64,8 @@ struct NestedDisplay : testing::Test
     mir::report::null::DisplayReport null_display_report;
     mg::DefaultDisplayConfigurationPolicy default_conf_policy;
     mtd::StubGLConfig stub_gl_config;
+    std::shared_ptr<mtd::NullPlatform> null_platform{
+        std::make_shared<mtd::NullPlatform>()};
 };
 
 }
@@ -94,6 +97,7 @@ TEST_F(NestedDisplay, respects_gl_config)
                         Return(EGL_TRUE)));
 
     mgn::NestedDisplay nested_display{
+        null_platform,
         std::make_shared<SingleDisplayHostConnection>(),
         mt::fake_shared(null_input_dispatcher),
         mt::fake_shared(null_display_report),
@@ -111,9 +115,29 @@ TEST_F(NestedDisplay, does_not_change_host_display_configuration_at_construction
         .Times(0);
 
     mgn::NestedDisplay nested_display{
+        null_platform,
         mt::fake_shared(host_connection),
         mt::fake_shared(null_input_dispatcher),
         mt::fake_shared(null_display_report),
         mt::fake_shared(default_conf_policy),
         mt::fake_shared(stub_gl_config)};
+}
+
+// Regression test for LP: #1372276
+TEST_F(NestedDisplay, keeps_platform_alive)
+{
+    using namespace testing;
+
+    mgn::NestedDisplay nested_display{
+        null_platform,
+        std::make_shared<SingleDisplayHostConnection>(),
+        mt::fake_shared(null_input_dispatcher),
+        mt::fake_shared(null_display_report),
+        mt::fake_shared(default_conf_policy),
+        mt::fake_shared(stub_gl_config)};
+
+    std::weak_ptr<mtd::NullPlatform> weak_platform = null_platform;
+    null_platform.reset();
+
+    EXPECT_FALSE(weak_platform.expired());
 }
