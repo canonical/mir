@@ -97,6 +97,7 @@ std::shared_ptr<mg::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_
     }
     else
     {
+        //LP: 1371619. Some devices cannot call gralloc's open()/close() function repeatedly without crashing
         if (!preserved_allocator)
             preserved_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
         return preserved_allocator;
