@@ -59,7 +59,7 @@ class SharedLibrary : public testing::Test
 public:
     SharedLibrary()
         : nonexistent_library{"imma_totally_not_a_library"},
-          existing_library{mtf::library_path() + "/libmirclientplatform.so"},
+          existing_library{mtf::library_path() + "/" MIR_CLIENT_DRIVER_BINARY},
           nonexistent_function{"yo_dawg"},
           existing_function{"create_client_platform_factory"},
           existent_version{"MIR_CLIENTPLATFORM_1"},
