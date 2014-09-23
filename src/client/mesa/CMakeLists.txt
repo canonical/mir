@@ -25,7 +25,7 @@ add_library(
 
 set_target_properties(
   mirclientplatformmesa PROPERTIES
-  OUTPUT_NAME mirclientplatform
+  OUTPUT_NAME ${MIR_CLIENT_DRIVER}
   LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/mesa
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
@@ -36,19 +36,19 @@ target_link_libraries(
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
 
-install(TARGETS mirclientplatformmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/clientplatform/mesa)
+install(TARGETS mirclientplatformmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/${CLIENT_DRIVER}/mesa)
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa")
   add_custom_command(TARGET mirclientplatformmesa
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E remove libmirclientplatform.so
-    COMMAND ${CMAKE_COMMAND} -E create_symlink mesa/$<TARGET_FILE_NAME:mirclientplatformmesa> libmirclientplatform.so
+    COMMAND ${CMAKE_COMMAND} -E remove ${MIR_CLIENT_DRIVER_BINARY}
+    COMMAND ${CMAKE_COMMAND} -E create_symlink mesa/$<TARGET_FILE_NAME:mirclientplatformmesa> ${MIR_CLIENT_DRIVER_BINARY}
     WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
   )
 
   install(CODE
     "execute_process(
-       COMMAND ln -sf mir/clientplatform/mesa/libmirclientplatform.so
+       COMMAND ln -sf mir/${CLIENT_DRIVER}/mesa/${MIR_CLIENT_DRIVER_BINARY}
        WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
      )"
   )
