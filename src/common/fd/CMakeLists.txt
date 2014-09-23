@@ -16,6 +16,7 @@
 
 add_library(mirsharedfd OBJECT
   fd.cpp
+  fd_socket_transmission.cpp
 )
 
 list(APPEND MIR_COMMON_SOURCES

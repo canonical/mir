@@ -13,38 +13,16 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by:
- *   Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_ANDROID_ANDROID_BUFFER_WRITER_H_
-#define MIR_PLATFORM_ANDROID_ANDROID_BUFFER_WRITER_H_
-
-#include "mir/graphics/buffer_writer.h"
-
-#include <hardware/gralloc.h>
-
-#include <memory>
+#ifndef MIR_FD_SOCKET_TRANSMISSION_H_
+#define MIR_FD_SOCKET_TRANSMISSION_H_
+#include "mir/fd.h"
+#include <vector>
 
 namespace mir
 {
-namespace graphics
-{
-namespace android
-{
-
-class BufferWriter : public graphics::BufferWriter
-{
-public:
-     BufferWriter();
-
-     void write(graphics::Buffer& buffer, unsigned char const* pixels, size_t size) override;
-private:
-     gralloc_module_t const* hw_module;
-};
-
+void send_fds(mir::Fd const& socket, std::vector<mir::Fd> const& fd);
 }
-}
-}
-
-#endif /* MIR_PLATFORM_ANDROID_ANDROID_BUFFER_WRITER_H_ */
+#endif /* MIR_FD_SOCKET_TRANSMISSION_H_ */
