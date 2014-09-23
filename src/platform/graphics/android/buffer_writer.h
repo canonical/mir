@@ -17,8 +17,8 @@
  *   Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_ANDROID_ANDROID_BUFFER_WRITER_H_
-#define MIR_PLATFORM_ANDROID_ANDROID_BUFFER_WRITER_H_
+#ifndef MIR_PLATFORM_ANDROID_BUFFER_WRITER_H_
+#define MIR_PLATFORM_ANDROID_BUFFER_WRITER_H_
 
 #include "mir/graphics/buffer_writer.h"
 
@@ -47,4 +47,4 @@ private:
 }
 }
 
-#endif /* MIR_PLATFORM_ANDROID_ANDROID_BUFFER_WRITER_H_ */
+#endif /* MIR_PLATFORM_ANDROID_BUFFER_WRITER_H_ */

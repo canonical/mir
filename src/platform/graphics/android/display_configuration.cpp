@@ -14,25 +14,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "android_display_configuration.h"
+#include "display_configuration.h"
 
 namespace mg = mir::graphics;
 namespace mga = mg::android;
 namespace geom = mir::geometry;
 
-mga::AndroidDisplayConfiguration::AndroidDisplayConfiguration(mg::DisplayConfigurationOutput && output)
+mga::DisplayConfiguration::DisplayConfiguration(mg::DisplayConfigurationOutput && output)
     : configuration(std::move(output)),
       card{mg::DisplayConfigurationCardId{0}, 1}
 {
 }
 
-mga::AndroidDisplayConfiguration::AndroidDisplayConfiguration(AndroidDisplayConfiguration const& other)
-    : DisplayConfiguration(), configuration(other.configuration),
+mga::DisplayConfiguration::DisplayConfiguration(DisplayConfiguration const& other)
+    : mg::DisplayConfiguration(), configuration(other.configuration),
       card(other.card)
 {
 }
 
-mga::AndroidDisplayConfiguration& mga::AndroidDisplayConfiguration::operator=(AndroidDisplayConfiguration const& other)
+mga::DisplayConfiguration& mga::DisplayConfiguration::operator=(DisplayConfiguration const& other)
 {
     if (&other != this)
     {
@@ -42,17 +42,17 @@ mga::AndroidDisplayConfiguration& mga::AndroidDisplayConfiguration::operator=(An
     return *this;
 }
 
-void mga::AndroidDisplayConfiguration::for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
+void mga::DisplayConfiguration::for_each_card(std::function<void(mg::DisplayConfigurationCard const&)> f) const
 {
     f(card);
 }
 
-void mga::AndroidDisplayConfiguration::for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
+void mga::DisplayConfiguration::for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
 {
     f(configuration);
 }
 
-void mga::AndroidDisplayConfiguration::for_each_output(std::function<void(mg::UserDisplayConfigurationOutput&)> f)
+void mga::DisplayConfiguration::for_each_output(std::function<void(mg::UserDisplayConfigurationOutput&)> f)
 {
     mg::UserDisplayConfigurationOutput user(configuration);
     f(user);

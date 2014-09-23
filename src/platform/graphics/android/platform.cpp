@@ -18,13 +18,13 @@
  */
 
 #include "mir/graphics/android/sync_fence.h"
-#include "android_platform.h"
+#include "platform.h"
 #include "android_graphic_buffer_allocator.h"
 #include "resource_factory.h"
-#include "android_display.h"
+#include "display.h"
 #include "internal_client.h"
 #include "output_builder.h"
-#include "android_buffer_writer.h"
+#include "buffer_writer.h"
 #include "hwc_loggers.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/android/native_buffer.h"
@@ -79,7 +79,7 @@ mga::OverlayOptimization should_use_overlay_optimization(mo::Option const& optio
 
 }
 
-mga::AndroidPlatform::AndroidPlatform(
+mga::Platform::Platform(
     std::shared_ptr<mga::DisplayBuilder> const& display_builder,
     std::shared_ptr<mg::DisplayReport> const& display_report)
     : display_builder(display_builder),
@@ -87,33 +87,33 @@ mga::AndroidPlatform::AndroidPlatform(
 {
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mga::AndroidPlatform::create_buffer_allocator(
+std::shared_ptr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
 {
     return std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
 }
 
-std::shared_ptr<mga::GraphicBufferAllocator> mga::AndroidPlatform::create_mga_buffer_allocator(
+std::shared_ptr<mga::GraphicBufferAllocator> mga::Platform::create_mga_buffer_allocator(
     std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
 {
     return std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
 }
 
-std::shared_ptr<mg::Display> mga::AndroidPlatform::create_display(
+std::shared_ptr<mg::Display> mga::Platform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
     std::shared_ptr<mg::GLConfig> const& gl_config)
 {
-    return std::make_shared<mga::AndroidDisplay>(
+    return std::make_shared<mga::Display>(
         display_builder, gl_program_factory, gl_config, display_report);
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mga::AndroidPlatform::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mga::Platform::get_ipc_package()
 {
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-void mga::AndroidPlatform::fill_buffer_package(
+void mga::Platform::fill_buffer_package(
     BufferIPCPacker* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const
 {
     auto native_buffer = buffer->native_buffer_handle();
@@ -140,21 +140,21 @@ void mga::AndroidPlatform::fill_buffer_package(
     }
 }
 
-EGLNativeDisplayType mga::AndroidPlatform::egl_native_display() const
+EGLNativeDisplayType mga::Platform::egl_native_display() const
 {
     return EGL_DEFAULT_DISPLAY;
 }
 
-void mga::AndroidPlatform::initialize(std::shared_ptr<NestedContext> const&)
+void mga::Platform::initialize(std::shared_ptr<NestedContext> const&)
 {
 }
 
-std::shared_ptr<mg::InternalClient> mga::AndroidPlatform::create_internal_client()
+std::shared_ptr<mg::InternalClient> mga::Platform::create_internal_client()
 {
     return std::make_shared<mga::InternalClient>();
 }
 
-std::shared_ptr<mg::BufferWriter> mga::AndroidPlatform::make_buffer_writer()
+std::shared_ptr<mg::BufferWriter> mga::Platform::make_buffer_writer()
 {
     return std::make_shared<mga::BufferWriter>();
 }
@@ -172,14 +172,14 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
     auto display_builder = std::make_shared<mga::OutputBuilder>(
         fb_allocator, display_resource_factory, display_report, overlay_option, logger);
-    return std::make_shared<mga::AndroidPlatform>(display_builder, display_report);
+    return std::make_shared<mga::Platform>(display_builder, display_report);
 }
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& display_report)
 {
     //TODO: remove nullptr parameter once platform classes are sorted.
     //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder
-    return std::make_shared<mga::AndroidPlatform>(nullptr, display_report);
+    return std::make_shared<mga::Platform>(nullptr, display_report);
 }
 
 extern "C" void add_platform_options(

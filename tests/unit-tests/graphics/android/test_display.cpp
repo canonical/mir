@@ -19,7 +19,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/logging/logger.h"
-#include "src/platform/graphics/android/android_display.h"
+#include "src/platform/graphics/android/display.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_display_device.h"
@@ -43,10 +43,10 @@ namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
-class AndroidDisplay : public ::testing::Test
+class Display : public ::testing::Test
 {
 public:
-    AndroidDisplay()
+    Display()
         : dummy_display{mock_egl.fake_egl_display},
           dummy_context{mock_egl.fake_egl_context},
           dummy_config{mock_egl.fake_configs[0]},
@@ -69,7 +69,7 @@ protected:
     std::shared_ptr<mtd::StubGLProgramFactory> const stub_gl_program_factory;
 };
 
-TEST_F(AndroidDisplay, creation_creates_egl_resources_properly)
+TEST_F(Display, creation_creates_egl_resources_properly)
 {
     using namespace testing;
     EGLSurface fake_surface = (EGLSurface) 0x715;
@@ -107,14 +107,14 @@ TEST_F(AndroidDisplay, creation_creates_egl_resources_properly)
     EXPECT_CALL(mock_egl, eglTerminate(dummy_display))
         .Times(1);
 
-    mga::AndroidDisplay display(
+    mga::Display display(
         stub_db_factory,
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report);
 }
 
-TEST_F(AndroidDisplay, selects_usable_configuration)
+TEST_F(Display, selects_usable_configuration)
 {
     using namespace testing;
     int const incorrect_visual_id = 2;
@@ -155,7 +155,7 @@ TEST_F(AndroidDisplay, selects_usable_configuration)
         .Times(1)
         .WillOnce(Invoke(config_filler));
 
-    mga::AndroidDisplay display(
+    mga::Display display(
         stub_db_factory,
         stub_gl_program_factory,
         stub_gl_config,
@@ -163,7 +163,7 @@ TEST_F(AndroidDisplay, selects_usable_configuration)
     EXPECT_EQ(correct_config, selected_config);
 }
 
-TEST_F(AndroidDisplay, respects_gl_config)
+TEST_F(Display, respects_gl_config)
 {
     using namespace testing;
 
@@ -183,14 +183,14 @@ TEST_F(AndroidDisplay, respects_gl_config)
                           mtd::EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits)),
                     _,_,_));
 
-    mga::AndroidDisplay display(
+    mga::Display display(
         stub_db_factory,
         stub_gl_program_factory,
         mock_gl_config,
         null_display_report);
 }
 
-TEST_F(AndroidDisplay, logs_creation_events)
+TEST_F(Display, logs_creation_events)
 {
     using namespace testing;
 
@@ -205,14 +205,14 @@ TEST_F(AndroidDisplay, logs_creation_events)
     EXPECT_CALL(*mock_display_report, report_successful_display_construction())
         .Times(1);
 
-    mga::AndroidDisplay display(
+    mga::Display display(
         stub_db_factory,
         stub_gl_program_factory,
         stub_gl_config,
         mock_display_report);
 }
 
-TEST_F(AndroidDisplay, throws_on_eglMakeCurrent_failure)
+TEST_F(Display, throws_on_eglMakeCurrent_failure)
 {
     using namespace testing;
 
@@ -229,7 +229,7 @@ TEST_F(AndroidDisplay, throws_on_eglMakeCurrent_failure)
         .Times(0);
 
     EXPECT_THROW({
-        mga::AndroidDisplay display(
+        mga::Display display(
             stub_db_factory,
             stub_gl_program_factory,
             stub_gl_config,
@@ -237,7 +237,7 @@ TEST_F(AndroidDisplay, throws_on_eglMakeCurrent_failure)
     }, std::runtime_error);
 }
 
-TEST_F(AndroidDisplay, logs_error_because_of_surface_creation_failure)
+TEST_F(Display, logs_error_because_of_surface_creation_failure)
 {
     using namespace testing;
 
@@ -255,7 +255,7 @@ TEST_F(AndroidDisplay, logs_error_because_of_surface_creation_failure)
         .WillOnce(Return(EGL_NO_SURFACE));
 
     EXPECT_THROW({
-        mga::AndroidDisplay display(
+        mga::Display display(
             stub_db_factory,
             stub_gl_program_factory,
             stub_gl_config,
@@ -263,10 +263,10 @@ TEST_F(AndroidDisplay, logs_error_because_of_surface_creation_failure)
     }, std::runtime_error);
 }
 
-TEST_F(AndroidDisplay, configures_display_buffer)
+TEST_F(Display, configures_display_buffer)
 {
     using namespace testing;
-    mga::AndroidDisplay display(
+    mga::Display display(
         stub_db_factory,
         stub_gl_program_factory,
         stub_gl_config,
@@ -299,9 +299,9 @@ TEST_F(AndroidDisplay, configures_display_buffer)
 }
 
 //we only have single display and single mode on android for the time being
-TEST_F(AndroidDisplay, supports_one_output_configuration)
+TEST_F(Display, supports_one_output_configuration)
 {
-    mga::AndroidDisplay display(
+    mga::Display display(
         stub_db_factory,
         stub_gl_program_factory,
         stub_gl_config,
