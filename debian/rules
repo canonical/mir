@@ -13,6 +13,9 @@ include /usr/share/dpkg/default.mk
 export CC=$(DEB_HOST_GNU_TYPE)-gcc-4.9
 export CXX=$(DEB_HOST_GNU_TYPE)-g++-4.9
 
+export PLATFORM_DRIVER = platform3driver
+export CLIENT_DRIVER = client8driver
+
 %:
 	dh $@ --parallel --fail-missing
 
@@ -49,8 +52,8 @@ override_dh_makeshlibs:
 
 override_dh_install:
 	dh_install --fail-missing \
-	  -Xusr/lib/$(DEB_HOST_MULTIARCH)/libmirplatformgraphics.so \
-	  -Xusr/lib/$(DEB_HOST_MULTIARCH)/libmirclientplatform.so
+	  -Xusr/lib/$(DEB_HOST_MULTIARCH)/libmir$(PLATFORM_DRIVER).so \
+	  -Xusr/lib/$(DEB_HOST_MULTIARCH)/libmir$(CLIENT_DRIVER).so
 	sh debian/install_ld_so_conf.sh $(DEB_HOST_ARCH) $(DEB_HOST_MULTIARCH)
 
 override_dh_installdeb:

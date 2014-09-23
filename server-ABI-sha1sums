@@ -65,7 +65,7 @@ b2ec497c6bec1b3a67c991f31cc7b7c51050ecbb  include/server/mir/input/input_recepti
 964069b241f1e8211386bb8735ee0f752b666949  include/server/mir/main_loop.h
 edd5a0a6be0be57ef64c5af89fc5a65dc558648c  include/server/mir/report_exception.h
 8192727cf5fa0b2b5798b2211c2c8a4ad65c9f60  include/server/mir/run_mir.h
-25a60c1f71e3772a3f8165bd2a3a236e788f3a79  include/server/mir/scene/coordinate_translator.h
+1c10dce8ad0943c48d1a6c492c9cbe757094874a  include/server/mir/scene/coordinate_translator.h
 71d9082681aa39d652c88ad3b54665695b521d24  include/server/mir/scene/depth_id.h
 4e4e563ab429a13ddca7eead16f2b6cefb8edff6  include/server/mir/scene/null_surface_observer.h
 10db25fbaefcabb3b191177ed70f5972df7f05f0  include/server/mir/scene/placement_strategy.h

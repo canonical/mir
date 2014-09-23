@@ -23,7 +23,7 @@ add_library(
 
 set_target_properties(
   mirclientplatformandroid PROPERTIES
-  OUTPUT_NAME mirclientplatform
+  OUTPUT_NAME ${MIR_CLIENT_DRIVER}
   LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/android
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
@@ -35,19 +35,19 @@ target_link_libraries(
   ${LIBHARDWARE_LIBRARIES}
 )
 
-install(TARGETS mirclientplatformandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/clientplatform/android)
+install(TARGETS mirclientplatformandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/${CLIENT_DRIVER}/android)
 
 if (MIR_TEST_PLATFORM STREQUAL "android")
   add_custom_command(TARGET mirclientplatformandroid
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E remove libmirclientplatform.so
-    COMMAND ${CMAKE_COMMAND} -E create_symlink android/$<TARGET_FILE_NAME:mirclientplatformandroid> libmirclientplatform.so
+    COMMAND ${CMAKE_COMMAND} -E remove ${MIR_CLIENT_DRIVER_BINARY}
+    COMMAND ${CMAKE_COMMAND} -E create_symlink android/$<TARGET_FILE_NAME:mirclientplatformandroid> ${MIR_CLIENT_DRIVER_BINARY}
     WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
   )
 
   install(CODE
     "execute_process(
-       COMMAND ln -sf mir/clientplatform/android/libmirclientplatform.so
+       COMMAND ln -sf mir/${CLIENT_DRIVER}/android/${MIR_CLIENT_DRIVER_BINARY}
        WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
      )"
   )

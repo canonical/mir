@@ -5,6 +5,11 @@ include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR})
 
+add_definitions(
+  -DMIR_PLATFORM_DRIVER_BINARY="${MIR_PLATFORM_DRIVER_BINARY}"
+  -DMIR_CLIENT_DRIVER_BINARY="${MIR_CLIENT_DRIVER_BINARY}"
+)
+
 protobuf_generate_cpp(
   GENERATED_PROTOBUF_SRCS GENERATED_PROTOBUF_HDRS
   test_protobuf.proto
@@ -61,6 +66,8 @@ add_executable(
 
   ${SOURCES}
 )
+
+mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
 
 add_dependencies(mir_acceptance_tests GMock)
 
