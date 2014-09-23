@@ -204,7 +204,7 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     EXPECT_FALSE(receiver.next_event(std::chrono::milliseconds(1), ev)); // Minimal timeout needed for valgrind
 }
 
-TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_case_frameskipping)
+TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 {   // Regression test for LP: #1372300
     using namespace testing;
     using namespace std::chrono;
