@@ -143,11 +143,19 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
     {
         /*
          * A batch is pending and must be completed or else the client could
-         * be starved of events. But don't hurry. A continuous motion gesture
-         * will wake us up much sooner than 50ms. This timeout is only reached
-         * in the case that motion has ended (fingers lifted).
+         * be starved of events. In the case of a native server with raw
+         * input events flooding in much raster than your display rate, we
+         * could simply sleep for a long time and allow the next raw event
+         * to wake us up (because it will still come before the frame
+         * deadline). However, in the case of nested servers, the "raw"
+         * event rate has already been resampled and reduced. So relying on
+         * a raw event to wake us up in time means we're almost certainly
+         * going to miss the frame deadline. Thus, to allow for nested
+         * servers (or just low-rate input devices), we must use a timeout
+         * that is reliably shorter than one frame. So we don't miss the
+         * next frame deadline.
          */
-        std::chrono::milliseconds const motion_idle_timeout(50);
+        std::chrono::milliseconds const motion_idle_timeout(5);
         if (timeout.count() < 0 || timeout > motion_idle_timeout)
             reduced_timeout = motion_idle_timeout;
     }
