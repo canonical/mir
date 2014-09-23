@@ -32,11 +32,29 @@ class Surface;
 namespace scene
 {
 
+/**
+ * Support for the debug "surface to screen" coordinate translation interface.
+ * \note For shells which do surface transformations the default implementation
+ *       will return incorrect results.
+ */
 class CoordinateTranslator
 {
 public:
     virtual ~CoordinateTranslator() = default;
 
+    /**
+     * \brief Translate a surface coordinate into the screen coordinate space
+     * \param [in] surface  A frontend::Surface. This will need to be dynamic_cast into
+     *                      the scene::Surface relevant for the shell.
+     * \param [in] x, y     Coordinates to translate from the surface coordinate space
+     * \return              The coordinates in the screen coordinate space.
+     * \throws              A std::runtime_error if the translation cannot be performed
+     *                      for any reason.
+     *
+     * \note It is acceptable for this call to unconditionally throw a std::runtime_error.
+     *       It is not required for normal functioning of the server or clients; clients which
+     *       use the debug extension will receive an appropriate failure notice.
+     */
     virtual geometry::Point surface_to_screen(std::shared_ptr<frontend::Surface> surface,
                                               uint32_t x, uint32_t y) = 0;
 };
