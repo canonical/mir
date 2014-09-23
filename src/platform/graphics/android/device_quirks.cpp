@@ -47,7 +47,7 @@ unsigned int num_framebuffers_for(std::string const& device_name)
         return 2;
 }
 
-unsigned int gralloc_is_closable_for(std::string const& device_name)
+unsigned int gralloc_reopenable_after_close_for(std::string const& device_name)
 {
     return device_name != std::string{"krillin"}; 
 }
@@ -56,7 +56,7 @@ unsigned int gralloc_is_closable_for(std::string const& device_name)
 mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties)
     : device_name(determine_device_name(properties)),
       num_framebuffers_(num_framebuffers_for(device_name)),
-      gralloc_reopenable_after_close_(gralloc_is_closable_for(device_name))
+      gralloc_reopenable_after_close_(gralloc_reopenable_after_close_for(device_name))
 {
 }
 
