@@ -203,12 +203,12 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
     auto rpc_channel = connection->rpc_channel();
     mp::DisplayServer::Stub server(
             rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
+    for(auto i = 0; i < buffer_request.buffer().fd().size(); i++)
+        ::close(buffer_request.buffer().fd(i));
+
     buffer_request.mutable_buffer()->set_buffer_id(buffer_id_exchange_seq.begin()->as_value());
     buffer_request.mutable_buffer()->set_fds_on_side_channel(1);
     buffer_request.mutable_buffer()->add_fd(file);
-
-    for(auto i = 0; i < buffer_request.buffer().fd().size(); i++)
-        ::close(buffer_request.buffer().fd(i));
 
     ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
 
