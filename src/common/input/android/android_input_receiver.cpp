@@ -134,30 +134,10 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
     }
 
     auto reduced_timeout = timeout;
-    if (input_consumer->hasDeferredEvent())
+    if (input_consumer->hasDeferredEvent() || input_consumer->hasPendingBatch())
     {
         // consume() didn't finish last time. Retry it immediately.
         reduced_timeout = std::chrono::milliseconds::zero();
-    }
-    else if (input_consumer->hasPendingBatch())
-    {
-        /*
-         * A batch is pending and must be completed or else the client could
-         * be starved of events. In the case of a native server with raw
-         * input events flooding in much raster than your display rate, we
-         * could simply sleep for a long time and allow the next raw event
-         * to wake us up (because it will still come before the frame
-         * deadline). However, in the case of nested servers, the "raw"
-         * event rate has already been resampled and reduced. So relying on
-         * a raw event to wake us up in time means we're almost certainly
-         * going to miss the frame deadline. Thus, to allow for nested
-         * servers (or just low-rate input devices), we must use a timeout
-         * that is reliably shorter than one frame. So we don't miss the
-         * next frame deadline.
-         */
-        std::chrono::milliseconds const motion_idle_timeout(5);
-        if (timeout.count() < 0 || timeout > motion_idle_timeout)
-            reduced_timeout = motion_idle_timeout;
     }
 
     auto result = looper->pollOnce(reduced_timeout.count());
