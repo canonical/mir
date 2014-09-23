@@ -25,7 +25,7 @@ using namespace testing;
 
 TEST(SymbolsRequiredByMesa, are_exported_by_libmirclientplatform)
 {
-    auto const handle = dlopen("libmirclientplatform.so", RTLD_LAZY);
+    auto const handle = dlopen(MIR_CLIENT_DRIVER_BINARY, RTLD_LAZY);
     ASSERT_THAT(handle, NotNull());
 
     auto const sym = dlsym(handle, "mir_client_mesa_egl_native_display_is_valid");
@@ -36,7 +36,7 @@ TEST(SymbolsRequiredByMesa, are_exported_by_libmirclientplatform)
 
 TEST(SymbolsRequiredByMesa, are_exported_by_libmirplatformgraphics)
 {
-    auto const handle = dlopen("libmirplatformgraphics.so", RTLD_LAZY);
+    auto const handle = dlopen(MIR_PLATFORM_DRIVER_BINARY, RTLD_LAZY);
     ASSERT_THAT(handle, NotNull());
 
     auto const sym = dlsym(handle, "mir_server_mesa_egl_native_display_is_valid");

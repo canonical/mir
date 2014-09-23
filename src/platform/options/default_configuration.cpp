@@ -63,7 +63,7 @@ int const glog_stderrthreshold_default = 2;
 int const glog_minloglevel_default     = 0;
 char const* const glog_log_dir_default = "";
 bool const enable_input_default        = true;
-char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
+char const* const default_platform_graphics_lib = MIR_PLATFORM_DRIVER_BINARY;
 
 // Hack around the way Qt loads mir:
 // platform_api and therefore Mir are loaded via dlopen(..., RTLD_LOCAL).
