@@ -19,7 +19,7 @@
 #ifndef MIR_CLIENT_RPC_RPC_REPORT_H_
 #define MIR_CLIENT_RPC_RPC_REPORT_H_
 
-#include <mir_toolkit/event.h>
+#include "mir_toolkit/event.h"
 #include <boost/system/error_code.hpp>
 #include <google/protobuf/message.h>
 #include "mir/fd.h"
