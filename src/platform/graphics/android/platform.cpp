@@ -38,6 +38,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <mutex>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -90,7 +91,20 @@ mga::Platform::Platform(
 std::shared_ptr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_allocator(
         std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
 {
-    return std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
+    if (quirks.gralloc_reopenable_after_close())
+    {
+        return std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
+    }
+    else
+    {
+        //LP: 1371619. Some devices cannot call gralloc's open()/close() function repeatedly without crashing
+        static std::mutex allocator_mutex;
+        std::unique_lock<std::mutex> lk(allocator_mutex);
+        static std::shared_ptr<mg::GraphicBufferAllocator> preserved_allocator;
+        if (!preserved_allocator)
+            preserved_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
+        return preserved_allocator;
+    }
 }
 
 std::shared_ptr<mga::GraphicBufferAllocator> mga::Platform::create_mga_buffer_allocator(
