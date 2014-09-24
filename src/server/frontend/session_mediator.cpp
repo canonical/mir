@@ -654,6 +654,6 @@ void mf::SessionMediator::pack_protobuf_buffer(
     mfd::ProtobufBufferPacker packer{&protobuf_buffer};
     ipc_operations->pack_buffer(packer, *graphics_buffer, buffer_msg_type);
 
-//    for(auto const& fd : packer.fds())
-//        resource_cache->save_fd(&protobuf_buffer, fd);
+    for(auto const& fd : packer.fds())
+        resource_cache->save_fd(&protobuf_buffer, fd);
 }

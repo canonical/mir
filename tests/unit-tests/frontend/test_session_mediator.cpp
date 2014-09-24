@@ -852,7 +852,9 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
 
     mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
     buffer_request.mutable_buffer()->set_buffer_id(exchanged_buffer.buffer_id());
+    exchanged_buffer.clear_fd();
 
     mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
     buffer_request.mutable_buffer()->set_buffer_id(exchanged_buffer.buffer_id());
+    buffer_request.mutable_buffer()->clear_fd();
 }
