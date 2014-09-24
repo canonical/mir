@@ -125,10 +125,10 @@ endif(MIR_DISABLE_EPOLL_REACTOR)
 
 add_definitions(-DMESA_EGL_NO_X11_HEADERS)
 
-# Default to mesa backend
+# Default to mesa backend, but build all of them
 set(
   MIR_PLATFORM
-  mesa
+  mesa;android
   CACHE
   STRING
   "a list of graphics backends to build (options are 'mesa' or 'android')"
