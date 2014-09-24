@@ -38,6 +38,9 @@ public:
     virtual void pack_flags(unsigned int) = 0;
     virtual void pack_size(geometry::Size const& size) = 0;
 
+    virtual std::vector<Fd> extract_fds() = 0;
+    virtual std::vector<int> extract_data() = 0;
+
 protected:
     BufferIpcMessage() = default;
     BufferIpcMessage(BufferIpcMessage const&) = delete;
