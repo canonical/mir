@@ -65,7 +65,7 @@ TEST(ProtobufBufferPacker, packing)
     EXPECT_EQ(789, response.height());
 }
 
-TEST(ProtobufBufferPacker, unpacker)
+TEST(ProtobufBufferPacker, data_and_fds_are_the_same_as_packed)
 {
     using namespace testing;
 
@@ -92,7 +92,7 @@ TEST(ProtobufBufferPacker, unpacker)
         EXPECT_THAT(item, response.data().Get(i++));
 }
 
-TEST(ProtobufBufferPacker, message_takes_ownership_of_fd_field)
+TEST(ProtobufBufferPacker, message_takes_ownership_of_fds)
 {
     using namespace testing;
 
@@ -108,6 +108,7 @@ TEST(ProtobufBufferPacker, message_takes_ownership_of_fd_field)
         packer.pack_fd(additional_fd);
     }
 
+    EXPECT_THAT(response.fd().size(), Eq(num_fds+1));
     auto i = 0u;
     for(; i < num_fds; i++)
         EXPECT_THAT(response.fd().Get(i), Not(mtd::RawFdIsValid()));

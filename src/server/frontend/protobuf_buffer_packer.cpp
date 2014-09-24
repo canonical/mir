@@ -127,6 +127,7 @@ std::vector<mir::Fd> mfd::ProtobufBufferPacker::fds()
 {
     return fds_;
 }
+
 std::vector<int> mfd::ProtobufBufferPacker::data()
 {
     std::vector<int> data; 
