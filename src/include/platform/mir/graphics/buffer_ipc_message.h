@@ -22,6 +22,7 @@
 #include "mir/geometry/dimensions.h"
 #include "mir/geometry/size.h"
 #include "mir/fd.h"
+#include <vector>
 
 namespace mir
 {
@@ -38,8 +39,8 @@ public:
     virtual void pack_flags(unsigned int) = 0;
     virtual void pack_size(geometry::Size const& size) = 0;
 
-    virtual std::vector<Fd> extract_fds() = 0;
-    virtual std::vector<int> extract_data() = 0;
+    virtual std::vector<Fd> fds() = 0;
+    virtual std::vector<int> data() = 0;
 
 protected:
     BufferIpcMessage() = default;

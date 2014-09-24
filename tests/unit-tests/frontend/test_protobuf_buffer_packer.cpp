@@ -102,23 +102,24 @@ TEST_F(ProtobufBufferPacker, fd_packing_saves_using_the_resource_cache)
 
 TEST_F(ProtobufBufferPacker, unpacker)
 {
+    using namespace testing;
+
     mp::Buffer response;
-    auto const num_fds{3};
-    auto const num_data{9};
-    for(auto i = 0; i < num_fds; i++)
-        response.add_fd(mir::Fd{fileno(tmpfile())};
-    for(auto i = 0; i < num_data; i++)
+    unsigned int const num_fds{3};
+    unsigned int const num_data{9};
+    for(auto i = 0u; i < num_fds; i++)
+        response.add_fd(mir::Fd{fileno(tmpfile())});
+    for(auto i = 0u; i < num_data; i++)
         response.add_data(i*3);
 
     mfd::ProtobufBufferPacker packer(&response, mock_resource_cache);
-    EXPECT_THAT(response.fd_size(), Eq(0));
 
-    auto fds = packer.extract_fds();
+    auto fds = packer.fds();
     EXPECT_THAT(fds.size(), Eq(num_fds));
 
-    auto data = packer.extract_data();
-    EXPECT_THAT(data.size(), Eq(num_data));
-    auto i{0u};
+    auto data = packer.data();
+    ASSERT_THAT(data.size(), Eq(num_data));
+    unsigned int i{0};
     for(auto const& item : data)
-        EXPECT_THAT(item, Eq(i++*3);
+        EXPECT_THAT(item, response.fd().Get(i++));
 }

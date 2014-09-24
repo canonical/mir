@@ -125,3 +125,11 @@ void mfd::ProtobufBufferPacker::pack_size(geometry::Size const& size)
     buffer_response->set_height(size.height.as_int());
 }
 
+std::vector<mir::Fd> mfd::ProtobufBufferPacker::fds()
+{
+    return {};
+}
+std::vector<int> mfd::ProtobufBufferPacker::data()
+{
+    return {};
+}

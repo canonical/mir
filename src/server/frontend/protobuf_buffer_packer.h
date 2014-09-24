@@ -47,6 +47,9 @@ public:
     void pack_stride(geometry::Stride);
     void pack_flags(unsigned int);
     void pack_size(geometry::Size const& size);
+
+    std::vector<Fd> fds();
+    std::vector<int> data();
 private:
     protobuf::Buffer* buffer_response;
     std::shared_ptr<MessageResourceCache> const resource_cache;    
