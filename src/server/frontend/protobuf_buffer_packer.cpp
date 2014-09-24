@@ -17,7 +17,6 @@
  */
 
 #include "protobuf_buffer_packer.h"
-#include "resource_cache.h"
 
 #include "mir/graphics/display_configuration.h"
 #include "mir_protobuf.pb.h"
@@ -90,17 +89,16 @@ void mfd::pack_protobuf_display_configuration(mp::DisplayConfiguration& protobuf
         });
 }
 
-mfd::ProtobufBufferPacker::ProtobufBufferPacker(
-    protobuf::Buffer* response,
-    std::shared_ptr<MessageResourceCache> const& resource_cache) :
-    buffer_response(response),
-    resource_cache(resource_cache)
+mfd::ProtobufBufferPacker::ProtobufBufferPacker(protobuf::Buffer* response) :
+    buffer_response(response)
 {
+    for(auto it = buffer_response->fd().begin(); it != buffer_response->fd().end(); it++)
+        fds_.emplace_back(mir::Fd(*it));
 }
 
 void mfd::ProtobufBufferPacker::pack_fd(Fd const& fd)
 {
-    resource_cache->save_fd(buffer_response, fd);
+    fds_.emplace_back(fd);
     buffer_response->add_fd(fd);
 }
 
@@ -127,9 +125,12 @@ void mfd::ProtobufBufferPacker::pack_size(geometry::Size const& size)
 
 std::vector<mir::Fd> mfd::ProtobufBufferPacker::fds()
 {
-    return {};
+    return fds_;
 }
 std::vector<int> mfd::ProtobufBufferPacker::data()
 {
-    return {};
+    std::vector<int> data; 
+    for(auto it = buffer_response->data().begin(); it != buffer_response->data().end(); it++)
+        data.emplace_back(*it);
+    return data;
 }
