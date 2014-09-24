@@ -21,6 +21,8 @@
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_buffer_allocator.h"
+#include "mir_test_doubles/stub_display.h"
+#include "mir_test_doubles/null_platform.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/scene/buffer_stream_factory.h"
 #include "mir/compositor/buffer_stream.h"
@@ -97,11 +99,81 @@ namespace
         std::vector<mg::BufferID> const buffer_id_seq;
     };
 
+    struct StubBufferPacker : public mg::PlatformIpcOperations
+    {
+        StubBufferPacker() :
+            last_fd{-1}
+        {
+        }
+        void pack_buffer(mg::BufferIpcMessage&, mg::Buffer const&, mg::BufferIpcMsgType) const override
+        {
+        }
+
+        void unpack_buffer(mg::BufferIpcMessage&, mg::Buffer const&) const override
+        {
+            
+        }
+    
+        std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
+        {
+            return std::make_shared<mg::PlatformIPCPackage>();
+        }
+
+        mir::Fd last_unpacked_fd()
+        {
+            return last_fd;
+        }
+        mir::Fd last_fd;
+    };
+
+    struct StubPlatform : public mtd::NullPlatform
+    {
+        StubPlatform(std::shared_ptr<mg::PlatformIpcOperations> const& ipc_ops) :
+            ipc_ops{ipc_ops}
+        {
+        }
+
+        std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
+            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
+        {
+            return std::make_shared<mtd::StubBufferAllocator>();
+        }
+
+        std::shared_ptr<mg::PlatformIpcOperations> make_ipc_operations() const override
+        {
+            return ipc_ops;
+        }
+
+        std::shared_ptr<mg::Display> create_display(
+            std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
+            std::shared_ptr<mg::GLProgramFactory> const&,
+            std::shared_ptr<mg::GLConfig> const&) override
+        {
+            std::vector<geom::Rectangle> rect{geom::Rectangle{{0,0},{1,1}}};
+            return std::make_shared<mtd::StubDisplay>(rect);
+        }
+        
+        std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
+        {
+            return nullptr;
+        }
+
+        std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
+    };
+
     struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
     {
-        ExchangeServerConfiguration(std::vector<mg::BufferID> const& id_seq) :
-            stream_factory{std::make_shared<StubStreamFactory>(id_seq)}
+        ExchangeServerConfiguration(
+            std::vector<mg::BufferID> const& id_seq,
+            std::shared_ptr<mg::PlatformIpcOperations> const& ipc_ops) :
+            stream_factory{std::make_shared<StubStreamFactory>(id_seq)},
+            platform{std::make_shared<StubPlatform>(ipc_ops)}
         {
+        }
+
+        std::shared_ptr<mg::Platform> the_graphics_platform() override
+        {
+            return platform;
         }
 
         std::shared_ptr<msc::BufferStreamFactory> the_buffer_stream_factory() override
@@ -110,13 +182,16 @@ namespace
         }
 
         std::shared_ptr<msc::BufferStreamFactory> const stream_factory;
+        std::shared_ptr<mg::Platform> const platform;
     };
 
     struct ExchangeBufferTest : mir_test_framework::InProcessServer
     {
         std::vector<mg::BufferID> const buffer_id_exchange_seq{
             mg::BufferID{4}, mg::BufferID{8}, mg::BufferID{9}, mg::BufferID{3}, mg::BufferID{4}};
-        ExchangeServerConfiguration server_configuration{buffer_id_exchange_seq};
+
+        std::shared_ptr<StubBufferPacker> stub_packer{std::make_shared<StubBufferPacker>()};
+        ExchangeServerConfiguration server_configuration{buffer_id_exchange_seq, stub_packer};
         mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
         mtf::UsingStubClientPlatform using_stub_client_platform;
 
@@ -183,12 +258,20 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
     mir_connection_release(connection);
 }
 
+namespace
+{
+MATCHER(NoErrorOnFileRead, "")
+{
+    return arg > 0;
+}
+}
 TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
 {
+    using namespace testing;
     std::string test_string{"test string"};
     mir::Fd file(fileno(fopen("/tmp/mir-test-file.txt", "w+")));
     unlink("/tmp/mir-test-file.txt");
-    ::write(file, test_string.c_str(), test_string.size());
+    write(file, test_string.c_str(), test_string.size());
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     MirSurfaceParameters const request_params =
@@ -214,4 +297,9 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
+
+    auto server_received_fd = stub_packer->last_unpacked_fd();
+    char file_buffer[32];
+    ASSERT_THAT(read(server_received_fd, file_buffer, sizeof(file_buffer)), NoErrorOnFileRead());
+    EXPECT_THAT(strncmp(test_string.c_str(), file_buffer, test_string.size()), Eq(0)); 
 }
