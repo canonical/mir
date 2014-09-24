@@ -66,7 +66,7 @@ public:
 };
 }
 
-mclr::StreamSocketTransport::StreamSocketTransport(int fd)
+mclr::StreamSocketTransport::StreamSocketTransport(mir::Fd const& fd)
     : socket_fd{fd}
 {
     init();
@@ -165,7 +165,7 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_reques
     }
 }
 
-void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested, std::vector<int>& fds)
+void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested, std::vector<mir::Fd>& fds)
 {
     if (bytes_requested == 0)
     {
@@ -240,8 +240,14 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_reques
             int const* const data = reinterpret_cast<int const*>CMSG_DATA(cmsg);
             ptrdiff_t const header_size = reinterpret_cast<char const*>(data) - reinterpret_cast<char const*>(cmsg);
             int const nfds = (cmsg->cmsg_len - header_size) / sizeof(int);
+
+            // We can't properly pass mir::Fds through google::protobuf::Message,
+            // which is where these get shoved.
+            //
+            // When we have our own RPC generator plugin and aren't using deprecated
+            // Protobuf features this can go away.
             for (int i = 0; i < nfds; i++)
-                fds[fds_read + i] = data[i];
+                fds[fds_read + i] = mir::Fd{mir::IntOwnedFd{data[i]}};
 
             fds_read += nfds;
         }
@@ -289,9 +295,9 @@ void mclr::StreamSocketTransport::init()
     // EPIPE behaviour; we don't want SIGPIPE when the IO loop terminates.
     int socket_fds[2];
     socketpair(AF_UNIX, SOCK_STREAM, 0, socket_fds);
-    this->shutdown_fd = socket_fds[1];
+    this->shutdown_fd = mir::Fd{socket_fds[1]};
 
-    auto shutdown_fd = socket_fds[0];
+    auto shutdown_fd = mir::Fd{socket_fds[0]};
     io_service_thread = std::thread([this, shutdown_fd]
     {
         // Our IO threads must not receive any signals
@@ -385,13 +391,11 @@ void mclr::StreamSocketTransport::init()
                 shutdown_requested = true;
             }
         }
-        ::close(shutdown_fd);
-        ::close(socket_fd);
         ::close(epoll_fd);
     });
 }
 
-int mclr::StreamSocketTransport::open_socket(std::string const& path)
+mir::Fd mclr::StreamSocketTransport::open_socket(std::string const& path)
 {
     struct sockaddr_un socket_address;
     // Appease the almighty valgrind
@@ -401,7 +405,7 @@ int mclr::StreamSocketTransport::open_socket(std::string const& path)
     // Must be memcpy rather than strcpy, as abstract socket paths start with '\0'
     memcpy(socket_address.sun_path, path.data(), path.size());
 
-    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    mir::Fd fd{socket(AF_UNIX, SOCK_STREAM, 0)};
     if (connect(fd, reinterpret_cast<sockaddr*>(&socket_address), sizeof(socket_address)) < 0)
     {
         BOOST_THROW_EXCEPTION(
