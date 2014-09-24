@@ -997,3 +997,11 @@ MIR_COMMON_2 {
   };
  local: *;
 };
+
+MIR_COMMON_2.1 {
+ global:
+  extern "C++" {
+    mir::send_fds*;
+  };
+ local: *;
+};

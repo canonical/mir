@@ -20,7 +20,7 @@
 #include "mir/graphics/native_platform.h"
 #include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/program_option.h"
-#include "src/platform/graphics/android/android_platform.h"
+#include "src/platform/graphics/android/platform.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_buffer_packer.h"
@@ -89,7 +89,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc)
 {
     using namespace ::testing;
 
-    mga::AndroidPlatform platform(stub_display_builder, stub_display_report);
+    mga::Platform platform(stub_display_builder, stub_display_report);
 
     mtd::MockPacker mock_packer;
     int offset = 0;
@@ -125,7 +125,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
 {
     using namespace ::testing;
 
-    mga::AndroidPlatform platform(stub_display_builder, stub_display_report);
+    mga::Platform platform(stub_display_builder, stub_display_report);
 
     mtd::MockPacker mock_packer;
     EXPECT_CALL(mock_packer, pack_fd(_))
@@ -147,7 +147,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
 
 TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
 {
-    mga::AndroidPlatform platform(
+    mga::Platform platform(
         std::make_shared<mtd::StubDisplayBuilder>(),
         mr::null_display_report());
 
