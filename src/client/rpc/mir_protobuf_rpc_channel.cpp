@@ -93,7 +93,7 @@ void mclr::MirProtobufRpcChannel::receive_any_file_descriptors_for(MessageType* 
 
         if (response->fds_on_side_channel() > 0)
         {
-            std::vector<int32_t> fds(response->fds_on_side_channel());
+            std::vector<mir::Fd> fds(response->fds_on_side_channel());
             transport->receive_data(dummy.data(), dummy.size(), fds);
             for (auto &fd: fds)
                 response->add_fd(fd);

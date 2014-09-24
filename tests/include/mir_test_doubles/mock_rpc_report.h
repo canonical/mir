@@ -68,7 +68,7 @@ public:
 
     MOCK_METHOD2(file_descriptors_received,
                  void(google::protobuf::Message const&,
-                      std::vector<int32_t> const&));
+                      std::vector<Fd> const&));
 
     MOCK_METHOD1(connection_failure, void (std::exception const&));
 };

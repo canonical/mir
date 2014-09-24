@@ -18,6 +18,7 @@
 
 #include "src/client/rpc/stream_transport.h"
 #include "src/client/rpc/stream_socket_transport.h"
+#include "mir/fd.h"
 
 #include "mir_test/auto_unblock_thread.h"
 #include "mir_test/signal.h"
@@ -65,9 +66,9 @@ public:
             throw std::system_error(errno, std::system_category());
         }
 
-        test_fd = socket_fds[0];
-        transport_fd = socket_fds[1];
-        transport = std::make_shared<TransportMechanism>(socket_fds[1]);
+        test_fd = mir::Fd{socket_fds[0]};
+        transport_fd = mir::Fd{socket_fds[1]};
+        transport = std::make_shared<TransportMechanism>(transport_fd);
     }
 
     virtual ~StreamTransportTest()
@@ -76,8 +77,8 @@ public:
         close(test_fd);
     }
 
-    int transport_fd;
-    int test_fd;
+    mir::Fd transport_fd;
+    mir::Fd test_fd;
     std::shared_ptr<TransportMechanism> transport;
 };
 
@@ -603,7 +604,7 @@ TYPED_TEST(StreamTransportTest, ReadsDataWithFds)
         byte = counter++;
     }
     std::vector<uint8_t> received(expected.size());
-    std::vector<int> received_fds(num_fds);
+    std::vector<mir::Fd> received_fds(num_fds);
 
     auto receive_done = std::make_shared<mir::test::Signal>();
     mir::test::AutoUnblockThread receive_thread{[this]()
@@ -657,7 +658,7 @@ TYPED_TEST(StreamTransportTest, ReadsFdsFromMultipleChunks)
         byte = counter++;
     }
     std::vector<uint8_t> received(expected.size() * 2);
-    std::vector<int> received_fds(num_fds * 2);
+    std::vector<mir::Fd> received_fds(num_fds * 2);
 
     auto receive_done = std::make_shared<mir::test::Signal>();
     mir::test::AutoUnblockThread receive_thread{[this]()
@@ -714,7 +715,7 @@ TYPED_TEST(StreamTransportTest, ReadsFullDataAndFdsWhenInterruptedWithSignals)
     }
 
     std::vector<uint8_t> received(expected.size());
-    std::vector<int> received_fds(num_fds);
+    std::vector<mir::Fd> received_fds(num_fds);
 
     TemporarySignalHandler sig_alarm_handler{SIGALRM, &set_alarm_raised};
     auto receive_done = std::make_shared<mir::test::Signal>();
@@ -825,7 +826,7 @@ TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanExpectedOnCmsgBoundaryIsAnEr
         test_fds[i] = test_files[i].fd;
     }
 
-    std::vector<int> received_fds(num_fds);
+    std::vector<mir::Fd> received_fds(num_fds);
 
     auto receive_done = std::make_shared<mir::test::Signal>();
     mir::test::AutoUnblockThread reader{[this]()
@@ -854,7 +855,7 @@ TYPED_TEST(StreamTransportTest, ReceivingMoreFdsThanRequestedWithSameCmsgSpaceIs
         test_fds[i] = test_files[i].fd;
     }
 
-    std::vector<int> received_fds(num_fds);
+    std::vector<mir::Fd> received_fds(num_fds);
 
     auto receive_done = std::make_shared<mir::test::Signal>();
     mir::test::AutoUnblockThread reader{[this]()
@@ -906,7 +907,7 @@ TYPED_TEST(StreamTransportTest, DISABLED_ReceivingMoreFdsThanExpectedInMultipleC
         byte = counter++;
     }
     std::vector<uint8_t> received(expected.size() * 2);
-    std::vector<int> received_fds(num_fds);
+    std::vector<mir::Fd> received_fds(num_fds);
 
     auto receive_done = std::make_shared<mir::test::Signal>();
     mir::test::AutoUnblockThread receive_thread{[this]()
@@ -950,7 +951,7 @@ TYPED_TEST(StreamTransportTest, MismatchedFdExpectationsHaveAppropriateErrorMess
 
     try
     {
-        std::vector<int> dummy_fds(num_fds + 1);
+        std::vector<mir::Fd> dummy_fds(num_fds + 1);
         this->transport->receive_data(&dummy, sizeof(dummy), dummy_fds);
         FAIL() << "Receiving fewer fds than sent unexpectedly succeeded";
     }
@@ -961,7 +962,7 @@ TYPED_TEST(StreamTransportTest, MismatchedFdExpectationsHaveAppropriateErrorMess
 
     try
     {
-        std::vector<int> dummy_fds(num_fds - 1);
+        std::vector<mir::Fd> dummy_fds(num_fds - 1);
         this->transport->receive_data(&dummy, sizeof(dummy), dummy_fds);
         FAIL() << "Receiving more fds than sent unexpectedly succeeded";
     }
@@ -1026,7 +1027,7 @@ TYPED_TEST(StreamTransportTest, ReadingZeroBytesIsAnError)
     EXPECT_THROW(this->transport->receive_data(nullptr, 0),
                  std::logic_error);
 
-    std::vector<int> dummy;
+    std::vector<mir::Fd> dummy;
     EXPECT_THROW(this->transport->receive_data(nullptr, 0, dummy),
                  std::logic_error);
 }
