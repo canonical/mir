@@ -204,6 +204,51 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     EXPECT_FALSE(receiver.next_event(std::chrono::milliseconds(1), ev)); // Minimal timeout needed for valgrind
 }
 
+TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
+{   // Regression test for LP: #1372300
+    using namespace testing;
+    using namespace std::chrono;
+
+    nsecs_t t = 0;
+
+    mircva::InputReceiver receiver(
+        client_fd, std::make_shared<mircv::NullInputReceiverReport>(),
+        [&t](int) { return t; }
+        );
+    TestingInputProducer producer(server_fd);
+
+    nsecs_t const one_millisecond = 1000000ULL;
+    nsecs_t const one_second = 1000 * one_millisecond;
+    nsecs_t const one_frame = one_second / 60;
+
+    MirEvent ev;
+
+    producer.produce_a_motion_event(123, 456, t);
+    producer.produce_a_key_event();
+    flush_channels();
+
+    std::chrono::milliseconds const max_timeout(1000);
+
+    // Key events don't get resampled. Will be reported first.
+    ASSERT_TRUE(receiver.next_event(max_timeout, ev));
+    ASSERT_EQ(mir_event_type_key, ev.type);
+
+    // The motion is still too new. Won't be reported yet, but is batched.
+    auto start = high_resolution_clock::now();
+    ASSERT_FALSE(receiver.next_event(max_timeout, ev));
+    auto end = high_resolution_clock::now();
+    auto duration = end - start;
+
+    // Verify we timed out in under a frame (LP: #1372300)
+    // Sadly using real time as droidinput::Looper doesn't use a mocked clock.
+    ASSERT_LT(duration_cast<nanoseconds>(duration).count(), one_frame);
+
+    // But later in a frame or so, the motion will be reported:
+    t += one_frame;
+    ASSERT_TRUE(receiver.next_event(max_timeout, ev));
+    ASSERT_EQ(mir_event_type_motion, ev.type);
+}
+
 TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
 {
     using namespace testing;

@@ -134,22 +134,10 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
     }
 
     auto reduced_timeout = timeout;
-    if (input_consumer->hasDeferredEvent())
+    if (input_consumer->hasDeferredEvent() || input_consumer->hasPendingBatch())
     {
         // consume() didn't finish last time. Retry it immediately.
         reduced_timeout = std::chrono::milliseconds::zero();
-    }
-    else if (input_consumer->hasPendingBatch())
-    {
-        /*
-         * A batch is pending and must be completed or else the client could
-         * be starved of events. But don't hurry. A continuous motion gesture
-         * will wake us up much sooner than 50ms. This timeout is only reached
-         * in the case that motion has ended (fingers lifted).
-         */
-        std::chrono::milliseconds const motion_idle_timeout(50);
-        if (timeout.count() < 0 || timeout > motion_idle_timeout)
-            reduced_timeout = motion_idle_timeout;
     }
 
     auto result = looper->pollOnce(reduced_timeout.count());
