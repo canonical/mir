@@ -820,7 +820,7 @@ TEST_F(SessionMediator, exchange_buffer_throws_if_client_submits_bad_request)
 TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
 {
     using namespace testing;
-    MockResourceCache mock_cache;
+    NiceMock<MockResourceCache> mock_cache;
     mp::Buffer exchanged_buffer;
 
     mir::Fd fake_fd0(mir::IntOwnedFd{99});
@@ -828,7 +828,6 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
     mir::Fd fake_fd2(mir::IntOwnedFd{101});
 
     EXPECT_CALL(mock_ipc_operations, pack_buffer(_,_,_))
-        .Times(3)
         .WillOnce(Invoke([&](mg::BufferIpcMessage& msg, mg::Buffer const&, mg::BufferIpcMsgType)
         { msg.pack_fd(fake_fd0); }))
         .WillOnce(Invoke([&](mg::BufferIpcMessage& msg, mg::Buffer const&, mg::BufferIpcMsgType)
@@ -836,8 +835,9 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
         .WillOnce(Invoke([&](mg::BufferIpcMessage& msg, mg::Buffer const&, mg::BufferIpcMsgType)
         { msg.pack_fd(fake_fd2); }));
 
-    EXPECT_CALL(mock_cache, save_fd(_,_))
-        .Times(3);
+    EXPECT_CALL(mock_cache, save_fd(_,fake_fd0));
+    EXPECT_CALL(mock_cache, save_fd(_,fake_fd1));
+    EXPECT_CALL(mock_cache, save_fd(_,fake_fd2));
 
     mf::SessionMediator mediator{
         shell, graphics_platform, graphics_changer,
