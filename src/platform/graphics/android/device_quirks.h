@@ -57,10 +57,13 @@ public:
     DeviceQuirks(PropertiesWrapper const& properties);
 
     unsigned int num_framebuffers() const;
+    bool gralloc_reopenable_after_close() const;
 private:
     DeviceQuirks(DeviceQuirks const&) = delete;
     DeviceQuirks & operator=(DeviceQuirks const&) = delete;
+    std::string const device_name;
     unsigned int const num_framebuffers_;
+    bool const gralloc_reopenable_after_close_;
 };
 }
 }

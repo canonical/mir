@@ -22,7 +22,7 @@
 #include "configurable_display_buffer.h"
 #include "mir/graphics/egl_resources.h"
 #include "mir/graphics/gl_program_factory.h"
-#include "android_display_configuration.h"
+#include "display_configuration.h"
 #include "gl_context.h"
 #include "hwc_fallback_gl_renderer.h"
 #include "overlay_optimization.h"

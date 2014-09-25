@@ -29,7 +29,7 @@
 #include "hwc_fb_device.h"
 #include "hwc_layerlist.h"
 #include "hwc_vsync.h"
-#include "android_display.h"
+#include "display.h"
 #include "real_hwc_wrapper.h"
 
 #include <boost/throw_exception.hpp>

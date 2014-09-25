@@ -19,9 +19,10 @@
 #ifndef MIR_CLIENT_RPC_RPC_REPORT_H_
 #define MIR_CLIENT_RPC_RPC_REPORT_H_
 
-#include <mir_toolkit/event.h>
+#include "mir_toolkit/event.h"
 #include <boost/system/error_code.hpp>
 #include <google/protobuf/message.h>
+#include "mir/fd.h"
 
 namespace mir
 {
@@ -64,7 +65,7 @@ public:
                                           std::exception const& ex) = 0;
 
     virtual void file_descriptors_received(google::protobuf::Message const& response,
-                                           std::vector<int32_t> const& fds) = 0;
+                                           std::vector<mir::Fd> const& fds) = 0;
 
     virtual void connection_failure(std::exception const& ex) = 0;
 

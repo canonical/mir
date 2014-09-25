@@ -17,7 +17,7 @@
  *   Robert Carr <robert.carr@canonical.com>
  */
 
-#include "android_buffer_writer.h"
+#include "buffer_writer.h"
 #include "buffer.h"
 
 #include "mir/graphics/android/android_native_buffer.h"

@@ -16,11 +16,12 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_
+#ifndef MIR_GRAPHICS_ANDROID_PLATFORM_H_
+#define MIR_GRAPHICS_ANDROID_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/native_platform.h"
+#include "device_quirks.h"
 
 namespace mir
 {
@@ -33,10 +34,10 @@ class GraphicBufferAllocator;
 class FramebufferFactory;
 class DisplayBuilder;
 
-class AndroidPlatform : public Platform, public NativePlatform
+class Platform : public graphics::Platform, public NativePlatform
 {
 public:
-    AndroidPlatform(
+    Platform(
         std::shared_ptr<DisplayBuilder> const& display_builder,
         std::shared_ptr<DisplayReport> const& display_report);
 
@@ -64,9 +65,10 @@ private:
 
     std::shared_ptr<DisplayBuilder> const display_builder;
     std::shared_ptr<DisplayReport> const display_report;
+    DeviceQuirks quirks{PropertiesOps{}};
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_PLATFORM_H_ */

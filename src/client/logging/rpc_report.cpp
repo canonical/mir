@@ -147,7 +147,7 @@ void mcll::RpcReport::result_processing_failed(
 
 void mcll::RpcReport::file_descriptors_received(
     google::protobuf::Message const& /*response*/,
-    std::vector<int32_t> const& fds)
+    std::vector<Fd> const& fds)
 {
     std::stringstream ss;
     ss << "File descriptors received: ";
