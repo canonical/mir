@@ -297,3 +297,62 @@ TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
     EXPECT_THAT(average_lag_milliseconds, Le(1));
 }
 
+TEST_F(AndroidInputReceiverSetup, input_comes_in_phase_with_rendering)
+{
+    using namespace testing;
+
+    nsecs_t t = 0;
+
+    mircva::InputReceiver receiver(
+        client_fd, std::make_shared<mircv::NullInputReceiverReport>(),
+        [&t](int) { return t; }
+        );
+    TestingInputProducer producer(server_fd);
+
+    nsecs_t const one_millisecond = 1000000ULL;
+    nsecs_t const one_second = 1000 * one_millisecond;
+    nsecs_t const device_sample_interval = one_second / 125;
+    nsecs_t const frame_interval = one_second / 60;
+    nsecs_t const gesture_duration = 10 * one_second;
+
+    nsecs_t last_produced = 0, last_consumed = 0, last_rendered = 0;
+    nsecs_t last_in_phase = 0;
+
+    for (t = 0; t < gesture_duration; t += one_millisecond)
+    {
+        if (!t || t >= (last_produced + device_sample_interval))
+        {
+            last_produced = t;
+            float a = t * M_PI / 1000000.0f;
+            float x = 500.0f * sinf(a);
+            float y = 1000.0f * cosf(a);
+            producer.produce_a_motion_event(x, y, t);
+            flush_channels();
+        }
+
+        MirEvent ev;
+        if (receiver.next_event(std::chrono::milliseconds(0), ev))
+            last_consumed = t;
+
+        if (t >= (last_rendered + frame_interval))
+        {
+            last_rendered = t;
+
+            if (last_consumed)
+            {
+                auto lag = last_rendered - last_consumed;
+
+                // How often does vsync drift in phase (very close) with the
+                // time that we emitted/consumed input events?
+                if (lag < 4*one_millisecond)
+                    last_in_phase = t;
+                last_consumed = 0;
+            }
+        }
+
+        // Verify input and vsync come into phase at least a few times every
+        // second (if not always). This ensure visible lag is minimized.
+        ASSERT_GE(250*one_millisecond, (t - last_in_phase));
+    }
+}
+
