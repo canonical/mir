@@ -21,6 +21,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/native_platform.h"
+#include "device_quirks.h"
 
 namespace mir
 {
@@ -63,6 +64,7 @@ private:
 
     std::shared_ptr<DisplayBuilder> const display_builder;
     std::shared_ptr<DisplayReport> const display_report;
+    DeviceQuirks quirks{PropertiesOps{}};
 };
 
 }
