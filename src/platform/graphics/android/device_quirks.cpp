@@ -30,25 +30,42 @@ int mga::PropertiesOps::property_get(
 
 namespace
 {
-unsigned int determine_num_framebuffers(mga::PropertiesWrapper const& properties)
+std::string determine_device_name(mga::PropertiesWrapper const& properties)
 {
-    char const key[] = "ro.product.device"; 
     char const default_value[] = "";
     char value[PROP_VALUE_MAX] = "";
+    char const key[] = "ro.product.device"; 
     properties.property_get(key, value, default_value);
-    if (std::string{"mx3"} == std::string{value})
+    return std::string{value};
+}
+
+unsigned int num_framebuffers_for(std::string const& device_name)
+{
+    if (device_name == std::string{"mx3"})
         return 3;
     else
         return 2;
 }
+
+unsigned int gralloc_reopenable_after_close_for(std::string const& device_name)
+{
+    return device_name != std::string{"krillin"}; 
+}
 }
 
 mga::DeviceQuirks::DeviceQuirks(PropertiesWrapper const& properties)
-    : num_framebuffers_(determine_num_framebuffers(properties))
+    : device_name(determine_device_name(properties)),
+      num_framebuffers_(num_framebuffers_for(device_name)),
+      gralloc_reopenable_after_close_(gralloc_reopenable_after_close_for(device_name))
 {
 }
 
 unsigned int mga::DeviceQuirks::num_framebuffers() const
 {
     return num_framebuffers_;
+}
+
+bool mga::DeviceQuirks::gralloc_reopenable_after_close() const
+{
+    return gralloc_reopenable_after_close_;
 }

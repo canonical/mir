@@ -124,6 +124,12 @@ mi::TouchspotController::TouchspotController(std::shared_ptr<mg::GraphicBufferAl
 
 void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches)
 {
+    // The compositor is unable to track damage to the touchspot renderables via the SurfaceObserver
+    // interface as it does with application window surfaces. So if our last action is moving a spot
+    // we must ask the scene to emit a scene changed. In the case of adding or removing a visualiza-
+    // tion we expect the scene to handle this for us.
+    bool must_update_scene = false;
+
     {
     std::lock_guard<std::mutex> lg(guard);
     
@@ -139,6 +145,8 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
         renderable->move_center_to(touches[i].touch_location);
         if (i >= renderables_in_use)
             scene->add_input_visualization(renderable);
+        
+        must_update_scene = true;
     }
     
     for (unsigned int i = num_touches; i < renderables_in_use; i++)
@@ -150,7 +158,8 @@ void mi::TouchspotController::visualize_touches(std::vector<Spot> const& touches
     // TODO (hackish): We may have just moved renderables which with the current
     // architecture of surface observers will not trigger a propagation to the
     // compositor damage callback we need this "emit_scene_changed".
-    scene->emit_scene_changed();
+    if (must_update_scene)
+        scene->emit_scene_changed();
 }
 
 void mi::TouchspotController::enable()
