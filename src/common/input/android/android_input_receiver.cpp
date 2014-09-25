@@ -90,18 +90,26 @@ bool mircva::InputReceiver::try_next_event(MirEvent &ev)
      *   consumeBatches = true, so as to ensure the "cooked" event rate that
      *      clients experience is at least the minimum of event_rate_hz
      *      and the raw device event rate.
-     *   frame_time = A regular interval of 60Hz. This provides a virtual frame
+     *   frame_time = A regular interval. This provides a virtual frame
      *      interval during which InputConsumer will collect raw events,
-     *      resample them and emit a "cooked" event back to us at least every
+     *      resample them and emit a "cooked" event back to us at roughly every
      *      60th of a second. "cooked" events are both smoothed and
      *      extrapolated/predicted into the future (for tool=finger) giving the
      *      appearance of lower latency. Getting a real frame time from the
      *      graphics logic (which is messy) does not appear to be necessary to
      *      gain significant benefit.
+     *
+     * Note event_rate_hz is only 55Hz. This allows rendering to catch up and
+     * overtake the event rate every ~12th frame (200ms) on a 60Hz display.
+     * Thus on every 12th+1 frame, there will be zero buffer lag in responding
+     * to the cooked input event we have given the client.
+     * This phase control is useful as it eliminates the one frame of lag you
+     * would otherwise never catch up to if the event rate was exactly the same
+     * as the display refresh rate.
      */
 
     nsecs_t const now = android_clock(SYSTEM_TIME_MONOTONIC);
-    int const event_rate_hz = 60;
+    int const event_rate_hz = 55;
     nsecs_t const one_frame = 1000000000ULL / event_rate_hz;
     nsecs_t frame_time = (now / one_frame) * one_frame;
 
@@ -134,22 +142,10 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
     }
 
     auto reduced_timeout = timeout;
-    if (input_consumer->hasDeferredEvent())
+    if (input_consumer->hasDeferredEvent() || input_consumer->hasPendingBatch())
     {
         // consume() didn't finish last time. Retry it immediately.
         reduced_timeout = std::chrono::milliseconds::zero();
-    }
-    else if (input_consumer->hasPendingBatch())
-    {
-        /*
-         * A batch is pending and must be completed or else the client could
-         * be starved of events. But don't hurry. A continuous motion gesture
-         * will wake us up much sooner than 50ms. This timeout is only reached
-         * in the case that motion has ended (fingers lifted).
-         */
-        std::chrono::milliseconds const motion_idle_timeout(50);
-        if (timeout.count() < 0 || timeout > motion_idle_timeout)
-            reduced_timeout = motion_idle_timeout;
     }
 
     auto result = looper->pollOnce(reduced_timeout.count());
