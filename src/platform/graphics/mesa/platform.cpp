@@ -22,14 +22,13 @@
 #include "display.h"
 #include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
+#include "ipc_operations.h"
+#include "mir/graphics/platform_ipc_operations.h"
 #include "buffer_writer.h"
-#include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/options/option.h"
 #include "mir/graphics/native_buffer.h"
 #include "mir/emergency_cleanup_registry.h"
 
-#include "drm_close_threadsafe.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -45,20 +44,6 @@ namespace
 {
 char const* bypass_option_name{"bypass"};
 char const* vt_option_name{"vt"};
-
-struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
-{
-    MesaPlatformIPCPackage(int drm_auth_fd)
-    {
-        ipc_fds.push_back(drm_auth_fd);
-    }
-
-    ~MesaPlatformIPCPackage()
-    {
-        if (ipc_fds.size() > 0 && ipc_fds[0] >= 0)
-            mgm::drm_close_threadsafe(ipc_fds[0]);
-    }
-};
 
 struct RealVTFileOperations : public mgm::VTFileOperations
 {
@@ -177,35 +162,14 @@ std::shared_ptr<mg::Display> mgm::Platform::create_display(
         listener);
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgm::Platform::get_ipc_package()
-{
-    return std::make_shared<MesaPlatformIPCPackage>(drm->get_authenticated_fd());
-}
-
-void mgm::Platform::fill_buffer_package(
-    BufferIPCPacker* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const
-{
-    if (msg_type == mg::BufferIpcMsgType::full_msg)
-    {
-        auto native_handle = buffer->native_buffer_handle();
-        for(auto i=0; i<native_handle->data_items; i++)
-        {
-            packer->pack_data(native_handle->data[i]);
-        }
-        for(auto i=0; i<native_handle->fd_items; i++)
-        {
-            packer->pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
-        }
-
-        packer->pack_stride(buffer->stride());
-        packer->pack_flags(native_handle->flags);
-        packer->pack_size(buffer->size());
-    }
-}
-
 void mgm::Platform::drm_auth_magic(unsigned int magic)
 {
     drm->auth_magic(magic);
+}
+
+std::shared_ptr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
+{
+    return std::make_shared<mgm::IpcOperations>(drm);
 }
 
 std::shared_ptr<mg::BufferWriter> mgm::Platform::make_buffer_writer()

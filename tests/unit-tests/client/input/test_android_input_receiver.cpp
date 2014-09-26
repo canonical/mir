@@ -204,6 +204,54 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     EXPECT_FALSE(receiver.next_event(std::chrono::milliseconds(1), ev)); // Minimal timeout needed for valgrind
 }
 
+TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
+{   // Regression test for LP: #1372300
+    using namespace testing;
+    using namespace std::chrono;
+
+    nsecs_t t = 0;
+
+    mircva::InputReceiver receiver(
+        client_fd, std::make_shared<mircv::NullInputReceiverReport>(),
+        [&t](int) { return t; }
+        );
+    TestingInputProducer producer(server_fd);
+
+    nsecs_t const one_millisecond = 1000000ULL;
+    nsecs_t const one_second = 1000 * one_millisecond;
+    nsecs_t const one_frame = one_second / 60;
+
+    MirEvent ev;
+
+    producer.produce_a_motion_event(123, 456, t);
+    producer.produce_a_key_event();
+    flush_channels();
+
+    std::chrono::milliseconds const max_timeout(1000);
+
+    // Key events don't get resampled. Will be reported first.
+    ASSERT_TRUE(receiver.next_event(max_timeout, ev));
+    ASSERT_EQ(mir_event_type_key, ev.type);
+
+    // The motion is still too new. Won't be reported yet, but is batched.
+    auto start = high_resolution_clock::now();
+    ASSERT_FALSE(receiver.next_event(max_timeout, ev));
+    auto end = high_resolution_clock::now();
+    auto duration = end - start;
+
+    // Verify we timed out in under a frame (LP: #1372300)
+    // Sadly using real time as droidinput::Looper doesn't use a mocked clock.
+    ASSERT_LT(duration_cast<nanoseconds>(duration).count(), one_frame);
+
+    // Verify we don't use all the CPU by not sleeping (LP: #1373809)
+    EXPECT_GT(duration_cast<nanoseconds>(duration).count(), one_millisecond);
+
+    // But later in a frame or so, the motion will be reported:
+    t += 2 * one_frame;  // Account for the new slower 55Hz event rate
+    ASSERT_TRUE(receiver.next_event(max_timeout, ev));
+    ASSERT_EQ(mir_event_type_motion, ev.type);
+}
+
 TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
 {
     using namespace testing;
@@ -250,5 +298,64 @@ TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
     int average_lag_milliseconds = (render_duration - gesture_duration) /
                                    (frames_triggered * one_millisecond);
     EXPECT_THAT(average_lag_milliseconds, Le(1));
+}
+
+TEST_F(AndroidInputReceiverSetup, input_comes_in_phase_with_rendering)
+{
+    using namespace testing;
+
+    nsecs_t t = 0;
+
+    mircva::InputReceiver receiver(
+        client_fd, std::make_shared<mircv::NullInputReceiverReport>(),
+        [&t](int) { return t; }
+        );
+    TestingInputProducer producer(server_fd);
+
+    nsecs_t const one_millisecond = 1000000ULL;
+    nsecs_t const one_second = 1000 * one_millisecond;
+    nsecs_t const device_sample_interval = one_second / 125;
+    nsecs_t const frame_interval = one_second / 60;
+    nsecs_t const gesture_duration = 10 * one_second;
+
+    nsecs_t last_produced = 0, last_consumed = 0, last_rendered = 0;
+    nsecs_t last_in_phase = 0;
+
+    for (t = 0; t < gesture_duration; t += one_millisecond)
+    {
+        if (!t || t >= (last_produced + device_sample_interval))
+        {
+            last_produced = t;
+            float a = t * M_PI / 1000000.0f;
+            float x = 500.0f * sinf(a);
+            float y = 1000.0f * cosf(a);
+            producer.produce_a_motion_event(x, y, t);
+            flush_channels();
+        }
+
+        MirEvent ev;
+        if (receiver.next_event(std::chrono::milliseconds(0), ev))
+            last_consumed = t;
+
+        if (t >= (last_rendered + frame_interval))
+        {
+            last_rendered = t;
+
+            if (last_consumed)
+            {
+                auto lag = last_rendered - last_consumed;
+
+                // How often does vsync drift in phase (very close) with the
+                // time that we emitted/consumed input events?
+                if (lag < 4*one_millisecond)
+                    last_in_phase = t;
+                last_consumed = 0;
+            }
+        }
+
+        // Verify input and vsync come into phase at least a few times every
+        // second (if not always). This ensure visible lag is minimized.
+        ASSERT_GE(250*one_millisecond, (t - last_in_phase));
+    }
 }
 

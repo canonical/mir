@@ -47,10 +47,8 @@ public:
             std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
             std::shared_ptr<GLProgramFactory> const& gl_program_factory,
             std::shared_ptr<GLConfig> const& gl_config);
-    std::shared_ptr<PlatformIPCPackage> get_ipc_package() override;
+    std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
     std::shared_ptr<BufferWriter> make_buffer_writer() override;
-    void fill_buffer_package(
-        BufferIPCPacker* packer, Buffer const* Buffer, BufferIpcMsgType msg_type) const override;
     EGLNativeDisplayType egl_native_display() const;
 
 private:

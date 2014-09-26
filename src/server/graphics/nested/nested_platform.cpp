@@ -94,15 +94,33 @@ std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(
         connection, dispatcher, display_report, conf_policy, gl_config);
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgn::NestedPlatform::get_ipc_package()
+namespace
 {
-    return native_platform->get_ipc_package();
+class BufferPacker : public mg::PlatformIpcOperations
+{
+public:
+    BufferPacker(std::shared_ptr<mg::NativePlatform> const& native_platform) :
+        native_platform{native_platform}
+    {}
+    void pack_buffer(
+        mg::BufferIpcMessage& message, mg::Buffer const& buffer, mg::BufferIpcMsgType msg_type) const
+    {
+        native_platform->fill_buffer_package(&message, &buffer, msg_type);
+    }
+    void unpack_buffer(mg::BufferIpcMessage&, mg::Buffer const&) const {}
+
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package()
+    {
+        return native_platform->connection_ipc_package();
+    }
+private:
+    std::shared_ptr<mg::NativePlatform> const native_platform;
+};
 }
 
-void mgn::NestedPlatform::fill_buffer_package(
-    BufferIPCPacker* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const
+std::shared_ptr<mg::PlatformIpcOperations> mgn::NestedPlatform::make_ipc_operations() const
 {
-    native_platform->fill_buffer_package(packer, buffer, msg_type);
+    return std::make_shared<BufferPacker>(native_platform);
 }
 
 EGLNativeDisplayType mgn::NestedPlatform::egl_native_display() const
