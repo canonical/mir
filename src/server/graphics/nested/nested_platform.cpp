@@ -91,7 +91,7 @@ std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(
     std::shared_ptr<mg::GLConfig> const& gl_config)
 {
     return std::make_shared<mgn::NestedDisplay>(
-        connection, dispatcher, display_report, conf_policy, gl_config);
+        shared_from_this(), connection, dispatcher, display_report, conf_policy, gl_config);
 }
 
 std::shared_ptr<mg::InternalClient> mgn::NestedPlatform::create_internal_client()
