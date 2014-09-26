@@ -65,7 +65,7 @@ template<> struct result_ptr_t<mir::protobuf::SocketFD>     { typedef ::mir::pro
 //The exchange_buffer and next_buffer calls can complete on a different thread than the
 //one the invocation was called on. Make sure to preserve the result resource. 
 template<class ParameterMessage>
-void invoke_for_multithreaded_dispatch(
+void invoke_and_ensure_any_thread_can_complete(
     ProtobufMessageProcessor* self,
     DisplayServer* server,
     void (mir::protobuf::DisplayServer::*function)(
@@ -149,11 +149,13 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         }
         else if ("next_buffer" == invocation.method_name())
         {
-            invoke_for_multithreaded_dispatch(this, display_server.get(), &DisplayServer::next_buffer, invocation);
+            invoke_and_ensure_any_thread_can_complete(
+                this, display_server.get(), &DisplayServer::next_buffer, invocation);
         }
         else if ("exchange_buffer" == invocation.method_name())
         {
-            invoke_for_multithreaded_dispatch(this, display_server.get(), &DisplayServer::exchange_buffer, invocation);
+            invoke_and_ensure_any_thread_can_complete(
+                this, display_server.get(), &DisplayServer::exchange_buffer, invocation);
         }
         else if ("release_surface" == invocation.method_name())
         {
