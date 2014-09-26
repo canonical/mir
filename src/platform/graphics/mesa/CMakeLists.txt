@@ -33,6 +33,7 @@ add_library(mirplatformgraphicsmesaobjects OBJECT
   anonymous_shm_file.cpp
   shm_buffer.cpp
   bypass.cpp
+  ipc_operations.cpp
   buffer_writer.cpp
 )
 

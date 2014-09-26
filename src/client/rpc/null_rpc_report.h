@@ -50,7 +50,7 @@ public:
                                   std::exception const& ex) override;
 
     void file_descriptors_received(google::protobuf::Message const& response,
-                                   std::vector<int32_t> const& fds) override;
+                                   std::vector<Fd> const& fds) override;
 
     void connection_failure(std::exception const& ex) override;
 };
