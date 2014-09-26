@@ -46,7 +46,7 @@ bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
     {
         //TODO: enable planeAlpha for (hwc version >= 1.2), 90 deg rotation
         static glm::mat4 const identity;
-        if (// renderable->shaped() ||  FIXME: Nested servers are shaped() !?
+        if (// renderable->shaped() ||  // Unsafe to uncomment yet LP: #1374358
             renderable->alpha() < 1.0f ||
             renderable->transformation() != identity)
         {
