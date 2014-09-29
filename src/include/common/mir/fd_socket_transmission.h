@@ -42,6 +42,7 @@ public:
     fd_reception_error();
 };
 
+bool socket_error_is_transient(int error_code);
 void send_fds(mir::Fd const& socket, std::vector<mir::Fd> const& fd);
 void receive_data(mir::Fd const& socket, void* buffer, size_t bytes_requested, std::vector<mir::Fd>& fds);
 }
