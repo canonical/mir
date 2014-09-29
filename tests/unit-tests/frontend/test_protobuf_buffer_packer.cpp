@@ -86,10 +86,7 @@ TEST(ProtobufBufferPacker, data_and_fds_are_the_same_as_packed)
     EXPECT_THAT(fds.size(), Eq(num_fds + 1));
 
     auto data = packer.data();
-    ASSERT_THAT(data.size(), Eq(num_data));
-    unsigned int i{0};
-    for(auto const& item : data)
-        EXPECT_THAT(item, response.data().Get(i++));
+    EXPECT_THAT(data, ElementsAreArray(response.data().data(), num_data));
 }
 
 TEST(ProtobufBufferPacker, message_takes_ownership_of_fds)
