@@ -25,20 +25,18 @@
 
 namespace mir
 {
-struct socket_error : public std::system_error
+struct socket_error : std::system_error
 {
     socket_error(std::string const& message);
 };
 
-class socket_disconnected_error : public std::system_error
+struct socket_disconnected_error : std::system_error
 {
-public:
     socket_disconnected_error(std::string const& message);
 };
 
-class fd_reception_error : public std::runtime_error
+struct fd_reception_error : std::runtime_error
 {
-public:
     fd_reception_error();
 };
 
