@@ -44,6 +44,7 @@ class DisplayReport;
 class DisplayBuffer;
 class DisplayConfigurationPolicy;
 class GLConfig;
+class Platform;
 
 namespace nested
 {
@@ -95,6 +96,7 @@ class NestedDisplay : public Display
 {
 public:
     NestedDisplay(
+        std::shared_ptr<Platform> const& platform,
         std::shared_ptr<HostConnection> const& connection,
         std::shared_ptr<input::InputDispatcher> const& dispatcher,
         std::shared_ptr<DisplayReport> const& display_report,
@@ -124,6 +126,7 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
+    std::shared_ptr<Platform> const platform;
     std::shared_ptr<HostConnection> const connection;
     std::shared_ptr<input::InputDispatcher> const dispatcher;
     std::shared_ptr<DisplayReport> const display_report;

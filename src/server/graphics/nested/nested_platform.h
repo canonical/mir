@@ -31,7 +31,8 @@ namespace graphics
 namespace nested
 {
 
-class NestedPlatform : public Platform
+class NestedPlatform : public Platform,
+                       public std::enable_shared_from_this<NestedPlatform>
 {
 public:
     NestedPlatform(
