@@ -19,6 +19,7 @@
 #include "stream_socket_transport.h"
 #include "mir/variable_length_array.h"
 #include "mir/thread_name.h"
+#include "mir/fd_socket_transmission.h"
 
 #include <system_error>
 
@@ -32,39 +33,7 @@
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
-
-
 namespace mclr = mir::client::rpc;
-
-namespace {
-class socket_error : public std::system_error
-{
-public:
-    socket_error(std::string const& message)
-        : std::system_error(errno, std::system_category(), message)
-    {
-    }
-};
-
-
-class socket_disconnected_error : public std::system_error
-{
-public:
-    socket_disconnected_error(std::string const& message)
-        : std::system_error(errno, std::system_category(), message)
-    {
-    }
-};
-
-class fd_reception_error : public std::runtime_error
-{
-public:
-    fd_reception_error()
-        : std::runtime_error("Invalid control message for receiving file descriptors")
-    {
-    }
-};
-}
 
 mclr::StreamSocketTransport::StreamSocketTransport(mir::Fd const& fd)
     : socket_fd{fd}

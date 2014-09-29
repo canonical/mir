@@ -24,6 +24,21 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
+mir::socket_error::socket_error(std::string const& message) :
+    std::system_error(errno, std::system_category(), message)
+{
+}
+
+mir::socket_disconnected_error::socket_disconnected_error(std::string const& message) :
+    std::system_error(errno, std::system_category(), message)
+{
+}
+
+mir::fd_reception_error::fd_reception_error() :
+    std::runtime_error("Invalid control message for receiving file descriptors")
+{
+}
+
 void mir::send_fds(
     mir::Fd const& socket,
     std::vector<mir::Fd> const& fds)
@@ -69,4 +84,13 @@ void mir::send_fds(
         if (sent < 0)
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send fds: " + std::string(strerror(errno))));
     }
+}
+
+
+void mir::receive_data(mir::Fd const& socket, void* buffer, size_t bytes_requested, std::vector<mir::Fd>& fds)
+{
+    (void) socket;
+    (void) buffer;
+    (void) fds;
+    (void) bytes_requested;
 }

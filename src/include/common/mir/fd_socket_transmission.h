@@ -20,9 +20,29 @@
 #define MIR_FD_SOCKET_TRANSMISSION_H_
 #include "mir/fd.h"
 #include <vector>
+#include <system_error>
+#include <stdexcept>
 
 namespace mir
 {
+struct socket_error : public std::system_error
+{
+    socket_error(std::string const& message);
+};
+
+class socket_disconnected_error : public std::system_error
+{
+public:
+    socket_disconnected_error(std::string const& message);
+};
+
+class fd_reception_error : public std::runtime_error
+{
+public:
+    fd_reception_error();
+};
+
 void send_fds(mir::Fd const& socket, std::vector<mir::Fd> const& fd);
+void receive_data(mir::Fd const& socket, void* buffer, size_t bytes_requested, std::vector<mir::Fd>& fds);
 }
 #endif /* MIR_FD_SOCKET_TRANSMISSION_H_ */

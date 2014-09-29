@@ -12,6 +12,7 @@ MIR_COMMON_2 {
     mir_diagonal_resize_bottom_to_top_cursor_name*;
     mir_diagonal_resize_top_to_bottom_cursor_name*;
     mir_disabled_cursor_name*;
+    mir::fd_reception_error::fd_reception_error*;
     mir::Fd::Fd*;
     mir::Fd::invalid*;
     mir::Fd::operator*;
@@ -763,6 +764,8 @@ MIR_COMMON_2 {
     mir::SharedLibrary::load_symbol*;
     mir::SharedLibrary::?SharedLibrary*;
     mir::SharedLibrary::SharedLibrary*;
+    mir::socket_error::socket_error*;
+    mir::socket_disconnected_error*;
     mir::udev::Context::?Context*;
     mir::udev::Context::Context*;
     mir::udev::Context::ctx*;
