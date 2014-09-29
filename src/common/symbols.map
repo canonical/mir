@@ -12,7 +12,6 @@ MIR_COMMON_2 {
     mir_diagonal_resize_bottom_to_top_cursor_name*;
     mir_diagonal_resize_top_to_bottom_cursor_name*;
     mir_disabled_cursor_name*;
-    mir::fd_reception_error::fd_reception_error*;
     mir::Fd::Fd*;
     mir::Fd::invalid*;
     mir::Fd::operator*;
@@ -758,16 +757,12 @@ MIR_COMMON_2 {
     mir::RecursiveReadWriteMutex::read_unlock*;
     mir::RecursiveReadWriteMutex::write_lock*;
     mir::RecursiveReadWriteMutex::write_unlock*;
-    mir::receive_data*;
     mir::report::lttng::TracepointProvider::?TracepointProvider*;
     mir::report::lttng::TracepointProvider::TracepointProvider*;
     mir::set_thread_name*;
     mir::SharedLibrary::load_symbol*;
     mir::SharedLibrary::?SharedLibrary*;
     mir::SharedLibrary::SharedLibrary*;
-    mir::socket_error::socket_error*;
-    mir::socket_error_is_transient*;
-    mir::socket_disconnected_error*;
     mir::udev::Context::?Context*;
     mir::udev::Context::Context*;
     mir::udev::Context::ctx*;
@@ -809,7 +804,6 @@ MIR_COMMON_2 {
     typeinfo?for?MirDisplayOutput;
     typeinfo?for?MirEventDelegate;
     typeinfo?for?mir::Fd;
-    typeinfo?for?mir::fd_reception_error;
     typeinfo?for?mir::geometry::Displacement;
     typeinfo?for?mir::geometry::Length;
     typeinfo?for?mir::geometry::Point;
@@ -888,8 +882,6 @@ MIR_COMMON_2 {
     typeinfo?for?MirResizeEvent;
     typeinfo?for?MirScreencastParameters;
     typeinfo?for?mir::SharedLibrary;
-    typeinfo?for?mir::socket_error;
-    typeinfo?for?mir::socket_disconnected_error;
     typeinfo?for?MirSurfaceEvent;
     typeinfo?for?MirSurfaceParameters;
     typeinfo?for?mir::udev::Context;
@@ -1010,6 +1002,21 @@ MIR_COMMON_2.1 {
  global:
   extern "C++" {
     mir::send_fds*;
+  };
+ local: *;
+};
+
+MIR_COMMON_2.2 {
+ global:
+  extern "C++" {
+    mir::fd_reception_error::fd_reception_error*;
+    mir::receive_data*;
+    mir::socket_error::socket_error*;
+    mir::socket_error_is_transient*;
+    mir::socket_disconnected_error*;
+    typeinfo?for?mir::fd_reception_error;
+    typeinfo?for?mir::socket_error;
+    typeinfo?for?mir::socket_disconnected_error;
   };
  local: *;
 };
