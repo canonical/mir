@@ -129,8 +129,5 @@ std::vector<mir::Fd> mfd::ProtobufBufferPacker::fds()
 
 std::vector<int> mfd::ProtobufBufferPacker::data()
 {
-    std::vector<int> data; 
-    for(auto it = buffer_response->data().begin(); it != buffer_response->data().end(); it++)
-        data.emplace_back(*it);
-    return data;
+    return {buffer_response->data().begin(), buffer_response->data().end()};
 }
