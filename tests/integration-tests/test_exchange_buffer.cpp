@@ -24,12 +24,14 @@
 #include "mir_test_doubles/stub_display.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "mir/scene/buffer_stream_factory.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "src/client/mir_connection.h"
 #include <chrono>
 #include <mutex>
+#include <stdio.h>
 #include <condition_variable>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -109,9 +111,11 @@ namespace
         {
         }
 
-        void unpack_buffer(mg::BufferIpcMessage&, mg::Buffer const&) const override
+        void unpack_buffer(mg::BufferIpcMessage& msg, mg::Buffer const&) const override
         {
-            
+            auto fds = msg.fds();
+            if (!fds.empty())
+                last_fd = fds[0];
         }
     
         std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
@@ -123,7 +127,9 @@ namespace
         {
             return last_fd;
         }
-        mir::Fd last_fd;
+    private:
+        //TODO: is const appropriate on unpack_buffer?
+        mir::Fd mutable last_fd;
     };
 
     struct StubPlatform : public mtd::NullPlatform
@@ -269,8 +275,7 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
 {
     using namespace testing;
     std::string test_string{"test string"};
-    mir::Fd file(fileno(fopen("/tmp/mir-test-file.txt", "w+")));
-    unlink("/tmp/mir-test-file.txt");
+    mir::Fd file(fileno(tmpfile()));
     write(file, test_string.c_str(), test_string.size());
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
