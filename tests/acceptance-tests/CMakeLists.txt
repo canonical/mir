@@ -40,7 +40,6 @@ set(
   test_prompt_session_client_api.cpp
   test_protobuf.cpp
   test_client_screencast.cpp
-  test_client_surface_swap_buffers.cpp
   test_client_cursor_api.cpp
   test_large_messages.cpp
   test_client_surface_visibility.cpp
