@@ -108,6 +108,7 @@ public:
     MOCK_METHOD2(receive_data, void(void*, size_t));
     MOCK_METHOD3(receive_data, void(void*, size_t, std::vector<mir::Fd>&));
     MOCK_METHOD1(send_data, void(std::vector<uint8_t> const&));
+    MOCK_METHOD2(send_data, void(std::vector<uint8_t> const&, std::vector<mir::Fd>&));
 
     // Transport interface
     void register_observer_default(std::shared_ptr<Observer> const& observer)

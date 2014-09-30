@@ -176,6 +176,12 @@ void mclr::StreamSocketTransport::send_data(const std::vector<uint8_t>& buffer)
     }
 }
 
+void mclr::StreamSocketTransport::send_data(const std::vector<uint8_t> &buffer, std::vector<mir::Fd>& fds)
+{
+    send_data(buffer);
+    mir::send_fds(socket_fd, fds);
+}
+
 void mclr::StreamSocketTransport::init()
 {
     // We use sockets rather than a pipe so that we can control

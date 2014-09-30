@@ -44,7 +44,7 @@ public:
     void receive_data(void* buffer, size_t bytes_requested) override;
     void receive_data(void* buffer, size_t bytes_requested, std::vector<Fd>& fds) override;
     void send_data(const std::vector<uint8_t> &buffer) override;
-
+    void send_data(const std::vector<uint8_t> &buffer, std::vector<mir::Fd>& fds) override;
 private:
     void init();
     Fd open_socket(std::string const& path);

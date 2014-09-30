@@ -170,9 +170,48 @@ void mclr::MirProtobufRpcChannel::CallMethod(
     pending_calls.save_completion_details(invocation, response, callback);
 
     // Only send message when details saved for handling response
-    send_message(invocation, invocation);
+    if (parameters->GetTypeName() == "mir.protobuf.Buffer")
+    {
+        mir::protobuf::Buffer buffer;
+//        buffer.ParseFromArray(*parameters);
+        std::vector<mir::Fd> fd(buffer.fd().begin(), buffer.fd().end());
+        send_message(invocation, invocation, fd);
+    }
+    else
+    {
+        send_message(invocation, invocation);
+    }
 }
 
+void mclr::MirProtobufRpcChannel::send_message(
+    mir::protobuf::wire::Invocation const& body,
+    mir::protobuf::wire::Invocation const& invocation,
+    std::vector<mir::Fd>& fds)
+{
+    const size_t size = body.ByteSize();
+    const unsigned char header_bytes[2] =
+    {
+        static_cast<unsigned char>((size >> 8) & 0xff),
+        static_cast<unsigned char>((size >> 0) & 0xff)
+    };
+
+    detail::SendBuffer send_buffer(sizeof header_bytes + size);
+    std::copy(header_bytes, header_bytes + sizeof header_bytes, send_buffer.begin());
+    body.SerializeToArray(send_buffer.data() + sizeof header_bytes, size);
+
+    try
+    {
+        std::lock_guard<decltype(write_mutex)> lock(write_mutex);
+        transport->send_data(send_buffer, fds);
+    }
+    catch (std::runtime_error const& err)
+    {
+        rpc_report->invocation_failed(invocation, err);
+        notify_disconnected();
+        throw;
+    }
+    rpc_report->invocation_succeeded(invocation);
+}
 void mclr::MirProtobufRpcChannel::send_message(
     mir::protobuf::wire::Invocation const& body,
     mir::protobuf::wire::Invocation const& invocation)
