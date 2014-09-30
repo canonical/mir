@@ -20,12 +20,16 @@
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/renderer.h"
 #include "mir/compositor/renderer_factory.h"
-#include "mir_test_doubles/stub_renderer.h"
+
 #include "mir/run_mir.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
+
+#include "mir_test/fake_event_hub_input_configuration.h"
+#include "mir_test/fake_event_hub.h"
+#include "mir_test_doubles/stub_renderer.h"
 
 #include <gtest/gtest.h>
 
@@ -36,6 +40,8 @@
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
+namespace mia = mir::input::android;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
@@ -112,6 +118,48 @@ public:
 
 private:
     std::string const flag_file;
+};
+
+struct FakeEventHubServerConfig : TestingServerConfiguration
+{
+    std::shared_ptr<mi::InputConfiguration> the_input_configuration() override
+    {
+        if (!input_configuration)
+        {
+            input_configuration =
+                std::make_shared<mtd::FakeEventHubInputConfiguration>(
+                    the_input_dispatcher(),
+                    the_input_region(),
+                    the_cursor_listener(),
+                    the_touch_visualizer(),
+                    the_input_report());
+        }
+
+        return input_configuration;
+    }
+
+    std::shared_ptr<mi::InputManager> the_input_manager() override
+    {
+        return DefaultServerConfiguration::the_input_manager();
+    }
+
+    std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override
+    {
+        return DefaultServerConfiguration::the_input_targeter();
+    }
+
+    std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override
+    {
+        return DefaultServerConfiguration::the_input_dispatcher();
+    }
+
+    mia::FakeEventHub* the_fake_event_hub()
+    {
+        the_input_configuration();
+        return input_configuration->the_fake_event_hub();
+    }
+
+    std::shared_ptr<mtd::FakeEventHubInputConfiguration> input_configuration;
 };
 }
 
@@ -228,6 +276,148 @@ TEST(ServerShutdownWithThreadException,
                 std::runtime_error);
         }};
 
+    server.join();
+
+    std::weak_ptr<mir::graphics::Display> display = server_config->the_display();
+    std::weak_ptr<mir::compositor::Compositor> compositor = server_config->the_compositor();
+    std::weak_ptr<mir::frontend::Connector> connector = server_config->the_connector();
+    std::weak_ptr<mir::input::InputManager> input_manager = server_config->the_input_manager();
+
+    server_config.reset();
+
+    EXPECT_EQ(0, display.use_count());
+    EXPECT_EQ(0, compositor.use_count());
+    EXPECT_EQ(0, connector.use_count());
+    EXPECT_EQ(0, input_manager.use_count());
+}
+
+TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clients)
+{
+    Flag surface_created1{"surface_created1_7e9c69fc.tmp"};
+    Flag surface_created2{"surface_created2_7e9c69fc.tmp"};
+    Flag surface_created3{"surface_created3_7e9c69fc.tmp"};
+    Flag server_done{"server_done_7e9c69fc.tmp"};
+    Flag resources_freed_success{"resources_free_success_7e9c69fc.tmp"};
+    Flag resources_freed_failure{"resources_free_failure_7e9c69fc.tmp"};
+
+    auto server_config = std::make_shared<FakeEventHubServerConfig>();
+    launch_server_process(*server_config);
+
+    struct ClientConfig : TestingClientConfiguration
+    {
+        ClientConfig(Flag& surface_created,
+                     Flag& server_done)
+            : surface_created(surface_created),
+              server_done(server_done)
+        {
+        }
+
+        void exec()
+        {
+            MirConnection* connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+
+            ASSERT_TRUE(connection != NULL);
+
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
+            };
+
+            mir_connection_create_surface_sync(connection, &request_params);
+
+            surface_created.set();
+            server_done.wait();
+
+            mir_connection_release(connection);
+        }
+
+        Flag& surface_created;
+        Flag& server_done;
+    };
+
+    ClientConfig client_config1{surface_created1, server_done};
+    ClientConfig client_config2{surface_created2, server_done};
+    ClientConfig client_config3{surface_created3, server_done};
+
+    launch_client_process(client_config1);
+    launch_client_process(client_config2);
+    launch_client_process(client_config3);
+
+    run_in_test_process([&]
+    {
+        /* Wait until the clients have created a surface */
+        surface_created1.wait();
+        surface_created2.wait();
+        surface_created3.wait();
+
+        /* Shut down the server */
+        shutdown_server_process();
+
+        /* Wait until we have checked the resources in the server process */
+        while (!resources_freed_failure.is_set() && !resources_freed_success.is_set())
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+        /* Fail if the resources have not been freed */
+        if (resources_freed_failure.is_set())
+            ADD_FAILURE();
+
+        /* Notify the clients that we are done (we only need to set the flag once) */
+        server_done.set();
+
+        wait_for_shutdown_client_processes();
+    });
+
+    /*
+     * Check that all resources are freed after destroying the server config.
+     * Note that these checks are run multiple times: in the server process,
+     * in each of the client processes and in the test process. We only care about
+     * the results in the server process (in the other cases the checks will
+     * succeed anyway, since we are not using the config object).
+     */
+    std::weak_ptr<mir::graphics::Display> display = server_config->the_display();
+    std::weak_ptr<mir::compositor::Compositor> compositor = server_config->the_compositor();
+    std::weak_ptr<mir::frontend::Connector> connector = server_config->the_connector();
+    std::weak_ptr<mir::input::InputManager> input_manager = server_config->the_input_manager();
+
+    server_config.reset();
+
+    EXPECT_EQ(0, display.use_count());
+    EXPECT_EQ(0, compositor.use_count());
+    EXPECT_EQ(0, connector.use_count());
+    EXPECT_EQ(0, input_manager.use_count());
+
+    if (display.use_count() != 0 ||
+        compositor.use_count() != 0 ||
+        connector.use_count() != 0 ||
+        input_manager.use_count() != 0)
+    {
+        resources_freed_failure.set();
+    }
+    else
+    {
+        resources_freed_success.set();
+    }
+}
+
+TEST(ServerShutdownWithThreadException,
+     server_releases_resources_on_abnormal_input_thread_termination)
+{
+    auto server_config = std::make_shared<FakeEventHubServerConfig>();
+    auto fake_event_hub = server_config->the_fake_event_hub();
+
+    std::thread server{
+        [&]
+        {
+            EXPECT_THROW(
+                mir::run_mir(*server_config, [](mir::DisplayServer&){}),
+                std::runtime_error);
+        }};
+
+    fake_event_hub->throw_exception_in_next_get_events();
     server.join();
 
     std::weak_ptr<mir::graphics::Display> display = server_config->the_display();
