@@ -77,6 +77,7 @@ mf::SessionMediator::SessionMediator(
     client_pid_(0),
     shell(shell),
     graphics_platform(graphics_platform),
+    ipc_operations(graphics_platform->make_ipc_operations()),
     surface_pixel_formats(surface_pixel_formats),
     display_changer(display_changer),
     report(report),
@@ -118,7 +119,7 @@ void mf::SessionMediator::connect(
     }
     connection_context.handle_client_connect(session);
 
-    auto ipc_package = graphics_platform->get_ipc_package();
+    auto ipc_package = ipc_operations->connection_ipc_package();
     auto platform = response->mutable_platform();
 
     for (auto& data : ipc_package->ipc_data)
@@ -144,8 +145,17 @@ void mf::SessionMediator::advance_buffer(
     Surface& surface,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
-    surface.swap_buffers( 
-        surface_tracker.last_buffer(surf_id),
+    auto client_buffer = surface_tracker.last_buffer(surf_id);
+    if (client_buffer)
+    {
+        //TODO: once we are doing an exchange_buffer, we should use the request buffer
+        static mir::protobuf::Buffer dummy_raw_msg;
+        mfd::ProtobufBufferPacker dummy_msg{&dummy_raw_msg, resource_cache};
+        ipc_operations->unpack_buffer(dummy_msg, *client_buffer);
+    }
+
+    surface.swap_buffers(
+        client_buffer, 
         [this, surf_id, complete](mg::Buffer* new_buffer)
         {
             if (surface_tracker.track_buffer(surf_id, new_buffer))
@@ -154,7 +164,6 @@ void mf::SessionMediator::advance_buffer(
                 complete(new_buffer, mg::BufferIpcMsgType::full_msg);
         });
 }
-
 
 void mf::SessionMediator::create_surface(
     google::protobuf::RpcController* /*controller*/,
@@ -559,6 +568,7 @@ void mf::SessionMediator::drm_auth_magic(
     }
 
     auto const magic = static_cast<unsigned int>(request->magic());
+    //FIXME: don't dynamic cast like this drm_auth_magic should be a part of PlatformIpcOperations 
     auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(graphics_platform);
     if (!authenticator)
         BOOST_THROW_EXCEPTION(std::logic_error("drm_auth_magic request not supported by the active platform"));
@@ -642,5 +652,5 @@ void mf::SessionMediator::pack_protobuf_buffer(
     protobuf_buffer.set_buffer_id(graphics_buffer->id().as_value());
 
     mfd::ProtobufBufferPacker packer{&protobuf_buffer, resource_cache};
-    graphics_platform->fill_buffer_package(&packer, graphics_buffer, buffer_msg_type);
+    ipc_operations->pack_buffer(packer, *graphics_buffer, buffer_msg_type);
 }

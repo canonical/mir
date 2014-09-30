@@ -158,7 +158,7 @@ MIRPLATFORM_3 {
     mir::graphics::NativePlatform::create_buffer_allocator*;
     mir::graphics::NativePlatform::create_internal_client*;
     mir::graphics::NativePlatform::fill_buffer_package*;
-    mir::graphics::NativePlatform::get_ipc_package*;
+    mir::graphics::NativePlatform::connection_ipc_package*;
     mir::graphics::NativePlatform::initialize*;
     mir::graphics::NativePlatform::?NativePlatform*;
     mir::graphics::NativePlatform::NativePlatform*;
@@ -180,7 +180,7 @@ MIRPLATFORM_3 {
     mir::graphics::Platform::create_display*;
     mir::graphics::Platform::create_internal_client*;
     mir::graphics::Platform::fill_buffer_package*;
-    mir::graphics::Platform::get_ipc_package*;
+    mir::graphics::Platform::connection_ipc_package*;
     mir::graphics::Platform::operator*;
     mir::graphics::Platform::Platform*;
     mir::graphics::red_channel_depth*;

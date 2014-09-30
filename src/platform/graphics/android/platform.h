@@ -48,11 +48,13 @@ public:
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLProgramFactory> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/);
-    std::shared_ptr<PlatformIPCPackage> get_ipc_package();
+    std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
+
+    std::shared_ptr<PlatformIPCPackage> connection_ipc_package();
     std::shared_ptr<InternalClient> create_internal_client();
     std::shared_ptr<graphics::BufferWriter> make_buffer_writer() override;
     void fill_buffer_package(
-        BufferIPCPacker* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const;
+        BufferIpcMessage* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const;
     EGLNativeDisplayType egl_native_display() const;
 
 private:
@@ -60,11 +62,12 @@ private:
 
     void initialize(std::shared_ptr<NestedContext> const& nested_context) override;
 
-    virtual std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator(
-        const std::shared_ptr<BufferInitializer>& buffer_initializer);
+    std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator(
+        std::shared_ptr<BufferInitializer> const& buffer_initializer);
 
     std::shared_ptr<DisplayBuilder> const display_builder;
     std::shared_ptr<DisplayReport> const display_report;
+    std::shared_ptr<PlatformIpcOperations> const ipc_operations;
     DeviceQuirks quirks{PropertiesOps{}};
 };
 

@@ -26,11 +26,12 @@
 #include "output_builder.h"
 #include "buffer_writer.h"
 #include "hwc_loggers.h"
+#include "ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/buffer_id.h"
-#include "mir/graphics/buffer_ipc_packer.h"
 #include "mir/graphics/display_report.h"
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
@@ -84,7 +85,8 @@ mga::Platform::Platform(
     std::shared_ptr<mga::DisplayBuilder> const& display_builder,
     std::shared_ptr<mg::DisplayReport> const& display_report)
     : display_builder(display_builder),
-      display_report(display_report)
+      display_report(display_report),
+      ipc_operations(std::make_shared<mga::IpcOperations>())
 {
 }
 
@@ -113,6 +115,11 @@ std::shared_ptr<mga::GraphicBufferAllocator> mga::Platform::create_mga_buffer_al
     return std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
 }
 
+std::shared_ptr<mg::PlatformIPCPackage> mga::Platform::connection_ipc_package()
+{
+    return std::make_shared<mg::PlatformIPCPackage>();
+}
+
 std::shared_ptr<mg::Display> mga::Platform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
@@ -122,36 +129,15 @@ std::shared_ptr<mg::Display> mga::Platform::create_display(
         display_builder, gl_program_factory, gl_config, display_report);
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mga::Platform::get_ipc_package()
+std::shared_ptr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operations() const
 {
-    return std::make_shared<mg::PlatformIPCPackage>();
+    return ipc_operations;
 }
 
 void mga::Platform::fill_buffer_package(
-    BufferIPCPacker* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const
+    BufferIpcMessage* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const
 {
-    auto native_buffer = buffer->native_buffer_handle();
-
-    /* TODO: instead of waiting, pack the fence fd in the message to the client */ 
-    native_buffer->ensure_available_for(mga::BufferAccess::write);
-    if (msg_type == mg::BufferIpcMsgType::full_msg)
-    {
-        auto buffer_handle = native_buffer->handle();
-
-        int offset = 0;
-
-        for(auto i=0; i<buffer_handle->numFds; i++)
-        {
-            packer->pack_fd(mir::Fd(IntOwnedFd{buffer_handle->data[offset++]}));
-        }
-        for(auto i=0; i<buffer_handle->numInts; i++)
-        {
-            packer->pack_data(buffer_handle->data[offset++]);
-        }
-
-        packer->pack_stride(buffer->stride());
-        packer->pack_size(buffer->size());
-    }
+    ipc_operations->pack_buffer(*packer, *buffer, msg_type);
 }
 
 EGLNativeDisplayType mga::Platform::egl_native_display() const

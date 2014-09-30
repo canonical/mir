@@ -142,10 +142,18 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
     }
 
     auto reduced_timeout = timeout;
-    if (input_consumer->hasDeferredEvent() || input_consumer->hasPendingBatch())
+    if (input_consumer->hasDeferredEvent())
     {
         // consume() didn't finish last time. Retry it immediately.
         reduced_timeout = std::chrono::milliseconds::zero();
+    }
+    else if (input_consumer->hasPendingBatch())
+    {
+        // When in constant motion we will usually "hasPendingBatch".
+        // But the batch won't get flushed until the next frame interval,
+        // so be sure to use a non-zero sleep time to avoid spinning the CPU
+        // for the whole interval...
+        reduced_timeout = std::chrono::milliseconds(1);
     }
 
     auto result = looper->pollOnce(reduced_timeout.count());

@@ -16,10 +16,10 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_
-#define MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_IPC_MESSAGE_H_
+#define MIR_TEST_DOUBLES_MOCK_BUFFER_IPC_MESSAGE_H_
 
-#include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/buffer_ipc_message.h"
 
 #include <gmock/gmock.h>
 
@@ -30,9 +30,9 @@ namespace test
 namespace doubles
 {
 
-struct MockPacker : public graphics::BufferIPCPacker
+struct MockBufferIpcMessage : public graphics::BufferIpcMessage
 {
-    ~MockPacker() noexcept {}
+    ~MockBufferIpcMessage() noexcept {}
     MOCK_METHOD1(pack_fd, void(Fd const&));
     MOCK_METHOD1(pack_data, void(int));
     MOCK_METHOD1(pack_stride, void(geometry::Stride));
@@ -44,4 +44,4 @@ struct MockPacker : public graphics::BufferIPCPacker
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_MOCK_BUFFER_PACKER_H_ */
+#endif /* MIR_TEST_DOUBLES_MOCK_BUFFER_IPC_MESSAGE_H_ */
