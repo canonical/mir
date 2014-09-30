@@ -12,6 +12,7 @@ set(
   test_surface_stack_with_compositor.cpp
   test_client_surface_swap_buffers.cpp
   test_surfaceloop.cpp
+  test_stale_frames.cpp
   test_error_reporting.cpp
   test_exchange_buffer.cpp
   test_display_info.cpp

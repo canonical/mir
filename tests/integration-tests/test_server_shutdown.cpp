@@ -18,20 +18,47 @@
 
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
+#include "mir/compositor/renderer.h"
+#include "mir/compositor/renderer_factory.h"
+#include "mir_test_doubles/stub_renderer.h"
 #include "mir/run_mir.h"
+
+#include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 
 #include <gtest/gtest.h>
 
+#include <cstdio>
+#include <fcntl.h>
 #include <thread>
 
+namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
 namespace
 {
+char const* const mir_test_socket = mtf::test_socket_file().c_str();
+
+class StubRendererFactory : public mc::RendererFactory
+{
+public:
+    std::unique_ptr<mc::Renderer> create_renderer_for(geom::Rectangle const&, mc::DestinationAlpha)
+    {
+        return std::unique_ptr<mc::Renderer>(new mtd::StubRenderer());
+    }
+};
+
+void null_surface_callback(MirSurface*, void*)
+{
+}
+
+void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
+{
+}
 
 class ExceptionThrowingDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
@@ -51,6 +78,128 @@ public:
             new ExceptionThrowingDisplayBufferCompositor{});
     }
 };
+
+class Flag
+{
+public:
+    explicit Flag(std::string const& flag_file)
+        : flag_file{flag_file}
+    {
+        std::remove(flag_file.c_str());
+    }
+
+    void set()
+    {
+        close(open(flag_file.c_str(), O_CREAT, S_IWUSR | S_IRUSR));
+    }
+
+    bool is_set()
+    {
+        int fd = -1;
+        if ((fd = open(flag_file.c_str(), O_RDONLY, S_IWUSR | S_IRUSR)) != -1)
+        {
+            close(fd);
+            return true;
+        }
+        return false;
+    }
+
+    void wait()
+    {
+        while (!is_set())
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+private:
+    std::string const flag_file;
+};
+}
+
+using ServerShutdown = BespokeDisplayServerTestFixture;
+
+TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
+{
+    Flag next_buffer_done1{"next_buffer_done1_c5d49978.tmp"};
+    Flag next_buffer_done2{"next_buffer_done2_c5d49978.tmp"};
+    Flag next_buffer_done3{"next_buffer_done3_c5d49978.tmp"};
+    Flag server_done{"server_done_c5d49978.tmp"};
+
+    struct ServerConfig : TestingServerConfiguration
+    {
+        std::shared_ptr<mc::RendererFactory> the_renderer_factory() override
+        {
+            return renderer_factory([] { return std::make_shared<StubRendererFactory>(); });
+        }
+    } server_config;
+
+    launch_server_process(server_config);
+
+    struct ClientConfig : TestingClientConfiguration
+    {
+        ClientConfig(Flag& next_buffer_done,
+                     Flag& server_done)
+            : next_buffer_done(next_buffer_done),
+              server_done(server_done)
+        {
+        }
+
+        void exec()
+        {
+            MirConnection* connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+
+            ASSERT_TRUE(connection != NULL);
+
+            /* Default lifecycle handler terminates the process on disconnect, so override it */
+            mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
+
+            MirSurfaceParameters const request_params =
+            {
+                __PRETTY_FUNCTION__,
+                640, 480,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
+            };
+
+            MirSurface* surf = mir_connection_create_surface_sync(connection, &request_params);
+
+            /* Ask for the first buffer (should succeed) */
+            mir_surface_swap_buffers_sync(surf);
+            /* Ask for the first second buffer (should block) */
+            mir_surface_swap_buffers(surf, null_surface_callback, nullptr);
+
+            next_buffer_done.set();
+            server_done.wait();
+
+            mir_connection_release(connection);
+        }
+
+
+        Flag& next_buffer_done;
+        Flag& server_done;
+    };
+
+    ClientConfig client_config1{next_buffer_done1, server_done};
+    ClientConfig client_config2{next_buffer_done2, server_done};
+    ClientConfig client_config3{next_buffer_done3, server_done};
+
+    launch_client_process(client_config1);
+    launch_client_process(client_config2);
+    launch_client_process(client_config3);
+
+    run_in_test_process([&]
+    {
+        /* Wait until the clients are blocked on getting the second buffer */
+        next_buffer_done1.wait();
+        next_buffer_done2.wait();
+        next_buffer_done3.wait();
+
+        /* Shutting down the server should not block */
+        shutdown_server_process();
+
+        /* Notify the clients that we are done (we only need to set the flag once) */
+        server_done.set();
+    });
 }
 
 TEST(ServerShutdownWithThreadException,
