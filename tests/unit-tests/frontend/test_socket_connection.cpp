@@ -49,7 +49,7 @@ mir::Fd temp_fd()
 struct StubReceiver : mfd::MessageReceiver
 {
     StubReceiver() :
-        async_buffer{nullptr, 0}
+        async_buffer{nullptr, 0},
         some_fds{temp_fd(), temp_fd(), temp_fd()}
     {
     }
@@ -75,10 +75,11 @@ struct StubReceiver : mfd::MessageReceiver
         return boost::system::error_code();
     }
 
-    void receive_fds(std::vector<mir::Fd>& fds);
-    {
+    void receive_fds(std::vector<mir::Fd>& fds) override
+    {   
+        int i = 0;
         for(auto fd : fds)
-            fd = some_fds[some_fds % some_fds.size()];
+            fd = some_fds[i++ % some_fds.size()];
     }
 
     size_t available_bytes() override
@@ -115,7 +116,7 @@ struct StubReceiver : mfd::MessageReceiver
 
 struct MockProcessor : public mfd::MessageProcessor
 {
-    MOCK_METHOD1(dispatch, bool(mfd::Invocation const& invocation, std::vector<mir::Fd> const&));
+    MOCK_METHOD2(dispatch, bool(mfd::Invocation const& invocation, std::vector<mir::Fd> const&));
     MOCK_METHOD1(client_pid, void(int pid));
 };
 }
@@ -200,7 +201,7 @@ TEST_F(SocketConnection, notifies_client_pid_once_only)
 
 TEST_F(SocketConnection, receives_and_dispatches_fds)
 {
-    std::vector<mir::Fd> fds{some_fds[0], some_fds[1]};
+    std::vector<mir::Fd> fds{stub_receiver.some_fds[0], stub_receiver.some_fds[1]};
     EXPECT_CALL(mock_processor, dispatch(_, ContainerEq(fds)));
     fake_receiving_message();
 }

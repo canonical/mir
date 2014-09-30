@@ -107,7 +107,8 @@ try
         processor->client_pid(client_pid);
     }
 
-    if (processor->dispatch(invocation))
+    std::vector<mir::Fd> fds;
+    if (processor->dispatch(invocation, fds))
     {
         read_next_message();
     }
