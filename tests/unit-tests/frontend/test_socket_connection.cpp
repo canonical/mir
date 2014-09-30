@@ -76,9 +76,9 @@ struct StubReceiver : mfd::MessageReceiver
     }
 
     void receive_fds(std::vector<mir::Fd>& fds) override
-    {   
+    {
         int i = 0;
-        for(auto fd : fds)
+        for(auto& fd : fds)
             fd = some_fds[i++ % some_fds.size()];
     }
 
