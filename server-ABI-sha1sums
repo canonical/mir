@@ -43,7 +43,7 @@ af1ff0714be973ac76d56006a2e5991f68cd1dec  include/server/mir/display_server.h
 65db331f1c0e956eced5c9fc73a2b2122dbc8dc7  include/server/mir/frontend/connection_creator.h
 e6e92642301fc9bb85e1d38087a5dd84e5d30fd7  include/server/mir/frontend/connections.h
 bdb89184f400bb04625db5835d38576f99f52684  include/server/mir/frontend/fd_sets.h
-4f1303065e300d26acb148c3dd9f7183dc3c4443  include/server/mir/frontend/message_processor.h
+47b239813b9004416edcf9eeefb6a2260ddf80b0  include/server/mir/frontend/message_processor.h
 59d6703def2a0ff840e5eb75390a5af76fd93f58  include/server/mir/frontend/prompt_session.h
 cb1f73934d150f21e60d4d8de3f15918d993dd98  include/server/mir/frontend/protobuf_connection_creator.h
 7fc88a2e39f6b87ecbd89a264612138e8fcfb10a  include/server/mir/frontend/protobuf_message_sender.h
