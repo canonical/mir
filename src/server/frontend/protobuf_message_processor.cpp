@@ -129,10 +129,8 @@ void mfd::ProtobufMessageProcessor::client_pid(int pid)
 
 bool mfd::ProtobufMessageProcessor::dispatch(
     Invocation const& invocation,
-    std::vector<mir::Fd> const& side_channel_fds)
+    std::vector<mir::Fd> const&)
 {
-    (void) side_channel_fds;
-
     report->received_invocation(display_server.get(), invocation.id(), invocation.method_name());
 
     bool result = true;

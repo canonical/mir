@@ -129,9 +129,8 @@ bs::error_code mfd::SocketMessenger::receive_msg(
     return e;
 }
 
-void mfd::SocketMessenger::receive_fds(std::vector<Fd>& fds)
+void mfd::SocketMessenger::receive_fds(std::vector<Fd>&)
 {
-    (void) fds;
 }
 
 size_t mfd::SocketMessenger::available_bytes()
