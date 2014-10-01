@@ -26,7 +26,7 @@
 #include "mir/input/android/default_android_input_configuration.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/cursor_listener.h"
-#include "mir/input/input_targets.h"
+#include "mir/input/scene.h"
 #include "mir/input/input_region.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/geometry/rectangle.h"

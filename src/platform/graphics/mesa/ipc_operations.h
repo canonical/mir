@@ -16,36 +16,31 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
-#define MIR_GRAPHICS_BUFFER_IPC_PACKER_H_
+#ifndef MIR_GRAPHICS_MESA_IPC_OPERATIONS_H_
+#define MIR_GRAPHICS_MESA_IPC_OPERATIONS_H_
 
-#include "mir/geometry/dimensions.h"
-#include "mir/geometry/size.h"
-#include "mir/fd.h"
-
+#include "mir/graphics/platform_ipc_operations.h"
 namespace mir
 {
 namespace graphics
 {
-
-class BufferIPCPacker
+namespace mesa
+{
+namespace helpers
+{
+class DRMHelper;
+}
+class IpcOperations : public PlatformIpcOperations
 {
 public:
-    virtual ~BufferIPCPacker() = default;
-    virtual void pack_fd(Fd const&) = 0;
-    virtual void pack_data(int) = 0;
-    virtual void pack_stride(geometry::Stride) = 0;
-    virtual void pack_flags(unsigned int) = 0;
-    virtual void pack_size(geometry::Size const& size) = 0;
-
-protected:
-    BufferIPCPacker() {}
-    BufferIPCPacker(BufferIPCPacker const&) = delete;
-    BufferIPCPacker& operator=(BufferIPCPacker const&) = delete;
-
+    IpcOperations(std::shared_ptr<helpers::DRMHelper> const&);
+    void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const override;
+    void unpack_buffer(BufferIpcMessage& message, Buffer const& buffer) const override;
+    std::shared_ptr<PlatformIPCPackage> connection_ipc_package() override;
+private:
+    std::shared_ptr<helpers::DRMHelper> const drm;
 };
-
 }
 }
-
-#endif /* MIR_GRAPHICS_BUFFER_IPC_PACKER_H_ */
+}
+#endif /* MIR_GRAPHICS_MESA_IPC_OPERATIONS_H_ */

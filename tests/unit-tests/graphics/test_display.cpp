@@ -33,7 +33,6 @@
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_framework/udev_environment.h"
 #else
-#include "src/platform/graphics/android/android_platform.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_display_device.h"
 #endif

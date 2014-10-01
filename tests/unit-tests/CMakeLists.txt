@@ -1,10 +1,16 @@
 include(CMakeDependentOption)
 
-add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
+add_definitions(
+  -DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/"
+  -DMIR_CLIENT_DRIVER_BINARY="${MIR_CLIENT_DRIVER_BINARY}"
+)
 
 include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${UMOCKDEV_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
 # TODO: Aim to remove
 include_directories(${MIR_XCURSOR_INCLUDE_DIRECTORIES})
+
+# Umockdev uses glib, which uses the deprecated "register" allocation specifier
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
 set(
   UNIT_TEST_SOURCES
@@ -49,6 +55,8 @@ add_executable(mir_unit_tests
   ${MIR_COMMON_OBJECTS}
 )
 
+mir_precompiled_header(mir_unit_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
+
 add_dependencies(mir_unit_tests GMock)
 
 uses_android_input(mir_unit_tests)
@@ -89,9 +97,6 @@ target_link_libraries(mir_unit_tests
   ${ANDROID_PROPERTIES_LDFLAGS}
 )
 endif()
-
-# Umockdev uses glib, which uses the deprecated "register" allocation specifier
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
 CMAKE_DEPENDENT_OPTION(
   MIR_RUN_UNIT_TESTS

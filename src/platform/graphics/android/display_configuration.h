@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_CONFIGURATION_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_CONFIGURATION_H_
+#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_CONFIGURATION_H_
+#define MIR_GRAPHICS_ANDROID_DISPLAY_CONFIGURATION_H_
 
 #include "mir/graphics/display_configuration.h"
 
@@ -26,14 +26,14 @@ namespace graphics
 namespace android
 {
 
-class AndroidDisplayConfiguration : public graphics::DisplayConfiguration
+class DisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-    AndroidDisplayConfiguration(DisplayConfigurationOutput&& output);
-    AndroidDisplayConfiguration(AndroidDisplayConfiguration const& other);
-    AndroidDisplayConfiguration& operator=(AndroidDisplayConfiguration const& other);
+    DisplayConfiguration(DisplayConfigurationOutput&& output);
+    DisplayConfiguration(DisplayConfiguration const& other);
+    DisplayConfiguration& operator=(DisplayConfiguration const& other);
 
-    virtual ~AndroidDisplayConfiguration() = default;
+    virtual ~DisplayConfiguration() = default;
 
     void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const override;
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
@@ -48,4 +48,4 @@ private:
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_DISPLAY_CONFIGURATION_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_CONFIGURATION_H_ */

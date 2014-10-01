@@ -7,6 +7,7 @@ set(
   test_surface_stack_with_compositor.cpp
   test_surfaceloop.cpp
   test_error_reporting.cpp
+  test_exchange_buffer.cpp
   test_display_info.cpp
   test_display_server_main_loop_events.cpp
   test_surface_first_frame_sync.cpp
@@ -49,6 +50,8 @@ add_executable(
   ${MIR_PLATFORM_OBJECTS}
   ${MIR_COMMON_OBJECTS}
 )
+
+mir_precompiled_header(mir_integration_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
 
 add_dependencies(mir_integration_tests GMock)
 

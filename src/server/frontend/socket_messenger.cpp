@@ -20,6 +20,7 @@
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/variable_length_array.h"
+#include "mir/fd_socket_transmission.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -34,8 +35,17 @@ namespace bs = boost::system;
 namespace ba = boost::asio;
 
 mfd::SocketMessenger::SocketMessenger(std::shared_ptr<ba::local::stream_protocol::socket> const& socket)
-    : socket(socket)
+    : socket(socket),
+      socket_fd{IntOwnedFd{socket->native_handle()}}
 {
+    // Make the socket non-blocking to avoid hanging the server when a client
+    // is unresponsive. Also increase the send buffer size to 64KiB to allow
+    // more leeway for transient client freezes.
+    // See https://bugs.launchpad.net/mir/+bug/1350207
+    // TODO: Rework the messenger to support asynchronous sends
+    socket->non_blocking(true);
+    boost::asio::socket_base::send_buffer_size option(64*1024);
+    socket->set_option(option);
 }
 
 mf::SessionCredentials mfd::SocketMessenger::creator_creds() const
@@ -43,7 +53,7 @@ mf::SessionCredentials mfd::SocketMessenger::creator_creds() const
     struct ucred cr;
     socklen_t cl = sizeof(cr);
 
-    auto status = getsockopt(socket->native_handle(), SOL_SOCKET, SO_PEERCRED, &cr, &cl);
+    auto status = getsockopt(socket_fd, SOL_SOCKET, SO_PEERCRED, &cr, &cl);
 
     if (status)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
@@ -85,47 +95,7 @@ void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& f
 
 void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, std::vector<mir::Fd> const& fds)
 {
-    if (fds.size() > 0)
-    {
-        // We send dummy data
-        struct iovec iov;
-        char dummy_iov_data = 'M';
-        iov.iov_base = &dummy_iov_data;
-        iov.iov_len = 1;
-
-        // Allocate space for control message
-        static auto const builtin_n_fds = 5;
-        static auto const builtin_cmsg_space = CMSG_SPACE(builtin_n_fds * sizeof(int));
-        auto const fds_bytes = fds.size() * sizeof(int);
-        mir::VariableLengthArray<builtin_cmsg_space> control{CMSG_SPACE(fds_bytes)};
-        // Silence valgrind uninitialized memory complaint
-        memset(control.data(), 0, control.size());
-
-        // Message to send
-        struct msghdr header;
-        header.msg_name = NULL;
-        header.msg_namelen = 0;
-        header.msg_iov = &iov;
-        header.msg_iovlen = 1;
-        header.msg_controllen = control.size();
-        header.msg_control = control.data();
-        header.msg_flags = 0;
-
-        // Control message contains file descriptors
-        struct cmsghdr *message = CMSG_FIRSTHDR(&header);
-        message->cmsg_len = CMSG_LEN(fds_bytes);
-        message->cmsg_level = SOL_SOCKET;
-        message->cmsg_type = SCM_RIGHTS;
-
-        int* const data = reinterpret_cast<int*>(CMSG_DATA(message));
-        int i = 0;
-        for (auto& fd : fds)
-            data[i++] = fd;
-
-        auto const sent = sendmsg(socket->native_handle(), &header, 0);
-        if (sent < 0)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send fds: " + std::string(strerror(errno))));
-    }
+    mir::send_fds(socket_fd, fds);
 }
 
 void mfd::SocketMessenger::async_receive_msg(
@@ -143,11 +113,19 @@ bs::error_code mfd::SocketMessenger::receive_msg(
     ba::mutable_buffers_1 const& buffer)
 {
     bs::error_code e;
-    boost::asio::read(
-         *socket,
-         buffer,
-         boost::asio::transfer_exactly(ba::buffer_size(buffer)),
-         e);
+    size_t nread = 0;
+
+    while (nread < ba::buffer_size(buffer))
+    {
+        nread += boost::asio::read(
+             *socket,
+             ba::mutable_buffers_1{buffer + nread},
+             e);
+
+        if (e && e != ba::error::would_block)
+            break;
+    }
+
     return e;
 }
 
@@ -182,7 +160,7 @@ void mfd::SocketMessenger::update_session_creds()
     msgh.msg_control = control_un.control;
     msgh.msg_controllen = sizeof(control_un.control);
 
-    if (recvmsg(socket->native_handle(), &msgh, MSG_PEEK) != -1)
+    if (recvmsg(socket_fd, &msgh, MSG_PEEK) != -1)
     {
         auto const ucredp = reinterpret_cast<ucred*>(CMSG_DATA(CMSG_FIRSTHDR(&msgh)));
         session_creds = {ucredp->pid, ucredp->uid, ucredp->gid};

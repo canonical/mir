@@ -21,6 +21,7 @@
 #define STREAM_SOCKET_TRANSPORT_H_
 
 #include "stream_transport.h"
+#include "mir/fd.h"
 
 #include <thread>
 #include <mutex>
@@ -35,24 +36,24 @@ namespace rpc
 class StreamSocketTransport : public StreamTransport
 {
 public:
-    StreamSocketTransport(int fd);
+    StreamSocketTransport(Fd const& fd);
     StreamSocketTransport(std::string const& socket_path);
     ~StreamSocketTransport() override;
 
     void register_observer(std::shared_ptr<Observer> const& observer) override;
     void receive_data(void* buffer, size_t bytes_requested) override;
-    void receive_data(void* buffer, size_t bytes_requested, std::vector<int>& fds) override;
+    void receive_data(void* buffer, size_t bytes_requested, std::vector<Fd>& fds) override;
     void send_data(const std::vector<uint8_t> &buffer) override;
 
 private:
     void init();
-    int open_socket(std::string const& path);
+    Fd open_socket(std::string const& path);
     void notify_data_available();
     void notify_disconnected();
 
     std::thread io_service_thread;
-    int const socket_fd;
-    int shutdown_fd;
+    Fd const socket_fd;
+    Fd shutdown_fd;
 
     std::mutex observer_mutex;
     std::vector<std::shared_ptr<Observer>> observers;

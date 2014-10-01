@@ -55,7 +55,7 @@ public:
         return {};
     }
 
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package() override
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
         return {};
     }
@@ -64,9 +64,14 @@ public:
     {
         return {};
     }
+    
+    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
+    {
+        return {};
+    }
 
     void fill_buffer_package(
-        mg::BufferIPCPacker*, mg::Buffer const*, mg::BufferIpcMsgType) const override {}
+        mg::BufferIpcMessage*, mg::Buffer const*, mg::BufferIpcMsgType) const override {}
 };
 
 TEST(NestedGraphicsPlatform, egl_native_display_is_host_connection_native_display)

@@ -5,7 +5,7 @@ set -e
 DEB_HOST_ARCH=$1
 DEB_HOST_MULTIARCH=$2
 
-mir_platform_types="platformgraphics clientplatform"
+mir_platform_types="${PLATFORM_DRIVER} ${CLIENT_DRIVER}"
 case $DEB_HOST_ARCH in
     arm64)
         mir_platforms="mesa"
