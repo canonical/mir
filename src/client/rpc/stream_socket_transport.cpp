@@ -130,19 +130,14 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_reques
 }
 
 void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested, std::vector<mir::Fd>& fds)
+try
 {
-    try
-    {
-        mir::receive_data(socket_fd, buffer, bytes_requested, fds);
-    } catch (socket_disconnected_error &e)
-    {
-        notify_disconnected();
-        throw e;
-    }
-    catch (...)
-    {
-        throw;
-    }
+    mir::receive_data(socket_fd, buffer, bytes_requested, fds);
+}
+catch (socket_disconnected_error &e)
+{
+    notify_disconnected();
+    throw e;
 }
 
 void mclr::StreamSocketTransport::send_data(const std::vector<uint8_t>& buffer)
