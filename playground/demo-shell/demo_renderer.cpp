@@ -174,10 +174,7 @@ DemoRenderer::~DemoRenderer()
 void DemoRenderer::begin(std::unordered_set<graphics::Renderable::ID> decoration_skip_list_) const
 {
     bool const opaque = destination_alpha() == compositor::DestinationAlpha::opaque;
-    if (opaque)
-        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-    else
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
