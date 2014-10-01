@@ -1,3 +1,91 @@
+mir (0.8.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.8.0 (https://launchpad.net/mir/+milestone/0.8.0)
+    - Enhancements:
+      . Less sensitivity to ABI breaks - many headers unused by external
+        projects are now hidden and not installed by -dev packaes. If you
+        require any headers that are missing, just ask.
+      . Touchspots: --enable-touchspots to servers; visually shows touch
+        locations (warning: This affects performance LP: #1373692).
+      . Client performance reporting: Any Mir client can now get accurate
+        performance information (frame rate, render time, buffer lag etc)
+        logged to stdout. Just set env MIR_CLIENT_PERF_REPORT=log
+      . Further improved touch responsiveness, with less lag and smoother
+        scrolling (so long as you don't enable touchspots).
+      . Slightly faster builds using precompiled headers.
+      . Turn hardware overlays on by default. When in use, this halves the
+        CPU usage of a Mir server. Already enabled in unity-system-compositor.
+      . More scripting to detect ABI breaks.
+      . Improved src/ tree consistency (renamed "src/shared" to "src/common").
+      . Improved fatal signal design: Changed from SIGTERM to SIGHUP delivered
+        to clients on unexpected server disconnection.
+      . Improved library/package design to allow concurrent installations
+        of different Mir versions without conflicts.
+    - ABI summary: Servers need rebuilding, but clients do not;
+      . Mirclient ABI unchanged at 8
+      . Mircommon ABI bumped to 2
+      . Mirplatform ABI bumped to 3
+      . Mirserver ABI bumped to 26
+    - API changes between Mir 0.7 and 0.8:
+      . Lots of headers removed from the public SDK! We have only hidden
+        headers not known to be used by any known projects. Please let us
+        know if anything is missing - https://bugs.launchpad.net/mir/+filebug
+      . graphics::Platform - interface changed significantly.
+      . Lots of server API changes to support touchspots.
+      . File descriptors now passed as type Fd instead of int32_t.
+    - Bug fixes:
+      . [regression] Mir deb packages with versioned names cannot be installed
+        simultaneously any more (LP: #1293944)
+      . A frozen client can hang the whole server (LP: #1350207)
+      . QtMir FTBFS: fatal error: mir/input/input_channel.h: No such file or
+        directory (LP: #1365934)
+      . [regression] platform-api fails to build against Mir 0.8 (LP: #1368354)
+      . Mir FTBFS with gcc 4.9.1-14 (utopic update):
+        auto_unblock_thread.h:44:46: error: no matching function for call to
+        ‘std::thread::thread(<brace-enclosed initializer list>)’ (LP: #1369389)
+      . [regression] Compositing is jerky and stutters during touch events
+        (LP: #1372850)
+      . unit test fails: AndroidInputReceiverSetup.slow_raw_input_doesnt_cause_
+        frameskipping (LP: #1373826)
+      . intermittent hang in TestClientInput (LP: #1338612)
+      . TestClientInput.scene_obscure_motion_events_by_stacking fails
+        intermittently (LP: #1361757)
+      . [regression] First frame is composited as black (even though the client
+        has provided a non-black frame) (LP: #1362444)
+      . Some mali drivers crash after repeatedly creating/destroying the mir
+        compositor threads (LP: #1362841)
+      . [android] SIGTERM to server with connected client causes crash
+        (LP: #1364637)
+      . [regression] acceptance tests fails in
+        ServerDisconnect.causes_client_to_terminate_by_default (LP: #1364772)
+      . [regression] symbol lookup error:
+        /usr/lib/arm-linux-gnueabihf/libmirserver.so.24: undefined symbol:
+        _ZTIN7android7RefBaseE (libmirserver 0.6.1 doesn't work with
+        libmircommon 0.7.0) (LP: #1364890)
+      . [regression] Mir FTBFS with g++-4.8 [error: ISO C++ forbids casting
+        between pointer-to-function and pointer-to-object] (LP: #1366134)
+      . Intermittent CI failure in DemoPrivateProtobuf.client_calls_server
+        (LP: #1367353)
+      . Overly strict libmirplatform* dependencies are blocking CI
+        (LP: #1370866)
+      . [regression] mir demo servers segfault on shutdown (LP: #1371619)
+      . Nested server crashes with SIGSEGV on shutdown in eglDestroyContext()
+        (LP: #1372276)
+      . [regression] Moving/resizing clients in a nested server is very
+        jerky/stuttery (LP: #1372300)
+      . [regression] Bypass/overlays are toggling constantly (LP: #1373689)
+      . [regression] Mir server uses too much CPU during touch scrolling
+        (LP: #1373809)
+      . Intermittent test failures in TestClientCursorAPI.* (LP: #1342567)
+      . clang emits lots of warnings about lttng headers (LP: #1348472)
+      . [enhancement] Draw input event location (LP: #1323522)
+      . demo shell: Keep colours consistent, regardless of the physical pixel
+        format of your framebuffer (LP: #1375660)
+      . tests: Fix SharedLibraryProber test runs on i386. (LP: #1375829)
+      . Touchspots rendered as squares on some devices (LP: #1373698)
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 30 Sep 2014 16:08:44 +0800
+
 mir (0.7.3+14.10.20140918.1-0ubuntu1) utopic; urgency=medium
 
   [ Andreas Pokorny ]

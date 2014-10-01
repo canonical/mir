@@ -54,7 +54,7 @@ class ClientBufferTracker;
 class Shell;
 class Session;
 class Surface;
-class ResourceCache;
+class MessageResourceCache;
 class SessionMediatorReport;
 class EventSink;
 class DisplayChanger;
@@ -73,7 +73,7 @@ public:
         std::vector<MirPixelFormat> const& surface_pixel_formats,
         std::shared_ptr<SessionMediatorReport> const& report,
         std::shared_ptr<EventSink> const& event_sink,
-        std::shared_ptr<ResourceCache> const& resource_cache,
+        std::shared_ptr<MessageResourceCache> const& resource_cache,
         std::shared_ptr<Screencast> const& screencast,
         ConnectionContext const& connection_context,
         std::shared_ptr<input::CursorImages> const& cursor_images);
@@ -189,7 +189,7 @@ private:
     std::shared_ptr<frontend::DisplayChanger> const display_changer;
     std::shared_ptr<SessionMediatorReport> const report;
     std::shared_ptr<EventSink> const event_sink;
-    std::shared_ptr<ResourceCache> const resource_cache;
+    std::shared_ptr<MessageResourceCache> const resource_cache;
     std::shared_ptr<Screencast> const screencast;
     ConnectionContext const connection_context;
     std::shared_ptr<input::CursorImages> const cursor_images;
