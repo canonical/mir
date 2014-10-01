@@ -103,7 +103,7 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_reques
         }
         if (result < 0)
         {
-            if (mir::socket_error_is_transient(errno))
+            if (socket_error_is_transient(errno))
             {
                 continue;
             }
