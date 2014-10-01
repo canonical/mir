@@ -68,10 +68,6 @@ public:
     {
         return stub_buffer;
     }
-    bool alpha_enabled() const
-    {
-        return false;
-    }
     geometry::Rectangle screen_position() const
     {
         return rect;
@@ -133,7 +129,7 @@ struct StubShapedRenderable : public StubRenderable
 
 struct StubTranslucentRenderable : public StubRenderable
 {
-    bool alpha_enabled() const override
+    bool shaped() const override
     {
         return true;
     }
@@ -141,10 +137,6 @@ struct StubTranslucentRenderable : public StubRenderable
 
 struct PlaneAlphaRenderable : public StubRenderable
 {
-    bool alpha_enabled() const override
-    {
-        return true;
-    }
     float alpha() const override
     {
         //approx 99% alpha 

@@ -115,11 +115,6 @@ public:
         return client->last_rendered();
     }
 
-    bool alpha_enabled() const override
-    {
-        return false;
-    }
-
     geom::Rectangle screen_position() const override
     {
         return position;

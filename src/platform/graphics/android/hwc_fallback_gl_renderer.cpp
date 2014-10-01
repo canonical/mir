@@ -111,7 +111,7 @@ void mga::HWCFallbackGLRenderer::render(
 
     for(auto const& renderable : renderlist)
     {
-        if (renderable->alpha_enabled())
+        if (renderable->shaped())  // TODO: support alpha() in future
             glEnable(GL_BLEND);
         else
             glDisable(GL_BLEND);
