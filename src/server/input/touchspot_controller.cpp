@@ -57,11 +57,6 @@ public:
         return buffer_;
     }
     
-    bool alpha_enabled() const override
-    {
-        return false;
-    }
-
     geom::Rectangle screen_position() const
     {
         return {position, buffer_->size()};

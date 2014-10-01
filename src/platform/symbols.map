@@ -185,7 +185,6 @@ MIRPLATFORM_3 {
     mir::graphics::Platform::Platform*;
     mir::graphics::red_channel_depth*;
     mir::graphics::Renderable::alpha*;
-    mir::graphics::Renderable::alpha_enabled*;
     mir::graphics::Renderable::buffer*;
     mir::graphics::Renderable::buffers_ready_for_compositor*;
     mir::graphics::Renderable::id*;
