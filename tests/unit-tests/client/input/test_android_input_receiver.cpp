@@ -300,30 +300,6 @@ TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
     EXPECT_THAT(average_lag_milliseconds, Le(1));
 }
 
-TEST_F(AndroidInputReceiverSetup, zero_timeout_is_less_than_1ms)
-{   // Regression test for LP: #1375211
-    nsecs_t t = 0;
-
-    mircva::InputReceiver receiver(
-        client_fd, std::make_shared<mircv::NullInputReceiverReport>(),
-        [&t](int) { return t; }
-        );
-    TestingInputProducer producer(server_fd);
-
-    producer.produce_a_motion_event(123, 456, t+1);
-    flush_channels();
-
-    MirEvent ev;
-    // next_event twice, because the batch only becomes pending on the 2nd...
-    ASSERT_FALSE(receiver.next_event(std::chrono::milliseconds::zero(), ev));
-    auto start = std::chrono::high_resolution_clock::now();
-    ASSERT_FALSE(receiver.next_event(std::chrono::milliseconds::zero(), ev));
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = end - start;
-
-    EXPECT_GT(std::chrono::milliseconds(1), duration);
-}
-
 TEST_F(AndroidInputReceiverSetup, input_comes_in_phase_with_rendering)
 {
     using namespace testing;
