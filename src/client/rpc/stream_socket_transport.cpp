@@ -179,6 +179,7 @@ void mclr::StreamSocketTransport::send_data(const std::vector<uint8_t>& buffer)
 void mclr::StreamSocketTransport::send_data(const std::vector<uint8_t> &buffer, std::vector<mir::Fd>& fds)
 {
     send_data(buffer);
+    //sleep(1);
     mir::send_fds(socket_fd, fds);
 }
 

@@ -170,12 +170,15 @@ void mclr::MirProtobufRpcChannel::CallMethod(
     pending_calls.save_completion_details(invocation, response, callback);
 
     // Only send message when details saved for handling response
-    if (parameters->GetTypeName() == "mir.protobuf.Buffer")
+    if (parameters->GetTypeName() == "mir.protobuf.BufferRequest")
     {
-        mir::protobuf::Buffer buffer;
-//        buffer.ParseFromArray(*parameters);
-        std::vector<mir::Fd> fd(buffer.fd().begin(), buffer.fd().end());
-        send_message(invocation, invocation, fd);
+        auto const* buffer = reinterpret_cast<mir::protobuf::BufferRequest const*>(parameters);
+        std::vector<mir::Fd> fds;
+        for(auto& fd : buffer->buffer().fd())
+            fds.emplace_back(mir::Fd{IntOwnedFd{fd}});
+            
+       // std::vector<mir::Fd> fd(buffer->buffer().fd().begin(), buffer->buffer().fd().end());
+        send_message(invocation, invocation, fds);
     }
     else
     {

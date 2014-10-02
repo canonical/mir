@@ -155,7 +155,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         }
         else if ("exchange_buffer" == invocation.method_name())
         {
+            printf("EXCHANGING.\n");
+            try{
             invoke(this, display_server.get(), &DisplayServer::exchange_buffer, invocation);
+            } catch(std::runtime_error& e){printf("EXCHANGE ERR %s\n", e.what());} catch(...){printf("other.\n");}
         }
         else if ("release_surface" == invocation.method_name())
         {

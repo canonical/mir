@@ -203,6 +203,7 @@ namespace
 
         void buffer_arrival()
         {
+            printf("BUFFER ARRIVE\n");
             std::unique_lock<decltype(mutex)> lk(mutex);
             arrived = true;
             cv.notify_all();
@@ -278,6 +279,7 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
     mir::Fd file(fileno(tmpfile()));
     write(file, test_string.c_str(), test_string.size());
 
+    printf("TEST FILE %i\n", (int)file);
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     MirSurfaceParameters const request_params =
     {
@@ -295,13 +297,15 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
         ::close(buffer_request.buffer().fd(i));
 
     buffer_request.mutable_buffer()->set_buffer_id(buffer_id_exchange_seq.begin()->as_value());
-    buffer_request.mutable_buffer()->set_fds_on_side_channel(1);
+    buffer_request.mutable_buffer()->add_fd(file);
     buffer_request.mutable_buffer()->add_fd(file);
 
     ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
+
+    printf("STILL ALIVE? %i\n", fcntl(file, F_GETFD));
 
     auto server_received_fd = stub_packer->last_unpacked_fd();
     char file_buffer[32];

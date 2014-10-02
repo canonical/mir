@@ -29,6 +29,7 @@
 #include "mir/frontend/session_authorizer.h"
 #include "mir/protobuf/google_protobuf_guard.h"
 
+#include <fcntl.h>
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
@@ -59,7 +60,9 @@ void mf::ProtobufConnectionCreator::create_connection_for(
     std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket,
     ConnectionContext const& connection_context)
 {
+    printf("ON_CREATE. %i\n", fcntl(socket->native_handle(), 3, 0) & O_NONBLOCK); 
     auto const messenger = std::make_shared<detail::SocketMessenger>(socket);
+    printf("BON_CREATE. %i\n", fcntl(socket->native_handle(), 3, 0) & O_NONBLOCK); 
     auto const creds = messenger->client_creds();
 
     if (session_authorizer->connection_is_allowed(creds))

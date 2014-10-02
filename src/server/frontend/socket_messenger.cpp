@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include <stdexcept>
+#include <fcntl.h>
 
 namespace mf = mir::frontend;
 namespace mfd = mf::detail;
@@ -51,13 +52,14 @@ mfd::SocketMessenger::SocketMessenger(std::shared_ptr<ba::local::stream_protocol
 mf::SessionCredentials mfd::SocketMessenger::creator_creds() const
 {
     struct ucred cr;
+#if 0
     socklen_t cl = sizeof(cr);
 
     auto status = getsockopt(socket_fd, SOL_SOCKET, SO_PEERCRED, &cr, &cl);
 
     if (status)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
-
+#endif
     return {cr.pid, cr.uid, cr.gid};
 }
 
@@ -102,6 +104,7 @@ void mfd::SocketMessenger::async_receive_msg(
     MirReadHandler const& handler,
     ba::mutable_buffers_1 const& buffer)
 {
+    printf("ASYNC READ.\n");
     boost::asio::async_read(
          *socket,
          buffer,
@@ -112,7 +115,16 @@ void mfd::SocketMessenger::async_receive_msg(
 bs::error_code mfd::SocketMessenger::receive_msg(
     ba::mutable_buffers_1 const& buffer)
 {
+    printf("SYNC READ.\n");
+    std::vector<Fd> fds(0);
+    try{
+        mir::receive_data(socket_fd,  ba::buffer_cast<void*>(buffer), ba::buffer_size(buffer), fds);
+    } catch (std::runtime_error& e) {
+        printf("READ ERRORRRRR %s\n", e.what());
+    }
+
     bs::error_code e;
+    #if 0
     size_t nread = 0;
 
     while (nread < ba::buffer_size(buffer))
@@ -125,14 +137,14 @@ bs::error_code mfd::SocketMessenger::receive_msg(
         if (e && e != ba::error::would_block)
             break;
     }
-
+#endif
     return e;
 }
 
 void mfd::SocketMessenger::receive_fds(std::vector<Fd>& fds)
 {
     static int buffer{0};
-    mir::receive_data(socket_fd, &buffer, sizeof(buffer), fds);
+    mir::receive_data(socket_fd, &buffer, 2, fds);
 }
 
 size_t mfd::SocketMessenger::available_bytes()
@@ -149,6 +161,7 @@ size_t mfd::SocketMessenger::available_bytes()
 
 void mfd::SocketMessenger::update_session_creds()
 {
+#if 0
     union {
         struct cmsghdr cmh;
         char   control[CMSG_SPACE(sizeof(ucred))];
@@ -171,4 +184,5 @@ void mfd::SocketMessenger::update_session_creds()
         auto const ucredp = reinterpret_cast<ucred*>(CMSG_DATA(CMSG_FIRSTHDR(&msgh)));
         session_creds = {ucredp->pid, ucredp->uid, ucredp->gid};
     }
+#endif
 }
