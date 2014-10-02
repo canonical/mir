@@ -135,10 +135,12 @@ void mir::receive_data(mir::Fd const& socket, void* buffer, size_t bytes_request
         header.msg_control = control.data();
         header.msg_flags = 0;
 
+#if 0
         auto fl = fcntl(socket, F_GETFL, 0);
         fl = fl & ~O_NONBLOCK;
         fcntl(socket, F_SETFL, fl);
         printf("WAIIIIT------------------------------>\n");
+#endif
         ssize_t result = recvmsg(socket, &header, MSG_NOSIGNAL | MSG_WAITALL);
         printf("done wAIIIIT------------------------------>\n");
         if (result == 0)

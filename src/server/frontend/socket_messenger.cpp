@@ -105,7 +105,6 @@ void mfd::SocketMessenger::async_receive_msg(
     MirReadHandler const& handler,
     ba::mutable_buffers_1 const& buffer)
 {
-    printf("ASYNC READ.\n");
     boost::asio::async_read(
          *socket,
          buffer,
@@ -117,16 +116,6 @@ bs::error_code mfd::SocketMessenger::receive_msg(
     ba::mutable_buffers_1 const& buffer)
 {
     bs::error_code e;
-#if 0
-    printf("SYNC READ.\n");
-    std::vector<Fd> fds(0);
-    try{
-        mir::receive_data(socket_fd,  ba::buffer_cast<void*>(buffer), ba::buffer_size(buffer), fds);
-    } catch (std::runtime_error& e) {
-        printf("READ ERRORRRRR %s\n", e.what());
-    }
-
-#else
     size_t nread = 0;
 
     while (nread < ba::buffer_size(buffer))
@@ -139,7 +128,6 @@ bs::error_code mfd::SocketMessenger::receive_msg(
         if (e && e != ba::error::would_block)
             break;
     }
-#endif
     return e;
 }
 
