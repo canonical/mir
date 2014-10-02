@@ -113,7 +113,7 @@ public:
     {
         for (auto const& r : renderables)
         {
-            (void)r;
+            r->buffer(); // We need to consume a buffer to unblock client tests
             while (write(render_operations_fd, "a", 1) != 1) continue;
         }
     }
