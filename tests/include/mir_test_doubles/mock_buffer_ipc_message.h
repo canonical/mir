@@ -38,6 +38,8 @@ struct MockBufferIpcMessage : public graphics::BufferIpcMessage
     MOCK_METHOD1(pack_stride, void(geometry::Stride));
     MOCK_METHOD1(pack_flags, void(unsigned int));
     MOCK_METHOD1(pack_size, void(geometry::Size const&));
+    MOCK_METHOD0(fds, std::vector<mir::Fd>());
+    MOCK_METHOD0(data, std::vector<int>());
 };
 
 }

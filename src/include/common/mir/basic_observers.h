@@ -95,7 +95,7 @@ void BasicObservers<Observer>::add(std::shared_ptr<Observer> const& observer)
         !current_item->next.compare_exchange_weak(expected, new_item);
         expected = nullptr)
     {
-        current_item = expected;
+        if (expected) current_item = expected;
     }
 }
 
