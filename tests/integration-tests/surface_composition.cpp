@@ -101,6 +101,7 @@ struct SurfaceComposition : Test
 };
 }
 
+// Presumptive cause of lp:1376324
 TEST_F(SurfaceComposition, does_not_send_client_buffers_to_dead_surfaces)
 {
     auto surface = create_surface();
