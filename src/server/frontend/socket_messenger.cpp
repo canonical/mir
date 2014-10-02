@@ -116,6 +116,8 @@ void mfd::SocketMessenger::async_receive_msg(
 bs::error_code mfd::SocketMessenger::receive_msg(
     ba::mutable_buffers_1 const& buffer)
 {
+    bs::error_code e;
+#if 0
     printf("SYNC READ.\n");
     std::vector<Fd> fds(0);
     try{
@@ -124,8 +126,7 @@ bs::error_code mfd::SocketMessenger::receive_msg(
         printf("READ ERRORRRRR %s\n", e.what());
     }
 
-    bs::error_code e;
-    #if 0
+#else
     size_t nread = 0;
 
     while (nread < ba::buffer_size(buffer))
