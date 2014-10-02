@@ -80,7 +80,7 @@ inline int32_t android_atomic_or(int32_t value, android_atomic_int32_t* addr) { 
 //int android_atomic_acquire_cas(int32_t oldvalue, int32_t newvalue,
 //        volatile int32_t* addr);
 inline int android_atomic_release_cas(int32_t oldvalue, int32_t newvalue,
-    android_atomic_int32_t* addr) { return !addr->compare_exchange_weak(oldvalue, newvalue); }
+    android_atomic_int32_t* addr) { return !addr->compare_exchange_strong(oldvalue, newvalue); }
 }
 
 /*
