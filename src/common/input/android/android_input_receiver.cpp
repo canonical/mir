@@ -141,11 +141,11 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
         fd_added = true;
     }
 
-    int reduced_timeout_ms = timeout.count();  // Note: May be negative
+    auto reduced_timeout = timeout;
     if (input_consumer->hasDeferredEvent())
     {
         // consume() didn't finish last time. Retry it immediately.
-        reduced_timeout_ms = 0;
+        reduced_timeout = std::chrono::milliseconds::zero();
     }
     else if (input_consumer->hasPendingBatch())
     {
@@ -154,12 +154,12 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
         // so be sure to use a non-zero sleep time to avoid spinning the CPU
         // for the whole interval...
 
-        // Note: Timeout -1 means "infinity" so that's negative and also large
-        if (reduced_timeout_ms != 0)
-            reduced_timeout_ms = 1;
+        // During tests with mocked clocks we may already have zero...
+        if (reduced_timeout != std::chrono::milliseconds::zero())
+            reduced_timeout = std::chrono::milliseconds(1);
     }
 
-    auto result = looper->pollOnce(reduced_timeout_ms);
+    auto result = looper->pollOnce(reduced_timeout.count());
     if (result == ALOOPER_POLL_WAKE)
         return false;
     if (result == ALOOPER_POLL_ERROR) // TODO: Exception?
