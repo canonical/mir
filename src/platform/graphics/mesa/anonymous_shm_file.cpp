@@ -34,7 +34,7 @@ namespace mgm = mir::graphics::mesa;
 namespace
 {
 
-mgm::detail::FdHandle create_anonymous_file(size_t size)
+mir::Fd create_anonymous_file(size_t size)
 {
     char const* const tmpl = "/mir-buffer-XXXXXX";
     char const* const runtime_dir = getenv("XDG_RUNTIME_DIR");
@@ -45,7 +45,7 @@ mgm::detail::FdHandle create_anonymous_file(size_t size)
     path.insert(path.end(), tmpl, tmpl + strlen(tmpl));
     path.push_back('\0');
 
-    mgm::detail::FdHandle fd{mkostemp(path.data(), O_CLOEXEC)};
+    mir::Fd fd{mkostemp(path.data(), O_CLOEXEC)};
     if (unlink(path.data()) < 0)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to unlink temporary file"));
     if (ftruncate(fd, size) < 0)
@@ -54,34 +54,6 @@ mgm::detail::FdHandle create_anonymous_file(size_t size)
     return fd;
 }
 
-}
-
-/*************
- * FdHandle *
- *************/
-
-mgm::detail::FdHandle::FdHandle(int fd)
-    : fd{fd}
-{
-    if (fd < 0)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create file"));
-}
-
-mgm::detail::FdHandle::FdHandle(FdHandle&& other)
-    : fd{other.fd}
-{
-    other.fd = -1;
-}
-
-mgm::detail::FdHandle::~FdHandle() noexcept
-{
-    if (fd >= 0)
-        close(fd);
-}
-
-mgm::detail::FdHandle::operator int() const
-{
-    return fd;
 }
 
 /*************
