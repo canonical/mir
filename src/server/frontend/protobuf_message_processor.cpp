@@ -131,6 +131,12 @@ bool mfd::ProtobufMessageProcessor::dispatch(
     Invocation const& invocation,
     std::vector<mir::Fd> const& side_channel_fds)
 {
+    for(auto &fd : side_channel_fds)
+    {
+        char file_buffer[32];
+        read(fd, file_buffer, sizeof(file_buffer));
+            printf("fb---->_>_ %s\n", file_buffer);
+    }
     (void) side_channel_fds;
 
     report->received_invocation(display_server.get(), invocation.id(), invocation.method_name());

@@ -278,6 +278,7 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
     std::string test_string{"test string"};
     mir::Fd file(fileno(tmpfile()));
     write(file, test_string.c_str(), test_string.size());
+    lseek(file, 0, SEEK_SET);
 
     printf("TEST FILE %i\n", (int)file);
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
