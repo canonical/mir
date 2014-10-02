@@ -62,18 +62,20 @@ template<> struct result_ptr_t<::mir::protobuf::Surface>    { typedef ::mir::pro
 template<> struct result_ptr_t<::mir::protobuf::Screencast> { typedef ::mir::protobuf::Screencast* type; };
 template<> struct result_ptr_t<mir::protobuf::SocketFD>     { typedef ::mir::protobuf::SocketFD* type; };
 
-template<>
-void invoke(
+//The exchange_buffer and next_buffer calls can complete on a different thread than the
+//one the invocation was called on. Make sure to preserve the result resource. 
+template<class ParameterMessage>
+void invoke_and_ensure_any_thread_can_complete(
     ProtobufMessageProcessor* self,
     DisplayServer* server,
     void (mir::protobuf::DisplayServer::*function)(
         ::google::protobuf::RpcController* controller,
-        const protobuf::SurfaceId* request,
+        const ParameterMessage* request,
         protobuf::Buffer* response,
         ::google::protobuf::Closure* done),
         Invocation const& invocation)
 {
-    protobuf::SurfaceId parameter_message;
+    ParameterMessage parameter_message;
     parameter_message.ParseFromString(invocation.parameters());
     auto const result_message = std::make_shared<protobuf::Buffer>();
 
@@ -157,14 +159,16 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         }
         else if ("next_buffer" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &DisplayServer::next_buffer, invocation);
+            invoke_and_ensure_any_thread_can_complete(
+                this, display_server.get(), &DisplayServer::next_buffer, invocation);
         }
         else if ("exchange_buffer" == invocation.method_name())
         {
             //invocation.sied
             printf("EXCHANGING. %i\n", (int) side_channel_fds.size());
             try{
-            invoke(this, display_server.get(), &DisplayServer::exchange_buffer, invocation);
+            invoke_and_ensure_any_thread_can_complete(
+                this, display_server.get(), &DisplayServer::exchange_buffer, invocation);
             } catch(std::runtime_error& e){printf("EXCHANGE ERR %s\n", e.what());} catch(...){printf("other.\n");}
             printf("complete EXCHANGING.\n");
         }

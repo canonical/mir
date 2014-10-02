@@ -171,16 +171,17 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * con
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     release_cpu_region();
-    auto const id = &surface.id();
-    auto const mutable_buffer = surface.mutable_buffer();
-    perf_report->end_frame(mutable_buffer->buffer_id());
+
+    *buffer_request.mutable_id() = surface.id();
+    *buffer_request.mutable_buffer() = surface.buffer();
+    perf_report->end_frame(surface.buffer().buffer_id());
     lock.unlock();
 
     next_buffer_wait_handle.expect_result();
-    server.next_buffer(
+    server.exchange_buffer(
         0,
-        id,
-        mutable_buffer,
+        &buffer_request,
+        surface.mutable_buffer(),
         google::protobuf::NewCallback(this, &MirSurface::new_buffer, callback, context));
 
     return &next_buffer_wait_handle;
