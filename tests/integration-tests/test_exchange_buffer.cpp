@@ -298,7 +298,7 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
 
     buffer_request.mutable_buffer()->set_buffer_id(buffer_id_exchange_seq.begin()->as_value());
     buffer_request.mutable_buffer()->add_fd(file);
-    buffer_request.mutable_buffer()->add_fd(file);
+//    buffer_request.mutable_buffer()->add_fd(file);
 
     ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
 

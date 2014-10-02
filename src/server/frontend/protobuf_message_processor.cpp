@@ -159,6 +159,7 @@ bool mfd::ProtobufMessageProcessor::dispatch(
             try{
             invoke(this, display_server.get(), &DisplayServer::exchange_buffer, invocation);
             } catch(std::runtime_error& e){printf("EXCHANGE ERR %s\n", e.what());} catch(...){printf("other.\n");}
+            printf("complete EXCHANGING.\n");
         }
         else if ("release_surface" == invocation.method_name())
         {
@@ -233,11 +234,13 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
 {
+    printf("BUFFER SEND.\n");
     sender->send_response(id, response, {extract_fds_from(response)});
 }
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::Buffer> response)
 {
+    printf("BUFFER SEND2.\n");
     send_response(id, response.get());
 }
 
