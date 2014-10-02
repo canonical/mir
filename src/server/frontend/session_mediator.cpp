@@ -145,13 +145,15 @@ void mf::SessionMediator::advance_buffer(
     Surface& surface,
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
+        printf("ADVANCE\n");
     auto client_buffer = surface_tracker.last_buffer(surf_id);
     if (client_buffer)
     {
+        printf("UNPAK\n");
         //TODO: once we are doing an exchange_buffer, we should use the request buffer
-        static mir::protobuf::Buffer dummy_raw_msg;
-        mfd::ProtobufBufferPacker dummy_msg{&dummy_raw_msg};
-        ipc_operations->unpack_buffer(dummy_msg, *client_buffer);
+//        static mir::protobuf::Buffer dummy_raw_msg;
+//        mfd::ProtobufBufferPacker dummy_msg{&brq};
+//        ipc_operations->unpack_buffer(dummy_msg, *client_buffer);
     }
 
     surface.swap_buffers(
@@ -265,6 +267,12 @@ void mf::SessionMediator::exchange_buffer(
 {
     mf::SurfaceId const surface_id{request->id().value()};
     mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
+
+    printf("SAVE THE BRQ\n");
+    auto client_buffer = surface_tracker.last_buffer(surface_id);
+    brq = request->buffer();
+        mfd::ProtobufBufferPacker dummy_msg{&brq};
+        ipc_operations->unpack_buffer(dummy_msg, *client_buffer);
 
     auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
     auto const session = weak_session.lock();

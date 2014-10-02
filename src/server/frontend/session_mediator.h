@@ -183,6 +183,7 @@ private:
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<graphics::PlatformIpcOperations> const ipc_operations;
+    mir::protobuf::Buffer brq;
 
     std::vector<MirPixelFormat> const surface_pixel_formats;
 

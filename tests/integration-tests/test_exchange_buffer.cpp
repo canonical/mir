@@ -113,9 +113,13 @@ namespace
 
         void unpack_buffer(mg::BufferIpcMessage& msg, mg::Buffer const&) const override
         {
+            printf("UNPACKE IN TEST %i\n", msg.fds().size());
             auto fds = msg.fds();
             if (!fds.empty())
+            {
                 last_fd = fds[0];
+                printf("LAST FD is...%i\n", (int) last_fd);
+            }
         }
     
         std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
@@ -269,7 +273,7 @@ namespace
 {
 MATCHER(NoErrorOnFileRead, "")
 {
-    return arg > 0;
+    return arg <= 0;
 }
 }
 TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
@@ -309,7 +313,11 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
     printf("STILL ALIVE? %i\n", fcntl(file, F_GETFD));
 
     auto server_received_fd = stub_packer->last_unpacked_fd();
+        printf("server rec %i\n",(int) server_received_fd);
     char file_buffer[32];
-    ASSERT_THAT(read(server_received_fd, file_buffer, sizeof(file_buffer)), NoErrorOnFileRead());
+    lseek(file, 0, SEEK_SET);
+    read(server_received_fd, file_buffer, sizeof(file_buffer));
+    printf("fb---->_%i>_ %s\n",(int)server_received_fd, file_buffer);
+//    ASSERT_THAT(read(server_received_fd, file_buffer, sizeof(file_buffer)), NoErrorOnFileRead());
     EXPECT_THAT(strncmp(test_string.c_str(), file_buffer, test_string.size()), Eq(0)); 
 }

@@ -64,6 +64,52 @@ template<> struct result_ptr_t<mir::protobuf::SocketFD>     { typedef ::mir::pro
 
 //The exchange_buffer and next_buffer calls can complete on a different thread than the
 //one the invocation was called on. Make sure to preserve the result resource. 
+void invoke_and_ensure_any_thread_can_complete1(
+    ProtobufMessageProcessor* self,
+    DisplayServer* server,
+    void (mir::protobuf::DisplayServer::*function)(
+        ::google::protobuf::RpcController* controller,
+        const mir::protobuf::BufferRequest* request,
+        protobuf::Buffer* response,
+        ::google::protobuf::Closure* done),
+        Invocation const& invocation, std::vector<mir::Fd> const&fds)
+{
+    mir::protobuf::BufferRequest parameter_message;
+    parameter_message.ParseFromString(invocation.parameters());
+    auto const result_message = std::make_shared<protobuf::Buffer>();
+
+    auto const callback =
+        google::protobuf::NewCallback<
+            ProtobufMessageProcessor,
+            ::google::protobuf::uint32,
+             std::shared_ptr<protobuf::Buffer>>(
+                self,
+                &ProtobufMessageProcessor::send_response,
+                invocation.id(),
+                result_message);
+
+            parameter_message.mutable_buffer()->clear_fd();
+            for(auto& fd : fds)
+            {   
+                int f= (int)fd;
+                printf("f %i\n", f);
+                parameter_message.mutable_buffer()->add_fd(f);
+            }
+    try
+    {
+        (server->*function)(
+            0,
+            &parameter_message,
+            result_message.get(),
+            callback);
+    }
+    catch (std::exception const& x)
+    {
+        delete callback;
+        result_message->set_error(boost::diagnostic_information(x));
+        self->send_response(invocation.id(), result_message);
+    }
+}
 template<class ParameterMessage>
 void invoke_and_ensure_any_thread_can_complete(
     ProtobufMessageProcessor* self,
@@ -137,7 +183,7 @@ bool mfd::ProtobufMessageProcessor::dispatch(
     {
         char file_buffer[32];
         read(fd, file_buffer, sizeof(file_buffer));
-            printf("fb---->_>_ %s\n", file_buffer);
+            printf("fb---->_%i>_ %s\n",(int)fd, file_buffer);
     }
     (void) side_channel_fds;
 
@@ -165,10 +211,9 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         else if ("exchange_buffer" == invocation.method_name())
         {
             //invocation.sied
-            printf("EXCHANGING. %i\n", (int) side_channel_fds.size());
             try{
-            invoke_and_ensure_any_thread_can_complete(
-                this, display_server.get(), &DisplayServer::exchange_buffer, invocation);
+            invoke_and_ensure_any_thread_can_complete1(
+                this, display_server.get(), &DisplayServer::exchange_buffer, invocation, side_channel_fds);
             } catch(std::runtime_error& e){printf("EXCHANGE ERR %s\n", e.what());} catch(...){printf("other.\n");}
             printf("complete EXCHANGING.\n");
         }
