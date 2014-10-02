@@ -155,6 +155,7 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         }
         else if ("exchange_buffer" == invocation.method_name())
         {
+            invocation.sied
             printf("EXCHANGING.\n");
             try{
             invoke(this, display_server.get(), &DisplayServer::exchange_buffer, invocation);
