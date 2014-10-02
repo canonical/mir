@@ -79,6 +79,10 @@ mir (0.8.0-0ubuntu1) UNRELEASED; urgency=medium
       . Intermittent test failures in TestClientCursorAPI.* (LP: #1342567)
       . clang emits lots of warnings about lttng headers (LP: #1348472)
       . [enhancement] Draw input event location (LP: #1323522)
+      . demo shell: Keep colours consistent, regardless of the physical pixel
+        format of your framebuffer (LP: #1375660)
+      . tests: Fix SharedLibraryProber test runs on i386. (LP: #1375829)
+      . Touchspots rendered as squares on some devices (LP: #1373698)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 30 Sep 2014 16:08:44 +0800
 

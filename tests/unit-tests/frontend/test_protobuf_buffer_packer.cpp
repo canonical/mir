@@ -16,6 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "mir_test_doubles/fd_matcher.h"
 #include "src/server/frontend/protobuf_buffer_packer.h"
 #include "src/server/frontend/resource_cache.h"
 
@@ -28,33 +29,14 @@ namespace mf=mir::frontend;
 namespace mfd=mir::frontend::detail;
 namespace mp=mir::protobuf;
 namespace geom=mir::geometry;
+namespace mtd=mir::test::doubles;
 
-namespace
-{
-
-struct MockResourceCache : public mf::MessageResourceCache
-{
-    MOCK_METHOD2(save_resource, void(google::protobuf::Message*, std::shared_ptr<void> const&));
-    MOCK_METHOD2(save_fd, void(google::protobuf::Message*, mir::Fd const&));
-    MOCK_METHOD1(free_resource, void(google::protobuf::Message*));
-};
-
-struct ProtobufBufferPacker : public testing::Test
-{
-    ProtobufBufferPacker() :
-        mock_resource_cache(std::make_shared<testing::NiceMock<MockResourceCache>>())
-    {
-    }
-    std::shared_ptr<MockResourceCache> mock_resource_cache;
-};
-}
-
-TEST_F(ProtobufBufferPacker, packing)
+TEST(ProtobufBufferPacker, packing)
 {
     geom::Stride dummy_stride(4);
 
     mp::Buffer response;
-    mfd::ProtobufBufferPacker packer(&response, mock_resource_cache);
+    mfd::ProtobufBufferPacker packer(&response);
 
     int num_fd = 33, num_int = 44;
     std::vector<mir::Fd> raw_fds;
@@ -83,19 +65,49 @@ TEST_F(ProtobufBufferPacker, packing)
     EXPECT_EQ(789, response.height());
 }
 
-TEST_F(ProtobufBufferPacker, fd_packing_saves_using_the_resource_cache)
+TEST(ProtobufBufferPacker, data_and_fds_are_the_same_as_packed)
 {
     using namespace testing;
-    mir::Fd fake_fd0{fileno(tmpfile())};
-    mir::Fd fake_fd1{fileno(tmpfile())};
 
     mp::Buffer response;
+    unsigned int const num_fds{3};
+    unsigned int const num_data{9};
+    for(auto i = 0u; i < num_fds; i++)
+        response.add_fd(mir::Fd{fileno(tmpfile())});
+    for(auto i = 0u; i < num_data; i++)
+        response.add_data(i*3);
 
-    EXPECT_CALL(*mock_resource_cache, save_fd(&response, Ref(fake_fd0)));
-    EXPECT_CALL(*mock_resource_cache, save_fd(&response, Ref(fake_fd1)));
+    mfd::ProtobufBufferPacker packer(&response);
 
-    mfd::ProtobufBufferPacker packer(&response, mock_resource_cache);
+    mir::Fd additional_fd{fileno(tmpfile())};
+    packer.pack_fd(additional_fd);
 
-    packer.pack_fd(fake_fd0);
-    packer.pack_fd(fake_fd1);
+    auto fds = packer.fds();
+    EXPECT_THAT(fds.size(), Eq(num_fds + 1));
+
+    auto data = packer.data();
+    EXPECT_THAT(data, ElementsAreArray(response.data().data(), num_data));
+}
+
+TEST(ProtobufBufferPacker, message_takes_ownership_of_fds)
+{
+    using namespace testing;
+
+    mp::Buffer response;
+    unsigned int const num_fds{3};
+    for(auto i = 0u; i < num_fds; i++)
+        response.add_fd(fileno(tmpfile()));
+
+    mir::Fd additional_fd{fileno(tmpfile())};
+
+    {
+        mfd::ProtobufBufferPacker packer(&response);
+        packer.pack_fd(additional_fd);
+    }
+
+    EXPECT_THAT(response.fd().size(), Eq(num_fds+1));
+    auto i = 0u;
+    for(; i < num_fds; i++)
+        EXPECT_THAT(response.fd().Get(i), Not(mtd::RawFdIsValid()));
+    EXPECT_THAT(response.fd().Get(i), mtd::RawFdIsValid());
 }
