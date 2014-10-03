@@ -24,12 +24,6 @@
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 #include <stdexcept>
-#include <mutex>
-
-#include <unistd.h>
-#include <fcntl.h>
-       #include <sys/types.h>
-       #include <sys/stat.h>
 
 mir::socket_error::socket_error(std::string const& message) :
     std::system_error(errno, std::system_category(), message)
@@ -41,8 +35,8 @@ mir::socket_disconnected_error::socket_disconnected_error(std::string const& mes
 {
 }
 
-mir::fd_reception_error::fd_reception_error() :
-    std::runtime_error("Invalid control message for receiving file descriptors")
+mir::fd_reception_error::fd_reception_error(std::string const& message) :
+    std::runtime_error(message)
 {
 }
 
@@ -54,7 +48,7 @@ void mir::send_fds(
     {
         // We send dummy data
         struct iovec iov;
-        char dummy_iov_data[1] = {'M'};
+        char dummy_iov_data = 'M';
         iov.iov_base = &dummy_iov_data;
         iov.iov_len = 1;
 
@@ -87,8 +81,7 @@ void mir::send_fds(
         for (auto& fd : fds)
             data[i++] = fd;
 
-
-        auto const sent = sendmsg(socket, &header, 0);//MSG_DONTWAIT);
+        auto const sent = sendmsg(socket, &header, 0);
         if (sent < 0)
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send fds: " + std::string(strerror(errno))));
     }
@@ -116,9 +109,9 @@ void mir::receive_data(mir::Fd const& socket, void* buffer, size_t bytes_request
         // Allocate space for control message
         static auto const builtin_n_fds = 5;
         static auto const builtin_cmsg_space = CMSG_SPACE(builtin_n_fds * sizeof(int));
-        auto fds_bytes = (fds.size() - fds_read) * sizeof(int);
+        auto const fds_bytes = (fds.size() - fds_read) * sizeof(int);
         mir::VariableLengthArray<builtin_cmsg_space> control{CMSG_SPACE(fds_bytes)};
-       
+        
         // Message to read
         struct msghdr header;
         header.msg_name = NULL;
@@ -128,18 +121,17 @@ void mir::receive_data(mir::Fd const& socket, void* buffer, size_t bytes_request
         header.msg_controllen = control.size();
         header.msg_control = control.data();
         header.msg_flags = 0;
-
-        ssize_t result = recvmsg(socket, &header, MSG_NOSIGNAL | MSG_WAITALL);
+        
+        ssize_t const result = recvmsg(socket, &header, MSG_NOSIGNAL | MSG_WAITALL);
         if (result == 0)
             BOOST_THROW_EXCEPTION(socket_disconnected_error("Failed to read message from server: server has shutdown"));
-                
         if (result < 0)
         {
             if (socket_error_is_transient(errno))
                 continue;
             if (errno == EPIPE)
                 BOOST_THROW_EXCEPTION(
-                    boost::enable_error_info(socket_disconnected_error("Failed to read message from server PIPE"))
+                    boost::enable_error_info(socket_disconnected_error("Failed to read message from server"))
                 << boost::errinfo_errno(errno));
 
             BOOST_THROW_EXCEPTION(
@@ -148,26 +140,23 @@ void mir::receive_data(mir::Fd const& socket, void* buffer, size_t bytes_request
         }
 
         bytes_read += result;
-       
+        
         // If we get a proper control message, copy the received
         // file descriptors back to the caller
-        struct cmsghdr * cmsg = CMSG_FIRSTHDR(&header);
+        struct cmsghdr const* const cmsg = CMSG_FIRSTHDR(&header);
         if (cmsg)
         {
-            if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_CREDENTIALS)
-            {
-//                BOOST_THROW_EXCEPTION(std::runtime_error("got a credential instead of a fd"));
-            }
-            if (cmsg->cmsg_level != SOL_SOCKET || cmsg->cmsg_type != SCM_RIGHTS)
-            {
-                BOOST_THROW_EXCEPTION(fd_reception_error());
-            }
-
             // NOTE: This relies on the file descriptor cmsg being read
             // (and written) atomically.
             if (cmsg->cmsg_len > CMSG_LEN(fds_bytes) || (header.msg_flags & MSG_CTRUNC))
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error("Received more fds than expected"));
+            }
+            if (cmsg->cmsg_level != SOL_SOCKET || cmsg->cmsg_type != SCM_RIGHTS)
+            {
+                if ((cmsg->cmsg_level == SOL_SOCKET) && (cmsg->cmsg_type == SCM_CREDENTIALS))
+                    BOOST_THROW_EXCEPTION(fd_reception_error("received SCM_CREDENTIALS when expecting fd"));
+                BOOST_THROW_EXCEPTION(fd_reception_error("Invalid control message for receiving file descriptors"));
             }
             int const* const data = reinterpret_cast<int const*>CMSG_DATA(cmsg);
             ptrdiff_t const header_size = reinterpret_cast<char const*>(data) - reinterpret_cast<char const*>(cmsg);
@@ -179,14 +168,12 @@ void mir::receive_data(mir::Fd const& socket, void* buffer, size_t bytes_request
             // When we have our own RPC generator plugin and aren't using deprecated
             // Protobuf features this can go away.
             for (int i = 0; i < nfds; i++)
-            {
                 fds[fds_read + i] = mir::Fd{mir::IntOwnedFd{data[i]}};
-            }
 
             fds_read += nfds;
         }
     }
 
     if (fds_read < fds.size())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Receieved fewer fds than expected"));
+        BOOST_THROW_EXCEPTION(fd_reception_error("Receieved fewer fds than expected"));
 }

@@ -29,7 +29,6 @@
 #include "mir/frontend/session_authorizer.h"
 #include "mir/protobuf/google_protobuf_guard.h"
 
-#include <fcntl.h>
 namespace mf = mir::frontend;
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;

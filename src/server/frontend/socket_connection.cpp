@@ -105,11 +105,7 @@ try
     if (invocation.side_channel_fds() > 0)
     {
         fds.resize(invocation.side_channel_fds());
-        try{
         message_receiver->receive_fds(fds);
-        } catch(std::runtime_error &e) {
-            printf("AND ERR %s +++ %i.\n", e.what(), errno);
-        }
     }
 
     if (!client_pid)

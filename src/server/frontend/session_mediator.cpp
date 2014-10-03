@@ -268,8 +268,8 @@ void mf::SessionMediator::exchange_buffer(
 
     auto client_buffer = surface_tracker.last_buffer(surface_id);
     brq = request->buffer();
-        mfd::ProtobufBufferPacker dummy_msg{&brq};
-        ipc_operations->unpack_buffer(dummy_msg, *client_buffer);
+    mfd::ProtobufBufferPacker dummy_msg{&brq};
+    ipc_operations->unpack_buffer(dummy_msg, *client_buffer);
 
     auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
     auto const session = weak_session.lock();

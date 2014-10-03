@@ -103,7 +103,7 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_reques
         }
         if (result < 0)
         {
-            if (mir::socket_error_is_transient(errno))
+            if (socket_error_is_transient(errno))
             {
                 continue;
             }
@@ -174,7 +174,6 @@ void mclr::StreamSocketTransport::send_data(const std::vector<uint8_t>& buffer)
 void mclr::StreamSocketTransport::send_data(const std::vector<uint8_t> &buffer, std::vector<mir::Fd>& fds)
 {
     send_data(buffer);
-    //sleep(1);
     mir::send_fds(socket_fd, fds);
 }
 
