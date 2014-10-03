@@ -75,7 +75,6 @@ mf::SessionCredentials mfd::SocketMessenger::client_creds()
 
 void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& fd_set)
 {
-    printf("SENDnstaohao!\n");
     static size_t const header_size{2};
     mir::VariableLengthArray<mf::serialization_buffer_size> whole_message{header_size + length};
 

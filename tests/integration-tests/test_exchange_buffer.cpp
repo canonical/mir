@@ -113,12 +113,10 @@ namespace
 
         void unpack_buffer(mg::BufferIpcMessage& msg, mg::Buffer const&) const override
         {
-            printf("UNPACKE IN TEST %i\n", msg.fds().size());
             auto fds = msg.fds();
             if (!fds.empty())
             {
                 last_fd = fds[0];
-                printf("LAST FD is...%i\n", (int) last_fd);
             }
         }
     
@@ -207,7 +205,6 @@ namespace
 
         void buffer_arrival()
         {
-            printf("BUFFER ARRIVE\n");
             std::unique_lock<decltype(mutex)> lk(mutex);
             arrived = true;
             cv.notify_all();
@@ -273,18 +270,16 @@ namespace
 {
 MATCHER(NoErrorOnFileRead, "")
 {
-    return arg <= 0;
+    return arg > 0;
 }
 }
 TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
 {
     using namespace testing;
-    std::string test_string{"test string"};
+    std::string test_string{"mir was a space station"};
     mir::Fd file(fileno(tmpfile()));
     write(file, test_string.c_str(), test_string.size());
-    lseek(file, 0, SEEK_SET);
 
-    printf("TEST FILE %i\n", (int)file);
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     MirSurfaceParameters const request_params =
     {
@@ -303,21 +298,15 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
 
     buffer_request.mutable_buffer()->set_buffer_id(buffer_id_exchange_seq.begin()->as_value());
     buffer_request.mutable_buffer()->add_fd(file);
-//    buffer_request.mutable_buffer()->add_fd(file);
 
     ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 
-    printf("STILL ALIVE? %i\n", fcntl(file, F_GETFD));
-
     auto server_received_fd = stub_packer->last_unpacked_fd();
-        printf("server rec %i\n",(int) server_received_fd);
     char file_buffer[32];
     lseek(file, 0, SEEK_SET);
-    read(server_received_fd, file_buffer, sizeof(file_buffer));
-    printf("fb---->_%i>_ %s\n",(int)server_received_fd, file_buffer);
-//    ASSERT_THAT(read(server_received_fd, file_buffer, sizeof(file_buffer)), NoErrorOnFileRead());
+    ASSERT_THAT(read(server_received_fd, file_buffer, sizeof(file_buffer)), NoErrorOnFileRead());
     EXPECT_THAT(strncmp(test_string.c_str(), file_buffer, test_string.size()), Eq(0)); 
 }

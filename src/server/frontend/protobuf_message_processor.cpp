@@ -92,7 +92,6 @@ void invoke_and_ensure_any_thread_can_complete1(
             for(auto& fd : fds)
             {   
                 int f= (int)fd;
-                printf("f %i\n", f);
                 parameter_message.mutable_buffer()->add_fd(f);
             }
     try
@@ -179,14 +178,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(
     Invocation const& invocation,
     std::vector<mir::Fd> const& side_channel_fds)
 {
-    for(auto &fd : side_channel_fds)
-    {
-        char file_buffer[32];
-        read(fd, file_buffer, sizeof(file_buffer));
-            printf("fb---->_%i>_ %s\n",(int)fd, file_buffer);
-    }
-    (void) side_channel_fds;
-
     report->received_invocation(display_server.get(), invocation.id(), invocation.method_name());
 
     bool result = true;
@@ -210,12 +201,8 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         }
         else if ("exchange_buffer" == invocation.method_name())
         {
-            //invocation.sied
-            try{
             invoke_and_ensure_any_thread_can_complete1(
                 this, display_server.get(), &DisplayServer::exchange_buffer, invocation, side_channel_fds);
-            } catch(std::runtime_error& e){printf("EXCHANGE ERR %s\n", e.what());} catch(...){printf("other.\n");}
-            printf("complete EXCHANGING.\n");
         }
         else if ("release_surface" == invocation.method_name())
         {
@@ -290,13 +277,11 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, mir::protobuf::Buffer* response)
 {
-    printf("BUFFER SEND.\n");
     sender->send_response(id, response, {extract_fds_from(response)});
 }
 
 void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id, std::shared_ptr<protobuf::Buffer> response)
 {
-    printf("BUFFER SEND2.\n");
     send_response(id, response.get());
 }
 

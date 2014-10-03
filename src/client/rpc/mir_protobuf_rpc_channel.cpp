@@ -107,7 +107,6 @@ void mclr::MirProtobufRpcChannel::receive_any_file_descriptors_for(MessageType* 
 void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
-    printf("INCOMING.\n");
     auto const message_type = response->GetTypeName();
 
     mir::protobuf::Surface* surface = nullptr;
@@ -325,7 +324,6 @@ void mclr::MirProtobufRpcChannel::on_data_available()
      */
     std::lock_guard<decltype(read_mutex)> lock(read_mutex);
 
-    printf("DATA AVAIL.\n");
     mir::protobuf::wire::Result result;
     try
     {
