@@ -94,7 +94,7 @@ TEST(ProtobufMessageProcessor, preserves_response_resource_for_exchange_buffer)
     mfd::Invocation invocation(raw_invocation);
 
     mfd::MessageProcessor* mp = &pb_message_processor;
-    mp->dispatch(invocation);
+    mp->dispatch(invocation, {});
 
     ASSERT_THAT(stub_display_server.exchange_buffer_response, testing::Ne(nullptr));
     int num_data{5};
