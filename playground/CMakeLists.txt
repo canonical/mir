@@ -33,5 +33,5 @@ target_link_libraries(mir_demo_standalone_render_overlays
 )
 
 add_subdirectory(testdraw/)
-#add_subdirectory(demo-shell/)
+add_subdirectory(demo-shell/)
 add_subdirectory(demo-inprocess-surface-client/)
