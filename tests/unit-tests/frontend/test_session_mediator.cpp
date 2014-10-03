@@ -821,6 +821,7 @@ TEST_F(SessionMediator, exchange_buffer_throws_if_client_submits_bad_request)
 
 TEST_F(SessionMediator, exchange_buffer_different_for_different_surfaces)
 {
+    using namespace testing;
     mp::SurfaceParameters surface_request;
     mp::BufferRequest req1;
     mp::BufferRequest req2;
