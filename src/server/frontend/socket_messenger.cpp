@@ -52,14 +52,12 @@ mfd::SocketMessenger::SocketMessenger(std::shared_ptr<ba::local::stream_protocol
 mf::SessionCredentials mfd::SocketMessenger::creator_creds() const
 {
     struct ucred cr;
-#if 0
     socklen_t cl = sizeof(cr);
 
     auto status = getsockopt(socket_fd, SOL_SOCKET, SO_PEERCRED, &cr, &cl);
 
     if (status)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
-#endif
     return {cr.pid, cr.uid, cr.gid};
 }
 
@@ -150,7 +148,11 @@ size_t mfd::SocketMessenger::available_bytes()
 
 void mfd::SocketMessenger::update_session_creds()
 {
-#if 0
+    /* We set the SO_PASSCRED socket option in order to receive credentials */
+    auto optval = 1;
+    if (setsockopt(socket_fd, SOL_SOCKET, SO_PASSCRED, &optval, sizeof(optval)) == -1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set SO_PASSCRED"));
+
     union {
         struct cmsghdr cmh;
         char   control[CMSG_SPACE(sizeof(ucred))];
@@ -173,5 +175,8 @@ void mfd::SocketMessenger::update_session_creds()
         auto const ucredp = reinterpret_cast<ucred*>(CMSG_DATA(CMSG_FIRSTHDR(&msgh)));
         session_creds = {ucredp->pid, ucredp->uid, ucredp->gid};
     }
-#endif
+
+    optval = 0;
+    if (setsockopt(socket_fd, SOL_SOCKET, SO_PASSCRED, &optval, sizeof(optval)) == -1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set SO_PASSCRED"));
 }
