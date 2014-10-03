@@ -69,6 +69,13 @@ namespace mr = mir::report;
 namespace
 {
 
+struct MockResourceCache : public mf::MessageResourceCache
+{
+    MOCK_METHOD2(save_resource, void(google::protobuf::Message*, std::shared_ptr<void> const&));
+    MOCK_METHOD2(save_fd, void(google::protobuf::Message*, mir::Fd const&));
+    MOCK_METHOD1(free_resource, void(google::protobuf::Message*));
+};
+
 struct StubConfig : public mtd::NullDisplayConfiguration
 {
     StubConfig(std::shared_ptr<mg::DisplayConfigurationOutput> const& conf)
@@ -814,7 +821,6 @@ TEST_F(SessionMediator, exchange_buffer_throws_if_client_submits_bad_request)
 
 TEST_F(SessionMediator, exchange_buffer_different_for_different_surfaces)
 {
-    using namespace testing;
     mp::SurfaceParameters surface_request;
     mp::BufferRequest req1;
     mp::BufferRequest req2;
@@ -831,6 +837,7 @@ TEST_F(SessionMediator, exchange_buffer_different_for_different_surfaces)
         .InSequence(seq);
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+
     mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
     *req1.mutable_id() = surface_response.id();
     *req1.mutable_buffer() = surface_response.buffer();
@@ -840,4 +847,46 @@ TEST_F(SessionMediator, exchange_buffer_different_for_different_surfaces)
     mediator.exchange_buffer(nullptr, &req2, &buffer_response, null_callback.get());
     mediator.exchange_buffer(nullptr, &req1, &buffer_response, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+}
+
+TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
+{
+    using namespace testing;
+    NiceMock<MockResourceCache> mock_cache;
+    mp::Buffer exchanged_buffer;
+
+    mir::Fd fake_fd0(mir::IntOwnedFd{99});
+    mir::Fd fake_fd1(mir::IntOwnedFd{100});
+    mir::Fd fake_fd2(mir::IntOwnedFd{101});
+
+    EXPECT_CALL(mock_ipc_operations, pack_buffer(_,_,_))
+        .WillOnce(Invoke([&](mg::BufferIpcMessage& msg, mg::Buffer const&, mg::BufferIpcMsgType)
+        { msg.pack_fd(fake_fd0); }))
+        .WillOnce(Invoke([&](mg::BufferIpcMessage& msg, mg::Buffer const&, mg::BufferIpcMsgType)
+        { msg.pack_fd(fake_fd1); }))
+        .WillOnce(Invoke([&](mg::BufferIpcMessage& msg, mg::Buffer const&, mg::BufferIpcMsgType)
+        { msg.pack_fd(fake_fd2); }));
+
+    EXPECT_CALL(mock_cache, save_fd(_,fake_fd0));
+    EXPECT_CALL(mock_cache, save_fd(_,fake_fd1));
+    EXPECT_CALL(mock_cache, save_fd(_,fake_fd2));
+
+    mf::SessionMediator mediator{
+        shell, graphics_platform, graphics_changer,
+        surface_pixel_formats, report,
+        std::make_shared<mtd::NullEventSink>(),
+        mt::fake_shared(mock_cache), stub_screencast, nullptr, nullptr};
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
+    *buffer_request.mutable_id() = surface_response.id();
+    buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer().buffer_id());
+
+    mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
+    buffer_request.mutable_buffer()->set_buffer_id(exchanged_buffer.buffer_id());
+    exchanged_buffer.clear_fd();
+
+    mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
+    buffer_request.mutable_buffer()->set_buffer_id(exchanged_buffer.buffer_id());
+    buffer_request.mutable_buffer()->clear_fd();
 }

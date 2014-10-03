@@ -70,7 +70,7 @@ mf::SessionMediator::SessionMediator(
     std::vector<MirPixelFormat> const& surface_pixel_formats,
     std::shared_ptr<SessionMediatorReport> const& report,
     std::shared_ptr<EventSink> const& sender,
-    std::shared_ptr<ResourceCache> const& resource_cache,
+    std::shared_ptr<MessageResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context,
     std::shared_ptr<mi::CursorImages> const& cursor_images) :
@@ -150,7 +150,7 @@ void mf::SessionMediator::advance_buffer(
     {
         //TODO: once we are doing an exchange_buffer, we should use the request buffer
         static mir::protobuf::Buffer dummy_raw_msg;
-        mfd::ProtobufBufferPacker dummy_msg{&dummy_raw_msg, resource_cache};
+        mfd::ProtobufBufferPacker dummy_msg{&dummy_raw_msg};
         ipc_operations->unpack_buffer(dummy_msg, *client_buffer);
     }
 
@@ -651,6 +651,9 @@ void mf::SessionMediator::pack_protobuf_buffer(
 {
     protobuf_buffer.set_buffer_id(graphics_buffer->id().as_value());
 
-    mfd::ProtobufBufferPacker packer{&protobuf_buffer, resource_cache};
+    mfd::ProtobufBufferPacker packer{&protobuf_buffer};
     ipc_operations->pack_buffer(packer, *graphics_buffer, buffer_msg_type);
+
+    for(auto const& fd : packer.fds())
+        resource_cache->save_fd(&protobuf_buffer, fd);
 }

@@ -31,7 +31,6 @@ class DisplayConfiguration;
 }
 namespace frontend
 {
-class MessageResourceCache;
 namespace detail
 {
 
@@ -41,15 +40,18 @@ void pack_protobuf_display_configuration(protobuf::DisplayConfiguration& protobu
 class ProtobufBufferPacker : public graphics::BufferIpcMessage
 {
 public:
-    ProtobufBufferPacker(protobuf::Buffer*, std::shared_ptr<MessageResourceCache> const&);
+    ProtobufBufferPacker(protobuf::Buffer*);
     void pack_fd(Fd const&);
     void pack_data(int);
     void pack_stride(geometry::Stride);
     void pack_flags(unsigned int);
     void pack_size(geometry::Size const& size);
+
+    std::vector<Fd> fds();
+    std::vector<int> data();
 private:
+    std::vector<mir::Fd> fds_;
     protobuf::Buffer* buffer_response;
-    std::shared_ptr<MessageResourceCache> const resource_cache;    
 };
 
 }
