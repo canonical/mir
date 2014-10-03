@@ -86,7 +86,7 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
 template<class MessageType>
 void mclr::MirProtobufRpcChannel::receive_any_file_descriptors_for(MessageType* response)
 {
-    static std::array<char, 2> dummy;
+    static std::array<char, 1> dummy;
     if (response)
     {
         response->clear_fd();

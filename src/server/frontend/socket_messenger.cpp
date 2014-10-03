@@ -132,8 +132,8 @@ bs::error_code mfd::SocketMessenger::receive_msg(
 
 void mfd::SocketMessenger::receive_fds(std::vector<Fd>& fds)
 {
-    static int buffer{0};
-    mir::receive_data(socket_fd, &buffer, 2, fds);
+    static char buffer;
+    mir::receive_data(socket_fd, &buffer, 1, fds);
 }
 
 size_t mfd::SocketMessenger::available_bytes()

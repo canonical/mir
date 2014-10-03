@@ -54,9 +54,9 @@ void mir::send_fds(
     {
         // We send dummy data
         struct iovec iov;
-        char dummy_iov_data[2] = {'o', 'p'};
+        char dummy_iov_data[1] = {'M'};
         iov.iov_base = &dummy_iov_data;
-        iov.iov_len = 2;
+        iov.iov_len = 1;
 
         // Allocate space for control message
         static auto const builtin_n_fds = 5;
