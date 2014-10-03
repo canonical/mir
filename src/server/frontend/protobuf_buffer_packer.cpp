@@ -90,10 +90,9 @@ void mfd::pack_protobuf_display_configuration(mp::DisplayConfiguration& protobuf
 }
 
 mfd::ProtobufBufferPacker::ProtobufBufferPacker(protobuf::Buffer* response) :
+    fds_(response->fd().begin(), response->fd().end()),
     buffer_response(response)
 {
-    for(auto it = buffer_response->fd().begin(); it != buffer_response->fd().end(); it++)
-        fds_.emplace_back(mir::Fd(*it));
 }
 
 void mfd::ProtobufBufferPacker::pack_fd(Fd const& fd)
@@ -130,8 +129,5 @@ std::vector<mir::Fd> mfd::ProtobufBufferPacker::fds()
 
 std::vector<int> mfd::ProtobufBufferPacker::data()
 {
-    std::vector<int> data; 
-    for(auto it = buffer_response->data().begin(); it != buffer_response->data().end(); it++)
-        data.emplace_back(*it);
-    return data;
+    return {buffer_response->data().begin(), buffer_response->data().end()};
 }

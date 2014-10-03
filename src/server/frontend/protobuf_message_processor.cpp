@@ -109,8 +109,9 @@ void invoke_and_ensure_any_thread_can_complete1(
         self->send_response(invocation.id(), result_message);
     }
 }
+
 template<class ParameterMessage>
-void invoke_and_ensure_any_thread_can_complete(
+void invoke_async(
     ProtobufMessageProcessor* self,
     DisplayServer* server,
     void (mir::protobuf::DisplayServer::*function)(
@@ -196,8 +197,7 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         }
         else if ("next_buffer" == invocation.method_name())
         {
-            invoke_and_ensure_any_thread_can_complete(
-                this, display_server.get(), &DisplayServer::next_buffer, invocation);
+            invoke_async(this, display_server.get(), &DisplayServer::next_buffer, invocation);
         }
         else if ("exchange_buffer" == invocation.method_name())
         {

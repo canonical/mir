@@ -107,11 +107,6 @@ public:
         return buf;
     }
 
-    bool alpha_enabled() const override
-    {
-        return shaped() || alpha() < 1.0f;
-    }
-
     geometry::Rectangle screen_position() const override
     {
         return rect;
