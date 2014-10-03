@@ -44,6 +44,7 @@ public:
     void receive_fds(std::vector<Fd>& fds) override;
 
 private:
+    void set_passcred(int opt);
     void update_session_creds();
     SessionCredentials creator_creds() const;
 

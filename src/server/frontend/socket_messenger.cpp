@@ -21,6 +21,7 @@
 #include "mir/frontend/session_credentials.h"
 #include "mir/variable_length_array.h"
 #include "mir/fd_socket_transmission.h"
+#include "mir/raii.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -146,13 +147,14 @@ size_t mfd::SocketMessenger::available_bytes()
     return command.get();
 }
 
+void mfd::SocketMessenger::set_passcred(int opt)
+{
+    if (setsockopt(socket_fd, SOL_SOCKET, SO_PASSCRED, &opt, sizeof(opt)) == -1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set SO_PASSCRED"));
+}
+
 void mfd::SocketMessenger::update_session_creds()
 {
-    /* We set the SO_PASSCRED socket option in order to receive credentials */
-    auto optval = 1;
-    if (setsockopt(socket_fd, SOL_SOCKET, SO_PASSCRED, &optval, sizeof(optval)) == -1)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set SO_PASSCRED"));
-
     union {
         struct cmsghdr cmh;
         char   control[CMSG_SPACE(sizeof(ucred))];
@@ -170,13 +172,13 @@ void mfd::SocketMessenger::update_session_creds()
     msgh.msg_control = control_un.control;
     msgh.msg_controllen = sizeof(control_un.control);
 
+    /* We set the SO_PASSCRED socket option in order to receive credentials */
+    auto const so_passcred_option = raii::paired_calls(
+        [this] { set_passcred(1); },
+        [this] { set_passcred(0); });
     if (recvmsg(socket_fd, &msgh, MSG_PEEK) != -1)
     {
         auto const ucredp = reinterpret_cast<ucred*>(CMSG_DATA(CMSG_FIRSTHDR(&msgh)));
         session_creds = {ucredp->pid, ucredp->uid, ucredp->gid};
     }
-
-    optval = 0;
-    if (setsockopt(socket_fd, SOL_SOCKET, SO_PASSCRED, &optval, sizeof(optval)) == -1)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set SO_PASSCRED"));
 }
