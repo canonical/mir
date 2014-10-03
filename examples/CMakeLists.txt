@@ -204,4 +204,3 @@ install(TARGETS mir_demo_standalone_render_overlays
 )
 
 add_subdirectory(testdraw/)
-add_subdirectory(demo-inprocess-surface-client/)
