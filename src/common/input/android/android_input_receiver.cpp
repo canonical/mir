@@ -153,10 +153,7 @@ bool mircva::InputReceiver::next_event(std::chrono::milliseconds const& timeout,
         // But the batch won't get flushed until the next frame interval,
         // so be sure to use a non-zero sleep time to avoid spinning the CPU
         // for the whole interval...
-
-        // During tests with mocked clocks we may already have zero...
-        if (reduced_timeout != std::chrono::milliseconds::zero())
-            reduced_timeout = std::chrono::milliseconds(1);
+        reduced_timeout = std::chrono::milliseconds(1);
     }
 
     auto result = looper->pollOnce(reduced_timeout.count());
