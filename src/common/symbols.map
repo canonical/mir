@@ -1005,3 +1005,18 @@ MIR_COMMON_2.1 {
   };
  local: *;
 };
+
+MIR_COMMON_2.2 {
+ global:
+  extern "C++" {
+    mir::fd_reception_error::fd_reception_error*;
+    mir::receive_data*;
+    mir::socket_error::socket_error*;
+    mir::socket_error_is_transient*;
+    mir::socket_disconnected_error*;
+    typeinfo?for?mir::fd_reception_error;
+    typeinfo?for?mir::socket_error;
+    typeinfo?for?mir::socket_disconnected_error;
+  };
+ local: *;
+};
