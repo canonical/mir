@@ -63,14 +63,20 @@ struct StubMessageProcessorReport : mf::MessageProcessorReport
 
 struct StubDisplayServer : mfd::DisplayServer
 {
-    void exchange_buffer(gp::RpcController*, mp::BufferRequest const*, mp::Buffer* response, gp::Closure*) override
+    void exchange_buffer(
+        gp::RpcController*,
+        mp::BufferRequest const*,
+        mp::Buffer* response,
+        gp::Closure* closure) override
     {   
         exchange_buffer_response = response;
+        exchange_closure = closure;
     }
     void client_pid(int) override
     {
     }
     mp::Buffer* exchange_buffer_response;
+    gp::Closure* exchange_closure;
 };
 }
 
@@ -97,10 +103,12 @@ TEST(ProtobufMessageProcessor, preserves_response_resource_for_exchange_buffer)
     mp->dispatch(invocation);
 
     ASSERT_THAT(stub_display_server.exchange_buffer_response, testing::Ne(nullptr));
+    ASSERT_THAT(stub_display_server.exchange_closure, testing::Ne(nullptr));
     int num_data{5};
     stub_display_server.exchange_buffer_response->clear_data();
     for(auto i = 0; i < num_data; i++)
         stub_display_server.exchange_buffer_response->add_data(i);
 
     EXPECT_THAT(stub_display_server.exchange_buffer_response->data().size(), Eq(num_data));
+    stub_display_server.exchange_closure->Run();
 }
