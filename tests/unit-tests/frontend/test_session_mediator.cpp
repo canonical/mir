@@ -819,9 +819,6 @@ TEST_F(SessionMediator, exchange_buffer_throws_if_client_submits_bad_request)
     }, std::logic_error);
 }
 
-#if 0
-<<<<<<< TREE
-=======
 TEST_F(SessionMediator, exchange_buffer_different_for_different_surfaces)
 {
     using namespace testing;
@@ -853,20 +850,9 @@ TEST_F(SessionMediator, exchange_buffer_different_for_different_surfaces)
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 }
 
->>>>>>> MERGE-SOURCE
 TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
-<<<<<<< TREE
-=======
-TEST_F(SessionMediator, exchange_buffer_different_for_different_surfaces)
->>>>>>> MERGE-SOURCE
-=======
->>>>>>> MERGE-SOURCE
 {
     using namespace testing;
-<<<<<<< TREE
-<<<<<<< TREE
-=======
->>>>>>> MERGE-SOURCE
     NiceMock<MockResourceCache> mock_cache;
     mp::Buffer exchanged_buffer;
 
@@ -891,31 +877,8 @@ TEST_F(SessionMediator, exchange_buffer_different_for_different_surfaces)
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
         mt::fake_shared(mock_cache), stub_screencast, nullptr, nullptr};
-<<<<<<< TREE
-=======
-    mp::SurfaceParameters surface_request;
-    mp::BufferRequest req1;
-    mp::BufferRequest req2;
-    auto const& mock_surface1 = stubbed_session->mock_surface_at(mf::SurfaceId{0});
-    auto const& mock_surface2 = stubbed_session->mock_surface_at(mf::SurfaceId{1});
-    Sequence seq;
-    EXPECT_CALL(*mock_surface1, swap_buffers(_,_))
-        .InSequence(seq);
-    EXPECT_CALL(*mock_surface2, swap_buffers(_,_))
-        .InSequence(seq);
-    EXPECT_CALL(*mock_surface2, swap_buffers(_,_))
-        .InSequence(seq);
-    EXPECT_CALL(*mock_surface1, swap_buffers(_,_))
-        .InSequence(seq);
->>>>>>> MERGE-SOURCE
-=======
->>>>>>> MERGE-SOURCE
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
-<<<<<<< TREE
-<<<<<<< TREE
-=======
->>>>>>> MERGE-SOURCE
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
     *buffer_request.mutable_id() = surface_response.id();
     buffer_request.mutable_buffer()->set_buffer_id(surface_response.buffer().buffer_id());
@@ -927,20 +890,4 @@ TEST_F(SessionMediator, exchange_buffer_different_for_different_surfaces)
     mediator.exchange_buffer(nullptr, &buffer_request, &exchanged_buffer, null_callback.get());
     buffer_request.mutable_buffer()->set_buffer_id(exchanged_buffer.buffer_id());
     buffer_request.mutable_buffer()->clear_fd();
-<<<<<<< TREE
-=======
-    mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
-    *req1.mutable_id() = surface_response.id();
-    *req1.mutable_buffer() = surface_response.buffer();
-    mediator.create_surface(nullptr, &surface_request, &surface_response, null_callback.get());
-    *req2.mutable_id() = surface_response.id();
-    *req2.mutable_buffer() = surface_response.buffer();
-    mediator.exchange_buffer(nullptr, &req2, &buffer_response, null_callback.get());
-    mediator.exchange_buffer(nullptr, &req1, &buffer_response, null_callback.get());
-    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
->>>>>>> MERGE-SOURCE
-=======
->>>>>>> MERGE-SOURCE
 }
-<<<<<<< TREE
-#endif
