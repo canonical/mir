@@ -37,7 +37,7 @@ struct socket_disconnected_error : std::system_error
 
 struct fd_reception_error : std::runtime_error
 {
-    fd_reception_error();
+    fd_reception_error(std::string const& message);
 };
 
 bool socket_error_is_transient(int error_code);
