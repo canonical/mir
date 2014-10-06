@@ -132,7 +132,7 @@ std::shared_ptr<ms::PromptSession> ms::PromptSessionManagerImpl::start_prompt_se
     session->start_prompt_session();
     prompt_session_listener->starting(prompt_session);
 
-	prompt_session_container->insert_participant(prompt_session.get(), application_session, PromptSessionContainer::ParticipantType::application);
+    prompt_session_container->insert_participant(prompt_session.get(), application_session, PromptSessionContainer::ParticipantType::application);
 
     return prompt_session;
 }
