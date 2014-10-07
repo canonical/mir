@@ -117,18 +117,6 @@ MIR_SERVER_26 {
     mir::DisplayServer::stop*;
     mir::EmergencyCleanup::operator*;
     mir::frontend::as_internal_surface*;
-    mir::frontend::ConnectionCreator::?ConnectionCreator*;
-    mir::frontend::ConnectionCreator::ConnectionCreator*;
-    mir::frontend::ConnectionCreator::create_connection_for*;
-    mir::frontend::ConnectionCreator::operator*;
-    mir::frontend::detail::Invocation::id*;
-    mir::frontend::detail::Invocation::method_name*;
-    mir::frontend::detail::Invocation::parameters*;
-    mir::frontend::detail::MessageProcessor::client_pid*;
-    mir::frontend::detail::MessageProcessor::dispatch*;
-    mir::frontend::detail::MessageProcessor::?MessageProcessor*;
-    mir::frontend::detail::MessageProcessor::MessageProcessor*;
-    mir::frontend::detail::MessageProcessor::operator*;
     mir::frontend::DisplayChanger::active_configuration*;
     mir::frontend::DisplayChanger::configure*;
     mir::frontend::DisplayChanger::?DisplayChanger*;
@@ -542,8 +530,6 @@ MIR_SERVER_26 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_touch_visualizer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_session_coordinator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_surface_coordinator*;
-    non-virtual?thunk?to?mir::frontend::ConnectionCreator::?ConnectionCreator*;
-    non-virtual?thunk?to?mir::frontend::detail::MessageProcessor::?MessageProcessor*;
     non-virtual?thunk?to?mir::frontend::DisplayChanger::?DisplayChanger*;
     non-virtual?thunk?to?mir::frontend::EventSink::?EventSink*;
     non-virtual?thunk?to?mir::frontend::PromptSession::?PromptSession*;
@@ -602,9 +588,6 @@ MIR_SERVER_26 {
     typeinfo?for?mir::DefaultServerConfiguration;
     typeinfo?for?mir::DisplayServer;
     typeinfo?for?mir::EmergencyCleanup;
-    typeinfo?for?mir::frontend::ConnectionCreator;
-    typeinfo?for?mir::frontend::detail::Invocation;
-    typeinfo?for?mir::frontend::detail::MessageProcessor;
     typeinfo?for?mir::frontend::DisplayChanger;
     typeinfo?for?mir::frontend::EventSink;
     typeinfo?for?mir::frontend::PromptSession;
@@ -662,9 +645,6 @@ MIR_SERVER_26 {
     vtable?for?mir::DefaultServerConfiguration;
     vtable?for?mir::DisplayServer;
     vtable?for?mir::EmergencyCleanup;
-    vtable?for?mir::frontend::ConnectionCreator;
-    vtable?for?mir::frontend::detail::Invocation;
-    vtable?for?mir::frontend::detail::MessageProcessor;
     vtable?for?mir::frontend::DisplayChanger;
     vtable?for?mir::frontend::EventSink;
     vtable?for?mir::frontend::PromptSession;
