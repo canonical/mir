@@ -116,12 +116,8 @@ MIR_SERVER_26 {
     mir::DisplayServer::run*;
     mir::DisplayServer::stop*;
     mir::EmergencyCleanup::operator*;
-<<<<<<< TREE
     mir::frontend::ConnectionContext::ConnectionContext*;
     mir::frontend::ConnectionContext::fd_for_new_client*;
-=======
-    mir::frontend::as_internal_surface*;
->>>>>>> MERGE-SOURCE
     mir::frontend::ConnectionCreator::?ConnectionCreator*;
     mir::frontend::ConnectionCreator::ConnectionCreator*;
     mir::frontend::ConnectionCreator::create_connection_for*;
