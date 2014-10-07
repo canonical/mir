@@ -105,7 +105,7 @@ install(
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit ${CMAKE_SOURCE_DIR}/include/client/mir
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit
   DESTINATION "include/mirclient"
 )
 
