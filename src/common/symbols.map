@@ -882,37 +882,6 @@ MIR_COMMON_2 {
     vtable?for?MirScreencastParameters;
     vtable?for?MirSurfaceEvent;
     vtable?for?MirSurfaceParameters;
-    vtable?for?mir::time::Clock;
-  };
- local: *;
-};
-
-MIR_COMMON_2.1 {
- global:
-  extern "C++" {
-    mir::send_fds*;
-  };
- local: *;
-};
-
-MIR_COMMON_2.2 {
- global:
-  extern "C++" {
-    mir::fd_reception_error::fd_reception_error*;
-    mir::receive_data*;
-    mir::socket_error::socket_error*;
-    mir::socket_error_is_transient*;
-    mir::socket_disconnected_error*;
-    typeinfo?for?mir::fd_reception_error;
-    typeinfo?for?mir::socket_error;
-    typeinfo?for?mir::socket_disconnected_error;
-  };
- local: *;
-};
-
-MIR_COMMON_PRIVATE_2.2 {
- global:
-  extern "C++" {
     
     # These symbols are supposed to be "private" (they're under src/include)
     # but they are used by libmirplatform, libmirclient or libmirserver
@@ -953,6 +922,30 @@ MIR_COMMON_PRIVATE_2.2 {
     mir::udev::operator*;
     vtable?for?mir::logging::DumbConsoleLogger;
     vtable?for?mir::time::HighResolutionClock;
+    vtable?for?mir::time::Clock;
+  };
+ local: *;
+};
+
+MIR_COMMON_2.1 {
+ global:
+  extern "C++" {
+    mir::send_fds*;
+  };
+ local: *;
+};
+
+MIR_COMMON_2.2 {
+ global:
+  extern "C++" {
+    mir::fd_reception_error::fd_reception_error*;
+    mir::receive_data*;
+    mir::socket_error::socket_error*;
+    mir::socket_error_is_transient*;
+    mir::socket_disconnected_error*;
+    typeinfo?for?mir::fd_reception_error;
+    typeinfo?for?mir::socket_error;
+    typeinfo?for?mir::socket_disconnected_error;
   };
  local: *;
 };
