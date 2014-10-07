@@ -129,9 +129,6 @@ MIR_SERVER_26 {
     mir::frontend::detail::MessageProcessor::?MessageProcessor*;
     mir::frontend::detail::MessageProcessor::MessageProcessor*;
     mir::frontend::detail::MessageProcessor::operator*;
-    mir::frontend::detail::ProtobufMessageSender::?ProtobufMessageSender*;
-    mir::frontend::detail::ProtobufMessageSender::ProtobufMessageSender*;
-    mir::frontend::detail::ProtobufMessageSender::send_response*;
     mir::frontend::DisplayChanger::active_configuration*;
     mir::frontend::DisplayChanger::configure*;
     mir::frontend::DisplayChanger::?DisplayChanger*;
@@ -146,10 +143,6 @@ MIR_SERVER_26 {
     mir::frontend::PromptSession::operator*;
     mir::frontend::PromptSession::?PromptSession*;
     mir::frontend::PromptSession::PromptSession*;
-    mir::frontend::ProtobufConnectionCreator::create_connection_for*;
-    mir::frontend::ProtobufConnectionCreator::create_processor*;
-    mir::frontend::ProtobufConnectionCreator::?ProtobufConnectionCreator*;
-    mir::frontend::ProtobufConnectionCreator::ProtobufConnectionCreator*;
     mir::frontend::Screencast::capture*;
     mir::frontend::Screencast::create_session*;
     mir::frontend::Screencast::destroy_session*;
@@ -551,12 +544,9 @@ MIR_SERVER_26 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_surface_coordinator*;
     non-virtual?thunk?to?mir::frontend::ConnectionCreator::?ConnectionCreator*;
     non-virtual?thunk?to?mir::frontend::detail::MessageProcessor::?MessageProcessor*;
-    non-virtual?thunk?to?mir::frontend::detail::ProtobufMessageSender::?ProtobufMessageSender*;
     non-virtual?thunk?to?mir::frontend::DisplayChanger::?DisplayChanger*;
     non-virtual?thunk?to?mir::frontend::EventSink::?EventSink*;
     non-virtual?thunk?to?mir::frontend::PromptSession::?PromptSession*;
-    non-virtual?thunk?to?mir::frontend::ProtobufConnectionCreator::create_connection_for*;
-    non-virtual?thunk?to?mir::frontend::ProtobufConnectionCreator::create_processor*;
     non-virtual?thunk?to?mir::frontend::Screencast::?Screencast*;
     non-virtual?thunk?to?mir::frontend::SessionAuthorizer::?SessionAuthorizer*;
     non-virtual?thunk?to?mir::frontend::Session::?Session*;
@@ -615,11 +605,9 @@ MIR_SERVER_26 {
     typeinfo?for?mir::frontend::ConnectionCreator;
     typeinfo?for?mir::frontend::detail::Invocation;
     typeinfo?for?mir::frontend::detail::MessageProcessor;
-    typeinfo?for?mir::frontend::detail::ProtobufMessageSender;
     typeinfo?for?mir::frontend::DisplayChanger;
     typeinfo?for?mir::frontend::EventSink;
     typeinfo?for?mir::frontend::PromptSession;
-    typeinfo?for?mir::frontend::ProtobufConnectionCreator;
     typeinfo?for?mir::frontend::Screencast;
     typeinfo?for?mir::frontend::Session;
     typeinfo?for?mir::frontend::SessionAuthorizer;
@@ -677,11 +665,9 @@ MIR_SERVER_26 {
     vtable?for?mir::frontend::ConnectionCreator;
     vtable?for?mir::frontend::detail::Invocation;
     vtable?for?mir::frontend::detail::MessageProcessor;
-    vtable?for?mir::frontend::detail::ProtobufMessageSender;
     vtable?for?mir::frontend::DisplayChanger;
     vtable?for?mir::frontend::EventSink;
     vtable?for?mir::frontend::PromptSession;
-    vtable?for?mir::frontend::ProtobufConnectionCreator;
     vtable?for?mir::frontend::Screencast;
     vtable?for?mir::frontend::Session;
     vtable?for?mir::frontend::SessionAuthorizer;
