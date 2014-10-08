@@ -24,7 +24,7 @@ namespace mir
 {
 namespace options { class DefaultConfiguration; class Option; }
 
-class SimplerServer
+class DeclarativeServer
 {
 public:
     /// set a callback to introduce additional configuration options.
@@ -86,7 +86,7 @@ private:
 int main(int argc, char const* argv[])
 {
     static char const* const launch_child_opt = "launch-client";
-    mir::SimplerServer simpler_server;
+    mir::DeclarativeServer simpler_server;
 
     simpler_server.set_add_configuration_options(
         [] (mir::options::DefaultConfiguration& config)
@@ -138,46 +138,46 @@ std::shared_ptr<mo::DefaultConfiguration> configuration_options(
         return std::make_shared<mo::DefaultConfiguration>(argc, argv);
 
 }
-
-struct SimplerDefaultServerConfiguration : mir::DefaultServerConfiguration
-{
-    using DefaultServerConfiguration::DefaultServerConfiguration;
-    using DefaultServerConfiguration::the_options;
-};
 }
 
-void mir::SimplerServer::set_add_configuration_options(
+void mir::DeclarativeServer::set_add_configuration_options(
     std::function<void(mo::DefaultConfiguration& config)> const& add_configuration_options)
 {
     this->add_configuration_options = add_configuration_options;
 }
 
 
-void mir::SimplerServer::set_command_line(int argc, char const* argv[])
+void mir::DeclarativeServer::set_command_line(int argc, char const* argv[])
 {
 	this->argc = argc;
 	this->argv = argv;
 }
 
-void mir::SimplerServer::set_init_callback(std::function<void()> const& init_callback)
+void mir::DeclarativeServer::set_init_callback(std::function<void()> const& init_callback)
 {
     this->init_callback = init_callback;
 }
 
-auto mir::SimplerServer::get_options()
+auto mir::DeclarativeServer::get_options()
 -> std::shared_ptr<options::Option> const
 {
     return options.lock();
 }
 
-void mir::SimplerServer::run()
+void mir::DeclarativeServer::run()
 try
 {
+    struct DefaultServerConfiguration : mir::DefaultServerConfiguration
+    {
+        using mir::DefaultServerConfiguration::DefaultServerConfiguration;
+        using mir::DefaultServerConfiguration::the_options;
+    };
+
     auto const options = configuration_options(argc, argv, command_line_hander);
 
     add_configuration_options(*options);
 
-    SimplerDefaultServerConfiguration config{options};
+    DefaultServerConfiguration config{options};
 
     run_mir(config, [&](DisplayServer&)
         {
@@ -195,7 +195,7 @@ catch (...)
         mir::report_exception(std::cerr);
 }
 
-bool mir::SimplerServer::exited_normally()
+bool mir::DeclarativeServer::exited_normally()
 {
     return exit_status;
 }
