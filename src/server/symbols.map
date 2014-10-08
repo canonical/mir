@@ -73,8 +73,9 @@ MIR_SERVER_26 {
     mir::DefaultServerConfiguration::the_input_registrar*;
     mir::DefaultServerConfiguration::the_input_report*;
     mir::DefaultServerConfiguration::the_input_scene*;
-    mir::DefaultServerConfiguration::the_input_sender*;
     mir::DefaultServerConfiguration::the_input_send_observer*;
+    mir::DefaultServerConfiguration::the_input_sender*;
+    mir::DefaultServerConfiguration::the_input_target_enumerator*;
     mir::DefaultServerConfiguration::the_input_targeter*;
     mir::DefaultServerConfiguration::the_logger*;
     mir::DefaultServerConfiguration::the_main_loop*;
