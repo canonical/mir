@@ -22,12 +22,27 @@
 
 namespace mir
 {
+namespace compositor{ class Compositor; }
+namespace frontend { class SessionAuthorizer; }
+namespace graphics { class Platform; class Display; class GLConfig; }
+namespace input { class CompositeEventFilter; class InputDispatcher; }
 namespace options { class DefaultConfiguration; class Option; }
-namespace graphics { class Platform; class Display; }
-namespace input { class CompositeEventFilter; }
+namespace scene
+{
+class PlacementStrategy;
+class SessionListener;
+class PromptSessionListener;
+class SurfaceConfigurator;
+}
+namespace shell { class FocusSetter; class DisplayLayout; }
 
 class MainLoop;
+class ServerStatusListener;
 
+// TODO A lot of functions return "null before initialization completes" - perhaps better to throw?
+
+/// A declarative server implementation that doesn't tie client code to
+/// volatile interfaces (like DefaultServerConfiguration)
 class Server
 {
 public:
@@ -92,7 +107,48 @@ public:
     /// when the init_callback has been invoked (and thereafter until the server exits).
     auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;
 
+// qtmir invokes the following
+
+    /// Returns the display layout.
+    /// This will be null before initialization completes. It will be available
+    /// when the init_callback has been invoked (and thereafter until the server exits).
+    auto the_shell_display_layout() const -> std::shared_ptr<shell::DisplayLayout>;
+
+    /// Returns the session authorizer.
+    /// This will be null before initialization completes. It will be available
+    /// when the init_callback has been invoked (and thereafter until the server exits).
+    auto the_session_authorizer() const -> std::shared_ptr<frontend::SessionAuthorizer>;
+
+    /// Returns the session listener.
+    /// This will be null before initialization completes. It will be available
+    /// when the init_callback has been invoked (and thereafter until the server exits).
+    auto the_session_listener() const -> std::shared_ptr<scene::SessionListener>;
+
+    /// Returns the prompt session listener.
+    /// This will be null before initialization completes. It will be available
+    /// when the init_callback has been invoked (and thereafter until the server exits).
+    auto the_prompt_session_listener() const -> std::shared_ptr<scene::PromptSessionListener>;
+
+    /// Returns the surface configurator.
+    /// This will be null before initialization completes. It will be available
+    /// when the init_callback has been invoked (and thereafter until the server exits).
+    auto the_surface_configurator() const -> std::shared_ptr<scene::SurfaceConfigurator>;
+
+    // qtmir overrides the following
+    // TODO I've only implemented the first of these as an example, the rest follow the same pattern
+    void override_the_placement_strategy(std::function<std::shared_ptr<scene::PlacementStrategy>()> const& placement_strategy_builder);
+    void override_the_session_listener(std::function<std::shared_ptr<scene::SessionListener>()> const& session_listener_builder);
+    void override_the_prompt_session_listener(std::function<std::shared_ptr<scene::PromptSessionListener>()> const& prompt_session_listener_builder);
+    void override_the_surface_configurator(std::function<std::shared_ptr<scene::SurfaceConfigurator>()> const& surface_configurator_builder);
+    void override_the_session_authorizer(std::function<std::shared_ptr<frontend::SessionAuthorizer>()> const& session_authorizer_builder);
+    void override_the_compositor(std::function<std::shared_ptr<compositor::Compositor>()> const& compositor_builder);
+    void override_the_input_dispatcher(std::function<std::shared_ptr<input::InputDispatcher>()> const& input_dispatcher_builder);
+    void override_the_gl_config(std::function<std::shared_ptr<graphics::GLConfig>()> const& gl_config_builder);
+    void override_the_server_status_listener(std::function<std::shared_ptr<ServerStatusListener>()> const& server_status_listener_builder);
+    void override_the_shell_focus_setter(std::function<std::shared_ptr<shell::FocusSetter>()> const& focus_setter_builder);
+
 private:
+    // TODO this should be hidden to avoid ABI changes if it changes.
     std::function<void(options::DefaultConfiguration& config)> add_configuration_options{
         [](options::DefaultConfiguration&){}};
     std::function<void(int argc, char const* const* argv)> command_line_hander{};
@@ -104,6 +160,8 @@ private:
     std::weak_ptr<options::Option> options;
     struct DefaultServerConfiguration;
     DefaultServerConfiguration* server_config{nullptr};
+
+    std::function<std::shared_ptr<scene::PlacementStrategy>()> placement_strategy_builder;
 };
 }
 // simple server header end
@@ -255,6 +313,18 @@ struct mir::Server::DefaultServerConfiguration : mir::DefaultServerConfiguration
 {
     using mir::DefaultServerConfiguration::DefaultServerConfiguration;
     using mir::DefaultServerConfiguration::the_options;
+
+    std::function<std::shared_ptr<scene::PlacementStrategy>()> placement_strategy_builder;
+
+    auto the_placement_strategy()
+    -> std::shared_ptr<scene::PlacementStrategy> override
+    {
+        if (placement_strategy_builder)
+            return shell_placement_strategy(
+                [this] { return placement_strategy_builder(); });
+
+        return mir::DefaultServerConfiguration::the_placement_strategy();
+    }
 };
 
 namespace
@@ -308,6 +378,8 @@ try
     add_configuration_options(*options);
 
     DefaultServerConfiguration config{options};
+
+    config.placement_strategy_builder = placement_strategy_builder;
 
     server_config = &config;
 
@@ -369,6 +441,51 @@ auto mir::Server::the_composite_event_filter() const
     if (server_config) return server_config->the_composite_event_filter();
 
     return {};
+}
+
+auto mir::Server::the_shell_display_layout() const
+-> std::shared_ptr<shell::DisplayLayout>
+{
+    if (server_config) return server_config->the_shell_display_layout();
+
+    return {};
+}
+
+auto mir::Server::the_session_authorizer() const
+-> std::shared_ptr<frontend::SessionAuthorizer>
+{
+    if (server_config) return server_config->the_session_authorizer();
+
+    return {};
+}
+
+auto mir::Server::the_session_listener() const
+-> std::shared_ptr<scene::SessionListener>
+{
+    if (server_config) return server_config->the_session_listener();
+
+    return {};
+}
+
+auto mir::Server::the_prompt_session_listener() const
+-> std::shared_ptr<scene::PromptSessionListener>
+{
+    if (server_config) return server_config->the_prompt_session_listener();
+
+    return {};
+}
+
+auto mir::Server::the_surface_configurator() const
+-> std::shared_ptr<scene::SurfaceConfigurator>
+{
+    if (server_config) return server_config->the_surface_configurator();
+
+    return {};
+}
+
+void mir::Server::override_the_placement_strategy(std::function<std::shared_ptr<scene::PlacementStrategy>()> const& placement_strategy_builder)
+{
+    this->placement_strategy_builder = placement_strategy_builder;
 }
 
 // simple server implementation end
