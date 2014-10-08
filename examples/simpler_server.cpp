@@ -32,12 +32,17 @@ public:
     void set_add_configuration_options(
         std::function<void(options::DefaultConfiguration& config)> const& add_configuration_options);
 
-    /// set a handler for any unrecognised command line options.
-    /// The default action is to exit by throwing mir::AbnormalExit
+    /// set a handler for any command line options Mir does not recognise.
+    /// This will be invoked if any unrecognised options are found during initialisation.
+    /// Any unrecognised arguments are passed to this function. The pointers remain valid
+    /// for the duration of the call only.
+    /// If set_command_line_hander is not called the default action is to exit by
+    /// throwing mir::AbnormalExit (which will be handled by the exception handler prior to
+    /// exiting run().
     void set_command_line_hander(
         std::function<void(int argc, char const* const* argv)> const& command_line_hander);
 
-    /// set the command line (this must remain valid while run() is called
+    /// set the command line (this must remain valid while run() is called)
     void set_command_line(int argc, char const* argv[]);
 
     /// set a callback to be invoked when the server has been initialized,
