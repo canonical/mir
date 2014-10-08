@@ -24,7 +24,7 @@ namespace mir
 {
 namespace options { class DefaultConfiguration; class Option; }
 
-class DeclarativeServer
+class Server
 {
 public:
     /// set a callback to introduce additional configuration options.
@@ -86,7 +86,7 @@ private:
 int main(int argc, char const* argv[])
 {
     static char const* const launch_child_opt = "launch-client";
-    mir::DeclarativeServer server;
+    mir::Server server;
 
     server.set_add_configuration_options(
         [] (mir::options::DefaultConfiguration& config)
@@ -140,31 +140,31 @@ std::shared_ptr<mo::DefaultConfiguration> configuration_options(
 }
 }
 
-void mir::DeclarativeServer::set_add_configuration_options(
+void mir::Server::set_add_configuration_options(
     std::function<void(mo::DefaultConfiguration& config)> const& add_configuration_options)
 {
     this->add_configuration_options = add_configuration_options;
 }
 
 
-void mir::DeclarativeServer::set_command_line(int argc, char const* argv[])
+void mir::Server::set_command_line(int argc, char const* argv[])
 {
 	this->argc = argc;
 	this->argv = argv;
 }
 
-void mir::DeclarativeServer::set_init_callback(std::function<void()> const& init_callback)
+void mir::Server::set_init_callback(std::function<void()> const& init_callback)
 {
     this->init_callback = init_callback;
 }
 
-auto mir::DeclarativeServer::get_options()
+auto mir::Server::get_options()
 -> std::shared_ptr<options::Option> const
 {
     return options.lock();
 }
 
-void mir::DeclarativeServer::run()
+void mir::Server::run()
 try
 {
     struct DefaultServerConfiguration : mir::DefaultServerConfiguration
@@ -195,7 +195,7 @@ catch (...)
         mir::report_exception(std::cerr);
 }
 
-bool mir::DeclarativeServer::exited_normally()
+bool mir::Server::exited_normally()
 {
     return exit_status;
 }
