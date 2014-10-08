@@ -211,9 +211,7 @@ TEST_F(GLRenderer, render_is_done_in_sequence)
     EXPECT_CALL(*mock_texture_cache, drop_unused());
 
     mc::GLRenderer renderer(program_factory, std::move(mock_texture_cache), display_area, mc::DestinationAlpha::opaque);
-    renderer.begin();
     renderer.render(renderable_list);
-    renderer.end();
 }
 
 TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
@@ -224,9 +222,7 @@ TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
     EXPECT_CALL(mock_gl, glDisable(GL_BLEND));
 
     mc::GLRenderer renderer(program_factory, std::move(mock_texture_cache), display_area, mc::DestinationAlpha::opaque);
-    renderer.begin();
     renderer.render(renderable_list);
-    renderer.end();
 }
 
 TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
@@ -263,9 +259,7 @@ TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
         .Times(bind_count);
 
     OverriddenTessellateRenderer renderer(program_factory, std::move(mock_texture_cache), display_area, bind_count);
-    renderer.begin();
     renderer.render(renderable_list);
-    renderer.end();
 }
 
 TEST_F(GLRenderer, opaque_alpha_channel)
@@ -279,9 +273,7 @@ TEST_F(GLRenderer, opaque_alpha_channel)
     mc::GLRenderer renderer(program_factory, std::move(mock_texture_cache), display_area,
         mc::DestinationAlpha::opaque);
 
-    renderer.begin();
     renderer.render(renderable_list);
-    renderer.end();
 }
 
 TEST_F(GLRenderer, generates_alpha_channel_content)
@@ -291,7 +283,5 @@ TEST_F(GLRenderer, generates_alpha_channel_content)
     mc::GLRenderer renderer(program_factory, std::move(mock_texture_cache), display_area,
         mc::DestinationAlpha::generate_from_source);
 
-    renderer.begin();
     renderer.render(renderable_list);
-    renderer.end();
 }
