@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,31 +16,27 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "graphics.h"
+#include "mir/server.h"
 
-#include "mir/default_server_configuration.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/report_exception.h"
+#include "graphics.h"
 
+#include <cstdlib>
 #include <csignal>
-#include <iostream>
-
-namespace mg=mir::graphics;
-namespace mo=mir::options;
 
 namespace
 {
+class ExampleExit {};
+
 volatile std::sig_atomic_t running = true;
 
 void signal_handler(int /*signum*/)
 {
     running = false;
 }
-}
 
-int main(int argc, char const** argv)
-try
+void render_to_fb(std::shared_ptr<mir::graphics::Display> const& display)
 {
     /* Set up graceful exit on SIGINT and SIGTERM */
     struct sigaction sa;
@@ -51,13 +47,9 @@ try
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
 
-    mir::DefaultServerConfiguration conf{argc, argv};
-
-    auto display = conf.the_display();
-
     mir::draw::glAnimationBasic gl_animation;
 
-    display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
+    display->for_each_display_buffer([&](mir::graphics::DisplayBuffer& buffer)
     {
         buffer.make_current();
         gl_animation.init_gl();
@@ -65,7 +57,7 @@ try
 
     while (running)
     {
-        display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
+        display->for_each_display_buffer([&](mir::graphics::DisplayBuffer& buffer)
         {
             buffer.make_current();
 
@@ -76,11 +68,23 @@ try
 
         gl_animation.step();
     }
-
-    return 0;
 }
-catch (...)
+}
+
+int main(int argc, char const* argv[])
 {
-    mir::report_exception(std::cerr);
-    return 1;
+    mir::Server server;
+
+    server.set_command_line(argc, argv);
+    server.set_init_callback([&]
+        {
+            render_to_fb(server.the_display());
+
+            server.set_exception_handler([]{});
+            throw ExampleExit{};
+        });
+
+    server.run();
+
+    return EXIT_SUCCESS;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012, 2013 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,23 +16,75 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "basic_server_configuration.h"
+#include "mir/server.h"
 
-#include "mir/report_exception.h"
-#include "mir/run_mir.h"
+#include "mir/options/default_configuration.h"
+#include "mir/input/composite_event_filter.h"
+#include "graphics.h"
 
-#include <iostream>
+#include <linux/input.h>
+
+namespace
+{
+class QuitFilter : public mir::input::EventFilter
+{
+public:
+    QuitFilter(mir::Server& server)
+        : server{server}
+    {
+    }
+
+    bool handle(MirEvent const& event) override
+    {
+        if (event.type == mir_event_type_key &&
+            event.key.action == mir_key_action_down &&
+            (event.key.modifiers & mir_key_modifier_alt) &&
+            (event.key.modifiers & mir_key_modifier_ctrl) &&
+            event.key.scan_code == KEY_BACKSPACE)
+        {
+            server.stop();
+            return true;
+        }
+
+        return false;
+    }
+
+private:
+    mir::Server& server;
+};
+}
 
 int main(int argc, char const* argv[])
-try
 {
-    mir::examples::BasicServerConfiguration config(argc, argv);
+    static char const* const launch_child_opt = "launch-client";
+    mir::Server server;
 
-    run_mir(config, [&](mir::DisplayServer&){ config.launch_client(); });
-    return 0;
-}
-catch (...)
-{
-    mir::report_exception(std::cerr);
-    return 1;
+    auto const quit_filter = std::make_shared<QuitFilter>(server);
+
+    server.set_add_configuration_options(
+        [] (mir::options::DefaultConfiguration& config)
+        {
+            namespace po = boost::program_options;
+
+            config.add_options()
+                (launch_child_opt, po::value<std::string>(), "system() command to launch client");
+        });
+
+    server.set_command_line(argc, argv);
+    server.set_init_callback([&]
+        {
+            server.the_composite_event_filter()->append(quit_filter);
+
+            auto const options = server.get_options();
+
+            if (options->is_set(launch_child_opt))
+            {
+                auto ignore = std::system((options->get<std::string>(launch_child_opt) + "&").c_str());
+                (void)ignore;
+            }
+        });
+
+    server.run();
+
+    return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
