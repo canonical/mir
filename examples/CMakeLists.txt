@@ -157,6 +157,7 @@ add_executable(mir_demo_server_simpler
 )
 
 target_link_libraries(mir_demo_server_simpler
+  mirdraw
   mirserver
 )
 #@------

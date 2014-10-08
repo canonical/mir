@@ -98,12 +98,63 @@ private:
 // simple server client start
 
 #include "mir/options/default_configuration.h"
+#include "mir/graphics/display.h"
+#include "mir/graphics/display_buffer.h"
+#include "graphics.h"
 
 #include <cstdlib>
+#include <csignal>
+
+namespace
+{
+class ExampleExit {};
+
+volatile std::sig_atomic_t running = true;
+
+void signal_handler(int /*signum*/)
+{
+    running = false;
+}
+
+void render_to_fb(std::shared_ptr<mir::graphics::Display> const& display)
+{
+    /* Set up graceful exit on SIGINT and SIGTERM */
+    struct sigaction sa;
+    sa.sa_handler = signal_handler;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+
+    mir::draw::glAnimationBasic gl_animation;
+
+    display->for_each_display_buffer([&](mir::graphics::DisplayBuffer& buffer)
+    {
+        buffer.make_current();
+        gl_animation.init_gl();
+    });
+
+    while (running)
+    {
+        display->for_each_display_buffer([&](mir::graphics::DisplayBuffer& buffer)
+        {
+            buffer.make_current();
+
+            gl_animation.render_gl();
+
+            buffer.post_update();
+        });
+
+        gl_animation.step();
+    }
+}
+}
 
 int main(int argc, char const* argv[])
 {
     static char const* const launch_child_opt = "launch-client";
+    static char const* const render_to_fb_opt = "render-to-fb";
     mir::Server server;
 
     server.set_add_configuration_options(
@@ -112,6 +163,7 @@ int main(int argc, char const* argv[])
             namespace po = boost::program_options;
 
             config.add_options()
+                (render_to_fb_opt, "emulate render_to_fb")
                 (launch_child_opt, po::value<std::string>(), "system() command to launch client");
         });
 
@@ -119,7 +171,15 @@ int main(int argc, char const* argv[])
     server.set_init_callback([&]
         {
             auto const options = server.get_options();
-            if (options->is_set(launch_child_opt))
+
+            if (options->is_set(render_to_fb_opt))
+            {
+                render_to_fb(server.the_display());
+
+                server.set_exception_handler([]{});
+                throw ExampleExit{};
+            }
+            else if (options->is_set(launch_child_opt))
             {
                 auto ignore = std::system((options->get<std::string>(launch_child_opt) + "&").c_str());
                 (void)ignore;
@@ -186,6 +246,11 @@ auto mir::Server::get_options()
 -> std::shared_ptr<options::Option> const
 {
     return options.lock();
+}
+
+void mir::Server::set_exception_handler(std::function<void()> const& exception_handler)
+{
+    this->exception_handler = exception_handler;
 }
 
 void mir::Server::run()
