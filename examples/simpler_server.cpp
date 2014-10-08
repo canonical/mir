@@ -86,9 +86,9 @@ private:
 int main(int argc, char const* argv[])
 {
     static char const* const launch_child_opt = "launch-client";
-    mir::DeclarativeServer simpler_server;
+    mir::DeclarativeServer server;
 
-    simpler_server.set_add_configuration_options(
+    server.set_add_configuration_options(
         [] (mir::options::DefaultConfiguration& config)
         {
             namespace po = boost::program_options;
@@ -97,10 +97,10 @@ int main(int argc, char const* argv[])
                 (launch_child_opt, po::value<std::string>(), "system() command to launch client");
         });
 
-    simpler_server.set_command_line(argc, argv);
-    simpler_server.set_init_callback([&]
+    server.set_command_line(argc, argv);
+    server.set_init_callback([&]
         {
-            auto const options = simpler_server.get_options();
+            auto const options = server.get_options();
             if (options->is_set(launch_child_opt))
             {
                 auto ignore = std::system((options->get<std::string>(launch_child_opt) + "&").c_str());
@@ -108,9 +108,9 @@ int main(int argc, char const* argv[])
             }
         });
 
-    simpler_server.run();
+    server.run();
 
-    return simpler_server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
+    return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 // simple server client end
 
