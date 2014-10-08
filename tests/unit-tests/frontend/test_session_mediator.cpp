@@ -843,7 +843,7 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        mt::fake_shared(mock_cache), stub_screencast, nullptr, nullptr};
+        mt::fake_shared(mock_cache), stub_screencast, &connector, nullptr, nullptr};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());
