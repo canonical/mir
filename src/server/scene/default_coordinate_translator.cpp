@@ -16,7 +16,6 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-
 #include "default_coordinate_translator.h"
 #include "basic_surface.h"
 
@@ -24,11 +23,10 @@ namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 
-geom::Point ms::DefaultCoordinateTranslator::surface_to_screen(
-        std::shared_ptr<mf::Surface> surface, uint32_t x, uint32_t y)
+geom::Point ms::DefaultCoordinateTranslator::surface_to_screen(std::shared_ptr<mf::Surface> surface, int32_t x,
+                                                               int32_t y)
 {
     auto const scene_surface = std::dynamic_pointer_cast<ms::BasicSurface>(surface);
 
-    return geom::Point{x + scene_surface->top_left().x.as_int(),
-                       y + scene_surface->top_left().y.as_int()};
+    return geom::Point{x + scene_surface->top_left().x.as_int(), y + scene_surface->top_left().y.as_int()};
 }

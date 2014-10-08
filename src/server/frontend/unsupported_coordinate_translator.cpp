@@ -26,7 +26,7 @@ namespace mf = mir::frontend;
 
 mg::Point mf::UnsupportedCoordinateTranslator::surface_to_screen(
         std::shared_ptr<mf::Surface> /*surface*/,
-        uint32_t /*x*/, uint32_t /*y*/)
+        int32_t /*x*/, int32_t /*y*/)
 {
     BOOST_THROW_EXCEPTION(mir::frontend::unsupported_feature());
 }

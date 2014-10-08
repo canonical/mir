@@ -99,8 +99,8 @@ public:
 
     // TODO: Some sort of extension mechanism so that this can be moved
     //       out into a separate class in the libmirclient-debug DSO.
-    bool translate_to_screen_coordinates(int x, int y,
-                                         int* screen_x, int* screen_y);
+    bool translate_to_screen_coordinates(int32_t x, int32_t y,
+                                         int32_t *screen_x, int32_t *screen_y);
     
     // Non-blocking
     int attrib(MirSurfaceAttrib a) const;

@@ -28,7 +28,7 @@ namespace frontend
 class UnsupportedCoordinateTranslator : public scene::CoordinateTranslator
 {
     geometry::Point surface_to_screen(std::shared_ptr<Surface> surface,
-                                      uint32_t x, uint32_t y) override;
+                                      int32_t x, int32_t y) override;
 };
 
 }

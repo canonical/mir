@@ -56,7 +56,7 @@ public:
      *       use the debug extension will receive an appropriate failure notice.
      */
     virtual geometry::Point surface_to_screen(std::shared_ptr<frontend::Surface> surface,
-                                              uint32_t x, uint32_t y) = 0;
+                                              int32_t x, int32_t y) = 0;
 };
 
 

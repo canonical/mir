@@ -31,8 +31,8 @@ int mir_debug_surface_id(MirSurface* surface)
 }
 
 MirBool mir_debug_surface_coords_to_screen(MirSurface* surface,
-                                           int x, int y,
-                                           int* screen_x, int* screen_y)
+                                           int32_t x, int32_t y,
+                                           int32_t* screen_x, int32_t* screen_y)
 {
     return surface->translate_to_screen_coordinates(x, y, screen_x, screen_y) ?
            mir_true : mir_false ;
