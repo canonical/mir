@@ -26,6 +26,11 @@ namespace mi = mir::input;
 namespace ms = mir::shell;
 namespace mia = mir::input::android;
 
+std::shared_ptr<mi::InputManager> mtf::FakeEventHubServerConfiguration::the_input_manager()
+{
+    return DefaultServerConfiguration::the_input_manager();
+}
+
 std::shared_ptr<ms::InputTargeter> mtf::FakeEventHubServerConfiguration::the_input_targeter()
 {
     return DefaultServerConfiguration::the_input_targeter();

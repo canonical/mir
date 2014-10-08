@@ -83,6 +83,11 @@ std::shared_ptr<ms::InputTargeter> mtf::InputTestingServerConfiguration::the_inp
     return DefaultServerConfiguration::the_input_targeter();
 }
 
+std::shared_ptr<mi::InputManager> mtf::InputTestingServerConfiguration::the_input_manager()
+{
+    return DefaultServerConfiguration::the_input_manager();
+}
+
 std::shared_ptr<mi::InputDispatcher> mtf::InputTestingServerConfiguration::the_input_dispatcher()
 {
     return DefaultServerConfiguration::the_input_dispatcher();
