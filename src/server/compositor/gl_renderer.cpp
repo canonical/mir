@@ -102,6 +102,11 @@ mc::GLRenderer::GLRenderer(
 
     set_viewport(display_area);
     set_rotation(0.0f);
+
+    if (dest_alpha == DestinationAlpha::opaque)
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    else
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
@@ -113,8 +118,34 @@ void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
 
 void mc::GLRenderer::render(mg::RenderableList const& renderables) const
 {
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    if (dest_alpha == DestinationAlpha::opaque)
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+
     for (auto const& r : renderables)
         render(*r);
+
+    /*
+     * glFinish is usually a bad thing to do as it blocks until rendering
+     * is complete, reducing parallelism between CPU and GPU. However in our
+     * case, glFinish is the lesser of two evils. Because glFinish only takes
+     * microseconds, whereas the alternative (old approach) takes 16
+     * milliseconds to complete a page flip while holding all the client
+     * buffers. And we don't want to hold buffer references for that
+     * long because it puts client frame deadlines at risk, and even
+     * risks no clients being ready to trigger the compositor in time
+     * for the next frame. So using glFinish here dramatically improves
+     * parallelism between the server and clients.
+     */
+    glFinish();
+
+    /*
+     * Drop all buffer references now it's safe (glFinish'd) and also delete
+     * any old textures from the GPU we didn't use during this frame.
+     */
+    texture_cache->drop_unused();
 }
 
 void mc::GLRenderer::render(mg::Renderable const& renderable) const
@@ -238,25 +269,6 @@ void mc::GLRenderer::set_rotation(float degrees)
     glUseProgram(0);
 
     rotation = degrees;
-}
-
-void mc::GLRenderer::begin() const
-{
-    if (dest_alpha == DestinationAlpha::opaque)
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    else
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    if (dest_alpha == DestinationAlpha::opaque)
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
-}
-
-void mc::GLRenderer::end() const
-{
-    texture_cache->drop_unused();
 }
 
 void mc::GLRenderer::suspend()

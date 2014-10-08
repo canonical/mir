@@ -89,6 +89,7 @@ void me::DemoCompositor::composite()
         }
         nonrenderlist_elements |= embellished;
     }
+    elements.clear(); // Don't hold compositor buffer references too long
 
     if (!nonrenderlist_elements &&
         display_buffer.post_renderables_if_optimizable(renderable_list))
@@ -103,8 +104,10 @@ void me::DemoCompositor::composite()
         renderer.set_rotation(display_buffer.orientation());
         renderer.begin(std::move(decoration_skip_list));
         renderer.render(renderable_list);
+        renderable_list.clear();  // Don't hold compositor buffers!
+
         display_buffer.post_update();
-        renderer.end();
+
         report->finished_frame(false, this);
     }
 }

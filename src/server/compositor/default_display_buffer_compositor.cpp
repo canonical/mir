@@ -72,6 +72,7 @@ void mc::DefaultDisplayBufferCompositor::composite()
         element->rendered_in(this);
         renderable_list.push_back(element->renderable());
     }
+    scene_elements.clear(); // Don't hold compositor buffers!
 
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
@@ -83,11 +84,10 @@ void mc::DefaultDisplayBufferCompositor::composite()
         display_buffer.make_current();
 
         renderer->set_rotation(display_buffer.orientation());
-
-        renderer->begin();  // TODO deprecatable now?
         renderer->render(renderable_list);
+        renderable_list.clear(); // Don't hold compositor buffers!
+
         display_buffer.post_update();
-        renderer->end();
 
         report->finished_frame(false, this);
     }

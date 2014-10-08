@@ -163,6 +163,7 @@ DemoRenderer::DemoRenderer(
     titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
                                                         {128,128,128,255},
                                                         255);
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 }
 
 DemoRenderer::~DemoRenderer()
@@ -173,15 +174,6 @@ DemoRenderer::~DemoRenderer()
 
 void DemoRenderer::begin(std::unordered_set<graphics::Renderable::ID> decoration_skip_list_) const
 {
-    bool const opaque = destination_alpha() == compositor::DestinationAlpha::opaque;
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    if (opaque)
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
-    
     decoration_skip_list = decoration_skip_list_;
 }
 
