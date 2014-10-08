@@ -16,11 +16,12 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_
-#define MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_
+#ifndef MIR_GRAPHICS_ANDROID_PLATFORM_H_
+#define MIR_GRAPHICS_ANDROID_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/native_platform.h"
+#include "device_quirks.h"
 
 namespace mir
 {
@@ -33,10 +34,10 @@ class GraphicBufferAllocator;
 class FramebufferFactory;
 class DisplayBuilder;
 
-class AndroidPlatform : public Platform, public NativePlatform
+class Platform : public graphics::Platform, public NativePlatform
 {
 public:
-    AndroidPlatform(
+    Platform(
         std::shared_ptr<DisplayBuilder> const& display_builder,
         std::shared_ptr<DisplayReport> const& display_report);
 
@@ -47,11 +48,13 @@ public:
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLProgramFactory> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/);
-    std::shared_ptr<PlatformIPCPackage> get_ipc_package();
+    std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
+
+    std::shared_ptr<PlatformIPCPackage> connection_ipc_package();
     std::shared_ptr<InternalClient> create_internal_client();
     std::shared_ptr<graphics::BufferWriter> make_buffer_writer() override;
     void fill_buffer_package(
-        BufferIPCPacker* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const;
+        BufferIpcMessage* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const;
     EGLNativeDisplayType egl_native_display() const;
 
 private:
@@ -59,14 +62,16 @@ private:
 
     void initialize(std::shared_ptr<NestedContext> const& nested_context) override;
 
-    virtual std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator(
-        const std::shared_ptr<BufferInitializer>& buffer_initializer);
+    std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator(
+        std::shared_ptr<BufferInitializer> const& buffer_initializer);
 
     std::shared_ptr<DisplayBuilder> const display_builder;
     std::shared_ptr<DisplayReport> const display_report;
+    std::shared_ptr<PlatformIpcOperations> const ipc_operations;
+    DeviceQuirks quirks{PropertiesOps{}};
 };
 
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_ANDROID_PLATFORM_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_PLATFORM_H_ */

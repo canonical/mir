@@ -160,6 +160,7 @@ TEST_F(SharedLibraryProber, LogsEachLibraryProbed)
 
     EXPECT_CALL(report, loading_library(FilenameMatches("libamd64.so")));
     EXPECT_CALL(report, loading_library(FilenameMatches("libarmhf.so")));
+    EXPECT_CALL(report, loading_library(FilenameMatches("libi386.so")));
 
     mir::libraries_for_path(library_path, report);
 }
@@ -169,14 +170,16 @@ TEST_F(SharedLibraryProber, LogsFailureForLoadFailure)
     using namespace testing;
     NiceMock<MockSharedLibraryProberReport> report;
 
-    bool armhf_failed{false}, amd64_failed{false};
+    bool armhf_failed{false}, amd64_failed{false}, i386_failed{false};
 
     ON_CALL(report, loading_failed(FilenameMatches("libamd64.so"), _))
             .WillByDefault(InvokeWithoutArgs([&amd64_failed]() { amd64_failed = true; }));
     ON_CALL(report, loading_failed(FilenameMatches("libarmhf.so"), _))
             .WillByDefault(InvokeWithoutArgs([&armhf_failed]() { armhf_failed = true; }));
+    ON_CALL(report, loading_failed(FilenameMatches("libi386.so"), _))
+            .WillByDefault(InvokeWithoutArgs([&i386_failed]() { i386_failed = true; }));
 
     mir::libraries_for_path(library_path, report);
 
-    EXPECT_TRUE(amd64_failed || armhf_failed);
+    EXPECT_TRUE(i386_failed || amd64_failed || armhf_failed);
 }

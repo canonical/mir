@@ -186,7 +186,7 @@ TEST_F(TestTouchspotController, touches_do_not_result_in_renderables_in_stack_wh
         .WillOnce(Return(std::make_shared<mtd::StubBuffer>()));
     mi::TouchspotController controller(allocator, writer, scene);
     controller.enable();
-    
+
     controller.disable();
     controller.visualize_touches({ {{0,0}, 1} });
 
@@ -196,4 +196,51 @@ TEST_F(TestTouchspotController, touches_do_not_result_in_renderables_in_stack_wh
     controller.visualize_touches({ {{0,0}, 1} });
 
     scene->expect_spots_centered_at({{0, 0}});
+}
+
+namespace
+{
+
+struct StubSceneWithMockEmission : public StubScene
+{
+    MOCK_METHOD0(emit_scene_changed, void());
+};
+
+struct TestTouchspotControllerSceneUpdates : public TestTouchspotController
+{
+    TestTouchspotControllerSceneUpdates()
+        : scene(std::make_shared<StubSceneWithMockEmission>())
+    {
+        EXPECT_CALL(*allocator, alloc_buffer(SoftwareBuffer())).Times(1)
+            .WillOnce(testing::Return(std::make_shared<mtd::StubBuffer>()));
+    }
+
+    std::shared_ptr<StubSceneWithMockEmission> const scene;
+};
+
+}
+
+TEST_F(TestTouchspotControllerSceneUpdates, does_not_emit_damage_if_nothing_happens)
+{
+    EXPECT_CALL(*scene, emit_scene_changed()).Times(0);
+
+    mi::TouchspotController controller(allocator, writer, scene);
+
+    // We are disabled so no damage should occur.
+    controller.visualize_touches({ {{0,0}, 1} });
+
+    controller.enable();
+    // Now we are enabled but do nothing so still no damage should occur.
+    controller.visualize_touches({});
+}
+
+TEST_F(TestTouchspotControllerSceneUpdates, emits_scene_damage)
+{
+    EXPECT_CALL(*scene, emit_scene_changed()).Times(2);
+
+    mi::TouchspotController controller(allocator, writer, scene);
+
+    controller.enable();
+    controller.visualize_touches({ {{0,0}, 1} });
+    controller.visualize_touches({ {{1,1}, 1}});
 }

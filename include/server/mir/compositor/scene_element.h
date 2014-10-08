@@ -19,7 +19,7 @@
 #ifndef MIR_COMPOSITOR_SCENE_ELEMENT_H_
 #define MIR_COMPOSITOR_SCENE_ELEMENT_H_
 
-#include "compositor_id.h"
+#include "mir/compositor/compositor_id.h"
 #include <memory>
 
 namespace mir

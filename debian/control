@@ -45,7 +45,7 @@ Homepage: https://launchpad.net/mir
 # just go ahead. ~mir-team will notice and sync up the code again.
 Vcs-Bzr: https://code.launchpad.net/~mir-team/mir/trunk
 
-Package: libmirserver25
+Package: libmirserver26
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -139,7 +139,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver25 (= ${binary:Version}),
+Depends: libmirserver26 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,

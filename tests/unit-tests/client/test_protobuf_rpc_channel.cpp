@@ -31,6 +31,8 @@
 #include <list>
 #include <endian.h>
 
+#include <fcntl.h>
+
 #include <google/protobuf/descriptor.h>
 
 #include <gtest/gtest.h>
@@ -67,7 +69,7 @@ public:
         }));
 
         ON_CALL(*this, receive_data(_,_,_))
-            .WillByDefault(Invoke([this](void* buffer, size_t message_size, std::vector<int>& fds)
+            .WillByDefault(Invoke([this](void* buffer, size_t message_size, std::vector<mir::Fd>& fds)
         {
             receive_data_default(buffer, message_size, fds);
         }));
@@ -81,7 +83,7 @@ public:
     {
         received_data.insert(received_data.end(), message.begin(), message.end());
     }
-    void add_server_message(std::vector<uint8_t> const& message, std::initializer_list<int> fds)
+    void add_server_message(std::vector<uint8_t> const& message, std::initializer_list<mir::Fd> fds)
     {
         add_server_message(message);
         received_fds.insert(received_fds.end(), fds);
@@ -104,7 +106,7 @@ public:
 
     MOCK_METHOD1(register_observer, void(std::shared_ptr<Observer> const&));
     MOCK_METHOD2(receive_data, void(void*, size_t));
-    MOCK_METHOD3(receive_data, void(void*, size_t, std::vector<int>&));
+    MOCK_METHOD3(receive_data, void(void*, size_t, std::vector<mir::Fd>&));
     MOCK_METHOD1(send_data, void(std::vector<uint8_t> const&));
 
     // Transport interface
@@ -115,11 +117,11 @@ public:
 
     void receive_data_default(void* buffer, size_t read_bytes)
     {
-        static std::vector<int> dummy;
+        static std::vector<mir::Fd> dummy;
         receive_data_default(buffer, read_bytes, dummy);
     }
 
-    void receive_data_default(void* buffer, size_t read_bytes, std::vector<int>& fds)
+    void receive_data_default(void* buffer, size_t read_bytes, std::vector<mir::Fd>& fds)
     {
         auto num_fds = fds.size();
         if (read_bytes > received_data.size())
@@ -147,7 +149,7 @@ public:
 
     size_t read_offset{0};
     std::vector<uint8_t> received_data;
-    std::vector<int> received_fds;
+    std::vector<mir::Fd> received_fds;
     std::list<std::vector<uint8_t>> sent_messages;
 };
 
@@ -247,7 +249,9 @@ TEST_F(MirProtobufRpcChannelTest, ReadsFds)
 
     channel_user.next_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){}));
 
-    std::initializer_list<int> fds = {2, 3, 5};
+    std::initializer_list<mir::Fd> fds = {mir::Fd{open("/dev/null", O_RDONLY)},
+                                          mir::Fd{open("/dev/null", O_RDONLY)},
+                                          mir::Fd{open("/dev/null", O_RDONLY)}};
 
     ASSERT_EQ(transport->sent_messages.size(), 1);
     {

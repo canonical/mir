@@ -40,14 +40,12 @@ set(
   test_prompt_session_client_api.cpp
   test_protobuf.cpp
   test_client_screencast.cpp
-  test_client_surface_swap_buffers.cpp
   test_client_cursor_api.cpp
   test_large_messages.cpp
   test_client_surface_visibility.cpp
   test_touchspot_visualization.cpp
   test_client_with_custom_display_config_deadlock.cpp
   test_macros.cpp
-  test_stale_frames.cpp
   test_server_without_active_outputs.cpp
   test_client_input.cpp
   test_server_startup.cpp
