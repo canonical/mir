@@ -23,6 +23,7 @@
 namespace mir
 {
 namespace options { class DefaultConfiguration; class Option; }
+namespace graphics { class Platform; class Display; }
 
 class Server
 {
@@ -68,6 +69,16 @@ public:
     /// when the init_callback has been invoked (and thereafter until the server exits).
     auto get_options() -> std::shared_ptr<options::Option> const;
 
+    /// Returns the graphics platform options.
+    /// This will be null before initialization completes. It will be available
+    /// when the init_callback has been invoked (and thereafter until the server exits).
+    auto the_graphics_platform() -> std::shared_ptr<graphics::Platform>;
+
+    /// Returns the graphics display options.
+    /// This will be null before initialization completes. It will be available
+    /// when the init_callback has been invoked (and thereafter until the server exits).
+    auto the_display() -> std::shared_ptr<graphics::Display>;
+
 private:
     std::function<void(options::DefaultConfiguration& config)> add_configuration_options{
         [](options::DefaultConfiguration&){}};
@@ -78,6 +89,8 @@ private:
     std::function<void()> exception_handler{};
     bool exit_status{false};
     std::weak_ptr<options::Option> options;
+    struct DefaultServerConfiguration;
+    DefaultServerConfiguration* server_config{nullptr};
 };
 }
 // simple server header end
@@ -130,6 +143,12 @@ int main(int argc, char const* argv[])
 
 namespace mo = mir::options;
 
+struct mir::Server::DefaultServerConfiguration : mir::DefaultServerConfiguration
+{
+    using mir::DefaultServerConfiguration::DefaultServerConfiguration;
+    using mir::DefaultServerConfiguration::the_options;
+};
+
 namespace
 {
 std::shared_ptr<mo::DefaultConfiguration> configuration_options(
@@ -172,17 +191,13 @@ auto mir::Server::get_options()
 void mir::Server::run()
 try
 {
-    struct DefaultServerConfiguration : mir::DefaultServerConfiguration
-    {
-        using mir::DefaultServerConfiguration::DefaultServerConfiguration;
-        using mir::DefaultServerConfiguration::the_options;
-    };
-
     auto const options = configuration_options(argc, argv, command_line_hander);
 
     add_configuration_options(*options);
 
     DefaultServerConfiguration config{options};
+
+    server_config = &config;
 
     run_mir(config, [&](DisplayServer&)
         {
@@ -191,9 +206,12 @@ try
         });
 
     exit_status = true;
+    server_config = nullptr;
 }
 catch (...)
 {
+    server_config = nullptr;
+
     if (exception_handler)
         exception_handler();
     else
@@ -203,6 +221,20 @@ catch (...)
 bool mir::Server::exited_normally()
 {
     return exit_status;
+}
+
+auto mir::Server::the_graphics_platform() -> std::shared_ptr<graphics::Platform>
+{
+    if (server_config) return server_config->the_graphics_platform();
+
+    return {};
+}
+
+auto mir::Server::the_display() -> std::shared_ptr<graphics::Display>
+{
+    if (server_config) return server_config->the_display();
+
+    return {};
 }
 
 // simple server implementation end
