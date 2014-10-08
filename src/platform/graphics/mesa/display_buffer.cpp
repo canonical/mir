@@ -313,9 +313,6 @@ void mgm::DisplayBuffer::post_update(
     else
     {
         scheduled_bufobj = bufobj;
-
-        if (outputs.size() == 1)
-            wait_for_page_flip();
     }
 }
 
