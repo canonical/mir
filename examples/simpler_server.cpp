@@ -18,10 +18,11 @@
 
 // simple server header start
 #include <functional>
+#include <memory>
 
 namespace mir
 {
-namespace options { class DefaultConfiguration; }
+namespace options { class DefaultConfiguration; class Option; }
 
 class SimplerServer
 {
@@ -54,14 +55,24 @@ public:
     /// Tell the Mir server to exit
     void stop();
 
+    /// returns true if and only if server exited normally. Otherwise false.
+    bool exited_normally();
+
+    /// Returns the configuration options.
+    /// This will be null before initialization completes. It will be available
+    /// when the init_callback has been invoked (and thereafter until the server exits).
+    auto get_options() -> std::shared_ptr<options::Option> const;
+
 private:
     std::function<void(options::DefaultConfiguration& config)> add_configuration_options{
         [](options::DefaultConfiguration&){}};
     std::function<void(int argc, char const* const* argv)> command_line_hander{};
-    std::function<void()> init_callback{[](){}};
+    std::function<void()> init_callback{[]{}};
     int argc{0};
     char const** argv{nullptr};
     std::function<void()> exception_handler{};
+    bool exit_status{false};
+    std::weak_ptr<options::Option> options;
 };
 }
 // simple server header end
@@ -70,8 +81,11 @@ private:
 
 #include "mir/options/default_configuration.h"
 
+#include <cstdlib>
+
 int main(int argc, char const* argv[])
 {
+    static char const* const launch_child_opt = "launch-client";
     mir::SimplerServer simpler_server;
 
     simpler_server.set_add_configuration_options(
@@ -80,11 +94,23 @@ int main(int argc, char const* argv[])
             namespace po = boost::program_options;
 
             config.add_options()
-                ("launch-client", po::value<std::string>(), "system() command to launch client");
+                (launch_child_opt, po::value<std::string>(), "system() command to launch client");
         });
 
     simpler_server.set_command_line(argc, argv);
+    simpler_server.set_init_callback([&]
+        {
+            auto const options = simpler_server.get_options();
+            if (options->is_set(launch_child_opt))
+            {
+                auto ignore = std::system((options->get<std::string>(launch_child_opt) + "&").c_str());
+                (void)ignore;
+            }
+        });
+
     simpler_server.run();
+
+    return simpler_server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 // simple server client end
 
@@ -112,6 +138,12 @@ std::shared_ptr<mo::DefaultConfiguration> configuration_options(
         return std::make_shared<mo::DefaultConfiguration>(argc, argv);
 
 }
+
+struct SimplerDefaultServerConfiguration : mir::DefaultServerConfiguration
+{
+    using DefaultServerConfiguration::DefaultServerConfiguration;
+    using DefaultServerConfiguration::the_options;
+};
 }
 
 void mir::SimplerServer::set_add_configuration_options(
@@ -127,6 +159,17 @@ void mir::SimplerServer::set_command_line(int argc, char const* argv[])
 	this->argv = argv;
 }
 
+void mir::SimplerServer::set_init_callback(std::function<void()> const& init_callback)
+{
+    this->init_callback = init_callback;
+}
+
+auto mir::SimplerServer::get_options()
+-> std::shared_ptr<options::Option> const
+{
+    return options.lock();
+}
+
 void mir::SimplerServer::run()
 try
 {
@@ -134,9 +177,15 @@ try
 
     add_configuration_options(*options);
 
-    DefaultServerConfiguration config{options};
+    SimplerDefaultServerConfiguration config{options};
 
-    run_mir(config, [this](DisplayServer&) { init_callback(); });
+    run_mir(config, [&](DisplayServer&)
+        {
+            this->options = config.the_options();
+            init_callback();
+        });
+
+    exit_status = true;
 }
 catch (...)
 {
@@ -144,6 +193,11 @@ catch (...)
         exception_handler();
     else
         mir::report_exception(std::cerr);
+}
+
+bool mir::SimplerServer::exited_normally()
+{
+    return exit_status;
 }
 
 // simple server implementation end
