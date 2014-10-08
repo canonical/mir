@@ -17,13 +17,8 @@
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
-#include "mir/input/event_filter.h"
-#include "mir/input/input_channel.h"
-
-#include "src/server/input/android/android_input_manager.h"
 #include "src/server/input/android/android_input_targeter.h"
 #include "src/server/input/android/android_input_registrar.h"
-#include "mir/input/input_dispatcher.h"
 #include "src/server/input/event_filter_chain.h"
 #include "src/server/input/android/event_filter_dispatcher_policy.h"
 
@@ -38,6 +33,11 @@
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
 #include "mir_test/event_matchers.h"
+
+#include "mir/input/event_filter.h"
+#include "mir/input/input_channel.h"
+#include "mir/input/input_dispatcher.h"
+#include "mir/input/input_manager.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
