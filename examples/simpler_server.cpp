@@ -25,16 +25,18 @@ namespace mir
 namespace compositor{ class Compositor; }
 namespace frontend { class SessionAuthorizer; }
 namespace graphics { class Platform; class Display; class GLConfig; }
-namespace input { class CompositeEventFilter; class InputDispatcher; }
+namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; }
 namespace options { class DefaultConfiguration; class Option; }
+namespace shell { class FocusSetter; class DisplayLayout; }
 namespace scene
 {
 class PlacementStrategy;
 class SessionListener;
 class PromptSessionListener;
 class SurfaceConfigurator;
+class SessionCoordinator;
+class SurfaceCoordinator;
 }
-namespace shell { class FocusSetter; class DisplayLayout; }
 
 class MainLoop;
 class ServerStatusListener;
@@ -106,6 +108,16 @@ public:
     /// This will be null before initialization completes. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
     auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;
+
+// USC invokes the following
+    auto the_cursor_listener() const -> std::shared_ptr<input::CursorListener>;
+
+// USC overrides the following (TODO implement them)
+    void override_the_cursor_listener(std::function<std::shared_ptr<input::CursorListener>()> const& cursor_listener_builder);
+    void the_server_status_listener(std::function<std::shared_ptr<ServerStatusListener>()> const& server_status_listener_builder);
+
+    void wrap_session_coordinator(std::function<std::shared_ptr<scene::SessionCoordinator>(std::shared_ptr<scene::SessionCoordinator>)>);
+    void wrap_surface_coordinator(std::function<std::shared_ptr<scene::SurfaceCoordinator>(std::shared_ptr<scene::SurfaceCoordinator>)>);
 
 // qtmir invokes the following
 
