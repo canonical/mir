@@ -84,9 +84,9 @@ void mc::DefaultDisplayBufferCompositor::composite()
         display_buffer.make_current();
 
         renderer->set_rotation(display_buffer.orientation());
+
         renderer->render(renderable_list);
         renderable_list.clear(); // Don't hold compositor buffers!
-
         display_buffer.post_update();
 
         report->finished_frame(false, this);

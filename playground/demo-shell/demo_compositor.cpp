@@ -105,9 +105,7 @@ void me::DemoCompositor::composite()
         renderer.begin(std::move(decoration_skip_list));
         renderer.render(renderable_list);
         renderable_list.clear();  // Don't hold compositor buffers!
-
         display_buffer.post_update();
-
         report->finished_frame(false, this);
     }
 }
