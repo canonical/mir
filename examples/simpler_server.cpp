@@ -24,6 +24,9 @@ namespace mir
 {
 namespace options { class DefaultConfiguration; class Option; }
 namespace graphics { class Platform; class Display; }
+namespace input { class CompositeEventFilter; }
+
+class MainLoop;
 
 class Server
 {
@@ -67,17 +70,27 @@ public:
     /// Returns the configuration options.
     /// This will be null before initialization completes. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
-    auto get_options() -> std::shared_ptr<options::Option> const;
+    auto get_options() const -> std::shared_ptr<options::Option>;
 
     /// Returns the graphics platform options.
     /// This will be null before initialization completes. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
-    auto the_graphics_platform() -> std::shared_ptr<graphics::Platform>;
+    auto the_graphics_platform() const -> std::shared_ptr<graphics::Platform>;
 
     /// Returns the graphics display options.
     /// This will be null before initialization completes. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
-    auto the_display() -> std::shared_ptr<graphics::Display>;
+    auto the_display() const -> std::shared_ptr<graphics::Display>;
+
+    /// Returns the main loop.
+    /// This will be null before initialization completes. It will be available
+    /// when the init_callback has been invoked (and thereafter until the server exits).
+    auto the_main_loop() const -> std::shared_ptr<MainLoop>;
+
+    /// Returns the composite event filter.
+    /// This will be null before initialization completes. It will be available
+    /// when the init_callback has been invoked (and thereafter until the server exits).
+    auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;
 
 private:
     std::function<void(options::DefaultConfiguration& config)> add_configuration_options{
@@ -100,7 +113,10 @@ private:
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/input/composite_event_filter.h"
 #include "graphics.h"
+
+#include <linux/input.h>
 
 #include <cstdlib>
 #include <csignal>
@@ -149,6 +165,33 @@ void render_to_fb(std::shared_ptr<mir::graphics::Display> const& display)
         gl_animation.step();
     }
 }
+
+class QuitFilter : public mir::input::EventFilter
+{
+public:
+    QuitFilter(mir::Server& server)
+        : server{server}
+    {
+    }
+
+    bool handle(MirEvent const& event) override
+    {
+        if (event.type == mir_event_type_key &&
+            event.key.action == mir_key_action_down &&
+            (event.key.modifiers & mir_key_modifier_alt) &&
+            (event.key.modifiers & mir_key_modifier_ctrl) &&
+            event.key.scan_code == KEY_BACKSPACE)
+        {
+            server.stop();
+            return true;
+        }
+
+        return false;
+    }
+
+private:
+    mir::Server& server;
+};
 }
 
 int main(int argc, char const* argv[])
@@ -156,6 +199,8 @@ int main(int argc, char const* argv[])
     static char const* const launch_child_opt = "launch-client";
     static char const* const render_to_fb_opt = "render-to-fb";
     mir::Server server;
+
+    auto const quit_filter = std::make_shared<QuitFilter>(server);
 
     server.set_add_configuration_options(
         [] (mir::options::DefaultConfiguration& config)
@@ -170,6 +215,8 @@ int main(int argc, char const* argv[])
     server.set_command_line(argc, argv);
     server.set_init_callback([&]
         {
+            server.the_composite_event_filter()->append(quit_filter);
+
             auto const options = server.get_options();
 
             if (options->is_set(render_to_fb_opt))
@@ -196,6 +243,7 @@ int main(int argc, char const* argv[])
 
 #include "mir/options/default_configuration.h"
 #include "mir/default_server_configuration.h"
+#include "mir/main_loop.h"
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
 
@@ -242,8 +290,7 @@ void mir::Server::set_init_callback(std::function<void()> const& init_callback)
     this->init_callback = init_callback;
 }
 
-auto mir::Server::get_options()
--> std::shared_ptr<options::Option> const
+auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 {
     return options.lock();
 }
@@ -283,21 +330,43 @@ catch (...)
         mir::report_exception(std::cerr);
 }
 
+void mir::Server::stop()
+{
+    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << std::endl;
+    if (auto const main_loop = the_main_loop())
+        main_loop->stop();
+}
+
 bool mir::Server::exited_normally()
 {
     return exit_status;
 }
 
-auto mir::Server::the_graphics_platform() -> std::shared_ptr<graphics::Platform>
+auto mir::Server::the_graphics_platform() const -> std::shared_ptr<graphics::Platform>
 {
     if (server_config) return server_config->the_graphics_platform();
 
     return {};
 }
 
-auto mir::Server::the_display() -> std::shared_ptr<graphics::Display>
+auto mir::Server::the_display() const -> std::shared_ptr<graphics::Display>
 {
     if (server_config) return server_config->the_display();
+
+    return {};
+}
+
+auto mir::Server::the_main_loop() const -> std::shared_ptr<MainLoop>
+{
+    if (server_config) return server_config->the_main_loop();
+
+    return {};
+}
+
+auto mir::Server::the_composite_event_filter() const
+-> std::shared_ptr<input::CompositeEventFilter>
+{
+    if (server_config) return server_config->the_composite_event_filter();
 
     return {};
 }
