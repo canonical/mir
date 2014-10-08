@@ -154,7 +154,6 @@ install(TARGETS ${INSTALL_DEMOS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 #@++++++
 add_executable(mir_demo_server_simpler
    simpler_server.cpp
-   server.cpp
 )
 
 target_link_libraries(mir_demo_server_simpler
