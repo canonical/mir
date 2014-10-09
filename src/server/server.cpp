@@ -43,6 +43,7 @@ struct mir::Server::BuildersAndWrappers
     std::function<std::shared_ptr<shell::FocusSetter>()> shell_focus_setter_builder;
 
     std::function<std::shared_ptr<scene::SessionCoordinator>(std::shared_ptr<scene::SessionCoordinator>)> session_coordinator_wrapper;
+    std::function<std::shared_ptr<scene::SurfaceCoordinator>(std::shared_ptr<scene::SurfaceCoordinator>)> surface_coordinator_wrapper;
 };
 
 #define MIR_SERVER_CONFIG_OVERRIDE(name)\
@@ -78,7 +79,6 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     }
 
     using mir::DefaultServerConfiguration::the_options;
-    using mir::DefaultServerConfiguration::wrap_session_coordinator;
 
     // TODO the MIR_SERVER_CONFIG_OVERRIDE macro expects a CachePtr named
     // TODO "placement_strategy" not "shell_placement_strategy".
@@ -100,6 +100,7 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     MIR_SERVER_CONFIG_OVERRIDE(shell_focus_setter)
 
     MIR_SERVER_CONFIG_WRAP(session_coordinator)
+    MIR_SERVER_CONFIG_WRAP(surface_coordinator)
 
     std::shared_ptr<BuildersAndWrappers> const builders_and_wrappers;
 };
@@ -242,11 +243,12 @@ MIR_SERVER_OVERRIDE(shell_focus_setter)
 #undef MIR_SERVER_OVERRIDE
 
 #define MIR_SERVER_WRAP(name)\
-void mir::Server::wrap_##name(decltype(BuildersAndWrappers::name##_wrapper) /*const&*/ value)\
+void mir::Server::wrap_##name(decltype(BuildersAndWrappers::name##_wrapper) const& value)\
 {\
     builders_and_wrappers->name##_wrapper = value;\
 }
 
 MIR_SERVER_WRAP(session_coordinator)
+MIR_SERVER_WRAP(surface_coordinator)
 
 #undef MIR_SERVER_WRAP
