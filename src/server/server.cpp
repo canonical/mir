@@ -56,6 +56,17 @@ auto the_##name()\
     return mir::DefaultServerConfiguration::the_##name();\
 }
 
+#define MIR_SERVER_CONFIG_WRAP(name)\
+auto wrap_##name(decltype(BuildersAndWrappers::name##_wrapper)::result_type const& wrapped)\
+-> decltype(mir::DefaultServerConfiguration::wrap_##name({})) override\
+{\
+    if (builders_and_wrappers->name##_wrapper)\
+        return name(\
+            [&] { return builders_and_wrappers->name##_wrapper(wrapped); });\
+\
+    return mir::DefaultServerConfiguration::wrap_##name(wrapped);\
+}
+
 struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 {
     ServerConfiguration(
@@ -67,6 +78,7 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     }
 
     using mir::DefaultServerConfiguration::the_options;
+    using mir::DefaultServerConfiguration::wrap_session_coordinator;
 
     // TODO the MIR_SERVER_CONFIG_OVERRIDE macro expects a CachePtr named
     // TODO "placement_strategy" not "shell_placement_strategy".
@@ -75,32 +87,25 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     // this ugliness. (Yet.)
     decltype(shell_placement_strategy)& placement_strategy = shell_placement_strategy;
 
-    MIR_SERVER_CONFIG_OVERRIDE(cursor_listener);
-    MIR_SERVER_CONFIG_OVERRIDE(placement_strategy);
-    MIR_SERVER_CONFIG_OVERRIDE(session_listener);
-    MIR_SERVER_CONFIG_OVERRIDE(prompt_session_listener);
-    MIR_SERVER_CONFIG_OVERRIDE(surface_configurator);
-    MIR_SERVER_CONFIG_OVERRIDE(session_authorizer);
-    MIR_SERVER_CONFIG_OVERRIDE(compositor);
-    MIR_SERVER_CONFIG_OVERRIDE(input_dispatcher);
-    MIR_SERVER_CONFIG_OVERRIDE(gl_config);
-    MIR_SERVER_CONFIG_OVERRIDE(server_status_listener);
-    MIR_SERVER_CONFIG_OVERRIDE(shell_focus_setter);
+    MIR_SERVER_CONFIG_OVERRIDE(cursor_listener)
+    MIR_SERVER_CONFIG_OVERRIDE(placement_strategy)
+    MIR_SERVER_CONFIG_OVERRIDE(session_listener)
+    MIR_SERVER_CONFIG_OVERRIDE(prompt_session_listener)
+    MIR_SERVER_CONFIG_OVERRIDE(surface_configurator)
+    MIR_SERVER_CONFIG_OVERRIDE(session_authorizer)
+    MIR_SERVER_CONFIG_OVERRIDE(compositor)
+    MIR_SERVER_CONFIG_OVERRIDE(input_dispatcher)
+    MIR_SERVER_CONFIG_OVERRIDE(gl_config)
+    MIR_SERVER_CONFIG_OVERRIDE(server_status_listener)
+    MIR_SERVER_CONFIG_OVERRIDE(shell_focus_setter)
 
-    auto wrap_session_coordinator(std::shared_ptr<scene::SessionCoordinator> const& wrapped)
-    -> std::shared_ptr<scene::SessionCoordinator> override
-    {
-        if (builders_and_wrappers->session_coordinator_wrapper)
-            return session_coordinator(
-                [&] { return builders_and_wrappers->session_coordinator_wrapper(wrapped); });
-
-        return mir::DefaultServerConfiguration::wrap_session_coordinator(wrapped);
-    }
+    MIR_SERVER_CONFIG_WRAP(session_coordinator)
 
     std::shared_ptr<BuildersAndWrappers> const builders_and_wrappers;
 };
 
 #undef MIR_SERVER_CONFIG_OVERRIDE
+#undef MIR_SERVER_CONFIG_WRAP
 
 namespace
 {
@@ -236,8 +241,12 @@ MIR_SERVER_OVERRIDE(shell_focus_setter)
 
 #undef MIR_SERVER_OVERRIDE
 
-
-void mir::Server::wrap_session_coordinator(std::function<std::shared_ptr<scene::SessionCoordinator>(std::shared_ptr<scene::SessionCoordinator>)> session_coordinator_wrapper)
-{
-    builders_and_wrappers->session_coordinator_wrapper = session_coordinator_wrapper;
+#define MIR_SERVER_WRAP(name)\
+void mir::Server::wrap_##name(decltype(BuildersAndWrappers::name##_wrapper) /*const&*/ value)\
+{\
+    builders_and_wrappers->name##_wrapper = value;\
 }
+
+MIR_SERVER_WRAP(session_coordinator)
+
+#undef MIR_SERVER_WRAP
