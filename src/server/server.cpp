@@ -28,29 +28,46 @@
 
 namespace mo = mir::options;
 
+#define FOREACH_WRAPPER(MACRO)\
+    MACRO(session_coordinator)\
+    MACRO(surface_coordinator)
+
+#define FOREACH_OVERRIDE(MACRO)\
+    MACRO(cursor_listener)\
+    MACRO(placement_strategy)\
+    MACRO(session_listener)\
+    MACRO(prompt_session_listener)\
+    MACRO(surface_configurator)\
+    MACRO(session_authorizer)\
+    MACRO(compositor)\
+    MACRO(input_dispatcher)\
+    MACRO(gl_config)\
+    MACRO(server_status_listener)\
+    MACRO(shell_focus_setter)
+
+#define FOREACH_ACCESSOR(MACRO)\
+    MACRO(the_graphics_platform)\
+    MACRO(the_display)\
+    MACRO(the_main_loop)\
+    MACRO(the_composite_event_filter)\
+    MACRO(the_shell_display_layout)\
+    MACRO(the_session_authorizer)\
+    MACRO(the_session_listener)\
+    MACRO(the_prompt_session_listener)\
+    MACRO(the_surface_configurator)
+
 #define MIR_SERVER_BUILDER(name)\
-    std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder
+    std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder;
 
 #define MIR_SERVER_WRAPPER(name)\
     std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type\
-        (std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type const&)> name##_wrapper
+        (std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type const&)> name##_wrapper;
 
 struct mir::Server::BuildersAndWrappers
 {
-    MIR_SERVER_BUILDER(cursor_listener);
-    MIR_SERVER_BUILDER(placement_strategy);
-    MIR_SERVER_BUILDER(session_listener);
-    MIR_SERVER_BUILDER(prompt_session_listener);
-    MIR_SERVER_BUILDER(surface_configurator);
-    MIR_SERVER_BUILDER(session_authorizer);
-    MIR_SERVER_BUILDER(compositor);
-    MIR_SERVER_BUILDER(input_dispatcher);
-    MIR_SERVER_BUILDER(gl_config);
-    MIR_SERVER_BUILDER(server_status_listener);
-    MIR_SERVER_BUILDER(shell_focus_setter);
+    FOREACH_OVERRIDE(MIR_SERVER_BUILDER)
 
-    MIR_SERVER_WRAPPER(session_coordinator);
-    MIR_SERVER_WRAPPER(surface_coordinator);
+    FOREACH_WRAPPER(MIR_SERVER_WRAPPER)
 };
 
 #undef MIR_SERVER_BUILDER
@@ -97,20 +114,9 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     // this ugliness. (Yet.)
     decltype(shell_placement_strategy)& placement_strategy = shell_placement_strategy;
 
-    MIR_SERVER_CONFIG_OVERRIDE(cursor_listener)
-    MIR_SERVER_CONFIG_OVERRIDE(placement_strategy)
-    MIR_SERVER_CONFIG_OVERRIDE(session_listener)
-    MIR_SERVER_CONFIG_OVERRIDE(prompt_session_listener)
-    MIR_SERVER_CONFIG_OVERRIDE(surface_configurator)
-    MIR_SERVER_CONFIG_OVERRIDE(session_authorizer)
-    MIR_SERVER_CONFIG_OVERRIDE(compositor)
-    MIR_SERVER_CONFIG_OVERRIDE(input_dispatcher)
-    MIR_SERVER_CONFIG_OVERRIDE(gl_config)
-    MIR_SERVER_CONFIG_OVERRIDE(server_status_listener)
-    MIR_SERVER_CONFIG_OVERRIDE(shell_focus_setter)
+    FOREACH_OVERRIDE(MIR_SERVER_CONFIG_OVERRIDE)
 
-    MIR_SERVER_CONFIG_WRAP(session_coordinator)
-    MIR_SERVER_CONFIG_WRAP(surface_coordinator)
+    FOREACH_WRAPPER(MIR_SERVER_CONFIG_WRAP)
 
     std::shared_ptr<BuildersAndWrappers> const builders_and_wrappers;
 };
@@ -220,15 +226,7 @@ auto mir::Server::name() const -> decltype(server_config->name())\
     BOOST_THROW_EXCEPTION(std::logic_error(no_config_to_access));\
 }
 
-MIR_SERVER_ACCESSOR(the_graphics_platform)
-MIR_SERVER_ACCESSOR(the_display)
-MIR_SERVER_ACCESSOR(the_main_loop)
-MIR_SERVER_ACCESSOR(the_composite_event_filter)
-MIR_SERVER_ACCESSOR(the_shell_display_layout)
-MIR_SERVER_ACCESSOR(the_session_authorizer)
-MIR_SERVER_ACCESSOR(the_session_listener)
-MIR_SERVER_ACCESSOR(the_prompt_session_listener)
-MIR_SERVER_ACCESSOR(the_surface_configurator)
+FOREACH_ACCESSOR(MIR_SERVER_ACCESSOR)
 
 #undef MIR_SERVER_ACCESSOR
 
@@ -238,17 +236,7 @@ void mir::Server::override_the_##name(decltype(BuildersAndWrappers::name##_build
     builders_and_wrappers->name##_builder = value;\
 }
 
-MIR_SERVER_OVERRIDE(cursor_listener)
-MIR_SERVER_OVERRIDE(placement_strategy)
-MIR_SERVER_OVERRIDE(session_listener)
-MIR_SERVER_OVERRIDE(prompt_session_listener)
-MIR_SERVER_OVERRIDE(surface_configurator)
-MIR_SERVER_OVERRIDE(session_authorizer)
-MIR_SERVER_OVERRIDE(compositor)
-MIR_SERVER_OVERRIDE(input_dispatcher)
-MIR_SERVER_OVERRIDE(gl_config)
-MIR_SERVER_OVERRIDE(server_status_listener)
-MIR_SERVER_OVERRIDE(shell_focus_setter)
+FOREACH_OVERRIDE(MIR_SERVER_OVERRIDE)
 
 #undef MIR_SERVER_OVERRIDE
 
@@ -258,7 +246,6 @@ void mir::Server::wrap_##name(decltype(BuildersAndWrappers::name##_wrapper) cons
     builders_and_wrappers->name##_wrapper = value;\
 }
 
-MIR_SERVER_WRAP(session_coordinator)
-MIR_SERVER_WRAP(surface_coordinator)
+FOREACH_WRAPPER(MIR_SERVER_WRAP)
 
 #undef MIR_SERVER_WRAP
