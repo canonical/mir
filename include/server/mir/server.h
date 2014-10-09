@@ -92,77 +92,115 @@ public:
     auto get_options() const -> std::shared_ptr<options::Option>;
 
     /// Returns the graphics platform options.
-    /// This will be null before initialization completes. It will be available
+    /// This will throw before initialization starts or after the server exits. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
     auto the_graphics_platform() const -> std::shared_ptr<graphics::Platform>;
 
     /// Returns the graphics display options.
-    /// This will be null before initialization completes. It will be available
+    /// This will throw before initialization starts or after the server exits. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
     auto the_display() const -> std::shared_ptr<graphics::Display>;
 
     /// Returns the main loop.
-    /// This will be null before initialization completes. It will be available
+    /// This will throw before initialization starts or after the server exits. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
     auto the_main_loop() const -> std::shared_ptr<MainLoop>;
 
     /// Returns the composite event filter.
-    /// This will be null before initialization completes. It will be available
+    /// This will throw before initialization starts or after the server exits. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
     auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;
 
-// USC invokes the following
+// USC invokes the following TODO: remove this note
+
+    /// Returns the cursor listener.
+    /// This will throw before initialization starts or after the server exits. It will be available
+    /// when the init_callback has been invoked (and thereafter until the server exits).
     auto the_cursor_listener() const -> std::shared_ptr<input::CursorListener>;
 
-// USC overrides the following (TODO implement them)
+// USC overrides the following TODO: remove this note
+    /// Sets an override functor for creating the cursor listener.
+    /// this is only useful before initialization starts.
     void override_the_cursor_listener(std::function<std::shared_ptr<input::CursorListener>()> const& cursor_listener_builder);
+
+    /// Returns the server status listener.
+    /// This will throw before initialization starts or after the server exits. It will be available
+    /// when the init_callback has been invoked (and thereafter until the server exits).
     void the_server_status_listener(std::function<std::shared_ptr<ServerStatusListener>()> const& server_status_listener_builder);
 
     void wrap_session_coordinator(std::function<std::shared_ptr<scene::SessionCoordinator>(std::shared_ptr<scene::SessionCoordinator>)>);
     void wrap_surface_coordinator(std::function<std::shared_ptr<scene::SurfaceCoordinator>(std::shared_ptr<scene::SurfaceCoordinator>)>);
 
-// qtmir invokes the following
+// qtmir invokes the following TODO: remove this note
 
     /// Returns the display layout.
-    /// This will be null before initialization completes. It will be available
+    /// This will throw before initialization starts or after the server exits. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
     auto the_shell_display_layout() const -> std::shared_ptr<shell::DisplayLayout>;
 
     /// Returns the session authorizer.
-    /// This will be null before initialization completes. It will be available
+    /// This will throw before initialization starts or after the server exits. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
     auto the_session_authorizer() const -> std::shared_ptr<frontend::SessionAuthorizer>;
 
     /// Returns the session listener.
-    /// This will be null before initialization completes. It will be available
+    /// This will throw before initialization starts or after the server exits. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
     auto the_session_listener() const -> std::shared_ptr<scene::SessionListener>;
 
     /// Returns the prompt session listener.
-    /// This will be null before initialization completes. It will be available
+    /// This will throw before initialization starts or after the server exits. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
     auto the_prompt_session_listener() const -> std::shared_ptr<scene::PromptSessionListener>;
 
     /// Returns the surface configurator.
-    /// This will be null before initialization completes. It will be available
+    /// This will throw before initialization starts or after the server exits. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
     auto the_surface_configurator() const -> std::shared_ptr<scene::SurfaceConfigurator>;
 
-    // qtmir overrides the following
-    // TODO I've only implemented the first of these as an example, the rest follow the same pattern
+// qtmir overrides the following TODO: remove this note
+
+    /// Sets an override functor for creating the placement strategy.
+    /// this is only useful before initialization starts.
     void override_the_placement_strategy(std::function<std::shared_ptr<scene::PlacementStrategy>()> const& placement_strategy_builder);
+
+    /// Sets an override functor for creating the session listener.
+    /// this is only useful before initialization starts.
     void override_the_session_listener(std::function<std::shared_ptr<scene::SessionListener>()> const& session_listener_builder);
+
+    /// Sets an override functor for creating the prompt session listener.
+    /// this is only useful before initialization starts.
     void override_the_prompt_session_listener(std::function<std::shared_ptr<scene::PromptSessionListener>()> const& prompt_session_listener_builder);
+
+    /// Sets an override functor for creating the surface configurator.
+    /// this is only useful before initialization starts.
     void override_the_surface_configurator(std::function<std::shared_ptr<scene::SurfaceConfigurator>()> const& surface_configurator_builder);
+
+    /// Sets an override functor for creating the session authorizer.
+    /// this is only useful before initialization starts.
     void override_the_session_authorizer(std::function<std::shared_ptr<frontend::SessionAuthorizer>()> const& session_authorizer_builder);
+
+    /// Sets an override functor for creating the compositor.
+    /// this is only useful before initialization starts.
     void override_the_compositor(std::function<std::shared_ptr<compositor::Compositor>()> const& compositor_builder);
+
+    /// Sets an override functor for creating the input dispatcher.
+    /// this is only useful before initialization starts.
     void override_the_input_dispatcher(std::function<std::shared_ptr<input::InputDispatcher>()> const& input_dispatcher_builder);
+
+    /// Sets an override functor for creating the gl config.
+    /// this is only useful before initialization starts.
     void override_the_gl_config(std::function<std::shared_ptr<graphics::GLConfig>()> const& gl_config_builder);
+
+    /// Sets an override functor for creating the status listener.
+    /// this is only useful before initialization starts.
     void override_the_server_status_listener(std::function<std::shared_ptr<ServerStatusListener>()> const& server_status_listener_builder);
+
+    /// Sets an override functor for creating the shell focus setter.
+    /// this is only useful before initialization starts.
     void override_the_shell_focus_setter(std::function<std::shared_ptr<shell::FocusSetter>()> const& focus_setter_builder);
 
 private:
-    // TODO this should be hidden to avoid ABI changes if it changes.
     std::function<void(options::DefaultConfiguration& config)> add_configuration_options{
         [](options::DefaultConfiguration&){}};
     std::function<void(int argc, char const* const* argv)> command_line_hander{};
