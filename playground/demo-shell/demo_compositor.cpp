@@ -95,6 +95,8 @@ void me::DemoCompositor::composite()
      *       references to them; elements and renderable_list.
      *       So no buffer is going to be released back to the client till
      *       both of those containers get destroyed (end of the function).
+     *       Actually, there's a third reference held by the texture cache
+     *       in GLRenderer, but that gets released earlier in render().
      */
 
     if (!nonrenderlist_elements &&
