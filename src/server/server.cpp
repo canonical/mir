@@ -28,6 +28,19 @@
 
 namespace mo = mir::options;
 
+#define MIR_SERVER_COPY_BUILDER(name)\
+std::function<decltype(static_cast<mir::DefaultServerConfiguration*>(nullptr)->the_##name())()> name##_builder;\
+\
+auto the_##name()\
+-> decltype(mir::DefaultServerConfiguration::the_##name()) override\
+{\
+    if (name##_builder)\
+        return name(\
+            [this] { return name##_builder(); });\
+\
+    return mir::DefaultServerConfiguration::the_##name();\
+}
+
 struct mir::Server::DefaultServerConfiguration : mir::DefaultServerConfiguration
 {
     using mir::DefaultServerConfiguration::DefaultServerConfiguration;
@@ -44,6 +57,35 @@ struct mir::Server::DefaultServerConfiguration : mir::DefaultServerConfiguration
 
         return mir::DefaultServerConfiguration::the_placement_strategy();
     }
+
+//    MIR_SERVER_COPY_BUILDER(placement_strategy)
+    MIR_SERVER_COPY_BUILDER(session_listener);
+    MIR_SERVER_COPY_BUILDER(prompt_session_listener);
+    MIR_SERVER_COPY_BUILDER(surface_configurator);
+    MIR_SERVER_COPY_BUILDER(session_authorizer);
+    MIR_SERVER_COPY_BUILDER(compositor);
+    MIR_SERVER_COPY_BUILDER(input_dispatcher);
+    MIR_SERVER_COPY_BUILDER(gl_config);
+    MIR_SERVER_COPY_BUILDER(server_status_listener);
+//    MIR_SERVER_COPY_BUILDER(focus_setter);
+//    MIR_SERVER_COPY_BUILDER(placement_cursor_listener);
+};
+
+#undef MIR_SERVER_COPY_BUILDER
+
+struct mir::Server::BuildersAndWrappers
+{
+    std::function<std::shared_ptr<scene::PlacementStrategy>()> placement_strategy_builder;
+    std::function<std::shared_ptr<scene::SessionListener>()> session_listener_builder;
+    std::function<std::shared_ptr<scene::PromptSessionListener>()> prompt_session_listener_builder;
+    std::function<std::shared_ptr<scene::SurfaceConfigurator>()> surface_configurator_builder;
+    std::function<std::shared_ptr<frontend::SessionAuthorizer>()> session_authorizer_builder;
+    std::function<std::shared_ptr<compositor::Compositor>()> compositor_builder;
+    std::function<std::shared_ptr<input::InputDispatcher>()> input_dispatcher_builder;
+    std::function<std::shared_ptr<graphics::GLConfig>()> gl_config_builder;
+    std::function<std::shared_ptr<ServerStatusListener>()> server_status_listener_builder;
+    std::function<std::shared_ptr<shell::FocusSetter>()> focus_setter_builder;
+    std::function<std::shared_ptr<scene::PlacementStrategy>()> placement_cursor_listener_builder;
 };
 
 namespace
@@ -59,6 +101,11 @@ std::shared_ptr<mo::DefaultConfiguration> configuration_options(
         return std::make_shared<mo::DefaultConfiguration>(argc, argv);
 
 }
+}
+
+mir::Server::Server() :
+    builders_and_wrappers(std::make_shared<BuildersAndWrappers>())
+{
 }
 
 void mir::Server::set_add_configuration_options(
@@ -89,6 +136,9 @@ void mir::Server::set_exception_handler(std::function<void()> const& exception_h
     this->exception_handler = exception_handler;
 }
 
+#define MIR_SERVER_COPY_BUILDER(name)\
+    config.name##_builder = builders_and_wrappers->name##_builder
+
 void mir::Server::run()
 try
 {
@@ -98,7 +148,17 @@ try
 
     DefaultServerConfiguration config{options};
 
-    config.placement_strategy_builder = placement_strategy_builder;
+    MIR_SERVER_COPY_BUILDER(placement_strategy);
+    MIR_SERVER_COPY_BUILDER(session_listener);
+    MIR_SERVER_COPY_BUILDER(prompt_session_listener);
+    MIR_SERVER_COPY_BUILDER(surface_configurator);
+    MIR_SERVER_COPY_BUILDER(session_authorizer);
+    MIR_SERVER_COPY_BUILDER(compositor);
+    MIR_SERVER_COPY_BUILDER(input_dispatcher);
+    MIR_SERVER_COPY_BUILDER(gl_config);
+    MIR_SERVER_COPY_BUILDER(server_status_listener);
+//    MIR_SERVER_COPY_BUILDER(focus_setter);
+//    MIR_SERVER_COPY_BUILDER(placement_cursor_listener);
 
     server_config = &config;
 
@@ -133,76 +193,47 @@ bool mir::Server::exited_normally()
     return exit_status;
 }
 
-auto mir::Server::the_graphics_platform() const -> std::shared_ptr<graphics::Platform>
+namespace
 {
-    if (server_config) return server_config->the_graphics_platform();
-
-    return {};
+auto const no_config_to_access = "Cannot access config when no config active.";
 }
 
-auto mir::Server::the_display() const -> std::shared_ptr<graphics::Display>
-{
-    if (server_config) return server_config->the_display();
-
-    return {};
+#define MIR_SERVER_ACCESSOR(name)\
+auto mir::Server::name() const -> decltype(server_config->name())\
+{\
+    if (server_config) return server_config->name();\
+    BOOST_THROW_EXCEPTION(std::logic_error(no_config_to_access));\
 }
 
-auto mir::Server::the_main_loop() const -> std::shared_ptr<MainLoop>
-{
-    if (server_config) return server_config->the_main_loop();
+MIR_SERVER_ACCESSOR(the_graphics_platform)
+MIR_SERVER_ACCESSOR(the_display)
+MIR_SERVER_ACCESSOR(the_main_loop)
+MIR_SERVER_ACCESSOR(the_composite_event_filter)
+MIR_SERVER_ACCESSOR(the_shell_display_layout)
+MIR_SERVER_ACCESSOR(the_session_authorizer)
+MIR_SERVER_ACCESSOR(the_session_listener)
+MIR_SERVER_ACCESSOR(the_prompt_session_listener)
+MIR_SERVER_ACCESSOR(the_surface_configurator)
 
-    return {};
+#undef MIR_SERVER_ACCESSOR
+
+#define MIR_SERVER_WRAPPER(name)\
+void mir::Server::override_the_##name(decltype(BuildersAndWrappers::name##_builder) const& value)\
+{\
+    builders_and_wrappers->name##_builder = value;\
 }
 
-auto mir::Server::the_composite_event_filter() const
--> std::shared_ptr<input::CompositeEventFilter>
-{
-    if (server_config) return server_config->the_composite_event_filter();
+MIR_SERVER_WRAPPER(placement_strategy)
+//MIR_SERVER_WRAPPER(session_listener)
+//MIR_SERVER_WRAPPER(prompt_session_listener)
+//MIR_SERVER_WRAPPER(surface_configurator)
+//MIR_SERVER_WRAPPER(session_authorizer)
+//MIR_SERVER_WRAPPER(compositor)
+//MIR_SERVER_WRAPPER(cursor_listener)
+//MIR_SERVER_WRAPPER(input_dispatcher)
+//MIR_SERVER_WRAPPER(gl_config)
+//MIR_SERVER_WRAPPER(server_status_listener)
+//MIR_SERVER_WRAPPER(shell_focus_setter)
+//MIR_SERVER_WRAPPER(cursor_listener)
 
-    return {};
-}
-
-auto mir::Server::the_shell_display_layout() const
--> std::shared_ptr<shell::DisplayLayout>
-{
-    if (server_config) return server_config->the_shell_display_layout();
-
-    return {};
-}
-
-auto mir::Server::the_session_authorizer() const
--> std::shared_ptr<frontend::SessionAuthorizer>
-{
-    if (server_config) return server_config->the_session_authorizer();
-
-    return {};
-}
-
-auto mir::Server::the_session_listener() const
--> std::shared_ptr<scene::SessionListener>
-{
-    if (server_config) return server_config->the_session_listener();
-
-    return {};
-}
-
-auto mir::Server::the_prompt_session_listener() const
--> std::shared_ptr<scene::PromptSessionListener>
-{
-    if (server_config) return server_config->the_prompt_session_listener();
-
-    return {};
-}
-
-auto mir::Server::the_surface_configurator() const
--> std::shared_ptr<scene::SurfaceConfigurator>
-{
-    if (server_config) return server_config->the_surface_configurator();
-
-    return {};
-}
-
-void mir::Server::override_the_placement_strategy(std::function<std::shared_ptr<scene::PlacementStrategy>()> const& placement_strategy_builder)
-{
-    this->placement_strategy_builder = placement_strategy_builder;
-}
+#undef MIR_SERVER_WRAPPER

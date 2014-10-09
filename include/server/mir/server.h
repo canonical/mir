@@ -43,13 +43,13 @@ class SurfaceCoordinator;
 class MainLoop;
 class ServerStatusListener;
 
-// TODO A lot of functions return "null before initialization completes" - perhaps better to throw?
-
 /// A declarative server implementation that doesn't tie client code to
 /// volatile interfaces (like DefaultServerConfiguration)
 class Server
 {
 public:
+    Server();
+
     /// set a callback to introduce additional configuration options.
     /// this will be invoked by run() before server initialisation starts
     void set_add_configuration_options(
@@ -174,8 +174,8 @@ private:
     std::weak_ptr<options::Option> options;
     struct DefaultServerConfiguration;
     DefaultServerConfiguration* server_config{nullptr};
-
-    std::function<std::shared_ptr<scene::PlacementStrategy>()> placement_strategy_builder;
+    struct BuildersAndWrappers;
+    std::shared_ptr<BuildersAndWrappers> const builders_and_wrappers;
 };
 }
 #endif /* SERVER_H_ */

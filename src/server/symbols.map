@@ -423,6 +423,7 @@ MIR_SERVER_26 {
     mir::Server::override_the_shell_focus_setter*;
     mir::Server::override_the_surface_configurator*;
     mir::Server::run*;
+    mir::Server::Server*;
     mir::Server::set_add_configuration_options*;
     mir::Server::set_command_line*;
     mir::Server::set_command_line_hander*;

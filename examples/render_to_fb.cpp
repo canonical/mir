@@ -16,13 +16,12 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/server.h"
+#include "graphics.h"
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "graphics.h"
+#include "mir/server.h"
 
-#include <cstdlib>
 #include <csignal>
 
 namespace
