@@ -28,53 +28,9 @@
 
 namespace mo = mir::options;
 
-#define MIR_SERVER_COPY_BUILDER(name)\
-std::function<decltype(static_cast<mir::DefaultServerConfiguration*>(nullptr)->the_##name())()> name##_builder;\
-\
-auto the_##name()\
--> decltype(mir::DefaultServerConfiguration::the_##name()) override\
-{\
-    if (name##_builder)\
-        return name(\
-            [this] { return name##_builder(); });\
-\
-    return mir::DefaultServerConfiguration::the_##name();\
-}
-
-struct mir::Server::DefaultServerConfiguration : mir::DefaultServerConfiguration
-{
-    using mir::DefaultServerConfiguration::DefaultServerConfiguration;
-    using mir::DefaultServerConfiguration::the_options;
-
-    std::function<std::shared_ptr<scene::PlacementStrategy>()> placement_strategy_builder;
-
-    auto the_placement_strategy()
-    -> std::shared_ptr<scene::PlacementStrategy> override
-    {
-        if (placement_strategy_builder)
-            return shell_placement_strategy(
-                [this] { return placement_strategy_builder(); });
-
-        return mir::DefaultServerConfiguration::the_placement_strategy();
-    }
-
-//    MIR_SERVER_COPY_BUILDER(placement_strategy)
-    MIR_SERVER_COPY_BUILDER(session_listener);
-    MIR_SERVER_COPY_BUILDER(prompt_session_listener);
-    MIR_SERVER_COPY_BUILDER(surface_configurator);
-    MIR_SERVER_COPY_BUILDER(session_authorizer);
-    MIR_SERVER_COPY_BUILDER(compositor);
-    MIR_SERVER_COPY_BUILDER(input_dispatcher);
-    MIR_SERVER_COPY_BUILDER(gl_config);
-    MIR_SERVER_COPY_BUILDER(server_status_listener);
-//    MIR_SERVER_COPY_BUILDER(focus_setter);
-//    MIR_SERVER_COPY_BUILDER(placement_cursor_listener);
-};
-
-#undef MIR_SERVER_COPY_BUILDER
-
 struct mir::Server::BuildersAndWrappers
 {
+    std::function<std::shared_ptr<input::CursorListener>()> cursor_listener_builder;
     std::function<std::shared_ptr<scene::PlacementStrategy>()> placement_strategy_builder;
     std::function<std::shared_ptr<scene::SessionListener>()> session_listener_builder;
     std::function<std::shared_ptr<scene::PromptSessionListener>()> prompt_session_listener_builder;
@@ -84,9 +40,51 @@ struct mir::Server::BuildersAndWrappers
     std::function<std::shared_ptr<input::InputDispatcher>()> input_dispatcher_builder;
     std::function<std::shared_ptr<graphics::GLConfig>()> gl_config_builder;
     std::function<std::shared_ptr<ServerStatusListener>()> server_status_listener_builder;
-    std::function<std::shared_ptr<shell::FocusSetter>()> focus_setter_builder;
-    std::function<std::shared_ptr<scene::PlacementStrategy>()> placement_cursor_listener_builder;
+    std::function<std::shared_ptr<shell::FocusSetter>()> shell_focus_setter_builder;
 };
+
+#define MIR_SERVER_CONFIG_OVERRIDE(name)\
+auto the_##name()\
+-> decltype(mir::DefaultServerConfiguration::the_##name()) override\
+{\
+    if (builders_and_wrappers->name##_builder)\
+        return name(\
+            [this] { return builders_and_wrappers->name##_builder(); });\
+\
+    return mir::DefaultServerConfiguration::the_##name();\
+}
+
+struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
+{
+    ServerConfiguration(
+        std::shared_ptr<options::Configuration> const& configuration_options,
+        std::shared_ptr<BuildersAndWrappers> const builders_and_wrappers) :
+        DefaultServerConfiguration(configuration_options),
+        builders_and_wrappers(builders_and_wrappers)
+    {
+    }
+
+    using mir::DefaultServerConfiguration::the_options;
+
+    // TODO the macro expects a CachePtr named "placement_strategy" not "shell_placement_strategy"
+    decltype(shell_placement_strategy)& placement_strategy = shell_placement_strategy;
+
+    MIR_SERVER_CONFIG_OVERRIDE(cursor_listener);
+    MIR_SERVER_CONFIG_OVERRIDE(placement_strategy);
+    MIR_SERVER_CONFIG_OVERRIDE(session_listener);
+    MIR_SERVER_CONFIG_OVERRIDE(prompt_session_listener);
+    MIR_SERVER_CONFIG_OVERRIDE(surface_configurator);
+    MIR_SERVER_CONFIG_OVERRIDE(session_authorizer);
+    MIR_SERVER_CONFIG_OVERRIDE(compositor);
+    MIR_SERVER_CONFIG_OVERRIDE(input_dispatcher);
+    MIR_SERVER_CONFIG_OVERRIDE(gl_config);
+    MIR_SERVER_CONFIG_OVERRIDE(server_status_listener);
+    MIR_SERVER_CONFIG_OVERRIDE(shell_focus_setter);
+
+    std::shared_ptr<BuildersAndWrappers> const builders_and_wrappers;
+};
+
+#undef MIR_SERVER_CONFIG_OVERRIDE
 
 namespace
 {
@@ -136,9 +134,6 @@ void mir::Server::set_exception_handler(std::function<void()> const& exception_h
     this->exception_handler = exception_handler;
 }
 
-#define MIR_SERVER_COPY_BUILDER(name)\
-    config.name##_builder = builders_and_wrappers->name##_builder
-
 void mir::Server::run()
 try
 {
@@ -146,19 +141,7 @@ try
 
     add_configuration_options(*options);
 
-    DefaultServerConfiguration config{options};
-
-    MIR_SERVER_COPY_BUILDER(placement_strategy);
-    MIR_SERVER_COPY_BUILDER(session_listener);
-    MIR_SERVER_COPY_BUILDER(prompt_session_listener);
-    MIR_SERVER_COPY_BUILDER(surface_configurator);
-    MIR_SERVER_COPY_BUILDER(session_authorizer);
-    MIR_SERVER_COPY_BUILDER(compositor);
-    MIR_SERVER_COPY_BUILDER(input_dispatcher);
-    MIR_SERVER_COPY_BUILDER(gl_config);
-    MIR_SERVER_COPY_BUILDER(server_status_listener);
-//    MIR_SERVER_COPY_BUILDER(focus_setter);
-//    MIR_SERVER_COPY_BUILDER(placement_cursor_listener);
+    ServerConfiguration config{options, builders_and_wrappers};
 
     server_config = &config;
 
@@ -217,23 +200,22 @@ MIR_SERVER_ACCESSOR(the_surface_configurator)
 
 #undef MIR_SERVER_ACCESSOR
 
-#define MIR_SERVER_WRAPPER(name)\
+#define MIR_SERVER_OVERRIDE(name)\
 void mir::Server::override_the_##name(decltype(BuildersAndWrappers::name##_builder) const& value)\
 {\
     builders_and_wrappers->name##_builder = value;\
 }
 
-MIR_SERVER_WRAPPER(placement_strategy)
-//MIR_SERVER_WRAPPER(session_listener)
-//MIR_SERVER_WRAPPER(prompt_session_listener)
-//MIR_SERVER_WRAPPER(surface_configurator)
-//MIR_SERVER_WRAPPER(session_authorizer)
-//MIR_SERVER_WRAPPER(compositor)
-//MIR_SERVER_WRAPPER(cursor_listener)
-//MIR_SERVER_WRAPPER(input_dispatcher)
-//MIR_SERVER_WRAPPER(gl_config)
-//MIR_SERVER_WRAPPER(server_status_listener)
-//MIR_SERVER_WRAPPER(shell_focus_setter)
-//MIR_SERVER_WRAPPER(cursor_listener)
+MIR_SERVER_OVERRIDE(cursor_listener)
+MIR_SERVER_OVERRIDE(placement_strategy)
+MIR_SERVER_OVERRIDE(session_listener)
+MIR_SERVER_OVERRIDE(prompt_session_listener)
+MIR_SERVER_OVERRIDE(surface_configurator)
+MIR_SERVER_OVERRIDE(session_authorizer)
+MIR_SERVER_OVERRIDE(compositor)
+MIR_SERVER_OVERRIDE(input_dispatcher)
+MIR_SERVER_OVERRIDE(gl_config)
+MIR_SERVER_OVERRIDE(server_status_listener)
+MIR_SERVER_OVERRIDE(shell_focus_setter)
 
-#undef MIR_SERVER_WRAPPER
+#undef MIR_SERVER_OVERRIDE

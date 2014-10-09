@@ -172,8 +172,8 @@ private:
     std::function<void()> exception_handler{};
     bool exit_status{false};
     std::weak_ptr<options::Option> options;
-    struct DefaultServerConfiguration;
-    DefaultServerConfiguration* server_config{nullptr};
+    struct ServerConfiguration;
+    ServerConfiguration* server_config{nullptr};
     struct BuildersAndWrappers;
     std::shared_ptr<BuildersAndWrappers> const builders_and_wrappers;
 };
