@@ -41,6 +41,8 @@ struct mir::Server::BuildersAndWrappers
     std::function<std::shared_ptr<graphics::GLConfig>()> gl_config_builder;
     std::function<std::shared_ptr<ServerStatusListener>()> server_status_listener_builder;
     std::function<std::shared_ptr<shell::FocusSetter>()> shell_focus_setter_builder;
+
+    std::function<std::shared_ptr<scene::SessionCoordinator>(std::shared_ptr<scene::SessionCoordinator>)> session_coordinator_wrapper;
 };
 
 #define MIR_SERVER_CONFIG_OVERRIDE(name)\
@@ -66,7 +68,11 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 
     using mir::DefaultServerConfiguration::the_options;
 
-    // TODO the macro expects a CachePtr named "placement_strategy" not "shell_placement_strategy"
+    // TODO the MIR_SERVER_CONFIG_OVERRIDE macro expects a CachePtr named
+    // TODO "placement_strategy" not "shell_placement_strategy".
+    // Unfortunately, "shell_placement_strategy" is currently part of our
+    // published API and used by qtmir: we cannot just rename it to remove
+    // this ugliness. (Yet.)
     decltype(shell_placement_strategy)& placement_strategy = shell_placement_strategy;
 
     MIR_SERVER_CONFIG_OVERRIDE(cursor_listener);
@@ -80,6 +86,16 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     MIR_SERVER_CONFIG_OVERRIDE(gl_config);
     MIR_SERVER_CONFIG_OVERRIDE(server_status_listener);
     MIR_SERVER_CONFIG_OVERRIDE(shell_focus_setter);
+
+    auto wrap_session_coordinator(std::shared_ptr<scene::SessionCoordinator> const& wrapped)
+    -> std::shared_ptr<scene::SessionCoordinator> override
+    {
+        if (builders_and_wrappers->session_coordinator_wrapper)
+            return session_coordinator(
+                [&] { return builders_and_wrappers->session_coordinator_wrapper(wrapped); });
+
+        return mir::DefaultServerConfiguration::wrap_session_coordinator(wrapped);
+    }
 
     std::shared_ptr<BuildersAndWrappers> const builders_and_wrappers;
 };
@@ -219,3 +235,9 @@ MIR_SERVER_OVERRIDE(server_status_listener)
 MIR_SERVER_OVERRIDE(shell_focus_setter)
 
 #undef MIR_SERVER_OVERRIDE
+
+
+void mir::Server::wrap_session_coordinator(std::function<std::shared_ptr<scene::SessionCoordinator>(std::shared_ptr<scene::SessionCoordinator>)> session_coordinator_wrapper)
+{
+    builders_and_wrappers->session_coordinator_wrapper = session_coordinator_wrapper;
+}
