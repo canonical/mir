@@ -72,7 +72,13 @@ void mc::DefaultDisplayBufferCompositor::composite()
         element->rendered_in(this);
         renderable_list.push_back(element->renderable());
     }
-    scene_elements.clear(); // Don't hold compositor buffers!
+
+    /*
+     * Note: Buffer lifetimes are ensured by the two objects holding
+     *       references to them; scene_elements and renderable_list.
+     *       So no buffer is going to be released back to the client till
+     *       both of those containers get destroyed (end of the function).
+     */
 
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
@@ -86,7 +92,6 @@ void mc::DefaultDisplayBufferCompositor::composite()
         renderer->set_rotation(display_buffer.orientation());
 
         renderer->render(renderable_list);
-        renderable_list.clear(); // Don't hold compositor buffers!
         display_buffer.post_update();
 
         report->finished_frame(false, this);

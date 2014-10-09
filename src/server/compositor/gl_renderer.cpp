@@ -127,24 +127,6 @@ void mc::GLRenderer::render(mg::RenderableList const& renderables) const
     for (auto const& r : renderables)
         render(*r);
 
-    /*
-     * glFinish is usually a bad thing to do as it blocks until rendering
-     * is complete, reducing parallelism between CPU and GPU. However in our
-     * case, glFinish is the lesser of two evils. Because glFinish only takes
-     * microseconds, whereas the alternative (old approach) takes 16
-     * milliseconds to complete a page flip while holding all the client
-     * buffers. And we don't want to hold buffer references for that
-     * long because it puts client frame deadlines at risk, and even
-     * risks no clients being ready to trigger the compositor in time
-     * for the next frame. So using glFinish here dramatically improves
-     * parallelism between the server and clients.
-     */
-    glFinish();
-
-    /*
-     * Drop all buffer references now it's safe (glFinish'd) and also delete
-     * any old textures from the GPU we didn't use during this frame.
-     */
     texture_cache->drop_unused();
 }
 

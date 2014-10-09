@@ -89,7 +89,13 @@ void me::DemoCompositor::composite()
         }
         nonrenderlist_elements |= embellished;
     }
-    elements.clear(); // Don't hold compositor buffer references too long
+
+    /*
+     * Note: Buffer lifetimes are ensured by the two objects holding
+     *       references to them; elements and renderable_list.
+     *       So no buffer is going to be released back to the client till
+     *       both of those containers get destroyed (end of the function).
+     */
 
     if (!nonrenderlist_elements &&
         display_buffer.post_renderables_if_optimizable(renderable_list))
@@ -104,7 +110,6 @@ void me::DemoCompositor::composite()
         renderer.set_rotation(display_buffer.orientation());
         renderer.begin(std::move(decoration_skip_list));
         renderer.render(renderable_list);
-        renderable_list.clear();  // Don't hold compositor buffers!
         display_buffer.post_update();
         report->finished_frame(false, this);
     }
