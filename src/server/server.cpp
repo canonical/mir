@@ -28,23 +28,33 @@
 
 namespace mo = mir::options;
 
+#define MIR_SERVER_BUILDER(name)\
+    std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder
+
+#define MIR_SERVER_WRAPPER(name)\
+    std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type\
+        (std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type const&)> name##_wrapper
+
 struct mir::Server::BuildersAndWrappers
 {
-    std::function<std::shared_ptr<input::CursorListener>()> cursor_listener_builder;
-    std::function<std::shared_ptr<scene::PlacementStrategy>()> placement_strategy_builder;
-    std::function<std::shared_ptr<scene::SessionListener>()> session_listener_builder;
-    std::function<std::shared_ptr<scene::PromptSessionListener>()> prompt_session_listener_builder;
-    std::function<std::shared_ptr<scene::SurfaceConfigurator>()> surface_configurator_builder;
-    std::function<std::shared_ptr<frontend::SessionAuthorizer>()> session_authorizer_builder;
-    std::function<std::shared_ptr<compositor::Compositor>()> compositor_builder;
-    std::function<std::shared_ptr<input::InputDispatcher>()> input_dispatcher_builder;
-    std::function<std::shared_ptr<graphics::GLConfig>()> gl_config_builder;
-    std::function<std::shared_ptr<ServerStatusListener>()> server_status_listener_builder;
-    std::function<std::shared_ptr<shell::FocusSetter>()> shell_focus_setter_builder;
+    MIR_SERVER_BUILDER(cursor_listener);
+    MIR_SERVER_BUILDER(placement_strategy);
+    MIR_SERVER_BUILDER(session_listener);
+    MIR_SERVER_BUILDER(prompt_session_listener);
+    MIR_SERVER_BUILDER(surface_configurator);
+    MIR_SERVER_BUILDER(session_authorizer);
+    MIR_SERVER_BUILDER(compositor);
+    MIR_SERVER_BUILDER(input_dispatcher);
+    MIR_SERVER_BUILDER(gl_config);
+    MIR_SERVER_BUILDER(server_status_listener);
+    MIR_SERVER_BUILDER(shell_focus_setter);
 
-    std::function<std::shared_ptr<scene::SessionCoordinator>(std::shared_ptr<scene::SessionCoordinator>)> session_coordinator_wrapper;
-    std::function<std::shared_ptr<scene::SurfaceCoordinator>(std::shared_ptr<scene::SurfaceCoordinator>)> surface_coordinator_wrapper;
+    MIR_SERVER_WRAPPER(session_coordinator);
+    MIR_SERVER_WRAPPER(surface_coordinator);
 };
+
+#undef MIR_SERVER_BUILDER
+#undef MIR_SERVER_WRAPPER
 
 #define MIR_SERVER_CONFIG_OVERRIDE(name)\
 auto the_##name()\
