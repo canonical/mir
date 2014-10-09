@@ -56,7 +56,7 @@ struct MockCursorListener : public mi::CursorListener
     ~MockCursorListener() noexcept {}
 };
 
-struct AndroidInputManagerAndCursorListenerSetup : public testing::Test, mtf::FakeEventHubServerConfiguration
+struct AndroidCursorListenerIntegrationTest : testing::Test, mtf::FakeEventHubServerConfiguration
 {
     bool is_key_repeat_enabled() const override
     {
@@ -90,7 +90,6 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test, mtf::Fa
         input_manager->stop();
     }
 
-protected:
     MockCursorListener cursor_listener;
     std::shared_ptr<mtd::MockEventFilter> event_filter = std::make_shared<mtd::MockEventFilter>();
     std::shared_ptr<mi::InputConfiguration> configuration;
@@ -100,7 +99,7 @@ protected:
 
 }
 
-TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motion)
+TEST_F(AndroidCursorListenerIntegrationTest, cursor_listener_receives_motion)
 {
     using namespace ::testing;
 

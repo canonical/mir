@@ -199,9 +199,8 @@ struct MockDispatcherPolicy : public mia::EventFilterDispatcherPolicy
                                                         droidinput::KeyEvent const*, uint32_t));
 };
 
-struct AndroidInputManagerDispatcherInterceptSetup : public testing::Test, public mtf::FakeEventHubServerConfiguration
+struct AndroidInputManagerDispatcherInterceptSetup : testing::Test, mtf::FakeEventHubServerConfiguration
 {
-public:
     bool is_key_repeat_enabled() const override
     {
         return false;
@@ -244,7 +243,6 @@ public:
         input_manager->stop();
     }
 
-protected:
     mtd::MockEventFilter event_filter;
     MockDispatcherPolicy dispatcher_policy{mt::fake_shared(event_filter)};
     mtd::StubScene scene;
