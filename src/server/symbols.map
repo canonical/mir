@@ -3,7 +3,6 @@ MIR_SERVER_26 {
   extern "C++" {
 # Symbols not yet picked up by script
     vtable?for?mir::input::NullInputDispatcher;
-    vtable?for?mir::input::NullInputConfiguration;
     VTT?for?mir::DefaultServerConfiguration;
     
 # The following symbols come from running a script over the generated docs. Vis:
@@ -234,10 +233,6 @@ MIR_SERVER_26 {
     mir::input::InputChannel::InputChannel*;
     mir::input::InputChannel::operator*;
     mir::input::InputChannel::server_fd*;
-    mir::input::InputConfiguration::?InputConfiguration*;
-    mir::input::InputConfiguration::InputConfiguration*;
-    mir::input::InputConfiguration::operator*;
-    mir::input::InputConfiguration::the_input_manager*;
     mir::input::InputDispatcher::configuration_changed*;
     mir::input::InputDispatcher::device_reset*;
     mir::input::InputDispatcher::dispatch*;
@@ -409,7 +404,6 @@ MIR_SERVER_26 {
     mir::ServerConfiguration::the_emergency_cleanup*;
     mir::ServerConfiguration::the_fatal_error_strategy*;
     mir::ServerConfiguration::the_graphics_platform*;
-    mir::ServerConfiguration::the_input_configuration*;
     mir::ServerConfiguration::the_input_dispatcher*;
     mir::ServerConfiguration::the_input_manager*;
     mir::ServerConfiguration::the_main_loop*;
@@ -500,6 +494,7 @@ MIR_SERVER_26 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_display_configuration_policy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_display_report*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_emergency_cleanup*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_event_hub*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_frame_dropping_policy_factory*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_frontend_display_changer*;
@@ -514,6 +509,9 @@ MIR_SERVER_26 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_configuration*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_dispatcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_manager*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_reader*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_reader_policy*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_reader_thread*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_region*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_registrar*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_report*;
@@ -522,6 +520,7 @@ MIR_SERVER_26 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_send_observer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_target_enumerator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_targeter*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_translator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_logger*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_main_loop*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_mediating_display_changer*;
@@ -737,16 +736,6 @@ MIR_SERVER_26 {
     vtable?for?mir::shell::SurfaceCoordinatorWrapper;
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::Timer;
-    
-# These symbols are needed by mir_acceptance_tests but are not intended to be public
-    mir::input::android::DefaultInputConfiguration::DefaultInputConfiguration*;
-    mir::input::android::DefaultInputConfiguration::?DefaultInputConfiguration*;
-    mir::input::android::DefaultInputConfiguration::the_input_manager*;
-    mir::input::android::DefaultInputConfiguration::the_reader*;
-    mir::input::android::DefaultInputConfiguration::the_input_translator*;
-    mir::input::android::DefaultInputConfiguration::the_reader_thread*;
-    mir::input::android::DefaultInputConfiguration::the_reader_policy*;
-    typeinfo?for?mir::input::android::DefaultInputConfiguration;
 
 # these symbols are needed by mir_demo_server_shell but are not intended to be public
     mir::compositor::GLRenderer::begin*;
