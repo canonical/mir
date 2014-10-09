@@ -27,6 +27,7 @@
 namespace android
 {
 class InputDispatcherInterface;
+class InputEnumerator;
 class InputDispatcherPolicyInterface;
 }
 
@@ -323,6 +324,7 @@ protected:
      *  @{ */
     virtual std::shared_ptr<input::android::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<droidinput::InputDispatcherInterface> the_android_input_dispatcher();
+    virtual std::shared_ptr<droidinput::InputEnumerator> the_input_target_enumerator();
     virtual std::shared_ptr<input::android::InputThread> the_dispatcher_thread();
     virtual std::shared_ptr<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
     virtual bool is_key_repeat_enabled() const;
@@ -340,6 +342,7 @@ protected:
     CachedPtr<input::android::InputRegistrar> input_registrar;
     CachedPtr<input::android::InputThread> dispatcher_thread;
     CachedPtr<droidinput::InputDispatcherInterface> android_input_dispatcher;
+    CachedPtr<droidinput::InputEnumerator> input_target_enumerator;
     CachedPtr<droidinput::InputDispatcherPolicyInterface> android_dispatcher_policy;
 
     CachedPtr<frontend::Connector>   connector;
