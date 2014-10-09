@@ -64,7 +64,7 @@ struct AndroidInputManagerAndCursorListenerSetup : public testing::Test, mtf::Fa
 
     std::shared_ptr<mi::CompositeEventFilter> the_composite_event_filter() override
     {
-        auto const& chain{std::static_pointer_cast<mi::EventFilter>(event_filter)};
+        std::initializer_list<std::shared_ptr<mi::EventFilter>const> const& chain{std::static_pointer_cast<mi::EventFilter>(event_filter)};
         return std::make_shared<mi::EventFilterChain>(chain);
     }
 
