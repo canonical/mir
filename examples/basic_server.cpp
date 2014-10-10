@@ -61,14 +61,8 @@ int main(int argc, char const* argv[])
 
     auto const quit_filter = std::make_shared<QuitFilter>(server);
 
-    server.set_add_configuration_options(
-        [] (mir::options::DefaultConfiguration& config)
-        {
-            namespace po = boost::program_options;
-
-            config.add_options()
-                (launch_child_opt, po::value<std::string>(), "system() command to launch client");
-        });
+    server.add_configuration_option(
+                launch_child_opt, "system() command to launch client", mir::OptionType::string);
 
     server.set_command_line(argc, argv);
     server.set_init_callback([&]

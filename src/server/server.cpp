@@ -68,6 +68,14 @@ struct mir::Server::BuildersAndWrappers
     FOREACH_OVERRIDE(MIR_SERVER_BUILDER)
 
     FOREACH_WRAPPER(MIR_SERVER_WRAPPER)
+
+    /// set a callback to introduce additional configuration options.
+    /// this will be invoked by run() before server initialisation starts
+    void set_add_configuration_options(
+        std::function<void(options::DefaultConfiguration& config)> const& add_configuration_options);
+
+    std::function<void(options::DefaultConfiguration& config)> add_configuration_options{
+        [](options::DefaultConfiguration&){}};
 };
 
 #undef MIR_SERVER_BUILDER
@@ -144,7 +152,7 @@ mir::Server::Server() :
 {
 }
 
-void mir::Server::set_add_configuration_options(
+void mir::Server::BuildersAndWrappers::set_add_configuration_options(
     std::function<void(mo::DefaultConfiguration& config)> const& add_configuration_options)
 {
     this->add_configuration_options = add_configuration_options;
@@ -177,7 +185,7 @@ try
 {
     auto const options = configuration_options(argc, argv, command_line_hander);
 
-    add_configuration_options(*options);
+    builders_and_wrappers->add_configuration_options(*options);
 
     ServerConfiguration config{options, builders_and_wrappers};
 
@@ -249,3 +257,104 @@ void mir::Server::wrap_##name(decltype(BuildersAndWrappers::name##_wrapper) cons
 FOREACH_WRAPPER(MIR_SERVER_WRAP)
 
 #undef MIR_SERVER_WRAP
+
+auto mir::Server::add_configuration_option(
+    std::string const& option,
+    std::string const& description,
+    int default_) -> detail::ServerAddConfigurationOptions
+{
+    namespace po = boost::program_options;
+
+    auto const& existing = builders_and_wrappers->add_configuration_options;
+
+    auto const option_adder = [=](options::DefaultConfiguration& config)
+        {
+            existing(config);
+
+            config.add_options()
+            (option.c_str(), po::value<int>()->default_value(default_), description.c_str());
+        };
+
+    builders_and_wrappers->set_add_configuration_options(option_adder);
+
+    return {*this};
+}
+
+auto mir::Server::add_configuration_option(
+    std::string const& option,
+    std::string const& description,
+    std::string const& default_) -> detail::ServerAddConfigurationOptions
+{
+    namespace po = boost::program_options;
+
+    auto const& existing = builders_and_wrappers->add_configuration_options;
+
+    auto const option_adder = [=](options::DefaultConfiguration& config)
+        {
+            existing(config);
+
+            config.add_options()
+            (option.c_str(), po::value<std::string>()->default_value(default_), description.c_str());
+        };
+
+    builders_and_wrappers->set_add_configuration_options(option_adder);
+
+    return {*this};
+}
+
+auto mir::Server::add_configuration_option(
+    std::string const& option,
+    std::string const& description,
+    OptionType type) -> detail::ServerAddConfigurationOptions
+{
+    namespace po = boost::program_options;
+
+    auto const& existing = builders_and_wrappers->add_configuration_options;
+
+    switch (type)
+    {
+    case OptionType::null:
+        {
+            auto const option_adder = [=](options::DefaultConfiguration& config)
+                {
+                    existing(config);
+
+                    config.add_options()
+                    (option.c_str(), description.c_str());
+                };
+
+            builders_and_wrappers->set_add_configuration_options(option_adder);
+        }
+        break;
+
+    case OptionType::integer:
+        {
+            auto const option_adder = [=](options::DefaultConfiguration& config)
+                {
+                    existing(config);
+
+                    config.add_options()
+                    (option.c_str(), po::value<int>(), description.c_str());
+                };
+
+            builders_and_wrappers->set_add_configuration_options(option_adder);
+        }
+        break;
+
+    case OptionType::string:
+        {
+            auto const option_adder = [=](options::DefaultConfiguration& config)
+                {
+                    existing(config);
+
+                    config.add_options()
+                    (option.c_str(), po::value<std::string>(), description.c_str());
+                };
+
+            builders_and_wrappers->set_add_configuration_options(option_adder);
+        }
+        break;
+    }
+
+    return {*this};
+}

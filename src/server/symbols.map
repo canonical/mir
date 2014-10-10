@@ -393,6 +393,7 @@ MIR_SERVER_26 {
     mir::ServerActionQueue::resume_processing_for*;
     mir::ServerActionQueue::?ServerActionQueue*;
     mir::ServerActionQueue::ServerActionQueue*;
+    mir::Server::add_configuration_option*;
     mir::ServerConfiguration::operator*;
     mir::ServerConfiguration::?ServerConfiguration*;
     mir::ServerConfiguration::ServerConfiguration*;
@@ -424,7 +425,6 @@ MIR_SERVER_26 {
     mir::Server::override_the_surface_configurator*;
     mir::Server::run*;
     mir::Server::Server*;
-    mir::Server::set_add_configuration_options*;
     mir::Server::set_command_line*;
     mir::Server::set_command_line_hander*;
     mir::Server::set_exception_handler*;
@@ -644,6 +644,7 @@ MIR_SERVER_26 {
     typeinfo?for?mir::compositor::Scene;
     typeinfo?for?mir::compositor::SceneElement;
     typeinfo?for?mir::DefaultServerConfiguration;
+    typeinfo?for?mir::detail::ServerAddConfigurationOptions;
     typeinfo?for?mir::DisplayServer;
     typeinfo?for?mir::EmergencyCleanup;
     typeinfo?for?mir::frontend::ConnectionCreator;
@@ -707,6 +708,7 @@ MIR_SERVER_26 {
     vtable?for?mir::compositor::Scene;
     vtable?for?mir::compositor::SceneElement;
     vtable?for?mir::DefaultServerConfiguration;
+    vtable?for?mir::detail::ServerAddConfigurationOptions;
     vtable?for?mir::DisplayServer;
     vtable?for?mir::EmergencyCleanup;
     vtable?for?mir::frontend::ConnectionCreator;
