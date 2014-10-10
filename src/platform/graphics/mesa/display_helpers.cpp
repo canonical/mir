@@ -130,7 +130,7 @@ void mgmh::DRMHelper::drop_master() const
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error("Failed to drop DRM master"))
-                    << boost::errinfo_errno(-ret));
+                    << boost::errinfo_errno(errno));
     }
 }
 
@@ -150,7 +150,7 @@ void mgmh::DRMHelper::set_master() const
         BOOST_THROW_EXCEPTION(
             boost::enable_error_info(
                 std::runtime_error("Failed to set DRM master"))
-                    << boost::errinfo_errno(-ret));
+                    << boost::errinfo_errno(errno));
     }
 }
 
