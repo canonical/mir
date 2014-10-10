@@ -60,7 +60,7 @@ public:
     Server();
 
 
-/** @name essential operations
+/** @name Essential operations
  * These are the commands used to start and stop.
  *  @{ */
     /// set the command line (this must remain valid while run() is called)
@@ -76,7 +76,7 @@ public:
     bool exited_normally();
 /** @} */
 
-/** @name configuration options
+/** @name Configuration options
  *  @{ */
     /// Add user configuration option(s) to Mir's option handling.
     /// These will be resolved during initialisation from the command line,
@@ -118,7 +118,7 @@ public:
     auto get_options() const -> std::shared_ptr<options::Option>;
 /** @} */
 
-/** @name hooks into the run() logic
+/** @name Using hooks into the run() logic
  *  @{ */
     /// set a callback to be invoked when the server has been initialized,
     /// but before it starts. This allows client code to get access Mir objects
@@ -130,9 +130,10 @@ public:
     void set_exception_handler(std::function<void()> const& exception_handler);
 /** @} */
 
-/** @name access to Mir subsystems
+/** @name Getting access to Mir subsystems
  * These will throw before initialization starts or after the server exits.
- * It will be available when the init_callback has been invoked (and thereafter
+ * They may be invoked by the functors that provide alternative implementations of
+ * Mir subsystems and when the init_callback is invoked (and thereafter
  * until the server exits).
  *  @{ */
     /// \return the composite event filter.
@@ -169,8 +170,8 @@ public:
     auto the_surface_configurator() const -> std::shared_ptr<scene::SurfaceConfigurator>;
 /** @} */
 
-/** @name Custom implementation
- * Provide alternative implementations of Mir subsystems
+/** @name Providing custom implementation
+ * Provide alternative implementations of Mir subsystems: the functors will be invoked during initialization
  * (this is only useful before initialization starts).
  *  @{ */
     /// Sets an override functor for creating the compositor.
