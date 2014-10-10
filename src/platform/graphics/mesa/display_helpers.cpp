@@ -60,7 +60,7 @@ int mgmh::DRMHelper::get_authenticated_fd()
             boost::enable_error_info(
                 std::runtime_error("Failed to get BusID of DRM device")) << boost::errinfo_errno(errno));
     int auth_fd = drmOpen(NULL, busid);
-    free(busid);
+    drmFreeBusid(busid);
 
     if (auth_fd < 0)
         BOOST_THROW_EXCEPTION(
