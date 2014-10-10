@@ -163,9 +163,6 @@ public:
     /// \return the display layout.
     auto the_shell_display_layout() const -> std::shared_ptr<shell::DisplayLayout>;
 
-    /// \return the server status listener.
-    void the_server_status_listener(std::function<std::shared_ptr<ServerStatusListener>()> const& server_status_listener_builder);
-
     /// \return the surface configurator.
     auto the_surface_configurator() const -> std::shared_ptr<scene::SurfaceConfigurator>;
 /** @} */
