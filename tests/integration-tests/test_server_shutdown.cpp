@@ -22,6 +22,7 @@
 #include "mir/compositor/renderer_factory.h"
 
 #include "mir/run_mir.h"
+#include "mir/main_loop.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -418,6 +419,43 @@ TEST(ServerShutdownWithThreadException,
         }};
 
     fake_event_hub->throw_exception_in_next_get_events();
+    server.join();
+
+    std::weak_ptr<mir::graphics::Display> display = server_config->the_display();
+    std::weak_ptr<mir::compositor::Compositor> compositor = server_config->the_compositor();
+    std::weak_ptr<mir::frontend::Connector> connector = server_config->the_connector();
+    std::weak_ptr<mir::input::InputManager> input_manager = server_config->the_input_manager();
+
+    server_config.reset();
+
+    EXPECT_EQ(0, display.use_count());
+    EXPECT_EQ(0, compositor.use_count());
+    EXPECT_EQ(0, connector.use_count());
+    EXPECT_EQ(0, input_manager.use_count());
+}
+
+// This also acts as a regression test for LP: #1378740
+TEST(ServerShutdownWithThreadException,
+     server_releases_resources_on_abnormal_main_thread_termination)
+{
+    // Use the FakeEventHubServerConfig to get the production input components
+    // (with the exception of EventHub, of course).
+    auto server_config = std::make_shared<FakeEventHubServerConfig>();
+
+    std::thread server{
+        [&]
+        {
+            EXPECT_THROW(
+                mir::run_mir(*server_config,
+                    [server_config](mir::DisplayServer&)
+                    {
+                        server_config->the_main_loop()->enqueue(
+                            server_config.get(),
+                            [] { throw std::runtime_error(""); });
+                    }),
+                std::runtime_error);
+        }};
+
     server.join();
 
     std::weak_ptr<mir::graphics::Display> display = server_config->the_display();

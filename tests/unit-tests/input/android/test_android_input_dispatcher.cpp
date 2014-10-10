@@ -57,6 +57,20 @@ namespace
 
 struct AndroidInputDispatcherTest : public testing::Test
 {
+    ~AndroidInputDispatcherTest()
+    {
+        using namespace ::testing;
+
+        Mock::VerifyAndClearExpectations(dispatcher.get());
+        Mock::VerifyAndClearExpectations(dispatcher_thread.get());
+
+        // mia::AndroidInputDispatcher destruction expectations
+        InSequence s;
+        EXPECT_CALL(*dispatcher_thread, request_stop());
+        EXPECT_CALL(*dispatcher, setInputDispatchMode(mia::DispatchDisabled, mia::DispatchFrozen));
+        EXPECT_CALL(*dispatcher_thread, join());
+    }
+
     std::shared_ptr<mtd::MockAndroidInputDispatcher> dispatcher = std::make_shared<mtd::MockAndroidInputDispatcher>();
     std::shared_ptr<MockInputThread> dispatcher_thread = std::make_shared<MockInputThread>();
     mia::AndroidInputDispatcher input_dispatcher{dispatcher,dispatcher_thread};
@@ -65,7 +79,7 @@ struct AndroidInputDispatcherTest : public testing::Test
 
 }
 
-TEST_F(AndroidInputDispatcherTest, start_starts_dispathcer_and_thread)
+TEST_F(AndroidInputDispatcherTest, start_starts_dispatcher_and_thread)
 {
     using namespace ::testing;
 

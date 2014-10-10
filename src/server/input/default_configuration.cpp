@@ -105,18 +105,28 @@ mir::DefaultServerConfiguration::the_input_configuration()
     });
 }
 
+std::shared_ptr<droidinput::InputEnumerator>
+mir::DefaultServerConfiguration::the_input_target_enumerator()
+{
+    return input_target_enumerator(
+        [this]()
+        {
+            return std::make_shared<mia::InputTargetEnumerator>(the_input_scene(), the_input_registrar());
+        });
+}
+
+
 std::shared_ptr<droidinput::InputDispatcherInterface>
 mir::DefaultServerConfiguration::the_android_input_dispatcher()
 {
     return android_input_dispatcher(
         [this]()
         {
-            auto registrar = the_input_registrar();
             auto dispatcher = std::make_shared<droidinput::InputDispatcher>(
                 the_dispatcher_policy(),
                 the_input_report(),
-                std::make_shared<mia::InputTargetEnumerator>(the_input_scene(), registrar));
-            registrar->set_dispatcher(dispatcher);
+                the_input_target_enumerator());
+            the_input_registrar()->set_dispatcher(dispatcher);
             return dispatcher;
         });
 }
