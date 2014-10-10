@@ -214,17 +214,12 @@ public:
 /** @} */
 
 private:
-    std::function<void(int argc, char const* const* argv)> command_line_hander{};
-    std::function<void()> init_callback{[]{}};
-    int argc{0};
-    char const** argv{nullptr};
-    std::function<void()> exception_handler{};
     bool exit_status{false};
     std::weak_ptr<options::Option> options;
     struct ServerConfiguration;
     ServerConfiguration* server_config{nullptr};
-    struct BuildersAndWrappers;
-    std::shared_ptr<BuildersAndWrappers> const builders_and_wrappers;
+    struct Self;
+    std::shared_ptr<Self> const self;
 };
 
 class detail::ServerAddConfigurationOptions

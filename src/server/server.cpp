@@ -33,27 +33,27 @@ namespace mo = mir::options;
     MACRO(surface_coordinator)
 
 #define FOREACH_OVERRIDE(MACRO)\
-    MACRO(cursor_listener)\
-    MACRO(placement_strategy)\
-    MACRO(session_listener)\
-    MACRO(prompt_session_listener)\
-    MACRO(surface_configurator)\
-    MACRO(session_authorizer)\
     MACRO(compositor)\
-    MACRO(input_dispatcher)\
+    MACRO(cursor_listener)\
     MACRO(gl_config)\
+    MACRO(input_dispatcher)\
+    MACRO(placement_strategy)\
+    MACRO(prompt_session_listener)\
     MACRO(server_status_listener)\
-    MACRO(shell_focus_setter)
+    MACRO(session_authorizer)\
+    MACRO(session_listener)\
+    MACRO(shell_focus_setter)\
+    MACRO(surface_configurator)
 
 #define FOREACH_ACCESSOR(MACRO)\
-    MACRO(the_graphics_platform)\
-    MACRO(the_display)\
-    MACRO(the_main_loop)\
     MACRO(the_composite_event_filter)\
-    MACRO(the_shell_display_layout)\
+    MACRO(the_display)\
+    MACRO(the_graphics_platform)\
+    MACRO(the_main_loop)\
+    MACRO(the_prompt_session_listener)\
     MACRO(the_session_authorizer)\
     MACRO(the_session_listener)\
-    MACRO(the_prompt_session_listener)\
+    MACRO(the_shell_display_layout)\
     MACRO(the_surface_configurator)
 
 #define MIR_SERVER_BUILDER(name)\
@@ -63,11 +63,14 @@ namespace mo = mir::options;
     std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type\
         (std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type const&)> name##_wrapper;
 
-struct mir::Server::BuildersAndWrappers
+struct mir::Server::Self
 {
-    FOREACH_OVERRIDE(MIR_SERVER_BUILDER)
+    std::function<void()> init_callback{[]{}};
+    int argc{0};
+    char const** argv{nullptr};
+    std::function<void()> exception_handler{};
 
-    FOREACH_WRAPPER(MIR_SERVER_WRAPPER)
+    std::function<void(int argc, char const* const* argv)> command_line_hander{};
 
     /// set a callback to introduce additional configuration options.
     /// this will be invoked by run() before server initialisation starts
@@ -76,6 +79,10 @@ struct mir::Server::BuildersAndWrappers
 
     std::function<void(options::DefaultConfiguration& config)> add_configuration_options{
         [](options::DefaultConfiguration&){}};
+
+    FOREACH_OVERRIDE(MIR_SERVER_BUILDER)
+
+    FOREACH_WRAPPER(MIR_SERVER_WRAPPER)
 };
 
 #undef MIR_SERVER_BUILDER
@@ -85,20 +92,20 @@ struct mir::Server::BuildersAndWrappers
 auto the_##name()\
 -> decltype(mir::DefaultServerConfiguration::the_##name()) override\
 {\
-    if (builders_and_wrappers->name##_builder)\
+    if (self->name##_builder)\
         return name(\
-            [this] { return builders_and_wrappers->name##_builder(); });\
+            [this] { return self->name##_builder(); });\
 \
     return mir::DefaultServerConfiguration::the_##name();\
 }
 
 #define MIR_SERVER_CONFIG_WRAP(name)\
-auto wrap_##name(decltype(BuildersAndWrappers::name##_wrapper)::result_type const& wrapped)\
+auto wrap_##name(decltype(Self::name##_wrapper)::result_type const& wrapped)\
 -> decltype(mir::DefaultServerConfiguration::wrap_##name({})) override\
 {\
-    if (builders_and_wrappers->name##_wrapper)\
+    if (self->name##_wrapper)\
         return name(\
-            [&] { return builders_and_wrappers->name##_wrapper(wrapped); });\
+            [&] { return self->name##_wrapper(wrapped); });\
 \
     return mir::DefaultServerConfiguration::wrap_##name(wrapped);\
 }
@@ -107,9 +114,9 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 {
     ServerConfiguration(
         std::shared_ptr<options::Configuration> const& configuration_options,
-        std::shared_ptr<BuildersAndWrappers> const builders_and_wrappers) :
+        std::shared_ptr<Self> const self) :
         DefaultServerConfiguration(configuration_options),
-        builders_and_wrappers(builders_and_wrappers)
+        self(self)
     {
     }
 
@@ -126,7 +133,7 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 
     FOREACH_WRAPPER(MIR_SERVER_CONFIG_WRAP)
 
-    std::shared_ptr<BuildersAndWrappers> const builders_and_wrappers;
+    std::shared_ptr<Self> const self;
 };
 
 #undef MIR_SERVER_CONFIG_OVERRIDE
@@ -148,11 +155,11 @@ std::shared_ptr<mo::DefaultConfiguration> configuration_options(
 }
 
 mir::Server::Server() :
-    builders_and_wrappers(std::make_shared<BuildersAndWrappers>())
+    self(std::make_shared<Self>())
 {
 }
 
-void mir::Server::BuildersAndWrappers::set_add_configuration_options(
+void mir::Server::Self::set_add_configuration_options(
     std::function<void(mo::DefaultConfiguration& config)> const& add_configuration_options)
 {
     this->add_configuration_options = add_configuration_options;
@@ -161,13 +168,13 @@ void mir::Server::BuildersAndWrappers::set_add_configuration_options(
 
 void mir::Server::set_command_line(int argc, char const* argv[])
 {
-    this->argc = argc;
-    this->argv = argv;
+    self->argc = argc;
+    self->argv = argv;
 }
 
 void mir::Server::set_init_callback(std::function<void()> const& init_callback)
 {
-    this->init_callback = init_callback;
+    self->init_callback = init_callback;
 }
 
 auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
@@ -177,24 +184,24 @@ auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 
 void mir::Server::set_exception_handler(std::function<void()> const& exception_handler)
 {
-    this->exception_handler = exception_handler;
+    self->exception_handler = exception_handler;
 }
 
 void mir::Server::run()
 try
 {
-    auto const options = configuration_options(argc, argv, command_line_hander);
+    auto const options = configuration_options(self->argc, self->argv, self->command_line_hander);
 
-    builders_and_wrappers->add_configuration_options(*options);
+    self->add_configuration_options(*options);
 
-    ServerConfiguration config{options, builders_and_wrappers};
+    ServerConfiguration config{options, self};
 
     server_config = &config;
 
     run_mir(config, [&](DisplayServer&)
         {
             this->options = config.the_options();
-            init_callback();
+            self->init_callback();
         });
 
     exit_status = true;
@@ -204,8 +211,8 @@ catch (...)
 {
     server_config = nullptr;
 
-    if (exception_handler)
-        exception_handler();
+    if (self->exception_handler)
+        self->exception_handler();
     else
         mir::report_exception(std::cerr);
 }
@@ -239,9 +246,9 @@ FOREACH_ACCESSOR(MIR_SERVER_ACCESSOR)
 #undef MIR_SERVER_ACCESSOR
 
 #define MIR_SERVER_OVERRIDE(name)\
-void mir::Server::override_the_##name(decltype(BuildersAndWrappers::name##_builder) const& value)\
+void mir::Server::override_the_##name(decltype(Self::name##_builder) const& value)\
 {\
-    builders_and_wrappers->name##_builder = value;\
+    self->name##_builder = value;\
 }
 
 FOREACH_OVERRIDE(MIR_SERVER_OVERRIDE)
@@ -249,9 +256,9 @@ FOREACH_OVERRIDE(MIR_SERVER_OVERRIDE)
 #undef MIR_SERVER_OVERRIDE
 
 #define MIR_SERVER_WRAP(name)\
-void mir::Server::wrap_##name(decltype(BuildersAndWrappers::name##_wrapper) const& value)\
+void mir::Server::wrap_##name(decltype(Self::name##_wrapper) const& value)\
 {\
-    builders_and_wrappers->name##_wrapper = value;\
+    self->name##_wrapper = value;\
 }
 
 FOREACH_WRAPPER(MIR_SERVER_WRAP)
@@ -265,7 +272,7 @@ auto mir::Server::add_configuration_option(
 {
     namespace po = boost::program_options;
 
-    auto const& existing = builders_and_wrappers->add_configuration_options;
+    auto const& existing = self->add_configuration_options;
 
     auto const option_adder = [=](options::DefaultConfiguration& config)
         {
@@ -275,7 +282,7 @@ auto mir::Server::add_configuration_option(
             (option.c_str(), po::value<int>()->default_value(default_), description.c_str());
         };
 
-    builders_and_wrappers->set_add_configuration_options(option_adder);
+    self->set_add_configuration_options(option_adder);
 
     return {*this};
 }
@@ -287,7 +294,7 @@ auto mir::Server::add_configuration_option(
 {
     namespace po = boost::program_options;
 
-    auto const& existing = builders_and_wrappers->add_configuration_options;
+    auto const& existing = self->add_configuration_options;
 
     auto const option_adder = [=](options::DefaultConfiguration& config)
         {
@@ -297,7 +304,7 @@ auto mir::Server::add_configuration_option(
             (option.c_str(), po::value<std::string>()->default_value(default_), description.c_str());
         };
 
-    builders_and_wrappers->set_add_configuration_options(option_adder);
+    self->set_add_configuration_options(option_adder);
 
     return {*this};
 }
@@ -309,7 +316,7 @@ auto mir::Server::add_configuration_option(
 {
     namespace po = boost::program_options;
 
-    auto const& existing = builders_and_wrappers->add_configuration_options;
+    auto const& existing = self->add_configuration_options;
 
     switch (type)
     {
@@ -323,7 +330,7 @@ auto mir::Server::add_configuration_option(
                     (option.c_str(), description.c_str());
                 };
 
-            builders_and_wrappers->set_add_configuration_options(option_adder);
+            self->set_add_configuration_options(option_adder);
         }
         break;
 
@@ -337,7 +344,7 @@ auto mir::Server::add_configuration_option(
                     (option.c_str(), po::value<int>(), description.c_str());
                 };
 
-            builders_and_wrappers->set_add_configuration_options(option_adder);
+            self->set_add_configuration_options(option_adder);
         }
         break;
 
@@ -351,7 +358,7 @@ auto mir::Server::add_configuration_option(
                     (option.c_str(), po::value<std::string>(), description.c_str());
                 };
 
-            builders_and_wrappers->set_add_configuration_options(option_adder);
+            self->set_add_configuration_options(option_adder);
         }
         break;
     }
