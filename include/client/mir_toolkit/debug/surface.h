@@ -60,8 +60,8 @@ uint32_t mir_debug_surface_current_buffer_id(MirSurface *surface);
  *          and shell state is known and constrained.
  */
 MirBool mir_debug_surface_coords_to_screen(MirSurface* surface,
-                                           int32_t x, int32_t y,
-                                           int32_t* screen_x, int32_t* screen_y);
+                                           int x, int y,
+                                           int* screen_x, int* screen_y);
 
 #ifdef __cplusplus
 }

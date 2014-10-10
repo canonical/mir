@@ -400,8 +400,8 @@ void signal_response_received(MirWaitHandle* handle)
 }
 }
 
-bool MirSurface::translate_to_screen_coordinates(int32_t x, int32_t y,
-                                                 int32_t *screen_x, int32_t *screen_y)
+bool MirSurface::translate_to_screen_coordinates(int x, int y,
+                                                 int *screen_x, int *screen_y)
 {
     if (!debug)
     {
