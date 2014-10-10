@@ -1,5 +1,6 @@
-mir (0.8.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.8.0+14.10.20141010-0ubuntu1) utopic; urgency=medium
 
+  [ Daniel van Vugt ]
   * New upstream release 0.8.0 (https://launchpad.net/mir/+milestone/0.8.0)
     - Enhancements:
       . Less sensitivity to ABI breaks - many headers unused by external
@@ -91,7 +92,7 @@ mir (0.8.0-0ubuntu1) UNRELEASED; urgency=medium
       . Fix arm64 package by adding arm64 to the shared library prober test.
         (LP: #1379478)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 30 Sep 2014 16:08:44 +0800
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 10 Oct 2014 14:01:26 +0000
 
 mir (0.7.3+14.10.20140918.1-0ubuntu1) utopic; urgency=medium
 
