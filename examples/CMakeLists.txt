@@ -154,6 +154,7 @@ install(TARGETS ${INSTALL_DEMOS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 add_executable(mir_demo_server_basic
   basic_server.cpp
   basic_server_configuration.cpp
+  example_display_configuration_policy.cpp
 )
 
 target_link_libraries(mir_demo_server_basic
