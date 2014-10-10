@@ -88,6 +88,8 @@ mir (0.8.0-0ubuntu1) UNRELEASED; urgency=medium
         not published (LP: #1375301)
       . update-all-ABI-sha1sums.sh and install_on_android.sh are no longer
         executable. (LP: #1376547)
+      . Fix arm64 package by adding arm64 to the shared library prober test.
+        (LP: #1379478)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 30 Sep 2014 16:08:44 +0800
 
