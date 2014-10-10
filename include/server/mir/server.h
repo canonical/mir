@@ -52,8 +52,7 @@ enum class OptionType
     string
 };
 
-/// A declarative server implementation that doesn't tie client code to
-/// volatile interfaces (like DefaultServerConfiguration)
+/// Customise and run a Mir server.
 class Server
 {
 public:
