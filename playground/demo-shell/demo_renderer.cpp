@@ -163,7 +163,9 @@ DemoRenderer::DemoRenderer(
     titlebar_corner_tex = generate_frame_corner_texture(corner_radius,
                                                         {128,128,128,255},
                                                         255);
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+
+    clear_color[0] = clear_color[1] = clear_color[2] = 0.2f;
+    clear_color[3] = 1.0f;
 }
 
 DemoRenderer::~DemoRenderer()
