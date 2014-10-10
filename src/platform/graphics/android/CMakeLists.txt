@@ -9,11 +9,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 add_definitions( -DANDROID )
 
 add_library(mirplatformgraphicsandroidobjects OBJECT
-  android_platform.cpp
+  platform.cpp
   android_buffer_allocator.cpp
   buffer.cpp
-  android_display.cpp
-  android_display_configuration.cpp
+  display.cpp
+  display_configuration.cpp
   display_buffer.cpp
   output_builder.cpp
   hwc_layerlist.cpp
@@ -35,6 +35,8 @@ add_library(mirplatformgraphicsandroidobjects OBJECT
   device_quirks.cpp
   real_hwc_wrapper.cpp
   hwc_fallback_gl_renderer.cpp
+  ipc_operations.cpp
+  buffer_writer.cpp
 )
 add_library(mirplatformgraphicsandroid SHARED
   $<TARGET_OBJECTS:mirplatformgraphicsandroidobjects>
@@ -42,7 +44,7 @@ add_library(mirplatformgraphicsandroid SHARED
 
 set_target_properties(
   mirplatformgraphicsandroid PROPERTIES
-  OUTPUT_NAME mirplatformgraphics
+  OUTPUT_NAME ${MIR_PLATFORM_DRIVER}
   LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/android
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
@@ -59,19 +61,19 @@ target_link_libraries(
   ${ANDROID_PROPERTIES_LDFLAGS}
 )
 
-install(TARGETS mirplatformgraphicsandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/platformgraphics/android)
+install(TARGETS mirplatformgraphicsandroid LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/${PLATFORM_DRIVER}/android)
 
 if (MIR_TEST_PLATFORM STREQUAL "android")
   add_custom_command(TARGET mirplatformgraphicsandroid
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E remove libmirplatformgraphics.so
-    COMMAND ${CMAKE_COMMAND} -E create_symlink android/$<TARGET_FILE_NAME:mirplatformgraphicsandroid> libmirplatformgraphics.so
+    COMMAND ${CMAKE_COMMAND} -E remove ${MIR_PLATFORM_DRIVER_BINARY}
+    COMMAND ${CMAKE_COMMAND} -E create_symlink android/$<TARGET_FILE_NAME:mirplatformgraphicsandroid> ${MIR_PLATFORM_DRIVER_BINARY}
     WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
   )
 
   install(CODE
     "execute_process(
-       COMMAND ln -sf mir/platformgraphics/android/libmirplatformgraphics.so
+       COMMAND ln -sf mir/${PLATFORM_DRIVER}/android/${MIR_PLATFORM_DRIVER_BINARY}
        WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
      )"
   )

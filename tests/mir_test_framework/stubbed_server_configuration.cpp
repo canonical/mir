@@ -20,7 +20,9 @@
 #include "mir_test_framework/command_line_server_configuration.h"
 
 #include "mir/options/default_configuration.h"
-#include "mir/graphics/buffer_ipc_packer.h"
+#include "mir/graphics/platform_ipc_operations.h"
+#include "mir/graphics/buffer_ipc_message.h"
+#include "mir/graphics/buffer_writer.h"
 #include "mir/graphics/cursor.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
@@ -43,6 +45,7 @@
 #include "src/server/input/null_input_dispatcher.h"
 #include "src/server/input/null_input_targeter.h"
 
+#include <system_error>
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -72,7 +75,7 @@ public:
         if (fd < 0)
             BOOST_THROW_EXCEPTION(
                 boost::enable_error_info(
-                    std::runtime_error("Failed to open dummy fd")) << boost::errinfo_errno(errno));
+                    std::system_error(errno, std::system_category(), "Failed to open dummy fd")));
     }
 
     std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
@@ -134,6 +137,45 @@ class StubCursor : public mg::Cursor
     void move_to(geom::Point) override {}
 };
 
+class StubIpcOps : public mg::PlatformIpcOperations
+{
+    void pack_buffer(
+        mg::BufferIpcMessage& message,
+        mg::Buffer const& buffer,
+        mg::BufferIpcMsgType msg_type) const override
+    {
+        if (msg_type == mg::BufferIpcMsgType::full_msg)
+        {
+#ifndef ANDROID
+            auto native_handle = buffer.native_buffer_handle();
+            for(auto i=0; i<native_handle->data_items; i++)
+            {
+                message.pack_data(native_handle->data[i]);
+            }
+            for(auto i=0; i<native_handle->fd_items; i++)
+            {
+                using namespace mir;
+                message.pack_fd(Fd(IntOwnedFd{native_handle->fd[i]}));
+            }
+
+            message.pack_flags(native_handle->flags);
+#endif
+            message.pack_stride(buffer.stride());
+            message.pack_size(buffer.size());
+        }
+    }
+
+    void unpack_buffer(
+        mg::BufferIpcMessage&, mg::Buffer const&) const override
+    {
+    }
+
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
+    {
+        return std::make_shared<mg::PlatformIPCPackage>();
+    }
+};
+
 class StubGraphicPlatform : public mtd::NullPlatform
 {
 public:
@@ -148,28 +190,9 @@ public:
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    void fill_buffer_package(
-        mg::BufferIPCPacker* packer, mg::Buffer const* buffer, mg::BufferIpcMsgType msg_type) const override
+    std::shared_ptr<mg::PlatformIpcOperations> make_ipc_operations() const override
     {
-        if (msg_type == mg::BufferIpcMsgType::full_msg)
-        {
-#ifndef ANDROID
-            auto native_handle = buffer->native_buffer_handle();
-            for(auto i=0; i<native_handle->data_items; i++)
-            {
-                packer->pack_data(native_handle->data[i]);
-            }
-            for(auto i=0; i<native_handle->fd_items; i++)
-            {
-                using namespace mir;
-                packer->pack_fd(Fd(IntOwnedFd{native_handle->fd[i]}));
-            }
-
-            packer->pack_flags(native_handle->flags);
-#endif
-            packer->pack_stride(buffer->stride());
-            packer->pack_size(buffer->size());
-        }
+        return std::make_shared<StubIpcOps>();
     }
 
     std::shared_ptr<mg::Display> create_display(
@@ -178,6 +201,18 @@ public:
         std::shared_ptr<mg::GLConfig> const&) override
     {
         return std::make_shared<mtd::StubDisplay>(display_rects);
+    }
+    
+    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
+    {
+        struct NullWriter : mg::BufferWriter 
+        {
+            void write(mg::Buffer& /* buffer */, 
+                unsigned char const* /* data */, size_t /* size */) override
+            {
+            }
+        };
+        return std::make_shared<NullWriter>();
     }
     
     std::vector<geom::Rectangle> const display_rects;

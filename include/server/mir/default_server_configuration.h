@@ -105,6 +105,7 @@ class Display;
 class BufferInitializer;
 class DisplayReport;
 class GraphicBufferAllocator;
+class BufferWriter;
 class Cursor;
 class CursorImage;
 class GLConfig;
@@ -114,7 +115,7 @@ namespace nested { class HostConnection; }
 namespace input
 {
 class InputReport;
-class InputTargets;
+class Scene;
 class InputManager;
 class CompositeEventFilter;
 class InputChannelFactory;
@@ -214,6 +215,7 @@ public:
      * dependencies of compositor on the rest of the Mir
      *  @{ */
     virtual std::shared_ptr<graphics::GraphicBufferAllocator> the_buffer_allocator();
+    virtual std::shared_ptr<graphics::BufferWriter> the_buffer_writer();
     virtual std::shared_ptr<compositor::Scene>                  the_scene();
     virtual std::shared_ptr<compositor::FrameDroppingPolicyFactory> the_frame_dropping_policy_factory();
     /** @} */
@@ -291,7 +293,7 @@ public:
     virtual std::shared_ptr<input::InputReport> the_input_report();
     virtual std::shared_ptr<input::CompositeEventFilter> the_composite_event_filter();
     virtual std::shared_ptr<shell::InputTargeter> the_input_targeter();
-    virtual std::shared_ptr<input::InputTargets>  the_input_targets();
+    virtual std::shared_ptr<input::Scene>  the_input_scene();
     virtual std::shared_ptr<input::CursorListener> the_cursor_listener();
     virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
@@ -359,6 +361,7 @@ protected:
     CachedPtr<graphics::NativePlatform>    graphics_native_platform;
     CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
+    CachedPtr<graphics::BufferWriter> buffer_writer;
     CachedPtr<graphics::Display>      display;
     CachedPtr<graphics::Cursor>       cursor;
     CachedPtr<graphics::CursorImage>  default_cursor_image;

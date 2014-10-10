@@ -1,3 +1,10 @@
+set(MIRCLIENT_ABI 8)
+set(CLIENT_DRIVER client${MIRCLIENT_ABI}driver)
+set(MIR_CLIENT_DRIVER mir${CLIENT_DRIVER})
+set(MIR_CLIENT_DRIVER_BINARY lib${MIR_CLIENT_DRIVER}.so
+    CACHE STRING "File name of Mir client drivers")
+add_definitions(-DMIR_CLIENT_DRIVER_BINARY="${MIR_CLIENT_DRIVER_BINARY}")
+
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
@@ -44,6 +51,7 @@ add_library(mirclientobjects OBJECT
   mir_surface_api.cpp
   logging/rpc_report.cpp
   logging/input_receiver_report.cpp
+  logging/perf_report.cpp
   default_connection_configuration.cpp
   surface_map.cpp
   lifecycle_control.cpp
@@ -54,6 +62,7 @@ add_library(mirclientobjects OBJECT
   mir_prompt_session.cpp
   mir_prompt_session_api.cpp
   mir_event_distributor.cpp
+  periodic_perf_report.cpp
 )
 
 add_library(
@@ -62,7 +71,6 @@ add_library(
   $<TARGET_OBJECTS:mirclientobjects>
 )
 
-set(MIRCLIENT_ABI 8)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(

@@ -19,6 +19,7 @@
 #include "stream_socket_transport.h"
 #include "mir/variable_length_array.h"
 #include "mir/thread_name.h"
+#include "mir/fd_socket_transmission.h"
 
 #include <system_error>
 
@@ -32,41 +33,9 @@
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
-
-
 namespace mclr = mir::client::rpc;
 
-namespace {
-class socket_error : public std::system_error
-{
-public:
-    socket_error(std::string const& message)
-        : std::system_error(errno, std::system_category(), message)
-    {
-    }
-};
-
-
-class socket_disconnected_error : public std::system_error
-{
-public:
-    socket_disconnected_error(std::string const& message)
-        : std::system_error(errno, std::system_category(), message)
-    {
-    }
-};
-
-class fd_reception_error : public std::runtime_error
-{
-public:
-    fd_reception_error()
-        : std::runtime_error("Invalid control message for receiving file descriptors")
-    {
-    }
-};
-}
-
-mclr::StreamSocketTransport::StreamSocketTransport(int fd)
+mclr::StreamSocketTransport::StreamSocketTransport(mir::Fd const& fd)
     : socket_fd{fd}
 {
     init();
@@ -92,11 +61,6 @@ void mclr::StreamSocketTransport::register_observer(std::shared_ptr<Observer> co
 {
     std::lock_guard<decltype(observer_mutex)> lock(observer_mutex);
     observers.push_back(observer);
-}
-
-static bool socket_error_is_transient(int error_code)
-{
-    return (error_code == EINTR);
 }
 
 void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested)
@@ -165,91 +129,15 @@ void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_reques
     }
 }
 
-void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested, std::vector<int>& fds)
+void mclr::StreamSocketTransport::receive_data(void* buffer, size_t bytes_requested, std::vector<mir::Fd>& fds)
+try
 {
-    if (bytes_requested == 0)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Attempted to receive 0 bytes"));
-    }
-    size_t bytes_read{0};
-    unsigned fds_read{0};
-    while (bytes_read < bytes_requested)
-    {
-        // Store the data in the buffer requested
-        struct iovec iov;
-        iov.iov_base = static_cast<uint8_t*>(buffer) + bytes_read;
-        iov.iov_len = bytes_requested - bytes_read;
-        
-        // Allocate space for control message
-        static auto const builtin_n_fds = 5;
-        static auto const builtin_cmsg_space = CMSG_SPACE(builtin_n_fds * sizeof(int));
-        auto const fds_bytes = (fds.size() - fds_read) * sizeof(int);
-        mir::VariableLengthArray<builtin_cmsg_space> control{CMSG_SPACE(fds_bytes)};
-        
-        // Message to read
-        struct msghdr header;
-        header.msg_name = NULL;
-        header.msg_namelen = 0;
-        header.msg_iov = &iov;
-        header.msg_iovlen = 1;
-        header.msg_controllen = control.size();
-        header.msg_control = control.data();
-        header.msg_flags = 0;
-        
-        ssize_t const result = recvmsg(socket_fd, &header, MSG_NOSIGNAL | MSG_WAITALL);
-        if (result == 0)
-        {
-            notify_disconnected();
-            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to read message from server: server has shutdown"));
-        }
-        if (result < 0)
-        {
-            if (socket_error_is_transient(errno))
-            {
-                continue;
-            }
-            if (errno == EPIPE)
-            {
-                notify_disconnected();
-                BOOST_THROW_EXCEPTION(
-                            boost::enable_error_info(socket_disconnected_error("Failed to read message from server"))
-                            << boost::errinfo_errno(errno));
-            }
-            BOOST_THROW_EXCEPTION(
-                        boost::enable_error_info(socket_error("Failed to read message from server"))
-                        << boost::errinfo_errno(errno));
-        }
-
-        bytes_read += result;
-        
-        // If we get a proper control message, copy the received
-        // file descriptors back to the caller
-        struct cmsghdr const* const cmsg = CMSG_FIRSTHDR(&header);
-        if (cmsg)
-        {
-            // NOTE: This relies on the file descriptor cmsg being read
-            // (and written) atomically.
-            if (cmsg->cmsg_len > CMSG_LEN(fds_bytes) || (header.msg_flags & MSG_CTRUNC))
-            {
-                BOOST_THROW_EXCEPTION(std::runtime_error("Received more fds than expected"));
-            }
-            if (cmsg->cmsg_level != SOL_SOCKET || cmsg->cmsg_type != SCM_RIGHTS)
-            {
-                BOOST_THROW_EXCEPTION(fd_reception_error());
-            }
-            int const* const data = reinterpret_cast<int const*>CMSG_DATA(cmsg);
-            ptrdiff_t const header_size = reinterpret_cast<char const*>(data) - reinterpret_cast<char const*>(cmsg);
-            int const nfds = (cmsg->cmsg_len - header_size) / sizeof(int);
-            for (int i = 0; i < nfds; i++)
-                fds[fds_read + i] = data[i];
-
-            fds_read += nfds;
-        }
-    }
-    if (fds_read < fds.size())
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Receieved fewer fds than expected"));
-    }
+    mir::receive_data(socket_fd, buffer, bytes_requested, fds);
+}
+catch (socket_disconnected_error &e)
+{
+    notify_disconnected();
+    throw e;
 }
 
 void mclr::StreamSocketTransport::send_data(const std::vector<uint8_t>& buffer)
@@ -289,9 +177,9 @@ void mclr::StreamSocketTransport::init()
     // EPIPE behaviour; we don't want SIGPIPE when the IO loop terminates.
     int socket_fds[2];
     socketpair(AF_UNIX, SOCK_STREAM, 0, socket_fds);
-    this->shutdown_fd = socket_fds[1];
+    this->shutdown_fd = mir::Fd{socket_fds[1]};
 
-    auto shutdown_fd = socket_fds[0];
+    auto shutdown_fd = mir::Fd{socket_fds[0]};
     io_service_thread = std::thread([this, shutdown_fd]
     {
         // Our IO threads must not receive any signals
@@ -385,13 +273,11 @@ void mclr::StreamSocketTransport::init()
                 shutdown_requested = true;
             }
         }
-        ::close(shutdown_fd);
-        ::close(socket_fd);
         ::close(epoll_fd);
     });
 }
 
-int mclr::StreamSocketTransport::open_socket(std::string const& path)
+mir::Fd mclr::StreamSocketTransport::open_socket(std::string const& path)
 {
     struct sockaddr_un socket_address;
     // Appease the almighty valgrind
@@ -401,7 +287,7 @@ int mclr::StreamSocketTransport::open_socket(std::string const& path)
     // Must be memcpy rather than strcpy, as abstract socket paths start with '\0'
     memcpy(socket_address.sun_path, path.data(), path.size());
 
-    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    mir::Fd fd{socket(AF_UNIX, SOCK_STREAM, 0)};
     if (connect(fd, reinterpret_cast<sockaddr*>(&socket_address), sizeof(socket_address)) < 0)
     {
         BOOST_THROW_EXCEPTION(

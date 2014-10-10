@@ -1,17 +1,26 @@
 include(CMakeDependentOption)
 
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(
+  ${CMAKE_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/src/include/platform
+  ${PROJECT_SOURCE_DIR}/src/include/server
+  ${PROJECT_SOURCE_DIR}/src/include/client
+)
 
 set(
   INTEGRATION_TESTS_SRCS
   test_surface_stack_with_compositor.cpp
+  test_client_surface_swap_buffers.cpp
   test_surfaceloop.cpp
+  test_stale_frames.cpp
   test_error_reporting.cpp
+  test_exchange_buffer.cpp
   test_display_info.cpp
   test_display_server_main_loop_events.cpp
   test_surface_first_frame_sync.cpp
   test_swapinterval.cpp
   test_server_client_types.cpp
+  test_server_shutdown.cpp
   test_session_manager.cpp
   test_session.cpp
   session_management.cpp
@@ -49,6 +58,8 @@ add_executable(
   ${MIR_PLATFORM_OBJECTS}
   ${MIR_COMMON_OBJECTS}
 )
+
+mir_precompiled_header(mir_integration_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
 
 add_dependencies(mir_integration_tests GMock)
 

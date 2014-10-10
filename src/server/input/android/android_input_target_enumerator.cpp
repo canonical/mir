@@ -20,7 +20,7 @@
 
 #include "android_window_handle_repository.h"
 
-#include "mir/input/input_targets.h"
+#include "mir/input/scene.h"
 #include "mir/input/surface.h"
 
 #include <InputWindow.h>
@@ -28,9 +28,9 @@
 namespace mi = mir::input;
 namespace mia = mi::android;
 
-mia::InputTargetEnumerator::InputTargetEnumerator(std::shared_ptr<mi::InputTargets> const& targets,
+mia::InputTargetEnumerator::InputTargetEnumerator(std::shared_ptr<mi::Scene> const& scene,
                                                   std::shared_ptr<mia::WindowHandleRepository> const& repository)
-    : targets(targets),
+    : scene(scene),
       repository(repository)
 {
 }
@@ -41,7 +41,7 @@ mia::InputTargetEnumerator::~InputTargetEnumerator() noexcept(true)
 
 void mia::InputTargetEnumerator::for_each(std::function<void(droidinput::sp<droidinput::InputWindowHandle> const&)> const& callback)
 {
-    targets->for_each(
+    scene->for_each(
         [&callback, this](std::shared_ptr<mi::Surface> const& target)
         {
             auto handle = repository->handle_for_channel(target->input_channel());

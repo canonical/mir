@@ -60,11 +60,13 @@ struct MockSessionMediatorReport : mf::SessionMediatorReport
         EXPECT_CALL(*this, session_create_surface_called(_)).Times(AnyNumber());
         EXPECT_CALL(*this, session_release_surface_called(_)).Times(AnyNumber());
         EXPECT_CALL(*this, session_next_buffer_called(_)).Times(AnyNumber());
+        EXPECT_CALL(*this, session_exchange_buffer_called(_)).Times(AnyNumber());
     }
 
     MOCK_METHOD1(session_connect_called, void (std::string const&));
     MOCK_METHOD1(session_create_surface_called, void (std::string const&));
     MOCK_METHOD1(session_next_buffer_called, void (std::string const&));
+    MOCK_METHOD1(session_exchange_buffer_called, void (std::string const&));
     MOCK_METHOD1(session_release_surface_called, void (std::string const&));
     MOCK_METHOD1(session_disconnect_called, void (std::string const&));
     MOCK_METHOD2(session_start_prompt_session_called, void (std::string const&, pid_t));
@@ -112,7 +114,10 @@ struct FakeCommandLine
 struct NativePlatformAdapter : mg::NativePlatform
 {
     NativePlatformAdapter(std::shared_ptr<mg::Platform> const& adaptee) :
-        adaptee(adaptee) {}
+        adaptee(adaptee),
+        ipc_ops(adaptee->make_ipc_operations())
+    {
+    }
 
     void initialize(std::shared_ptr<mg::NestedContext> const& /*nested_context*/) override {}
 
@@ -122,9 +127,9 @@ struct NativePlatformAdapter : mg::NativePlatform
         return adaptee->create_buffer_allocator(buffer_initializer);
     }
 
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package() override
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
-        return adaptee->get_ipc_package();
+        return ipc_ops->connection_ipc_package();
     }
 
     std::shared_ptr<mg::InternalClient> create_internal_client() override
@@ -132,15 +137,21 @@ struct NativePlatformAdapter : mg::NativePlatform
         return adaptee->create_internal_client();
     }
 
+    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
+    {
+        return adaptee->make_buffer_writer();
+    }
+
     void fill_buffer_package(
-        mg::BufferIPCPacker* packer,
+        mg::BufferIpcMessage* message,
         mg::Buffer const* buffer,
         mg::BufferIpcMsgType msg_type) const override
     {
-        return adaptee->fill_buffer_package(packer, buffer, msg_type);
+        return ipc_ops->pack_buffer(*message, *buffer, msg_type);
     }
-
+    
     std::shared_ptr<mg::Platform> const adaptee;
+    std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
 };
 
 struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
@@ -194,10 +205,8 @@ struct NestedMockEGL : mir::test::doubles::MockEGL
         EXPECT_CALL(*this, eglDestroySurface(_, _)).Times(AnyNumber());
 
         EXPECT_CALL(*this, eglQueryString(_, _)).Times(AnyNumber());
-        ON_CALL(*this, eglQueryString(_,EGL_EXTENSIONS))
-            .WillByDefault(Return("EGL_KHR_image "
-                                  "EGL_KHR_image_base "
-                                  "EGL_MESA_drm_image"));
+
+        provide_egl_extensions();
 
         EXPECT_CALL(*this, eglChooseConfig(_, _, _, _, _)).Times(AnyNumber()).WillRepeatedly(
             DoAll(WithArgs<2, 4>(Invoke(this, &NestedMockEGL::egl_choose_config)), Return(EGL_TRUE)));

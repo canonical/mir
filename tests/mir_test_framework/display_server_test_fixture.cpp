@@ -97,12 +97,6 @@ void BespokeDisplayServerTestFixture::terminate_client_processes()
     process_manager.terminate_client_processes();
 }
 
-
-void BespokeDisplayServerTestFixture::kill_client_processes()
-{
-    process_manager.kill_client_processes();
-}
-
 void BespokeDisplayServerTestFixture::run_in_test_process(
     std::function<void()> const& run_code)
 {

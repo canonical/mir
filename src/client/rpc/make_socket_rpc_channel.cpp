@@ -52,7 +52,7 @@ mclr::make_rpc_channel(std::string const& name,
     if (fd_prefix.is_start_of(name))
     {
         auto const fd = atoi(name.c_str()+fd_prefix.size);
-        transport = std::unique_ptr<mclr::StreamTransport>{new mclr::StreamSocketTransport{fd}};
+        transport = std::unique_ptr<mclr::StreamTransport>{new mclr::StreamSocketTransport{mir::Fd{fd}}};
     }
     else
     {

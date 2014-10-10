@@ -616,14 +616,12 @@ public:
         geom::Rectangle const& position,
         glm::mat4 const& transform,
         bool visible,
-        bool alpha_enabled,
         float alpha,
         bool shaped,
         mg::Renderable::ID id)
     : underlying_buffer_stream{stream},
       compositor_buffer{nullptr},
       compositor_id{compositor_id},
-      alpha_enabled_{alpha_enabled},
       alpha_{alpha},
       shaped_{shaped},
       visible_{visible},
@@ -650,9 +648,6 @@ public:
     bool visible() const override
     { return visible_; }
 
-    bool alpha_enabled() const override
-    { return alpha_enabled_; }
-
     geom::Rectangle screen_position() const override
     { return screen_position_; }
 
@@ -667,12 +662,10 @@ public:
  
     mg::Renderable::ID id() const override
     { return id_; }
-
 private:
     std::shared_ptr<mc::BufferStream> const underlying_buffer_stream;
     std::shared_ptr<mg::Buffer> mutable compositor_buffer;
     void const*const compositor_id;
-    bool const alpha_enabled_;
     float const alpha_;
     bool const shaped_;
     bool const visible_;
@@ -686,7 +679,6 @@ std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const
 {
     std::unique_lock<std::mutex> lk(guard);
 
-    auto const shaped = nonrectangular || (surface_alpha < 1.0f);
     return std::unique_ptr<mg::Renderable>(
         new SurfaceSnapshot(
             surface_buffer_stream,
@@ -694,7 +686,6 @@ std::unique_ptr<mg::Renderable> ms::BasicSurface::compositor_snapshot(void const
             surface_rect,
             transformation_matrix,
             visible(lk),
-            shaped,
             surface_alpha,
             nonrectangular, 
             this));

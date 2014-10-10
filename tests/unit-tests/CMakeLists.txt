@@ -1,10 +1,23 @@
 include(CMakeDependentOption)
 
-add_definitions(-DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/")
+include_directories(
+  ${CMAKE_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/src/include/platform
+  ${PROJECT_SOURCE_DIR}/src/include/server
+  ${PROJECT_SOURCE_DIR}/src/include/client
+)
+
+add_definitions(
+  -DTEST_RECORDINGS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/input_recordings/"
+  -DMIR_CLIENT_DRIVER_BINARY="${MIR_CLIENT_DRIVER_BINARY}"
+)
 
 include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${UMOCKDEV_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
 # TODO: Aim to remove
 include_directories(${MIR_XCURSOR_INCLUDE_DIRECTORIES})
+
+# Umockdev uses glib, which uses the deprecated "register" allocation specifier
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
 set(
   UNIT_TEST_SOURCES
@@ -21,6 +34,7 @@ set(
   test_basic_observers.cpp
   test_fatal.cpp
   test_fd.cpp
+  test_shared_library_prober.cpp
 )
 
 add_subdirectory(options/)
@@ -47,6 +61,8 @@ add_executable(mir_unit_tests
   ${MIR_PLATFORM_OBJECTS}
   ${MIR_COMMON_OBJECTS}
 )
+
+mir_precompiled_header(mir_unit_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
 
 add_dependencies(mir_unit_tests GMock)
 
@@ -89,9 +105,6 @@ target_link_libraries(mir_unit_tests
 )
 endif()
 
-# Umockdev uses glib, which uses the deprecated "register" allocation specifier
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
-
 CMAKE_DEPENDENT_OPTION(
   MIR_RUN_UNIT_TESTS
   "Run unit tests as part of default testing"
@@ -106,4 +119,10 @@ endif (MIR_RUN_UNIT_TESTS)
 install(
     TARGETS mir_unit_tests
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+add_custom_command(TARGET mir_unit_tests POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_data ${CMAKE_BINARY_DIR}/bin/test_data
+  COMMENT "Copying test data to build dir..."
 )

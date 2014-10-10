@@ -33,6 +33,8 @@ add_library(mirplatformgraphicsmesaobjects OBJECT
   anonymous_shm_file.cpp
   shm_buffer.cpp
   bypass.cpp
+  ipc_operations.cpp
+  buffer_writer.cpp
 )
 
 add_library(mirplatformgraphicsmesa SHARED
@@ -41,7 +43,7 @@ add_library(mirplatformgraphicsmesa SHARED
 
 set_target_properties(
   mirplatformgraphicsmesa PROPERTIES
-  OUTPUT_NAME mirplatformgraphics
+  OUTPUT_NAME ${MIR_PLATFORM_DRIVER}
   LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/mesa
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
@@ -55,19 +57,19 @@ target_link_libraries(mirplatformgraphicsmesa
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
 )
 
-install(TARGETS mirplatformgraphicsmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/platformgraphics/mesa)
+install(TARGETS mirplatformgraphicsmesa LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir/${PLATFORM_DRIVER}/mesa)
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa")
   add_custom_command(TARGET mirplatformgraphicsmesa
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E remove libmirplatformgraphics.so
-    COMMAND ${CMAKE_COMMAND} -E create_symlink mesa/$<TARGET_FILE_NAME:mirplatformgraphicsmesa> libmirplatformgraphics.so
+    COMMAND ${CMAKE_COMMAND} -E remove ${MIR_PLATFORM_DRIVER_BINARY}
+    COMMAND ${CMAKE_COMMAND} -E create_symlink mesa/$<TARGET_FILE_NAME:mirplatformgraphicsmesa> ${MIR_PLATFORM_DRIVER_BINARY}
     WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
   )
 
   install(CODE
     "execute_process(
-       COMMAND ln -sf mir/platformgraphics/mesa/libmirplatformgraphics.so
+       COMMAND ln -sf mir/${PLATFORM_DRIVER}/mesa/${MIR_PLATFORM_DRIVER_BINARY}
        WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}
      )"
   )

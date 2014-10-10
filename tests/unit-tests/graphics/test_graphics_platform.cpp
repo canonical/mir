@@ -20,6 +20,7 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/platform_ipc_operations.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/platform_factory.h"
@@ -121,10 +122,11 @@ TEST_F(GraphicsPlatform, buffer_creation)
 
 }
 
-TEST_F(GraphicsPlatform, get_ipc_package)
+TEST_F(GraphicsPlatform, connection_ipc_package)
 {
     auto platform = create_platform();
-    auto pkg = platform->get_ipc_package();
+    auto ipc_ops = platform->make_ipc_operations();
+    auto pkg = ipc_ops->connection_ipc_package();
 
     ASSERT_TRUE(pkg.get() != NULL);
 }

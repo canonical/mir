@@ -23,7 +23,7 @@
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream_buffer.hpp>
 
-#include <stdexcept>
+#include <system_error>
 
 namespace mt = mir::test;
 namespace io = boost::iostreams;
@@ -35,16 +35,15 @@ std::unique_ptr<std::streambuf> create_stream_buffer(FILE* raw_stream)
     if (raw_stream == nullptr)
     {
         BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(std::runtime_error("popen failed"))
-                << boost::errinfo_errno(errno));
+            boost::enable_error_info(std::system_error(errno, std::system_category(), "popen failed")));
     }
 
     int fd = fileno(raw_stream);
     if (fd == -1)
     {
         BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(std::runtime_error("invalid file stream"))
-                << boost::errinfo_errno(errno));
+            boost::enable_error_info(
+                std::system_error(errno, std::system_category(), "invalid file stream")));
     }
     auto raw = new io::stream_buffer<io::file_descriptor_source>{
         fd, io::never_close_handle};

@@ -23,6 +23,7 @@
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/graphics/platform.h"
+#include "mir/graphics/platform_ipc_operations.h"
 #include "mir_toolkit/common.h"
 #include "surface_tracker.h"
 
@@ -53,7 +54,7 @@ class ClientBufferTracker;
 class Shell;
 class Session;
 class Surface;
-class ResourceCache;
+class MessageResourceCache;
 class SessionMediatorReport;
 class EventSink;
 class DisplayChanger;
@@ -72,7 +73,7 @@ public:
         std::vector<MirPixelFormat> const& surface_pixel_formats,
         std::shared_ptr<SessionMediatorReport> const& report,
         std::shared_ptr<EventSink> const& event_sink,
-        std::shared_ptr<ResourceCache> const& resource_cache,
+        std::shared_ptr<MessageResourceCache> const& resource_cache,
         std::shared_ptr<Screencast> const& screencast,
         ConnectionContext const& connection_context,
         std::shared_ptr<input::CursorImages> const& cursor_images);
@@ -95,6 +96,12 @@ public:
     void next_buffer(
         google::protobuf::RpcController* controller,
         mir::protobuf::SurfaceId const* request,
+        mir::protobuf::Buffer* response,
+        google::protobuf::Closure* done) override;
+
+    void exchange_buffer(
+        google::protobuf::RpcController* controller,
+        mir::protobuf::BufferRequest const* request,
         mir::protobuf::Buffer* response,
         google::protobuf::Closure* done) override;
 
@@ -175,13 +182,14 @@ private:
     pid_t client_pid_;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<graphics::Platform> const graphics_platform;
+    std::shared_ptr<graphics::PlatformIpcOperations> const ipc_operations;
 
     std::vector<MirPixelFormat> const surface_pixel_formats;
 
     std::shared_ptr<frontend::DisplayChanger> const display_changer;
     std::shared_ptr<SessionMediatorReport> const report;
     std::shared_ptr<EventSink> const event_sink;
-    std::shared_ptr<ResourceCache> const resource_cache;
+    std::shared_ptr<MessageResourceCache> const resource_cache;
     std::shared_ptr<Screencast> const screencast;
     ConnectionContext const connection_context;
     std::shared_ptr<input::CursorImages> const cursor_images;

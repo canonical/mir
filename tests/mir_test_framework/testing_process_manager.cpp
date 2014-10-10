@@ -229,19 +229,6 @@ void mtf::TestingProcessManager::terminate_client_processes()
     }
 }
 
-void mtf::TestingProcessManager::kill_client_processes()
-{
-    if (is_test_process)
-    {
-        for(auto client : clients)
-        {
-            client->kill();
-        }
-
-        clients.clear();
-    }
-}
-
 void mtf::TestingProcessManager::run_in_test_process(std::function<void()> const& run_code)
 {
     if (is_test_process)
