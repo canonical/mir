@@ -26,7 +26,7 @@ namespace mir
 {
 namespace compositor{ class Compositor; }
 namespace frontend { class SessionAuthorizer; }
-namespace graphics { class Platform; class Display; class GLConfig; }
+namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; }
 namespace options { class Option; }
 namespace shell { class FocusSetter; class DisplayLayout; }
@@ -202,6 +202,9 @@ public:
 
     /// Sets an override functor for creating the surface configurator.
     void override_the_surface_configurator(std::function<std::shared_ptr<scene::SurfaceConfigurator>()> const& surface_configurator_builder);
+
+    /// Sets a wrapper functor for creating the display configuration policy.
+    void wrap_display_configuration_policy(std::function<std::shared_ptr<graphics::DisplayConfigurationPolicy>(std::shared_ptr<graphics::DisplayConfigurationPolicy> const& wrapped)> const& wrapper);
 
     /// Sets a wrapper functor for creating the session coordinator.
     void wrap_session_coordinator(std::function<std::shared_ptr<scene::SessionCoordinator>(std::shared_ptr<scene::SessionCoordinator> const& wrapped)> const& wrapper);

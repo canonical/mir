@@ -29,6 +29,7 @@
 namespace mo = mir::options;
 
 #define FOREACH_WRAPPER(MACRO)\
+    MACRO(display_configuration_policy)\
     MACRO(session_coordinator)\
     MACRO(surface_coordinator)
 
