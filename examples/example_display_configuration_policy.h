@@ -45,6 +45,11 @@ public:
     void apply_to(graphics::DisplayConfiguration& conf);
 };
 
+extern char const* const display_alpha_opt;
+extern char const* const display_alpha_descr;
+extern char const* const display_alpha_off;
+extern char const* const display_alpha_on;
+
 /**
  * \brief Example of a DisplayConfigurationPolicy that tries to find
  * an opaque or transparent pixel format, or falls back to the default

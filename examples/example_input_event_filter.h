@@ -21,8 +21,6 @@
 
 #include "mir/input/composite_event_filter.h"
 
-#include <linux/input.h>
-
 namespace mir
 {
 class Server;

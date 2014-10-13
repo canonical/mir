@@ -35,6 +35,12 @@ char const* const me::clone_opt_val = "clone";
 char const* const me::sidebyside_opt_val = "sidebyside";
 char const* const me::single_opt_val = "single";
 
+char const* const me::display_alpha_opt = "translucent";
+char const* const me::display_alpha_descr = "Select a display mode with alpha[{on,off}]";
+
+char const* const me::display_alpha_off = "off";
+char const* const me::display_alpha_on = "on";
+
 void me::SideBySideDisplayConfigurationPolicy::apply_to(graphics::DisplayConfiguration& conf)
 {
     size_t const preferred_mode_index{0};
