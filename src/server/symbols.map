@@ -76,6 +76,7 @@ MIR_SERVER_26 {
     mir::DefaultServerConfiguration::the_input_scene*;
     mir::DefaultServerConfiguration::the_input_sender*;
     mir::DefaultServerConfiguration::the_input_send_observer*;
+    mir::DefaultServerConfiguration::the_input_target_enumerator*;
     mir::DefaultServerConfiguration::the_input_targeter*;
     mir::DefaultServerConfiguration::the_logger*;
     mir::DefaultServerConfiguration::the_main_loop*;
@@ -518,6 +519,7 @@ MIR_SERVER_26 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_scene*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_sender*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_send_observer*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_target_enumerator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_targeter*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_logger*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_main_loop*;
