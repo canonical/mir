@@ -51,13 +51,12 @@ public:
     // These are called with a valid GL context:
     void set_viewport(geometry::Rectangle const& rect) override;
     void set_rotation(float degrees) override;
-    void begin() const override;
     void render(graphics::RenderableList const&) const override;
-    void end() const override;
 
     // This is called _without_ a GL context:
     void suspend() override;
 
+protected:
     /**
      * tessellate defines the list of triangles that will be used to render
      * the surface. By default it just returns 4 vertices for a rectangle.
@@ -80,6 +79,8 @@ public:
     virtual void render(graphics::Renderable const& renderable) const;
 
     DestinationAlpha destination_alpha() const;
+
+    GLfloat clear_color[4];
 
 private:
     std::unique_ptr<graphics::GLProgram> program;
