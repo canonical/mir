@@ -21,6 +21,8 @@
 
 #include "mir/graphics/display_configuration_policy.h"
 
+#include <memory>
+
 namespace mir
 {
 namespace examples
@@ -42,6 +44,23 @@ class SingleDisplayConfigurationPolicy : public graphics::DisplayConfigurationPo
 public:
     void apply_to(graphics::DisplayConfiguration& conf);
 };
+
+/**
+ * \brief Example of a DisplayConfigurationPolicy that tries to find
+ * an opaque or transparent pixel format, or falls back to the default
+ * if not found.
+ */
+class PixelFormatSelector : public graphics::DisplayConfigurationPolicy
+{
+public:
+    PixelFormatSelector(std::shared_ptr<graphics::DisplayConfigurationPolicy> const& base_policy,
+                        bool with_alpha);
+    virtual void apply_to(graphics::DisplayConfiguration& conf);
+private:
+    std::shared_ptr<graphics::DisplayConfigurationPolicy> const base_policy;
+    bool const with_alpha;
+};
+
 }
 }
 

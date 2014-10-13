@@ -16,23 +16,68 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "translucent_server_configuration.h"
+#include "mir/server.h"
 
-#include "mir/report_exception.h"
-#include "mir/run_mir.h"
+#include "example_input_event_filter.h"
+#include "example_display_configuration_policy.h"
 
-#include <iostream>
+#include "mir/options/option.h"
+
+#include "graphics.h"
+
+namespace me = mir::examples;
+namespace mg = mir::graphics;
 
 int main(int argc, char const* argv[])
-try
 {
-    mir::examples::TranslucentServerConfiguration config(argc, argv);
+    static char const* const launch_child_opt = "launch-client";
+    static char const* const launch_client_descr = "system() command to launch client";
 
-    run_mir(config, [&](mir::DisplayServer&){ config.launch_client(); });
-    return 0;
-}
-catch (...)
-{
-    mir::report_exception(std::cerr);
-    return 1;
+    mir::Server server;
+
+    // Set up a Ctrl+Alt+BkSp => quit
+    auto const quit_filter = std::make_shared<me::QuitFilter>(server);
+
+    server.add_init_callback([&] { server.the_composite_event_filter()->append(quit_filter); });
+
+    // Add choice of monitor arrangement
+    server.add_configuration_option(
+        me::display_config_opt, me::display_config_descr,   me::clone_opt_val);
+
+    server.wrap_display_configuration_policy(
+        [&](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
+        -> std::shared_ptr<mg::DisplayConfigurationPolicy>
+        {
+            auto display_config = server.get_options()->get<std::string>(me::display_config_opt);
+
+            auto layout_selector = wrapped;
+
+            if (display_config == me::sidebyside_opt_val)
+                layout_selector = std::make_shared<me::SideBySideDisplayConfigurationPolicy>();
+            else if (display_config == me::single_opt_val)
+                layout_selector = std::make_shared<me::SingleDisplayConfigurationPolicy>();
+
+            // Whatever the layout select a pixel format with alpha
+            return std::make_shared<me::PixelFormatSelector>(layout_selector, true);
+        });
+
+    // Add a launcher option
+    server.add_configuration_option(
+        launch_child_opt,       launch_client_descr,        mir::OptionType::string);
+
+    server.add_init_callback([&]
+        {
+            auto const options = server.get_options();
+
+            if (options->is_set(launch_child_opt))
+            {
+                auto ignore = std::system((options->get<std::string>(launch_child_opt) + "&").c_str());
+                (void)ignore;
+            }
+        });
+
+    // Provide the command line and run the server
+    server.set_command_line(argc, argv);
+    server.run();
+    return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
 }

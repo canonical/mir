@@ -20,7 +20,9 @@
 
 #include "mir/graphics/display_configuration.h"
 
+#include <algorithm>
 #include <unordered_map>
+#include <stdexcept>
 
 namespace geom = mir::geometry;
 namespace me = mir::examples;
@@ -89,5 +91,44 @@ void me::SingleDisplayConfigurationPolicy::apply_to(graphics::DisplayConfigurati
                 conf_output.used = false;
                 conf_output.power_mode = mir_power_mode_off;
             }
+        });
+}
+
+namespace
+{
+bool contains_alpha(MirPixelFormat format)
+{
+    return (format == mir_pixel_format_abgr_8888 ||
+            format == mir_pixel_format_argb_8888);
+}
+}
+
+me::PixelFormatSelector::PixelFormatSelector(std::shared_ptr<DisplayConfigurationPolicy> const& base_policy,
+                                         bool with_alpha)
+    : base_policy{base_policy},
+    with_alpha{with_alpha}
+{}
+
+void me::PixelFormatSelector::apply_to(graphics::DisplayConfiguration & conf)
+{
+    base_policy->apply_to(conf);
+    conf.for_each_output(
+        [&](graphics::UserDisplayConfigurationOutput& conf_output)
+        {
+            if (!conf_output.connected || !conf_output.used) return;
+
+            auto const& pos = find_if(conf_output.pixel_formats.begin(),
+                                      conf_output.pixel_formats.end(),
+                                      [&](MirPixelFormat format) -> bool
+                                          {
+                                              return contains_alpha(format) == with_alpha;
+                                          }
+                                     );
+
+            // keep the default settings if nothing was found
+            if (pos == conf_output.pixel_formats.end())
+                return;
+
+            conf_output.current_format = *pos;
         });
 }
