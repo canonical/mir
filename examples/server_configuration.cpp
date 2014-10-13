@@ -22,41 +22,10 @@
 #include "mir/main_loop.h"
 
 #include "example_display_configuration_policy.h"
-
-#include <linux/input.h>
+#include "example_input_event_filter.h"
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
-
-namespace
-{
-class QuitFilter : public mir::input::EventFilter
-{
-public:
-    QuitFilter(std::shared_ptr<mir::MainLoop> const& main_loop)
-        : main_loop{main_loop}
-    {
-    }
-
-    bool handle(MirEvent const& event) override
-    {
-        if (event.type == mir_event_type_key &&
-            event.key.action == mir_key_action_down &&
-            (event.key.modifiers & mir_key_modifier_alt) &&
-            (event.key.modifiers & mir_key_modifier_ctrl) &&
-            event.key.scan_code == KEY_BACKSPACE)
-        {
-            main_loop->stop();
-            return true;
-        }
-
-        return false;
-    }
-
-private:
-    std::shared_ptr<mir::MainLoop> const main_loop;
-};
-}
 
 me::ServerConfiguration::ServerConfiguration(std::shared_ptr<options::DefaultConfiguration> const& configuration_options) :
     DefaultServerConfiguration(configuration_options)
@@ -94,7 +63,7 @@ std::shared_ptr<mir::input::CompositeEventFilter>
 me::ServerConfiguration::the_composite_event_filter()
 {
     if (!quit_filter)
-        quit_filter = std::make_shared<QuitFilter>(the_main_loop());
+        quit_filter = std::make_shared<me::QuitFilter>([this] { the_main_loop()->stop(); });
 
     auto composite_filter = DefaultServerConfiguration::the_composite_event_filter();
     composite_filter->append(quit_filter);
