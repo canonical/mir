@@ -172,9 +172,17 @@ void mir::Server::set_command_line(int argc, char const* argv[])
     self->argv = argv;
 }
 
-void mir::Server::set_init_callback(std::function<void()> const& init_callback)
+void mir::Server::add_init_callback(std::function<void()> const& init_callback)
 {
-    self->init_callback = init_callback;
+    auto const& existing = self->init_callback;
+
+    auto const updated = [=]
+        {
+            existing();
+            init_callback();
+        };
+
+    self->init_callback = updated;
 }
 
 auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
