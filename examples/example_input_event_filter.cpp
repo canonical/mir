@@ -24,8 +24,8 @@
 
 namespace me = mir::examples;
 
-me::QuitFilter::QuitFilter(mir::Server& server)
-    : server{server}
+me::QuitFilter::QuitFilter(std::function<void()> const& quit_action)
+    : quit_action{quit_action}
 {
 }
 
@@ -37,7 +37,7 @@ bool me::QuitFilter::handle(MirEvent const& event)
         (event.key.modifiers & mir_key_modifier_ctrl) &&
         event.key.scan_code == KEY_BACKSPACE)
     {
-        server.stop();
+        quit_action();
         return true;
     }
 

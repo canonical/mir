@@ -21,21 +21,21 @@
 
 #include "mir/input/composite_event_filter.h"
 
+#include <functional>
+
 namespace mir
 {
-class Server;
-
 namespace examples
 {
 class QuitFilter : public mir::input::EventFilter
 {
 public:
-    QuitFilter(mir::Server& server);
+    QuitFilter(std::function<void()> const& quit_action);
 
     bool handle(MirEvent const& event) override;
 
 private:
-    mir::Server& server;
+    std::function<void()> const quit_action;
 };
 }
 }

@@ -36,7 +36,7 @@ int main(int argc, char const* argv[])
     mir::Server server;
 
     // Set up a Ctrl+Alt+BkSp => quit
-    auto const quit_filter = std::make_shared<me::QuitFilter>(server);
+    auto const quit_filter = std::make_shared<me::QuitFilter>([&]{ server.stop(); });
 
     server.add_init_callback([&] { server.the_composite_event_filter()->append(quit_filter); });
 
