@@ -63,14 +63,14 @@ private:
 int main(int argc, char const* argv[])
 {
     static char const* const launch_child_opt = "launch-client";
+    static char const* const launch_client_descr = "system() command to launch client";
 
     mir::Server server;
 
     auto const quit_filter = std::make_shared<QuitFilter>(server);
-
     server.add_configuration_option(
-        launch_child_opt, "system() command to launch client", mir::OptionType::string)
-       (me::display_config_opt, "Display configuration [{clone,sidebyside,single}]", me::clone_opt_val);
+        launch_child_opt, launch_client_descr, mir::OptionType::string)(
+        me::display_config_opt, me::display_config_descr, me::clone_opt_val);
 
     server.wrap_display_configuration_policy([&](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
         -> std::shared_ptr<mg::DisplayConfigurationPolicy>

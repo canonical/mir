@@ -26,6 +26,7 @@ namespace mir
 namespace examples
 {
 extern char const* const display_config_opt;
+extern char const* const display_config_descr;
 extern char const* const clone_opt_val;
 extern char const* const sidebyside_opt_val;
 extern char const* const single_opt_val;

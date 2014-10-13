@@ -27,6 +27,8 @@ namespace me = mir::examples;
 namespace mg = mir::graphics;
 
 char const* const me::display_config_opt = "display-config";
+char const* const me::display_config_descr = "Display configuration [{clone,sidebyside,single}]";
+
 char const* const me::clone_opt_val = "clone";
 char const* const me::sidebyside_opt_val = "sidebyside";
 char const* const me::single_opt_val = "single";
