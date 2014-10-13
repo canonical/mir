@@ -68,11 +68,9 @@ int main(int argc, char const* argv[])
     mir::Server server;
 
     auto const quit_filter = std::make_shared<QuitFilter>(server);
-    server.add_configuration_option(
-        launch_child_opt, launch_client_descr, mir::OptionType::string)(
-        me::display_config_opt, me::display_config_descr, me::clone_opt_val);
 
-    server.wrap_display_configuration_policy([&](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
+    auto const display_configuration_selector =
+        [&](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
         -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
             auto display_config = server.get_options()->get<std::string>(me::display_config_opt);
@@ -83,10 +81,9 @@ int main(int argc, char const* argv[])
                 return std::make_shared<me::SingleDisplayConfigurationPolicy>();
             else
                 return wrapped;
-        });
+        };
 
-    server.set_command_line(argc, argv);
-    server.set_init_callback([&]
+    auto const on_init = [&]
         {
             server.the_composite_event_filter()->append(quit_filter);
 
@@ -97,7 +94,17 @@ int main(int argc, char const* argv[])
                 auto ignore = std::system((options->get<std::string>(launch_child_opt) + "&").c_str());
                 (void)ignore;
             }
-        });
+        };
+
+    server.add_configuration_option(
+        launch_child_opt,       launch_client_descr,        mir::OptionType::string)(
+        me::display_config_opt, me::display_config_descr,   me::clone_opt_val);
+
+    server.wrap_display_configuration_policy(display_configuration_selector);
+
+    server.set_command_line(argc, argv);
+
+    server.set_init_callback(on_init);
 
     server.run();
 
