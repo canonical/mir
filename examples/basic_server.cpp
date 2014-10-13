@@ -35,9 +35,16 @@ int main(int argc, char const* argv[])
 
     mir::Server server;
 
+    // Set up a Ctrl+Alt+BkSp => quit
     auto const quit_filter = std::make_shared<me::QuitFilter>(server);
 
-    auto const display_configuration_selector =
+    server.add_init_callback([&] { server.the_composite_event_filter()->append(quit_filter); });
+
+    // Add choice of monitor arrangement
+    server.add_configuration_option(
+        me::display_config_opt, me::display_config_descr,   me::clone_opt_val);
+
+    server.wrap_display_configuration_policy(
         [&](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
         -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
@@ -49,12 +56,14 @@ int main(int argc, char const* argv[])
                 return std::make_shared<me::SingleDisplayConfigurationPolicy>();
             else
                 return wrapped;
-        };
+        });
 
-    auto const on_init = [&]
+    // Add a launcher option
+    server.add_configuration_option(
+        launch_child_opt,       launch_client_descr,        mir::OptionType::string);
+
+    server.add_init_callback([&]
         {
-            server.the_composite_event_filter()->append(quit_filter);
-
             auto const options = server.get_options();
 
             if (options->is_set(launch_child_opt))
@@ -62,19 +71,10 @@ int main(int argc, char const* argv[])
                 auto ignore = std::system((options->get<std::string>(launch_child_opt) + "&").c_str());
                 (void)ignore;
             }
-        };
+        });
 
-    server.add_configuration_option(
-        launch_child_opt,       launch_client_descr,        mir::OptionType::string)(
-        me::display_config_opt, me::display_config_descr,   me::clone_opt_val);
-
-    server.wrap_display_configuration_policy(display_configuration_selector);
-
+    // Provide the command line and run the server
     server.set_command_line(argc, argv);
-
-    server.add_init_callback(on_init);
-
     server.run();
-
     return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
