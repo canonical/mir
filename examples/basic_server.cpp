@@ -72,7 +72,7 @@ int main(int argc, char const* argv[])
 
     server.set_command_line(argc, argv);
 
-    server.set_init_callback(on_init);
+    server.add_init_callback(on_init);
 
     server.run();
 

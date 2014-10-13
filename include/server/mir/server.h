@@ -119,9 +119,10 @@ public:
 
 /** @name Using hooks into the run() logic
  *  @{ */
-    /// set a callback to be invoked when the server has been initialized,
-    /// but before it starts. This allows client code to get access Mir objects
-    void set_init_callback(std::function<void()> const& init_callback);
+    /// add an callback to be invoked when the server has been initialized,
+    /// but before it starts. This allows client code to get access Mir objects.
+    /// If multiple callbacks are added they will be invoked in the sequence added.
+    void add_init_callback(std::function<void()> const& init_callback);
 
     /// Set a handler for exceptions. This is invoked in a catch (...) block and
     /// the exception can be re-thrown to retrieve type information.

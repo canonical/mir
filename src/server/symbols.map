@@ -412,6 +412,7 @@ MIR_SERVER_26 {
     mir::ServerConfiguration::the_main_loop*;
     mir::ServerConfiguration::the_prompt_connector*;
     mir::ServerConfiguration::the_server_status_listener*;
+    mir::Server::add_init_callback*;
     mir::Server::exited_normally*;
     mir::Server::get_options*;
     mir::Server::override_the_compositor*;
@@ -430,7 +431,6 @@ MIR_SERVER_26 {
     mir::Server::set_command_line*;
     mir::Server::set_command_line_hander*;
     mir::Server::set_exception_handler*;
-    mir::Server::set_init_callback*;
     mir::ServerStatusListener::operator*;
     mir::ServerStatusListener::paused*;
     mir::ServerStatusListener::resumed*;
