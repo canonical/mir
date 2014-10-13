@@ -155,6 +155,7 @@ add_executable(mir_demo_server_basic
   basic_server.cpp
   basic_server_configuration.cpp
   example_display_configuration_policy.cpp
+  example_input_event_filter.cpp
 )
 
 target_link_libraries(mir_demo_server_basic

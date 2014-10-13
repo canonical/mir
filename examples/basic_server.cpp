@@ -18,47 +18,15 @@
 
 #include "mir/server.h"
 
+#include "example_input_event_filter.h"
 #include "example_display_configuration_policy.h"
 
-#include "mir/input/composite_event_filter.h"
 #include "mir/options/option.h"
 
 #include "graphics.h"
 
-#include <linux/input.h>
-
 namespace me = mir::examples;
 namespace mg = mir::graphics;
-
-namespace
-{
-class QuitFilter : public mir::input::EventFilter
-{
-public:
-    QuitFilter(mir::Server& server)
-        : server{server}
-    {
-    }
-
-    bool handle(MirEvent const& event) override
-    {
-        if (event.type == mir_event_type_key &&
-            event.key.action == mir_key_action_down &&
-            (event.key.modifiers & mir_key_modifier_alt) &&
-            (event.key.modifiers & mir_key_modifier_ctrl) &&
-            event.key.scan_code == KEY_BACKSPACE)
-        {
-            server.stop();
-            return true;
-        }
-
-        return false;
-    }
-
-private:
-    mir::Server& server;
-};
-}
 
 int main(int argc, char const* argv[])
 {
@@ -67,7 +35,7 @@ int main(int argc, char const* argv[])
 
     mir::Server server;
 
-    auto const quit_filter = std::make_shared<QuitFilter>(server);
+    auto const quit_filter = std::make_shared<me::QuitFilter>(server);
 
     auto const display_configuration_selector =
         [&](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
