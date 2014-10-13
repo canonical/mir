@@ -207,9 +207,10 @@ try
 
     server_config = &config;
 
+    this->options = config.the_options();
+
     run_mir(config, [&](DisplayServer&)
         {
-            this->options = config.the_options();
             self->init_callback();
         });
 
