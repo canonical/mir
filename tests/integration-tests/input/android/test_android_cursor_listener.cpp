@@ -17,61 +17,37 @@
  *              Daniel d'Andrada <daniel.dandrada@canonical.com>
  */
 
-#include "src/server/input/android/android_input_manager.h"
-#include "src/server/report/null_report_factory.h"
-#include "src/server/input/android/android_input_dispatcher.h"
-#include "src/server/input/android/event_filter_dispatcher_policy.h"
-#include "src/server/input/android/common_input_thread.h"
-
-#include "mir/input/android/default_android_input_configuration.h"
-#include "mir/input/event_filter.h"
-#include "mir/input/cursor_listener.h"
-#include "mir/input/scene.h"
-#include "mir/input/input_region.h"
-#include "mir/input/input_dispatcher.h"
-#include "mir/geometry/rectangle.h"
+#include "src/server/input/event_filter_chain.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/fake_event_hub_input_configuration.h"
+#include "mir_test_framework/fake_event_hub_server_configuration.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test_doubles/stub_input_enumerator.h"
 #include "mir_test_doubles/stub_touch_visualizer.h"
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_factory.h"
 
-#include "InputDispatcher.h"
-
-#include <thread>
+#include "mir/input/cursor_listener.h"
+#include "mir/input/input_dispatcher.h"
+#include "mir/input/input_manager.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <thread>
+
 namespace mi = mir::input;
 namespace mia = mir::input::android;
 namespace mis = mir::input::synthesis;
-namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
-namespace mr = mir::report;
-
-using mtd::MockEventFilter;
+namespace mtf = mir_test_framework;
 
 namespace
 {
 using namespace ::testing;
-
-struct StubInputRegion : public mi::InputRegion
-{
-    geom::Rectangle bounding_rectangle()
-    {
-        return {geom::Point{}, geom::Size{1024, 1024}};
-    }
-
-    void confine(geom::Point&)
-    {
-    }
-};
 
 struct MockCursorListener : public mi::CursorListener
 {
@@ -80,53 +56,50 @@ struct MockCursorListener : public mi::CursorListener
     ~MockCursorListener() noexcept {}
 };
 
-struct AndroidInputManagerAndCursorListenerSetup : public testing::Test
+struct AndroidCursorListenerIntegrationTest : testing::Test, mtf::FakeEventHubServerConfiguration
 {
-    bool repeat_is_disabled{false};
-    std::shared_ptr<mi::InputReport> null_report = mir::report::null_input_report();
-    std::shared_ptr<MockEventFilter> event_filter = std::make_shared<MockEventFilter>();
-    mia::EventFilterDispatcherPolicy policy{event_filter, repeat_is_disabled};
-    droidinput::InputDispatcher android_dispatcher{mt::fake_shared(policy), null_report, std::make_shared<mtd::StubInputEnumerator>()};
-    mia::CommonInputThread input_thread{"InputDispatcher",
-                                        new droidinput::InputDispatcherThread(mt::fake_shared(android_dispatcher))};
-
-    mia::AndroidInputDispatcher dispatcher{mt::fake_shared(android_dispatcher), mt::fake_shared(input_thread)};
-
-    void SetUp()
+    bool is_key_repeat_enabled() const override
     {
-        configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
-            mt::fake_shared(dispatcher),
-            mt::fake_shared(input_region),
-            mt::fake_shared(cursor_listener),
-            mt::fake_shared(touch_visualizer),
-            null_report);
-
-        fake_event_hub = configuration->the_fake_event_hub();
-
-        input_manager = configuration->the_input_manager();
-
-        input_manager->start();
-        dispatcher.start();
+        return false;
     }
 
-    void TearDown()
+    std::shared_ptr<mi::CompositeEventFilter> the_composite_event_filter() override
     {
-        dispatcher.stop();
+        std::initializer_list<std::shared_ptr<mi::EventFilter>const> const& chain{std::static_pointer_cast<mi::EventFilter>(event_filter)};
+        return std::make_shared<mi::EventFilterChain>(chain);
+    }
+
+    std::shared_ptr<mi::CursorListener> the_cursor_listener() override
+    {
+        return mt::fake_shared(cursor_listener);
+    }
+
+    void SetUp() override
+    {
+        configuration = the_input_configuration();
+
+        input_manager = configuration->the_input_manager();
+        input_manager->start();
+        input_dispatcher = the_input_dispatcher();
+        input_dispatcher->start();
+    }
+
+    void TearDown() override
+    {
+        input_dispatcher->stop();
         input_manager->stop();
     }
 
-    std::shared_ptr<mtd::FakeEventHubInputConfiguration> configuration;
-    mia::FakeEventHub* fake_event_hub;
-    std::shared_ptr<mi::InputManager> input_manager;
     MockCursorListener cursor_listener;
-    mtd::StubTouchVisualizer touch_visualizer;
-    StubInputRegion input_region;
+    std::shared_ptr<mtd::MockEventFilter> event_filter = std::make_shared<mtd::MockEventFilter>();
+    std::shared_ptr<mi::InputConfiguration> configuration;
+    std::shared_ptr<mi::InputManager> input_manager;
+    std::shared_ptr<mi::InputDispatcher> input_dispatcher;
 };
 
 }
 
-
-TEST_F(AndroidInputManagerAndCursorListenerSetup, cursor_listener_receives_motion)
+TEST_F(AndroidCursorListenerIntegrationTest, cursor_listener_receives_motion)
 {
     using namespace ::testing;
 

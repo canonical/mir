@@ -35,8 +35,8 @@ mir::socket_disconnected_error::socket_disconnected_error(std::string const& mes
 {
 }
 
-mir::fd_reception_error::fd_reception_error() :
-    std::runtime_error("Invalid control message for receiving file descriptors")
+mir::fd_reception_error::fd_reception_error(std::string const& message) :
+    std::runtime_error(message)
 {
 }
 
@@ -149,13 +149,11 @@ void mir::receive_data(mir::Fd const& socket, void* buffer, size_t bytes_request
             // NOTE: This relies on the file descriptor cmsg being read
             // (and written) atomically.
             if (cmsg->cmsg_len > CMSG_LEN(fds_bytes) || (header.msg_flags & MSG_CTRUNC))
-            {
                 BOOST_THROW_EXCEPTION(std::runtime_error("Received more fds than expected"));
-            }
+            if ((cmsg->cmsg_level == SOL_SOCKET) && (cmsg->cmsg_type == SCM_CREDENTIALS))
+                BOOST_THROW_EXCEPTION(fd_reception_error("received SCM_CREDENTIALS when expecting fd"));
             if (cmsg->cmsg_level != SOL_SOCKET || cmsg->cmsg_type != SCM_RIGHTS)
-            {
-                BOOST_THROW_EXCEPTION(fd_reception_error());
-            }
+                BOOST_THROW_EXCEPTION(fd_reception_error("Invalid control message for receiving file descriptors"));
             int const* const data = reinterpret_cast<int const*>CMSG_DATA(cmsg);
             ptrdiff_t const header_size = reinterpret_cast<char const*>(data) - reinterpret_cast<char const*>(cmsg);
             int const nfds = (cmsg->cmsg_len - header_size) / sizeof(int);

@@ -24,6 +24,7 @@ set(
   test_session_manager.cpp
   test_session.cpp
   session_management.cpp
+  surface_composition.cpp
 )
 
 add_subdirectory(client/)
