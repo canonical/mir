@@ -1,4 +1,4 @@
-MIRPLATFORM_3 {
+MIRPLATFORM_4 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
