@@ -51,6 +51,7 @@ public:
     MOCK_METHOD0(drop_old_buffers, void());
     int buffers_ready_for_compositor() const override { return 1; }
     int buffers_free_for_client() const override { return 1; }
+    void drop_client_requests() override {}
 };
 
 }

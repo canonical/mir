@@ -21,6 +21,7 @@ mir (0.8.0-0ubuntu1) UNRELEASED; urgency=medium
         to clients on unexpected server disconnection.
       . Improved library/package design to allow concurrent installations
         of different Mir versions without conflicts.
+      . Fd reception code is now common to client and server.
     - ABI summary: Servers need rebuilding, but clients do not;
       . Mirclient ABI unchanged at 8
       . Mircommon ABI bumped to 2
@@ -83,6 +84,10 @@ mir (0.8.0-0ubuntu1) UNRELEASED; urgency=medium
         format of your framebuffer (LP: #1375660)
       . tests: Fix SharedLibraryProber test runs on i386. (LP: #1375829)
       . Touchspots rendered as squares on some devices (LP: #1373698)
+      . The headers needed to use features shown in the acceptance tests are
+        not published (LP: #1375301)
+      . update-all-ABI-sha1sums.sh and install_on_android.sh are no longer
+        executable. (LP: #1376547)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Tue, 30 Sep 2014 16:08:44 +0800
 

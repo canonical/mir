@@ -63,6 +63,7 @@ public:
     bool framedropping_allowed() const;
     bool is_a_current_buffer_user(void const* user_id) const;
     void drop_old_buffers() override;
+    void drop_client_requests() override;
 
 private:
     void give_buffer_to_client(graphics::Buffer* buffer,

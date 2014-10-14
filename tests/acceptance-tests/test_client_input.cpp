@@ -204,7 +204,7 @@ struct TestClientInput : mtf::InProcessServer
         return server_configuration_;
     }
 
-    mir::input::android::FakeEventHub* fake_event_hub()
+    std::shared_ptr<mir::input::android::FakeEventHub> fake_event_hub()
     {
         return server_configuration_.fake_event_hub;
     }
