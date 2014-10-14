@@ -223,7 +223,7 @@ try
 }
 catch (...)
 {
-	self->server_config = nullptr;
+    self->server_config = nullptr;
 
     if (self->exception_handler)
         self->exception_handler();
@@ -233,7 +233,6 @@ catch (...)
 
 void mir::Server::stop()
 {
-    std::cerr << "DEBUG: " << __PRETTY_FUNCTION__ << std::endl;
     if (auto const main_loop = the_main_loop())
         main_loop->stop();
 }
