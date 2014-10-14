@@ -58,7 +58,6 @@ class Server
 public:
     Server();
 
-
 /** @name Essential operations
  * These are the commands used to start and stop.
  *  @{ */
@@ -212,10 +211,7 @@ public:
 /** @} */
 
 private:
-    bool exit_status{false};
-    std::weak_ptr<options::Option> options;
     struct ServerConfiguration;
-    ServerConfiguration* server_config{nullptr};
     struct Self;
     std::shared_ptr<Self> const self;
 };

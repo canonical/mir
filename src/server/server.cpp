@@ -65,6 +65,10 @@ namespace mo = mir::options;
 
 struct mir::Server::Self
 {
+    bool exit_status{false};
+    std::weak_ptr<options::Option> options;
+    ServerConfiguration* server_config{nullptr};
+
     std::function<void()> init_callback{[]{}};
     int argc{0};
     char const** argv{nullptr};
@@ -187,7 +191,7 @@ void mir::Server::add_init_callback(std::function<void()> const& init_callback)
 
 auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 {
-    return options.lock();
+    return self->options.lock();
 }
 
 void mir::Server::set_exception_handler(std::function<void()> const& exception_handler)
@@ -204,21 +208,21 @@ try
 
     ServerConfiguration config{options, self};
 
-    server_config = &config;
+    self->server_config = &config;
 
-    this->options = config.the_options();
+    self->options = config.the_options();
 
     run_mir(config, [&](DisplayServer&)
         {
             self->init_callback();
         });
 
-    exit_status = true;
-    server_config = nullptr;
+    self->exit_status = true;
+    self->server_config = nullptr;
 }
 catch (...)
 {
-    server_config = nullptr;
+	self->server_config = nullptr;
 
     if (self->exception_handler)
         self->exception_handler();
@@ -235,7 +239,7 @@ void mir::Server::stop()
 
 bool mir::Server::exited_normally()
 {
-    return exit_status;
+    return self->exit_status;
 }
 
 namespace
@@ -244,9 +248,9 @@ auto const no_config_to_access = "Cannot access config when no config active.";
 }
 
 #define MIR_SERVER_ACCESSOR(name)\
-auto mir::Server::name() const -> decltype(server_config->name())\
+auto mir::Server::name() const -> decltype(self->server_config->name())\
 {\
-    if (server_config) return server_config->name();\
+    if (self->server_config) return self->server_config->name();\
     BOOST_THROW_EXCEPTION(std::logic_error(no_config_to_access));\
 }
 
