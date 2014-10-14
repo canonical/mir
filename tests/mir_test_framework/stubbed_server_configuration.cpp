@@ -41,7 +41,7 @@
 
 #include "mir/compositor/renderer.h"
 #include "mir/compositor/renderer_factory.h"
-#include "src/server/input/null_input_configuration.h"
+#include "src/server/input/null_input_manager.h"
 #include "src/server/input/null_input_dispatcher.h"
 #include "src/server/input/null_input_targeter.h"
 
@@ -276,14 +276,14 @@ std::shared_ptr<mc::RendererFactory> mtf::StubbedServerConfiguration::the_render
             });
 }
 
-std::shared_ptr<mi::InputConfiguration> mtf::StubbedServerConfiguration::the_input_configuration()
+std::shared_ptr<mi::InputManager> mtf::StubbedServerConfiguration::the_input_manager()
 {
     auto options = the_options();
 
     if (options->get<bool>("tests-use-real-input"))
-        return DefaultServerConfiguration::the_input_configuration();
+        return DefaultServerConfiguration::the_input_manager();
     else
-        return std::make_shared<mi::NullInputConfiguration>();
+        return std::make_shared<mi::NullInputManager>();
 }
 
 std::shared_ptr<msh::InputTargeter> mtf::StubbedServerConfiguration::the_input_targeter()

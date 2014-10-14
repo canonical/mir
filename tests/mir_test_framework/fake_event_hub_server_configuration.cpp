@@ -20,12 +20,16 @@
 #include "mir_test_framework/fake_event_hub_server_configuration.h"
 
 #include "mir_test/fake_event_hub.h"
-#include "mir_test/fake_event_hub_input_configuration.h"
 
 namespace mtf = mir_test_framework;
 namespace mi = mir::input;
 namespace ms = mir::shell;
-namespace mtd = mir::test::doubles;
+namespace mia = mir::input::android;
+
+std::shared_ptr<mi::InputManager> mtf::FakeEventHubServerConfiguration::the_input_manager()
+{
+    return DefaultServerConfiguration::the_input_manager();
+}
 
 std::shared_ptr<ms::InputTargeter> mtf::FakeEventHubServerConfiguration::the_input_targeter()
 {
@@ -42,17 +46,11 @@ std::shared_ptr<mi::InputSender> mtf::FakeEventHubServerConfiguration::the_input
     return DefaultServerConfiguration::the_input_sender();
 }
 
-std::shared_ptr<mi::InputConfiguration> mtf::FakeEventHubServerConfiguration::the_input_configuration()
+std::shared_ptr<droidinput::EventHubInterface> mtf::FakeEventHubServerConfiguration::the_event_hub()
 {
-    if (!input_configuration)
+    if (!fake_event_hub)
     {
-        input_configuration = std::make_shared<mtd::FakeEventHubInputConfiguration>(
-            the_input_dispatcher(),
-            the_input_region(),
-            the_cursor_listener(),
-            the_touch_visualizer(),
-            the_input_report());
-        fake_event_hub = input_configuration->the_fake_event_hub();
+        fake_event_hub = std::make_shared<mia::FakeEventHub>();
 
         fake_event_hub->synthesize_builtin_keyboard_added();
         fake_event_hub->synthesize_builtin_cursor_added();
@@ -60,5 +58,5 @@ std::shared_ptr<mi::InputConfiguration> mtf::FakeEventHubServerConfiguration::th
         fake_event_hub->synthesize_device_scan_complete();
     }
 
-    return input_configuration;
+    return fake_event_hub;
 }
