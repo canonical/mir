@@ -26,6 +26,10 @@
 
 namespace android
 {
+class EventHubInterface;
+class InputReaderInterface;
+class InputReaderPolicyInterface;
+class InputListenerInterface;
 class InputDispatcherInterface;
 class InputEnumerator;
 class InputDispatcherPolicyInterface;
@@ -120,7 +124,6 @@ class Scene;
 class InputManager;
 class CompositeEventFilter;
 class InputChannelFactory;
-class InputConfiguration;
 class CursorListener;
 class TouchVisualizer;
 class InputRegion;
@@ -170,7 +173,6 @@ public:
     std::shared_ptr<ServerStatusListener>   the_server_status_listener() override;
     std::shared_ptr<DisplayChanger>         the_display_changer() override;
     std::shared_ptr<graphics::Platform>     the_graphics_platform() override;
-    std::shared_ptr<input::InputConfiguration> the_input_configuration() override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<EmergencyCleanup>  the_emergency_cleanup() override;
     /**
@@ -300,6 +302,11 @@ public:
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     virtual std::shared_ptr<input::InputSender>    the_input_sender();
     virtual std::shared_ptr<input::InputSendObserver> the_input_send_observer();
+    virtual std::shared_ptr<droidinput::EventHubInterface> the_event_hub();
+    virtual std::shared_ptr<droidinput::InputReaderInterface> the_input_reader();
+    virtual std::shared_ptr<droidinput::InputReaderPolicyInterface> the_input_reader_policy();
+    virtual std::shared_ptr<droidinput::InputListenerInterface> the_input_translator();
+    virtual std::shared_ptr<input::android::InputThread> the_input_reader_thread();
     /** @} */
 
     /** @name logging configuration - customization
@@ -341,14 +348,17 @@ protected:
 
     CachedPtr<input::android::InputRegistrar> input_registrar;
     CachedPtr<input::android::InputThread> dispatcher_thread;
+    CachedPtr<input::android::InputThread> input_reader_thread;
     CachedPtr<droidinput::InputDispatcherInterface> android_input_dispatcher;
     CachedPtr<droidinput::InputEnumerator> input_target_enumerator;
     CachedPtr<droidinput::InputDispatcherPolicyInterface> android_dispatcher_policy;
+    CachedPtr<droidinput::EventHubInterface> event_hub;
+    CachedPtr<droidinput::InputReaderPolicyInterface> input_reader_policy;
+    CachedPtr<droidinput::InputReaderInterface> input_reader;
+    CachedPtr<droidinput::InputListenerInterface> input_translator;
 
     CachedPtr<frontend::Connector>   connector;
     CachedPtr<frontend::Connector>   prompt_connector;
-
-    CachedPtr<input::InputConfiguration> input_configuration;
 
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;

@@ -21,7 +21,6 @@
 
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
-#include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test_framework/fake_event_hub_server_configuration.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test_doubles/stub_input_enumerator.h"
@@ -76,9 +75,7 @@ struct AndroidCursorListenerIntegrationTest : testing::Test, mtf::FakeEventHubSe
 
     void SetUp() override
     {
-        configuration = the_input_configuration();
-
-        input_manager = configuration->the_input_manager();
+        input_manager = the_input_manager();
         input_manager->start();
         input_dispatcher = the_input_dispatcher();
         input_dispatcher->start();
@@ -92,7 +89,6 @@ struct AndroidCursorListenerIntegrationTest : testing::Test, mtf::FakeEventHubSe
 
     MockCursorListener cursor_listener;
     std::shared_ptr<mtd::MockEventFilter> event_filter = std::make_shared<mtd::MockEventFilter>();
-    std::shared_ptr<mi::InputConfiguration> configuration;
     std::shared_ptr<mi::InputManager> input_manager;
     std::shared_ptr<mi::InputDispatcher> input_dispatcher;
 };
