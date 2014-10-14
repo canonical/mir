@@ -24,7 +24,7 @@
 
 namespace mir
 {
-namespace compositor{ class Compositor; }
+namespace compositor { class Compositor; }
 namespace frontend { class SessionAuthorizer; }
 namespace graphics { class Platform; class Display; class GLConfig; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; }
@@ -141,10 +141,10 @@ public:
     /// \return the cursor listener.
     auto the_cursor_listener() const -> std::shared_ptr<input::CursorListener>;
 
-    /// \return the graphics display options.
+    /// \return the graphics display.
     auto the_display() const -> std::shared_ptr<graphics::Display>;
 
-    /// \return the graphics platform options.
+    /// \return the graphics platform.
     auto the_graphics_platform() const -> std::shared_ptr<graphics::Platform>;
 
     /// \return the main loop.
