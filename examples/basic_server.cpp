@@ -16,14 +16,14 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/server.h"
-
 #include "example_input_event_filter.h"
 #include "example_display_configuration_policy.h"
 
+#include "mir/server.h"
 #include "mir/options/option.h"
+#include "mir/input/composite_event_filter.h"
 
-#include "graphics.h"
+#include <cstdlib>
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
