@@ -21,7 +21,7 @@
 #include "demo_compositor.h"
 #include "window_manager.h"
 #include "fullscreen_placement_strategy.h"
-#include "server_configuration.h"
+#include "../server_configuration.h"
 
 #include "mir/options/default_configuration.h"
 #include "mir/run_mir.h"
