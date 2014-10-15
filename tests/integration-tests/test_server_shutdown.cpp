@@ -28,7 +28,6 @@
 
 #include "mir_test_framework/display_server_test_fixture.h"
 
-#include "mir_test/fake_event_hub_input_configuration.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test_doubles/stub_renderer.h"
 
@@ -123,20 +122,9 @@ private:
 
 struct FakeEventHubServerConfig : TestingServerConfiguration
 {
-    std::shared_ptr<mi::InputConfiguration> the_input_configuration() override
+    std::shared_ptr<droidinput::EventHubInterface> the_event_hub() override
     {
-        if (!input_configuration)
-        {
-            input_configuration =
-                std::make_shared<mtd::FakeEventHubInputConfiguration>(
-                    the_input_dispatcher(),
-                    the_input_region(),
-                    the_cursor_listener(),
-                    the_touch_visualizer(),
-                    the_input_report());
-        }
-
-        return input_configuration;
+        return the_fake_event_hub();
     }
 
     std::shared_ptr<mi::InputManager> the_input_manager() override
@@ -154,13 +142,18 @@ struct FakeEventHubServerConfig : TestingServerConfiguration
         return DefaultServerConfiguration::the_input_dispatcher();
     }
 
-    mia::FakeEventHub* the_fake_event_hub()
+
+    std::shared_ptr<mia::FakeEventHub> the_fake_event_hub()
     {
-        the_input_configuration();
-        return input_configuration->the_fake_event_hub();
+        if (!fake_event_hub)
+        {
+            fake_event_hub = std::make_shared<mia::FakeEventHub>();
+        }
+
+        return fake_event_hub;
     }
 
-    std::shared_ptr<mtd::FakeEventHubInputConfiguration> input_configuration;
+    std::shared_ptr<mia::FakeEventHub> fake_event_hub;
 };
 }
 
