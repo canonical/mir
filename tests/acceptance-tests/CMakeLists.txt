@@ -2,17 +2,11 @@ include(CMakeDependentOption)
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
-  ${PROTOBUF_INCLUDE_DIRS}
-  ${CMAKE_CURRENT_BINARY_DIR})
+)
 
 add_definitions(
   -DMIR_PLATFORM_DRIVER_BINARY="${MIR_PLATFORM_DRIVER_BINARY}"
   -DMIR_CLIENT_DRIVER_BINARY="${MIR_CLIENT_DRIVER_BINARY}"
-)
-
-protobuf_generate_cpp(
-  GENERATED_PROTOBUF_SRCS GENERATED_PROTOBUF_HDRS
-  test_protobuf.proto
 )
 
 set(
@@ -38,7 +32,6 @@ set(
   test_server_disconnect.cpp
   test_client_library_drm.cpp
   test_prompt_session_client_api.cpp
-  test_protobuf.cpp
   test_client_screencast.cpp
   test_client_cursor_api.cpp
   test_large_messages.cpp
@@ -50,8 +43,6 @@ set(
   test_client_input.cpp
   test_server_startup.cpp
   test_unresponsive_client.cpp
-  ${GENERATED_PROTOBUF_SRCS}
-  ${GENERATED_PROTOBUF_HDRS}
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa")

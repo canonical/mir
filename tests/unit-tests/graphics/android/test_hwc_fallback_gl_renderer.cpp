@@ -291,7 +291,8 @@ TEST_F(HWCFallbackGLRenderer, executes_render_in_sequence)
 
     InSequence seq;
     EXPECT_CALL(mock_gl, glUseProgram(_));
-    EXPECT_CALL(mock_gl, glClearColor(FloatEq(0.0), FloatEq(0.0), FloatEq(0.0), FloatEq(1.0)));
+    EXPECT_CALL(mock_gl, glClearColor(FloatEq(0.0), FloatEq(0.0), FloatEq(0.0), FloatEq(0.0)));
+    EXPECT_CALL(mock_gl, glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE));
     EXPECT_CALL(mock_gl, glClear(GL_COLOR_BUFFER_BIT));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_loc));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_loc));
