@@ -277,10 +277,10 @@ FOREACH_WRAPPER(MIR_SERVER_WRAP)
 
 #undef MIR_SERVER_WRAP
 
-auto mir::Server::add_configuration_option(
+void mir::Server::add_configuration_option(
     std::string const& option,
     std::string const& description,
-    int default_) -> ChainAddConfigurationOption
+    int default_)
 {
     namespace po = boost::program_options;
 
@@ -295,14 +295,12 @@ auto mir::Server::add_configuration_option(
         };
 
     self->set_add_configuration_options(option_adder);
-
-    return {*this};
 }
 
-auto mir::Server::add_configuration_option(
+void mir::Server::add_configuration_option(
     std::string const& option,
     std::string const& description,
-    std::string const& default_) -> ChainAddConfigurationOption
+    std::string const& default_)
 {
     namespace po = boost::program_options;
 
@@ -317,14 +315,12 @@ auto mir::Server::add_configuration_option(
         };
 
     self->set_add_configuration_options(option_adder);
-
-    return {*this};
 }
 
-auto mir::Server::add_configuration_option(
+void mir::Server::add_configuration_option(
     std::string const& option,
     std::string const& description,
-    OptionType type) -> ChainAddConfigurationOption
+    OptionType type)
 {
     namespace po = boost::program_options;
 
@@ -374,6 +370,4 @@ auto mir::Server::add_configuration_option(
         }
         break;
     }
-
-    return {*this};
 }
