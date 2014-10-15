@@ -59,7 +59,7 @@ public:
     Server();
 
 /** @name Essential operations
- * These are the commands used to start and stop.
+ * These are the commands used to run and stop.
  *  @{ */
     /// set the command line (this must remain valid while run() is called)
     void set_command_line(int argc, char const* argv[]);
@@ -100,14 +100,14 @@ public:
         std::string const& description,
         OptionType type) -> detail::ServerAddConfigurationOptions;
 
-    /// set a handler for any command line options Mir does not recognise.
+    /// Set a handler for any command line options Mir does not recognise.
     /// This will be invoked if any unrecognised options are found during initialisation.
     /// Any unrecognised arguments are passed to this function. The pointers remain valid
     /// for the duration of the call only.
-    /// If set_command_line_hander is not called the default action is to exit by
+    /// If set_command_line_handler is not called the default action is to exit by
     /// throwing mir::AbnormalExit (which will be handled by the exception handler prior to
     /// exiting run().
-    void set_command_line_hander(
+    void set_command_line_handler(
         std::function<void(int argc, char const* const* argv)> const& command_line_hander);
 
     /// Returns the configuration options.
@@ -118,7 +118,7 @@ public:
 
 /** @name Using hooks into the run() logic
  *  @{ */
-    /// add an callback to be invoked when the server has been initialized,
+    /// Add a callback to be invoked when the server has been initialized,
     /// but before it starts. This allows client code to get access Mir objects.
     /// If multiple callbacks are added they will be invoked in the sequence added.
     void add_init_callback(std::function<void()> const& init_callback);
