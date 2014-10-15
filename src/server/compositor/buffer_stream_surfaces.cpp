@@ -94,3 +94,8 @@ void mc::BufferStreamSurfaces::drop_old_buffers()
 {
     buffer_bundle->drop_old_buffers();
 }
+
+void mc::BufferStreamSurfaces::drop_client_requests()
+{
+    buffer_bundle->drop_client_requests();
+}

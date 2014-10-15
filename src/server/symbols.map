@@ -1,9 +1,8 @@
-MIR_SERVER_26 {
+MIR_SERVER_27 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
     vtable?for?mir::input::NullInputDispatcher;
-    vtable?for?mir::input::NullInputConfiguration;
     VTT?for?mir::DefaultServerConfiguration;
     
 # The following symbols come from running a script over the generated docs. Vis:
@@ -53,6 +52,7 @@ MIR_SERVER_26 {
     mir::DefaultServerConfiguration::the_display_configuration_policy*;
     mir::DefaultServerConfiguration::the_display_report*;
     mir::DefaultServerConfiguration::the_emergency_cleanup*;
+    mir::DefaultServerConfiguration::the_event_hub*;
     mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     mir::DefaultServerConfiguration::the_focus_controller*;
     mir::DefaultServerConfiguration::the_frame_dropping_policy_factory*;
@@ -69,13 +69,18 @@ MIR_SERVER_26 {
     mir::DefaultServerConfiguration::the_input_configuration*;
     mir::DefaultServerConfiguration::the_input_dispatcher*;
     mir::DefaultServerConfiguration::the_input_manager*;
+    mir::DefaultServerConfiguration::the_input_reader*;
+    mir::DefaultServerConfiguration::the_input_reader_policy*;
+    mir::DefaultServerConfiguration::the_input_reader_thread*;
     mir::DefaultServerConfiguration::the_input_region*;
     mir::DefaultServerConfiguration::the_input_registrar*;
     mir::DefaultServerConfiguration::the_input_report*;
     mir::DefaultServerConfiguration::the_input_scene*;
     mir::DefaultServerConfiguration::the_input_sender*;
     mir::DefaultServerConfiguration::the_input_send_observer*;
+    mir::DefaultServerConfiguration::the_input_target_enumerator*;
     mir::DefaultServerConfiguration::the_input_targeter*;
+    mir::DefaultServerConfiguration::the_input_translator*;
     mir::DefaultServerConfiguration::the_logger*;
     mir::DefaultServerConfiguration::the_main_loop*;
     mir::DefaultServerConfiguration::the_mediating_display_changer*;
@@ -117,21 +122,6 @@ MIR_SERVER_26 {
     mir::DisplayServer::stop*;
     mir::EmergencyCleanup::operator*;
     mir::frontend::as_internal_surface*;
-    mir::frontend::ConnectionCreator::?ConnectionCreator*;
-    mir::frontend::ConnectionCreator::ConnectionCreator*;
-    mir::frontend::ConnectionCreator::create_connection_for*;
-    mir::frontend::ConnectionCreator::operator*;
-    mir::frontend::detail::Invocation::id*;
-    mir::frontend::detail::Invocation::method_name*;
-    mir::frontend::detail::Invocation::parameters*;
-    mir::frontend::detail::MessageProcessor::client_pid*;
-    mir::frontend::detail::MessageProcessor::dispatch*;
-    mir::frontend::detail::MessageProcessor::?MessageProcessor*;
-    mir::frontend::detail::MessageProcessor::MessageProcessor*;
-    mir::frontend::detail::MessageProcessor::operator*;
-    mir::frontend::detail::ProtobufMessageSender::?ProtobufMessageSender*;
-    mir::frontend::detail::ProtobufMessageSender::ProtobufMessageSender*;
-    mir::frontend::detail::ProtobufMessageSender::send_response*;
     mir::frontend::DisplayChanger::active_configuration*;
     mir::frontend::DisplayChanger::configure*;
     mir::frontend::DisplayChanger::?DisplayChanger*;
@@ -146,10 +136,6 @@ MIR_SERVER_26 {
     mir::frontend::PromptSession::operator*;
     mir::frontend::PromptSession::?PromptSession*;
     mir::frontend::PromptSession::PromptSession*;
-    mir::frontend::ProtobufConnectionCreator::create_connection_for*;
-    mir::frontend::ProtobufConnectionCreator::create_processor*;
-    mir::frontend::ProtobufConnectionCreator::?ProtobufConnectionCreator*;
-    mir::frontend::ProtobufConnectionCreator::ProtobufConnectionCreator*;
     mir::frontend::Screencast::capture*;
     mir::frontend::Screencast::create_session*;
     mir::frontend::Screencast::destroy_session*;
@@ -228,10 +214,6 @@ MIR_SERVER_26 {
     mir::input::InputChannel::InputChannel*;
     mir::input::InputChannel::operator*;
     mir::input::InputChannel::server_fd*;
-    mir::input::InputConfiguration::?InputConfiguration*;
-    mir::input::InputConfiguration::InputConfiguration*;
-    mir::input::InputConfiguration::operator*;
-    mir::input::InputConfiguration::the_input_manager*;
     mir::input::InputDispatcher::configuration_changed*;
     mir::input::InputDispatcher::device_reset*;
     mir::input::InputDispatcher::dispatch*;
@@ -393,6 +375,7 @@ MIR_SERVER_26 {
     mir::ServerActionQueue::resume_processing_for*;
     mir::ServerActionQueue::?ServerActionQueue*;
     mir::ServerActionQueue::ServerActionQueue*;
+    mir::Server::add_configuration_option*;
     mir::ServerConfiguration::operator*;
     mir::ServerConfiguration::?ServerConfiguration*;
     mir::ServerConfiguration::ServerConfiguration*;
@@ -403,18 +386,50 @@ MIR_SERVER_26 {
     mir::ServerConfiguration::the_emergency_cleanup*;
     mir::ServerConfiguration::the_fatal_error_strategy*;
     mir::ServerConfiguration::the_graphics_platform*;
-    mir::ServerConfiguration::the_input_configuration*;
     mir::ServerConfiguration::the_input_dispatcher*;
     mir::ServerConfiguration::the_input_manager*;
     mir::ServerConfiguration::the_main_loop*;
     mir::ServerConfiguration::the_prompt_connector*;
     mir::ServerConfiguration::the_server_status_listener*;
+    mir::Server::add_init_callback*;
+    mir::Server::exited_normally*;
+    mir::Server::get_options*;
+    mir::Server::override_the_compositor*;
+    mir::Server::override_the_cursor_listener*;
+    mir::Server::override_the_gl_config*;
+    mir::Server::override_the_input_dispatcher*;
+    mir::Server::override_the_placement_strategy*;
+    mir::Server::override_the_prompt_session_listener*;
+    mir::Server::override_the_server_status_listener*;
+    mir::Server::override_the_session_authorizer*;
+    mir::Server::override_the_session_listener*;
+    mir::Server::override_the_shell_focus_setter*;
+    mir::Server::override_the_surface_configurator*;
+    mir::Server::run*;
+    mir::Server::Server*;
+    mir::Server::set_command_line*;
+    mir::Server::set_command_line_hander*;
+    mir::Server::set_exception_handler*;
     mir::ServerStatusListener::operator*;
     mir::ServerStatusListener::paused*;
     mir::ServerStatusListener::resumed*;
     mir::ServerStatusListener::?ServerStatusListener*;
     mir::ServerStatusListener::ServerStatusListener*;
     mir::ServerStatusListener::started*;
+    mir::Server::stop*;
+    mir::Server::the_composite_event_filter*;
+    mir::Server::the_cursor_listener*;
+    mir::Server::the_display*;
+    mir::Server::the_graphics_platform*;
+    mir::Server::the_main_loop*;
+    mir::Server::the_prompt_session_listener*;
+    mir::Server::the_server_status_listener*;
+    mir::Server::the_session_authorizer*;
+    mir::Server::the_session_listener*;
+    mir::Server::the_shell_display_layout*;
+    mir::Server::the_surface_configurator*;
+    mir::Server::wrap_session_coordinator*;
+    mir::Server::wrap_surface_coordinator*;
     mir::shell::DisplayLayout::clip_to_output*;
     mir::shell::DisplayLayout::?DisplayLayout*;
     mir::shell::DisplayLayout::DisplayLayout*;
@@ -494,6 +509,7 @@ MIR_SERVER_26 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_display_configuration_policy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_display_report*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_emergency_cleanup*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_event_hub*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_frame_dropping_policy_factory*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_frontend_display_changer*;
@@ -508,13 +524,18 @@ MIR_SERVER_26 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_configuration*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_dispatcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_manager*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_reader*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_reader_policy*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_reader_thread*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_region*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_registrar*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_report*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_scene*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_sender*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_send_observer*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_target_enumerator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_targeter*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_translator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_logger*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_main_loop*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_mediating_display_changer*;
@@ -549,14 +570,9 @@ MIR_SERVER_26 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_touch_visualizer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_session_coordinator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_surface_coordinator*;
-    non-virtual?thunk?to?mir::frontend::ConnectionCreator::?ConnectionCreator*;
-    non-virtual?thunk?to?mir::frontend::detail::MessageProcessor::?MessageProcessor*;
-    non-virtual?thunk?to?mir::frontend::detail::ProtobufMessageSender::?ProtobufMessageSender*;
     non-virtual?thunk?to?mir::frontend::DisplayChanger::?DisplayChanger*;
     non-virtual?thunk?to?mir::frontend::EventSink::?EventSink*;
     non-virtual?thunk?to?mir::frontend::PromptSession::?PromptSession*;
-    non-virtual?thunk?to?mir::frontend::ProtobufConnectionCreator::create_connection_for*;
-    non-virtual?thunk?to?mir::frontend::ProtobufConnectionCreator::create_processor*;
     non-virtual?thunk?to?mir::frontend::Screencast::?Screencast*;
     non-virtual?thunk?to?mir::frontend::SessionAuthorizer::?SessionAuthorizer*;
     non-virtual?thunk?to?mir::frontend::Session::?Session*;
@@ -610,16 +626,12 @@ MIR_SERVER_26 {
     typeinfo?for?mir::compositor::Scene;
     typeinfo?for?mir::compositor::SceneElement;
     typeinfo?for?mir::DefaultServerConfiguration;
+    typeinfo?for?mir::detail::ServerAddConfigurationOptions;
     typeinfo?for?mir::DisplayServer;
     typeinfo?for?mir::EmergencyCleanup;
-    typeinfo?for?mir::frontend::ConnectionCreator;
-    typeinfo?for?mir::frontend::detail::Invocation;
-    typeinfo?for?mir::frontend::detail::MessageProcessor;
-    typeinfo?for?mir::frontend::detail::ProtobufMessageSender;
     typeinfo?for?mir::frontend::DisplayChanger;
     typeinfo?for?mir::frontend::EventSink;
     typeinfo?for?mir::frontend::PromptSession;
-    typeinfo?for?mir::frontend::ProtobufConnectionCreator;
     typeinfo?for?mir::frontend::Screencast;
     typeinfo?for?mir::frontend::Session;
     typeinfo?for?mir::frontend::SessionAuthorizer;
@@ -656,6 +668,7 @@ MIR_SERVER_26 {
     typeinfo?for?mir::scene::SurfaceCoordinator;
     typeinfo?for?mir::scene::SurfaceCreationParameters;
     typeinfo?for?mir::scene::SurfaceObserver;
+    typeinfo?for?mir::Server;
     typeinfo?for?mir::ServerActionQueue;
     typeinfo?for?mir::ServerConfiguration;
     typeinfo?for?mir::ServerStatusListener;
@@ -672,16 +685,12 @@ MIR_SERVER_26 {
     vtable?for?mir::compositor::Scene;
     vtable?for?mir::compositor::SceneElement;
     vtable?for?mir::DefaultServerConfiguration;
+    vtable?for?mir::detail::ServerAddConfigurationOptions;
     vtable?for?mir::DisplayServer;
     vtable?for?mir::EmergencyCleanup;
-    vtable?for?mir::frontend::ConnectionCreator;
-    vtable?for?mir::frontend::detail::Invocation;
-    vtable?for?mir::frontend::detail::MessageProcessor;
-    vtable?for?mir::frontend::detail::ProtobufMessageSender;
     vtable?for?mir::frontend::DisplayChanger;
     vtable?for?mir::frontend::EventSink;
     vtable?for?mir::frontend::PromptSession;
-    vtable?for?mir::frontend::ProtobufConnectionCreator;
     vtable?for?mir::frontend::Screencast;
     vtable?for?mir::frontend::Session;
     vtable?for?mir::frontend::SessionAuthorizer;
@@ -718,6 +727,7 @@ MIR_SERVER_26 {
     vtable?for?mir::scene::SurfaceCoordinator;
     vtable?for?mir::scene::SurfaceCreationParameters;
     vtable?for?mir::scene::SurfaceObserver;
+    vtable?for?mir::Server;
     vtable?for?mir::ServerActionQueue;
     vtable?for?mir::ServerConfiguration;
     vtable?for?mir::ServerStatusListener;
@@ -730,16 +740,6 @@ MIR_SERVER_26 {
     vtable?for?mir::shell::SurfaceCoordinatorWrapper;
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::Timer;
-    
-# These symbols are needed by mir_acceptance_tests but are not intended to be public
-    mir::input::android::DefaultInputConfiguration::DefaultInputConfiguration*;
-    mir::input::android::DefaultInputConfiguration::?DefaultInputConfiguration*;
-    mir::input::android::DefaultInputConfiguration::the_input_manager*;
-    mir::input::android::DefaultInputConfiguration::the_reader*;
-    mir::input::android::DefaultInputConfiguration::the_input_translator*;
-    mir::input::android::DefaultInputConfiguration::the_reader_thread*;
-    mir::input::android::DefaultInputConfiguration::the_reader_policy*;
-    typeinfo?for?mir::input::android::DefaultInputConfiguration;
 
 # these symbols are needed by mir_demo_server_shell but are not intended to be public
     mir::compositor::GLRenderer::begin*;

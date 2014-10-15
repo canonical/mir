@@ -37,6 +37,13 @@ mia::AndroidInputDispatcher::AndroidInputDispatcher(
 {
 }
 
+mia::AndroidInputDispatcher::~AndroidInputDispatcher()
+{
+    // It is safe to call stop(), even if we haven't been started at all,
+    // or we have been previously started and stopped manually.
+    stop();
+}
+
 void mia::AndroidInputDispatcher::configuration_changed(nsecs_t when)
 {
     droidinput::NotifyConfigurationChangedArgs args(when);

@@ -64,18 +64,19 @@ template<> struct result_ptr_t<mir::protobuf::SocketFD>     { typedef ::mir::pro
 
 //The exchange_buffer and next_buffer calls can complete on a different thread than the
 //one the invocation was called on. Make sure to preserve the result resource. 
-void invoke_and_ensure_any_thread_can_complete1(
+template<typename RequestType>
+void invoke(
     ProtobufMessageProcessor* self,
     DisplayServer* server,
     void (mir::protobuf::DisplayServer::*function)(
         ::google::protobuf::RpcController* controller,
-        const mir::protobuf::BufferRequest* request,
+        const RequestType* request,
         protobuf::Buffer* response,
         ::google::protobuf::Closure* done),
-        Invocation const& invocation, std::vector<mir::Fd> const&fds)
+        Invocation const& invocation)
 {
-    mir::protobuf::BufferRequest parameter_message;
-    parameter_message.ParseFromString(invocation.parameters());
+    RequestType request;
+    request.ParseFromString(invocation.parameters());
     auto const result_message = std::make_shared<protobuf::Buffer>();
 
     auto const callback =
@@ -88,17 +89,11 @@ void invoke_and_ensure_any_thread_can_complete1(
                 invocation.id(),
                 result_message);
 
-            parameter_message.mutable_buffer()->clear_fd();
-            for(auto& fd : fds)
-            {   
-                int f= (int)fd;
-                parameter_message.mutable_buffer()->add_fd(f);
-            }
     try
     {
         (server->*function)(
             0,
-            &parameter_message,
+            &request,
             result_message.get(),
             callback);
     }
@@ -109,22 +104,28 @@ void invoke_and_ensure_any_thread_can_complete1(
         self->send_response(invocation.id(), result_message);
     }
 }
-
-template<class ParameterMessage>
-void invoke_async(
+template<typename RequestType>
+void invoke(
     ProtobufMessageProcessor* self,
     DisplayServer* server,
     void (mir::protobuf::DisplayServer::*function)(
         ::google::protobuf::RpcController* controller,
-        const ParameterMessage* request,
+        const RequestType* request,
         protobuf::Buffer* response,
         ::google::protobuf::Closure* done),
-        Invocation const& invocation)
+        Invocation const& invocation,
+        std::vector<mir::Fd> const&fds)
 {
-    ParameterMessage parameter_message;
-    parameter_message.ParseFromString(invocation.parameters());
+    RequestType request;
+    request.ParseFromString(invocation.parameters());
     auto const result_message = std::make_shared<protobuf::Buffer>();
 
+    request.mutable_buffer()->clear_fd();
+    for(auto& fd : fds)
+    {   
+        int f= (int)fd;
+        request.mutable_buffer()->add_fd(f);
+    }
     auto const callback =
         google::protobuf::NewCallback<
             ProtobufMessageProcessor,
@@ -139,7 +140,7 @@ void invoke_async(
     {
         (server->*function)(
             0,
-            &parameter_message,
+            &request,
             result_message.get(),
             callback);
     }
@@ -197,12 +198,11 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         }
         else if ("next_buffer" == invocation.method_name())
         {
-            invoke_async(this, display_server.get(), &DisplayServer::next_buffer, invocation);
+            invoke(this, display_server.get(), &DisplayServer::next_buffer, invocation);
         }
         else if ("exchange_buffer" == invocation.method_name())
         {
-            invoke_and_ensure_any_thread_can_complete1(
-                this, display_server.get(), &DisplayServer::exchange_buffer, invocation, side_channel_fds);
+            invoke(this, display_server.get(), &DisplayServer::exchange_buffer, invocation, side_channel_fds);
         }
         else if ("release_surface" == invocation.method_name())
         {
