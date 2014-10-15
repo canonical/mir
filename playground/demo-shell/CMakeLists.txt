@@ -7,12 +7,12 @@ add_library(demo-shell STATIC
 
 add_executable(mir_demo_server_shell
   demo_shell.cpp
-  ../server_configuration.cpp
 )
 
 target_link_libraries(mir_demo_server_shell
   demo-shell
   mirserver
+  playgroundserverconfig
   exampleserverconfig
 )
 
