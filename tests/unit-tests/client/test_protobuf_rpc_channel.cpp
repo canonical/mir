@@ -74,7 +74,7 @@ public:
             receive_data_default(buffer, message_size, fds);
         }));
 
-        ON_CALL(*this, send_data(_))
+        ON_CALL(*this, send_data(_,_))
             .WillByDefault(Invoke(std::bind(&MockStreamTransport::send_data_default,
                                             this, std::placeholders::_1)));
     }
@@ -107,7 +107,6 @@ public:
     MOCK_METHOD1(register_observer, void(std::shared_ptr<Observer> const&));
     MOCK_METHOD2(receive_data, void(void*, size_t));
     MOCK_METHOD3(receive_data, void(void*, size_t, std::vector<mir::Fd>&));
-    MOCK_METHOD1(send_data, void(std::vector<uint8_t> const&));
     MOCK_METHOD2(send_data, void(std::vector<uint8_t> const&, std::vector<mir::Fd>&));
 
     // Transport interface
@@ -310,7 +309,7 @@ TEST_F(MirProtobufRpcChannelTest, NotifiesOfDisconnectOnWriteError)
         }
     });
 
-    EXPECT_CALL(*transport, send_data(_))
+    EXPECT_CALL(*transport, send_data(_,_))
         .WillOnce(Throw(std::runtime_error("Eaten by giant space goat")));
 
     mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
@@ -364,7 +363,7 @@ TEST_F(MirProtobufRpcChannelTest, NotifiesOfDisconnectOnlyOnce)
         }
     });
 
-    EXPECT_CALL(*transport, send_data(_))
+    EXPECT_CALL(*transport, send_data(_,_))
         .WillOnce(DoAll(Throw(std::runtime_error("Eaten by giant space goat")),
                         InvokeWithoutArgs([this]()
     {
