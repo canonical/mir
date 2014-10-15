@@ -43,8 +43,6 @@ class SurfaceCoordinator;
 class MainLoop;
 class ServerStatusListener;
 
-namespace detail { class ServerAddConfigurationOptions; }
-
 enum class OptionType
 {
     null,
@@ -76,13 +74,9 @@ public:
 
 /** @name Configuration options
  *  @{ */
-    /// Add user configuration option(s) to Mir's option handling.
-    /// These will be resolved during initialisation from the command line,
-    /// environment variables, a config file or the supplied default.
-    auto add_configuration_option(
-        std::string const& option,
-        std::string const& description,
-        int default_value) -> detail::ServerAddConfigurationOptions;
+
+    /// Helper class to facilitate adding multiple options
+    class ChainAddConfigurationOption;
 
     /// Add user configuration option(s) to Mir's option handling.
     /// These will be resolved during initialisation from the command line,
@@ -90,7 +84,7 @@ public:
     auto add_configuration_option(
         std::string const& option,
         std::string const& description,
-        std::string const& default_value) -> detail::ServerAddConfigurationOptions;
+        int default_value) -> ChainAddConfigurationOption;
 
     /// Add user configuration option(s) to Mir's option handling.
     /// These will be resolved during initialisation from the command line,
@@ -98,7 +92,15 @@ public:
     auto add_configuration_option(
         std::string const& option,
         std::string const& description,
-        OptionType type) -> detail::ServerAddConfigurationOptions;
+        std::string const& default_value) -> ChainAddConfigurationOption;
+
+    /// Add user configuration option(s) to Mir's option handling.
+    /// These will be resolved during initialisation from the command line,
+    /// environment variables, a config file or the supplied default.
+    auto add_configuration_option(
+        std::string const& option,
+        std::string const& description,
+        OptionType type) -> ChainAddConfigurationOption;
 
     /// Set a handler for any command line options Mir does not recognise.
     /// This will be invoked if any unrecognised options are found during initialisation.
@@ -216,7 +218,7 @@ private:
     std::shared_ptr<Self> const self;
 };
 
-class detail::ServerAddConfigurationOptions
+class Server::ChainAddConfigurationOption
 {
 public:
     // Yes, I know a single forwarding template would cover all three cases.
@@ -224,7 +226,7 @@ public:
     auto operator()(
         std::string const& option,
         std::string const& description,
-        int default_value) const -> ServerAddConfigurationOptions
+        int default_value) const -> ChainAddConfigurationOption
     {
         return server.add_configuration_option(option, description, default_value);
     }
@@ -232,7 +234,7 @@ public:
     auto operator()(
         std::string const& option,
         std::string const& description,
-        std::string const& default_value) const -> ServerAddConfigurationOptions
+        std::string const& default_value) const -> ChainAddConfigurationOption
     {
         return server.add_configuration_option(option, description, default_value);
     }
@@ -240,14 +242,14 @@ public:
     auto operator()(
         std::string const& option,
         std::string const& description,
-        OptionType type) const -> ServerAddConfigurationOptions
+        OptionType type) const -> ChainAddConfigurationOption
     {
         return server.add_configuration_option(option, description, type);
     }
 
 private:
     friend class ::mir::Server;
-    ServerAddConfigurationOptions(Server& server) : server(server) {}
+    ChainAddConfigurationOption(Server& server) : server(server) {}
 
     Server& server;
 };
