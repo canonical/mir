@@ -26,7 +26,14 @@ namespace mir
 {
 namespace compositor { class Compositor; }
 namespace frontend { class SessionAuthorizer; }
-namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
+namespace graphics
+{
+class BufferInitializer;
+class Display;
+class DisplayConfigurationPolicy;
+class GLConfig;
+class Platform;
+}
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; }
 namespace options { class Option; }
 namespace shell { class FocusSetter; class DisplayLayout; }
@@ -125,6 +132,14 @@ public:
     /// the exception can be re-thrown to retrieve type information.
     /// The default action is to call mir::report_exception(std::cerr)
     void set_exception_handler(std::function<void()> const& exception_handler);
+
+    /// Replaces the logic that starts the Mir server.
+    /// This is mostly useful for testing subsystems without initializing or running
+    /// a server instance.
+    /// \note if you use this there will be no call to the init_callback and
+    /// there's no guarantee that Server::stop() will stop your code.
+    /// You have to organise these yourself.
+    void replace_runner(std::function<void()> const& runner);
 /** @} */
 
 /** @name Getting access to Mir subsystems
@@ -133,6 +148,9 @@ public:
  * Mir subsystems and when the init_callback is invoked (and thereafter
  * until the server exits).
  *  @{ */
+    /// \return the buffer initializer.
+    auto the_buffer_initializer() const -> std::shared_ptr<graphics::BufferInitializer>;
+
     /// \return the composite event filter.
     auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;
 

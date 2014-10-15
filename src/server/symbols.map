@@ -406,10 +406,11 @@ MIR_SERVER_27 {
     mir::Server::override_the_session_listener*;
     mir::Server::override_the_shell_focus_setter*;
     mir::Server::override_the_surface_configurator*;
+    mir::Server::replace_runner*;
     mir::Server::run*;
     mir::Server::Server*;
     mir::Server::set_command_line*;
-    mir::Server::set_command_line_hander*;
+    mir::Server::set_command_line_handler*;
     mir::Server::set_exception_handler*;
     mir::ServerStatusListener::operator*;
     mir::ServerStatusListener::paused*;
@@ -418,6 +419,7 @@ MIR_SERVER_27 {
     mir::ServerStatusListener::ServerStatusListener*;
     mir::ServerStatusListener::started*;
     mir::Server::stop*;
+    mir::Server::the_buffer_initializer*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_cursor_listener*;
     mir::Server::the_display*;
@@ -628,7 +630,6 @@ MIR_SERVER_27 {
     typeinfo?for?mir::compositor::Scene;
     typeinfo?for?mir::compositor::SceneElement;
     typeinfo?for?mir::DefaultServerConfiguration;
-    typeinfo?for?mir::detail::ServerAddConfigurationOptions;
     typeinfo?for?mir::DisplayServer;
     typeinfo?for?mir::EmergencyCleanup;
     typeinfo?for?mir::frontend::DisplayChanger;
@@ -687,7 +688,6 @@ MIR_SERVER_27 {
     vtable?for?mir::compositor::Scene;
     vtable?for?mir::compositor::SceneElement;
     vtable?for?mir::DefaultServerConfiguration;
-    vtable?for?mir::detail::ServerAddConfigurationOptions;
     vtable?for?mir::DisplayServer;
     vtable?for?mir::EmergencyCleanup;
     vtable?for?mir::frontend::DisplayChanger;

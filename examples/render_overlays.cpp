@@ -16,24 +16,21 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/default_server_configuration.h"
+#include "mir/server.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
-#include "mir/report_exception.h"
 
 #include "testdraw/graphics_region_factory.h"
 #include "testdraw/patterns.h"
 
 #include <chrono>
 #include <csignal>
-#include <iostream>
 
 namespace mg=mir::graphics;
-namespace ml=mir::logging;
 namespace mo=mir::options;
 namespace geom=mir::geometry;
 
@@ -150,12 +147,9 @@ private:
     geom::Rectangle const position;
     glm::mat4 const trans;
 };
-}
 
-int main(int argc, char const** argv)
-try
+void render_loop(mir::Server& server)
 {
-
     /* Set up graceful exit on SIGINT and SIGTERM */
     struct sigaction sa;
     sa.sa_handler = signal_handler;
@@ -165,11 +159,9 @@ try
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
 
-    mir::DefaultServerConfiguration conf{argc, argv};
-
-    auto platform = conf.the_graphics_platform();
-    auto display = conf.the_display();
-    auto buffer_allocator = platform->create_buffer_allocator(conf.the_buffer_initializer());
+    auto platform = server.the_graphics_platform();
+    auto display = server.the_display();
+    auto buffer_allocator = platform->create_buffer_allocator(server.the_buffer_initializer());
 
      mg::BufferProperties buffer_properties{
         geom::Size{512, 512},
@@ -196,10 +188,17 @@ try
             buffer.post_renderables_if_optimizable(renderlist);
         });
     }
-   return 0;
 }
-catch (...)
+}
+
+int main(int argc, char const** argv)
 {
-    mir::report_exception(std::cerr);
-    return 1;
+    mir::Server server;
+    server.set_command_line(argc, argv);
+
+    server.replace_runner([&]{ render_loop(server); });
+
+    server.run();
+
+    return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
