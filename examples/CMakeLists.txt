@@ -6,7 +6,6 @@ add_library(eglapp STATIC
 )
 
 add_library(exampleserverconfig STATIC
-  server_configuration.cpp
   example_display_configuration_policy.cpp
   example_input_event_filter.cpp
 )
