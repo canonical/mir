@@ -502,3 +502,9 @@ void mc::BufferQueue::drop_old_buffers()
        release(buffer, std::move(lock));
     }
 }
+
+void mc::BufferQueue::drop_client_requests()
+{
+    std::unique_lock<std::mutex> lock(guard);
+    pending_client_notifications.clear();
+}

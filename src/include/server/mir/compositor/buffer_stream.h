@@ -54,6 +54,7 @@ public:
     virtual void force_requests_to_complete() = 0;
     virtual int buffers_ready_for_compositor() const = 0;
     virtual void drop_old_buffers() = 0;
+    virtual void drop_client_requests() = 0;
 };
 
 }

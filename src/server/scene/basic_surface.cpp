@@ -151,6 +151,9 @@ void ms::BasicSurface::force_requests_to_complete()
 ms::BasicSurface::~BasicSurface() noexcept
 {
     report->surface_deleted(this, surface_name);
+
+    if (surface_buffer_stream) // some tests use null for surface_buffer_stream
+        surface_buffer_stream->drop_client_requests();
 }
 
 std::shared_ptr<mc::BufferStream> ms::BasicSurface::buffer_stream() const

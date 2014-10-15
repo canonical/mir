@@ -18,7 +18,6 @@
 
 #include "mir/frontend/session.h"
 #include "mir/frontend/shell.h"
-#include "mir/input/input_configuration.h"
 
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/session.h"

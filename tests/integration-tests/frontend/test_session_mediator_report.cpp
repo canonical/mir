@@ -510,6 +510,8 @@ TEST_F(SessionMediatorReport, prompt_session_stop_called)
 
             client.wait_for_connect_done();
 
+            client.prompt_session_parameters.set_application_pid(getpid());
+
             client.display_server.start_prompt_session(
                 0,
                 &client.prompt_session_parameters,
