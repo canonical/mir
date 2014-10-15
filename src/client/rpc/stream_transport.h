@@ -140,11 +140,10 @@ public:
     /**
      * \brief Write data to the server
      * \param [in] buffer   Data to send
+     * \param [in] fds      Fds to send
      * \throws A std::runtime_error if it is not possible to write the full contents
      *         of buffer to the server.
      */
-    virtual void send_data(std::vector<uint8_t> const& buffer) = 0;
-
     virtual void send_data(const std::vector<uint8_t> &buffer, std::vector<Fd>& fds) = 0;
 };
 

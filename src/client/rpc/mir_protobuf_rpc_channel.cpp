@@ -170,20 +170,15 @@ void mclr::MirProtobufRpcChannel::CallMethod(
     pending_calls.save_completion_details(invocation, response, callback);
 
     // Only send message when details saved for handling response
+    std::vector<mir::Fd> fds;
     if (parameters->GetTypeName() == "mir.protobuf.BufferRequest")
     {
         auto const* buffer = reinterpret_cast<mir::protobuf::BufferRequest const*>(parameters);
-        std::vector<mir::Fd> fds;
         for(auto& fd : buffer->buffer().fd())
             fds.emplace_back(mir::Fd{IntOwnedFd{fd}});
-            
-       // std::vector<mir::Fd> fd(buffer->buffer().fd().begin(), buffer->buffer().fd().end());
-        send_message(invocation, invocation, fds);
     }
-    else
-    {
-        send_message(invocation, invocation);
-    }
+        
+    send_message(invocation, invocation, fds);
 }
 
 void mclr::MirProtobufRpcChannel::send_message(
@@ -206,34 +201,6 @@ void mclr::MirProtobufRpcChannel::send_message(
     {
         std::lock_guard<decltype(write_mutex)> lock(write_mutex);
         transport->send_data(send_buffer, fds);
-    }
-    catch (std::runtime_error const& err)
-    {
-        rpc_report->invocation_failed(invocation, err);
-        notify_disconnected();
-        throw;
-    }
-    rpc_report->invocation_succeeded(invocation);
-}
-void mclr::MirProtobufRpcChannel::send_message(
-    mir::protobuf::wire::Invocation const& body,
-    mir::protobuf::wire::Invocation const& invocation)
-{
-    const size_t size = body.ByteSize();
-    const unsigned char header_bytes[2] =
-    {
-        static_cast<unsigned char>((size >> 8) & 0xff),
-        static_cast<unsigned char>((size >> 0) & 0xff)
-    };
-
-    detail::SendBuffer send_buffer(sizeof header_bytes + size);
-    std::copy(header_bytes, header_bytes + sizeof header_bytes, send_buffer.begin());
-    body.SerializeToArray(send_buffer.data() + sizeof header_bytes, size);
-
-    try
-    {
-        std::lock_guard<decltype(write_mutex)> lock(write_mutex);
-        transport->send_data(send_buffer);
     }
     catch (std::runtime_error const& err)
     {

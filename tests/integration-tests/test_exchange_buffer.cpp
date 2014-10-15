@@ -48,194 +48,194 @@ namespace mp = mir::protobuf;
 
 namespace
 {
-    MATCHER(DidNotTimeOut, "did not time out")
+MATCHER(DidNotTimeOut, "did not time out")
+{
+    return arg;
+}
+
+struct StubStream : public mc::BufferStream
+{
+    StubStream(std::vector<mg::BufferID> const& ids) :
+        buffer_id_seq(ids)
     {
-        return arg;
     }
 
-    struct StubStream : public mc::BufferStream
+    void acquire_client_buffer(std::function<void(mg::Buffer* buffer)> complete)
     {
-        StubStream(std::vector<mg::BufferID> const& ids) :
-            buffer_id_seq(ids)
-        {
-        }
+        std::shared_ptr<mg::Buffer> stub_buffer;
+        if (buffers_acquired < buffer_id_seq.size())
+            stub_buffer = std::make_shared<mtd::StubBuffer>(buffer_id_seq.at(buffers_acquired++));
+        else
+            stub_buffer = std::make_shared<mtd::StubBuffer>(buffer_id_seq.back());
 
-        void acquire_client_buffer(std::function<void(mg::Buffer* buffer)> complete)
-        {
-            std::shared_ptr<mg::Buffer> stub_buffer;
-            if (buffers_acquired < buffer_id_seq.size())
-                stub_buffer = std::make_shared<mtd::StubBuffer>(buffer_id_seq.at(buffers_acquired++));
-            else
-                stub_buffer = std::make_shared<mtd::StubBuffer>(buffer_id_seq.back());
+        client_buffers.push_back(stub_buffer);
+        complete(stub_buffer.get());
+    }
 
-            client_buffers.push_back(stub_buffer);
-            complete(stub_buffer.get());
-        }
+    void release_client_buffer(mg::Buffer*) {}
+    std::shared_ptr<mg::Buffer> lock_compositor_buffer(void const*)
+    { return std::make_shared<mtd::StubBuffer>(); }
+    std::shared_ptr<mg::Buffer> lock_snapshot_buffer()
+    { return std::make_shared<mtd::StubBuffer>(); }
+    MirPixelFormat get_stream_pixel_format() { return mir_pixel_format_abgr_8888; }
+    geom::Size stream_size() { return geom::Size{1,212121}; }
+    void resize(geom::Size const&) {};
+    void allow_framedropping(bool) {};
+    void force_requests_to_complete() {};
+    int buffers_ready_for_compositor() const { return -5; }
+    void drop_old_buffers() {}
+    void drop_client_requests() {}
 
-        void release_client_buffer(mg::Buffer*) {}
-        std::shared_ptr<mg::Buffer> lock_compositor_buffer(void const*)
-        { return std::make_shared<mtd::StubBuffer>(); }
-        std::shared_ptr<mg::Buffer> lock_snapshot_buffer()
-        { return std::make_shared<mtd::StubBuffer>(); }
-        MirPixelFormat get_stream_pixel_format() { return mir_pixel_format_abgr_8888; }
-        geom::Size stream_size() { return geom::Size{1,212121}; }
-        void resize(geom::Size const&) {};
-        void allow_framedropping(bool) {};
-        void force_requests_to_complete() {};
-        int buffers_ready_for_compositor() const { return -5; }
-        void drop_old_buffers() {}
-        void drop_client_requests() {}
+    std::vector<std::shared_ptr<mg::Buffer>> client_buffers;
+    std::vector<mg::BufferID> const buffer_id_seq;
+    unsigned int buffers_acquired{0};
+};
 
-        std::vector<std::shared_ptr<mg::Buffer>> client_buffers;
-        std::vector<mg::BufferID> const buffer_id_seq;
-        unsigned int buffers_acquired{0};
-    };
+struct StubStreamFactory : public msc::BufferStreamFactory
+{
+    StubStreamFactory(std::vector<mg::BufferID> const& ids) :
+        buffer_id_seq(ids)
+    {}
 
-    struct StubStreamFactory : public msc::BufferStreamFactory
+    std::shared_ptr<mc::BufferStream> create_buffer_stream(mg::BufferProperties const&) override
+    { return std::make_shared<StubStream>(buffer_id_seq); }
+    std::vector<mg::BufferID> const buffer_id_seq;
+};
+
+struct StubBufferPacker : public mg::PlatformIpcOperations
+{
+    StubBufferPacker() :
+        last_fd{-1}
     {
-        StubStreamFactory(std::vector<mg::BufferID> const& ids) :
-            buffer_id_seq(ids)
-        {}
-
-        std::shared_ptr<mc::BufferStream> create_buffer_stream(mg::BufferProperties const&) override
-        { return std::make_shared<StubStream>(buffer_id_seq); }
-        std::vector<mg::BufferID> const buffer_id_seq;
-    };
-
-    struct StubBufferPacker : public mg::PlatformIpcOperations
+    }
+    void pack_buffer(mg::BufferIpcMessage&, mg::Buffer const&, mg::BufferIpcMsgType) const override
     {
-        StubBufferPacker() :
-            last_fd{-1}
-        {
-        }
-        void pack_buffer(mg::BufferIpcMessage&, mg::Buffer const&, mg::BufferIpcMsgType) const override
-        {
-        }
+    }
 
-        void unpack_buffer(mg::BufferIpcMessage& msg, mg::Buffer const&) const override
+    void unpack_buffer(mg::BufferIpcMessage& msg, mg::Buffer const&) const override
+    {
+        auto fds = msg.fds();
+        if (!fds.empty())
         {
-            auto fds = msg.fds();
-            if (!fds.empty())
-            {
-                last_fd = fds[0];
-            }
+            last_fd = fds[0];
         }
+    }
+
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
+    {
+        return std::make_shared<mg::PlatformIPCPackage>();
+    }
+
+    mir::Fd last_unpacked_fd()
+    {
+        return last_fd;
+    }
+private:
+    //TODO: is const appropriate on unpack_buffer?
+    mir::Fd mutable last_fd;
+};
+
+struct StubPlatform : public mtd::NullPlatform
+{
+    StubPlatform(std::shared_ptr<mg::PlatformIpcOperations> const& ipc_ops) :
+        ipc_ops{ipc_ops}
+    {
+    }
+
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
+        const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
+    {
+        return std::make_shared<mtd::StubBufferAllocator>();
+    }
+
+    std::shared_ptr<mg::PlatformIpcOperations> make_ipc_operations() const override
+    {
+        return ipc_ops;
+    }
+
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
+        std::shared_ptr<mg::GLProgramFactory> const&,
+        std::shared_ptr<mg::GLConfig> const&) override
+    {
+        std::vector<geom::Rectangle> rect{geom::Rectangle{{0,0},{1,1}}};
+        return std::make_shared<mtd::StubDisplay>(rect);
+    }
     
-        std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
-        {
-            return std::make_shared<mg::PlatformIPCPackage>();
-        }
-
-        mir::Fd last_unpacked_fd()
-        {
-            return last_fd;
-        }
-    private:
-        //TODO: is const appropriate on unpack_buffer?
-        mir::Fd mutable last_fd;
-    };
-
-    struct StubPlatform : public mtd::NullPlatform
+    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
     {
-        StubPlatform(std::shared_ptr<mg::PlatformIpcOperations> const& ipc_ops) :
-            ipc_ops{ipc_ops}
-        {
-        }
+        return nullptr;
+    }
 
-        std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
-        {
-            return std::make_shared<mtd::StubBufferAllocator>();
-        }
+    std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
+};
 
-        std::shared_ptr<mg::PlatformIpcOperations> make_ipc_operations() const override
-        {
-            return ipc_ops;
-        }
-
-        std::shared_ptr<mg::Display> create_display(
-            std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-            std::shared_ptr<mg::GLProgramFactory> const&,
-            std::shared_ptr<mg::GLConfig> const&) override
-        {
-            std::vector<geom::Rectangle> rect{geom::Rectangle{{0,0},{1,1}}};
-            return std::make_shared<mtd::StubDisplay>(rect);
-        }
-        
-        std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
-        {
-            return nullptr;
-        }
-
-        std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
-    };
-
-    struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
+struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
+{
+    ExchangeServerConfiguration(
+        std::vector<mg::BufferID> const& id_seq,
+        std::shared_ptr<mg::PlatformIpcOperations> const& ipc_ops) :
+        stream_factory{std::make_shared<StubStreamFactory>(id_seq)},
+        platform{std::make_shared<StubPlatform>(ipc_ops)}
     {
-        ExchangeServerConfiguration(
-            std::vector<mg::BufferID> const& id_seq,
-            std::shared_ptr<mg::PlatformIpcOperations> const& ipc_ops) :
-            stream_factory{std::make_shared<StubStreamFactory>(id_seq)},
-            platform{std::make_shared<StubPlatform>(ipc_ops)}
-        {
-        }
+    }
 
-        std::shared_ptr<mg::Platform> the_graphics_platform() override
-        {
-            return platform;
-        }
-
-        std::shared_ptr<msc::BufferStreamFactory> the_buffer_stream_factory() override
-        {
-            return stream_factory;
-        }
-
-        std::shared_ptr<msc::BufferStreamFactory> const stream_factory;
-        std::shared_ptr<mg::Platform> const platform;
-    };
-
-    struct ExchangeBufferTest : mir_test_framework::InProcessServer
+    std::shared_ptr<mg::Platform> the_graphics_platform() override
     {
-        std::vector<mg::BufferID> const buffer_id_exchange_seq{
-            mg::BufferID{4}, mg::BufferID{8}, mg::BufferID{9}, mg::BufferID{3}, mg::BufferID{4}};
+        return platform;
+    }
 
-        std::shared_ptr<StubBufferPacker> stub_packer{std::make_shared<StubBufferPacker>()};
-        ExchangeServerConfiguration server_configuration{buffer_id_exchange_seq, stub_packer};
-        mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
-        mtf::UsingStubClientPlatform using_stub_client_platform;
+    std::shared_ptr<msc::BufferStreamFactory> the_buffer_stream_factory() override
+    {
+        return stream_factory;
+    }
 
-        void buffer_arrival()
-        {
-            std::unique_lock<decltype(mutex)> lk(mutex);
-            arrived = true;
-            cv.notify_all();
-        }
+    std::shared_ptr<msc::BufferStreamFactory> const stream_factory;
+    std::shared_ptr<mg::Platform> const platform;
+};
 
-        //TODO: once the next_buffer rpc is deprecated, change this code out for the
-        //      mir_surface_next_buffer() api call
-        bool exchange_buffer(mp::DisplayServer& server)
-        {
-            std::unique_lock<decltype(mutex)> lk(mutex);
-            mp::Buffer next;
-            server.exchange_buffer(0, &buffer_request, &next,
-                    google::protobuf::NewCallback(this, &ExchangeBufferTest::buffer_arrival));
+struct ExchangeBufferTest : mir_test_framework::InProcessServer
+{
+    std::vector<mg::BufferID> const buffer_id_exchange_seq{
+        mg::BufferID{4}, mg::BufferID{8}, mg::BufferID{9}, mg::BufferID{3}, mg::BufferID{4}};
+
+    std::shared_ptr<StubBufferPacker> stub_packer{std::make_shared<StubBufferPacker>()};
+    ExchangeServerConfiguration server_configuration{buffer_id_exchange_seq, stub_packer};
+    mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
+    mtf::UsingStubClientPlatform using_stub_client_platform;
+
+    void buffer_arrival()
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        arrived = true;
+        cv.notify_all();
+    }
+
+    //TODO: once the next_buffer rpc is deprecated, change this code out for the
+    //      mir_surface_next_buffer() api call
+    bool exchange_buffer(mp::DisplayServer& server)
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        mp::Buffer next;
+        server.exchange_buffer(0, &buffer_request, &next,
+                google::protobuf::NewCallback(this, &ExchangeBufferTest::buffer_arrival));
 
 
-            arrived = false;
-            auto completed = cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
-            for(auto i = 0; i < next.fd().size(); i++)
-                ::close(next.fd(i));
-            next.set_fds_on_side_channel(0);
+        arrived = false;
+        auto completed = cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
+        for(auto i = 0; i < next.fd().size(); i++)
+            ::close(next.fd(i));
+        next.set_fds_on_side_channel(0);
 
-            *buffer_request.mutable_buffer() = next;
-            return completed;
-        }
+        *buffer_request.mutable_buffer() = next;
+        return completed;
+    }
 
-        std::mutex mutex;
-        std::condition_variable cv;
-        bool arrived{false};
-        mp::BufferRequest buffer_request; 
-    };
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool arrived{false};
+    mp::BufferRequest buffer_request; 
+};
 }
 
 TEST_F(ExchangeBufferTest, exchanges_happen)

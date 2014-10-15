@@ -19,7 +19,7 @@
 #include "mir_basic_rpc_channel.h"
 #include "rpc_report.h"
 
-#include "mir_protobuf.pb.h"  // For Buffer frig
+#include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/variable_length_array.h"
@@ -122,12 +122,11 @@ mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     if (request->GetTypeName() == "mir.protobuf.BufferRequest")
     {
         auto const* buffer = reinterpret_cast<mir::protobuf::BufferRequest const*>(request);
-        auto o = buffer->buffer().fd().size();
-        invoke.set_side_channel_fds(o);
+        invoke.set_side_channel_fds(buffer->buffer().fd().size());
     }
     else
     {
-        invoke.set_side_channel_fds(0);
+        invoke.clear_side_channel_fds();
     }
 
     return invoke;
