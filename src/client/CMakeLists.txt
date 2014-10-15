@@ -20,6 +20,7 @@ include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${PROJECT_SOURCE_DIR}/include/client
+  ${PROJECT_SOURCE_DIR}/src/include/client
   ${DRM_INCLUDE_DIRS}
 )
 
@@ -104,7 +105,7 @@ install(
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(
-  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit ${CMAKE_SOURCE_DIR}/include/client/mir
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit
   DESTINATION "include/mirclient"
 )
 

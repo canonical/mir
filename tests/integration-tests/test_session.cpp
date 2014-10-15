@@ -17,7 +17,7 @@
  */
 
 #include "mir/default_server_configuration.h"
-#include "src/server/input/null_input_configuration.h"
+#include "src/server/input/null_input_manager.h"
 #include "mir/compositor/compositor.h"
 #include "src/server/scene/application_session.h"
 #include "src/server/scene/pixel_buffer.h"
@@ -54,12 +54,12 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
 {
     TestServerConfiguration() : DefaultServerConfiguration(0, nullptr) {}
 
-    std::shared_ptr<mi::InputConfiguration> the_input_configuration() override
+    std::shared_ptr<mi::InputManager> the_input_manager() override
     {
-        if (!input_configuration)
-            input_configuration = std::make_shared<mi::NullInputConfiguration>();
+        if (!input_manager)
+            input_manager = std::make_shared<mi::NullInputManager>();
 
-        return input_configuration;
+        return input_manager;
     }
 
     std::shared_ptr<mf::Connector> the_connector() override
@@ -123,7 +123,7 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
             });
     }
 
-    std::shared_ptr<mi::NullInputConfiguration> input_configuration;
+    std::shared_ptr<mi::NullInputManager> input_manager;
 };
 
 }

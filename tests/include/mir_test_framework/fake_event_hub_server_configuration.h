@@ -31,13 +31,6 @@ namespace android
 class FakeEventHub;
 }
 }
-namespace test
-{
-namespace doubles
-{
-class FakeEventHubInputConfiguration;
-}
-}
 }
 
 namespace mir_test_framework
@@ -48,15 +41,13 @@ class FakeEventHubServerConfiguration : public StubbedServerConfiguration
 public:
     using StubbedServerConfiguration::StubbedServerConfiguration;
 
-    std::shared_ptr<mir::input::InputConfiguration> the_input_configuration() override;
+    std::shared_ptr<droidinput::EventHubInterface> the_event_hub() override;
+    std::shared_ptr<mir::input::InputManager> the_input_manager() override;
     std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override;
     std::shared_ptr<mir::input::InputSender> the_input_sender() override;
 
-    mir::input::android::FakeEventHub* fake_event_hub;
-
-private:
-    std::shared_ptr<mir::test::doubles::FakeEventHubInputConfiguration> input_configuration;
+    std::shared_ptr<mir::input::android::FakeEventHub> fake_event_hub;
 };
 
 }
