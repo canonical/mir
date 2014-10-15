@@ -84,7 +84,7 @@ struct StubStream : public mc::BufferStream
     void force_requests_to_complete() {};
     int buffers_ready_for_compositor() const { return -5; }
     void drop_old_buffers() {}
-    void drop_client_requests() {}
+    void drop_client_requests() override {}
 
     std::vector<std::shared_ptr<mg::Buffer>> client_buffers;
     std::vector<mg::BufferID> const buffer_id_seq;
@@ -218,7 +218,7 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
         std::unique_lock<decltype(mutex)> lk(mutex);
         mp::Buffer next;
         server.exchange_buffer(0, &buffer_request, &next,
-                google::protobuf::NewCallback(this, &ExchangeBufferTest::buffer_arrival));
+            google::protobuf::NewCallback(this, &ExchangeBufferTest::buffer_arrival));
 
 
         arrived = false;
@@ -252,7 +252,7 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
     auto surface = mir_connection_create_surface_sync(connection, &request_params);
     auto rpc_channel = connection->rpc_channel();
     mp::DisplayServer::Stub server(
-            rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
+        rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
     buffer_request.mutable_buffer()->set_buffer_id(buffer_id_exchange_seq.begin()->as_value());
     for(auto i = 0; i < buffer_request.buffer().fd().size(); i++)
         ::close(buffer_request.buffer().fd(i));
