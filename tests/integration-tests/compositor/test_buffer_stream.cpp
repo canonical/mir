@@ -49,25 +49,33 @@ struct BufferStreamSurfaces : mc::BufferStreamSurfaces
 {
     using mc::BufferStreamSurfaces::BufferStreamSurfaces;
 
-    // Convenient function to allow tests to be written in linear style
-    void swap_client_buffers_blocking(mg::Buffer*& buffer)
+    void acquire_client_buffer_async(mg::Buffer*& buffer,
+        std::shared_ptr<mt::Signal> const& signal)
     {
-        swap_client_buffers_cancellable(buffer, std::make_shared<mt::Signal>());
+        acquire_client_buffer(
+            [signal, &buffer](mg::Buffer* new_buffer)
+            {
+               buffer = new_buffer;
+               signal->raise();
+            });
     }
 
-    void swap_client_buffers_cancellable(mg::Buffer*& buffer, std::shared_ptr<mt::Signal> const& signal)
+    // Convenient functions to allow tests to be written in linear style
+    mg::Buffer* acquire_client_buffer_blocking()
+    {
+        mg::Buffer* buffer = nullptr;
+        auto signal = std::make_shared<mt::Signal>();
+        acquire_client_buffer_async(buffer, signal);
+        signal->wait();
+        return buffer;
+    }
+
+    void swap_client_buffers_blocking(mg::Buffer*& buffer)
     {
         if (buffer)
             release_client_buffer(buffer);
 
-        acquire_client_buffer(
-            [signal, &buffer](mg::Buffer* new_buffer)
-             {
-                buffer = new_buffer;
-                signal->raise();
-             });
-
-        signal->wait();
+        buffer = acquire_client_buffer_blocking();
     }
 };
 
@@ -116,12 +124,9 @@ struct BufferStreamTest : public ::testing::Test
 
 TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 {
-    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
-
-    mg::Buffer* client1{nullptr};
-    buffer_stream.swap_client_buffers_blocking(client1);
+    mg::Buffer* client1 = buffer_stream.acquire_client_buffer_blocking();
     auto client1_id = client1->id();
-    buffer_stream.swap_client_buffers_blocking(client1);
+    buffer_stream.release_client_buffer(client1);
 
     auto comp1 = buffer_stream.lock_compositor_buffer(nullptr);
     auto comp2 = buffer_stream.lock_compositor_buffer(nullptr);
@@ -131,10 +136,14 @@ TEST_F(BufferStreamTest, gives_same_back_buffer_until_more_available)
 
     comp1.reset();
 
-    buffer_stream.swap_client_buffers_blocking(client1);
+    mg::Buffer* client2 = buffer_stream.acquire_client_buffer_blocking();
+    auto client2_id = client2->id();
+    buffer_stream.release_client_buffer(client2);
+
     auto comp3 = buffer_stream.lock_compositor_buffer(nullptr);
 
     EXPECT_NE(client1_id, comp3->id());
+    EXPECT_EQ(client2_id, comp3->id());
 
     comp2.reset();
     auto comp3_id = comp3->id();
@@ -165,16 +174,10 @@ TEST_F(BufferStreamTest, gives_all_monitors_the_same_buffer)
 
 TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
 {
-    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
-
-    mg::Buffer* client_buffer{nullptr};
-    buffer_stream.swap_client_buffers_blocking(client_buffer);
-
-    ASSERT_THAT(nbuffers, Gt(1));
-    buffer_stream.swap_client_buffers_blocking(client_buffer);
+    buffer_stream.release_client_buffer(buffer_stream.acquire_client_buffer_blocking());
     auto comp1 = buffer_stream.lock_compositor_buffer(nullptr);
 
-    buffer_stream.swap_client_buffers_blocking(client_buffer);
+    buffer_stream.release_client_buffer(buffer_stream.acquire_client_buffer_blocking());
     auto comp2 = buffer_stream.lock_compositor_buffer(nullptr);
 
     EXPECT_NE(comp1->id(), comp2->id());
@@ -185,13 +188,13 @@ TEST_F(BufferStreamTest, gives_different_back_buffer_asap)
 
 TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
 {
-    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
-
     auto old_size = buffer_stream.stream_size();
 
-    mg::Buffer* client{nullptr};
-    buffer_stream.swap_client_buffers_blocking(client);
+    mg::Buffer* client = buffer_stream.acquire_client_buffer_blocking();
     EXPECT_EQ(old_size, client->size());
+    buffer_stream.release_client_buffer(client);
+
+    buffer_stream.lock_compositor_buffer(this);
 
     geom::Size const new_size
     {
@@ -201,28 +204,28 @@ TEST_F(BufferStreamTest, resize_affects_client_buffers_immediately)
     buffer_stream.resize(new_size);
     EXPECT_EQ(new_size, buffer_stream.stream_size());
 
-    buffer_stream.swap_client_buffers_blocking(client);
+    client = buffer_stream.acquire_client_buffer_blocking();
     EXPECT_EQ(new_size, client->size());
+    buffer_stream.release_client_buffer(client);
+
+    buffer_stream.lock_compositor_buffer(this);
 
     buffer_stream.resize(old_size);
     EXPECT_EQ(old_size, buffer_stream.stream_size());
 
-    /* Release a buffer so client can acquire another */
-    auto comp = buffer_stream.lock_compositor_buffer(nullptr);
-    comp.reset();
+    buffer_stream.lock_compositor_buffer(this);
 
-    buffer_stream.swap_client_buffers_blocking(client);
+    client = buffer_stream.acquire_client_buffer_blocking();
     EXPECT_EQ(old_size, client->size());
+    buffer_stream.release_client_buffer(client);
 }
 
 TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
 {
-    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
-
     auto old_size = buffer_stream.stream_size();
 
-    mg::Buffer* client{nullptr};
-    buffer_stream.swap_client_buffers_blocking(client);
+    mg::Buffer* client = buffer_stream.acquire_client_buffer_blocking();
+    buffer_stream.release_client_buffer(client);
 
     geom::Size const new_size
     {
@@ -232,47 +235,54 @@ TEST_F(BufferStreamTest, compositor_gets_resized_buffers)
     buffer_stream.resize(new_size);
     EXPECT_EQ(new_size, buffer_stream.stream_size());
 
-    buffer_stream.swap_client_buffers_blocking(client);
-
     auto comp1 = buffer_stream.lock_compositor_buffer(nullptr);
+
+    client = buffer_stream.acquire_client_buffer_blocking();
+    buffer_stream.release_client_buffer(client);
+
     EXPECT_EQ(old_size, comp1->size());
     comp1.reset();
 
-    buffer_stream.swap_client_buffers_blocking(client);
-
     auto comp2 = buffer_stream.lock_compositor_buffer(nullptr);
+
+    client = buffer_stream.acquire_client_buffer_blocking();
+    buffer_stream.release_client_buffer(client);
+
     EXPECT_EQ(new_size, comp2->size());
     comp2.reset();
 
-    buffer_stream.swap_client_buffers_blocking(client);
-
     auto comp3 = buffer_stream.lock_compositor_buffer(nullptr);
+
+    client = buffer_stream.acquire_client_buffer_blocking();
+    buffer_stream.release_client_buffer(client);
+
     EXPECT_EQ(new_size, comp3->size());
     comp3.reset();
 
     buffer_stream.resize(old_size);
     EXPECT_EQ(old_size, buffer_stream.stream_size());
 
-    // No client frames "drawn" since resize(old_size), so compositor gets new_size
-    buffer_stream.swap_client_buffers_blocking(client);
     auto comp4 = buffer_stream.lock_compositor_buffer(nullptr);
+
+    // No client frames "drawn" since resize(old_size), so compositor gets new_size
+    client = buffer_stream.acquire_client_buffer_blocking();
+    buffer_stream.release_client_buffer(client);
     EXPECT_EQ(new_size, comp4->size());
     comp4.reset();
 
-    // Generate a new frame, which should be back to old_size now
-    buffer_stream.swap_client_buffers_blocking(client);
     auto comp5 = buffer_stream.lock_compositor_buffer(nullptr);
+
+    // Generate a new frame, which should be back to old_size now
+    client = buffer_stream.acquire_client_buffer_blocking();
+    buffer_stream.release_client_buffer(client);
     EXPECT_EQ(old_size, comp5->size());
     comp5.reset();
 }
 
 TEST_F(BufferStreamTest, can_get_partly_released_back_buffer)
 {
-    ASSERT_THAT(buffers_free_for_client(), Ge(2)); // else we will hang
-
-    mg::Buffer* client{nullptr};
-    buffer_stream.swap_client_buffers_blocking(client);
-    buffer_stream.swap_client_buffers_blocking(client);
+    mg::Buffer* client = buffer_stream.acquire_client_buffer_blocking();
+    buffer_stream.release_client_buffer(client);
 
     int a, b, c;
     auto comp1 = buffer_stream.lock_compositor_buffer(&a);

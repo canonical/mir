@@ -188,3 +188,19 @@ target_link_libraries(mir_demo_server_translucent
 install(TARGETS mir_demo_server_translucent
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+add_executable(mir_demo_standalone_render_overlays
+    render_overlays.cpp
+)
+
+target_link_libraries(mir_demo_standalone_render_overlays
+    mirserver
+    mirtestdraw
+    mircommon
+)
+
+install(TARGETS mir_demo_standalone_render_overlays
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+add_subdirectory(testdraw/)

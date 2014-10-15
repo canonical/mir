@@ -1,11 +1,26 @@
 include(CMakeDependentOption)
 
-include_directories(${CMAKE_SOURCE_DIR})
+include_directories(
+  ${CMAKE_SOURCE_DIR}
+  ${PROTOBUF_INCLUDE_DIRS}
+  ${CMAKE_CURRENT_BINARY_DIR}
+  ${PROJECT_SOURCE_DIR}/src/include/platform
+  ${PROJECT_SOURCE_DIR}/src/include/server
+  ${PROJECT_SOURCE_DIR}/src/include/client
+)
+
+protobuf_generate_cpp(
+  GENERATED_PROTOBUF_SRCS GENERATED_PROTOBUF_HDRS
+  test_protobuf.proto
+)
 
 set(
   INTEGRATION_TESTS_SRCS
   test_surface_stack_with_compositor.cpp
+  test_client_surface_swap_buffers.cpp
+  test_protobuf.cpp
   test_surfaceloop.cpp
+  test_stale_frames.cpp
   test_error_reporting.cpp
   test_exchange_buffer.cpp
   test_display_info.cpp
@@ -13,9 +28,13 @@ set(
   test_surface_first_frame_sync.cpp
   test_swapinterval.cpp
   test_server_client_types.cpp
+  test_server_shutdown.cpp
   test_session_manager.cpp
   test_session.cpp
   session_management.cpp
+  surface_composition.cpp
+  ${GENERATED_PROTOBUF_SRCS}
+  ${GENERATED_PROTOBUF_HDRS}
 )
 
 add_subdirectory(client/)
