@@ -42,7 +42,8 @@ int main(int argc, char const* argv[])
 
     // Add choice of monitor configuration
     server.add_configuration_option(
-        me::display_config_opt, me::display_config_descr,   me::clone_opt_val)(
+        me::display_config_opt, me::display_config_descr,   me::clone_opt_val);
+    server.add_configuration_option(
         me::display_alpha_opt,  me::display_alpha_descr,    me::display_alpha_off);
 
     server.wrap_display_configuration_policy(

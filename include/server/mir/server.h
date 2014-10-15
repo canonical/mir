@@ -24,7 +24,7 @@
 
 namespace mir
 {
-namespace compositor{ class Compositor; }
+namespace compositor { class Compositor; }
 namespace frontend { class SessionAuthorizer; }
 namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; }
@@ -43,8 +43,6 @@ class SurfaceCoordinator;
 class MainLoop;
 class ServerStatusListener;
 
-namespace detail { class ServerAddConfigurationOptions; }
-
 enum class OptionType
 {
     null,
@@ -59,7 +57,7 @@ public:
     Server();
 
 /** @name Essential operations
- * These are the commands used to start and stop.
+ * These are the commands used to run and stop.
  *  @{ */
     /// set the command line (this must remain valid while run() is called)
     void set_command_line(int argc, char const* argv[]);
@@ -79,35 +77,35 @@ public:
     /// Add user configuration option(s) to Mir's option handling.
     /// These will be resolved during initialisation from the command line,
     /// environment variables, a config file or the supplied default.
-    auto add_configuration_option(
+    void add_configuration_option(
         std::string const& option,
         std::string const& description,
-        int default_value) -> detail::ServerAddConfigurationOptions;
+        int default_value);
 
     /// Add user configuration option(s) to Mir's option handling.
     /// These will be resolved during initialisation from the command line,
     /// environment variables, a config file or the supplied default.
-    auto add_configuration_option(
+    void add_configuration_option(
         std::string const& option,
         std::string const& description,
-        std::string const& default_value) -> detail::ServerAddConfigurationOptions;
+        std::string const& default_value);
 
     /// Add user configuration option(s) to Mir's option handling.
     /// These will be resolved during initialisation from the command line,
     /// environment variables, a config file or the supplied default.
-    auto add_configuration_option(
+    void add_configuration_option(
         std::string const& option,
         std::string const& description,
-        OptionType type) -> detail::ServerAddConfigurationOptions;
+        OptionType type);
 
-    /// set a handler for any command line options Mir does not recognise.
+    /// Set a handler for any command line options Mir does not recognise.
     /// This will be invoked if any unrecognised options are found during initialisation.
     /// Any unrecognised arguments are passed to this function. The pointers remain valid
     /// for the duration of the call only.
-    /// If set_command_line_hander is not called the default action is to exit by
+    /// If set_command_line_handler is not called the default action is to exit by
     /// throwing mir::AbnormalExit (which will be handled by the exception handler prior to
     /// exiting run().
-    void set_command_line_hander(
+    void set_command_line_handler(
         std::function<void(int argc, char const* const* argv)> const& command_line_hander);
 
     /// Returns the configuration options.
@@ -118,7 +116,7 @@ public:
 
 /** @name Using hooks into the run() logic
  *  @{ */
-    /// add an callback to be invoked when the server has been initialized,
+    /// Add a callback to be invoked when the server has been initialized,
     /// but before it starts. This allows client code to get access Mir objects.
     /// If multiple callbacks are added they will be invoked in the sequence added.
     void add_init_callback(std::function<void()> const& init_callback);
@@ -141,10 +139,10 @@ public:
     /// \return the cursor listener.
     auto the_cursor_listener() const -> std::shared_ptr<input::CursorListener>;
 
-    /// \return the graphics display options.
+    /// \return the graphics display.
     auto the_display() const -> std::shared_ptr<graphics::Display>;
 
-    /// \return the graphics platform options.
+    /// \return the graphics platform.
     auto the_graphics_platform() const -> std::shared_ptr<graphics::Platform>;
 
     /// \return the main loop.
@@ -217,42 +215,6 @@ private:
     struct ServerConfiguration;
     struct Self;
     std::shared_ptr<Self> const self;
-};
-
-class detail::ServerAddConfigurationOptions
-{
-public:
-    // Yes, I know a single forwarding template would cover all three cases.
-    // but this can give clearer error messages.
-    auto operator()(
-        std::string const& option,
-        std::string const& description,
-        int default_value) const -> ServerAddConfigurationOptions
-    {
-        return server.add_configuration_option(option, description, default_value);
-    }
-
-    auto operator()(
-        std::string const& option,
-        std::string const& description,
-        std::string const& default_value) const -> ServerAddConfigurationOptions
-    {
-        return server.add_configuration_option(option, description, default_value);
-    }
-
-    auto operator()(
-        std::string const& option,
-        std::string const& description,
-        OptionType type) const -> ServerAddConfigurationOptions
-    {
-        return server.add_configuration_option(option, description, type);
-    }
-
-private:
-    friend class ::mir::Server;
-    ServerAddConfigurationOptions(Server& server) : server(server) {}
-
-    Server& server;
 };
 }
 #endif /* SERVER_H_ */
