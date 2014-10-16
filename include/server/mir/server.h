@@ -168,44 +168,51 @@ public:
  * Provide alternative implementations of Mir subsystems: the functors will be invoked during initialization
  * (this is only useful before initialization starts).
  *  @{ */
+
+    /// Each of the override functions takes a builder functor of the same form
+    template<typename T> using Builder = std::function<std::shared_ptr<T>()>;
+
     /// Sets an override functor for creating the compositor.
-    void override_the_compositor(std::function<std::shared_ptr<compositor::Compositor>()> const& compositor_builder);
+    void override_the_compositor(Builder<compositor::Compositor> const& compositor_builder);
 
     /// Sets an override functor for creating the cursor listener.
-    void override_the_cursor_listener(std::function<std::shared_ptr<input::CursorListener>()> const& cursor_listener_builder);
+    void override_the_cursor_listener(Builder<input::CursorListener> const& cursor_listener_builder);
 
     /// Sets an override functor for creating the gl config.
-    void override_the_gl_config(std::function<std::shared_ptr<graphics::GLConfig>()> const& gl_config_builder);
+    void override_the_gl_config(Builder<graphics::GLConfig> const& gl_config_builder);
 
     /// Sets an override functor for creating the input dispatcher.
-    void override_the_input_dispatcher(std::function<std::shared_ptr<input::InputDispatcher>()> const& input_dispatcher_builder);
+    void override_the_input_dispatcher(Builder<input::InputDispatcher> const& input_dispatcher_builder);
 
     /// Sets an override functor for creating the placement strategy.
-    void override_the_placement_strategy(std::function<std::shared_ptr<scene::PlacementStrategy>()> const& placement_strategy_builder);
+    void override_the_placement_strategy(Builder<scene::PlacementStrategy> const& placement_strategy_builder);
 
     /// Sets an override functor for creating the prompt session listener.
-    void override_the_prompt_session_listener(std::function<std::shared_ptr<scene::PromptSessionListener>()> const& prompt_session_listener_builder);
+    void override_the_prompt_session_listener(Builder<scene::PromptSessionListener> const& prompt_session_listener_builder);
 
     /// Sets an override functor for creating the status listener.
-    void override_the_server_status_listener(std::function<std::shared_ptr<ServerStatusListener>()> const& server_status_listener_builder);
+    void override_the_server_status_listener(Builder<ServerStatusListener> const& server_status_listener_builder);
 
     /// Sets an override functor for creating the session authorizer.
-    void override_the_session_authorizer(std::function<std::shared_ptr<frontend::SessionAuthorizer>()> const& session_authorizer_builder);
+    void override_the_session_authorizer(Builder<frontend::SessionAuthorizer> const& session_authorizer_builder);
 
     /// Sets an override functor for creating the session listener.
-    void override_the_session_listener(std::function<std::shared_ptr<scene::SessionListener>()> const& session_listener_builder);
+    void override_the_session_listener(Builder<scene::SessionListener> const& session_listener_builder);
 
     /// Sets an override functor for creating the shell focus setter.
-    void override_the_shell_focus_setter(std::function<std::shared_ptr<shell::FocusSetter>()> const& focus_setter_builder);
+    void override_the_shell_focus_setter(Builder<shell::FocusSetter> const& focus_setter_builder);
 
     /// Sets an override functor for creating the surface configurator.
-    void override_the_surface_configurator(std::function<std::shared_ptr<scene::SurfaceConfigurator>()> const& surface_configurator_builder);
+    void override_the_surface_configurator(Builder<scene::SurfaceConfigurator> const& surface_configurator_builder);
+
+    /// Each of the wrap functions takes a wrapper functor of the same form
+    template<typename T> using Wrapper = std::function<std::shared_ptr<T>(std::shared_ptr<T> const&)>;
 
     /// Sets a wrapper functor for creating the session coordinator.
-    void wrap_session_coordinator(std::function<std::shared_ptr<scene::SessionCoordinator>(std::shared_ptr<scene::SessionCoordinator> const& wrapped)> const& wrapper);
+    void wrap_session_coordinator(Wrapper<scene::SessionCoordinator> const& wrapper);
 
     /// Sets a wrapper functor for creating the surface coordinator.
-    void wrap_surface_coordinator(std::function<std::shared_ptr<scene::SurfaceCoordinator>(std::shared_ptr<scene::SurfaceCoordinator> const& wrapped)> const& wrapper);
+    void wrap_surface_coordinator(Wrapper<scene::SurfaceCoordinator> const& wrapper);
 /** @} */
 
 private:
