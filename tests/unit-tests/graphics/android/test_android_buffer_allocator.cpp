@@ -48,7 +48,7 @@ TEST_F(AndroidGraphicBufferAllocatorTest, allocator_accesses_gralloc_module)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::AndroidGraphicBufferAllocator allocator();
+    mga::AndroidGraphicBufferAllocator allocator{};
 }
 
 TEST_F(AndroidGraphicBufferAllocatorTest, supported_pixel_formats_contain_common_formats)
