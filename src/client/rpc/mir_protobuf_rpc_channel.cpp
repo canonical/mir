@@ -159,16 +159,6 @@ void mclr::MirProtobufRpcChannel::CallMethod(
     google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
-    auto const& invocation = invocation_for(method, parameters);
-
-    rpc_report->invocation_requested(invocation);
-
-    std::shared_ptr<google::protobuf::Closure> callback(
-        google::protobuf::NewPermanentCallback(this, &MirProtobufRpcChannel::receive_file_descriptors, response, complete));
-
-    // Only save details after serialization succeeds
-    pending_calls.save_completion_details(invocation, response, callback);
-
     // Only send message when details saved for handling response
     std::vector<mir::Fd> fds;
     if (parameters->GetTypeName() == "mir.protobuf.BufferRequest")
@@ -177,6 +167,16 @@ void mclr::MirProtobufRpcChannel::CallMethod(
         for(auto& fd : buffer->buffer().fd())
             fds.emplace_back(mir::Fd{IntOwnedFd{fd}});
     }
+
+    auto const& invocation = invocation_for(method, parameters, fds.size());
+
+    rpc_report->invocation_requested(invocation);
+
+    std::shared_ptr<google::protobuf::Closure> callback(
+        google::protobuf::NewPermanentCallback(this, &MirProtobufRpcChannel::receive_file_descriptors, response, complete));
+
+    // Only save details after serialization succeeds
+    pending_calls.save_completion_details(invocation, response, callback);
 
     send_message(invocation, invocation, fds);
 }

@@ -29,7 +29,6 @@
 #include <string.h>
 
 #include <stdexcept>
-#include <fcntl.h>
 
 namespace mf = mir::frontend;
 namespace mfd = mf::detail;

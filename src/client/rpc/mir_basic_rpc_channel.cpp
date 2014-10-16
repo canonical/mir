@@ -105,7 +105,8 @@ mclr::MirBasicRpcChannel::~MirBasicRpcChannel()
 
 mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     google::protobuf::MethodDescriptor const* method,
-    google::protobuf::Message const* request)
+    google::protobuf::Message const* request,
+    size_t num_side_channel_fds)
 {
     mir::VariableLengthArray<mir::frontend::serialization_buffer_size>
         buffer{static_cast<size_t>(request->ByteSize())};
@@ -118,16 +119,7 @@ mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     invoke.set_method_name(method->name());
     invoke.set_parameters(buffer.data(), buffer.size());
     invoke.set_protocol_version(1);
-
-    if (request->GetTypeName() == "mir.protobuf.BufferRequest")
-    {
-        auto const* buffer = reinterpret_cast<mir::protobuf::BufferRequest const*>(request);
-        invoke.set_side_channel_fds(buffer->buffer().fd().size());
-    }
-    else
-    {
-        invoke.clear_side_channel_fds();
-    }
+    invoke.set_side_channel_fds(num_side_channel_fds);
 
     return invoke;
 }

@@ -85,6 +85,7 @@ void invoke(
     RequestType* request)
 {
     auto const result_message = std::make_shared<protobuf::Buffer>();
+
     auto const callback =
         google::protobuf::NewCallback<
             ProtobufMessageProcessor,
