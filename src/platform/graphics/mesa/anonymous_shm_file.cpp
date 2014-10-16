@@ -37,29 +37,38 @@ namespace
 
 mir::Fd create_anonymous_file(size_t size)
 {
-    char const* const tmpl = "/mir-buffer-XXXXXX";
-    char const* const runtime_dir = getenv("XDG_RUNTIME_DIR");
-    bool runtime_dir_valid = false;
+    int raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
 
-    if (runtime_dir)
+    if (raw_fd < 0)
     {
-        boost::system::error_code ec;
-        boost::filesystem::path p(runtime_dir);
-        runtime_dir_valid = boost::filesystem::is_directory(p, ec);
+        /* No O_TMPFILE support in the kernel. Fallback to the old way. */
+        char const* const tmpl = "/mir-buffer-XXXXXX";
+        char const* const runtime_dir = getenv("XDG_RUNTIME_DIR");
+        bool runtime_dir_valid = false;
+
+        if (runtime_dir)
+        {
+            boost::system::error_code ec;
+            boost::filesystem::path p(runtime_dir);
+            runtime_dir_valid = boost::filesystem::is_directory(p, ec);
+        }
+
+        char const* const target_dir = (runtime_dir_valid ? runtime_dir : "/tmp");
+
+        /* We need a mutable array for mkostemp */
+        std::vector<char> path(target_dir, target_dir + strlen(target_dir));
+        path.insert(path.end(), tmpl, tmpl + strlen(tmpl));
+        path.push_back('\0');
+
+        raw_fd = mkostemp(path.data(), O_CLOEXEC);
+        if (unlink(path.data()) < 0)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to unlink temporary file"));
     }
 
-    char const* const target_dir = (runtime_dir_valid ? runtime_dir : "/tmp");
-
-    /* We need a mutable array for mkostemp */
-    std::vector<char> path(target_dir, target_dir + strlen(target_dir));
-    path.insert(path.end(), tmpl, tmpl + strlen(tmpl));
-    path.push_back('\0');
-
-    mir::Fd fd{mkostemp(path.data(), O_CLOEXEC)};
-    if (unlink(path.data()) < 0)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to unlink temporary file"));
-    if (ftruncate(fd, size) < 0)
+    if (ftruncate(raw_fd, size) < 0)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to resize temporary file"));
+
+    mir::Fd fd{raw_fd};
 
     return fd;
 }

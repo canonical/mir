@@ -30,6 +30,7 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <sys/inotify.h>
+#include <fcntl.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -178,66 +179,99 @@ private:
     int const watch_fd;
 };
 
+bool kernel_supports_O_TMPFILE()
+{
+    int raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
+    if (raw_fd < 0)
+        return false;
+    else
+    {
+        close(raw_fd);
+        return true;
+    }
+}
+
+}
+
+TEST(AnonymousShmFile, is_created)
+{
+    size_t const file_size{100};
+
+    mgm::AnonymousShmFile shm_file{file_size};
+
+    EXPECT_GE(shm_file.fd(), 0);
 }
 
 TEST(AnonymousShmFile, is_created_and_deleted_in_xdg_runtime_dir)
 {
     using namespace testing;
 
-    TemporaryDirectory const temp_dir;
-    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
-    PathWatcher const path_watcher{temp_dir.path()};
-    size_t const file_size{100};
+    if (!kernel_supports_O_TMPFILE())
+    {
+        TemporaryDirectory const temp_dir;
+        TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
+        PathWatcher const path_watcher{temp_dir.path()};
+        size_t const file_size{100};
 
-    InSequence s;
-    EXPECT_CALL(path_watcher, file_created(StartsWith("mir-buffer-")));
-    EXPECT_CALL(path_watcher, file_deleted(StartsWith("mir-buffer-")));
+        InSequence s;
+        EXPECT_CALL(path_watcher, file_created(StartsWith("mir-buffer-")));
+        EXPECT_CALL(path_watcher, file_deleted(StartsWith("mir-buffer-")));
 
-    mgm::AnonymousShmFile shm_file{file_size};
+        mgm::AnonymousShmFile shm_file{file_size};
 
-    path_watcher.process_events();
+        path_watcher.process_events();
+    }
 }
 
 TEST(AnonymousShmFile, is_created_and_deleted_in_tmp_dir)
 {
     using namespace testing;
 
-    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", nullptr};
-    PathWatcher const path_watcher{"/tmp"};
-    size_t const file_size{100};
+    if (!kernel_supports_O_TMPFILE())
+    {
+        TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", nullptr};
+        PathWatcher const path_watcher{"/tmp"};
+        size_t const file_size{100};
 
-    InSequence s;
-    EXPECT_CALL(path_watcher, file_created(StartsWith("mir-buffer-")));
-    EXPECT_CALL(path_watcher, file_deleted(StartsWith("mir-buffer-")));
+        InSequence s;
+        EXPECT_CALL(path_watcher, file_created(StartsWith("mir-buffer-")));
+        EXPECT_CALL(path_watcher, file_deleted(StartsWith("mir-buffer-")));
 
-    mgm::AnonymousShmFile shm_file{file_size};
+        mgm::AnonymousShmFile shm_file{file_size};
 
-    path_watcher.process_events();
+        path_watcher.process_events();
+    }
 }
 
 TEST(AnonymousShmFile, is_created_and_deleted_in_tmp_dir_with_nonexistent_xdg_runtime_dir)
 {
     using namespace testing;
 
-    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", "/non-existent-dir"};
-    PathWatcher const path_watcher{"/tmp"};
-    size_t const file_size{100};
+    if (!kernel_supports_O_TMPFILE())
+    {
+        TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", "/non-existent-dir"};
+        PathWatcher const path_watcher{"/tmp"};
+        size_t const file_size{100};
 
-    InSequence s;
-    EXPECT_CALL(path_watcher, file_created(StartsWith("mir-buffer-")));
-    EXPECT_CALL(path_watcher, file_deleted(StartsWith("mir-buffer-")));
+        InSequence s;
+        EXPECT_CALL(path_watcher, file_created(StartsWith("mir-buffer-")));
+        EXPECT_CALL(path_watcher, file_deleted(StartsWith("mir-buffer-")));
 
-    mgm::AnonymousShmFile shm_file{file_size};
+        mgm::AnonymousShmFile shm_file{file_size};
 
-    path_watcher.process_events();
+        path_watcher.process_events();
+    }
 }
 
 TEST(AnonymousShmFile, has_correct_size)
 {
     using namespace testing;
 
-    TemporaryDirectory const temp_dir;
-    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
+    if (!kernel_supports_O_TMPFILE())
+    {
+        TemporaryDirectory const temp_dir;
+        TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
+    }
     size_t const file_size{100};
 
     mgm::AnonymousShmFile shm_file{file_size};
@@ -252,8 +286,11 @@ TEST(AnonymousShmFile, writing_to_base_ptr_writes_to_file)
 {
     using namespace testing;
 
-    TemporaryDirectory const temp_dir;
-    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
+    if (!kernel_supports_O_TMPFILE())
+    {
+        TemporaryDirectory const temp_dir;
+        TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
+    }
     size_t const file_size{100};
 
     mgm::AnonymousShmFile shm_file{file_size};
