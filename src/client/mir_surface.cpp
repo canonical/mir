@@ -172,8 +172,9 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * con
     std::unique_lock<decltype(mutex)> lock(mutex);
     release_cpu_region();
 
+    //TODO: we have extract the per-message information from the buffer
     *buffer_request.mutable_id() = surface.id();
-    *buffer_request.mutable_buffer() = surface.buffer();
+    buffer_request.mutable_buffer()->set_buffer_id(surface.buffer().buffer_id());
     perf_report->end_frame(surface.buffer().buffer_id());
     lock.unlock();
 
@@ -304,26 +305,25 @@ void MirSurface::populate(MirBufferPackage& buffer_package)
 {
     if (!surface.has_error() && surface.has_buffer())
     {
-        auto buffer = surface.mutable_buffer();
+        auto const& buffer = surface.buffer();
 
-        buffer_package.data_items = buffer->data_size();
-        for (int i = 0; i != buffer->data_size(); ++i)
+        buffer_package.data_items = buffer.data_size();
+        for (int i = 0; i != buffer.data_size(); ++i)
         {
-            buffer_package.data[i] = buffer->data(i);
+            buffer_package.data[i] = buffer.data(i);
         }
 
-        buffer_package.fd_items = buffer->fd_size();
+        buffer_package.fd_items = buffer.fd_size();
 
-        for (int i = 0; i != buffer->fd_size(); ++i)
+        for (int i = 0; i != buffer.fd_size(); ++i)
         {
-            buffer_package.fd[i] = buffer->fd(i);
+            buffer_package.fd[i] = buffer.fd(i);
         }
-        buffer->clear_fd();
 
-        buffer_package.stride = buffer->stride();
-        buffer_package.flags = buffer->flags();
-        buffer_package.width = buffer->width();
-        buffer_package.height = buffer->height();
+        buffer_package.stride = buffer.stride();
+        buffer_package.flags = buffer.flags();
+        buffer_package.width = buffer.width();
+        buffer_package.height = buffer.height();
     }
     else
     {
