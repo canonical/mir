@@ -71,9 +71,7 @@ namespace me = mir::examples;
 ///\section RenderSurfacesServerConfiguration RenderSurfacesServerConfiguration
 /// The configuration stubs out client connectivity and input.
 /// \snippet render_surfaces.cpp RenderSurfacesServerConfiguration_stubs_tag
-/// it also provides a bespoke buffer initializer
-/// \snippet render_surfaces.cpp RenderResourcesBufferInitializer_tag
-/// and a bespoke display buffer compositor
+/// it also provides a bespoke display buffer compositor
 /// \snippet render_surfaces.cpp RenderSurfacesDisplayBufferCompositor_tag
 ///\section Utilities Utility classes
 /// For smooth animation we need to track time and move surfaces accordingly

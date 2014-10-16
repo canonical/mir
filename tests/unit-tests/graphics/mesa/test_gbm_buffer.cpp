@@ -25,7 +25,6 @@
 
 #include "src/platform/graphics/mesa/gbm_buffer.h"
 #include "src/platform/graphics/mesa/buffer_allocator.h"
-#include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir_test_doubles/platform_factory.h"
 
@@ -71,9 +70,8 @@ protected:
         .WillByDefault(Return(stride.as_uint32_t()));
 
         platform = mtd::create_mesa_platform_with_null_dependencies();
-        null_init = std::make_shared<mg::NullBufferInitializer>();
 
-        allocator.reset(new mgm::BufferAllocator(platform->gbm.device, null_init, mgm::BypassOption::allowed));
+        allocator.reset(new mgm::BufferAllocator(platform->gbm.device, mgm::BypassOption::allowed));
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
@@ -81,7 +79,6 @@ protected:
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL>  mock_gl;
     std::shared_ptr<mgm::Platform> platform;
-    std::shared_ptr<mg::NullBufferInitializer> null_init;
     std::unique_ptr<mgm::BufferAllocator> allocator;
 
     // Defaults

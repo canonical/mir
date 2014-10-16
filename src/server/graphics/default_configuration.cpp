@@ -25,7 +25,6 @@
 #include "nested/nested_platform.h"
 #include "offscreen/display.h"
 
-#include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/cursor.h"
 #include "program_factory.h"
@@ -42,16 +41,6 @@
 #include <map>
 
 namespace mg = mir::graphics;
-
-std::shared_ptr<mg::BufferInitializer>
-mir::DefaultServerConfiguration::the_buffer_initializer()
-{
-    return buffer_initializer(
-        []()
-        {
-             return std::make_shared<mg::NullBufferInitializer>();
-        });
-}
 
 std::shared_ptr<mg::DisplayConfigurationPolicy>
 mir::DefaultServerConfiguration::the_display_configuration_policy()
@@ -102,7 +91,7 @@ mir::DefaultServerConfiguration::the_buffer_allocator()
     return buffer_allocator(
         [&]()
         {
-            return the_graphics_platform()->create_buffer_allocator(the_buffer_initializer());
+            return the_graphics_platform()->create_buffer_allocator();
         });
 }
 

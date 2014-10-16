@@ -140,8 +140,7 @@ private:
 class StubPlatform : public mtd::NullPlatform
 {
 public:
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
-            std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
     {
         return std::make_shared<mtd::StubBufferAllocator>();
     }

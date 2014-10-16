@@ -53,11 +53,9 @@ mgm::NativePlatform::~NativePlatform()
     finish_internal_native_display();
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator(
-        std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
+std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator()
 {
-    return std::make_shared<mgm::BufferAllocator>(
-        gbm.device, buffer_initializer, mgm::BypassOption::prohibited);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::connection_ipc_package()
