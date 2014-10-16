@@ -209,7 +209,7 @@ public:
     template<typename T> using Wrapper = std::function<std::shared_ptr<T>(std::shared_ptr<T> const&)>;
 
     /// Sets a wrapper functor for creating the display configuration policy.
-    void wrap_display_configuration_policy(std::function<std::shared_ptr<graphics::DisplayConfigurationPolicy>(std::shared_ptr<graphics::DisplayConfigurationPolicy> const& wrapped)> const& wrapper);
+    void wrap_display_configuration_policy(Wrapper<graphics::DisplayConfigurationPolicy> const& wrapper);
 
     /// Sets a wrapper functor for creating the session coordinator.
     void wrap_session_coordinator(Wrapper<scene::SessionCoordinator> const& wrapper);
