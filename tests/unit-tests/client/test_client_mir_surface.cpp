@@ -224,9 +224,8 @@ struct MockClientBufferFactory : public mcl::ClientBufferFactory
 
     static void close_package_fds(std::shared_ptr<MirBufferPackage> const& package)
     {
-        (void) package;
-//        for (int i = 0; i < package->fd_items; i++)
-//            close(package->fd[i]);
+        for (int i = 0; i < package->fd_items; i++)
+            close(package->fd[i]);
     }
 
     MOCK_METHOD3(create_buffer,
