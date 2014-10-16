@@ -184,8 +184,7 @@ public:
     {
     }
 
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
-        const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
     {
         return std::make_shared<StubGraphicBufferAllocator>();
     }

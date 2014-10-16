@@ -42,8 +42,7 @@ public:
         std::shared_ptr<NativePlatform> const& native_platform);
 
     ~NestedPlatform() noexcept;
-    std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
-            std::shared_ptr<BufferInitializer> const& buffer_initializer) override;
+    std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() override;
     std::shared_ptr<Display> create_display(
             std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
             std::shared_ptr<GLProgramFactory> const& gl_program_factory,

@@ -169,7 +169,7 @@ try
 
     auto platform = conf.the_graphics_platform();
     auto display = conf.the_display();
-    auto buffer_allocator = platform->create_buffer_allocator(conf.the_buffer_initializer());
+    auto buffer_allocator = platform->create_buffer_allocator();
 
      mg::BufferProperties buffer_properties{
         geom::Size{512, 512},

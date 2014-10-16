@@ -209,7 +209,7 @@ class MockPlatform : public mg::Platform
     MockPlatform(std::shared_ptr<mg::PlatformIpcOperations> const& ipc_ops)
     {
         using namespace testing;
-        ON_CALL(*this, create_buffer_allocator(_))
+        ON_CALL(*this, create_buffer_allocator())
             .WillByDefault(Return(std::shared_ptr<mg::GraphicBufferAllocator>()));
         ON_CALL(*this, create_display(_,_,_))
             .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
@@ -219,7 +219,7 @@ class MockPlatform : public mg::Platform
             .WillByDefault(Return(ipc_ops));
     }
 
-    MOCK_METHOD1(create_buffer_allocator, std::shared_ptr<mg::GraphicBufferAllocator>(std::shared_ptr<mg::BufferInitializer> const&));
+    MOCK_METHOD0(create_buffer_allocator, std::shared_ptr<mg::GraphicBufferAllocator>());
     MOCK_METHOD3(create_display,
                  std::shared_ptr<mg::Display>(
                      std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
