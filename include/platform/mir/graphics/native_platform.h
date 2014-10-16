@@ -32,11 +32,11 @@ class Option;
 namespace graphics
 {
 class GraphicBufferAllocator;
-class BufferInitializer;
 class PlatformIPCPackage;
 class InternalClient;
 class BufferIpcMessage;
 class Buffer;
+class BufferWriter;
 class DisplayReport;
 class NestedContext;
 
@@ -47,10 +47,9 @@ public:
 
     virtual void initialize(std::shared_ptr<NestedContext> const& nested_context) = 0;
 
-    virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
-        std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
+    virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() = 0;
 
-    virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
+    virtual std::shared_ptr<PlatformIPCPackage> connection_ipc_package() = 0;
 
     virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
 
@@ -58,6 +57,8 @@ public:
         BufferIpcMessage* message,
         Buffer const* buffer,
         BufferIpcMsgType msg_type) const = 0;
+
+    virtual std::shared_ptr<BufferWriter> make_buffer_writer() = 0;
 
     virtual ~NativePlatform() = default;
     NativePlatform(NativePlatform const&) = delete;

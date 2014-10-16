@@ -52,15 +52,15 @@ public:
     ~Platform();
 
     /* From Platform */
-    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<BufferInitializer>& buffer_initializer);
+    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator();
+    std::shared_ptr<graphics::BufferWriter> make_buffer_writer();
     std::shared_ptr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLProgramFactory> const& program_factory,
         std::shared_ptr<GLConfig> const& gl_config);
     std::shared_ptr<InternalClient> create_internal_client();
 
-    std::shared_ptr<PlatformIpcOperations> create_ipc_operations() const override;
+    std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
 
     EGLNativeDisplayType egl_native_display() const;
 

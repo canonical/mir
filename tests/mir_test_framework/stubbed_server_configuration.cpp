@@ -22,6 +22,7 @@
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/buffer_ipc_message.h"
+#include "mir/graphics/buffer_writer.h"
 #include "mir/graphics/cursor.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
@@ -40,10 +41,11 @@
 
 #include "mir/compositor/renderer.h"
 #include "mir/compositor/renderer_factory.h"
-#include "src/server/input/null_input_configuration.h"
+#include "src/server/input/null_input_manager.h"
 #include "src/server/input/null_input_dispatcher.h"
 #include "src/server/input/null_input_targeter.h"
 
+#include <system_error>
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -73,7 +75,7 @@ public:
         if (fd < 0)
             BOOST_THROW_EXCEPTION(
                 boost::enable_error_info(
-                    std::runtime_error("Failed to open dummy fd")) << boost::errinfo_errno(errno));
+                    std::system_error(errno, std::system_category(), "Failed to open dummy fd")));
     }
 
     std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
@@ -168,7 +170,7 @@ class StubIpcOps : public mg::PlatformIpcOperations
     {
     }
 
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package() override
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
         return std::make_shared<mg::PlatformIPCPackage>();
     }
@@ -182,13 +184,12 @@ public:
     {
     }
 
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
-        const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
     {
         return std::make_shared<StubGraphicBufferAllocator>();
     }
 
-    std::shared_ptr<mg::PlatformIpcOperations> create_ipc_operations() const override
+    std::shared_ptr<mg::PlatformIpcOperations> make_ipc_operations() const override
     {
         return std::make_shared<StubIpcOps>();
     }
@@ -199,6 +200,18 @@ public:
         std::shared_ptr<mg::GLConfig> const&) override
     {
         return std::make_shared<mtd::StubDisplay>(display_rects);
+    }
+    
+    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
+    {
+        struct NullWriter : mg::BufferWriter 
+        {
+            void write(mg::Buffer& /* buffer */, 
+                unsigned char const* /* data */, size_t /* size */) override
+            {
+            }
+        };
+        return std::make_shared<NullWriter>();
     }
     
     std::vector<geom::Rectangle> const display_rects;
@@ -262,14 +275,14 @@ std::shared_ptr<mc::RendererFactory> mtf::StubbedServerConfiguration::the_render
             });
 }
 
-std::shared_ptr<mi::InputConfiguration> mtf::StubbedServerConfiguration::the_input_configuration()
+std::shared_ptr<mi::InputManager> mtf::StubbedServerConfiguration::the_input_manager()
 {
     auto options = the_options();
 
     if (options->get<bool>("tests-use-real-input"))
-        return DefaultServerConfiguration::the_input_configuration();
+        return DefaultServerConfiguration::the_input_manager();
     else
-        return std::make_shared<mi::NullInputConfiguration>();
+        return std::make_shared<mi::NullInputManager>();
 }
 
 std::shared_ptr<msh::InputTargeter> mtf::StubbedServerConfiguration::the_input_targeter()

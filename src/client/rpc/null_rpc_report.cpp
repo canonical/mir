@@ -81,7 +81,7 @@ void mclr::NullRpcReport::result_processing_failed(
 
 void mclr::NullRpcReport::file_descriptors_received(
     google::protobuf::Message const& /*response*/,
-    std::vector<int32_t> const& /*fds*/)
+    std::vector<mir::Fd> const& /*fds*/)
 {
 }
 

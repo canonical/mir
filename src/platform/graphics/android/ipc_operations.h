@@ -32,7 +32,7 @@ class IpcOperations : public PlatformIpcOperations
 public:
     void pack_buffer(BufferIpcMessage&, Buffer const&, BufferIpcMsgType) const override;
     void unpack_buffer(BufferIpcMessage&, Buffer const&) const override;
-    std::shared_ptr<PlatformIPCPackage> get_ipc_package() override;
+    std::shared_ptr<PlatformIPCPackage> connection_ipc_package() override;
 };
 }
 }

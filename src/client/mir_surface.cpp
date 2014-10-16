@@ -24,6 +24,8 @@
 #include "mir_connection.h"
 #include "mir/input/input_receiver_thread.h"
 #include "mir/input/input_platform.h"
+#include "perf_report.h"
+#include "logging/perf_report.h"
 
 #include <cassert>
 #include <unistd.h>
@@ -54,6 +56,18 @@ MirSurface::MirSurface(
       buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
       input_platform(input_platform)
 {
+    const char* report_target = getenv("MIR_CLIENT_PERF_REPORT");
+    if (report_target && !strcmp(report_target, "log"))
+    {
+        auto& logger = connection->the_logger();
+        perf_report = std::make_shared<mir::client::logging::PerfReport>(logger);
+    }
+    else
+    {
+        perf_report = std::make_shared<mir::client::NullPerfReport>();
+    }
+    perf_report->name_surface(params.name);
+
     for (int i = 0; i < mir_surface_attribs; i++)
         attrib_cache[i] = -1;
 
@@ -157,15 +171,17 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * con
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
     release_cpu_region();
-    auto const id = &surface.id();
-    auto const mutable_buffer = surface.mutable_buffer();
+
+    *buffer_request.mutable_id() = surface.id();
+    *buffer_request.mutable_buffer() = surface.buffer();
+    perf_report->end_frame(surface.buffer().buffer_id());
     lock.unlock();
 
     next_buffer_wait_handle.expect_result();
-    server.next_buffer(
+    server.exchange_buffer(
         0,
-        id,
-        mutable_buffer,
+        &buffer_request,
+        surface.mutable_buffer(),
         google::protobuf::NewCallback(this, &MirSurface::new_buffer, callback, context));
 
     return &next_buffer_wait_handle;
@@ -209,6 +225,7 @@ void MirSurface::process_incoming_buffer()
         buffer_depository->deposit_package(std::move(ipc_package),
                                            buffer.buffer_id(),
                                            surface_size, surface_pf);
+        perf_report->begin_frame(buffer.buffer_id());
     }
     catch (const std::runtime_error& err)
     {

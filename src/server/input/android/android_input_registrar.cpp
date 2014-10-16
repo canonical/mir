@@ -123,3 +123,7 @@ void mia::InputRegistrar::SceneObserver::surface_removed(ms::Surface* surface)
 {
     remove(surface);
 }
+
+void mia::InputRegistrar::SceneObserver::scene_changed()
+{
+}

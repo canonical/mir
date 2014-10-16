@@ -43,12 +43,11 @@ public:
      * the frontend from server to client. This should be called every
      * time a buffer is to be sent cross-process.
      *
-     * The Buffer IPC message will be sent to clients when receiving a buffer.
-     * The implementation must use the provided packer object to perform the packing.
+     * Pack the platform specific contents of Buffer into BufferIpcMessage for sending to the client
      *
      * \param [in] message   the message that will be sent
      * \param [in] buffer    the buffer to be put in the message
-     * \param [in] ipc_type what sort of ipc message is needed
+     * \param [in] ipc_type  what sort of ipc message is needed
      */
     virtual void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const = 0;
 
@@ -67,10 +66,10 @@ public:
      *
      * The IPC package will be sent to clients when they connect.
      */
-    virtual std::shared_ptr<PlatformIPCPackage> get_ipc_package() = 0;
+    virtual std::shared_ptr<PlatformIPCPackage> connection_ipc_package() = 0;
 
 protected:
-    PlatformIpcOperations() {}
+    PlatformIpcOperations() = default;
     PlatformIpcOperations(PlatformIpcOperations const&) = delete;
     PlatformIpcOperations& operator=(PlatformIpcOperations const&) = delete;
 

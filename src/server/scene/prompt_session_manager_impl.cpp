@@ -109,6 +109,19 @@ std::shared_ptr<ms::PromptSession> ms::PromptSessionManagerImpl::start_prompt_se
     PromptSessionCreationParameters const& params) const
 {
     auto prompt_session = std::make_shared<PromptSession>();
+    std::shared_ptr<Session> application_session;
+
+    app_container->for_each(
+    [&](std::shared_ptr<Session> const& session)
+    {
+        if (session->process_id() == params.application_pid)
+        {
+            application_session = session;
+        }
+    });
+
+    if (!application_session)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Could not identify application session"));
 
     std::lock_guard<std::mutex> lock(prompt_sessions_mutex);
 
@@ -119,14 +132,7 @@ std::shared_ptr<ms::PromptSession> ms::PromptSessionManagerImpl::start_prompt_se
     session->start_prompt_session();
     prompt_session_listener->starting(prompt_session);
 
-    app_container->for_each(
-    [&](std::shared_ptr<Session> const& session)
-    {
-        if (session->process_id() == params.application_pid)
-        {
-            prompt_session_container->insert_participant(prompt_session.get(), session, PromptSessionContainer::ParticipantType::application);
-        }
-    });
+    prompt_session_container->insert_participant(prompt_session.get(), application_session, PromptSessionContainer::ParticipantType::application);
 
     return prompt_session;
 }

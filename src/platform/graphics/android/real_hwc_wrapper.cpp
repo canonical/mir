@@ -17,6 +17,7 @@
  */
 
 #include "real_hwc_wrapper.h"
+#include "hwc_common_device.h"
 #include "hwc_logger.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -61,9 +62,10 @@ void mga::RealHwcWrapper::set(hwc_display_contents_1_t& display_list) const
     }
 }
 
-void mga::RealHwcWrapper::register_hooks(hwc_procs_t* callbacks) const
+void mga::RealHwcWrapper::register_hooks(std::shared_ptr<HWCCallbacks> const& callbacks)
 {
-    hwc_device->registerProcs(hwc_device.get(), callbacks);
+    hwc_device->registerProcs(hwc_device.get(), reinterpret_cast<hwc_procs_t*>(callbacks.get()));
+    registered_callbacks = callbacks;
 }
 
 void mga::RealHwcWrapper::vsync_signal_on() const

@@ -44,7 +44,6 @@ namespace graphics
 {
 class Buffer;
 class Display;
-class BufferInitializer;
 class InternalClient;
 class DisplayReport;
 class DisplayConfigurationPolicy;
@@ -52,6 +51,7 @@ class GraphicBufferAllocator;
 class GLConfig;
 class GLProgramFactory;
 class PlatformIpcOperations;
+class BufferWriter;
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -74,12 +74,10 @@ public:
 
     /**
      * Creates the buffer allocator subsystem.
-     *
-     * \param [in] buffer_initializer the object responsible for initializing the buffers
      */
-
-    virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
-        std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
+    virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() = 0;
+    
+    virtual std::shared_ptr<BufferWriter> make_buffer_writer() = 0;
 
     /**
      * Creates the display subsystem.
@@ -93,7 +91,7 @@ public:
      * Creates an object capable of doing platform specific processing of buffers
      * before they are sent or after they are recieved accross IPC
      */
-    virtual std::shared_ptr<PlatformIpcOperations> create_ipc_operations() const = 0;
+    virtual std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const = 0;
 
     /**
      * Creates the in-process client support object.

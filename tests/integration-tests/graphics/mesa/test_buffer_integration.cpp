@@ -19,7 +19,6 @@
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer_properties.h"
-#include "mir/graphics/buffer_initializer.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir_test_doubles/stub_buffer.h"
@@ -85,8 +84,7 @@ class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
 class StubGraphicPlatform : public mtd::NullPlatform
 {
 public:
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
-        const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
     {
         return std::make_shared<StubGraphicBufferAllocator>();
     }
@@ -116,8 +114,7 @@ protected:
             conf_policy,
             std::make_shared<mtd::StubGLProgramFactory>(),
             std::make_shared<mtd::StubGLConfig>());
-        auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-        allocator = platform->create_buffer_allocator(buffer_initializer);
+        allocator = platform->create_buffer_allocator();
         size = geom::Size{100, 100};
         pf = mir_pixel_format_abgr_8888;
         usage = mg::BufferUsage::hardware;

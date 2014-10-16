@@ -43,10 +43,12 @@ public:
     SessionCredentials client_creds() override;
 
 private:
+    void set_passcred(int opt);
     void update_session_creds();
     SessionCredentials creator_creds() const;
 
     std::shared_ptr<boost::asio::local::stream_protocol::socket> socket;
+    mir::Fd socket_fd;
 
     std::mutex message_lock;
     SessionCredentials session_creds{0, 0, 0};

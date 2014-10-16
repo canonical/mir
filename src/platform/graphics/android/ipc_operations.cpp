@@ -43,14 +43,13 @@ void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer
     if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
         auto buffer_handle = native_buffer->handle();
-
         int offset = 0;
 
-        for(auto i=0; i<buffer_handle->numFds; i++)
+        for(auto i = 0; i < buffer_handle->numFds; i++)
         {
             msg.pack_fd(mir::Fd(IntOwnedFd{buffer_handle->data[offset++]}));
         }
-        for(auto i=0; i<buffer_handle->numInts; i++)
+        for(auto i = 0; i < buffer_handle->numInts; i++)
         {
             msg.pack_data(buffer_handle->data[offset++]);
         }
@@ -64,7 +63,7 @@ void mga::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 {
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mga::IpcOperations::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mga::IpcOperations::connection_ipc_package()
 {
     return std::make_shared<mg::PlatformIPCPackage>();
 }

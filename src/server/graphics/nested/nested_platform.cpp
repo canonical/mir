@@ -74,10 +74,14 @@ mgn::NestedPlatform::~NestedPlatform() noexcept
 {
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_allocator(
-        std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
+std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_allocator()
 {
-    return native_platform->create_buffer_allocator(buffer_initializer);
+    return native_platform->create_buffer_allocator();
+}
+
+std::shared_ptr<mg::BufferWriter> mgn::NestedPlatform::make_buffer_writer()
+{
+    return native_platform->make_buffer_writer();
 }
 
 std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(
@@ -86,7 +90,7 @@ std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(
     std::shared_ptr<mg::GLConfig> const& gl_config)
 {
     return std::make_shared<mgn::NestedDisplay>(
-        connection, dispatcher, display_report, conf_policy, gl_config);
+        shared_from_this(), connection, dispatcher, display_report, conf_policy, gl_config);
 }
 
 std::shared_ptr<mg::InternalClient> mgn::NestedPlatform::create_internal_client()
@@ -109,16 +113,16 @@ public:
     }
     void unpack_buffer(mg::BufferIpcMessage&, mg::Buffer const&) const {}
 
-    std::shared_ptr<mg::PlatformIPCPackage> get_ipc_package()
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package()
     {
-        return native_platform->get_ipc_package();
+        return native_platform->connection_ipc_package();
     }
 private:
     std::shared_ptr<mg::NativePlatform> const native_platform;
 };
 }
 
-std::shared_ptr<mg::PlatformIpcOperations> mgn::NestedPlatform::create_ipc_operations() const
+std::shared_ptr<mg::PlatformIpcOperations> mgn::NestedPlatform::make_ipc_operations() const
 {
     return std::make_shared<BufferPacker>(native_platform);
 }

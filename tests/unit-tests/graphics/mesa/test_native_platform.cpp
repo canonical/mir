@@ -74,7 +74,7 @@ TEST_F(MesaNativePlatformTest, auth_magic_is_delegated_to_nested_context)
     EXPECT_CALL(mock_nested_context, drm_auth_magic(_));
 
     native.initialize(mt::fake_shared(mock_nested_context));
-    native.get_ipc_package();
+    native.connection_ipc_package();
 }
 
 TEST_F(MesaNativePlatformTest, sets_gbm_device_during_initialization)

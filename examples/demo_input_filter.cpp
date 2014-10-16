@@ -84,7 +84,6 @@ struct DemoServerConfiguration : public mir::examples::ServerConfiguration
 }
 
 
-#include <std/MirLog.h>
 void my_write_to_log(int /*prio*/, char const* buffer)
 {
     printf("%s\n", buffer);
@@ -94,7 +93,6 @@ int main(int argc, char const* argv[])
 try
 {
     DemoServerConfiguration config(argc, argv);
-    mir::write_to_log = my_write_to_log;
 
     mir::run_mir(config, [](mir::DisplayServer&) {/* empty init */});
     return 0;

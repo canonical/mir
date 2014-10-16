@@ -62,19 +62,21 @@ template<> struct result_ptr_t<::mir::protobuf::Surface>    { typedef ::mir::pro
 template<> struct result_ptr_t<::mir::protobuf::Screencast> { typedef ::mir::protobuf::Screencast* type; };
 template<> struct result_ptr_t<mir::protobuf::SocketFD>     { typedef ::mir::protobuf::SocketFD* type; };
 
-template<>
+//The exchange_buffer and next_buffer calls can complete on a different thread than the
+//one the invocation was called on. Make sure to preserve the result resource. 
+template<typename RequestType>
 void invoke(
     ProtobufMessageProcessor* self,
     DisplayServer* server,
     void (mir::protobuf::DisplayServer::*function)(
         ::google::protobuf::RpcController* controller,
-        const protobuf::SurfaceId* request,
+        const RequestType* request,
         protobuf::Buffer* response,
         ::google::protobuf::Closure* done),
         Invocation const& invocation)
 {
-    protobuf::SurfaceId parameter_message;
-    parameter_message.ParseFromString(invocation.parameters());
+    RequestType request;
+    request.ParseFromString(invocation.parameters());
     auto const result_message = std::make_shared<protobuf::Buffer>();
 
     auto const callback =
@@ -91,7 +93,7 @@ void invoke(
     {
         (server->*function)(
             0,
-            &parameter_message,
+            &request,
             result_message.get(),
             callback);
     }
@@ -148,6 +150,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(Invocation const& invocation)
         else if ("next_buffer" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::next_buffer, invocation);
+        }
+        else if ("exchange_buffer" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &DisplayServer::exchange_buffer, invocation);
         }
         else if ("release_surface" == invocation.method_name())
         {

@@ -19,7 +19,7 @@
 #ifndef MIR_OPTIONS_CONFIGURATION_H_
 #define MIR_OPTIONS_CONFIGURATION_H_
 
-#include "mir/options/program_option.h"
+#include "mir/options/option.h"
 
 #include <memory>
 
@@ -41,6 +41,7 @@ extern char const* const scene_report_opt;
 extern char const* const input_report_opt;
 extern char const* const host_socket_opt;
 extern char const* const frontend_threads_opt;
+extern char const* const touchspots_opt;
 extern char const* const fatal_abort_opt;
 
 extern char const* const name_opt;

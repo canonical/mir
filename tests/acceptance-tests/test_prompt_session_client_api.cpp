@@ -552,3 +552,20 @@ TEST_F(PromptSessionClientAPI,
 
     mir_prompt_session_release_sync(prompt_session);
 }
+
+// lp:1377968
+TEST_F(PromptSessionClientAPI, when_application_pid_is_invalid_starting_a_prompt_session_fails)
+{
+    connection = mir_connect_sync(new_prompt_connection().c_str(), __PRETTY_FUNCTION__);
+
+    EXPECT_CALL(*the_mock_prompt_session_listener(), starting(_)).Times(0);
+
+    MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
+        connection, ~application_session_pid, null_state_change_callback, this);
+
+    EXPECT_THAT(mir_prompt_session_is_valid(prompt_session), Eq(false));
+    EXPECT_THAT(mir_prompt_session_error_message(prompt_session),
+        HasSubstr("Could not identify application"));
+
+    mir_prompt_session_release_sync(prompt_session);
+}

@@ -74,7 +74,7 @@ void mga::LayerList::update_list(RenderableList const& renderlist, size_t additi
             it->needs_commit = it->layer.setup_layer(
                 mga::LayerType::gl_rendered,
                 renderable->screen_position(),
-                renderable->alpha_enabled(),
+                renderable->shaped(), // TODO: support alpha() in future too
                 *renderable->buffer());
             it++;
         }
@@ -89,7 +89,7 @@ void mga::LayerList::update_list(RenderableList const& renderlist, size_t additi
                 mga::HWCLayer(
                     mga::LayerType::gl_rendered,
                     renderable->screen_position(),
-                    renderable->alpha_enabled(),
+                    renderable->shaped(), // TODO: support alpha() in future
                     *renderable->buffer(),
                     hwc_representation, i++), true);
         }

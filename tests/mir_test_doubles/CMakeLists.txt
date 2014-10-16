@@ -1,4 +1,9 @@
 include_directories(
+  ${CMAKE_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/src/include/platform
+  ${PROJECT_SOURCE_DIR}/src/include/server
+  ${PROJECT_SOURCE_DIR}/src/include/client
+
     ${Boost_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
 )
@@ -9,7 +14,6 @@ set(
   test_protobuf_client.cpp
   event_factory.cpp
   fake_event_hub.cpp
-  fake_event_hub_input_configuration.cpp
   test_protobuf_socket_server.cpp
   mock_timer.cpp
   mock_frame_dropping_policy_factory.cpp

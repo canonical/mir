@@ -25,6 +25,7 @@
 #include "linux_virtual_terminal.h"
 #include "ipc_operations.h"
 #include "mir/graphics/platform_ipc_operations.h"
+#include "buffer_writer.h"
 #include "mir/options/option.h"
 #include "mir/graphics/native_buffer.h"
 #include "mir/emergency_cleanup_registry.h"
@@ -144,10 +145,9 @@ mgm::Platform::~Platform()
 }
 
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator(
-        const std::shared_ptr<mg::BufferInitializer>& buffer_initializer)
+std::shared_ptr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator()
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, buffer_initializer, bypass_option_);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, bypass_option_);
 }
 
 std::shared_ptr<mg::Display> mgm::Platform::create_display(
@@ -169,16 +169,21 @@ void mgm::Platform::drm_auth_magic(unsigned int magic)
 
 std::shared_ptr<mg::InternalClient> mgm::Platform::create_internal_client()
 {
-    auto packer = create_ipc_operations();
+    auto packer = make_ipc_operations();
     if (!internal_native_display)
-        internal_native_display = std::make_shared<mgm::InternalNativeDisplay>(packer->get_ipc_package());
+        internal_native_display = std::make_shared<mgm::InternalNativeDisplay>(packer->connection_ipc_package());
     internal_display_clients_present = true;
     return std::make_shared<mgm::InternalClient>(internal_native_display);
 }
 
-std::shared_ptr<mg::PlatformIpcOperations> mgm::Platform::create_ipc_operations() const
+std::shared_ptr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
 {
     return std::make_shared<mgm::IpcOperations>(drm);
+}
+
+std::shared_ptr<mg::BufferWriter> mgm::Platform::make_buffer_writer()
+{
+    return std::make_shared<mgm::BufferWriter>();
 }
 
 EGLNativeDisplayType mgm::Platform::egl_native_display() const

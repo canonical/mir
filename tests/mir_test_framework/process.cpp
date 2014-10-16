@@ -25,6 +25,7 @@
 
 #include <boost/exception/errinfo_errno.hpp>
 
+#include <system_error>
 #include <cassert>
 #include <chrono>
 #include <ostream>
@@ -45,10 +46,11 @@ void signal_process(pid_t pid, int signum)
     if (::kill(pid, signum) != 0)
     {
         BOOST_THROW_EXCEPTION(
-            ::boost::enable_error_info(std::runtime_error("Failed to kill process."))
+            ::boost::enable_error_info(std::system_error(errno,
+                                                         std::system_category(),
+                                                         "Failed to kill process."))
             << errinfo_pid(pid)
-            << errinfo_signum(signum)
-            << boost::errinfo_errno(errno));
+            << errinfo_signum(signum));
     }
 }
 }

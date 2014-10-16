@@ -43,8 +43,8 @@ char const* const mo::host_socket_opt             = "host-socket";
 char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
 char const* const mo::offscreen_opt               = "offscreen";
+char const* const mo::touchspots_opt               = "enable-touchspots";
 char const* const mo::fatal_abort_opt             = "on-fatal-error-abort";
-
 
 char const* const mo::glog                 = "glog";
 char const* const mo::glog_stderrthreshold = "glog-stderrthreshold";
@@ -63,7 +63,7 @@ int const glog_stderrthreshold_default = 2;
 int const glog_minloglevel_default     = 0;
 char const* const glog_log_dir_default = "";
 bool const enable_input_default        = true;
-char const* const default_platform_graphics_lib = "libmirplatformgraphics.so";
+char const* const default_platform_graphics_lib = MIR_PLATFORM_DRIVER_BINARY;
 
 // Hack around the way Qt loads mir:
 // platform_api and therefore Mir are loaded via dlopen(..., RTLD_LOCAL).
@@ -74,7 +74,10 @@ void ensure_loaded_with_rtld_global()
 {
     Dl_info info;
 
-    dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global), &info);
+    // Cast dladdr itself to work around g++-4.8 warnings (LP: #1366134)
+    typedef int (safe_dladdr_t)(void(*func)(), Dl_info *info);
+    safe_dladdr_t *safe_dladdr = (safe_dladdr_t*)&dladdr;
+    safe_dladdr(&ensure_loaded_with_rtld_global, &info);
     dlopen(info.dli_fname,  RTLD_NOW | RTLD_NOLOAD | RTLD_GLOBAL);
 }
 }
@@ -158,6 +161,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "When nested, the name Mir uses when registering with the host.")
         (offscreen_opt,
             "Render to offscreen buffers instead of the real outputs.")
+        (touchspots_opt,
+            "Display visualization of touchspots (e.g. for screencasting).")
         (fatal_abort_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
             "in unexpected ways] abort (to get a core dump)");
 
