@@ -131,7 +131,6 @@ struct StubBufferPacker : public mg::PlatformIpcOperations
         return last_fd;
     }
 private:
-    //TODO: is const appropriate on unpack_buffer?
     mir::Fd mutable last_fd;
 };
 
