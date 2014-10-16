@@ -81,6 +81,17 @@ void me::DemoCompositor::composite()
         if (renderable->visible() && any_part_drawn)
         {
             renderable_list.push_back(renderable);
+
+            // Fullscreen and opaque? Definitely no embellishment
+            if (renderable->screen_position() == view_area &&
+                renderable->alpha() == 1.0f &&
+                !renderable->shaped() &&
+                renderable->transformation() == glm::mat4())
+            {
+                embellished = false;
+                nonrenderlist_elements = false; // Don't care what's underneath
+            }
+
             it->rendered_in(this);
         }
         else
