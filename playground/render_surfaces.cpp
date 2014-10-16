@@ -377,15 +377,10 @@ public:
                                    .of_buffer_usage(mg::BufferUsage::hardware),
                     nullptr);
 
-            /*
-             * We call swap_buffers() twice so that the surface is
-             * considers the first buffer to be posted.
-             * (TODO There must be a better way!)
-             */
             {
                 mg::Buffer* buffer{nullptr};
                 auto const complete = [&](mg::Buffer* new_buf){ buffer = new_buf; };
-                s->swap_buffers(buffer, complete);
+                s->swap_buffers(buffer, complete); // Fetch buffer for rendering
                 {
                     auto using_gl_context = mir::raii::paired_calls(
                         [&gl_context] { gl_context->make_current(); },
@@ -398,7 +393,7 @@ public:
                     brt.make_current();
                     img_renderer.render();
                 }
-                s->swap_buffers(buffer, complete);
+                s->swap_buffers(buffer, complete); // Post rendered buffer
             }
 
             /*
