@@ -31,7 +31,6 @@
 #else
 #include "mir_test_doubles/mock_android_hw.h"
 #endif
-#include "mir/graphics/buffer_initializer.h"
 #include "mir/logging/dumb_console_logger.h"
 
 
@@ -52,7 +51,6 @@ public:
     GraphicsPlatform() : logger(std::make_shared<ml::DumbConsoleLogger>())
     {
         using namespace testing;
-        buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
 
 #ifndef ANDROID
         ON_CALL(mock_gbm, gbm_bo_get_width(_))
@@ -74,7 +72,6 @@ public:
     }
 
     std::shared_ptr<ml::Logger> logger;
-    std::shared_ptr<mg::BufferInitializer> buffer_initializer;
 
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL> mock_gl;
@@ -93,7 +90,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
 
     EXPECT_NO_THROW (
         auto platform = create_platform();
-        auto allocator = platform->create_buffer_allocator(buffer_initializer);
+        auto allocator = platform->create_buffer_allocator();
 
         EXPECT_TRUE(allocator.get());
     );
@@ -103,7 +100,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
 TEST_F(GraphicsPlatform, buffer_creation)
 {
     auto platform = create_platform();
-    auto allocator = platform->create_buffer_allocator(buffer_initializer);
+    auto allocator = platform->create_buffer_allocator();
     auto supported_pixel_formats = allocator->supported_pixel_formats();
 
     ASSERT_NE(0u, supported_pixel_formats.size());

@@ -31,7 +31,6 @@ namespace mir
 namespace graphics
 {
 
-class BufferInitializer;
 class EGLExtensions;
 
 namespace android
@@ -42,8 +41,7 @@ class GraphicAllocAdaptor;
 class AndroidGraphicBufferAllocator: public GraphicBufferAllocator, public graphics::GraphicBufferAllocator
 {
 public:
-    AndroidGraphicBufferAllocator(
-        std::shared_ptr<BufferInitializer> const& buffer_initializer);
+    AndroidGraphicBufferAllocator();
 
     std::shared_ptr<graphics::Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties);
@@ -58,7 +56,6 @@ public:
 private:
     const hw_module_t    *hw_module;
     std::shared_ptr<GraphicAllocAdaptor> alloc_device;
-    std::shared_ptr<BufferInitializer> const buffer_initializer;
     std::shared_ptr<EGLExtensions> const egl_extensions;
 };
 
