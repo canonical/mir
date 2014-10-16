@@ -28,7 +28,6 @@ namespace compositor { class Compositor; }
 namespace frontend { class SessionAuthorizer; }
 namespace graphics
 {
-class BufferInitializer;
 class Display;
 class DisplayConfigurationPolicy;
 class GLConfig;
@@ -148,9 +147,6 @@ public:
  * Mir subsystems and when the init_callback is invoked (and thereafter
  * until the server exits).
  *  @{ */
-    /// \return the buffer initializer.
-    auto the_buffer_initializer() const -> std::shared_ptr<graphics::BufferInitializer>;
-
     /// \return the composite event filter.
     auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;
 

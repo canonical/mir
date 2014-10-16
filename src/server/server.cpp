@@ -47,7 +47,6 @@ namespace mo = mir::options;
     MACRO(surface_configurator)
 
 #define FOREACH_ACCESSOR(MACRO)\
-    MACRO(the_buffer_initializer)\
     MACRO(the_composite_event_filter)\
     MACRO(the_display)\
     MACRO(the_graphics_platform)\

@@ -23,7 +23,6 @@
 #include "buffer_texture_binder.h"
 #include "anonymous_shm_file.h"
 #include "shm_buffer.h"
-#include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/buffer_properties.h"
 #include <boost/throw_exception.hpp>
@@ -110,15 +109,12 @@ struct GBMBODeleter
 
 mgm::BufferAllocator::BufferAllocator(
     gbm_device* device,
-    const std::shared_ptr<BufferInitializer>& buffer_initializer,
     BypassOption bypass_option)
     : device(device),
-      buffer_initializer(buffer_initializer),
       egl_extensions(std::make_shared<mg::EGLExtensions>()),
       bypass_option(bypass_option)
 
 {
-    assert(buffer_initializer.get() != 0);
 }
 
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
@@ -186,8 +182,6 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_hardware_buffer(
     auto const buffer =
         std::make_shared<GBMBuffer>(bo, bo_flags, std::move(texture_binder));
 
-    (*buffer_initializer)(*buffer);
-
     return buffer;
 }
 
@@ -212,8 +206,6 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     auto const buffer =
         std::make_shared<ShmBuffer>(shm_file, buffer_properties.size,
                                     buffer_properties.format);
-
-    (*buffer_initializer)(*buffer);
 
     return buffer;
 }

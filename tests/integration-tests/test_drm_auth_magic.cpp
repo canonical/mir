@@ -47,8 +47,7 @@ char const* const mir_test_socket = mtf::test_socket_file().c_str();
 class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthenticator
 {
 public:
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
-        std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
     {
         return std::make_shared<mtd::StubBufferAllocator>();
     }

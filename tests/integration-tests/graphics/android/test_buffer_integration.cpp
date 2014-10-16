@@ -18,7 +18,6 @@
 
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 #include "src/server/compositor/buffer_queue.h"
-#include "mir/graphics/buffer_initializer.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_properties.h"
@@ -47,11 +46,9 @@ protected:
         size = geom::Size{334, 122};
         pf  = mir_pixel_format_abgr_8888;
         buffer_properties = mg::BufferProperties{size, pf, mg::BufferUsage::software};
-        null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
         graphics_region_factory = mtd::create_graphics_region_factory();
     }
 
-    std::shared_ptr<mg::BufferInitializer> null_buffer_initializer;
     geom::Size size;
     MirPixelFormat pf;
     mg::BufferProperties buffer_properties;
@@ -89,7 +86,7 @@ TEST_F(AndroidBufferIntegration, allocator_can_create_sw_buffer)
 {
     using namespace testing;
 
-    auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
+    auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
 
     mg::BufferProperties sw_properties{size, pf, mg::BufferUsage::software};
     auto test_buffer = allocator->alloc_buffer(sw_properties);
@@ -106,7 +103,7 @@ TEST_F(AndroidBufferIntegration, allocator_can_create_hw_buffer)
     using namespace testing;
 
     mg::BufferProperties hw_properties{size, pf, mg::BufferUsage::hardware};
-    auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
+    auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
 
     //TODO: kdub it is a bit trickier to test that a gpu can render... just check creation for now
     auto test_buffer = allocator->alloc_buffer(hw_properties);
@@ -117,7 +114,7 @@ TEST_F(AndroidBufferIntegration, swapper_creation_is_sane)
 {
     using namespace testing;
 
-    auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
+    auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
 
     mc::BufferQueue swapper(2, allocator, buffer_properties, policy_factory);
 
