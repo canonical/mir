@@ -64,46 +64,14 @@ template<> struct result_ptr_t<mir::protobuf::SocketFD>     { typedef ::mir::pro
 
 //The exchange_buffer and next_buffer calls can complete on a different thread than the
 //one the invocation was called on. Make sure to preserve the result resource. 
-template<typename RequestType>
-void invoke(
-    ProtobufMessageProcessor* self,
-    DisplayServer* server,
-    void (mir::protobuf::DisplayServer::*function)(
-        ::google::protobuf::RpcController* controller,
-        const RequestType* request,
-        protobuf::Buffer* response,
-        ::google::protobuf::Closure* done),
-        Invocation const& invocation)
+template<class ParameterMessage>
+ParameterMessage parse_parameter(Invocation const& invocation)
 {
-    RequestType request;
+    ParameterMessage request;
     request.ParseFromString(invocation.parameters());
-    auto const result_message = std::make_shared<protobuf::Buffer>();
-
-    auto const callback =
-        google::protobuf::NewCallback<
-            ProtobufMessageProcessor,
-            ::google::protobuf::uint32,
-             std::shared_ptr<protobuf::Buffer>>(
-                self,
-                &ProtobufMessageProcessor::send_response,
-                invocation.id(),
-                result_message);
-
-    try
-    {
-        (server->*function)(
-            0,
-            &request,
-            result_message.get(),
-            callback);
-    }
-    catch (std::exception const& x)
-    {
-        delete callback;
-        result_message->set_error(boost::diagnostic_information(x));
-        self->send_response(invocation.id(), result_message);
-    }
+    return request;
 }
+
 template<typename RequestType>
 void invoke(
     ProtobufMessageProcessor* self,
@@ -113,19 +81,10 @@ void invoke(
         const RequestType* request,
         protobuf::Buffer* response,
         ::google::protobuf::Closure* done),
-        Invocation const& invocation,
-        std::vector<mir::Fd> const&fds)
+    unsigned int invocation_id,
+    RequestType* request)
 {
-    RequestType request;
-    request.ParseFromString(invocation.parameters());
     auto const result_message = std::make_shared<protobuf::Buffer>();
-
-    request.mutable_buffer()->clear_fd();
-    for(auto& fd : fds)
-    {   
-        int f= (int)fd;
-        request.mutable_buffer()->add_fd(f);
-    }
     auto const callback =
         google::protobuf::NewCallback<
             ProtobufMessageProcessor,
@@ -133,14 +92,14 @@ void invoke(
              std::shared_ptr<protobuf::Buffer>>(
                 self,
                 &ProtobufMessageProcessor::send_response,
-                invocation.id(),
+                invocation_id,
                 result_message);
 
     try
     {
         (server->*function)(
             0,
-            &request,
+            request,
             result_message.get(),
             callback);
     }
@@ -148,7 +107,7 @@ void invoke(
     {
         delete callback;
         result_message->set_error(boost::diagnostic_information(x));
-        self->send_response(invocation.id(), result_message);
+        self->send_response(invocation_id, result_message);
     }
 }
 }
@@ -198,11 +157,16 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         }
         else if ("next_buffer" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &DisplayServer::next_buffer, invocation);
+            auto request = parse_parameter<mir::protobuf::SurfaceId>(invocation);
+            invoke(this, display_server.get(), &DisplayServer::next_buffer, invocation.id(), &request);
         }
         else if ("exchange_buffer" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &DisplayServer::exchange_buffer, invocation, side_channel_fds);
+            auto request = parse_parameter<mir::protobuf::BufferRequest>(invocation);
+            request.mutable_buffer()->clear_fd();
+            for(auto& fd : side_channel_fds)
+                request.mutable_buffer()->add_fd(fd);
+            invoke(this, display_server.get(), &DisplayServer::exchange_buffer, invocation.id(), &request);
         }
         else if ("release_surface" == invocation.method_name())
         {
