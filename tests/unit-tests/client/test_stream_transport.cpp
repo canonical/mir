@@ -308,7 +308,7 @@ TYPED_TEST(StreamTransportTest, WritesCorrectData)
     std::vector<char> received(expected.size());
 
     std::vector<mir::Fd> fds;
-    this->transport->send_data(send_buffer, fds);
+    this->transport->send_message(send_buffer, fds);
 
     pollfd read_listener;
     read_listener.fd = this->test_fd;
@@ -995,7 +995,7 @@ TYPED_TEST(StreamTransportTest, SendsFullMessagesWhenInterrupted)
                                      {
                                          alarm_raised = false;
                                          write_now_waiting->raise();
-                                         this->transport->send_data(expected, fds);
+                                         this->transport->send_message(expected, fds);
                                          EXPECT_TRUE(alarm_raised);
                                      });
 

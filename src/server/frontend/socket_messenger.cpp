@@ -59,6 +59,7 @@ mf::SessionCredentials mfd::SocketMessenger::creator_creds() const
 
     if (status)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query client socket credentials"));
+
     return {cr.pid, cr.uid, cr.gid};
 }
 
@@ -126,6 +127,7 @@ bs::error_code mfd::SocketMessenger::receive_msg(
         if (e && e != ba::error::would_block)
             break;
     }
+
     return e;
 }
 
