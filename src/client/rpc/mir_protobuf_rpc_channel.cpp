@@ -177,7 +177,7 @@ void mclr::MirProtobufRpcChannel::CallMethod(
         for(auto& fd : buffer->buffer().fd())
             fds.emplace_back(mir::Fd{IntOwnedFd{fd}});
     }
-        
+
     send_message(invocation, invocation, fds);
 }
 
