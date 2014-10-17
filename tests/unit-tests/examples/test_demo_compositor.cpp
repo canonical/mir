@@ -56,8 +56,8 @@ struct MockSceneElement : mc::SceneElement
 
     MOCK_CONST_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
     MOCK_CONST_METHOD0(is_a_surface, bool());
-    MOCK_METHOD1(rendered_in, void(mc::CompositorID));
-    MOCK_METHOD1(occluded_in, void(mc::CompositorID));
+    MOCK_METHOD0(rendered, void());
+    MOCK_METHOD0(occluded, void());
 };
 
 struct DemoCompositor : testing::Test
@@ -99,8 +99,8 @@ TEST_F(DemoCompositor, sets_surface_visibility)
         .WillOnce(Return(std::make_shared<mtd::StubRenderable>(false)));
 
     InSequence seq;
-    EXPECT_CALL(element, rendered_in(_));
-    EXPECT_CALL(element, occluded_in(_));
+    EXPECT_CALL(element, rendered());
+    EXPECT_CALL(element, occluded());
 
     demo_compositor.composite(stub_display_buffer, scene_elements);
     demo_compositor.composite(stub_display_buffer, scene_elements);
