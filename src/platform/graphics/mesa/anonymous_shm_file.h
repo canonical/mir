@@ -51,8 +51,8 @@ private:
 class AnonymousShmFile : public ShmFile
 {
 public:
-	// force_legacy_path: should only be used in test code to test both
-	// code paths (when supported).
+    // force_legacy_path: should only be used in test code to test both
+    // code paths (when supported).
     AnonymousShmFile(size_t size, bool force_legacy_path = false);
 
     void* base_ptr() const;
