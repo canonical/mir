@@ -34,6 +34,7 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <algorithm>
 #include <unordered_map>
 #include <unordered_set>
 #include <thread>
@@ -682,4 +683,23 @@ TEST(MultiThreadedCompositor, names_compositor_threads)
 
     for (size_t i = 0; i < thread_names.size(); ++i)
         EXPECT_THAT(thread_names[i], Eq("Mir/Comp")) << "i=" << i;
+}
+
+TEST(MultiThreadedCompositor, registers_and_unregisters_with_scene)
+{
+    using namespace testing;
+    unsigned int const nbuffers{3};
+    auto display = std::make_shared<StubDisplayWithMockBuffers>(nbuffers);
+    auto mock_scene = std::make_shared<NiceMock<mtd::MockScene>>();
+    auto db_compositor_factory = std::make_shared<NullDisplayBufferCompositorFactory>();
+    auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
+
+    EXPECT_CALL(*mock_scene, register_compositor(_))
+        .Times(nbuffers);
+    EXPECT_CALL(*mock_scene, unregister_compositor(_))
+        .Times(nbuffers);
+    mc::MultiThreadedCompositor compositor{display, mock_scene, db_compositor_factory, mock_report, true};
+
+    compositor.start();
+    compositor.stop();
 }
