@@ -125,6 +125,14 @@ public:
     /// the exception can be re-thrown to retrieve type information.
     /// The default action is to call mir::report_exception(std::cerr)
     void set_exception_handler(std::function<void()> const& exception_handler);
+
+    /// Replaces the logic that starts the Mir server.
+    /// This is mostly useful for testing subsystems without initializing or running
+    /// a server instance.
+    /// \note if you use this there will be no call to the init_callback and
+    /// there's no guarantee that Server::stop() will stop your code.
+    /// You have to organise these yourself.
+    void replace_runner(std::function<void()> const& runner);
 /** @} */
 
 /** @name Getting access to Mir subsystems

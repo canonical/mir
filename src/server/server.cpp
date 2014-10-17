@@ -71,6 +71,7 @@ struct mir::Server::Self
     ServerConfiguration* server_config{nullptr};
 
     std::function<void()> init_callback{[]{}};
+    std::function<void()> runner;
     int argc{0};
     char const** argv{nullptr};
     std::function<void()> exception_handler{};
@@ -200,6 +201,11 @@ void mir::Server::set_exception_handler(std::function<void()> const& exception_h
     self->exception_handler = exception_handler;
 }
 
+void mir::Server::replace_runner(std::function<void()> const& runner)
+{
+    self->runner = runner;
+}
+
 void mir::Server::run()
 try
 {
@@ -213,10 +219,14 @@ try
 
     self->options = config.the_options();
 
-    run_mir(config, [&](DisplayServer&)
-        {
-            self->init_callback();
-        });
+    if (self->runner)
+    {
+        self->runner();
+    }
+    else
+    {
+        run_mir(config, [&](DisplayServer&) { self->init_callback(); });
+    }
 
     self->exit_status = true;
     self->server_config = nullptr;
