@@ -42,7 +42,6 @@ mir::Fd create_anonymous_file(size_t size, bool force_legacy_path)
     if (force_legacy_path ||
        ((fd = mir::Fd{open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU)}) == mir::Fd::invalid))
     {
-        /* No O_TMPFILE support in the kernel. Fallback to the old way. */
         char const* const tmpl = "/mir-buffer-XXXXXX";
         char const* const runtime_dir = getenv("XDG_RUNTIME_DIR");
         bool runtime_dir_valid = false;
