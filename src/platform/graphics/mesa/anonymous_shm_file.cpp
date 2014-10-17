@@ -37,9 +37,9 @@ namespace
 
 mir::Fd create_anonymous_file(size_t size)
 {
-    int raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
+	mir::Fd fd{open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU)};
 
-    if (raw_fd < 0)
+    if (fd == mir::Fd::invalid)
     {
         /* No O_TMPFILE support in the kernel. Fallback to the old way. */
         char const* const tmpl = "/mir-buffer-XXXXXX";
@@ -60,15 +60,13 @@ mir::Fd create_anonymous_file(size_t size)
         path.insert(path.end(), tmpl, tmpl + strlen(tmpl));
         path.push_back('\0');
 
-        raw_fd = mkostemp(path.data(), O_CLOEXEC);
+        fd = mir::Fd{mkostemp(path.data(), O_CLOEXEC)};
         if (unlink(path.data()) < 0)
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to unlink temporary file"));
     }
 
-    if (ftruncate(raw_fd, size) < 0)
+    if (ftruncate(fd, size) < 0)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to resize temporary file"));
-
-    mir::Fd fd{raw_fd};
 
     return fd;
 }

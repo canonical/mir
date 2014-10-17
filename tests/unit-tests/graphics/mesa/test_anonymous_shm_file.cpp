@@ -181,14 +181,8 @@ private:
 
 bool kernel_supports_O_TMPFILE()
 {
-    int raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
-    if (raw_fd < 0)
-        return false;
-    else
-    {
-        close(raw_fd);
-        return true;
-    }
+	mir::Fd fd{open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU)};
+    return (fd >= 0);
 }
 
 }
