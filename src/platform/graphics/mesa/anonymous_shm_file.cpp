@@ -35,11 +35,12 @@ namespace mgm = mir::graphics::mesa;
 namespace
 {
 
-mir::Fd create_anonymous_file(size_t size)
+mir::Fd create_anonymous_file(size_t size, bool force_legacy_path)
 {
-	mir::Fd fd{open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU)};
+    mir::Fd fd;
 
-    if (fd == mir::Fd::invalid)
+    if (force_legacy_path ||
+       ((fd = mir::Fd{open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU)}) == mir::Fd::invalid))
     {
         /* No O_TMPFILE support in the kernel. Fallback to the old way. */
         char const* const tmpl = "/mir-buffer-XXXXXX";
@@ -100,9 +101,8 @@ mgm::detail::MapHandle::operator void*() const
 /********************
  * AnonymousShmFile *
  ********************/
-
-mgm::AnonymousShmFile::AnonymousShmFile(size_t size)
-    : fd_{create_anonymous_file(size)},
+mgm::AnonymousShmFile::AnonymousShmFile(size_t size, bool force_legacy_path)
+    : fd_{create_anonymous_file(size, force_legacy_path)},
       mapping{fd_, size}
 {
 }
