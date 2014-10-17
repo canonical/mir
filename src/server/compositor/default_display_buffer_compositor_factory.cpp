@@ -44,6 +44,6 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
     auto dest_alpha = display_buffer.uses_alpha() ?
         DestinationAlpha::generate_from_source : DestinationAlpha::opaque;
     auto renderer = renderer_factory->create_renderer_for(display_buffer.view_area(), dest_alpha);
-    auto raw = new DefaultDisplayBufferCompositor{std::move(renderer), report};
-    return std::unique_ptr<DisplayBufferCompositor>(raw);
+    return std::unique_ptr<DisplayBufferCompositor>(
+         new DefaultDisplayBufferCompositor{std::move(renderer), report});
 }

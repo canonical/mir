@@ -18,7 +18,6 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/compositor_report.h"
-#include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/compositor/destination_alpha.h"
 #include "demo_compositor.h"
@@ -38,11 +37,9 @@ mc::DestinationAlpha destination_alpha(mg::DisplayBuffer const& db)
 
 me::DemoCompositor::DemoCompositor(
     mg::DisplayBuffer& display_buffer,
-    std::shared_ptr<mc::Scene> const& scene,
     mg::GLProgramFactory const& factory,
     std::shared_ptr<mc::CompositorReport> const& report) :
     display_buffer(display_buffer),
-    scene(scene),
     report(report),
     renderer(
         factory,
@@ -51,12 +48,10 @@ me::DemoCompositor::DemoCompositor(
         30.0f, //titlebar_height
         80.0f) //shadow_radius
 {
-    scene->register_compositor(this);
 }
 
 me::DemoCompositor::~DemoCompositor()
 {
-    scene->unregister_compositor(this);
 }
 
 void me::DemoCompositor::composite(mg::DisplayBuffer& display_buffer, mc::SceneElementSequence elements)

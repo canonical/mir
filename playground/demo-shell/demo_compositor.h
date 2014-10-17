@@ -43,7 +43,6 @@ class DemoCompositor : public compositor::DisplayBufferCompositor
 public:
     DemoCompositor(
         graphics::DisplayBuffer& display_buffer,
-        std::shared_ptr<compositor::Scene> const& scene,
         graphics::GLProgramFactory const& factory,
         std::shared_ptr<compositor::CompositorReport> const& report);
     ~DemoCompositor();
@@ -52,7 +51,6 @@ public:
 
 private:
     graphics::DisplayBuffer& display_buffer;
-    std::shared_ptr<compositor::Scene> const scene;
     std::shared_ptr<compositor::CompositorReport> const report;
     DemoRenderer renderer;
 };

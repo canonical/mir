@@ -49,7 +49,7 @@ add_subdirectory(input/)
 add_subdirectory(android_input/)
 add_subdirectory(scene/)
 add_subdirectory(draw/)
-#add_subdirectory(examples/)
+add_subdirectory(examples/)
 add_subdirectory(thread/)
 
 link_directories(${LIBRARY_OUTPUT_PATH})
