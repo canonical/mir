@@ -46,11 +46,20 @@ std::shared_ptr<mg::DisplayConfigurationPolicy>
 mir::DefaultServerConfiguration::the_display_configuration_policy()
 {
     return display_configuration_policy(
-        []
+        [this]
         {
-            return std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
+            return wrap_display_configuration_policy(
+                std::make_shared<mg::DefaultDisplayConfigurationPolicy>());
         });
 }
+
+std::shared_ptr<mg::DisplayConfigurationPolicy>
+mir::DefaultServerConfiguration::wrap_display_configuration_policy(
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
+{
+    return wrapped;
+}
+
 
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {

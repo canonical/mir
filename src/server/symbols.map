@@ -114,6 +114,7 @@ MIR_SERVER_27 {
     mir::DefaultServerConfiguration::the_surface_factory*;
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
+    mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
     mir::DefaultServerConfiguration::wrap_session_coordinator*;
     mir::DefaultServerConfiguration::wrap_surface_coordinator*;
     mir::DisplayServer::?DisplayServer*;
@@ -423,11 +424,11 @@ MIR_SERVER_27 {
     mir::Server::the_graphics_platform*;
     mir::Server::the_main_loop*;
     mir::Server::the_prompt_session_listener*;
-    mir::Server::the_server_status_listener*;
     mir::Server::the_session_authorizer*;
     mir::Server::the_session_listener*;
     mir::Server::the_shell_display_layout*;
     mir::Server::the_surface_configurator*;
+    mir::Server::wrap_display_configuration_policy*;
     mir::Server::wrap_session_coordinator*;
     mir::Server::wrap_surface_coordinator*;
     mir::shell::DisplayLayout::clip_to_output*;
@@ -568,6 +569,7 @@ MIR_SERVER_27 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_surface_factory*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_surface_stack_model*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_touch_visualizer*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_session_coordinator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_surface_coordinator*;
     non-virtual?thunk?to?mir::frontend::DisplayChanger::?DisplayChanger*;
