@@ -142,7 +142,7 @@ public:
     {
     }
 
-    void composite()
+    void composite(mg::DisplayBuffer&, mc::SceneElementSequence)
     {
         mark_render_buffer();
         /* Reduce run-time under valgrind */
