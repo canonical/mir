@@ -162,6 +162,9 @@ public:
     /// \return the session authorizer.
     auto the_session_authorizer() const -> std::shared_ptr<frontend::SessionAuthorizer>;
 
+    /// \return the session authorizer.
+    auto the_session_coordinator() const -> std::shared_ptr<scene::SessionCoordinator>;
+
     /// \return the session listener.
     auto the_session_listener() const -> std::shared_ptr<scene::SessionListener>;
 
@@ -170,6 +173,10 @@ public:
 
     /// \return the surface configurator.
     auto the_surface_configurator() const -> std::shared_ptr<scene::SurfaceConfigurator>;
+
+    /// \return the surface coordinator.
+    auto the_surface_coordinator() const -> std::shared_ptr<scene::SurfaceCoordinator>;
+
 /** @} */
 
 /** @name Providing custom implementation

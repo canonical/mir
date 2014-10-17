@@ -424,9 +424,11 @@ MIR_SERVER_27 {
     mir::Server::the_main_loop*;
     mir::Server::the_prompt_session_listener*;
     mir::Server::the_session_authorizer*;
+    mir::Server::the_session_coordinator*;
     mir::Server::the_session_listener*;
     mir::Server::the_shell_display_layout*;
     mir::Server::the_surface_configurator*;
+    mir::Server::the_surface_coordinator*;
     mir::Server::wrap_display_configuration_policy*;
     mir::Server::wrap_session_coordinator*;
     mir::Server::wrap_surface_coordinator*;
