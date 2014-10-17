@@ -244,7 +244,7 @@ TEST_F(CompositingScreencastTest, captures_by_compositing_with_provided_region)
     EXPECT_CALL(mock_db_compositor_factory.mock_db_compositor, composite(_,Eq(scene_elements)));
 
     mc::CompositingScreencast screencast_local{
-        mt::fake_shared(stub_scene),
+        mt::fake_shared(mock_scene),
         mt::fake_shared(stub_display),
         mt::fake_shared(stub_buffer_allocator),
         mt::fake_shared(mock_db_compositor_factory)};
@@ -312,9 +312,10 @@ TEST_F(CompositingScreencastTest, uses_one_buffer_per_session)
 TEST_F(CompositingScreencastTest, registers_and_unregisters_from_scene)
 {
     using namespace testing;
-
     NiceMock<mtd::MockScene> mock_scene;
-    MockBufferAllocator mock_buffer_allocator;
+    NiceMock<MockBufferAllocator> mock_buffer_allocator;
+    ON_CALL(mock_buffer_allocator, alloc_buffer(_))
+        .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
 
     EXPECT_CALL(mock_scene, register_compositor(_))
         .Times(1);
@@ -328,5 +329,5 @@ TEST_F(CompositingScreencastTest, registers_and_unregisters_from_scene)
         mt::fake_shared(stub_db_compositor_factory)};
 
     auto session_id = screencast_local.create_session(default_region, default_size, default_pixel_format);
-    screencast_local.capture(session_id);
+    screencast_local.destroy_session(session_id);
 }
