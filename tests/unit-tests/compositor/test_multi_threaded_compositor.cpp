@@ -34,7 +34,6 @@
 
 #include <boost/throw_exception.hpp>
 
-#include <algorithm>
 #include <unordered_map>
 #include <unordered_set>
 #include <thread>
