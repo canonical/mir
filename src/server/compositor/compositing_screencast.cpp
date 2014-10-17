@@ -50,6 +50,7 @@ struct mc::detail::ScreencastSessionContext
 
 
 mc::CompositingScreencast::CompositingScreencast(
+    std::shared_ptr<Scene> const& scene,
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory)
@@ -57,6 +58,7 @@ mc::CompositingScreencast::CompositingScreencast(
       buffer_allocator{buffer_allocator},
       db_compositor_factory{db_compositor_factory}
 {
+    (void) scene;
 }
 
 mf::ScreencastSessionId mc::CompositingScreencast::create_session(

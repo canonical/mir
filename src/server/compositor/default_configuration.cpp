@@ -98,6 +98,7 @@ std::shared_ptr<mf::Screencast> mir::DefaultServerConfiguration::the_screencast(
         [this]()
         {
             return std::make_shared<mc::CompositingScreencast>(
+                the_scene(),
                 the_display(),
                 the_buffer_allocator(),
                 the_display_buffer_compositor_factory()
