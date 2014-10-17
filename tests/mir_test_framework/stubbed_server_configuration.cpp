@@ -17,6 +17,8 @@
  */
 
 #include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/set_test_stubs.h"
+
 #include "mir_test_framework/command_line_server_configuration.h"
 
 #include "mir/options/default_configuration.h"
@@ -26,6 +28,7 @@
 #include "mir/graphics/cursor.h"
 #include "mir/input/input_channel.h"
 #include "mir/input/input_manager.h"
+#include "mir/server.h"
 
 #include "mir_test_doubles/stub_display.h"
 #include "mir_test_doubles/null_platform.h"
@@ -318,4 +321,14 @@ std::shared_ptr<mi::InputSender> mtf::StubbedServerConfiguration::the_input_send
 std::shared_ptr<mg::Cursor> mtf::StubbedServerConfiguration::the_cursor()
 {
     return std::make_shared<StubCursor>();
+}
+
+void mtf::set_test_stubs(mir::Server& server)
+{
+    server.override_the_graphics_platform([]
+        () -> std::shared_ptr<mg::Platform>
+        {
+            std::vector<geom::Rectangle> const display_rects{geom::Rectangle{{0,0},{1600,1600}}};
+            return std::make_shared<StubGraphicPlatform>(display_rects);
+        });
 }

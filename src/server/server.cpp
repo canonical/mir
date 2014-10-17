@@ -37,6 +37,7 @@ namespace mo = mir::options;
     MACRO(compositor)\
     MACRO(cursor_listener)\
     MACRO(gl_config)\
+    MACRO(graphics_platform)\
     MACRO(input_dispatcher)\
     MACRO(placement_strategy)\
     MACRO(prompt_session_listener)\

@@ -19,6 +19,8 @@
 #include "mir/shell/session_coordinator_wrapper.h"
 #include "mir/shell/surface_coordinator_wrapper.h"
 
+#include "mir_test_framework/set_test_stubs.h"
+
 #include "mir/server.h"
 
 #include <gtest/gtest.h>
@@ -50,6 +52,8 @@ struct ServerConfigurationWrapping : Test
 
     void SetUp() override
     {
+        mir_test_framework::set_test_stubs(server);
+
         server.wrap_surface_coordinator([]
             (std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
             {
