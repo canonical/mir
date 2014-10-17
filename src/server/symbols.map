@@ -13,10 +13,10 @@ MIR_SERVER_27 {
     mir::compositor::Compositor::stop*;
     mir::compositor::Scene::add_observer*;
     mir::compositor::SceneElement::is_a_surface*;
-    mir::compositor::SceneElement::occluded_in*;
+    mir::compositor::SceneElement::occluded*;
     mir::compositor::SceneElement::operator*;
     mir::compositor::SceneElement::renderable*;
-    mir::compositor::SceneElement::rendered_in*;
+    mir::compositor::SceneElement::rendered*;
     mir::compositor::SceneElement::?SceneElement*;
     mir::compositor::SceneElement::SceneElement*;
     mir::compositor::Scene::register_compositor*;
