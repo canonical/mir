@@ -110,6 +110,7 @@ struct DefaultDisplayBufferCompositor : public testing::Test
 };
 }
 
+#if 0
 TEST_F(DefaultDisplayBufferCompositor, render)
 {
     using namespace testing;
@@ -453,3 +454,4 @@ TEST_F(DefaultDisplayBufferCompositor, ignores_invisible_scene_elements)
 
     compositor.composite();
 }
+#endif

@@ -258,7 +258,7 @@ public:
     {
     }
 
-    void composite()
+    void composite(mg::DisplayBuffer&, mc::SceneElementSequence) override
     {
         fake_surface_update();
         /* Reduce run-time under valgrind */
@@ -307,7 +307,9 @@ public:
     {
         struct NullDisplayBufferCompositor : mc::DisplayBufferCompositor
         {
-            void composite() {}
+            void composite(mg::DisplayBuffer&, mc::SceneElementSequence) override
+            {
+            }
         };
 
         auto raw = new NullDisplayBufferCompositor{};

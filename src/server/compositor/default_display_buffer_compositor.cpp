@@ -35,29 +35,20 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
-    mg::DisplayBuffer& display_buffer,
-    std::shared_ptr<mc::Scene> const& scene,
     std::shared_ptr<mc::Renderer> const& renderer,
-    std::shared_ptr<mc::CompositorReport> const& report)
-    : display_buffer(display_buffer),
-      scene{scene},
-      renderer{renderer},
-      report{report}
+    std::shared_ptr<mc::CompositorReport> const& report) :
+    renderer{renderer},
+    report{report}
 {
-    scene->register_compositor(this);
 }
 
-mc::DefaultDisplayBufferCompositor::~DefaultDisplayBufferCompositor()
-{
-    scene->unregister_compositor(this);
-}
-
-void mc::DefaultDisplayBufferCompositor::composite()
+void mc::DefaultDisplayBufferCompositor::composite(
+    mg::DisplayBuffer& display_buffer,
+    mc::SceneElementSequence scene_elements)
 {
     report->began_frame(this);
 
     auto const& view_area = display_buffer.view_area();
-    auto scene_elements = scene->scene_elements_for(this);
     auto const& occlusions = mc::filter_occlusions_from(scene_elements, view_area);
 
     for (auto const& element : occlusions)

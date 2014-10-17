@@ -90,9 +90,11 @@ class CompositingFunctor
 public:
     CompositingFunctor(std::shared_ptr<mc::DisplayBufferCompositorFactory> const& db_compositor_factory,
                        mg::DisplayBuffer& buffer,
+                       std::shared_ptr<mc::Scene> const& scene,
                        std::shared_ptr<CompositorReport> const& report)
         : display_buffer_compositor_factory{db_compositor_factory},
           buffer(buffer),
+          scene(scene),
           running{true},
           frames_scheduled{0},
           report{report}
@@ -120,6 +122,8 @@ public:
                               r.top_left.x.as_int(), r.top_left.y.as_int(),
                               report_id);
 
+        scene->register_compositor(display_buffer_compositor.get());
+
         std::unique_lock<std::mutex> lock{run_mutex};
         while (running)
         {
@@ -142,11 +146,14 @@ public:
                 frames_scheduled--;
                 lock.unlock();
 
-                display_buffer_compositor->composite();
+                display_buffer_compositor->composite(
+                    buffer, scene->scene_elements_for(display_buffer_compositor.get()));
 
                 lock.lock();
             }
         }
+
+        scene->unregister_compositor(display_buffer_compositor.get());
     }
     catch(...)
     {
@@ -174,6 +181,7 @@ public:
 private:
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const display_buffer_compositor_factory;
     mg::DisplayBuffer& buffer;
+    std::shared_ptr<mc::Scene> const scene;
     bool running;
     int frames_scheduled;
     std::mutex run_mutex;
@@ -287,7 +295,7 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
     /* Start the display buffer compositing threads */
     display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
     {
-        auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, buffer, report};
+        auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, buffer, scene, report};
         auto thread_functor = std::unique_ptr<mc::CompositingFunctor>(thread_functor_raw);
 
         futures.push_back(thread_pool.run(std::ref(*thread_functor), &buffer));

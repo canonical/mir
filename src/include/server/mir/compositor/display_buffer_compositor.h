@@ -20,8 +20,14 @@
 #ifndef MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_
 #define MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_
 
+#include "mir/compositor/scene.h"
+
 namespace mir
 {
+namespace graphics
+{
+class DisplayBuffer;
+}
 namespace compositor
 {
 
@@ -30,7 +36,9 @@ class DisplayBufferCompositor
 public:
     virtual ~DisplayBufferCompositor() = default;
 
-    virtual void composite() = 0;
+    virtual void composite(
+        graphics::DisplayBuffer& display_buffer,
+        SceneElementSequence scene_sequence) = 0;
 
 protected:
     DisplayBufferCompositor() = default;

@@ -59,7 +59,7 @@ me::DemoCompositor::~DemoCompositor()
     scene->unregister_compositor(this);
 }
 
-void me::DemoCompositor::composite()
+void me::DemoCompositor::composite(mg::DisplayBuffer& display_buffer, mc::SceneElementSequence elements)
 {
     report->began_frame(this);
     //a simple filtering out of renderables that shouldn't be drawn
@@ -68,7 +68,6 @@ void me::DemoCompositor::composite()
     mg::RenderableList renderable_list;
     std::unordered_set<mg::Renderable::ID> decoration_skip_list;
 
-    auto elements = scene->scene_elements_for(this);
     for(auto const& it : elements)
     {
         auto const& renderable = it->renderable();
