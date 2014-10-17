@@ -108,8 +108,13 @@ public:
     void set_command_line_handler(
         std::function<void(int argc, char const* const* argv)> const& command_line_hander);
 
+    /// Force the initialization process to start.
+    /// This makes it possible to call the accessor methods.
+    /// Calling this is optional (as it is also the first thing run() does).
+    void start_initialization();
+
     /// Returns the configuration options.
-    /// This will be null before initialization completes. It will be available
+    /// This will be null before initialization starts. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
     auto get_options() const -> std::shared_ptr<options::Option>;
 /** @} */
@@ -125,14 +130,6 @@ public:
     /// the exception can be re-thrown to retrieve type information.
     /// The default action is to call mir::report_exception(std::cerr)
     void set_exception_handler(std::function<void()> const& exception_handler);
-
-    /// Replaces the logic that starts the Mir server.
-    /// This is mostly useful for testing subsystems without initializing or running
-    /// a server instance.
-    /// \note if you use this there will be no call to the init_callback and
-    /// there's no guarantee that Server::stop() will stop your code.
-    /// You have to organise these yourself.
-    void replace_runner(std::function<void()> const& runner);
 /** @} */
 
 /** @name Getting access to Mir subsystems

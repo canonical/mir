@@ -70,10 +70,9 @@ struct mir::Server::Self
 {
     bool exit_status{false};
     std::weak_ptr<options::Option> options;
-    ServerConfiguration* server_config{nullptr};
+    std::shared_ptr<ServerConfiguration> server_config;
 
     std::function<void()> init_callback{[]{}};
-    std::function<void()> runner;
     int argc{0};
     char const** argv{nullptr};
     std::function<void()> exception_handler{};
@@ -122,9 +121,9 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 {
     ServerConfiguration(
         std::shared_ptr<options::Configuration> const& configuration_options,
-        std::shared_ptr<Self> const self) :
+        std::shared_ptr<Self> const& self) :
         DefaultServerConfiguration(configuration_options),
-        self(self)
+        self(self.get())
     {
     }
 
@@ -141,7 +140,7 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 
     FOREACH_WRAPPER(MIR_SERVER_CONFIG_WRAP)
 
-    std::shared_ptr<Self> const self;
+    Self* const self;
 };
 
 #undef MIR_SERVER_CONFIG_OVERRIDE
@@ -203,35 +202,27 @@ void mir::Server::set_exception_handler(std::function<void()> const& exception_h
     self->exception_handler = exception_handler;
 }
 
-void mir::Server::replace_runner(std::function<void()> const& runner)
+void mir::Server::start_initialization()
 {
-    self->runner = runner;
+    if (self->server_config) return;
+
+    auto const options = configuration_options(self->argc, self->argv, self->command_line_hander);
+    self->add_configuration_options(*options);
+
+    auto const config = std::make_shared<ServerConfiguration>(options, self);
+    self->server_config = config;
+    self->options = config->the_options();
 }
 
 void mir::Server::run()
 try
 {
-    auto const options = configuration_options(self->argc, self->argv, self->command_line_hander);
+    start_initialization();
 
-    self->add_configuration_options(*options);
-
-    ServerConfiguration config{options, self};
-
-    self->server_config = &config;
-
-    self->options = config.the_options();
-
-    if (self->runner)
-    {
-        self->runner();
-    }
-    else
-    {
-        run_mir(config, [&](DisplayServer&) { self->init_callback(); });
-    }
+    run_mir(*self->server_config, [&](DisplayServer&) { self->init_callback(); });
 
     self->exit_status = true;
-    self->server_config = nullptr;
+    self->server_config.reset();
 }
 catch (...)
 {

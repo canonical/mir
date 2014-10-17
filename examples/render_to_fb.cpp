@@ -19,10 +19,12 @@
 #include "graphics.h"
 
 #include "mir/server.h"
+#include "mir/report_exception.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 
 #include <csignal>
+#include <iostream>
 
 namespace mg=mir::graphics;
 namespace mo=mir::options;
@@ -74,13 +76,19 @@ void render_loop(mir::Server& server)
 }
 
 int main(int argc, char const** argv)
+try
 {
     mir::Server server;
     server.set_command_line(argc, argv);
 
-    server.replace_runner([&]{ render_loop(server); });
+    server.start_initialization();
 
-    server.run();
+    render_loop(server);
 
-    return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
+    return EXIT_SUCCESS;
+}
+catch (...)
+{
+    mir::report_exception(std::cerr);
+    return EXIT_FAILURE;
 }
