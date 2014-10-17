@@ -67,11 +67,11 @@ struct StubSceneElement : mc::SceneElement
         return true;
     }
 
-    void rendered_in(mc::CompositorID)
+    void rendered()
     {
     }
 
-    void occluded_in(mc::CompositorID)
+    void occluded()
     {
     }
 
@@ -345,8 +345,8 @@ struct MockSceneElement : mc::SceneElement
 
     MOCK_CONST_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
     MOCK_CONST_METHOD0(is_a_surface, bool());
-    MOCK_METHOD1(rendered_in, void(mc::CompositorID));
-    MOCK_METHOD1(occluded_in, void(mc::CompositorID));
+    MOCK_METHOD0(rendered, void());
+    MOCK_METHOD0(occluded, void());
 };
 }
 
@@ -359,8 +359,8 @@ TEST_F(DefaultDisplayBufferCompositor, marks_rendered_scene_elements)
     auto element1_rendered = std::make_shared<NiceMock<MockSceneElement>>(
         std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0,0},{100,100}}));
 
-    EXPECT_CALL(*element0_rendered, rendered_in(_));
-    EXPECT_CALL(*element1_rendered, rendered_in(_));
+    EXPECT_CALL(*element0_rendered, rendered());
+    EXPECT_CALL(*element1_rendered, rendered());
 
     mc::DefaultDisplayBufferCompositor compositor(
         mt::fake_shared(mock_renderer),
@@ -380,9 +380,9 @@ TEST_F(DefaultDisplayBufferCompositor, marks_occluded_scene_elements)
     auto element2_occluded = std::make_shared<NiceMock<MockSceneElement>>(
         std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{10000,10000},{20,20}}));
 
-    EXPECT_CALL(*element0_occluded, occluded_in(_));
-    EXPECT_CALL(*element1_rendered, rendered_in(_));
-    EXPECT_CALL(*element2_occluded, occluded_in(_));
+    EXPECT_CALL(*element0_occluded, occluded());
+    EXPECT_CALL(*element1_rendered, rendered());
+    EXPECT_CALL(*element2_occluded, occluded());
 
     mc::DefaultDisplayBufferCompositor compositor(
         mt::fake_shared(mock_renderer),
@@ -397,8 +397,9 @@ TEST_F(DefaultDisplayBufferCompositor, ignores_invisible_scene_elements)
 
     auto element0_invisible = std::make_shared<NiceMock<MockSceneElement>>(
         std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0,0},{500,500}}, 1.0f, true, false, true));
-    EXPECT_CALL(*element0_invisible, occluded_in(_)).Times(0);
-    EXPECT_CALL(*element0_invisible, rendered_in(_)).Times(0);
+
+    EXPECT_CALL(*element0_invisible, occluded()).Times(0);
+    EXPECT_CALL(*element0_invisible, rendered()).Times(0);
 
     mc::DefaultDisplayBufferCompositor compositor(
         mt::fake_shared(mock_renderer),

@@ -47,11 +47,11 @@ public:
         return renderable_;
     }
 
-    void rendered_in(compositor::CompositorID) override
+    void rendered() override
     {
     }
 
-    void occluded_in(compositor::CompositorID) override
+    void occluded() override
     {
     }
     
