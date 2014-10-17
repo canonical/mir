@@ -18,122 +18,14 @@
 
 #include "server_configuration.h"
 #include "mir/options/default_configuration.h"
-#include "mir/graphics/display_configuration_policy.h"
-#include "mir/graphics/display_configuration.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/main_loop.h"
 
-#include <string>
-
-#include <linux/input.h>
-#include <unordered_map>
+#include "example_display_configuration_policy.h"
+#include "example_input_event_filter.h"
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
-namespace geom = mir::geometry;
-
-namespace
-{
-
-char const* const display_config_opt = "display-config";
-char const* const clone_opt_val = "clone";
-char const* const sidebyside_opt_val = "sidebyside";
-char const* const single_opt_val = "single";
-
-class SideBySideDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
-{
-public:
-    void apply_to(mg::DisplayConfiguration& conf)
-    {
-        size_t const preferred_mode_index{0};
-        int max_x = 0;
-        std::unordered_map<mg::DisplayConfigurationCardId, size_t> available_outputs_for_card;
-
-        conf.for_each_card(
-            [&](mg::DisplayConfigurationCard const& card)
-            {
-                available_outputs_for_card[card.id] = card.max_simultaneous_outputs;
-            });
-
-        conf.for_each_output(
-            [&](mg::UserDisplayConfigurationOutput& conf_output)
-            {
-                if (conf_output.connected && conf_output.modes.size() > 0 &&
-                    available_outputs_for_card[conf_output.card_id] > 0)
-                {
-                    conf_output.used = true;
-                    conf_output.top_left = geom::Point{max_x, 0};
-                    conf_output.current_mode_index = preferred_mode_index;
-                    conf_output.power_mode = mir_power_mode_on;
-                    conf_output.orientation = mir_orientation_normal;
-                    max_x += conf_output.modes[preferred_mode_index].size.width.as_int();
-                    --available_outputs_for_card[conf_output.card_id];
-                }
-                else
-                {
-                    conf_output.used = false;
-                    conf_output.power_mode = mir_power_mode_off;
-                }
-            });
-    }
-};
-
-class SingleDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
-{
-public:
-    void apply_to(mg::DisplayConfiguration& conf)
-    {
-        size_t const preferred_mode_index{0};
-        bool done{false};
-
-        conf.for_each_output(
-            [&](mg::UserDisplayConfigurationOutput& conf_output)
-            {
-                if (!done && conf_output.connected && conf_output.modes.size() > 0)
-                {
-                    conf_output.used = true;
-                    conf_output.top_left = geom::Point{0, 0};
-                    conf_output.current_mode_index = preferred_mode_index;
-                    conf_output.power_mode = mir_power_mode_on;
-                    done = true;
-                }
-                else
-                {
-                    conf_output.used = false;
-                    conf_output.power_mode = mir_power_mode_off;
-                }
-            });
-    }
-};
-
-class QuitFilter : public mir::input::EventFilter
-{
-public:
-    QuitFilter(std::shared_ptr<mir::MainLoop> const& main_loop)
-        : main_loop{main_loop}
-    {
-    }
-
-    bool handle(MirEvent const& event) override
-    {
-        if (event.type == mir_event_type_key &&
-            event.key.action == mir_key_action_down &&
-            (event.key.modifiers & mir_key_modifier_alt) &&
-            (event.key.modifiers & mir_key_modifier_ctrl) &&
-            event.key.scan_code == KEY_BACKSPACE)
-        {
-            main_loop->stop();
-            return true;
-        }
-
-        return false;
-    }
-
-private:
-    std::shared_ptr<mir::MainLoop> const main_loop;
-};
-
-}
 
 me::ServerConfiguration::ServerConfiguration(std::shared_ptr<options::DefaultConfiguration> const& configuration_options) :
     DefaultServerConfiguration(configuration_options)
@@ -141,8 +33,8 @@ me::ServerConfiguration::ServerConfiguration(std::shared_ptr<options::DefaultCon
     namespace po = boost::program_options;
 
     configuration_options->add_options()
-        (display_config_opt, po::value<std::string>()->default_value(clone_opt_val),
-            "Display configuration [{clone,sidebyside,single}]");
+        (me::display_config_opt, po::value<std::string>()->default_value(me::clone_opt_val),
+            me::display_config_descr);
 }
 
 me::ServerConfiguration::ServerConfiguration(int argc, char const** argv) :
@@ -156,11 +48,11 @@ me::ServerConfiguration::the_display_configuration_policy()
     return display_configuration_policy(
         [this]() -> std::shared_ptr<mg::DisplayConfigurationPolicy>
         {
-            auto display_config = the_options()->get<std::string>(display_config_opt);
+            auto display_config = the_options()->get<std::string>(me::display_config_opt);
 
-            if (display_config == sidebyside_opt_val)
+            if (display_config == me::sidebyside_opt_val)
                 return std::make_shared<SideBySideDisplayConfigurationPolicy>();
-            else if (display_config == single_opt_val)
+            else if (display_config == me::single_opt_val)
                 return std::make_shared<SingleDisplayConfigurationPolicy>();
             else
                 return DefaultServerConfiguration::the_display_configuration_policy();
@@ -171,7 +63,7 @@ std::shared_ptr<mir::input::CompositeEventFilter>
 me::ServerConfiguration::the_composite_event_filter()
 {
     if (!quit_filter)
-        quit_filter = std::make_shared<QuitFilter>(the_main_loop());
+        quit_filter = std::make_shared<me::QuitFilter>([this] { the_main_loop()->stop(); });
 
     auto composite_filter = DefaultServerConfiguration::the_composite_event_filter();
     composite_filter->append(quit_filter);
