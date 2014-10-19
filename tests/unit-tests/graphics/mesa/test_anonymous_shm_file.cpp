@@ -179,6 +179,38 @@ private:
     int const watch_fd;
 };
 
+bool kernel_supports_O_TMPFILE()
+{
+	//O_TMPFILE support starts in kernel version 3.11
+	mir::Fd fd{open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU)};
+    return (fd >= 0);
+}
+
+void check_written_values(int fd, size_t const size, uint8_t *base_ptr)
+{
+    std::vector<unsigned char> buffer(size);
+
+    for (size_t i = 0; i < size; i++)
+    {
+        base_ptr[i] = i;
+    }
+
+    EXPECT_EQ(static_cast<ssize_t>(size), read(fd, buffer.data(), size));
+
+    for (size_t i = 0; i < size; i++)
+    {
+        EXPECT_EQ(base_ptr[i], buffer[i]) << "i=" << i;
+    }
+}
+
+void check_size(int fd, size_t const size)
+{
+    struct stat stat;
+
+    fstat(fd, &stat);
+    EXPECT_EQ(static_cast<off_t>(size), stat.st_size);
+}
+
 }
 
 TEST(AnonymousShmFile, is_created)
@@ -246,42 +278,49 @@ TEST(AnonymousShmFile, has_correct_size)
 {
     using namespace testing;
 
-    TemporaryDirectory const temp_dir;
-    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
     size_t const file_size{100};
 
-    mgm::AnonymousShmFile shm_file{file_size, true};
+    // Test legacy code path
+    {
+        TemporaryDirectory const temp_dir;
+        TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
+        mgm::AnonymousShmFile shm_file_forced{file_size, true};
 
-    struct stat stat;
-    fstat(shm_file.fd(), &stat);
+        check_size(shm_file_forced.fd(), file_size);
+    }
 
-    EXPECT_EQ(static_cast<off_t>(file_size), stat.st_size);
+    // Test alternate code path, if supported
+    if (kernel_supports_O_TMPFILE())
+    {
+        mgm::AnonymousShmFile shm_file{file_size};
+
+        check_size(shm_file.fd(), file_size);
+    }
 }
 
 TEST(AnonymousShmFile, writing_to_base_ptr_writes_to_file)
 {
     using namespace testing;
 
-    TemporaryDirectory const temp_dir;
-    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
     size_t const file_size{100};
+    uint8_t *base_ptr;
 
-    mgm::AnonymousShmFile shm_file{file_size, true};
-
-    auto base_ptr = reinterpret_cast<uint8_t*>(shm_file.base_ptr());
-
-    for (size_t i = 0; i < file_size; i++)
+    // Test legacy code path
     {
-        base_ptr[i] = i;
+        TemporaryDirectory const temp_dir;
+        TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
+        mgm::AnonymousShmFile shm_file_forced{file_size, true};
+
+        base_ptr = reinterpret_cast<uint8_t*>(shm_file_forced.base_ptr());
+        check_written_values(shm_file_forced.fd(), file_size, base_ptr);
     }
 
-    std::vector<unsigned char> buffer(file_size);
-
-    EXPECT_EQ(static_cast<ssize_t>(file_size),
-              read(shm_file.fd(), buffer.data(), file_size));
-
-    for (size_t i = 0; i < file_size; i++)
+    // Test alternate code path, if supported
+    if (kernel_supports_O_TMPFILE())
     {
-        EXPECT_EQ(base_ptr[i], buffer[i]) << "i=" << i;
+        mgm::AnonymousShmFile shm_file{file_size};
+
+        base_ptr = reinterpret_cast<uint8_t*>(shm_file.base_ptr());
+        check_written_values(shm_file.fd(), file_size, base_ptr);
     }
 }
