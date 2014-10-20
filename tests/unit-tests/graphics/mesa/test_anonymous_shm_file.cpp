@@ -32,7 +32,6 @@
 #include <sys/inotify.h>
 #include <fcntl.h>
 
-namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 
 namespace
@@ -181,12 +180,12 @@ private:
 
 bool kernel_supports_O_TMPFILE()
 {
-	//O_TMPFILE support starts in kernel version 3.11
-	mir::Fd fd{open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU)};
+    // O_TMPFILE support starts in kernel version 3.11
+    mir::Fd fd{open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU)};
     return (fd >= 0);
 }
 
-void check_written_values(int fd, size_t const size, uint8_t *base_ptr)
+void check_values(int fd, size_t const size, uint8_t *base_ptr)
 {
     std::vector<unsigned char> buffer(size);
 
@@ -312,7 +311,7 @@ TEST(AnonymousShmFile, writing_to_base_ptr_writes_to_file)
         mgm::AnonymousShmFile shm_file_forced{file_size, true};
 
         base_ptr = reinterpret_cast<uint8_t*>(shm_file_forced.base_ptr());
-        check_written_values(shm_file_forced.fd(), file_size, base_ptr);
+        check_values(shm_file_forced.fd(), file_size, base_ptr);
     }
 
     // Test alternate code path, if supported
@@ -321,6 +320,6 @@ TEST(AnonymousShmFile, writing_to_base_ptr_writes_to_file)
         mgm::AnonymousShmFile shm_file{file_size};
 
         base_ptr = reinterpret_cast<uint8_t*>(shm_file.base_ptr());
-        check_written_values(shm_file.fd(), file_size, base_ptr);
+        check_values(shm_file.fd(), file_size, base_ptr);
     }
 }
