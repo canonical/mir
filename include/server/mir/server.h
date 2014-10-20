@@ -24,7 +24,7 @@
 
 namespace mir
 {
-namespace compositor { class Compositor; }
+namespace compositor { class Compositor; class DisplayBufferCompositorFactory; }
 namespace frontend { class SessionAuthorizer; }
 namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; }
@@ -174,6 +174,10 @@ public:
 
     /// Sets an override functor for creating the compositor.
     void override_the_compositor(Builder<compositor::Compositor> const& compositor_builder);
+
+    /// Sets an override functor for creating the per-display rendering code.
+    void override_the_display_buffer_compositor_factory(
+        Builder<compositor::DisplayBufferCompositorFactory> const& compositor_builder);
 
     /// Sets an override functor for creating the cursor listener.
     void override_the_cursor_listener(Builder<input::CursorListener> const& cursor_listener_builder);
