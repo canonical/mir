@@ -128,10 +128,9 @@ public:
 /** @} */
 
 /** @name Getting access to Mir subsystems
- * These will throw before initialization starts or after the server exits.
- * They may be invoked by the functors that provide alternative implementations of
- * Mir subsystems and when the init_callback is invoked (and thereafter
- * until the server exits).
+ * These may be invoked by the functors that provide alternative implementations of
+ * Mir subsystems. If called before customization or configuration calls then the latter
+ * are not guaranteed to be honoured.
  *  @{ */
     /// \return the composite event filter.
     auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;
@@ -166,9 +165,8 @@ public:
 
 /** @name Providing custom implementation
  * Provide alternative implementations of Mir subsystems: the functors will be invoked during initialization
- * (this is only useful before initialization starts).
+ * of the Mir server (or when accessor methods are called).
  *  @{ */
-
     /// Each of the override functions takes a builder functor of the same form
     template<typename T> using Builder = std::function<std::shared_ptr<T>()>;
 
