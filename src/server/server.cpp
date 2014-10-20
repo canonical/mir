@@ -200,7 +200,7 @@ void mir::Server::set_exception_handler(std::function<void()> const& exception_h
     self->exception_handler = exception_handler;
 }
 
-void mir::Server::start_initialization()
+void mir::Server::start_initialization() const
 {
     if (self->server_config) return;
 
@@ -243,16 +243,11 @@ bool mir::Server::exited_normally()
     return self->exit_status;
 }
 
-namespace
-{
-auto const no_config_to_access = "Cannot access config when no config active.";
-}
-
 #define MIR_SERVER_ACCESSOR(name)\
 auto mir::Server::name() const -> decltype(self->server_config->name())\
 {\
-    if (self->server_config) return self->server_config->name();\
-    BOOST_THROW_EXCEPTION(std::logic_error(no_config_to_access));\
+    start_initialization();\
+    return self->server_config->name();\
 }
 
 FOREACH_ACCESSOR(MIR_SERVER_ACCESSOR)
