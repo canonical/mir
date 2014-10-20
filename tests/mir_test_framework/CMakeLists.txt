@@ -18,6 +18,7 @@ set(
   server_runner.cpp
   testing_server_options.cpp
   input_testing_server_options.cpp
+  stubbed_graphics_platform.cpp
   stubbed_server_configuration.cpp
   testing_process_manager.cpp
   testing_client_options.cpp
