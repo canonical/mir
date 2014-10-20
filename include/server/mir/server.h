@@ -217,7 +217,7 @@ public:
 /** @} */
 
 private:
-    void start_initialization() const;
+    void apply_settings() const;
     struct ServerConfiguration;
     struct Self;
     std::shared_ptr<Self> const self;

@@ -200,7 +200,7 @@ void mir::Server::set_exception_handler(std::function<void()> const& exception_h
     self->exception_handler = exception_handler;
 }
 
-void mir::Server::start_initialization() const
+void mir::Server::apply_settings() const
 {
     if (self->server_config) return;
 
@@ -215,7 +215,7 @@ void mir::Server::start_initialization() const
 void mir::Server::run()
 try
 {
-    start_initialization();
+    apply_settings();
 
     run_mir(*self->server_config, [&](DisplayServer&) { self->init_callback(); });
 
@@ -246,7 +246,7 @@ bool mir::Server::exited_normally()
 #define MIR_SERVER_ACCESSOR(name)\
 auto mir::Server::name() const -> decltype(self->server_config->name())\
 {\
-    start_initialization();\
+    apply_settings();\
     return self->server_config->name();\
 }
 
