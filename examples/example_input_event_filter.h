@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,36 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_BUFFER_INITIALIZER_H_
-#define MIR_TEST_DOUBLES_MOCK_BUFFER_INITIALIZER_H_
+#ifndef EXAMPLE_INPUT_EVENT_FILTER_H_
+#define EXAMPLE_INPUT_EVENT_FILTER_H_
 
-#include "mir/graphics/buffer_initializer.h"
+#include "mir/input/event_filter.h"
 
-#include <gmock/gmock.h>
+#include <functional>
 
 namespace mir
 {
-namespace test
+namespace examples
 {
-namespace doubles
-{
-
-class MockBufferInitializer : public graphics::BufferInitializer
+class QuitFilter : public mir::input::EventFilter
 {
 public:
-    MOCK_METHOD1(operator_call, void(graphics::Buffer& buffer));
+    QuitFilter(std::function<void()> const& quit_action);
 
-    void operator()(graphics::Buffer& buffer)
-    {
-        operator_call(buffer);
-    }
+    bool handle(MirEvent const& event) override;
+
+private:
+    std::function<void()> const quit_action;
 };
-
 }
 }
-} // namespace mir
 
-#endif /* MIR_TEST_DOUBLES_MOCK_BUFFER_INITIALIZER_H_ */
+#endif /* EXAMPLE_INPUT_EVENT_FILTER_H_ */

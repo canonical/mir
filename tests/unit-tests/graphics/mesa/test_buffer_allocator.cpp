@@ -25,7 +25,6 @@
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
-#include "mir_test_doubles/mock_buffer_initializer.h"
 #include "mir_test_doubles/platform_factory.h"
 #include "mir_test_framework/udev_environment.h"
 
@@ -62,9 +61,8 @@ protected:
         .WillByDefault(Return(mock_gbm.fake_gbm.bo_handle));
 
         platform = mtd::create_mesa_platform_with_null_dependencies();
-        mock_buffer_initializer = std::make_shared<testing::NiceMock<mtd::MockBufferInitializer>>();
         allocator.reset(new mgm::BufferAllocator(
-            platform->gbm.device, mock_buffer_initializer, mgm::BypassOption::allowed));
+            platform->gbm.device, mgm::BypassOption::allowed));
     }
 
     // Defaults
@@ -78,7 +76,6 @@ protected:
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL> mock_gl;
     std::shared_ptr<mgm::Platform> platform;
-    std::shared_ptr<testing::NiceMock<mtd::MockBufferInitializer>> mock_buffer_initializer;
     std::unique_ptr<mgm::BufferAllocator> allocator;
     mtf::UdevEnvironment fake_devices;
 };
@@ -147,7 +144,6 @@ TEST_F(MesaBufferAllocatorTest, bypass_disables_when_option_is_disabled)
 
     mgm::BufferAllocator alloc(
         platform->gbm.device,
-        mock_buffer_initializer,
         mgm::BypassOption::prohibited);
     auto buf = alloc.alloc_buffer(properties);
     ASSERT_TRUE(buf.get() != NULL);
@@ -234,29 +230,6 @@ TEST_F(MesaBufferAllocatorTest, correct_buffer_handle_is_destroyed)
     EXPECT_CALL(mock_gbm, gbm_bo_destroy(bo));
 
     allocator->alloc_buffer(buffer_properties);
-}
-
-TEST_F(MesaBufferAllocatorTest, buffer_initializer_is_called)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_buffer_initializer, operator_call(_))
-        .Times(1);
-
-    allocator->alloc_buffer(buffer_properties);
-}
-
-TEST_F(MesaBufferAllocatorTest, null_buffer_initializer_does_not_crash)
-{
-    using namespace testing;
-
-    auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    allocator.reset(new mgm::BufferAllocator(
-        platform->gbm.device, null_buffer_initializer, mgm::BypassOption::allowed));
-
-    EXPECT_NO_THROW({
-        allocator->alloc_buffer(buffer_properties);
-    });
 }
 
 TEST_F(MesaBufferAllocatorTest, throws_on_buffer_creation_failure)

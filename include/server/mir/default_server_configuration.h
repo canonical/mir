@@ -108,7 +108,6 @@ namespace graphics
 class NativePlatform;
 class Platform;
 class Display;
-class BufferInitializer;
 class DisplayReport;
 class GraphicBufferAllocator;
 class BufferWriter;
@@ -190,7 +189,6 @@ public:
     /** @name graphics configuration - customization
      * configurable interfaces for modifying graphics
      *  @{ */
-    virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
     virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
@@ -341,6 +339,9 @@ protected:
 
     /** @Convenience wrapper functions
      *  @{ */
+    virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> wrap_display_configuration_policy(
+        std::shared_ptr<graphics::DisplayConfigurationPolicy> const& wrapped);
+
     virtual std::shared_ptr<scene::SurfaceCoordinator>  wrap_surface_coordinator(
         std::shared_ptr<scene::SurfaceCoordinator> const& wrapped);
 
@@ -374,7 +375,6 @@ protected:
     CachedPtr<input::TouchVisualizer> touch_visualizer;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::NativePlatform>    graphics_native_platform;
-    CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::BufferWriter> buffer_writer;
     CachedPtr<graphics::Display>      display;

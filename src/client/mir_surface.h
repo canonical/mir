@@ -132,6 +132,7 @@ private:
     mir::protobuf::DisplayServer::Stub& server;
     mir::protobuf::Debug::Stub* debug;
     mir::protobuf::Surface surface;
+    mir::protobuf::BufferRequest buffer_request;
     std::string error_message;
     mir::protobuf::Void void_response;
 

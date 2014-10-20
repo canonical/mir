@@ -16,7 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/display_buffer.h"
 #include "src/platform/graphics/android/display.h"
 #include "src/platform/graphics/android/hwc_loggers.h"
@@ -55,8 +54,7 @@ protected:
            the server can handle this, but we need the test to as well */
         original_sigterm_handler = signal(SIGTERM, [](int){});
 
-        auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-        buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
+        buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
 
         /* note about fb_device: OMAP4 drivers seem to only be able to open fb once
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we

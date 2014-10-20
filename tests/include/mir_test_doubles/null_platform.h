@@ -33,8 +33,7 @@ namespace doubles
 class NullPlatform : public graphics::Platform
 {
  public:
-    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<graphics::BufferInitializer>& /*buffer_initializer*/)
+    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator()
     {
         return nullptr;
     }
