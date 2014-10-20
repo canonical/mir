@@ -557,8 +557,8 @@ TEST_F(SurfaceStack, occludes_not_rendered_surface)
 
     EXPECT_CALL(*mock_surface, configure(mir_surface_attrib_visibility, mir_surface_visibility_occluded));
 
-    elements.back()->occluded_in(compositor_id);
-    elements2.back()->occluded_in(compositor_id2);
+    elements.back()->occluded();
+    elements2.back()->occluded();
 }
 
 TEST_F(SurfaceStack, exposes_rendered_surface)
@@ -580,8 +580,8 @@ TEST_F(SurfaceStack, exposes_rendered_surface)
 
     EXPECT_CALL(*mock_surface, configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed));
 
-    elements.back()->occluded_in(compositor_id);
-    elements2.back()->rendered_in(compositor_id2);
+    elements.back()->occluded();
+    elements2.back()->rendered();
 }
 
 TEST_F(SurfaceStack, occludes_surface_when_unregistering_all_compositors_that_rendered_it)
@@ -608,9 +608,9 @@ TEST_F(SurfaceStack, occludes_surface_when_unregistering_all_compositors_that_re
     EXPECT_CALL(*mock_surface, configure(mir_surface_attrib_visibility, mir_surface_visibility_exposed))
         .Times(2);
 
-    elements.back()->occluded_in(compositor_id);
-    elements2.back()->rendered_in(compositor_id2);
-    elements3.back()->rendered_in(compositor_id3);
+    elements.back()->occluded();
+    elements2.back()->rendered();
+    elements3.back()->rendered();
 
     Mock::VerifyAndClearExpectations(mock_surface.get());
 

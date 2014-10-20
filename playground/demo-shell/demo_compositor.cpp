@@ -92,11 +92,11 @@ void me::DemoCompositor::composite()
                 nonrenderlist_elements = false; // Don't care what's underneath
             }
 
-            it->rendered_in(this);
+            it->rendered();
         }
         else
         {
-            it->occluded_in(this);
+            it->occluded();
         }
         nonrenderlist_elements |= embellished;
     }

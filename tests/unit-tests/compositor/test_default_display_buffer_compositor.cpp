@@ -379,8 +379,8 @@ struct MockVisibilitySceneElement : mtd::StubSceneElement
 {
     using mtd::StubSceneElement::StubSceneElement;
 
-    MOCK_METHOD1(rendered_in, void(mc::CompositorID));
-    MOCK_METHOD1(occluded_in, void(mc::CompositorID));
+    MOCK_METHOD0(rendered, void());
+    MOCK_METHOD0(occluded, void());
 };
 }
 
@@ -393,8 +393,8 @@ TEST_F(DefaultDisplayBufferCompositor, marks_rendered_scene_elements)
     auto element1_rendered = std::make_shared<MockVisibilitySceneElement>(
         std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0,0},{100,100}}));
 
-    EXPECT_CALL(*element0_rendered, rendered_in(_));
-    EXPECT_CALL(*element1_rendered, rendered_in(_));
+    EXPECT_CALL(*element0_rendered, rendered());
+    EXPECT_CALL(*element1_rendered, rendered());
 
     FakeScene scene({element0_rendered, element1_rendered});
 
@@ -418,9 +418,9 @@ TEST_F(DefaultDisplayBufferCompositor, marks_occluded_scene_elements)
     auto element2_occluded = std::make_shared<MockVisibilitySceneElement>(
         std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{10000,10000},{20,20}}));
 
-    EXPECT_CALL(*element0_occluded, occluded_in(_));
-    EXPECT_CALL(*element1_rendered, rendered_in(_));
-    EXPECT_CALL(*element2_occluded, occluded_in(_));
+    EXPECT_CALL(*element0_occluded, occluded());
+    EXPECT_CALL(*element1_rendered, rendered());
+    EXPECT_CALL(*element2_occluded, occluded());
 
     FakeScene scene({element0_occluded, element1_rendered, element2_occluded});
 
@@ -440,8 +440,8 @@ TEST_F(DefaultDisplayBufferCompositor, ignores_invisible_scene_elements)
     auto element0_invisible = std::make_shared<MockVisibilitySceneElement>(
         std::make_shared<mtd::FakeRenderable>(geom::Rectangle{{0,0},{500,500}}, 1.0f, true, false, true));
 
-    EXPECT_CALL(*element0_invisible, occluded_in(_)).Times(0);
-    EXPECT_CALL(*element0_invisible, rendered_in(_)).Times(0);
+    EXPECT_CALL(*element0_invisible, occluded()).Times(0);
+    EXPECT_CALL(*element0_invisible, rendered()).Times(0);
 
     FakeScene scene({element0_invisible});
 

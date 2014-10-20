@@ -19,7 +19,6 @@
 #ifndef MIR_COMPOSITOR_SCENE_ELEMENT_H_
 #define MIR_COMPOSITOR_SCENE_ELEMENT_H_
 
-#include "mir/compositor/compositor_id.h"
 #include <memory>
 
 namespace mir
@@ -37,8 +36,8 @@ public:
     virtual ~SceneElement() = default;
 
     virtual std::shared_ptr<graphics::Renderable> renderable() const = 0;
-    virtual void rendered_in(CompositorID cid) = 0;
-    virtual void occluded_in(CompositorID cid) = 0;
+    virtual void rendered() = 0;
+    virtual void occluded() = 0;
     
     // Query whether the SceneElement represents a window-surface, which at the discretion of the compositor
     // may be eligible for window decoration.
