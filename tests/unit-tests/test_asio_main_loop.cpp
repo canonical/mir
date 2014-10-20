@@ -100,13 +100,14 @@ public:
     mt::WaitObject wait;
     std::chrono::milliseconds delay{50};
 
-    struct UnblockMainLoop : mt::AutoUnblockThread
-    {
-        UnblockMainLoop(mir::AsioMainLoop & loop)
-            : mt::AutoUnblockThread([&loop]() {loop.stop();},
-                                    [&loop]() {loop.run();})
-        {}
-    };
+};
+
+struct UnblockMainLoop : mt::AutoUnblockThread
+{
+    UnblockMainLoop(mir::AsioMainLoop & loop)
+        : mt::AutoUnblockThread([&loop]() {loop.stop();},
+                                [&loop]() {loop.run();})
+    {}
 };
 
 class Counter
@@ -633,7 +634,7 @@ TEST_F(AsioMainLoopAlarmTest, rescheduled_alarm_cancels_previous_scheduling)
 
 TEST_F(AsioMainLoopAlarmTest, alarm_callback_cannot_deadlock)
 {   // Regression test for deadlock bug LP: #1339700
-    std::mutex m;
+    std::timed_mutex m;
     std::atomic_bool failed(false);
     int i = 0;
     int const loops = 5;
@@ -641,13 +642,7 @@ TEST_F(AsioMainLoopAlarmTest, alarm_callback_cannot_deadlock)
     auto alarm = ml.notify_in(std::chrono::milliseconds{0}, [&]()
     {
         // From this angle, ensure we can lock m (alarm should be unlocked)
-        int tries = 0;
-        while (!m.try_lock() && tries < 100) // 100 x 100 = try for 10 seconds
-        {
-            ++tries;
-            std::this_thread::sleep_for(std::chrono::milliseconds{100});
-        }
-        failed = (tries >= 100);
+        failed = !m.try_lock_for(std::chrono::seconds{5});
         ASSERT_FALSE(failed);
         ++i;
         m.unlock();
@@ -670,8 +665,8 @@ TEST_F(AsioMainLoopAlarmTest, alarm_callback_cannot_deadlock)
     UnblockMainLoop unblocker(ml);
     for (int j = 0; j < loops; ++j)
     {
-        clock->advance_by(std::chrono::milliseconds{101}, ml);
-        alarm->reschedule_in(std::chrono::milliseconds{100});
+        clock->advance_by(std::chrono::milliseconds{11}, ml);
+        alarm->reschedule_in(std::chrono::milliseconds{10});
     }
 
     t.join();
@@ -858,4 +853,23 @@ TEST_F(AsioMainLoopTest, handles_enqueue_from_within_action)
     ASSERT_THAT(actions.size(), Eq(num_actions));
     for (int i = 0; i < num_actions; ++i)
         EXPECT_THAT(actions[i], Eq(i)) << "i = " << i;
+}
+
+// More targeted regression test for LP: #1381925
+TEST_F(AsioMainLoopTest, stress_emits_alarm_notification_with_zero_timeout)
+{
+    using namespace ::testing;
+
+    UnblockMainLoop unblocker{ml};
+
+    for (int i = 0; i < 1000; ++i)
+    {
+        mt::WaitObject notification_called;
+
+        auto alarm = ml.notify_in(
+            std::chrono::milliseconds{0},
+            [&] { notification_called.notify_ready(); });
+
+        notification_called.wait_until_ready(std::chrono::seconds{5});
+    }
 }
