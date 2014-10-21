@@ -85,3 +85,39 @@ TEST_F(AndroidClientBuffer, packs_memory_region_correctly)
     EXPECT_EQ(stride, region->stride);
     EXPECT_EQ(pf, region->format);
 }
+
+TEST_F(AndroidClientBuffer, packs_memory_region_correctly)
+{
+    using namespace testing;
+    int stub_fence{44};
+    int invalid_fence{-1};
+
+    EXPECT_CALL(*mock_native_buffer, copy_fence())
+        .Times(2)
+        .WillOnce(Return(stub_fence));
+        .WillOnce(Return(invalid_fence));
+
+    mcl::BufferUpdateMsg msg;
+    mcla::Buffer buffer(mock_registrar, package, pf);
+
+    buffer.fill_update_msg(msg);
+
+    EXPECT_THAT(msg.data_size, Eq(1));
+    EXPECT_THAT(msg.data[0], Eq(mga::BufferFlag::fenced));
+    for(auto i = 1; i < data_size_max; i++)
+        EXPECT_THAT(msg.data[i], Eq(0));
+    EXPECT_THAT(msg.fd_size, Eq(1));
+    EXPECT_THAT(msg.fd[0], Eq(stub_fence));
+    for(auto i = 1; i < fd_size_max; i++)
+        EXPECT_THAT(msg.fd[i], Eq(-1));
+
+    buffer.fill_update_msg(msg);
+
+    EXPECT_THAT(msg.data_size, Eq(1));
+    EXPECT_THAT(msg.data[0], Eq(mga::BufferFlag::unfenced));
+    for(auto i = 1; i < data_size_max; i++)
+        EXPECT_THAT(msg.data[i], Eq(0));
+    EXPECT_THAT(msg.fd_size, Eq(0));
+    for(auto i = 0; i < fd_size_max; i++)
+        EXPECT_THAT(msg.fd[i], Eq(-1));
+}
