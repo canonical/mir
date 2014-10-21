@@ -28,7 +28,9 @@
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #endif
 
-#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #include <system_error>
 #include <boost/exception/errinfo_errno.hpp>
