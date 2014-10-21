@@ -77,3 +77,8 @@ void mcla::Buffer::update_from(MirBufferPackage const& update_package)
 {
     (void) update_package;
 }
+
+void mcla::Buffer::fill_update_msg(MirBufferPackage& message)
+{
+    (void) message;
+}
