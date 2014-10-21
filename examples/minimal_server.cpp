@@ -16,21 +16,14 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "mir/default_server_configuration.h"
-#include "mir/report_exception.h"
-#include "mir/run_mir.h"
+#include "mir/server.h"
 
-#include <iostream>
+#include <cstdlib>
 
 int main(int argc, char const* argv[])
-try
 {
-    mir::DefaultServerConfiguration config(argc, argv);
-    run_mir(config, [](mir::DisplayServer&){} );
-    return 0;
-}
-catch (...)
-{
-    mir::report_exception(std::cerr);
-    return 1;
+    mir::Server server;
+    server.set_command_line(argc, argv);
+    server.run();
+    return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
 }

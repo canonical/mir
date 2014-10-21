@@ -47,9 +47,11 @@ class SurfaceSceneElement : public mc::SceneElement
 public:
     SurfaceSceneElement(
         std::shared_ptr<mg::Renderable> renderable,
-        std::shared_ptr<ms::RenderingTracker> const& tracker)
+        std::shared_ptr<ms::RenderingTracker> const& tracker,
+        mc::CompositorID id)
         : renderable_{renderable},
-          tracker{tracker}
+          tracker{tracker},
+          cid{id}
     {
     }
 
@@ -58,12 +60,12 @@ public:
         return renderable_;
     }
 
-    void rendered_in(mc::CompositorID cid) override
+    void rendered() override
     {
         tracker->rendered_in(cid);
     }
 
-    void occluded_in(mc::CompositorID cid) override
+    void occluded() override
     {
         tracker->occluded_in(cid);
     }
@@ -76,8 +78,10 @@ public:
 private:
     std::shared_ptr<mg::Renderable> const renderable_;
     std::shared_ptr<ms::RenderingTracker> const tracker;
+    mc::CompositorID cid;
 };
 
+//note: something different than a 2D/HWC overlay
 class OverlaySceneElement : public mc::SceneElement
 {
 public:
@@ -92,11 +96,11 @@ public:
         return renderable_;
     }
 
-    void rendered_in(mc::CompositorID /* cid */) override
+    void rendered() override
     {
     }
 
-    void occluded_in(mc::CompositorID /* cid */) override
+    void occluded() override
     {
     }
     
@@ -127,7 +131,8 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
         {
             auto element = std::make_shared<SurfaceSceneElement>(
                 surface->compositor_snapshot(id),
-                rendering_trackers[surface.get()]);
+                rendering_trackers[surface.get()],
+                id);
             elements.emplace_back(element);
         }
     }

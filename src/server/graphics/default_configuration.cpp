@@ -25,7 +25,6 @@
 #include "nested/nested_platform.h"
 #include "offscreen/display.h"
 
-#include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/cursor.h"
 #include "program_factory.h"
@@ -43,25 +42,24 @@
 
 namespace mg = mir::graphics;
 
-std::shared_ptr<mg::BufferInitializer>
-mir::DefaultServerConfiguration::the_buffer_initializer()
-{
-    return buffer_initializer(
-        []()
-        {
-             return std::make_shared<mg::NullBufferInitializer>();
-        });
-}
-
 std::shared_ptr<mg::DisplayConfigurationPolicy>
 mir::DefaultServerConfiguration::the_display_configuration_policy()
 {
     return display_configuration_policy(
-        []
+        [this]
         {
-            return std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
+            return wrap_display_configuration_policy(
+                std::make_shared<mg::DefaultDisplayConfigurationPolicy>());
         });
 }
+
+std::shared_ptr<mg::DisplayConfigurationPolicy>
+mir::DefaultServerConfiguration::wrap_display_configuration_policy(
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
+{
+    return wrapped;
+}
+
 
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
@@ -102,7 +100,7 @@ mir::DefaultServerConfiguration::the_buffer_allocator()
     return buffer_allocator(
         [&]()
         {
-            return the_graphics_platform()->create_buffer_allocator(the_buffer_initializer());
+            return the_graphics_platform()->create_buffer_allocator();
         });
 }
 
