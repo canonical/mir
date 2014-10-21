@@ -277,7 +277,7 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
     using namespace testing;
     std::string test_string{"mir was a space station"};
     mir::Fd file(fileno(tmpfile()));
-    write(file, test_string.c_str(), test_string.size());
+    EXPECT_THAT(write(file, test_string.c_str(), test_string.size()), Gt(0));
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     MirSurfaceParameters const request_params =
