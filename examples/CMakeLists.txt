@@ -7,6 +7,8 @@ add_library(eglapp STATIC
 
 add_library(exampleserverconfig STATIC
   server_configuration.cpp
+  example_display_configuration_policy.cpp
+  example_input_event_filter.cpp
 )
 
 target_link_libraries(eglapp
@@ -153,7 +155,6 @@ install(TARGETS ${INSTALL_DEMOS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_executable(mir_demo_server_basic
   basic_server.cpp
-  basic_server_configuration.cpp
 )
 
 target_link_libraries(mir_demo_server_basic
@@ -170,23 +171,6 @@ add_executable(mir_demo_server_minimal minimal_server.cpp)
 target_link_libraries(mir_demo_server_minimal mirserver)
 install(TARGETS mir_demo_server_minimal
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-
-add_executable(mir_demo_server_translucent
-  translucent_server.cpp
-  translucent_server_configuration.cpp
-  pixel_format_selector.cpp
-  basic_server_configuration.cpp
-)
-
-target_link_libraries(mir_demo_server_translucent
-  mirserver
-  exampleserverconfig
-  ${Boost_LIBRARIES}
-)
-
-install(TARGETS mir_demo_server_translucent
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 add_executable(mir_demo_standalone_render_overlays

@@ -34,7 +34,6 @@ namespace mir
 {
 namespace graphics
 {
-class BufferInitializer;
 struct EGLExtensions;
 
 namespace mesa
@@ -42,9 +41,7 @@ namespace mesa
 class BufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:
-    BufferAllocator(gbm_device* device,
-                    std::shared_ptr<BufferInitializer> const& buffer_initializer,
-                    BypassOption bypass_option);
+    BufferAllocator(gbm_device* device, BypassOption bypass_option);
 
     virtual std::shared_ptr<Buffer> alloc_buffer(
         graphics::BufferProperties const& buffer_properties);
@@ -59,7 +56,6 @@ private:
         graphics::BufferProperties const& buffer_properties);
 
     gbm_device* const device;
-    std::shared_ptr<graphics::BufferInitializer> buffer_initializer;
     std::shared_ptr<EGLExtensions> const egl_extensions;
 
     BypassOption const bypass_option;

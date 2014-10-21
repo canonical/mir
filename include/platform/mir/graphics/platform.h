@@ -44,7 +44,6 @@ namespace graphics
 {
 class Buffer;
 class Display;
-class BufferInitializer;
 class InternalClient;
 class DisplayReport;
 class DisplayConfigurationPolicy;
@@ -75,12 +74,8 @@ public:
 
     /**
      * Creates the buffer allocator subsystem.
-     *
-     * \param [in] buffer_initializer the object responsible for initializing the buffers
      */
-
-    virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator(
-        std::shared_ptr<BufferInitializer> const& buffer_initializer) = 0;
+    virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() = 0;
     
     virtual std::shared_ptr<BufferWriter> make_buffer_writer() = 0;
 

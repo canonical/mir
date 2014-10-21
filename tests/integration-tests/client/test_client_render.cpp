@@ -19,7 +19,6 @@
 #include "mir_test_framework/process.h"
 
 #include "mir/graphics/buffer_properties.h"
-#include "mir/graphics/buffer_initializer.h"
 #include "src/platform/graphics/android/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
@@ -192,8 +191,7 @@ struct StubServerGenerator : public mt::StubServerTool
 {
     StubServerGenerator()
     {
-        auto initializer = std::make_shared<mg::NullBufferInitializer>();
-        allocator = std::make_shared<mga::AndroidGraphicBufferAllocator> (initializer);
+        allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
         auto size = geom::Size{test_width, test_height};
         surface_pf = mir_pixel_format_abgr_8888;
         last_posted = allocator->alloc_buffer_platform(size, surface_pf, mga::BufferUsage::use_hardware);
@@ -234,9 +232,9 @@ struct StubServerGenerator : public mt::StubServerTool
         done->Run();
     }
 
-    virtual void next_buffer(
+    virtual void exchange_buffer(
         ::google::protobuf::RpcController* /*controller*/,
-        ::mir::protobuf::SurfaceId const* /*request*/,
+        ::mir::protobuf::BufferRequest const* /*request*/,
         ::mir::protobuf::Buffer* response,
         ::google::protobuf::Closure* done)
     {

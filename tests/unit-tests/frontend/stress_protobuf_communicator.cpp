@@ -65,7 +65,7 @@ struct StubProtobufClient
 
     void connect_done();
     void create_surface_done();
-    void next_buffer_done();
+    void exchange_buffer_done();
     void release_surface_done();
     void disconnect_done();
     void drm_auth_magic_done();
@@ -74,7 +74,7 @@ struct StubProtobufClient
 
     void wait_for_create_surface();
 
-    void wait_for_next_buffer();
+    void wait_for_exchange_buffer();
 
     void wait_for_release_surface();
 
@@ -93,7 +93,7 @@ struct StubProtobufClient
     const int maxwait;
     std::atomic<bool> connect_done_called;
     std::atomic<bool> create_surface_called;
-    std::atomic<bool> next_buffer_called;
+    std::atomic<bool> exchange_buffer_called;
     std::atomic<bool> release_surface_called;
     std::atomic<bool> disconnect_done_called;
     std::atomic<bool> drm_auth_magic_done_called;
@@ -142,7 +142,7 @@ std::shared_ptr<mt::StubServerTool> StressProtobufCommunicator::stub_server_tool
 std::shared_ptr<mt::TestProtobufServer> StressProtobufCommunicator::stub_server;
 
 
-TEST_F(StressProtobufCommunicator, DISABLED_stress_next_buffer)
+TEST_F(StressProtobufCommunicator, DISABLED_stress_exchange_buffer)
 {
     client->display_server.create_surface(
         0,
@@ -155,13 +155,16 @@ TEST_F(StressProtobufCommunicator, DISABLED_stress_next_buffer)
 
     for (int i = 0; i != 100000; ++i)
     {
-        client->display_server.next_buffer(
+        mir::protobuf::BufferRequest request;
+        *request.mutable_id() = client->surface.id();
+        *request.mutable_buffer() = client->surface.buffer();
+        client->display_server.exchange_buffer(
             0,
-            &client->surface.id(),
+            &request,
             client->surface.mutable_buffer(),
-            google::protobuf::NewCallback(client.get(), &StubProtobufClient::next_buffer_done));
+            google::protobuf::NewCallback(client.get(), &StubProtobufClient::exchange_buffer_done));
 
-        client->wait_for_next_buffer();
+        client->wait_for_exchange_buffer();
     }
 
     client->display_server.disconnect(
@@ -188,7 +191,7 @@ StubProtobufClient::StubProtobufClient(
     maxwait(timeout_ms),
     connect_done_called(false),
     create_surface_called(false),
-    next_buffer_called(false),
+    exchange_buffer_called(false),
     release_surface_called(false),
     disconnect_done_called(false),
     tfd_done_called(false),
@@ -220,9 +223,9 @@ void StubProtobufClient::create_surface_done()
     while (!create_surface_done_count.compare_exchange_weak(old, old+1));
 }
 
-void StubProtobufClient::next_buffer_done()
+void StubProtobufClient::exchange_buffer_done()
 {
-    next_buffer_called.store(true);
+    exchange_buffer_called.store(true);
 }
 
 void StubProtobufClient::release_surface_done()
@@ -266,14 +269,14 @@ void StubProtobufClient::wait_for_create_surface()
     create_surface_called.store(false);
 }
 
-void StubProtobufClient::wait_for_next_buffer()
+void StubProtobufClient::wait_for_exchange_buffer()
 {
-    for (int i = 0; !next_buffer_called.load() && i < maxwait; ++i)
+    for (int i = 0; !exchange_buffer_called.load() && i < maxwait; ++i)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         std::this_thread::yield();
     }
-    next_buffer_called.store(false);
+    exchange_buffer_called.store(false);
 }
 
 void StubProtobufClient::wait_for_release_surface()

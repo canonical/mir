@@ -74,10 +74,9 @@ mgn::NestedPlatform::~NestedPlatform() noexcept
 {
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_allocator(
-        std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
+std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_allocator()
 {
-    return native_platform->create_buffer_allocator(buffer_initializer);
+    return native_platform->create_buffer_allocator();
 }
 
 std::shared_ptr<mg::BufferWriter> mgn::NestedPlatform::make_buffer_writer()
