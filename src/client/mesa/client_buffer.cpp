@@ -136,6 +136,8 @@ void mclm::ClientBuffer::update_from(MirBufferPackage const&)
 {
 }
 
-void mclm::ClientBuffer::fill_update_msg(MirBufferPackage&)
+void mclm::ClientBuffer::fill_update_msg(MirBufferPackage& package)
 {
+    package.data_items = 0;
+    package.fd_items = 0;
 }
