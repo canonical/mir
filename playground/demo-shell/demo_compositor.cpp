@@ -115,7 +115,7 @@ void me::DemoCompositor::composite()
             renderable_list.push_back(renderable);
 
             // Fullscreen and opaque? Definitely no embellishment
-            if (renderable->screen_position() == view_area &&
+            if (renderable->screen_position() == viewport &&
                 renderable->alpha() == 1.0f &&
                 !renderable->shaped() &&
                 renderable->transformation() == glm::mat4())
