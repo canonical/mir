@@ -105,20 +105,12 @@ TEST_F(AndroidClientBuffer, fills_update_msg)
 
     EXPECT_THAT(msg.data_items, Eq(1));
     EXPECT_THAT(msg.data[0], Eq(static_cast<int>(BufferFlag::fenced)));
-    for(auto i = 1; i < mir_buffer_package_max; i++)
-        EXPECT_THAT(msg.data[i], Eq(0));
     EXPECT_THAT(msg.fd_items, Eq(1));
     EXPECT_THAT(msg.fd[0], Eq(stub_fence));
-    for(auto i = 1; i < mir_buffer_package_max; i++)
-        EXPECT_THAT(msg.fd[i], Eq(-1));
 
     buffer.fill_update_msg(msg);
 
     EXPECT_THAT(msg.data_items, Eq(1));
     EXPECT_THAT(msg.data[0], Eq(static_cast<int>(BufferFlag::unfenced)));
-    for(auto i = 1; i < mir_buffer_package_max; i++)
-        EXPECT_THAT(msg.data[i], Eq(0));
     EXPECT_THAT(msg.fd_items, Eq(0));
-    for(auto i = 0; i < mir_buffer_package_max; i++)
-        EXPECT_THAT(msg.fd[i], Eq(-1));
 }
