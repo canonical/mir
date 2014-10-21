@@ -22,30 +22,16 @@
 #include "stubbed_graphics_platform.h"
 
 #include "mir/options/default_configuration.h"
-#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/cursor.h"
-#include "mir/input/input_channel.h"
-#include "mir/input/input_manager.h"
 
-#include "mir_test_doubles/null_platform.h"
-#include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_renderer.h"
 #include "mir_test_doubles/stub_input_sender.h"
 
-#include "mir/compositor/renderer.h"
 #include "mir/compositor/renderer_factory.h"
 #include "src/server/input/null_input_manager.h"
 #include "src/server/input/null_input_dispatcher.h"
 #include "src/server/input/null_input_targeter.h"
-
-#include <system_error>
-#include <boost/exception/errinfo_errno.hpp>
-#include <boost/throw_exception.hpp>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
