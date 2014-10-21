@@ -27,6 +27,7 @@
 #include "mir/scene/surface_observer.h"
 #include "mir/scene/surface.h"
 #include "mir/run_mir.h"
+#include "mir/raii.h"
 #include "mir/thread_name.h"
 
 #include <thread>
@@ -122,7 +123,9 @@ public:
                               r.top_left.x.as_int(), r.top_left.y.as_int(),
                               report_id);
 
-        scene->register_compositor(display_buffer_compositor.get());
+        auto compositor_registration = mir::raii::paired_calls(
+            [this,&display_buffer_compositor]{scene->register_compositor(display_buffer_compositor.get());},
+            [this,&display_buffer_compositor]{scene->unregister_compositor(display_buffer_compositor.get());});
 
         std::unique_lock<std::mutex> lock{run_mutex};
         while (running)
@@ -152,8 +155,6 @@ public:
                 lock.lock();
             }
         }
-
-        scene->unregister_compositor(display_buffer_compositor.get());
     }
     catch(...)
     {
