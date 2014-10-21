@@ -47,7 +47,7 @@ public:
         std::shared_ptr<compositor::CompositorReport> const& report);
     ~DemoCompositor();
 
-    void composite(graphics::DisplayBuffer& db, compositor::SceneElementSequence elements) override;
+    void composite(compositor::SceneElementSequence elements) override;
 
 private:
     graphics::DisplayBuffer& display_buffer;

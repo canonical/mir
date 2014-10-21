@@ -35,16 +35,16 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
+    mg::DisplayBuffer& display_buffer,
     std::shared_ptr<mc::Renderer> const& renderer,
     std::shared_ptr<mc::CompositorReport> const& report) :
+    display_buffer{display_buffer},
     renderer{renderer},
     report{report}
 {
 }
 
-void mc::DefaultDisplayBufferCompositor::composite(
-    mg::DisplayBuffer& display_buffer,
-    mc::SceneElementSequence scene_elements)
+void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence scene_elements)
 {
     report->began_frame(this);
 

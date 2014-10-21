@@ -147,7 +147,7 @@ public:
                 lock.unlock();
 
                 display_buffer_compositor->composite(
-                    buffer, scene->scene_elements_for(display_buffer_compositor.get()));
+                    scene->scene_elements_for(display_buffer_compositor.get()));
 
                 lock.lock();
             }

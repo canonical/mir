@@ -126,9 +126,10 @@ TEST_F(DefaultDisplayBufferCompositor, render)
         .Times(1);
 
     mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
-    compositor.composite(display_buffer, make_scene_elements({}));
+    compositor.composite(make_scene_elements({}));
 }
 
 TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
@@ -177,9 +178,10 @@ TEST_F(DefaultDisplayBufferCompositor, skips_scene_that_should_not_be_rendered)
         .Times(1);
 
     mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
-    compositor.composite(display_buffer, make_scene_elements({
+    compositor.composite(make_scene_elements({
         mock_renderable1,
         mock_renderable2,
         mock_renderable3
@@ -206,9 +208,10 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_skips_composition)
         .Times(0);
 
     mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(mock_renderer),
         report);
-    compositor.composite(display_buffer, make_scene_elements({}));
+    compositor.composite(make_scene_elements({}));
 }
 
 TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
@@ -230,10 +233,11 @@ TEST_F(DefaultDisplayBufferCompositor, calls_renderer_in_sequence)
         .InSequence(render_seq);
 
     mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
 
-    compositor.composite(display_buffer, make_scene_elements({
+    compositor.composite(make_scene_elements({
         big,
         small
     }));
@@ -283,12 +287,13 @@ TEST_F(DefaultDisplayBufferCompositor, optimization_toggles_seamlessly)
         .InSequence(seq);
 
     mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
 
-    compositor.composite(display_buffer, make_scene_elements({}));
-    compositor.composite(display_buffer, make_scene_elements({}));
-    compositor.composite(display_buffer, make_scene_elements({}));
+    compositor.composite(make_scene_elements({}));
+    compositor.composite(make_scene_elements({}));
+    compositor.composite(make_scene_elements({}));
 
     fullscreen->set_buffer({});  // Avoid GMock complaining about false leaks
 }
@@ -320,9 +325,10 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
         .InSequence(seq);
 
     mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
-    compositor.composite(display_buffer, make_scene_elements({
+    compositor.composite(make_scene_elements({
         window0, //not occluded
         window1, //occluded
         window2, //occluded
@@ -363,10 +369,11 @@ TEST_F(DefaultDisplayBufferCompositor, marks_rendered_scene_elements)
     EXPECT_CALL(*element1_rendered, rendered());
 
     mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
 
-    compositor.composite(display_buffer, {element0_rendered, element1_rendered});
+    compositor.composite({element0_rendered, element1_rendered});
 }
 
 TEST_F(DefaultDisplayBufferCompositor, marks_occluded_scene_elements)
@@ -385,10 +392,11 @@ TEST_F(DefaultDisplayBufferCompositor, marks_occluded_scene_elements)
     EXPECT_CALL(*element2_occluded, occluded());
 
     mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
 
-    compositor.composite(display_buffer, {element0_occluded, element1_rendered, element2_occluded});
+    compositor.composite({element0_occluded, element1_rendered, element2_occluded});
 }
 
 TEST_F(DefaultDisplayBufferCompositor, ignores_invisible_scene_elements)
@@ -402,8 +410,9 @@ TEST_F(DefaultDisplayBufferCompositor, ignores_invisible_scene_elements)
     EXPECT_CALL(*element0_invisible, rendered()).Times(0);
 
     mc::DefaultDisplayBufferCompositor compositor(
+        display_buffer,
         mt::fake_shared(mock_renderer),
         mr::null_compositor_report());
 
-    compositor.composite(display_buffer, {element0_invisible});
+    compositor.composite({element0_invisible});
 }
