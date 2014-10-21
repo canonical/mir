@@ -135,3 +135,7 @@ std::shared_ptr<MirNativeBuffer> mclm::ClientBuffer::native_buffer_handle() cons
 void mclm::ClientBuffer::update_from(MirBufferPackage const&)
 {
 }
+
+void mclm::ClientBuffer::fill_update_msg(MirBufferPackage&)
+{
+}
