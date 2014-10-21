@@ -145,10 +145,9 @@ mgm::Platform::~Platform()
 }
 
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator(
-        const std::shared_ptr<mg::BufferInitializer>& buffer_initializer)
+std::shared_ptr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator()
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, buffer_initializer, bypass_option_);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, bypass_option_);
 }
 
 std::shared_ptr<mg::Display> mgm::Platform::create_display(
