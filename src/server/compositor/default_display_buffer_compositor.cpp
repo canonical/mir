@@ -63,13 +63,13 @@ void mc::DefaultDisplayBufferCompositor::composite()
     for (auto const& element : occlusions)
     {
         if (element->renderable()->visible())
-            element->occluded_in(this);
+            element->occluded();
     }
 
     mg::RenderableList renderable_list;
     for (auto const& element : scene_elements)
     {
-        element->rendered_in(this);
+        element->rendered();
         renderable_list.push_back(element->renderable());
     }
 
