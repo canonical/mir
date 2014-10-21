@@ -43,7 +43,7 @@ public:
         std::shared_ptr<Renderer> const& renderer,
         std::shared_ptr<CompositorReport> const& report);
 
-    void composite(SceneElementSequence scene_sequence) override;
+    void composite(SceneElementSequence&& scene_sequence) override;
 
 private:
     graphics::DisplayBuffer& display_buffer;

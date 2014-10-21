@@ -44,7 +44,7 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 {
 }
 
-void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence scene_elements)
+void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements)
 {
     report->began_frame(this);
 

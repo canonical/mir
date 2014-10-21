@@ -32,7 +32,7 @@ class DisplayBufferCompositor
 public:
     virtual ~DisplayBufferCompositor() = default;
 
-    virtual void composite(SceneElementSequence scene_sequence) = 0;
+    virtual void composite(SceneElementSequence&& scene_sequence) = 0;
 
 protected:
     DisplayBufferCompositor() = default;

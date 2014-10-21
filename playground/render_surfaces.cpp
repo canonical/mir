@@ -286,7 +286,7 @@ public:
             {
             }
 
-            void composite(mc::SceneElementSequence scene_sequence) override
+            void composite(mc::SceneElementSequence&& scene_sequence) override
             {
                 while (!created) std::this_thread::yield();
                 stop_watch.stop();

@@ -95,7 +95,7 @@ public:
     {
         struct NullDisplayBufferCompositor : mc::DisplayBufferCompositor
         {
-            void composite(mc::SceneElementSequence) {}
+            void composite(mc::SceneElementSequence&&) {}
         };
 
         auto raw = new NullDisplayBufferCompositor{};
@@ -105,7 +105,12 @@ public:
 
 struct MockDisplayBufferCompositor : mc::DisplayBufferCompositor
 {
-    MOCK_METHOD1(composite, void(mc::SceneElementSequence));
+    void composite(mc::SceneElementSequence&& seq)
+    {
+        composite_(seq);
+    }
+
+    MOCK_METHOD1(composite_, void(mc::SceneElementSequence&));
 };
 
 class WrappingDisplayBufferCompositor : public mc::DisplayBufferCompositor
@@ -116,7 +121,7 @@ public:
     {
     }
 
-    void composite(mc::SceneElementSequence elements)
+    void composite(mc::SceneElementSequence&& elements)
     {
         comp.composite(std::move(elements));
     }
@@ -241,7 +246,7 @@ TEST_F(CompositingScreencastTest, captures_by_compositing_with_provided_region)
                 create_compositor_mock(DisplayBufferCoversArea(default_region)));
     EXPECT_CALL(mock_scene, scene_elements_for(_))
         .WillOnce(Return(scene_elements));
-    EXPECT_CALL(mock_db_compositor_factory.mock_db_compositor, composite(Eq(scene_elements)));
+    EXPECT_CALL(mock_db_compositor_factory.mock_db_compositor, composite_(Eq(scene_elements)));
 
     mc::CompositingScreencast screencast_local{
         mt::fake_shared(mock_scene),
