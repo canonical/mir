@@ -37,19 +37,6 @@ list(APPEND TEST_FRAMEWORK_SRCS
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
 add_library(
-  mirplatformstub SHARED
-  stubbed_graphics_platform.cpp
-)
-
-target_link_libraries(mirplatformstub 
-  mir-test-doubles
-  mirplatform
-  mircommon
-)
-
-install(TARGETS mirplatformstub LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
-add_library(
   mir-test-framework STATIC
   ${TEST_FRAMEWORK_SRCS}
 )
@@ -83,3 +70,21 @@ add_custom_command(TARGET mir-test-framework POST_BUILD
   ${CMAKE_CURRENT_SOURCE_DIR}/testing-cursor-theme ${CMAKE_BINARY_DIR}/bin/testing-cursor-theme
   COMMENT "Copying testing cursor themes to build dir..."
 )
+
+string (REPLACE " -Wl,--no-undefined" " " CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
+
+add_library(
+  mirplatformstub SHARED
+  stubbed_graphics_platform.cpp
+)
+
+target_link_libraries(mirplatformstub 
+  mir-test-doubles
+)
+
+set_target_properties(mirplatformstub
+  PROPERTIES
+  LINK_FLAGS "-Wl,--exclude-libs=ALL"
+)
+
+install(TARGETS mirplatformstub LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
