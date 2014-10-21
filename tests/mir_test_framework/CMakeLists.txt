@@ -37,6 +37,19 @@ list(APPEND TEST_FRAMEWORK_SRCS
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 
 add_library(
+  mirplatformstub SHARED
+  stubbed_graphics_platform.cpp
+)
+
+target_link_libraries(mirplatformstub 
+  mir-test-doubles
+  mirplatform
+  mircommon
+)
+
+install(TARGETS mirplatformstub LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+add_library(
   mir-test-framework STATIC
   ${TEST_FRAMEWORK_SRCS}
 )
@@ -48,6 +61,7 @@ uses_android_input(mir-test-framework)
 target_link_libraries(
   mir-test-framework
 
+  mirplatformstub
   3rd_party
 
   ${PROTOBUF_LIBRARIES}
