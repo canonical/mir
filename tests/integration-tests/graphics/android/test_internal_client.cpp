@@ -22,7 +22,6 @@
 #include "src/platform/graphics/android/internal_client.h"
 #include "src/server/compositor/buffer_stream_factory.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/graphics/buffer_initializer.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/graphics/android/mir_native_window.h"
 #include "mir/graphics/platform.h"
@@ -100,8 +99,7 @@ TEST_F(AndroidInternalClient, internal_client_creation_and_use)
 
     auto stub_input_factory = std::make_shared<StubInputFactory>();
     auto stub_input_sender = std::make_shared<mtd::StubInputSender>();
-    auto null_buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
-    auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(null_buffer_initializer);
+    auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
     auto buffer_stream_factory = std::make_shared<mc::BufferStreamFactory>(allocator, std::make_shared<mtd::StubFrameDroppingPolicyFactory>());
     auto scene_report = mr::null_scene_report();
     auto const surface_configurator = std::make_shared<mtd::NullSurfaceConfigurator>();

@@ -74,7 +74,8 @@ mc::GLRenderer::GLRenderer(
     std::unique_ptr<mg::GLTextureCache> && texture_cache, 
     geom::Rectangle const& display_area,
     DestinationAlpha dest_alpha)
-    : program(program_factory.create_gl_program(vertex_shader_src, fragment_shader_src)),
+    : clear_color{0.0f, 0.0f, 0.0f, 1.0f},
+      program(program_factory.create_gl_program(vertex_shader_src, fragment_shader_src)),
       texture_cache(std::move(texture_cache)),
       position_attr_loc(0),
       texcoord_attr_loc(0),
@@ -102,6 +103,9 @@ mc::GLRenderer::GLRenderer(
 
     set_viewport(display_area);
     set_rotation(0.0f);
+
+    if (dest_alpha != DestinationAlpha::opaque)
+        clear_color[3] = 0.0f;
 }
 
 void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
@@ -113,8 +117,17 @@ void mc::GLRenderer::tessellate(std::vector<mg::GLPrimitive>& primitives,
 
 void mc::GLRenderer::render(mg::RenderableList const& renderables) const
 {
+    glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    if (dest_alpha == DestinationAlpha::opaque)
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+
     for (auto const& r : renderables)
         render(*r);
+
+    texture_cache->drop_unused();
 }
 
 void mc::GLRenderer::render(mg::Renderable const& renderable) const
@@ -238,25 +251,6 @@ void mc::GLRenderer::set_rotation(float degrees)
     glUseProgram(0);
 
     rotation = degrees;
-}
-
-void mc::GLRenderer::begin() const
-{
-    if (dest_alpha == DestinationAlpha::opaque)
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    else
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    if (dest_alpha == DestinationAlpha::opaque)
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
-}
-
-void mc::GLRenderer::end() const
-{
-    texture_cache->drop_unused();
 }
 
 void mc::GLRenderer::suspend()

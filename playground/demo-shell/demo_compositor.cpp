@@ -81,14 +81,34 @@ void me::DemoCompositor::composite()
         if (renderable->visible() && any_part_drawn)
         {
             renderable_list.push_back(renderable);
-            it->rendered_in(this);
+
+            // Fullscreen and opaque? Definitely no embellishment
+            if (renderable->screen_position() == view_area &&
+                renderable->alpha() == 1.0f &&
+                !renderable->shaped() &&
+                renderable->transformation() == glm::mat4())
+            {
+                embellished = false;
+                nonrenderlist_elements = false; // Don't care what's underneath
+            }
+
+            it->rendered();
         }
         else
         {
-            it->occluded_in(this);
+            it->occluded();
         }
         nonrenderlist_elements |= embellished;
     }
+
+    /*
+     * Note: Buffer lifetimes are ensured by the two objects holding
+     *       references to them; elements and renderable_list.
+     *       So no buffer is going to be released back to the client till
+     *       both of those containers get destroyed (end of the function).
+     *       Actually, there's a third reference held by the texture cache
+     *       in GLRenderer, but that gets released earlier in render().
+     */
 
     if (!nonrenderlist_elements &&
         display_buffer.post_renderables_if_optimizable(renderable_list))
@@ -104,7 +124,6 @@ void me::DemoCompositor::composite()
         renderer.begin(std::move(decoration_skip_list));
         renderer.render(renderable_list);
         display_buffer.post_update();
-        renderer.end();
         report->finished_frame(false, this);
     }
 }

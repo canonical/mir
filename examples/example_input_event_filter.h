@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,15 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "null_input_configuration.h"
-#include "null_input_manager.h"
+#ifndef EXAMPLE_INPUT_EVENT_FILTER_H_
+#define EXAMPLE_INPUT_EVENT_FILTER_H_
 
-namespace mi = mir::input;
+#include "mir/input/event_filter.h"
 
-std::shared_ptr<mi::InputManager> mi::NullInputConfiguration::the_input_manager()
+#include <functional>
+
+namespace mir
 {
-    return std::make_shared<NullInputManager>();
+namespace examples
+{
+class QuitFilter : public mir::input::EventFilter
+{
+public:
+    QuitFilter(std::function<void()> const& quit_action);
+
+    bool handle(MirEvent const& event) override;
+
+private:
+    std::function<void()> const quit_action;
+};
 }
+}
+
+#endif /* EXAMPLE_INPUT_EVENT_FILTER_H_ */

@@ -42,8 +42,7 @@ public:
         std::shared_ptr<DisplayReport> const& display_report);
 
     /* From Platform */
-    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator(
-            std::shared_ptr<BufferInitializer> const& buffer_initializer);
+    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator();
     std::shared_ptr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLProgramFactory> const&,
@@ -62,8 +61,7 @@ private:
 
     void initialize(std::shared_ptr<NestedContext> const& nested_context) override;
 
-    std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator(
-        std::shared_ptr<BufferInitializer> const& buffer_initializer);
+    std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator();
 
     std::shared_ptr<DisplayBuilder> const display_builder;
     std::shared_ptr<DisplayReport> const display_report;

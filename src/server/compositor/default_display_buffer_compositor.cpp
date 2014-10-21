@@ -63,15 +63,24 @@ void mc::DefaultDisplayBufferCompositor::composite()
     for (auto const& element : occlusions)
     {
         if (element->renderable()->visible())
-            element->occluded_in(this);
+            element->occluded();
     }
 
     mg::RenderableList renderable_list;
     for (auto const& element : scene_elements)
     {
-        element->rendered_in(this);
+        element->rendered();
         renderable_list.push_back(element->renderable());
     }
+
+    /*
+     * Note: Buffer lifetimes are ensured by the two objects holding
+     *       references to them; scene_elements and renderable_list.
+     *       So no buffer is going to be released back to the client till
+     *       both of those containers get destroyed (end of the function).
+     *       Actually, there's a third reference held by the texture cache
+     *       in GLRenderer, but that gets released earlier in render().
+     */
 
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
@@ -84,10 +93,8 @@ void mc::DefaultDisplayBufferCompositor::composite()
 
         renderer->set_rotation(display_buffer.orientation());
 
-        renderer->begin();  // TODO deprecatable now?
         renderer->render(renderable_list);
         display_buffer.post_update();
-        renderer->end();
 
         report->finished_frame(false, this);
     }

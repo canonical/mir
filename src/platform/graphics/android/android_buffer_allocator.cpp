@@ -18,7 +18,6 @@
  */
 
 #include "mir/graphics/platform.h"
-#include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/android/sync_fence.h"
@@ -46,10 +45,8 @@ struct AllocDevDeleter
 };
 }
 
-mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator(
-        std::shared_ptr<BufferInitializer> const& buffer_initializer)
-    : buffer_initializer(buffer_initializer),
-      egl_extensions(std::make_shared<mg::EGLExtensions>())
+mga::AndroidGraphicBufferAllocator::AndroidGraphicBufferAllocator()
+    : egl_extensions(std::make_shared<mg::EGLExtensions>())
 {
     int err;
 
@@ -82,7 +79,7 @@ std::shared_ptr<mg::Buffer> mga::AndroidGraphicBufferAllocator::alloc_buffer_pla
 {
     auto native_handle = alloc_device->alloc_buffer(sz, pf, use);
     auto buffer = std::make_shared<Buffer>(native_handle, egl_extensions);
-    (*buffer_initializer)(*buffer);
+
     return buffer;
 }
 

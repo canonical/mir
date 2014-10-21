@@ -25,8 +25,6 @@
 
 #include "src/client/client_buffer.h"
 
-#include "mir/frontend/connector.h"
-
 #include "mir_protobuf.pb.h"
 
 #ifdef ANDROID

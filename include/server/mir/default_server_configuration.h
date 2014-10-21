@@ -26,7 +26,12 @@
 
 namespace android
 {
+class EventHubInterface;
+class InputReaderInterface;
+class InputReaderPolicyInterface;
+class InputListenerInterface;
 class InputDispatcherInterface;
+class InputEnumerator;
 class InputDispatcherPolicyInterface;
 }
 
@@ -102,7 +107,6 @@ namespace graphics
 class NativePlatform;
 class Platform;
 class Display;
-class BufferInitializer;
 class DisplayReport;
 class GraphicBufferAllocator;
 class BufferWriter;
@@ -119,7 +123,6 @@ class Scene;
 class InputManager;
 class CompositeEventFilter;
 class InputChannelFactory;
-class InputConfiguration;
 class CursorListener;
 class TouchVisualizer;
 class InputRegion;
@@ -169,7 +172,6 @@ public:
     std::shared_ptr<ServerStatusListener>   the_server_status_listener() override;
     std::shared_ptr<DisplayChanger>         the_display_changer() override;
     std::shared_ptr<graphics::Platform>     the_graphics_platform() override;
-    std::shared_ptr<input::InputConfiguration> the_input_configuration() override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<EmergencyCleanup>  the_emergency_cleanup() override;
     /**
@@ -186,7 +188,6 @@ public:
     /** @name graphics configuration - customization
      * configurable interfaces for modifying graphics
      *  @{ */
-    virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
     virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
@@ -299,6 +300,11 @@ public:
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     virtual std::shared_ptr<input::InputSender>    the_input_sender();
     virtual std::shared_ptr<input::InputSendObserver> the_input_send_observer();
+    virtual std::shared_ptr<droidinput::EventHubInterface> the_event_hub();
+    virtual std::shared_ptr<droidinput::InputReaderInterface> the_input_reader();
+    virtual std::shared_ptr<droidinput::InputReaderPolicyInterface> the_input_reader_policy();
+    virtual std::shared_ptr<droidinput::InputListenerInterface> the_input_translator();
+    virtual std::shared_ptr<input::android::InputThread> the_input_reader_thread();
     /** @} */
 
     /** @name logging configuration - customization
@@ -323,6 +329,7 @@ protected:
      *  @{ */
     virtual std::shared_ptr<input::android::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<droidinput::InputDispatcherInterface> the_android_input_dispatcher();
+    virtual std::shared_ptr<droidinput::InputEnumerator> the_input_target_enumerator();
     virtual std::shared_ptr<input::android::InputThread> the_dispatcher_thread();
     virtual std::shared_ptr<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
     virtual bool is_key_repeat_enabled() const;
@@ -330,6 +337,9 @@ protected:
 
     /** @Convenience wrapper functions
      *  @{ */
+    virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> wrap_display_configuration_policy(
+        std::shared_ptr<graphics::DisplayConfigurationPolicy> const& wrapped);
+
     virtual std::shared_ptr<scene::SurfaceCoordinator>  wrap_surface_coordinator(
         std::shared_ptr<scene::SurfaceCoordinator> const& wrapped);
 
@@ -339,13 +349,17 @@ protected:
 
     CachedPtr<input::android::InputRegistrar> input_registrar;
     CachedPtr<input::android::InputThread> dispatcher_thread;
+    CachedPtr<input::android::InputThread> input_reader_thread;
     CachedPtr<droidinput::InputDispatcherInterface> android_input_dispatcher;
+    CachedPtr<droidinput::InputEnumerator> input_target_enumerator;
     CachedPtr<droidinput::InputDispatcherPolicyInterface> android_dispatcher_policy;
+    CachedPtr<droidinput::EventHubInterface> event_hub;
+    CachedPtr<droidinput::InputReaderPolicyInterface> input_reader_policy;
+    CachedPtr<droidinput::InputReaderInterface> input_reader;
+    CachedPtr<droidinput::InputListenerInterface> input_translator;
 
     CachedPtr<frontend::Connector>   connector;
     CachedPtr<frontend::Connector>   prompt_connector;
-
-    CachedPtr<input::InputConfiguration> input_configuration;
 
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
@@ -359,7 +373,6 @@ protected:
     CachedPtr<input::TouchVisualizer> touch_visualizer;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::NativePlatform>    graphics_native_platform;
-    CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::BufferWriter> buffer_writer;
     CachedPtr<graphics::Display>      display;

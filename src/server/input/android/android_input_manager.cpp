@@ -36,6 +36,9 @@ mia::InputManager::InputManager(std::shared_ptr<droidinput::EventHubInterface> c
 
 mia::InputManager::~InputManager()
 {
+    // It is safe to call stop(), even if we haven't been started at all,
+    // or we have been previously started and stopped manually.
+    stop();
 }
 
 void mia::InputManager::stop()
