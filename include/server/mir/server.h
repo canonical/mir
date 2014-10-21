@@ -193,9 +193,6 @@ public:
     /// Sets an override functor for creating the gl config.
     void override_the_gl_config(Builder<graphics::GLConfig> const& gl_config_builder);
 
-    /// Sets an override functor for creating the graphics platform.
-    void override_the_graphics_platform(Builder<graphics::Platform> const& graphics_platform_builder);
-
     /// Sets an override functor for creating the input dispatcher.
     void override_the_input_dispatcher(Builder<input::InputDispatcher> const& input_dispatcher_builder);
 
