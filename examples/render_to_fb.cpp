@@ -81,8 +81,6 @@ try
     mir::Server server;
     server.set_command_line(argc, argv);
 
-    server.start_initialization();
-
     render_loop(server);
 
     return EXIT_SUCCESS;

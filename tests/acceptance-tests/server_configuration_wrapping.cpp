@@ -98,8 +98,6 @@ struct ServerConfigurationWrapping : AcceptanceTest
                 return std::make_shared<MySessionCoordinator>(wrapped);
             });
 
-        server.start_initialization();
-
         surface_coordinator = server.the_surface_coordinator();
         session_coordinator = server.the_session_coordinator();
     }

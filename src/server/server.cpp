@@ -159,6 +159,13 @@ std::shared_ptr<mo::DefaultConfiguration> configuration_options(
         return std::make_shared<mo::DefaultConfiguration>(argc, argv);
 
 }
+
+template<typename ConfigPtr>
+void verify_setting_allowed(ConfigPtr const& initialized)
+{
+    if (initialized)
+       BOOST_THROW_EXCEPTION(std::logic_error("Cannot amend configuration after initialization starts"));
+}
 }
 
 mir::Server::Server() :
@@ -175,12 +182,14 @@ void mir::Server::Self::set_add_configuration_options(
 
 void mir::Server::set_command_line(int argc, char const* argv[])
 {
+    verify_setting_allowed(self->server_config);    
     self->argc = argc;
     self->argv = argv;
 }
 
 void mir::Server::add_init_callback(std::function<void()> const& init_callback)
 {
+    verify_setting_allowed(self->server_config);    
     auto const& existing = self->init_callback;
 
     auto const updated = [=]
@@ -199,10 +208,11 @@ auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 
 void mir::Server::set_exception_handler(std::function<void()> const& exception_handler)
 {
+    verify_setting_allowed(self->server_config);    
     self->exception_handler = exception_handler;
 }
 
-void mir::Server::start_initialization()
+void mir::Server::apply_settings() const
 {
     if (self->server_config) return;
 
@@ -217,7 +227,7 @@ void mir::Server::start_initialization()
 void mir::Server::run()
 try
 {
-    start_initialization();
+    apply_settings();
 
     run_mir(*self->server_config, [&](DisplayServer&) { self->init_callback(); });
 
@@ -245,16 +255,11 @@ bool mir::Server::exited_normally()
     return self->exit_status;
 }
 
-namespace
-{
-auto const no_config_to_access = "Cannot access config when no config active.";
-}
-
 #define MIR_SERVER_ACCESSOR(name)\
 auto mir::Server::name() const -> decltype(self->server_config->name())\
 {\
-    if (self->server_config) return self->server_config->name();\
-    BOOST_THROW_EXCEPTION(std::logic_error(no_config_to_access));\
+    apply_settings();\
+    return self->server_config->name();\
 }
 
 FOREACH_ACCESSOR(MIR_SERVER_ACCESSOR)
@@ -264,6 +269,7 @@ FOREACH_ACCESSOR(MIR_SERVER_ACCESSOR)
 #define MIR_SERVER_OVERRIDE(name)\
 void mir::Server::override_the_##name(decltype(Self::name##_builder) const& value)\
 {\
+    verify_setting_allowed(self->server_config);\
     self->name##_builder = value;\
 }
 
@@ -274,6 +280,7 @@ FOREACH_OVERRIDE(MIR_SERVER_OVERRIDE)
 #define MIR_SERVER_WRAP(name)\
 void mir::Server::wrap_##name(decltype(Self::name##_wrapper) const& value)\
 {\
+    verify_setting_allowed(self->server_config);\
     self->name##_wrapper = value;\
 }
 
@@ -286,6 +293,7 @@ void mir::Server::add_configuration_option(
     std::string const& description,
     int default_)
 {
+    verify_setting_allowed(self->server_config);
     namespace po = boost::program_options;
 
     auto const& existing = self->add_configuration_options;
@@ -306,6 +314,7 @@ void mir::Server::add_configuration_option(
     std::string const& description,
     std::string const& default_)
 {
+    verify_setting_allowed(self->server_config);
     namespace po = boost::program_options;
 
     auto const& existing = self->add_configuration_options;
@@ -326,6 +335,7 @@ void mir::Server::add_configuration_option(
     std::string const& description,
     OptionType type)
 {
+    verify_setting_allowed(self->server_config);
     namespace po = boost::program_options;
 
     auto const& existing = self->add_configuration_options;
