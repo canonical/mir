@@ -13,10 +13,10 @@ MIR_SERVER_27 {
     mir::compositor::Compositor::stop*;
     mir::compositor::Scene::add_observer*;
     mir::compositor::SceneElement::is_a_surface*;
-    mir::compositor::SceneElement::occluded_in*;
+    mir::compositor::SceneElement::occluded*;
     mir::compositor::SceneElement::operator*;
     mir::compositor::SceneElement::renderable*;
-    mir::compositor::SceneElement::rendered_in*;
+    mir::compositor::SceneElement::rendered*;
     mir::compositor::SceneElement::?SceneElement*;
     mir::compositor::SceneElement::SceneElement*;
     mir::compositor::Scene::register_compositor*;
@@ -423,9 +423,11 @@ MIR_SERVER_27 {
     mir::Server::the_main_loop*;
     mir::Server::the_prompt_session_listener*;
     mir::Server::the_session_authorizer*;
+    mir::Server::the_session_coordinator*;
     mir::Server::the_session_listener*;
     mir::Server::the_shell_display_layout*;
     mir::Server::the_surface_configurator*;
+    mir::Server::the_surface_coordinator*;
     mir::Server::wrap_display_configuration_policy*;
     mir::Server::wrap_session_coordinator*;
     mir::Server::wrap_surface_coordinator*;
@@ -579,7 +581,6 @@ MIR_SERVER_27 {
     non-virtual?thunk?to?mir::input::CursorImages::?CursorImages*;
     non-virtual?thunk?to?mir::input::CursorListener::?CursorListener*;
     non-virtual?thunk?to?mir::input::EventFilter::?EventFilter*;
-    non-virtual?thunk?to?mir::input::InputConfiguration::?InputConfiguration*;
     non-virtual?thunk?to?mir::input::InputDispatcher::?InputDispatcher*;
     non-virtual?thunk?to?mir::input::Surface::?Surface*;
     non-virtual?thunk?to?mir::input::TouchVisualizer::?TouchVisualizer*;
@@ -641,7 +642,6 @@ MIR_SERVER_27 {
     typeinfo?for?mir::input::CursorListener;
     typeinfo?for?mir::input::EventFilter;
     typeinfo?for?mir::input::InputChannel;
-    typeinfo?for?mir::input::InputConfiguration;
     typeinfo?for?mir::input::InputDispatcher;
     typeinfo?for?mir::input::InputManager;
     typeinfo?for?mir::input::Surface;
@@ -699,7 +699,6 @@ MIR_SERVER_27 {
     vtable?for?mir::input::CursorListener;
     vtable?for?mir::input::EventFilter;
     vtable?for?mir::input::InputChannel;
-    vtable?for?mir::input::InputConfiguration;
     vtable?for?mir::input::InputDispatcher;
     vtable?for?mir::input::InputManager;
     vtable?for?mir::input::Surface;
