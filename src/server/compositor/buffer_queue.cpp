@@ -100,6 +100,7 @@ mc::BufferQueue::BufferQueue(
       frame_dropping_enabled{false},
       the_properties{props},
       force_new_compositor_buffer{false},
+      callbacks_allowed{true},
       gralloc{gralloc}
 {
     if (nbuffers < 1)
@@ -434,6 +435,9 @@ void mc::BufferQueue::give_buffer_to_client(
             [&]{ return !contains(buffer, pending_snapshots); });
     }
 
+    if (!callbacks_allowed)  // We're shutting down
+        return;
+
     buffers_owned_by_client.push_back(buffer);
 
     lock.unlock();
@@ -506,5 +510,6 @@ void mc::BufferQueue::drop_old_buffers()
 void mc::BufferQueue::drop_client_requests()
 {
     std::unique_lock<std::mutex> lock(guard);
+    callbacks_allowed = false;
     pending_client_notifications.clear();
 }

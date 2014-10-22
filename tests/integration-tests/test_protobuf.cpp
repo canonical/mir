@@ -79,7 +79,7 @@ struct DemoMessageProcessor : mfd::MessageProcessor
 
     void client_pid(int /*pid*/) override {}
 
-    bool dispatch(mfd::Invocation const& invocation)
+    bool dispatch(mfd::Invocation const& invocation, std::vector<mir::Fd> const& fds)
     {
         if ("function" == invocation.method_name())
         {
@@ -91,7 +91,7 @@ struct DemoMessageProcessor : mfd::MessageProcessor
             return true;
         }
 
-        return wrapped->dispatch(invocation);
+        return wrapped->dispatch(invocation, fds);
     }
 
     void send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response)

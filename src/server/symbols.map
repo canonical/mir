@@ -30,7 +30,6 @@ MIR_SERVER_27 {
     mir::DefaultServerConfiguration::new_ipc_factory*;
     mir::DefaultServerConfiguration::the_android_input_dispatcher*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
-    mir::DefaultServerConfiguration::the_buffer_initializer*;
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
     mir::DefaultServerConfiguration::the_buffer_writer*;
     mir::DefaultServerConfiguration::the_clock*;
@@ -66,7 +65,6 @@ MIR_SERVER_27 {
     mir::DefaultServerConfiguration::the_host_connection*;
     mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
     mir::DefaultServerConfiguration::the_input_channel_factory*;
-    mir::DefaultServerConfiguration::the_input_configuration*;
     mir::DefaultServerConfiguration::the_input_dispatcher*;
     mir::DefaultServerConfiguration::the_input_manager*;
     mir::DefaultServerConfiguration::the_input_reader*;
@@ -377,6 +375,7 @@ MIR_SERVER_27 {
     mir::ServerActionQueue::?ServerActionQueue*;
     mir::ServerActionQueue::ServerActionQueue*;
     mir::Server::add_configuration_option*;
+    mir::Server::add_init_callback*;
     mir::ServerConfiguration::operator*;
     mir::ServerConfiguration::?ServerConfiguration*;
     mir::ServerConfiguration::ServerConfiguration*;
@@ -392,7 +391,6 @@ MIR_SERVER_27 {
     mir::ServerConfiguration::the_main_loop*;
     mir::ServerConfiguration::the_prompt_connector*;
     mir::ServerConfiguration::the_server_status_listener*;
-    mir::Server::add_init_callback*;
     mir::Server::exited_normally*;
     mir::Server::get_options*;
     mir::Server::override_the_compositor*;
@@ -409,7 +407,7 @@ MIR_SERVER_27 {
     mir::Server::run*;
     mir::Server::Server*;
     mir::Server::set_command_line*;
-    mir::Server::set_command_line_hander*;
+    mir::Server::set_command_line_handler*;
     mir::Server::set_exception_handler*;
     mir::ServerStatusListener::operator*;
     mir::ServerStatusListener::paused*;
@@ -488,7 +486,6 @@ MIR_SERVER_27 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::new_ipc_factory*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_android_input_dispatcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_allocator*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_initializer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_stream_factory*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_writer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_clock*;
@@ -522,7 +519,6 @@ MIR_SERVER_27 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_host_connection*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_channel_factory*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_configuration*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_dispatcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_manager*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_input_reader*;
@@ -628,7 +624,6 @@ MIR_SERVER_27 {
     typeinfo?for?mir::compositor::Scene;
     typeinfo?for?mir::compositor::SceneElement;
     typeinfo?for?mir::DefaultServerConfiguration;
-    typeinfo?for?mir::detail::ServerAddConfigurationOptions;
     typeinfo?for?mir::DisplayServer;
     typeinfo?for?mir::EmergencyCleanup;
     typeinfo?for?mir::frontend::DisplayChanger;
@@ -687,7 +682,6 @@ MIR_SERVER_27 {
     vtable?for?mir::compositor::Scene;
     vtable?for?mir::compositor::SceneElement;
     vtable?for?mir::DefaultServerConfiguration;
-    vtable?for?mir::detail::ServerAddConfigurationOptions;
     vtable?for?mir::DisplayServer;
     vtable?for?mir::EmergencyCleanup;
     vtable?for?mir::frontend::DisplayChanger;
