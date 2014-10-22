@@ -25,7 +25,7 @@
 #include "mir_test_doubles/stub_display.h"
 
 #ifdef ANDROID
-#include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test_doubles/stub_android_native_buffer.h"
 #endif
 
 #include <sys/types.h>

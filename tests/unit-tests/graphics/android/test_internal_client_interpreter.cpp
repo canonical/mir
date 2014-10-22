@@ -21,7 +21,7 @@
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"
 #include "mir_test_doubles/mock_fence.h"
 #include "mir/graphics/internal_surface.h"
-#include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test_doubles/stub_android_native_buffer.h"
 
 #include "gmock_set_arg.h"
 #include <gtest/gtest.h>
