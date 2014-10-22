@@ -20,6 +20,8 @@
 #define MIR_FRONTEND_MESSAGE_PROCESSOR_H_
 
 #include <google/protobuf/service.h>
+#include <mir/fd.h>
+#include <vector>
 
 namespace mir
 {
@@ -50,7 +52,7 @@ private:
 class MessageProcessor
 {
 public:
-    virtual bool dispatch(Invocation const& invocation) = 0;
+    virtual bool dispatch(Invocation const& invocation, std::vector<mir::Fd> const& side_channel_fds) = 0;
     virtual void client_pid(int pid) = 0;
 
 protected:
