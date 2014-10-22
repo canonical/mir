@@ -21,6 +21,8 @@
 
 #include "mir/server.h"
 
+#include "mir_test/temporary_environment_value.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -44,40 +46,11 @@ struct MySessionCoordinator : msh::SessionCoordinatorWrapper
     MOCK_METHOD0(focus_next, void());
 };
 
-class TemporaryEnvironmentValue
-{
-public:
-    TemporaryEnvironmentValue(char const* name, char const* value)
-        : name{name},
-          has_old_value{getenv(name) != nullptr},
-          old_value{has_old_value ? getenv(name) : ""}
-    {
-        if (value)
-            setenv(name, value, overwrite);
-        else
-            unsetenv(name);
-    }
-
-    ~TemporaryEnvironmentValue()
-    {
-        if (has_old_value)
-            setenv(name.c_str(), old_value.c_str(), overwrite);
-        else
-            unsetenv(name.c_str());
-    }
-
-private:
-    static int const overwrite = 1;
-    std::string const name;
-    bool const has_old_value;
-    std::string const old_value;
-};
-
 struct AcceptanceTest : Test
 {
     AcceptanceTest() : platform("MIR_SERVER_PLATFORM_GRAPHICS_LIB", "libmirplatformstub.so") {}
 
-    TemporaryEnvironmentValue platform;
+    mir::test::TemporaryEnvironmentValue platform;
 };
 
 struct ServerConfigurationWrapping : AcceptanceTest
