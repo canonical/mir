@@ -21,7 +21,7 @@
 
 #include "mir/server.h"
 
-#include "mir_test/temporary_environment_value.h"
+#include "mir_test_framework/headless_test.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -46,14 +46,7 @@ struct MySessionCoordinator : msh::SessionCoordinatorWrapper
     MOCK_METHOD0(focus_next, void());
 };
 
-struct AcceptanceTest : Test
-{
-    AcceptanceTest() : platform("MIR_SERVER_PLATFORM_GRAPHICS_LIB", "libmirplatformstub.so") {}
-
-    mir::test::TemporaryEnvironmentValue platform;
-};
-
-struct ServerConfigurationWrapping : AcceptanceTest
+struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
 {
     mir::Server server;
 

@@ -15,6 +15,7 @@ set(
   executable_path.cpp
   command_line_server_configuration.cpp
   cross_process_sync.cpp
+  headless_test.cpp
   server_runner.cpp
   testing_server_options.cpp
   input_testing_server_options.cpp
