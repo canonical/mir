@@ -17,14 +17,12 @@
  */
 
 #include "mir_test_framework/stubbed_server_configuration.h"
-
 #include "mir_test_framework/command_line_server_configuration.h"
 
 #include "stubbed_graphics_platform.h"
 
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/cursor.h"
-#include "mir/server.h"
 
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_renderer.h"
