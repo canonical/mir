@@ -46,5 +46,3 @@ private:
 };
 
 #endif // VSYNC_SIMULATING_GRAPHICS_PLATFORM_H_
-
-
