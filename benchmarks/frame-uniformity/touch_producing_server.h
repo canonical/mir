@@ -32,8 +32,11 @@ class TouchProducingServer : public mir_test_framework::FakeEventHubServerConfig
 public:
     TouchProducingServer(mir::geometry::Rectangle screen_dimensions, mir::geometry::Point touch_start, mir::geometry::Point touch_end, std::chrono::high_resolution_clock::duration touch_duration, mir::test::Barrier& client_ready);
     
-    std::tuple<std::chrono::high_resolution_clock::time_point,std::chrono::high_resolution_clock::time_point>
-        touch_timings();
+    struct TouchTimings {
+        std::chrono::high_resolution_clock::time_point touch_start;
+        std::chrono::high_resolution_clock::time_point touch_end;
+    };
+    TouchTimings touch_timings();
     
     std::shared_ptr<mir::graphics::Platform> the_graphics_platform() override;
 

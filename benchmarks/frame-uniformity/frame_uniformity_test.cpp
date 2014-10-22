@@ -29,10 +29,6 @@ FrameUniformityTest::FrameUniformityTest(FrameUniformityTestParameters const& pa
 {
 }
 
-FrameUniformityTest::~FrameUniformityTest()
-{
-}
-
 mir::DefaultServerConfiguration& FrameUniformityTest::server_config()
 {
     return server_configuration;
@@ -50,7 +46,7 @@ std::shared_ptr<TouchSamples> FrameUniformityTest::client_results()
     return client.results();
 }
 
-std::tuple<std::chrono::high_resolution_clock::time_point,std::chrono::high_resolution_clock::time_point> FrameUniformityTest::server_timings()
+TouchProducingServer::TouchTimings FrameUniformityTest::server_timings()
 {
     return server_configuration.touch_timings();
 }

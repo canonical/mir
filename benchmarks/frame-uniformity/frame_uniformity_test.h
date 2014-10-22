@@ -45,7 +45,7 @@ class FrameUniformityTest : public mir_test_framework::ServerRunner
 {
 public:
     FrameUniformityTest(FrameUniformityTestParameters const& parameters);
-    ~FrameUniformityTest();
+    virtual ~FrameUniformityTest() = default;
     
     mir::DefaultServerConfiguration& server_config() override;
     
@@ -53,8 +53,7 @@ public:
     
     std::shared_ptr<TouchSamples> client_results();
     
-    // Actual touch start and end times.
-    std::tuple<std::chrono::high_resolution_clock::time_point,std::chrono::high_resolution_clock::time_point> server_timings();
+    TouchProducingServer::TouchTimings server_timings();
 
 private:
     mir::test::Barrier client_ready_fence;

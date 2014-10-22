@@ -107,8 +107,8 @@ void TouchProducingServer::thread_function()
     }
 }
 
-std::tuple<std::chrono::high_resolution_clock::time_point,std::chrono::high_resolution_clock::time_point>
+TouchProducingServer::TouchTimings
 TouchProducingServer::touch_timings()
 {
-    return std::tuple<std::chrono::high_resolution_clock::time_point,std::chrono::high_resolution_clock::time_point>{touch_start_time, touch_end_time};
+    return {touch_start_time, touch_end_time};
 }

@@ -36,8 +36,13 @@ geom::Point interpolated_touch_at_time(geom::Point touch_start, geom::Point touc
     std::chrono::high_resolution_clock::time_point interpolated_touch_time)
 {
     assert(interpolated_touch_time > touch_start_time);
+
+    double elapsed_interval = interpolated_touch_time.time_since_epoch().count() - touch_start_time.time_since_epoch().count();
+    double total_interval = touch_end_time.time_since_epoch().count() -
+        touch_start_time.time_since_epoch().count();
+
     // std::chrono is a beautiful api
-    double alpha = (interpolated_touch_time.time_since_epoch().count() - touch_start_time.time_since_epoch().count()) / static_cast<double>((touch_end_time.time_since_epoch().count() - touch_start_time.time_since_epoch().count()));
+    double alpha = elapsed_interval / total_interval;
     
     auto ix = touch_start.x.as_int() + (touch_end.x.as_int()-touch_start.x.as_int())*alpha;
     auto iy = touch_start.y.as_int() + (touch_end.y.as_int()-touch_start.y.as_int())*alpha;
@@ -122,8 +127,8 @@ TEST(FrameUniformity, average_frame_offset)
         t.run_test();
   
         auto touch_timings = t.server_timings();
-        auto touch_start_time = std::get<0>(touch_timings);
-        auto touch_end_time = std::get<1>(touch_timings);
+        auto touch_start_time = touch_timings.touch_start;
+        auto touch_end_time = touch_timings.touch_end;
         auto samples = t.client_results()->get();
 
         auto results = compute_frame_uniformity(samples, touch_start_point, touch_end_point,
@@ -136,6 +141,6 @@ TEST(FrameUniformity, average_frame_offset)
     average_lag /= run_count;
     average_uniformity /= run_count;
     
-    printf("Average pixel lag: %f \n", average_lag);
-    printf("Frame Uniformity: %f \n", average_uniformity);
+    printf("Average pixel lag: %f px\n", average_lag);
+    printf("Frame Uniformity (smaller scores are more uniform): %f px per sample\n", average_uniformity);
 }

@@ -75,7 +75,7 @@ struct StubDisplayBuffer : mtd::StubDisplayBuffer
     void post_update() override
     {
         auto now = std::chrono::high_resolution_clock::now();
-        auto next_sync = last_sync + std::chrono::seconds(1) / (double)vsync_rate_in_hz;
+        auto next_sync = last_sync + std::chrono::seconds(1) / vsync_rate_in_hz;
         
         if (now < next_sync)
             std::this_thread::sleep_for(next_sync - now);
@@ -83,7 +83,7 @@ struct StubDisplayBuffer : mtd::StubDisplayBuffer
         last_sync = now;
     }
     
-    int const vsync_rate_in_hz;
+    double const vsync_rate_in_hz;
 
     std::chrono::high_resolution_clock::time_point last_sync;
 };
