@@ -19,8 +19,6 @@
 #include "mir/shell/session_coordinator_wrapper.h"
 #include "mir/shell/surface_coordinator_wrapper.h"
 
-#include "mir/server.h"
-
 #include "mir_test_framework/headless_test.h"
 
 #include <gtest/gtest.h>
@@ -48,8 +46,6 @@ struct MySessionCoordinator : msh::SessionCoordinatorWrapper
 
 struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
 {
-    mir::Server server;
-
     void SetUp() override
     {
         server.wrap_surface_coordinator([]

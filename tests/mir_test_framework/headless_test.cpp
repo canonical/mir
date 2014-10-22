@@ -20,12 +20,19 @@
 
 namespace mtf = mir_test_framework;
 
-mtf::HeadlessTest::HeadlessTest() :
-    env{mir::test::TemporaryEnvironmentValue{"MIR_SERVER_PLATFORM_GRAPHICS_LIB", "libmirplatformstub.so"}}
+mtf::HeadlessTest::HeadlessTest()
 {
+    add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", "libmirplatformstub.so");
 }
 
 void mtf::HeadlessTest::add_to_environment(char const* key, char const* value)
 {
     env.emplace_back(key, value);
+}
+
+auto mtf::HeadlessTest::new_connection() -> std::string
+{
+    char connect_string[64] = {0};
+    sprintf(connect_string, "fd://%d", server.open_client_socket());
+    return connect_string;
 }

@@ -21,6 +21,8 @@
 
 #include "mir_test/temporary_environment_value.h"
 
+#include "mir/server.h"
+
 #include <gtest/gtest.h>
 
 #include <list>
@@ -38,6 +40,10 @@ public:
     HeadlessTest();
 
     void add_to_environment(char const* key, char const* value);
+
+    auto new_connection() -> std::string;
+
+    mir::Server server;
 
 private:
     std::list<mir::test::TemporaryEnvironmentValue> env;

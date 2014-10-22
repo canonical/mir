@@ -18,6 +18,7 @@
 
 #include "mir/server.h"
 
+#include "mir/frontend/connector.h"
 #include "mir/options/default_configuration.h"
 #include "mir/default_server_configuration.h"
 #include "mir/main_loop.h"
@@ -253,6 +254,22 @@ void mir::Server::stop()
 bool mir::Server::exited_normally()
 {
     return self->exit_status;
+}
+
+auto mir::Server::open_client_socket() -> int
+{
+    if (auto const config = self->server_config)
+        return config->the_connector()->client_socket_fd();
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
+}
+
+auto mir::Server::open_client_socket(ConnectHandler const& connect_handler) -> int
+{
+    if (auto const config = self->server_config)
+        return config->the_connector()->client_socket_fd(connect_handler);
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
 #define MIR_SERVER_ACCESSOR(name)\
