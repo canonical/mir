@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -30,7 +30,7 @@
 class TouchProducingServer : public mir_test_framework::FakeEventHubServerConfiguration
 {
 public:
-    TouchProducingServer(mir::geometry::Rectangle screen_dimensions, mir::geometry::Point touch_start, mir::geometry::Point touch_end, std::chrono::high_resolution_clock::duration touch_duration, mir::test::Barrier &client_ready);
+    TouchProducingServer(mir::geometry::Rectangle screen_dimensions, mir::geometry::Point touch_start, mir::geometry::Point touch_end, std::chrono::high_resolution_clock::duration touch_duration, mir::test::Barrier& client_ready);
     
     std::tuple<std::chrono::high_resolution_clock::time_point,std::chrono::high_resolution_clock::time_point>
         touch_timings();
@@ -45,7 +45,7 @@ private:
     mir::geometry::Point const touch_end;
     std::chrono::high_resolution_clock::duration const touch_duration;
 
-    mir::test::Barrier &client_ready;
+    mir::test::Barrier& client_ready;
     
     std::thread input_injection_thread;
     

@@ -34,7 +34,7 @@
 class TouchMeasuringClient
 {
 public:
-    TouchMeasuringClient(mir::test::Barrier &client_ready,
+    TouchMeasuringClient(mir::test::Barrier& client_ready,
         std::chrono::high_resolution_clock::duration const& touch_duration);
     
     void run(std::string const& connect_string);
@@ -42,7 +42,7 @@ public:
     std::shared_ptr<TouchSamples> results();
 
 private:
-    mir::test::Barrier &client_ready;
+    mir::test::Barrier& client_ready;
     
     std::chrono::high_resolution_clock::duration const touch_duration;
     
