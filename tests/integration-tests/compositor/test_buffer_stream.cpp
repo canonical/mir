@@ -388,7 +388,8 @@ TEST_F(BufferStreamTest, blocked_client_is_released_on_timeout)
     mg::Buffer* placeholder{nullptr};
 
     // Grab all the buffers...
-    for (int i = 0; i < buffers_free_for_client(); ++i)
+    int max = buffers_free_for_client();
+    for (int i = 0; i < max; ++i)
     {
         placeholder = buffer_stream.acquire_client_buffer_blocking();
         buffer_stream.release_client_buffer(placeholder);
