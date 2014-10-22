@@ -99,8 +99,9 @@ TEST(ProtobufMessageProcessor, preserves_response_resource_for_exchange_buffer)
     raw_invocation.set_method_name("exchange_buffer");
     mfd::Invocation invocation(raw_invocation);
 
+    std::vector<mir::Fd> fds;
     mfd::MessageProcessor* mp = &pb_message_processor;
-    mp->dispatch(invocation);
+    mp->dispatch(invocation, fds);
 
     ASSERT_THAT(stub_display_server.exchange_buffer_response, testing::Ne(nullptr));
     ASSERT_THAT(stub_display_server.exchange_closure, testing::Ne(nullptr));

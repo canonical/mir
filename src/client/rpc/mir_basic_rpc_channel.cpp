@@ -117,6 +117,7 @@ mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     invoke.set_method_name(method->name());
     invoke.set_parameters(buffer.data(), buffer.size());
     invoke.set_protocol_version(1);
+    invoke.set_side_channel_fds(0);
 
     return invoke;
 }
