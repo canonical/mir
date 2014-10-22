@@ -214,7 +214,7 @@ public:
     /// \return the session authorizer.
     auto the_session_authorizer() const -> std::shared_ptr<frontend::SessionAuthorizer>;
 
-    /// \return the session authorizer.
+    /// \return the session coordinator.
     auto the_session_coordinator() const -> std::shared_ptr<scene::SessionCoordinator>;
 
     /// \return the session listener.
