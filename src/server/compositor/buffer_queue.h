@@ -90,6 +90,7 @@ private:
     bool frame_dropping_enabled;
     graphics::BufferProperties the_properties;
     bool force_new_compositor_buffer;
+    bool callbacks_allowed;
 
     std::condition_variable snapshot_released;
     std::shared_ptr<graphics::GraphicBufferAllocator> gralloc;
