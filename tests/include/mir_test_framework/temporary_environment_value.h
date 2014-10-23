@@ -16,14 +16,12 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_TEMPORARY_ENVIRONMENT_VALUE_H_
-#define MIR_TEST_TEMPORARY_ENVIRONMENT_VALUE_H_
+#ifndef MIR_TEST_FRAMEWORK_ENVIRONMENT_VALUE_H_
+#define MIR_TEST_FRAMEWORK_ENVIRONMENT_VALUE_H_
 
 #include <string>
 
-namespace mir
-{
-namespace test
+namespace mir_test_framework
 {
 class TemporaryEnvironmentValue
 {
@@ -39,6 +37,5 @@ private:
     std::string const old_value;
 };
 }
-}
 
-#endif /* MIR_TEST_TEMPORARY_ENVIRONMENT_VALUE_H_ */
+#endif /* MIR_TEST_FRAMEWORK_ENVIRONMENT_VALUE_H_ */

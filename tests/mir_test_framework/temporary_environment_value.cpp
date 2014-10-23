@@ -16,13 +16,13 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test/temporary_environment_value.h"
+#include "mir_test_framework/temporary_environment_value.h"
 
 #include <cstdlib>
 
-namespace mt = mir::test;
+namespace mtf = mir_test_framework;
 
-mt::TemporaryEnvironmentValue::TemporaryEnvironmentValue(char const* name, char const* value) :
+mtf::TemporaryEnvironmentValue::TemporaryEnvironmentValue(char const* name, char const* value) :
     name{name},
     has_old_value{getenv(name) != nullptr},
     old_value{has_old_value ? getenv(name) : ""}
@@ -33,7 +33,7 @@ mt::TemporaryEnvironmentValue::TemporaryEnvironmentValue(char const* name, char 
         unsetenv(name);
 }
 
-mt::TemporaryEnvironmentValue::~TemporaryEnvironmentValue()
+mtf::TemporaryEnvironmentValue::~TemporaryEnvironmentValue()
 {
     if (has_old_value)
         setenv(name.c_str(), old_value.c_str(), overwrite);

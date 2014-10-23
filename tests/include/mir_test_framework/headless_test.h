@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_FRAMEWORK_HEADLESS_TEST_H_
 #define MIR_TEST_FRAMEWORK_HEADLESS_TEST_H_
 
-#include "mir_test/temporary_environment_value.h"
+#include "mir_test_framework/temporary_environment_value.h"
 
 #include "mir/server.h"
 
@@ -57,7 +57,7 @@ public:
     mir::Server server;
 
 private:
-    std::list<mir::test::TemporaryEnvironmentValue> env;
+    std::list<TemporaryEnvironmentValue> env;
     std::thread server_thread;
 
     std::mutex mutex;

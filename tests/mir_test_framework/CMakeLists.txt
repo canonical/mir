@@ -17,6 +17,7 @@ set(
   cross_process_sync.cpp
   headless_test.cpp
   server_runner.cpp
+  temporary_environment_value.cpp
   testing_server_options.cpp
   input_testing_server_options.cpp
   stubbed_server_configuration.cpp
@@ -49,7 +50,6 @@ uses_android_input(mir-test-framework)
 target_link_libraries(
   mir-test-framework
 
-  mir-test
   mirplatformstub
   3rd_party
 
