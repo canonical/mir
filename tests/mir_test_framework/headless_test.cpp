@@ -41,37 +41,35 @@ void mtf::HeadlessTest::add_to_environment(char const* key, char const* value)
 
 void mtf::HeadlessTest::start_server()
 {
-    auto const main_loop = server.the_main_loop();
+    server.add_init_callback([&]
+        {
+            auto const main_loop = server.the_main_loop();
+            // By enqueuing the notification code in the main loop, we are
+            // ensuring that the server has really and fully started before
+            // leaving start_mir_server().
+            main_loop->enqueue(
+                this,
+                [&]
+                {
+                    std::lock_guard<std::mutex> lock(mutex);
+                    server_running = true;
+                    started.notify_one();
+                });
+        });
 
     server_thread = std::thread([&]
         {
             try
             {
-                server.add_init_callback([&]
-                    {
-                        // By enqueuing the notification code in the main loop, we are
-                        // ensuring that the server has really and fully started before
-                        // leaving start_mir_server().
-                        main_loop->enqueue(
-                            this,
-                            [&]
-                            {
-                                std::lock_guard<std::mutex> lock(mutex);
-                                server_running = true;
-                                started.notify_one();
-                            });
-                    });
-
                 server.run();
-
-                std::lock_guard<std::mutex> lock(mutex);
-                server_running = false;
-                started.notify_one();
             }
             catch (std::exception const& e)
             {
                 FAIL() << e.what();
             }
+            std::lock_guard<std::mutex> lock(mutex);
+            server_running = false;
+            started.notify_one();
         });
 
     std::unique_lock<std::mutex> lock(mutex);
@@ -89,7 +87,6 @@ void mtf::HeadlessTest::stop_server()
     if (server_running)
     {
         server.stop();
-        std::unique_lock<std::mutex> lock(mutex);
         started.wait_for(lock, timeout, [&] { return !server_running; });
     }
 
