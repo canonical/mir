@@ -47,7 +47,7 @@ b45f14082c4f8b29efaa1b13de795dcb29deb738  include/platform/mir/options/option.h
 f4030e400baf8baa9c38e7c6ec6b4a5ad7134aeb  include/server/mir/compositor/compositor.h
 a9f284ba4b05d58fd3eeb628d1f56fe4ac188526  include/server/mir/compositor/compositor_id.h
 98fe6bde01fb8b25b1bacafcdf572f24c3ade3c3  include/server/mir/compositor/display_buffer_compositor_factory.h
-922bf6c0040c038529f56c117f69e6839e27c67f  include/server/mir/compositor/display_buffer_compositor.h
+d49eae4f986645b32e29ce2c1f99f524703ba3c0  include/server/mir/compositor/display_buffer_compositor.h
 878ab5c4007d16dac213a3eb0105421d8ffad206  include/server/mir/compositor/scene_element.h
 4fcf34e424128b87ddc76733594e32e09ebbd486  include/server/mir/compositor/scene.h
 7e47baf423fc61960d8e4ea92eae93caf71c93e2  include/server/mir/default_server_configuration.h
