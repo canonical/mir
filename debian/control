@@ -45,6 +45,20 @@ Homepage: https://launchpad.net/mir
 # just go ahead. ~mir-team will notice and sync up the code again.
 Vcs-Bzr: https://code.launchpad.net/~mir-team/mir/trunk
 
+Package: libmirprotobuf0
+Section: libs
+Architecture: i386 amd64 armhf arm64
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - RPC definitions
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains the shared library containing the Google Protobuf definitions
+ required for Mir clients and servers.
+
 Package: libmirserver27
 Section: libs
 Architecture: i386 amd64 armhf arm64

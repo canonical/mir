@@ -7,6 +7,7 @@ add_executable(mir_demo_standalone_inprocess_egl
 target_link_libraries(mir_demo_standalone_inprocess_egl
   mirserver
   mirdraw
+  playgroundserverconfig
   exampleserverconfig
 )
 # TODO Install this demo?

@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_BUFFER_H_
 
 #ifdef ANDROID
-#include "mock_android_native_buffer.h"
+#include "mir_test_doubles/stub_android_native_buffer.h"
 #else
 #include "stub_gbm_native_buffer.h"
 #endif

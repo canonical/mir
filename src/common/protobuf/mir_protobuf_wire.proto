@@ -5,6 +5,7 @@ message Invocation {
   required string method_name = 2;
   required bytes  parameters = 3;
   required uint32 protocol_version = 4;
+  optional uint32 side_channel_fds = 5;
 }
 
 message Result {
