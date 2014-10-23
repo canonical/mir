@@ -25,7 +25,10 @@
 
 #include <gtest/gtest.h>
 
+#include <condition_variable>
 #include <list>
+#include <mutex>
+#include <thread>
 
 namespace mir_test_framework
 {
@@ -38,15 +41,28 @@ class HeadlessTest : public ::testing::Test
 {
 public:
     HeadlessTest();
+    ~HeadlessTest() noexcept;
 
     void add_to_environment(char const* key, char const* value);
 
+    /// Starts the server on a new thread
+    void start_server();
+
+    /// Stops the server and joins thread
+    void stop_server();
+
+    /// \return a connection string for a new client to connect to the server
     auto new_connection() -> std::string;
 
     mir::Server server;
 
 private:
     std::list<mir::test::TemporaryEnvironmentValue> env;
+    std::thread server_thread;
+
+    std::mutex mutex;
+    std::condition_variable started;
+    bool server_running{false};
 };
 }
 

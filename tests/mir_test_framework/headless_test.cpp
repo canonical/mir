@@ -18,7 +18,16 @@
 
 #include "mir_test_framework/headless_test.h"
 
+#include "mir/main_loop.h"
+
+#include <boost/throw_exception.hpp>
+
 namespace mtf = mir_test_framework;
+
+namespace
+{
+std::chrono::seconds const timeout{10};
+}
 
 mtf::HeadlessTest::HeadlessTest()
 {
@@ -28,6 +37,71 @@ mtf::HeadlessTest::HeadlessTest()
 void mtf::HeadlessTest::add_to_environment(char const* key, char const* value)
 {
     env.emplace_back(key, value);
+}
+
+void mtf::HeadlessTest::start_server()
+{
+    auto const main_loop = server.the_main_loop();
+
+    server_thread = std::thread([&]
+        {
+            try
+            {
+                server.add_init_callback([&]
+                    {
+                        // By enqueuing the notification code in the main loop, we are
+                        // ensuring that the server has really and fully started before
+                        // leaving start_mir_server().
+                        main_loop->enqueue(
+                            this,
+                            [&]
+                            {
+                                std::lock_guard<std::mutex> lock(mutex);
+                                server_running = true;
+                                started.notify_one();
+                            });
+                    });
+
+                server.run();
+
+                std::lock_guard<std::mutex> lock(mutex);
+                server_running = false;
+                started.notify_one();
+            }
+            catch (std::exception const& e)
+            {
+                FAIL() << e.what();
+            }
+        });
+
+    std::unique_lock<std::mutex> lock(mutex);
+    started.wait_for(lock, timeout, [&] { return server_running; });
+
+    if (!server_running)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to start server thread"});
+    }
+}
+
+void mtf::HeadlessTest::stop_server()
+{
+    std::unique_lock<std::mutex> lock(mutex);
+    if (server_running)
+    {
+        server.stop();
+        std::unique_lock<std::mutex> lock(mutex);
+        started.wait_for(lock, timeout, [&] { return !server_running; });
+    }
+
+    if (server_running)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error{"stop_server() failed to stop server"});
+    }
+}
+
+mtf::HeadlessTest::~HeadlessTest() noexcept
+{
+    if (server_thread.joinable()) server_thread.join();
 }
 
 auto mtf::HeadlessTest::new_connection() -> std::string

@@ -49,6 +49,7 @@ uses_android_input(mir-test-framework)
 target_link_libraries(
   mir-test-framework
 
+  mir-test
   mirplatformstub
   3rd_party
 
