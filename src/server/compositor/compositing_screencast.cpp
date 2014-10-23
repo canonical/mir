@@ -127,7 +127,6 @@ std::shared_ptr<mg::Buffer> mc::CompositingScreencast::capture(mf::ScreencastSes
         [&] { session_context->gl_context->release_current(); });
 
     session_context->display_buffer_compositor->composite(
-        *session_context->display_buffer,
         session_context->scene->scene_elements_for(session_context.get()));
 
     return session_context->buffer;

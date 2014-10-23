@@ -102,7 +102,7 @@ TEST_F(DemoCompositor, sets_surface_visibility)
     EXPECT_CALL(element, rendered());
     EXPECT_CALL(element, occluded());
 
-    demo_compositor.composite(stub_display_buffer, scene_elements);
-    demo_compositor.composite(stub_display_buffer, scene_elements);
+    demo_compositor.composite(mc::SceneElementSequence(scene_elements));
+    demo_compositor.composite(mc::SceneElementSequence(scene_elements));
 
 }

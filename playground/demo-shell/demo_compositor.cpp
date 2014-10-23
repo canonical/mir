@@ -54,7 +54,7 @@ me::DemoCompositor::~DemoCompositor()
 {
 }
 
-void me::DemoCompositor::composite(mg::DisplayBuffer& display_buffer, mc::SceneElementSequence elements)
+void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
 {
     report->began_frame(this);
     //a simple filtering out of renderables that shouldn't be drawn

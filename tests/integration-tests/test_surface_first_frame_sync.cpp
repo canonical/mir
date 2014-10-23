@@ -73,9 +73,7 @@ public:
             display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
             {
                 auto& dbc = display_buffer_compositor_map[&display_buffer];
-                dbc->composite(
-                    display_buffer,
-                    scene->scene_elements_for(dbc.get()));
+                dbc->composite(scene->scene_elements_for(dbc.get()));
             });
         };
         auto notify2 = [this](int)
@@ -83,9 +81,7 @@ public:
             display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
             {
                 auto& dbc = display_buffer_compositor_map[&display_buffer];
-                dbc->composite(
-                    display_buffer,
-                    scene->scene_elements_for(dbc.get()));
+                dbc->composite(scene->scene_elements_for(dbc.get()));
             });
         };
         observer = std::make_shared<ms::LegacySceneChangeNotification>(notify, notify2);

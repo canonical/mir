@@ -142,7 +142,7 @@ public:
     {
     }
 
-    void composite(mg::DisplayBuffer&, mc::SceneElementSequence)
+    void composite(mc::SceneElementSequence&&)
     {
         mark_render_buffer();
         /* Reduce run-time under valgrind */
@@ -258,7 +258,7 @@ public:
     {
     }
 
-    void composite(mg::DisplayBuffer&, mc::SceneElementSequence) override
+    void composite(mc::SceneElementSequence&&) override
     {
         fake_surface_update();
         /* Reduce run-time under valgrind */
@@ -307,7 +307,7 @@ public:
     {
         struct NullDisplayBufferCompositor : mc::DisplayBufferCompositor
         {
-            void composite(mg::DisplayBuffer&, mc::SceneElementSequence) override
+            void composite(mc::SceneElementSequence&&) override
             {
             }
         };
