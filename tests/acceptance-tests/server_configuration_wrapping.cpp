@@ -19,14 +19,13 @@
 #include "mir/shell/session_coordinator_wrapper.h"
 #include "mir/shell/surface_coordinator_wrapper.h"
 
-#include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/headless_test.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
-namespace mtf = mir_test_framework;
 
 using namespace testing;
 
@@ -45,27 +44,28 @@ struct MySessionCoordinator : msh::SessionCoordinatorWrapper
     MOCK_METHOD0(focus_next, void());
 };
 
-struct MyConfig : mtf::StubbedServerConfiguration
+struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
 {
-    std::shared_ptr<ms::SurfaceCoordinator> wrap_surface_coordinator(
-        std::shared_ptr<ms::SurfaceCoordinator> const& wrapped) override
+    void SetUp() override
     {
-        return std::make_shared<MySurfaceCoordinator>(wrapped);
+        server.wrap_surface_coordinator([]
+            (std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
+            {
+                return std::make_shared<MySurfaceCoordinator>(wrapped);
+            });
+
+        server.wrap_session_coordinator([]
+            (std::shared_ptr<ms::SessionCoordinator> const& wrapped)
+            {
+                return std::make_shared<MySessionCoordinator>(wrapped);
+            });
+
+        surface_coordinator = server.the_surface_coordinator();
+        session_coordinator = server.the_session_coordinator();
     }
 
-    std::shared_ptr<ms::SessionCoordinator> wrap_session_coordinator(
-        std::shared_ptr<ms::SessionCoordinator> const& wrapped) override
-    {
-        return std::make_shared<MySessionCoordinator>(wrapped);
-    }
-};
-
-struct ServerConfigurationWrapping : Test
-{
-    MyConfig config;
-
-    std::shared_ptr<ms::SurfaceCoordinator> surface_coordinator{config.the_surface_coordinator()};
-    std::shared_ptr<ms::SessionCoordinator> session_coordinator{config.the_session_coordinator()};
+    std::shared_ptr<ms::SurfaceCoordinator> surface_coordinator;
+    std::shared_ptr<ms::SessionCoordinator> session_coordinator;
 };
 }
 
@@ -86,7 +86,7 @@ TEST_F(ServerConfigurationWrapping, can_override_surface_coordinator_methods)
 
 TEST_F(ServerConfigurationWrapping, returns_same_surface_coordinator_from_cache)
 {
-    ASSERT_THAT(config.the_surface_coordinator(), Eq(surface_coordinator));
+    ASSERT_THAT(server.the_surface_coordinator(), Eq(surface_coordinator));
 }
 
 TEST_F(ServerConfigurationWrapping, session_coordinator_is_of_wrapper_type)
@@ -106,5 +106,5 @@ TEST_F(ServerConfigurationWrapping, can_override_session_coordinator_methods)
 
 TEST_F(ServerConfigurationWrapping, returns_same_session_coordinator_from_cache)
 {
-    ASSERT_THAT(config.the_session_coordinator(), Eq(session_coordinator));
+    ASSERT_THAT(server.the_session_coordinator(), Eq(session_coordinator));
 }
