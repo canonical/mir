@@ -15,6 +15,7 @@ set(
   executable_path.cpp
   command_line_server_configuration.cpp
   cross_process_sync.cpp
+  headless_in_process_server.cpp
   headless_test.cpp
   server_runner.cpp
   temporary_environment_value.cpp
