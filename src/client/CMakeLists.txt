@@ -135,7 +135,7 @@ add_library(
 target_link_libraries(
   mirclient-debug-extension
 
-  ${MIR_CLIENT_LIBRARIES}
+  mirclient
 )
 
 set(debug_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-debug.map)
