@@ -35,35 +35,9 @@ namespace mgm = mir::graphics::mesa;
 namespace
 {
 
-mir::Fd create_anonymous_file(size_t size, bool force_legacy_path)
+mir::Fd create_anonymous_file(size_t size)
 {
-    mir::Fd fd;
-
-    if (force_legacy_path ||
-       ((fd = mir::Fd{open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU)}) == mir::Fd::invalid))
-    {
-        char const* const tmpl = "/mir-buffer-XXXXXX";
-        char const* const runtime_dir = getenv("XDG_RUNTIME_DIR");
-        bool runtime_dir_valid = false;
-
-        if (runtime_dir)
-        {
-            boost::system::error_code ec;
-            boost::filesystem::path p(runtime_dir);
-            runtime_dir_valid = boost::filesystem::is_directory(p, ec);
-        }
-
-        char const* const target_dir = (runtime_dir_valid ? runtime_dir : "/tmp");
-
-        /* We need a mutable array for mkostemp */
-        std::vector<char> path(target_dir, target_dir + strlen(target_dir));
-        path.insert(path.end(), tmpl, tmpl + strlen(tmpl));
-        path.push_back('\0');
-
-        fd = mir::Fd{mkostemp(path.data(), O_CLOEXEC)};
-        if (unlink(path.data()) < 0)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to unlink temporary file"));
-    }
+    mir::Fd fd = mir::Fd{open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU)};
 
     if (ftruncate(fd, size) < 0)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to resize temporary file"));
@@ -100,8 +74,8 @@ mgm::detail::MapHandle::operator void*() const
 /********************
  * AnonymousShmFile *
  ********************/
-mgm::AnonymousShmFile::AnonymousShmFile(size_t size, bool force_legacy_path)
-    : fd_{create_anonymous_file(size, force_legacy_path)},
+mgm::AnonymousShmFile::AnonymousShmFile(size_t size)
+    : fd_{create_anonymous_file(size)},
       mapping{fd_, size}
 {
 }
