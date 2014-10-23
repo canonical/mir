@@ -49,11 +49,9 @@ set_target_properties(
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
-target_link_libraries(
-  mirplatformgraphicsandroid
-
+target_link_libraries(mirplatformgraphicsandroid
+  mirplatform
   mirsharedandroid
-
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${LIBHARDWARE_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
