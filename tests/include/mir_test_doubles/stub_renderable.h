@@ -38,21 +38,31 @@ namespace doubles
 class StubRenderable : public graphics::Renderable
 {
 public:
-    StubRenderable(std::shared_ptr<graphics::Buffer> const& buffer, geometry::Rectangle const& rect)
+    StubRenderable(std::shared_ptr<graphics::Buffer> const& buffer, geometry::Rectangle const& rect, bool visible)
         : rect(rect),
-          stub_buffer(buffer)
+          stub_buffer(buffer),
+          visible_(visible)
+    {}
+
+    StubRenderable(std::shared_ptr<graphics::Buffer> const& buffer, geometry::Rectangle const& rect)
+        : StubRenderable(buffer, rect, true)
+    {}
+
+    StubRenderable(bool visible)
+        : StubRenderable(make_stub_buffer(rect), {{},{}}, visible)
     {}
 
     StubRenderable(std::shared_ptr<graphics::Buffer> const& buffer)
-        : StubRenderable(buffer, {{},{}})
+        : StubRenderable(buffer, {{},{}}, true)
     {}
 
+
     StubRenderable(geometry::Rectangle const& rect)
-        : StubRenderable(make_stub_buffer(rect), rect)
+        : StubRenderable(make_stub_buffer(rect), rect, true)
     {}
 
     StubRenderable() :
-        StubRenderable(make_stub_buffer({{},{}}), {{},{}})
+        StubRenderable(make_stub_buffer({{},{}}), {{},{}}, true)
     {}
 
     void set_buffer(std::shared_ptr<graphics::Buffer> const& buffer)
@@ -82,7 +92,7 @@ public:
     }
     bool visible() const
     {
-        return true;
+        return visible_;
     }
     bool shaped() const override
     {
@@ -105,6 +115,7 @@ private:
     glm::mat4 trans;
     geometry::Rectangle const rect;
     std::shared_ptr<graphics::Buffer> stub_buffer;
+    bool visible_;
 };
 
 struct StubTransformedRenderable : public StubRenderable
