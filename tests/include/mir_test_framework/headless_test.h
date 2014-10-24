@@ -54,6 +54,9 @@ public:
     /// \return a connection string for a new client to connect to the server
     auto new_connection() -> std::string;
 
+    /// \return a connection string for a client to connect to the server
+    auto connection(int fd) -> std::string;
+
     mir::Server server;
 
 private:

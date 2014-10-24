@@ -103,7 +103,12 @@ mtf::HeadlessTest::~HeadlessTest() noexcept
 
 auto mtf::HeadlessTest::new_connection() -> std::string
 {
+    return connection(server.open_client_socket());
+}
+
+auto mtf::HeadlessTest::connection(int fd) -> std::string
+{
     char connect_string[64] = {0};
-    sprintf(connect_string, "fd://%d", server.open_client_socket());
+    sprintf(connect_string, "fd://%d", fd);
     return connect_string;
 }
