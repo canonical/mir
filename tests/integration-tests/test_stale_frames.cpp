@@ -195,10 +195,16 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
     auto const stale_buffer_id2 = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
     mir_surface_swap_buffers_sync(surface);
 
+    auto const buffer_id3 = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
     mir_surface_swap_buffers_sync(surface);
 
     start_compositor();
 
+    EXPECT_NE(stale_buffer_id1, stale_buffer_id2);
+    EXPECT_NE(stale_buffer_id2, buffer_id3);
+    // Note buffers 1 and 3 may be equal when defaulting to double buffers
+
     auto const new_buffers = wait_for_new_rendered_buffers();
-    EXPECT_THAT(new_buffers, Not(AnyOf(Contains(stale_buffer_id1), Contains(stale_buffer_id2))));
+    ASSERT_EQ(1, new_buffers.size());
+    EXPECT_EQ(buffer_id3, new_buffers[0]);
 }
