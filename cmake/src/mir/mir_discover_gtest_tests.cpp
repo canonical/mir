@@ -246,6 +246,11 @@ bool is_death_test(string const& test)
     return death_test;
 }
 
+inline bool is_anonymous_shm_test(string const& test)
+{
+    return (test == "AnonymousShmFile.*");
+}
+
 int main (int argc, char **argv)
 {
     int output_width = get_output_width();
@@ -305,6 +310,10 @@ int main (int argc, char **argv)
         for (auto test = tests.begin(); test != tests.end(); ++ test)
         {
             static char cmd_line[1024] = "";
+
+            if (is_anonymous_shm_test(*test))
+            	continue;
+
             snprintf(
                 cmd_line,
                 sizeof(cmd_line),
