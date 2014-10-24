@@ -235,7 +235,7 @@ public:
  * They should be called while the server is running (i.e. run() has been called and
  * not exited) otherwise they throw a std::logic_error.
  * @{ */
-    typedef std::function<void(std::shared_ptr<frontend::Session> const& session)> ConnectHandler;
+    using ConnectHandler = std::function<void(std::shared_ptr<frontend::Session> const& session)>;
 
     /// Get a file descriptor that can be used to connect a client
     /// It can be passed to another process, or used directly with mir_connect()
