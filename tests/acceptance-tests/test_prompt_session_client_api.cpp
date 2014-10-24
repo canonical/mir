@@ -307,10 +307,6 @@ MATCHER_P(SessionWithName, name, "")
 }
 }
 
-TEST_F(PromptSessionClientAPI, null)
-{
-}
-
 TEST_F(PromptSessionClientAPI, can_start_and_stop_a_prompt_session)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
