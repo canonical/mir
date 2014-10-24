@@ -74,7 +74,7 @@ public:
     {
         struct ExceptionThrowingDisplayBufferCompositor : mc::DisplayBufferCompositor
         {
-            void composite() override
+            void composite(mc::SceneElementSequence&&) override
             {
                 throw std::runtime_error("ExceptionThrowingDisplayBufferCompositor");
             }
