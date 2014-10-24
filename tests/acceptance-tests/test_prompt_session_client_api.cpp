@@ -109,9 +109,7 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
     MirConnection* connection = nullptr;
 
     static constexpr pid_t application_session_pid = __LINE__;
-    std::mutex application_session_mutex;
-    std::condition_variable application_session_cv;
-    std::weak_ptr<mf::Session> application_session;
+    std::shared_ptr<mf::Session> application_session;
     MirConnection* application_connection{nullptr};
 
     std::shared_ptr<ms::PromptSession> server_prompt_session;
@@ -144,6 +142,9 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
 
     void start_application_session()
     {
+        std::mutex application_session_mutex;
+        std::condition_variable application_session_cv;
+
         auto connect_handler = [&](std::shared_ptr<mf::Session> const& session)
             {
                 std::lock_guard<std::mutex> lock(application_session_mutex);
@@ -156,7 +157,7 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
         application_connection = mir_connect_sync(HeadlessInProcessServer::connection(fd).c_str(), __PRETTY_FUNCTION__);
 
         std::unique_lock<std::mutex> lock(application_session_mutex);
-        application_session_cv.wait(lock, [&] { return !!application_session.lock(); });
+        application_session_cv.wait(lock, [&] { return !!application_session; });
     }
 
     void SetUp() override
@@ -196,6 +197,7 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
 
     void TearDown() override
     {
+        application_session.reset();
         if (application_connection) mir_connection_release(application_connection);
         if (connection) mir_connection_release(connection);
         mtf::HeadlessInProcessServer::TearDown();
@@ -462,7 +464,7 @@ TEST_F(PromptSessionClientAPI, server_retrieves_application_session)
         connection, application_session_pid, null_state_change_callback, this);
 
     EXPECT_THAT(the_prompt_session_manager()->application_for(server_prompt_session),
-        Eq(application_session.lock()));
+        Eq(application_session));
 
     mir_prompt_session_release_sync(prompt_session);
 }
