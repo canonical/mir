@@ -92,15 +92,13 @@ Results compute_frame_uniformity(std::vector<TouchSamples::Sample> const& result
         touch_start_time, touch_end_time);
     
     double sum = 0;
-    int count = 0;
     for (auto const& sample : results)
     {
         auto distance = pixel_lag_for_sample_at_time(touch_start_point, touch_end_point, touch_start_time, 
             touch_end_time, sample);
         sum += (distance-average_pixel_offset)*(distance-average_pixel_offset);
-        count += 1;
     }
-    double uniformity = std::sqrt(sum/count);
+    double uniformity = std::sqrt(sum/results.size());
     return {average_pixel_offset, uniformity};
 }
 

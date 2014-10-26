@@ -75,7 +75,7 @@ void collect_input_and_frame_timing(MirSurface *surface, mt::Barrier& client_rea
 
 }
 
-TouchMeasuringClient::TouchMeasuringClient(mt::Barrier &client_ready,
+TouchMeasuringClient::TouchMeasuringClient(mt::Barrier& client_ready,
     std::chrono::high_resolution_clock::duration const& touch_duration)
     : client_ready(client_ready),
       touch_duration(touch_duration),
