@@ -57,21 +57,19 @@ void input_callback(MirSurface * /* surface */, MirEvent const* event, void* con
     results->record_pointer_coordinates(std::chrono::high_resolution_clock::now(), *event);
 }
 
-void collect_input_and_frame_timing(MirSurface *surface, mt::Barrier &client_ready, std::chrono::high_resolution_clock::duration duration, std::shared_ptr<TouchSamples> const& results)
+void collect_input_and_frame_timing(MirSurface *surface, mt::Barrier& client_ready, std::chrono::high_resolution_clock::duration duration, std::shared_ptr<TouchSamples> const& results)
 {
     MirEventDelegate event_handler = { input_callback, results.get() };
     mir_surface_set_event_handler(surface, &event_handler);
     
     client_ready.ready();
 
-    auto now = []() { return std::chrono::high_resolution_clock::now(); };
-
     // May be better if end time were relative to the first input event
-    auto end_time = now() + duration;
-    while (now() < end_time)
+    auto end_time = std::chrono::high_resolution_clock::now() + duration;
+    while (std::chrono::high_resolution_clock::now() < end_time)
     {
         mir_surface_swap_buffers_sync(surface);
-        results->record_frame_time(now());
+        results->record_frame_time(std::chrono::high_resolution_clock::now());
     }
 }
 

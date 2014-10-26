@@ -38,7 +38,7 @@ namespace
 
 struct StubBufferWriter : public mg::BufferWriter
 {
-    void write(mg::Buffer &, unsigned char const*, size_t) override
+    void write(mg::Buffer&, unsigned char const*, size_t) override
     {
     }
 };

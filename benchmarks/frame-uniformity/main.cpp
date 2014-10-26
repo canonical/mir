@@ -19,9 +19,10 @@
 #include "frame_uniformity_test.h"
 
 #include <assert.h>
-#include <math.h>
+#include <cmath>
 
 #include <chrono>
+#include <iostream>
 
 #include <gtest/gtest.h>
 
@@ -41,7 +42,6 @@ geom::Point interpolated_touch_at_time(geom::Point touch_start, geom::Point touc
     double total_interval = touch_end_time.time_since_epoch().count() -
         touch_start_time.time_since_epoch().count();
 
-    // std::chrono is a beautiful api
     double alpha = elapsed_interval / total_interval;
     
     auto ix = touch_start.x.as_int() + (touch_end.x.as_int()-touch_start.x.as_int())*alpha;
@@ -58,7 +58,7 @@ double pixel_lag_for_sample_at_time(geom::Point touch_start_point, geom::Point t
         touch_end_time, sample.frame_time);
     auto dx = sample.x - expected_point.x.as_int();
     auto dy = sample.y - expected_point.y.as_int();
-    auto distance = sqrt(dx*dx+dy*dy);
+    auto distance = std::sqrt(dx*dx+dy*dy);
     return distance;
 }
 
@@ -68,15 +68,13 @@ double compute_average_frame_offset(std::vector<TouchSamples::Sample> const& res
     std::chrono::high_resolution_clock::time_point touch_end_time)
 {
     double sum = 0;
-    int count = 0;
     for (auto const& sample : results)
     {
         auto distance = pixel_lag_for_sample_at_time(touch_start_point, touch_end_point, touch_start_time, 
             touch_end_time, sample);
         sum += distance;
-        count += 1;
     }
-    return sum / count;
+    return sum / results.size();
 }
 
 struct Results
@@ -102,7 +100,7 @@ Results compute_frame_uniformity(std::vector<TouchSamples::Sample> const& result
         sum += (distance-average_pixel_offset)*(distance-average_pixel_offset);
         count += 1;
     }
-    double uniformity = sqrt(sum/count);
+    double uniformity = std::sqrt(sum/count);
     return {average_pixel_offset, uniformity};
 }
 
@@ -141,6 +139,7 @@ TEST(FrameUniformity, average_frame_offset)
     average_lag /= run_count;
     average_uniformity /= run_count;
     
-    printf("Average pixel lag: %f px\n", average_lag);
-    printf("Frame Uniformity (smaller scores are more uniform): %f px per sample\n", average_uniformity);
+    std::cout << "Average pixel lag: " << average_lag << "px" << std::endl;
+    std::cout << "Frame Uniformity (smaller scores are more uniform): " << average_uniformity << "px per sample\n"
+        << std::endl;
 }
