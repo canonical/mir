@@ -57,9 +57,8 @@ struct ClientServerTest : mtf::HeadlessTest
     pid_t test_process_id{getpid()};
     pid_t server_process_id{0};
     std::shared_ptr<mtf::Process> server_process;
-    std::shared_ptr<mtf::Process> client_process;
     mtf::CrossProcessSync shutdown_sync;
-    char const* process_tag = "test";
+    char const* process_tag = "test"; // Convenient identifier if adding debug code
 
     ~ClientServerTest()
     {
@@ -117,7 +116,7 @@ struct ClientServerTest : mtf::HeadlessTest
         }
         else
         {
-            client_process = std::make_shared<mtf::Process>(pid);
+            auto const client_process = std::make_shared<mtf::Process>(pid);
             mtf::Result result = client_process->wait_for_termination();
             EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
         }
@@ -201,6 +200,12 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
 {
     auto const server_setup = [&]
         {
+            server.override_the_session_authorizer(
+                [&] { return mt::fake_shared(mock_authorizer); });
+        };
+
+    auto const server_exec = [&]
+        {
             auto matches_creds = [&](mf::SessionCredentials const& creds)
             {
                 return shared_region->matches_client_process_creds(creds);
@@ -223,10 +228,8 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
                 .Times(1)
                 .WillOnce(Return(false));
 
-            server.override_the_session_authorizer([&] { return mt::fake_shared(mock_authorizer); });
+            EXPECT_TRUE(shared_region->wait_for_client_creds());
         };
-
-    auto const server_exec = [&]{ EXPECT_TRUE(shared_region->wait_for_client_creds()); };
 
     run_server_with(server_setup, server_exec);
 
@@ -253,12 +256,13 @@ TEST_F(ClientCredsTestFixture, authorizer_may_prevent_connection_of_clients)
 {
     auto const server_setup = [&]
         {
+        server.override_the_session_authorizer(
+            [&] { return mt::fake_shared(mock_authorizer); });
+
             EXPECT_CALL(mock_authorizer,
                 connection_is_allowed(_))
                 .Times(1)
                 .WillOnce(Return(false));
-
-            server.override_the_session_authorizer([&] { return mt::fake_shared(mock_authorizer); });
         };
 
     run_server_with(server_setup, [&]{});
