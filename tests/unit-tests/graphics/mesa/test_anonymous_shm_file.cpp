@@ -22,11 +22,14 @@
 namespace mgm = mir::graphics::mesa;
 
 // TODO: To be removed when kernel support for O_TMPFILE (>= 3.11) is more prevalent
-#define CHECK_FLAG_AND_SKIP()                                 \
-    if (getenv("MIR_SKIP_TESTS_USING_O_TMPFILE") != NULL) \
-    {                                                     \
-        return;                                           \
-    }                                                     \
+#define CHECK_FLAG_AND_SKIP()                                  \
+    {                                                          \
+        auto value = getenv("MIR_SKIP_TESTS_USING_O_TMPFILE"); \
+        if (value != NULL && !strncmp(value, "true", 4))       \
+        {                                                      \
+           return;                                             \
+        }                                                      \
+    }
 
 TEST(AnonymousShmFile, is_created)
 {
