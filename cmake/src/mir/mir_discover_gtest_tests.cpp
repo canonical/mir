@@ -305,7 +305,6 @@ int main (int argc, char **argv)
         for (auto test = tests.begin(); test != tests.end(); ++ test)
         {
             static char cmd_line[1024] = "";
-
             snprintf(
                 cmd_line,
                 sizeof(cmd_line),

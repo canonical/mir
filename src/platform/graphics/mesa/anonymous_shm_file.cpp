@@ -74,6 +74,7 @@ mgm::detail::MapHandle::operator void*() const
 /********************
  * AnonymousShmFile *
  ********************/
+
 mgm::AnonymousShmFile::AnonymousShmFile(size_t size)
     : fd_{create_anonymous_file(size)},
       mapping{fd_, size}
