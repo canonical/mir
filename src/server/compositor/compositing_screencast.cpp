@@ -42,6 +42,26 @@ uint32_t const max_screencast_sessions{100};
 
 struct mc::detail::ScreencastSessionContext
 {
+    ScreencastSessionContext(
+        std::shared_ptr<Scene> const& scene,
+        std::shared_ptr<graphics::Buffer> const& buffer,
+        std::unique_ptr<graphics::GLContext> gl_context,
+        std::unique_ptr<graphics::DisplayBuffer> display_buffer,
+        std::unique_ptr<compositor::DisplayBufferCompositor> display_buffer_compositor) :
+    scene{scene},
+    buffer{buffer},
+    gl_context{std::move(gl_context)},
+    display_buffer{std::move(display_buffer)},
+    display_buffer_compositor{std::move(display_buffer_compositor)}
+    {
+        scene->register_compositor(this);
+    }
+    ~ScreencastSessionContext()
+    {
+        scene->unregister_compositor(this);
+    }
+
+    std::shared_ptr<Scene> const scene;
     std::shared_ptr<graphics::Buffer> buffer;
     std::unique_ptr<graphics::GLContext> gl_context;
     std::unique_ptr<graphics::DisplayBuffer> display_buffer;
@@ -50,10 +70,12 @@ struct mc::detail::ScreencastSessionContext
 
 
 mc::CompositingScreencast::CompositingScreencast(
+    std::shared_ptr<Scene> const& scene,
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory)
-    : display{display},
+    : scene{scene},
+      display{display},
       buffer_allocator{buffer_allocator},
       db_compositor_factory{db_compositor_factory}
 {
@@ -104,7 +126,8 @@ std::shared_ptr<mg::Buffer> mc::CompositingScreencast::capture(mf::ScreencastSes
         [&] { session_context->gl_context->make_current(); },
         [&] { session_context->gl_context->release_current(); });
 
-    session_context->display_buffer_compositor->composite();
+    session_context->display_buffer_compositor->composite(
+        session_context->scene->scene_elements_for(session_context.get()));
 
     return session_context->buffer;
 }
@@ -146,6 +169,7 @@ mc::CompositingScreencast::create_session_context(
 
     return std::shared_ptr<detail::ScreencastSessionContext>(
         new detail::ScreencastSessionContext{
+            scene,
             buffer,
             std::move(gl_context),
             std::move(display_buffer),

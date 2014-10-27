@@ -30,7 +30,7 @@ namespace mir
 {
 namespace input { class InputChannel; }
 namespace shell { class InputTargeter; }
-namespace geometry { class Rectangle; }
+namespace geometry { struct Rectangle; }
 namespace graphics { class CursorImage; }
 
 namespace scene

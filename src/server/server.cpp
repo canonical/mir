@@ -35,6 +35,7 @@ namespace mo = mir::options;
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
+    MACRO(display_buffer_compositor_factory)\
     MACRO(cursor_listener)\
     MACRO(gl_config)\
     MACRO(input_dispatcher)\
@@ -53,9 +54,11 @@ namespace mo = mir::options;
     MACRO(the_main_loop)\
     MACRO(the_prompt_session_listener)\
     MACRO(the_session_authorizer)\
+    MACRO(the_session_coordinator)\
     MACRO(the_session_listener)\
     MACRO(the_shell_display_layout)\
-    MACRO(the_surface_configurator)
+    MACRO(the_surface_configurator)\
+    MACRO(the_surface_coordinator)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder;

@@ -388,9 +388,12 @@ TEST_F(BufferStreamTest, blocked_client_is_released_on_timeout)
     mg::Buffer* placeholder{nullptr};
 
     // Grab all the buffers...
-    // TODO: the magic “nbuffers - 1” number should be removed
-    for (int i = 0; i < nbuffers - 1; ++i)
-        buffer_stream.swap_client_buffers_blocking(placeholder);
+    int max = buffers_free_for_client();
+    for (int i = 0; i < max; ++i)
+    {
+        placeholder = buffer_stream.acquire_client_buffer_blocking();
+        buffer_stream.release_client_buffer(placeholder);
+    }
 
     auto swap_completed = std::make_shared<mt::Signal>();
     buffer_stream.acquire_client_buffer([swap_completed](mg::Buffer*) {swap_completed->raise();});

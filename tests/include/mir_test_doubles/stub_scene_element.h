@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_SCENE_ELEMENT_H_
 
 #include "mir/compositor/scene_element.h"
+#include "stub_renderable.h"
 
 namespace mir
 {
@@ -33,6 +34,11 @@ class StubSceneElement : public compositor::SceneElement
 public:
     StubSceneElement(std::shared_ptr<graphics::Renderable> const& renderable)
         : renderable_{renderable}
+    {
+    }
+
+    StubSceneElement()
+        : StubSceneElement(std::make_shared<StubRenderable>())
     {
     }
 

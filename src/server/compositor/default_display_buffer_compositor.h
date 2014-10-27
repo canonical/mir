@@ -40,17 +40,13 @@ class DefaultDisplayBufferCompositor : public DisplayBufferCompositor
 public:
     DefaultDisplayBufferCompositor(
         graphics::DisplayBuffer& display_buffer,
-        std::shared_ptr<Scene> const& scene,
         std::shared_ptr<Renderer> const& renderer,
         std::shared_ptr<CompositorReport> const& report);
-    ~DefaultDisplayBufferCompositor();
 
-    void composite() override;
+    void composite(SceneElementSequence&& scene_sequence) override;
 
 private:
     graphics::DisplayBuffer& display_buffer;
-
-    std::shared_ptr<Scene> const scene;
     std::shared_ptr<Renderer> const renderer;
     std::shared_ptr<CompositorReport> const report;
 };
