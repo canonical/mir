@@ -26,6 +26,7 @@
 #include "mir_test_framework/cross_process_sync.h"
 #include "mir_test_framework/process.h"
 #include "mir_test_doubles/stub_session_authorizer.h"
+#include "mir/report_exception.h" // DEBUG
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -65,8 +66,10 @@ struct ClientServerTest : mtf::HeadlessTest
     {
         if (getpid() != test_process_id)
         {
-            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") exiting" << std::endl;
-            exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
+            auto const status = ::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS;
+            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") exiting status=" << status << std::endl;
+//            if (getpid() == server_process_id) // FRIG
+                exit(status);
         }
     }
 
@@ -108,8 +111,6 @@ struct ClientServerTest : mtf::HeadlessTest
     {
         if (test_process_id != getpid()) return;
 
-        mtf::CrossProcessSync finished_sync;
-
         pid_t pid = fork();
 
         if (pid < 0)
@@ -124,14 +125,14 @@ struct ClientServerTest : mtf::HeadlessTest
             std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") pre-client-code" << std::endl;
             client_code();
             std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") post-client-code" << std::endl;
-            finished_sync.signal_ready();
         }
         else
         {
-            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") waiting for client exit..." << std::endl;
             client_process = std::make_shared<mtf::Process>(pid);
-            finished_sync.wait_for_signal_ready_for();
-            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") ...continuing" << std::endl;
+            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") waiting for client exit..." << std::endl;
+            mtf::Result result = client_process->wait_for_termination();
+            EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
+            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") client exit status=" << result.exit_code << std::endl;
         }
     }
 
@@ -159,7 +160,8 @@ struct ClientServerTest : mtf::HeadlessTest
             mtf::Result result = server_process->wait_for_termination();
             std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") server done" << std::endl;
             server_process.reset();
-            ASSERT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
+            EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
+            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") server exit status=" << result.exit_code << std::endl;
         }
     }
 };
@@ -246,21 +248,47 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
             server.override_the_session_authorizer([&] { return mt::fake_shared(mock_authorizer); });
         };
 
-    auto const server_exec = [&] { EXPECT_TRUE(shared_region->wait_for_client_creds()); };
+    auto const server_exec = [&]
+        {
+            EXPECT_TRUE(shared_region->wait_for_client_creds());
+            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") received creds:"
+                "client pid=" << shared_region->client_pid << std::endl;
+
+        };
 
     run_server_with(server_setup, server_exec);
 
-//    run_as_client([&]
-//        {
-            std::cerr << "DEBUG: client("<< getpid() << ") posting creds..." << std::endl;
+    run_as_client([&]
+        {
+//    if (getpid() != server_process_id)
+//    try
+//    {
+            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") posting creds..." << std::endl;
             shared_region->post_client_creds();
-            std::cerr << "DEBUG: client("<< getpid() << ") connecting..." << std::endl;
+
+            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") connecting..." << std::endl;
             auto const connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-            EXPECT_TRUE(mir_connection_is_valid(connection));
-            std::cerr << "DEBUG: client("<< getpid() << ") disconnecting..." << std::endl;
+            ASSERT_TRUE(mir_connection_is_valid(connection));
+
+            // Clear the lifecycle callback in order not to get SIGHUP by the
+            // default lifecycle handler during connection teardown
+            mir_connection_set_lifecycle_event_callback(
+                connection,
+                [](MirConnection*, MirLifecycleState, void*){},
+                nullptr);
+
+            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") disconnecting..." << std::endl;
             mir_connection_release(connection);
-            std::cerr << "DEBUG: client("<< getpid() << ") done" << std::endl;
-//        });
+            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") done" << std::endl;
+//    }
+//    catch (...)
+//    {
+//        mir::report_exception(std::cerr);
+//        throw;
+//    }
+        });
+
+    std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") end of test body" << std::endl;
 }
 
 #ifdef ARG_COMMENTED_OUT
