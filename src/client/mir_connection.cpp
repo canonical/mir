@@ -216,23 +216,6 @@ MirPromptSession* MirConnection::create_prompt_session()
     return new MirPromptSession(display_server(), event_handler_register);
 }
 
-namespace
-{
-void default_lifecycle_event_handler(MirLifecycleState transition)
-{
-    if (transition == mir_lifecycle_connection_lost)
-    {
-        /*
-         * We need to use kill() instead of raise() to ensure the signal
-         * is dispatched to the process even if it's blocked in the current
-         * thread.
-         */
-        kill(getpid(), SIGHUP);
-    }
-}
-}
-
-
 void MirConnection::connected(mir_connected_callback callback, void * context)
 {
     bool safe_to_callback = true;
@@ -254,6 +237,26 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
          * established, to ensure that the client platform has access to all
          * needed data (e.g. platform package).
          */
+        auto default_lifecycle_event_handler = [this](MirLifecycleState transition)
+            {
+                bool const expect_connection_lost = [&]
+                    {
+                        std::lock_guard<decltype(mutex)> lock(mutex);
+                        return disconnecting;
+                    }();
+
+                if (transition == mir_lifecycle_connection_lost &&
+                    !expect_connection_lost)
+                {
+                    /*
+                     * We need to use kill() instead of raise() to ensure the signal
+                     * is dispatched to the process even if it's blocked in the current
+                     * thread.
+                     */
+                    kill(getpid(), SIGHUP);
+                }
+            };
+
         platform = client_platform_factory->create_client_platform(this);
         native_display = platform->create_egl_native_display();
         display_configuration->set_configuration(connect_result.display_configuration());
@@ -300,6 +303,10 @@ void MirConnection::done_disconnect()
 
 MirWaitHandle* MirConnection::disconnect()
 {
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        disconnecting = true;
+    }
     disconnect_wait_handle.expect_result();
     server.disconnect(0, &ignored, &ignored,
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));
