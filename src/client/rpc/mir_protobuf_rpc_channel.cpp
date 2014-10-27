@@ -164,7 +164,7 @@ void mclr::MirProtobufRpcChannel::CallMethod(
     if (parameters->GetTypeName() == "mir.protobuf.BufferRequest")
     {
         auto const* buffer = reinterpret_cast<mir::protobuf::BufferRequest const*>(parameters);
-        for(auto& fd : buffer->buffer().fd())
+        for (auto& fd : buffer->buffer().fd())
             fds.emplace_back(mir::Fd{IntOwnedFd{fd}});
     }
 

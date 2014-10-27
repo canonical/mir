@@ -221,7 +221,7 @@ struct ExchangeBufferTest : mir_test_framework::InProcessServer
 
         arrived = false;
         auto completed = cv.wait_for(lk, std::chrono::seconds(5), [this]() {return arrived;});
-        for(auto i = 0; i < next.fd().size(); i++)
+        for (auto i = 0; i < next.fd().size(); i++)
             ::close(next.fd(i));
         next.set_fds_on_side_channel(0);
 
@@ -252,10 +252,10 @@ TEST_F(ExchangeBufferTest, exchanges_happen)
     mp::DisplayServer::Stub server(
         rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
     buffer_request.mutable_buffer()->set_buffer_id(buffer_id_exchange_seq.begin()->as_value());
-    for(auto i = 0; i < buffer_request.buffer().fd().size(); i++)
+    for (auto i = 0; i < buffer_request.buffer().fd().size(); i++)
         ::close(buffer_request.buffer().fd(i));
 
-    for(auto const& id : buffer_id_exchange_seq)
+    for (auto const& id : buffer_id_exchange_seq)
     {
         EXPECT_THAT(buffer_request.buffer().buffer_id(), testing::Eq(id.as_value()));
         ASSERT_THAT(exchange_buffer(server), DidNotTimeOut());
@@ -292,7 +292,7 @@ TEST_F(ExchangeBufferTest, fds_can_be_sent_back)
     auto rpc_channel = connection->rpc_channel();
     mp::DisplayServer::Stub server(
             rpc_channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL);
-    for(auto i = 0; i < buffer_request.buffer().fd().size(); i++)
+    for (auto i = 0; i < buffer_request.buffer().fd().size(); i++)
         ::close(buffer_request.buffer().fd(i));
 
     buffer_request.mutable_buffer()->set_buffer_id(buffer_id_exchange_seq.begin()->as_value());

@@ -32,7 +32,7 @@ template<class Response>
 std::vector<mir::Fd> extract_fds_from(Response* response)
 {
     std::vector<mir::Fd> fd;
-    for(auto i = 0; i < response->fd().size(); ++i)
+    for (auto i = 0; i < response->fd().size(); ++i)
         fd.emplace_back(mir::Fd(dup(response->fd().data()[i])));
     response->clear_fd();
     response->set_fds_on_side_channel(fd.size());
@@ -165,7 +165,7 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             auto request = parse_parameter<mir::protobuf::BufferRequest>(invocation);
             request.mutable_buffer()->clear_fd();
-            for(auto& fd : side_channel_fds)
+            for (auto& fd : side_channel_fds)
                 request.mutable_buffer()->add_fd(fd);
             invoke(this, display_server.get(), &DisplayServer::exchange_buffer, invocation.id(), &request);
         }
