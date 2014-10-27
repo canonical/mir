@@ -155,7 +155,6 @@ struct SurfaceStackCompositor : public testing::Test
     CountingDisplayBuffer stub_secondary_db;
     StubDisplay stub_display{stub_primary_db, stub_secondary_db};
     mc::DefaultDisplayBufferCompositorFactory dbc_factory{
-        mt::fake_shared(stack),
         mt::fake_shared(renderer_factory),
         null_comp_report};
 };

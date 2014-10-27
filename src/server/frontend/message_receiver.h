@@ -20,6 +20,7 @@
 
 #include <functional>
 #include <boost/asio.hpp>
+#include <mir/fd.h>
 
 namespace mir
 {
@@ -37,6 +38,7 @@ public:
     virtual boost::system::error_code receive_msg(boost::asio::mutable_buffers_1 const& buffer) = 0;
     virtual size_t available_bytes() = 0;
     virtual SessionCredentials client_creds() = 0;
+    virtual void receive_fds(std::vector<Fd>& fds) = 0;
 
 protected:
     MessageReceiver() = default;
