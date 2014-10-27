@@ -42,6 +42,7 @@ public:
     void increment_age() {}
     void mark_as_submitted() {}
     void update_from(MirBufferPackage const&) {}
+    void fill_update_msg(MirBufferPackage&) {}
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const
     {
         return nullptr;
