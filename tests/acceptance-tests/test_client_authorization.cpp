@@ -57,8 +57,18 @@ struct ClientServerTest : mtf::HeadlessTest
     pid_t test_process_id{getpid()};
     pid_t server_process_id{0};
     std::shared_ptr<mtf::Process> server_process;
+    std::shared_ptr<mtf::Process> client_process;
     mtf::CrossProcessSync shutdown_sync;
     char const* process_tag = "test";
+
+    ~ClientServerTest()
+    {
+        if (getpid() != test_process_id)
+        {
+            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") exiting" << std::endl;
+            exit(::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
+        }
+    }
 
     void run_server_with(std::function<void()> const& setup_code, std::function<void()> const& exec_code)
     {
@@ -76,14 +86,14 @@ struct ClientServerTest : mtf::HeadlessTest
             server_process_id = getpid();
             process_tag = "server";
             add_to_environment("MIR_SERVER_FILE", mir_test_socket);
-            std::cerr << "DEBUG: " << process_tag << "("<< server_process_id << ") pre-setup" << std::endl;
+            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") pre-setup" << std::endl;
             setup_code();
-            std::cerr << "DEBUG: " << process_tag << "("<< server_process_id << ") post-setup" << std::endl;
+            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") post-setup" << std::endl;
             start_server();
-            std::cerr << "DEBUG: " << process_tag << "("<< server_process_id << ") running" << std::endl;
+            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") running" << std::endl;
             started_sync.signal_ready();
             exec_code();
-            std::cerr << "DEBUG: " << process_tag << "("<< server_process_id << ") exec done" << std::endl;
+            std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") exec done" << std::endl;
         }
         else
         {
@@ -119,6 +129,7 @@ struct ClientServerTest : mtf::HeadlessTest
         else
         {
             std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") waiting for client exit..." << std::endl;
+            client_process = std::make_shared<mtf::Process>(pid);
             finished_sync.wait_for_signal_ready_for();
             std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") ...continuing" << std::endl;
         }
@@ -126,15 +137,14 @@ struct ClientServerTest : mtf::HeadlessTest
 
     void TearDown() override
     {
-        std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") TearDown" << std::endl;
-
         if (server_process_id == getpid())
             {
                 std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") waiting for shutdown..." << std::endl;
-//                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 shutdown_sync.wait_for_signal_ready_for();
                 std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") ...continuing to shutdown" << std::endl;
             }
+
+        std::cerr << "DEBUG: " << process_tag << "("<< getpid() << ") TearDown" << std::endl;
 
         if (test_process_id != getpid()) return;
 
@@ -241,7 +251,7 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
     run_server_with(server_setup, server_exec);
 
 //    run_as_client([&]
-        {
+//        {
             std::cerr << "DEBUG: client("<< getpid() << ") posting creds..." << std::endl;
             shared_region->post_client_creds();
             std::cerr << "DEBUG: client("<< getpid() << ") connecting..." << std::endl;
@@ -250,7 +260,7 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
             std::cerr << "DEBUG: client("<< getpid() << ") disconnecting..." << std::endl;
             mir_connection_release(connection);
             std::cerr << "DEBUG: client("<< getpid() << ") done" << std::endl;
-        }//);
+//        });
 }
 
 #ifdef ARG_COMMENTED_OUT
