@@ -41,6 +41,7 @@ namespace mo = mir::options;
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
+    MACRO(display_buffer_compositor_factory)\
     MACRO(cursor_listener)\
     MACRO(gl_config)\
     MACRO(input_dispatcher)\
