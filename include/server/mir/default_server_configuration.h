@@ -101,6 +101,7 @@ class SurfaceStack;
 class SceneReport;
 class PromptSessionListener;
 class PromptSessionManager;
+class CoordinateTranslator;
 }
 namespace graphics
 {
@@ -286,6 +287,7 @@ public:
      *  @{ */
     // To customize this behaviour it is recommended you override wrap_session_coordinator().
     virtual std::shared_ptr<scene::SessionCoordinator>  the_session_coordinator();
+    virtual std::shared_ptr<scene::CoordinateTranslator> the_coordinate_translator();
     /** @} */
 
 
@@ -421,6 +423,7 @@ protected:
     CachedPtr<scene::PromptSessionListener> prompt_session_listener;
     CachedPtr<scene::PromptSessionManager> prompt_session_manager;
     CachedPtr<scene::SessionCoordinator> session_coordinator;
+    CachedPtr<scene::CoordinateTranslator> coordinate_translator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
     CachedPtr<shell::HostLifecycleEventListener> host_lifecycle_event_listener;
 

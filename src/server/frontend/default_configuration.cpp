@@ -22,6 +22,8 @@
 #include "default_ipc_factory.h"
 #include "published_socket_connector.h"
 
+#include "unsupported_coordinate_translator.h"
+
 #include "mir/frontend/protobuf_connection_creator.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/options/configuration.h"
@@ -29,6 +31,7 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace ms = mir::scene;
 
 std::shared_ptr<mf::ConnectionCreator>
 mir::DefaultServerConfiguration::the_connection_creator()
@@ -137,13 +140,23 @@ std::shared_ptr<mir::frontend::ProtobufIpcFactory>
 mir::DefaultServerConfiguration::new_ipc_factory(
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer)
 {
+    std::shared_ptr<ms::CoordinateTranslator> translator;
+    if (the_options()->is_set(options::debug_opt))
+    {
+        translator = the_coordinate_translator();
+    }
+    else
+    {
+        translator = std::make_shared<mf::UnsupportedCoordinateTranslator>();
+    }
     return std::make_shared<mf::DefaultIpcFactory>(
-        the_frontend_shell(),
-        the_session_mediator_report(),
-        the_graphics_platform(),
-        the_frontend_display_changer(),
-        the_buffer_allocator(),
-        the_screencast(),
-        session_authorizer,
-        the_cursor_images());
+                the_frontend_shell(),
+                the_session_mediator_report(),
+                the_graphics_platform(),
+                the_frontend_display_changer(),
+                the_buffer_allocator(),
+                the_screencast(),
+                session_authorizer,
+                the_cursor_images(),
+                translator);
 }

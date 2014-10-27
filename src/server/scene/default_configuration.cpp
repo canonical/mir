@@ -36,6 +36,7 @@
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
 #include "prompt_session_manager_impl.h"
+#include "default_coordinate_translator.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -236,5 +237,15 @@ mir::DefaultServerConfiguration::the_prompt_session_manager()
             return std::make_shared<ms::PromptSessionManagerImpl>(
                 the_session_container(),
                 the_prompt_session_listener());
+        });
+}
+
+std::shared_ptr<ms::CoordinateTranslator>
+mir::DefaultServerConfiguration::the_coordinate_translator()
+{
+    return coordinate_translator(
+        [this]()
+        {
+            return std::make_shared<ms::DefaultCoordinateTranslator>();
         });
 }

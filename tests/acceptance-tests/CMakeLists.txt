@@ -43,6 +43,7 @@ set(
   test_server_without_active_outputs.cpp
   test_client_input.cpp
   test_server_startup.cpp
+  test_debug_api.cpp
   test_unresponsive_client.cpp
 )
 
@@ -68,6 +69,7 @@ target_link_libraries(
 
   mirserver
   mirclient
+  mirclient-debug-extension
   mirplatform
 
   mir-test

@@ -28,6 +28,7 @@ extern "C" {
 
 /**
  * Return the ID of a surface (only useful for debug output).
+ *   \pre                 The surface is valid
  *   \param [in] surface  The surface
  *   \return              An internal ID that identifies the surface
  */
@@ -42,6 +43,25 @@ int mir_debug_surface_id(MirSurface *surface);
  *                                and would be returned by mir_surface_get_current_buffer.
  */
 uint32_t mir_debug_surface_current_buffer_id(MirSurface *surface);
+
+/**
+ * Get the screen coordinates corresponding to a pair of surface coordinates
+ * \pre                               The surface is valid
+ * \param   [in] surface              The surface
+ * \param   [in] x, y                 Surface coordinates to map to screen coordinates
+ * \param   [out] screen_x, screen_y  The screen coordinates corresponding to x, y.
+ * \return                            True if screen_x and screen_y contain values
+ * \note    There are many cases where such a mapping does not exist or would be expensive
+ *          to calculate. Only Mir servers started with the --debug option will ever return
+ *          values for this call, and even when --debug is enabled servers are free to
+ *          return nothing.
+ *
+ *          This call will only be interesting for automated testing, where both the client
+ *          and shell state is known and constrained.
+ */
+MirBool mir_debug_surface_coords_to_screen(MirSurface* surface,
+                                           int x, int y,
+                                           int* screen_x, int* screen_y);
 
 #ifdef __cplusplus
 }
