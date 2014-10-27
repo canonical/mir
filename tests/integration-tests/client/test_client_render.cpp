@@ -56,10 +56,6 @@ static mtd::DrawPatternCheckered<2,2> draw_pattern0(pattern0);
 static mtd::DrawPatternCheckered<2,2> draw_pattern1(pattern1);
 static const char socket_file[] = "./test_client_ipc_render_socket";
 
-void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
-{
-}
-
 struct TestClient
 {
     static MirPixelFormat select_format_for_visual_id(int visual_id)
