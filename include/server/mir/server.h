@@ -25,7 +25,7 @@
 namespace mir
 {
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; }
-namespace frontend { class SessionAuthorizer; }
+namespace frontend { class SessionAuthorizer; class Session; }
 namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; }
 namespace options { class Option; }
@@ -234,6 +234,24 @@ public:
     auto the_surface_coordinator() const -> std::shared_ptr<scene::SurfaceCoordinator>;
 /** @} */
 
+/** @name Client side support
+ * These facilitate use of the server through the client API.
+ * They should be called while the server is running (i.e. run() has been called and
+ * not exited) otherwise they throw a std::logic_error.
+ * @{ */
+    using ConnectHandler = std::function<void(std::shared_ptr<frontend::Session> const& session)>;
+
+    /// Get a file descriptor that can be used to connect a client
+    /// It can be passed to another process, or used directly with mir_connect()
+    /// using the format "fd://%d".
+    auto open_client_socket() -> int;
+
+    /// Get a file descriptor that can be used to connect a client
+    /// It can be passed to another process, or used directly with mir_connect()
+    /// using the format "fd://%d".
+    /// \param connect_handler callback to be invoked when the client connects
+    auto open_client_socket(ConnectHandler const& connect_handler) -> int;
+/** @} */
 private:
     void apply_settings() const;
     struct ServerConfiguration;
