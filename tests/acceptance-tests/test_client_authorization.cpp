@@ -248,40 +248,25 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
         });
 }
 
-#ifdef ARG_COMMENTED_OUT
 // This test is also a regression test for https://bugs.launchpad.net/mir/+bug/1358191
 TEST_F(ClientCredsTestFixture, authorizer_may_prevent_connection_of_clients)
 {
-    using namespace ::testing;
-
-    struct ServerConfiguration : TestingServerConfiguration
-    {
-        std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer() override
+    auto const server_setup = [&]
         {
-            struct StubAuthorizer : mtd::StubSessionAuthorizer
-            {
-                bool connection_is_allowed(mir::frontend::SessionCredentials const&) override
-                {
-                    return false;
-                }
-            };
+            EXPECT_CALL(mock_authorizer,
+                connection_is_allowed(_))
+                .Times(1)
+                .WillOnce(Return(false));
 
-            return std::make_shared<StubAuthorizer>();
-        }
-    } server_config;
+            server.override_the_session_authorizer([&] { return mt::fake_shared(mock_authorizer); });
+        };
 
-    launch_server_process(server_config);
+    run_server_with(server_setup, [&]{});
 
-    struct ClientConfiguration : TestingClientConfiguration
-    {
-        void exec() override
+    run_as_client([&]
         {
             auto const connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
             EXPECT_FALSE(mir_connection_is_valid(connection));
             mir_connection_release(connection);
-        }
-    } client_config;
-
-    launch_client_process(client_config);
+        });
 }
-#endif
