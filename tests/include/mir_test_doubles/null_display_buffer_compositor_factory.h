@@ -37,7 +37,7 @@ public:
     {
         struct NullDisplayBufferCompositor : compositor::DisplayBufferCompositor
         {
-            void composite() {}
+            void composite(compositor::SceneElementSequence&&) {}
         };
 
         auto raw = new NullDisplayBufferCompositor{};
