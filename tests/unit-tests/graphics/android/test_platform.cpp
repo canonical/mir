@@ -59,7 +59,7 @@ protected:
 
         native_buffer_handle->numInts = num_ints;
         native_buffer_handle->numFds = num_fds;
-        for(auto i=0u; i< (num_ints+num_fds); i++)
+        for (auto i = 0u; i < (num_ints+num_fds); i++)
         {
             native_buffer_handle->data[i] = i;
         }
@@ -98,9 +98,9 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     int offset = 0;
     EXPECT_CALL(mock_ipc_msg, pack_data(static_cast<int>(mga::BufferFlag::fenced)));
     EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(fake_fence)));
-    for(auto i=0u; i<num_fds; i++)
+    for (auto i = 0u; i < num_fds; i++)
         EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(native_buffer_handle->data[offset++])));
-    for(auto i=0u; i<num_ints; i++)
+    for (auto i = 0u; i < num_ints; i++)
         EXPECT_CALL(mock_ipc_msg, pack_data(native_buffer_handle->data[offset++]));
 
     EXPECT_CALL(*mock_buffer, stride())
@@ -131,12 +131,12 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(-1)))
         .Times(0);
 
-    for(auto i=0u; i<num_fds; i++)
+    for (auto i = 0u; i < num_fds; i++)
     {
         EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(native_buffer_handle->data[offset++])))
             .Times(1);
     }
-    for(auto i=0u; i<num_ints; i++)
+    for (auto i = 0u; i < num_ints; i++)
     {
         EXPECT_CALL(mock_ipc_msg, pack_data(native_buffer_handle->data[offset++]))
             .Times(1);
@@ -166,13 +166,13 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
-    for(auto i=0u; i<num_fds; i++)
+    for (auto i = 0u; i < num_fds; i++)
     {
         EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(native_buffer_handle->data[offset++])))
             .Times(1);
     }
     EXPECT_CALL(mock_ipc_msg, pack_data(static_cast<int>(mga::BufferFlag::unfenced)));
-    for(auto i=0u; i<num_ints; i++)
+    for (auto i = 0u; i < num_ints; i++)
     {
         EXPECT_CALL(mock_ipc_msg, pack_data(native_buffer_handle->data[offset++]))
             .Times(1);
