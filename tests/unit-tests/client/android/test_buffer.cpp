@@ -104,3 +104,20 @@ TEST_F(AndroidClientBuffer, update_from_package_merges_fence_in_when_present)
     package.data[0] = static_cast<int>(mga::BufferFlag::unfenced);
     buffer.update_from(package);
 }
+
+TEST_F(AndroidClientBuffer, fences_can_be_extracted)
+{
+    mga::NativeFence fake_fence{213};
+    EXPECT_CALL(*mock_native_buffer, update_usage(fake_fence, mga::BufferAccess::read))
+        .Times(1);
+    mcla::Buffer buffer(mock_registrar, package, pf);
+
+    package.data_items = 1;
+    package.fd_items = 1;
+    package.data[0] = static_cast<int>(mga::BufferFlag::fenced);
+    package.fd[0] = fake_fence;
+    buffer.update_from(package);
+ 
+    package.data[0] = static_cast<int>(mga::BufferFlag::unfenced);
+    buffer.update_from(package);
+}
