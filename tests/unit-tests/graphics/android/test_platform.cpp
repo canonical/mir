@@ -191,42 +191,6 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
     platform.fill_buffer_package(&mock_ipc_msg, mock_buffer.get(), mg::BufferIpcMsgType::full_msg);
 }
 
-TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc)
-{
-    using namespace ::testing;
-
-    mga::Platform platform(stub_display_builder, stub_display_report);
-
-    mtd::MockBufferIpcMessage mock_ipc_msg;
-    int offset = 0;
-    for(auto i=0u; i<num_fds; i++)
-    {
-        EXPECT_CALL(mock_ipc_msg, pack_fd(mtd::RawFdMatcher(native_buffer_handle->data[offset++])))
-            .Times(1);
-    }
-    for(auto i=0u; i<num_ints; i++)
-    {
-        EXPECT_CALL(mock_ipc_msg, pack_data(native_buffer_handle->data[offset++]))
-            .Times(1);
-    }
-
-    EXPECT_CALL(*mock_buffer, stride())
-        .WillOnce(Return(stride));
-    EXPECT_CALL(mock_ipc_msg, pack_stride(stride))
-        .Times(1);
-
-    EXPECT_CALL(*mock_buffer, size())
-        .WillOnce(Return(mir::geometry::Size{123, 456}));
-    EXPECT_CALL(mock_ipc_msg, pack_size(_))
-        .Times(1);
-
-    EXPECT_CALL(*native_buffer, ensure_available_for(mga::BufferAccess::write))
-        .Times(1);
-
-    platform.fill_buffer_package(
-        &mock_ipc_msg, mock_buffer.get(), mg::BufferIpcMsgType::full_msg);
-}
-
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ipc)
 {
     using namespace ::testing;
