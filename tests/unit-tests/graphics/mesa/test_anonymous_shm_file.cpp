@@ -21,9 +21,18 @@
 
 namespace mgm = mir::graphics::mesa;
 
+// TODO: To be removed when kernel support for O_TMPFILE is more prevalent (>= 3.11)
+#define CHECK_SKIP_FLAG()                                 \
+    if (getenv("MIR_SKIP_TESTS_USING_O_TMPFILE") != NULL) \
+    {                                                     \
+        return;                                           \
+    }                                                     \
+
 TEST(AnonymousShmFile, is_created)
 {
-    size_t const file_size{100};
+    CHECK_SKIP_FLAG();
+
+	size_t const file_size{100};
 
     mgm::AnonymousShmFile shm_file{file_size};
 
@@ -32,7 +41,9 @@ TEST(AnonymousShmFile, is_created)
 
 TEST(AnonymousShmFile, has_correct_size)
 {
-    size_t const file_size{100};
+    CHECK_SKIP_FLAG();
+
+	size_t const file_size{100};
 
     mgm::AnonymousShmFile shm_file{file_size};
 
@@ -44,6 +55,8 @@ TEST(AnonymousShmFile, has_correct_size)
 
 TEST(AnonymousShmFile, writing_to_base_ptr_writes_to_file)
 {
+    CHECK_SKIP_FLAG();
+
     size_t const file_size{100};
 
     mgm::AnonymousShmFile shm_file{file_size};

@@ -306,9 +306,6 @@ int main (int argc, char **argv)
         {
             static char cmd_line[1024] = "";
 
-            if (*test == "AnonymousShmFile.*")
-            	continue;
-
             snprintf(
                 cmd_line,
                 sizeof(cmd_line),
