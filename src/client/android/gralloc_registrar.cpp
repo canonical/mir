@@ -109,6 +109,8 @@ std::shared_ptr<mg::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
     }
     else
     {
+        auto ops = std::make_shared<mga::RealSyncFileOps>();
+        fence = std::make_shared<mga::SyncFence>(ops, mir::Fd(mir::Fd::invalid));
         handle->numFds  = package.fd_items;
         for (auto i = 0; i < handle->numFds; i++)
             handle->data[i] = package.fd[i];
