@@ -61,10 +61,12 @@ mcla::GrallocRegistrar::GrallocRegistrar(const std::shared_ptr<const gralloc_mod
 namespace
 {
 std::shared_ptr<mg::NativeBuffer> create_native_buffer(
-    std::shared_ptr<const native_handle_t> const& handle, MirBufferPackage const& package, MirPixelFormat pf)
+    std::shared_ptr<const native_handle_t> const& handle,
+    std::shared_ptr<mga::Fence> const& fence,
+    MirBufferPackage const& package,
+    MirPixelFormat pf)
 {
     auto ops = std::make_shared<mga::RealSyncFileOps>();
-    auto fence = std::make_shared<mga::SyncFence>(ops, mir::Fd());
     auto anwb = std::shared_ptr<mga::RefCountedNativeBuffer>(
         new mga::RefCountedNativeBuffer(handle),
         [](mga::RefCountedNativeBuffer* buffer)
@@ -123,7 +125,7 @@ std::shared_ptr<mg::NativeBuffer> mcla::GrallocRegistrar::register_buffer(
     }
 
     NativeHandleDeleter del(gralloc_module);
-    return create_native_buffer(std::shared_ptr<const native_handle_t>(handle, del), package, pf);
+    return create_native_buffer(std::shared_ptr<const native_handle_t>(handle, del), fence, package, pf);
 }
 
 std::shared_ptr<char> mcla::GrallocRegistrar::secure_for_cpu(
