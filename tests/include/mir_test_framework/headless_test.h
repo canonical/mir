@@ -67,6 +67,8 @@ private:
     std::condition_variable started;
     bool server_running{false};
 };
+
+std::string const& test_socket_file();
 }
 
 #endif /* MIR_TEST_FRAMEWORK_HEADLESS_TEST_H_ */

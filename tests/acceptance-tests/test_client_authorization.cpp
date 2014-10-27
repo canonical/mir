@@ -22,9 +22,7 @@
 #include <mir_toolkit/mir_client_library.h>
 
 #include "mir_test/fake_shared.h"
-#include "mir_test_framework/headless_test.h"
-#include "mir_test_framework/cross_process_sync.h"
-#include "mir_test_framework/process.h"
+#include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test_doubles/stub_session_authorizer.h"
 
 #include <gtest/gtest.h>
@@ -43,106 +41,8 @@ namespace mtd = mir::test::doubles;
 
 using namespace ::testing;
 
-namespace mir_test_framework
-{
-std::string const& test_socket_file(); // FRIG
-}
-
 namespace
 {
-struct ClientServerTest : mtf::HeadlessTest
-{
-    char const* const mir_test_socket = mtf::test_socket_file().c_str();
-
-    pid_t test_process_id{getpid()};
-    pid_t server_process_id{0};
-    std::shared_ptr<mtf::Process> server_process;
-    mtf::CrossProcessSync shutdown_sync;
-    char const* process_tag = "test"; // Convenient identifier if adding debug code
-
-    ~ClientServerTest()
-    {
-        if (getpid() != test_process_id)
-        {
-            auto const status = ::testing::Test::HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS;
-            exit(status);
-        }
-    }
-
-    void run_server_with(std::function<void()> const& setup_code, std::function<void()> const& exec_code)
-    {
-        mtf::CrossProcessSync started_sync;
-
-        pid_t pid = fork();
-
-        if (pid < 0)
-        {
-            throw std::runtime_error("Failed to fork process");
-        }
-
-        if (pid == 0)
-        {
-            server_process_id = getpid();
-            process_tag = "server";
-            add_to_environment("MIR_SERVER_FILE", mir_test_socket);
-            setup_code();
-            start_server();
-            started_sync.signal_ready();
-            exec_code();
-        }
-        else
-        {
-            server_process = std::make_shared<mtf::Process>(pid);
-            started_sync.wait_for_signal_ready_for();
-        }
-    }
-
-    void run_as_client(std::function<void()> const& client_code)
-    {
-        if (test_process_id != getpid()) return;
-
-        pid_t pid = fork();
-
-        if (pid < 0)
-        {
-            throw std::runtime_error("Failed to fork process");
-        }
-
-        if (pid == 0)
-        {
-            process_tag = "client";
-            add_to_environment("MIR_SOCKET", mir_test_socket);
-            client_code();
-        }
-        else
-        {
-            auto const client_process = std::make_shared<mtf::Process>(pid);
-            mtf::Result result = client_process->wait_for_termination();
-            EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
-        }
-    }
-
-    void TearDown() override
-    {
-        if (server_process_id == getpid())
-        {
-            shutdown_sync.wait_for_signal_ready_for();
-        }
-
-        if (test_process_id != getpid()) return;
-
-        shutdown_sync.signal_ready();
-
-        if (server_process)
-        {
-            server_process->terminate();
-            mtf::Result result = server_process->wait_for_termination();
-            server_process.reset();
-            EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
-        }
-    }
-};
-
 struct MockSessionAuthorizer : public mf::SessionAuthorizer
 {
     MOCK_METHOD1(connection_is_allowed, bool(mf::SessionCredentials const&));
@@ -151,7 +51,7 @@ struct MockSessionAuthorizer : public mf::SessionAuthorizer
     MOCK_METHOD1(prompt_session_is_allowed, bool(mf::SessionCredentials const&));
 };
 
-struct ClientCredsTestFixture : ClientServerTest
+struct ClientCredsTestFixture : mtf::InterprocessClientServerTest
 {
     ClientCredsTestFixture()
     {
@@ -198,18 +98,15 @@ struct ClientCredsTestFixture : ClientServerTest
 
 TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_clients)
 {
-    auto const server_setup = [&]
+    auto const matches_creds = [&](mf::SessionCredentials const& creds)
+    {
+        return shared_region->matches_client_process_creds(creds);
+    };
+
+    init_server([&]
         {
             server.override_the_session_authorizer(
                 [&] { return mt::fake_shared(mock_authorizer); });
-        };
-
-    auto const server_exec = [&]
-        {
-            auto matches_creds = [&](mf::SessionCredentials const& creds)
-            {
-                return shared_region->matches_client_process_creds(creds);
-            };
 
             EXPECT_CALL(mock_authorizer,
                 connection_is_allowed(Truly(matches_creds)))
@@ -227,19 +124,21 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
                 prompt_session_is_allowed(Truly(matches_creds)))
                 .Times(1)
                 .WillOnce(Return(false));
+        });
 
-            EXPECT_TRUE(shared_region->wait_for_client_creds());
-        };
+    run_in_server([&]
+       {
+           EXPECT_TRUE(shared_region->wait_for_client_creds());
+       });
 
-    run_server_with(server_setup, server_exec);
-
-    run_as_client([&]
+    run_in_client([&]
         {
             shared_region->post_client_creds();
 
             auto const connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
             ASSERT_TRUE(mir_connection_is_valid(connection));
 
+            // TODO why is this needed for such a simple test scenario?
             // Clear the lifecycle callback in order not to get SIGHUP by the
             // default lifecycle handler during connection teardown
             mir_connection_set_lifecycle_event_callback(
@@ -254,20 +153,20 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
 // This test is also a regression test for https://bugs.launchpad.net/mir/+bug/1358191
 TEST_F(ClientCredsTestFixture, authorizer_may_prevent_connection_of_clients)
 {
-    auto const server_setup = [&]
+    init_server([&]
         {
-        server.override_the_session_authorizer(
-            [&] { return mt::fake_shared(mock_authorizer); });
+            server.override_the_session_authorizer(
+                [&] { return mt::fake_shared(mock_authorizer); });
 
             EXPECT_CALL(mock_authorizer,
                 connection_is_allowed(_))
                 .Times(1)
                 .WillOnce(Return(false));
-        };
+        });
 
-    run_server_with(server_setup, [&]{});
+    run_in_server([&]{});
 
-    run_as_client([&]
+    run_in_client([&]
         {
             auto const connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
             EXPECT_FALSE(mir_connection_is_valid(connection));
