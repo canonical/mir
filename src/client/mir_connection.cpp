@@ -300,6 +300,8 @@ void MirConnection::done_disconnect()
             delete handle;
     }
 
+    // Ensure no racy lifecycle notifications can happen after disconnect completes
+    lifecycle_control->set_lifecycle_event_handler([](MirLifecycleState){});
     disconnect_wait_handle.result_received();
 }
 
