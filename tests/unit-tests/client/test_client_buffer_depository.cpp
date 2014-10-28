@@ -46,6 +46,7 @@ struct MockBuffer : public mcl::AgingBuffer
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mir::graphics::NativeBuffer>());
     MOCK_METHOD1(update_from, void(MirBufferPackage const&));
+    MOCK_METHOD1(fill_update_msg, void(MirBufferPackage&));
 };
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory

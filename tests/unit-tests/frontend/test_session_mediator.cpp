@@ -259,7 +259,7 @@ struct SessionMediator : public ::testing::Test
             shell, graphics_platform, graphics_changer,
             surface_pixel_formats, report,
             std::make_shared<mtd::NullEventSink>(),
-            resource_cache, stub_screencast, &connector, nullptr}
+            resource_cache, stub_screencast, &connector, nullptr, nullptr}
     {
         using namespace ::testing;
 
@@ -316,7 +316,7 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        resource_cache, stub_screencast, context, nullptr};
+        resource_cache, stub_screencast, context, nullptr, nullptr};
 
     EXPECT_THAT(connects_handled_count, Eq(0));
 
@@ -421,7 +421,7 @@ TEST_F(SessionMediator, connect_packs_display_configuration)
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
         resource_cache, std::make_shared<mtd::NullScreencast>(),
-        nullptr, nullptr);
+        nullptr, nullptr, nullptr);
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
     EXPECT_THAT(connection.display_configuration(), mt::DisplayConfigMatches(std::cref(config)));
@@ -629,7 +629,7 @@ TEST_F(SessionMediator, display_config_request)
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(), resource_cache,
         std::make_shared<mtd::NullScreencast>(),
-         nullptr, nullptr};
+         nullptr, nullptr, nullptr};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
 
@@ -876,7 +876,7 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
         shell, graphics_platform, graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
-        mt::fake_shared(mock_cache), stub_screencast, nullptr, nullptr};
+        mt::fake_shared(mock_cache), stub_screencast, &connector, nullptr, nullptr};
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.create_surface(nullptr, &surface_parameters, &surface_response, null_callback.get());

@@ -22,6 +22,7 @@ set(
   session_credentials.cpp
   default_configuration.cpp
   default_ipc_factory.cpp
+  unsupported_coordinate_translator.cpp
 )
 
 add_library(

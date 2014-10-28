@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_debug.h"
+#include "mir_toolkit/debug/surface.h"
 
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/renderer_factory.h"

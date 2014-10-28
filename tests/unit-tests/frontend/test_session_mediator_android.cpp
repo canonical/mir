@@ -61,7 +61,7 @@ struct SessionMediatorAndroidTest : public ::testing::Test
           mediator{shell, graphics_platform, display_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
-                   resource_cache, std::make_shared<mtd::NullScreencast>(), nullptr, nullptr},
+                   resource_cache, std::make_shared<mtd::NullScreencast>(), nullptr, nullptr, nullptr},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }

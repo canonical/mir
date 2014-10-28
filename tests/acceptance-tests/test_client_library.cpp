@@ -17,7 +17,6 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_debug.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"

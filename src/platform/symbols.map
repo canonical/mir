@@ -146,6 +146,7 @@ MIRPLATFORM_4 {
     mir::options::DefaultConfiguration::parse_environment*;
     mir::options::DefaultConfiguration::the_options*;
     mir::options::display_report_opt*;
+    mir::options::debug_opt*;
     mir::options::enable_input_opt*;
     mir::options::fatal_abort_opt*;
     mir::options::frontend_threads_opt*;

@@ -40,7 +40,7 @@ d4ab0ef9544345fcc85740f6ed6d8118728a5c59  include/platform/mir/graphics/native_p
 1fbe488b4581486fd01e2f03e504f31b72c09040  include/platform/mir/graphics/platform_ipc_operations.h
 9c7712af84b6fde1970ff802ad2ea78f892c7b7e  include/platform/mir/graphics/platform_ipc_package.h
 84c063346b3bd51b4624d9f940008d4c3f8be066  include/platform/mir/graphics/renderable.h
-f5746dab3336266cfd410ce4e4d01333df6e5b99  include/platform/mir/options/configuration.h
+b19329d35a55f640edd72c0a953908995211d97e  include/platform/mir/options/configuration.h
 47007c783c174f8e94d332c4b13c6b01358b48fb  include/platform/mir/options/default_configuration.h
 b45f14082c4f8b29efaa1b13de795dcb29deb738  include/platform/mir/options/option.h
 3c37cc31e8b290b89c311d82f02e07d342766451  include/platform/mir/options/program_option.h
@@ -50,7 +50,7 @@ a9f284ba4b05d58fd3eeb628d1f56fe4ac188526  include/server/mir/compositor/composit
 d49eae4f986645b32e29ce2c1f99f524703ba3c0  include/server/mir/compositor/display_buffer_compositor.h
 878ab5c4007d16dac213a3eb0105421d8ffad206  include/server/mir/compositor/scene_element.h
 4fcf34e424128b87ddc76733594e32e09ebbd486  include/server/mir/compositor/scene.h
-7e47baf423fc61960d8e4ea92eae93caf71c93e2  include/server/mir/default_server_configuration.h
+c14448c8f882f44b05fa56ced7c8db51083a9bd3  include/server/mir/default_server_configuration.h
 af1ff0714be973ac76d56006a2e5991f68cd1dec  include/server/mir/display_server.h
 a35c5495d8fd28fc0e375b17495fc5caab51b329  include/server/mir/emergency_cleanup.h
 938de641cb0e01e1098b007b39b151a7dfe4adc1  include/server/mir/frontend/display_changer.h
@@ -77,6 +77,7 @@ b2ec497c6bec1b3a67c991f31cc7b7c51050ecbb  include/server/mir/input/input_recepti
 964069b241f1e8211386bb8735ee0f752b666949  include/server/mir/main_loop.h
 edd5a0a6be0be57ef64c5af89fc5a65dc558648c  include/server/mir/report_exception.h
 8192727cf5fa0b2b5798b2211c2c8a4ad65c9f60  include/server/mir/run_mir.h
+c9de8b851fb22092a9a486d71cd998b4cb8392e1  include/server/mir/scene/coordinate_translator.h
 71d9082681aa39d652c88ad3b54665695b521d24  include/server/mir/scene/depth_id.h
 4e4e563ab429a13ddca7eead16f2b6cefb8edff6  include/server/mir/scene/null_surface_observer.h
 d5273f3363b0b776427d5e3f1af99f0f2bcf3fa6  include/server/mir/scene/observer.h
