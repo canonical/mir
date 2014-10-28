@@ -39,6 +39,10 @@ public:
 
     void run_in_client(std::function<void()> const& client_code);
 
+    bool is_test_process() const;
+
+    pid_t client_pid() const { return client_process_id; }
+
     void TearDown() override;
 
     // Convenient [test|server|client] identifier if adding debug messages
@@ -48,6 +52,7 @@ private:
 
     pid_t test_process_id{getpid()};
     pid_t server_process_id{0};
+    pid_t client_process_id{0};
     std::shared_ptr<Process> server_process;
     CrossProcessSync shutdown_sync;
     char const* process_tag = "test";
