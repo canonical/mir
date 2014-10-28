@@ -55,13 +55,15 @@ public:
     auto new_connection() -> std::string;
 
     /// \return a connection string for a client to connect to the server
-    auto connection(int fd) -> std::string;
+    auto connection(mir::Fd fd) -> std::string;
 
     mir::Server server;
 
 private:
     std::list<TemporaryEnvironmentValue> env;
     std::thread server_thread;
+
+    std::list<mir::Fd> connections;
 
     std::mutex mutex;
     std::condition_variable started;

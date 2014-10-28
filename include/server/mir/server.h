@@ -19,6 +19,8 @@
 #ifndef MIR_SERVER_H_
 #define MIR_SERVER_H_
 
+#include "mir/fd.h"
+
 #include <functional>
 #include <memory>
 
@@ -248,18 +250,18 @@ public:
     /// Get a file descriptor that can be used to connect a client
     /// It can be passed to another process, or used directly with mir_connect()
     /// using the format "fd://%d".
-    auto open_client_socket() -> int;
+    auto open_client_socket() -> Fd;
 
     /// Get a file descriptor that can be used to connect a client
     /// It can be passed to another process, or used directly with mir_connect()
     /// using the format "fd://%d".
     /// \param connect_handler callback to be invoked when the client connects
-    auto open_client_socket(ConnectHandler const& connect_handler) -> int;
+    auto open_client_socket(ConnectHandler const& connect_handler) -> Fd;
 
     /// Get a file descriptor that can be used to connect a prompt provider
     /// It can be passed to another process, or used directly with mir_connect()
     /// using the format "fd://%d".
-    auto open_prompt_socket() -> int;
+    auto open_prompt_socket() -> Fd;
 /** @} */
 private:
     void apply_settings() const;
