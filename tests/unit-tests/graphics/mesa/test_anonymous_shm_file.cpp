@@ -18,6 +18,8 @@
 
 #include "src/platform/graphics/mesa/anonymous_shm_file.h"
 
+#include "mir_test_framework/temporary_environment_value.h"
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -33,39 +35,10 @@
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
+namespace mtf = mir_test_framework;
 
 namespace
 {
-
-class TemporaryEnvironmentValue
-{
-public:
-    TemporaryEnvironmentValue(char const* name, char const* value)
-        : name{name},
-          has_old_value{getenv(name) != nullptr},
-          old_value{has_old_value ? getenv(name) : ""}
-    {
-        if (value)
-            setenv(name, value, overwrite);
-        else
-            unsetenv(name);
-    }
-
-    ~TemporaryEnvironmentValue()
-    {
-        if (has_old_value)
-            setenv(name.c_str(), old_value.c_str(), overwrite);
-        else
-            unsetenv(name.c_str());
-    }
-
-private:
-    static int const overwrite = 1;
-    std::string const name;
-    bool const has_old_value;
-    std::string const old_value;
-};
-
 class TemporaryDirectory
 {
 public:
@@ -185,7 +158,7 @@ TEST(AnonymousShmFile, is_created_and_deleted_in_xdg_runtime_dir)
     using namespace testing;
 
     TemporaryDirectory const temp_dir;
-    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
+    mtf::TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
     PathWatcher const path_watcher{temp_dir.path()};
     size_t const file_size{100};
 
@@ -202,7 +175,7 @@ TEST(AnonymousShmFile, is_created_and_deleted_in_tmp_dir)
 {
     using namespace testing;
 
-    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", nullptr};
+    mtf::TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", nullptr};
     PathWatcher const path_watcher{"/tmp"};
     size_t const file_size{100};
 
@@ -219,7 +192,7 @@ TEST(AnonymousShmFile, is_created_and_deleted_in_tmp_dir_with_nonexistent_xdg_ru
 {
     using namespace testing;
 
-    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", "/non-existent-dir"};
+    mtf::TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", "/non-existent-dir"};
     PathWatcher const path_watcher{"/tmp"};
     size_t const file_size{100};
 
@@ -237,7 +210,7 @@ TEST(AnonymousShmFile, has_correct_size)
     using namespace testing;
 
     TemporaryDirectory const temp_dir;
-    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
+    mtf::TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
     size_t const file_size{100};
 
     mgm::AnonymousShmFile shm_file{file_size};
@@ -253,7 +226,7 @@ TEST(AnonymousShmFile, writing_to_base_ptr_writes_to_file)
     using namespace testing;
 
     TemporaryDirectory const temp_dir;
-    TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
+    mtf::TemporaryEnvironmentValue const env{"XDG_RUNTIME_DIR", temp_dir.path()};
     size_t const file_size{100};
 
     mgm::AnonymousShmFile shm_file{file_size};
