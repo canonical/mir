@@ -33,7 +33,7 @@ template<class Response>
 std::vector<mir::Fd> extract_fds_from(Response* response)
 {
     std::vector<mir::Fd> fd;
-    for(auto i = 0; i < response->fd().size(); ++i)
+    for (auto i = 0; i < response->fd().size(); ++i)
         fd.emplace_back(mir::Fd(dup(response->fd().data()[i])));
     response->clear_fd();
     response->set_fds_on_side_channel(fd.size());
@@ -65,6 +65,14 @@ template<> struct result_ptr_t<mir::protobuf::SocketFD>     { typedef ::mir::pro
 
 //The exchange_buffer and next_buffer calls can complete on a different thread than the
 //one the invocation was called on. Make sure to preserve the result resource. 
+template<class ParameterMessage>
+ParameterMessage parse_parameter(Invocation const& invocation)
+{
+    ParameterMessage request;
+    request.ParseFromString(invocation.parameters());
+    return request;
+}
+
 template<typename RequestType>
 void invoke(
     ProtobufMessageProcessor* self,
@@ -74,10 +82,9 @@ void invoke(
         const RequestType* request,
         protobuf::Buffer* response,
         ::google::protobuf::Closure* done),
-        Invocation const& invocation)
+    unsigned int invocation_id,
+    RequestType* request)
 {
-    RequestType request;
-    request.ParseFromString(invocation.parameters());
     auto const result_message = std::make_shared<protobuf::Buffer>();
 
     auto const callback =
@@ -87,14 +94,14 @@ void invoke(
              std::shared_ptr<protobuf::Buffer>>(
                 self,
                 &ProtobufMessageProcessor::send_response,
-                invocation.id(),
+                invocation_id,
                 result_message);
 
     try
     {
         (server->*function)(
             0,
-            &request,
+            request,
             result_message.get(),
             callback);
     }
@@ -102,7 +109,7 @@ void invoke(
     {
         delete callback;
         result_message->set_error(boost::diagnostic_information(x));
-        self->send_response(invocation.id(), result_message);
+        self->send_response(invocation_id, result_message);
     }
 }
 
@@ -150,7 +157,7 @@ void mfd::ProtobufMessageProcessor::client_pid(int pid)
 
 bool mfd::ProtobufMessageProcessor::dispatch(
     Invocation const& invocation,
-    std::vector<mir::Fd> const&)
+    std::vector<mir::Fd> const& side_channel_fds)
 {
     report->received_invocation(display_server.get(), invocation.id(), invocation.method_name());
 
@@ -170,11 +177,16 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         }
         else if ("next_buffer" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &DisplayServer::next_buffer, invocation);
+            auto request = parse_parameter<mir::protobuf::SurfaceId>(invocation);
+            invoke(this, display_server.get(), &DisplayServer::next_buffer, invocation.id(), &request);
         }
         else if ("exchange_buffer" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &DisplayServer::exchange_buffer, invocation);
+            auto request = parse_parameter<mir::protobuf::BufferRequest>(invocation);
+            request.mutable_buffer()->clear_fd();
+            for (auto& fd : side_channel_fds)
+                request.mutable_buffer()->add_fd(fd);
+            invoke(this, display_server.get(), &DisplayServer::exchange_buffer, invocation.id(), &request);
         }
         else if ("release_surface" == invocation.method_name())
         {

@@ -192,8 +192,9 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * con
     std::unique_lock<decltype(mutex)> lock(mutex);
     release_cpu_region();
 
+    //TODO: we have extract the per-message information from the buffer
     *buffer_request.mutable_id() = surface.id();
-    *buffer_request.mutable_buffer() = surface.buffer();
+    buffer_request.mutable_buffer()->set_buffer_id(surface.buffer().buffer_id());
     perf_report->end_frame(surface.buffer().buffer_id());
     lock.unlock();
 
