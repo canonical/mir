@@ -159,7 +159,9 @@ TEST_F(GrallocRegistrar, registrar_frees_fds)
 {
     using namespace testing;
     MirBufferPackage stub_package;
-    stub_package.data_items = 0;
+    memset(&stub_package, 0, sizeof(MirBufferPackage));
+    stub_package.data_items = 1;
+    stub_package.data[0] = static_cast<int>(mir::graphics::android::BufferFlag::unfenced);
     stub_package.fd_items = 2;
     EXPECT_EQ(0, pipe(static_cast<int*>(stub_package.fd)));
 
