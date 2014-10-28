@@ -138,14 +138,6 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
             auto const connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
             ASSERT_TRUE(mir_connection_is_valid(connection));
 
-            // TODO why is this needed for such a simple test scenario?
-            // Clear the lifecycle callback in order not to get SIGHUP by the
-            // default lifecycle handler during connection teardown
-            mir_connection_set_lifecycle_event_callback(
-                connection,
-                [](MirConnection*, MirLifecycleState, void*){},
-                nullptr);
-
             mir_connection_release(connection);
         });
 }
