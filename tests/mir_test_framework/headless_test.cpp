@@ -83,6 +83,8 @@ void mtf::HeadlessTest::start_server()
 
 void mtf::HeadlessTest::stop_server()
 {
+    connections.clear();
+
     std::unique_lock<std::mutex> lock(mutex);
     if (server_running)
     {
@@ -104,6 +106,8 @@ mtf::HeadlessTest::~HeadlessTest() noexcept
 auto mtf::HeadlessTest::new_connection() -> std::string
 {
     char connect_string[64] = {0};
-    sprintf(connect_string, "fd://%d", server.open_client_socket());
+    auto const client_socket = server.open_client_socket();
+    connections.push_back(client_socket);
+    sprintf(connect_string, "fd://%d", client_socket.operator int());
     return connect_string;
 }

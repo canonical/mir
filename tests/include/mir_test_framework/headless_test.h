@@ -60,6 +60,8 @@ private:
     std::list<TemporaryEnvironmentValue> env;
     std::thread server_thread;
 
+    std::list<mir::Fd> connections;
+
     std::mutex mutex;
     std::condition_variable started;
     bool server_running{false};
