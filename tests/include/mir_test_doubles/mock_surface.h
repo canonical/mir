@@ -21,6 +21,7 @@
 
 #include "src/server/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"
+#include "mock_buffer_stream.h"
 
 #include <gmock/gmock.h>
 
@@ -38,7 +39,7 @@ struct MockSurface : public scene::BasicSurface
             {},
             {{},{}},
             true,
-            {},
+            std::make_shared<testing::NiceMock<MockBufferStream>>(),
             {},
             {},
             {},

@@ -228,3 +228,20 @@ service DisplayServer {
   rpc stop_prompt_session(Void) returns (Void);
   rpc exchange_buffer(BufferRequest) returns (Buffer);
 }
+
+message CoordinateTranslationRequest {
+  required SurfaceId surfaceid = 1;
+  required int32 x = 2;
+  required int32 y = 3;
+}
+
+message CoordinateTranslationResponse {
+  optional int32 x = 1;
+  optional int32 y = 2;
+
+  optional string error = 127;
+}
+
+service Debug {
+  rpc translate_surface_to_screen(CoordinateTranslationRequest) returns (CoordinateTranslationResponse);
+}

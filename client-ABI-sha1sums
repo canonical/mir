@@ -1,4 +1,4 @@
-cbe1e3ccfea6ab5865510f4f598ec11571fcc852  include/client/mir_toolkit/mir_client_library_debug.h
+3a60fb3b2b250ca67f54ade346ef658c9259c9a7  include/client/mir_toolkit/debug/surface.h
 b53736bcb22ddc09aab8275cfdd05c109fdd0f12  include/client/mir_toolkit/mir_client_library_drm.h
 1522a5fcdb01c0d9a990364539c4f1255853eef7  include/client/mir_toolkit/mir_client_library.h
 e6185b680533c5fdcf1294a4797d5c3dd01d433f  include/client/mir_toolkit/mir_connection.h

@@ -38,7 +38,8 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<Screencast> const& screencast,
     std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-    std::shared_ptr<mi::CursorImages> const& cursor_images) :
+    std::shared_ptr<mi::CursorImages> const& cursor_images,
+    std::shared_ptr<scene::CoordinateTranslator> const& translator) :
     shell(shell),
     no_prompt_shell(std::make_shared<NoPromptShell>(shell)),
     sm_report(sm_report),
@@ -48,7 +49,8 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     buffer_allocator(buffer_allocator),
     screencast(screencast),
     session_authorizer(session_authorizer),
-    cursor_images(cursor_images)
+    cursor_images(cursor_images),
+    translator{translator}
 {
 }
 
@@ -120,5 +122,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         resource_cache(),
         effective_screencast,
         connection_context,
-        cursor_images);
+        cursor_images,
+        translator);
 }

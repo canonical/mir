@@ -1,11 +1,13 @@
 prefix=@PREFIX@
 exec_prefix=@EXEC_PREFIX@
 libdir=@LIBDIR@
-includedir=@INCLUDEDIR@
+includedir=@INCLUDEDIR@/mirclient
+common_includedir=@INCLUDEDIR@/mircommon
+
 
 Name: mirclient
 Description: Mir client library
 Version: @MIR_VERSION@
 Requires.private: protobuf >= 2.4.1
-Libs: -L@LIBDIR@ -lmirclient
-Cflags: -I@INCLUDEDIR@ -I@COMMON_INCLUDEDIR@ 
+Libs: -L${libdir} -lmirclient
+Cflags: -I${includedir} -I${common_includedir} 

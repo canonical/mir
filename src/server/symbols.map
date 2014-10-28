@@ -39,6 +39,7 @@ MIR_SERVER_27 {
     mir::DefaultServerConfiguration::the_connection_creator*;
     mir::DefaultServerConfiguration::the_connector*;
     mir::DefaultServerConfiguration::the_connector_report*;
+    mir::DefaultServerConfiguration::the_coordinate_translator*;
     mir::DefaultServerConfiguration::the_cursor*;
     mir::DefaultServerConfiguration::the_cursor_images*;
     mir::DefaultServerConfiguration::the_cursor_listener*;
@@ -244,6 +245,9 @@ MIR_SERVER_27 {
     mir::report_exception*;
     mir::run_mir*;
     mir::scene::a_surface*;
+    mir::scene::CoordinateTranslator::?CoordinateTranslator*;
+    mir::scene::CoordinateTranslator::CoordinateTranslator*;
+    mir::scene::CoordinateTranslator::surface_to_screen*;
     mir::scene::NullSurfaceObserver::alpha_set_to*;
     mir::scene::NullSurfaceObserver::attrib_changed*;
     mir::scene::NullSurfaceObserver::cursor_image_set_to*;
@@ -649,6 +653,7 @@ MIR_SERVER_27 {
     typeinfo?for?mir::input::TouchVisualizer;
     typeinfo?for?mir::input::TouchVisualizer::Spot;
     typeinfo?for?mir::MainLoop;
+    typeinfo?for?mir::scene::CoordinateTranslator;
     typeinfo?for?mir::scene::NullSurfaceObserver;
     typeinfo?for?mir::scene::Observer;
     typeinfo?for?mir::scene::PlacementStrategy;
@@ -706,6 +711,7 @@ MIR_SERVER_27 {
     vtable?for?mir::input::TouchVisualizer;
     vtable?for?mir::input::TouchVisualizer::Spot;
     vtable?for?mir::MainLoop;
+    vtable?for?mir::scene::CoordinateTranslator;
     vtable?for?mir::scene::NullSurfaceObserver;
     vtable?for?mir::scene::Observer;
     vtable?for?mir::scene::PlacementStrategy;

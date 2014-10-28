@@ -74,8 +74,7 @@ TEST_F(AndroidClientBuffer, packs_memory_region_correctly)
     using namespace testing;
     geom::Rectangle rect{{0,0}, size};
     std::shared_ptr<char> empty_char = std::make_shared<char>();
-    EXPECT_CALL(*mock_registrar, secure_for_cpu(
-        std::dynamic_pointer_cast<mg::NativeBuffer>(mock_native_buffer),rect))
+    EXPECT_CALL(*mock_registrar, secure_for_cpu(Eq(mock_native_buffer),rect))
         .Times(1)
         .WillOnce(Return(empty_char));
 
@@ -120,4 +119,33 @@ TEST_F(AndroidClientBuffer, fences_can_be_extracted)
  
     package.data[0] = static_cast<int>(mga::BufferFlag::unfenced);
     buffer.update_from(package);
+}
+
+TEST_F(AndroidClientBuffer, fills_update_msg)
+{
+    using namespace testing;
+    using mir::graphics::android::BufferFlag;
+    int stub_fence{44};
+    int invalid_fence{-1};
+
+    EXPECT_CALL(*mock_native_buffer, copy_fence())
+        .Times(2)
+        .WillOnce(Return(stub_fence))
+        .WillOnce(Return(invalid_fence));
+
+    MirBufferPackage msg;
+    mcla::Buffer buffer(mock_registrar, package, pf);
+
+    buffer.fill_update_msg(msg);
+
+    EXPECT_THAT(msg.data_items, Eq(1));
+    EXPECT_THAT(msg.data[0], Eq(static_cast<int>(BufferFlag::fenced)));
+    EXPECT_THAT(msg.fd_items, Eq(1));
+    EXPECT_THAT(msg.fd[0], Eq(stub_fence));
+
+    buffer.fill_update_msg(msg);
+
+    EXPECT_THAT(msg.data_items, Eq(1));
+    EXPECT_THAT(msg.data[0], Eq(static_cast<int>(BufferFlag::unfenced)));
+    EXPECT_THAT(msg.fd_items, Eq(0));
 }

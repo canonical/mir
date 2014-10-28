@@ -62,6 +62,15 @@ public:
     MirSurface(
         MirConnection *allocating_connection,
         mir::protobuf::DisplayServer::Stub & server,
+        mir::protobuf::Debug::Stub* debug,
+        std::shared_ptr<mir::client::ClientBufferFactory> const& buffer_factory,
+        std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
+        MirSurfaceParameters const& params,
+        mir_surface_callback callback, void * context);
+
+    MirSurface(
+        MirConnection *allocating_connection,
+        mir::protobuf::DisplayServer::Stub & server,
         std::shared_ptr<mir::client::ClientBufferFactory> const& buffer_factory,
         std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
         MirSurfaceParameters const& params,
@@ -87,6 +96,11 @@ public:
     EGLNativeWindowType generate_native_window();
 
     MirWaitHandle* configure(MirSurfaceAttrib a, int value);
+
+    // TODO: Some sort of extension mechanism so that this can be moved
+    //       out into a separate class in the libmirclient-debug DSO.
+    bool translate_to_screen_coordinates(int x, int y,
+                                         int* screen_x, int* screen_y);
     
     // Non-blocking
     int attrib(MirSurfaceAttrib a) const;
@@ -115,7 +129,8 @@ private:
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf);
     void release_cpu_region();
 
-    mir::protobuf::DisplayServer::Stub & server;
+    mir::protobuf::DisplayServer::Stub& server;
+    mir::protobuf::Debug::Stub* debug;
     mir::protobuf::Surface surface;
     mir::protobuf::BufferRequest buffer_request;
     std::string error_message;

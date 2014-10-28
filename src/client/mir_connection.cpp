@@ -87,6 +87,7 @@ MirConnection::MirConnection(std::string const& error_message) :
     deregisterer{this},
     channel(),
     server(0),
+    debug(0),
     error_message(error_message)
 {
 }
@@ -97,6 +98,7 @@ MirConnection::MirConnection(
         platform_library{conf.the_platform_library()},
         channel(conf.the_rpc_channel()),
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
+        debug(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         logger(conf.the_logger()),
         client_platform_factory(conf.the_client_platform_factory()),
         input_platform(conf.the_input_platform()),
@@ -133,7 +135,7 @@ MirWaitHandle* MirConnection::create_surface(
     mir_surface_callback callback,
     void * context)
 {
-    auto surface = new MirSurface(this, server, platform->create_buffer_factory(), input_platform, params, callback, context);
+    auto surface = new MirSurface(this, server, &debug, platform->create_buffer_factory(), input_platform, params, callback, context);
 
     return surface->get_create_wait_handle();
 }
@@ -216,23 +218,6 @@ MirPromptSession* MirConnection::create_prompt_session()
     return new MirPromptSession(display_server(), event_handler_register);
 }
 
-namespace
-{
-void default_lifecycle_event_handler(MirLifecycleState transition)
-{
-    if (transition == mir_lifecycle_connection_lost)
-    {
-        /*
-         * We need to use kill() instead of raise() to ensure the signal
-         * is dispatched to the process even if it's blocked in the current
-         * thread.
-         */
-        kill(getpid(), SIGHUP);
-    }
-}
-}
-
-
 void MirConnection::connected(mir_connected_callback callback, void * context)
 {
     bool safe_to_callback = true;
@@ -254,6 +239,26 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
          * established, to ensure that the client platform has access to all
          * needed data (e.g. platform package).
          */
+        auto default_lifecycle_event_handler = [this](MirLifecycleState transition)
+            {
+                bool const expect_connection_lost = [&]
+                    {
+                        std::lock_guard<decltype(mutex)> lock(mutex);
+                        return disconnecting;
+                    }();
+
+                if (transition == mir_lifecycle_connection_lost &&
+                    !expect_connection_lost)
+                {
+                    /*
+                     * We need to use kill() instead of raise() to ensure the signal
+                     * is dispatched to the process even if it's blocked in the current
+                     * thread.
+                     */
+                    kill(getpid(), SIGHUP);
+                }
+            };
+
         platform = client_platform_factory->create_client_platform(this);
         native_display = platform->create_egl_native_display();
         display_configuration->set_configuration(connect_result.display_configuration());
@@ -300,6 +305,10 @@ void MirConnection::done_disconnect()
 
 MirWaitHandle* MirConnection::disconnect()
 {
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        disconnecting = true;
+    }
     disconnect_wait_handle.expect_result();
     server.disconnect(0, &ignored, &ignored,
                       google::protobuf::NewCallback(this, &MirConnection::done_disconnect));

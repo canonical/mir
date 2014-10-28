@@ -42,12 +42,13 @@ public:
         MirBufferPackage const& package,
         MirPixelFormat pf);
 
-    std::shared_ptr<MemoryRegion> secure_for_cpu_write();
-    geometry::Size size() const;
-    geometry::Stride stride() const;
-    MirPixelFormat pixel_format() const;
-    std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const;
-    void update_from(MirBufferPackage const& update_package);
+    std::shared_ptr<MemoryRegion> secure_for_cpu_write() override;
+    geometry::Size size() const override;
+    geometry::Stride stride() const override;
+    MirPixelFormat pixel_format() const override;
+    std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override;
+    void update_from(MirBufferPackage const& update_package) override;
+    void fill_update_msg(MirBufferPackage& message) override;
 
     Buffer(const Buffer&) = delete;
     Buffer& operator=(const Buffer&) = delete;
