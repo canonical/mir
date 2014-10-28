@@ -205,6 +205,16 @@ TEST_F(DemoPrivateProtobuf, client_calls_server)
     result.set_error(nothing_returned);
     std::atomic<bool> called_back{false};
 
+    // After the call there's a race between the client releasing the connection
+    // and the server dropping the connection.
+    // If the latter wins we'll invoke the client's lifecycle_event_callback.
+    // As the default callback kills the process with SIGHUP, we need to
+    // replace it to ensure the test can continue.
+    mir_connection_set_lifecycle_event_callback(
+        connection,
+        [](MirConnection*, MirLifecycleState, void*){},
+        nullptr);
+
     // Note:
     // As the default server won't recognise this call it drops the connection
     // resulting in a callback when the connection drops (but result being unchanged)
@@ -214,11 +224,6 @@ TEST_F(DemoPrivateProtobuf, client_calls_server)
         &result,
         NewCallback(&callback, &called_back));
 
-    // FIXME - This test is somehow racy. If I add:
-    //    EXPECT_TRUE(false) << connection;
-    // then I can get mir_connection_release to generate an exception during
-    // disconnect() internally, sometimes. Although that exception is caught
-    // internally by the client library so we don't see it here.
     mir_connection_release(connection);
 
     EXPECT_TRUE(called_back);
