@@ -99,7 +99,7 @@ void mtf::InterprocessClientServerTest::TearDown()
     if (server_process_id == getpid())
     {
         shutdown_sync.wait_for_signal_ready_for();
-        server.stop();
+        stop_server();
     }
 
     if (test_process_id != getpid()) return;
