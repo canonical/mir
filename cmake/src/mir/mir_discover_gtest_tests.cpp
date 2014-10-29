@@ -330,8 +330,9 @@ int main (int argc, char **argv)
                 elide_string_left(*test, output_width/2).c_str(),
                 config.executable,
                 // Don't run MesaBufferAllocatorTest.{software_buffers_dont_bypass|creates_software_rendering_buffer} tests on older kernels
-                (*test != "MesaBufferAllocatorTest.*") ? test->c_str() :
-                "MesaBufferAllocatorTest.*:-MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer");
+                ((*test == "MesaBufferAllocatorTest.*") && !kernel_supports_O_TMPFILE)
+                    ? "MesaBufferAllocatorTest.*:-MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer"
+                    : test->c_str());
 
             if (testfilecmake.good())
             {
