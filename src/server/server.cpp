@@ -18,11 +18,17 @@
 
 #include "mir/server.h"
 
+#include "mir/frontend/connector.h"
 #include "mir/options/default_configuration.h"
 #include "mir/default_server_configuration.h"
 #include "mir/main_loop.h"
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
+
+// TODO these are used to frig a stub renderer when running headless
+#include "mir/compositor/renderer.h"
+#include "mir/graphics/renderable.h"
+#include "mir/compositor/renderer_factory.h"
 
 #include <iostream>
 
@@ -35,6 +41,7 @@ namespace mo = mir::options;
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
+    MACRO(display_buffer_compositor_factory)\
     MACRO(cursor_listener)\
     MACRO(gl_config)\
     MACRO(input_dispatcher)\
@@ -117,6 +124,36 @@ auto wrap_##name(decltype(Self::name##_wrapper)::result_type const& wrapped)\
     return mir::DefaultServerConfiguration::wrap_##name(wrapped);\
 }
 
+// TODO these are used to frig a stub renderer when running headless
+namespace
+{
+class StubRenderer : public mir::compositor::Renderer
+{
+public:
+    void set_viewport(mir::geometry::Rectangle const&) override {}
+
+    void set_rotation(float) override {}
+
+    void render(mir::graphics::RenderableList const& renderables) const override
+    {
+        for (auto const& r : renderables)
+            r->buffer(); // We need to consume a buffer to unblock client tests
+    }
+
+    void suspend() override {}
+};
+
+class StubRendererFactory : public mir::compositor::RendererFactory
+{
+public:
+    auto create_renderer_for(mir::geometry::Rectangle const&, mir::compositor::DestinationAlpha)
+    -> std::unique_ptr<mir::compositor::Renderer>
+    {
+        return std::unique_ptr<mir::compositor::Renderer>(new StubRenderer());
+    }
+};
+}
+
 struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 {
     ServerConfiguration(
@@ -125,6 +162,17 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
         DefaultServerConfiguration(configuration_options),
         self(self.get())
     {
+    }
+
+    // TODO this is an ugly frig to avoid exposing the render factory to end users and tests running headless
+    auto the_renderer_factory() -> std::shared_ptr<compositor::RendererFactory> override
+    {
+        auto const graphics_lib = the_options()->get<std::string>(options::platform_graphics_lib);
+
+        if (graphics_lib != "libmirplatformstub.so")
+            return mir::DefaultServerConfiguration::the_renderer_factory();
+        else
+            return std::make_shared<StubRendererFactory>();
     }
 
     using mir::DefaultServerConfiguration::the_options;
@@ -253,6 +301,22 @@ void mir::Server::stop()
 bool mir::Server::exited_normally()
 {
     return self->exit_status;
+}
+
+auto mir::Server::open_client_socket() -> Fd
+{
+    if (auto const config = self->server_config)
+        return Fd{config->the_connector()->client_socket_fd()};
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
+}
+
+auto mir::Server::open_client_socket(ConnectHandler const& connect_handler) -> Fd
+{
+    if (auto const config = self->server_config)
+        return Fd{config->the_connector()->client_socket_fd(connect_handler)};
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
 #define MIR_SERVER_ACCESSOR(name)\

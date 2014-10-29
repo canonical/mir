@@ -81,7 +81,7 @@ void mir::send_fds(
         for (auto& fd : fds)
             data[i++] = fd;
 
-        auto const sent = sendmsg(socket, &header, 0);
+        auto const sent = sendmsg(socket, &header, MSG_NOSIGNAL);
         if (sent < 0)
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to send fds: " + std::string(strerror(errno))));
     }
@@ -128,6 +128,8 @@ void mir::receive_data(mir::Fd const& socket, void* buffer, size_t bytes_request
         if (result < 0)
         {
             if (socket_error_is_transient(errno))
+                continue;
+            if (errno == EAGAIN)
                 continue;
             if (errno == EPIPE)
                 BOOST_THROW_EXCEPTION(
