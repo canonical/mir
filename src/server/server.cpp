@@ -18,11 +18,17 @@
 
 #include "mir/server.h"
 
+#include "mir/frontend/connector.h"
 #include "mir/options/default_configuration.h"
 #include "mir/default_server_configuration.h"
 #include "mir/main_loop.h"
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
+
+// TODO these are used to frig a stub renderer when running headless
+#include "mir/compositor/renderer.h"
+#include "mir/graphics/renderable.h"
+#include "mir/compositor/renderer_factory.h"
 
 #include <iostream>
 
@@ -35,6 +41,7 @@ namespace mo = mir::options;
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
+    MACRO(display_buffer_compositor_factory)\
     MACRO(cursor_listener)\
     MACRO(gl_config)\
     MACRO(input_dispatcher)\
@@ -53,9 +60,11 @@ namespace mo = mir::options;
     MACRO(the_main_loop)\
     MACRO(the_prompt_session_listener)\
     MACRO(the_session_authorizer)\
+    MACRO(the_session_coordinator)\
     MACRO(the_session_listener)\
     MACRO(the_shell_display_layout)\
-    MACRO(the_surface_configurator)
+    MACRO(the_surface_configurator)\
+    MACRO(the_surface_coordinator)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder;
@@ -68,7 +77,7 @@ struct mir::Server::Self
 {
     bool exit_status{false};
     std::weak_ptr<options::Option> options;
-    ServerConfiguration* server_config{nullptr};
+    std::shared_ptr<ServerConfiguration> server_config;
 
     std::function<void()> init_callback{[]{}};
     int argc{0};
@@ -115,14 +124,55 @@ auto wrap_##name(decltype(Self::name##_wrapper)::result_type const& wrapped)\
     return mir::DefaultServerConfiguration::wrap_##name(wrapped);\
 }
 
+// TODO these are used to frig a stub renderer when running headless
+namespace
+{
+class StubRenderer : public mir::compositor::Renderer
+{
+public:
+    void set_viewport(mir::geometry::Rectangle const&) override {}
+
+    void set_rotation(float) override {}
+
+    void render(mir::graphics::RenderableList const& renderables) const override
+    {
+        for (auto const& r : renderables)
+            r->buffer(); // We need to consume a buffer to unblock client tests
+    }
+
+    void suspend() override {}
+};
+
+class StubRendererFactory : public mir::compositor::RendererFactory
+{
+public:
+    auto create_renderer_for(mir::geometry::Rectangle const&, mir::compositor::DestinationAlpha)
+    -> std::unique_ptr<mir::compositor::Renderer>
+    {
+        return std::unique_ptr<mir::compositor::Renderer>(new StubRenderer());
+    }
+};
+}
+
 struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 {
     ServerConfiguration(
         std::shared_ptr<options::Configuration> const& configuration_options,
-        std::shared_ptr<Self> const self) :
+        std::shared_ptr<Self> const& self) :
         DefaultServerConfiguration(configuration_options),
-        self(self)
+        self(self.get())
     {
+    }
+
+    // TODO this is an ugly frig to avoid exposing the render factory to end users and tests running headless
+    auto the_renderer_factory() -> std::shared_ptr<compositor::RendererFactory> override
+    {
+        auto const graphics_lib = the_options()->get<std::string>(options::platform_graphics_lib);
+
+        if (graphics_lib != "libmirplatformstub.so")
+            return mir::DefaultServerConfiguration::the_renderer_factory();
+        else
+            return std::make_shared<StubRendererFactory>();
     }
 
     using mir::DefaultServerConfiguration::the_options;
@@ -138,7 +188,7 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 
     FOREACH_WRAPPER(MIR_SERVER_CONFIG_WRAP)
 
-    std::shared_ptr<Self> const self;
+    Self* const self;
 };
 
 #undef MIR_SERVER_CONFIG_OVERRIDE
@@ -157,6 +207,13 @@ std::shared_ptr<mo::DefaultConfiguration> configuration_options(
         return std::make_shared<mo::DefaultConfiguration>(argc, argv);
 
 }
+
+template<typename ConfigPtr>
+void verify_setting_allowed(ConfigPtr const& initialized)
+{
+    if (initialized)
+       BOOST_THROW_EXCEPTION(std::logic_error("Cannot amend configuration after initialization starts"));
+}
 }
 
 mir::Server::Server() :
@@ -173,12 +230,14 @@ void mir::Server::Self::set_add_configuration_options(
 
 void mir::Server::set_command_line(int argc, char const* argv[])
 {
+    verify_setting_allowed(self->server_config);    
     self->argc = argc;
     self->argv = argv;
 }
 
 void mir::Server::add_init_callback(std::function<void()> const& init_callback)
 {
+    verify_setting_allowed(self->server_config);    
     auto const& existing = self->init_callback;
 
     auto const updated = [=]
@@ -197,29 +256,31 @@ auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 
 void mir::Server::set_exception_handler(std::function<void()> const& exception_handler)
 {
+    verify_setting_allowed(self->server_config);    
     self->exception_handler = exception_handler;
+}
+
+void mir::Server::apply_settings() const
+{
+    if (self->server_config) return;
+
+    auto const options = configuration_options(self->argc, self->argv, self->command_line_hander);
+    self->add_configuration_options(*options);
+
+    auto const config = std::make_shared<ServerConfiguration>(options, self);
+    self->server_config = config;
+    self->options = config->the_options();
 }
 
 void mir::Server::run()
 try
 {
-    auto const options = configuration_options(self->argc, self->argv, self->command_line_hander);
+    apply_settings();
 
-    self->add_configuration_options(*options);
-
-    ServerConfiguration config{options, self};
-
-    self->server_config = &config;
-
-    self->options = config.the_options();
-
-    run_mir(config, [&](DisplayServer&)
-        {
-            self->init_callback();
-        });
+    run_mir(*self->server_config, [&](DisplayServer&) { self->init_callback(); });
 
     self->exit_status = true;
-    self->server_config = nullptr;
+    self->server_config.reset();
 }
 catch (...)
 {
@@ -242,16 +303,27 @@ bool mir::Server::exited_normally()
     return self->exit_status;
 }
 
-namespace
+auto mir::Server::open_client_socket() -> Fd
 {
-auto const no_config_to_access = "Cannot access config when no config active.";
+    if (auto const config = self->server_config)
+        return Fd{config->the_connector()->client_socket_fd()};
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
+}
+
+auto mir::Server::open_client_socket(ConnectHandler const& connect_handler) -> Fd
+{
+    if (auto const config = self->server_config)
+        return Fd{config->the_connector()->client_socket_fd(connect_handler)};
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
 #define MIR_SERVER_ACCESSOR(name)\
 auto mir::Server::name() const -> decltype(self->server_config->name())\
 {\
-    if (self->server_config) return self->server_config->name();\
-    BOOST_THROW_EXCEPTION(std::logic_error(no_config_to_access));\
+    apply_settings();\
+    return self->server_config->name();\
 }
 
 FOREACH_ACCESSOR(MIR_SERVER_ACCESSOR)
@@ -261,6 +333,7 @@ FOREACH_ACCESSOR(MIR_SERVER_ACCESSOR)
 #define MIR_SERVER_OVERRIDE(name)\
 void mir::Server::override_the_##name(decltype(Self::name##_builder) const& value)\
 {\
+    verify_setting_allowed(self->server_config);\
     self->name##_builder = value;\
 }
 
@@ -271,6 +344,7 @@ FOREACH_OVERRIDE(MIR_SERVER_OVERRIDE)
 #define MIR_SERVER_WRAP(name)\
 void mir::Server::wrap_##name(decltype(Self::name##_wrapper) const& value)\
 {\
+    verify_setting_allowed(self->server_config);\
     self->name##_wrapper = value;\
 }
 
@@ -283,6 +357,7 @@ void mir::Server::add_configuration_option(
     std::string const& description,
     int default_)
 {
+    verify_setting_allowed(self->server_config);
     namespace po = boost::program_options;
 
     auto const& existing = self->add_configuration_options;
@@ -303,6 +378,7 @@ void mir::Server::add_configuration_option(
     std::string const& description,
     std::string const& default_)
 {
+    verify_setting_allowed(self->server_config);
     namespace po = boost::program_options;
 
     auto const& existing = self->add_configuration_options;
@@ -323,6 +399,7 @@ void mir::Server::add_configuration_option(
     std::string const& description,
     OptionType type)
 {
+    verify_setting_allowed(self->server_config);
     namespace po = boost::program_options;
 
     auto const& existing = self->add_configuration_options;

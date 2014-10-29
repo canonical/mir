@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_SCENE_ELEMENT_H_
 
 #include "mir/compositor/scene_element.h"
+#include "stub_renderable.h"
 
 namespace mir
 {
@@ -36,16 +37,21 @@ public:
     {
     }
 
+    StubSceneElement()
+        : StubSceneElement(std::make_shared<StubRenderable>())
+    {
+    }
+
     std::shared_ptr<graphics::Renderable> renderable() const
     {
         return renderable_;
     }
 
-    void rendered_in(compositor::CompositorID) override
+    void rendered() override
     {
     }
 
-    void occluded_in(compositor::CompositorID) override
+    void occluded() override
     {
     }
     

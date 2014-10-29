@@ -28,12 +28,10 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::DefaultDisplayBufferCompositorFactory::DefaultDisplayBufferCompositorFactory(
-    std::shared_ptr<mc::Scene> const& scene,
     std::shared_ptr<mc::RendererFactory> const& renderer_factory,
-    std::shared_ptr<mc::CompositorReport> const& report)
-    : scene{scene},
-      renderer_factory{renderer_factory},
-      report{report}
+    std::shared_ptr<mc::CompositorReport> const& report) :
+    renderer_factory{renderer_factory},
+    report{report}
 {
 }
 
@@ -44,8 +42,6 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
     auto dest_alpha = display_buffer.uses_alpha() ?
         DestinationAlpha::generate_from_source : DestinationAlpha::opaque;
     auto renderer = renderer_factory->create_renderer_for(display_buffer.view_area(), dest_alpha);
-    auto raw = new DefaultDisplayBufferCompositor{display_buffer, scene,
-                                                  std::move(renderer),
-                                                  report};
-    return std::unique_ptr<DisplayBufferCompositor>(raw);
+    return std::unique_ptr<DisplayBufferCompositor>(
+         new DefaultDisplayBufferCompositor{display_buffer, std::move(renderer), report});
 }

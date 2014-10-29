@@ -43,7 +43,7 @@ public:
     void register_observer(std::shared_ptr<Observer> const& observer) override;
     void receive_data(void* buffer, size_t bytes_requested) override;
     void receive_data(void* buffer, size_t bytes_requested, std::vector<Fd>& fds) override;
-    void send_data(const std::vector<uint8_t> &buffer) override;
+    void send_message(std::vector<uint8_t> const& buffer, std::vector<mir::Fd> const& fds) override;
 
 private:
     void init();

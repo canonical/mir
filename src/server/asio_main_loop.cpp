@@ -476,9 +476,9 @@ bool AlarmImpl::reschedule_for(mir::time::Timestamp time_point)
 
 void AlarmImpl::update_timer()
 {
-    timer.async_wait(handler);
     std::lock_guard<decltype(data->m)> lock(data->m);
     data->state = pending;
+    timer.async_wait(handler);
 }
 }
 

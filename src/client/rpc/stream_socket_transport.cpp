@@ -140,7 +140,9 @@ catch (socket_disconnected_error &e)
     throw e;
 }
 
-void mclr::StreamSocketTransport::send_data(const std::vector<uint8_t>& buffer)
+void mclr::StreamSocketTransport::send_message(
+    std::vector<uint8_t> const& buffer,
+    std::vector<mir::Fd> const& fds)
 {
     size_t bytes_written{0};
     while (bytes_written < buffer.size())
@@ -169,6 +171,9 @@ void mclr::StreamSocketTransport::send_data(const std::vector<uint8_t>& buffer)
         }
         bytes_written += result;
     }
+
+    if (!fds.empty())
+        mir::send_fds(socket_fd, fds);
 }
 
 void mclr::StreamSocketTransport::init()

@@ -130,6 +130,12 @@ bs::error_code mfd::SocketMessenger::receive_msg(
     return e;
 }
 
+void mfd::SocketMessenger::receive_fds(std::vector<Fd>& fds)
+{
+    static char buffer;
+    mir::receive_data(socket_fd, &buffer, 1, fds);
+}
+
 size_t mfd::SocketMessenger::available_bytes()
 {
     // We call available_bytes() once the client is talking to us

@@ -79,7 +79,7 @@ struct DemoMessageProcessor : mfd::MessageProcessor
 
     void client_pid(int /*pid*/) override {}
 
-    bool dispatch(mfd::Invocation const& invocation)
+    bool dispatch(mfd::Invocation const& invocation, std::vector<mir::Fd> const& fds)
     {
         if ("function" == invocation.method_name())
         {
@@ -91,7 +91,7 @@ struct DemoMessageProcessor : mfd::MessageProcessor
             return true;
         }
 
-        return wrapped->dispatch(invocation);
+        return wrapped->dispatch(invocation, fds);
     }
 
     void send_response(::google::protobuf::uint32 id, ::google::protobuf::Message* response)
@@ -179,10 +179,6 @@ struct DemoPrivateProtobuf : mtf::InProcessServer
     testing::NiceMock<DemoMirServer> demo_mir_server;
 };
 
-void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
-{
-}
-
 void callback(std::atomic<bool>* called_back) { called_back->store(true); }
 char const* const nothing_returned = "Nothing returned";
 }
@@ -194,9 +190,6 @@ TEST_F(DemoPrivateProtobuf, client_calls_server)
 
     auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     ASSERT_TRUE(mir_connection_is_valid(connection));
-    // Override the default lifecycle callback to avoid sending a signal to the process
-    // when the connection is dropped, due to the invalid server RPC call (see below)
-    mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
 
     auto const rpc_channel = mir::client::the_rpc_channel(connection);
 
@@ -212,6 +205,16 @@ TEST_F(DemoPrivateProtobuf, client_calls_server)
     result.set_error(nothing_returned);
     std::atomic<bool> called_back{false};
 
+    // After the call there's a race between the client releasing the connection
+    // and the server dropping the connection.
+    // If the latter wins we'll invoke the client's lifecycle_event_callback.
+    // As the default callback kills the process with SIGHUP, we need to
+    // replace it to ensure the test can continue.
+    mir_connection_set_lifecycle_event_callback(
+        connection,
+        [](MirConnection*, MirLifecycleState, void*){},
+        nullptr);
+
     // Note:
     // As the default server won't recognise this call it drops the connection
     // resulting in a callback when the connection drops (but result being unchanged)
@@ -221,11 +224,6 @@ TEST_F(DemoPrivateProtobuf, client_calls_server)
         &result,
         NewCallback(&callback, &called_back));
 
-    // FIXME - This test is somehow racy. If I add:
-    //    EXPECT_TRUE(false) << connection;
-    // then I can get mir_connection_release to generate an exception during
-    // disconnect() internally, sometimes. Although that exception is caught
-    // internally by the client library so we don't see it here.
     mir_connection_release(connection);
 
     EXPECT_TRUE(called_back);

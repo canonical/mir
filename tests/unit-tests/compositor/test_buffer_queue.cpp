@@ -695,6 +695,27 @@ TEST_F(BufferQueueTest, snapshot_acquire_basic)
     }
 }
 
+TEST_F(BufferQueueTest, callbacks_cant_happen_after_shutdown)
+{
+    mc::BufferQueue q(1, allocator, basic_properties, policy_factory);
+
+    q.drop_client_requests();
+    auto client = client_acquire_async(q);
+    ASSERT_FALSE(client->has_acquired_buffer());
+}
+
+TEST_F(BufferQueueTest, callbacks_cant_happen_after_shutdown_with_snapshots)
+{
+    mc::BufferQueue q(1, allocator, basic_properties, policy_factory);
+
+    auto snapshot = q.snapshot_acquire();
+    q.drop_client_requests();
+    q.snapshot_release(snapshot);
+
+    auto client = client_acquire_async(q);
+    ASSERT_FALSE(client->has_acquired_buffer());
+}
+
 TEST_F(BufferQueueTest, snapshot_acquire_never_blocks)
 {
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)

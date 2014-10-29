@@ -19,13 +19,15 @@
 #ifndef MIR_SERVER_H_
 #define MIR_SERVER_H_
 
+#include "mir/fd.h"
+
 #include <functional>
 #include <memory>
 
 namespace mir
 {
-namespace compositor { class Compositor; }
-namespace frontend { class SessionAuthorizer; }
+namespace compositor { class Compositor; class DisplayBufferCompositorFactory; }
+namespace frontend { class SessionAuthorizer; class Session; }
 namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; }
 namespace options { class Option; }
@@ -73,6 +75,10 @@ public:
 /** @} */
 
 /** @name Configuration options
+ *  These functions allow customization of the handling of configuration
+ * options. The add and set functions should be called before using the 
+ * configuration (either by calling run() or invoking the accessors) 
+ * otherwise they throw a std::logic_error.
  *  @{ */
     /// Add user configuration option(s) to Mir's option handling.
     /// These will be resolved during initialisation from the command line,
@@ -109,12 +115,15 @@ public:
         std::function<void(int argc, char const* const* argv)> const& command_line_hander);
 
     /// Returns the configuration options.
-    /// This will be null before initialization completes. It will be available
+    /// This will be null before initialization starts. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
     auto get_options() const -> std::shared_ptr<options::Option>;
 /** @} */
 
 /** @name Using hooks into the run() logic
+ *  These allow the user to insert logic into startup or error handling.
+ * They should be called before starting to use the configuration (either by
+ * calling run() or invoking the accessors) otherwise they throw a std::logic_error.
  *  @{ */
     /// Add a callback to be invoked when the server has been initialized,
     /// but before it starts. This allows client code to get access Mir objects.
@@ -127,53 +136,21 @@ public:
     void set_exception_handler(std::function<void()> const& exception_handler);
 /** @} */
 
-/** @name Getting access to Mir subsystems
- * These will throw before initialization starts or after the server exits.
- * They may be invoked by the functors that provide alternative implementations of
- * Mir subsystems and when the init_callback is invoked (and thereafter
- * until the server exits).
- *  @{ */
-    /// \return the composite event filter.
-    auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;
-
-    /// \return the cursor listener.
-    auto the_cursor_listener() const -> std::shared_ptr<input::CursorListener>;
-
-    /// \return the graphics display.
-    auto the_display() const -> std::shared_ptr<graphics::Display>;
-
-    /// \return the graphics platform.
-    auto the_graphics_platform() const -> std::shared_ptr<graphics::Platform>;
-
-    /// \return the main loop.
-    auto the_main_loop() const -> std::shared_ptr<MainLoop>;
-
-    /// \return the prompt session listener.
-    auto the_prompt_session_listener() const -> std::shared_ptr<scene::PromptSessionListener>;
-
-    /// \return the session authorizer.
-    auto the_session_authorizer() const -> std::shared_ptr<frontend::SessionAuthorizer>;
-
-    /// \return the session listener.
-    auto the_session_listener() const -> std::shared_ptr<scene::SessionListener>;
-
-    /// \return the display layout.
-    auto the_shell_display_layout() const -> std::shared_ptr<shell::DisplayLayout>;
-
-    /// \return the surface configurator.
-    auto the_surface_configurator() const -> std::shared_ptr<scene::SurfaceConfigurator>;
-/** @} */
-
 /** @name Providing custom implementation
  * Provide alternative implementations of Mir subsystems: the functors will be invoked during initialization
- * (this is only useful before initialization starts).
+ * of the Mir server (or when accessor methods are called).
+ * They should be called before starting to use the configuration (either by
+ * calling run() or invoking the accessors) otherwise they throw a std::logic_error.
  *  @{ */
-
     /// Each of the override functions takes a builder functor of the same form
     template<typename T> using Builder = std::function<std::shared_ptr<T>()>;
 
     /// Sets an override functor for creating the compositor.
     void override_the_compositor(Builder<compositor::Compositor> const& compositor_builder);
+
+    /// Sets an override functor for creating the per-display rendering code.
+    void override_the_display_buffer_compositor_factory(
+        Builder<compositor::DisplayBufferCompositorFactory> const& compositor_builder);
 
     /// Sets an override functor for creating the cursor listener.
     void override_the_cursor_listener(Builder<input::CursorListener> const& cursor_listener_builder);
@@ -218,7 +195,67 @@ public:
     void wrap_surface_coordinator(Wrapper<scene::SurfaceCoordinator> const& wrapper);
 /** @} */
 
+/** @name Getting access to Mir subsystems
+ * These may be invoked by the functors that provide alternative implementations of
+ * Mir subsystems.
+ *  @{ */
+    /// \return the composite event filter.
+    auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;
+
+    /// \return the cursor listener.
+    auto the_cursor_listener() const -> std::shared_ptr<input::CursorListener>;
+
+    /// \return the graphics display.
+    auto the_display() const -> std::shared_ptr<graphics::Display>;
+
+    /// \return the graphics platform.
+    auto the_graphics_platform() const -> std::shared_ptr<graphics::Platform>;
+
+    /// \return the main loop.
+    auto the_main_loop() const -> std::shared_ptr<MainLoop>;
+
+    /// \return the prompt session listener.
+    auto the_prompt_session_listener() const -> std::shared_ptr<scene::PromptSessionListener>;
+
+    /// \return the session authorizer.
+    auto the_session_authorizer() const -> std::shared_ptr<frontend::SessionAuthorizer>;
+
+    /// \return the session coordinator.
+    auto the_session_coordinator() const -> std::shared_ptr<scene::SessionCoordinator>;
+
+    /// \return the session listener.
+    auto the_session_listener() const -> std::shared_ptr<scene::SessionListener>;
+
+    /// \return the display layout.
+    auto the_shell_display_layout() const -> std::shared_ptr<shell::DisplayLayout>;
+
+    /// \return the surface configurator.
+    auto the_surface_configurator() const -> std::shared_ptr<scene::SurfaceConfigurator>;
+
+    /// \return the surface coordinator.
+    auto the_surface_coordinator() const -> std::shared_ptr<scene::SurfaceCoordinator>;
+/** @} */
+
+/** @name Client side support
+ * These facilitate use of the server through the client API.
+ * They should be called while the server is running (i.e. run() has been called and
+ * not exited) otherwise they throw a std::logic_error.
+ * @{ */
+    using ConnectHandler = std::function<void(std::shared_ptr<frontend::Session> const& session)>;
+
+    /// Get a file descriptor that can be used to connect a client
+    /// It can be passed to another process, or used directly with mir_connect()
+    /// using the format "fd://%d".
+    auto open_client_socket() -> Fd;
+
+    /// Get a file descriptor that can be used to connect a client
+    /// It can be passed to another process, or used directly with mir_connect()
+    /// using the format "fd://%d".
+    /// \param connect_handler callback to be invoked when the client connects
+    auto open_client_socket(ConnectHandler const& connect_handler) -> Fd;
+/** @} */
 private:
+    void apply_settings() const;
     struct ServerConfiguration;
     struct Self;
     std::shared_ptr<Self> const self;

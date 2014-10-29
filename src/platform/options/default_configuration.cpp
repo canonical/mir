@@ -45,6 +45,7 @@ char const* const mo::name_opt                    = "name";
 char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::touchspots_opt               = "enable-touchspots";
 char const* const mo::fatal_abort_opt             = "on-fatal-error-abort";
+char const* const mo::debug_opt                   = "debug";
 
 char const* const mo::glog                 = "glog";
 char const* const mo::glog_stderrthreshold = "glog-stderrthreshold";
@@ -164,7 +165,9 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (touchspots_opt,
             "Display visualization of touchspots (e.g. for screencasting).")
         (fatal_abort_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
-            "in unexpected ways] abort (to get a core dump)");
+            "in unexpected ways] abort (to get a core dump)")
+        (debug_opt, "Enable extra development debugging. "
+            "This is only interesting for people doing Mir server or client development.");
 
         add_platform_options();
 }

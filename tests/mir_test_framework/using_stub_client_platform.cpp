@@ -26,11 +26,6 @@ namespace mcl = mir::client;
 
 namespace
 {
-
-void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
-{
-}
-
 class StubMirConnectionAPI : public mcl::MirConnectionAPI
 {
 public:
@@ -50,9 +45,6 @@ public:
 
     void release(MirConnection* connection) override
     {
-        // Clear the lifecycle callback in order not to get SIGHUP by the
-        // default lifecycle handler during connection teardown
-        mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
         return prev_api->release(connection);
     }
 
