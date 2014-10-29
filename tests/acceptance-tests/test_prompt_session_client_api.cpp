@@ -76,11 +76,11 @@ struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
     MOCK_METHOD1(prompt_session_is_allowed, bool(mf::SessionCredentials const&));
 };
 
-// We need to fake the client_pid for the as that is used to identify sessions
-class HookSessionCoordinator : public msh::SessionCoordinatorWrapper
+// We need to fake any client_pids used to identify sessions
+class PidFakingSessionCoordinator : public msh::SessionCoordinatorWrapper
 {
 public:
-    HookSessionCoordinator(
+    PidFakingSessionCoordinator(
         std::shared_ptr<ms::SessionCoordinator> const& wrapped,
         std::vector<pid_t> const& pids) :
             msh::SessionCoordinatorWrapper(wrapped),
@@ -168,7 +168,7 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
                 std::vector<pid_t> fake_pids;
                 fake_pids.push_back(application_session_pid);
 
-                return std::make_shared<HookSessionCoordinator>(wrapped, fake_pids);
+                return std::make_shared<PidFakingSessionCoordinator>(wrapped, fake_pids);
             };
 
         server.override_the_session_authorizer([this]()
