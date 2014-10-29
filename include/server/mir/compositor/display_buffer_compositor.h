@@ -21,6 +21,7 @@
 #define MIR_COMPOSITOR_DISPLAY_BUFFER_COMPOSITOR_H_
 
 #include <memory>
+#include "mir/compositor/scene.h"
 
 namespace mir
 {
@@ -33,7 +34,7 @@ class DisplayBufferCompositor
 public:
     virtual ~DisplayBufferCompositor() = default;
 
-    virtual void composite() = 0;
+    virtual void composite(SceneElementSequence&& scene_sequence) = 0;
 
     virtual std::weak_ptr<graphics::Cursor> cursor() const { return {}; }
 

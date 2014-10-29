@@ -77,3 +77,20 @@ void mcla::Buffer::update_from(MirBufferPackage const& update_package)
 {
     (void) update_package;
 }
+
+void mcla::Buffer::fill_update_msg(MirBufferPackage& message)
+{
+    message.data_items = 1;
+    auto fence = native_buffer->copy_fence();
+    if (fence > 0)
+    {
+        message.data[0] = static_cast<int>(mga::BufferFlag::fenced);
+        message.fd[0] = fence;
+        message.fd_items = 1; 
+    }
+    else
+    {
+        message.data[0] = static_cast<int>(mga::BufferFlag::unfenced);
+        message.fd_items = 0; 
+    }
+}

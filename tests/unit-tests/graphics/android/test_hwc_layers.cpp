@@ -37,7 +37,7 @@ public:
     {
         using namespace testing;
 
-        native_handle_1 = std::make_shared<mtd::StubAndroidNativeBuffer>(buffer_size);
+        native_handle_1 = std::make_shared<mtd::MockAndroidNativeBuffer>(buffer_size);
         ON_CALL(mock_buffer, size())
             .WillByDefault(Return(buffer_size));
         ON_CALL(mock_buffer, native_buffer_handle())
@@ -82,7 +82,7 @@ public:
     geom::Size buffer_size{333, 444};
     geom::Rectangle screen_position{{9,8},buffer_size};
     bool alpha_enabled{false};
-    std::shared_ptr<mtd::StubAndroidNativeBuffer> native_handle_1;
+    std::shared_ptr<mtd::MockAndroidNativeBuffer> native_handle_1;
     testing::NiceMock<mtd::MockBuffer> mock_buffer;
 
     std::shared_ptr<hwc_display_contents_1_t> list;

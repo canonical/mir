@@ -51,6 +51,10 @@ override_dh_makeshlibs:
 	dh_makeshlibs -V
 
 override_dh_install:
+# Nothing outside Mir should link to libmirprotobuf directly.
+# Delete the symlink so that --fail-missing doesn't think we've missed it
+# accidentally.
+	rm debian/tmp/usr/lib/*/libmirprotobuf.so
 	dh_install --fail-missing \
 	  -Xusr/lib/$(DEB_HOST_MULTIARCH)/libmir$(PLATFORM_DRIVER).so \
 	  -Xusr/lib/$(DEB_HOST_MULTIARCH)/libmir$(CLIENT_DRIVER).so

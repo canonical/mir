@@ -18,7 +18,6 @@
 
 #include "mir_toolkit/mir_surface.h"
 #include "mir_toolkit/mir_wait.h"
-#include "mir_toolkit/mir_client_library_debug.h"
 
 #include "mir_connection.h"
 #include "mir_surface.h"
@@ -152,9 +151,9 @@ void mir_surface_release_sync(MirSurface* surface)
         nullptr));
 }
 
-int mir_surface_get_id(MirSurface* surface)
+int mir_surface_get_id(MirSurface* /*surface*/)
 {
-    return mir_debug_surface_id(surface);
+    return 0;
 }
 
 MirWaitHandle* mir_surface_set_type(MirSurface* surf,

@@ -18,7 +18,6 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/compositor_report.h"
-#include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/compositor/destination_alpha.h"
 #include "mir/graphics/cursor.h"
@@ -66,11 +65,9 @@ private:
 
 me::DemoCompositor::DemoCompositor(
     mg::DisplayBuffer& display_buffer,
-    std::shared_ptr<mc::Scene> const& scene,
     mg::GLProgramFactory const& factory,
     std::shared_ptr<mc::CompositorReport> const& report) :
     display_buffer(display_buffer),
-    scene(scene),
     report(report),
     soft_cursor{std::make_shared<SoftCursor>(*this)},
     viewport(display_buffer.view_area()),
@@ -82,15 +79,13 @@ me::DemoCompositor::DemoCompositor(
         30.0f, //titlebar_height
         80.0f) //shadow_radius
 {
-    scene->register_compositor(this);
 }
 
 me::DemoCompositor::~DemoCompositor()
 {
-    scene->unregister_compositor(this);
 }
 
-void me::DemoCompositor::composite()
+void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
 {
     report->began_frame(this);
     //a simple filtering out of renderables that shouldn't be drawn
@@ -99,7 +94,6 @@ void me::DemoCompositor::composite()
     mg::RenderableList renderable_list;
     std::unordered_set<mg::Renderable::ID> decoration_skip_list;
 
-    auto elements = scene->scene_elements_for(this);
     for(auto const& it : elements)
     {
         auto const& renderable = it->renderable();

@@ -19,6 +19,7 @@
 #include "src/server/compositor/compositing_screencast.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
+#include "mir/compositor/scene.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/geometry/rectangle.h"
@@ -28,6 +29,9 @@
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_gl.h"
+#include "mir_test_doubles/stub_scene.h"
+#include "mir_test_doubles/stub_scene_element.h"
+#include "mir_test_doubles/mock_scene.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -91,7 +95,7 @@ public:
     {
         struct NullDisplayBufferCompositor : mc::DisplayBufferCompositor
         {
-            void composite() {}
+            void composite(mc::SceneElementSequence&&) {}
         };
 
         auto raw = new NullDisplayBufferCompositor{};
@@ -101,7 +105,12 @@ public:
 
 struct MockDisplayBufferCompositor : mc::DisplayBufferCompositor
 {
-    MOCK_METHOD0(composite, void());
+    void composite(mc::SceneElementSequence&& seq)
+    {
+        composite_(seq);
+    }
+
+    MOCK_METHOD1(composite_, void(mc::SceneElementSequence&));
 };
 
 class WrappingDisplayBufferCompositor : public mc::DisplayBufferCompositor
@@ -112,7 +121,10 @@ public:
     {
     }
 
-    void composite() { comp.composite(); }
+    void composite(mc::SceneElementSequence&& elements)
+    {
+        comp.composite(std::move(elements));
+    }
 
 private:
     mc::DisplayBufferCompositor& comp;
@@ -159,7 +171,8 @@ MATCHER_P(BufferPropertiesMatchSize, size, "")
 struct CompositingScreencastTest : testing::Test
 {
     CompositingScreencastTest()
-        : screencast{mt::fake_shared(stub_display),
+        : screencast{mt::fake_shared(stub_scene),
+                     mt::fake_shared(stub_display),
                      mt::fake_shared(stub_buffer_allocator),
                      mt::fake_shared(stub_db_compositor_factory)},
           default_size{1, 1},
@@ -169,6 +182,7 @@ struct CompositingScreencastTest : testing::Test
     }
 
     testing::NiceMock<mtd::MockGL> mock_gl;
+    mtd::StubScene stub_scene;
     StubDisplay stub_display;
     mtd::StubBufferAllocator stub_buffer_allocator;
     NullDisplayBufferCompositorFactory stub_db_compositor_factory;
@@ -221,14 +235,21 @@ TEST_F(CompositingScreencastTest, captures_by_compositing_with_provided_region)
 {
     using namespace testing;
 
+    mtd::StubSceneElement element1;
+    mtd::StubSceneElement element2;
+    mc::SceneElementSequence scene_elements{mt::fake_shared(element1), mt::fake_shared(element2)};
+    NiceMock<mtd::MockScene> mock_scene;
     MockDisplayBufferCompositorFactory mock_db_compositor_factory;
 
     InSequence s;
     EXPECT_CALL(mock_db_compositor_factory,
                 create_compositor_mock(DisplayBufferCoversArea(default_region)));
-    EXPECT_CALL(mock_db_compositor_factory.mock_db_compositor, composite());
+    EXPECT_CALL(mock_scene, scene_elements_for(_))
+        .WillOnce(Return(scene_elements));
+    EXPECT_CALL(mock_db_compositor_factory.mock_db_compositor, composite_(Eq(scene_elements)));
 
     mc::CompositingScreencast screencast_local{
+        mt::fake_shared(mock_scene),
         mt::fake_shared(stub_display),
         mt::fake_shared(stub_buffer_allocator),
         mt::fake_shared(mock_db_compositor_factory)};
@@ -251,6 +272,7 @@ TEST_F(CompositingScreencastTest, allocates_and_uses_buffer_with_provided_size)
         .WillOnce(Return(mt::fake_shared(stub_buffer)));
 
     mc::CompositingScreencast screencast_local{
+        mt::fake_shared(stub_scene),
         mt::fake_shared(stub_display),
         mt::fake_shared(mock_buffer_allocator),
         mt::fake_shared(stub_db_compositor_factory)};
@@ -274,6 +296,7 @@ TEST_F(CompositingScreencastTest, uses_one_buffer_per_session)
         .WillOnce(Return(mt::fake_shared(stub_buffer2)));
 
     mc::CompositingScreencast screencast_local{
+        mt::fake_shared(stub_scene),
         mt::fake_shared(stub_display),
         mt::fake_shared(mock_buffer_allocator),
         mt::fake_shared(stub_db_compositor_factory)};
@@ -289,4 +312,27 @@ TEST_F(CompositingScreencastTest, uses_one_buffer_per_session)
     ASSERT_EQ(&stub_buffer2, buffer2.get());
     buffer2 = screencast_local.capture(session_id2);
     ASSERT_EQ(&stub_buffer2, buffer2.get());
+}
+
+TEST_F(CompositingScreencastTest, registers_and_unregisters_from_scene)
+{
+    using namespace testing;
+    NiceMock<mtd::MockScene> mock_scene;
+    NiceMock<MockBufferAllocator> mock_buffer_allocator;
+    ON_CALL(mock_buffer_allocator, alloc_buffer(_))
+        .WillByDefault(Return(std::make_shared<mtd::StubBuffer>()));
+
+    EXPECT_CALL(mock_scene, register_compositor(_))
+        .Times(1);
+    EXPECT_CALL(mock_scene, unregister_compositor(_))
+        .Times(1);
+
+    mc::CompositingScreencast screencast_local{
+        mt::fake_shared(mock_scene),
+        mt::fake_shared(stub_display),
+        mt::fake_shared(mock_buffer_allocator),
+        mt::fake_shared(stub_db_compositor_factory)};
+
+    auto session_id = screencast_local.create_session(default_region, default_size, default_pixel_format);
+    screencast_local.destroy_session(session_id);
 }

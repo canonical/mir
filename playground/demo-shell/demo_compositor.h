@@ -46,12 +46,11 @@ class DemoCompositor : public compositor::DisplayBufferCompositor,
 public:
     DemoCompositor(
         graphics::DisplayBuffer& display_buffer,
-        std::shared_ptr<compositor::Scene> const& scene,
         graphics::GLProgramFactory const& factory,
         std::shared_ptr<compositor::CompositorReport> const& report);
     ~DemoCompositor();
 
-    void composite() override;
+    void composite(compositor::SceneElementSequence&& elements) override;
     std::weak_ptr<graphics::Cursor> cursor() const override;
     void zoom(float mag) override;
     void on_cursor_movement(geometry::Point const& p);
@@ -60,7 +59,6 @@ private:
     void update_viewport();
 
     graphics::DisplayBuffer& display_buffer;
-    std::shared_ptr<compositor::Scene> const scene;
     std::shared_ptr<compositor::CompositorReport> const report;
     std::shared_ptr<graphics::Cursor> const soft_cursor;
     geometry::Rectangle viewport;

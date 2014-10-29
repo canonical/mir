@@ -19,6 +19,8 @@
 #include "playground/demo-shell/demo_compositor.h"
 
 #include "mir/geometry/rectangle.h"
+#include "mir/compositor/scene_element.h"
+#include "mir/compositor/scene.h"
 #include "src/server/scene/surface_stack.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"
@@ -27,6 +29,7 @@
 #include "mir_test_doubles/stub_display_buffer.h"
 #include "mir_test_doubles/stub_gl_program_factory.h"
 #include "mir_test_doubles/stub_buffer_stream.h"
+#include "mir_test_doubles/stub_renderable.h"
 #include "mir_test_doubles/null_surface_configurator.h"
 #include "mir_test/fake_shared.h"
 
@@ -38,44 +41,30 @@ namespace geom = mir::geometry;
 namespace me = mir::examples;
 namespace mt = mir::test;
 namespace ms = mir::scene;
+namespace mc = mir::compositor;
 
 namespace
 {
 
+struct MockSceneElement : mc::SceneElement
+{
+    MockSceneElement()
+    {
+        ON_CALL(*this, is_a_surface())
+            .WillByDefault(testing::Return(true));
+    }
+
+    MOCK_CONST_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
+    MOCK_CONST_METHOD0(is_a_surface, bool());
+    MOCK_METHOD0(rendered, void());
+    MOCK_METHOD0(occluded, void());
+};
+
 struct DemoCompositor : testing::Test
 {
-    DemoCompositor()
-    {
-        using namespace testing;
-
-        surface_stack.add_surface(
-            mt::fake_shared(stub_surface),
-            ms::DepthId{0},
-            mir::input::InputReceptionMode::normal);
-
-        post_surface_buffer();
-    }
-
-    void post_surface_buffer()
-    {
-        mir::graphics::Buffer* old_buffer;
-
-        stub_surface.swap_buffers(
-            nullptr,
-            [&old_buffer] (mir::graphics::Buffer* buffer)
-            {
-                old_buffer = buffer;
-            });
-
-        stub_surface.swap_buffers(
-            old_buffer,
-            [] (mir::graphics::Buffer*) {});
-    }
-
     testing::NiceMock<mtd::MockGL> mock_gl;
     mtd::StubDisplayBuffer stub_display_buffer{
         geom::Rectangle{{0,0}, {1000,1000}}};
-    mir::scene::SurfaceStack surface_stack{mir::report::null_scene_report()};
     mtd::StubGLProgramFactory stub_factory;
     ms::BasicSurface stub_surface{
         std::string("stub"),
@@ -90,9 +79,11 @@ struct DemoCompositor : testing::Test
 
     me::DemoCompositor demo_compositor{
         stub_display_buffer,
-        mt::fake_shared(surface_stack),
         stub_factory,
         mir::report::null_compositor_report()};
+
+    testing::NiceMock<MockSceneElement> element;
+    mc::SceneElementSequence scene_elements{mt::fake_shared(element)};
 };
 
 }
@@ -102,17 +93,16 @@ TEST_F(DemoCompositor, sets_surface_visibility)
 {
     using namespace testing;
 
-    demo_compositor.composite();
+    EXPECT_CALL(element, renderable())
+        .Times(2)
+        .WillOnce(Return(std::make_shared<mtd::StubRenderable>(true)))
+        .WillOnce(Return(std::make_shared<mtd::StubRenderable>(false)));
 
-    EXPECT_THAT(
-        stub_surface.query(mir_surface_attrib_visibility),
-        Eq(mir_surface_visibility_exposed));
+    InSequence seq;
+    EXPECT_CALL(element, rendered());
+    EXPECT_CALL(element, occluded());
 
-    stub_surface.hide();
+    demo_compositor.composite(mc::SceneElementSequence(scene_elements));
+    demo_compositor.composite(mc::SceneElementSequence(scene_elements));
 
-    demo_compositor.composite();
-
-    EXPECT_THAT(
-        stub_surface.query(mir_surface_attrib_visibility),
-        Eq(mir_surface_visibility_occluded));
 }

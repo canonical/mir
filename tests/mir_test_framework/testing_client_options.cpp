@@ -72,6 +72,9 @@ class StubClientBuffer : public mcl::ClientBuffer
     void update_from(MirBufferPackage const&) override
     {
     }
+    void fill_update_msg(MirBufferPackage&) override
+    {
+    }
 };
 
 struct StubClientBufferFactory : public mcl::ClientBufferFactory

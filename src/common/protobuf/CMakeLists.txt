@@ -13,16 +13,24 @@ protobuf_generate_cpp(
   ${MIR_PROTOBUF_PROTOCOL_SPEC}
 )
 
-add_library(mirprotobuf OBJECT
+add_library(mirprotobuf SHARED
   google_protobuf_guard.cpp
   ${GENERATED_PROTOBUF_SRCS}
   ${GENERATED_PROTOBUF_HDRS}
 )
 
-list(APPEND MIR_COMMON_SOURCES
-  $<TARGET_OBJECTS:mirprotobuf>
+target_link_libraries(
+  mirprotobuf
+
+  ${PROTOBUF_LIBRARIES}
 )
 
+set_target_properties(
+  mirprotobuf
+
+  PROPERTIES
+  SOVERSION 0
+)
 
 # Export the include directories
 list(APPEND MIR_GENERATED_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
@@ -33,8 +41,12 @@ set(
   PARENT_SCOPE)
 
 list(APPEND MIR_COMMON_REFERENCES
-  ${PROTOBUF_LIBRARIES}
+  mirprotobuf
 )
 
-set(MIR_COMMON_SOURCES ${MIR_COMMON_SOURCES} PARENT_SCOPE)
 set(MIR_COMMON_REFERENCES ${MIR_COMMON_REFERENCES} PARENT_SCOPE)
+
+install(
+  TARGETS mirprotobuf
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)

@@ -19,13 +19,15 @@
 #ifndef MIR_SERVER_H_
 #define MIR_SERVER_H_
 
+#include "mir/fd.h"
+
 #include <functional>
 #include <memory>
 
 namespace mir
 {
-namespace compositor { class Compositor; }
-namespace frontend { class SessionAuthorizer; }
+namespace compositor { class Compositor; class DisplayBufferCompositorFactory; }
+namespace frontend { class SessionAuthorizer; class Session; }
 namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; }
 namespace options { class Option; }
@@ -146,6 +148,10 @@ public:
     /// Sets an override functor for creating the compositor.
     void override_the_compositor(Builder<compositor::Compositor> const& compositor_builder);
 
+    /// Sets an override functor for creating the per-display rendering code.
+    void override_the_display_buffer_compositor_factory(
+        Builder<compositor::DisplayBufferCompositorFactory> const& compositor_builder);
+
     /// Sets an override functor for creating the cursor listener.
     void override_the_cursor_listener(Builder<input::CursorListener> const& cursor_listener_builder);
 
@@ -214,6 +220,9 @@ public:
     /// \return the session authorizer.
     auto the_session_authorizer() const -> std::shared_ptr<frontend::SessionAuthorizer>;
 
+    /// \return the session coordinator.
+    auto the_session_coordinator() const -> std::shared_ptr<scene::SessionCoordinator>;
+
     /// \return the session listener.
     auto the_session_listener() const -> std::shared_ptr<scene::SessionListener>;
 
@@ -222,8 +231,29 @@ public:
 
     /// \return the surface configurator.
     auto the_surface_configurator() const -> std::shared_ptr<scene::SurfaceConfigurator>;
+
+    /// \return the surface coordinator.
+    auto the_surface_coordinator() const -> std::shared_ptr<scene::SurfaceCoordinator>;
 /** @} */
 
+/** @name Client side support
+ * These facilitate use of the server through the client API.
+ * They should be called while the server is running (i.e. run() has been called and
+ * not exited) otherwise they throw a std::logic_error.
+ * @{ */
+    using ConnectHandler = std::function<void(std::shared_ptr<frontend::Session> const& session)>;
+
+    /// Get a file descriptor that can be used to connect a client
+    /// It can be passed to another process, or used directly with mir_connect()
+    /// using the format "fd://%d".
+    auto open_client_socket() -> Fd;
+
+    /// Get a file descriptor that can be used to connect a client
+    /// It can be passed to another process, or used directly with mir_connect()
+    /// using the format "fd://%d".
+    /// \param connect_handler callback to be invoked when the client connects
+    auto open_client_socket(ConnectHandler const& connect_handler) -> Fd;
+/** @} */
 private:
     void apply_settings() const;
     struct ServerConfiguration;
