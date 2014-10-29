@@ -77,3 +77,8 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_packa
 void mgm::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 {
 }
+
+void mgm::IpcOperations::platform_operation(
+    mg::PlatformIPCPackage&, unsigned int const, mg::PlatformIPCPackage const&)
+{
+}
