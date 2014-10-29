@@ -50,6 +50,8 @@
 #include "mir/frontend/event_sink.h"
 
 #include "gmock_set_arg.h"
+#include <boost/exception/errinfo_errno.hpp>
+#include <boost/throw_exception.hpp>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -915,4 +917,29 @@ TEST_F(SessionMediator, drm_auth_magic_calls_platform_operation_abstraction)
     ASSERT_THAT(request.ipc_data.size(), Eq(1));
     EXPECT_THAT(request.ipc_data[0], Eq(magic));
     EXPECT_THAT(drm_response.status_code(), Eq(test_response));
+}
+
+TEST_F(SessionMediator, drm_auth_magic_sets_status_code_on_error)
+{
+    using namespace testing;
+
+    mp::ConnectParameters connect_parameters;
+    mp::Connection connection;
+
+    unsigned int const drm_magic{0x10111213};
+    int const error_number{667};
+
+    EXPECT_CALL(mock_ipc_operations, platform_operation(_, 3u, _))
+        .WillOnce(Throw(::boost::enable_error_info(std::exception())
+            << boost::errinfo_errno(error_number)));
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+
+    mp::DRMMagic magic;
+    mp::DRMAuthMagicStatus status;
+    magic.set_magic(drm_magic);
+
+    mediator.drm_auth_magic(nullptr, &magic, &status, null_callback.get());
+
+    EXPECT_EQ(error_number, status.status_code());
 }
