@@ -18,6 +18,7 @@
 
 #include "mir/server.h"
 
+#include "mir/fd.h"
 #include "mir/frontend/connector.h"
 #include "mir/options/default_configuration.h"
 #include "mir/default_server_configuration.h"

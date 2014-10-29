@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/headless_test.h"
 
+#include "mir/fd.h"
 #include "mir/main_loop.h"
 
 #include <boost/throw_exception.hpp>
