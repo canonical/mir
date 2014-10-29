@@ -590,16 +590,15 @@ void mf::SessionMediator::drm_auth_magic(
         report->session_drm_auth_magic_called(session->name());
     }
 
-    auto const magic = static_cast<unsigned int>(request->magic());
-    //FIXME: don't dynamic cast like this drm_auth_magic should be a part of PlatformIpcOperations 
-    auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(graphics_platform);
-    if (!authenticator)
-        BOOST_THROW_EXCEPTION(std::logic_error("drm_auth_magic request not supported by the active platform"));
-
+    //TODO: the opcode should be provided as part of the request, and should be opaque to the server code
+    unsigned int const made_up_opcode{3};
+    mg::PlatformIPCPackage platform_request{{static_cast<int32_t>(request->magic())},{}};
+    mg::PlatformIPCPackage platform_response{{},{}};
     try
     {
-        authenticator->drm_auth_magic(magic);
-        response->set_status_code(0);
+        ipc_operations->platform_operation(platform_response, made_up_opcode, platform_request);
+        if (platform_request.ipc_data.size() > 0) 
+            response->set_status_code(platform_request.ipc_data[0]);
     }
     catch (std::exception const& e)
     {
