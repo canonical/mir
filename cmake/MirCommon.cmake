@@ -52,13 +52,13 @@ function (mir_discover_tests EXECUTABLE)
     message(STATUS "Kernel version detected: " ${KERNEL_VERSION})
     # Some tests expect kernel version 3.11 and up
     if (${KERNEL_VERSION} VERSION_LESS "3.11")
-        set(EXCLUDED_TESTS "--gtest_filter=-*DeathTest.*:AnonymousShmFile.*:MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer")
+        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}
+            "--gtest_filter=-*DeathTest.*:AnonymousShmFile.*:MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer")
     else()
-        set(EXCLUDED_TESTS "--gtest_filter=-*DeathTest.*")
+        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}
+            "--gtest_filter=-*DeathTest.*")
     endif()
-    message(STATUS "Excluded tests: " ${EXCLUDED_TESTS})
 
-    add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} $(EXCLUDED_TESTS))
     add_test(${EXECUTABLE}_death_tests ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} "--gtest_filter=*DeathTest.*")
     if (${ARGC} GREATER 1)
       set_property(TEST ${EXECUTABLE} PROPERTY ENVIRONMENT ${ARGN})
