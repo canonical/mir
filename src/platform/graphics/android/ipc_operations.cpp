@@ -58,3 +58,9 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::IpcOperations::connection_ipc_packa
 {
     return std::make_shared<mg::PlatformIPCPackage>();
 }
+
+void mga::IpcOperations::platform_operation(
+    mg::PlatformIPCPackage& response, unsigned int const opcode, mg::PlatformIPCPackage const& package)
+{
+    (void) response; (void) opcode; (void) package;
+}

@@ -130,6 +130,11 @@ struct StubBufferPacker : public mg::PlatformIpcOperations
     {
         return last_fd;
     }
+
+    void platform_operation(
+        mg::PlatformIPCPackage&, unsigned int const, mg::PlatformIPCPackage const&) override
+    {
+    }
 private:
     mir::Fd mutable last_fd;
 };

@@ -124,6 +124,7 @@ struct MockBufferPacker : public mg::PlatformIpcOperations
     MOCK_CONST_METHOD2(unpack_buffer,
         void(mg::BufferIpcMessage&, mg::Buffer const&));
     MOCK_METHOD0(connection_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
+    MOCK_METHOD3(platform_operation, void(mg::PlatformIPCPackage&, unsigned int const, mg::PlatformIPCPackage const&));
 };
 
 class StubbedSession : public mtd::StubSession
@@ -899,20 +900,20 @@ TEST_F(SessionMediator, drm_auth_magic_calls_platform_operation_abstraction)
 
     int magic{0x3248};
     int test_response{4};
-    mg::PlatformIPCMessage response {{test_response}, {}};
-    mg::PlatformIPCMessage request;
+    mg::PlatformIPCPackage response{{test_response}, {}};
+    mg::PlatformIPCPackage request;
     drm_request.set_magic(magic);
 
-    EXPECT_CALL(mock_ipc_operations, platform_operation(0u, _))
+    EXPECT_CALL(mock_ipc_operations, platform_operation(_, 0u, _))
         .Times(1)
-        .WillOnce(SaveArg<1>(&request));
-        .WillOnce(Return(response));
+        .WillOnce(SaveArg<2>(&request))
+        .WillOnce(SetArg<0>(response));
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.drm_auth_magic(nullptr, &drm_request, &drm_response, null_callback.get());
     mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
 
     ASSERT_THAT(request.ipc_data.size(), Eq(1));
-    EXPECT_THAT(request.ipc_data(0), Eq(magic));
+    EXPECT_THAT(request.ipc_data[0], Eq(magic));
     EXPECT_THAT(drm_response.status_code(), Eq(test_response));
 }
