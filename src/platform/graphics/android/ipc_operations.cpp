@@ -21,6 +21,8 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/android/android_native_buffer.h"
 #include "ipc_operations.h"
+#include <stdexcept>
+#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
@@ -60,7 +62,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::IpcOperations::connection_ipc_packa
 }
 
 void mga::IpcOperations::platform_operation(
-    mg::PlatformIPCPackage& response, unsigned int const opcode, mg::PlatformIPCPackage const& package)
+    mg::PlatformIPCPackage&, unsigned int const, mg::PlatformIPCPackage const&)
 {
-    (void) response; (void) opcode; (void) package;
+    BOOST_THROW_EXCEPTION(std::invalid_argument("android platform does not support any platform operations"));
 }
