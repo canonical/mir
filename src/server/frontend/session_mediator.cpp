@@ -597,8 +597,8 @@ void mf::SessionMediator::drm_auth_magic(
     try
     {
         ipc_operations->platform_operation(platform_response, made_up_opcode, platform_request);
-        if (platform_request.ipc_data.size() > 0) 
-            response->set_status_code(platform_request.ipc_data[0]);
+        if (platform_response.ipc_data.size() > 0) 
+            response->set_status_code(platform_response.ipc_data[0]);
     }
     catch (std::exception const& e)
     {

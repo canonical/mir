@@ -904,10 +904,9 @@ TEST_F(SessionMediator, drm_auth_magic_calls_platform_operation_abstraction)
     mg::PlatformIPCPackage request;
     drm_request.set_magic(magic);
 
-    EXPECT_CALL(mock_ipc_operations, platform_operation(_, 0u, _))
+    EXPECT_CALL(mock_ipc_operations, platform_operation(_, 3u, _))
         .Times(1)
-        .WillOnce(SaveArg<2>(&request))
-        .WillOnce(SetArg<0>(response));
+        .WillOnce(DoAll(SaveArg<2>(&request), SetArg<0>(response)));
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.drm_auth_magic(nullptr, &drm_request, &drm_response, null_callback.get());
