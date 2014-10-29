@@ -148,14 +148,6 @@ void mf::SessionMediator::advance_buffer(
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
     auto client_buffer = surface_tracker.last_buffer(surf_id);
-    if (client_buffer)
-    {
-        //TODO: once we are doing an exchange_buffer, we should use the request buffer
-        static mir::protobuf::Buffer dummy_raw_msg;
-        mfd::ProtobufBufferPacker dummy_msg{&dummy_raw_msg};
-        ipc_operations->unpack_buffer(dummy_msg, *client_buffer);
-    }
-
     surface.swap_buffers(
         client_buffer, 
         [this, surf_id, complete](mg::Buffer* new_buffer)
@@ -267,6 +259,9 @@ void mf::SessionMediator::exchange_buffer(
 {
     mf::SurfaceId const surface_id{request->id().value()};
     mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
+
+    mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
+    ipc_operations->unpack_buffer(request_msg, *surface_tracker.last_buffer(surface_id));
 
     auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
     auto const session = weak_session.lock();

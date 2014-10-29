@@ -82,7 +82,8 @@ private:
     template<class MessageType>
     void receive_any_file_descriptors_for(MessageType* response);
     void send_message(mir::protobuf::wire::Invocation const& body,
-                      mir::protobuf::wire::Invocation const& invocation);
+                      mir::protobuf::wire::Invocation const& invocation,
+                      std::vector<mir::Fd>& fds);
 
     void read_message();
     void process_event_sequence(std::string const& event);
