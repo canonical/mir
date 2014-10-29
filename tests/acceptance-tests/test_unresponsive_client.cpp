@@ -120,9 +120,7 @@ TEST_F(UnresponsiveClient, does_not_hang_server)
             });
     };
 
-    auto client_runner = std::async(
-        std::launch::async,
-        [&]{ run_in_client(client_code); });
+    auto client_runner = std::async(std::launch::async, [&]{ run_in_client(client_code); });
 
     if (is_test_process())
     {
