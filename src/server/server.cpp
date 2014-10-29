@@ -79,8 +79,7 @@ struct mir::Server::Self
 {
     bool exit_status{false};
     std::weak_ptr<options::Option> options;
-    std::weak_ptr<ServerConfiguration> server_config;
-    std::shared_ptr<ServerConfiguration> hidden_server_config;
+    std::shared_ptr<ServerConfiguration> server_config;
 
     std::function<void()> init_callback{[]{}};
     int argc{0};
@@ -214,7 +213,7 @@ std::shared_ptr<mo::DefaultConfiguration> configuration_options(
 template<typename ConfigPtr>
 void verify_setting_allowed(ConfigPtr const& initialized)
 {
-    if (initialized.lock())
+    if (initialized)
        BOOST_THROW_EXCEPTION(std::logic_error("Cannot amend configuration after initialization starts"));
 }
 }
@@ -233,14 +232,14 @@ void mir::Server::Self::set_add_configuration_options(
 
 void mir::Server::set_command_line(int argc, char const* argv[])
 {
-    verify_setting_allowed(self->server_config);
+    verify_setting_allowed(self->server_config);    
     self->argc = argc;
     self->argv = argv;
 }
 
 void mir::Server::add_init_callback(std::function<void()> const& init_callback)
 {
-    verify_setting_allowed(self->server_config);
+    verify_setting_allowed(self->server_config);    
     auto const& existing = self->init_callback;
 
     auto const updated = [=]
@@ -259,20 +258,20 @@ auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 
 void mir::Server::set_exception_handler(std::function<void()> const& exception_handler)
 {
-    verify_setting_allowed(self->server_config);
+    verify_setting_allowed(self->server_config);    
     self->exception_handler = exception_handler;
 }
 
 void mir::Server::apply_settings() const
 {
-    if (self->server_config.lock()) return;
+    if (self->server_config) return;
 
     auto const options = configuration_options(self->argc, self->argv, self->command_line_hander);
     self->add_configuration_options(*options);
 
-    self->hidden_server_config = std::make_shared<ServerConfiguration>(options, self);
-    self->server_config = self->hidden_server_config;
-    self->options = self->hidden_server_config->the_options();
+    auto const config = std::make_shared<ServerConfiguration>(options, self);
+    self->server_config = config;
+    self->options = config->the_options();
 }
 
 void mir::Server::run()
@@ -280,14 +279,14 @@ try
 {
     apply_settings();
 
-    run_mir(*self->server_config.lock(), [&](DisplayServer&) { self->init_callback(); });
+    run_mir(*self->server_config, [&](DisplayServer&) { self->init_callback(); });
 
     self->exit_status = true;
     self->server_config.reset();
 }
 catch (...)
 {
-    self->server_config.reset();
+    self->server_config = nullptr;
 
     if (self->exception_handler)
         self->exception_handler();
@@ -308,7 +307,7 @@ bool mir::Server::exited_normally()
 
 auto mir::Server::open_client_socket() -> Fd
 {
-    if (auto const config = self->server_config.lock())
+    if (auto const config = self->server_config)
         return Fd{config->the_connector()->client_socket_fd()};
 
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
@@ -316,7 +315,7 @@ auto mir::Server::open_client_socket() -> Fd
 
 auto mir::Server::open_prompt_socket() -> Fd
 {
-    if (auto const config = self->server_config.lock())
+    if (auto const config = self->server_config)
         return Fd{config->the_prompt_connector()->client_socket_fd()};
 
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
@@ -324,17 +323,17 @@ auto mir::Server::open_prompt_socket() -> Fd
 
 auto mir::Server::open_client_socket(ConnectHandler const& connect_handler) -> Fd
 {
-    if (auto const config = self->server_config.lock())
+    if (auto const config = self->server_config)
         return Fd{config->the_connector()->client_socket_fd(connect_handler)};
 
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
 #define MIR_SERVER_ACCESSOR(name)\
-auto mir::Server::name() const -> decltype(self->server_config.lock()->name())\
+auto mir::Server::name() const -> decltype(self->server_config->name())\
 {\
     apply_settings();\
-    return self->server_config.lock()->name();\
+    return self->server_config->name();\
 }
 
 FOREACH_ACCESSOR(MIR_SERVER_ACCESSOR)
