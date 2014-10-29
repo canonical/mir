@@ -316,9 +316,8 @@ int main (int argc, char **argv)
         {
             static char cmd_line[1024] = "";
 
-            if (!kernel_supports_O_TMPFILE &&
-                ((*test == "AnonymousShmFile.*") ||
-                 (*test == "MesaBufferAllocatorTest.*")))
+            // Don't run AnonymousShmFile.* tests on older kernels
+            if (!kernel_supports_O_TMPFILE && *test == "AnonymousShmFile.*")
             	continue;
 
             snprintf(
@@ -330,7 +329,9 @@ int main (int argc, char **argv)
                 test_suite.c_str(),
                 elide_string_left(*test, output_width/2).c_str(),
                 config.executable,
-                test->c_str());
+                // Don't run MesaBufferAllocatorTest.{software_buffers_dont_bypass|creates_software_rendering_buffer} tests on older kernels
+                (*test != "MesaBufferAllocatorTest.*") ? test->c_str() :
+                "MesaBufferAllocatorTest.*:-MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer");
 
             if (testfilecmake.good())
             {
