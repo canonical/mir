@@ -105,6 +105,7 @@ void mtf::InterprocessClientServerTest::TearDown()
     if (server_process_id == getpid())
     {
         shutdown_sync.wait_for_signal_ready_for();
+        stop_server();
     }
 
     if (test_process_id != getpid()) return;
@@ -113,7 +114,6 @@ void mtf::InterprocessClientServerTest::TearDown()
 
     if (server_process)
     {
-        server_process->terminate();
         Result result = server_process->wait_for_termination();
         server_process.reset();
         EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
