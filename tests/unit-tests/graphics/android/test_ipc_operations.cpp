@@ -35,6 +35,7 @@ TEST_F(IpcOperations, test_ipc_data_packed_correctly_for_full_ipc)
         {2,4,8,16,32};
         {fileno(tmpfile()), fileno(tmpfile())}
     };
+
     EXPECT_THROW({
         ipc_operations.platform_operation(0u, package);
     }, std::invalid_argument);

@@ -891,3 +891,28 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
     buffer_request.mutable_buffer()->set_buffer_id(exchanged_buffer.buffer_id());
     buffer_request.mutable_buffer()->clear_fd();
 }
+
+//FIXME: we have an platform specific request in the protocol!
+TEST_F(SessionMediator, drm_auth_magic_calls_platform_operation_abstraction)
+{
+    using namespace testing;
+
+    int magic{0x3248};
+    int test_response{4};
+    mg::PlatformIPCMessage response {{test_response}, {}};
+    mg::PlatformIPCMessage request;
+    drm_request.set_magic(magic);
+
+    EXPECT_CALL(mock_ipc_operations, platform_operation(0u, _))
+        .Times(1)
+        .WillOnce(SaveArg<1>(&request));
+        .WillOnce(Return(response));
+
+    mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
+    mediator.drm_auth_magic(nullptr, &drm_request, &drm_response, null_callback.get());
+    mediator.disconnect(nullptr, nullptr, nullptr, null_callback.get());
+
+    ASSERT_THAT(request.ipc_data.size(), Eq(1));
+    EXPECT_THAT(request.ipc_data(0), Eq(magic));
+    EXPECT_THAT(drm_response.status_code(), Eq(test_response));
+}
