@@ -556,5 +556,7 @@ void MirSurface::request_and_wait_for_configure(MirSurfaceAttrib a, int value)
 
 MirOrientation MirSurface::get_orientation() const
 {
+    std::lock_guard<decltype(mutex)> lock(mutex);
+
     return orientation;
 }

@@ -19,8 +19,6 @@
 #ifndef MIR_SERVER_H_
 #define MIR_SERVER_H_
 
-#include "mir/fd.h"
-
 #include <functional>
 #include <memory>
 
@@ -43,6 +41,7 @@ class SessionCoordinator;
 class SurfaceCoordinator;
 }
 
+class Fd;
 class MainLoop;
 class ServerStatusListener;
 
