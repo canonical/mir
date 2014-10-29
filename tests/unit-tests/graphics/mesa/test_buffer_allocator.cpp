@@ -37,16 +37,6 @@
 
 #include <gbm.h>
 
-// TODO: To be removed when kernel support for O_TMPFILE (>= 3.11) is more prevalent
-#define CHECK_FLAG_AND_SKIP()                                  \
-    {                                                          \
-        auto value = getenv("MIR_SKIP_TESTS_USING_O_TMPFILE"); \
-        if (value != NULL && !strncmp(value, "true", 4))       \
-        {                                                      \
-           return;                                             \
-        }                                                      \
-    }
-
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
@@ -131,8 +121,6 @@ TEST_F(MesaBufferAllocatorTest, small_buffers_dont_bypass)
 
 TEST_F(MesaBufferAllocatorTest, software_buffers_dont_bypass)
 {
-    CHECK_FLAG_AND_SKIP();
-
     using namespace testing;
 
     const mg::BufferProperties properties(geom::Size{1920, 1200},
@@ -201,8 +189,6 @@ TEST_F(MesaBufferAllocatorTest, creates_hardware_rendering_buffer)
 
 TEST_F(MesaBufferAllocatorTest, creates_software_rendering_buffer)
 {
-    CHECK_FLAG_AND_SKIP();
-
     using namespace testing;
 
     mg::BufferProperties properties{size, pf, mg::BufferUsage::software};

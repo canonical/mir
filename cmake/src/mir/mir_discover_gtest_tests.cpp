@@ -16,6 +16,11 @@
 #include <getopt.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#ifndef _GNU_SOURCE
+// Needed for O_TMPFILE
+#define _GNU_SOURCE
+#endif
+#include <fcntl.h>
 
 using namespace std;
 
@@ -302,9 +307,20 @@ int main (int argc, char **argv)
         {
             testfilecmake << "SET( ENV{"<<env_pair.first<<"} \""<<env_pair.second<<"\" )"<<std::endl;
         }
+
+        int ret = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
+        bool kernel_supports_O_TMPFILE = (ret != -1);
+        if (kernel_supports_O_TMPFILE) close(ret);
+
         for (auto test = tests.begin(); test != tests.end(); ++ test)
         {
             static char cmd_line[1024] = "";
+
+            if (!kernel_supports_O_TMPFILE &&
+                ((*test == "AnonymousShmFile.*") ||
+                 (*test == "MesaBufferAllocatorTest.*")))
+            	continue;
+
             snprintf(
                 cmd_line,
                 sizeof(cmd_line),
