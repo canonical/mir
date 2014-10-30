@@ -21,6 +21,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/exception/errinfo_errno.hpp>
 #include <stdexcept>
 
 #include <vector>
@@ -37,10 +38,18 @@ namespace
 
 mir::Fd create_anonymous_file(size_t size)
 {
-    mir::Fd fd = mir::Fd{open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU)};
+    auto const raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
+    if (raw_fd == -1)
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(
+            std::runtime_error("Failed to open temporary file"))
+               << boost::errinfo_errno(errno));
 
-    if (ftruncate(fd, size) < 0)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to resize temporary file"));
+    mir::Fd fd = mir::Fd{raw_fd};
+
+    if (ftruncate(fd, size) == -1)
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(
+    		std::runtime_error("Failed to resize temporary file"))
+                << boost::errinfo_errno(errno));
 
     return fd;
 }
