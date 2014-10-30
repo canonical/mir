@@ -54,6 +54,9 @@ public:
     /// \return a connection string for a new client to connect to the server
     auto new_connection() -> std::string;
 
+    /// \return a connection string for a client to connect to the server
+    auto connection(mir::Fd fd) -> std::string;
+
     mir::Server server;
 
 private:
@@ -66,6 +69,8 @@ private:
     std::condition_variable started;
     bool server_running{false};
 };
+
+std::string const& test_socket_file();
 }
 
 #endif /* MIR_TEST_FRAMEWORK_HEADLESS_TEST_H_ */
