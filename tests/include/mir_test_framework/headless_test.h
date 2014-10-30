@@ -51,6 +51,9 @@ public:
     /// Stops the server and joins thread
     void stop_server();
 
+    /// Wait for the server to exit and joins thread
+    void wait_for_server_exit();
+
     /// \return a connection string for a new client to connect to the server
     auto new_connection() -> std::string;
 

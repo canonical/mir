@@ -18,7 +18,7 @@
 
 #include "mir/server.h"
 
-#include "mir_test_framework/headless_in_process_server.h"
+#include "mir_test_framework/headless_test.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -28,13 +28,24 @@
 namespace mtf = mir_test_framework;
 namespace
 {
-struct TerminateSignal : mtf::HeadlessInProcessServer
+struct TerminateSignal : mtf::HeadlessTest
 {
     MOCK_CONST_METHOD1(callback, void(int));
 
     void SetUp() override
     {
-        server.set_terminator([&](int signal) { callback(signal); });
+        server.set_terminator([&](int signal)
+            {
+                callback(signal);
+                server.stop();
+            });
+
+        start_server();
+    }
+
+    void TearDown() override
+    {
+        wait_for_server_exit();
     }
 };
 }
@@ -42,6 +53,5 @@ struct TerminateSignal : mtf::HeadlessInProcessServer
 TEST_F(TerminateSignal, handler_is_called_for_SIGTERM)
 {
     EXPECT_CALL(*this, callback(SIGTERM));
-
     kill(getpid(), SIGTERM);
 }

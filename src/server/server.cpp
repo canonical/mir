@@ -85,6 +85,7 @@ struct mir::Server::Self
     int argc{0};
     char const** argv{nullptr};
     std::function<void()> exception_handler{};
+    Terminator terminator{};
 
     std::function<void(int argc, char const* const* argv)> command_line_hander{};
 
@@ -262,9 +263,10 @@ void mir::Server::set_exception_handler(std::function<void()> const& exception_h
     self->exception_handler = exception_handler;
 }
 
-void mir::Server::set_terminator(Terminator const& /*terminator*/)
+void mir::Server::set_terminator(Terminator const& terminator)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented"));
+    verify_setting_allowed(self->server_config);
+    self->terminator = terminator;
 }
 
 void mir::Server::add_emergency_cleanup(EmergencyCleanupHandler const& /*handler*/)
@@ -289,7 +291,10 @@ try
 {
     apply_settings();
 
-    run_mir(*self->server_config, [&](DisplayServer&) { self->init_callback(); });
+    run_mir(
+        *self->server_config,
+        [&](DisplayServer&) { self->init_callback(); },
+        self->terminator);
 
     self->exit_status = true;
     self->server_config.reset();
