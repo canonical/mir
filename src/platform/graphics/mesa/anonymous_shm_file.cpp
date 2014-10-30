@@ -48,7 +48,7 @@ mir::Fd create_anonymous_file(size_t size)
 
     if (ftruncate(fd, size) == -1)
         BOOST_THROW_EXCEPTION(boost::enable_error_info(
-    		std::runtime_error("Failed to resize temporary file"))
+            std::runtime_error("Failed to resize temporary file"))
                 << boost::errinfo_errno(errno));
 
     return fd;
