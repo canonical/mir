@@ -76,7 +76,7 @@ b2ec497c6bec1b3a67c991f31cc7b7c51050ecbb  include/server/mir/input/input_recepti
 036f3967757873751fcacaa768ca11a52001c225  include/server/mir/input/touch_visualizer.h
 964069b241f1e8211386bb8735ee0f752b666949  include/server/mir/main_loop.h
 edd5a0a6be0be57ef64c5af89fc5a65dc558648c  include/server/mir/report_exception.h
-8192727cf5fa0b2b5798b2211c2c8a4ad65c9f60  include/server/mir/run_mir.h
+4c5137391fd5b02510fec9cf1a218c0d6cd47e2b  include/server/mir/run_mir.h
 c9de8b851fb22092a9a486d71cd998b4cb8392e1  include/server/mir/scene/coordinate_translator.h
 71d9082681aa39d652c88ad3b54665695b521d24  include/server/mir/scene/depth_id.h
 4e4e563ab429a13ddca7eead16f2b6cefb8edff6  include/server/mir/scene/null_surface_observer.h
