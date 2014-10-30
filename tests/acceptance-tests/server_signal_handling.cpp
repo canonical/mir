@@ -55,3 +55,9 @@ TEST_F(TerminateSignal, handler_is_called_for_SIGTERM)
     EXPECT_CALL(*this, callback(SIGTERM));
     kill(getpid(), SIGTERM);
 }
+
+TEST_F(TerminateSignal, handler_is_called_for_SIGINT)
+{
+    EXPECT_CALL(*this, callback(SIGINT));
+    kill(getpid(), SIGINT);
+}
