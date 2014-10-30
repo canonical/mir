@@ -39,7 +39,7 @@ typedef struct MirMesaEGLNativeSurface MirMesaEGLNativeSurface;
 struct MirMesaEGLNativeDisplay
 {
     int (*display_get_platform)(MirMesaEGLNativeDisplay* display,
-                                 MirPlatformPackage* package);
+                                MirPlatformPackage* package);
     void *context;
 };
 
@@ -47,9 +47,9 @@ struct MirMesaEGLNativeSurface
 {
     int (*surface_set_swapinterval)(MirMesaEGLNativeSurface* surface, int interval);
     int (*surface_advance_buffer)(MirMesaEGLNativeSurface* surface,
-                                   MirBufferPackage* buffer_package);
+                                  MirBufferPackage* buffer_package);
     int (*surface_get_parameters)(MirMesaEGLNativeSurface* surface,
-                                   MirSurfaceParameters* surface_parameters);
+                                  MirSurfaceParameters* surface_parameters);
 };
 
 typedef int (*MirMesaEGLNativeDisplayIsValidFunc)(MirMesaEGLNativeDisplay* display);
