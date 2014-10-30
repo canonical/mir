@@ -75,7 +75,13 @@ std::shared_ptr<mir::graphics::NativeBuffer> mcla::Buffer::native_buffer_handle(
 
 void mcla::Buffer::update_from(MirBufferPackage const& update_package)
 {
-    (void) update_package;
+    if ((update_package.data_items != 0) && 
+        (update_package.fd_items != 0) && 
+        (update_package.data[0] == static_cast<int>(mga::BufferFlag::fenced)))
+    {
+        auto fence_fd = update_package.fd[0];
+        native_buffer->update_usage(fence_fd, mga::BufferAccess::read);
+    }
 }
 
 void mcla::Buffer::fill_update_msg(MirBufferPackage& message)
