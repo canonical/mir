@@ -19,6 +19,7 @@
 #include "mir/server.h"
 
 #include "mir_test_framework/interprocess_client_server_test.h"
+#include "mir_test_framework/cross_process_sync.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -28,6 +29,7 @@
 #include <chrono>
 
 namespace mtf = mir_test_framework;
+
 namespace
 {
 struct TerminateSignal : mtf::InterprocessClientServerTest
@@ -66,4 +68,30 @@ TEST_F(TerminateSignal, handler_is_called_for_SIGINT)
             kill(getpid(), SIGINT);
             wait_for_server_exit();
         });
+}
+
+namespace
+{
+struct AbortSignal : mtf::InterprocessClientServerTest
+{
+    std::chrono::milliseconds const timeout{200};
+
+    mtf::CrossProcessSync handler1;
+
+    void SetUp() override
+    {
+        init_server([&]
+           {
+            server.add_emergency_cleanup([&]
+                { handler1.signal_ready(); });
+           });
+    }
+};
+}
+
+TEST_F(AbortSignal, handler_is_called_for_SIGABRT)
+{
+    run_in_server([&]{ kill(getpid(), SIGABRT); });
+
+    handler1.wait_for_signal_ready_for(timeout);
 }

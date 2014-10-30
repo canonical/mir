@@ -18,6 +18,7 @@
 
 #include "mir/server.h"
 
+#include "mir/emergency_cleanup.h"
 #include "mir/fd.h"
 #include "mir/frontend/connector.h"
 #include "mir/options/default_configuration.h"
@@ -86,6 +87,7 @@ struct mir::Server::Self
     char const** argv{nullptr};
     std::function<void()> exception_handler{};
     Terminator terminator{};
+    EmergencyCleanupHandler emergency_cleanup_handler;
 
     std::function<void(int argc, char const* const* argv)> command_line_hander{};
 
@@ -269,9 +271,10 @@ void mir::Server::set_terminator(Terminator const& terminator)
     self->terminator = terminator;
 }
 
-void mir::Server::add_emergency_cleanup(EmergencyCleanupHandler const& /*handler*/)
+void mir::Server::add_emergency_cleanup(EmergencyCleanupHandler const& handler)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("Not implemented"));
+    verify_setting_allowed(self->server_config);
+    self->emergency_cleanup_handler = handler;
 }
 
 void mir::Server::apply_settings() const
@@ -290,6 +293,11 @@ void mir::Server::run()
 try
 {
     apply_settings();
+
+    auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
+
+    if (self->emergency_cleanup_handler)
+        emergency_cleanup->add(self->emergency_cleanup_handler);
 
     run_mir(
         *self->server_config,
