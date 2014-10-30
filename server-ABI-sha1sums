@@ -76,7 +76,7 @@ b2ec497c6bec1b3a67c991f31cc7b7c51050ecbb  include/server/mir/input/input_recepti
 036f3967757873751fcacaa768ca11a52001c225  include/server/mir/input/touch_visualizer.h
 964069b241f1e8211386bb8735ee0f752b666949  include/server/mir/main_loop.h
 edd5a0a6be0be57ef64c5af89fc5a65dc558648c  include/server/mir/report_exception.h
-4c5137391fd5b02510fec9cf1a218c0d6cd47e2b  include/server/mir/run_mir.h
+d75dffd05bf9dd829a413cf82f43b467c6c7eea0  include/server/mir/run_mir.h
 c9de8b851fb22092a9a486d71cd998b4cb8392e1  include/server/mir/scene/coordinate_translator.h
 71d9082681aa39d652c88ad3b54665695b521d24  include/server/mir/scene/depth_id.h
 4e4e563ab429a13ddca7eead16f2b6cefb8edff6  include/server/mir/scene/null_surface_observer.h
@@ -98,7 +98,7 @@ dd8f054f786b9746d9e513f2656e931234b5283a  include/server/mir/scene/surface_creat
 993e9f458ffc4288d304413f3fa0b1dcc95a093d  include/server/mir/scene/surface_observer.h
 7ef3e99901168cda296d74d05a979f47bf9c3ff1  include/server/mir/server_action_queue.h
 8d83a51c278b8b71866d2178d9b6387c1f91a7d0  include/server/mir/server_configuration.h
-8404895136835ed3f14be6defa094d5872b99eee  include/server/mir/server.h
+d471b8bafa71bcded4d777ff54bc9213703a0a13  include/server/mir/server.h
 86098b500339bfccd07a9bed8298f75a68b18f5c  include/server/mir/server_status_listener.h
 860c04f32b60e680140148dc9dc2295de145b9c1  include/server/mir/shell/display_layout.h
 6a2107b01feae13060d5c305804906e53c52e0be  include/server/mir/shell/focus_controller.h
