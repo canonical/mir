@@ -18,46 +18,52 @@
 
 #include "mir/server.h"
 
-#include "mir_test_framework/headless_test.h"
+#include "mir_test_framework/interprocess_client_server_test.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include <csignal>
 
+#include <chrono>
+
 namespace mtf = mir_test_framework;
 namespace
 {
-struct TerminateSignal : mtf::HeadlessTest
+struct TerminateSignal : mtf::InterprocessClientServerTest
 {
     MOCK_CONST_METHOD1(callback, void(int));
 
     void SetUp() override
     {
-        server.set_terminator([&](int signal)
-            {
-                callback(signal);
-                server.stop();
-            });
-
-        start_server();
-    }
-
-    void TearDown() override
-    {
-        wait_for_server_exit();
+        init_server([&]
+           {
+            server.set_terminator([&](int signal)
+                {
+                    callback(signal);
+                    server.stop();
+                });
+           });
     }
 };
 }
 
 TEST_F(TerminateSignal, handler_is_called_for_SIGTERM)
 {
-    EXPECT_CALL(*this, callback(SIGTERM));
-    kill(getpid(), SIGTERM);
+    run_in_server([&]
+        {
+            EXPECT_CALL(*this, callback(SIGTERM));
+            kill(getpid(), SIGTERM);
+            wait_for_server_exit();
+        });
 }
 
 TEST_F(TerminateSignal, handler_is_called_for_SIGINT)
 {
-    EXPECT_CALL(*this, callback(SIGINT));
-    kill(getpid(), SIGINT);
+    run_in_server([&]
+        {
+            EXPECT_CALL(*this, callback(SIGINT));
+            kill(getpid(), SIGINT);
+            wait_for_server_exit();
+        });
 }
