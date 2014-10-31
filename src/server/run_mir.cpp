@@ -62,14 +62,6 @@ extern "C" void fatal_signal_cleanup(int sig)
 }
 }
 
-namespace mir
-{
-    void run_mir(
-    ServerConfiguration& config,
-    std::function<void(DisplayServer&)> init,
-    std::function<void(int)> const& terminator);
-}
-
 void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
 {
     run_mir(config, init, {});
