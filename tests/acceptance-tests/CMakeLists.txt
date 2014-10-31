@@ -14,6 +14,7 @@ set(
 
   server_configuration_wrapping.cpp
   server_signal_handling.cpp
+  server_command_line.cpp
   clients.cpp
   test_client_library.cpp
   test_client_library_old.cpp
