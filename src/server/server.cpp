@@ -57,6 +57,7 @@ namespace mo = mir::options;
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_composite_event_filter)\
     MACRO(the_display)\
+    MACRO(the_gl_config)\
     MACRO(the_graphics_platform)\
     MACRO(the_main_loop)\
     MACRO(the_prompt_session_listener)\

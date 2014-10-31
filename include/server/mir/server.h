@@ -208,6 +208,9 @@ public:
     /// \return the graphics display.
     auto the_display() const -> std::shared_ptr<graphics::Display>;
 
+    /// \return the GL config.
+    auto the_gl_config() const -> std::shared_ptr<graphics::GLConfig>;
+
     /// \return the graphics platform.
     auto the_graphics_platform() const -> std::shared_ptr<graphics::Platform>;
 
