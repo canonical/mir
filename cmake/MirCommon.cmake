@@ -43,7 +43,22 @@ endif(ENABLE_MEMCHECK_OPTION)
 
 function (mir_discover_tests EXECUTABLE)
   if(DISABLE_GTEST_TEST_DISCOVERY)
-    add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} "--gtest_filter=-*DeathTest.*")
+    execute_process(
+      COMMAND uname -r
+      OUTPUT_VARIABLE KERNEL_VERSION_FULL
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    string(REGEX MATCH "^[0-9]+[.][0-9]+" KERNEL_VERSION ${KERNEL_VERSION_FULL})
+    message(STATUS "Kernel version detected: " ${KERNEL_VERSION})
+    # Some tests expect kernel version 3.11 and up
+    if (${KERNEL_VERSION} VERSION_LESS "3.11")
+        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}
+            "--gtest_filter=-*DeathTest.*:AnonymousShmFile.*:MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer")
+    else()
+        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}
+            "--gtest_filter=-*DeathTest.*")
+    endif()
+
     add_test(${EXECUTABLE}_death_tests ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} "--gtest_filter=*DeathTest.*")
     if (${ARGC} GREATER 1)
       set_property(TEST ${EXECUTABLE} PROPERTY ENVIRONMENT ${ARGN})
