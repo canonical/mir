@@ -274,7 +274,19 @@ void mir::Server::set_terminator(Terminator const& terminator)
 void mir::Server::add_emergency_cleanup(EmergencyCleanupHandler const& handler)
 {
     verify_setting_allowed(self->server_config);
-    self->emergency_cleanup_handler = handler;
+
+    if (auto const& existing = self->emergency_cleanup_handler)
+    {
+        self->emergency_cleanup_handler = [=]
+            {
+                existing();
+                handler();
+            };
+    }
+    else
+    {
+        self->emergency_cleanup_handler = handler;
+    }
 }
 
 void mir::Server::apply_settings() const

@@ -88,3 +88,24 @@ TEST_P(Abort, cleanup_handler_is_called_for)
 
 INSTANTIATE_TEST_CASE_P(ServerSignal, Abort,
     ::testing::Values(SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS));
+
+TEST_F(ServerSignal, multiple_cleanup_handlers_are_called)
+{
+    const int multiple = 5;
+    expect_server_signalled(SIGABRT);
+
+    mtf::CrossProcessSync more_cleanup[multiple];
+
+    init_server([&]
+       {
+            for (auto& cleanup : more_cleanup)
+                server.add_emergency_cleanup([&] { cleanup.signal_ready(); });
+       });
+
+    run_in_server([&]{ kill(getpid(), SIGABRT); });
+
+    cleanup_done.wait_for_signal_ready_for(timeout);
+    for (auto& cleanup : more_cleanup)
+        cleanup.wait_for_signal_ready_for(timeout);
+}
+

@@ -36,7 +36,18 @@ mtf::InterprocessClientServerTest::~InterprocessClientServerTest()
 
 void mtf::InterprocessClientServerTest::init_server(std::function<void()> const& init_code)
 {
-    server_setup = init_code;
+    if (auto const& existing = server_setup)
+    {
+        server_setup = [=]
+            {
+                existing();
+                init_code();
+            };
+    }
+    else
+    {
+        server_setup = init_code;
+    }
 }
 
 void mtf::InterprocessClientServerTest::run_in_server(std::function<void()> const& exec_code)
