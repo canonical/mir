@@ -13,6 +13,7 @@ set(
   SOURCES
 
   server_configuration_wrapping.cpp
+  server_command_line.cpp
   clients.cpp
   test_client_library.cpp
   test_client_library_old.cpp

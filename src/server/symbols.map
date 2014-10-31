@@ -426,6 +426,7 @@ MIR_SERVER_27 {
     mir::Server::the_composite_event_filter*;
     mir::Server::the_cursor_listener*;
     mir::Server::the_display*;
+    mir::Server::the_gl_config*;
     mir::Server::the_graphics_platform*;
     mir::Server::the_main_loop*;
     mir::Server::the_prompt_session_listener*;

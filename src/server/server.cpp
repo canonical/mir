@@ -252,6 +252,14 @@ void mir::Server::add_init_callback(std::function<void()> const& init_callback)
     self->init_callback = updated;
 }
 
+void mir::Server::set_command_line_handler(
+    std::function<void(int argc, char const* const* argv)> const& command_line_hander)
+{
+    verify_setting_allowed(self->server_config);
+    self->command_line_hander = command_line_hander;
+}
+
+
 auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 {
     return self->options.lock();
