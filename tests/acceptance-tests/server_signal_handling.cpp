@@ -75,11 +75,16 @@ TEST_F(ServerSignal, terminate_handler_is_called_for_SIGINT)
         });
 }
 
-TEST_F(ServerSignal, cleanup_handler_is_called_for_SIGABRT)
-{
-    expect_server_signalled(SIGABRT);
+struct Abort : ServerSignal, ::testing::WithParamInterface<int> {};
 
-    run_in_server([&]{ kill(getpid(), SIGABRT); });
+TEST_P(Abort, cleanup_handler_is_called_for)
+{
+    expect_server_signalled(GetParam());
+
+    run_in_server([&]{ kill(getpid(), GetParam()); });
 
     cleanup_done.wait_for_signal_ready_for(timeout);
 }
+
+INSTANTIATE_TEST_CASE_P(ServerSignal, Abort,
+    ::testing::Values(SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS));
