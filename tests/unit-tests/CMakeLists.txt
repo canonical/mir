@@ -31,7 +31,7 @@ set(
   test_variable_length_array.cpp
   test_thread_name.cpp
   test_default_emergency_cleanup.cpp
-  test_basic_observers.cpp
+  test_thread_safe_list.cpp
   test_fatal.cpp
   test_fd.cpp
   test_shared_library_prober.cpp
