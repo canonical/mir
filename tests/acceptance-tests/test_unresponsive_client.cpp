@@ -64,6 +64,7 @@ TEST_F(UnresponsiveClient, does_not_hang_server)
     mt::CrossProcessAction server_send_events;
     mt::CrossProcessAction client_connect;
     mt::CrossProcessAction client_release;
+    mt::CrossProcessAction server_finish;
 
     SessionListener sessions;
 
@@ -74,18 +75,23 @@ TEST_F(UnresponsiveClient, does_not_hang_server)
          });
 
     run_in_server([&]
-       {
-            server_send_events.exec([&]
-                {
-                    for (int i = 0; i < 1000; ++i)
-                    {
-                        sessions.for_each(
-                            [i] (std::shared_ptr<ms::Session> const& session)
+        {
+            std::thread {
+                [&] {
+                    server_send_events.exec([&]
+                        {
+                            for (int i = 0; i < 1000; ++i)
                             {
-                                session->default_surface()->resize({i + 1, i + 1});
-                            });
-                    }
-                });
+                                sessions.for_each(
+                                    [i] (std::shared_ptr<ms::Session> const& session)
+                                    {
+                                        session->default_surface()->resize({i + 1, i + 1});
+                                    });
+                            }
+                        });
+                }}.detach();
+
+            server_finish.exec([]{});
         });
 
     auto const client_code = [&]
@@ -126,8 +132,16 @@ TEST_F(UnresponsiveClient, does_not_hang_server)
     {
         client_connect();
         kill(client_pid(), SIGSTOP);
-        server_send_events(std::chrono::seconds{10});
+        try 
+        { 
+            server_send_events(std::chrono::seconds{10});
+        }
+        catch(...)
+        { 
+            ADD_FAILURE() << "Server blocked while sending events";
+        }
         kill(client_pid(), SIGCONT);
         client_release();
+        server_finish();
     }
 }
