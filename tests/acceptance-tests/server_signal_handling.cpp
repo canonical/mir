@@ -91,6 +91,8 @@ struct AbortSignal : mtf::InterprocessClientServerTest
 
 TEST_F(AbortSignal, handler_is_called_for_SIGABRT)
 {
+    expect_server_signalled(SIGABRT);
+
     run_in_server([&]{ kill(getpid(), SIGABRT); });
 
     handler1.wait_for_signal_ready_for(timeout);

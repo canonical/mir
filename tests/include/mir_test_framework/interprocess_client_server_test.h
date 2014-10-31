@@ -44,6 +44,8 @@ public:
     // Convenient [test|server|client] identifier if adding debug messages
     auto process_type() const -> char const* { return process_tag; }
 
+    void expect_server_signalled(int signal);
+
 private:
 
     pid_t test_process_id{getpid()};
@@ -52,6 +54,8 @@ private:
     CrossProcessSync shutdown_sync;
     char const* process_tag = "test";
     std::function<void()> server_setup = []{};
+    bool server_signal_expected{false};
+    int expected_server_failure_signal{0};
 };
 }
 
