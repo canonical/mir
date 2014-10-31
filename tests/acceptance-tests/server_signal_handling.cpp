@@ -32,9 +32,11 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-struct TerminateSignal : mtf::InterprocessClientServerTest
+struct ServerSignal : mtf::InterprocessClientServerTest
 {
-    MOCK_CONST_METHOD1(callback, void(int));
+    std::chrono::milliseconds const timeout{200};
+    MOCK_CONST_METHOD1(terminate_handler, void(int));
+    mtf::CrossProcessSync cleanup_done;
 
     void SetUp() override
     {
@@ -42,58 +44,42 @@ struct TerminateSignal : mtf::InterprocessClientServerTest
            {
             server.set_terminator([&](int signal)
                 {
-                    callback(signal);
+                    terminate_handler(signal);
                     server.stop();
                 });
+
+            server.add_emergency_cleanup([&]
+                { cleanup_done.signal_ready(); });
            });
     }
 };
 }
 
-TEST_F(TerminateSignal, handler_is_called_for_SIGTERM)
+TEST_F(ServerSignal, terminate_handler_is_called_for_SIGTERM)
 {
     run_in_server([&]
         {
-            EXPECT_CALL(*this, callback(SIGTERM));
+            EXPECT_CALL(*this, terminate_handler(SIGTERM));
             kill(getpid(), SIGTERM);
             wait_for_server_exit();
         });
 }
 
-TEST_F(TerminateSignal, handler_is_called_for_SIGINT)
+TEST_F(ServerSignal, terminate_handler_is_called_for_SIGINT)
 {
     run_in_server([&]
         {
-            EXPECT_CALL(*this, callback(SIGINT));
+            EXPECT_CALL(*this, terminate_handler(SIGINT));
             kill(getpid(), SIGINT);
             wait_for_server_exit();
         });
 }
 
-namespace
-{
-struct AbortSignal : mtf::InterprocessClientServerTest
-{
-    std::chrono::milliseconds const timeout{200};
-
-    mtf::CrossProcessSync handler1;
-
-    void SetUp() override
-    {
-        init_server([&]
-           {
-            server.add_emergency_cleanup([&]
-                { handler1.signal_ready(); });
-           });
-    }
-};
-}
-
-TEST_F(AbortSignal, handler_is_called_for_SIGABRT)
+TEST_F(ServerSignal, cleanup_handler_is_called_for_SIGABRT)
 {
     expect_server_signalled(SIGABRT);
 
     run_in_server([&]{ kill(getpid(), SIGABRT); });
 
-    handler1.wait_for_signal_ready_for(timeout);
+    cleanup_done.wait_for_signal_ready_for(timeout);
 }
