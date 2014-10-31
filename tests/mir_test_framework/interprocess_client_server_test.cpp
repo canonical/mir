@@ -105,12 +105,6 @@ void mtf::InterprocessClientServerTest::run_in_client(std::function<void()> cons
     }
 }
 
-void mtf::InterprocessClientServerTest::expect_server_signalled(int signal)
-{
-    server_signal_expected = true;
-    expected_server_failure_signal = signal;
-}
-
 void mtf::InterprocessClientServerTest::TearDown()
 {
     if (server_process_id == getpid())
@@ -138,4 +132,10 @@ void mtf::InterprocessClientServerTest::TearDown()
             EXPECT_THAT(result.signal, Eq(expected_server_failure_signal));
         }
     }
+}
+
+void mtf::InterprocessClientServerTest::expect_server_signalled(int signal)
+{
+    server_signal_expected = true;
+    expected_server_failure_signal = signal;
 }
