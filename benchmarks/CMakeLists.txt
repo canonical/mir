@@ -11,4 +11,4 @@ add_subdirectory(cpu)
 add_subdirectory(memory)
 add_subdirectory(frame-uniformity)
 
-add_dependencies(benchmarks cpu_benchmarks memory_benchmarks frame_uniformity)
+add_dependencies(benchmarks cpu_benchmarks memory_benchmarks frame_uniformity_test_client)
