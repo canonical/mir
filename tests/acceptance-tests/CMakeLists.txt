@@ -21,7 +21,6 @@ set(
   test_command_line_handling.cpp
   test_custom_input_dispatcher.cpp
   test_client_surfaces.cpp
-  test_test_framework.cpp
   test_focus_selection.cpp
   test_server_shutdown.cpp
   test_client_focus_notification.cpp
