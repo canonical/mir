@@ -8,5 +8,5 @@ Description: Mir server library
 Version: @MIR_VERSION@
 Requires.private: mirclient
 Requires: mirplatform
-Libs: -L@LIBDIR@ -lmirserver
+Libs: -L@LIBDIR@ -lmirserver -lmirprotobuf
 Cflags: -I@INCLUDEDIR@
