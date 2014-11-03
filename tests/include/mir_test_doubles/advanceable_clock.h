@@ -38,7 +38,7 @@ public:
         return current_time;
     }
 
-    mir::time::Duration min_real_time_until(mir::time::Timestamp) const override
+    mir::time::Duration min_wait_until(mir::time::Timestamp) const override
     {
         return mir::time::Duration{0};
     }

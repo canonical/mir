@@ -45,7 +45,7 @@ public:
      * implementations), this will just be max(t - now(), 0).
      * However, fake clocks may return different durations.
      */
-    virtual Duration min_real_time_until(Timestamp t) const = 0;
+    virtual Duration min_wait_until(Timestamp t) const = 0;
 
 protected:
     Clock() = default;
