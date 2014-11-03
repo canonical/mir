@@ -434,6 +434,7 @@ MIR_SERVER_27 {
     mir::ServerStatusListener::started*;
     mir::Server::stop*;
     mir::Server::the_composite_event_filter*;
+    mir::Server::the_compositor*;
     mir::Server::the_cursor_listener*;
     mir::Server::the_display*;
     mir::Server::the_gl_config*;

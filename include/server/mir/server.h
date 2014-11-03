@@ -224,6 +224,9 @@ public:
  * These may be invoked by the functors that provide alternative implementations of
  * Mir subsystems.
  *  @{ */
+    /// \return the compositor.
+    auto the_compositor() const -> std::shared_ptr<compositor::Compositor>;
+
     /// \return the composite event filter.
     auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;
 
