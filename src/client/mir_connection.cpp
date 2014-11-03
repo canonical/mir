@@ -63,8 +63,6 @@ private:
     MirDisplayConfiguration* const config;
 };
 
-using LibrariesCache = std::map<std::string, std::shared_ptr<mir::SharedLibrary>>;
-
 std::mutex connection_guard;
 MirConnection* valid_connections{nullptr};
 }

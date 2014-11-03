@@ -99,10 +99,16 @@ void mtf::InterprocessClientServerTest::run_in_client(std::function<void()> cons
     }
     else
     {
+        client_process_id = pid;
         auto const client_process = std::make_shared<Process>(pid);
         Result result = client_process->wait_for_termination();
         EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
     }
+}
+
+bool mtf::InterprocessClientServerTest::is_test_process() const
+{
+    return test_process_id == getpid();
 }
 
 void mtf::InterprocessClientServerTest::TearDown()
