@@ -437,6 +437,7 @@ MIR_SERVER_27 {
     mir::Server::the_compositor*;
     mir::Server::the_cursor_listener*;
     mir::Server::the_display*;
+    mir::Server::the_focus_controller*;
     mir::Server::the_gl_config*;
     mir::Server::the_graphics_platform*;
     mir::Server::the_main_loop*;
@@ -592,6 +593,7 @@ MIR_SERVER_27 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_surface_factory*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_surface_stack_model*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_touch_visualizer*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_cursor_listener*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_session_coordinator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_surface_coordinator*;

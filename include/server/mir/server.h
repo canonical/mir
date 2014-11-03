@@ -29,15 +29,15 @@ namespace frontend { class SessionAuthorizer; class Session; }
 namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; }
 namespace options { class Option; }
-namespace shell { class FocusSetter; class DisplayLayout; }
+namespace shell { class FocusController; class FocusSetter; class DisplayLayout; }
 namespace scene
 {
 class PlacementStrategy;
-class SessionListener;
 class PromptSessionListener;
 class PromptSessionManager;
-class SurfaceConfigurator;
+class SessionListener;
 class SessionCoordinator;
+class SurfaceConfigurator;
 class SurfaceCoordinator;
 }
 
@@ -241,6 +241,9 @@ public:
 
     /// \return the cursor listener.
     auto the_cursor_listener() const -> std::shared_ptr<input::CursorListener>;
+
+    /// \return the focus controller.
+    auto the_focus_controller() const -> std::shared_ptr<shell::FocusController>;
 
     /// \return the graphics display.
     auto the_display() const -> std::shared_ptr<graphics::Display>;
