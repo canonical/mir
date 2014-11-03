@@ -64,6 +64,8 @@ extern "C" void fatal_signal_cleanup(int sig)
 
 void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
 {
+ //    mir::logging::AlwaysOnLogger::instance().log(mir::logging::Logger::critical, "Mir starting", "Core");
+    mir::logging::AlwaysOnLogger::instance().log();
     run_mir(config, init, {});
 }
 
