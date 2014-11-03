@@ -16,6 +16,11 @@
 #include <getopt.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#ifndef _GNU_SOURCE
+// Needed for O_TMPFILE
+#define _GNU_SOURCE
+#endif
+#include <fcntl.h>
 
 using namespace std;
 
@@ -302,9 +307,19 @@ int main (int argc, char **argv)
         {
             testfilecmake << "SET( ENV{"<<env_pair.first<<"} \""<<env_pair.second<<"\" )"<<std::endl;
         }
+
+        int ret = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
+        bool kernel_supports_O_TMPFILE = (ret != -1);
+        if (kernel_supports_O_TMPFILE) close(ret);
+
         for (auto test = tests.begin(); test != tests.end(); ++ test)
         {
             static char cmd_line[1024] = "";
+
+            // Don't run AnonymousShmFile.* tests on older kernels
+            if (!kernel_supports_O_TMPFILE && *test == "AnonymousShmFile.*")
+            	continue;
+
             snprintf(
                 cmd_line,
                 sizeof(cmd_line),
@@ -314,7 +329,10 @@ int main (int argc, char **argv)
                 test_suite.c_str(),
                 elide_string_left(*test, output_width/2).c_str(),
                 config.executable,
-                test->c_str());
+                // Don't run MesaBufferAllocatorTest.{software_buffers_dont_bypass|creates_software_rendering_buffer} tests on older kernels
+                ((*test == "MesaBufferAllocatorTest.*") && !kernel_supports_O_TMPFILE)
+                    ? "MesaBufferAllocatorTest.*:-MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer"
+                    : test->c_str());
 
             if (testfilecmake.good())
             {
