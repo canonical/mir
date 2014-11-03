@@ -18,6 +18,7 @@
 
 #include "mir/server.h"
 
+#include "mir/fd.h"
 #include "mir/frontend/connector.h"
 #include "mir/options/default_configuration.h"
 #include "mir/default_server_configuration.h"
@@ -62,6 +63,7 @@ namespace mo = mir::options;
     MACRO(the_session_authorizer)\
     MACRO(the_session_coordinator)\
     MACRO(the_session_listener)\
+    MACRO(the_prompt_session_manager)\
     MACRO(the_shell_display_layout)\
     MACRO(the_surface_configurator)\
     MACRO(the_surface_coordinator)
@@ -307,6 +309,14 @@ auto mir::Server::open_client_socket() -> Fd
 {
     if (auto const config = self->server_config)
         return Fd{config->the_connector()->client_socket_fd()};
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
+}
+
+auto mir::Server::open_prompt_socket() -> Fd
+{
+    if (auto const config = self->server_config)
+        return Fd{config->the_prompt_connector()->client_socket_fd()};
 
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }

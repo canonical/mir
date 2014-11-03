@@ -19,8 +19,6 @@
 #ifndef MIR_SERVER_H_
 #define MIR_SERVER_H_
 
-#include "mir/fd.h"
-
 #include <functional>
 #include <memory>
 
@@ -37,11 +35,13 @@ namespace scene
 class PlacementStrategy;
 class SessionListener;
 class PromptSessionListener;
+class PromptSessionManager;
 class SurfaceConfigurator;
 class SessionCoordinator;
 class SurfaceCoordinator;
 }
 
+class Fd;
 class MainLoop;
 class ServerStatusListener;
 
@@ -217,6 +217,9 @@ public:
     /// \return the prompt session listener.
     auto the_prompt_session_listener() const -> std::shared_ptr<scene::PromptSessionListener>;
 
+    /// \return the prompt session manager.
+    auto the_prompt_session_manager() const ->std::shared_ptr<scene::PromptSessionManager>;
+
     /// \return the session authorizer.
     auto the_session_authorizer() const -> std::shared_ptr<frontend::SessionAuthorizer>;
 
@@ -253,6 +256,11 @@ public:
     /// using the format "fd://%d".
     /// \param connect_handler callback to be invoked when the client connects
     auto open_client_socket(ConnectHandler const& connect_handler) -> Fd;
+
+    /// Get a file descriptor that can be used to connect a prompt provider
+    /// It can be passed to another process, or used directly with mir_connect()
+    /// using the format "fd://%d".
+    auto open_prompt_socket() -> Fd;
 /** @} */
 private:
     void apply_settings() const;

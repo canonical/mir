@@ -18,7 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_test_framework/headless_test.h"
+#include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 
 #include "src/client/client_buffer.h"
@@ -49,28 +49,9 @@ namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 namespace mcl = mir::client;
 namespace mtf = mir_test_framework;
-
 namespace
 {
-struct HeadlessInProcessServer : mir_test_framework::HeadlessTest
-{
-    HeadlessInProcessServer()
-    {
-        add_to_environment("MIR_SERVER_NO_FILE", "");
-    }
-
-    void SetUp() override
-    {
-        start_server();
-    }
-
-    void TearDown() override
-    {
-        stop_server();
-    }
-};
-
-struct ClientLibrary : HeadlessInProcessServer
+struct ClientLibrary : mtf::HeadlessInProcessServer
 {
     mtf::UsingStubClientPlatform using_stub_client_platform;
 
