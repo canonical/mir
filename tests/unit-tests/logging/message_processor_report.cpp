@@ -32,7 +32,7 @@ class MockClock : public mir::time::Clock
 {
 public:
     MOCK_CONST_METHOD0(now, mir::time::Timestamp());
-    MOCK_CONST_METHOD1(min_real_time_until, mir::time::Duration(mir::time::Timestamp));
+    MOCK_CONST_METHOD1(min_wait_until, mir::time::Duration(mir::time::Timestamp));
 
     ~MockClock() noexcept(true) {}
 };
