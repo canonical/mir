@@ -14,7 +14,7 @@ be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
 183d9e5e6cfe48b3d9145a28541dd4202ff6137b  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 bdaceadd56e41d2cb708f7c4da97acf84dfc75b7  include/common/mir_toolkit/event.h
-99ef5f3bf548508fae24c60f74be1dea018a6e8c  include/common/mir_toolkit/mesa/native_display.h
+4975998aa1056ed0d39dcc538127453e516ad8e9  include/common/mir_toolkit/mesa/native_display.h
 101017c17714a57db57d79b7b5e7df40a3568236  include/common/mir_toolkit/mir_native_buffer.h
 871e609c0fed0d566ddbaaa8ac2d7cd5c06dd09a  include/platform/mir/abnormal_exit.h
 8f47feb6d983aa5c9ebd58e9d1524361c9f5e651  include/platform/mir/fatal.h

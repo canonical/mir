@@ -39,6 +39,10 @@ function(make_lib_descriptor name)
     ${private_headers}"
   )
 
+  if (NOT ${CMAKE_MAJOR_VERSION} LESS 3)
+    cmake_policy(SET CMP0026 OLD)
+  endif()
+  # TODO: Deprecate use of "LOCATION" (CMP0026) ...
   if ("${ABI_DUMP_PREBUILT_LIBDIR}" STREQUAL "")
     get_property(LIB_DESC_LIBS TARGET ${libname} PROPERTY LOCATION)
   else()

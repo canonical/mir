@@ -11,6 +11,14 @@ MIR_SERVER_27 {
     mir::compositor::Compositor::operator*;
     mir::compositor::Compositor::start*;
     mir::compositor::Compositor::stop*;
+    mir::compositor::DisplayBufferCompositor::composite*;
+    mir::compositor::DisplayBufferCompositor::?DisplayBufferCompositor*;
+    mir::compositor::DisplayBufferCompositor::DisplayBufferCompositor*;
+    mir::compositor::DisplayBufferCompositorFactory::create_compositor_for*;
+    mir::compositor::DisplayBufferCompositorFactory::?DisplayBufferCompositorFactory*;
+    mir::compositor::DisplayBufferCompositorFactory::DisplayBufferCompositorFactory*;
+    mir::compositor::DisplayBufferCompositorFactory::operator*;
+    mir::compositor::DisplayBufferCompositor::operator*;
     mir::compositor::Scene::add_observer*;
     mir::compositor::SceneElement::is_a_surface*;
     mir::compositor::SceneElement::occluded*;
@@ -246,7 +254,6 @@ MIR_SERVER_27 {
     mir::run_mir*;
     mir::scene::a_surface*;
     mir::scene::CoordinateTranslator::?CoordinateTranslator*;
-    mir::scene::CoordinateTranslator::CoordinateTranslator*;
     mir::scene::CoordinateTranslator::surface_to_screen*;
     mir::scene::NullSurfaceObserver::alpha_set_to*;
     mir::scene::NullSurfaceObserver::attrib_changed*;
@@ -398,9 +405,10 @@ MIR_SERVER_27 {
     mir::Server::exited_normally*;
     mir::Server::get_options*;
     mir::Server::open_client_socket*;
+    mir::Server::open_prompt_socket*;
     mir::Server::override_the_compositor*;
-    mir::Server::override_the_display_buffer_compositor_factory*;
     mir::Server::override_the_cursor_listener*;
+    mir::Server::override_the_display_buffer_compositor_factory*;
     mir::Server::override_the_gl_config*;
     mir::Server::override_the_input_dispatcher*;
     mir::Server::override_the_placement_strategy*;
@@ -428,6 +436,7 @@ MIR_SERVER_27 {
     mir::Server::the_graphics_platform*;
     mir::Server::the_main_loop*;
     mir::Server::the_prompt_session_listener*;
+    mir::Server::the_prompt_session_manager*;
     mir::Server::the_session_authorizer*;
     mir::Server::the_session_coordinator*;
     mir::Server::the_session_listener*;
@@ -489,6 +498,8 @@ MIR_SERVER_27 {
     mir::time::Timer::operator*;
     mir::time::Timer::?Timer*;
     mir::time::Timer::Timer*;
+    non-virtual?thunk?to?mir::compositor::DisplayBufferCompositor::?DisplayBufferCompositor*;
+    non-virtual?thunk?to?mir::compositor::DisplayBufferCompositorFactory::?DisplayBufferCompositorFactory*;
     non-virtual?thunk?to?mir::compositor::SceneElement::?SceneElement*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::is_key_repeat_enabled*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::new_ipc_factory*;
@@ -503,6 +514,7 @@ MIR_SERVER_27 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_connection_creator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_connector*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_connector_report*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_coordinate_translator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_cursor*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_cursor_images*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_cursor_listener*;
@@ -590,6 +602,7 @@ MIR_SERVER_27 {
     non-virtual?thunk?to?mir::input::InputDispatcher::?InputDispatcher*;
     non-virtual?thunk?to?mir::input::Surface::?Surface*;
     non-virtual?thunk?to?mir::input::TouchVisualizer::?TouchVisualizer*;
+    non-virtual?thunk?to?mir::scene::CoordinateTranslator::?CoordinateTranslator*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::alpha_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::attrib_changed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::cursor_image_set_to*;
@@ -628,6 +641,8 @@ MIR_SERVER_27 {
     non-virtual?thunk?to?mir::time::Alarm::?Alarm*;
     non-virtual?thunk?to?mir::time::Timer::?Timer*;
     typeinfo?for?mir::compositor::Compositor;
+    typeinfo?for?mir::compositor::DisplayBufferCompositor;
+    typeinfo?for?mir::compositor::DisplayBufferCompositorFactory;
     typeinfo?for?mir::compositor::Scene;
     typeinfo?for?mir::compositor::SceneElement;
     typeinfo?for?mir::DefaultServerConfiguration;
@@ -686,6 +701,8 @@ MIR_SERVER_27 {
     typeinfo?for?mir::time::Alarm;
     typeinfo?for?mir::time::Timer;
     vtable?for?mir::compositor::Compositor;
+    vtable?for?mir::compositor::DisplayBufferCompositor;
+    vtable?for?mir::compositor::DisplayBufferCompositorFactory;
     vtable?for?mir::compositor::Scene;
     vtable?for?mir::compositor::SceneElement;
     vtable?for?mir::DefaultServerConfiguration;
