@@ -202,7 +202,6 @@ MIR_SERVER_27 {
     mir::frontend::Surface::?Surface*;
     mir::frontend::Surface::Surface*;
     mir::frontend::Surface::swap_buffers*;
-    mir::frontend::Surface::swap_buffers_blocking*;
     mir::input::CompositeEventFilter::append*;
     mir::input::CompositeEventFilter::prepend*;
     mir::input::CursorImages::?CursorImages*;
