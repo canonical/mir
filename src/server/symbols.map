@@ -386,6 +386,7 @@ MIR_SERVER_27 {
     mir::ServerActionQueue::?ServerActionQueue*;
     mir::ServerActionQueue::ServerActionQueue*;
     mir::Server::add_configuration_option*;
+    mir::Server::add_emergency_cleanup*;
     mir::Server::add_init_callback*;
     mir::ServerConfiguration::operator*;
     mir::ServerConfiguration::?ServerConfiguration*;
@@ -423,6 +424,7 @@ MIR_SERVER_27 {
     mir::Server::set_command_line*;
     mir::Server::set_command_line_handler*;
     mir::Server::set_exception_handler*;
+    mir::Server::set_terminator*;
     mir::ServerStatusListener::operator*;
     mir::ServerStatusListener::paused*;
     mir::ServerStatusListener::resumed*;
