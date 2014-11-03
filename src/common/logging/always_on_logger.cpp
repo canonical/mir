@@ -18,6 +18,8 @@
 
 #include "mir/logging/always_on_logger.h"
 
+#include <syslog.h>
+
 namespace ml = mir::logging;
 
 ml::AlwaysOnLogger& ml::AlwaysOnLogger::instance()
@@ -28,8 +30,8 @@ ml::AlwaysOnLogger& ml::AlwaysOnLogger::instance()
 }
 
 void ml::AlwaysOnLogger::log(ml::Logger::Severity /*severity*/,
-                             const std::string& /*message*/,
-                             const std::string& /*component*/)
+                             const std::string& message,
+                             const std::string& component)
 {
-
+    syslog(LOG_INFO, "%s:%s", component.c_str(), message.c_str());
 }
