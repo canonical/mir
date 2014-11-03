@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TIME_HIGH_RESOLUTION_CLOCK_H_
-#define MIR_TIME_HIGH_RESOLUTION_CLOCK_H_
+#ifndef MIR_TIME_STEADY_CLOCK_H_
+#define MIR_TIME_STEADY_CLOCK_H_
 
 #include "mir/time/clock.h"
 
@@ -26,16 +26,16 @@ namespace mir
 namespace time
 {
 
-class HighResolutionClock : public Clock
+class SteadyClock : public Clock
 {
 public:
     virtual Timestamp now() const override;
     virtual Duration min_real_time_until(Timestamp t) const override;
 
 private:
-    std::chrono::high_resolution_clock clock;
+    std::chrono::steady_clock clock;
 };
 }
 }
 
-#endif /* MIR_TIME_HIGH_RESOLUTION_CLOCK_H_ */
+#endif

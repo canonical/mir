@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_ADVANCEABLE_CLOCK_H_
 #define MIR_TEST_DOUBLES_ADVANCEABLE_CLOCK_H_
 
-#include "mir/time/high_resolution_clock.h"
+#include "mir/time/steady_clock.h"
 #include <mutex>
 
 namespace mir
@@ -54,7 +54,7 @@ private:
     mir::time::Timestamp current_time{
         []
         {
-           mir::time::HighResolutionClock clock;
+           mir::time::SteadyClock clock;
            return clock.now();
         }()
         };

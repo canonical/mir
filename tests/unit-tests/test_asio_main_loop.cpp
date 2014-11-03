@@ -17,7 +17,7 @@
  */
 
 #include "mir/asio_main_loop.h"
-#include "mir/time/high_resolution_clock.h"
+#include "mir/time/steady_clock.h"
 #include "mir_test/pipe.h"
 #include "mir_test/auto_unblock_thread.h"
 #include "mir_test/signal.h"
@@ -47,7 +47,7 @@ namespace
 class AsioMainLoopTest : public ::testing::Test
 {
 public:
-    mir::AsioMainLoop ml{std::make_shared<mir::time::HighResolutionClock>()};
+    mir::AsioMainLoop ml{std::make_shared<mir::time::SteadyClock>()};
 };
 
 struct AdvanceableClock : mtd::AdvanceableClock

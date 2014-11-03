@@ -26,8 +26,8 @@ namespace mir
 namespace time
 {
 
-using Timestamp = std::chrono::high_resolution_clock::time_point;
-using Duration = std::chrono::high_resolution_clock::duration;
+using Timestamp = std::chrono::steady_clock::time_point;
+using Duration = std::chrono::steady_clock::duration;
 
 }
 }
