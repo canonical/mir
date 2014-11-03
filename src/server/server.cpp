@@ -49,6 +49,7 @@ namespace mo = mir::options;
     MACRO(input_dispatcher)\
     MACRO(placement_strategy)\
     MACRO(prompt_session_listener)\
+    MACRO(prompt_session_manager)\
     MACRO(server_status_listener)\
     MACRO(session_authorizer)\
     MACRO(session_listener)\

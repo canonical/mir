@@ -407,6 +407,7 @@ MIR_SERVER_27 {
     mir::Server::override_the_input_dispatcher*;
     mir::Server::override_the_placement_strategy*;
     mir::Server::override_the_prompt_session_listener*;
+    mir::Server::override_the_prompt_session_manager*;
     mir::Server::override_the_server_status_listener*;
     mir::Server::override_the_session_authorizer*;
     mir::Server::override_the_session_listener*;

@@ -189,6 +189,9 @@ public:
     /// Sets an override functor for creating the prompt session listener.
     void override_the_prompt_session_listener(Builder<scene::PromptSessionListener> const& prompt_session_listener_builder);
 
+    /// Sets an override functor for creating the prompt session manager.
+    void override_the_prompt_session_manager(Builder<scene::PromptSessionManager> const& prompt_session_manager_builder);
+
     /// Sets an override functor for creating the status listener.
     void override_the_server_status_listener(Builder<ServerStatusListener> const& server_status_listener_builder);
 
