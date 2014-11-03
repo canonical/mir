@@ -33,5 +33,5 @@ void ml::AlwaysOnLogger::log(ml::Logger::Severity /*severity*/,
                              const std::string& message,
                              const std::string& component)
 {
-    syslog(LOG_INFO, "%s:%s", component.c_str(), message.c_str());
+    syslog(LOG_INFO, "%s: %s", component.c_str(), message.c_str());
 }
