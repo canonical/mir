@@ -32,7 +32,7 @@ class ProgramFactory : public GLProgramFactory
 {
 public:
     std::unique_ptr<GLProgram> create_gl_program(std::string const&, std::string const&) const override;
-    std::unique_ptr<GLTextureCache> create_texture_cache() const;
+    std::unique_ptr<GLTextureCache> create_texture_cache() const override;
 
 private:
     /*

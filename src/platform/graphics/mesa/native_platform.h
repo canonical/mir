@@ -37,7 +37,7 @@ class NativePlatform : public graphics::NativePlatform
 public:
     virtual ~NativePlatform();
 
-    void initialize(std::shared_ptr<NestedContext> const& nested_context);
+    void initialize(std::shared_ptr<NestedContext> const& nested_context) override;
     std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() override;
     std::shared_ptr<PlatformIPCPackage> connection_ipc_package() override;
     std::shared_ptr<InternalClient> create_internal_client() override;

@@ -123,17 +123,17 @@ mir::DefaultServerConfiguration::the_session_authorizer()
 {
     struct DefaultSessionAuthorizer : public mf::SessionAuthorizer
     {
-        bool connection_is_allowed(mf::SessionCredentials const& /* creds */)
+        bool connection_is_allowed(mf::SessionCredentials const& /* creds */) override
         {
             return true;
         }
 
-        bool configure_display_is_allowed(mf::SessionCredentials const& /* creds */)
+        bool configure_display_is_allowed(mf::SessionCredentials const& /* creds */) override
         {
             return true;
         }
 
-        bool screencast_is_allowed(mf::SessionCredentials const& /* creds */)
+        bool screencast_is_allowed(mf::SessionCredentials const& /* creds */) override
         {
             return true;
         }

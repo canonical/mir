@@ -10,6 +10,9 @@ if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
   # Avoid clang complaints about poor quality gmock/gtest headers
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=null-dereference")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=overloaded-virtual")
+  # MOCK_METHOD()s cannot be marked as override; we cannot consistently mark overrides
+  # in the tests.
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override")
 endif()
 
 if (MIR_TEST_PLATFORM STREQUAL "android")

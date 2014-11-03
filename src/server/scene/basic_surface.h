@@ -98,15 +98,15 @@ public:
     geometry::Size size() const override;
     geometry::Size client_size() const override;
 
-    MirPixelFormat pixel_format() const;
+    MirPixelFormat pixel_format() const override;
 
     std::shared_ptr<graphics::Buffer> snapshot_buffer() const;
-    void swap_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete);
-    void force_requests_to_complete();
+    void swap_buffers(graphics::Buffer* old_buffer, std::function<void(graphics::Buffer* new_buffer)> complete) override;
+    void force_requests_to_complete() override;
 
-    bool supports_input() const;
-    int client_input_fd() const;
-    void allow_framedropping(bool);
+    bool supports_input() const override;
+    int client_input_fd() const override;
+    void allow_framedropping(bool) override;
     std::shared_ptr<input::InputChannel> input_channel() const override;
     input::InputReceptionMode reception_mode() const override;
     void set_reception_mode(input::InputReceptionMode mode) override;
@@ -119,14 +119,14 @@ public:
     geometry::Point top_left() const override;
     geometry::Rectangle input_bounds() const override;
     bool input_area_contains(geometry::Point const& point) const override;
-    void consume(MirEvent const& event);
+    void consume(MirEvent const& event) override;
     void set_alpha(float alpha) override;
     void set_orientation(MirOrientation orientation) override;
     void set_transformation(glm::mat4 const&) override;
 
     bool visible() const;
     
-    std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const;
+    std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const override;
 
     void with_most_recent_buffer_do(
         std::function<void(graphics::Buffer&)> const& exec) override;
@@ -139,8 +139,8 @@ public:
     void hide() override;
     void show() override;
     
-    void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image);
-    std::shared_ptr<graphics::CursorImage> cursor_image() const;
+    void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) override;
+    std::shared_ptr<graphics::CursorImage> cursor_image() const override;
 
     void add_observer(std::shared_ptr<SurfaceObserver> const& observer) override;
     void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) override;
