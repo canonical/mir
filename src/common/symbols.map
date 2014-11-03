@@ -203,7 +203,9 @@ MIR_COMMON_3 {
 MIR_COMMON_2.3 {
  global:
   extern "C++" {
-    vtable?for?mir::logging::AlwaysOnLogger
+    vtable?for?mir::logging::AlwaysOnLogger;
+    mir::logging::AlwaysOnLogger::instance*;
+    mir::logging::AlwaysOnLogger::log*;
   };
  local: *;
 };

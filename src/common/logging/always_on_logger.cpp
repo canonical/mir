@@ -20,6 +20,13 @@
 
 namespace ml = mir::logging;
 
+ml::AlwaysOnLogger& ml::AlwaysOnLogger::instance()
+{
+    static ml::AlwaysOnLogger always_on_logger;
+
+    return always_on_logger;
+}
+
 void ml::AlwaysOnLogger::log(ml::Logger::Severity /*severity*/,
                              const std::string& /*message*/,
                              const std::string& /*component*/)

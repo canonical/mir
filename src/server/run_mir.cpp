@@ -24,6 +24,7 @@
 #include "mir/frontend/connector.h"
 #include "mir/raii.h"
 #include "mir/emergency_cleanup.h"
+#include "mir/logging/always_on_logger.h"
 
 #include <atomic>
 #include <exception>
@@ -64,8 +65,7 @@ extern "C" void fatal_signal_cleanup(int sig)
 
 void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
 {
- //    mir::logging::AlwaysOnLogger::instance().log(mir::logging::Logger::critical, "Mir starting", "Core");
-    mir::logging::AlwaysOnLogger::instance().log();
+    mir::logging::AlwaysOnLogger::instance().log(mir::logging::Logger::critical, "Mir starting", "Core");
     run_mir(config, init, {});
 }
 

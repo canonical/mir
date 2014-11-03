@@ -29,17 +29,11 @@ namespace logging
 class AlwaysOnLogger final : public Logger
 {
 public:
-    static AlwaysOnLogger& instance()
-    {
-        static AlwaysOnLogger always_on_logger;
+    static AlwaysOnLogger& instance();
 
-        return always_on_logger;
-    }
+    virtual void log(Severity severity, const std::string& message, const std::string& component) override;
 
-    void log(Severity severity, const std::string& message, const std::string& component) override;
-    void log() {}
-
-/*private:*/
+private:
     AlwaysOnLogger() {}
 };
 
