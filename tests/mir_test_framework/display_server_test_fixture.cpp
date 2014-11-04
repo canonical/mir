@@ -60,9 +60,9 @@ void BespokeDisplayServerTestFixture::launch_server_process(TestingServerConfigu
     process_manager.launch_server_process(functor);
 }
 
-void BespokeDisplayServerTestFixture::launch_client_process(TestingClientConfiguration& config)
+pid_t BespokeDisplayServerTestFixture::launch_client_process(TestingClientConfiguration& config)
 {
-    process_manager.launch_client_process(config, *test_options);
+    return process_manager.launch_client_process(config, *test_options);
 }
 
 bool BespokeDisplayServerTestFixture::shutdown_server_process()
@@ -95,12 +95,6 @@ std::vector<mtf::Result> BespokeDisplayServerTestFixture::wait_for_shutdown_clie
 void BespokeDisplayServerTestFixture::terminate_client_processes()
 {
     process_manager.terminate_client_processes();
-}
-
-
-void BespokeDisplayServerTestFixture::kill_client_processes()
-{
-    process_manager.kill_client_processes();
 }
 
 void BespokeDisplayServerTestFixture::run_in_test_process(

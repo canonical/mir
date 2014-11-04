@@ -20,6 +20,7 @@
 #include "mir/graphics/android/android_driver_interpreter.h"
 #include "src/client/mir_client_surface.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test_doubles/stub_android_native_buffer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -152,6 +153,24 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_right_buffer)
     EXPECT_EQ(fake_fd, fence_fd);
 }
 
+TEST_F(AndroidNativeWindowTest, native_window_dequeue_returns_previously_cancelled_buffer)
+{
+    using namespace testing;
+    ANativeWindowBuffer buffer;
+    int fence_fd = 33;
+
+    auto rc = window.cancelBuffer(&window, &buffer, fence_fd);
+    EXPECT_EQ(0, rc);
+
+    EXPECT_CALL(*mock_driver_interpreter, driver_requests_buffer())
+        .Times(0);
+
+    ANativeWindowBuffer* dequeued_buffer;
+    ANativeWindowBuffer* expected_buffer = &buffer;
+    window.dequeueBuffer(&window, &dequeued_buffer, &fence_fd);
+    EXPECT_EQ(dequeued_buffer, expected_buffer);
+}
+
 TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_hook_callable)
 {
     ANativeWindowBuffer* tmp;
@@ -177,6 +196,23 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_right_b
 
     window.dequeueBuffer_DEPRECATED(&window, &returned_buffer);
     EXPECT_EQ(mock_buffer->anwb(), returned_buffer);
+}
+
+TEST_F(AndroidNativeWindowTest, native_window_dequeue_deprecated_returns_previously_cancelled_buffer)
+{
+    using namespace testing;
+    ANativeWindowBuffer buffer;
+
+    auto rc = window.cancelBuffer_DEPRECATED(&window, &buffer);
+    EXPECT_EQ(0, rc);
+
+    EXPECT_CALL(*mock_driver_interpreter, driver_requests_buffer())
+        .Times(0);
+
+    ANativeWindowBuffer* dequeued_buffer;
+    ANativeWindowBuffer* expected_buffer = &buffer;
+    window.dequeueBuffer_DEPRECATED(&window, &dequeued_buffer);
+    EXPECT_EQ(dequeued_buffer, expected_buffer);
 }
 
 /* queue hook tests */
@@ -268,14 +304,14 @@ TEST_F(AndroidNativeWindowTest, native_window_dequeue_has_proper_rc)
     EXPECT_EQ(0, ret);
 }
 
-TEST_F(AndroidNativeWindowTest, native_window_cancel_hook_behavior)
+TEST_F(AndroidNativeWindowTest, native_window_cancel_hook_does_not_call_driver_interpreter)
 {
     using namespace testing;
     ANativeWindowBuffer buffer;
     int fence_fd = 33;
 
     EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(&buffer, _))
-        .Times(1);
+        .Times(0);
 
     auto rc = window.cancelBuffer(&window, &buffer, fence_fd);
     EXPECT_EQ(0, rc);
@@ -303,18 +339,6 @@ TEST_F(AndroidNativeWindowTest, returns_error_on_queue_buffer_failure)
 
     EXPECT_THAT(window.queueBuffer(&window, nullptr, 0), Eq(failure_code));
     EXPECT_THAT(window.queueBuffer_DEPRECATED(&window, nullptr), Eq(failure_code));
-}
-
-TEST_F(AndroidNativeWindowTest, returns_error_on_cancel_buffer_failure)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_driver_interpreter, driver_returns_buffer(_, _))
-        .WillOnce(Throw(std::runtime_error("")))
-        .WillOnce(Throw(std::runtime_error("")));
-
-    EXPECT_THAT(window.cancelBuffer(&window, nullptr, 0), Eq(failure_code));
-    EXPECT_THAT(window.cancelBuffer_DEPRECATED(&window, nullptr), Eq(failure_code));
 }
 
 TEST_F(AndroidNativeWindowTest, returns_error_on_query_failure)

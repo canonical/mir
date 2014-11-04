@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<descriptor>
+<headers>
+    ${LIB_DESC_HEADERS}
+</headers>
+<libs>
+    ${LIB_DESC_LIBS}
+</libs>
+<include_paths>
+    ${LIB_DESC_INCLUDE_PATHS}
+</include_paths>
+<gcc_options>
+    ${LIB_DESC_GCC_OPTS}
+</gcc_options>
+<skip_headers>
+    ${LIB_DESC_SKIP_HEADERS}
+</skip_headers>
+<defines>
+    ${LIB_DESC_DEFINES}
+</defines>

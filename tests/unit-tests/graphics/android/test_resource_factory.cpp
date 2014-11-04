@@ -17,7 +17,6 @@
  */
 
 #include "src/platform/graphics/android/resource_factory.h"
-#include "src/platform/graphics/android/hwc_loggers.h"
 #include "mir_test_doubles/mock_android_hw.h"
 
 #include <stdexcept>
@@ -30,12 +29,7 @@ namespace mtd=mir::test::doubles;
 
 struct ResourceFactoryTest  : public ::testing::Test
 {
-    ResourceFactoryTest() :
-        logger{std::make_shared<mga::NullHwcLogger>()}
-    {
-    }
     mtd::HardwareAccessMock hw_access_mock;
-    std::shared_ptr<mga::HwcLogger> const logger;
 };
 
 TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)
@@ -44,7 +38,7 @@ TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::ResourceFactory factory{logger};
+    mga::ResourceFactory factory;
     factory.create_fb_native_device();
     EXPECT_TRUE(hw_access_mock.open_count_matches_close());
 }
@@ -52,7 +46,7 @@ TEST_F(ResourceFactoryTest, fb_native_creation_opens_and_closes_gralloc)
 TEST_F(ResourceFactoryTest, test_device_creation_throws_on_failure)
 {
     using namespace testing;
-    mga::ResourceFactory factory{logger};
+    mga::ResourceFactory factory;
 
     /* failure because of rc */
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
@@ -79,7 +73,7 @@ TEST_F(ResourceFactoryTest, hwc_allocation)
     EXPECT_CALL(hw_access_mock, hw_get_module(StrEq(HWC_HARDWARE_MODULE_ID), _))
         .Times(1);
 
-    mga::ResourceFactory factory{logger};
+    mga::ResourceFactory factory;
     factory.create_hwc_native_device();
 
     EXPECT_TRUE(hw_access_mock.open_count_matches_close());
@@ -96,7 +90,7 @@ TEST_F(ResourceFactoryTest, hwc_allocation_failures)
         .WillOnce(Return(-1))
         .WillOnce(DoAll(SetArgPointee<1>(&failing_hwc_module_stub), Return(0)));
 
-    mga::ResourceFactory factory{logger};
+    mga::ResourceFactory factory;
 
     EXPECT_THROW({
         factory.create_hwc_native_device();

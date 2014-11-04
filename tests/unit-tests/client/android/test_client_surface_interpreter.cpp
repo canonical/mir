@@ -21,7 +21,7 @@
 #include "src/client/mir_client_surface.h"
 #include "src/client/client_buffer.h"
 #include "src/client/android/client_surface_interpreter.h"
-#include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test_doubles/stub_android_native_buffer.h"
 #include "mir_test/fake_shared.h"
 #include <system/window.h>
 #include <gmock/gmock.h>
@@ -55,6 +55,7 @@ struct MockClientBuffer : public mcl::ClientBuffer
     MOCK_METHOD0(mark_as_submitted, void());
     MOCK_METHOD0(increment_age, void());
     MOCK_METHOD1(update_from, void(MirBufferPackage const&));
+    MOCK_METHOD1(fill_update_msg, void(MirBufferPackage&));
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mir::graphics::NativeBuffer>());
 
     std::shared_ptr<mir::graphics::NativeBuffer> buffer;

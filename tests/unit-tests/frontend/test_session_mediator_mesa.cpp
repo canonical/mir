@@ -54,8 +54,7 @@ namespace
 class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthenticator
 {
  public:
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
-        const std::shared_ptr<mg::BufferInitializer>& /*buffer_initializer*/) override
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
     {
         return std::shared_ptr<mg::GraphicBufferAllocator>();
     }
@@ -75,7 +74,8 @@ struct SessionMediatorMesaTest : public ::testing::Test
           mediator{shell, mock_platform, display_changer,
                    surface_pixel_formats, report,
                    std::make_shared<mtd::NullEventSink>(),
-                   resource_cache, std::make_shared<mtd::NullScreencast>(), nullptr, nullptr},
+                   resource_cache, std::make_shared<mtd::NullScreencast>(), nullptr, nullptr,
+                   nullptr},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)}
     {
     }

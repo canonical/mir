@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_debug.h"
+#include "mir_toolkit/debug/surface.h"
 
 #include "src/client/client_platform_factory.h"
 #include "src/client/client_platform.h"

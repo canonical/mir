@@ -86,14 +86,14 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
 template<class MessageType>
 void mclr::MirProtobufRpcChannel::receive_any_file_descriptors_for(MessageType* response)
 {
-    static std::array<int, 1> dummy;
+    static std::array<char, 1> dummy;
     if (response)
     {
         response->clear_fd();
 
         if (response->fds_on_side_channel() > 0)
         {
-            std::vector<int32_t> fds(response->fds_on_side_channel());
+            std::vector<mir::Fd> fds(response->fds_on_side_channel());
             transport->receive_data(dummy.data(), dummy.size(), fds);
             for (auto &fd: fds)
                 response->add_fd(fd);
@@ -159,7 +159,16 @@ void mclr::MirProtobufRpcChannel::CallMethod(
     google::protobuf::Message* response,
     google::protobuf::Closure* complete)
 {
-    auto const& invocation = invocation_for(method, parameters);
+    // Only send message when details saved for handling response
+    std::vector<mir::Fd> fds;
+    if (parameters->GetTypeName() == "mir.protobuf.BufferRequest")
+    {
+        auto const* buffer = reinterpret_cast<mir::protobuf::BufferRequest const*>(parameters);
+        for (auto& fd : buffer->buffer().fd())
+            fds.emplace_back(mir::Fd{IntOwnedFd{fd}});
+    }
+
+    auto const& invocation = invocation_for(method, parameters, fds.size());
 
     rpc_report->invocation_requested(invocation);
 
@@ -169,13 +178,13 @@ void mclr::MirProtobufRpcChannel::CallMethod(
     // Only save details after serialization succeeds
     pending_calls.save_completion_details(invocation, response, callback);
 
-    // Only send message when details saved for handling response
-    send_message(invocation, invocation);
+    send_message(invocation, invocation, fds);
 }
 
 void mclr::MirProtobufRpcChannel::send_message(
     mir::protobuf::wire::Invocation const& body,
-    mir::protobuf::wire::Invocation const& invocation)
+    mir::protobuf::wire::Invocation const& invocation,
+    std::vector<mir::Fd>& fds)
 {
     const size_t size = body.ByteSize();
     const unsigned char header_bytes[2] =
@@ -191,7 +200,7 @@ void mclr::MirProtobufRpcChannel::send_message(
     try
     {
         std::lock_guard<decltype(write_mutex)> lock(write_mutex);
-        transport->send_data(send_buffer);
+        transport->send_message(send_buffer, fds);
     }
     catch (std::runtime_error const& err)
     {

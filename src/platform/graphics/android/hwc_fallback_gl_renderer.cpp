@@ -103,7 +103,14 @@ void mga::HWCFallbackGLRenderer::render(
 {
     glUseProgram(*program);
 
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+    /* NOTE: some HWC implementations rely on the framebuffer target layer
+     * being cleared to transparent black. eg, in mixed-mode composition,
+     * krillin actually arranges the fb_target in the topmost level of its
+     * display controller and relies on blending to make the overlays appear
+     * /under/ the gl layer. (lp: #1378326)
+     */
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glEnableVertexAttribArray(position_attr);
@@ -111,7 +118,7 @@ void mga::HWCFallbackGLRenderer::render(
 
     for(auto const& renderable : renderlist)
     {
-        if (renderable->alpha_enabled())
+        if (renderable->shaped())  // TODO: support alpha() in future
             glEnable(GL_BLEND);
         else
             glDisable(GL_BLEND);

@@ -1,0 +1,5 @@
+{
+ global: 
+   mir_debug_*;
+ local: *;
+};

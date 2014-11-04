@@ -55,32 +55,42 @@ class SynchronousCompositor : public mc::Compositor
 {
 public:
     SynchronousCompositor(std::shared_ptr<mg::Display> const& display_,
-                          std::shared_ptr<mc::Scene> const& scene,
+                          std::shared_ptr<mc::Scene> const& s,
                           std::shared_ptr<mc::DisplayBufferCompositorFactory> const& db_compositor_factory)
         : display{display_},
-          scene{scene}
+          scene{s}
     {
         display->for_each_display_buffer(
             [this, &db_compositor_factory](mg::DisplayBuffer& display_buffer)
             {
-                display_buffer_compositor_map[&display_buffer] = db_compositor_factory->create_compositor_for(display_buffer);
+                auto dbc = db_compositor_factory->create_compositor_for(display_buffer);
+                scene->register_compositor(dbc.get());
+                display_buffer_compositor_map[&display_buffer] = std::move(dbc);
             });
        
         auto notify = [this]()
         {
             display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
             {
-                display_buffer_compositor_map[&display_buffer]->composite();
+                auto& dbc = display_buffer_compositor_map[&display_buffer];
+                dbc->composite(scene->scene_elements_for(dbc.get()));
             });
         };
         auto notify2 = [this](int)
         {
             display->for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
             {
-                display_buffer_compositor_map[&display_buffer]->composite();
+                auto& dbc = display_buffer_compositor_map[&display_buffer];
+                dbc->composite(scene->scene_elements_for(dbc.get()));
             });
         };
         observer = std::make_shared<ms::LegacySceneChangeNotification>(notify, notify2);
+    }
+
+    ~SynchronousCompositor()
+    {
+        for(auto& dbc : display_buffer_compositor_map)
+            scene->unregister_compositor(dbc.second.get());
     }
 
     void start()
@@ -113,7 +123,7 @@ public:
     {
         for (auto const& r : renderables)
         {
-            (void)r;
+            r->buffer(); // We need to consume a buffer to unblock client tests
             while (write(render_operations_fd, "a", 1) != 1) continue;
         }
     }

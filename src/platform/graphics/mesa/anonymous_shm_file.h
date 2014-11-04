@@ -21,6 +21,7 @@
 #define MIR_GRAPHICS_MESA_ANONYMOUS_SHM_FILE_H_
 
 #include "shm_file.h"
+#include "mir/fd.h"
 
 namespace mir
 {
@@ -31,21 +32,6 @@ namespace mesa
 
 namespace detail
 {
-class FdHandle
-{
-public:
-    FdHandle(int fd);
-    FdHandle(FdHandle&&);
-    ~FdHandle() noexcept;
-
-    operator int() const;
-
-private:
-    FdHandle(FdHandle const&) = delete;
-    FdHandle& operator=(FdHandle const&) = delete;
-    int fd;
-};
-
 class MapHandle
 {
 public:
@@ -71,7 +57,7 @@ public:
     int fd() const;
 
 private:
-    detail::FdHandle const fd_;
+    Fd const fd_;
     detail::MapHandle const mapping;
 };
 

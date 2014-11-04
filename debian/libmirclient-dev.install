@@ -1,3 +1,3 @@
-usr/include/mirclient
+usr/include/mirclient/mir_toolkit/*.h
 usr/lib/*/pkgconfig/mirclient.pc
 usr/lib/*/libmirclient.so

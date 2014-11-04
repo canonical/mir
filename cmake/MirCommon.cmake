@@ -16,6 +16,12 @@ option(
   OFF
 )
 
+option(
+  MIR_USE_PRECOMPILED_HEADERS
+  "Use precompiled headers"
+  ON
+)
+
 if(ENABLE_MEMCHECK_OPTION)
   find_program(
     VALGRIND_EXECUTABLE
@@ -37,7 +43,22 @@ endif(ENABLE_MEMCHECK_OPTION)
 
 function (mir_discover_tests EXECUTABLE)
   if(DISABLE_GTEST_TEST_DISCOVERY)
-    add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} "--gtest_filter=-*DeathTest.*")
+    execute_process(
+      COMMAND uname -r
+      OUTPUT_VARIABLE KERNEL_VERSION_FULL
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    string(REGEX MATCH "^[0-9]+[.][0-9]+" KERNEL_VERSION ${KERNEL_VERSION_FULL})
+    message(STATUS "Kernel version detected: " ${KERNEL_VERSION})
+    # Some tests expect kernel version 3.11 and up
+    if (${KERNEL_VERSION} VERSION_LESS "3.11")
+        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}
+            "--gtest_filter=-*DeathTest.*:AnonymousShmFile.*:MesaBufferAllocatorTest.software_buffers_dont_bypass:MesaBufferAllocatorTest.creates_software_rendering_buffer")
+    else()
+        add_test(${EXECUTABLE} ${VALGRIND_EXECUTABLE} ${VALGRIND_ARGS} ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE}
+            "--gtest_filter=-*DeathTest.*")
+    endif()
+
     add_test(${EXECUTABLE}_death_tests ${EXECUTABLE_OUTPUT_PATH}/${EXECUTABLE} "--gtest_filter=*DeathTest.*")
     if (${ARGC} GREATER 1)
       set_property(TEST ${EXECUTABLE} PROPERTY ENVIRONMENT ${ARGN})
@@ -115,5 +136,35 @@ function (mir_add_memcheck_test)
           mir_discover_gtest_tests
           mir_test_memory_error)
       endif()
+  endif()
+endfunction()
+
+function (mir_precompiled_header TARGET HEADER)
+  if (MIR_USE_PRECOMPILED_HEADERS)
+    get_property(TARGET_COMPILE_FLAGS TARGET ${TARGET} PROPERTY COMPILE_FLAGS)
+    get_property(TARGET_INCLUDE_DIRECTORIES TARGET ${TARGET} PROPERTY INCLUDE_DIRECTORIES)
+    foreach(dir ${TARGET_INCLUDE_DIRECTORIES})
+      if (${dir} MATCHES "usr/include")
+        set(TARGET_INCLUDE_DIRECTORIES_STRING "${TARGET_INCLUDE_DIRECTORIES_STRING} -isystem ${dir}")
+      else()
+        set(TARGET_INCLUDE_DIRECTORIES_STRING "${TARGET_INCLUDE_DIRECTORIES_STRING} -I${dir}")
+      endif()
+    endforeach()
+
+    separate_arguments(
+      PCH_CXX_FLAGS UNIX_COMMAND
+      "${CMAKE_CXX_FLAGS} ${TARGET_COMPILE_FLAGS} ${TARGET_INCLUDE_DIRECTORIES_STRING}"
+    )
+
+    add_custom_command(
+      OUTPUT ${TARGET}_precompiled.hpp.gch
+      DEPENDS ${HEADER}
+      COMMAND ${CMAKE_CXX_COMPILER} ${PCH_CXX_FLAGS} -x c++-header -c ${HEADER} -o ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_precompiled.hpp.gch
+    )
+
+    set_property(TARGET ${TARGET} APPEND_STRING PROPERTY COMPILE_FLAGS " -include ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_precompiled.hpp -Winvalid-pch ")
+
+    add_custom_target(${TARGET}_pch DEPENDS ${TARGET}_precompiled.hpp.gch)
+    add_dependencies(${TARGET} ${TARGET}_pch)
   endif()
 endfunction()

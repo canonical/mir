@@ -120,11 +120,13 @@ mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
 }
 
 mgn::NestedDisplay::NestedDisplay(
+    std::shared_ptr<mg::Platform> const& platform,
     std::shared_ptr<HostConnection> const& connection,
     std::shared_ptr<input::InputDispatcher> const& dispatcher,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<mg::GLConfig> const& gl_config) :
+    platform{platform},
     connection{connection},
     dispatcher{dispatcher},
     display_report{display_report},

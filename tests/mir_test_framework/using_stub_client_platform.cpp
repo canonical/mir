@@ -22,13 +22,6 @@
 namespace mtf = mir_test_framework;
 namespace mcl = mir::client;
 
-namespace
-{
-void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
-{
-}
-}
-
 MirWaitHandle* mtf::StubMirConnectionAPI::connect(
         mcl::ConfigurationFactory /*configuration*/,
         char const* socket_file,
@@ -41,9 +34,6 @@ MirWaitHandle* mtf::StubMirConnectionAPI::connect(
 
 void mtf::StubMirConnectionAPI::release(MirConnection* connection)
 {
-    // Clear the lifecycle callback in order not to get SIGTERM by the default
-    // lifecycle handler during connection teardown
-    mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
     return prev_api->release(connection);
 }
 

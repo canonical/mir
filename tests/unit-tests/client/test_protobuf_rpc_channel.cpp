@@ -31,6 +31,8 @@
 #include <list>
 #include <endian.h>
 
+#include <fcntl.h>
+
 #include <google/protobuf/descriptor.h>
 
 #include <gtest/gtest.h>
@@ -67,13 +69,13 @@ public:
         }));
 
         ON_CALL(*this, receive_data(_,_,_))
-            .WillByDefault(Invoke([this](void* buffer, size_t message_size, std::vector<int>& fds)
+            .WillByDefault(Invoke([this](void* buffer, size_t message_size, std::vector<mir::Fd>& fds)
         {
             receive_data_default(buffer, message_size, fds);
         }));
 
-        ON_CALL(*this, send_data(_))
-            .WillByDefault(Invoke(std::bind(&MockStreamTransport::send_data_default,
+        ON_CALL(*this, send_message(_,_))
+            .WillByDefault(Invoke(std::bind(&MockStreamTransport::send_message_default,
                                             this, std::placeholders::_1)));
     }
 
@@ -81,7 +83,7 @@ public:
     {
         received_data.insert(received_data.end(), message.begin(), message.end());
     }
-    void add_server_message(std::vector<uint8_t> const& message, std::initializer_list<int> fds)
+    void add_server_message(std::vector<uint8_t> const& message, std::initializer_list<mir::Fd> fds)
     {
         add_server_message(message);
         received_fds.insert(received_fds.end(), fds);
@@ -104,8 +106,8 @@ public:
 
     MOCK_METHOD1(register_observer, void(std::shared_ptr<Observer> const&));
     MOCK_METHOD2(receive_data, void(void*, size_t));
-    MOCK_METHOD3(receive_data, void(void*, size_t, std::vector<int>&));
-    MOCK_METHOD1(send_data, void(std::vector<uint8_t> const&));
+    MOCK_METHOD3(receive_data, void(void*, size_t, std::vector<mir::Fd>&));
+    MOCK_METHOD2(send_message, void(std::vector<uint8_t> const&, std::vector<mir::Fd> const&));
 
     // Transport interface
     void register_observer_default(std::shared_ptr<Observer> const& observer)
@@ -115,11 +117,11 @@ public:
 
     void receive_data_default(void* buffer, size_t read_bytes)
     {
-        static std::vector<int> dummy;
+        static std::vector<mir::Fd> dummy;
         receive_data_default(buffer, read_bytes, dummy);
     }
 
-    void receive_data_default(void* buffer, size_t read_bytes, std::vector<int>& fds)
+    void receive_data_default(void* buffer, size_t read_bytes, std::vector<mir::Fd>& fds)
     {
         auto num_fds = fds.size();
         if (read_bytes > received_data.size())
@@ -138,7 +140,7 @@ public:
         received_fds.erase(received_fds.begin(), received_fds.begin() + num_fds);
     }
 
-    void send_data_default(std::vector<uint8_t> const& buffer)
+    void send_message_default(std::vector<uint8_t> const& buffer)
     {
         sent_messages.push_back(buffer);
     }
@@ -147,7 +149,7 @@ public:
 
     size_t read_offset{0};
     std::vector<uint8_t> received_data;
-    std::vector<int> received_fds;
+    std::vector<mir::Fd> received_fds;
     std::list<std::vector<uint8_t>> sent_messages;
 };
 
@@ -243,11 +245,13 @@ TEST_F(MirProtobufRpcChannelTest, ReadsFds)
 {
     mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
     mir::protobuf::Buffer reply;
-    mir::protobuf::SurfaceId request;
+    mir::protobuf::BufferRequest request;
 
-    channel_user.next_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){}));
+    channel_user.exchange_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){}));
 
-    std::initializer_list<int> fds = {2, 3, 5};
+    std::initializer_list<mir::Fd> fds = {mir::Fd{open("/dev/null", O_RDONLY)},
+                                          mir::Fd{open("/dev/null", O_RDONLY)},
+                                          mir::Fd{open("/dev/null", O_RDONLY)}};
 
     ASSERT_EQ(transport->sent_messages.size(), 1);
     {
@@ -305,15 +309,15 @@ TEST_F(MirProtobufRpcChannelTest, NotifiesOfDisconnectOnWriteError)
         }
     });
 
-    EXPECT_CALL(*transport, send_data(_))
+    EXPECT_CALL(*transport, send_message(_,_))
         .WillOnce(Throw(std::runtime_error("Eaten by giant space goat")));
 
     mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
     mir::protobuf::Buffer reply;
-    mir::protobuf::SurfaceId request;
+    mir::protobuf::BufferRequest request;
 
     EXPECT_THROW(
-        channel_user.next_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){})),
+        channel_user.exchange_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){})),
         std::runtime_error);
 
     EXPECT_TRUE(disconnected);
@@ -359,7 +363,7 @@ TEST_F(MirProtobufRpcChannelTest, NotifiesOfDisconnectOnlyOnce)
         }
     });
 
-    EXPECT_CALL(*transport, send_data(_))
+    EXPECT_CALL(*transport, send_message(_,_))
         .WillOnce(DoAll(Throw(std::runtime_error("Eaten by giant space goat")),
                         InvokeWithoutArgs([this]()
     {
@@ -371,10 +375,10 @@ TEST_F(MirProtobufRpcChannelTest, NotifiesOfDisconnectOnlyOnce)
 
     mir::protobuf::DisplayServer::Stub channel_user{channel.get(), mir::protobuf::DisplayServer::STUB_DOESNT_OWN_CHANNEL};
     mir::protobuf::Buffer reply;
-    mir::protobuf::SurfaceId request;
+    mir::protobuf::BufferRequest request;
 
     EXPECT_THROW(
-        channel_user.next_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){})),
+        channel_user.exchange_buffer(nullptr, &request, &reply, google::protobuf::NewCallback([](){})),
         std::runtime_error);
 
     EXPECT_TRUE(disconnected);

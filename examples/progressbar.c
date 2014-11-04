@@ -16,12 +16,14 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE /* for usleep() */
+
 #include "mir_toolkit/mir_client_library.h"
 #include <stdio.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdlib.h>
-#define __USE_BSD 1  /* for usleep() */
 #include <unistd.h>  /* sleep() */
 #include <string.h>
 
@@ -268,6 +270,7 @@ int main(int argc, char *argv[])
 
             signal(SIGINT, shutdown);
             signal(SIGTERM, shutdown);
+            signal(SIGHUP, shutdown);
         
             while (running)
             {

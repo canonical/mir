@@ -2,27 +2,28 @@ include(CMakeDependentOption)
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
-  ${PROTOBUF_INCLUDE_DIRS}
-  ${CMAKE_CURRENT_BINARY_DIR})
+)
 
-protobuf_generate_cpp(
-  GENERATED_PROTOBUF_SRCS GENERATED_PROTOBUF_HDRS
-  test_protobuf.proto
+add_definitions(
+  -DMIR_PLATFORM_DRIVER_BINARY="${MIR_PLATFORM_DRIVER_BINARY}"
+  -DMIR_CLIENT_DRIVER_BINARY="${MIR_CLIENT_DRIVER_BINARY}"
 )
 
 set(
   SOURCES
 
   server_configuration_wrapping.cpp
+  server_command_line.cpp
+  server_signal_handling.cpp
   clients.cpp
   test_client_library.cpp
   test_client_library_errors.cpp
   test_client_library_old.cpp
   test_client_surface_events.cpp
+  test_client_surface_swap_buffers.cpp
   test_command_line_handling.cpp
   test_custom_input_dispatcher.cpp
   test_client_surfaces.cpp
-  test_test_framework.cpp
   test_focus_selection.cpp
   test_server_shutdown.cpp
   test_client_focus_notification.cpp
@@ -34,21 +35,18 @@ set(
   test_server_disconnect.cpp
   test_client_library_drm.cpp
   test_prompt_session_client_api.cpp
-  test_protobuf.cpp
   test_client_screencast.cpp
-  test_client_surface_swap_buffers.cpp
   test_client_cursor_api.cpp
   test_large_messages.cpp
   test_client_surface_visibility.cpp
   test_touchspot_visualization.cpp
   test_client_with_custom_display_config_deadlock.cpp
   test_macros.cpp
-  test_stale_frames.cpp
   test_server_without_active_outputs.cpp
   test_client_input.cpp
   test_server_startup.cpp
-  ${GENERATED_PROTOBUF_SRCS}
-  ${GENERATED_PROTOBUF_HDRS}
+  test_debug_api.cpp
+  test_unresponsive_client.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa")
@@ -60,6 +58,11 @@ add_executable(
 
   ${SOURCES}
 )
+
+mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
+
+add_dependencies(mir_acceptance_tests GMock)
+
 uses_android_input(mir_acceptance_tests)
 
 
@@ -68,6 +71,7 @@ target_link_libraries(
 
   mirserver
   mirclient
+  mirclient-debug-extension
   mirplatform
 
   mir-test

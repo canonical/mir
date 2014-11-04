@@ -17,15 +17,11 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_debug.h"
 
-#include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 
 #include "src/client/client_buffer.h"
-
-#include "mir/frontend/connector.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -53,13 +49,11 @@ namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 namespace mcl = mir::client;
 namespace mtf = mir_test_framework;
-
 namespace
 {
-struct ClientLibrary : mir_test_framework::InProcessServer
+struct ClientLibrary : mtf::HeadlessInProcessServer
 {
-    mtf::StubbedServerConfiguration server_configuration;
-    mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
+    mtf::UsingStubClientPlatform using_stub_client_platform;
 
     std::set<MirSurface*> surfaces;
     MirConnection* connection = nullptr;

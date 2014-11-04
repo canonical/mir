@@ -43,7 +43,7 @@ bool plane_alpha_is_translucent(mg::Renderable const& renderable)
     {
         1.0f/(2.0 * static_cast<float>(std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max()))
     };
-    return renderable.alpha_enabled() && (renderable.alpha() < 1.0f - tolerance);
+    return (renderable.alpha() < 1.0f - tolerance);
 }
 
 bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)

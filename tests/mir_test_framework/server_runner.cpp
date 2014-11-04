@@ -22,6 +22,7 @@
 #include "mir/display_server.h"
 #include "mir/frontend/connector.h"
 #include "mir/run_mir.h"
+#include "mir/main_loop.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -85,6 +86,7 @@ mir::DisplayServer* mtf::ServerRunner::start_mir_server()
     std::mutex mutex;
     std::condition_variable started;
     mir::DisplayServer* result{nullptr};
+    auto const main_loop = server_config().the_main_loop();
 
     server_thread = std::thread([&]
     {
@@ -92,9 +94,17 @@ mir::DisplayServer* mtf::ServerRunner::start_mir_server()
         {
             mir::run_mir(server_config(), [&](mir::DisplayServer& ds)
             {
-                std::lock_guard<std::mutex> lock(mutex);
-                result = &ds;
-                started.notify_one();
+                // By enqueuing the notification code in the main loop, we are
+                // ensuring that the server has really and fully started before
+                // leaving start_mir_server().
+                main_loop->enqueue(
+                    this,
+                    [&]
+                    {
+                        std::lock_guard<std::mutex> lock(mutex);
+                        result = &ds;
+                        started.notify_one();
+                    });
             });
         }
         catch (std::exception const& e)

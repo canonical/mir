@@ -581,7 +581,7 @@ TEST_F(BufferQueueTest, compositor_acquire_recycles_latest_ready_buffer)
     {
         mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
 
-        mg::BufferID client_id;
+        mg::Buffer* last_client_acquired_buffer{nullptr};
 
         for (int i = 0; i < 20; i++)
         {
@@ -589,7 +589,7 @@ TEST_F(BufferQueueTest, compositor_acquire_recycles_latest_ready_buffer)
             {
                 auto handle = client_acquire_async(q);
                 ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
-                client_id = handle->id();
+                last_client_acquired_buffer = handle->buffer();
                 handle->release_buffer();
             }
 
@@ -597,7 +597,7 @@ TEST_F(BufferQueueTest, compositor_acquire_recycles_latest_ready_buffer)
             {
                 void const* user_id = reinterpret_cast<void const*>(monitor_id);
                 auto buffer = q.compositor_acquire(user_id);
-                ASSERT_THAT(buffer->id(), Eq(client_id));
+                ASSERT_THAT(buffer.get(), Eq(last_client_acquired_buffer));
                 q.compositor_release(buffer);
             }
         }
@@ -693,6 +693,27 @@ TEST_F(BufferQueueTest, snapshot_acquire_basic)
         q.compositor_release(comp_buffer);
         q.snapshot_release(snapshot);
     }
+}
+
+TEST_F(BufferQueueTest, callbacks_cant_happen_after_shutdown)
+{
+    mc::BufferQueue q(1, allocator, basic_properties, policy_factory);
+
+    q.drop_client_requests();
+    auto client = client_acquire_async(q);
+    ASSERT_FALSE(client->has_acquired_buffer());
+}
+
+TEST_F(BufferQueueTest, callbacks_cant_happen_after_shutdown_with_snapshots)
+{
+    mc::BufferQueue q(1, allocator, basic_properties, policy_factory);
+
+    auto snapshot = q.snapshot_acquire();
+    q.drop_client_requests();
+    q.snapshot_release(snapshot);
+
+    auto client = client_acquire_async(q);
+    ASSERT_FALSE(client->has_acquired_buffer());
 }
 
 TEST_F(BufferQueueTest, snapshot_acquire_never_blocks)
@@ -969,7 +990,7 @@ TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
     for (int nbuffers = 1; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::BufferQueue q(nbuffers, allocator, basic_properties, policy_factory);
-        mg::BufferID history[5];
+        std::vector<mg::BufferID> history;
 
         const int width0 = 123;
         const int height0 = 456;
@@ -980,7 +1001,8 @@ TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
         int const nbuffers_to_use = q.buffers_free_for_client();
         ASSERT_THAT(nbuffers_to_use, Gt(0));
 
-        for (int produce = 0; produce < max_ownable_buffers(nbuffers); ++produce)
+        int max_buffers{max_ownable_buffers(nbuffers)};
+        for (int produce = 0; produce < max_buffers; ++produce)
         {
             geom::Size new_size{width, height};
             width += dx;
@@ -989,7 +1011,7 @@ TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
             q.resize(new_size);
             auto handle = client_acquire_async(q);
             ASSERT_THAT(handle->has_acquired_buffer(), Eq(true));
-            history[produce] = handle->id();
+            history.emplace_back(handle->id());
             auto buffer = handle->buffer();
             ASSERT_THAT(buffer->size(), Eq(new_size));
             handle->release_buffer();
@@ -998,7 +1020,8 @@ TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
         width = width0;
         height = height0;
 
-        for (int consume = 0; consume < max_ownable_buffers(nbuffers); ++consume)
+        ASSERT_THAT(history.size(), Eq(max_buffers));
+        for (int consume = 0; consume < max_buffers; ++consume)
         {
             geom::Size expect_size{width, height};
             width += dx;
@@ -1464,7 +1487,7 @@ TEST_F(BufferQueueTest, gives_compositor_a_valid_buffer_after_dropping_old_buffe
     q.drop_old_buffers();
 
     auto comp = q.compositor_acquire(this);
-    ASSERT_THAT(comp->id(), Ne(mg::BufferID{}));
+    ASSERT_THAT(comp, Ne(nullptr));
 }
 
 TEST_F(BufferQueueTest, gives_compositor_the_newest_buffer_after_dropping_old_buffers)

@@ -29,6 +29,12 @@ get the source and build it:
  - \ref building_source_for_pc
  - \ref building_source_for_android
 
+### Preparing a VM to run Mir
+
+Especially if you want to debug the shell without locking your system this might be a helpful setup:
+
+- \ref setup_kvm_for_mir
+
 Using Mir
 ---------
 
@@ -83,4 +89,7 @@ Working on Mir code
 
  - \ref md_README  "Mir Read me"
  - \ref md_HACKING "Mir hacking guide"
+ - \subpage android_new_device_bringup "New android device bringup" 
  - \ref component_reports
+ - \ref dso_versioning_guide
+ - \ref abi_compatibility_tools

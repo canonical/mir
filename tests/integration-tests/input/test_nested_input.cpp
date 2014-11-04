@@ -25,7 +25,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/raii.h"
 
-#include "mir_test_doubles/stub_input_targets.h"
+#include "mir_test_doubles/stub_scene.h"
 #include "mir_test_doubles/mock_event_filter.h"
 #include "mir_test_doubles/stub_input_enumerator.h"
 #include "mir_test/fake_shared.h"

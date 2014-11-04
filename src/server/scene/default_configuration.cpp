@@ -20,7 +20,7 @@
 
 #include "mir/graphics/display.h"
 #include "mir/graphics/gl_context.h"
-#include "mir/input/input_targets.h"
+#include "mir/input/scene.h"
 #include "mir/abnormal_exit.h"
 #include "mir/scene/session.h"
 
@@ -36,6 +36,7 @@
 #include "surface_stack.h"
 #include "threaded_snapshot_strategy.h"
 #include "prompt_session_manager_impl.h"
+#include "default_coordinate_translator.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -57,7 +58,7 @@ mir::DefaultServerConfiguration::the_scene()
                          { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
 }
 
-std::shared_ptr<mi::InputTargets> mir::DefaultServerConfiguration::the_input_targets()
+std::shared_ptr<mi::Scene> mir::DefaultServerConfiguration::the_input_scene()
 {
     return surface_stack([this]()
                          { return std::make_shared<ms::SurfaceStack>(the_scene_report()); });
@@ -236,5 +237,15 @@ mir::DefaultServerConfiguration::the_prompt_session_manager()
             return std::make_shared<ms::PromptSessionManagerImpl>(
                 the_session_container(),
                 the_prompt_session_listener());
+        });
+}
+
+std::shared_ptr<ms::CoordinateTranslator>
+mir::DefaultServerConfiguration::the_coordinate_translator()
+{
+    return coordinate_translator(
+        [this]()
+        {
+            return std::make_shared<ms::DefaultCoordinateTranslator>();
         });
 }

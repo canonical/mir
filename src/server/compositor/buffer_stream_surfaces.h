@@ -53,6 +53,7 @@ public:
     void force_requests_to_complete() override;
     int buffers_ready_for_compositor() const override;
     void drop_old_buffers() override;
+    void drop_client_requests() override;
 
 protected:
     BufferStreamSurfaces(const BufferStreamSurfaces&) = delete;

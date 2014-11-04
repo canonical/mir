@@ -24,6 +24,8 @@
 #include <memory>
 #include <stdint.h>
 
+#include "mir/fd.h"
+
 namespace mir
 {
 namespace client
@@ -133,15 +135,16 @@ public:
      *
      * \note This provides stream semantics - message boundaries are not preserved.
      */
-    virtual void receive_data(void* buffer, size_t bytes_requested, std::vector<int>& fds) = 0;
+    virtual void receive_data(void* buffer, size_t bytes_requested, std::vector<Fd>& fds) = 0;
 
     /**
-     * \brief Write data to the server
+     * \brief Write message to the server
      * \param [in] buffer   Data to send
+     * \param [in] fds      Fds to send
      * \throws A std::runtime_error if it is not possible to write the full contents
      *         of buffer to the server.
      */
-    virtual void send_data(std::vector<uint8_t> const& buffer) = 0;
+    virtual void send_message(std::vector<uint8_t> const& buffer, std::vector<Fd> const& fds) = 0;
 };
 
 }

@@ -21,7 +21,8 @@
 #include "native_platform.h"
 
 #include "buffer_allocator.h"
-#include "mir/graphics/buffer_ipc_packer.h"
+#include "buffer_writer.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/nested_context.h"
 
@@ -52,14 +53,12 @@ mgm::NativePlatform::~NativePlatform()
     finish_internal_native_display();
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator(
-        std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
+std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator()
 {
-    return std::make_shared<mgm::BufferAllocator>(
-        gbm.device, buffer_initializer, mgm::BypassOption::prohibited);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited);
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::connection_ipc_package()
 {
     struct MesaNativePlatformIPCPackage : public mg::PlatformIPCPackage
     {
@@ -93,29 +92,29 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::get_ipc_package()
 
 std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
 {
-    auto nd = ensure_internal_native_display(get_ipc_package());
+    auto nd = ensure_internal_native_display(connection_ipc_package());
     return std::make_shared<mgm::InternalClient>(nd);
 }
 
-/* TODO : this is just a duplication of mgm::Platform::fill_buffer_package */
+/* TODO : this is just a duplication of mgm::BufferPacker::pack_buffer */
 void mgm::NativePlatform::fill_buffer_package(
-    BufferIPCPacker* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const
+    BufferIpcMessage* message, Buffer const* buffer, BufferIpcMsgType msg_type) const
 {
     if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
         auto native_handle = buffer->native_buffer_handle();
         for(auto i=0; i<native_handle->data_items; i++)
         {
-            packer->pack_data(native_handle->data[i]);
+            message->pack_data(native_handle->data[i]);
         }
         for(auto i=0; i<native_handle->fd_items; i++)
         {
-            packer->pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
+            message->pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
         }
 
-        packer->pack_stride(buffer->stride());
-        packer->pack_flags(native_handle->flags);
-        packer->pack_size(buffer->size());
+        message->pack_stride(buffer->stride());
+        message->pack_flags(native_handle->flags);
+        message->pack_size(buffer->size());
     }
 }
 
@@ -157,3 +156,7 @@ void mgm::NativePlatform::finish_internal_native_display()
     native_display.reset();
 }
 
+std::shared_ptr<mg::BufferWriter> mgm::NativePlatform::make_buffer_writer()
+{
+    return std::make_shared<mgm::BufferWriter>();
+}

@@ -133,7 +133,7 @@ TEST_F(CustomInputDispatcher, receives_input)
     // may be stopped before events have been dispatched.
     run_in_test_process([&]
     {
-        server_config.dispatching_done.wait_for_signal_ready_for(std::chrono::seconds{5});
+        server_config.dispatching_done.wait_for_signal_ready_for(std::chrono::seconds{50});
     });
 }
 
@@ -179,6 +179,6 @@ TEST_F(CustomInputDispatcher, receives_focus_changes)
     launch_client_process(client);
     run_in_test_process([&]
     {
-        server_config.dispatching_done.wait_for_signal_ready_for(std::chrono::seconds{5});
+        server_config.dispatching_done.wait_for_signal_ready_for(std::chrono::seconds{50});
     });
 }

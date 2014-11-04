@@ -95,35 +95,56 @@ struct AndroidInputManagerSetup : public testing::Test
 {
     std::shared_ptr<MockEventHub> event_hub = std::make_shared<MockEventHub>();
     std::shared_ptr<MockInputThread> reader_thread = std::make_shared<MockInputThread>();
-};
 
-}
-
-TEST_F(AndroidInputManagerSetup, start_and_stop)
-{
-    using namespace ::testing;
-
-    ExpectationSet reader_setup;
-
-
-    reader_setup += EXPECT_CALL(*event_hub, flush()).Times(1);
-
-    EXPECT_CALL(*reader_thread, start())
-        .Times(1)
-        .After(reader_setup);
-
+    void setup_start_expectations()
     {
-        InSequence seq;
+        testing::InSequence seq;
+
+        EXPECT_CALL(*event_hub, flush());
+        EXPECT_CALL(*reader_thread, start());
+    }
+
+    void setup_stop_expectations()
+    {
+        testing::InSequence seq;
 
         EXPECT_CALL(*reader_thread, request_stop());
         EXPECT_CALL(*event_hub, wake());
         EXPECT_CALL(*reader_thread, join());
     }
+};
+
+}
+
+TEST_F(AndroidInputManagerSetup, starts_and_stops_reader)
+{
+    using namespace ::testing;
+
+    setup_start_expectations();
+    setup_stop_expectations();
 
     mia::InputManager manager(event_hub, reader_thread);
 
     manager.start();
     manager.stop();
+
+    // The input manager is unconditionally stopped at destruction.
+    Mock::VerifyAndClearExpectations(reader_thread.get());
+    Mock::VerifyAndClearExpectations(event_hub.get());
+
+    setup_stop_expectations();
+}
+
+TEST_F(AndroidInputManagerSetup, stops_reader_at_destruction)
+{
+    using namespace ::testing;
+
+    setup_start_expectations();
+    setup_stop_expectations();
+
+    mia::InputManager manager(event_hub, reader_thread);
+
+    manager.start();
 }
 
 TEST_F(AndroidInputManagerSetup, channel_factory_returns_input_channel_with_fds)
