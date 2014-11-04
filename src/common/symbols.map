@@ -183,7 +183,7 @@ MIR_COMMON_3 {
     mir::udev::Monitor::process_events*;
     mir::udev::operator*;
     vtable?for?mir::logging::DumbConsoleLogger;
-    vtable?for?mir::time::HighResolutionClock;
+    vtable?for?mir::time::SteadyClock;
     vtable?for?mir::time::Clock;
 
     mir::send_fds*;

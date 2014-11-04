@@ -35,7 +35,7 @@
 #include "mir/input/cursor_listener.h"
 #include "mir/input/vt_filter.h"
 #include "mir/input/input_manager.h"
-#include "mir/time/high_resolution_clock.h"
+#include "mir/time/steady_clock.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/default_configuration.h"
 #include "mir/scene/null_prompt_session_listener.h"
@@ -157,7 +157,7 @@ std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()
     return clock(
         []()
         {
-            return std::make_shared<mir::time::HighResolutionClock>();
+            return std::make_shared<mir::time::SteadyClock>();
         });
 }
 
