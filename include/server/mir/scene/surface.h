@@ -85,15 +85,15 @@ public:
     virtual void set_orientation(MirOrientation orientation) = 0;
     virtual void force_requests_to_complete() = 0;
     
-    virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
-    virtual std::shared_ptr<graphics::CursorImage> cursor_image() const = 0;
+    virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) override = 0;
+    virtual std::shared_ptr<graphics::CursorImage> cursor_image() const override = 0;
 
     virtual void add_observer(std::shared_ptr<SurfaceObserver> const& observer) = 0;
     virtual void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) = 0;
 
     // TODO input_channel() relates to adding and removing the surface
     // TODO from the scene and is probably not cleanest interface for this.
-    virtual std::shared_ptr<input::InputChannel> input_channel() const = 0;
+    virtual std::shared_ptr<input::InputChannel> input_channel() const override = 0;
     virtual void set_reception_mode(input::InputReceptionMode mode) = 0;
 };
 }

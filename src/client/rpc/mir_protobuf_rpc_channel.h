@@ -69,7 +69,7 @@ public:
 private:
     virtual void CallMethod(const google::protobuf::MethodDescriptor* method, google::protobuf::RpcController*,
         const google::protobuf::Message* parameters, google::protobuf::Message* response,
-        google::protobuf::Closure* complete);
+        google::protobuf::Closure* complete) override;
 
     std::shared_ptr<RpcReport> const rpc_report;
     detail::PendingCallCache pending_calls;

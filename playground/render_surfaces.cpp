@@ -235,8 +235,8 @@ public:
     {
         struct NullConnector : public mf::Connector
         {
-            void start() {}
-            void stop() {}
+            void start() override {}
+            void stop() override {}
             int client_socket_fd() const override { return 0; }
             int client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const override { return 0; }
         };
@@ -247,7 +247,7 @@ public:
 
     // Unless the compositor starts before we create the surfaces it won't respond to
     // the change notification that causes.
-    std::shared_ptr<mir::ServerStatusListener> the_server_status_listener()
+    std::shared_ptr<mir::ServerStatusListener> the_server_status_listener() override
     {
         struct ServerStatusListener : mir::ServerStatusListener
         {

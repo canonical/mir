@@ -34,7 +34,7 @@ namespace doubles
 class NullDisplay : public graphics::Display
 {
  public:
-    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const&)
+    void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const&) override
     {
         /* yield() is needed to ensure reasonable runtime under valgrind for some tests */
         std::this_thread::yield();
@@ -45,7 +45,7 @@ class NullDisplay : public graphics::Display
             new NullDisplayConfiguration
         );
     }
-    void configure(graphics::DisplayConfiguration const&) {}
+    void configure(graphics::DisplayConfiguration const&)  override{}
     void register_configuration_change_handler(
         graphics::EventHandlerRegister&,
         graphics::DisplayConfigurationChangeHandler const&) override
@@ -56,13 +56,13 @@ class NullDisplay : public graphics::Display
                                         graphics::DisplayResumeHandler const&) override
     {
     }
-    void pause() {}
-    void resume() {}
-    std::shared_ptr<graphics::Cursor> create_hardware_cursor(std::shared_ptr<graphics::CursorImage> const& /* initial_image */)
+    void pause() override{}
+    void resume() override {}
+    std::shared_ptr<graphics::Cursor> create_hardware_cursor(std::shared_ptr<graphics::CursorImage> const& /* initial_image */) override
     {
          return {}; 
     }
-    std::unique_ptr<graphics::GLContext> create_gl_context()
+    std::unique_ptr<graphics::GLContext> create_gl_context() override
     {
         return std::unique_ptr<NullGLContext>{new NullGLContext()};
     }

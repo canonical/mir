@@ -45,12 +45,12 @@ public:
     explicit AsioMainLoop(std::shared_ptr<time::Clock> const& clock);
     ~AsioMainLoop() noexcept(true);
 
-    void run();
-    void stop();
+    void run() override;
+    void stop() override;
 
     void register_signal_handler(
         std::initializer_list<int> signals,
-        std::function<void(int)> const& handler);
+        std::function<void(int)> const& handler) override;
 
     void register_fd_handler(
         std::initializer_list<int> fd,
@@ -65,9 +65,9 @@ public:
                                            std::function<void()> callback) override;
     std::unique_ptr<time::Alarm> create_alarm(std::function<void()> callback) override;
 
-    void enqueue(void const* owner, ServerAction const& action);
-    void pause_processing_for(void const* owner);
-    void resume_processing_for(void const* owner);
+    void enqueue(void const* owner, ServerAction const& action) override;
+    void pause_processing_for(void const* owner) override;
+    void resume_processing_for(void const* owner) override;
 
 private:
     class SignalHandler;

@@ -64,7 +64,7 @@ public:
      * We don't have expectations for these, so use stubs
      * to silence gmock warnings.
      */
-    int client_socket_fd() const { return 0; }
+    int client_socket_fd() const override { return 0; }
     int client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const override { return 0; }
     void remove_endpoint() const {}
 };
@@ -89,7 +89,7 @@ public:
         display->for_each_display_buffer(f);
     }
 
-    std::unique_ptr<mg::DisplayConfiguration> configuration() const override
+    std::unique_ptr<mg::DisplayConfiguration> configuration() const
     {
         return std::unique_ptr<mg::DisplayConfiguration>(
             new mtd::NullDisplayConfiguration

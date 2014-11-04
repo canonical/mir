@@ -94,15 +94,15 @@ public:
     {
     }
 
-    virtual graphics::BufferID id() const { return buf_id; }
+    virtual graphics::BufferID id() const override { return buf_id; }
 
-    virtual geometry::Size size() const { return buf_size; }
+    virtual geometry::Size size() const override { return buf_size; }
 
-    virtual geometry::Stride stride() const { return buf_stride; }
+    virtual geometry::Stride stride() const override { return buf_stride; }
 
-    virtual MirPixelFormat pixel_format() const { return buf_pixel_format; }
+    virtual MirPixelFormat pixel_format() const override { return buf_pixel_format; }
 
-    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const { return native_buffer; }
+    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override { return native_buffer; }
     virtual void gl_bind_to_texture() override {}
 
     virtual bool can_bypass() const override { return true; }
