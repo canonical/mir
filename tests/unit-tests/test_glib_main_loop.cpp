@@ -33,23 +33,39 @@ struct GLibMainLoopTest : ::testing::Test
 
 TEST_F(GLibMainLoopTest, stops_from_within_handler)
 {
-    int const owner{0};
+    mt::Signal loop_finished;
 
-    ml.enqueue(&owner, [&] { ml.stop(); });
-    ml.run();
+    std::thread{
+        [&]
+        {
+            int const owner{0};
+            ml.enqueue(&owner, [&] { ml.stop(); });
+            ml.run();
+            loop_finished.raise();
+        }}.detach();
+
+    EXPECT_TRUE(loop_finished.wait_for(std::chrono::seconds{5}));
 }
 
 TEST_F(GLibMainLoopTest, stops_from_outside_handler)
 {
-    int const owner{0};
     mt::Signal loop_running;
+    mt::Signal loop_finished;
 
-    std::thread t{[&] { loop_running.wait(); ml.stop(); }};
+    std::thread{
+        [&]
+        {
+            int const owner{0};
+            ml.enqueue(&owner, [&] { loop_running.raise(); });
+            ml.run();
+            loop_finished.raise();
+        }}.detach();
 
-    ml.enqueue(&owner, [&] { loop_running.raise(); });
-    ml.run();
+    ASSERT_TRUE(loop_running.wait_for(std::chrono::seconds{5}));
 
-    t.join();
+    ml.stop();
+
+    EXPECT_TRUE(loop_finished.wait_for(std::chrono::seconds{5}));
 }
 
 TEST_F(GLibMainLoopTest, ignores_handler_added_after_stop)

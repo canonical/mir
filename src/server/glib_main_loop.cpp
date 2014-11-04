@@ -29,7 +29,7 @@ namespace
 class GSourceHandle
 {
 public:
-    GSourceHandle(GSource* gsource)
+    explicit GSourceHandle(GSource* gsource)
         : gsource{gsource}
     {
     }
@@ -72,7 +72,7 @@ GSourceHandle make_idle_source(int priority, std::function<void()> const& callba
         new IdleContext{callback},
         reinterpret_cast<GDestroyNotify>(&IdleContext::static_destroy));
 
-    return {gsource};
+    return GSourceHandle{gsource};
 }
 
 }
