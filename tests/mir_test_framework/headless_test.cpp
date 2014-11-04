@@ -58,6 +58,8 @@ void mtf::HeadlessTest::start_server()
                 });
         });
 
+    server.apply_settings();
+
     server_thread = std::thread([&]
         {
             try
