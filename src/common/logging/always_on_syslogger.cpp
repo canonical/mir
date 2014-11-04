@@ -16,23 +16,20 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#ifndef MIR_LOGGING_ALWAYS_ON_LOGGER_H_
-#define MIR_LOGGING_ALWAYS_ON_LOGGER_H_
+#include "mir/logging/always_on_syslogger.h"
 
-#include "mir/logging/logger.h"
+namespace ml = mir::logging;
 
-namespace mir
+ml::AlwaysOnLogger& ml::AlwaysOnSysLogger::instance()
 {
-namespace logging
-{
+    static ml::AlwaysOnSysLogger always_on_syslogger;
 
-class AlwaysOnLogger : public Logger
-{
-public:
-    static AlwaysOnLogger& instance();
-};
-
-}
+    return always_on_syslogger;
 }
 
-#endif // MIR_LOGGING_ALWAYS_ON_LOGGER_H_
+void ml::AlwaysOnSysLogger::log(ml::Logger::Severity /*severity*/,
+                             const std::string& message,
+                             const std::string& component)
+{
+    syslog(LOG_INFO, "%s: %s", component.c_str(), message.c_str());
+}

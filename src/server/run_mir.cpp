@@ -24,7 +24,6 @@
 #include "mir/frontend/connector.h"
 #include "mir/raii.h"
 #include "mir/emergency_cleanup.h"
-#include "mir/logging/always_on_logger.h"
 
 #include <atomic>
 #include <exception>

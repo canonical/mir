@@ -16,22 +16,26 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "mir/logging/always_on_logger.h"
+#ifndef MIR_LOGGING_ALWAYS_ON_SYSLOGGER_H_
+#define MIR_LOGGING_ALWAYS_ON_SYSLOGGER_H_
 
+#include "mir/logging/always_on_logger.h"
 #include <syslog.h>
 
-namespace ml = mir::logging;
-
-ml::AlwaysOnLogger& ml::AlwaysOnLogger::instance()
+namespace mir
 {
-    static ml::AlwaysOnLogger always_on_logger;
+namespace logging
+{
 
-    return always_on_logger;
+class AlwaysOnSysLogger : public AlwaysOnLogger
+{
+public:
+    static AlwaysOnLogger& instance();
+
+    virtual void log(Severity severity, const std::string& message, const std::string& component) override;
+};
+
+}
 }
 
-void ml::AlwaysOnLogger::log(ml::Logger::Severity /*severity*/,
-                             const std::string& message,
-                             const std::string& component)
-{
-    syslog(LOG_INFO, "%s: %s", component.c_str(), message.c_str());
-}
+#endif // MIR_LOGGING_ALWAYS_ON_SYSLOGGER_H_
