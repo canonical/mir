@@ -21,25 +21,14 @@
 #include <gmock/gmock.h>
 #include <chrono>
 
+#include "mir_test_doubles/advanceable_clock.h"
+
 using namespace mir;
+
+namespace mtd = mir::test::doubles;
 
 namespace
 {
-
-class FakeClock : public time::Clock 
-{
-public:
-    void elapse(time::Duration delta)
-    {
-        now += delta;
-    }
-    time::Timestamp sample() const override
-    {
-        return now;
-    }
-private:
-    time::Timestamp now;
-};
 
 class MockPeriodicPerfReport : public client::PeriodicPerfReport
 {
@@ -53,17 +42,21 @@ public:
     MOCK_CONST_METHOD5(display, void(const char*,long,long,long,int));
 };
 
+struct PeriodicPerfReport : ::testing::Test
+{
+    std::chrono::seconds const period{1};
+    std::shared_ptr<mtd::AdvanceableClock> const clock = std::make_shared<mtd::AdvanceableClock>();
+    MockPeriodicPerfReport report{period, clock};
+};
+
 } // namespace
 
-TEST(PeriodicPerfReport, reports_the_right_numbers_at_full_speed)
+TEST_F(PeriodicPerfReport, reports_the_right_numbers_at_full_speed)
 {
     int const fps = 50;
     int const nbuffers = 3;
     std::chrono::microseconds const render_time = std::chrono::milliseconds(3);
     auto const frame_time = std::chrono::microseconds(1000000 / fps);
-    std::chrono::seconds const period(1);
-    auto clock = std::make_shared<FakeClock>();
-    MockPeriodicPerfReport report(period, clock);
     const char* const name = "Foo";
 
     report.name_surface(name);
@@ -93,21 +86,18 @@ TEST(PeriodicPerfReport, reports_the_right_numbers_at_full_speed)
     {
         int const buffer_id = f % nbuffers;
 
-        clock->elapse(frame_time - render_time);
+        clock->advance_by(frame_time - render_time);
         report.begin_frame(buffer_id);
-        clock->elapse(render_time);
+        clock->advance_by(render_time);
         report.end_frame(buffer_id);
     }
 }
 
-TEST(PeriodicPerfReport, reports_the_right_numbers_at_low_speed)
+TEST_F(PeriodicPerfReport, reports_the_right_numbers_at_low_speed)
 {
     int const nbuffers = 3;
     std::chrono::microseconds const render_time = std::chrono::milliseconds(3);
     auto const frame_time = std::chrono::seconds(4);
-    std::chrono::seconds const period(1);
-    auto clock = std::make_shared<FakeClock>();
-    MockPeriodicPerfReport report(period, clock);
     const char* const name = "Foo";
 
     report.name_surface(name);
@@ -126,21 +116,17 @@ TEST(PeriodicPerfReport, reports_the_right_numbers_at_low_speed)
     for (int f = 0; f < nframes; ++f)
     {
         int const buffer_id = f % nbuffers;
-        clock->elapse(frame_time - render_time);
+        clock->advance_by(frame_time - render_time);
         report.begin_frame(buffer_id);
-        clock->elapse(render_time);
+        clock->advance_by(render_time);
         report.end_frame(buffer_id);
     }
 }
 
-TEST(PeriodicPerfReport, reports_nothing_on_idle)
+TEST_F(PeriodicPerfReport, reports_nothing_on_idle)
 {
-    std::chrono::seconds const period(1);
-    auto clock = std::make_shared<FakeClock>();
-    MockPeriodicPerfReport report(period, clock);
-
     using namespace testing;
     EXPECT_CALL(report, display(_,_,_,_,_)).Times(0);
-    clock->elapse(std::chrono::seconds(10));
+    clock->advance_by(std::chrono::seconds(10));
 }
 

@@ -17,8 +17,15 @@
  */
 
 #include "mir/time/high_resolution_clock.h"
+#include <algorithm>
 
-mir::time::Timestamp mir::time::HighResolutionClock::sample() const
+mir::time::Timestamp mir::time::HighResolutionClock::now() const
 {
     return clock.now();
+}
+
+mir::time::Duration
+mir::time::HighResolutionClock::min_wait_until(Timestamp t) const
+{
+    return std::max(t - now(), Duration{0});
 }

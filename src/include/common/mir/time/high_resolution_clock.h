@@ -29,7 +29,8 @@ namespace time
 class HighResolutionClock : public Clock
 {
 public:
-    virtual Timestamp sample() const override;
+    Timestamp now() const override;
+    Duration min_wait_until(Timestamp t) const override;
 
 private:
     std::chrono::high_resolution_clock clock;
