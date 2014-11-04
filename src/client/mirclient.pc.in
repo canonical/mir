@@ -9,5 +9,5 @@ Name: mirclient
 Description: Mir client library
 Version: @MIR_VERSION@
 Requires.private: protobuf >= 2.4.1
-Libs: -L${libdir} -lmirclient
+Libs: -L${libdir} -lmirclient -lmirprotobuf
 Cflags: -I${includedir} -I${common_includedir} 

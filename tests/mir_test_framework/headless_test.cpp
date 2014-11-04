@@ -85,13 +85,14 @@ void mtf::HeadlessTest::start_server()
 void mtf::HeadlessTest::stop_server()
 {
     connections.clear();
+    server.stop();
+    wait_for_server_exit();
+}
 
+void mtf::HeadlessTest::wait_for_server_exit()
+{
     std::unique_lock<std::mutex> lock(mutex);
-    if (server_running)
-    {
-        server.stop();
-        started.wait_for(lock, timeout, [&] { return !server_running; });
-    }
+    started.wait_for(lock, timeout, [&] { return !server_running; });
 
     if (server_running)
     {
