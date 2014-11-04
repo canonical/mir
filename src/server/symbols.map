@@ -786,3 +786,12 @@ MIR_SERVER_27 {
   };
  local: *;
 };
+
+MIR_SERVER_27.1 {
+ global:
+  extern "C++" {
+    mir::DefaultServerConfiguration::the_always_on_logger*;
+  };
+ local: *;
+};
+  

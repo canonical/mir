@@ -142,6 +142,7 @@ class InputThread;
 namespace logging
 {
 class Logger;
+class AlwaysOnLogger;
 }
 
 namespace options
@@ -314,6 +315,7 @@ public:
      *  @{ */
     virtual std::shared_ptr<logging::Logger> the_logger();
     /** @} */
+    virtual logging::AlwaysOnLogger& the_always_on_logger();
 
     virtual std::shared_ptr<time::Clock> the_clock();
     virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
