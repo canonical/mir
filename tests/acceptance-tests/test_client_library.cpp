@@ -53,8 +53,6 @@ namespace
 {
 struct ClientLibrary : mtf::HeadlessInProcessServer
 {
-    mtf::UsingStubClientPlatform using_stub_client_platform;
-
     std::set<MirSurface*> surfaces;
     MirConnection* connection = nullptr;
     MirSurface* surface  = nullptr;
