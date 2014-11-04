@@ -23,6 +23,8 @@
 #include "src/client/client_platform.h"
 #include "src/client/client_buffer_factory.h"
 
+#include "mir_test/validity_matchers.h"
+
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/using_stub_client_platform.h"
@@ -190,7 +192,7 @@ TEST_F(ClientLibraryErrors, CreateSurfaceReturnsErrorObjectOnFailure)
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    ASSERT_TRUE(mir_connection_is_valid(connection)) << mir_connection_get_error_message(connection);
+    ASSERT_THAT(connection, IsValid());
 
     MirSurfaceParameters const request_params =
     {
@@ -216,7 +218,7 @@ TEST_F(ClientLibraryErrors, CreateSurfaceReturnsErrorObjectOnFailureInReplyProce
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    ASSERT_TRUE(mir_connection_is_valid(connection)) << mir_connection_get_error_message(connection);
+    ASSERT_THAT(connection, IsValid());
 
     MirSurfaceParameters const request_params =
     {
