@@ -92,7 +92,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircommon2 (= ${binary:Version}), 
+Depends: libmircommon3 (= ${binary:Version}), 
          libprotobuf-dev (>= 2.4.1),
          ${misc:Depends},
 Breaks: mircommon-dev (<< 0.6)
@@ -251,7 +251,7 @@ Description: Display Server for Ubuntu - stress tests and other test tools
  .
  Contains a tool for stress testing the Mir display server
 
-Package: libmircommon2
+Package: libmircommon3
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
