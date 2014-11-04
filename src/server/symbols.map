@@ -121,6 +121,7 @@ MIR_SERVER_27 {
     mir::DefaultServerConfiguration::the_surface_factory*;
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
+    mir::DefaultServerConfiguration::wrap_cursor_listener*;
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
     mir::DefaultServerConfiguration::wrap_session_coordinator*;
     mir::DefaultServerConfiguration::wrap_surface_coordinator*;
@@ -408,12 +409,12 @@ MIR_SERVER_27 {
     mir::Server::open_client_socket*;
     mir::Server::open_prompt_socket*;
     mir::Server::override_the_compositor*;
-    mir::Server::override_the_cursor_listener*;
     mir::Server::override_the_display_buffer_compositor_factory*;
     mir::Server::override_the_gl_config*;
     mir::Server::override_the_input_dispatcher*;
     mir::Server::override_the_placement_strategy*;
     mir::Server::override_the_prompt_session_listener*;
+    mir::Server::override_the_prompt_session_manager*;
     mir::Server::override_the_server_status_listener*;
     mir::Server::override_the_session_authorizer*;
     mir::Server::override_the_session_listener*;
@@ -433,8 +434,10 @@ MIR_SERVER_27 {
     mir::ServerStatusListener::started*;
     mir::Server::stop*;
     mir::Server::the_composite_event_filter*;
+    mir::Server::the_compositor*;
     mir::Server::the_cursor_listener*;
     mir::Server::the_display*;
+    mir::Server::the_focus_controller*;
     mir::Server::the_gl_config*;
     mir::Server::the_graphics_platform*;
     mir::Server::the_main_loop*;
@@ -446,6 +449,8 @@ MIR_SERVER_27 {
     mir::Server::the_shell_display_layout*;
     mir::Server::the_surface_configurator*;
     mir::Server::the_surface_coordinator*;
+    mir::Server::the_touch_visualizer*;
+    mir::Server::wrap_cursor_listener*;
     mir::Server::wrap_display_configuration_policy*;
     mir::Server::wrap_session_coordinator*;
     mir::Server::wrap_surface_coordinator*;
@@ -588,6 +593,7 @@ MIR_SERVER_27 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_surface_factory*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_surface_stack_model*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_touch_visualizer*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_cursor_listener*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_session_coordinator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::wrap_surface_coordinator*;
