@@ -18,6 +18,7 @@
 
 #include "mir/server.h"
 
+#include "mir/emergency_cleanup.h"
 #include "mir/fd.h"
 #include "mir/frontend/connector.h"
 #include "mir/options/default_configuration.h"
@@ -57,6 +58,7 @@ namespace mo = mir::options;
 #define FOREACH_ACCESSOR(MACRO)\
     MACRO(the_composite_event_filter)\
     MACRO(the_display)\
+    MACRO(the_gl_config)\
     MACRO(the_graphics_platform)\
     MACRO(the_main_loop)\
     MACRO(the_prompt_session_listener)\
@@ -85,6 +87,8 @@ struct mir::Server::Self
     int argc{0};
     char const** argv{nullptr};
     std::function<void()> exception_handler{};
+    Terminator terminator{};
+    EmergencyCleanupHandler emergency_cleanup_handler;
 
     std::function<void(int argc, char const* const* argv)> command_line_hander{};
 
@@ -232,14 +236,14 @@ void mir::Server::Self::set_add_configuration_options(
 
 void mir::Server::set_command_line(int argc, char const* argv[])
 {
-    verify_setting_allowed(self->server_config);    
+    verify_setting_allowed(self->server_config);
     self->argc = argc;
     self->argv = argv;
 }
 
 void mir::Server::add_init_callback(std::function<void()> const& init_callback)
 {
-    verify_setting_allowed(self->server_config);    
+    verify_setting_allowed(self->server_config);
     auto const& existing = self->init_callback;
 
     auto const updated = [=]
@@ -251,6 +255,14 @@ void mir::Server::add_init_callback(std::function<void()> const& init_callback)
     self->init_callback = updated;
 }
 
+void mir::Server::set_command_line_handler(
+    std::function<void(int argc, char const* const* argv)> const& command_line_hander)
+{
+    verify_setting_allowed(self->server_config);
+    self->command_line_hander = command_line_hander;
+}
+
+
 auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 {
     return self->options.lock();
@@ -258,8 +270,32 @@ auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 
 void mir::Server::set_exception_handler(std::function<void()> const& exception_handler)
 {
-    verify_setting_allowed(self->server_config);    
+    verify_setting_allowed(self->server_config);
     self->exception_handler = exception_handler;
+}
+
+void mir::Server::set_terminator(Terminator const& terminator)
+{
+    verify_setting_allowed(self->server_config);
+    self->terminator = terminator;
+}
+
+void mir::Server::add_emergency_cleanup(EmergencyCleanupHandler const& handler)
+{
+    verify_setting_allowed(self->server_config);
+
+    if (auto const& existing = self->emergency_cleanup_handler)
+    {
+        self->emergency_cleanup_handler = [=]
+            {
+                existing();
+                handler();
+            };
+    }
+    else
+    {
+        self->emergency_cleanup_handler = handler;
+    }
 }
 
 void mir::Server::apply_settings() const
@@ -279,7 +315,15 @@ try
 {
     apply_settings();
 
-    run_mir(*self->server_config, [&](DisplayServer&) { self->init_callback(); });
+    auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
+
+    if (self->emergency_cleanup_handler)
+        emergency_cleanup->add(self->emergency_cleanup_handler);
+
+    run_mir(
+        *self->server_config,
+        [&](DisplayServer&) { self->init_callback(); },
+        self->terminator);
 
     self->exit_status = true;
     self->server_config.reset();

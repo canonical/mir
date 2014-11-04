@@ -134,6 +134,28 @@ public:
     /// the exception can be re-thrown to retrieve type information.
     /// The default action is to call mir::report_exception(std::cerr)
     void set_exception_handler(std::function<void()> const& exception_handler);
+
+    /// Functor for processing SIGTERM or SIGINT
+    /// This will not be called directly by a signal handler: arbitrary functions may be invoked.
+    using Terminator = std::function<void(int signal)>;
+
+    /// Set handler for termination requests.
+    /// terminator will be called following receipt of SIGTERM or SIGINT.
+    /// The default terminator stop()s the server, replacements should probably
+    /// do the same in addition to any additional shutdown logic.
+    void set_terminator(Terminator const& terminator);
+
+    /// Functor for processing fatal signals for any "emergency cleanup".
+    /// That is: SIGQUIT, SIGABRT, SIGFPE, SIGSEGV & SIGBUS
+    ///
+    /// \warning This will be called directly by a signal handler:
+    /// Only async-signal-safe functions may be called
+    using EmergencyCleanupHandler = std::function<void()>;
+
+    /// Add cleanup for abnormal terminations.
+    /// handler will be called on receipt of a fatal signal after which the
+    /// default signal-handler will terminate the process.
+    void add_emergency_cleanup(EmergencyCleanupHandler const& handler);
 /** @} */
 
 /** @name Providing custom implementation
@@ -207,6 +229,9 @@ public:
 
     /// \return the graphics display.
     auto the_display() const -> std::shared_ptr<graphics::Display>;
+
+    /// \return the GL config.
+    auto the_gl_config() const -> std::shared_ptr<graphics::GLConfig>;
 
     /// \return the graphics platform.
     auto the_graphics_platform() const -> std::shared_ptr<graphics::Platform>;

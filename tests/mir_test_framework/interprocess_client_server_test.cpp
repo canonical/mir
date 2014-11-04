@@ -36,7 +36,18 @@ mtf::InterprocessClientServerTest::~InterprocessClientServerTest()
 
 void mtf::InterprocessClientServerTest::init_server(std::function<void()> const& init_code)
 {
-    server_setup = init_code;
+    if (auto const& existing = server_setup)
+    {
+        server_setup = [=]
+            {
+                existing();
+                init_code();
+            };
+    }
+    else
+    {
+        server_setup = init_code;
+    }
 }
 
 void mtf::InterprocessClientServerTest::run_in_server(std::function<void()> const& exec_code)
@@ -116,6 +127,22 @@ void mtf::InterprocessClientServerTest::TearDown()
     {
         Result result = server_process->wait_for_termination();
         server_process.reset();
-        EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
+
+        if (!server_signal_expected)
+        {
+            EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
+        }
+        else
+        {
+            EXPECT_THAT(result.signalled(), Eq(true));
+            // FIXME Under valgrind we always see SIGKILL (so treat that as a pass)
+            EXPECT_THAT(result.signal, AnyOf(Eq(expected_server_failure_signal), Eq(SIGKILL)));
+        }
     }
+}
+
+void mtf::InterprocessClientServerTest::expect_server_signalled(int signal)
+{
+    server_signal_expected = true;
+    expected_server_failure_signal = signal;
 }

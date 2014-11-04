@@ -38,11 +38,19 @@ void run_mir(
     ServerConfiguration& config,
     std::function<void(DisplayServer&)> init);
 
-void report_exception(std::ostream& out);
+/**
+ *  Run a DisplayServer with the supplied configuration.
+ *  init will be called after constructing the server, but before invoking DisplayServer::run()
+ *  The terminator will be called following receipt of SIGTERM or SIGINT
+ *  (but not in a signal handler - so arbitrary functions may be invoked).
+ *  This function does not return until the server has stopped.
+ */
+void run_mir(
+    ServerConfiguration& config,
+    std::function<void(DisplayServer&)> init,
+    std::function<void(int)> const& terminator);
 
 void terminate_with_current_exception();
 }
-
-
 
 #endif /* MIR_RUN_MIR_H_ */
