@@ -33,6 +33,7 @@ add_library(mirserverobjects OBJECT
   default_server_configuration.cpp
   asio_main_loop.cpp
   glib_main_loop.cpp
+  glib_main_loop_sources.cpp
   default_emergency_cleanup.cpp
   server.cpp
 )
