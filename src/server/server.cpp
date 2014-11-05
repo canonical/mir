@@ -245,7 +245,14 @@ template<typename ConfigPtr>
 void verify_setting_allowed(ConfigPtr const& initialized)
 {
     if (initialized)
-       BOOST_THROW_EXCEPTION(std::logic_error("Cannot amend configuration after initialization starts"));
+       BOOST_THROW_EXCEPTION(std::logic_error("Cannot amend configuration after apply_settings() call"));
+}
+
+template<typename ConfigPtr>
+void verify_accessing_allowed(ConfigPtr const& initialized)
+{
+    if (!initialized)
+       BOOST_THROW_EXCEPTION(std::logic_error("Cannot use configuration before apply_settings() call"));
 }
 }
 
@@ -297,6 +304,7 @@ void mir::Server::set_config_filename(std::string const& config_file)
 
 auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 {
+    verify_accessing_allowed(self->server_config);
     return self->options.lock();
 }
 
@@ -330,7 +338,7 @@ void mir::Server::add_emergency_cleanup(EmergencyCleanupHandler const& handler)
     }
 }
 
-void mir::Server::apply_settings() const
+void mir::Server::apply_settings()
 {
     if (self->server_config) return;
 
@@ -345,7 +353,7 @@ void mir::Server::apply_settings() const
 void mir::Server::run()
 try
 {
-    apply_settings();
+    verify_accessing_allowed(self->server_config);
 
     auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
 
@@ -372,8 +380,9 @@ catch (...)
 
 void mir::Server::stop()
 {
-    if (auto const main_loop = the_main_loop())
-        main_loop->stop();
+    if (self->server_config)
+        if (auto const main_loop = the_main_loop())
+            main_loop->stop();
 }
 
 bool mir::Server::exited_normally()
@@ -408,7 +417,7 @@ auto mir::Server::open_client_socket(ConnectHandler const& connect_handler) -> F
 #define MIR_SERVER_ACCESSOR(name)\
 auto mir::Server::name() const -> decltype(self->server_config->name())\
 {\
-    apply_settings();\
+    verify_accessing_allowed(self->server_config);\
     return self->server_config->name();\
 }
 

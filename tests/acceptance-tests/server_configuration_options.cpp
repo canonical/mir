@@ -120,7 +120,7 @@ TEST_F(ServerConfigurationOptions, unknown_command_line_options_are_passed_to_ha
     EXPECT_CALL(*this, command_line_handler(
         ElementsAre(StrEq("--hello"), StrEq("world"), StrEq("--answer"), StrEq("42"))));
 
-    server.the_session_authorizer();
+    server.apply_settings();
 }
 
 TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_home)
@@ -128,7 +128,7 @@ TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_home)
     create_config_file_in(fake_xdg_config_home);
 
     server.set_config_filename(config_filename);
-    server.the_session_authorizer();
+    server.apply_settings();
 
     auto const options = server.get_options();
 
@@ -144,7 +144,7 @@ TEST_F(ServerConfigurationOptions, are_read_from_home_config_file)
     add_to_environment(env_xdg_config_home, nullptr);
 
     server.set_config_filename(config_filename);
-    server.the_session_authorizer();
+    server.apply_settings();
 
     auto const options = server.get_options();
 
@@ -156,7 +156,7 @@ TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_dir0_config_file)
     create_config_file_in(fake_xdg_config_dir0);
 
     server.set_config_filename(config_filename);
-    server.the_session_authorizer();
+    server.apply_settings();
 
     auto const options = server.get_options();
 
@@ -168,7 +168,7 @@ TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_dir1_config_file)
     create_config_file_in(fake_xdg_config_dir1);
 
     server.set_config_filename(config_filename);
-    server.the_session_authorizer();
+    server.apply_settings();
 
     auto const options = server.get_options();
 
@@ -181,7 +181,7 @@ TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_dir0_before_xdg_conf
     create_config_file_in(fake_xdg_config_dir1);
 
     server.set_config_filename(config_filename);
-    server.the_session_authorizer();
+    server.apply_settings();
 
     auto const options = server.get_options();
 
@@ -195,7 +195,7 @@ TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_home_before_xdg_conf
     create_config_file_in(fake_xdg_config_dir1);
 
     server.set_config_filename(config_filename);
-    server.the_session_authorizer();
+    server.apply_settings();
 
     auto const options = server.get_options();
 
