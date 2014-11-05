@@ -59,7 +59,11 @@ GSourceHandle make_idle_source(int priority, std::function<void()> const& callba
 {
     struct IdleContext
     {
-        static void static_call(IdleContext* ctx) { ctx->callback(); }
+        static gboolean static_call(IdleContext* ctx)
+        {
+            ctx->callback();
+            return G_SOURCE_REMOVE;
+        }
         static void static_destroy(IdleContext* ctx) { delete ctx; }
         std::function<void()> const callback;
     };
