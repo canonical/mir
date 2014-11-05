@@ -203,9 +203,9 @@ MIR_COMMON_3 {
 MIR_COMMON_2.3 {
  global:
   extern "C++" {
-    vtable?for?mir::logging::AlwaysOnSysLogger;
-    mir::logging::AlwaysOnSysLogger::instance*;
-    mir::logging::AlwaysOnSysLogger::log*;
+    vtable?for?mir::logging::AlwaysOnConsoleLogger;
+    mir::logging::AlwaysOnConsoleLogger::instance*;
+    mir::logging::AlwaysOnConsoleLogger::log*;
   };
  local: *;
 };

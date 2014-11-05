@@ -16,18 +16,18 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#ifndef MIR_LOGGING_ALWAYS_ON_SYSLOGGER_H_
-#define MIR_LOGGING_ALWAYS_ON_SYSLOGGER_H_
+#ifndef MIR_LOGGING_ALWAYS_ON_CONSOLE_LOGGER_H_
+#define MIR_LOGGING_ALWAYS_ON_CONSOLE_LOGGER_H_
 
 #include "mir/logging/always_on_logger.h"
-#include <syslog.h>
+#include <iostream>
 
 namespace mir
 {
 namespace logging
 {
 
-class AlwaysOnSysLogger : public AlwaysOnLogger
+class AlwaysOnConsoleLogger : public AlwaysOnLogger
 {
 public:
     static AlwaysOnLogger& instance();
@@ -38,4 +38,4 @@ public:
 }
 }
 
-#endif // MIR_LOGGING_ALWAYS_ON_SYSLOGGER_H_
+#endif // MIR_LOGGING_ALWAYS_ON_CONSOLE_LOGGER_H_

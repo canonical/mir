@@ -21,7 +21,7 @@
 #include "mir/default_server_configuration.h"
 #include "mir/options/default_configuration.h"
 #include "mir/logging/dumb_console_logger.h"
-#include "mir/logging/always_on_syslogger.h"
+#include "mir/logging/always_on_console_logger.h"
 
 namespace ml = mir::logging;
 
@@ -48,6 +48,6 @@ auto mir::DefaultServerConfiguration::the_logger()
 
 ml::AlwaysOnLogger& mir::DefaultServerConfiguration::the_always_on_logger()
 {
-    return ml::AlwaysOnSysLogger::instance();
+    return ml::AlwaysOnConsoleLogger::instance();
 }
 

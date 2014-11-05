@@ -16,20 +16,33 @@
  * Authored by: Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#include "mir/logging/always_on_syslogger.h"
+#include "mir/logging/always_on_console_logger.h"
 
 namespace ml = mir::logging;
 
-ml::AlwaysOnLogger& ml::AlwaysOnSysLogger::instance()
+ml::AlwaysOnLogger& ml::AlwaysOnConsoleLogger::instance()
 {
-    static ml::AlwaysOnSysLogger always_on_syslogger;
+    static ml::AlwaysOnConsoleLogger always_on_console_logger;
 
-    return always_on_syslogger;
+    return always_on_console_logger;
 }
 
-void ml::AlwaysOnSysLogger::log(ml::Logger::Severity /*severity*/,
-                             const std::string& message,
-                             const std::string& component)
+void ml::AlwaysOnConsoleLogger::log(ml::Logger::Severity /*severity*/,
+                                    const std::string& message,
+                                    const std::string& component)
 {
-    syslog(LOG_INFO, "%s: %s", component.c_str(), message.c_str());
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    char now[32];
+
+    snprintf(now, sizeof(now), "%ld.%06ld",
+             (long)ts.tv_sec, ts.tv_nsec / 1000);
+
+    std::cout << "["
+              << now
+              << "] "
+              << component
+              << ": "
+              << message
+              << "\n";
 }
