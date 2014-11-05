@@ -44,8 +44,9 @@ struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
                 command_line_handler(args);
             });
 
-        remove_config_file_in(fake_home_config);
-        remove(fake_home);
+        server.add_configuration_option(test_config_key, "", mir::OptionType::string);
+
+        clean_test_files();
 
         add_to_environment(env_xdg_config_home, fake_xdg_config_home);
         add_to_environment(env_home, fake_home);
@@ -54,8 +55,9 @@ struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
 
     void TearDown() override
     {
-//        remove_config_file_in(fake_home_config);
-//        remove(fake_home);
+        // In the event of failure leave test files around to aid debugging
+        if(!HasFailure())
+            clean_test_files();
     }
 
     static constexpr char const* const env_xdg_config_home = "XDG_CONFIG_HOME";
@@ -67,12 +69,17 @@ struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
     static constexpr char const* const fake_home_config = "fake_home/.config";
     static constexpr char const* const fake_xdg_config_dirs =
         "fake_xdg_config_dir0:fake_xdg_config_dir1";
+    static constexpr char const* const fake_xdg_config_dir0 = "fake_xdg_config_dir0";
+    static constexpr char const* const fake_xdg_config_dir1 = "fake_xdg_config_dir1";
 
+    static constexpr char const* const not_found = "not found";
     std::string const config_filename{"test.config"};
     static constexpr char const* const test_config_key = "config_dir";
 
     void create_config_file_in(char const* dir)
     {
+        mkdir(dir, 0700);
+
         auto const filename = dir + ('/' + config_filename);
 
         std::ofstream config(filename);
@@ -83,6 +90,15 @@ struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
     {
         remove((dir + ('/' + config_filename)).c_str());
         remove(dir);
+    }
+
+    void clean_test_files()
+    {
+        remove_config_file_in(fake_xdg_config_dir0);
+        remove_config_file_in(fake_xdg_config_dir1);
+        remove_config_file_in(fake_xdg_config_home);
+        remove_config_file_in(fake_home_config);
+        remove(fake_home);
     }
 };
 
@@ -107,18 +123,81 @@ TEST_F(ServerConfigurationOptions, unknown_command_line_options_are_passed_to_ha
     server.the_session_authorizer();
 }
 
-TEST_F(ServerConfigurationOptions, are_read_from_home_config_file)
+TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_home)
 {
-    add_to_environment(env_xdg_config_home, nullptr);
-    ASSERT_THAT(mkdir(fake_home, 0700), Eq(0));
-    ASSERT_THAT(mkdir(fake_home_config, 0700), Eq(0));
-    create_config_file_in(fake_home_config);
-
-    server.add_configuration_option(test_config_key, "", mir::OptionType::string);
-    EXPECT_CALL(*this, command_line_handler(_)).Times(Exactly(0));
+    create_config_file_in(fake_xdg_config_home);
 
     server.set_config_filename(config_filename);
     server.the_session_authorizer();
 
-    EXPECT_TRUE(server.get_options()->is_set(test_config_key));
+    auto const options = server.get_options();
+
+    EXPECT_THAT(options->get(test_config_key, not_found), StrEq(fake_xdg_config_home));
+}
+
+TEST_F(ServerConfigurationOptions, are_read_from_home_config_file)
+{
+    mkdir(fake_home, 0700);
+    create_config_file_in(fake_home_config);
+
+    // $HOME is only used if $XDG_CONFIG_HOME isn't set
+    add_to_environment(env_xdg_config_home, nullptr);
+
+    server.set_config_filename(config_filename);
+    server.the_session_authorizer();
+
+    auto const options = server.get_options();
+
+    EXPECT_THAT(options->get(test_config_key, not_found), StrEq(fake_home_config));
+}
+
+TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_dir0_config_file)
+{
+    create_config_file_in(fake_xdg_config_dir0);
+
+    server.set_config_filename(config_filename);
+    server.the_session_authorizer();
+
+    auto const options = server.get_options();
+
+    EXPECT_THAT(options->get(test_config_key, not_found), StrEq(fake_xdg_config_dir0));
+}
+
+TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_dir1_config_file)
+{
+    create_config_file_in(fake_xdg_config_dir1);
+
+    server.set_config_filename(config_filename);
+    server.the_session_authorizer();
+
+    auto const options = server.get_options();
+
+    EXPECT_THAT(options->get(test_config_key, not_found), StrEq(fake_xdg_config_dir1));
+}
+
+TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_dir0_before_xdg_config_dir1)
+{
+    create_config_file_in(fake_xdg_config_dir0);
+    create_config_file_in(fake_xdg_config_dir1);
+
+    server.set_config_filename(config_filename);
+    server.the_session_authorizer();
+
+    auto const options = server.get_options();
+
+    EXPECT_THAT(options->get(test_config_key, not_found), StrEq(fake_xdg_config_dir0));
+}
+
+TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_home_before_xdg_config_dirs)
+{
+    create_config_file_in(fake_xdg_config_home);
+    create_config_file_in(fake_xdg_config_dir0);
+    create_config_file_in(fake_xdg_config_dir1);
+
+    server.set_config_filename(config_filename);
+    server.the_session_authorizer();
+
+    auto const options = server.get_options();
+
+    EXPECT_THAT(options->get(test_config_key, not_found), StrEq(fake_xdg_config_home));
 }
