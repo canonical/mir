@@ -239,7 +239,6 @@ void mir::Server::Self::set_add_configuration_options(
     this->add_configuration_options = add_configuration_options;
 }
 
-
 void mir::Server::set_command_line(int argc, char const* argv[])
 {
     verify_setting_allowed(self->server_config);
