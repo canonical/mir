@@ -18,6 +18,8 @@
 
 #include "src/server/report/logging/compositor_report.h"
 #include "mir/logging/logger.h"
+#include "mir_test_doubles/advanceable_clock.h"
+
 #include <gtest/gtest.h>
 #include <string>
 #include <cstdio>
@@ -25,23 +27,10 @@
 using namespace mir;
 using namespace std;
 
+namespace mtd = mir::test::doubles;
+
 namespace
 {
-
-class FakeClock : public time::Clock
-{
-public:
-    void elapse(chrono::microseconds delta)
-    {
-        now += delta;
-    }
-    time::Timestamp sample() const
-    {
-        return now;
-    }
-private:
-    time::Timestamp now;
-};
 
 class Recorder : public logging::Logger
 {
@@ -67,26 +56,31 @@ private:
     string last;
 };
 
+struct LoggingCompositorReport : ::testing::Test
+{
+    std::shared_ptr<mtd::AdvanceableClock> const clock =
+        std::make_shared<mtd::AdvanceableClock>();
+    std::shared_ptr<Recorder> const recorder =
+        make_shared<Recorder>();
+    report::logging::CompositorReport report{recorder, clock};
+};
+
 } // namespace
 
-TEST(LoggingCompositorReport, calculates_accurate_stats)
+TEST_F(LoggingCompositorReport, calculates_accurate_stats)
 {
     /*
      * This test just verifies the important stats; FPS and frame time.
      * We don't need to validate all the numbers because maintaining low
      * coupling to log formats is more important.
      */
-    auto clock = make_shared<FakeClock>();
-    auto recorder = make_shared<Recorder>();
     const void* const display_id = nullptr;
-
-    report::logging::CompositorReport report(recorder, clock);
 
     int target_fps = 60;
     for (int frame = 0; frame < target_fps*3; frame++)
     {
         report.began_frame(display_id);
-        clock->elapse(chrono::microseconds(1000000 / target_fps));
+        clock->advance_by(chrono::microseconds(1000000 / target_fps));
         report.finished_frame(false, display_id);
     }
 
@@ -98,13 +92,13 @@ TEST(LoggingCompositorReport, calculates_accurate_stats)
     EXPECT_LE(16.5f, measured_frame_time);
     EXPECT_GE(16.7f, measured_frame_time);
 
-    clock->elapse(chrono::microseconds(5000000));
+    clock->advance_by(chrono::microseconds(5000000));
 
     target_fps = 100;
     for (int frame = 0; frame < target_fps*3; frame++)
     {
         report.began_frame(display_id);
-        clock->elapse(chrono::microseconds(1000000 / target_fps));
+        clock->advance_by(chrono::microseconds(1000000 / target_fps));
         report.finished_frame(false, display_id);
     }
     ASSERT_TRUE(recorder->scrape(measured_fps, measured_frame_time))
@@ -113,67 +107,58 @@ TEST(LoggingCompositorReport, calculates_accurate_stats)
     EXPECT_FLOAT_EQ(10.0f, measured_frame_time);
 }
 
-TEST(LoggingCompositorReport, survives_pause_resume)
+TEST_F(LoggingCompositorReport, survives_pause_resume)
 {
-    auto clock = make_shared<FakeClock>();
-    auto logger = make_shared<Recorder>();
     const void* const before = "before";
     const void* const after = "after";
-
-    report::logging::CompositorReport report(logger, clock);
 
     report.started();
 
     report.began_frame(before);
-    clock->elapse(chrono::microseconds(12345));
+    clock->advance_by(chrono::microseconds(12345));
     report.finished_frame(false, before);
 
     report.stopped();
-    clock->elapse(chrono::microseconds(12345678));
+    clock->advance_by(chrono::microseconds(12345678));
     report.started();
 
     report.began_frame(after);
-    clock->elapse(chrono::microseconds(12345));
+    clock->advance_by(chrono::microseconds(12345));
     report.finished_frame(false, after);
 
-    clock->elapse(chrono::microseconds(12345678));
+    clock->advance_by(chrono::microseconds(12345678));
 
     report.began_frame(after);
-    clock->elapse(chrono::microseconds(12345));
+    clock->advance_by(chrono::microseconds(12345));
     report.finished_frame(false, after);
 
     report.stopped();
 }
 
-TEST(LoggingCompositorReport, reports_bypass_only_when_changed)
+TEST_F(LoggingCompositorReport, reports_bypass_only_when_changed)
 {
     const void* const id = "My Screen";
-
-    auto clock = make_shared<FakeClock>();
-    auto logger = make_shared<Recorder>();
-
-    report::logging::CompositorReport report(logger, clock);
 
     report.started();
 
     report.began_frame(id);
     report.finished_frame(false, id);
-    EXPECT_TRUE(logger->last_message_contains("bypass OFF"))
-        << logger->last_message();
+    EXPECT_TRUE(recorder->last_message_contains("bypass OFF"))
+        << recorder->last_message();
 
     for (int f = 0; f < 3; ++f)
     {
         report.began_frame(id);
         report.finished_frame(false, id);
-        clock->elapse(chrono::microseconds(12345678));
+        clock->advance_by(chrono::microseconds(12345678));
     }
-    EXPECT_FALSE(logger->last_message_contains("bypass "))
-        << logger->last_message();
+    EXPECT_FALSE(recorder->last_message_contains("bypass "))
+        << recorder->last_message();
 
     report.began_frame(id);
     report.finished_frame(true, id);
-    EXPECT_TRUE(logger->last_message_contains("bypass ON"))
-        << logger->last_message();
+    EXPECT_TRUE(recorder->last_message_contains("bypass ON"))
+        << recorder->last_message();
 
     report.stopped();
 }

@@ -88,21 +88,15 @@ set_target_properties(
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
-set(
-  MIR_CLIENT_LIBRARIES
+target_link_libraries(mirclient
   mirclientrpc
   mirclientlttngstatic
   mircommon
+  mirprotobuf
 
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${XKBCOMMON_LIBRARIES}
-)
-
-target_link_libraries(
-  mirclient
-
-  ${MIR_CLIENT_LIBRARIES}
 )
 
 install(

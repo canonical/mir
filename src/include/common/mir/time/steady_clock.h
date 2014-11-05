@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,35 +13,29 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_CLIENT_PERF_REPORT_H_
-#define MIR_CLIENT_PERF_REPORT_H_
+#ifndef MIR_TIME_STEADY_CLOCK_H_
+#define MIR_TIME_STEADY_CLOCK_H_
+
+#include "mir/time/clock.h"
 
 namespace mir
 {
-namespace client
+namespace time
 {
 
-class PerfReport
-{
-public:
-    virtual ~PerfReport() = default;
-    virtual void name_surface(char const*) = 0;
-    virtual void begin_frame(int buffer_id) = 0;
-    virtual void end_frame(int buffer_id) = 0;
-};
-
-class NullPerfReport : public PerfReport
+class SteadyClock : public Clock
 {
 public:
-    virtual void name_surface(char const*) override {}
-    void begin_frame(int) override {}
-    void end_frame(int) override {}
+    Timestamp now() const override;
+    Duration min_wait_until(Timestamp t) const override;
+
+private:
+    std::chrono::steady_clock clock;
 };
+}
+}
 
-} // namespace client
-} // namespace mir
-
-#endif // MIR_CLIENT_PERF_REPORT_H_
+#endif

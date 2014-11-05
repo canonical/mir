@@ -144,22 +144,22 @@ public:
     void screencast_buffer(google::protobuf::RpcController*,
                            const mir::protobuf::ScreencastId*,
                            mir::protobuf::Buffer*,
-                           google::protobuf::Closure* done);
+                           google::protobuf::Closure* done) override;
 
     void configure_cursor(google::protobuf::RpcController*,
                           mir::protobuf::CursorSetting const*,
                           mir::protobuf::Void*,
-                          google::protobuf::Closure* done);
+                          google::protobuf::Closure* done) override;
 
     void start_prompt_session(::google::protobuf::RpcController* controller,
                             const ::mir::protobuf::PromptSessionParameters* request,
                             ::mir::protobuf::Void* response,
-                            ::google::protobuf::Closure* done);
+                            ::google::protobuf::Closure* done) override;
 
     void stop_prompt_session(::google::protobuf::RpcController* controller,
                             const ::mir::protobuf::Void* request,
                             ::mir::protobuf::Void* response,
-                            ::google::protobuf::Closure* done);
+                            ::google::protobuf::Closure* done) override;
 
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,

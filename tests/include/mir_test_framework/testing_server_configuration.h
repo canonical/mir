@@ -44,7 +44,7 @@ public:
 
     std::shared_ptr<mir::ServerStatusListener> the_server_status_listener() override;
 
-    virtual std::string the_socket_file() const;
+    virtual std::string the_socket_file() const override;
     using DefaultServerConfiguration::the_options;
 
     virtual void wait_for_server_start();

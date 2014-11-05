@@ -37,6 +37,7 @@
 namespace mo = mir::options;
 
 #define FOREACH_WRAPPER(MACRO)\
+    MACRO(cursor_listener)\
     MACRO(display_configuration_policy)\
     MACRO(session_coordinator)\
     MACRO(surface_coordinator)
@@ -44,11 +45,11 @@ namespace mo = mir::options;
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
     MACRO(display_buffer_compositor_factory)\
-    MACRO(cursor_listener)\
     MACRO(gl_config)\
     MACRO(input_dispatcher)\
     MACRO(placement_strategy)\
     MACRO(prompt_session_listener)\
+    MACRO(prompt_session_manager)\
     MACRO(server_status_listener)\
     MACRO(session_authorizer)\
     MACRO(session_listener)\
@@ -56,8 +57,10 @@ namespace mo = mir::options;
     MACRO(surface_configurator)
 
 #define FOREACH_ACCESSOR(MACRO)\
+    MACRO(the_compositor)\
     MACRO(the_composite_event_filter)\
     MACRO(the_display)\
+    MACRO(the_focus_controller)\
     MACRO(the_gl_config)\
     MACRO(the_graphics_platform)\
     MACRO(the_main_loop)\
@@ -68,7 +71,8 @@ namespace mo = mir::options;
     MACRO(the_prompt_session_manager)\
     MACRO(the_shell_display_layout)\
     MACRO(the_surface_configurator)\
-    MACRO(the_surface_coordinator)
+    MACRO(the_surface_coordinator)\
+    MACRO(the_touch_visualizer)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder;
@@ -451,6 +455,27 @@ void mir::Server::add_configuration_option(
 void mir::Server::add_configuration_option(
     std::string const& option,
     std::string const& description,
+    bool default_)
+{
+    verify_setting_allowed(self->server_config);
+    namespace po = boost::program_options;
+
+    auto const& existing = self->add_configuration_options;
+
+    auto const option_adder = [=](options::DefaultConfiguration& config)
+        {
+            existing(config);
+
+            config.add_options()
+            (option.c_str(), po::value<decltype(default_)>()->default_value(default_), description.c_str());
+        };
+
+    self->set_add_configuration_options(option_adder);
+}
+
+void mir::Server::add_configuration_option(
+    std::string const& option,
+    std::string const& description,
     OptionType type)
 {
     verify_setting_allowed(self->server_config);
@@ -496,6 +521,20 @@ void mir::Server::add_configuration_option(
 
                     config.add_options()
                     (option.c_str(), po::value<std::string>(), description.c_str());
+                };
+
+            self->set_add_configuration_options(option_adder);
+        }
+        break;
+
+    case OptionType::boolean:
+        {
+            auto const option_adder = [=](options::DefaultConfiguration& config)
+                {
+                    existing(config);
+
+                    config.add_options()
+                    (option.c_str(), po::value<bool>(), description.c_str());
                 };
 
             self->set_add_configuration_options(option_adder);

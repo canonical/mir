@@ -318,9 +318,16 @@ mir::DefaultServerConfiguration::the_cursor_listener()
     return cursor_listener(
         [this, ctl]() -> std::shared_ptr<mi::CursorListener>
         {
-            return std::make_shared<DefaultCursorListener>(ctl, compositor);
+            return wrap_cursor_listener(std::make_shared<DefaultCursorListener>(ctl, compositor));
         });
 
+}
+
+std::shared_ptr<mi::CursorListener>
+mir::DefaultServerConfiguration::wrap_cursor_listener(
+    std::shared_ptr<mi::CursorListener> const& wrapped)
+{
+    return wrapped;
 }
 
 std::shared_ptr<mi::TouchVisualizer>

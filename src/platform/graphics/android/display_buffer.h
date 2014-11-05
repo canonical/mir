@@ -48,17 +48,17 @@ public:
                   GLProgramFactory const& program_factory,
                   OverlayOptimization overlay_option);
 
-    geometry::Rectangle view_area() const;
-    void make_current();
-    void release_current();
-    void post_update();
-    bool post_renderables_if_optimizable(RenderableList const& renderlist);
+    geometry::Rectangle view_area() const override;
+    void make_current() override;
+    void release_current() override;
+    void post_update() override;
+    bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
     MirOrientation orientation() const override;
     bool uses_alpha() const override;
 
-    DisplayConfigurationOutput configuration() const;
-    void configure(DisplayConfigurationOutput const&);
+    DisplayConfigurationOutput configuration() const override;
+    void configure(DisplayConfigurationOutput const&) override;
 
 private:
     std::shared_ptr<FramebufferBundle> const fb_bundle;
