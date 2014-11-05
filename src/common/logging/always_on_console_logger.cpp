@@ -38,7 +38,7 @@ void ml::AlwaysOnConsoleLogger::log(ml::Logger::Severity /*severity*/,
     snprintf(now, sizeof(now), "%ld.%06ld",
              (long)ts.tv_sec, ts.tv_nsec / 1000);
 
-    std::cout << "["
+    std::cerr << "["
               << now
               << "] "
               << component
