@@ -323,6 +323,11 @@ MirWaitHandle* MirSurface::release_surface(
     {
         wait_handle = connection->release_surface(this, callback, context);
     }
+    else
+    {
+        callback(this, context);
+        delete this;
+    }
 
     return wait_handle;
 }

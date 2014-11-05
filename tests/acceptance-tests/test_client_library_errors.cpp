@@ -212,6 +212,44 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
     mir_connection_release(connection);
 }
 
+namespace
+{
+void recording_surface_callback(MirSurface*, void* ctx)
+{
+    auto called = static_cast<bool*>(ctx);
+    *called = true;
+}
+}
+
+TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback)
+{
+    mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_buffer_factory>> stubby;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    ASSERT_THAT(connection, IsValid());
+
+    MirSurfaceParameters const request_params =
+    {
+        __PRETTY_FUNCTION__,
+        640, 480,
+        mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware,
+        mir_display_output_id_invalid
+    };
+
+    auto surface = mir_connection_create_surface_sync(connection, &request_params);
+    ASSERT_NE(surface, nullptr);
+    EXPECT_FALSE(mir_surface_is_valid(surface));
+    EXPECT_THAT(mir_surface_get_error_message(surface), testing::HasSubstr(exception_text));
+
+    bool callback_called{false};
+    mir_surface_release(surface, &recording_surface_callback, &callback_called);
+    EXPECT_TRUE(callback_called);
+    mir_connection_release(connection);
+}
+
+
 TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_reply_processing)
 {
     mtf::UsingClientPlatform<ConfigurableFailureConfiguration<Method::create_egl_native_window>> stubby;
