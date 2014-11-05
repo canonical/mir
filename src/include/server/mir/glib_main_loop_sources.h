@@ -20,6 +20,9 @@
 #define MIR_GLIB_MAIN_LOOP_SOURCES_H_
 
 #include <functional>
+#include <vector>
+#include <mutex>
+#include <memory>
 
 #include <glib.h>
 
@@ -36,13 +39,33 @@ public:
     ~GSourceHandle();
 
     void attach(GMainContext* main_context) const;
+    void attach_and_detach_on_destruction(GMainContext* main_context);
 
 private:
     GSource* gsource;
+    bool detach_on_destruction;
 };
 
 GSourceHandle make_idle_gsource(int priority, std::function<void()> const& callback);
 GSourceHandle make_signal_gsource(int sig, std::function<void(int)> const& callback);
+
+class FdSources
+{
+public:
+    FdSources(GMainContext* main_context);
+    ~FdSources();
+
+    void add(int fd, void const* owner, std::function<void(int)> const& handler);
+    void remove_all_owned_by(void const* owner);
+
+private:
+    struct FdContext;
+    struct FdSource;
+
+    GMainContext* const main_context;
+    std::mutex sources_mutex;
+    std::vector<std::unique_ptr<FdSource>> sources;
+};
 
 }
 }

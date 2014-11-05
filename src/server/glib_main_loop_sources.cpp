@@ -17,8 +17,10 @@
  */
 
 #include "mir/glib_main_loop_sources.h"
+#include "mir/recursive_read_write_mutex.h"
 
 #include <glib-unix.h>
+#include <algorithm>
 
 namespace md = mir::detail;
 
@@ -27,12 +29,12 @@ namespace md = mir::detail;
  *****************/
 
 md::GSourceHandle::GSourceHandle(GSource* gsource)
-    : gsource{gsource}
+    : gsource{gsource}, detach_on_destruction{false}
 {
 }
 
-md::GSourceHandle::GSourceHandle(md::GSourceHandle&& other)
-    : gsource{other.gsource}
+md::GSourceHandle::GSourceHandle(GSourceHandle&& other)
+    : gsource{other.gsource}, detach_on_destruction{other.detach_on_destruction}
 {
     other.gsource = nullptr;
 }
@@ -40,11 +42,22 @@ md::GSourceHandle::GSourceHandle(md::GSourceHandle&& other)
 md::GSourceHandle::~GSourceHandle()
 {
     if (gsource)
+    {
+        if (detach_on_destruction)
+            g_source_destroy(gsource);
+
         g_source_unref(gsource);
+    }
 }
 
 void md::GSourceHandle::attach(GMainContext* main_context) const
 {
+    g_source_attach(gsource, main_context);
+}
+
+void md::GSourceHandle::attach_and_detach_on_destruction(GMainContext* main_context)
+{
+    detach_on_destruction = true;
     g_source_attach(gsource, main_context);
 }
 
@@ -99,4 +112,99 @@ md::GSourceHandle md::make_signal_gsource(
         reinterpret_cast<GDestroyNotify>(&SignalContext::static_destroy));
 
     return GSourceHandle{gsource};
+}
+
+/*************
+ * FdSources *
+ *************/
+
+struct md::FdSources::FdContext
+{
+    FdContext(std::function<void(int)> const& handler)
+        : handler{handler}, enabled{true}
+    {
+    }
+
+    void disable_callback()
+    {
+        RecursiveWriteLock lock{mutex};
+        enabled = false;
+    }
+
+    static gboolean static_call(int fd, GIOCondition, FdContext* ctx)
+    {
+        RecursiveReadLock lock{ctx->mutex};
+
+        if (ctx->enabled)
+            ctx->handler(fd);
+
+        return G_SOURCE_CONTINUE;
+    }
+
+    static void static_destroy(FdContext* ctx)
+    {
+        delete ctx;
+    }
+
+private:
+    std::function<void(int)> handler;
+    bool enabled;
+    mir::RecursiveReadWriteMutex mutex;
+};
+
+struct md::FdSources::FdSource
+{
+    ~FdSource()
+    {
+        // g_source_destroy() may be called while the source is about to be
+        // dispatched, so there is no guarantee that after g_source_destroy()
+        // returns any associated handlers won't be called. Since we want a
+        // stronger no-call guarantee we need to disable the callback manually
+        // before destruction.
+        if (ctx)
+            ctx->disable_callback();
+    }
+
+    GSourceHandle gsource;
+    FdContext* const ctx;
+    void const* const owner;
+};
+
+md::FdSources::FdSources(GMainContext* main_context)
+    : main_context{main_context}
+{
+}
+
+md::FdSources::~FdSources() = default;
+
+void md::FdSources::add(
+    int fd, void const* owner, std::function<void(int)> const& handler)
+{
+    auto const gsource_raw = g_unix_fd_source_new(fd, G_IO_IN);
+    auto const fd_context = new FdContext{handler};
+
+    g_source_set_callback(
+        gsource_raw,
+        reinterpret_cast<GSourceFunc>(&FdContext::static_call),
+        fd_context,
+        reinterpret_cast<GDestroyNotify>(&FdContext::static_destroy));
+
+    std::lock_guard<std::mutex> lock{sources_mutex};
+
+    sources.emplace_back(new FdSource{GSourceHandle{gsource_raw}, fd_context, owner});
+    sources.back()->gsource.attach_and_detach_on_destruction(main_context);
+}
+
+void md::FdSources::remove_all_owned_by(void const* owner)
+{
+    std::lock_guard<std::mutex> lock{sources_mutex};
+
+    auto const new_end = std::remove_if(
+        sources.begin(), sources.end(),
+        [&] (std::unique_ptr<FdSource> const& fd_source)
+        {
+            return fd_source->owner == owner;
+        });
+
+    sources.erase(new_end, sources.end());
 }
