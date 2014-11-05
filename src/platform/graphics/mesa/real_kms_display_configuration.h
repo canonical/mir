@@ -41,9 +41,9 @@ public:
     void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
 
-    uint32_t get_kms_connector_id(DisplayConfigurationOutputId id) const;
-    size_t get_kms_mode_index(DisplayConfigurationOutputId id, size_t conf_mode_index) const;
-    void update();
+    uint32_t get_kms_connector_id(DisplayConfigurationOutputId id) const override;
+    size_t get_kms_mode_index(DisplayConfigurationOutputId id, size_t conf_mode_index) const override;
+    void update() override;
 
 private:
     void add_or_update_output(DRMModeResources const& resources, drmModeConnector const& connector);

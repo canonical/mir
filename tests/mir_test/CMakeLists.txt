@@ -12,4 +12,4 @@ add_library(
   current_thread_name.cpp
 )
 
-add_dependencies(mir-test mirprotobuf)
+target_link_libraries(mir-test mirprotobuf)

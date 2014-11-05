@@ -1,5 +1,6 @@
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(common/)
+add_subdirectory(protobuf/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(platform/)

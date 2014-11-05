@@ -42,19 +42,19 @@ public:
         std::shared_ptr<DisplayReport> const& display_report);
 
     /* From Platform */
-    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator();
+    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
     std::shared_ptr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLProgramFactory> const&,
-        std::shared_ptr<graphics::GLConfig> const& /*gl_config*/);
+        std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
     std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
 
-    std::shared_ptr<PlatformIPCPackage> connection_ipc_package();
-    std::shared_ptr<InternalClient> create_internal_client();
+    std::shared_ptr<PlatformIPCPackage> connection_ipc_package() override;
+    std::shared_ptr<InternalClient> create_internal_client() override;
     std::shared_ptr<graphics::BufferWriter> make_buffer_writer() override;
     void fill_buffer_package(
-        BufferIpcMessage* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const;
-    EGLNativeDisplayType egl_native_display() const;
+        BufferIpcMessage* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const override;
+    EGLNativeDisplayType egl_native_display() const override;
 
 private:
     std::shared_ptr<Display> create_fb_backup_display();

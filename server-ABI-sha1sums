@@ -9,7 +9,7 @@ e1be9faee8b844ca2ce617f8fd82c9ee08d56bed  include/common/mir/graphics/native_buf
 dcf8b8982f138bdde39a241825c610e955cd5e33  include/common/mir/input/input_platform.h
 208cd6aed5ef5f8f39b3eb86604e4133cb840485  include/common/mir/input/input_receiver_thread.h
 be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
-f3d9db3285fab38c832f3e9d25c720d232eeb42f  include/common/mir/time/types.h
+9ae8473df05dd9e048a73797f01a2f34f7447554  include/common/mir/time/types.h
 9907751d046e4aea81881cf19e5df52c7a6a813e  include/common/mir_toolkit/client_types.h
 183d9e5e6cfe48b3d9145a28541dd4202ff6137b  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
@@ -80,7 +80,7 @@ d75dffd05bf9dd829a413cf82f43b467c6c7eea0  include/server/mir/run_mir.h
 c9de8b851fb22092a9a486d71cd998b4cb8392e1  include/server/mir/scene/coordinate_translator.h
 71d9082681aa39d652c88ad3b54665695b521d24  include/server/mir/scene/depth_id.h
 cacb23805002e87fc6c4cb3e28bc77e800854cf1  include/server/mir/scene/null_session_listener.h
-4e4e563ab429a13ddca7eead16f2b6cefb8edff6  include/server/mir/scene/null_surface_observer.h
+2584482306208ef2c70b238b4732089551f48937  include/server/mir/scene/null_surface_observer.h
 d5273f3363b0b776427d5e3f1af99f0f2bcf3fa6  include/server/mir/scene/observer.h
 10db25fbaefcabb3b191177ed70f5972df7f05f0  include/server/mir/scene/placement_strategy.h
 74f7f66ffc3e15c428082fb961e748cb4f39dafc  include/server/mir/scene/prompt_session_creation_parameters.h
@@ -95,7 +95,7 @@ ee94083f10f890e24c0e0bbdb94842e2dd788deb  include/server/mir/scene/session_liste
 bbc9e2e2bb71634cd6f1c5c0430093e10e74fa23  include/server/mir/scene/surface_configurator.h
 e5e4dd7bcaf186810043fa0f05be42d7e49b0843  include/server/mir/scene/surface_coordinator.h
 dd8f054f786b9746d9e513f2656e931234b5283a  include/server/mir/scene/surface_creation_parameters.h
-6770913f3c61d3bc3ccc03656583ad6f88c8a456  include/server/mir/scene/surface.h
+6b53424c5a813e80c29952284cda1c20bd2854c2  include/server/mir/scene/surface.h
 993e9f458ffc4288d304413f3fa0b1dcc95a093d  include/server/mir/scene/surface_observer.h
 7ef3e99901168cda296d74d05a979f47bf9c3ff1  include/server/mir/server_action_queue.h
 8d83a51c278b8b71866d2178d9b6387c1f91a7d0  include/server/mir/server_configuration.h
@@ -106,7 +106,7 @@ dd8f054f786b9746d9e513f2656e931234b5283a  include/server/mir/scene/surface_creat
 b74342d8ffab489405a4e12fce0c257ac9f8596c  include/server/mir/shell/focus_setter.h
 f8d415af54b4a477338fb9dbe20db01aa4544029  include/server/mir/shell/host_lifecycle_event_listener.h
 4f50c37bb8e36a1aa4918af6aa01b0f032ed0984  include/server/mir/shell/input_targeter.h
-82bc93ea53f03399cb143b9ce936bb51d4366be6  include/server/mir/shell/session_coordinator_wrapper.h
+de7d7ad64da45b4c5dedef8eaa1d720c9f307f4c  include/server/mir/shell/session_coordinator_wrapper.h
 18e869c5b87ab8be4bc185d2cd55a93d699cde72  include/server/mir/shell/surface_coordinator_wrapper.h
 1b8c2a763c8f5f00b737c3a187db2304676f8076  include/server/mir/time/alarm.h
 a134c7b86e9c3b191f1004abe7bbdceed8ac42ee  include/server/mir/time/timer.h

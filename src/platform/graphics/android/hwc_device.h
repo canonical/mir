@@ -45,11 +45,11 @@ public:
               std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
               std::shared_ptr<SyncFileOps> const& sync_ops);
 
-    virtual void post_gl(SwappingGLContext const& context);
+    virtual void post_gl(SwappingGLContext const& context) override;
     virtual bool post_overlays(
         SwappingGLContext const& context,
         RenderableList const& list,
-        RenderableListCompositor const& list_compositor);
+        RenderableListCompositor const& list_compositor) override;
 
 private:
     bool buffer_is_onscreen(Buffer const&) const;

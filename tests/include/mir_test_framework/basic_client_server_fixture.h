@@ -38,7 +38,7 @@ struct BasicClientServerFixture : InProcessServer
 
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
 
-    void SetUp()
+    void SetUp() override
     {
         InProcessServer::SetUp();
         connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -50,7 +50,7 @@ struct BasicClientServerFixture : InProcessServer
         }
     }
 
-    void TearDown()
+    void TearDown() override
     {
         mir_connection_release(connection);
         InProcessServer::TearDown();

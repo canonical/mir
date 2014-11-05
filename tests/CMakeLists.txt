@@ -6,10 +6,23 @@ endif()
 include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
 include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 
-if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag(-Wnull-dereference HAS_W_NULL_DEREFERENCE)
+check_cxx_compiler_flag(-Woverloaded-virtual HAS_W_OVERLOADED_VIRTUAL)
+check_cxx_compiler_flag(-Winconsistent-missing-override HAS_W_INCONSISTENT_MISSING_OVERRIDE)
+
+if (HAS_W_NULL_DEREFERENCE)
   # Avoid clang complaints about poor quality gmock/gtest headers
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=null-dereference")
+endif()
+if (HAS_W_OVERLOADED_VIRTUAL)
+  # Avoid clang complaints about poor quality gmock/gtest headers
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=overloaded-virtual")
+endif()
+if (HAS_W_INCONSISTENT_MISSING_OVERRIDE)
+  # MOCK_METHOD()s cannot be marked as override; we cannot consistently mark overrides
+  # in the tests.
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override")
 endif()
 
 if (MIR_TEST_PLATFORM STREQUAL "android")
