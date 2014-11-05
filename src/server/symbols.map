@@ -389,6 +389,7 @@ MIR_SERVER_27 {
     mir::Server::add_configuration_option*;
     mir::Server::add_emergency_cleanup*;
     mir::Server::add_init_callback*;
+    mir::Server::apply_settings*;
     mir::ServerConfiguration::operator*;
     mir::ServerConfiguration::?ServerConfiguration*;
     mir::ServerConfiguration::ServerConfiguration*;
