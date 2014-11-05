@@ -123,6 +123,13 @@ public:
     void set_command_line_handler(
         std::function<void(int argc, char const* const* argv)> const& command_line_hander);
 
+    /// Set the configuration filename.
+    /// This will be searched for and parsed in the standard locations. Vis:
+    /// 1. $XDG_CONFIG_HOME (if set)
+    /// 2. $HOME/.config
+    /// 3. $XDG_CONFIG_DIRS (if set, otherwise /etc/xdg)
+    void set_config_filename(std::string const& config_file);
+
     /// Returns the configuration options.
     /// This will be null before initialization starts. It will be available
     /// when the init_callback has been invoked (and thereafter until the server exits).
