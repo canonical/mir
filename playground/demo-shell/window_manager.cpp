@@ -123,7 +123,6 @@ bool me::WindowManager::handle(MirEvent const& event)
     assert(compositor);
 
     bool handled = false;
-    static int const ANDROID_KEYCODE_POWER = 26;
 
     if (event.key.type == mir_event_type_key &&
         event.key.action == mir_key_action_down)
@@ -136,7 +135,7 @@ bool me::WindowManager::handle(MirEvent const& event)
         }
         else if ((event.key.modifiers & mir_key_modifier_alt &&
                   event.key.scan_code == KEY_P) ||
-                 (event.key.key_code == ANDROID_KEYCODE_POWER))
+                 (event.key.scan_code == KEY_POWER))
         {
             compositor->stop();
             auto conf = display->configuration();
