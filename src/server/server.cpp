@@ -254,7 +254,6 @@ void mir::Server::set_command_line(int argc, char const* argv[])
 
 void mir::Server::add_init_callback(std::function<void()> const& init_callback)
 {
-    verify_setting_allowed(self->server_config);
     auto const& existing = self->init_callback;
 
     auto const updated = [=]
@@ -282,20 +281,16 @@ auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 
 void mir::Server::set_exception_handler(std::function<void()> const& exception_handler)
 {
-    verify_setting_allowed(self->server_config);
     self->exception_handler = exception_handler;
 }
 
 void mir::Server::set_terminator(Terminator const& terminator)
 {
-    verify_setting_allowed(self->server_config);
     self->terminator = terminator;
 }
 
 void mir::Server::add_emergency_cleanup(EmergencyCleanupHandler const& handler)
 {
-    verify_setting_allowed(self->server_config);
-
     if (auto const& existing = self->emergency_cleanup_handler)
     {
         self->emergency_cleanup_handler = [=]
