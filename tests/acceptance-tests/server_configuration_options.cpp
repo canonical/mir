@@ -46,12 +46,16 @@ struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
 
         remove_config_file_in(fake_home_config);
         remove(fake_home);
+
+        add_to_environment(env_xdg_config_home, fake_xdg_config_home);
+        add_to_environment(env_home, fake_home);
+        add_to_environment(env_xdg_config_dirs, fake_xdg_config_dirs);
     }
 
     void TearDown() override
     {
-        remove_config_file_in(fake_home_config);
-        remove(fake_home);
+//        remove_config_file_in(fake_home_config);
+//        remove(fake_home);
     }
 
     static constexpr char const* const env_xdg_config_home = "XDG_CONFIG_HOME";
@@ -69,13 +73,15 @@ struct ServerConfigurationOptions : mir_test_framework::HeadlessTest
 
     void create_config_file_in(char const* dir)
     {
-        std::ofstream config(dir + '/' + config_filename);
+        auto const filename = dir + ('/' + config_filename);
+
+        std::ofstream config(filename);
         config << test_config_key << '=' << dir << std::endl;
     }
 
     void remove_config_file_in(char const* dir)
     {
-        remove((dir + '/' + config_filename).c_str());
+        remove((dir + ('/' + config_filename)).c_str());
         remove(dir);
     }
 };
@@ -111,6 +117,7 @@ TEST_F(ServerConfigurationOptions, are_read_from_home_config_file)
     server.add_configuration_option(test_config_key, "", mir::OptionType::string);
     EXPECT_CALL(*this, command_line_handler(_)).Times(Exactly(0));
 
+    server.set_config_filename(config_filename);
     server.the_session_authorizer();
 
     EXPECT_TRUE(server.get_options()->is_set(test_config_key));

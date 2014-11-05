@@ -125,9 +125,8 @@ public:
 
     /// Set the configuration filename.
     /// This will be searched for and parsed in the standard locations. Vis:
-    /// 1. $XDG_CONFIG_HOME (if set)
-    /// 2. $HOME/.config
-    /// 3. $XDG_CONFIG_DIRS (if set, otherwise /etc/xdg)
+    /// 1. $XDG_CONFIG_HOME (if set, otherwise $HOME/.config (if set))
+    /// 2. $XDG_CONFIG_DIRS (if set, otherwise /etc/xdg)
     void set_config_filename(std::string const& config_file);
 
     /// Returns the configuration options.

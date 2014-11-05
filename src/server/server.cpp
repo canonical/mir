@@ -212,11 +212,14 @@ class ConfigurationOptions : public mo::DefaultConfiguration
 public:
     using mo::DefaultConfiguration::DefaultConfiguration;
 
+    std::string config_file;
+
     void parse_config_file(
         boost::program_options::options_description& options_description,
         mo::ProgramOption& options) const override
     {
-        options.parse_file(options_description, "unity-system-compositor.conf");
+        if (!config_file.empty())
+            options.parse_file(options_description, config_file);
     }
 };
 
@@ -224,13 +227,18 @@ std::shared_ptr<mo::DefaultConfiguration> configuration_options(
     int argc,
     char const** argv,
     std::function<void(int argc, char const* const* argv)> const& command_line_hander,
-    std::string& /*config_file*/)
+    std::string const& config_file)
 {
-    if (command_line_hander)
-        return std::make_shared<ConfigurationOptions>(argc, argv, command_line_hander);
-    else
-        return std::make_shared<ConfigurationOptions>(argc, argv);
+    std::shared_ptr<ConfigurationOptions> result;
 
+    if (command_line_hander)
+        result = std::make_shared<ConfigurationOptions>(argc, argv, command_line_hander);
+    else
+        result = std::make_shared<ConfigurationOptions>(argc, argv);
+
+    result->config_file = config_file;
+
+    return result;
 }
 
 template<typename ConfigPtr>
