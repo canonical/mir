@@ -50,6 +50,11 @@ md::GSourceHandle::~GSourceHandle()
     }
 }
 
+md::GSourceHandle::operator GSource*() const
+{
+    return gsource;
+}
+
 void md::GSourceHandle::attach(GMainContext* main_context) const
 {
     g_source_attach(gsource, main_context);
@@ -78,7 +83,8 @@ md::GSourceHandle md::make_idle_gsource(int priority, std::function<void()> cons
         std::function<void()> const callback;
     };
 
-    auto const gsource = g_idle_source_new();
+    GSourceHandle gsource{g_idle_source_new()};
+
     g_source_set_priority(gsource, priority);
     g_source_set_callback(
         gsource,
@@ -86,7 +92,7 @@ md::GSourceHandle md::make_idle_gsource(int priority, std::function<void()> cons
         new IdleContext{callback},
         reinterpret_cast<GDestroyNotify>(&IdleContext::static_destroy));
 
-    return GSourceHandle{gsource};
+    return gsource;
 }
 
 md::GSourceHandle md::make_signal_gsource(
@@ -104,14 +110,15 @@ md::GSourceHandle md::make_signal_gsource(
         int sig;
     };
 
-    auto const gsource = g_unix_signal_source_new(sig);
+    GSourceHandle gsource{g_unix_signal_source_new(sig)};
+
     g_source_set_callback(
         gsource,
         reinterpret_cast<GSourceFunc>(&SignalContext::static_call),
         new SignalContext{callback, sig},
         reinterpret_cast<GDestroyNotify>(&SignalContext::static_destroy));
 
-    return GSourceHandle{gsource};
+    return gsource;
 }
 
 /*************
@@ -180,18 +187,19 @@ md::FdSources::~FdSources() = default;
 void md::FdSources::add(
     int fd, void const* owner, std::function<void(int)> const& handler)
 {
-    auto const gsource_raw = g_unix_fd_source_new(fd, G_IO_IN);
+    GSourceHandle gsource{g_unix_fd_source_new(fd, G_IO_IN)};
+
     auto const fd_context = new FdContext{handler};
 
     g_source_set_callback(
-        gsource_raw,
+        gsource,
         reinterpret_cast<GSourceFunc>(&FdContext::static_call),
         fd_context,
         reinterpret_cast<GDestroyNotify>(&FdContext::static_destroy));
 
     std::lock_guard<std::mutex> lock{sources_mutex};
 
-    sources.emplace_back(new FdSource{GSourceHandle{gsource_raw}, fd_context, owner});
+    sources.emplace_back(new FdSource{std::move(gsource), fd_context, owner});
     sources.back()->gsource.attach_and_detach_on_destruction(main_context);
 }
 

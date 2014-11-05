@@ -38,6 +38,8 @@ public:
     GSourceHandle(GSourceHandle&& other);
     ~GSourceHandle();
 
+    operator GSource*() const;
+
     void attach(GMainContext* main_context) const;
     void attach_and_detach_on_destruction(GMainContext* main_context);
 
