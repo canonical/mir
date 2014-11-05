@@ -347,6 +347,9 @@ protected:
 
     virtual std::shared_ptr<scene::SessionCoordinator>  wrap_session_coordinator(
         std::shared_ptr<scene::SessionCoordinator> const& wrapped);
+
+    virtual std::shared_ptr<input::CursorListener>  wrap_cursor_listener(
+        std::shared_ptr<input::CursorListener> const& wrapped);
 /** @} */
 
     CachedPtr<input::android::InputRegistrar> input_registrar;

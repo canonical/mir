@@ -51,7 +51,7 @@ public:
     MirOrientation orientation() const override;
     bool uses_alpha() const override;
 
-    bool post_renderables_if_optimizable(RenderableList const& renderlist);
+    bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
     NestedOutput(NestedOutput const&) = delete;
     NestedOutput operator=(NestedOutput const&) = delete;

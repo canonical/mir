@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -14,31 +14,45 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Thomas Voss <thomas.voss@canonical.com>
+ *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
 #ifndef MIR_TIME_CLOCK_H_
 #define MIR_TIME_CLOCK_H_
 
-#include <chrono>
+#include "mir/time/types.h"
 
 namespace mir
 {
 namespace time
 {
 
-typedef std::chrono::high_resolution_clock::time_point Timestamp;
-typedef std::chrono::high_resolution_clock::duration Duration;
-
 class Clock
 {
 public:
     virtual ~Clock() = default;
 
-    virtual Timestamp sample() const = 0;
+    /**
+     * The current time according to this clock.
+     */
+    virtual Timestamp now() const = 0;
+
+    /**
+     * The minimum amount of real time we would have to wait for this
+     * clock to reach or surpass the specified timestamp.
+     *
+     * For clocks that deal in real time (i.e., most production
+     * implementations), this will just be max(t - now(), 0).
+     * However, fake clocks may return different durations.
+     */
+    virtual Duration min_wait_until(Timestamp t) const = 0;
 
 protected:
     Clock() = default;
+    Clock(Clock const&) = delete;
+    Clock& operator=(Clock const&) = delete;
 };
+
 }
 }
 

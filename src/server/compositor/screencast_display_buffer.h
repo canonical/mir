@@ -53,17 +53,17 @@ public:
         graphics::Buffer& buffer);
     ~ScreencastDisplayBuffer();
 
-    geometry::Rectangle view_area() const;
+    geometry::Rectangle view_area() const override;
 
-    void make_current();
+    void make_current() override;
 
-    void release_current();
+    void release_current() override;
 
-    bool post_renderables_if_optimizable(graphics::RenderableList const&);
+    bool post_renderables_if_optimizable(graphics::RenderableList const&) override;
 
-    void post_update();
+    void post_update() override;
 
-    MirOrientation orientation() const;
+    MirOrientation orientation() const override;
 
     bool uses_alpha() const override;
 

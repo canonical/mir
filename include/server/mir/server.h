@@ -27,17 +27,17 @@ namespace mir
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; }
 namespace frontend { class SessionAuthorizer; class Session; }
 namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
-namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; }
+namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; }
 namespace options { class Option; }
-namespace shell { class FocusSetter; class DisplayLayout; }
+namespace shell { class FocusController; class FocusSetter; class DisplayLayout; }
 namespace scene
 {
 class PlacementStrategy;
-class SessionListener;
 class PromptSessionListener;
 class PromptSessionManager;
-class SurfaceConfigurator;
+class SessionListener;
 class SessionCoordinator;
+class SurfaceConfigurator;
 class SurfaceCoordinator;
 }
 
@@ -49,7 +49,8 @@ enum class OptionType
 {
     null,
     integer,
-    string
+    string,
+    boolean
 };
 
 /// Customise and run a Mir server.
@@ -95,6 +96,14 @@ public:
         std::string const& option,
         std::string const& description,
         std::string const& default_value);
+
+    /// Add user configuration option(s) to Mir's option handling.
+    /// These will be resolved during initialisation from the command line,
+    /// environment variables, a config file or the supplied default.
+    void add_configuration_option(
+        std::string const& option,
+        std::string const& description,
+        bool default_value);
 
     /// Add user configuration option(s) to Mir's option handling.
     /// These will be resolved during initialisation from the command line,
@@ -174,9 +183,6 @@ public:
     void override_the_display_buffer_compositor_factory(
         Builder<compositor::DisplayBufferCompositorFactory> const& compositor_builder);
 
-    /// Sets an override functor for creating the cursor listener.
-    void override_the_cursor_listener(Builder<input::CursorListener> const& cursor_listener_builder);
-
     /// Sets an override functor for creating the gl config.
     void override_the_gl_config(Builder<graphics::GLConfig> const& gl_config_builder);
 
@@ -188,6 +194,9 @@ public:
 
     /// Sets an override functor for creating the prompt session listener.
     void override_the_prompt_session_listener(Builder<scene::PromptSessionListener> const& prompt_session_listener_builder);
+
+    /// Sets an override functor for creating the prompt session manager.
+    void override_the_prompt_session_manager(Builder<scene::PromptSessionManager> const& prompt_session_manager_builder);
 
     /// Sets an override functor for creating the status listener.
     void override_the_server_status_listener(Builder<ServerStatusListener> const& server_status_listener_builder);
@@ -207,6 +216,9 @@ public:
     /// Each of the wrap functions takes a wrapper functor of the same form
     template<typename T> using Wrapper = std::function<std::shared_ptr<T>(std::shared_ptr<T> const&)>;
 
+    /// Sets a wrapper functor for creating the cursor listener.
+    void wrap_cursor_listener(Wrapper<input::CursorListener> const& wrapper);
+
     /// Sets a wrapper functor for creating the display configuration policy.
     void wrap_display_configuration_policy(Wrapper<graphics::DisplayConfigurationPolicy> const& wrapper);
 
@@ -221,11 +233,17 @@ public:
  * These may be invoked by the functors that provide alternative implementations of
  * Mir subsystems.
  *  @{ */
+    /// \return the compositor.
+    auto the_compositor() const -> std::shared_ptr<compositor::Compositor>;
+
     /// \return the composite event filter.
     auto the_composite_event_filter() const -> std::shared_ptr<input::CompositeEventFilter>;
 
     /// \return the cursor listener.
     auto the_cursor_listener() const -> std::shared_ptr<input::CursorListener>;
+
+    /// \return the focus controller.
+    auto the_focus_controller() const -> std::shared_ptr<shell::FocusController>;
 
     /// \return the graphics display.
     auto the_display() const -> std::shared_ptr<graphics::Display>;
@@ -262,6 +280,9 @@ public:
 
     /// \return the surface coordinator.
     auto the_surface_coordinator() const -> std::shared_ptr<scene::SurfaceCoordinator>;
+
+    /// \return the touch visualizer.
+    auto the_touch_visualizer() const -> std::shared_ptr<input::TouchVisualizer>;
 /** @} */
 
 /** @name Client side support

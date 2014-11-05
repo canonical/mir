@@ -30,7 +30,7 @@ PeriodicPerfReport::PeriodicPerfReport(mir::time::Duration period,
 
 PeriodicPerfReport::Timestamp PeriodicPerfReport::current_time() const
 {
-    return clock->sample();
+    return clock->now();
 }
 
 void PeriodicPerfReport::name_surface(char const* s)
