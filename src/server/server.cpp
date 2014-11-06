@@ -386,7 +386,6 @@ catch (...)
 
 void mir::Server::stop()
 {
-
     if (self->server_config)
     {
         self->server_config->the_always_on_logger()->log(ml::Logger::informational, "Stopping Mir", "Server");
