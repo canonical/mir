@@ -153,7 +153,7 @@ public:
                  const std::string& message,
                  const std::string& /*component*/)
     	{
-    		syslog(LOG_INFO, "%s", message.c_str());
+            syslog(LOG_INFO, "%s", message.c_str());
     	}
     };
 

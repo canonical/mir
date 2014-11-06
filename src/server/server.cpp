@@ -35,6 +35,11 @@
 
 #include <iostream>
 
+namespace
+{
+    const char * const component = "Mir Server";
+}
+
 namespace mo = mir::options;
 namespace ml = mir::logging;
 
@@ -357,13 +362,13 @@ try
     if (self->emergency_cleanup_handler)
         emergency_cleanup->add(self->emergency_cleanup_handler);
 
-    self->server_config->the_always_on_logger()->log(ml::Logger::informational, "Starting Mir", "Server");
+    self->server_config->the_always_on_logger()->log(ml::Logger::informational, "Starting Mir", component);
     if (self->argc)
     {
         std::string msg = "    commandline: ";
         for (int i=0; i<self->argc; i++)
             msg += self->argv[i];
-        self->server_config->the_always_on_logger()->log(ml::Logger::informational, msg, "Server");
+        self->server_config->the_always_on_logger()->log(ml::Logger::informational, msg, component);
     }
 
     run_mir(
@@ -388,7 +393,7 @@ void mir::Server::stop()
 {
     if (self->server_config)
     {
-        self->server_config->the_always_on_logger()->log(ml::Logger::informational, "Stopping Mir", "Server");
+        self->server_config->the_always_on_logger()->log(ml::Logger::informational, "Stopping Mir", component);
         if (auto const main_loop = the_main_loop())
             main_loop->stop();
     }
