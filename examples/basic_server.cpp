@@ -82,6 +82,7 @@ int main(int argc, char const* argv[])
 
     // Provide the command line and run the server
     server.set_command_line(argc, argv);
+    server.apply_settings();
     server.run();
     return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
 }

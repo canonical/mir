@@ -59,5 +59,5 @@ TEST_F(ServerCommandLine, unknown_options_are_passed_to_handler)
     EXPECT_CALL(*this, command_line_handler(
         ElementsAre(StrEq("--hello"), StrEq("world"), StrEq("--answer"), StrEq("42"))));
 
-    server.the_session_authorizer();
+    server.apply_settings();
 }
