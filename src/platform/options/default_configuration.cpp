@@ -241,7 +241,7 @@ void mo::DefaultConfiguration::parse_arguments(
         std::vector<char const*> tokens;
         for (auto const& token : unparsed_arguments)
             tokens.push_back(token.c_str());
-        unparsed_arguments_handler(tokens.size(), tokens.data());
+        if (!tokens.empty()) unparsed_arguments_handler(tokens.size(), tokens.data());
 
         if (options.is_set("help"))
         {
