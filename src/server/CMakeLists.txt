@@ -3,6 +3,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/src/include/server
+  ${GLIB_INCLUDE_DIRS}
 )
 
 add_subdirectory(compositor/)
@@ -31,6 +32,7 @@ add_library(mirserverobjects OBJECT
   display_server.cpp
   default_server_configuration.cpp
   asio_main_loop.cpp
+  glib_main_loop.cpp
   default_emergency_cleanup.cpp
   server.cpp
 )
@@ -59,6 +61,7 @@ set(MIR_SERVER_REFERENCES
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
+  ${GLIB_LDFLAGS} ${GLIB_LIBRARIES}
 )
 
 set(MIR_SERVER_OBJECTS ${MIR_SERVER_OBJECTS} PARENT_SCOPE)
@@ -80,6 +83,7 @@ target_link_libraries(mirserver LINK_PUBLIC
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
+  ${GLIB_LDFLAGS} ${GLIB_LIBRARIES}
 )
 
 install(TARGETS mirserver
