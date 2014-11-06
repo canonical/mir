@@ -141,8 +141,7 @@ public:
 
 /** @name Using hooks into the run() logic
  *  These allow the user to insert logic into startup or error handling.
- * They should be called before apply_settings() otherwise they throw
- * a std::logic_error.
+ *  For obvious reasons they should be called before run().
  *  @{ */
     /// Add a callback to be invoked when the server has been initialized,
     /// but before it starts. This allows client code to get access Mir objects.
