@@ -62,8 +62,13 @@ public:
 /** @name Essential operations
  * These are the commands used to run and stop.
  *  @{ */
-    /// set the command line (this must remain valid while run() is called)
+    /// set the command line.
+    /// This must remain valid while apply_settings() and run() are called.
     void set_command_line(int argc, char const* argv[]);
+
+    /// Applies any configuration options, hooks, or custom implementations.
+    /// Must be called before calling run() or accessing any mir subsystems.
+    void apply_settings();
 
     /// Run the Mir server until it exits
     void run();
@@ -77,8 +82,7 @@ public:
 
 /** @name Configuration options
  *  These functions allow customization of the handling of configuration
- * options. The add and set functions should be called before using the 
- * configuration (either by calling run() or invoking the accessors) 
+ * options. The add and set functions should be called before apply_settings()
  * otherwise they throw a std::logic_error.
  *  @{ */
     /// Add user configuration option(s) to Mir's option handling.
@@ -131,8 +135,7 @@ public:
 
 /** @name Using hooks into the run() logic
  *  These allow the user to insert logic into startup or error handling.
- * They should be called before starting to use the configuration (either by
- * calling run() or invoking the accessors) otherwise they throw a std::logic_error.
+ *  For obvious reasons they should be called before run().
  *  @{ */
     /// Add a callback to be invoked when the server has been initialized,
     /// but before it starts. This allows client code to get access Mir objects.
@@ -168,10 +171,9 @@ public:
 /** @} */
 
 /** @name Providing custom implementation
- * Provide alternative implementations of Mir subsystems: the functors will be invoked during initialization
- * of the Mir server (or when accessor methods are called).
- * They should be called before starting to use the configuration (either by
- * calling run() or invoking the accessors) otherwise they throw a std::logic_error.
+ * Provide alternative implementations of Mir subsystems: the functors will be invoked
+ * during initialization of the Mir server (or when accessor methods are called).
+ * They should be called before apply_settings() otherwise they throw a std::logic_error.
  *  @{ */
     /// Each of the override functions takes a builder functor of the same form
     template<typename T> using Builder = std::function<std::shared_ptr<T>()>;
@@ -232,6 +234,8 @@ public:
 /** @name Getting access to Mir subsystems
  * These may be invoked by the functors that provide alternative implementations of
  * Mir subsystems.
+ * They should only be used after apply_settings() is called - otherwise they throw
+ *  a std::logic_error.
  *  @{ */
     /// \return the compositor.
     auto the_compositor() const -> std::shared_ptr<compositor::Compositor>;
@@ -309,7 +313,6 @@ public:
     auto open_prompt_socket() -> Fd;
 /** @} */
 private:
-    void apply_settings() const;
     struct ServerConfiguration;
     struct Self;
     std::shared_ptr<Self> const self;

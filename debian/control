@@ -39,6 +39,7 @@ Build-Depends: cmake,
                libudev-dev,
                google-mock (>= 1.6.0+svn437),
                valgrind [!arm64],
+               libglib2.0-dev,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
