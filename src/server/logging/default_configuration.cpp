@@ -21,7 +21,6 @@
 #include "mir/default_server_configuration.h"
 #include "mir/options/default_configuration.h"
 #include "mir/logging/dumb_console_logger.h"
-#include "mir/logging/always_on_console_logger.h"
 
 namespace ml = mir::logging;
 
@@ -46,8 +45,11 @@ auto mir::DefaultServerConfiguration::the_logger()
         });
 }
 
-ml::AlwaysOnLogger& mir::DefaultServerConfiguration::the_always_on_logger()
+std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_always_on_logger()
 {
-    return ml::AlwaysOnConsoleLogger::instance();
+    return always_on_logger(
+        []()
+        {
+            return std::make_shared<ml::DumbConsoleLogger>();
+        });
 }
-

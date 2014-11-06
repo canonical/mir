@@ -26,7 +26,7 @@
 #include "mir/main_loop.h"
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
-#include "mir/logging/always_on_logger.h"
+#include "mir/logging/logger.h"
 
 // TODO these are used to frig a stub renderer when running headless
 #include "mir/compositor/renderer.h"
@@ -239,6 +239,7 @@ void mir::Server::Self::set_add_configuration_options(
     this->add_configuration_options = add_configuration_options;
 }
 
+
 void mir::Server::set_command_line(int argc, char const* argv[])
 {
     verify_setting_allowed(self->server_config);
@@ -325,13 +326,13 @@ try
     if (self->emergency_cleanup_handler)
         emergency_cleanup->add(self->emergency_cleanup_handler);
 
-    self->server_config->the_always_on_logger().log(ml::Logger::informational, "Starting Mir", "Server");
+    self->server_config->the_always_on_logger()->log(ml::Logger::informational, "Starting Mir", "Server");
     if (self->argc)
     {
         std::string msg = "    commandline: ";
         for (int i=0; i<self->argc; i++)
             msg += self->argv[i];
-        self->server_config->the_always_on_logger().log(ml::Logger::informational, msg, "Server");
+        self->server_config->the_always_on_logger()->log(ml::Logger::informational, msg, "Server");
     }
 
     run_mir(
@@ -355,7 +356,7 @@ catch (...)
 void mir::Server::stop()
 {
 	if (self->server_config)
-        self->server_config->the_always_on_logger().log(ml::Logger::informational, "Stopping Mir", "Server");
+        self->server_config->the_always_on_logger()->log(ml::Logger::informational, "Stopping Mir", "Server");
 
     if (auto const main_loop = the_main_loop())
         main_loop->stop();
