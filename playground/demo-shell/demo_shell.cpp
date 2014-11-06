@@ -160,10 +160,10 @@ public:
     std::shared_ptr<ml::Logger> the_always_on_logger()
     {
         return always_on_logger(
-              []()
-              {
-                  return std::make_shared<AlwaysOnSysLogger>();
-              });
+            []()
+            {
+                return std::make_shared<AlwaysOnSysLogger>();
+            });
     }
 
 private:
