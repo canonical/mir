@@ -85,6 +85,7 @@ struct mir::Server::Self
 {
     bool exit_status{false};
     std::weak_ptr<options::Option> options;
+    std::string config_file;
     std::shared_ptr<ServerConfiguration> server_config;
 
     std::function<void()> init_callback{[]{}};
@@ -206,16 +207,38 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 
 namespace
 {
+class ConfigurationOptions : public mo::DefaultConfiguration
+{
+public:
+    using mo::DefaultConfiguration::DefaultConfiguration;
+
+    std::string config_file;
+
+    void parse_config_file(
+        boost::program_options::options_description& options_description,
+        mo::ProgramOption& options) const override
+    {
+        if (!config_file.empty())
+            options.parse_file(options_description, config_file);
+    }
+};
+
 std::shared_ptr<mo::DefaultConfiguration> configuration_options(
     int argc,
     char const** argv,
-    std::function<void(int argc, char const* const* argv)> const& command_line_hander)
+    std::function<void(int argc, char const* const* argv)> const& command_line_hander,
+    std::string const& config_file)
 {
-    if (command_line_hander)
-        return std::make_shared<mo::DefaultConfiguration>(argc, argv, command_line_hander);
-    else
-        return std::make_shared<mo::DefaultConfiguration>(argc, argv);
+    std::shared_ptr<ConfigurationOptions> result;
 
+    if (command_line_hander)
+        result = std::make_shared<ConfigurationOptions>(argc, argv, command_line_hander);
+    else
+        result = std::make_shared<ConfigurationOptions>(argc, argv);
+
+    result->config_file = config_file;
+
+    return result;
 }
 
 template<typename ConfigPtr>
@@ -272,6 +295,11 @@ void mir::Server::set_command_line_handler(
     self->command_line_hander = command_line_hander;
 }
 
+void mir::Server::set_config_filename(std::string const& config_file)
+{
+    verify_setting_allowed(self->server_config);
+    self->config_file = config_file;
+}
 
 auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 {
@@ -309,7 +337,7 @@ void mir::Server::apply_settings()
 {
     if (self->server_config) return;
 
-    auto const options = configuration_options(self->argc, self->argv, self->command_line_hander);
+    auto const options = configuration_options(self->argc, self->argv, self->command_line_hander, self->config_file);
     self->add_configuration_options(*options);
 
     auto const config = std::make_shared<ServerConfiguration>(options, self);
