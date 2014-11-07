@@ -43,7 +43,11 @@ namespace
 {
 static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 {
-    return std::make_shared<mtd::MockSurface>();
+    using namespace ::testing;
+    auto surface = std::make_shared<mtd::MockSurface>();
+    EXPECT_CALL(*surface, add_observer(_))
+        .Times(AnyNumber());
+    return surface;
 }
 
 class MockSnapshotStrategy : public ms::SnapshotStrategy
@@ -88,6 +92,8 @@ TEST(ApplicationSession, create_and_destroy_surface)
 
     EXPECT_CALL(surface_coordinator, add_surface(_, _))
         .WillOnce(Return(mock_surface));
+    EXPECT_CALL(surface_coordinator, remove_surface(_))
+        .Times(AnyNumber());
 
     mtd::MockSessionListener listener;
     EXPECT_CALL(listener, surface_created(_, _))
@@ -120,6 +126,8 @@ TEST(ApplicationSession, listener_notified_of_surface_destruction_on_session_des
     ON_CALL(surface_coordinator, add_surface(_,_)).WillByDefault(Return(mock_surface));
 
     EXPECT_CALL(surface_coordinator, add_surface(_, _));
+    EXPECT_CALL(surface_coordinator, remove_surface(_))
+        .Times(AnyNumber());
 
     mtd::MockSessionListener listener;
     EXPECT_CALL(listener, surface_created(_, _)).Times(1);
@@ -146,15 +154,21 @@ TEST(ApplicationSession, default_surface_is_first_surface)
     mtd::NullEventSink sender;
     mtd::MockSurfaceCoordinator surface_coordinator;
 
+    auto a = make_mock_surface();
+    auto b = make_mock_surface();
+    auto c = make_mock_surface();
+
     {
         InSequence seq;
         EXPECT_CALL(surface_coordinator, add_surface(_, _)).Times(1)
-            .WillOnce(Return(make_mock_surface()));
+            .WillOnce(Return(a));
         EXPECT_CALL(surface_coordinator, add_surface(_, _)).Times(1)
-            .WillOnce(Return(make_mock_surface()));
+            .WillOnce(Return(b));
         EXPECT_CALL(surface_coordinator, add_surface(_, _)).Times(1)
-            .WillOnce(Return(make_mock_surface()));
+            .WillOnce(Return(c));
     }
+    EXPECT_CALL(surface_coordinator, remove_surface(_))
+        .Times(AnyNumber());
 
     ms::ApplicationSession app_session(
         mt::fake_shared(surface_coordinator),
@@ -202,6 +216,8 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
         mt::fake_shared(sender));
 
     EXPECT_CALL(surface_coordinator, add_surface(_, _));
+    EXPECT_CALL(surface_coordinator, remove_surface(_))
+        .Times(AnyNumber());
 
     {
         InSequence seq;
@@ -273,6 +289,8 @@ TEST(ApplicationSession, takes_snapshot_of_default_surface)
 
     EXPECT_CALL(surface_coordinator, add_surface(_,_))
         .WillOnce(Return(default_surface));
+    EXPECT_CALL(surface_coordinator, remove_surface(_))
+        .Times(AnyNumber());
 
     EXPECT_CALL(*snapshot_strategy,
                 take_snapshot_of(default_surface_buffer_access, _));
