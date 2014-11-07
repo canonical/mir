@@ -26,7 +26,6 @@
 #include "mir/main_loop.h"
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
-#include "mir/logging/logger.h"
 
 // TODO these are used to frig a stub renderer when running headless
 #include "mir/compositor/renderer.h"
@@ -35,13 +34,7 @@
 
 #include <iostream>
 
-namespace
-{
-    const char * const component = "Mir Server";
-}
-
 namespace mo = mir::options;
-namespace ml = mir::logging;
 
 #define FOREACH_WRAPPER(MACRO)\
     MACRO(cursor_listener)\
@@ -362,15 +355,6 @@ try
     if (self->emergency_cleanup_handler)
         emergency_cleanup->add(self->emergency_cleanup_handler);
 
-    self->server_config->the_always_on_logger()->log(ml::Logger::informational, "Starting Mir", component);
-    if (self->argc)
-    {
-        std::string msg = "    commandline: ";
-        for (int i=0; i<self->argc; i++)
-            msg += self->argv[i];
-        self->server_config->the_always_on_logger()->log(ml::Logger::informational, msg, component);
-    }
-
     run_mir(
         *self->server_config,
         [&](DisplayServer&) { self->init_callback(); },
@@ -392,11 +376,8 @@ catch (...)
 void mir::Server::stop()
 {
     if (self->server_config)
-    {
-        self->server_config->the_always_on_logger()->log(ml::Logger::informational, "Stopping Mir", component);
         if (auto const main_loop = the_main_loop())
             main_loop->stop();
-    }
 }
 
 bool mir::Server::exited_normally()

@@ -44,12 +44,3 @@ auto mir::DefaultServerConfiguration::the_logger()
             }
         });
 }
-
-std::shared_ptr<ml::Logger> mir::DefaultServerConfiguration::the_always_on_logger()
-{
-    return always_on_logger(
-        []()
-        {
-            return std::make_shared<ml::DumbConsoleLogger>();
-        });
-}

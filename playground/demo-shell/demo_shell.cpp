@@ -32,10 +32,8 @@
 #include "mir/compositor/destination_alpha.h"
 #include "mir/compositor/renderer_factory.h"
 #include "mir/shell/host_lifecycle_event_listener.h"
-#include "mir/logging/logger.h"
 
 #include <iostream>
-#include <syslog.h>
 
 namespace me = mir::examples;
 namespace ms = mir::scene;
@@ -45,7 +43,6 @@ namespace mi = mir::input;
 namespace mo = mir::options;
 namespace mc = mir::compositor;
 namespace msh = mir::shell;
-namespace ml = mir::logging;
 
 namespace mir
 {
@@ -146,26 +143,6 @@ public:
            });
     }
 
-    class AlwaysOnSysLogger : public ml::Logger
-    {
-    public:
-    	void log(ml::Logger::Severity /*severity*/,
-                 const std::string& message,
-                 const std::string& /*component*/)
-    	{
-            syslog(LOG_INFO, "%s", message.c_str());
-    	}
-    };
-
-    std::shared_ptr<ml::Logger> the_always_on_logger()
-    {
-        return always_on_logger(
-            []()
-            {
-                return std::make_shared<AlwaysOnSysLogger>();
-            });
-    }
-
 private:
     std::vector<std::shared_ptr<mi::EventFilter>> const filter_list;
 };
@@ -179,7 +156,6 @@ try
     auto wm = std::make_shared<me::WindowManager>();
     me::DemoServerConfiguration config(argc, argv, {wm});
 
-    config.the_always_on_logger()->log(ml::Logger::informational, "Starting Demo Shell", "Demo Shell");
     mir::run_mir(config, [&config, &wm](mir::DisplayServer&)
         {
             // We use this strange two stage initialization to avoid a circular dependency between the EventFilters

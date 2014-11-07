@@ -314,7 +314,6 @@ public:
      *  @{ */
     virtual std::shared_ptr<logging::Logger> the_logger();
     /** @} */
-    virtual std::shared_ptr<logging::Logger> the_always_on_logger();
 
     virtual std::shared_ptr<time::Clock> the_clock();
     virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
@@ -414,7 +413,6 @@ protected:
     CachedPtr<compositor::Compositor> compositor;
     CachedPtr<compositor::CompositorReport> compositor_report;
     CachedPtr<logging::Logger> logger;
-    CachedPtr<logging::Logger> always_on_logger;
     CachedPtr<graphics::DisplayReport> display_report;
     // static to workaround the singleton clock in AsioMainLoop when running multiple servers
     static CachedPtr<time::Clock> clock;
