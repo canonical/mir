@@ -211,3 +211,22 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
     ASSERT_THAT(new_buffers.size(), Eq(1));
     EXPECT_THAT(stale_buffers, Not(Contains(new_buffers[0])));
 }
+
+TEST_F(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
+{
+    using namespace testing;
+
+    stop_compositor();
+
+    mir_surface_swap_buffers_sync(surface);
+    mir_surface_swap_buffers_sync(surface);
+
+    auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
+    mir_surface_swap_buffers_sync(surface);
+
+    start_compositor();
+
+    auto const new_buffers = wait_for_new_rendered_buffers();
+    ASSERT_THAT(new_buffers.size(), Eq(1));
+    EXPECT_THAT(new_buffers[0], Eq(fresh_buffer));
+}
