@@ -425,6 +425,7 @@ MIR_SERVER_27 {
     mir::Server::Server*;
     mir::Server::set_command_line*;
     mir::Server::set_command_line_handler*;
+    mir::Server::set_config_filename*;
     mir::Server::set_exception_handler*;
     mir::Server::set_terminator*;
     mir::ServerStatusListener::operator*;

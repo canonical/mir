@@ -74,7 +74,7 @@ TEST_F(CommandLineHandling, valid_options_are_not_passed_to_callback)
 
     int const argc = std::distance(std::begin(argv), std::end(argv));
 
-    EXPECT_CALL(*this, callback(ElementsAre()));
+    EXPECT_CALL(*this, callback(_)).Times(Exactly(0));
 
     mo::DefaultConfiguration config{argc, argv, callback_functor};
 
