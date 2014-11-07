@@ -91,10 +91,10 @@ void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& f
     ba::write(*socket, ba::buffer(whole_message.data(), whole_message.size()));
 
     for (auto const& fds : fd_set)
-        send_fds_locked(lg, fds);
+        send_fds_locked(fds);
 }
 
-void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, std::vector<mir::Fd> const& fds)
+void mfd::SocketMessenger::send_fds_locked(std::vector<mir::Fd> const& fds)
 {
     mir::send_fds(socket_fd, fds);
 }
