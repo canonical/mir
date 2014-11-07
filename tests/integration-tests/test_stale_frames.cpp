@@ -191,14 +191,17 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
 
     std::set<mg::BufferID> stale_buffers;
 
+    std::cerr << "DEBUG (" << __LINE__ << "): buffer id:" << mir_debug_surface_current_buffer_id(surface) << std::endl;
     stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
     mir_surface_swap_buffers_sync(surface);
 
+    std::cerr << "DEBUG (" << __LINE__ << "): buffer id:" << mir_debug_surface_current_buffer_id(surface) << std::endl;
     stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
     mir_surface_swap_buffers_sync(surface);
 
     EXPECT_THAT(stale_buffers.size(), Eq(2));
 
+    std::cerr << "DEBUG (" << __LINE__ << "): buffer id:" << mir_debug_surface_current_buffer_id(surface) << std::endl;
     auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
     mir_surface_swap_buffers_sync(surface);
 
@@ -218,9 +221,12 @@ TEST_F(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
 
     stop_compositor();
 
+    std::cerr << "DEBUG (" << __LINE__ << "): buffer id:" << mir_debug_surface_current_buffer_id(surface) << std::endl;
     mir_surface_swap_buffers_sync(surface);
+    std::cerr << "DEBUG (" << __LINE__ << "): buffer id:" << mir_debug_surface_current_buffer_id(surface) << std::endl;
     mir_surface_swap_buffers_sync(surface);
 
+    std::cerr << "DEBUG (" << __LINE__ << "): buffer id:" << mir_debug_surface_current_buffer_id(surface) << std::endl;
     auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
     mir_surface_swap_buffers_sync(surface);
 
