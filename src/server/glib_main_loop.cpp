@@ -59,14 +59,12 @@ void mir::GLibMainLoop::run()
 
 void mir::GLibMainLoop::stop()
 {
-    auto const gsource = detail::make_idle_gsource(G_PRIORITY_HIGH,
+    detail::add_idle_gsource(main_context, G_PRIORITY_HIGH,
         [this]
         {
             running = false;
             g_main_context_wakeup(main_context);
         });
-
-    gsource.attach(main_context);
 }
 
 void mir::GLibMainLoop::register_signal_handler(
@@ -74,10 +72,7 @@ void mir::GLibMainLoop::register_signal_handler(
     std::function<void(int)> const& handler)
 {
     for (auto sig : sigs)
-    {
-        auto const gsource = detail::make_signal_gsource(sig, handler);
-        gsource.attach(main_context);
-    }
+        detail::add_signal_gsource(main_context, sig, handler);
 }
 
 void mir::GLibMainLoop::register_fd_handler(
@@ -97,6 +92,5 @@ void mir::GLibMainLoop::unregister_fd_handler(
 
 void mir::GLibMainLoop::enqueue(void const*, ServerAction const& action)
 {
-    auto const gsource = detail::make_idle_gsource(G_PRIORITY_DEFAULT, action);
-    gsource.attach(main_context);
+    detail::add_idle_gsource(main_context, G_PRIORITY_DEFAULT, action);
 }

@@ -34,22 +34,22 @@ namespace detail
 class GSourceHandle
 {
 public:
-    explicit GSourceHandle(GSource* gsource);
+    GSourceHandle(GSource* gsource, std::function<void()> const& pre_destruction_hook);
     GSourceHandle(GSourceHandle&& other);
     ~GSourceHandle();
 
     operator GSource*() const;
 
-    void attach(GMainContext* main_context) const;
-    void attach_and_detach_on_destruction(GMainContext* main_context);
-
 private:
     GSource* gsource;
-    bool detach_on_destruction;
+    std::function<void()> pre_destruction_hook;
 };
 
-GSourceHandle make_idle_gsource(int priority, std::function<void()> const& callback);
-GSourceHandle make_signal_gsource(int sig, std::function<void(int)> const& callback);
+void add_idle_gsource(
+    GMainContext* main_context, int priority, std::function<void()> const& callback);
+
+void add_signal_gsource(
+    GMainContext* main_context, int sig, std::function<void(int)> const& callback);
 
 class FdSources
 {

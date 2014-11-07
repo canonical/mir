@@ -24,28 +24,47 @@
 
 namespace md = mir::detail;
 
+namespace
+{
+
+struct GSourceRef
+{
+    GSourceRef(GSource* gsource) : gsource{gsource} {}
+    ~GSourceRef() { if (gsource) g_source_unref(gsource); }
+    operator GSource*() const { return gsource; }
+
+private:
+    GSource* gsource;
+};
+
+}
+
 /*****************
  * GSourceHandle *
  *****************/
 
-md::GSourceHandle::GSourceHandle(GSource* gsource)
-    : gsource{gsource}, detach_on_destruction{false}
+md::GSourceHandle::GSourceHandle(
+    GSource* gsource,
+    std::function<void()> const& pre_destruction_hook)
+    : gsource{gsource},
+      pre_destruction_hook{pre_destruction_hook}
 {
 }
 
 md::GSourceHandle::GSourceHandle(GSourceHandle&& other)
-    : gsource{other.gsource}, detach_on_destruction{other.detach_on_destruction}
+    : gsource{std::move(other.gsource)},
+      pre_destruction_hook{std::move(other.pre_destruction_hook)}
 {
     other.gsource = nullptr;
+    other.pre_destruction_hook = []{};
 }
 
 md::GSourceHandle::~GSourceHandle()
 {
     if (gsource)
     {
-        if (detach_on_destruction)
-            g_source_destroy(gsource);
-
+        pre_destruction_hook();
+        g_source_destroy(gsource);
         g_source_unref(gsource);
     }
 }
@@ -55,22 +74,12 @@ md::GSourceHandle::operator GSource*() const
     return gsource;
 }
 
-void md::GSourceHandle::attach(GMainContext* main_context) const
-{
-    g_source_attach(gsource, main_context);
-}
-
-void md::GSourceHandle::attach_and_detach_on_destruction(GMainContext* main_context)
-{
-    detach_on_destruction = true;
-    g_source_attach(gsource, main_context);
-}
-
 /******************
  * make_*_gsource *
  ******************/
 
-md::GSourceHandle md::make_idle_gsource(int priority, std::function<void()> const& callback)
+void md::add_idle_gsource(
+    GMainContext* main_context, int priority, std::function<void()> const& callback)
 {
     struct IdleContext
     {
@@ -83,7 +92,7 @@ md::GSourceHandle md::make_idle_gsource(int priority, std::function<void()> cons
         std::function<void()> const callback;
     };
 
-    GSourceHandle gsource{g_idle_source_new()};
+    GSourceRef gsource{g_idle_source_new()};
 
     g_source_set_priority(gsource, priority);
     g_source_set_callback(
@@ -92,10 +101,11 @@ md::GSourceHandle md::make_idle_gsource(int priority, std::function<void()> cons
         new IdleContext{callback},
         reinterpret_cast<GDestroyNotify>(&IdleContext::static_destroy));
 
-    return gsource;
+    g_source_attach(gsource, main_context);
 }
 
-md::GSourceHandle md::make_signal_gsource(
+void md::add_signal_gsource(
+    GMainContext* main_context,
     int sig, std::function<void(int)> const& callback)
 {
     struct SignalContext
@@ -110,7 +120,7 @@ md::GSourceHandle md::make_signal_gsource(
         int sig;
     };
 
-    GSourceHandle gsource{g_unix_signal_source_new(sig)};
+    GSourceRef gsource{g_unix_signal_source_new(sig)};
 
     g_source_set_callback(
         gsource,
@@ -118,7 +128,7 @@ md::GSourceHandle md::make_signal_gsource(
         new SignalContext{callback, sig},
         reinterpret_cast<GDestroyNotify>(&SignalContext::static_destroy));
 
-    return gsource;
+    g_source_attach(gsource, main_context);
 }
 
 /*************
@@ -161,19 +171,7 @@ private:
 
 struct md::FdSources::FdSource
 {
-    ~FdSource()
-    {
-        // g_source_destroy() may be called while the source is about to be
-        // dispatched, so there is no guarantee that after g_source_destroy()
-        // returns any associated handlers won't be called. Since we want a
-        // stronger no-call guarantee we need to disable the callback manually
-        // before destruction.
-        if (ctx)
-            ctx->disable_callback();
-    }
-
     GSourceHandle gsource;
-    FdContext* const ctx;
     void const* const owner;
 };
 
@@ -187,9 +185,16 @@ md::FdSources::~FdSources() = default;
 void md::FdSources::add(
     int fd, void const* owner, std::function<void(int)> const& handler)
 {
-    GSourceHandle gsource{g_unix_fd_source_new(fd, G_IO_IN)};
-
     auto const fd_context = new FdContext{handler};
+
+    // g_source_destroy() may be called while the source is about to be
+    // dispatched, so there is no guarantee that after g_source_destroy()
+    // returns any associated handlers won't be called. Since we want a
+    // stronger guarantee we need to disable the callback manually before
+    // destruction.
+    GSourceHandle gsource{
+        g_unix_fd_source_new(fd, G_IO_IN),
+        [=] { fd_context->disable_callback(); }};
 
     g_source_set_callback(
         gsource,
@@ -199,8 +204,8 @@ void md::FdSources::add(
 
     std::lock_guard<std::mutex> lock{sources_mutex};
 
-    sources.emplace_back(new FdSource{std::move(gsource), fd_context, owner});
-    sources.back()->gsource.attach_and_detach_on_destruction(main_context);
+    sources.emplace_back(new FdSource{std::move(gsource), owner});
+    g_source_attach(sources.back()->gsource, main_context);
 }
 
 void md::FdSources::remove_all_owned_by(void const* owner)
