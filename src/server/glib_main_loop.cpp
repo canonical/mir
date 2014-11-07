@@ -17,69 +17,11 @@
  */
 
 #include "mir/glib_main_loop.h"
+#include "mir/glib_main_loop_sources.h"
 
-#include <functional>
 #include <stdexcept>
 
 #include <boost/throw_exception.hpp>
-
-namespace
-{
-
-class GSourceHandle
-{
-public:
-    explicit GSourceHandle(GSource* gsource)
-        : gsource{gsource}
-    {
-    }
-
-    GSourceHandle(GSourceHandle&& other)
-        : gsource{other.gsource}
-    {
-        other.gsource = nullptr;
-    }
-
-    ~GSourceHandle()
-    {
-        if (gsource)
-            g_source_unref(gsource);
-    }
-
-    void attach(GMainContext* main_context) const
-    {
-        g_source_attach(gsource, main_context);
-    }
-
-private:
-    GSource* gsource;
-};
-
-GSourceHandle make_idle_source(int priority, std::function<void()> const& callback)
-{
-    struct IdleContext
-    {
-        static gboolean static_call(IdleContext* ctx)
-        {
-            ctx->callback();
-            return G_SOURCE_REMOVE;
-        }
-        static void static_destroy(IdleContext* ctx) { delete ctx; }
-        std::function<void()> const callback;
-    };
-
-    auto const gsource = g_idle_source_new();
-    g_source_set_priority(gsource, priority);
-    g_source_set_callback(
-        gsource,
-        reinterpret_cast<GSourceFunc>(&IdleContext::static_call),
-        new IdleContext{callback},
-        reinterpret_cast<GDestroyNotify>(&IdleContext::static_destroy));
-
-    return GSourceHandle{gsource};
-}
-
-}
 
 mir::detail::GMainContextHandle::GMainContextHandle()
     : main_context{g_main_context_new()}
@@ -117,18 +59,29 @@ void mir::GLibMainLoop::run()
 
 void mir::GLibMainLoop::stop()
 {
-    auto const source = make_idle_source(G_PRIORITY_HIGH,
+    auto const gsource = detail::make_idle_gsource(G_PRIORITY_HIGH,
         [this]
         {
             running = false;
             g_main_context_wakeup(main_context);
         });
 
-    source.attach(main_context);
+    gsource.attach(main_context);
+}
+
+void mir::GLibMainLoop::register_signal_handler(
+    std::initializer_list<int> sigs,
+    std::function<void(int)> const& handler)
+{
+    for (auto sig : sigs)
+    {
+        auto const gsource = detail::make_signal_gsource(sig, handler);
+        gsource.attach(main_context);
+    }
 }
 
 void mir::GLibMainLoop::enqueue(void const*, ServerAction const& action)
 {
-    auto const source = make_idle_source(G_PRIORITY_DEFAULT, action);
-    source.attach(main_context);
+    auto const gsource = detail::make_idle_gsource(G_PRIORITY_DEFAULT, action);
+    gsource.attach(main_context);
 }

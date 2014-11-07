@@ -16,52 +16,35 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GLIB_MAIN_LOOP_H_
-#define MIR_GLIB_MAIN_LOOP_H_
+#ifndef MIR_GLIB_MAIN_LOOP_SOURCES_H_
+#define MIR_GLIB_MAIN_LOOP_SOURCES_H_
 
-#include "mir/main_loop.h"
-
-#include <atomic>
+#include <functional>
 
 #include <glib.h>
 
 namespace mir
 {
-
 namespace detail
 {
 
-class GMainContextHandle
+class GSourceHandle
 {
 public:
-    GMainContextHandle();
-    ~GMainContextHandle();
-    operator GMainContext*() const;
+    explicit GSourceHandle(GSource* gsource);
+    GSourceHandle(GSourceHandle&& other);
+    ~GSourceHandle();
+
+    void attach(GMainContext* main_context) const;
+
 private:
-    GMainContext* const main_context;
+    GSource* gsource;
 };
+
+GSourceHandle make_idle_gsource(int priority, std::function<void()> const& callback);
+GSourceHandle make_signal_gsource(int sig, std::function<void(int)> const& callback);
 
 }
-
-class GLibMainLoop
-{
-public:
-    GLibMainLoop();
-
-    void run();
-    void stop();
-
-    void register_signal_handler(
-        std::initializer_list<int> signals,
-        std::function<void(int)> const& handler);
-
-    void enqueue(void const* owner, ServerAction const& action);
-
-private:
-    detail::GMainContextHandle const main_context;
-    std::atomic<bool> running;
-};
-
 }
 
 #endif

@@ -40,7 +40,7 @@ builddeps=$(echo ${builddeps} | sed -e 's/dpkg-checkbuilddeps://g' -e 's/Unmet b
 builddeps=$(echo ${builddeps} | sed 's/([^)]*)//g')
 builddeps=$(echo ${builddeps} | sed 's/ /,/g')
 
-fakeroot debootstrap --include=${builddeps} --arch=armhf --download-only --variant=buildd utopic .
+fakeroot debootstrap --include=${builddeps} --arch=armhf --download-only --variant=buildd vivid .
 
 # Remove libc libraries that confuse the cross-compiler
 rm var/cache/apt/archives/libc-dev*.deb
