@@ -170,7 +170,7 @@ private:
 int main(int argc, char const* argv[])
 try
 {
-	ml::the_always_on_logger = &me::override_always_on_logger;
+    ml::the_always_on_logger = &me::override_always_on_logger;
 
     auto wm = std::make_shared<me::WindowManager>();
     me::DemoServerConfiguration config(argc, argv, {wm});

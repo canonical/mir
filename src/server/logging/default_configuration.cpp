@@ -44,3 +44,5 @@ auto mir::DefaultServerConfiguration::the_logger()
             }
         });
 }
+
+

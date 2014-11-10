@@ -49,7 +49,7 @@ Logger* the_always_on_logger = &default_always_on_logger;
 
 void log(Logger::Severity severity, const std::string& message)
 {
-	the_always_on_logger->log(severity, message, "Mir Server");
+    the_always_on_logger->log(severity, message, "Mir Server");
 }
 
 }
