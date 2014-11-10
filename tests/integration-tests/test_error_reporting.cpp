@@ -24,6 +24,7 @@
 #include "mir/frontend/connector.h"
 
 #include "src/server/frontend/display_server.h"
+#include "src/server/scene/surface_allocator.h"
 
 #include "mir_test_framework/display_server_test_fixture.h"
 #include "mir_test_doubles/stub_ipc_factory.h"
@@ -34,6 +35,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "mir_test/gmock_fixes.h"
+#include "mir_test/validity_matchers.h"
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -45,31 +47,12 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
+std::string const test_exception_text{"test exception text"};
 
-struct ErrorServer : mf::detail::DisplayServer
+
+struct ConnectionErrorServer : mf::detail::DisplayServer
 {
     void client_pid(int /*pid*/) override {}
-
-    static std::string const test_exception_text;
-
-    void create_surface(
-        google::protobuf::RpcController*,
-        const mir::protobuf::SurfaceParameters*,
-        mir::protobuf::Surface*,
-        google::protobuf::Closure*)
-    {
-        throw std::runtime_error(test_exception_text);
-    }
-
-    void release_surface(
-        google::protobuf::RpcController*,
-        const mir::protobuf::SurfaceId*,
-        mir::protobuf::Void*,
-        google::protobuf::Closure*)
-    {
-        throw std::runtime_error(test_exception_text);
-    }
-
 
     void connect(
         ::google::protobuf::RpcController*,
@@ -89,8 +72,6 @@ struct ErrorServer : mf::detail::DisplayServer
         throw std::runtime_error(test_exception_text);
     }
 };
-
-std::string const ErrorServer::test_exception_text{"test exception text"};
 
 struct SurfaceSync
 {
@@ -193,7 +174,7 @@ void wait_for_surface_release(SurfaceSync* context)
 
 using ErrorReporting = BespokeDisplayServerTestFixture;
 
-TEST_F(ErrorReporting, c_api_returns_error)
+TEST_F(ErrorReporting, c_api_returns_connection_error)
 {
 
     struct ServerConfig : TestingServerConfiguration
@@ -201,7 +182,7 @@ TEST_F(ErrorReporting, c_api_returns_error)
         std::shared_ptr<mf::ProtobufIpcFactory> new_ipc_factory(
             std::shared_ptr<mf::SessionAuthorizer> const&) override
         {
-            static auto error_server = std::make_shared<ErrorServer>();
+            static auto error_server = std::make_shared<ConnectionErrorServer>();
             return std::make_shared<mtd::StubIpcFactory>(*error_server);
         }
     } server_config;
@@ -218,7 +199,46 @@ TEST_F(ErrorReporting, c_api_returns_error)
 
             ASSERT_TRUE(connection != NULL);
             EXPECT_FALSE(mir_connection_is_valid(connection));
-            EXPECT_TRUE(std::strstr(mir_connection_get_error_message(connection), ErrorServer::test_exception_text.c_str()));
+            EXPECT_TRUE(std::strstr(mir_connection_get_error_message(connection), test_exception_text.c_str()));
+
+            mir_connection_release(connection);
+        }
+    } client_config;
+
+    launch_client_process(client_config);
+}
+
+TEST_F(ErrorReporting, c_api_returns_surface_creation_error)
+{
+
+    struct ServerConfig : TestingServerConfiguration
+    {
+        class BoobytrappedSurfaceFactory : public mir::scene::SurfaceFactory
+        {
+            std::shared_ptr<mir::scene::Surface>
+            create_surface(mir::scene::SurfaceCreationParameters const&) override
+            {
+                throw std::runtime_error{test_exception_text};
+            }
+        };
+
+        std::shared_ptr<mir::scene::SurfaceFactory> the_surface_factory() override
+        {
+            return std::make_shared<BoobytrappedSurfaceFactory>();
+        }
+    } server_config;
+
+    launch_server_process(server_config);
+
+    struct ClientConfig : ClientConfigCommon
+    {
+        void exec()
+        {
+            mir_connect(mir_test_socket, __PRETTY_FUNCTION__, connection_callback, this);
+
+            wait_for_connect();
+
+            ASSERT_THAT(connection, IsValid());
 
             MirSurfaceParameters const request_params =
             {
@@ -235,12 +255,7 @@ TEST_F(ErrorReporting, c_api_returns_error)
 
             ASSERT_TRUE(ssync->surface != NULL);
             EXPECT_FALSE(mir_surface_is_valid(ssync->surface));
-            EXPECT_TRUE(std::strstr(mir_surface_get_error_message(ssync->surface), ErrorServer::test_exception_text.c_str()));
-
-            EXPECT_NO_THROW({
-                MirSurfaceParameters response_params;
-                mir_surface_get_parameters(ssync->surface, &response_params);
-            });
+            EXPECT_TRUE(std::strstr(mir_surface_get_error_message(ssync->surface), test_exception_text.c_str()));
 
             mir_surface_release(ssync->surface, release_surface_callback, ssync);
 
