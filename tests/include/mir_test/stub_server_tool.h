@@ -86,7 +86,14 @@ struct StubServerTool : mir::frontend::detail::DisplayServer
                          ::google::protobuf::Closure* done) override
     {
         app_name = request->application_name();
-        connect_msg->set_error("");
+        // If you check out MirConnection::connected either the platform and display_configuration
+        // have to be set or the error has to be set, otherwise we die and fail to callback.
+        //
+        // Since setting the error to "" means that mir_connection_is_valid will return false
+        // with a confusing non-error-message, instead clear the error and set the platform et al.
+        connect_msg->clear_error();
+        connect_msg->set_allocated_platform(new mir::protobuf::Platform{});
+        connect_msg->set_allocated_display_configuration(new mir::protobuf::DisplayConfiguration{});
         done->Run();
     }
 

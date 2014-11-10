@@ -20,32 +20,76 @@
 #define MIR_TEST_FRAMEWORK_USING_STUB_CLIENT_PLATFORM_H_
 
 #include <memory>
+#include <functional>
 
-namespace mir
-{
-namespace client
-{
-class MirConnectionAPI;
-}
-}
+#include "mir_test_framework/stub_client_connection_configuration.h"
+#include "src/client/mir_connection_api.h"
+
+namespace mcl = mir::client;
 
 namespace mir_test_framework
 {
 
-class UsingStubClientPlatform
+class StubMirConnectionAPI : public mcl::MirConnectionAPI
 {
 public:
-    UsingStubClientPlatform();
-    ~UsingStubClientPlatform();
+    StubMirConnectionAPI(mcl::MirConnectionAPI* prev_api,
+                         mcl::ConfigurationFactory factory)
+        : prev_api{prev_api},
+          factory{factory}
+    {
+    }
+
+    MirWaitHandle* connect(
+        mcl::ConfigurationFactory configuration,
+        char const* socket_file,
+        char const* name,
+        mir_connected_callback callback,
+        void* context) override;
+
+    void release(MirConnection* connection) override;
+
+    mcl::ConfigurationFactory configuration_factory() override;
 
 private:
-    UsingStubClientPlatform(UsingStubClientPlatform const&) = delete;
-    UsingStubClientPlatform operator=(UsingStubClientPlatform const&) = delete;
+    mcl::MirConnectionAPI* const prev_api;
+    mcl::ConfigurationFactory factory;
+};
+
+template<class ClientConfig>
+class UsingClientPlatform
+{
+public:
+    UsingClientPlatform()
+        : prev_api{mir_connection_api_impl},
+          stub_api{new StubMirConnectionAPI{prev_api, make_configuration_factory()}}
+    {
+        mir_connection_api_impl = stub_api.get();
+    }
+
+    ~UsingClientPlatform()
+    {
+        mir_connection_api_impl = prev_api;
+    }
+
+private:
+    UsingClientPlatform(UsingClientPlatform const&) = delete;
+    UsingClientPlatform operator=(UsingClientPlatform const&) = delete;
 
     mir::client::MirConnectionAPI* prev_api;
     std::unique_ptr<mir::client::MirConnectionAPI> stub_api;
+
+    mcl::ConfigurationFactory make_configuration_factory()
+    {
+        return [](std::string const& socket) {
+            return std::unique_ptr<mir::client::ConnectionConfiguration>{
+                new ClientConfig{socket}
+            };
+        };
+    }
 };
 
+using UsingStubClientPlatform = UsingClientPlatform<StubConnectionConfiguration>;
 }
 
 #endif /* MIR_TEST_FRAMEWORK_USING_STUB_CLIENT_PLATFORM_H_ */
