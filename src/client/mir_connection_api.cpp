@@ -53,6 +53,7 @@ class DefaultMirConnectionAPI : public mcl::MirConnectionAPI
 {
 public:
     MirWaitHandle* connect(
+        mcl::ConfigurationFactory configuration,
         char const* socket_file,
         char const* name,
         mir_connected_callback callback,
@@ -112,10 +113,13 @@ public:
         delete connection;
     }
 
-    std::unique_ptr<mcl::ConnectionConfiguration> configuration(std::string const& socket) override
+    mcl::ConfigurationFactory configuration_factory() override
     {
-        return std::unique_ptr<mcl::ConnectionConfiguration>{
-            new mcl::DefaultConnectionConfiguration{socket}};
+        return [](std::string const& socket) {
+            return std::unique_ptr<mcl::ConnectionConfiguration>{
+                new mcl::DefaultConnectionConfiguration{socket}
+            };
+        };
     }
 };
 
@@ -132,7 +136,11 @@ MirWaitHandle* mir_connect(
 {
     try
     {
-        return mir_connection_api_impl->connect(socket_file, name, callback, context);
+        return mir_connection_api_impl->connect(mir_connection_api_impl->configuration_factory(),
+                                                socket_file,
+                                                name,
+                                                callback,
+                                                context);
     }
     catch (std::exception const&)
     {
