@@ -107,7 +107,7 @@ struct DisconnectingTestingClientConfiguration : mtf::TestingClientConfiguration
                 mir_buffer_usage_hardware,
                 mir_display_output_id_invalid
             };
-            mir_connection_create_surface_sync(connection, &parameters);
+            surf = mir_connection_create_surface_sync(connection, &parameters);
         });
 
         configure_display.exec([&] {
@@ -117,6 +117,7 @@ struct DisconnectingTestingClientConfiguration : mtf::TestingClientConfiguration
         });
 
         disconnect.exec([&] {
+            mir_surface_release_sync(surf);
             mir_connection_release(connection);
         });
     }
@@ -129,6 +130,8 @@ struct DisconnectingTestingClientConfiguration : mtf::TestingClientConfiguration
     mt::CrossProcessAction create_surface;
     mt::CrossProcessAction configure_display;
     mt::CrossProcessAction disconnect;
+private:
+    MirSurface* surf;
 };
 
 /*

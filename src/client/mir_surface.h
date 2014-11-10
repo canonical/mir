@@ -59,6 +59,8 @@ public:
     MirSurface(MirSurface const &) = delete;
     MirSurface& operator=(MirSurface const &) = delete;
 
+    MirSurface(std::string const& error);
+
     MirSurface(
         MirConnection *allocating_connection,
         mir::protobuf::DisplayServer::Stub & server,

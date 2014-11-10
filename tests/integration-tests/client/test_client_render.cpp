@@ -28,6 +28,7 @@
 #include "examples/testdraw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
+#include "mir_test/validity_matchers.h"
 
 #include "mir/frontend/connector.h"
 
@@ -92,7 +93,9 @@ struct TestClient
             mir_buffer_usage_software, mir_display_output_id_invalid
         };
         auto connection = mir_connect_sync(socket_file, "test_renderer");
+        EXPECT_THAT(connection, IsValid());
         auto surface = mir_connection_create_surface_sync(connection, &surface_parameters);
+        EXPECT_THAT(surface, IsValid());
         MirGraphicsRegion graphics_region;
         for(int i=0u; i < num_frames; i++)
         {
@@ -119,6 +122,7 @@ struct TestClient
         process_sync.wait_for_signal_ready_for();
 
         auto connection = mir_connect_sync(socket_file, "test_renderer");
+        EXPECT_THAT(connection, IsValid());
 
         /* set up egl context */
         int major, minor, n;
@@ -137,7 +141,9 @@ struct TestClient
         eglInitialize(egl_display, &major, &minor);
         eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
 
-        auto mir_surface = create_mir_surface(connection, egl_display, egl_config);
+        auto mir_surface = create_mir_surface(connection, egl_display, egl_config);        
+        EXPECT_THAT(mir_surface, IsValid());
+
         auto native_window = static_cast<EGLNativeWindowType>(
             mir_surface_get_egl_native_window(mir_surface));
 
