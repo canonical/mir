@@ -31,10 +31,7 @@ mg::BufferID generate_next_buffer_id()
 }
 }
 
-#include <iostream>
-
 mg::BufferBasic::BufferBasic() :
     buffer_id(generate_next_buffer_id())
 {
-    std::cerr << "DEBUG (BufferBasic() ctor): buffer id:" << buffer_id << std::endl;
 }

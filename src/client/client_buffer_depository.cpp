@@ -33,11 +33,8 @@ mcl::ClientBufferDepository::ClientBufferDepository(std::shared_ptr<ClientBuffer
 {
 }
 
-#include <iostream>
 void mcl::ClientBufferDepository::deposit_package(std::shared_ptr<MirBufferPackage> const& package, int id, geometry::Size size, MirPixelFormat pf)
 {
-    std::cerr << "DEBUG (deposit_package): buffer id:" << id << std::endl;
-
     auto existing_buffer_id_pair = buffers.end();
     for (auto pair = buffers.begin(); pair != buffers.end(); ++pair)
     {
