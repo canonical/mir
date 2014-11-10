@@ -27,13 +27,17 @@ namespace md = mir::detail;
 namespace
 {
 
-struct GSourceRef
+class GSourceRef
 {
+public:
     GSourceRef(GSource* gsource) : gsource{gsource} {}
     ~GSourceRef() { if (gsource) g_source_unref(gsource); }
     operator GSource*() const { return gsource; }
 
 private:
+    GSourceRef(GSourceRef const&) = delete;
+    GSourceRef& operator=(GSourceRef const&) = delete;
+
     GSource* gsource;
 };
 
