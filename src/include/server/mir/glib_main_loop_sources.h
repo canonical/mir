@@ -51,6 +51,12 @@ void add_idle_gsource(
 void add_signal_gsource(
     GMainContext* main_context, int sig, std::function<void(int)> const& callback);
 
+void add_server_action_gsource(
+    GMainContext* main_context,
+    void const* owner,
+    std::function<void()> const& action,
+    std::function<bool(void const*)> const& should_dispatch);
+
 class FdSources
 {
 public:

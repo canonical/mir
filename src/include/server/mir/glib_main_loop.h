@@ -23,6 +23,8 @@
 #include "mir/glib_main_loop_sources.h"
 
 #include <atomic>
+#include <vector>
+#include <mutex>
 
 #include <glib.h>
 
@@ -64,11 +66,17 @@ public:
     void unregister_fd_handler(void const* owner);
 
     void enqueue(void const* owner, ServerAction const& action);
+    void pause_processing_for(void const* owner);
+    void resume_processing_for(void const* owner);
 
 private:
+    bool should_process_actions_for(void const* owner);
+
     detail::GMainContextHandle const main_context;
     std::atomic<bool> running;
     detail::FdSources fd_sources;
+    std::mutex do_not_process_mutex;
+    std::vector<void const*> do_not_process;
 };
 
 }

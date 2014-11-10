@@ -135,6 +135,68 @@ void md::add_signal_gsource(
     g_source_attach(gsource, main_context);
 }
 
+void md::add_server_action_gsource(
+    GMainContext* main_context,
+    void const* owner,
+    std::function<void()> const& action,
+    std::function<bool(void const*)> const& should_dispatch)
+{
+    struct ServerActionContext
+    {
+        void const* const owner;
+        std::function<void(void)> const action;
+        std::function<bool(void const*)> const should_dispatch;
+    };
+
+    struct ServerActionGSource
+    {
+        GSource gsource;
+        ServerActionContext ctx;
+
+        static gboolean prepare(GSource* source, gint *timeout)
+        {
+            *timeout = -1;
+            auto const& ctx = reinterpret_cast<ServerActionGSource*>(source)->ctx;
+            return ctx.should_dispatch(ctx.owner);
+        }
+
+        static gboolean check(GSource* source)
+        {
+            auto const& ctx = reinterpret_cast<ServerActionGSource*>(source)->ctx;
+            return ctx.should_dispatch(ctx.owner);
+        }
+
+        static gboolean dispatch(GSource* source, GSourceFunc, gpointer)
+        {
+            auto const& ctx = reinterpret_cast<ServerActionGSource*>(source)->ctx;
+            ctx.action();
+            return FALSE;
+        }
+
+        static void finalize(GSource* source)
+        {
+            auto const& ctx = reinterpret_cast<ServerActionGSource*>(source)->ctx;
+            ctx.~ServerActionContext();
+        }
+    };
+
+    static GSourceFuncs gsource_funcs{
+        ServerActionGSource::prepare,
+        ServerActionGSource::check,
+        ServerActionGSource::dispatch,
+        ServerActionGSource::finalize,
+        nullptr,
+        nullptr
+    };
+
+    GSourceRef gsource{g_source_new(&gsource_funcs, sizeof(ServerActionGSource))};
+    auto const sa_gsource = reinterpret_cast<ServerActionGSource*>(static_cast<GSource*>(gsource));
+
+    new (&sa_gsource->ctx) decltype(sa_gsource->ctx){owner, action, should_dispatch};
+
+    g_source_attach(gsource, main_context);
+}
+
 /*************
  * FdSources *
  *************/

@@ -19,6 +19,7 @@
 #include "mir/glib_main_loop.h"
 
 #include <stdexcept>
+#include <algorithm>
 
 #include <boost/throw_exception.hpp>
 
@@ -90,7 +91,39 @@ void mir::GLibMainLoop::unregister_fd_handler(
     fd_sources.remove_all_owned_by(owner);
 }
 
-void mir::GLibMainLoop::enqueue(void const*, ServerAction const& action)
+void mir::GLibMainLoop::enqueue(void const* owner, ServerAction const& action)
 {
-    detail::add_idle_gsource(main_context, G_PRIORITY_DEFAULT, action);
+    detail::add_server_action_gsource(main_context, owner, action,
+        [this] (void const* owner)
+        {
+            return should_process_actions_for(owner);
+        });
+}
+
+void mir::GLibMainLoop::pause_processing_for(void const* owner)
+{
+    std::lock_guard<std::mutex> lock{do_not_process_mutex};
+
+    auto const iter = std::find(do_not_process.begin(), do_not_process.end(), owner);
+    if (iter == do_not_process.end())
+        do_not_process.push_back(owner);
+}
+
+void mir::GLibMainLoop::resume_processing_for(void const* owner)
+{
+    std::lock_guard<std::mutex> lock{do_not_process_mutex};
+
+    auto const new_end = std::remove(do_not_process.begin(), do_not_process.end(), owner);
+    do_not_process.erase(new_end, do_not_process.end());
+
+    // Wake up the context to reprocess all sources
+    g_main_context_wakeup(main_context);
+}
+
+bool mir::GLibMainLoop::should_process_actions_for(void const* owner)
+{
+    std::lock_guard<std::mutex> lock{do_not_process_mutex};
+
+    auto const iter = std::find(do_not_process.begin(), do_not_process.end(), owner);
+    return iter == do_not_process.end();
 }
