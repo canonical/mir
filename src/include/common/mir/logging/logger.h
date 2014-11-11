@@ -19,6 +19,7 @@
 #ifndef MIR_LOGGING_LOGGER_H_
 #define MIR_LOGGING_LOGGER_H_
 
+#include <memory>
 #include <string>
 
 namespace mir
@@ -50,6 +51,11 @@ protected:
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
 };
+
+void log(Logger::Severity severity, const std::string& message);
+void log(Logger::Severity severity,const std::string& message, const std::string& component);
+
+void set_logger(std::shared_ptr<Logger> const& new_logger);
 }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -18,6 +18,7 @@
 
 #include "mir/logging/dumb_console_logger.h"
 
+#include <mutex>
 #include <iostream>
 #include <ctime>
 #include <cstdio>
@@ -55,4 +56,45 @@ void ml::DumbConsoleLogger::log(ml::Logger::Severity severity,
         << ": "
         << message
         << "\n";
+}
+
+namespace
+{
+std::mutex log_mutex;
+std::shared_ptr<ml::Logger> the_logger;
+
+std::shared_ptr<ml::Logger> get_logger()
+{
+    if (auto const result = the_logger)
+    {
+        return result;
+    }
+    else
+    {
+        std::lock_guard<decltype(log_mutex)> lock{log_mutex};
+        if (!the_logger)
+            the_logger = std::make_shared<ml::DumbConsoleLogger>();
+
+        return the_logger;
+    }
+}
+}
+
+void ml::log(Logger::Severity severity, const std::string& message)
+{
+    log(severity, message, "UnknownComponent");
+}
+
+void ml::log(Logger::Severity severity,const std::string& message, const std::string& component)
+{
+    auto const logger = get_logger();
+
+    logger->log(severity, message, component);
+}
+
+void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
+{
+    std::lock_guard<decltype(log_mutex)> lock{log_mutex};
+    if (!new_logger)
+        the_logger = new_logger;
 }
