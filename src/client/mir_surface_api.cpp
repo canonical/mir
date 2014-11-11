@@ -332,15 +332,3 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfig
 
     return result;
 }
-
-/* Debug functions */
-
-uint32_t mir_debug_surface_current_buffer_id(MirSurface* surface)
-{
-    return surface->get_current_buffer_id();
-}
-
-int mir_debug_surface_id(MirSurface* surface)
-{
-    return surface->id();
-}
