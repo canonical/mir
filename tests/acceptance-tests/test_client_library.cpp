@@ -255,10 +255,10 @@ TEST_F(ClientLibrary, can_set_surface_types)
         mir_surface_set_type(surface, mir_surface_type_normal);
         mir_surface_set_type(surface, mir_surface_type_utility);
         mir_surface_set_type(surface, mir_surface_type_dialog);
-        mir_surface_set_type(surface, mir_surface_type_overlay);
+        mir_surface_set_type(surface, mir_surface_type_gloss);
         mir_surface_set_type(surface, mir_surface_type_freestyle);
-        mir_wait_for(mir_surface_set_type(surface, mir_surface_type_popover));
-        ASSERT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_popover));
+        mir_wait_for(mir_surface_set_type(surface, mir_surface_type_menu));
+        ASSERT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_menu));
     }
 
     mir_wait_for(mir_surface_release(surface, release_surface_callback, this));
