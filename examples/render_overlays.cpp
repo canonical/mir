@@ -198,6 +198,7 @@ try
 {
     mir::Server server;
     server.set_command_line(argc, argv);
+    server.apply_settings();
 
     render_loop(server);
 
