@@ -152,6 +152,7 @@ void md::add_server_action_gsource(
     {
         GSource gsource;
         ServerActionContext ctx;
+        bool ctx_constructed;
 
         static gboolean prepare(GSource* source, gint *timeout)
         {
@@ -175,8 +176,9 @@ void md::add_server_action_gsource(
 
         static void finalize(GSource* source)
         {
-            auto const& ctx = reinterpret_cast<ServerActionGSource*>(source)->ctx;
-            ctx.~ServerActionContext();
+            auto const sa_gsource = reinterpret_cast<ServerActionGSource*>(source);
+            if (sa_gsource->ctx_constructed)
+                sa_gsource->ctx.~ServerActionContext();
         }
     };
 
@@ -192,7 +194,9 @@ void md::add_server_action_gsource(
     GSourceRef gsource{g_source_new(&gsource_funcs, sizeof(ServerActionGSource))};
     auto const sa_gsource = reinterpret_cast<ServerActionGSource*>(static_cast<GSource*>(gsource));
 
+    sa_gsource->ctx_constructed = false;
     new (&sa_gsource->ctx) decltype(sa_gsource->ctx){owner, action, should_dispatch};
+    sa_gsource->ctx_constructed = true;
 
     g_source_attach(gsource, main_context);
 }
