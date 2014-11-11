@@ -20,6 +20,7 @@
 #define MIR_GLIB_MAIN_LOOP_H_
 
 #include "mir/main_loop.h"
+#include "mir/glib_main_loop_sources.h"
 
 #include <atomic>
 
@@ -55,11 +56,19 @@ public:
         std::initializer_list<int> signals,
         std::function<void(int)> const& handler);
 
+    void register_fd_handler(
+        std::initializer_list<int> fds,
+        void const* owner,
+        std::function<void(int)> const& handler);
+
+    void unregister_fd_handler(void const* owner);
+
     void enqueue(void const* owner, ServerAction const& action);
 
 private:
     detail::GMainContextHandle const main_context;
     std::atomic<bool> running;
+    detail::FdSources fd_sources;
 };
 
 }
