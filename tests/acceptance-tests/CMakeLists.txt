@@ -13,10 +13,11 @@ set(
   SOURCES
 
   server_configuration_wrapping.cpp
-  server_command_line.cpp
+  server_configuration_options.cpp
   server_signal_handling.cpp
   clients.cpp
   test_client_library.cpp
+  test_client_library_errors.cpp
   test_client_library_old.cpp
   test_client_surface_events.cpp
   test_client_surface_swap_buffers.cpp

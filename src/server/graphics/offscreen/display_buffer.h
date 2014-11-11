@@ -62,10 +62,10 @@ public:
     DisplayBuffer(SurfacelessEGLContext egl_context,
                   geometry::Rectangle const& area);
 
-    geometry::Rectangle view_area() const;
-    void make_current();
-    void release_current();
-    void post_update();
+    geometry::Rectangle view_area() const override;
+    void make_current() override;
+    void release_current() override;
+    void post_update() override;
 
     MirOrientation orientation() const override;
     bool uses_alpha() const override;

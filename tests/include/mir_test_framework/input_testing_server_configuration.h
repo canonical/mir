@@ -58,8 +58,8 @@ public:
     InputTestingServerConfiguration();
     explicit InputTestingServerConfiguration(std::vector<geometry::Rectangle> const& display_rects);
 
-    void on_start();
-    void on_exit();
+    void on_start() override;
+    void on_exit() override;
 
     std::shared_ptr<droidinput::EventHubInterface> the_event_hub() override;
     std::shared_ptr<mir::input::InputManager> the_input_manager() override;

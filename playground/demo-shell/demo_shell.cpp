@@ -93,7 +93,7 @@ public:
     }
 
 
-    std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory()
+    std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory() override
     {
         return display_buffer_compositor_factory(
             [this]()

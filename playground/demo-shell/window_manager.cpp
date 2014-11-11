@@ -123,7 +123,6 @@ bool me::WindowManager::handle(MirEvent const& event)
     assert(compositor);
 
     bool handled = false;
-    static int const ANDROID_KEYCODE_POWER = 26;
 
     if (event.key.type == mir_event_type_key &&
         event.key.action == mir_key_action_down)
@@ -136,7 +135,7 @@ bool me::WindowManager::handle(MirEvent const& event)
         }
         else if ((event.key.modifiers & mir_key_modifier_alt &&
                   event.key.scan_code == KEY_P) ||
-                 (event.key.key_code == ANDROID_KEYCODE_POWER))
+                 (event.key.scan_code == KEY_POWER))
         {
             compositor->stop();
             auto conf = display->configuration();
@@ -232,7 +231,37 @@ bool me::WindowManager::handle(MirEvent const& event)
                 return true;
             }
         }
+        else if ((event.key.scan_code == KEY_VOLUMEDOWN ||
+                  event.key.scan_code == KEY_VOLUMEUP) &&
+                 max_fingers == 1)
+        {
+            int delta = (event.key.scan_code == KEY_VOLUMEDOWN) ? -1 : +1;
+            static const MirOrientation order[4] =
+            {
+                mir_orientation_normal,
+                mir_orientation_right,
+                mir_orientation_inverted,
+                mir_orientation_left
+            };
 
+            compositor->stop();
+            auto conf = display->configuration();
+            conf->for_each_output(
+                [&](mg::UserDisplayConfigurationOutput& output)
+                {
+                    int i = 0;
+                    for (; i < 4; ++i)
+                    {
+                        if (output.orientation == order[i])
+                            break;
+                    }
+                    output.orientation = order[(i+4+delta) % 4];
+                }
+            );
+            display->configure(*conf.get());
+            compositor->start();
+            return true;
+        }
     }
     else if (event.type == mir_event_type_motion &&
              focus_controller)
@@ -345,6 +374,9 @@ bool me::WindowManager::handle(MirEvent const& event)
                 handled = true;
             }
         }
+
+        if (fingers == 1 && action == mir_motion_action_up)
+            max_fingers = 0;
 
         old_cursor = cursor;
     }

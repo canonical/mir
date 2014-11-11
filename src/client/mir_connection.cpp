@@ -34,6 +34,8 @@
 #include <unistd.h>
 #include <signal.h>
 
+#include <boost/exception/diagnostic_information.hpp>
+
 namespace mcl = mir::client;
 namespace mircv = mir::input::receiver;
 namespace gp = google::protobuf;
@@ -219,6 +221,7 @@ MirPromptSession* MirConnection::create_prompt_session()
 void MirConnection::connected(mir_connected_callback callback, void * context)
 {
     bool safe_to_callback = true;
+    try
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
 
@@ -261,6 +264,11 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
         native_display = platform->create_egl_native_display();
         display_configuration->set_configuration(connect_result.display_configuration());
         lifecycle_control->set_lifecycle_event_handler(default_lifecycle_event_handler);
+    }
+    catch (std::exception const& e)
+    {
+        connect_result.set_error(std::string{"Failed to process connect response: "} +
+                                 boost::diagnostic_information(e));
     }
 
     if (safe_to_callback) callback(this, context);

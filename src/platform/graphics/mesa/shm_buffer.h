@@ -42,12 +42,12 @@ public:
               MirPixelFormat const& pixel_format);
     ~ShmBuffer() noexcept;
 
-    geometry::Size size() const;
-    geometry::Stride stride() const;
-    MirPixelFormat pixel_format() const;
-    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
+    geometry::Size size() const override;
+    geometry::Stride stride() const override;
+    MirPixelFormat pixel_format() const override;
+    std::shared_ptr<MirNativeBuffer> native_buffer_handle() const override;
     void gl_bind_to_texture() override;
-    bool can_bypass() const;
+    bool can_bypass() const override;
 
     void write(unsigned char const* data, size_t size);
 

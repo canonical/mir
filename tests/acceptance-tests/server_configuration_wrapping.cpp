@@ -60,6 +60,8 @@ struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
                 return std::make_shared<MySessionCoordinator>(wrapped);
             });
 
+        server.apply_settings();
+
         surface_coordinator = server.the_surface_coordinator();
         session_coordinator = server.the_session_coordinator();
     }

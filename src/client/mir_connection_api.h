@@ -23,6 +23,7 @@
 
 #include <string>
 #include <memory>
+#include <functional>
 
 namespace mir
 {
@@ -30,12 +31,15 @@ namespace client
 {
 class ConnectionConfiguration;
 
+using ConfigurationFactory = std::function<std::unique_ptr<ConnectionConfiguration>(std::string const&)>;
+
 class MirConnectionAPI
 {
 public:
     virtual ~MirConnectionAPI() = default;
 
     virtual MirWaitHandle* connect(
+        ConfigurationFactory configuration,
         char const* socket_file,
         char const* name,
         mir_connected_callback callback,
@@ -43,7 +47,7 @@ public:
 
     virtual void release(MirConnection* connection) = 0;
 
-    virtual std::unique_ptr<ConnectionConfiguration> configuration(std::string const& socket) = 0;
+    virtual ConfigurationFactory configuration_factory() = 0;
 
 protected:
     MirConnectionAPI() = default;
