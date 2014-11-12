@@ -18,8 +18,10 @@
 
 #include "example_input_event_filter.h"
 #include "example_display_configuration_policy.h"
+#include "glog_logger.h"
 
 #include "mir/server.h"
+#include "mir/report_exception.h"
 #include "mir/options/option.h"
 #include "mir/input/composite_event_filter.h"
 
@@ -29,15 +31,6 @@ namespace me = mir::examples;
 namespace mg = mir::graphics;
 
 #ifdef ARG_CODE_I_NEED_TO_REINSTATE
-#include "mir/logging/glog_logger.h"
-#include "mir/options/default_configuration.h"
-
-
-extern char const* const glog;
-extern char const* const glog_stderrthreshold;
-extern char const* const glog_minloglevel;
-extern char const* const glog_log_dir;
-
 auto mir::DefaultServerConfiguration::the_logger()
     -> std::shared_ptr<ml::Logger>
 {
@@ -73,6 +66,7 @@ char const* const glog_log_dir_default = "";
 }
 
 int main(int argc, char const* argv[])
+try
 {
     static char const* const launch_child_opt = "launch-client";
     static char const* const launch_client_descr = "system() command to launch client";
@@ -151,4 +145,9 @@ int main(int argc, char const* argv[])
     server.apply_settings();
     server.run();
     return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+catch (...)
+{
+    mir::report_exception();
+    return EXIT_FAILURE;
 }
