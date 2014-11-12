@@ -17,7 +17,6 @@
  */
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/buffer_basic.h"
