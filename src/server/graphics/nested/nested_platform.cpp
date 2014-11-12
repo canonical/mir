@@ -119,13 +119,10 @@ public:
         return native_platform->connection_ipc_package();
     }
 
-    void platform_operation(
-        mg::PlatformIPCPackage& response,
-        unsigned int const opcode,
-        mg::PlatformIPCPackage const& package) override
+    void platform_operation(mg::PlatformIPCPackage&, unsigned int const, mg::PlatformIPCPackage const&) override
     {
-        (void) response; (void) opcode; (void) package;
     }
+
 private:
     std::shared_ptr<mg::NativePlatform> const native_platform;
 };

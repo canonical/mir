@@ -45,4 +45,7 @@ TEST_F(IpcOperations, test_ipc_data_packed_correctly_for_full_ipc)
     EXPECT_THROW({
         ipc_operations.platform_operation(response_package, 1u, package);
     }, std::invalid_argument);
+
+    for (auto fd : package.ipc_fds)
+        close(fd); 
 }
