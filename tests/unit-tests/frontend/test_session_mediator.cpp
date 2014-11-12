@@ -205,36 +205,6 @@ public:
     MOCK_METHOD0(supported_pixel_formats, std::vector<MirPixelFormat>());
 };
 
-
-class MockPlatform : public mg::Platform
-{
- public:
-    MockPlatform(std::shared_ptr<mg::PlatformIpcOperations> const& ipc_ops)
-    {
-        using namespace testing;
-        ON_CALL(*this, create_buffer_allocator())
-            .WillByDefault(Return(std::shared_ptr<mg::GraphicBufferAllocator>()));
-        ON_CALL(*this, create_display(_,_,_))
-            .WillByDefault(Return(std::make_shared<mtd::NullDisplay>()));
-        ON_CALL(*this, connection_ipc_package())
-            .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
-        ON_CALL(*this, make_ipc_operations())
-            .WillByDefault(Return(ipc_ops));
-    }
-
-    MOCK_METHOD0(create_buffer_allocator, std::shared_ptr<mg::GraphicBufferAllocator>());
-    MOCK_METHOD3(create_display,
-                 std::shared_ptr<mg::Display>(
-                     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-                     std::shared_ptr<mg::GLProgramFactory> const&,
-                     std::shared_ptr<mg::GLConfig> const&));
-    MOCK_METHOD0(connection_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
-    MOCK_METHOD0(create_internal_client, std::shared_ptr<mg::InternalClient>());
-    MOCK_CONST_METHOD0(make_ipc_operations, std::shared_ptr<mg::PlatformIpcOperations>());
-    MOCK_CONST_METHOD0(egl_native_display, EGLNativeDisplayType());
-    MOCK_METHOD0(make_buffer_writer, std::shared_ptr<mg::BufferWriter>());
-};
-
 struct StubScreencast : mtd::NullScreencast
 {
     std::shared_ptr<mg::Buffer> capture(mf::ScreencastSessionId)
@@ -249,8 +219,6 @@ struct SessionMediator : public ::testing::Test
 {
     SessionMediator()
         : shell{std::make_shared<testing::NiceMock<mtd::MockShell>>()},
-          graphics_platform{
-              std::make_shared<testing::NiceMock<MockPlatform>>(mt::fake_shared(mock_ipc_operations))},
           graphics_changer{std::make_shared<mtd::NullDisplayChanger>()},
           surface_pixel_formats{mir_pixel_format_argb_8888, mir_pixel_format_xrgb_8888},
           report{mr::null_session_mediator_report()},
@@ -259,7 +227,7 @@ struct SessionMediator : public ::testing::Test
           stubbed_session{std::make_shared<StubbedSession>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)},
           mediator{
-            shell, graphics_platform, graphics_changer,
+            shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
             surface_pixel_formats, report,
             std::make_shared<mtd::NullEventSink>(),
             resource_cache, stub_screencast, &connector, nullptr, nullptr}
@@ -272,7 +240,6 @@ struct SessionMediator : public ::testing::Test
     MockConnector connector;
     testing::NiceMock<MockBufferPacker> mock_ipc_operations;
     std::shared_ptr<testing::NiceMock<mtd::MockShell>> const shell;
-    std::shared_ptr<MockPlatform> const graphics_platform;
     std::shared_ptr<mf::DisplayChanger> const graphics_changer;
     std::vector<MirPixelFormat> const surface_pixel_formats;
     std::shared_ptr<mf::SessionMediatorReport> const report;
@@ -316,7 +283,7 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
     };
 
     mf::SessionMediator mediator{
-        shell, graphics_platform, graphics_changer,
+        shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
         resource_cache, stub_screencast, context, nullptr, nullptr};
@@ -420,7 +387,7 @@ TEST_F(SessionMediator, connect_packs_display_configuration)
         .WillByDefault(Return(mt::fake_shared(config)));
 
     mf::SessionMediator mediator(
-        shell, graphics_platform, mock_display,
+        shell, mt::fake_shared(mock_ipc_operations), mock_display,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
         resource_cache, std::make_shared<mtd::NullScreencast>(),
@@ -622,7 +589,7 @@ TEST_F(SessionMediator, display_config_request)
         .WillOnce(Return(mt::fake_shared(stub_display_config)));
 
     mf::SessionMediator mediator{
-        shell, graphics_platform, mock_display_selector,
+        shell, mt::fake_shared(mock_ipc_operations), mock_display_selector,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(), resource_cache,
         std::make_shared<mtd::NullScreencast>(),
@@ -876,7 +843,7 @@ TEST_F(SessionMediator, buffer_fd_resources_are_put_in_resource_cache)
     EXPECT_CALL(mock_cache, save_fd(_,fake_fd2));
 
     mf::SessionMediator mediator{
-        shell, graphics_platform, graphics_changer,
+        shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
         surface_pixel_formats, report,
         std::make_shared<mtd::NullEventSink>(),
         mt::fake_shared(mock_cache), stub_screencast, &connector, nullptr, nullptr};
