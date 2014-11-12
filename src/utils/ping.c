@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
     static const MirSurfaceType types[2] =
     {
         mir_surface_type_normal,
-        mir_surface_type_overlay
+        mir_surface_type_utility
     };
     int t = 1;
 
