@@ -642,6 +642,15 @@ TEST_F(GLibMainLoopTest, dispatches_actions_resumed_externally)
     EXPECT_THAT(actions[1], Eq(0));
 }
 
+TEST_F(GLibMainLoopTest, cannot_be_created_twice)
+{
+    using namespace ::testing;
+
+    EXPECT_THROW({
+        mir::GLibMainLoop second_ml{std::make_shared<mir::time::SteadyClock>()};
+    }, std::runtime_error);
+}
+
 namespace
 {
 

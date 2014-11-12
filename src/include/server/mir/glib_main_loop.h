@@ -89,6 +89,7 @@ private:
     detail::GMainContextHandle const main_context;
     std::atomic<bool> running;
     detail::FdSources fd_sources;
+    detail::SignalSources signal_sources;
     std::mutex do_not_process_mutex;
     std::vector<void const*> do_not_process;
     std::function<void()> before_iteration_hook;
