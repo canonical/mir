@@ -76,7 +76,7 @@ public:
     void show(CursorImage const& cursor_image) override;
     void hide() override;
 
-    void move_to(geometry::Point position);
+    void move_to(geometry::Point position) override;
 
     void suspend();
     void resume();

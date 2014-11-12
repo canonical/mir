@@ -78,7 +78,7 @@ public:
     {
         return stub_buffer;
     }
-    geometry::Rectangle screen_position() const
+    geometry::Rectangle screen_position() const override
     {
         return rect;
     }
@@ -90,7 +90,7 @@ public:
     {
         return trans;
     }
-    bool visible() const
+    bool visible() const override
     {
         return visible_;
     }

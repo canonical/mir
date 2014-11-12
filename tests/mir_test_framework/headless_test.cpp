@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/headless_test.h"
 
+#include "mir/fd.h"
 #include "mir/main_loop.h"
 
 #include <boost/throw_exception.hpp>
@@ -57,6 +58,8 @@ void mtf::HeadlessTest::start_server()
                 });
         });
 
+    server.apply_settings();
+
     server_thread = std::thread([&]
         {
             try
@@ -84,13 +87,14 @@ void mtf::HeadlessTest::start_server()
 void mtf::HeadlessTest::stop_server()
 {
     connections.clear();
+    server.stop();
+    wait_for_server_exit();
+}
 
+void mtf::HeadlessTest::wait_for_server_exit()
+{
     std::unique_lock<std::mutex> lock(mutex);
-    if (server_running)
-    {
-        server.stop();
-        started.wait_for(lock, timeout, [&] { return !server_running; });
-    }
+    started.wait_for(lock, timeout, [&] { return !server_running; });
 
     if (server_running)
     {
@@ -105,9 +109,13 @@ mtf::HeadlessTest::~HeadlessTest() noexcept
 
 auto mtf::HeadlessTest::new_connection() -> std::string
 {
+    return connection(server.open_client_socket());
+}
+
+auto mtf::HeadlessTest::connection(mir::Fd fd) -> std::string
+{
     char connect_string[64] = {0};
-    auto const client_socket = server.open_client_socket();
-    connections.push_back(client_socket);
-    sprintf(connect_string, "fd://%d", client_socket.operator int());
+    connections.push_back(fd);
+    sprintf(connect_string, "fd://%d", fd.operator int());
     return connect_string;
 }

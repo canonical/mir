@@ -43,7 +43,7 @@ namespace
 {
 static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 {
-    return std::make_shared<mtd::MockSurface>();
+    return std::make_shared<testing::NiceMock<mtd::MockSurface> >();
 }
 
 class MockSnapshotStrategy : public ms::SnapshotStrategy
@@ -84,7 +84,7 @@ TEST(ApplicationSession, create_and_destroy_surface)
     auto mock_surface = make_mock_surface();
 
     mtd::NullEventSink sender;
-    mtd::MockSurfaceCoordinator surface_coordinator;
+    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
 
     EXPECT_CALL(surface_coordinator, add_surface(_, _))
         .WillOnce(Return(mock_surface));
@@ -116,10 +116,8 @@ TEST(ApplicationSession, listener_notified_of_surface_destruction_on_session_des
     auto mock_surface = make_mock_surface();
 
     mtd::NullEventSink sender;
-    mtd::MockSurfaceCoordinator surface_coordinator;
+    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
     ON_CALL(surface_coordinator, add_surface(_,_)).WillByDefault(Return(mock_surface));
-
-    EXPECT_CALL(surface_coordinator, add_surface(_, _));
 
     mtd::MockSessionListener listener;
     EXPECT_CALL(listener, surface_created(_, _)).Times(1);
@@ -144,17 +142,11 @@ TEST(ApplicationSession, default_surface_is_first_surface)
     using namespace ::testing;
 
     mtd::NullEventSink sender;
-    mtd::MockSurfaceCoordinator surface_coordinator;
+    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
 
-    {
-        InSequence seq;
-        EXPECT_CALL(surface_coordinator, add_surface(_, _)).Times(1)
-            .WillOnce(Return(make_mock_surface()));
-        EXPECT_CALL(surface_coordinator, add_surface(_, _)).Times(1)
-            .WillOnce(Return(make_mock_surface()));
-        EXPECT_CALL(surface_coordinator, add_surface(_, _)).Times(1)
-            .WillOnce(Return(make_mock_surface()));
-    }
+    EXPECT_CALL(surface_coordinator, add_surface(_, _))
+        .Times(3)
+        .WillRepeatedly(Return(make_mock_surface()));
 
     ms::ApplicationSession app_session(
         mt::fake_shared(surface_coordinator),
@@ -190,7 +182,7 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
     mtd::NullEventSink sender;
     auto mock_surface = make_mock_surface();
 
-    mtd::MockSurfaceCoordinator surface_coordinator;
+    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
     ON_CALL(surface_coordinator, add_surface(_, _)).WillByDefault(Return(mock_surface));
 
     ms::ApplicationSession app_session(
@@ -200,8 +192,6 @@ TEST(ApplicationSession, session_visbility_propagates_to_surfaces)
         std::make_shared<mtd::NullSnapshotStrategy>(),
         std::make_shared<ms::NullSessionListener>(),
         mt::fake_shared(sender));
-
-    EXPECT_CALL(surface_coordinator, add_surface(_, _));
 
     {
         InSequence seq;
@@ -264,7 +254,7 @@ TEST(ApplicationSession, takes_snapshot_of_default_surface)
 {
     using namespace ::testing;
 
-    mtd::MockSurfaceCoordinator surface_coordinator;
+    NiceMock<mtd::MockSurfaceCoordinator> surface_coordinator;
     mtd::NullEventSink sender;
     auto const default_surface = make_mock_surface();
     auto const default_surface_buffer_access =

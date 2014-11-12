@@ -17,11 +17,12 @@
  */
 
 #include "mir/asio_main_loop.h"
-#include "mir/time/high_resolution_clock.h"
+#include "mir/time/steady_clock.h"
 #include "mir_test/pipe.h"
 #include "mir_test/auto_unblock_thread.h"
 #include "mir_test/signal.h"
 #include "mir_test/wait_object.h"
+#include "mir_test_doubles/advanceable_clock.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -38,6 +39,7 @@
 #include <unistd.h>
 
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -45,27 +47,19 @@ namespace
 class AsioMainLoopTest : public ::testing::Test
 {
 public:
-    mir::AsioMainLoop ml{std::make_shared<mir::time::HighResolutionClock>()};
+    mir::AsioMainLoop ml{std::make_shared<mir::time::SteadyClock>()};
 };
 
-class AdvanceableClock : public mir::time::Clock
+struct AdvanceableClock : mtd::AdvanceableClock
 {
-public:
-    mir::time::Timestamp sample() const override
+    void advance_by(mir::time::Duration step, mir::AsioMainLoop& ml)
     {
-        std::lock_guard<std::mutex> lock(time_mutex);
-        return current_time;
-    }
-    void advance_by(std::chrono::milliseconds const step, mir::AsioMainLoop & ml)
-    {
+        mtd::AdvanceableClock::advance_by(step);
+
         bool done = false;
         std::mutex checkpoint_mutex;
         std::condition_variable checkpoint;
 
-        {
-            std::lock_guard<std::mutex> lock(time_mutex);
-            current_time += step;
-        }
         auto evaluate_clock_alarm = ml.notify_in(
             std::chrono::milliseconds{0},
             [&done, &checkpoint_mutex, &checkpoint]
@@ -77,17 +71,7 @@ public:
 
         std::unique_lock<std::mutex> lock(checkpoint_mutex);
         while(!done) checkpoint.wait(lock);
-
     }
-private:
-    mutable std::mutex time_mutex;
-    mir::time::Timestamp current_time{
-        []
-        {
-           mir::time::HighResolutionClock clock;
-           return clock.sample();
-        }()
-        };
 };
 
 
@@ -674,7 +658,7 @@ TEST_F(AsioMainLoopAlarmTest, alarm_callback_cannot_deadlock)
 
 TEST_F(AsioMainLoopAlarmTest, alarm_fires_at_correct_time_point)
 {
-    mir::time::Timestamp real_soon = clock->sample() + std::chrono::milliseconds{120};
+    mir::time::Timestamp real_soon = clock->now() + std::chrono::milliseconds{120};
 
     auto alarm = ml.notify_at(real_soon, []{});
 

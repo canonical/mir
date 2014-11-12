@@ -80,13 +80,13 @@ void mrl::MessageProcessorReport::received_invocation(void const* mediator, int 
     auto& invocations = mediators[mediator].current_invocations;
     auto& invocation = invocations[id];
 
-    invocation.start = clock->sample();
+    invocation.start = clock->now();
     invocation.method = method;
 }
 
 void mrl::MessageProcessorReport::completed_invocation(void const* mediator, int id, bool result)
 {
-    auto const end = clock->sample();
+    auto const end = clock->now();
     std::ostringstream out;
 
     {

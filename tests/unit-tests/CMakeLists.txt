@@ -5,6 +5,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
+  ${GLIB_INCLUDE_DIRS}
 )
 
 add_definitions(
@@ -25,13 +26,14 @@ set(
   test_gmock_fixes.cpp
   test_recursive_read_write_mutex.cpp
   test_asio_main_loop.cpp
+  test_glib_main_loop.cpp
   shared_library_test.cpp
   test_raii.cpp
   test_udev_wrapper.cpp
   test_variable_length_array.cpp
   test_thread_name.cpp
   test_default_emergency_cleanup.cpp
-  test_basic_observers.cpp
+  test_thread_safe_list.cpp
   test_fatal.cpp
   test_fd.cpp
   test_shared_library_prober.cpp

@@ -35,10 +35,11 @@ Build-Depends: cmake,
                liblttng-ust-dev,
                libxkbcommon-dev,
                libumockdev-dev (>= 0.6),
-               umockdev,
+               umockdev (>= 0.8.7),
                libudev-dev,
                google-mock (>= 1.6.0+svn437),
                valgrind [!arm64],
+               libglib2.0-dev,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
@@ -92,7 +93,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmircommon2 (= ${binary:Version}), 
+Depends: libmircommon3 (= ${binary:Version}), 
          libprotobuf-dev (>= 2.4.1),
          ${misc:Depends},
 Breaks: mircommon-dev (<< 0.6)
@@ -191,7 +192,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirclient-debug-extension1 (= ${binary:Version})
+Depends: libmirclient-debug-extension1 (= ${binary:Version}),
 	 ${misc:Depends},
          ${shlibs:Depends},
 Description: Display server for Ubuntu - client debug interface headers
@@ -251,7 +252,7 @@ Description: Display Server for Ubuntu - stress tests and other test tools
  .
  Contains a tool for stress testing the Mir display server
 
-Package: libmircommon2
+Package: libmircommon3
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same

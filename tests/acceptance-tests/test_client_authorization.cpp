@@ -22,7 +22,7 @@
 #include <mir_toolkit/mir_client_library.h>
 
 #include "mir_test/fake_shared.h"
-#include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test_doubles/stub_session_authorizer.h"
 
 #include <gtest/gtest.h>
@@ -39,11 +39,19 @@ namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 
+using namespace ::testing;
+
 namespace
 {
-char const* const mir_test_socket = mtf::test_socket_file().c_str();
+struct MockSessionAuthorizer : public mf::SessionAuthorizer
+{
+    MOCK_METHOD1(connection_is_allowed, bool(mf::SessionCredentials const&));
+    MOCK_METHOD1(configure_display_is_allowed, bool(mf::SessionCredentials const&));
+    MOCK_METHOD1(screencast_is_allowed, bool(mf::SessionCredentials const&));
+    MOCK_METHOD1(prompt_session_is_allowed, bool(mf::SessionCredentials const&));
+};
 
-struct ClientCredsTestFixture : BespokeDisplayServerTestFixture
+struct ClientCredsTestFixture : mtf::InterprocessClientServerTest
 {
     ClientCredsTestFixture()
     {
@@ -84,40 +92,21 @@ struct ClientCredsTestFixture : BespokeDisplayServerTestFixture
     };
 
     SharedRegion* shared_region;
+    MockSessionAuthorizer mock_authorizer;
 };
-
-struct MockSessionAuthorizer : public mf::SessionAuthorizer
-{
-    MOCK_METHOD1(connection_is_allowed, bool(mf::SessionCredentials const&));
-    MOCK_METHOD1(configure_display_is_allowed, bool(mf::SessionCredentials const&));
-    MOCK_METHOD1(screencast_is_allowed, bool(mf::SessionCredentials const&));
-    MOCK_METHOD1(prompt_session_is_allowed, bool(mf::SessionCredentials const&));
-};
-
 }
 
 TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_clients)
 {
-    mtf::CrossProcessSync connect_sync;
-
-    struct ServerConfiguration : TestingServerConfiguration
+    auto const matches_creds = [&](mf::SessionCredentials const& creds)
     {
-        ServerConfiguration(ClientCredsTestFixture::SharedRegion *shared_region,
-                            mtf::CrossProcessSync const& connect_sync)
-            : shared_region(shared_region),
-              connect_sync(connect_sync)
-        {
-        }
+        return shared_region->matches_client_process_creds(creds);
+    };
 
-        void on_start() override
+    init_server([&]
         {
-            using namespace ::testing;
-
-            EXPECT_TRUE(shared_region->wait_for_client_creds());
-            auto matches_creds = [&](mf::SessionCredentials const& creds)
-            {
-                return shared_region->matches_client_process_creds(creds);
-            };
+            server.override_the_session_authorizer(
+                [&] { return mt::fake_shared(mock_authorizer); });
 
             EXPECT_CALL(mock_authorizer,
                 connection_is_allowed(Truly(matches_creds)))
@@ -135,77 +124,44 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
                 prompt_session_is_allowed(Truly(matches_creds)))
                 .Times(1)
                 .WillOnce(Return(false));
-            connect_sync.try_signal_ready_for();
-        }
+        });
 
-        std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer() override
-        {
-            return mt::fake_shared(mock_authorizer);
-        }
+    run_in_server([&]
+       {
+           EXPECT_TRUE(shared_region->wait_for_client_creds());
+       });
 
-        ClientCredsTestFixture::SharedRegion* shared_region;
-        MockSessionAuthorizer mock_authorizer;
-        mtf::CrossProcessSync connect_sync;
-    } server_config(shared_region, connect_sync);
-    launch_server_process(server_config);
-
-
-    struct ClientConfiguration : TestingClientConfiguration
-    {
-        ClientConfiguration(ClientCredsTestFixture::SharedRegion *shared_region,
-                            mtf::CrossProcessSync const& connect_sync)
-            : shared_region(shared_region),
-              connect_sync(connect_sync)
-        {
-        }
-
-        void exec() override
+    run_in_client([&]
         {
             shared_region->post_client_creds();
-            connect_sync.wait_for_signal_ready_for();
-            auto const connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-            EXPECT_TRUE(mir_connection_is_valid(connection));
-            mir_connection_release(connection);
-        }
 
-        ClientCredsTestFixture::SharedRegion* shared_region;
-        mtf::CrossProcessSync connect_sync;
-    } client_config(shared_region, connect_sync);
-    launch_client_process(client_config);
+            auto const connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+            ASSERT_TRUE(mir_connection_is_valid(connection));
+
+            mir_connection_release(connection);
+        });
 }
 
 // This test is also a regression test for https://bugs.launchpad.net/mir/+bug/1358191
 TEST_F(ClientCredsTestFixture, authorizer_may_prevent_connection_of_clients)
 {
-    using namespace ::testing;
-
-    struct ServerConfiguration : TestingServerConfiguration
-    {
-        std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer() override
+    init_server([&]
         {
-            struct StubAuthorizer : mtd::StubSessionAuthorizer
-            {
-                bool connection_is_allowed(mir::frontend::SessionCredentials const&) override
-                {
-                    return false;
-                }
-            };
+            server.override_the_session_authorizer(
+                [&] { return mt::fake_shared(mock_authorizer); });
 
-            return std::make_shared<StubAuthorizer>();
-        }
-    } server_config;
+            EXPECT_CALL(mock_authorizer,
+                connection_is_allowed(_))
+                .Times(1)
+                .WillOnce(Return(false));
+        });
 
-    launch_server_process(server_config);
+    run_in_server([&]{});
 
-    struct ClientConfiguration : TestingClientConfiguration
-    {
-        void exec() override
+    run_in_client([&]
         {
             auto const connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
             EXPECT_FALSE(mir_connection_is_valid(connection));
             mir_connection_release(connection);
-        }
-    } client_config;
-
-    launch_client_process(client_config);
+        });
 }

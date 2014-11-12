@@ -31,11 +31,11 @@ namespace doubles
 class NullDisplayBuffer : public graphics::DisplayBuffer
 {
 public:
-    geometry::Rectangle view_area() const { return geometry::Rectangle(); }
-    void make_current() {}
-    void release_current() {}
-    void post_update() {}
-    bool post_renderables_if_optimizable(graphics::RenderableList const&) { return false; }
+    geometry::Rectangle view_area() const override { return geometry::Rectangle(); }
+    void make_current() override {}
+    void release_current() override {}
+    void post_update() override {}
+    bool post_renderables_if_optimizable(graphics::RenderableList const&) override { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal; }
     bool uses_alpha() const override { return false; }
 };

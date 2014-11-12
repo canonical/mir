@@ -40,7 +40,7 @@ mrl::CompositorReport::CompositorReport(
 
 mrl::CompositorReport::TimePoint mrl::CompositorReport::now() const
 {
-    return clock->sample();
+    return clock->now();
 }
 
 void mrl::CompositorReport::added_display(int width, int height, int x, int y, SubCompositorId id)

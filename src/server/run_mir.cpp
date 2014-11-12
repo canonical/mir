@@ -64,20 +64,36 @@ extern "C" void fatal_signal_cleanup(int sig)
 
 void mir::run_mir(ServerConfiguration& config, std::function<void(DisplayServer&)> init)
 {
+    run_mir(config, init, {});
+}
+
+void mir::run_mir(
+    ServerConfiguration& config,
+    std::function<void(DisplayServer&)> init,
+    std::function<void(int)> const& terminator)
+{
     DisplayServer* server_ptr{nullptr};
     {
         std::lock_guard<std::mutex> lock{termination_exception_mutex};
         termination_exception = nullptr;
     }
-    auto main_loop = config.the_main_loop();
 
-    main_loop->register_signal_handler(
-        {SIGINT, SIGTERM},
-        [&server_ptr](int)
-        {
-            assert(server_ptr);
-            server_ptr->stop();
-        });
+    auto const main_loop = config.the_main_loop();
+
+    if (terminator)
+    {
+        main_loop->register_signal_handler({SIGINT, SIGTERM}, terminator);
+    }
+    else
+    {
+        main_loop->register_signal_handler(
+            {SIGINT, SIGTERM},
+            [&server_ptr](int)
+            {
+                assert(server_ptr);
+                server_ptr->stop();
+            });
+    }
 
     FatalErrorStrategy fatal_error_strategy{config.the_fatal_error_strategy()};
 

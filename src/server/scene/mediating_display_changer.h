@@ -54,14 +54,14 @@ public:
         std::shared_ptr<ServerActionQueue> const& server_action_queue);
 
     /* From mir::frontend::DisplayChanger */
-    std::shared_ptr<graphics::DisplayConfiguration> active_configuration();
+    std::shared_ptr<graphics::DisplayConfiguration> active_configuration() override;
     void configure(std::shared_ptr<frontend::Session> const& session,
-                   std::shared_ptr<graphics::DisplayConfiguration> const& conf);
+                   std::shared_ptr<graphics::DisplayConfiguration> const& conf) override;
 
     /* From mir::DisplayChanger */
     void configure_for_hardware_change(
         std::shared_ptr<graphics::DisplayConfiguration> const& conf,
-        SystemStateHandling pause_resume_system);
+        SystemStateHandling pause_resume_system) override;
 
     void pause_display_config_processing() override;
     void resume_display_config_processing() override;

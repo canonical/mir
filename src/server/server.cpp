@@ -18,6 +18,8 @@
 
 #include "mir/server.h"
 
+#include "mir/emergency_cleanup.h"
+#include "mir/fd.h"
 #include "mir/frontend/connector.h"
 #include "mir/options/default_configuration.h"
 #include "mir/default_server_configuration.h"
@@ -35,6 +37,7 @@
 namespace mo = mir::options;
 
 #define FOREACH_WRAPPER(MACRO)\
+    MACRO(cursor_listener)\
     MACRO(display_configuration_policy)\
     MACRO(session_coordinator)\
     MACRO(surface_coordinator)
@@ -42,11 +45,11 @@ namespace mo = mir::options;
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
     MACRO(display_buffer_compositor_factory)\
-    MACRO(cursor_listener)\
     MACRO(gl_config)\
     MACRO(input_dispatcher)\
     MACRO(placement_strategy)\
     MACRO(prompt_session_listener)\
+    MACRO(prompt_session_manager)\
     MACRO(server_status_listener)\
     MACRO(session_authorizer)\
     MACRO(session_listener)\
@@ -54,17 +57,22 @@ namespace mo = mir::options;
     MACRO(surface_configurator)
 
 #define FOREACH_ACCESSOR(MACRO)\
+    MACRO(the_compositor)\
     MACRO(the_composite_event_filter)\
     MACRO(the_display)\
+    MACRO(the_focus_controller)\
+    MACRO(the_gl_config)\
     MACRO(the_graphics_platform)\
     MACRO(the_main_loop)\
     MACRO(the_prompt_session_listener)\
     MACRO(the_session_authorizer)\
     MACRO(the_session_coordinator)\
     MACRO(the_session_listener)\
+    MACRO(the_prompt_session_manager)\
     MACRO(the_shell_display_layout)\
     MACRO(the_surface_configurator)\
-    MACRO(the_surface_coordinator)
+    MACRO(the_surface_coordinator)\
+    MACRO(the_touch_visualizer)
 
 #define MIR_SERVER_BUILDER(name)\
     std::function<std::result_of<decltype(&mir::DefaultServerConfiguration::the_##name)(mir::DefaultServerConfiguration*)>::type()> name##_builder;
@@ -77,12 +85,15 @@ struct mir::Server::Self
 {
     bool exit_status{false};
     std::weak_ptr<options::Option> options;
+    std::string config_file;
     std::shared_ptr<ServerConfiguration> server_config;
 
     std::function<void()> init_callback{[]{}};
     int argc{0};
     char const** argv{nullptr};
     std::function<void()> exception_handler{};
+    Terminator terminator{};
+    EmergencyCleanupHandler emergency_cleanup_handler;
 
     std::function<void(int argc, char const* const* argv)> command_line_hander{};
 
@@ -196,23 +207,52 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
 
 namespace
 {
+class ConfigurationOptions : public mo::DefaultConfiguration
+{
+public:
+    using mo::DefaultConfiguration::DefaultConfiguration;
+
+    std::string config_file;
+
+    void parse_config_file(
+        boost::program_options::options_description& options_description,
+        mo::ProgramOption& options) const override
+    {
+        if (!config_file.empty())
+            options.parse_file(options_description, config_file);
+    }
+};
+
 std::shared_ptr<mo::DefaultConfiguration> configuration_options(
     int argc,
     char const** argv,
-    std::function<void(int argc, char const* const* argv)> const& command_line_hander)
+    std::function<void(int argc, char const* const* argv)> const& command_line_hander,
+    std::string const& config_file)
 {
-    if (command_line_hander)
-        return std::make_shared<mo::DefaultConfiguration>(argc, argv, command_line_hander);
-    else
-        return std::make_shared<mo::DefaultConfiguration>(argc, argv);
+    std::shared_ptr<ConfigurationOptions> result;
 
+    if (command_line_hander)
+        result = std::make_shared<ConfigurationOptions>(argc, argv, command_line_hander);
+    else
+        result = std::make_shared<ConfigurationOptions>(argc, argv);
+
+    result->config_file = config_file;
+
+    return result;
 }
 
 template<typename ConfigPtr>
 void verify_setting_allowed(ConfigPtr const& initialized)
 {
     if (initialized)
-       BOOST_THROW_EXCEPTION(std::logic_error("Cannot amend configuration after initialization starts"));
+       BOOST_THROW_EXCEPTION(std::logic_error("Cannot amend configuration after apply_settings() call"));
+}
+
+template<typename ConfigPtr>
+void verify_accessing_allowed(ConfigPtr const& initialized)
+{
+    if (!initialized)
+       BOOST_THROW_EXCEPTION(std::logic_error("Cannot use configuration before apply_settings() call"));
 }
 }
 
@@ -230,14 +270,13 @@ void mir::Server::Self::set_add_configuration_options(
 
 void mir::Server::set_command_line(int argc, char const* argv[])
 {
-    verify_setting_allowed(self->server_config);    
+    verify_setting_allowed(self->server_config);
     self->argc = argc;
     self->argv = argv;
 }
 
 void mir::Server::add_init_callback(std::function<void()> const& init_callback)
 {
-    verify_setting_allowed(self->server_config);    
     auto const& existing = self->init_callback;
 
     auto const updated = [=]
@@ -249,22 +288,56 @@ void mir::Server::add_init_callback(std::function<void()> const& init_callback)
     self->init_callback = updated;
 }
 
+void mir::Server::set_command_line_handler(
+    std::function<void(int argc, char const* const* argv)> const& command_line_hander)
+{
+    verify_setting_allowed(self->server_config);
+    self->command_line_hander = command_line_hander;
+}
+
+void mir::Server::set_config_filename(std::string const& config_file)
+{
+    verify_setting_allowed(self->server_config);
+    self->config_file = config_file;
+}
+
 auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 {
+    verify_accessing_allowed(self->server_config);
     return self->options.lock();
 }
 
 void mir::Server::set_exception_handler(std::function<void()> const& exception_handler)
 {
-    verify_setting_allowed(self->server_config);    
     self->exception_handler = exception_handler;
 }
 
-void mir::Server::apply_settings() const
+void mir::Server::set_terminator(Terminator const& terminator)
+{
+    self->terminator = terminator;
+}
+
+void mir::Server::add_emergency_cleanup(EmergencyCleanupHandler const& handler)
+{
+    if (auto const& existing = self->emergency_cleanup_handler)
+    {
+        self->emergency_cleanup_handler = [=]
+            {
+                existing();
+                handler();
+            };
+    }
+    else
+    {
+        self->emergency_cleanup_handler = handler;
+    }
+}
+
+void mir::Server::apply_settings()
 {
     if (self->server_config) return;
 
-    auto const options = configuration_options(self->argc, self->argv, self->command_line_hander);
+    auto const options = configuration_options(self->argc, self->argv, self->command_line_hander, self->config_file);
     self->add_configuration_options(*options);
 
     auto const config = std::make_shared<ServerConfiguration>(options, self);
@@ -275,9 +348,17 @@ void mir::Server::apply_settings() const
 void mir::Server::run()
 try
 {
-    apply_settings();
+    verify_accessing_allowed(self->server_config);
 
-    run_mir(*self->server_config, [&](DisplayServer&) { self->init_callback(); });
+    auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
+
+    if (self->emergency_cleanup_handler)
+        emergency_cleanup->add(self->emergency_cleanup_handler);
+
+    run_mir(
+        *self->server_config,
+        [&](DisplayServer&) { self->init_callback(); },
+        self->terminator);
 
     self->exit_status = true;
     self->server_config.reset();
@@ -294,8 +375,9 @@ catch (...)
 
 void mir::Server::stop()
 {
-    if (auto const main_loop = the_main_loop())
-        main_loop->stop();
+    if (self->server_config)
+        if (auto const main_loop = the_main_loop())
+            main_loop->stop();
 }
 
 bool mir::Server::exited_normally()
@@ -311,6 +393,14 @@ auto mir::Server::open_client_socket() -> Fd
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
+auto mir::Server::open_prompt_socket() -> Fd
+{
+    if (auto const config = self->server_config)
+        return Fd{config->the_prompt_connector()->client_socket_fd()};
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
+}
+
 auto mir::Server::open_client_socket(ConnectHandler const& connect_handler) -> Fd
 {
     if (auto const config = self->server_config)
@@ -322,7 +412,7 @@ auto mir::Server::open_client_socket(ConnectHandler const& connect_handler) -> F
 #define MIR_SERVER_ACCESSOR(name)\
 auto mir::Server::name() const -> decltype(self->server_config->name())\
 {\
-    apply_settings();\
+    verify_accessing_allowed(self->server_config);\
     return self->server_config->name();\
 }
 
@@ -397,6 +487,27 @@ void mir::Server::add_configuration_option(
 void mir::Server::add_configuration_option(
     std::string const& option,
     std::string const& description,
+    bool default_)
+{
+    verify_setting_allowed(self->server_config);
+    namespace po = boost::program_options;
+
+    auto const& existing = self->add_configuration_options;
+
+    auto const option_adder = [=](options::DefaultConfiguration& config)
+        {
+            existing(config);
+
+            config.add_options()
+            (option.c_str(), po::value<decltype(default_)>()->default_value(default_), description.c_str());
+        };
+
+    self->set_add_configuration_options(option_adder);
+}
+
+void mir::Server::add_configuration_option(
+    std::string const& option,
+    std::string const& description,
     OptionType type)
 {
     verify_setting_allowed(self->server_config);
@@ -442,6 +553,20 @@ void mir::Server::add_configuration_option(
 
                     config.add_options()
                     (option.c_str(), po::value<std::string>(), description.c_str());
+                };
+
+            self->set_add_configuration_options(option_adder);
+        }
+        break;
+
+    case OptionType::boolean:
+        {
+            auto const option_adder = [=](options::DefaultConfiguration& config)
+                {
+                    existing(config);
+
+                    config.add_options()
+                    (option.c_str(), po::value<bool>(), description.c_str());
                 };
 
             self->set_add_configuration_options(option_adder);
