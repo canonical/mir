@@ -48,6 +48,11 @@ MirSurfaceSpec* mir_new_surface_spec_for_normal(MirConnection* connection)
 
 MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification)
 {
+    if (/*requested_specification->output_id == mir_display_output_id_invalid &&*/
+        ((requested_specification->width == -1) || (requested_specification->height == -1)))
+    {
+        return new MirSurface{"Invalid surface specification: you must set dimensions or fullscreen output id"};
+    }
     MirSurfaceParameters params;
     // Hack: our stub doesn't yet allow unset things here.
     params.name = requested_specification->name;

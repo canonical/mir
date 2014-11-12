@@ -690,3 +690,18 @@ TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
 
     mir_surface_spec_release(resultant_spec);
 }
+
+TEST_F(ClientLibrary, setting_neither_dimensions_nor_fullscreen_output_fails)
+{
+    using namespace testing;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto surface_spec = mir_new_surface_spec_for_normal(connection);
+
+    auto surface = mir_surface_realise_sync(surface_spec);
+
+    EXPECT_FALSE(mir_surface_is_valid(surface));
+    EXPECT_THAT(mir_surface_get_error_message(surface),
+                HasSubstr("must set dimensions or fullscreen output"));
+}
