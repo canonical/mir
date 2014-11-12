@@ -38,31 +38,6 @@ extern char const* const glog_stderrthreshold;
 extern char const* const glog_minloglevel;
 extern char const* const glog_log_dir;
 
-char const* const mo::glog                 = "glog";
-char const* const mo::glog_stderrthreshold = "glog-stderrthreshold";
-char const* const mo::glog_minloglevel     = "glog-minloglevel";
-char const* const mo::glog_log_dir         = "glog-log-dir";
-
-int const glog_stderrthreshold_default = 2;
-int const glog_minloglevel_default     = 0;
-char const* const glog_log_dir_default = "";
-
-    (glog,
-        "Use google::GLog for logging")
-    (glog_stderrthreshold, po::value<int>()->default_value(glog_stderrthreshold_default),
-        "Copy log messages at or above this level "
-        "to stderr in addition to logfiles. The numbers "
-        "of severity levels INFO, WARNING, ERROR, and "
-        "FATAL are 0, 1, 2, and 3, respectively.")
-    (glog_minloglevel, po::value<int>()->default_value(glog_minloglevel_default),
-        "Log messages at or above this level. The numbers "
-        "of severity levels INFO, WARNING, ERROR, and "
-        "FATAL are 0, 1, 2, and 3, respectively."
-        " [int:default=0]")
-    (glog_log_dir, po::value<std::string>()->default_value(glog_log_dir_default),
-        "If specified, logfiles are written into this "
-        "directory instead of the default logging directory.")
-
 auto mir::DefaultServerConfiguration::the_logger()
     -> std::shared_ptr<ml::Logger>
 {
@@ -85,6 +60,18 @@ auto mir::DefaultServerConfiguration::the_logger()
 }
 #endif
 
+namespace
+{
+char const* const glog                 = "glog";
+char const* const glog_stderrthreshold = "glog-stderrthreshold";
+char const* const glog_minloglevel     = "glog-minloglevel";
+char const* const glog_log_dir         = "glog-log-dir";
+
+int const glog_stderrthreshold_default = 2;
+int const glog_minloglevel_default     = 0;
+char const* const glog_log_dir_default = "";
+}
+
 int main(int argc, char const* argv[])
 {
     static char const* const launch_child_opt = "launch-client";
@@ -102,6 +89,28 @@ int main(int argc, char const* argv[])
         me::display_config_opt, me::display_config_descr,   me::clone_opt_val);
     server.add_configuration_option(
         me::display_alpha_opt,  me::display_alpha_descr,    me::display_alpha_off);
+
+    server.add_configuration_option(glog, "Use google::GLog for logging", mir::OptionType::null);
+
+    server.add_configuration_option(
+        glog_stderrthreshold,
+        "Copy log messages at or above this level "
+        "to stderr in addition to logfiles. The numbers "
+        "of severity levels INFO, WARNING, ERROR, and "
+        "FATAL are 0, 1, 2, and 3, respectively.",
+        glog_stderrthreshold_default);
+
+    server.add_configuration_option(
+        glog_minloglevel,
+        "Log messages at or above this level. The numbers "
+        "of severity levels INFO, WARNING, ERROR, and "
+        "FATAL are 0, 1, 2, and 3, respectively.",
+        glog_minloglevel_default);
+
+    server.add_configuration_option(
+        glog_log_dir,
+        "logfiles are written into this directory.",
+        glog_log_dir_default);
 
     server.wrap_display_configuration_policy(
         [&](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
