@@ -19,16 +19,15 @@
 #ifndef MIR_LOGGING_ALWAYS_ON_LOGGER_H_
 #define MIR_LOGGING_ALWAYS_ON_LOGGER_H_
 
-#include "mir/logging/dumb_console_logger.h"
+#include "mir/logging/logger.h"
 
 namespace mir
 {
 namespace logging
 {
 
-extern Logger* the_always_on_logger;
-
-void log(Logger::Severity severity, const std::string& message);
+void set_always_on_logger(std::shared_ptr<Logger> const& new_always_on_logger);
+void log(const Logger::Severity severity, const std::string& message);
 
 }
 }

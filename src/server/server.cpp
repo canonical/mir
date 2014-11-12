@@ -27,6 +27,7 @@
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
 #include "mir/logging/always_on_logging.h"
+#include "mir/logging/dumb_console_logger.h"
 
 // TODO these are used to frig a stub renderer when running headless
 #include "mir/compositor/renderer.h"
@@ -34,22 +35,48 @@
 #include "mir/compositor/renderer_factory.h"
 
 #include <iostream>
+#include <mutex>
 
 namespace mo = mir::options;
 namespace ml = mir::logging;
-
-ml::DumbConsoleLogger default_always_on_logger;
 
 namespace mir
 {
 namespace logging
 {
 
-Logger* the_always_on_logger = &default_always_on_logger;
+std::mutex log_mutex;
+std::shared_ptr<Logger> the_always_on_logger;
 
-void log(Logger::Severity severity, const std::string& message)
+std::shared_ptr<Logger> get_logger()
 {
-    the_always_on_logger->log(severity, message, "Mir Server");
+    if (auto const result = the_always_on_logger)
+    {
+        return result;
+    }
+    else
+    {
+        std::lock_guard<decltype(log_mutex)> lock{log_mutex};
+        if (!the_always_on_logger)
+            the_always_on_logger = std::make_shared<DumbConsoleLogger>();
+
+        return the_always_on_logger;
+    }
+}
+
+void set_always_on_logger(std::shared_ptr<Logger> const& new_always_on_logger)
+{
+    if (new_always_on_logger)
+    {
+        std::lock_guard<decltype(log_mutex)> lock{log_mutex};
+        the_always_on_logger = new_always_on_logger;
+    }
+}
+
+void log(const Logger::Severity severity, const std::string& message)
+{
+    auto logger = get_logger();
+    logger->log(severity, message, "Mir Server");
 }
 
 }

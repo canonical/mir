@@ -64,8 +64,6 @@ protected:
     }
 };
 
-AlwaysOnSysLogger override_always_on_logger;
-
 class DisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
 public:
@@ -170,7 +168,7 @@ private:
 int main(int argc, char const* argv[])
 try
 {
-    ml::the_always_on_logger = &me::override_always_on_logger;
+    ml::set_always_on_logger(std::make_shared<me::AlwaysOnSysLogger>());
 
     auto wm = std::make_shared<me::WindowManager>();
     me::DemoServerConfiguration config(argc, argv, {wm});
