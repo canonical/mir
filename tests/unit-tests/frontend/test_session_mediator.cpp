@@ -873,7 +873,7 @@ TEST_F(SessionMediator, drm_auth_magic_calls_platform_operation_abstraction)
     mg::PlatformIPCPackage request;
     drm_request.set_magic(magic);
 
-    EXPECT_CALL(mock_ipc_operations, platform_operation(_, 3u, _))
+    EXPECT_CALL(mock_ipc_operations, platform_operation(_, _, _))
         .Times(1)
         .WillOnce(DoAll(SaveArg<2>(&request), SetArg<0>(response)));
 
@@ -896,7 +896,7 @@ TEST_F(SessionMediator, drm_auth_magic_sets_status_code_on_error)
     unsigned int const drm_magic{0x10111213};
     int const error_number{667};
 
-    EXPECT_CALL(mock_ipc_operations, platform_operation(_, 3u, _))
+    EXPECT_CALL(mock_ipc_operations, platform_operation(_, _, _))
         .WillOnce(Throw(::boost::enable_error_info(std::exception())
             << boost::errinfo_errno(error_number)));
 

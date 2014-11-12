@@ -54,10 +54,10 @@ struct MockAuthenticatingIpcOps : public mg::PlatformIpcOperations
         mg::PlatformIPCPackage&, unsigned int const, mg::PlatformIPCPackage const&));
 };
 
-class MockAuthenticatingPlatform : public mtd::NullPlatform
+class StubAuthenticatingPlatform : public mtd::NullPlatform
 {
 public:
-    MockAuthenticatingPlatform(std::shared_ptr<mg::PlatformIpcOperations> const& ops) :
+    StubAuthenticatingPlatform(std::shared_ptr<mg::PlatformIpcOperations> const& ops) :
         ops{ops}
     {
     }
@@ -101,17 +101,19 @@ TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
             if (!platform)
             {
                 mg::PlatformIPCPackage pkg{{0},{}};
-                auto ipc_ops = std::make_shared<MockAuthenticatingIpcOps>();
+                auto ipc_ops = std::make_shared<NiceMock<MockAuthenticatingIpcOps>>();
                 EXPECT_CALL(*ipc_ops, platform_operation(_,_,_))
                     .Times(1)
                     .WillRepeatedly(SetArgReferee<0>(pkg));
-                platform = std::make_shared<MockAuthenticatingPlatform>(ipc_ops);
+                ON_CALL(*ipc_ops, connection_ipc_package())
+                    .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
+                platform = std::make_shared<StubAuthenticatingPlatform>(ipc_ops);
             }
 
             return platform;
         }
 
-        std::shared_ptr<MockAuthenticatingPlatform> platform;
+        std::shared_ptr<StubAuthenticatingPlatform> platform;
     } server_config;
 
     launch_server_process(server_config);
@@ -153,17 +155,17 @@ TEST_F(BespokeDisplayServerTestFixture, drm_auth_magic_platform_error_reaches_cl
             using namespace testing;
             if (!platform)
             {
-                auto ipc_ops = std::make_shared<MockAuthenticatingIpcOps>();
+                auto ipc_ops = std::make_shared<NiceMock<MockAuthenticatingIpcOps>>();
                 EXPECT_CALL(*ipc_ops, platform_operation(_,_,_))
                     .WillOnce(Throw(::boost::enable_error_info(std::exception())
                         << boost::errinfo_errno(auth_magic_error)));
-                platform = std::make_shared<MockAuthenticatingPlatform>(ipc_ops);
+                platform = std::make_shared<StubAuthenticatingPlatform>(ipc_ops);
             }
 
             return platform;
         }
 
-        std::shared_ptr<MockAuthenticatingPlatform> platform;
+        std::shared_ptr<StubAuthenticatingPlatform> platform;
     } server_config;
 
     launch_server_process(server_config);
