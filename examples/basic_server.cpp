@@ -32,6 +32,37 @@ namespace mg = mir::graphics;
 #include "mir/logging/glog_logger.h"
 #include "mir/options/default_configuration.h"
 
+
+extern char const* const glog;
+extern char const* const glog_stderrthreshold;
+extern char const* const glog_minloglevel;
+extern char const* const glog_log_dir;
+
+char const* const mo::glog                 = "glog";
+char const* const mo::glog_stderrthreshold = "glog-stderrthreshold";
+char const* const mo::glog_minloglevel     = "glog-minloglevel";
+char const* const mo::glog_log_dir         = "glog-log-dir";
+
+int const glog_stderrthreshold_default = 2;
+int const glog_minloglevel_default     = 0;
+char const* const glog_log_dir_default = "";
+
+    (glog,
+        "Use google::GLog for logging")
+    (glog_stderrthreshold, po::value<int>()->default_value(glog_stderrthreshold_default),
+        "Copy log messages at or above this level "
+        "to stderr in addition to logfiles. The numbers "
+        "of severity levels INFO, WARNING, ERROR, and "
+        "FATAL are 0, 1, 2, and 3, respectively.")
+    (glog_minloglevel, po::value<int>()->default_value(glog_minloglevel_default),
+        "Log messages at or above this level. The numbers "
+        "of severity levels INFO, WARNING, ERROR, and "
+        "FATAL are 0, 1, 2, and 3, respectively."
+        " [int:default=0]")
+    (glog_log_dir, po::value<std::string>()->default_value(glog_log_dir_default),
+        "If specified, logfiles are written into this "
+        "directory instead of the default logging directory.")
+
 auto mir::DefaultServerConfiguration::the_logger()
     -> std::shared_ptr<ml::Logger>
 {
