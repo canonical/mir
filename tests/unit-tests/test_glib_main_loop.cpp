@@ -17,8 +17,12 @@
  */
 
 #include "mir/glib_main_loop.h"
+#include "mir/time/steady_clock.h"
+
 #include "mir_test/signal.h"
 #include "mir_test/pipe.h"
+#include "mir_test/auto_unblock_thread.h"
+#include "mir_test_doubles/advanceable_clock.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -26,11 +30,17 @@
 #include <thread>
 
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
+
+namespace
+{
 
 struct GLibMainLoopTest : ::testing::Test
 {
-    mir::GLibMainLoop ml;
+    mir::GLibMainLoop ml{std::make_shared<mir::time::SteadyClock>()};
 };
+
+}
 
 TEST_F(GLibMainLoopTest, stops_from_within_handler)
 {
@@ -630,4 +640,301 @@ TEST_F(GLibMainLoopTest, dispatches_actions_resumed_externally)
     ASSERT_THAT(actions.size(), Eq(2));
     EXPECT_THAT(actions[0], Eq(1));
     EXPECT_THAT(actions[1], Eq(0));
+}
+
+namespace
+{
+
+struct AdvanceableClock : mtd::AdvanceableClock
+{
+    void advance_by(std::chrono::milliseconds const step, mir::GLibMainLoop& ml)
+    {
+        mtd::AdvanceableClock::advance_by(step);
+        ml.reprocess_all_sources();
+    }
+};
+
+class Counter
+{
+public:
+    int operator++()
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        cv.notify_one();
+        return ++counter;
+    }
+
+    bool wait_for(std::chrono::milliseconds const& delay, int expected)
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        return cv.wait_for(lock, delay, [&]{ return counter == expected;});
+    }
+
+    operator int() const
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        return counter;
+    }
+
+private:
+    std::mutex mutable mutex;
+    std::condition_variable cv;
+    int counter{0};
+};
+
+struct UnblockMainLoop : mt::AutoUnblockThread
+{
+    UnblockMainLoop(mir::GLibMainLoop& loop)
+        : mt::AutoUnblockThread([&loop]() {loop.stop();},
+                                [&loop]() {loop.run();})
+    {}
+};
+
+struct GLibMainLoopAlarmTest : ::testing::Test
+{
+    std::shared_ptr<AdvanceableClock> clock = std::make_shared<AdvanceableClock>();
+    mir::GLibMainLoop ml{clock};
+    std::chrono::milliseconds delay{50};
+};
+
+}
+
+TEST_F(GLibMainLoopAlarmTest, main_loop_runs_until_stop_called)
+{
+    auto mainloop_started = std::make_shared<mt::Signal>();
+
+    auto fire_on_mainloop_start = ml.notify_in(std::chrono::milliseconds{0},
+                                               [mainloop_started]()
+    {
+        mainloop_started->raise();
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    ASSERT_TRUE(mainloop_started->wait_for(std::chrono::milliseconds{100}));
+
+    auto timer_fired = std::make_shared<mt::Signal>();
+    auto alarm = ml.notify_in(std::chrono::milliseconds{10}, [timer_fired]
+    {
+        timer_fired->raise();
+    });
+
+    clock->advance_by(std::chrono::milliseconds{10}, ml);
+    EXPECT_TRUE(timer_fired->wait_for(std::chrono::milliseconds{500}));
+
+    ml.stop();
+
+    // Main loop should be stopped now
+    timer_fired = std::make_shared<mt::Signal>();
+    auto should_not_fire =  ml.notify_in(std::chrono::milliseconds{0},
+                                         [timer_fired]()
+    {
+        timer_fired->raise();
+    });
+
+    EXPECT_FALSE(timer_fired->wait_for(std::chrono::milliseconds{10}));
+}
+
+TEST_F(GLibMainLoopAlarmTest, alarm_starts_in_pending_state)
+{
+    auto alarm = ml.notify_in(delay, [this]() {});
+
+    UnblockMainLoop unblocker(ml);
+
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+}
+
+TEST_F(GLibMainLoopAlarmTest, alarm_fires_with_correct_delay)
+{
+    UnblockMainLoop unblocker(ml);
+
+    auto alarm = ml.notify_in(delay, [](){});
+
+    clock->advance_by(delay - std::chrono::milliseconds{1}, ml);
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+
+    clock->advance_by(delay, ml);
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+}
+
+TEST_F(GLibMainLoopAlarmTest, multiple_alarms_fire)
+{
+    using namespace testing;
+
+    int const alarm_count{10};
+    Counter call_count;
+    std::array<std::unique_ptr<mir::time::Alarm>, alarm_count> alarms;
+
+    for (auto& alarm : alarms)
+        alarm = ml.notify_in(delay, [&call_count](){++call_count;});
+
+    UnblockMainLoop unblocker(ml);
+    clock->advance_by(delay, ml);
+
+    call_count.wait_for(delay, alarm_count);
+    EXPECT_THAT(call_count, Eq(alarm_count));
+
+    for (auto const& alarm : alarms)
+        EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+}
+
+TEST_F(GLibMainLoopAlarmTest, alarm_changes_to_triggered_state)
+{
+    auto alarm_fired = std::make_shared<mt::Signal>();
+    auto alarm = ml.notify_in(std::chrono::milliseconds{5}, [alarm_fired]()
+    {
+        alarm_fired->raise();
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    clock->advance_by(delay, ml);
+    ASSERT_TRUE(alarm_fired->wait_for(std::chrono::milliseconds{100}));
+
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+}
+
+TEST_F(GLibMainLoopAlarmTest, cancelled_alarm_doesnt_fire)
+{
+    UnblockMainLoop unblocker(ml);
+    auto alarm = ml.notify_in(std::chrono::milliseconds{100},
+                              [](){ FAIL() << "Alarm handler of canceld alarm called";});
+
+    EXPECT_TRUE(alarm->cancel());
+
+    EXPECT_EQ(mir::time::Alarm::cancelled, alarm->state());
+
+    clock->advance_by(std::chrono::milliseconds{100}, ml);
+
+    EXPECT_EQ(mir::time::Alarm::cancelled, alarm->state());
+}
+
+TEST_F(GLibMainLoopAlarmTest, destroyed_alarm_doesnt_fire)
+{
+    auto alarm = ml.notify_in(std::chrono::milliseconds{200},
+                              [](){ FAIL() << "Alarm handler of destroyed alarm called"; });
+
+    UnblockMainLoop unblocker(ml);
+
+    alarm.reset(nullptr);
+    clock->advance_by(std::chrono::milliseconds{200}, ml);
+}
+
+TEST_F(GLibMainLoopAlarmTest, rescheduled_alarm_fires_again)
+{
+    std::atomic<int> call_count{0};
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{0}, [&call_count]()
+    {
+        if (call_count++ > 1)
+            FAIL() << "Alarm called too many times";
+    });
+
+    UnblockMainLoop unblocker(ml);
+
+    clock->advance_by(std::chrono::milliseconds{0}, ml);
+    ASSERT_EQ(mir::time::Alarm::triggered, alarm->state());
+
+    alarm->reschedule_in(std::chrono::milliseconds{100});
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+
+    clock->advance_by(std::chrono::milliseconds{100}, ml);
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+}
+
+TEST_F(GLibMainLoopAlarmTest, rescheduled_alarm_cancels_previous_scheduling)
+{
+    std::atomic<int> call_count{0};
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{100}, [&call_count]()
+    {
+        call_count++;
+    });
+
+    UnblockMainLoop unblocker(ml);
+    clock->advance_by(std::chrono::milliseconds{90}, ml);
+
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+    EXPECT_EQ(0, call_count);
+    EXPECT_TRUE(alarm->reschedule_in(std::chrono::milliseconds{100}));
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+
+    clock->advance_by(std::chrono::milliseconds{110}, ml);
+
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+    EXPECT_EQ(1, call_count);
+}
+
+TEST_F(GLibMainLoopAlarmTest, alarm_callback_cannot_deadlock)
+{   // Regression test for deadlock bug LP: #1339700
+    std::timed_mutex m;
+    std::atomic_bool failed(false);
+    int i = 0;
+    int const loops = 5;
+
+    auto alarm = ml.notify_in(std::chrono::milliseconds{0}, [&]()
+    {
+        // From this angle, ensure we can lock m (alarm should be unlocked)
+        failed = !m.try_lock_for(std::chrono::seconds{5});
+        ASSERT_FALSE(failed);
+        ++i;
+        m.unlock();
+    });
+
+    std::thread t([&]()
+        {
+            m.lock();
+            while (i < loops && !failed)
+            {
+                // From this angle, ensure we can lock alarm while holding m
+                (void)alarm->state();
+                m.unlock();
+                std::this_thread::yield();
+                m.lock();
+            }
+            m.unlock();
+        });
+
+    UnblockMainLoop unblocker(ml);
+    for (int j = 0; j < loops; ++j)
+    {
+        clock->advance_by(std::chrono::milliseconds{11}, ml);
+        alarm->reschedule_in(std::chrono::milliseconds{10});
+    }
+
+    t.join();
+}
+
+TEST_F(GLibMainLoopAlarmTest, alarm_fires_at_correct_time_point)
+{
+    mir::time::Timestamp real_soon = clock->now() + std::chrono::milliseconds{120};
+
+    auto alarm = ml.notify_at(real_soon, []{});
+
+    UnblockMainLoop unblocker(ml);
+
+    clock->advance_by(std::chrono::milliseconds{119}, ml);
+    EXPECT_EQ(mir::time::Alarm::pending, alarm->state());
+
+    clock->advance_by(std::chrono::milliseconds{1}, ml);
+    EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+}
+
+// More targeted regression test for LP: #1381925
+TEST_F(GLibMainLoopTest, stress_emits_alarm_notification_with_zero_timeout)
+{
+    using namespace ::testing;
+
+    UnblockMainLoop unblocker{ml};
+
+    for (int i = 0; i < 1000; ++i)
+    {
+        mt::Signal notification_called;
+
+        auto alarm = ml.notify_in(
+                std::chrono::milliseconds{0},
+                [&] { notification_called.raise(); });
+
+        EXPECT_TRUE(notification_called.wait_for(std::chrono::seconds{5}));
+    }
 }
