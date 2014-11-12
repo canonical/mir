@@ -37,6 +37,21 @@ MirSurfaceSpec* mir_new_surface_spec_for_normal(MirConnection* connection);
 
 MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification);
 
+bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name);
+bool mir_surface_spec_set_dimensions(MirSurfaceSpec* spec, unsigned width, unsigned height);
+bool mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format);
+bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage);
+
+MirSurfaceSpec* mir_surface_get_spec(MirSurface* surf);
+
+char const* mir_surface_spec_get_name(MirSurfaceSpec* spec);
+int mir_surface_spec_get_width(MirSurfaceSpec* spec);
+int mir_surface_spec_get_height(MirSurfaceSpec* spec);
+MirPixelFormat mir_surface_spec_get_pixel_format(MirSurfaceSpec* spec);
+MirBufferUsage mir_surface_spec_get_buffer_usage(MirSurfaceSpec* spec);
+
+void mir_surface_spec_release(MirSurfaceSpec* spec);
+
 /**
  * Request a new Mir surface on the supplied connection with the supplied
  * parameters. The returned handle remains valid until the surface has been

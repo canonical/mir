@@ -50,11 +50,74 @@ MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification)
 {
     MirSurfaceParameters params;
     // Hack: our stub doesn't yet allow unset things here.
-    params.width = 10;
-    params.height = 10;
+    params.name = requested_specification->name;
+    params.width = requested_specification->width;
+    params.height = requested_specification->height;
+    params.pixel_format = requested_specification->pixel_format;
+    params.buffer_usage = requested_specification->buffer_usage;
     params.output_id = mir_display_output_id_invalid;
     return mir_connection_create_surface_sync(requested_specification->connection,
                                               &params);
+}
+
+bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)
+{
+    spec->name = name;
+    return true;
+}
+
+bool mir_surface_spec_set_dimensions(MirSurfaceSpec* spec, unsigned width, unsigned height)
+{
+    spec->width = width;
+    spec->height = height;
+    return true;
+}
+
+bool mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format)
+{
+    spec->pixel_format = format;
+    return true;
+}
+
+bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage)
+{
+    spec->buffer_usage = usage;
+    return true;
+}
+
+MirSurfaceSpec* mir_surface_get_spec(MirSurface* surf)
+{
+    return surf->get_surface_spec();
+}
+
+char const* mir_surface_spec_get_name(MirSurfaceSpec* spec)
+{
+    return spec->name;
+}
+
+int mir_surface_spec_get_width(MirSurfaceSpec* spec)
+{
+    return spec->width;
+}
+
+int mir_surface_spec_get_height(MirSurfaceSpec* spec)
+{
+    return spec->height;
+}
+
+MirPixelFormat mir_surface_spec_get_pixel_format(MirSurfaceSpec* spec)
+{
+    return spec->pixel_format;
+}
+
+MirBufferUsage mir_surface_spec_get_buffer_usage(MirSurfaceSpec* spec)
+{
+    return spec->buffer_usage;
+}
+
+void mir_surface_spec_release(MirSurfaceSpec* spec)
+{
+    delete spec;
 }
 
 MirWaitHandle* mir_connection_create_surface(

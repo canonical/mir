@@ -55,7 +55,13 @@ struct MemoryRegion;
 
 struct MirSurfaceSpec
 {
+    MirSurfaceSpec();
+
     MirConnection* connection;
+    char const* name;
+    int width, height;
+    MirPixelFormat pixel_format;
+    MirBufferUsage buffer_usage;
 };
 
 struct MirSurface : public mir::client::ClientSurface
@@ -90,6 +96,7 @@ public:
         void *context);
 
     MirSurfaceParameters get_parameters() const;
+    MirSurfaceSpec* get_surface_spec() const;
     char const * get_error_message();
     int id() const;
     MirWaitHandle* next_buffer(mir_surface_callback callback, void * context);
@@ -133,7 +140,7 @@ private:
     void populate(MirBufferPackage& buffer_package);
     void created(mir_surface_callback callback, void * context);
     void new_buffer(mir_surface_callback callback, void * context);
-    MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf);
+    MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
     void release_cpu_region();
 
     mir::protobuf::DisplayServer::Stub& server;

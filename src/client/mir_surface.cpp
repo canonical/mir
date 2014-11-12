@@ -47,6 +47,11 @@ std::mutex handle_mutex;
 std::unordered_set<MirSurface*> valid_surfaces;
 }
 
+MirSurfaceSpec::MirSurfaceSpec()
+    : name{nullptr}
+{
+}
+
 MirSurface::MirSurface(std::string const& error)
     : server{null_server},
       connection{nullptr}
@@ -153,6 +158,20 @@ MirSurfaceParameters MirSurface::get_parameters() const
         mir_display_output_id_invalid};
 }
 
+MirSurfaceSpec* MirSurface::get_surface_spec() const
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+
+    auto spec = new MirSurfaceSpec;
+    spec->name = "The magnificent Dandy Warhols";
+    spec->width = surface.width();
+    spec->height = surface.height();
+    spec->pixel_format = convert_ipc_pf_to_geometry(surface.pixel_format());
+    spec->buffer_usage = static_cast<MirBufferUsage>(surface.buffer_usage());
+
+    return spec;
+}
+
 char const * MirSurface::get_error_message()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
@@ -228,7 +247,7 @@ MirWaitHandle* MirSurface::get_create_wait_handle()
 
 /* todo: all these conversion functions are a bit of a kludge, probably
          better to have a more developed MirPixelFormat that can handle this */
-MirPixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf)
+MirPixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf) const
 {
     return static_cast<MirPixelFormat>(pf);
 }

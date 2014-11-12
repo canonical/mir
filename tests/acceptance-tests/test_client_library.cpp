@@ -650,7 +650,43 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
     // Normal surfaces have no required parameters
     auto surface_spec = mir_new_surface_spec_for_normal(connection);
 
+    mir_surface_spec_set_dimensions(surface_spec, 800, 600);
+
     auto surface = mir_surface_realise_sync(surface_spec);
 
     EXPECT_THAT(surface, IsValid());
+}
+
+TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
+{
+    using namespace testing;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto surface_spec = mir_new_surface_spec_for_normal(connection);
+
+    char const* name = "The magnificent Dandy Warhols";
+    EXPECT_TRUE(mir_surface_spec_set_name(surface_spec, name));
+
+    int const width{999}, height{555};
+    EXPECT_TRUE(mir_surface_spec_set_dimensions(surface_spec, width, height));
+
+    MirPixelFormat const pixel_format{mir_pixel_format_argb_8888};
+    EXPECT_TRUE(mir_surface_spec_set_pixel_format(surface_spec, pixel_format));
+
+    MirBufferUsage const buffer_usage{mir_buffer_usage_software};
+    EXPECT_TRUE(mir_surface_spec_set_buffer_usage(surface_spec, buffer_usage));
+
+    auto surface = mir_surface_realise_sync(surface_spec);
+    EXPECT_THAT(surface, IsValid());
+
+    auto resultant_spec = mir_surface_get_spec(surface);
+
+    EXPECT_THAT(mir_surface_spec_get_name(resultant_spec), StrEq(name));
+    EXPECT_THAT(mir_surface_spec_get_width(resultant_spec), Eq(width));
+    EXPECT_THAT(mir_surface_spec_get_height(resultant_spec), Eq(height));
+    EXPECT_THAT(mir_surface_spec_get_pixel_format(resultant_spec), Eq(pixel_format));
+    EXPECT_THAT(mir_surface_spec_get_buffer_usage(resultant_spec), Eq(buffer_usage));
+
+    mir_surface_spec_release(resultant_spec);
 }
