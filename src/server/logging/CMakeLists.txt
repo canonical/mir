@@ -4,7 +4,6 @@ set(
   LOGGING_SOURCES
 
   default_configuration.cpp
-  glog_logger.cpp
 )
 
 add_library(

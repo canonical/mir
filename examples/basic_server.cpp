@@ -28,6 +28,32 @@
 namespace me = mir::examples;
 namespace mg = mir::graphics;
 
+#ifdef ARG_CODE_I_NEED_TO_REINSTATE
+#include "mir/logging/glog_logger.h"
+#include "mir/options/default_configuration.h"
+
+auto mir::DefaultServerConfiguration::the_logger()
+    -> std::shared_ptr<ml::Logger>
+{
+    return logger(
+        [this]() -> std::shared_ptr<ml::Logger>
+        {
+            if (the_options()->is_set(options::glog))
+            {
+                return std::make_shared<ml::GlogLogger>(
+                    "mir",
+                    the_options()->get<int>(options::glog_stderrthreshold),
+                    the_options()->get<int>(options::glog_minloglevel),
+                    the_options()->get<std::string>(options::glog_log_dir));
+            }
+            else
+            {
+                return std::make_shared<ml::DumbConsoleLogger>();
+            }
+        });
+}
+#endif
+
 int main(int argc, char const* argv[])
 {
     static char const* const launch_child_opt = "launch-client";

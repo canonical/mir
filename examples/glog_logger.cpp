@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/logging/glog_logger.h"
+#include "glog_logger.h"
 
 #include <glog/logging.h>
 #include <gflags/gflags.h>

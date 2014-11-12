@@ -16,10 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/logging/logger.h"
-#include "mir/logging/glog_logger.h"
 #include "mir/default_server_configuration.h"
-#include "mir/options/default_configuration.h"
 #include "mir/logging/dumb_console_logger.h"
 
 namespace ml = mir::logging;
@@ -30,18 +27,7 @@ auto mir::DefaultServerConfiguration::the_logger()
     return logger(
         [this]() -> std::shared_ptr<ml::Logger>
         {
-            if (the_options()->is_set(options::glog))
-            {
-                return std::make_shared<ml::GlogLogger>(
-                    "mir",
-                    the_options()->get<int>(options::glog_stderrthreshold),
-                    the_options()->get<int>(options::glog_minloglevel),
-                    the_options()->get<std::string>(options::glog_log_dir));
-            }
-            else
-            {
-                return std::make_shared<ml::DumbConsoleLogger>();
-            }
+            return std::make_shared<ml::DumbConsoleLogger>();
         });
 }
 

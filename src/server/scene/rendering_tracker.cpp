@@ -33,6 +33,14 @@ ms::RenderingTracker::RenderingTracker(
 {
 }
 
+ms::RenderingTracker::~RenderingTracker() noexcept
+{
+    std::lock_guard<std::mutex> lock{guard};
+
+    occlusions.clear();
+    active_compositors_.clear();
+}
+
 void ms::RenderingTracker::rendered_in(mc::CompositorID cid)
 {
     std::lock_guard<std::mutex> lock{guard};
