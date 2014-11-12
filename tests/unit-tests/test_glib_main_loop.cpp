@@ -35,6 +35,15 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
+template <typename T>
+std::vector<T> values_from_to(T f, T t)
+{
+    std::vector<T> v;
+    for (T i = f; i <= t; ++i)
+        v.push_back(i);
+    return v;
+}
+
 struct GLibMainLoopTest : ::testing::Test
 {
     mir::GLibMainLoop ml{std::make_shared<mir::time::SteadyClock>()};
@@ -156,11 +165,13 @@ TEST_F(GLibMainLoopTest, handles_multiple_signals)
     ASSERT_EQ(num_signals_to_send, handled_signals.size());
 
     for (size_t i = 0; i < num_signals_to_send; i++)
-        ASSERT_EQ(signals[i % signals.size()], handled_signals[i]) << " index " << i;
+        EXPECT_EQ(signals[i % signals.size()], handled_signals[i]) << " index " << i;
 }
 
 TEST_F(GLibMainLoopTest, invokes_all_registered_handlers_for_signal)
 {
+    using namespace testing;
+
     int const signum{SIGUSR1};
     std::vector<int> handled_signum{0,0,0};
 
@@ -207,9 +218,7 @@ TEST_F(GLibMainLoopTest, invokes_all_registered_handlers_for_signal)
 
     ml.run();
 
-    ASSERT_EQ(signum, handled_signum[0]);
-    ASSERT_EQ(signum, handled_signum[1]);
-    ASSERT_EQ(signum, handled_signum[2]);
+    ASSERT_THAT(handled_signum, Each(signum));
 }
 
 TEST_F(GLibMainLoopTest, handles_fd)
@@ -238,6 +247,8 @@ TEST_F(GLibMainLoopTest, handles_fd)
 
 TEST_F(GLibMainLoopTest, multiple_fds_with_single_handler_handled)
 {
+    using namespace testing;
+
     std::vector<mt::Pipe> const pipes(2);
     size_t const num_elems_to_send{10};
     std::vector<int> handled_fds;
@@ -276,17 +287,16 @@ TEST_F(GLibMainLoopTest, multiple_fds_with_single_handler_handled)
     fd_writing_thread.join();
 
     ASSERT_EQ(num_elems_to_send, handled_fds.size());
-    ASSERT_EQ(num_elems_to_send, elems_read.size());
-
     for (size_t i = 0; i < num_elems_to_send; i++)
-    {
         EXPECT_EQ(pipes[i % pipes.size()].read_fd(), handled_fds[i]) << " index " << i;
-        EXPECT_EQ(i, elems_read[i]) << " index " << i;
-    }
+
+    EXPECT_THAT(elems_read, ContainerEq(values_from_to<size_t>(0, num_elems_to_send - 1)));
 }
 
 TEST_F(GLibMainLoopTest, multiple_fd_handlers_are_called)
 {
+    using namespace testing;
+
     std::vector<mt::Pipe> const pipes(3);
     std::vector<int> const elems_to_send{10,11,12};
     std::vector<int> handled_fds{0,0,0};
@@ -349,13 +359,13 @@ TEST_F(GLibMainLoopTest, multiple_fd_handlers_are_called)
 
     ml.run();
 
-    EXPECT_EQ(pipes[0].read_fd(), handled_fds[0]);
-    EXPECT_EQ(pipes[1].read_fd(), handled_fds[1]);
-    EXPECT_EQ(pipes[2].read_fd(), handled_fds[2]);
+    EXPECT_THAT(handled_fds,
+                ElementsAre(
+                    pipes[0].read_fd(),
+                    pipes[1].read_fd(),
+                    pipes[2].read_fd()));
 
-    EXPECT_EQ(elems_to_send[0], elems_read[0]);
-    EXPECT_EQ(elems_to_send[1], elems_read[1]);
-    EXPECT_EQ(elems_to_send[2], elems_read[2]);
+    EXPECT_THAT(elems_read, ContainerEq(elems_to_send));
 }
 
 TEST_F(GLibMainLoopTest,
@@ -471,9 +481,7 @@ TEST_F(GLibMainLoopTest, dispatches_multiple_actions_in_order)
 
     ml.run();
 
-    ASSERT_THAT(actions.size(), Eq(num_actions));
-    for (int i = 0; i < num_actions; ++i)
-        EXPECT_THAT(actions[i], Eq(i)) << "i = " << i;
+    EXPECT_THAT(actions, ContainerEq(values_from_to(0, num_actions - 1)));
 }
 
 TEST_F(GLibMainLoopTest, does_not_dispatch_paused_actions)
@@ -521,9 +529,7 @@ TEST_F(GLibMainLoopTest, does_not_dispatch_paused_actions)
 
     ml.run();
 
-    ASSERT_THAT(actions.size(), Eq(2));
-    EXPECT_THAT(actions[0], Eq(1));
-    EXPECT_THAT(actions[1], Eq(3));
+    EXPECT_THAT(actions, ElementsAre(1, 3));
 }
 
 TEST_F(GLibMainLoopTest, dispatches_actions_resumed_from_within_another_action)
@@ -556,9 +562,7 @@ TEST_F(GLibMainLoopTest, dispatches_actions_resumed_from_within_another_action)
 
     ml.run();
 
-    ASSERT_THAT(actions.size(), Eq(2));
-    EXPECT_THAT(actions[0], Eq(1));
-    EXPECT_THAT(actions[1], Eq(0));
+    EXPECT_THAT(actions, ElementsAre(1, 0));
 }
 
 TEST_F(GLibMainLoopTest, handles_enqueue_from_within_action)
@@ -591,9 +595,7 @@ TEST_F(GLibMainLoopTest, handles_enqueue_from_within_action)
 
     ml.run();
 
-    ASSERT_THAT(actions.size(), Eq(num_actions));
-    for (int i = 0; i < num_actions; ++i)
-        EXPECT_THAT(actions[i], Eq(i)) << "i = " << i;
+    EXPECT_THAT(actions, ContainerEq(values_from_to(0, num_actions - 1)));
 }
 
 TEST_F(GLibMainLoopTest, dispatches_actions_resumed_externally)
@@ -637,9 +639,7 @@ TEST_F(GLibMainLoopTest, dispatches_actions_resumed_externally)
     t.join();
 
     EXPECT_TRUE(action_with_id_1_done.raised());
-    ASSERT_THAT(actions.size(), Eq(2));
-    EXPECT_THAT(actions[0], Eq(1));
-    EXPECT_THAT(actions[1], Eq(0));
+    EXPECT_THAT(actions, ElementsAre(1, 0));
 }
 
 namespace
@@ -923,8 +923,6 @@ TEST_F(GLibMainLoopAlarmTest, alarm_fires_at_correct_time_point)
 // More targeted regression test for LP: #1381925
 TEST_F(GLibMainLoopTest, stress_emits_alarm_notification_with_zero_timeout)
 {
-    using namespace ::testing;
-
     UnblockMainLoop unblocker{ml};
 
     for (int i = 0; i < 1000; ++i)
