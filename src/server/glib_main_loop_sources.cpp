@@ -27,6 +27,7 @@
 
 #include <csignal>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include <boost/throw_exception.hpp>
 #include <glib-unix.h>
@@ -49,13 +50,6 @@ private:
 
     GSource* gsource;
 };
-
-std::atomic<int> static_signal_write_fd{-1};
-
-void notify_sources_of_signal(int sig)
-{
-    if (write(static_signal_write_fd, &sig, sizeof(sig))) {}
-}
 
 }
 
@@ -397,6 +391,84 @@ void md::FdSources::remove_all_owned_by(void const* owner)
  * SignalSources *
  *****************/
 
+class md::SignalSources::SourceRegistration
+{
+public:
+    SourceRegistration(int write_fd)
+        : write_fd{write_fd}
+    {
+        init_write_fds();
+        add_write_fd();
+    }
+
+    ~SourceRegistration()
+    {
+        remove_write_fd();
+    }
+
+    static void notify_sources_of_signal(int sig)
+    {
+        for (auto const& write_fd : write_fds)
+        {
+            // There is a benign race here: write_fd may have changed
+            // between checking and using it. This doesn't matter
+            // since in the worst case we will call write() with an invalid
+            // fd (-1) which is harmless.
+            if (write_fd >= 0 && write(write_fd, &sig, sizeof(sig))) {}
+        }
+    }
+
+private:
+    void init_write_fds()
+    {
+        static std::once_flag once;
+        std::call_once(once,
+            [&]
+            {
+                for (auto& wfd : write_fds)
+                    wfd = -1;
+            });
+    }
+
+    void add_write_fd()
+    {
+        bool added_fd = false;
+
+        for (auto& wfd : write_fds)
+        {
+            int v = -1;
+            if (wfd.compare_exchange_strong(v, write_fd))
+            {
+                added_fd = true;
+                break;
+            }
+        }
+
+        if (!added_fd)
+        {
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error(
+                    "Failed to add signal write fd. Have you created too many main loops?"));
+        }
+    }
+
+    void remove_write_fd()
+    {
+        for (auto& wfd : write_fds)
+        {
+            int v = write_fd;
+            if (wfd.compare_exchange_strong(v, -1))
+                break;
+        }
+    }
+
+    static int const max_write_fds{10};
+    static std::array<std::atomic<int>, max_write_fds> write_fds;
+    int const write_fd;
+};
+
+std::array<std::atomic<int>,10> md::SignalSources::SourceRegistration::write_fds;
+
 md::SignalSources::SignalSources(md::FdSources& fd_sources)
     : fd_sources{fd_sources}
 {
@@ -416,12 +488,9 @@ md::SignalSources::SignalSources(md::FdSources& fd_sources)
     // Make the signal_write_fd non-blocking, to avoid blocking in the signal handler
     fcntl(signal_write_fd, F_SETFL, O_NONBLOCK);
 
-    if (static_signal_write_fd != -1)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Only one signal-handling main loop is allowed"));
+    source_registration.reset(new SourceRegistration{signal_write_fd});
 
-    static_signal_write_fd = pipefd[1];
-
-    fd_sources.add(pipefd[0], this,
+    fd_sources.add(signal_read_fd, this,
         [this] (int) { dispatch_pending_signal(); });
 }
 
@@ -431,8 +500,6 @@ md::SignalSources::~SignalSources()
         sigaction(handled.first, &handled.second, nullptr);
 
     fd_sources.remove_all_owned_by(this);
-
-    static_signal_write_fd = -1;
 }
 
 void md::SignalSources::dispatch_pending_signal()
@@ -450,7 +517,10 @@ int md::SignalSources::read_pending_signal()
     do
     {
         auto const nread = read(
-            signal_read_fd, reinterpret_cast<char*>(&sig) + total, sizeof(sig) - total);
+            signal_read_fd,
+            reinterpret_cast<char*>(&sig) + total,
+            sizeof(sig) - total);
+
         if (nread < 0)
         {
             if (errno != EINTR)
@@ -485,7 +555,7 @@ void md::SignalSources::ensure_signal_is_handled(int sig)
     struct sigaction old_action;
     struct sigaction new_action;
 
-    new_action.sa_handler = notify_sources_of_signal;
+    new_action.sa_handler = SourceRegistration::notify_sources_of_signal;
     sigfillset(&new_action.sa_mask);
     new_action.sa_flags = no_flags;
 

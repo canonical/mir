@@ -94,6 +94,7 @@ public:
     void add(std::vector<int> const& sigs, std::function<void(int)> const& handler);
 
 private:
+    class SourceRegistration;
     struct HandlerElement
     {
         operator bool() const { return !!handler; }
@@ -107,11 +108,12 @@ private:
     void dispatch_signal(int sig);
 
     FdSources& fd_sources;
-    Fd signal_read_fd;
-    Fd signal_write_fd;
+    mir::Fd signal_read_fd;
+    mir::Fd signal_write_fd;
     mir::ThreadSafeList<HandlerElement> handlers;
     std::mutex handled_signals_mutex;
     std::unordered_map<int, struct sigaction> handled_signals;
+    std::unique_ptr<SourceRegistration> source_registration;
 };
 
 }
