@@ -193,7 +193,6 @@ public:
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
     virtual std::shared_ptr<graphics::GLConfig> the_gl_config();
-    virtual std::shared_ptr<graphics::NativePlatform>  the_graphics_native_platform();
     /** @} */
 
     /** @name graphics configuration - dependencies

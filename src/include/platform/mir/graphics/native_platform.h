@@ -43,9 +43,7 @@ class NestedContext;
 class NativePlatform
 {
 public:
-    NativePlatform() {}
-
-    virtual void initialize(std::shared_ptr<NestedContext> const& nested_context) = 0;
+    NativePlatform() = default;
 
     virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() = 0;
 
@@ -65,8 +63,12 @@ public:
     NativePlatform& operator=(NativePlatform const&) = delete;
 };
 
-extern "C" typedef std::shared_ptr<NativePlatform>(*CreateNativePlatform)(std::shared_ptr<DisplayReport> const& report);
-extern "C" std::shared_ptr<NativePlatform> create_native_platform(std::shared_ptr<DisplayReport> const& report);
+extern "C" typedef std::shared_ptr<NativePlatform>(*CreateNativePlatform)(
+    std::shared_ptr<DisplayReport> const& report,
+    std::shared_ptr<NestedContext> const& nested_context);
+extern "C" std::shared_ptr<NativePlatform> create_native_platform(
+    std::shared_ptr<DisplayReport> const& report,
+    std::shared_ptr<NestedContext> const& nested_context);
 }
 }
 

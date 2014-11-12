@@ -25,52 +25,15 @@
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 
-namespace
-{
-
-class MirConnectionNestedContext : public mg::NestedContext
-{
-public:
-    MirConnectionNestedContext(std::shared_ptr<mgn::HostConnection> const& connection)
-        : connection{connection}
-    {
-    }
-
-    std::vector<int> platform_fd_items()
-    {
-        return connection->platform_fd_items();
-    }
-
-    void drm_auth_magic(int magic)
-    {
-        connection->drm_auth_magic(magic);
-    }
-
-    void drm_set_gbm_device(struct gbm_device* dev)
-    {
-        connection->drm_set_gbm_device(dev);
-    }
-
-private:
-    std::shared_ptr<mgn::HostConnection> const connection;
-};
-
-}
-
 mgn::NestedPlatform::NestedPlatform(
     std::shared_ptr<HostConnection> const& connection,
     std::shared_ptr<input::InputDispatcher> const& dispatcher,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::NativePlatform> const& native_platform) :
-native_platform{native_platform},
-dispatcher{dispatcher},
-display_report{display_report},
-connection{connection}
-{
-    native_platform->initialize(std::make_shared<MirConnectionNestedContext>(connection));
-}
-
-mgn::NestedPlatform::~NestedPlatform() noexcept
+    native_platform{native_platform},
+    dispatcher{dispatcher},
+    display_report{display_report},
+    connection{connection}
 {
 }
 

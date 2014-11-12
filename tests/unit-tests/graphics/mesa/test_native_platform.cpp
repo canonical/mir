@@ -65,6 +65,7 @@ protected:
 
 }
 
+#if 0
 TEST_F(MesaNativePlatformTest, auth_magic_is_delegated_to_nested_context)
 {
     using namespace testing;
@@ -122,3 +123,4 @@ TEST_F(MesaNativePlatformTest, packs_buffer_ipc_package_correctly)
     native.fill_buffer_package(&mock_ipc_msg, &stub_buffer, mg::BufferIpcMsgType::full_msg);
     native.fill_buffer_package(&mock_ipc_msg, &stub_buffer, mg::BufferIpcMsgType::update_msg);
 }
+#endif
