@@ -28,6 +28,7 @@
 #include <cstdlib>
 
 namespace me = mir::examples;
+namespace ml = mir::logging;
 namespace mg = mir::graphics;
 
 #ifdef ARG_CODE_I_NEED_TO_REINSTATE
@@ -105,6 +106,23 @@ try
         glog_log_dir,
         "logfiles are written into this directory.",
         glog_log_dir_default);
+
+    server.override_the_logger(
+        [&]() -> std::shared_ptr<ml::Logger>
+        {
+            if (server.get_options()->is_set(glog))
+            {
+                return std::make_shared<ml::GlogLogger>(
+                    "mir",
+                    server.get_options()->get<int>(glog_stderrthreshold),
+                    server.get_options()->get<int>(glog_minloglevel),
+                    server.get_options()->get<std::string>(glog_log_dir));
+            }
+            else
+            {
+                return std::shared_ptr<ml::Logger>{};
+            }
+        });
 
     server.wrap_display_configuration_policy(
         [&](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
