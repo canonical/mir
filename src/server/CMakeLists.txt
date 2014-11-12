@@ -10,7 +10,6 @@ add_subdirectory(compositor/)
 add_subdirectory(graphics/)
 add_subdirectory(input/)
 add_subdirectory(report/)
-add_subdirectory(logging/)
 add_subdirectory(scene/)
 add_subdirectory(frontend/)
 add_subdirectory(shell/)
@@ -50,7 +49,6 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirreport>
   $<TARGET_OBJECTS:mirlogging>
   $<TARGET_OBJECTS:mirnullreport>
-  $<TARGET_OBJECTS:mirlogger>
   $<TARGET_OBJECTS:mirnestedgraphics>
   $<TARGET_OBJECTS:miroffscreengraphics>
   $<TARGET_OBJECTS:mirthread>

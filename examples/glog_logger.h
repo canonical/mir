@@ -20,9 +20,9 @@
 
 namespace mir
 {
-namespace logging
+namespace examples
 {
-class GlogLogger : public Logger
+class GlogLogger : public logging::Logger
 {
 public:
     GlogLogger(

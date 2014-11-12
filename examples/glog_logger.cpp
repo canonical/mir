@@ -53,7 +53,7 @@ struct google_gflag_guard_t
 }
 
 
-mir::logging::GlogLogger::GlogLogger(
+mir::examples::GlogLogger::GlogLogger(
     const char* argv0,
     int stderrthreshold,
     int minloglevel,
@@ -66,7 +66,7 @@ mir::logging::GlogLogger::GlogLogger(
     static google_glog_guard_t guard(argv0);
 }
 
-void mir::logging::GlogLogger::log(Severity severity, const std::string& message, const std::string& component)
+void mir::examples::GlogLogger::log(Severity severity, const std::string& message, const std::string& component)
 {
     static int glog_level[] =
     {
