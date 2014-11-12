@@ -31,6 +31,10 @@
 extern "C" {
 #endif
 
+MirSurfaceSpec* mir_new_surface_spec_for_normal(MirConnection* connection);
+
+MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification);
+
 /**
  * Request a new Mir surface on the supplied connection with the supplied
  * parameters. The returned handle remains valid until the surface has been

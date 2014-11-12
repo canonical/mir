@@ -20,6 +20,7 @@
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test/validity_matchers.h"
 
 #include "src/client/client_buffer.h"
 
@@ -640,4 +641,16 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
     ASSERT_THAT(current_surface_count(), testing::Eq(0));
 
     mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
+{
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    // Normal surfaces have no required parameters
+    auto surface_spec = mir_new_surface_spec_for_normal(connection);
+
+    auto surface = mir_surface_realise_sync(surface_spec);
+
+    EXPECT_THAT(surface, IsValid());
 }

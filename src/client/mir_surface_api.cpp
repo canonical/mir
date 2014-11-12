@@ -39,6 +39,24 @@ void assign_result(void* result, void** context)
 
 }
 
+MirSurfaceSpec* mir_new_surface_spec_for_normal(MirConnection* connection)
+{
+    auto spec = new MirSurfaceSpec;
+    spec->connection = connection;
+    return spec;
+}
+
+MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification)
+{
+    MirSurfaceParameters params;
+    // Hack: our stub doesn't yet allow unset things here.
+    params.width = 10;
+    params.height = 10;
+    params.output_id = mir_display_output_id_invalid;
+    return mir_connection_create_surface_sync(requested_specification->connection,
+                                              &params);
+}
+
 MirWaitHandle* mir_connection_create_surface(
     MirConnection* connection,
     MirSurfaceParameters const* params,

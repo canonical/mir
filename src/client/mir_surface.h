@@ -53,6 +53,11 @@ struct MemoryRegion;
 }
 }
 
+struct MirSurfaceSpec
+{
+    MirConnection* connection;
+};
+
 struct MirSurface : public mir::client::ClientSurface
 {
 public:
