@@ -117,6 +117,15 @@ public:
         std::string const& description,
         OptionType type);
 
+    // Workaround char const* => bool being "better" than char const* => std::string
+    void add_configuration_option(
+        std::string const& option,
+        std::string const& description,
+        char const* default_value)
+    {
+        add_configuration_option(option, description, std::string{default_value});
+    }
+
     /// Set a handler for any command line options Mir does not recognise.
     /// This will be invoked if any unrecognised options are found during initialisation.
     /// Any unrecognised arguments are passed to this function. The pointers remain valid
