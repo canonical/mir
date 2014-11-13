@@ -182,6 +182,7 @@ public:
  * They should be called before apply_settings() otherwise they throw a std::logic_error.
  *  @{ */
     /// Each of the override functions takes a builder functor of the same form
+    /// \note If a null pointer is returned by the builder the default is used instead.
     template<typename T> using Builder = std::function<std::shared_ptr<T>()>;
 
     /// Sets an override functor for creating the compositor.

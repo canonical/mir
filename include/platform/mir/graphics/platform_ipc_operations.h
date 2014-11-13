@@ -71,12 +71,11 @@ public:
     
     /**
      * Arranges a platform specific operation triggered by an IPC call
-     * \param [out] response the response that will be sent to the client
+     * \returns              the response that will be sent to the client
      * \param [in]  opcode   the opcode that indicates the action to be performed 
      * \param [in]  request  the message that was sent to the server
      */
-    virtual void platform_operation(
-        PlatformIPCPackage& response, unsigned int const opcode, PlatformIPCPackage const& package) = 0; 
+    virtual PlatformIPCPackage platform_operation(unsigned int const opcode, PlatformIPCPackage const& package) = 0; 
 
 protected:
     PlatformIpcOperations() = default;
