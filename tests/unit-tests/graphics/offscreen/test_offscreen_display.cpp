@@ -1,4 +1,3 @@
-#include "mir/graphics/basic_platform.h"
 #include "mir/graphics/display_buffer.h"
 
 #include "src/server/graphics/offscreen/display.h"

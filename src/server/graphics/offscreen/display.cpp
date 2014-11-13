@@ -18,7 +18,6 @@
 
 #include "display.h"
 #include "display_buffer.h"
-#include "mir/graphics/basic_platform.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/geometry/size.h"
 
