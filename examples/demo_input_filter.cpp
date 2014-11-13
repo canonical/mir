@@ -17,6 +17,7 @@
  */
 
 #include "mir/server.h"
+#include "mir/report_exception.h"
 
 #include "example_input_event_filter.h"
 #include "mir/input/composite_event_filter.h"
@@ -64,6 +65,7 @@ struct PrintingEventFilter : public mi::EventFilter
 }
 
 int main(int argc, char const* argv[])
+try
 {
     mir::Server server;
 
@@ -80,4 +82,9 @@ int main(int argc, char const* argv[])
     server.apply_settings();
     server.run();
     return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+catch (...)
+{
+    mir::report_exception(std::cerr);
+    return EXIT_FAILURE;
 }
