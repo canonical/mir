@@ -17,6 +17,7 @@
  */
 
 #include "mir/frontend/session_mediator_report.h"
+#include "mir/graphics/native_platform.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/display_server.h"
@@ -110,6 +111,46 @@ struct FakeCommandLine
     }
 };
 
+struct NativePlatformAdapter : mg::NativePlatform
+{
+    NativePlatformAdapter(std::shared_ptr<mg::Platform> const& adaptee) :
+        adaptee(adaptee),
+        ipc_ops(adaptee->make_ipc_operations())
+    {
+    }
+
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
+    {
+        return adaptee->create_buffer_allocator();
+    }
+
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
+    {
+        return ipc_ops->connection_ipc_package();
+    }
+
+    std::shared_ptr<mg::InternalClient> create_internal_client() override
+    {
+        return adaptee->create_internal_client();
+    }
+
+    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
+    {
+        return adaptee->make_buffer_writer();
+    }
+
+    void fill_buffer_package(
+        mg::BufferIpcMessage* message,
+        mg::Buffer const* buffer,
+        mg::BufferIpcMsgType msg_type) const override
+    {
+        return ipc_ops->pack_buffer(*message, *buffer, msg_type);
+    }
+    
+    std::shared_ptr<mg::Platform> const adaptee;
+    std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
+};
+
 struct MockHostLifecycleEventListener : msh::HostLifecycleEventListener
 {
     MockHostLifecycleEventListener(
@@ -134,16 +175,15 @@ struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerCon
     {
     }
 
-#if 0
-    std::shared_ptr<mg::Platform> the_graphics_platform() override
+    std::shared_ptr<mg::NativePlatform> the_graphics_native_platform() override
     {
-        return std::make_shared<mir::graphics::nested::NestedPlatform>(
-            the_host_connection(),
-            the_input_dispatcher(),
-            the_display_report(),
-            std::make_shared<NativePlatformAdapter>(the_graphics_platform()));
+        return graphics_native_platform(
+            [this]() -> std::shared_ptr<mg::NativePlatform>
+            {
+                return std::make_shared<NativePlatformAdapter>(graphics_platform);
+            });
     }
-#endif
+
     std::shared_ptr<mg::Platform> const graphics_platform;
 };
 
