@@ -432,24 +432,16 @@ private:
 
     void add_write_fd()
     {
-        bool added_fd = false;
-
         for (auto& wfd : write_fds)
         {
             int v = -1;
             if (wfd.compare_exchange_strong(v, write_fd))
-            {
-                added_fd = true;
-                break;
-            }
+                return;
         }
 
-        if (!added_fd)
-        {
-            BOOST_THROW_EXCEPTION(
-                std::runtime_error(
-                    "Failed to add signal write fd. Have you created too many main loops?"));
-        }
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error(
+                "Failed to add signal write fd. Have you created too many main loops?"));
     }
 
     void remove_write_fd()
