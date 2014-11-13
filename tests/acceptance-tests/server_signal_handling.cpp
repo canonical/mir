@@ -34,7 +34,7 @@ namespace
 {
 struct ServerSignal : mtf::InterprocessClientServerTest
 {
-    std::chrono::seconds const timeout{2};
+    std::chrono::seconds const timeout{60};
     MOCK_CONST_METHOD1(terminate_handler, void(int));
     mtf::CrossProcessSync cleanup_done;
 
