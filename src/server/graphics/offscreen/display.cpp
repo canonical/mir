@@ -33,13 +33,10 @@ namespace
 {
 
 mgo::detail::EGLDisplayHandle
-create_and_initialize_display(mg::BasicPlatform& basic_platform)
+create_and_initialize_display(EGLNativeDisplayType egl_native_display)
 {
-    mgo::detail::EGLDisplayHandle egl_display{
-        basic_platform.egl_native_display()};
-
+    mgo::detail::EGLDisplayHandle egl_display{egl_native_display};
     egl_display.initialize();
-
     return egl_display;
 }
 
@@ -76,11 +73,10 @@ mgo::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
 }
 
 mgo::Display::Display(
-    std::shared_ptr<BasicPlatform> const& basic_platform,
+    EGLNativeDisplayType egl_native_display,
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<DisplayReport> const&)
-    : basic_platform{basic_platform},
-      egl_display{create_and_initialize_display(*basic_platform)},
+    : egl_display{create_and_initialize_display(egl_native_display)},
       egl_context_shared{egl_display, EGL_NO_CONTEXT},
       current_display_configuration{geom::Size{1024,768}}
 {
