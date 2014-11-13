@@ -19,8 +19,72 @@
 #include "mir/glib_main_loop.h"
 
 #include <stdexcept>
+#include <algorithm>
+#include <condition_variable>
 
 #include <boost/throw_exception.hpp>
+
+namespace
+{
+
+class AlarmImpl : public mir::time::Alarm
+{
+public:
+    AlarmImpl(
+        GMainContext* main_context,
+        std::shared_ptr<mir::time::Clock> const& clock,
+        std::function<void()> const& callback)
+        : main_context{main_context},
+          clock{clock},
+          callback{callback},
+          state_{State::cancelled}
+    {
+    }
+
+    bool cancel() override
+    {
+        std::lock_guard<std::mutex> lock{alarm_mutex};
+
+        gsource = mir::detail::GSourceHandle{};
+        state_ = State::cancelled;
+        return true;
+    }
+
+    State state() const override
+    {
+        std::lock_guard<std::mutex> lock{alarm_mutex};
+        return state_;
+    }
+
+    bool reschedule_in(std::chrono::milliseconds delay) override
+    {
+        return reschedule_for(clock->now() + delay);
+    }
+
+    bool reschedule_for(mir::time::Timestamp time_point) override
+    {
+        std::lock_guard<std::mutex> lock{alarm_mutex};
+
+        state_ = State::pending;
+        gsource = mir::detail::add_timer_gsource(
+            main_context,
+            clock,
+            [&] { state_ = State::triggered; callback(); },
+            time_point);
+
+        return true;
+    }
+
+private:
+    mutable std::mutex alarm_mutex;
+    GMainContext* main_context;
+    std::shared_ptr<mir::time::Clock> const clock;
+    std::function<void()> const callback;
+    State state_;
+    mir::detail::GSourceHandle gsource;
+};
+
+}
 
 mir::detail::GMainContextHandle::GMainContextHandle()
     : main_context{g_main_context_new()}
@@ -41,9 +105,12 @@ mir::detail::GMainContextHandle::operator GMainContext*() const
 }
 
 
-mir::GLibMainLoop::GLibMainLoop()
-    : running{false},
-      fd_sources{main_context}
+mir::GLibMainLoop::GLibMainLoop(
+    std::shared_ptr<time::Clock> const& clock)
+    : clock{clock},
+      running{false},
+      fd_sources{main_context},
+      before_iteration_hook{[]{}}
 {
 }
 
@@ -53,6 +120,7 @@ void mir::GLibMainLoop::run()
 
     while (running)
     {
+        before_iteration_hook();
         g_main_context_iteration(main_context, TRUE);
     }
 }
@@ -90,7 +158,110 @@ void mir::GLibMainLoop::unregister_fd_handler(
     fd_sources.remove_all_owned_by(owner);
 }
 
-void mir::GLibMainLoop::enqueue(void const*, ServerAction const& action)
+void mir::GLibMainLoop::enqueue(void const* owner, ServerAction const& action)
 {
-    detail::add_idle_gsource(main_context, G_PRIORITY_DEFAULT, action);
+    detail::add_server_action_gsource(main_context, owner, action,
+        [this] (void const* owner)
+        {
+            return should_process_actions_for(owner);
+        });
+}
+
+void mir::GLibMainLoop::pause_processing_for(void const* owner)
+{
+    std::lock_guard<std::mutex> lock{do_not_process_mutex};
+
+    auto const iter = std::find(do_not_process.begin(), do_not_process.end(), owner);
+    if (iter == do_not_process.end())
+        do_not_process.push_back(owner);
+}
+
+void mir::GLibMainLoop::resume_processing_for(void const* owner)
+{
+    std::lock_guard<std::mutex> lock{do_not_process_mutex};
+
+    auto const new_end = std::remove(do_not_process.begin(), do_not_process.end(), owner);
+    do_not_process.erase(new_end, do_not_process.end());
+
+    // Wake up the context to reprocess all sources
+    g_main_context_wakeup(main_context);
+}
+
+bool mir::GLibMainLoop::should_process_actions_for(void const* owner)
+{
+    std::lock_guard<std::mutex> lock{do_not_process_mutex};
+
+    auto const iter = std::find(do_not_process.begin(), do_not_process.end(), owner);
+    return iter == do_not_process.end();
+}
+
+std::unique_ptr<mir::time::Alarm> mir::GLibMainLoop::notify_in(
+    std::chrono::milliseconds delay,
+    std::function<void()> callback)
+{
+    auto alarm = create_alarm(callback);
+
+    alarm->reschedule_in(delay);
+
+    return alarm;
+}
+
+std::unique_ptr<mir::time::Alarm> mir::GLibMainLoop::notify_at(
+    mir::time::Timestamp t,
+    std::function<void()> callback)
+{
+    auto alarm = create_alarm(callback);
+
+    alarm->reschedule_for(t);
+
+    return alarm;
+}
+
+std::unique_ptr<mir::time::Alarm> mir::GLibMainLoop::create_alarm(
+    std::function<void()> callback)
+{
+    return std::unique_ptr<mir::time::Alarm>{
+        new AlarmImpl(main_context, clock, callback)};
+}
+
+void mir::GLibMainLoop::reprocess_all_sources()
+{
+    std::condition_variable reprocessed_cv;
+    std::mutex reprocessed_mutex;
+    bool reprocessed = false;
+
+    // Schedule setting the before_iteration_hook as an
+    // idle source to ensure there is no concurrent access
+    // to it.
+    detail::add_idle_gsource(main_context, G_PRIORITY_HIGH,
+        [&]
+        {
+            // GMainContexts process sources in order of decreasing priority.
+            // Since all of our sources have priority higher than
+            // G_PRIORITY_LOW, by adding a G_PRIORITY_LOW source, we can be
+            // sure that when this source is processed all other sources will
+            // have been processed before it. We add the source in the
+            // before_iteration_hook to avoid premature notifications.
+            before_iteration_hook =
+                [&]
+                {
+                    detail::add_idle_gsource(main_context, G_PRIORITY_LOW,
+                        [&]
+                        {
+                            std::lock_guard<std::mutex> lock{reprocessed_mutex};
+                            reprocessed = true;
+                            reprocessed_cv.notify_all();
+                        });
+
+                    before_iteration_hook = []{};
+                };
+
+            // Wake up the main loop to ensure that we eventually leave
+            // g_main_context_iteration() and reprocess all sources after
+            // having called the newly set before_iteration_hook.
+            g_main_context_wakeup(main_context);
+        });
+
+    std::unique_lock<std::mutex> reprocessed_lock{reprocessed_mutex};
+    reprocessed_cv.wait(reprocessed_lock, [&] { return reprocessed == true; });
 }
