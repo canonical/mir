@@ -21,9 +21,9 @@
 #include "mir/scene/prompt_session_creation_parameters.h"
 #include "mir/scene/prompt_session_listener.h"
 #include "mir/scene/session.h"
-#include "mir/scene/prompt_session.h"
 #include "session_container.h"
 #include "prompt_session_container.h"
+#include "prompt_session_impl.h"
 
 namespace ms = mir::scene;
 
@@ -62,6 +62,7 @@ void ms::PromptSessionManagerImpl::stop_prompt_session_locked(
         if (prompt_session_container->remove_participant(prompt_session.get(), participant, PromptSessionContainer::ParticipantType::prompt_provider))
             prompt_session_listener->prompt_provider_removed(*prompt_session, participant);
     }
+    prompt_session->set_state(mir_prompt_session_state_stopped);
 
     prompt_session_container->remove_prompt_session(prompt_session);
 
@@ -104,11 +105,29 @@ void ms::PromptSessionManagerImpl::stop_prompt_session(std::shared_ptr<PromptSes
     stop_prompt_session_locked(lock, prompt_session);
 }
 
+void ms::PromptSessionManagerImpl::suspend_prompt_session(
+    std::shared_ptr<PromptSession> const& prompt_session,
+    bool suspended) const
+{
+    if (suspended && prompt_session->state() == mir_prompt_session_state_started)
+    {
+        prompt_session->set_state(mir_prompt_session_state_suspended);
+    }
+    else if (!suspended && prompt_session->state() == mir_prompt_session_state_suspended)
+    {
+        prompt_session->set_state(mir_prompt_session_state_started);
+    }
+
+    auto helper_session = helper_for(prompt_session);
+    if (helper_session)
+        helper_session->suspend_prompt_session(suspended);
+}
+
 std::shared_ptr<ms::PromptSession> ms::PromptSessionManagerImpl::start_prompt_session_for(
     std::shared_ptr<Session> const& session,
     PromptSessionCreationParameters const& params) const
 {
-    auto prompt_session = std::make_shared<PromptSession>();
+    auto prompt_session = std::make_shared<PromptSessionImpl>();
     std::shared_ptr<Session> application_session;
 
     app_container->for_each(
@@ -129,6 +148,7 @@ std::shared_ptr<ms::PromptSession> ms::PromptSessionManagerImpl::start_prompt_se
     if (!prompt_session_container->insert_participant(prompt_session.get(), session, PromptSessionContainer::ParticipantType::helper))
         BOOST_THROW_EXCEPTION(std::runtime_error("Could not set prompt session helper"));
 
+    prompt_session->set_state(mir_prompt_session_state_started);
     session->start_prompt_session();
     prompt_session_listener->starting(prompt_session);
 

@@ -43,6 +43,7 @@ public:
 
     virtual void start_prompt_session() = 0;
     virtual void stop_prompt_session() = 0;
+    virtual void suspend_prompt_session(bool suspended) = 0;
 };
 }
 }

@@ -104,7 +104,8 @@ typedef enum MirPowerMode
 typedef enum MirPromptSessionState
 {
     mir_prompt_session_state_stopped = 0,
-    mir_prompt_session_state_started
+    mir_prompt_session_state_started,
+    mir_prompt_session_state_suspended
 } MirPromptSessionState;
 
 /**

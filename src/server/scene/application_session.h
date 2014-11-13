@@ -73,6 +73,7 @@ public:
 
     void start_prompt_session() override;
     void stop_prompt_session() override;
+    void suspend_prompt_session(bool suspended) override;
 
 protected:
     ApplicationSession(ApplicationSession const&) = delete;

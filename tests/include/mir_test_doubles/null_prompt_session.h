@@ -27,9 +27,14 @@ namespace test
 {
 namespace doubles
 {
+
 class NullPromptSession : public scene::PromptSession
 {
+public:
+    void set_state(MirPromptSessionState) override { }
+    MirPromptSessionState state() const override { return mir_prompt_session_state_stopped; }
 };
+
 }
 }
 }

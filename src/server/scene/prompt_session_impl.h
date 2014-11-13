@@ -13,28 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored By: Nick Dedekind <nick.dedekind@canonical.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef MIR_SCENE_PROMPT_SESSION_H_
-#define MIR_SCENE_PROMPT_SESSION_H_
+#ifndef MIR_SCENE_PROMPT_SESSION_IMPL_H_
+#define MIR_SCENE_PROMPT_SESSION_IMPL_H_
 
-#include "mir/frontend/prompt_session.h"
+#include "mir/scene/prompt_session.h"
+
+#include <mutex>
 
 namespace mir
 {
 namespace scene
 {
-class Session;
 
-class PromptSession : public frontend::PromptSession
+class PromptSessionImpl : public scene::PromptSession
 {
 public:
-    virtual void set_state(MirPromptSessionState state) = 0;
-    virtual MirPromptSessionState state() const = 0;
+    explicit PromptSessionImpl();
+
+    void set_state(MirPromptSessionState state) override;
+    MirPromptSessionState state() const override;
+
+private:
+    std::mutex mutable guard;
+    MirPromptSessionState m_state;
 };
-
 }
 }
 
-#endif // MIR_SHELL_PROMPT_SESSION_H_
+#endif // MIR_SCENE_PROMPT_SESSION_IMPL_H_

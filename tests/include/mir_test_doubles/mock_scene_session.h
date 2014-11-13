@@ -55,6 +55,7 @@ struct MockSceneSession : public scene::Session
 
     MOCK_METHOD0(start_prompt_session, void());
     MOCK_METHOD0(stop_prompt_session, void());
+    MOCK_METHOD1(suspend_prompt_session, void(bool));
 };
 
 }
