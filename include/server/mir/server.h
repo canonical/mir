@@ -107,6 +107,14 @@ public:
     void add_configuration_option(
         std::string const& option,
         std::string const& description,
+        char const* default_value);
+
+    /// Add user configuration option(s) to Mir's option handling.
+    /// These will be resolved during initialisation from the command line,
+    /// environment variables, a config file or the supplied default.
+    void add_configuration_option(
+        std::string const& option,
+        std::string const& description,
         bool default_value);
 
     /// Add user configuration option(s) to Mir's option handling.
