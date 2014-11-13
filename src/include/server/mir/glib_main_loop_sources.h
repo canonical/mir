@@ -19,6 +19,8 @@
 #ifndef MIR_GLIB_MAIN_LOOP_SOURCES_H_
 #define MIR_GLIB_MAIN_LOOP_SOURCES_H_
 
+#include "mir/time/clock.h"
+
 #include <functional>
 #include <vector>
 #include <mutex>
@@ -34,15 +36,17 @@ namespace detail
 class GSourceHandle
 {
 public:
-    GSourceHandle(GSource* gsource, std::function<void()> const& pre_destruction_hook);
+    GSourceHandle();
+    GSourceHandle(GSource* gsource, std::function<void(GSource*)> const& pre_destruction_hook);
     GSourceHandle(GSourceHandle&& other);
+    GSourceHandle& operator=(GSourceHandle other);
     ~GSourceHandle();
 
     operator GSource*() const;
 
 private:
     GSource* gsource;
-    std::function<void()> pre_destruction_hook;
+    std::function<void(GSource*)> pre_destruction_hook;
 };
 
 void add_idle_gsource(
@@ -56,6 +60,12 @@ void add_server_action_gsource(
     void const* owner,
     std::function<void()> const& action,
     std::function<bool(void const*)> const& should_dispatch);
+
+GSourceHandle add_timer_gsource(
+    GMainContext* main_context,
+    std::shared_ptr<time::Clock> const& clock,
+    std::function<void()> const& handler,
+    time::Timestamp target_time);
 
 class FdSources
 {

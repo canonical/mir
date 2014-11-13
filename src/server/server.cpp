@@ -490,6 +490,14 @@ void mir::Server::add_configuration_option(
 void mir::Server::add_configuration_option(
     std::string const& option,
     std::string const& description,
+    char const* default_value)
+{
+    add_configuration_option(option, description, std::string{default_value});
+}
+
+void mir::Server::add_configuration_option(
+    std::string const& option,
+    std::string const& description,
     bool default_)
 {
     verify_setting_allowed(self->server_config);
