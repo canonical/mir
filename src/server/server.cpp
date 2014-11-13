@@ -118,8 +118,10 @@ auto the_##name()\
 -> decltype(mir::DefaultServerConfiguration::the_##name()) override\
 {\
     if (self->name##_builder)\
-        return name(\
-            [this] { return self->name##_builder(); });\
+    {\
+        if (auto const result = name([this]{ return self->name##_builder(); }))\
+            return result;\
+    }\
 \
     return mir::DefaultServerConfiguration::the_##name();\
 }
