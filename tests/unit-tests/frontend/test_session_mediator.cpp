@@ -126,7 +126,7 @@ struct MockBufferPacker : public mg::PlatformIpcOperations
     MOCK_CONST_METHOD2(unpack_buffer,
         void(mg::BufferIpcMessage&, mg::Buffer const&));
     MOCK_METHOD0(connection_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
-    MOCK_METHOD3(platform_operation, void(mg::PlatformIPCPackage&, unsigned int const, mg::PlatformIPCPackage const&));
+    MOCK_METHOD2(platform_operation, mg::PlatformIPCPackage(unsigned int const, mg::PlatformIPCPackage const&));
 };
 
 class StubbedSession : public mtd::StubSession
@@ -873,9 +873,9 @@ TEST_F(SessionMediator, drm_auth_magic_calls_platform_operation_abstraction)
     mg::PlatformIPCPackage request;
     drm_request.set_magic(magic);
 
-    EXPECT_CALL(mock_ipc_operations, platform_operation(_, _, _))
+    EXPECT_CALL(mock_ipc_operations, platform_operation(_, _))
         .Times(1)
-        .WillOnce(DoAll(SaveArg<2>(&request), SetArg<0>(response)));
+        .WillOnce(DoAll(SaveArg<1>(&request), Return(response)));
 
     mediator.connect(nullptr, &connect_parameters, &connection, null_callback.get());
     mediator.drm_auth_magic(nullptr, &drm_request, &drm_response, null_callback.get());
@@ -896,7 +896,7 @@ TEST_F(SessionMediator, drm_auth_magic_sets_status_code_on_error)
     unsigned int const drm_magic{0x10111213};
     int const error_number{667};
 
-    EXPECT_CALL(mock_ipc_operations, platform_operation(_, _, _))
+    EXPECT_CALL(mock_ipc_operations, platform_operation(_, _))
         .WillOnce(Throw(::boost::enable_error_info(std::exception())
             << boost::errinfo_errno(error_number)));
 

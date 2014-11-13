@@ -32,18 +32,17 @@ struct IpcOperations : public ::testing::Test
 TEST_F(IpcOperations, test_ipc_data_packed_correctly_for_full_ipc)
 {
     //android has no valid operations platform specific operations yet, expect throw
-    mg::PlatformIPCPackage response_package;
     mg::PlatformIPCPackage package{
         std::vector<int32_t>{2,4,8,16,32},
         std::vector<int32_t>{fileno(tmpfile()), fileno(tmpfile())}
     };
 
     EXPECT_THROW({
-        ipc_operations.platform_operation(response_package, 0u, package);
+        ipc_operations.platform_operation(0u, package);
     }, std::invalid_argument);
 
     EXPECT_THROW({
-        ipc_operations.platform_operation(response_package, 1u, package);
+        ipc_operations.platform_operation(1u, package);
     }, std::invalid_argument);
 
     for (auto fd : package.ipc_fds)

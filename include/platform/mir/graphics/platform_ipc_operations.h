@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_PLATFORM_IPC_OPERATIONS_H_
 #define MIR_GRAPHICS_PLATFORM_IPC_OPERATIONS_H_
 
+#include "platform_ipc_package.h"
 #include <memory>
 
 namespace mir
@@ -32,7 +33,6 @@ enum class BufferIpcMsgType
 };
 class Buffer;
 class BufferIpcMessage;
-struct PlatformIPCPackage;
 
 class PlatformIpcOperations
 {

@@ -62,8 +62,9 @@ class StubIpcOps : public mg::PlatformIpcOperations
         return std::make_shared<mg::PlatformIPCPackage>();
     }
 
-    void platform_operation(mg::PlatformIPCPackage&, unsigned int const, mg::PlatformIPCPackage const&) override
+    mg::PlatformIPCPackage platform_operation(unsigned int const, mg::PlatformIPCPackage const&) override
     {
+        return mg::PlatformIPCPackage();
     }
 };
 

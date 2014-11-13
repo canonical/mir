@@ -50,8 +50,8 @@ struct MockAuthenticatingIpcOps : public mg::PlatformIpcOperations
     MOCK_CONST_METHOD3(pack_buffer, void(mg::BufferIpcMessage&, mg::Buffer const&, mg::BufferIpcMsgType));
     MOCK_CONST_METHOD2(unpack_buffer, void(mg::BufferIpcMessage&, mg::Buffer const&));
     MOCK_METHOD0(connection_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
-    MOCK_METHOD3(platform_operation, void(
-        mg::PlatformIPCPackage&, unsigned int const, mg::PlatformIPCPackage const&));
+    MOCK_METHOD2(platform_operation, mg::PlatformIPCPackage(
+        unsigned int const, mg::PlatformIPCPackage const&));
 };
 
 class StubAuthenticatingPlatform : public mtd::NullPlatform
@@ -102,9 +102,9 @@ TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
             {
                 mg::PlatformIPCPackage pkg{{0},{}};
                 auto ipc_ops = std::make_shared<NiceMock<MockAuthenticatingIpcOps>>();
-                EXPECT_CALL(*ipc_ops, platform_operation(_,_,_))
+                EXPECT_CALL(*ipc_ops, platform_operation(_,_))
                     .Times(1)
-                    .WillRepeatedly(SetArgReferee<0>(pkg));
+                    .WillRepeatedly(Return(pkg));
                 ON_CALL(*ipc_ops, connection_ipc_package())
                     .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
                 platform = std::make_shared<StubAuthenticatingPlatform>(ipc_ops);
@@ -156,7 +156,7 @@ TEST_F(BespokeDisplayServerTestFixture, drm_auth_magic_platform_error_reaches_cl
             if (!platform)
             {
                 auto ipc_ops = std::make_shared<NiceMock<MockAuthenticatingIpcOps>>();
-                EXPECT_CALL(*ipc_ops, platform_operation(_,_,_))
+                EXPECT_CALL(*ipc_ops, platform_operation(_,_))
                     .WillOnce(Throw(::boost::enable_error_info(std::exception())
                         << boost::errinfo_errno(auth_magic_error)));
                 platform = std::make_shared<StubAuthenticatingPlatform>(ipc_ops);
