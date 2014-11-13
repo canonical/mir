@@ -35,8 +35,7 @@ class InternalNativeDisplay;
 class NativePlatform : public graphics::NativePlatform
 {
 public:
-    NativePlatform(
-        std::shared_ptr<NestedContext> const& nested_context_arg);
+    NativePlatform(std::shared_ptr<NestedContext> const& nested_context_arg);
     virtual ~NativePlatform();
 
     std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() override;

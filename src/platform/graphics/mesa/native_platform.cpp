@@ -38,8 +38,7 @@
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 
-mgm::NativePlatform::NativePlatform(
-    std::shared_ptr<NestedContext> const& nested_context_arg)
+mgm::NativePlatform::NativePlatform(std::shared_ptr<NestedContext> const& nested_context_arg)
 {
     nested_context = nested_context_arg;
     auto fds = nested_context->platform_fd_items();
