@@ -38,7 +38,6 @@ class RenderingTracker
 {
 public:
     RenderingTracker(std::weak_ptr<Surface> const& weak_surface);
-    ~RenderingTracker() noexcept;
 
     void rendered_in(compositor::CompositorID cid);
     void occluded_in(compositor::CompositorID cid);
