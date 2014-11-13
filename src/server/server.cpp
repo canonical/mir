@@ -40,15 +40,13 @@
 namespace mo = mir::options;
 namespace ml = mir::logging;
 
-namespace mir
-{
-namespace logging
+namespace
 {
 
 std::mutex log_mutex;
-std::shared_ptr<Logger> the_always_on_logger;
+std::shared_ptr<ml::Logger> the_always_on_logger;
 
-std::shared_ptr<Logger> get_logger()
+std::shared_ptr<ml::Logger> get_logger()
 {
     if (auto const result = the_always_on_logger)
     {
@@ -58,28 +56,27 @@ std::shared_ptr<Logger> get_logger()
     {
         std::lock_guard<decltype(log_mutex)> lock{log_mutex};
         if (!the_always_on_logger)
-            the_always_on_logger = std::make_shared<DumbConsoleLogger>();
+            the_always_on_logger = std::make_shared<ml::DumbConsoleLogger>();
 
         return the_always_on_logger;
     }
 }
 
-void set_always_on_logger(std::shared_ptr<Logger> const& new_always_on_logger)
+}
+
+void ml::log(const ml::Logger::Severity severity, const std::string& message)
+{
+    auto logger = get_logger();
+    logger->log(severity, message, "Mir Server");
+}
+
+void ml::set_always_on_logger(std::shared_ptr<ml::Logger> const& new_always_on_logger)
 {
     if (new_always_on_logger)
     {
         std::lock_guard<decltype(log_mutex)> lock{log_mutex};
         the_always_on_logger = new_always_on_logger;
     }
-}
-
-void log(const Logger::Severity severity, const std::string& message)
-{
-    auto logger = get_logger();
-    logger->log(severity, message, "Mir Server");
-}
-
-}
 }
 
 #define FOREACH_WRAPPER(MACRO)\
