@@ -691,7 +691,7 @@ TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
     mir_surface_spec_release(resultant_spec);
 }
 
-TEST_F(ClientLibrary, setting_neither_dimensions_nor_fullscreen_output_fails)
+TEST_F(ClientLibrary, setting_no_size_hint_fails_with_useful_message)
 {
     using namespace testing;
 
