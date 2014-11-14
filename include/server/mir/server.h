@@ -107,6 +107,14 @@ public:
     void add_configuration_option(
         std::string const& option,
         std::string const& description,
+        char const* default_value);
+
+    /// Add user configuration option(s) to Mir's option handling.
+    /// These will be resolved during initialisation from the command line,
+    /// environment variables, a config file or the supplied default.
+    void add_configuration_option(
+        std::string const& option,
+        std::string const& description,
         bool default_value);
 
     /// Add user configuration option(s) to Mir's option handling.
@@ -182,6 +190,7 @@ public:
  * They should be called before apply_settings() otherwise they throw a std::logic_error.
  *  @{ */
     /// Each of the override functions takes a builder functor of the same form
+    /// \note If a null pointer is returned by the builder the default is used instead.
     template<typename T> using Builder = std::function<std::shared_ptr<T>()>;
 
     /// Sets an override functor for creating the compositor.
