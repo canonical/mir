@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,7 +16,7 @@
  * Authored by: Thomas Guest <thomas.guest@canonical.com>
  */
 
-#include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/interprocess_client_server_test.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -28,7 +28,6 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-char const* const mir_test_socket = mtf::test_socket_file().c_str();
 bool signalled;
 }
 
@@ -37,13 +36,18 @@ static void SIGIO_handler(int /*signo*/)
     signalled = true;
 }
 
-using ClientLibraryThread = DefaultDisplayServerTestFixture;
-
-TEST_F(ClientLibraryThread, HandlesNoSignals)
+struct ClientLibraryThread : mtf::InterprocessClientServerTest
 {
-    struct ClientConfig : TestingClientConfiguration
+    void SetUp() override
     {
-        void exec()
+        mtf::InterprocessClientServerTest::SetUp();
+        run_in_server([]{});
+    }
+};
+
+TEST_F(ClientLibraryThread, handles_no_signals)
+{
+    run_in_client([&]
         {
             signalled = false;
 
@@ -81,17 +85,12 @@ TEST_F(ClientLibraryThread, HandlesNoSignals)
             mir_connection_release(conn);
 
             EXPECT_FALSE(signalled);
-        }
-    } client_config;
-
-    launch_client_process(client_config);
+        });
 }
 
-TEST_F(ClientLibraryThread, DoesNotInterfereWithClientSignalHandling)
+TEST_F(ClientLibraryThread, does_not_interfere_with_client_signal_handling)
 {
-    struct ClientConfig : TestingClientConfiguration
-    {
-        void exec()
+    run_in_client([&]
         {
             signalled = false;
 
@@ -114,8 +113,5 @@ TEST_F(ClientLibraryThread, DoesNotInterfereWithClientSignalHandling)
             mir_connection_release(conn);
 
             EXPECT_TRUE(signalled);
-        }
-    } client_config;
-
-    launch_client_process(client_config);
+        });
 }
