@@ -30,10 +30,9 @@ int mir_debug_surface_id(MirSurface* surface)
     return surface->id();
 }
 
-MirBool mir_debug_surface_coords_to_screen(MirSurface* surface,
-                                           int x, int y,
-                                           int* screen_x, int* screen_y)
+bool mir_debug_surface_coords_to_screen(MirSurface* surface,
+                                        int x, int y,
+                                        int* screen_x, int* screen_y)
 {
-    return surface->translate_to_screen_coordinates(x, y, screen_x, screen_y) ?
-           mir_true : mir_false ;
+    return surface->translate_to_screen_coordinates(x, y, screen_x, screen_y);
 }
