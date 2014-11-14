@@ -32,10 +32,8 @@
 #include "mir/compositor/destination_alpha.h"
 #include "mir/compositor/renderer_factory.h"
 #include "mir/shell/host_lifecycle_event_listener.h"
-#include "mir/logging/always_on_logging.h"
 
 #include <iostream>
-#include <syslog.h>
 
 namespace me = mir::examples;
 namespace ms = mir::scene;
@@ -45,24 +43,11 @@ namespace mi = mir::input;
 namespace mo = mir::options;
 namespace mc = mir::compositor;
 namespace msh = mir::shell;
-namespace ml = mir::logging;
 
 namespace mir
 {
 namespace examples
 {
-
-class AlwaysOnSysLogger : public ml::Logger
-{
-public:
-protected:
-    void log(ml::Logger::Severity /*severity*/,
-             const std::string& message,
-             const std::string& /*component*/)
-    {
-        syslog(LOG_INFO, "%s", message.c_str());
-    }
-};
 
 class DisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
@@ -168,8 +153,6 @@ private:
 int main(int argc, char const* argv[])
 try
 {
-    ml::set_always_on_logger(std::make_shared<me::AlwaysOnSysLogger>());
-
     auto wm = std::make_shared<me::WindowManager>();
     me::DemoServerConfiguration config(argc, argv, {wm});
 

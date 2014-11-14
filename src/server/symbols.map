@@ -249,7 +249,6 @@ MIR_SERVER_27 {
     mir::input::TouchVisualizer::?TouchVisualizer*;
     mir::input::TouchVisualizer::TouchVisualizer*;
     mir::input::TouchVisualizer::visualize_touches*;
-    mir::logging::set_always_on_logger*;
     mir::MainLoop::run*;
     mir::MainLoop::stop*;
     mir::report_exception*;

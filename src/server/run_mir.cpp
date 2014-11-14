@@ -24,7 +24,6 @@
 #include "mir/frontend/connector.h"
 #include "mir/raii.h"
 #include "mir/emergency_cleanup.h"
-#include "mir/logging/always_on_logging.h"
 
 #include <atomic>
 #include <exception>
@@ -78,8 +77,6 @@ void mir::run_mir(
         std::lock_guard<std::mutex> lock{termination_exception_mutex};
         termination_exception = nullptr;
     }
-
-    log(mir::logging::Logger::informational, "Running");
 
     auto const main_loop = config.the_main_loop();
 
