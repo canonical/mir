@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -18,11 +18,16 @@
 
 #include "mir/shared_library_loader.h"
 #include "mir/shared_library.h"
+#include "mir/logging/logger.h"
 #include <memory>
 #include <map>
 
+namespace ml = mir::logging;
+
 mir::SharedLibrary const* mir::load_library(std::string const& libname)
 {
+    ml::log(ml::Logger::Severity::informational, "Loading library : " + libname);
+
     // There's no point in loading twice, and it isn't safe to unload...
     static std::map<std::string, std::shared_ptr<mir::SharedLibrary>> libraries_cache;
 
