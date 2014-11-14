@@ -48,7 +48,10 @@ void mgm::NativePlatform::initialize(
     drm_fd = fds.at(0);
     gbm.setup(drm_fd);
     nested_context->drm_set_gbm_device(gbm.device);
-    ipc_ops = std::make_shared<mgm::NestedIPC>(drm_fd, nested_context);
+
+    auto drm_helper = std::make_shared<helpers::DRMHelper>();
+    drm_helper->fd = drm_fd;
+    ipc_ops = std::make_shared<mgm::NestedIPC>(drm_helper, nested_context);
 }
 
 mgm::NativePlatform::~NativePlatform()
