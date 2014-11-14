@@ -50,6 +50,8 @@ public:
 
     void expect_server_signalled(int signal);
 
+    bool sigkill_server_process();
+
 private:
 
     pid_t test_process_id{getpid()};
