@@ -48,11 +48,6 @@ MirSurfaceSpec* mir_new_surface_spec_for_normal(MirConnection* connection)
 
 MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification)
 {
-    if (/*requested_specification->output_id == mir_display_output_id_invalid &&*/
-        ((requested_specification->width == -1) || (requested_specification->height == -1)))
-    {
-        return new MirSurface{"Invalid surface specification: you must set dimensions or fullscreen output id"};
-    }
     MirSurfaceParameters params;
     // Hack: our stub doesn't yet allow unset things here.
     params.name = requested_specification->name;
@@ -60,7 +55,7 @@ MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification)
     params.height = requested_specification->height;
     params.pixel_format = requested_specification->pixel_format;
     params.buffer_usage = requested_specification->buffer_usage;
-    params.output_id = mir_display_output_id_invalid;
+    params.output_id = requested_specification->output_id;
     return mir_connection_create_surface_sync(requested_specification->connection,
                                               &params);
 }
@@ -87,6 +82,12 @@ bool mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat form
 bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage)
 {
     spec->buffer_usage = usage;
+    return true;
+}
+
+bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id)
+{
+    spec->output_id = output_id;
     return true;
 }
 

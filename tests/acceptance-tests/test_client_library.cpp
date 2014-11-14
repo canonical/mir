@@ -691,7 +691,7 @@ TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
     mir_surface_spec_release(resultant_spec);
 }
 
-TEST_F(ClientLibrary, setting_no_size_hint_fails_with_useful_message)
+TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
 {
     using namespace testing;
 
@@ -699,9 +699,26 @@ TEST_F(ClientLibrary, setting_no_size_hint_fails_with_useful_message)
 
     auto surface_spec = mir_new_surface_spec_for_normal(connection);
 
+    // We need to specify a valid output id, so we need to find which ones are valid...
+    auto configuration = mir_connection_create_display_config(connection);
+    ASSERT_THAT(configuration->num_outputs, Ge(1));
+
+    auto const requested_output = configuration->outputs[0];
+
+    mir_surface_spec_set_fullscreen_on_output(surface_spec, requested_output.output_id);
+
     auto surface = mir_surface_realise_sync(surface_spec);
 
-    EXPECT_FALSE(mir_surface_is_valid(surface));
-    EXPECT_THAT(mir_surface_get_error_message(surface),
-                HasSubstr("must set dimensions or fullscreen output"));
+    EXPECT_THAT(surface, IsValid());
+
+    auto resultant_spec = mir_surface_get_spec(surface);
+
+    EXPECT_THAT(mir_surface_spec_get_width(resultant_spec),
+                Eq(requested_output.modes[requested_output.current_mode].horizontal_resolution));
+    EXPECT_THAT(mir_surface_spec_get_height(resultant_spec),
+                Eq(requested_output.modes[requested_output.current_mode].vertical_resolution));
+
+    mir_surface_spec_release(resultant_spec);
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
 }

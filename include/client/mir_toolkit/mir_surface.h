@@ -41,6 +41,7 @@ bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name);
 bool mir_surface_spec_set_dimensions(MirSurfaceSpec* spec, unsigned width, unsigned height);
 bool mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format);
 bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage);
+bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id);
 
 MirSurfaceSpec* mir_surface_get_spec(MirSurface* surf);
 

@@ -62,6 +62,7 @@ struct MirSurfaceSpec
     int width, height;
     MirPixelFormat pixel_format;
     MirBufferUsage buffer_usage;
+    uint32_t output_id;
 };
 
 struct MirSurface : public mir::client::ClientSurface

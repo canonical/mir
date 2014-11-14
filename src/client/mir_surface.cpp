@@ -50,7 +50,8 @@ std::unordered_set<MirSurface*> valid_surfaces;
 MirSurfaceSpec::MirSurfaceSpec()
     : name{nullptr},
       width{-1},
-      height{-1}
+      height{-1},
+      output_id{mir_display_output_id_invalid}
 {
 }
 

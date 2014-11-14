@@ -32,7 +32,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-
 struct StubDisplay : mtd::StubDisplay
 {
     StubDisplay()
@@ -145,7 +144,7 @@ TEST(GraphicsDisplayLayoutTest, place_in_output_places_in_correct_output)
     }
 }
 
-TEST(GraphicsDisplayLayoutTest, place_in_output_throws_on_non_fullscreen_request)
+TEST(GraphicsDisplayLayoutTest, place_in_output_updates_size_of_non_fullscreen_request)
 {
     auto stub_display = std::make_shared<StubDisplay>();
 
@@ -171,8 +170,10 @@ TEST(GraphicsDisplayLayoutTest, place_in_output_throws_on_non_fullscreen_request
     {
         auto const output_id = std::get<0>(t);
         auto submitted_rect = std::get<1>(t);
-        EXPECT_THROW({
-            display_layout.place_in_output(output_id, submitted_rect);
-        }, std::runtime_error);
+
+        display_layout.place_in_output(output_id, submitted_rect);
+
+        EXPECT_THAT(submitted_rect.size,
+                    testing::Eq(stub_display->output_rects[output_id.as_value() - 1].size));
     }
 }
