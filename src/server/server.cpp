@@ -118,8 +118,10 @@ auto the_##name()\
 -> decltype(mir::DefaultServerConfiguration::the_##name()) override\
 {\
     if (self->name##_builder)\
-        return name(\
-            [this] { return self->name##_builder(); });\
+    {\
+        if (auto const result = name([this]{ return self->name##_builder(); }))\
+            return result;\
+    }\
 \
     return mir::DefaultServerConfiguration::the_##name();\
 }
@@ -482,6 +484,14 @@ void mir::Server::add_configuration_option(
         };
 
     self->set_add_configuration_options(option_adder);
+}
+
+void mir::Server::add_configuration_option(
+    std::string const& option,
+    std::string const& description,
+    char const* default_value)
+{
+    add_configuration_option(option, description, std::string{default_value});
 }
 
 void mir::Server::add_configuration_option(

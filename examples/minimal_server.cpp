@@ -17,14 +17,21 @@
  */
 
 #include "mir/server.h"
+#include "mir/report_exception.h"
 
 #include <cstdlib>
 
 int main(int argc, char const* argv[])
+try
 {
     mir::Server server;
     server.set_command_line(argc, argv);
     server.apply_settings();
     server.run();
     return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+catch (...)
+{
+    mir::report_exception();
+    return EXIT_FAILURE;
 }
