@@ -354,6 +354,7 @@ void mir::Server::apply_settings()
 void mir::Server::run()
 try
 {
+    logging::log(logging::Logger::Severity::informational, "Starting");
     verify_accessing_allowed(self->server_config);
 
     auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
@@ -381,6 +382,7 @@ catch (...)
 
 void mir::Server::stop()
 {
+    logging::log(logging::Logger::Severity::informational, "Stopping");
     if (self->server_config)
         if (auto const main_loop = the_main_loop())
             main_loop->stop();
