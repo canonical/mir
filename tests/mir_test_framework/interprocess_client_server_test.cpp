@@ -116,7 +116,16 @@ void mtf::InterprocessClientServerTest::TearDown()
     if (server_process_id == getpid())
     {
         shutdown_sync.wait_for_signal_ready_for();
-        stop_server();
+    }
+
+    stop_server();
+}
+
+void mtf::InterprocessClientServerTest::stop_server()
+{
+    if (server_process_id == getpid())
+    {
+        HeadlessTest::stop_server();
     }
 
     if (test_process_id != getpid()) return;
@@ -156,9 +165,19 @@ bool mtf::InterprocessClientServerTest::sigkill_server_process()
         throw std::logic_error("No server process to kill");
 
     server_process->kill();
-    auto result = server_process->wait_for_termination();
-    server_process.reset();
+    auto result = wait_for_shutdown_server_process();
 
     return result.reason == TerminationReason::child_terminated_by_signal &&
            result.signal == SIGKILL;
+}
+
+mtf::Result mtf::InterprocessClientServerTest::wait_for_shutdown_server_process()
+{
+
+    if (!server_process)
+        throw std::logic_error("No server process to monitor");
+
+    Result result = server_process->wait_for_termination();
+    server_process.reset();
+    return result;
 }

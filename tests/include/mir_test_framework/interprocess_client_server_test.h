@@ -25,6 +25,7 @@
 namespace mir_test_framework
 {
 class Process;
+class Result;
 
 class InterprocessClientServerTest : public HeadlessTest
 {
@@ -50,7 +51,11 @@ public:
 
     void expect_server_signalled(int signal);
 
+    void stop_server();
+
     bool sigkill_server_process();
+
+    Result wait_for_shutdown_server_process();
 
 private:
 
