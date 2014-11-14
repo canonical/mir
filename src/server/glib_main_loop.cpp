@@ -110,6 +110,7 @@ mir::GLibMainLoop::GLibMainLoop(
     : clock{clock},
       running{false},
       fd_sources{main_context},
+      signal_sources{fd_sources},
       before_iteration_hook{[]{}}
 {
 }
@@ -139,8 +140,7 @@ void mir::GLibMainLoop::register_signal_handler(
     std::initializer_list<int> sigs,
     std::function<void(int)> const& handler)
 {
-    for (auto sig : sigs)
-        detail::add_signal_gsource(main_context, sig, handler);
+    signal_sources.add(sigs, handler);
 }
 
 void mir::GLibMainLoop::register_fd_handler(
