@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -178,6 +178,30 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_mir_fatal_error_except)
 
         EXPECT_FALSE(file_exists(server_config.the_socket_file()));
     });
+}
+
+// Here's a failing attempt...
+TEST_F(ServerShutdown, server_removes_endpoint_on_mir_fatal_error_except)
+{   // Even fatal errors sometimes need to be caught for critical cleanup...
+    mtf::CrossProcessSync sync;
+
+    run_in_server([&]
+        {
+            sync.wait_for_signal_ready_for();
+            server.the_main_loop()->enqueue(this, [&] { mir::fatal_error("Bang"); });
+        });
+
+    if (is_test_process())
+    {
+        ASSERT_TRUE(file_exists(mir_test_socket));
+
+        sync.signal_ready();
+
+        auto result = wait_for_shutdown_server_process();
+        EXPECT_EQ(mtf::TerminationReason::child_terminated_normally, result.reason);
+
+        EXPECT_FALSE(file_exists(mir_test_socket));
+    }
 }
 #endif
 
