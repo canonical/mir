@@ -84,9 +84,9 @@ MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface* surface)
     return reinterpret_cast<MirEGLNativeWindowType>(surface->generate_native_window());
 }
 
-MirBool mir_surface_is_valid(MirSurface* surface)
+bool mir_surface_is_valid(MirSurface* surface)
 {
-    return MirSurface::is_valid(surface) ? mir_true : mir_false;
+    return MirSurface::is_valid(surface);
 }
 
 char const* mir_surface_get_error_message(MirSurface* surface)

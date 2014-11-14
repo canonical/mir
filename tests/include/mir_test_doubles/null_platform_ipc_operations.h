@@ -40,6 +40,11 @@ class NullPlatformIpcOperations : public graphics::PlatformIpcOperations
     {
         return std::make_shared<graphics::PlatformIPCPackage>();
     }
+    graphics::PlatformIPCPackage platform_operation(
+        unsigned int const, graphics::PlatformIPCPackage const&) override
+    {
+        return graphics::PlatformIPCPackage();
+    }
 };
 }
 }

@@ -22,7 +22,6 @@
 #include "display_server.h"
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
-#include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir_toolkit/common.h"
 #include "surface_tracker.h"
@@ -37,7 +36,6 @@ namespace mir
 namespace graphics
 {
 class Buffer;
-class Platform;
 class Display;
 class GraphicBufferAllocator;
 }
@@ -73,7 +71,7 @@ public:
 
     SessionMediator(
         std::shared_ptr<Shell> const& shell,
-        std::shared_ptr<graphics::Platform> const& graphics_platform,
+        std::shared_ptr<graphics::PlatformIpcOperations> const& ipc_operations,
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
         std::vector<MirPixelFormat> const& surface_pixel_formats,
         std::shared_ptr<SessionMediatorReport> const& report,
@@ -194,7 +192,6 @@ private:
 
     pid_t client_pid_;
     std::shared_ptr<Shell> const shell;
-    std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<graphics::PlatformIpcOperations> const ipc_operations;
 
     std::vector<MirPixelFormat> const surface_pixel_formats;
