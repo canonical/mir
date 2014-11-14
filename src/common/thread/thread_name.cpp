@@ -17,11 +17,14 @@
  */
 
 #include "mir/thread_name.h"
+#include "mir/logging/logger.h"
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
 #include <pthread.h>
+
+namespace ml = mir::logging;
 
 void mir::set_thread_name(std::string const& name)
 {
@@ -29,4 +32,5 @@ void mir::set_thread_name(std::string const& name)
     auto const proper_name = name.substr(0, max_name_len);
 
     pthread_setname_np(pthread_self(), proper_name.c_str());
+    ml::log(ml::Logger::Severity::informational, "Thread name set to : " + proper_name);
 }
