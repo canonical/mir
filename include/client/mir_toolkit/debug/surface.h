@@ -59,9 +59,9 @@ uint32_t mir_debug_surface_current_buffer_id(MirSurface *surface);
  *          This call will only be interesting for automated testing, where both the client
  *          and shell state is known and constrained.
  */
-MirBool mir_debug_surface_coords_to_screen(MirSurface* surface,
-                                           int x, int y,
-                                           int* screen_x, int* screen_y);
+bool mir_debug_surface_coords_to_screen(MirSurface* surface,
+                                        int x, int y,
+                                        int* screen_x, int* screen_y);
 
 #ifdef __cplusplus
 }

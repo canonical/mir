@@ -160,9 +160,9 @@ MirConnection* mir_connect_sync(
     return conn;
 }
 
-MirBool mir_connection_is_valid(MirConnection* connection)
+bool mir_connection_is_valid(MirConnection* connection)
 {
-    return MirConnection::is_valid(connection) ? mir_true : mir_false;
+    return MirConnection::is_valid(connection);
 }
 
 char const* mir_connection_get_error_message(MirConnection* connection)

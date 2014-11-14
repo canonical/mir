@@ -20,8 +20,11 @@
 #define MIR_GLIB_MAIN_LOOP_H_
 
 #include "mir/main_loop.h"
+#include "mir/glib_main_loop_sources.h"
 
 #include <atomic>
+#include <vector>
+#include <mutex>
 
 #include <glib.h>
 
@@ -46,7 +49,7 @@ private:
 class GLibMainLoop
 {
 public:
-    GLibMainLoop();
+    GLibMainLoop(std::shared_ptr<time::Clock> const& clock);
 
     void run();
     void stop();
@@ -55,11 +58,40 @@ public:
         std::initializer_list<int> signals,
         std::function<void(int)> const& handler);
 
+    void register_fd_handler(
+        std::initializer_list<int> fds,
+        void const* owner,
+        std::function<void(int)> const& handler);
+
+    void unregister_fd_handler(void const* owner);
+
     void enqueue(void const* owner, ServerAction const& action);
+    void pause_processing_for(void const* owner);
+    void resume_processing_for(void const* owner);
+
+    std::unique_ptr<mir::time::Alarm> notify_in(
+        std::chrono::milliseconds delay,
+        std::function<void()> callback);
+
+    std::unique_ptr<mir::time::Alarm> notify_at(
+        mir::time::Timestamp t,
+        std::function<void()> callback);
+
+    std::unique_ptr<mir::time::Alarm> create_alarm(
+        std::function<void()> callback);
+
+    void reprocess_all_sources();
 
 private:
+    bool should_process_actions_for(void const* owner);
+
+    std::shared_ptr<time::Clock> const clock;
     detail::GMainContextHandle const main_context;
     std::atomic<bool> running;
+    detail::FdSources fd_sources;
+    std::mutex do_not_process_mutex;
+    std::vector<void const*> do_not_process;
+    std::function<void()> before_iteration_hook;
 };
 
 }

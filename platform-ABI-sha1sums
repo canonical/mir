@@ -11,7 +11,7 @@ dcf8b8982f138bdde39a241825c610e955cd5e33  include/common/mir/input/input_platfor
 be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
 9ae8473df05dd9e048a73797f01a2f34f7447554  include/common/mir/time/types.h
 9907751d046e4aea81881cf19e5df52c7a6a813e  include/common/mir_toolkit/client_types.h
-183d9e5e6cfe48b3d9145a28541dd4202ff6137b  include/common/mir_toolkit/common.h
+2100c0674d9d882c1845550847357f6a5de5af66  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 bdaceadd56e41d2cb708f7c4da97acf84dfc75b7  include/common/mir_toolkit/event.h
 4975998aa1056ed0d39dcc538127453e516ad8e9  include/common/mir_toolkit/mesa/native_display.h
@@ -40,7 +40,7 @@ d4ab0ef9544345fcc85740f6ed6d8118728a5c59  include/platform/mir/graphics/native_p
 1fbe488b4581486fd01e2f03e504f31b72c09040  include/platform/mir/graphics/platform_ipc_operations.h
 9c7712af84b6fde1970ff802ad2ea78f892c7b7e  include/platform/mir/graphics/platform_ipc_package.h
 84c063346b3bd51b4624d9f940008d4c3f8be066  include/platform/mir/graphics/renderable.h
-b19329d35a55f640edd72c0a953908995211d97e  include/platform/mir/options/configuration.h
+e21ddf2958273a8719550ca97e18602c9b9daa10  include/platform/mir/options/configuration.h
 47007c783c174f8e94d332c4b13c6b01358b48fb  include/platform/mir/options/default_configuration.h
 b45f14082c4f8b29efaa1b13de795dcb29deb738  include/platform/mir/options/option.h
 3c37cc31e8b290b89c311d82f02e07d342766451  include/platform/mir/options/program_option.h

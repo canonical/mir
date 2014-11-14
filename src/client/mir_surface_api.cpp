@@ -84,9 +84,9 @@ MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface* surface)
     return reinterpret_cast<MirEGLNativeWindowType>(surface->generate_native_window());
 }
 
-MirBool mir_surface_is_valid(MirSurface* surface)
+bool mir_surface_is_valid(MirSurface* surface)
 {
-    return MirSurface::is_valid(surface) ? mir_true : mir_false;
+    return MirSurface::is_valid(surface);
 }
 
 char const* mir_surface_get_error_message(MirSurface* surface)
@@ -331,16 +331,4 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfig
     }
 
     return result;
-}
-
-/* Debug functions */
-
-uint32_t mir_debug_surface_current_buffer_id(MirSurface* surface)
-{
-    return surface->get_current_buffer_id();
-}
-
-int mir_debug_surface_id(MirSurface* surface)
-{
-    return surface->id();
 }

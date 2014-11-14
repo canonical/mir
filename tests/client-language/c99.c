@@ -1,5 +1,5 @@
 /*
- * Stub client to be compiled with -std=c89, just to check we have correct
+ * Stub client to be compiled with -std=c99, just to check we have correct
  * language compatibility in the client header(s).
  *
  * Copyright © 2013 Canonical Ltd.
@@ -22,6 +22,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_client_library_drm.h"
+#include "mir_toolkit/debug/surface.h"
 #include "mir_toolkit/event.h"
 
 int main()

@@ -25,6 +25,7 @@
 #include "mir/emergency_cleanup.h"
 #include "mir/default_configuration.h"
 
+#include "mir/logging/dumb_console_logger.h"
 #include "mir/options/program_option.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
@@ -45,6 +46,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace ml = mir::logging;
 namespace mo = mir::options;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -200,4 +202,14 @@ auto mir::DefaultServerConfiguration::the_fatal_error_strategy()
         return &fatal_error_abort;
     else
         return fatal_error;
+}
+
+auto mir::DefaultServerConfiguration::the_logger()
+    -> std::shared_ptr<ml::Logger>
+{
+    return logger(
+        [this]() -> std::shared_ptr<ml::Logger>
+        {
+            return std::make_shared<ml::DumbConsoleLogger>();
+        });
 }

@@ -11,7 +11,7 @@ dcf8b8982f138bdde39a241825c610e955cd5e33  include/common/mir/input/input_platfor
 be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
 9ae8473df05dd9e048a73797f01a2f34f7447554  include/common/mir/time/types.h
 9907751d046e4aea81881cf19e5df52c7a6a813e  include/common/mir_toolkit/client_types.h
-183d9e5e6cfe48b3d9145a28541dd4202ff6137b  include/common/mir_toolkit/common.h
+2100c0674d9d882c1845550847357f6a5de5af66  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 bdaceadd56e41d2cb708f7c4da97acf84dfc75b7  include/common/mir_toolkit/event.h
 4975998aa1056ed0d39dcc538127453e516ad8e9  include/common/mir_toolkit/mesa/native_display.h
@@ -40,7 +40,7 @@ d4ab0ef9544345fcc85740f6ed6d8118728a5c59  include/platform/mir/graphics/native_p
 1fbe488b4581486fd01e2f03e504f31b72c09040  include/platform/mir/graphics/platform_ipc_operations.h
 9c7712af84b6fde1970ff802ad2ea78f892c7b7e  include/platform/mir/graphics/platform_ipc_package.h
 84c063346b3bd51b4624d9f940008d4c3f8be066  include/platform/mir/graphics/renderable.h
-b19329d35a55f640edd72c0a953908995211d97e  include/platform/mir/options/configuration.h
+e21ddf2958273a8719550ca97e18602c9b9daa10  include/platform/mir/options/configuration.h
 47007c783c174f8e94d332c4b13c6b01358b48fb  include/platform/mir/options/default_configuration.h
 b45f14082c4f8b29efaa1b13de795dcb29deb738  include/platform/mir/options/option.h
 3c37cc31e8b290b89c311d82f02e07d342766451  include/platform/mir/options/program_option.h
@@ -75,7 +75,7 @@ b2ec497c6bec1b3a67c991f31cc7b7c51050ecbb  include/server/mir/input/input_recepti
 15119bf95b4512c8b91df7c20edf56a3c0734957  include/server/mir/input/surface.h
 036f3967757873751fcacaa768ca11a52001c225  include/server/mir/input/touch_visualizer.h
 964069b241f1e8211386bb8735ee0f752b666949  include/server/mir/main_loop.h
-edd5a0a6be0be57ef64c5af89fc5a65dc558648c  include/server/mir/report_exception.h
+dd95fb488fa59c3030dfa63e5f4a1e9077a30647  include/server/mir/report_exception.h
 d75dffd05bf9dd829a413cf82f43b467c6c7eea0  include/server/mir/run_mir.h
 c9de8b851fb22092a9a486d71cd998b4cb8392e1  include/server/mir/scene/coordinate_translator.h
 71d9082681aa39d652c88ad3b54665695b521d24  include/server/mir/scene/depth_id.h
@@ -99,7 +99,7 @@ dd8f054f786b9746d9e513f2656e931234b5283a  include/server/mir/scene/surface_creat
 993e9f458ffc4288d304413f3fa0b1dcc95a093d  include/server/mir/scene/surface_observer.h
 7ef3e99901168cda296d74d05a979f47bf9c3ff1  include/server/mir/server_action_queue.h
 8d83a51c278b8b71866d2178d9b6387c1f91a7d0  include/server/mir/server_configuration.h
-7459422129bb07c2cfd0afeca149582e508b4858  include/server/mir/server.h
+21b13d7b44094f4d5d3f131993bfc6770bc874eb  include/server/mir/server.h
 86098b500339bfccd07a9bed8298f75a68b18f5c  include/server/mir/server_status_listener.h
 860c04f32b60e680140148dc9dc2295de145b9c1  include/server/mir/shell/display_layout.h
 6a2107b01feae13060d5c305804906e53c52e0be  include/server/mir/shell/focus_controller.h

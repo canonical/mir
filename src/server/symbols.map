@@ -414,6 +414,7 @@ MIR_SERVER_27 {
     mir::Server::override_the_display_buffer_compositor_factory*;
     mir::Server::override_the_gl_config*;
     mir::Server::override_the_input_dispatcher*;
+    mir::Server::override_the_logger*;
     mir::Server::override_the_placement_strategy*;
     mir::Server::override_the_prompt_session_listener*;
     mir::Server::override_the_prompt_session_manager*;
