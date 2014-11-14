@@ -38,27 +38,63 @@
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 
-void mgm::NativePlatform::initialize(
-    std::shared_ptr<NestedContext> const& nested_context_arg)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+namespace mir { namespace graphics { namespace mesa {
+struct NestedIPC : public PlatformIpcOperations
 {
-    nested_context = nested_context_arg;
-    auto fds = nested_context->platform_fd_items();
-    drm_fd = fds.at(0);
-    gbm.setup(drm_fd);
-    nested_context->drm_set_gbm_device(gbm.device);
+    NestedIPC(
+        int drm_fd, std::shared_ptr<NestedContext> const& nested_context);
+    void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const;
+    void unpack_buffer(BufferIpcMessage& message, Buffer const& buffer) const;
+    std::shared_ptr<PlatformIPCPackage> connection_ipc_package();
+    PlatformIPCPackage platform_operation(unsigned int const opcode, PlatformIPCPackage const& package); 
+    int drm_fd;
+    std::shared_ptr<NestedContext> nested_context;
+};
+}}}
+
+mgm::NestedIPC::NestedIPC(
+        int drm_fd, std::shared_ptr<NestedContext> const& nested_context) :
+    drm_fd(drm_fd), nested_context(nested_context)
+{
 }
 
-mgm::NativePlatform::~NativePlatform()
+void mgm::NestedIPC::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 {
-    finish_internal_native_display();
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator()
+mg::PlatformIPCPackage mgm::NestedIPC::platform_operation(
+    unsigned int const, mg::PlatformIPCPackage const& request)
 {
-    return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited);
+    int magic{0};
+    if (request.ipc_data.size() > 0)
+        magic = request.ipc_data[0];
+
+    nested_context->drm_auth_magic(magic);
+    //drm->auth_magic(magic);
+
+    return mg::PlatformIPCPackage{{0},{}};
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::connection_ipc_package()
+std::shared_ptr<mg::PlatformIPCPackage> mgm::NestedIPC::connection_ipc_package()
 {
     struct MesaNativePlatformIPCPackage : public mg::PlatformIPCPackage
     {
@@ -85,38 +121,80 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::connection_ipc_pack
                 std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(-ret));
     }
 
+// goes over to get  connection, drm auth magic
     nested_context->drm_auth_magic(magic);
 
     return std::make_shared<MesaNativePlatformIPCPackage>(auth_fd);
 }
 
-std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
-{
-    auto nd = ensure_internal_native_display(connection_ipc_package());
-    return std::make_shared<mgm::InternalClient>(nd);
-}
-
-/* TODO : this is just a duplication of mgm::BufferPacker::pack_buffer */
-void mgm::NativePlatform::fill_buffer_package(
-    BufferIpcMessage* message, Buffer const* buffer, BufferIpcMsgType msg_type) const
+void mgm::NestedIPC::pack_buffer(
+    BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const
 {
     if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
-        auto native_handle = buffer->native_buffer_handle();
+        auto native_handle = buffer.native_buffer_handle();
         for(auto i=0; i<native_handle->data_items; i++)
         {
-            message->pack_data(native_handle->data[i]);
+            message.pack_data(native_handle->data[i]);
         }
         for(auto i=0; i<native_handle->fd_items; i++)
         {
-            message->pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
+            message.pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
         }
 
-        message->pack_stride(buffer->stride());
-        message->pack_flags(native_handle->flags);
-        message->pack_size(buffer->size());
+        message.pack_stride(buffer.stride());
+        message.pack_flags(native_handle->flags);
+        message.pack_size(buffer.size());
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void mgm::NativePlatform::initialize(
+    std::shared_ptr<NestedContext> const& nested_context_arg)
+{
+    nested_context = nested_context_arg;
+    auto fds = nested_context->platform_fd_items();
+    drm_fd = fds.at(0);
+    gbm.setup(drm_fd);
+    nested_context->drm_set_gbm_device(gbm.device);
+    ipc_ops = std::make_shared<mgm::NestedIPC>(drm_fd, nested_context);
+}
+
+mgm::NativePlatform::~NativePlatform()
+{
+    finish_internal_native_display();
+}
+
+std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator()
+{
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited);
+}
+
+
+std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
+{
+//    auto nd = ensure_internal_native_display(connection_ipc_package());
+//    return std::make_shared<mgm::InternalClient>(nd);
+    return nullptr;
+}
+
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
@@ -159,4 +237,9 @@ void mgm::NativePlatform::finish_internal_native_display()
 std::shared_ptr<mg::BufferWriter> mgm::NativePlatform::make_buffer_writer()
 {
     return std::make_shared<mgm::BufferWriter>();
+}
+
+std::shared_ptr<mg::PlatformIpcOperations> mgm::NativePlatform::make_ipc_operations() const
+{
+    return ipc_ops;
 }
