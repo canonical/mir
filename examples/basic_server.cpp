@@ -18,6 +18,7 @@
 
 #include "example_input_event_filter.h"
 #include "example_display_configuration_policy.h"
+#include "glog_logger.h"
 
 #include "mir/server.h"
 #include "mir/report_exception.h"
@@ -27,7 +28,20 @@
 #include <cstdlib>
 
 namespace me = mir::examples;
+namespace ml = mir::logging;
 namespace mg = mir::graphics;
+
+namespace
+{
+char const* const glog                 = "glog";
+char const* const glog_stderrthreshold = "glog-stderrthreshold";
+char const* const glog_minloglevel     = "glog-minloglevel";
+char const* const glog_log_dir         = "glog-log-dir";
+
+int const glog_stderrthreshold_default = 2;
+int const glog_minloglevel_default     = 0;
+char const* const glog_log_dir_default = "";
+}
 
 int main(int argc, char const* argv[])
 try
@@ -47,6 +61,45 @@ try
         me::display_config_opt, me::display_config_descr,   me::clone_opt_val);
     server.add_configuration_option(
         me::display_alpha_opt,  me::display_alpha_descr,    me::display_alpha_off);
+
+    server.add_configuration_option(glog, "Use google::GLog for logging", mir::OptionType::null);
+
+    server.add_configuration_option(
+        glog_stderrthreshold,
+        "Copy log messages at or above this level "
+        "to stderr in addition to logfiles. The numbers "
+        "of severity levels INFO, WARNING, ERROR, and "
+        "FATAL are 0, 1, 2, and 3, respectively.",
+        glog_stderrthreshold_default);
+
+    server.add_configuration_option(
+        glog_minloglevel,
+        "Log messages at or above this level. The numbers "
+        "of severity levels INFO, WARNING, ERROR, and "
+        "FATAL are 0, 1, 2, and 3, respectively.",
+        glog_minloglevel_default);
+
+    server.add_configuration_option(
+        glog_log_dir,
+        "logfiles are written into this directory.",
+        glog_log_dir_default);
+
+    server.override_the_logger(
+        [&]() -> std::shared_ptr<ml::Logger>
+        {
+            if (server.get_options()->is_set(glog))
+            {
+                return std::make_shared<me::GlogLogger>(
+                    "mir",
+                    server.get_options()->get<int>(glog_stderrthreshold),
+                    server.get_options()->get<int>(glog_minloglevel),
+                    server.get_options()->get<std::string>(glog_log_dir));
+            }
+            else
+            {
+                return std::shared_ptr<ml::Logger>{};
+            }
+        });
 
     server.wrap_display_configuration_policy(
         [&](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
