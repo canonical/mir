@@ -47,9 +47,14 @@ private:
  * GSourceHandle *
  *****************/
 
+md::GSourceHandle::GSourceHandle()
+    : GSourceHandle(nullptr, [](GSource*){})
+{
+}
+
 md::GSourceHandle::GSourceHandle(
     GSource* gsource,
-    std::function<void()> const& pre_destruction_hook)
+    std::function<void(GSource*)> const& pre_destruction_hook)
     : gsource{gsource},
       pre_destruction_hook{pre_destruction_hook}
 {
@@ -60,14 +65,21 @@ md::GSourceHandle::GSourceHandle(GSourceHandle&& other)
       pre_destruction_hook{std::move(other.pre_destruction_hook)}
 {
     other.gsource = nullptr;
-    other.pre_destruction_hook = []{};
+    other.pre_destruction_hook = [](GSource*){};
+}
+
+md::GSourceHandle& md::GSourceHandle::operator=(GSourceHandle other)
+{
+    std::swap(other.gsource, gsource);
+    std::swap(other.pre_destruction_hook, pre_destruction_hook);
+    return *this;
 }
 
 md::GSourceHandle::~GSourceHandle()
 {
     if (gsource)
     {
-        pre_destruction_hook();
+        pre_destruction_hook(gsource);
         g_source_destroy(gsource);
         g_source_unref(gsource);
     }
@@ -78,9 +90,9 @@ md::GSourceHandle::operator GSource*() const
     return gsource;
 }
 
-/******************
- * make_*_gsource *
- ******************/
+/*****************
+ * add_*_gsource *
+ *****************/
 
 void md::add_idle_gsource(
     GMainContext* main_context, int priority, std::function<void()> const& callback)
@@ -133,6 +145,172 @@ void md::add_signal_gsource(
         reinterpret_cast<GDestroyNotify>(&SignalContext::static_destroy));
 
     g_source_attach(gsource, main_context);
+}
+
+void md::add_server_action_gsource(
+    GMainContext* main_context,
+    void const* owner,
+    std::function<void()> const& action,
+    std::function<bool(void const*)> const& should_dispatch)
+{
+    struct ServerActionContext
+    {
+        void const* const owner;
+        std::function<void(void)> const action;
+        std::function<bool(void const*)> const should_dispatch;
+    };
+
+    struct ServerActionGSource
+    {
+        GSource gsource;
+        ServerActionContext ctx;
+        bool ctx_constructed;
+
+        static gboolean prepare(GSource* source, gint *timeout)
+        {
+            *timeout = -1;
+            auto const& ctx = reinterpret_cast<ServerActionGSource*>(source)->ctx;
+            return ctx.should_dispatch(ctx.owner);
+        }
+
+        static gboolean check(GSource* source)
+        {
+            auto const& ctx = reinterpret_cast<ServerActionGSource*>(source)->ctx;
+            return ctx.should_dispatch(ctx.owner);
+        }
+
+        static gboolean dispatch(GSource* source, GSourceFunc, gpointer)
+        {
+            auto const& ctx = reinterpret_cast<ServerActionGSource*>(source)->ctx;
+            ctx.action();
+            return FALSE;
+        }
+
+        static void finalize(GSource* source)
+        {
+            auto const sa_gsource = reinterpret_cast<ServerActionGSource*>(source);
+            if (sa_gsource->ctx_constructed)
+                sa_gsource->ctx.~ServerActionContext();
+        }
+    };
+
+    static GSourceFuncs gsource_funcs{
+        ServerActionGSource::prepare,
+        ServerActionGSource::check,
+        ServerActionGSource::dispatch,
+        ServerActionGSource::finalize,
+        nullptr,
+        nullptr
+    };
+
+    GSourceRef gsource{g_source_new(&gsource_funcs, sizeof(ServerActionGSource))};
+    auto const sa_gsource = reinterpret_cast<ServerActionGSource*>(static_cast<GSource*>(gsource));
+
+    sa_gsource->ctx_constructed = false;
+    new (&sa_gsource->ctx) decltype(sa_gsource->ctx){owner, action, should_dispatch};
+    sa_gsource->ctx_constructed = true;
+
+    g_source_attach(gsource, main_context);
+}
+
+md::GSourceHandle md::add_timer_gsource(
+    GMainContext* main_context,
+    std::shared_ptr<time::Clock> const& clock,
+    std::function<void()> const& handler,
+    time::Timestamp target_time)
+{
+    struct TimerContext
+    {
+        TimerContext(std::shared_ptr<time::Clock> const& clock,
+                     std::function<void()> const& handler,
+                     time::Timestamp target_time)
+            : clock{clock}, handler{handler}, target_time{target_time}, enabled{true}
+        {
+        }
+        std::shared_ptr<time::Clock> clock;
+        std::function<void()> handler;
+        time::Timestamp target_time;
+        bool enabled;
+        mir::RecursiveReadWriteMutex mutex;
+    };
+
+    struct TimerGSource
+    {
+        GSource gsource;
+        TimerContext ctx;
+        bool ctx_constructed;
+
+        static gboolean prepare(GSource* source, gint *timeout)
+        {
+            auto const& ctx = reinterpret_cast<TimerGSource*>(source)->ctx;
+
+            auto const now = ctx.clock->now();
+            bool const ready = (now >= ctx.target_time);
+            if (ready)
+                *timeout = -1;
+            else
+                *timeout = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    ctx.clock->min_wait_until(ctx.target_time)).count();
+
+            return ready;
+        }
+
+        static gboolean check(GSource* source)
+        {
+            auto const& ctx = reinterpret_cast<TimerGSource*>(source)->ctx;
+
+            auto const now = ctx.clock->now();
+            bool const ready = (now >= ctx.target_time);
+            return ready;
+        }
+
+        static gboolean dispatch(GSource* source, GSourceFunc, gpointer)
+        {
+            auto& ctx = reinterpret_cast<TimerGSource*>(source)->ctx;
+
+            RecursiveReadLock lock{ctx.mutex};
+            if (ctx.enabled)
+                ctx.handler();
+
+            return FALSE;
+        }
+
+        static void finalize(GSource* source)
+        {
+            auto const timer_gsource = reinterpret_cast<TimerGSource*>(source);
+            if (timer_gsource->ctx_constructed)
+                timer_gsource->ctx.~TimerContext();
+        }
+
+        static void disable(GSource* source)
+        {
+            auto& ctx = reinterpret_cast<TimerGSource*>(source)->ctx;
+            RecursiveWriteLock lock{ctx.mutex};
+            ctx.enabled = false;
+        }
+    };
+
+    static GSourceFuncs gsource_funcs{
+        TimerGSource::prepare,
+        TimerGSource::check,
+        TimerGSource::dispatch,
+        TimerGSource::finalize,
+        nullptr,
+        nullptr
+    };
+
+    GSourceHandle gsource{
+        g_source_new(&gsource_funcs, sizeof(TimerGSource)),
+        [](GSource* gsource) { TimerGSource::disable(gsource); }};
+    auto const timer_gsource = reinterpret_cast<TimerGSource*>(static_cast<GSource*>(gsource));
+
+    timer_gsource->ctx_constructed = false;
+    new (&timer_gsource->ctx) TimerContext{clock, handler, target_time};
+    timer_gsource->ctx_constructed = true;
+
+    g_source_attach(gsource, main_context);
+
+    return gsource;
 }
 
 /*************
@@ -198,7 +376,7 @@ void md::FdSources::add(
     // destruction.
     GSourceHandle gsource{
         g_unix_fd_source_new(fd, G_IO_IN),
-        [=] { fd_context->disable_callback(); }};
+        [=] (GSource*) { fd_context->disable_callback(); }};
 
     g_source_set_callback(
         gsource,

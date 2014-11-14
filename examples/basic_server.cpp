@@ -20,6 +20,7 @@
 #include "example_display_configuration_policy.h"
 
 #include "mir/server.h"
+#include "mir/report_exception.h"
 #include "mir/options/option.h"
 #include "mir/input/composite_event_filter.h"
 
@@ -29,6 +30,7 @@ namespace me = mir::examples;
 namespace mg = mir::graphics;
 
 int main(int argc, char const* argv[])
+try
 {
     static char const* const launch_child_opt = "launch-client";
     static char const* const launch_client_descr = "system() command to launch client";
@@ -85,4 +87,9 @@ int main(int argc, char const* argv[])
     server.apply_settings();
     server.run();
     return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+catch (...)
+{
+    mir::report_exception();
+    return EXIT_FAILURE;
 }

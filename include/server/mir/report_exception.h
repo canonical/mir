@@ -29,6 +29,12 @@ namespace mir
  *  to write error information to an output stream.
  */
 void report_exception(std::ostream& out);
+
+/**
+ *  Call this from a catch block (and only from a catch block)
+ *  to write error information to std:cerr.
+ */
+void report_exception();
 }
 
 
