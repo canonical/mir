@@ -648,7 +648,9 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     // Normal surfaces have no required parameters
-    auto surface_spec = mir_new_surface_spec_for_normal(connection, 800, 600);
+    auto surface_spec = mir_new_surface_spec_for_normal(connection,
+                                                        800, 600,
+                                                        mir_pixel_format_argb_8888);
 
     auto surface = mir_surface_realise_sync(surface_spec);
 
@@ -661,7 +663,9 @@ TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    auto surface_spec = mir_new_surface_spec_for_normal(connection, 800, 600);
+    auto surface_spec = mir_new_surface_spec_for_normal(connection,
+                                                        800, 600,
+                                                        mir_pixel_format_bgr_888);
 
     char const* name = "The magnificent Dandy Warhols";
     EXPECT_TRUE(mir_surface_spec_set_name(surface_spec, name));
@@ -695,7 +699,9 @@ TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
 
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    auto surface_spec = mir_new_surface_spec_for_normal(connection, 780, 555);
+    auto surface_spec = mir_new_surface_spec_for_normal(connection,
+                                                        780, 555,
+                                                        mir_pixel_format_xbgr_8888);
 
     // We need to specify a valid output id, so we need to find which ones are valid...
     auto configuration = mir_connection_create_display_config(connection);
