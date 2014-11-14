@@ -316,15 +316,13 @@ void mgm::DisplayBuffer::post_update(
         {
             /*
              * glFinish: Work around intel driver insanity (LP: #1377872)
-             * The problem is intel tries to be too clever, and even after
-             * SwapBuffers has returned (see above), it still hasn't even
-             * started rendering in some cases!
-             * In fact, intel defers rendering for so long that it wastes
-             * the perfectly good idle time available during
-             * wait_for_page_flip(), eliminating any chance of parallelism.
-             * This call should be ineffectual to any normal driver, but to
-             * intel it ensures our rendering actually finishes
-             * before the next vsync and not the one after.
+             * The intel driver has issues. If we don't glFinish() then it
+             * will often defer rendering (or just lose track of it?) for
+             * two frames before wait_for_page_flip() completes. So our
+             * frame rate gets halved :(
+             * Forcing a glFinish here works around those bugs and rendering
+             * correctly finishes in a matter of microseconds instead of
+             * taking >1 frame.
              */
             glFinish();
 
