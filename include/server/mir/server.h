@@ -28,6 +28,7 @@ namespace compositor { class Compositor; class DisplayBufferCompositorFactory; }
 namespace frontend { class SessionAuthorizer; class Session; }
 namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; }
+namespace logging { class Logger; }
 namespace options { class Option; }
 namespace shell { class FocusController; class FocusSetter; class DisplayLayout; }
 namespace scene
@@ -100,6 +101,14 @@ public:
         std::string const& option,
         std::string const& description,
         std::string const& default_value);
+
+    /// Add user configuration option(s) to Mir's option handling.
+    /// These will be resolved during initialisation from the command line,
+    /// environment variables, a config file or the supplied default.
+    void add_configuration_option(
+        std::string const& option,
+        std::string const& description,
+        char const* default_value);
 
     /// Add user configuration option(s) to Mir's option handling.
     /// These will be resolved during initialisation from the command line,
@@ -182,6 +191,7 @@ public:
  * They should be called before apply_settings() otherwise they throw a std::logic_error.
  *  @{ */
     /// Each of the override functions takes a builder functor of the same form
+    /// \note If a null pointer is returned by the builder the default is used instead.
     template<typename T> using Builder = std::function<std::shared_ptr<T>()>;
 
     /// Sets an override functor for creating the compositor.
@@ -196,6 +206,9 @@ public:
 
     /// Sets an override functor for creating the input dispatcher.
     void override_the_input_dispatcher(Builder<input::InputDispatcher> const& input_dispatcher_builder);
+
+    /// Sets an override functor for creating the logger.
+    void override_the_logger(Builder<logging::Logger> const& logger_builder);
 
     /// Sets an override functor for creating the placement strategy.
     void override_the_placement_strategy(Builder<scene::PlacementStrategy> const& placement_strategy_builder);

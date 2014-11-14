@@ -21,6 +21,7 @@
 
 #include <boost/exception/diagnostic_information.hpp>
 
+#include <iostream>
 
 void mir::report_exception(std::ostream& out)
 {
@@ -42,3 +43,7 @@ void mir::report_exception(std::ostream& out)
     }
 }
 
+void mir::report_exception()
+{
+    report_exception(std::cerr);
+}
