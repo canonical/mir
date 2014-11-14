@@ -21,9 +21,6 @@
 
 #include <memory>
 #include <mutex>
-#include <iostream>
-#include <ctime>
-#include <cstdio>
 
 namespace ml = mir::logging;
 
@@ -58,7 +55,9 @@ void ml::log(Logger::Severity severity, const std::string& message)
 
 void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
 {
-    std::lock_guard<decltype(log_mutex)> lock{log_mutex};
     if (!new_logger)
+    {
+        std::lock_guard<decltype(log_mutex)> lock{log_mutex};
         the_logger = new_logger;
+    }
 }
