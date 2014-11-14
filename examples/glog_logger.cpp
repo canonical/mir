@@ -66,7 +66,7 @@ mir::examples::GlogLogger::GlogLogger(
     static google_glog_guard_t guard(argv0);
 }
 
-void mir::examples::GlogLogger::log(Severity severity, const std::string& message, const std::string& component)
+void mir::examples::GlogLogger::log(Severity severity, std::string const& message, std::string const& component)
 {
     static int glog_level[] =
     {
