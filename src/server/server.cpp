@@ -23,6 +23,7 @@
 #include "mir/frontend/connector.h"
 #include "mir/options/default_configuration.h"
 #include "mir/default_server_configuration.h"
+#include "mir/report/logger.h"
 #include "mir/main_loop.h"
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
@@ -346,6 +347,8 @@ void mir::Server::apply_settings()
     auto const config = std::make_shared<ServerConfiguration>(options, self);
     self->server_config = config;
     self->options = config->the_options();
+
+    logging::set_logger(config->the_logger());
 }
 
 void mir::Server::run()
