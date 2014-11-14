@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_PLATFORM_IPC_OPERATIONS_H_
 #define MIR_GRAPHICS_PLATFORM_IPC_OPERATIONS_H_
 
+#include "platform_ipc_package.h"
 #include <memory>
 
 namespace mir
@@ -32,7 +33,6 @@ enum class BufferIpcMsgType
 };
 class Buffer;
 class BufferIpcMessage;
-struct PlatformIPCPackage;
 
 class PlatformIpcOperations
 {
@@ -67,6 +67,15 @@ public:
      * The IPC package will be sent to clients when they connect.
      */
     virtual std::shared_ptr<PlatformIPCPackage> connection_ipc_package() = 0;
+
+    
+    /**
+     * Arranges a platform specific operation triggered by an IPC call
+     * \returns              the response that will be sent to the client
+     * \param [in]  opcode   the opcode that indicates the action to be performed 
+     * \param [in]  request  the message that was sent to the server
+     */
+    virtual PlatformIPCPackage platform_operation(unsigned int const opcode, PlatformIPCPackage const& package) = 0; 
 
 protected:
     PlatformIpcOperations() = default;
