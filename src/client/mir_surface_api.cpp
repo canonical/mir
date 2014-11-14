@@ -39,10 +39,13 @@ void assign_result(void* result, void** context)
 
 }
 
-MirSurfaceSpec* mir_new_surface_spec_for_normal(MirConnection* connection)
+MirSurfaceSpec* mir_new_surface_spec_for_normal(MirConnection* connection,
+                                                int width, int height)
 {
     auto spec = new MirSurfaceSpec;
     spec->connection = connection;
+    spec->width = width;
+    spec->height = height;
     return spec;
 }
 
