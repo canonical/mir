@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-MirSurfaceSpec* mir_new_surface_spec_for_normal(MirConnection* connection, int width, int height, MirPixelFormat format);
+MirSurfaceSpec* mir_new_spec_for_normal_surface(MirConnection* connection, int width, int height, MirPixelFormat format);
 
 MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification);
 

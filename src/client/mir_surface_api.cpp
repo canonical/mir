@@ -39,7 +39,7 @@ void assign_result(void* result, void** context)
 
 }
 
-MirSurfaceSpec* mir_new_surface_spec_for_normal(MirConnection* connection,
+MirSurfaceSpec* mir_new_spec_for_normal_surface(MirConnection* connection,
                                                 int width, int height,
                                                 MirPixelFormat format)
 {
