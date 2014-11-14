@@ -647,14 +647,23 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    // Normal surfaces have no required parameters
+    int const width{800}, height{600};
+    MirPixelFormat const format{mir_pixel_format_bgr_888};
     auto surface_spec = mir_new_surface_spec_for_normal(connection,
-                                                        800, 600,
-                                                        mir_pixel_format_argb_8888);
+                                                        width, height,
+                                                        format);
 
     auto surface = mir_surface_realise_sync(surface_spec);
 
     EXPECT_THAT(surface, IsValid());
+    auto resultant_spec = mir_surface_get_spec(surface);
+
+    EXPECT_THAT(mir_surface_spec_get_width(resultant_spec), Eq(width));
+    EXPECT_THAT(mir_surface_spec_get_height(resultant_spec), Eq(height));
+    EXPECT_THAT(mir_surface_spec_get_pixel_format(resultant_spec), Eq(format));
+
+    mir_surface_release_sync(surface);
+    mir_surface_spec_release(resultant_spec);
 }
 
 TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
