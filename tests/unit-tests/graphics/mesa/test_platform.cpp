@@ -200,13 +200,10 @@ TEST_F(MesaGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
         .WillOnce(Return(0));
 
     mg::PlatformIPCPackage magic_pkg{{magic}, {}};
-    mg::PlatformIPCPackage response_pkg;
-
-
     int drm_opcode{44};
     auto platform = create_platform();
     auto ipc_ops = platform->make_ipc_operations();
-    ipc_ops->platform_operation(response_pkg, drm_opcode, magic_pkg);
+    auto response_pkg = ipc_ops->platform_operation(drm_opcode, magic_pkg);
     ASSERT_THAT(response_pkg.ipc_data.size(), Eq(1));
     EXPECT_THAT(response_pkg.ipc_data[0], Eq(0));
 }
@@ -224,10 +221,9 @@ TEST_F(MesaGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
     auto platform = create_platform();
     auto ipc_ops = platform->make_ipc_operations();
     mg::PlatformIPCPackage magic_pkg{{magic}, {}};
-    mg::PlatformIPCPackage response_pkg;
 
     EXPECT_THROW({
-        ipc_ops->platform_operation(response_pkg, drm_opcode, magic_pkg);
+        ipc_ops->platform_operation(drm_opcode, magic_pkg);
     }, std::runtime_error);
 }
 

@@ -592,10 +592,9 @@ void mf::SessionMediator::drm_auth_magic(
     //TODO: the opcode should be provided as part of the request, and should be opaque to the server code.
     unsigned int const made_up_opcode{0};
     mg::PlatformIPCPackage platform_request{{static_cast<int32_t>(request->magic())},{}};
-    mg::PlatformIPCPackage platform_response{{},{}};
     try
     {
-        ipc_operations->platform_operation(platform_response, made_up_opcode, platform_request);
+        auto platform_response = ipc_operations->platform_operation(made_up_opcode, platform_request);
         if (platform_response.ipc_data.size() > 0)
             response->set_status_code(platform_response.ipc_data[0]);
     }

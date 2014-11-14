@@ -119,8 +119,9 @@ public:
         return native_platform->connection_ipc_package();
     }
 
-    void platform_operation(mg::PlatformIPCPackage&, unsigned int const, mg::PlatformIPCPackage const&) override
+    mg::PlatformIPCPackage platform_operation(unsigned int const, mg::PlatformIPCPackage const&) override
     {
+        return mg::PlatformIPCPackage();
     }
 
 private:
