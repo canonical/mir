@@ -24,6 +24,7 @@ namespace mir
 {
 namespace graphics
 {
+class NestedContext;
 namespace mesa
 {
 namespace helpers
@@ -43,6 +44,19 @@ public:
 private:
     std::shared_ptr<helpers::DRMHelper> const drm;
 };
+
+struct NestedIPC : public PlatformIpcOperations
+{
+    NestedIPC(
+        int drm_fd, std::shared_ptr<NestedContext> const& nested_context);
+    void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const;
+    void unpack_buffer(BufferIpcMessage& message, Buffer const& buffer) const;
+    std::shared_ptr<PlatformIPCPackage> connection_ipc_package();
+    PlatformIPCPackage platform_operation(unsigned int const opcode, PlatformIPCPackage const& package); 
+    int drm_fd;
+    std::shared_ptr<NestedContext> nested_context;
+};
+
 }
 }
 }
