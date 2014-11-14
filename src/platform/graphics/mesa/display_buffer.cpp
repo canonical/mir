@@ -253,7 +253,7 @@ void mgm::DisplayBuffer::post_update(
     else
     {
         if (!egl.swap_buffers())
-            fatal_error("Failed to perform initial surface buffer swap");
+            fatal_error("Failed to perform buffer swap");
         bufobj = get_front_buffer_object();
     }
 
