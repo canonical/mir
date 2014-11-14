@@ -307,8 +307,44 @@ void mgm::DisplayBuffer::post_update(
     }
     else
     {
+        /*
+         * Not in clone mode? We can afford to wait for the page flip then,
+         * making us double-buffered (noticeably less laggy than the triple
+         * buffering that clone mode requires).
+         */
         if (outputs.size() == 1)
+        {
+            /*
+             * glFinish: Work around intel driver insanity (LP: #1377872)
+             * The problem is intel tries to be too clever, and even after
+             * SwapBuffers has returned (see above), it still hasn't even
+             * started rendering in some cases!
+             * In fact, intel defers rendering for so long that it wastes
+             * the perfectly good idle time available during
+             * wait_for_page_flip(), eliminating any chance of parallelism.
+             * This call should be ineffectual to any normal driver, but to
+             * intel it ensures our rendering actually finishes
+             * before the next vsync and not the one after.
+             */
+            glFinish();
+
             wait_for_page_flip();
+
+            /*
+             * bufobj is now physically on screen. Release the old frame...
+             */
+            if (last_flipped_bufobj)
+            {
+                last_flipped_bufobj->release();
+                last_flipped_bufobj = nullptr;
+            }
+
+            /*
+             * last_flipped_bufobj will be set correctly on the next iteration
+             * Don't do it here or else bufobj would be released while still
+             * on screen (hence tearing and artefacts).
+             */
+        }
 
         scheduled_bufobj = bufobj;
     }
