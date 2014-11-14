@@ -48,20 +48,18 @@ struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
 }
 
 mgm::IpcOperations::IpcOperations(std::shared_ptr<helpers::DRMHelper> const& drm) :
-    drm{drm}
+    drm{drm},
+    nested_context{nullptr},
+    master{true}
 {
 }
 
-mgm::NestedIPC::NestedIPC(
+mgm::IpcOperations::IpcOperations(
     std::shared_ptr<helpers::DRMHelper> const& drm,
         std::shared_ptr<NestedContext> const& nested_context) :
-    drm(drm), nested_context(nested_context)
+    drm(drm), nested_context(nested_context),master(false)
 {
 }
-
-
-
-
 
 void mgm::IpcOperations::pack_buffer(
     mg::BufferIpcMessage& packer, Buffer const& buffer, BufferIpcMsgType msg_type) const
@@ -83,38 +81,18 @@ void mgm::IpcOperations::pack_buffer(
         packer.pack_size(buffer.size());
     }
 }
-void mgm::NestedIPC::pack_buffer(
-    BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const
-{
-    if (msg_type == mg::BufferIpcMsgType::full_msg)
-    {
-        auto native_handle = buffer.native_buffer_handle();
-        for(auto i=0; i<native_handle->data_items; i++)
-        {
-            message.pack_data(native_handle->data[i]);
-        }
-        for(auto i=0; i<native_handle->fd_items; i++)
-        {
-            message.pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
-        }
 
-        message.pack_stride(buffer.stride());
-        message.pack_flags(native_handle->flags);
-        message.pack_size(buffer.size());
-    }
+void mgm::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
+{
 }
 
-
-
-
-
-
-
-
-
-
-
-
+void mgm::IpcOperations::authenticate(int magic)
+{
+    if (master)
+        drm->auth_magic(magic);
+    else
+        nested_context->drm_auth_magic(magic);
+}
 
 mg::PlatformIPCPackage mgm::IpcOperations::platform_operation(
     unsigned int const, mg::PlatformIPCPackage const& request)
@@ -123,100 +101,47 @@ mg::PlatformIPCPackage mgm::IpcOperations::platform_operation(
     if (request.ipc_data.size() > 0)
         magic = request.ipc_data[0];
 
-    drm->auth_magic(magic);
+    authenticate(magic);
 
     return mg::PlatformIPCPackage{{0},{}};
 }
-
-mg::PlatformIPCPackage mgm::NestedIPC::platform_operation(
-    unsigned int const, mg::PlatformIPCPackage const& request)
-{
-    int magic{0};
-    if (request.ipc_data.size() > 0)
-        magic = request.ipc_data[0];
-
-    nested_context->drm_auth_magic(magic);
-
-    return mg::PlatformIPCPackage{{0},{}};
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void mgm::NestedIPC::unpack_buffer(BufferIpcMessage&, Buffer const&) const
-{
-}
-void mgm::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
-{
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()
 {
-    return std::make_shared<MesaPlatformIPCPackage>(drm->get_authenticated_fd());
-}
-
-std::shared_ptr<mg::PlatformIPCPackage> mgm::NestedIPC::connection_ipc_package()
-{
-    struct MesaNativePlatformIPCPackage : public mg::PlatformIPCPackage
+    if (master)
     {
-        MesaNativePlatformIPCPackage(int fd)
-        {
-            ipc_fds.push_back(fd);
-        }
-    };
-    char* busid = drmGetBusid(drm->fd);
-    if (!busid)
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to get BusID of DRM device")) << boost::errinfo_errno(errno));
-    int auth_fd = drmOpen(NULL, busid);
-    free(busid);
-
-    drm_magic_t magic;
-    int ret = -1;
-    if ((ret = drmGetMagic(auth_fd, &magic)) < 0)
-    {
-        close(auth_fd);
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(-ret));
+        return std::make_shared<MesaPlatformIPCPackage>(drm->get_authenticated_fd());
     }
+    else
+    {
+        struct MesaNativePlatformIPCPackage : public mg::PlatformIPCPackage
+        {
+            MesaNativePlatformIPCPackage(int fd)
+            {
+                ipc_fds.push_back(fd);
+            }
+        };
+        char* busid = drmGetBusid(drm->fd);
+        if (!busid)
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error("Failed to get BusID of DRM device")) << boost::errinfo_errno(errno));
+        int auth_fd = drmOpen(NULL, busid);
+        free(busid);
 
-// goes over to get  connection, drm auth magic
-    nested_context->drm_auth_magic(magic);
+        drm_magic_t magic;
+        int ret = -1;
+        if ((ret = drmGetMagic(auth_fd, &magic)) < 0)
+        {
+            close(auth_fd);
+            BOOST_THROW_EXCEPTION(
+                boost::enable_error_info(
+                    std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(-ret));
+        }
 
-    return std::make_shared<MesaNativePlatformIPCPackage>(auth_fd);
+        // goes over to get  connection, drm auth magic
+        nested_context->drm_auth_magic(magic);
+
+        return std::make_shared<MesaNativePlatformIPCPackage>(auth_fd);
+    }
 }
