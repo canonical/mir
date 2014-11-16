@@ -23,6 +23,8 @@
 #include <mir_toolkit/common.h>
 #include <mir_toolkit/mir_cursor_configuration.h>
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 /**
  * \addtogroup mir_toolkit
@@ -89,7 +91,7 @@ MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface *surface);
  *   \return              True if the supplied surface is valid, or
  *                        false otherwise.
  */
-MirBool mir_surface_is_valid(MirSurface *surface);
+bool mir_surface_is_valid(MirSurface *surface);
 
 /**
  * Retrieve a text description of the error. The returned string is owned by
