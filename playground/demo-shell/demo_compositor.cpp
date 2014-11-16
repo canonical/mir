@@ -122,6 +122,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
      */
 
     if (!nonrenderlist_elements &&
+        viewport == display_buffer.view_area() &&  // no bypass while zoomed
         display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();
