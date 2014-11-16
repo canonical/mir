@@ -37,6 +37,7 @@ namespace me = mir::examples;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace mi = mir::input;
 
 namespace
 {
@@ -61,6 +62,18 @@ void me::WindowManager::set_display(std::shared_ptr<mg::Display> const& dpy)
 void me::WindowManager::set_compositor(std::shared_ptr<mc::Compositor> const& cptor)
 {
     compositor = cptor;
+}
+
+void me::WindowManager::set_input_scene(std::shared_ptr<mi::Scene> const& s)
+{
+    input_scene = s;
+}
+
+void me::WindowManager::force_redraw()
+{
+    // This is clumsy, but the only option our architecture allows us for now
+    // Same hack as used in TouchspotController...
+    input_scene->emit_scene_changed();
 }
 
 namespace
@@ -272,7 +285,7 @@ bool me::WindowManager::handle(MirEvent const& event)
         // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
         MirMotionAction action = static_cast<MirMotionAction>(event.motion.action & ~0xff00);
 
-        float zoom_mag = 0.0f;
+        float new_zoom_mag = 0.0f;  // zero means unchanged
 
         if (event.motion.modifiers & mir_key_modifier_meta &&
             action == mir_motion_action_scroll)
@@ -284,17 +297,20 @@ bool me::WindowManager::handle(MirEvent const& event)
             if (zoom_exponent < 0)
                 zoom_exponent = 0;
     
-            zoom_mag = powf(1.2f, zoom_exponent);
+            new_zoom_mag = powf(1.2f, zoom_exponent);
             handled = true;
         }
 
         me::DemoCompositor::for_each(
-            [zoom_mag,&cursor](me::DemoCompositor& c)
+            [new_zoom_mag,&cursor](me::DemoCompositor& c)
             {
-                if (zoom_mag > 0.0f)
-                    c.zoom(zoom_mag);
+                if (new_zoom_mag > 0.0f)
+                    c.zoom(new_zoom_mag);
                 c.on_cursor_movement(cursor);
             });
+
+        if (zoom_exponent)
+            force_redraw();
 
         auto const app = focus_controller->focussed_application().lock();
 

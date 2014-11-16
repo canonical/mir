@@ -20,6 +20,7 @@
 #define MIR_EXAMPLES_WINDOW_MANAGER_H_
 
 #include "mir/input/event_filter.h"
+#include "mir/input/scene.h"
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/size.h"
 
@@ -51,6 +52,8 @@ public:
     void set_focus_controller(std::shared_ptr<shell::FocusController> const& focus_controller);
     void set_display(std::shared_ptr<graphics::Display> const& display);
     void set_compositor(std::shared_ptr<compositor::Compositor> const& compositor);
+    void set_input_scene(std::shared_ptr<input::Scene> const& scene);
+    void force_redraw();
     
     bool handle(MirEvent const& event) override;
 
@@ -62,6 +65,7 @@ private:
     std::shared_ptr<shell::FocusController> focus_controller;
     std::shared_ptr<graphics::Display> display;
     std::shared_ptr<compositor::Compositor> compositor;
+    std::shared_ptr<input::Scene> input_scene;
 
     geometry::Point click;
     geometry::Point old_pos;
