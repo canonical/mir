@@ -18,6 +18,7 @@
  */
 
 #include "window_manager.h"
+#include "demo_compositor.h"
 
 #include "mir/shell/focus_controller.h"
 #include "mir/scene/session.h"
@@ -25,7 +26,6 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/compositor/compositor.h"
-#include "mir/compositor/zoomable.h"
 
 #include <linux/input.h>
 
@@ -44,9 +44,7 @@ const int min_swipe_distance = 100;  // How long must a swipe be to act on?
 }
 
 me::WindowManager::WindowManager()
-    : old_pinch_diam(0.0f)
-    , max_fingers(0)
-    , zoom_exponent(0)
+    : old_pinch_diam(0.0f), max_fingers(0)
 {
 }
 
@@ -274,22 +272,29 @@ bool me::WindowManager::handle(MirEvent const& event)
         // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
         MirMotionAction action = static_cast<MirMotionAction>(event.motion.action & ~0xff00);
 
+        float zoom_mag = 0.0f;
+
         if (event.motion.modifiers & mir_key_modifier_meta &&
             action == mir_motion_action_scroll)
         {
-            if (auto zoomable =
-                  std::dynamic_pointer_cast<compositor::Zoomable>(compositor))
-            {
-                zoom_exponent += event.motion.pointer_coordinates[0].vscroll;
-                // Negative exponents do work too, but disable them until
-                // there's a clear edge to the desktop.
-                if (zoom_exponent < 0)
-                    zoom_exponent = 0;
+            zoom_exponent += event.motion.pointer_coordinates[0].vscroll;
+
+            // Negative exponents do work too, but disable them until
+            // there's a clear edge to the desktop.
+            if (zoom_exponent < 0)
+                zoom_exponent = 0;
     
-                zoomable->zoom(powf(1.2f, zoom_exponent));
-                handled = true;
-            }
+            zoom_mag = powf(1.2f, zoom_exponent);
+            handled = true;
         }
+
+        me::DemoCompositor::for_each(
+            [zoom_mag,&cursor](me::DemoCompositor& c)
+            {
+                if (zoom_mag > 0.0f)
+                    c.zoom(zoom_mag);
+                c.on_cursor_movement(cursor);
+            });
 
         auto const app = focus_controller->focussed_application().lock();
 

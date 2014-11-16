@@ -21,10 +21,12 @@
 
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/scene.h"
-#include "mir/compositor/zoomable.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/renderable.h"
 #include "demo_renderer.h"
+
+#include <mutex>
+#include <set>
 
 namespace mir
 {
@@ -40,8 +42,7 @@ class DisplayBuffer;
 namespace examples
 {
 
-class DemoCompositor : public compositor::DisplayBufferCompositor,
-                       public compositor::Zoomable
+class DemoCompositor : public compositor::DisplayBufferCompositor
 {
 public:
     DemoCompositor(
@@ -51,20 +52,24 @@ public:
     ~DemoCompositor();
 
     void composite(compositor::SceneElementSequence&& elements) override;
-    std::weak_ptr<graphics::Cursor> cursor() const override;
-    void zoom(float mag) override;
+
+    void zoom(float mag);
     void on_cursor_movement(geometry::Point const& p);
+
+    static void for_each(std::function<void(DemoCompositor&)> f);
 
 private:
     void update_viewport();
 
     graphics::DisplayBuffer& display_buffer;
     std::shared_ptr<compositor::CompositorReport> const report;
-    std::shared_ptr<graphics::Cursor> const soft_cursor;
     geometry::Rectangle viewport;
     geometry::Point cursor_pos;
     float zoom_mag;
     DemoRenderer renderer;
+
+    static std::mutex instances_mutex;
+    static std::unordered_set<DemoCompositor*> instances;
 };
 
 } // namespace examples

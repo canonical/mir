@@ -20,14 +20,12 @@
 #include "mir/compositor/compositor_report.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/compositor/destination_alpha.h"
-#include "mir/graphics/cursor.h"
 #include "demo_compositor.h"
 
 namespace me = mir::examples;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
-using namespace mir;
 
 namespace
 {
@@ -35,33 +33,10 @@ mc::DestinationAlpha destination_alpha(mg::DisplayBuffer const& db)
 {
     return db.uses_alpha() ? mc::DestinationAlpha::generate_from_source : mc::DestinationAlpha::opaque;
 }
-
-class SoftCursor : public mg::Cursor
-{
-public:
-    SoftCursor(me::DemoCompositor& compositor)
-        : compositor(compositor)
-    {
-    }
-
-    void show(mg::CursorImage const&) override
-    {
-        // TODO: Implement software cursor image setting later
-    }
-
-    void hide() override
-    {
-    }
-
-    void move_to(geometry::Point position) override
-    {
-        compositor.on_cursor_movement(position);
-    }
-
-private:
-    me::DemoCompositor& compositor;
-};
 }
+
+std::mutex                              me::DemoCompositor::instances_mutex;
+std::unordered_set<me::DemoCompositor*> me::DemoCompositor::instances;
 
 me::DemoCompositor::DemoCompositor(
     mg::DisplayBuffer& display_buffer,
@@ -69,7 +44,6 @@ me::DemoCompositor::DemoCompositor(
     std::shared_ptr<mc::CompositorReport> const& report) :
     display_buffer(display_buffer),
     report(report),
-    soft_cursor{std::make_shared<SoftCursor>(*this)},
     viewport(display_buffer.view_area()),
     zoom_mag{1.0f},
     renderer(
@@ -79,10 +53,21 @@ me::DemoCompositor::DemoCompositor(
         30.0f, //titlebar_height
         80.0f) //shadow_radius
 {
+    std::lock_guard<std::mutex> lock(instances_mutex);
+    instances.insert(this);
 }
 
 me::DemoCompositor::~DemoCompositor()
 {
+    std::lock_guard<std::mutex> lock(instances_mutex);
+    instances.erase(this);
+}
+
+void me::DemoCompositor::for_each(std::function<void(DemoCompositor&)> f)
+{
+    std::lock_guard<std::mutex> lock(instances_mutex);
+    for (auto& i : instances)
+        f(*i);
 }
 
 void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
@@ -153,12 +138,6 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         display_buffer.post_update();
         report->finished_frame(false, this);
     }
-}
-
-std::weak_ptr<graphics::Cursor>
-me::DemoCompositor::cursor() const
-{
-    return soft_cursor;
 }
 
 void me::DemoCompositor::on_cursor_movement(
