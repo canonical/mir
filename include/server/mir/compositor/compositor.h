@@ -19,11 +19,8 @@
 #ifndef MIR_COMPOSITOR_COMPOSITOR_H_
 #define MIR_COMPOSITOR_COMPOSITOR_H_
 
-#include <memory>
-
 namespace mir
 {
-namespace graphics { class Cursor; }
 namespace compositor
 {
 
@@ -34,8 +31,6 @@ public:
 
     virtual void start() = 0;
     virtual void stop() = 0;
-
-    virtual std::weak_ptr<graphics::Cursor> cursor() const { return {}; }
 
 protected:
     Compositor() = default;

@@ -1,4 +1,4 @@
-e59ebaa305b2db11e02aa7149c74202f56194ebc  include/common/mir/cached_ptr.h
+3329ada91412ded2f127aee9a92f065e57b81cb2  include/common/mir/cached_ptr.h
 82ff9499ef62739379616e02164dc98f9914c329  include/common/mir/fd.h
 b399dc08514751c86e23824612a52378dd9b1e23  include/common/mir/geometry/dimensions.h
 d954464ef2d20c2876db68c94512a443186da09b  include/common/mir/geometry/point.h
@@ -44,13 +44,12 @@ e21ddf2958273a8719550ca97e18602c9b9daa10  include/platform/mir/options/configura
 47007c783c174f8e94d332c4b13c6b01358b48fb  include/platform/mir/options/default_configuration.h
 b45f14082c4f8b29efaa1b13de795dcb29deb738  include/platform/mir/options/option.h
 3c37cc31e8b290b89c311d82f02e07d342766451  include/platform/mir/options/program_option.h
-2ce95db232b7a6174ecf5947773a6504f475d5b7  include/server/mir/compositor/compositor.h
+f4030e400baf8baa9c38e7c6ec6b4a5ad7134aeb  include/server/mir/compositor/compositor.h
 a9f284ba4b05d58fd3eeb628d1f56fe4ac188526  include/server/mir/compositor/compositor_id.h
 98fe6bde01fb8b25b1bacafcdf572f24c3ade3c3  include/server/mir/compositor/display_buffer_compositor_factory.h
-77ef434a0fc190b995356e0cd3980f43852f88fa  include/server/mir/compositor/display_buffer_compositor.h
+d49eae4f986645b32e29ce2c1f99f524703ba3c0  include/server/mir/compositor/display_buffer_compositor.h
 878ab5c4007d16dac213a3eb0105421d8ffad206  include/server/mir/compositor/scene_element.h
 4fcf34e424128b87ddc76733594e32e09ebbd486  include/server/mir/compositor/scene.h
-ef5136eb08c08d39bcac8a8b5b8400a7fe0ca3c5  include/server/mir/compositor/zoomable.h
 bd13887133bab2dfaab764077983311485b233d0  include/server/mir/default_server_configuration.h
 af1ff0714be973ac76d56006a2e5991f68cd1dec  include/server/mir/display_server.h
 a35c5495d8fd28fc0e375b17495fc5caab51b329  include/server/mir/emergency_cleanup.h

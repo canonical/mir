@@ -46,18 +46,14 @@
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/compositor/scene.h"
-#include "mir/compositor/compositor.h"
 #include "mir/report/legacy_input_report.h"
 #include "mir/main_loop.h"
-
-#include "mir/graphics/cursor.h"
-#include "mir/input/cursor_listener.h"
 
 #include <InputDispatcher.h>
 #include <EventHub.h>
 #include <InputReader.h>
 
-namespace mc = mir::compositor;
+
 namespace mi = mir::input;
 namespace mia = mi::android;
 namespace mr = mir::report;
@@ -285,40 +281,13 @@ std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_in
 std::shared_ptr<mi::CursorListener>
 mir::DefaultServerConfiguration::the_cursor_listener()
 {
-    struct DefaultCursorListener : mi::CursorListener
-    {
-        DefaultCursorListener(std::shared_ptr<mi::CursorController> ctl,
-                              CachedPtr<mc::Compositor> const& compositor)
-            : ctl(ctl), compositor(compositor)
-        {
-        }
-
-        void cursor_moved_to(float abs_x, float abs_y)
-        {
-            ctl->cursor_moved_to(abs_x, abs_y);
-
-            auto comp = *compositor;
-            if (comp)
-            {
-                auto sw_cursor = comp->cursor();
-                if (auto c = sw_cursor.lock())
-                    c->move_to({abs_x, abs_y});
-            }
-        }
-
-        std::shared_ptr<mi::CursorController> ctl;
-
-        // We use the cached ptr because a shared_ptr would force early
-        // construction resulting in a constructor cycle, and crash.
-        CachedPtr<mc::Compositor> const& compositor;
-    };
-
-    auto ctl = std::make_shared<mi::CursorController>(the_input_scene(), 
-                   the_cursor(), the_default_cursor_image());
     return cursor_listener(
-        [this, ctl]() -> std::shared_ptr<mi::CursorListener>
+        [this]() -> std::shared_ptr<mi::CursorListener>
         {
-            return wrap_cursor_listener(std::make_shared<DefaultCursorListener>(ctl, compositor));
+            return wrap_cursor_listener(std::make_shared<mi::CursorController>(
+                    the_input_scene(),
+                    the_cursor(),
+                    the_default_cursor_image()));
         });
 
 }

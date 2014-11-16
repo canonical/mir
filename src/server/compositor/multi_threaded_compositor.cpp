@@ -19,7 +19,6 @@
 #include "multi_threaded_compositor.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/cursor.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/scene.h"
@@ -69,37 +68,6 @@ namespace mir
 namespace compositor
 {
 
-/**
- * MultiCursor is the top-level cursor implementation providing a single
- * cursor instance to the display server, but is able to multiplex all
- * cursor calls to multiple (per-display) visible cursors.
- */
-class MultiCursor : public graphics::Cursor
-{
-public:
-    MultiCursor(MultiThreadedCompositor& compositor)
-        : compositor(compositor)
-    {
-    }
-
-    void show(mg::CursorImage const&) override
-    {
-        // Maybe later if we want to implement software-rendered cursors
-    }
-
-    void hide() override
-    {
-    }
-
-    void move_to(geometry::Point position) override
-    {
-        compositor.on_cursor_movement(position);
-    }
-
-private:
-    MultiThreadedCompositor& compositor;
-};
-
 class CurrentRenderingTarget
 {
 public:
@@ -130,8 +98,7 @@ public:
           scene(scene),
           running{true},
           frames_scheduled{0},
-          report{report},
-          zoom_mag{0.0f}
+          report{report}
     {
     }
 
@@ -146,7 +113,7 @@ public:
          */
         CurrentRenderingTarget target{buffer};
 
-        display_buffer_compositor = display_buffer_compositor_factory->create_compositor_for(buffer);
+        auto display_buffer_compositor = display_buffer_compositor_factory->create_compositor_for(buffer);
 
         CompositorReport::SubCompositorId report_id =
             display_buffer_compositor.get();
@@ -157,8 +124,8 @@ public:
                               report_id);
 
         auto compositor_registration = mir::raii::paired_calls(
-            [this]{scene->register_compositor(display_buffer_compositor.get());},
-            [this]{scene->unregister_compositor(display_buffer_compositor.get());});
+            [this,&display_buffer_compositor]{scene->register_compositor(display_buffer_compositor.get());},
+            [this,&display_buffer_compositor]{scene->unregister_compositor(display_buffer_compositor.get());});
 
         std::unique_lock<std::mutex> lock{run_mutex};
         while (running)
@@ -194,8 +161,10 @@ public:
         mir::terminate_with_current_exception();
     }
 
-    void schedule_compositing_unlocked(int num_frames)
+    void schedule_compositing(int num_frames)
     {
+        std::lock_guard<std::mutex> lock{run_mutex};
+
         if (num_frames > frames_scheduled)
         {
             frames_scheduled = num_frames;
@@ -203,51 +172,11 @@ public:
         }
     }
 
-    void schedule_compositing(int num)
-    {
-        std::lock_guard<std::mutex> lock{run_mutex};
-        schedule_compositing_unlocked(num);
-    }
-
     void stop()
     {
         std::lock_guard<std::mutex> lock{run_mutex};
         running = false;
         run_cv.notify_one();
-    }
-
-    void on_cursor_movement_unlocked(geometry::Point const& p)
-    {
-        if (display_buffer_compositor)
-        {
-            if (auto cursor = display_buffer_compositor->cursor().lock())
-                cursor->move_to(p);
-        }
-        if (zoom_mag != 1.0f)
-            schedule_compositing_unlocked(1);
-    }
-
-    void on_cursor_movement(geometry::Point const& p)
-    {
-        std::lock_guard<std::mutex> lock{run_mutex};
-        on_cursor_movement_unlocked(p);
-    }
-
-    void zoom_unlocked(float magnification)
-    {
-        if (auto db = dynamic_cast<Zoomable*>(display_buffer_compositor.get()))
-        {
-            db->zoom(magnification);
-            if (magnification != zoom_mag)
-                schedule_compositing_unlocked(1);
-        }
-        zoom_mag = magnification;
-    }
-
-    void zoom(float magnification)
-    {
-        std::lock_guard<std::mutex> lock{run_mutex};
-        zoom_unlocked(magnification);
     }
 
 private:
@@ -259,8 +188,6 @@ private:
     std::mutex run_mutex;
     std::condition_variable run_cv;
     std::shared_ptr<CompositorReport> const report;
-    std::unique_ptr<DisplayBufferCompositor> display_buffer_compositor;
-    float zoom_mag;
 };
 
 }
@@ -276,7 +203,6 @@ mc::MultiThreadedCompositor::MultiThreadedCompositor(
       scene{scene},
       display_buffer_compositor_factory{db_compositor_factory},
       report{compositor_report},
-      vcursor(std::make_shared<MultiCursor>(*this)),
       state{CompositorState::stopped},
       compose_on_start{compose_on_start},
       thread_pool{1}
@@ -402,23 +328,4 @@ void mc::MultiThreadedCompositor::destroy_compositing_threads(std::unique_lock<s
     report->stopped();
 
     state = CompositorState::stopped;
-}
-
-std::weak_ptr<mir::graphics::Cursor> mc::MultiThreadedCompositor::cursor() const
-{
-    return vcursor;
-}
-
-void mc::MultiThreadedCompositor::on_cursor_movement(geometry::Point const& p)
-{
-    std::unique_lock<std::mutex> lk(state_guard);
-    for (auto& f : thread_functors)
-        f->on_cursor_movement(p);
-}
-
-void mc::MultiThreadedCompositor::zoom(float magnification)
-{
-    std::unique_lock<std::mutex> lk(state_guard);
-    for (auto& f : thread_functors)
-        f->zoom(magnification);
 }

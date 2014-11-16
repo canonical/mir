@@ -20,8 +20,6 @@
 #define MIR_COMPOSITOR_MULTI_THREADED_COMPOSITOR_H_
 
 #include "mir/compositor/compositor.h"
-#include "mir/compositor/zoomable.h"
-#include "mir/geometry/point.h"
 #include "mir/thread/basic_thread_pool.h"
 
 #include <mutex>
@@ -56,7 +54,7 @@ enum class CompositorState
     stopping
 };
 
-class MultiThreadedCompositor : public Compositor, public Zoomable
+class MultiThreadedCompositor : public Compositor
 {
 public:
     MultiThreadedCompositor(std::shared_ptr<graphics::Display> const& display,
@@ -68,10 +66,6 @@ public:
 
     void start();
     void stop();
-
-    std::weak_ptr<graphics::Cursor> cursor() const override;
-    void zoom(float mag) override;
-    void on_cursor_movement(geometry::Point const& p);
 
 private:
     void create_compositing_threads();
@@ -85,7 +79,6 @@ private:
     std::vector<std::unique_ptr<CompositingFunctor>> thread_functors;
     std::vector<std::future<void>> futures;
 
-    std::shared_ptr<graphics::Cursor> const vcursor;
     std::mutex state_guard;
     CompositorState state;
     bool compose_on_start;
