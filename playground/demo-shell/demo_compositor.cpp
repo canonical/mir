@@ -82,13 +82,10 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
     for(auto const& it : elements)
     {
         auto const& renderable = it->renderable();
-
         auto embellished = renderer.would_embellish(*renderable, viewport);
         auto any_part_drawn = (viewport.overlaps(renderable->screen_position()) || embellished);
-        
         if (!it->is_a_surface())
             decoration_skip_list.insert(renderable->id());
-
         if (renderable->visible() && any_part_drawn)
         {
             renderable_list.push_back(renderable);
