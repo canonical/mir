@@ -309,7 +309,7 @@ bool me::WindowManager::handle(MirEvent const& event)
                 c.on_cursor_movement(cursor);
             });
 
-        if (zoom_exponent)
+        if (zoom_exponent || new_zoom_mag)
             force_redraw();
 
         auto const app = focus_controller->focussed_application().lock();
