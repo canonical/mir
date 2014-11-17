@@ -54,17 +54,13 @@ MirSurfaceSpec* mir_spec_for_normal_surface(MirConnection* connection,
 
 MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification)
 {
-    MirSurfaceParameters params;
-    // Hack: our stub doesn't yet allow unset things here.
-    auto connection = requested_specification->connection;
-    params.name = requested_specification->name;
-    params.width = requested_specification->width;
-    params.height = requested_specification->height;
-    params.pixel_format = requested_specification->pixel_format;
-    params.buffer_usage = requested_specification->buffer_usage;
-    params.output_id = requested_specification->output_id;
-    delete requested_specification;
-    return mir_connection_create_surface_sync(connection, &params);
+    MirSurface* surface = nullptr;
+
+    mir_wait_for(mir_surface_realise(requested_specification,
+        reinterpret_cast<mir_surface_callback>(assign_result),
+        &surface));
+
+    return surface;
 }
 
 namespace
