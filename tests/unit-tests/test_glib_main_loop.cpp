@@ -683,6 +683,18 @@ TEST_F(GLibMainLoopTest, propagates_exception_from_server_action)
     }, std::runtime_error);
 }
 
+TEST_F(GLibMainLoopTest, can_be_rerun_after_exception)
+{
+    ml.enqueue(this, [] { throw std::runtime_error(""); });
+
+    EXPECT_THROW({
+        ml.run();
+    }, std::runtime_error);
+
+    ml.enqueue(this, [&] { ml.stop(); });
+    ml.run();
+}
+
 namespace
 {
 

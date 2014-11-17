@@ -117,6 +117,7 @@ mir::GLibMainLoop::GLibMainLoop(
 
 void mir::GLibMainLoop::run()
 {
+    main_loop_exception = nullptr;
     running = true;
 
     while (running)
