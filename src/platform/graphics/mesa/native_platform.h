@@ -39,11 +39,9 @@ public:
     virtual ~NativePlatform();
 
     std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() override;
-    std::shared_ptr<PlatformIPCPackage> connection_ipc_package() override;
     std::shared_ptr<InternalClient> create_internal_client() override;
-    void fill_buffer_package(
-        BufferIpcMessage* packer, Buffer const* buffer, BufferIpcMsgType msg_type) const override;
     std::shared_ptr<graphics::BufferWriter> make_buffer_writer() override;
+    std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
     
     static std::shared_ptr<InternalNativeDisplay> internal_native_display();
     static bool internal_native_display_in_use();
@@ -52,6 +50,7 @@ private:
     int drm_fd;
     std::shared_ptr<NestedContext> nested_context;
     helpers::GBMHelper gbm;
+    std::shared_ptr<PlatformIpcOperations> ipc_ops;
 
     static std::shared_ptr<InternalNativeDisplay> ensure_internal_native_display(std::shared_ptr<PlatformIPCPackage> const& package);
     static void finish_internal_native_display();

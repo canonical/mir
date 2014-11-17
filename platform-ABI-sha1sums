@@ -35,7 +35,7 @@ d0442a5d5d88a4be6e3e1f99e433c1c43a86bfce  include/platform/mir/graphics/gl_conte
 979d2c1ac723ccef538d9a378228a02b0f173bd7  include/platform/mir/graphics/graphic_buffer_allocator.h
 f90a35371e236a6cfec8e9a8474dbb3305c7621e  include/platform/mir/graphics/internal_client.h
 c9730cac4a3a101f9706ec6f444958abe047fd88  include/platform/mir/graphics/internal_surface.h
-d062fde60f1caa3102560b0b50da9909e18b3449  include/platform/mir/graphics/native_platform.h
+c187e4d1ca333ded84d4599c6527b13a658dd77a  include/platform/mir/graphics/native_platform.h
 109d2c82d245a512e7c1790a3b853c9c275ebd4d  include/platform/mir/graphics/platform.h
 3b3463d2513f4c3985f2400496dab333518f9a13  include/platform/mir/graphics/platform_ipc_operations.h
 1b77fb3290af00dc7d1c11dcc5388972dacb9ec3  include/platform/mir/graphics/platform_ipc_package.h
