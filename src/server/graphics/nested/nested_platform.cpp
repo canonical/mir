@@ -111,12 +111,19 @@ public:
     {
         native_platform->fill_buffer_package(&message, &buffer, msg_type);
     }
+
     void unpack_buffer(mg::BufferIpcMessage&, mg::Buffer const&) const {}
 
     std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package()
     {
         return native_platform->connection_ipc_package();
     }
+
+    mg::PlatformIPCPackage platform_operation(unsigned int const, mg::PlatformIPCPackage const&) override
+    {
+        return mg::PlatformIPCPackage();
+    }
+
 private:
     std::shared_ptr<mg::NativePlatform> const native_platform;
 };
