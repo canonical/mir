@@ -53,6 +53,7 @@ protected:
 };
 
 void log(Logger::Severity severity, const std::string& message);
+void log(Logger::Severity severity, const std::string& message, const std::string& component);
 void set_logger(std::shared_ptr<Logger> const& new_logger);
 
 }

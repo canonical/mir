@@ -48,9 +48,14 @@ std::shared_ptr<ml::Logger> get_logger()
 
 void ml::log(Logger::Severity severity, const std::string& message)
 {
+    log(severity, message, "UnknownComponent");
+}
+
+void ml::log(Logger::Severity severity, const std::string& message, const std::string& component)
+{
     auto const logger = get_logger();
 
-    logger->log(severity, message, "Mir");
+    logger->log(severity, message, component);
 }
 
 void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
