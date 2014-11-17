@@ -46,7 +46,6 @@ public:
         unsigned int const opcode,
         PlatformIPCPackage const& package) override; 
 private:
-    void authenticate(int magic);
     std::shared_ptr<helpers::DRMHelper> const drm;
     std::shared_ptr<NestedContext> nested_context;
     bool master;

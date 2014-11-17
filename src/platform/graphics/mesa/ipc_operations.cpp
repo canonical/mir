@@ -86,14 +86,6 @@ void mgm::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 {
 }
 
-void mgm::IpcOperations::authenticate(int magic)
-{
-    if (master)
-        drm->auth_magic(magic);
-    else
-        nested_context->drm_auth_magic(magic);
-}
-
 mg::PlatformIPCPackage mgm::IpcOperations::platform_operation(
     unsigned int const, mg::PlatformIPCPackage const& request)
 {
@@ -101,7 +93,10 @@ mg::PlatformIPCPackage mgm::IpcOperations::platform_operation(
     if (request.ipc_data.size() > 0)
         magic = request.ipc_data[0];
 
-    authenticate(magic);
+    if (master)
+        drm->auth_magic(magic);
+    else
+        nested_context->drm_auth_magic(magic);
 
     return mg::PlatformIPCPackage{{0},{}};
 }

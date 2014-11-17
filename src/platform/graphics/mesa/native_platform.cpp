@@ -64,13 +64,11 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_a
     return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited);
 }
 
-
 std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
 {
     auto nd = ensure_internal_native_display(ipc_ops->connection_ipc_package());
     return std::make_shared<mgm::InternalClient>(nd);
 }
-
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
