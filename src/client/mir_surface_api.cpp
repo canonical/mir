@@ -76,7 +76,7 @@ MirWaitHandle* mir_surface_realise(MirSurfaceSpec* requested_specification,
                                    mir_surface_callback callback, void* context)
 {
     MirSurfaceParameters params;
-    params.name = requested_specification->name;
+    params.name = requested_specification->name.c_str();
     params.width = requested_specification->width;
     params.height = requested_specification->height;
     params.pixel_format = requested_specification->pixel_format;
@@ -135,7 +135,7 @@ MirSurfaceSpec* mir_surface_get_spec(MirSurface* surf)
 
 char const* mir_surface_spec_get_name(MirSurfaceSpec* spec)
 {
-    return spec->name;
+    return spec->name.c_str();
 }
 
 int mir_surface_spec_get_width(MirSurfaceSpec* spec)

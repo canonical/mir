@@ -58,7 +58,7 @@ struct MirSurfaceSpec
     MirSurfaceSpec();
 
     MirConnection* connection;
-    char const* name;
+    std::string name;
     int width, height;
     MirPixelFormat pixel_format;
     MirBufferUsage buffer_usage;
