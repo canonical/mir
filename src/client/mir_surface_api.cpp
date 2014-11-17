@@ -24,6 +24,7 @@
 #include "error_connections.h"
 
 #include <boost/exception/diagnostic_information.hpp>
+#include <functional>
 
 namespace mcl = mir::client;
 
@@ -64,6 +65,40 @@ MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification)
     params.output_id = requested_specification->output_id;
     delete requested_specification;
     return mir_connection_create_surface_sync(connection, &params);
+}
+
+namespace
+{
+void mir_surface_realise_thunk(MirSurface* surface, void* context)
+{
+    auto real_callback = static_cast<std::function<void(MirSurface*)>*>(context);
+    (*real_callback)(surface);
+}
+}
+
+MirWaitHandle* mir_surface_realise(MirSurfaceSpec* requested_specification,
+                                   mir_surface_callback callback, void* context)
+{
+    MirSurfaceParameters params;
+    params.name = requested_specification->name;
+    params.width = requested_specification->width;
+    params.height = requested_specification->height;
+    params.pixel_format = requested_specification->pixel_format;
+    params.buffer_usage = requested_specification->buffer_usage;
+    params.output_id = requested_specification->output_id;
+
+    auto shim_callback = new std::function<void(MirSurface*)>;
+    *shim_callback = [requested_specification, shim_callback, callback, context]
+                     (MirSurface* surface)
+    {
+        callback(surface, context);
+        delete requested_specification;
+        delete shim_callback;
+    };
+
+    return mir_connection_create_surface(requested_specification->connection,
+                                         &params,
+                                         mir_surface_realise_thunk, shim_callback);
 }
 
 bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)

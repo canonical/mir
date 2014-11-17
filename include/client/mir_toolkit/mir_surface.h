@@ -36,6 +36,8 @@ extern "C" {
 MirSurfaceSpec* mir_spec_for_normal_surface(MirConnection* connection, int width, int height, MirPixelFormat format);
 
 MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification);
+MirWaitHandle* mir_surface_realise(MirSurfaceSpec* requested_specification,
+                                   mir_surface_callback callback, void* context);
 
 bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name);
 bool mir_surface_spec_set_dimensions(MirSurfaceSpec* spec, unsigned width, unsigned height);

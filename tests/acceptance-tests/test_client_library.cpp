@@ -667,6 +667,30 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
     mir_connection_release(connection);
 }
 
+TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
+{
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    int const width{800}, height{600};
+    MirPixelFormat const format{mir_pixel_format_bgr_888};
+    auto surface_spec = mir_spec_for_normal_surface(connection,
+                                                    width, height,
+                                                    format);
+
+    mir_wait_for(mir_surface_realise(surface_spec, create_surface_callback, this));
+
+    EXPECT_THAT(surface, IsValid());
+    auto resultant_spec = mir_surface_get_spec(surface);
+
+    EXPECT_THAT(mir_surface_spec_get_width(resultant_spec), Eq(width));
+    EXPECT_THAT(mir_surface_spec_get_height(resultant_spec), Eq(height));
+    EXPECT_THAT(mir_surface_spec_get_pixel_format(resultant_spec), Eq(format));
+
+    mir_surface_release_sync(surface);
+    mir_surface_spec_release(resultant_spec);
+    mir_connection_release(connection);
+}
+
 TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
 {
     using namespace testing;
