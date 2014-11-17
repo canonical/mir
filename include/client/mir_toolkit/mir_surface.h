@@ -33,26 +33,138 @@
 extern "C" {
 #endif
 
+/**
+ * Create a surface specification for a normal surface - that is, a surface of type mir_surface_type_normal
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a surface with this height.
+ * \param [in] format       Pixel format for the surface.
+ * \return                  A handle that can be passed to mir_surface_realise to complete construction.
+ */
 MirSurfaceSpec* mir_spec_for_normal_surface(MirConnection* connection, int width, int height, MirPixelFormat format);
 
-MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification);
+/**
+ * Create a surface from a given specification
+ * \param [in] requested_specification  Specification of the attributes for the created surface
+ * \param [in] callback                 Callback function to be invoked when realisation is complete
+ * \param [in, out] context             User data passed to callback function.
+ * \return                              A handle that can be passed to mir_wait_for
+ * \note    This consumes requested_specification. No further calls should be made with it.
+ */
 MirWaitHandle* mir_surface_realise(MirSurfaceSpec* requested_specification,
                                    mir_surface_callback callback, void* context);
 
+/**
+ * Create a surface from a given specification and wait for the result.
+ * \param [in] requested_specification  Specification of the attributes for the created surface
+ * \return                              The new surface. This is guaranteed non-null, but may be invalid
+ *                                      in the case of error.
+ * \note    This consumes requested_specification. No further calls should be made with it.
+ */
+MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification);
+
+/**
+ * Set the requested name.
+ *
+ * The surface name helps the user to distinguish between multiple surfaces
+ * from the same application. A typical desktop shell may use it to provide
+ * text in the window titlebar, in an alt-tab switcher, or equivalent.
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] name     Requested name. Copied into spec; clients can free the buffer passed
+ *                      after this call.
+ * \return              False if name is not a valid attribute of this surface type.
+ */
 bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name);
+
+/**
+ * Set the requested dimensions.
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] width    Requested width.
+ * \param [in] height   Requested height.
+ * \return              False if the set dimensions are invalid for
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          surface of any specific width or height.
+ */
 bool mir_surface_spec_set_dimensions(MirSurfaceSpec* spec, unsigned width, unsigned height);
+
+/**
+ * Set the requested pixel format.
+ * \param [in] spec     Specification to mutate
+ * \param [in] format   Requested pixel format
+ * \return              False if format is not a valid pixel format for this surface type.
+ */
 bool mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format);
+
+/**
+ * Set the requested buffer usage.
+ * \param [in] spec     Specification to mutate
+ * \param [in] usage    Requested buffer usage
+ * \return              False if the requested buffer usage is invalid for this surface.
+ */
 bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage);
+
+/**
+ * \param [in] spec     Specification to mutate
+ * \param output_id
+ * \return              False if name is not a valid attribute of this surface type.
+ */
 bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id);
 
+/**
+ * Get a surface specification based on a surface's current state
+ * \param [in] surf     Surface to generate specification from
+ * \return              A surface specification that would construct a surface with
+ *                      identical attributes to surf.
+ * \note    Caller owns this MirSurfaceSpec. If the spec is not passed to mir_surface_realise
+ *          use mir_surface_spec_release to free the associated resources.
+ */
 MirSurfaceSpec* mir_surface_get_spec(MirSurface* surf);
 
+/**
+ * Get the requested name
+ * \param [in] spec     Specification to query
+ * \return              The name. This buffer is owned by the MirSurfaceSpec; do not free it.
+ */
 char const* mir_surface_spec_get_name(MirSurfaceSpec* spec);
+
+/**
+ * Get the requested width
+ * \param [in] spec     Specification to query
+ * \return              The width, in pixels, or -1 if the width is unset
+ */
 int mir_surface_spec_get_width(MirSurfaceSpec* spec);
+
+/**
+ * Get the requested height
+ * \param [in] spec     Specification to query
+ * \return              The height, in pixels, or -1 if the height is unset
+ */
 int mir_surface_spec_get_height(MirSurfaceSpec* spec);
+
+/**
+ * Get the requested pixel format
+ * \param [in] spec     Specification to query
+ * \return              The pixel format
+ */
 MirPixelFormat mir_surface_spec_get_pixel_format(MirSurfaceSpec* spec);
+
+/**
+ * Get the requested buffer usage
+ * \param [in] spec     Specification to query
+ * \return              The buffer usage
+ */
 MirBufferUsage mir_surface_spec_get_buffer_usage(MirSurfaceSpec* spec);
 
+/**
+ * Release the resources held by a MirSurfaceSpec.
+ *
+ * \note mir_surface_realise/mir_surface_realise_sync consume the MirSurfaceSpec passed
+ *       to them. It is incorrect to call mir_surface_spec_release on a MirSurfaceSpec
+ *       passed to these functions.
+ * \param [in] spec     Specification to release
+ */
 void mir_surface_spec_release(MirSurfaceSpec* spec);
 
 /**
