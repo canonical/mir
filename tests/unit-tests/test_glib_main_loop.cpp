@@ -23,6 +23,7 @@
 #include "mir_test/pipe.h"
 #include "mir_test/auto_unblock_thread.h"
 #include "mir_test_doubles/advanceable_clock.h"
+#include "mir_test_framework/process.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -934,5 +935,48 @@ TEST_F(GLibMainLoopTest, stress_emits_alarm_notification_with_zero_timeout)
                 [&] { notification_called.raise(); });
 
         EXPECT_TRUE(notification_called.wait_for(std::chrono::seconds{5}));
+    }
+}
+
+// This test recreates a scenario we get in our integration and acceptance test
+// runs, and which creates problems for the default glib signal source. The
+// scenario involves creating, running (with signal handling) and destroying
+// the main loop in the main process and then trying to do the same in a forked
+// process. This happens, for example, when we run some tests with an in-process
+// server setup followed by a test using an out-of-process server setup.
+TEST(GLibMainLoopForkTest, handles_signals_when_created_in_forked_process)
+{
+    auto const check_mainloop_signal_handling =
+        []
+        {
+            int const signum = SIGUSR1;
+            mir::GLibMainLoop ml{std::make_shared<mir::time::SteadyClock>()};
+            ml.register_signal_handler(
+                {signum},
+                [&](int)
+                {
+                   ml.stop();
+                });
+
+            kill(getpid(), signum);
+
+            ml.run();
+        };
+
+    check_mainloop_signal_handling();
+
+    auto const pid = fork();
+    if (!pid)
+    {
+        // In problematic implementations the main loop in the forked process
+        // doesn't handle signals, and thus hangs forever.
+        check_mainloop_signal_handling();
+        exit(EXIT_SUCCESS);
+    }
+    else
+    {
+        mir_test_framework::Process child{pid};
+        auto const result = child.wait_for_termination(std::chrono::seconds{5});
+        EXPECT_TRUE(result.succeeded());
     }
 }

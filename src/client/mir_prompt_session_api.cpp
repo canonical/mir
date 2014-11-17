@@ -78,11 +78,11 @@ void mir_prompt_session_release_sync(
     delete prompt_session;
 }
 
-MirBool mir_prompt_session_is_valid(MirPromptSession *prompt_session)
+bool mir_prompt_session_is_valid(MirPromptSession *prompt_session)
 {
     auto const err = prompt_session->get_error_message();
 
-    return MirBool(!*err);
+    return !*err;
 }
 
 char const *mir_prompt_session_error_message(MirPromptSession *prompt_session)

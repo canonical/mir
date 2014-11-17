@@ -243,13 +243,6 @@ void mgm::DisplayBuffer::post_update(
     last_flipped_bufobj = scheduled_bufobj;
     scheduled_bufobj = nullptr;
 
-    /*
-     * Bring the back buffer to the front and get the buffer object
-     * corresponding to the front buffer.
-     */
-    if (!bypass_buf && !egl.swap_buffers())
-        fatal_error("Failed to perform initial surface buffer swap");
-
     mgm::BufferObject *bufobj;
     if (bypass_buf)
     {
@@ -259,6 +252,8 @@ void mgm::DisplayBuffer::post_update(
     }
     else
     {
+        if (!egl.swap_buffers())
+            fatal_error("Failed to perform buffer swap");
         bufobj = get_front_buffer_object();
     }
 
