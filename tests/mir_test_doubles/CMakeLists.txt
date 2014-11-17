@@ -19,6 +19,7 @@ set(
   mock_timer.cpp
   mock_frame_dropping_policy_factory.cpp
   platform_factory.cpp
+  stub_buffer.cpp
 )
 
 set(

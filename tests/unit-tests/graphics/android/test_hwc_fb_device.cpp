@@ -17,6 +17,7 @@
  */
 
 #include "src/platform/graphics/android/hwc_fb_device.h"
+#include "mir_test_doubles/stub_android_native_buffer.h"
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"

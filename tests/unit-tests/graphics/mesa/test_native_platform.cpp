@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -24,6 +24,7 @@
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/stub_buffer.h"
+#include "mir_test_doubles/stub_gbm_native_buffer.h"
 #include "mir_test_doubles/mock_buffer_ipc_message.h"
 #include "mir_test_doubles/fd_matcher.h"
 
