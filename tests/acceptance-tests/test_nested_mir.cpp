@@ -17,7 +17,7 @@
  */
 
 #include "mir/frontend/session_mediator_report.h"
-#include "mir/graphics/native_platform.h"
+#include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/display_server.h"
@@ -111,9 +111,9 @@ struct FakeCommandLine
     }
 };
 
-struct NativePlatformAdapter : mg::NativePlatform
+struct PlatformAdapter : mg::Platform
 {
-    NativePlatformAdapter(std::shared_ptr<mg::Platform> const& adaptee) :
+    PlatformAdapter(std::shared_ptr<mg::Platform> const& adaptee) :
         adaptee(adaptee),
         ipc_ops(adaptee->make_ipc_operations())
     {
@@ -138,7 +138,20 @@ struct NativePlatformAdapter : mg::NativePlatform
     {
         return adaptee->make_buffer_writer();
     }
-    
+   
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const& policy,
+        std::shared_ptr<mg::GLProgramFactory> const& factory,
+        std::shared_ptr<mg::GLConfig> const& gl_config) override
+    {
+        return adaptee->create_display(policy, factory, gl_config);
+    }
+
+    EGLNativeDisplayType egl_native_display() const override
+    {
+        return adaptee->egl_native_display();
+    }
+ 
     std::shared_ptr<mg::Platform> const adaptee;
     std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
 };
@@ -163,20 +176,20 @@ struct NestedServerConfiguration : FakeCommandLine, public mir::DefaultServerCon
         std::shared_ptr<mg::Platform> const& graphics_platform) :
         FakeCommandLine(host_socket),
         DefaultServerConfiguration(FakeCommandLine::argc, FakeCommandLine::argv),
-        graphics_platform(graphics_platform)
+        gp(graphics_platform)
     {
     }
 
-    std::shared_ptr<mg::NativePlatform> the_graphics_native_platform() override
+    std::shared_ptr<mg::Platform> the_graphics_platform() override
     {
-        return graphics_native_platform(
-            [this]() -> std::shared_ptr<mg::NativePlatform>
+        return graphics_platform(
+            [this]() -> std::shared_ptr<mg::Platform>
             {
-                return std::make_shared<NativePlatformAdapter>(graphics_platform);
+                return std::make_shared<PlatformAdapter>(gp);
             });
     }
 
-    std::shared_ptr<mg::Platform> const graphics_platform;
+    std::shared_ptr<mg::Platform> const gp;
 };
 
 struct NestedMockEGL : mir::test::doubles::MockEGL

@@ -105,7 +105,6 @@ class CoordinateTranslator;
 }
 namespace graphics
 {
-class NativePlatform;
 class Platform;
 class Display;
 class DisplayReport;
@@ -376,7 +375,6 @@ protected:
     CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<input::TouchVisualizer> touch_visualizer;
     CachedPtr<graphics::Platform>     graphics_platform;
-    CachedPtr<graphics::NativePlatform>    graphics_native_platform;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::BufferWriter> buffer_writer;
     CachedPtr<graphics::Display>      display;
