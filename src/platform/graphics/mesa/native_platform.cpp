@@ -67,9 +67,8 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_a
 
 std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
 {
-//    auto nd = ensure_internal_native_display(connection_ipc_package());
-//    return std::make_shared<mgm::InternalClient>(nd);
-    return nullptr;
+    auto nd = ensure_internal_native_display(ipc_ops->connection_ipc_package());
+    return std::make_shared<mgm::InternalClient>(nd);
 }
 
 
