@@ -200,6 +200,14 @@ extern "C" std::shared_ptr<mg::Platform> create_platform(
     return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
 }
 
+extern "C" std::shared_ptr<mg::Platform> create_native_platform(
+    std::shared_ptr<mg::DisplayReport> const&,
+    std::shared_ptr<mg::NestedContext> const&)
+{
+    static std::vector<geom::Rectangle> const display_rects{geom::Rectangle{{0,0},{1600,1600}}};
+    return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
+}
+
 extern "C" void add_platform_options(
     boost::program_options::options_description& /*config*/)
 {
