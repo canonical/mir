@@ -707,7 +707,8 @@ TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
     EXPECT_TRUE(mir_surface_spec_set_name(surface_spec, name));
 
     int const width{999}, height{555};
-    EXPECT_TRUE(mir_surface_spec_set_dimensions(surface_spec, width, height));
+    EXPECT_TRUE(mir_surface_spec_set_width(surface_spec, width));
+    EXPECT_TRUE(mir_surface_spec_set_height(surface_spec, height));
 
     MirPixelFormat const pixel_format{mir_pixel_format_argb_8888};
     EXPECT_TRUE(mir_surface_spec_set_pixel_format(surface_spec, pixel_format));

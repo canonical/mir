@@ -78,16 +78,26 @@ MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification);
 bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name);
 
 /**
- * Set the requested dimensions.
+ * Set the requested width, in pixels
  *
  * \param [in] spec     Specification to mutate
  * \param [in] width    Requested width.
- * \param [in] height   Requested height.
- * \return              False if the set dimensions are invalid for
+ * \return              False if width is invalid for a surface of this type
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          surface of any specific width or height.
  */
-bool mir_surface_spec_set_dimensions(MirSurfaceSpec* spec, unsigned width, unsigned height);
+bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width);
+
+/**
+ * Set the requested height, in pixels
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] height   Requested height.
+ * \return              False if height is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          surface of any specific width or height.
+ */
+bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height);
 
 /**
  * Set the requested pixel format.

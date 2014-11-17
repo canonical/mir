@@ -107,9 +107,14 @@ bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)
     return true;
 }
 
-bool mir_surface_spec_set_dimensions(MirSurfaceSpec* spec, unsigned width, unsigned height)
+bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width)
 {
     spec->width = width;
+    return true;
+}
+
+bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height)
+{
     spec->height = height;
     return true;
 }
