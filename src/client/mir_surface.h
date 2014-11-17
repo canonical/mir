@@ -63,6 +63,7 @@ struct MirSurfaceSpec
     MirPixelFormat pixel_format;
     MirBufferUsage buffer_usage;
     uint32_t output_id;
+    bool fullscreen;
 };
 
 struct MirSurface : public mir::client::ClientSurface

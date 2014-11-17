@@ -51,7 +51,8 @@ MirSurfaceSpec::MirSurfaceSpec()
     : width{-1},
       height{-1},
       buffer_usage{mir_buffer_usage_hardware},
-      output_id{mir_display_output_id_invalid}
+      output_id{mir_display_output_id_invalid},
+      fullscreen{false}
 {
 }
 

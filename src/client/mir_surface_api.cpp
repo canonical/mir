@@ -87,6 +87,10 @@ MirWaitHandle* mir_surface_realise(MirSurfaceSpec* requested_specification,
     *shim_callback = [requested_specification, shim_callback, callback, context]
                      (MirSurface* surface)
     {
+        if (requested_specification->fullscreen)
+        {
+            mir_surface_set_state(surface, mir_surface_state_fullscreen);
+        }
         callback(surface, context);
         delete requested_specification;
         delete shim_callback;
@@ -125,6 +129,7 @@ bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usag
 bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id)
 {
     spec->output_id = output_id;
+    spec->fullscreen = true;
     return true;
 }
 
