@@ -26,21 +26,21 @@ namespace mir
 {
 namespace logging
 {
+
+enum class Severity
+{
+    critical = 0,
+    error = 1,
+    warning = 2,
+    informational = 3,
+    debug = 4
+};
+
 // A facade to shield the inner core of mir to prevent an actual
 // logging framework from leaking implementation detail.
 class Logger
 {
 public:
-    enum Severity
-    {
-        critical = 0,
-        error = 1,
-        warning = 2,
-        informational = 3,
-        debug = 4
-    };
-
-
     virtual void log(Severity severity,
                      const std::string& message,
                      const std::string& component = "UnknownComponent") = 0;
@@ -52,8 +52,8 @@ protected:
     Logger& operator=(const Logger&) = delete;
 };
 
-void log(Logger::Severity severity, const std::string& message);
-void log(Logger::Severity severity, const std::string& message, const std::string& component);
+void log(Severity severity, const std::string& message);
+void log(Severity severity, const std::string& message, const std::string& component);
 void set_logger(std::shared_ptr<Logger> const& new_logger);
 
 }

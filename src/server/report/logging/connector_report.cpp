@@ -42,49 +42,49 @@ void mrl::ConnectorReport::thread_start()
 {
     std::stringstream ss;
     ss << "thread (" << std::this_thread::get_id() << ") started.";
-    logger->log(ml::Logger::informational, ss.str(), component);
+    logger->log(ml::Severity::informational, ss.str(), component);
 }
 
 void mrl::ConnectorReport::thread_end()
 {
     std::stringstream ss;
     ss << "thread (" << std::this_thread::get_id() << ") ended.";
-    logger->log(ml::Logger::informational, ss.str(), component);
+    logger->log(ml::Severity::informational, ss.str(), component);
 }
 
 void mrl::ConnectorReport::starting_threads(int count)
 {
     std::stringstream ss;
     ss << "Starting " << count << " threads.";
-    logger->log(ml::Logger::informational, ss.str(), component);
+    logger->log(ml::Severity::informational, ss.str(), component);
 }
 
 void mrl::ConnectorReport::stopping_threads(int count)
 {
     std::stringstream ss;
     ss << "Stopping " << count << " threads.";
-    logger->log(ml::Logger::informational, ss.str(), component);
+    logger->log(ml::Severity::informational, ss.str(), component);
 }
 
 void mrl::ConnectorReport::creating_session_for(int socket_handle)
 {
     std::stringstream ss;
     ss << "thread (" << std::this_thread::get_id() << ") Creating session for socket " << socket_handle;
-    logger->log(ml::Logger::informational, ss.str(), component);
+    logger->log(ml::Severity::informational, ss.str(), component);
 }
 
 void mrl::ConnectorReport::creating_socket_pair(int server_handle, int client_handle)
 {
     std::stringstream ss;
     ss << "thread (" << std::this_thread::get_id() << ") Creating socket pair (server=" << server_handle << ", client=" << client_handle << ").";
-    logger->log(ml::Logger::informational, ss.str(), component);
+    logger->log(ml::Severity::informational, ss.str(), component);
 }
 
 void mrl::ConnectorReport::listening_on(std::string const& endpoint)
 {
     std::stringstream ss;
     ss << "Listening on endpoint: " << endpoint;
-    logger->log(ml::Logger::informational, ss.str(), component);
+    logger->log(ml::Severity::informational, ss.str(), component);
 }
 
 void mrl::ConnectorReport::error(std::exception const& error)
@@ -92,7 +92,7 @@ void mrl::ConnectorReport::error(std::exception const& error)
     std::stringstream ss;
     ss << "thread (" << std::this_thread::get_id() << ") Error: " << boost::diagnostic_information(error);
 
-    logger->log(ml::Logger::warning, ss.str(), component);
+    logger->log(ml::Severity::warning, ss.str(), component);
 }
 
 

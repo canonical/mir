@@ -65,7 +65,7 @@ mrl::MessageProcessorReport::~MessageProcessorReport() noexcept(true)
             }
         }
 
-        log->log(ml::Logger::informational, out.str(), component);
+        log->log(ml::Severity::informational, out.str(), component);
     }
 }
 
@@ -74,7 +74,7 @@ void mrl::MessageProcessorReport::received_invocation(void const* mediator, int 
 {
     std::ostringstream out;
     out << "mediator=" << mediator << ", method=" << method << "()";
-    log->log(ml::Logger::debug, out.str(), component);
+    log->log(ml::Severity::debug, out.str(), component);
 
     std::lock_guard<std::mutex> lock(mutex);
     auto& invocations = mediators[mediator].current_invocations;
@@ -119,14 +119,14 @@ void mrl::MessageProcessorReport::completed_invocation(void const* mediator, int
         }
     }
 
-    log->log(ml::Logger::informational, out.str(), component);
+    log->log(ml::Severity::informational, out.str(), component);
 }
 
 void mrl::MessageProcessorReport::unknown_method(void const* mediator, int id, std::string const& method)
 {
     std::ostringstream out;
     out << "mediator=" << mediator << ", id=" << id << ", UNKNOWN method=\"" << method << "\"";
-    log->log(ml::Logger::warning, out.str(), component);
+    log->log(ml::Severity::warning, out.str(), component);
 
     std::lock_guard<std::mutex> lock(mutex);
     auto const pm = mediators.find(mediator);
@@ -155,7 +155,7 @@ void mrl::MessageProcessorReport::exception_handled(void const* mediator, std::e
 {
     std::ostringstream out;
     out << "mediator=" << mediator << ", ERROR: " << boost::diagnostic_information(error);
-    log->log(ml::Logger::informational, out.str(), component);
+    log->log(ml::Severity::informational, out.str(), component);
 
     std::lock_guard<std::mutex> lock(mutex);
     auto const pm = mediators.find(mediator);
@@ -167,5 +167,5 @@ void mrl::MessageProcessorReport::sent_event(void const* mediator, MirSurfaceEve
 {
     std::ostringstream out;
     out << "mediator=" << mediator << ", sent event, surface id=" << event.id;
-    log->log(ml::Logger::debug, out.str(), component);
+    log->log(ml::Severity::debug, out.str(), component);
 }
