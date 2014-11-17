@@ -315,17 +315,18 @@ void mgm::DisplayBuffer::post_update(
         if (outputs.size() == 1)
         {
             /*
-             * glFinish: Work around intel driver insanity (LP: #1377872)
+             * glFinish: Work around intel driver performance issues:
+             * https://bugs.freedesktop.org/show_bug.cgi?id=86366
              * The intel driver has issues. If we don't glFinish() then it
              * will often defer rendering (or just lose track of it?) for
              * two frames before wait_for_page_flip() completes. So our
              * frame rate gets halved :(
-             * Forcing a glFinish here works around those bugs and rendering
-             * correctly finishes in a matter of microseconds instead of
-             * taking >1 frame.
+             * Forcing a glFinish here is theoretically benign for any other
+             * driver as it's up against wait_for_page_flip(). However for
+             * intel it dramatically improves performance avoiding missed
+             * frame deadlines.
              */
             glFinish();
-
             wait_for_page_flip();
 
             /*
