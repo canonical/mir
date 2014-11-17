@@ -59,8 +59,6 @@ public:
 private:
     std::shared_ptr<Display> create_fb_backup_display();
 
-    void initialize(std::shared_ptr<NestedContext> const& nested_context) override;
-
     std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator();
 
     std::shared_ptr<DisplayBuilder> const display_builder;

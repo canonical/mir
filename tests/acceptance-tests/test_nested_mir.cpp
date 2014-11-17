@@ -119,8 +119,6 @@ struct NativePlatformAdapter : mg::NativePlatform
     {
     }
 
-    void initialize(std::shared_ptr<mg::NestedContext> const& /*nested_context*/) override {}
-
     std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
     {
         return adaptee->create_buffer_allocator();
