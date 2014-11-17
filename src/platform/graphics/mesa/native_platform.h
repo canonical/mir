@@ -21,7 +21,8 @@
 #ifndef MIR_GRAPHICS_MESA_NATIVE_PLATFORM_H_
 #define MIR_GRAPHICS_MESA_NATIVE_PLATFORM_H_
 
-#include "mir/graphics/native_platform.h"
+#include "mir/graphics/platform.h"
+#include "mir/graphics/platform_ipc_package.h"
 #include "display_helpers.h"
 
 namespace mir
@@ -32,7 +33,7 @@ namespace mesa
 {
 class InternalNativeDisplay; 
 
-class NativePlatform : public graphics::NativePlatform
+class NativePlatform : public graphics::Platform
 {
 public:
     NativePlatform(std::shared_ptr<NestedContext> const& nested_context_arg);
@@ -45,6 +46,12 @@ public:
     
     static std::shared_ptr<InternalNativeDisplay> internal_native_display();
     static bool internal_native_display_in_use();
+
+    std::shared_ptr<Display> create_display(
+        std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
+        std::shared_ptr<graphics::GLProgramFactory> const&,
+        std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
+    EGLNativeDisplayType egl_native_display() const override;
 
 private:
     int drm_fd;

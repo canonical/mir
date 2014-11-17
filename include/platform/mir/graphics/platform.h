@@ -52,6 +52,7 @@ class GLConfig;
 class GLProgramFactory;
 class PlatformIpcOperations;
 class BufferWriter;
+class NestedContext;
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -118,6 +119,15 @@ extern "C" std::shared_ptr<Platform> create_platform(
     std::shared_ptr<options::Option> const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<DisplayReport> const& report);
+
+
+extern "C" typedef std::shared_ptr<Platform>(*CreateNativePlatform)(
+    std::shared_ptr<DisplayReport> const&,
+    std::shared_ptr<NestedContext> const&);
+extern "C" std::shared_ptr<Platform> create_native_platform(
+    std::shared_ptr<DisplayReport> const& report,
+    std::shared_ptr<NestedContext> const&);
+
 extern "C" typedef void(*AddPlatformOptions)(
     boost::program_options::options_description& config);
 extern "C" void add_platform_options(

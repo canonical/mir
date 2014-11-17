@@ -156,7 +156,7 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
     return std::make_shared<mga::Platform>(display_builder, display_report);
 }
 
-extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(
+extern "C" std::shared_ptr<mg::Platform> create_native_platform(
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::NestedContext> const&)
 {

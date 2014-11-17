@@ -69,7 +69,7 @@ std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client(
     return std::make_shared<mgm::InternalClient>(nd);
 }
 
-extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(
+extern "C" std::shared_ptr<mg::Platform> create_native_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& nested_context)
 {
@@ -117,4 +117,17 @@ std::shared_ptr<mg::BufferWriter> mgm::NativePlatform::make_buffer_writer()
 std::shared_ptr<mg::PlatformIpcOperations> mgm::NativePlatform::make_ipc_operations() const
 {
     return ipc_ops;
+}
+
+std::shared_ptr<mg::Display> mgm::NativePlatform::create_display(
+    std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
+    std::shared_ptr<graphics::GLProgramFactory> const&,
+    std::shared_ptr<graphics::GLConfig> const& /*gl_config*/)
+{
+    throw std::runtime_error("oooo");
+}
+
+EGLNativeDisplayType mgm::NativePlatform::egl_native_display() const
+{
+    throw std::runtime_error("oooo");
 }
