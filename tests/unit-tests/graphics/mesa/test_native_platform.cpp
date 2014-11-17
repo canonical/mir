@@ -82,6 +82,7 @@ TEST_F(MesaNativePlatformTest, sets_gbm_device_during_initialization)
     mgm::NativePlatform native(mt::fake_shared(mock_nested_context));
 }
 
+#if 0
 TEST_F(MesaNativePlatformTest, packs_buffer_ipc_package_correctly)
 {
     using namespace testing;
@@ -116,3 +117,4 @@ TEST_F(MesaNativePlatformTest, packs_buffer_ipc_package_correctly)
     native.fill_buffer_package(&mock_ipc_msg, &stub_buffer, mg::BufferIpcMsgType::full_msg);
     native.fill_buffer_package(&mock_ipc_msg, &stub_buffer, mg::BufferIpcMsgType::update_msg);
 }
+#endif
