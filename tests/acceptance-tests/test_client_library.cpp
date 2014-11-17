@@ -664,6 +664,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
 
     mir_surface_release_sync(surface);
     mir_surface_spec_release(resultant_spec);
+    mir_connection_release(connection);
 }
 
 TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
@@ -700,6 +701,9 @@ TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
     EXPECT_THAT(mir_surface_spec_get_buffer_usage(resultant_spec), Eq(buffer_usage));
 
     mir_surface_spec_release(resultant_spec);
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
 }
 
 TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
@@ -733,5 +737,6 @@ TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
 
     mir_surface_spec_release(resultant_spec);
     mir_surface_release_sync(surface);
+    mir_display_config_destroy(configuration);
     mir_connection_release(connection);
 }
