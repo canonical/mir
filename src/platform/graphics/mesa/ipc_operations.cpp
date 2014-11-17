@@ -109,6 +109,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_packa
     }
     else
     {
+        //TODO: very close to the code in mgmh::DRMHelper::get_authenticated_fd()
         struct MesaNativePlatformIPCPackage : public mg::PlatformIPCPackage
         {
             MesaNativePlatformIPCPackage(int fd)
@@ -134,9 +135,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_packa
                     std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(-ret));
         }
 
-        // goes over to get  connection, drm auth magic
         nested_context->drm_auth_magic(magic);
-
         return std::make_shared<MesaNativePlatformIPCPackage>(auth_fd);
     }
 }
