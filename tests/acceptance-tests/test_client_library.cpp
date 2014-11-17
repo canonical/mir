@@ -661,6 +661,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
     EXPECT_THAT(mir_surface_spec_get_width(resultant_spec), Eq(width));
     EXPECT_THAT(mir_surface_spec_get_height(resultant_spec), Eq(height));
     EXPECT_THAT(mir_surface_spec_get_pixel_format(resultant_spec), Eq(format));
+    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_normal));
 
     mir_surface_release_sync(surface);
     mir_surface_spec_release(resultant_spec);
@@ -685,6 +686,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
     EXPECT_THAT(mir_surface_spec_get_width(resultant_spec), Eq(width));
     EXPECT_THAT(mir_surface_spec_get_height(resultant_spec), Eq(height));
     EXPECT_THAT(mir_surface_spec_get_pixel_format(resultant_spec), Eq(format));
+    EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_normal));
 
     mir_surface_release_sync(surface);
     mir_surface_spec_release(resultant_spec);
