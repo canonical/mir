@@ -111,7 +111,7 @@ void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> co
         BOOST_THROW_EXCEPTION(std::logic_error("Image is too big for GBM cursor buffer"));
     }
     
-    unsigned int buffer_stride = gbm_bo_get_stride(buffer);  // in bytes
+    size_t buffer_stride = gbm_bo_get_stride(buffer);  // in bytes
     size_t padded_size = buffer_stride * buffer_height;
     auto padded = new uint8_t[padded_size];
     size_t rhs_padding = buffer_stride - image_stride;
