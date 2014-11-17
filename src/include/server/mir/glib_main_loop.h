@@ -25,6 +25,7 @@
 #include <atomic>
 #include <vector>
 #include <mutex>
+#include <exception>
 
 #include <glib.h>
 
@@ -84,6 +85,7 @@ public:
 
 private:
     bool should_process_actions_for(void const* owner);
+    void handle_exception(std::exception_ptr const& e);
 
     std::shared_ptr<time::Clock> const clock;
     detail::GMainContextHandle const main_context;
@@ -93,6 +95,7 @@ private:
     std::mutex do_not_process_mutex;
     std::vector<void const*> do_not_process;
     std::function<void()> before_iteration_hook;
+    std::exception_ptr main_loop_exception;
 };
 
 }

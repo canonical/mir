@@ -222,6 +222,20 @@ TEST_F(GLibMainLoopTest, invokes_all_registered_handlers_for_signal)
     ASSERT_THAT(handled_signum, Each(signum));
 }
 
+TEST_F(GLibMainLoopTest, propagates_exception_from_signal_handler)
+{
+    int const signum{SIGUSR1};
+    ml.register_signal_handler(
+        {signum},
+        [] (int) { throw std::runtime_error(""); });
+
+    kill(getpid(), signum);
+
+    EXPECT_THROW({
+        ml.run();
+    }, std::runtime_error);
+}
+
 TEST_F(GLibMainLoopTest, handles_fd)
 {
     mt::Pipe p;
@@ -440,6 +454,23 @@ TEST_F(GLibMainLoopTest, unregister_does_not_close_fds)
     EXPECT_EQ(data_to_write, data_read);
 }
 
+TEST_F(GLibMainLoopTest, propagates_exception_from_fd_handler)
+{
+    mt::Pipe p;
+    char const data_to_write{'a'};
+
+    ml.register_fd_handler(
+        {p.read_fd()},
+        this,
+        [] (int) { throw std::runtime_error(""); });
+
+    EXPECT_EQ(1, write(p.write_fd(), &data_to_write, 1));
+
+    EXPECT_THROW({
+        ml.run();
+    }, std::runtime_error);
+}
+
 TEST_F(GLibMainLoopTest, dispatches_action)
 {
     using namespace testing;
@@ -641,6 +672,15 @@ TEST_F(GLibMainLoopTest, dispatches_actions_resumed_externally)
 
     EXPECT_TRUE(action_with_id_1_done.raised());
     EXPECT_THAT(actions, ElementsAre(1, 0));
+}
+
+TEST_F(GLibMainLoopTest, propagates_exception_from_server_action)
+{
+    ml.enqueue(this, [] { throw std::runtime_error(""); });
+
+    EXPECT_THROW({
+        ml.run();
+    }, std::runtime_error);
 }
 
 namespace
@@ -919,6 +959,17 @@ TEST_F(GLibMainLoopAlarmTest, alarm_fires_at_correct_time_point)
 
     clock->advance_by(std::chrono::milliseconds{1}, ml);
     EXPECT_EQ(mir::time::Alarm::triggered, alarm->state());
+}
+
+TEST_F(GLibMainLoopAlarmTest, propagates_exception_from_alarm)
+{
+    auto const alarm = ml.notify_in(
+        std::chrono::milliseconds{0},
+        [] { throw std::runtime_error(""); });
+
+    EXPECT_THROW({
+        ml.run();
+    }, std::runtime_error);
 }
 
 // More targeted regression test for LP: #1381925
