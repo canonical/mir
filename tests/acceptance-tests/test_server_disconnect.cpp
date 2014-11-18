@@ -18,8 +18,10 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test_framework/cross_process_sync.h"
+#include "mir_test_framework/process.h"
+#include "mir_test_framework/testing_client_configuration.h"
 #include "mir_test/cross_process_action.h"
 
 #include <gtest/gtest.h>
@@ -30,7 +32,7 @@
 namespace mtf = mir_test_framework;
 namespace mt = mir::test;
 
-using ServerDisconnect = mtf::BespokeDisplayServerTestFixture;
+using ServerDisconnect = mtf::InterprocessClientServerTest;
 
 namespace
 {
@@ -171,31 +173,29 @@ struct TerminatingTestingClientConfiguration : mtf::TestingClientConfiguration
 
 TEST_F(ServerDisconnect, client_detects_server_shutdown)
 {
-    TestingServerConfiguration server_config;
-    launch_server_process(server_config);
+    run_in_server([]{});
 
     MyTestingClientConfiguration client_config;
-    launch_client_process(client_config);
+    auto const client = client_process_running([&] { client_config.exec(); });
 
-    run_in_test_process([this, &client_config]
+    if (is_test_process())
     {
         client_config.sync.wait_for_signal_ready_for();
-        shutdown_server_process();
-    });
+        stop_server();
+    }
 }
 
 TEST_F(ServerDisconnect, client_can_call_connection_functions_after_connection_break_is_detected)
 {
-    TestingServerConfiguration server_config;
-    launch_server_process(server_config);
+    run_in_server([]{});
 
     DisconnectingTestingClientConfiguration client_config;
-    launch_client_process(client_config);
+    auto const client = client_process_running([&] { client_config.exec(); });
 
-    run_in_test_process([this, &client_config]
+    if (is_test_process())
     {
         client_config.connect();
-        shutdown_server_process();
+        stop_server();
         /* While trying to create a surface the connection break will be detected */
         client_config.create_surface();
 
@@ -203,21 +203,20 @@ TEST_F(ServerDisconnect, client_can_call_connection_functions_after_connection_b
         client_config.configure_display();
         /* Trying to disconnect at this point shouldn't block */
         client_config.disconnect();
-    });
+    }
 }
 
 TEST_F(ServerDisconnect, causes_client_to_terminate_by_default)
 {
-    TestingServerConfiguration server_config;
-    launch_server_process(server_config);
+    run_in_server([]{});
 
     TerminatingTestingClientConfiguration client_config;
-    launch_client_process(client_config);
+    auto const client = client_process_running([&] { client_config.exec(); });
 
-    run_in_test_process([this, &client_config]
+    if (is_test_process())
     {
         client_config.connect();
-        shutdown_server_process();
+        stop_server();
 
         /*
          * While trying to create a surface the connection break will be detected
@@ -225,11 +224,10 @@ TEST_F(ServerDisconnect, causes_client_to_terminate_by_default)
          */
         client_config.create_surface_sync.signal_ready();
 
-        auto const client_results = wait_for_shutdown_client_processes();
-        ASSERT_EQ(1, client_results.size());
+        auto const client_result = client->wait_for_termination();
         EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal,
-                  client_results[0].reason);
-        int sig = client_results[0].signal;
+                  client_result.reason);
+        int sig = client_result.signal;
         EXPECT_TRUE(sig == SIGHUP || sig == SIGKILL /* (Valgrind) */);
-    });
+    }
 }
