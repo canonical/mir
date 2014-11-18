@@ -161,11 +161,6 @@ std::shared_ptr<mg::Display> mgm::Platform::create_display(
         listener);
 }
 
-void mgm::Platform::drm_auth_magic(unsigned int magic)
-{
-    drm->auth_magic(magic);
-}
-
 std::shared_ptr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
 {
     return std::make_shared<mgm::IpcOperations>(drm);

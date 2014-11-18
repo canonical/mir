@@ -146,3 +146,19 @@ void mtf::InterprocessClientServerTest::expect_server_signalled(int signal)
     server_signal_expected = true;
     expected_server_failure_signal = signal;
 }
+
+bool mtf::InterprocessClientServerTest::sigkill_server_process()
+{
+    if (test_process_id != getpid())
+        throw std::logic_error("Only the test process may kill the server");
+
+    if (!server_process)
+        throw std::logic_error("No server process to kill");
+
+    server_process->kill();
+    auto result = server_process->wait_for_termination();
+    server_process.reset();
+
+    return result.reason == TerminationReason::child_terminated_by_signal &&
+           result.signal == SIGKILL;
+}

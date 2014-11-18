@@ -141,10 +141,6 @@ EGLNativeDisplayType mga::Platform::egl_native_display() const
     return EGL_DEFAULT_DISPLAY;
 }
 
-void mga::Platform::initialize(std::shared_ptr<NestedContext> const&)
-{
-}
-
 std::shared_ptr<mg::BufferWriter> mga::Platform::make_buffer_writer()
 {
     return std::make_shared<mga::BufferWriter>();
@@ -165,7 +161,9 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
     return std::make_shared<mga::Platform>(display_builder, display_report);
 }
 
-extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& display_report)
+extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    std::shared_ptr<mg::NestedContext> const&)
 {
     //TODO: remove nullptr parameter once platform classes are sorted.
     //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder
