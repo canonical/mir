@@ -24,6 +24,7 @@
 #define release_wake_lock(id) {}
 
 #include "mir/input/input_report.h"
+#include "mir/udev/wrapper.h"
 
 #include <cutils/properties.h>
 #include <std/Log.h>
@@ -212,7 +213,7 @@ const int EventHub::EPOLL_MAX_EVENTS;
 
 EventHub::EventHub(std::shared_ptr<mi::InputReport> const& input_report) :
         input_report(input_report),
-        device_listener{mir::udev::Context()},
+        device_listener{new mir::udev::Monitor{mir::udev::Context()}},
         mBuiltInKeyboardId(NO_BUILT_IN_KEYBOARD), mNextDeviceId(1),
         mOpeningDevices(0), mClosingDevices(0),
         mNeedToSendFinishedDeviceScan(false),
@@ -223,15 +224,15 @@ EventHub::EventHub(std::shared_ptr<mi::InputReport> const& input_report) :
     mEpollFd = epoll_create(EPOLL_SIZE_HINT);
     LOG_ALWAYS_FATAL_IF(mEpollFd < 0, "Could not create epoll instance.  errno=%d", errno);
 
-    device_listener.filter_by_subsystem("input");
-    device_listener.enable();
+    device_listener->filter_by_subsystem("input");
+    device_listener->enable();
 
 
     struct epoll_event eventItem;
     memset(&eventItem, 0, sizeof(eventItem));
     eventItem.events = EPOLLIN;
     eventItem.data.u32 = EPOLL_ID_UDEV;
-    int result = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, device_listener.fd(), &eventItem);
+    int result = epoll_ctl(mEpollFd, EPOLL_CTL_ADD, device_listener->fd(), &eventItem);
     LOG_ALWAYS_FATAL_IF(result != 0, "Could not add Udev monitor to epoll instance.  errno=%d", errno);
 
     int wakeFds[2];
@@ -935,7 +936,7 @@ void EventHub::scanDevicesLocked() {
 
 void EventHub::handleUdevEventsLocked()
 {
-    device_listener.process_events([this](mir::udev::Monitor::EventType type, mir::udev::Device const& dev){
+    device_listener->process_events([this](mir::udev::Monitor::EventType type, mir::udev::Device const& dev){
         if (type == mir::udev::Monitor::ADDED)
         {
             if (dev.devnode() != nullptr)

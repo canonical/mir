@@ -18,8 +18,6 @@
 #ifndef _RUNTIME_EVENT_HUB_H
 #define _RUNTIME_EVENT_HUB_H
 
-#include "mir/udev/wrapper.h"
-
 #include <androidfw/Input.h>
 #include <androidfw/InputDevice.h>
 #include <androidfw/Keyboard.h>
@@ -41,6 +39,7 @@
 
 namespace mir
 {
+namespace udev { class Monitor; }
 namespace input
 {
 class InputReport;
@@ -407,7 +406,7 @@ private:
     Vector<String8> mExcludedDevices;
 
     int mEpollFd;
-    mir::udev::Monitor device_listener;
+    std::unique_ptr<mir::udev::Monitor> const device_listener;
     int mWakeReadPipeFd;
     int mWakeWritePipeFd;
 
