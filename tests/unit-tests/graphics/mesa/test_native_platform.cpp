@@ -68,24 +68,16 @@ protected:
 TEST_F(MesaNativePlatformTest, auth_magic_is_delegated_to_nested_context)
 {
     using namespace testing;
-
-    mgm::NativePlatform native;
-
     EXPECT_CALL(mock_nested_context, drm_auth_magic(_));
 
-    native.initialize(mt::fake_shared(mock_nested_context));
+    mgm::NativePlatform native(mt::fake_shared(mock_nested_context));
     native.connection_ipc_package();
 }
 
 TEST_F(MesaNativePlatformTest, sets_gbm_device_during_initialization)
 {
-    using namespace testing;
-
-    mgm::NativePlatform native;
-
     EXPECT_CALL(mock_nested_context, drm_set_gbm_device(mock_gbm.fake_gbm.device));
-
-    native.initialize(mt::fake_shared(mock_nested_context));
+    mgm::NativePlatform native(mt::fake_shared(mock_nested_context));
 }
 
 TEST_F(MesaNativePlatformTest, packs_buffer_ipc_package_correctly)
@@ -117,7 +109,7 @@ TEST_F(MesaNativePlatformTest, packs_buffer_ipc_package_correctly)
     EXPECT_CALL(mock_ipc_msg, pack_size(stub_buffer.size()))
         .Times(Exactly(1));
 
-    mgm::NativePlatform native;
+    mgm::NativePlatform native(mt::fake_shared(mock_nested_context));
 
     native.fill_buffer_package(&mock_ipc_msg, &stub_buffer, mg::BufferIpcMsgType::full_msg);
     native.fill_buffer_package(&mock_ipc_msg, &stub_buffer, mg::BufferIpcMsgType::update_msg);
