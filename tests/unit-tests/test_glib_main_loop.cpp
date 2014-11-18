@@ -45,6 +45,23 @@ std::vector<T> values_from_to(T f, T t)
     return v;
 }
 
+void execute_in_forked_process(testing::Test* test, std::function<void()> const& f)
+{
+    auto const pid = fork();
+
+    if (!pid)
+    {
+        f();
+        exit(test->HasFailure() ? EXIT_FAILURE : EXIT_SUCCESS);
+    }
+    else
+    {
+        mir_test_framework::Process child{pid};
+        auto const result = child.wait_for_termination(std::chrono::seconds{5});
+        EXPECT_TRUE(result.succeeded());
+    }
+}
+
 struct GLibMainLoopTest : ::testing::Test
 {
     mir::GLibMainLoop ml{std::make_shared<mir::time::SteadyClock>()};
@@ -224,16 +241,21 @@ TEST_F(GLibMainLoopTest, invokes_all_registered_handlers_for_signal)
 
 TEST_F(GLibMainLoopTest, propagates_exception_from_signal_handler)
 {
-    int const signum{SIGUSR1};
-    ml.register_signal_handler(
-        {signum},
-        [] (int) { throw std::runtime_error(""); });
+    // Execute in forked process to work around
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61643
+    // causing subsequent tests to fail (e.g. MultiThreadedCompositor.*)
+    execute_in_forked_process(this,
+        [&]
+        {
+            int const signum{SIGUSR1};
+            ml.register_signal_handler(
+                {signum},
+                [&] (int) { throw std::runtime_error(""); });
 
-    kill(getpid(), signum);
+            kill(getpid(), signum);
 
-    EXPECT_THROW({
-        ml.run();
-    }, std::runtime_error);
+            EXPECT_THROW({ ml.run(); }, std::runtime_error);
+        });
 }
 
 TEST_F(GLibMainLoopTest, handles_fd)
@@ -456,19 +478,24 @@ TEST_F(GLibMainLoopTest, unregister_does_not_close_fds)
 
 TEST_F(GLibMainLoopTest, propagates_exception_from_fd_handler)
 {
-    mt::Pipe p;
-    char const data_to_write{'a'};
+    // Execute in forked process to work around
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61643
+    // causing subsequent tests to fail (e.g. MultiThreadedCompositor.*)
+    execute_in_forked_process(this,
+        [&]
+        {
+            mt::Pipe p;
+            char const data_to_write{'a'};
 
-    ml.register_fd_handler(
-        {p.read_fd()},
-        this,
-        [] (int) { throw std::runtime_error(""); });
+            ml.register_fd_handler(
+                {p.read_fd()},
+                this,
+                [] (int) { throw std::runtime_error(""); });
 
-    EXPECT_EQ(1, write(p.write_fd(), &data_to_write, 1));
+            EXPECT_EQ(1, write(p.write_fd(), &data_to_write, 1));
 
-    EXPECT_THROW({
-        ml.run();
-    }, std::runtime_error);
+            EXPECT_THROW({ ml.run(); }, std::runtime_error);
+        });
 }
 
 TEST_F(GLibMainLoopTest, dispatches_action)
@@ -676,23 +703,35 @@ TEST_F(GLibMainLoopTest, dispatches_actions_resumed_externally)
 
 TEST_F(GLibMainLoopTest, propagates_exception_from_server_action)
 {
-    ml.enqueue(this, [] { throw std::runtime_error(""); });
+    // Execute in forked process to work around
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61643
+    // causing subsequent tests to fail (e.g. MultiThreadedCompositor.*)
+    execute_in_forked_process(this,
+        [&]
+        {
+            ml.enqueue(this, [] { throw std::runtime_error(""); });
 
-    EXPECT_THROW({
-        ml.run();
-    }, std::runtime_error);
+            EXPECT_THROW({ ml.run(); }, std::runtime_error);
+        });
 }
 
 TEST_F(GLibMainLoopTest, can_be_rerun_after_exception)
 {
-    ml.enqueue(this, [] { throw std::runtime_error(""); });
+    // Execute in forked process to work around
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61643
+    // causing subsequent tests to fail (e.g. MultiThreadedCompositor.*)
+    execute_in_forked_process(this,
+        [&]
+        {
+            ml.enqueue(this, [] { throw std::runtime_error(""); });
 
-    EXPECT_THROW({
-        ml.run();
-    }, std::runtime_error);
+            EXPECT_THROW({
+                ml.run();
+            }, std::runtime_error);
 
-    ml.enqueue(this, [&] { ml.stop(); });
-    ml.run();
+            ml.enqueue(this, [&] { ml.stop(); });
+            ml.run();
+        });
 }
 
 namespace
@@ -975,13 +1014,18 @@ TEST_F(GLibMainLoopAlarmTest, alarm_fires_at_correct_time_point)
 
 TEST_F(GLibMainLoopAlarmTest, propagates_exception_from_alarm)
 {
-    auto const alarm = ml.notify_in(
-        std::chrono::milliseconds{0},
-        [] { throw std::runtime_error(""); });
+    // Execute in forked process to work around
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61643
+    // causing subsequent tests to fail (e.g. MultiThreadedCompositor.*)
+    execute_in_forked_process(this,
+        [&]
+        {
+            auto const alarm = ml.notify_in(
+                std::chrono::milliseconds{0},
+                [] { throw std::runtime_error(""); });
 
-    EXPECT_THROW({
-        ml.run();
-    }, std::runtime_error);
+            EXPECT_THROW({ ml.run(); }, std::runtime_error);
+        });
 }
 
 // More targeted regression test for LP: #1381925
@@ -1028,18 +1072,7 @@ TEST(GLibMainLoopForkTest, handles_signals_when_created_in_forked_process)
 
     check_mainloop_signal_handling();
 
-    auto const pid = fork();
-    if (!pid)
-    {
-        // In problematic implementations the main loop in the forked process
-        // doesn't handle signals, and thus hangs forever.
-        check_mainloop_signal_handling();
-        exit(EXIT_SUCCESS);
-    }
-    else
-    {
-        mir_test_framework::Process child{pid};
-        auto const result = child.wait_for_termination(std::chrono::seconds{5});
-        EXPECT_TRUE(result.succeeded());
-    }
+    // In problematic implementations the main loop in the forked process
+    // doesn't handle signals, and thus hangs forever.
+    execute_in_forked_process(this, [&] { check_mainloop_signal_handling(); });
 }
