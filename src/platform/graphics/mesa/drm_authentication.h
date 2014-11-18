@@ -36,6 +36,7 @@ public:
     DRMAuthentication(DRMAuthentication const&) = delete;
     DRMAuthentication& operator=(DRMAuthentication const&) = delete;
 
+    virtual void auth_magic(int magic) = 0;
 };
 
 }

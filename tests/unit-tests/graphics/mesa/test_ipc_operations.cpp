@@ -17,7 +17,7 @@
  */
 
 #include "src/platform/graphics/mesa/ipc_operations.h"
-#include "src/platform/graphics/mesa/drm_operations.h"
+#include "src/platform/graphics/mesa/drm_authentication.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -89,7 +89,9 @@ TEST_F(IpcOperations, drm_auth_magic_called_for_platform_operation)
 {
     int magic{112358};
     EXPECT_CALL(mock_drm_ops, auth_magic(magic));
-    ipc_ops.platform_operation(0, mg::PlatformIPCPackage{{magic},{}});
+    auto package = ipc_ops.platform_operation(0, mg::PlatformIPCPackage{{magic},{}});
+    ASSERT_THAT(package.ipc_data.size(), testing::Eq(1));
+    ASSERT_THAT(package.ipc_data[0], testing::Eq(0));
 }
 
 TEST_F(IpcOperations, gets_authentication_fd_for_connection_package)
