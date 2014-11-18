@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,7 +17,7 @@
  *              Thomas Voss <thomas.voss@canonical.com>
  */
 
-#include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test_framework/detect_server.h"
 
 #include <chrono>
@@ -28,56 +28,40 @@ namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 namespace mtf = mir_test_framework;
 
-namespace mir
-{
-TEST_F(BespokeDisplayServerTestFixture, server_announces_itself_on_startup)
+using ServerStartup = mtf::InterprocessClientServerTest;
+
+TEST_F(ServerStartup, creates_endpoint_on_filesystem)
 {
     ASSERT_FALSE(mtf::detect_server(mtf::test_socket_file(), std::chrono::milliseconds(0)));
 
-    TestingServerConfiguration server_config;
+    run_in_server([]{});
 
-    launch_server_process(server_config);
-
-    struct ClientConfig : TestingClientConfiguration
-    {
-        void exec()
+    run_in_client([]
         {
             EXPECT_TRUE(mtf::detect_server(mtf::test_socket_file(),
                                            std::chrono::milliseconds(100)));
-        }
-    } client_config;
-
-    launch_client_process(client_config);
+        });
 }
 
-TEST_F(BespokeDisplayServerTestFixture, can_start_new_instance_after_sigkill)
+TEST_F(ServerStartup, after_server_sigkilled_can_start_new_instance)
 {
     ASSERT_FALSE(mtf::detect_server(mtf::test_socket_file(), std::chrono::milliseconds(0)));
 
-    TestingServerConfiguration config;
-    launch_server_process(config);
+    run_in_server([]{});
 
-    run_in_test_process([&]
+    if (is_test_process())
     {
         /* Under valgrind, raise(SIGKILL) results in a memcheck orphan process
          * we kill the server process from the test process instead
          */
-        EXPECT_TRUE(kill_server_process());
+        EXPECT_TRUE(sigkill_server_process());
 
-        /* Attempt to start a new server instance */
-        TestingServerConfiguration server_config;
-        launch_server_process(server_config);
+        run_in_server([]{});
+    }
 
-        struct ClientConfig : TestingClientConfiguration
+    run_in_client([]
         {
-            void exec()
-            {
-                EXPECT_TRUE(mtf::detect_server(mtf::test_socket_file(),
-                                               std::chrono::milliseconds(100)));
-            }
-        } client_config;
-
-        launch_client_process(client_config);
-    });
-}
+            EXPECT_TRUE(mtf::detect_server(mtf::test_socket_file(),
+                                           std::chrono::milliseconds(100)));
+        });
 }
