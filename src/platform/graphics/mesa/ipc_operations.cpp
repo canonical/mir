@@ -90,26 +90,10 @@ mg::PlatformIPCPackage mgm::IpcOperations::platform_operation(
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()
 {
-    return std::make_shared<mg::PlatformIPCPackage>();//{{},{}});
-
-//    return std::make_shared<MesaPlatformIPCPackage>(44);
+    return std::make_shared<MesaPlatformIPCPackage>(drm_auth->authenticated_fd());
 }
+
 #if 0
-mg::PlatformIPCPackage mgm::IpcOperations::platform_operation(
-    unsigned int const, mg::PlatformIPCPackage const& request)
-{
-    int magic{0};
-    if (request.ipc_data.size() > 0)
-        magic = request.ipc_data[0];
-
-    if (master)
-        drm_auth->auth_magic(magic);
-    else
-        nested_context->drm_auth_auth_magic(magic);
-
-    return mg::PlatformIPCPackage{{0},{}};
-}
-
 std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()
 {
     if (master)

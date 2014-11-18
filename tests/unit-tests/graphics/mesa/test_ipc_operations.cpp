@@ -23,6 +23,7 @@
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_ipc_message.h"
 #include "mir_test_doubles/fd_matcher.h"
+#include "mir_test_doubles/mock_drm.h"
 #include <gtest/gtest.h>
 
 namespace mg = mir::graphics;
@@ -37,7 +38,7 @@ namespace
 struct MockDRMOperations : public mgm::DRMAuthentication
 {
     MOCK_METHOD1(auth_magic, void(int incantation));
-    MOCK_METHOD0(drm_authenticated_fd, mir::Fd());
+    MOCK_METHOD0(authenticated_fd, mir::Fd());
 };
 
 struct IpcOperations : public ::testing::Test
@@ -67,6 +68,7 @@ struct IpcOperations : public ::testing::Test
     mtd::MockBuffer mock_buffer;
     geom::Stride dummy_stride{4390};
     geom::Size dummy_size{123, 345};
+    ::testing::NiceMock<mtd::MockDRM> mock_drm;
 };
 }
 
@@ -98,7 +100,7 @@ TEST_F(IpcOperations, gets_authentication_fd_for_connection_package)
 {
     using namespace testing;
     mir::Fd stub_fd(fileno(tmpfile()));
-    EXPECT_CALL(mock_drm_ops, drm_authenticated_fd())
+    EXPECT_CALL(mock_drm_ops, authenticated_fd())
         .WillOnce(Return(stub_fd));
     auto connection_package = ipc_ops.connection_ipc_package();
     ASSERT_THAT(connection_package->ipc_fds.size(), Eq(1));

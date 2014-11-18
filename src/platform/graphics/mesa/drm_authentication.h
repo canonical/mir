@@ -37,6 +37,7 @@ public:
     DRMAuthentication& operator=(DRMAuthentication const&) = delete;
 
     virtual void auth_magic(int magic) = 0;
+    virtual mir::Fd authenticated_fd() = 0;
 };
 
 }
