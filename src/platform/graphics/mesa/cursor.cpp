@@ -113,10 +113,10 @@ void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> co
     
     size_t buffer_stride = gbm_bo_get_stride(buffer);  // in bytes
     size_t padded_size = buffer_stride * buffer_height;
-    auto padded = new uint8_t[padded_size];
+    auto padded = std::unique_ptr<uint8_t[]>(new uint8_t[padded_size]);
     size_t rhs_padding = buffer_stride - image_stride;
 
-    uint8_t* dest = padded;
+    uint8_t* dest = &padded[0];
     uint8_t const* src = image_argb;
 
     for (unsigned int y = 0; y < image_height; y++)
@@ -129,8 +129,7 @@ void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> co
 
     memset(dest, 0, buffer_stride * (buffer_height - image_height));
 
-    write_buffer_data_locked(lg, padded, padded_size);
-    delete[] padded;
+    write_buffer_data_locked(lg, &padded[0], padded_size);
 }
 
 void mgm::Cursor::show(CursorImage const& cursor_image)
