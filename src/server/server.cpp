@@ -23,6 +23,7 @@
 #include "mir/frontend/connector.h"
 #include "mir/options/default_configuration.h"
 #include "mir/default_server_configuration.h"
+#include "mir/logging/logger.h"
 #include "mir/main_loop.h"
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
@@ -35,6 +36,7 @@
 #include <iostream>
 
 namespace mo = mir::options;
+namespace ml = mir::logging;
 
 #define FOREACH_WRAPPER(MACRO)\
     MACRO(cursor_listener)\
@@ -346,11 +348,14 @@ void mir::Server::apply_settings()
     auto const config = std::make_shared<ServerConfiguration>(options, self);
     self->server_config = config;
     self->options = config->the_options();
+
+    ml::set_logger(config->the_logger());
 }
 
 void mir::Server::run()
 try
 {
+    ml::log(ml::Logger::Severity::informational, "Starting Mir server");
     verify_accessing_allowed(self->server_config);
 
     auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
@@ -378,6 +383,7 @@ catch (...)
 
 void mir::Server::stop()
 {
+    ml::log(ml::Logger::Severity::informational, "Stopping Mir Server");
     if (self->server_config)
         if (auto const main_loop = the_main_loop())
             main_loop->stop();

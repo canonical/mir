@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -19,6 +19,7 @@
 #ifndef MIR_LOGGING_LOGGER_H_
 #define MIR_LOGGING_LOGGER_H_
 
+#include <memory>
 #include <string>
 
 namespace mir
@@ -50,6 +51,11 @@ protected:
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
 };
+
+void log(Logger::Severity severity, const std::string& message);
+void log(Logger::Severity severity, const std::string& message, const std::string& component);
+void set_logger(std::shared_ptr<Logger> const& new_logger);
+
 }
 }
 

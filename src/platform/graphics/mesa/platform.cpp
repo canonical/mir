@@ -162,11 +162,6 @@ std::shared_ptr<mg::Display> mgm::Platform::create_display(
         listener);
 }
 
-void mgm::Platform::drm_auth_magic(unsigned int magic)
-{
-    drm->auth_magic(magic);
-}
-
 std::shared_ptr<mg::InternalClient> mgm::Platform::create_internal_client()
 {
     auto packer = make_ipc_operations();
