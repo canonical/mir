@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_MESA_DRM_AUTHENTICATION_H_
 #define MIR_GRAPHICS_MESA_DRM_AUTHENTICATION_H_
 
+#include <xf86drmMode.h>
 #include "mir/fd.h"
 
 namespace mir
@@ -27,7 +28,6 @@ namespace graphics
 {
 namespace mesa
 {
-
 class DRMAuthentication
 {
 public:
@@ -36,10 +36,9 @@ public:
     DRMAuthentication(DRMAuthentication const&) = delete;
     DRMAuthentication& operator=(DRMAuthentication const&) = delete;
 
-    virtual void auth_magic(int magic) = 0;
+    virtual void auth_magic(drm_magic_t magic) = 0;
     virtual mir::Fd authenticated_fd() = 0;
 };
-
 }
 }
 }

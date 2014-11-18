@@ -178,8 +178,7 @@ std::shared_ptr<mg::InternalClient> mgm::Platform::create_internal_client()
 
 std::shared_ptr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
 {
-    return nullptr;
-//    return std::make_shared<mgm::IpcOperations>(drm);
+    return std::make_shared<mgm::IpcOperations>(drm);
 }
 
 std::shared_ptr<mg::BufferWriter> mgm::Platform::make_buffer_writer()
