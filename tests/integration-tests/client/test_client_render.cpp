@@ -24,11 +24,10 @@
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test_framework/cross_process_sync.h"
-#include "examples/testdraw/graphics_region_factory.h"
-#include "examples/testdraw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test/validity_matchers.h"
+#include "draw_pattern_checkered-inl.h"
 
 #include "mir/frontend/connector.h"
 

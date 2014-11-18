@@ -64,5 +64,6 @@ add_subdirectory(mir_test_framework/)
 add_subdirectory(mir_test_doubles/)
 add_subdirectory(client-language/)
 add_subdirectory(mir-stress/)
+add_subdirectory(testdraw/)
 
 mir_add_memcheck_test()

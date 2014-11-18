@@ -24,9 +24,8 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
-
-#include "testdraw/graphics_region_factory.h"
-#include "testdraw/patterns.h"
+#include "mir/graphics/buffer_writer.h"
+#include "mir_image.h"
 
 #include <chrono>
 #include <csignal>
@@ -50,12 +49,13 @@ class DemoOverlayClient
 public:
     DemoOverlayClient(
         mg::GraphicBufferAllocator& buffer_allocator,
+        std::shared_ptr<mg::BufferWriter> const& buffer_writer,
         mg::BufferProperties const& buffer_properties, uint32_t color)
          : front_buffer(buffer_allocator.alloc_buffer(buffer_properties)),
            back_buffer(buffer_allocator.alloc_buffer(buffer_properties)),
-           region_factory(mir::test::draw::create_graphics_region_factory()),
            color{color},
-           last_tick{std::chrono::high_resolution_clock::now()}
+           last_tick{std::chrono::high_resolution_clock::now()},
+           buffer_writer{buffer_writer}
     {
     }
 
@@ -66,8 +66,7 @@ public:
         color &= 0xFFFF00FF;
         color |= (green_value << 8);
 
-        mir::test::draw::DrawPatternSolid fill{color};
-        fill.draw(*region_factory->graphic_region_from_handle(*back_buffer->native_buffer_handle()));
+        buffer_writer->write(*back_buffer, nullptr, 0);
         std::swap(front_buffer, back_buffer);
     }
 
@@ -90,9 +89,9 @@ private:
 
     std::shared_ptr<mg::Buffer> front_buffer;
     std::shared_ptr<mg::Buffer> back_buffer;
-    std::shared_ptr<mir::test::draw::GraphicsRegionFactory> region_factory;
     unsigned int color;
     std::chrono::time_point<std::chrono::high_resolution_clock> last_tick;
+    std::shared_ptr<mg::BufferWriter> const buffer_writer;
 };
 
 class DemoRenderable : public mg::Renderable
@@ -164,15 +163,18 @@ void render_loop(mir::Server& server)
     auto platform = server.the_graphics_platform();
     auto display = server.the_display();
     auto buffer_allocator = platform->create_buffer_allocator();
+    auto buffer_writer = platform->make_buffer_writer();
 
-     mg::BufferProperties buffer_properties{
+    mg::BufferProperties buffer_properties{
         geom::Size{512, 512},
         mir_pixel_format_abgr_8888,
         mg::BufferUsage::hardware
     };
 
-    auto client1 = std::make_shared<DemoOverlayClient>(*buffer_allocator, buffer_properties,0xFF0000FF);
-    auto client2 = std::make_shared<DemoOverlayClient>(*buffer_allocator, buffer_properties,0xFFFFFF00);
+    auto client1 = std::make_shared<DemoOverlayClient>(
+        *buffer_allocator, buffer_writer, buffer_properties,0xFF0000FF);
+    auto client2 = std::make_shared<DemoOverlayClient>(
+        *buffer_allocator, buffer_writer, buffer_properties,0xFFFFFF00);
 
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {
