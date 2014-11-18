@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -19,27 +19,28 @@
 #ifndef MIR_LOGGING_LOGGER_H_
 #define MIR_LOGGING_LOGGER_H_
 
+#include <memory>
 #include <string>
 
 namespace mir
 {
 namespace logging
 {
+
+enum class Severity
+{
+    critical = 0,
+    error = 1,
+    warning = 2,
+    informational = 3,
+    debug = 4
+};
+
 // A facade to shield the inner core of mir to prevent an actual
 // logging framework from leaking implementation detail.
 class Logger
 {
 public:
-    enum Severity
-    {
-        critical = 0,
-        error = 1,
-        warning = 2,
-        informational = 3,
-        debug = 4
-    };
-
-
     virtual void log(Severity severity,
                      const std::string& message,
                      const std::string& component = "UnknownComponent") = 0;
@@ -50,6 +51,11 @@ protected:
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
 };
+
+void log(Severity severity, const std::string& message);
+void log(Severity severity, const std::string& message, const std::string& component);
+void set_logger(std::shared_ptr<Logger> const& new_logger);
+
 }
 }
 

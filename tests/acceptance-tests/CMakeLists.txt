@@ -41,7 +41,6 @@ set(
   test_client_surface_visibility.cpp
   test_touchspot_visualization.cpp
   test_client_with_custom_display_config_deadlock.cpp
-  test_macros.cpp
   test_server_without_active_outputs.cpp
   test_client_input.cpp
   test_server_startup.cpp
