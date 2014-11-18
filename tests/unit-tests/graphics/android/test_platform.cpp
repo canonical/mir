@@ -17,7 +17,6 @@
  */
 
 #include "src/server/report/null_report_factory.h"
-#include "mir/graphics/native_platform.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/options/program_option.h"
 #include "src/platform/graphics/android/platform.h"
