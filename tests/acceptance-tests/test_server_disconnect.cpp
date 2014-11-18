@@ -45,42 +45,6 @@ struct MockEventHandler
     }
 };
 
-struct MyTestingClientConfiguration
-{
-    void exec()
-    {
-        static MirSurfaceParameters const params =
-            { __PRETTY_FUNCTION__, 33, 45, mir_pixel_format_abgr_8888,
-              mir_buffer_usage_hardware, mir_display_output_id_invalid };
-
-        MockEventHandler mock_event_handler;
-
-        auto connection = mir_connect_sync(mtf::test_socket_file().c_str() , __PRETTY_FUNCTION__);
-        mir_connection_set_lifecycle_event_callback(connection, &MockEventHandler::handle, &mock_event_handler);
-        auto surface = mir_connection_create_surface_sync(connection, &params);
-
-        std::atomic<bool> signalled(false);
-
-        EXPECT_CALL(mock_event_handler, handle(mir_lifecycle_connection_lost)).Times(1).
-            WillOnce(testing::InvokeWithoutArgs([&] { signalled.store(true); }));
-
-        sync.signal_ready();
-
-        using clock = std::chrono::high_resolution_clock;
-
-        auto time_limit = clock::now() + std::chrono::seconds(2);
-
-        while (!signalled.load() && clock::now() < time_limit)
-        {
-            mir_surface_swap_buffers_sync(surface);
-        }
-        mir_surface_release_sync(surface);
-        mir_connection_release(connection);
-    }
-
-    mtf::CrossProcessSync sync;
-};
-
 struct DisconnectingTestingClientConfiguration
 {
     void exec()
@@ -174,12 +138,42 @@ TEST_F(ServerDisconnect, client_detects_server_shutdown)
 {
     run_in_server([]{});
 
-    MyTestingClientConfiguration client_config;
-    auto const client = new_client_process([&] { client_config.exec(); });
+    mtf::CrossProcessSync sync;
+
+    auto const client = new_client_process([&]
+        {
+            static MirSurfaceParameters const params =
+                { __PRETTY_FUNCTION__, 33, 45, mir_pixel_format_abgr_8888,
+                  mir_buffer_usage_hardware, mir_display_output_id_invalid };
+
+            MockEventHandler mock_event_handler;
+
+            auto connection = mir_connect_sync(mtf::test_socket_file().c_str() , __PRETTY_FUNCTION__);
+            mir_connection_set_lifecycle_event_callback(connection, &MockEventHandler::handle, &mock_event_handler);
+            auto surface = mir_connection_create_surface_sync(connection, &params);
+
+            std::atomic<bool> signalled(false);
+
+            EXPECT_CALL(mock_event_handler, handle(mir_lifecycle_connection_lost)).Times(1).
+                WillOnce(testing::InvokeWithoutArgs([&] { signalled.store(true); }));
+
+            sync.signal_ready();
+
+            using clock = std::chrono::high_resolution_clock;
+
+            auto time_limit = clock::now() + std::chrono::seconds(2);
+
+            while (!signalled.load() && clock::now() < time_limit)
+            {
+                mir_surface_swap_buffers_sync(surface);
+            }
+            mir_surface_release_sync(surface);
+            mir_connection_release(connection);
+        });
 
     if (is_test_process())
     {
-        client_config.sync.wait_for_signal_ready_for();
+        sync.wait_for_signal_ready_for();
         stop_server();
     }
 }
