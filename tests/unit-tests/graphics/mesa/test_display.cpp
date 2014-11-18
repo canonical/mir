@@ -64,7 +64,7 @@ namespace
 struct MockLogger : public ml::Logger
 {
     MOCK_METHOD3(log,
-                 void(ml::Logger::Severity, const std::string&, const std::string&));
+                 void(ml::Severity, const std::string&, const std::string&));
 
     ~MockLogger() noexcept(true) {}
 };
@@ -522,7 +522,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_setup_of_native_re
 
     EXPECT_CALL(
         *logger,
-        log(Eq(ml::Logger::informational),
+        log(Eq(ml::Severity::informational),
             StrEq("Successfully setup native resources."),
             StrEq("graphics"))).Times(Exactly(1));
 
@@ -538,7 +538,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_egl_make_current_o
 
     EXPECT_CALL(
         *logger,
-        log(Eq(ml::Logger::informational),
+        log(Eq(ml::Severity::informational),
             StrEq("Successfully made egl context current on construction."),
             StrEq("graphics"))).Times(Exactly(1));
 
@@ -554,7 +554,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_egl_buffer_swap_on
 
     EXPECT_CALL(
         *logger,
-        log(Eq(ml::Logger::informational),
+        log(Eq(ml::Severity::informational),
             StrEq("Successfully performed egl buffer swap on construction."),
             StrEq("graphics"))).Times(Exactly(1));
 
@@ -570,7 +570,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_
 
     EXPECT_CALL(
         *logger,
-        log(Eq(ml::Logger::informational),
+        log(Eq(ml::Severity::informational),
             StrEq("Successfully performed drm mode setup on construction."),
             StrEq("graphics"))).Times(Exactly(1));
 

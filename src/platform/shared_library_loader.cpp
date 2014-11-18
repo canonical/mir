@@ -35,7 +35,7 @@ mir::SharedLibrary const* mir::load_library(std::string const& libname)
     }
     else
     {
-        ml::log(ml::Logger::Severity::informational, "Loading library : " + libname);
+        ml::log(ml::Severity::informational, "Loading library : " + libname);
         ptr = std::make_shared<mir::SharedLibrary>(libname);
         return ptr.get();
     }

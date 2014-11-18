@@ -24,18 +24,19 @@
 #include <string>
 #include <cstdio>
 
-using namespace mir;
 using namespace std;
 
 namespace mtd = mir::test::doubles;
+namespace mrl = mir::report::logging;
+namespace ml = mir::logging;
 
 namespace
 {
 
-class Recorder : public logging::Logger
+class Recorder : public ml::Logger
 {
 public:
-    void log(Severity, string const& message, string const&)
+    void log(ml::Severity, string const& message, string const&)
     {
         last = message;
     }
@@ -62,7 +63,7 @@ struct LoggingCompositorReport : ::testing::Test
         std::make_shared<mtd::AdvanceableClock>();
     std::shared_ptr<Recorder> const recorder =
         make_shared<Recorder>();
-    report::logging::CompositorReport report{recorder, clock};
+    mrl::CompositorReport report{recorder, clock};
 };
 
 } // namespace
