@@ -51,7 +51,7 @@ void mgm::NativePlatform::initialize(
 
     auto drm_helper = std::make_shared<helpers::DRMHelper>();
     drm_helper->fd = drm_fd;
-    ipc_ops = std::make_shared<mgm::IpcOperations>(drm_helper, nested_context);
+//    ipc_ops = std::make_shared<mgm::IpcOperations>(drm_helper, nested_context);
 }
 
 mgm::NativePlatform::~NativePlatform()

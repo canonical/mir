@@ -27,17 +27,11 @@ namespace graphics
 class NestedContext;
 namespace mesa
 {
-namespace helpers
-{
-class DRMHelper;
-}
+class DRMAuthentication;
 class IpcOperations : public PlatformIpcOperations
 {
 public:
-    IpcOperations(std::shared_ptr<helpers::DRMHelper> const&);
-    IpcOperations(
-        std::shared_ptr<helpers::DRMHelper> const&,
-        std::shared_ptr<NestedContext> const& nested_context);
+    IpcOperations(std::shared_ptr<DRMAuthentication> const&);
 
     void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const override;
     void unpack_buffer(BufferIpcMessage& message, Buffer const& buffer) const override;
@@ -46,9 +40,7 @@ public:
         unsigned int const opcode,
         PlatformIPCPackage const& package) override; 
 private:
-    std::shared_ptr<helpers::DRMHelper> const drm;
-    std::shared_ptr<NestedContext> nested_context;
-    bool master;
+    std::shared_ptr<DRMAuthentication> const drm_auth;
 };
 
 }
