@@ -70,14 +70,14 @@ public:
         native_platform{native_platform}
     {}
     void pack_buffer(
-        mg::BufferIpcMessage& message, mg::Buffer const& buffer, mg::BufferIpcMsgType msg_type) const
+        mg::BufferIpcMessage& message, mg::Buffer const& buffer, mg::BufferIpcMsgType msg_type) const override
     {
         native_platform->fill_buffer_package(&message, &buffer, msg_type);
     }
 
-    void unpack_buffer(mg::BufferIpcMessage&, mg::Buffer const&) const {}
+    void unpack_buffer(mg::BufferIpcMessage&, mg::Buffer const&) const override {}
 
-    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package()
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
         return native_platform->connection_ipc_package();
     }
