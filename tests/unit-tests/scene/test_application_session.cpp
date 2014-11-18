@@ -401,7 +401,7 @@ TEST_F(ApplicationSessionTestMockSender, process_id)
         stub_session_listener,
         mt::fake_shared(sender));
 
-    EXPECT_THAT(app_session.process_id(), Eq(pid));
+    EXPECT_THAT(app_session.process_id(), Eq(session_pid));
 }
 
 TEST_F(ApplicationSessionTestMockSender, start_prompt_session)
