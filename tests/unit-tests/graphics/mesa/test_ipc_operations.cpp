@@ -37,7 +37,7 @@ namespace
 
 struct MockDRMOperations : public mgm::DRMAuthentication
 {
-    MOCK_METHOD1(auth_magic, void(int incantation));
+    MOCK_METHOD1(auth_magic, void(drm_magic_t incantation));
     MOCK_METHOD0(authenticated_fd, mir::Fd());
 };
 
