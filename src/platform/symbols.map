@@ -100,7 +100,6 @@ MIRPLATFORM_4 {
     mir::graphics::NativePlatform::create_buffer_allocator*;
     mir::graphics::NativePlatform::create_internal_client*;
     mir::graphics::NativePlatform::fill_buffer_package*;
-    mir::graphics::NativePlatform::initialize*;
     mir::graphics::NativePlatform::make_buffer_writer*;
     mir::graphics::NativePlatform::?NativePlatform*;
     mir::graphics::NativePlatform::NativePlatform*;
