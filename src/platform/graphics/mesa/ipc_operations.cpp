@@ -77,3 +77,15 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_packa
 void mgm::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 {
 }
+
+mg::PlatformIPCPackage mgm::IpcOperations::platform_operation(
+    unsigned int const, mg::PlatformIPCPackage const& request)
+{
+    int magic{0};
+    if (request.ipc_data.size() > 0)
+        magic = request.ipc_data[0];
+
+    drm->auth_magic(magic);
+
+    return mg::PlatformIPCPackage{{0},{}};
+}

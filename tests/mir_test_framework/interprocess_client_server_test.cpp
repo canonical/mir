@@ -82,7 +82,19 @@ void mtf::InterprocessClientServerTest::run_in_server(std::function<void()> cons
 
 void mtf::InterprocessClientServerTest::run_in_client(std::function<void()> const& client_code)
 {
+    auto const client_process = new_client_process(client_code);
+
     if (test_process_id != getpid()) return;
+
+    Result result = client_process->wait_for_termination();
+    EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
+}
+
+auto mtf::InterprocessClientServerTest::new_client_process(std::function<void()> const& client_code)
+-> std::shared_ptr<Process>
+{
+    if (test_process_id != getpid())
+        return std::shared_ptr<Process>{};
 
     pid_t pid = fork();
 
@@ -96,13 +108,12 @@ void mtf::InterprocessClientServerTest::run_in_client(std::function<void()> cons
         process_tag = "client";
         add_to_environment("MIR_SOCKET", mir_test_socket);
         client_code();
+        return std::shared_ptr<Process>{};
     }
     else
     {
         client_process_id = pid;
-        auto const client_process = std::make_shared<Process>(pid);
-        Result result = client_process->wait_for_termination();
-        EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
+        return std::make_shared<Process>(pid);
     }
 }
 

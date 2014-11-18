@@ -110,12 +110,14 @@ mir::GLibMainLoop::GLibMainLoop(
     : clock{clock},
       running{false},
       fd_sources{main_context},
+      signal_sources{fd_sources},
       before_iteration_hook{[]{}}
 {
 }
 
 void mir::GLibMainLoop::run()
 {
+    main_loop_exception = nullptr;
     running = true;
 
     while (running)
@@ -123,6 +125,9 @@ void mir::GLibMainLoop::run()
         before_iteration_hook();
         g_main_context_iteration(main_context, TRUE);
     }
+
+    if (main_loop_exception)
+        std::rethrow_exception(main_loop_exception);
 }
 
 void mir::GLibMainLoop::stop()
@@ -139,8 +144,14 @@ void mir::GLibMainLoop::register_signal_handler(
     std::initializer_list<int> sigs,
     std::function<void(int)> const& handler)
 {
-    for (auto sig : sigs)
-        detail::add_signal_gsource(main_context, sig, handler);
+    auto const handler_with_exception_handling =
+        [this, handler] (int sig)
+        {
+            try { handler(sig); }
+            catch (...) { handle_exception(std::current_exception()); }
+        };
+
+    signal_sources.add(sigs, handler_with_exception_handling);
 }
 
 void mir::GLibMainLoop::register_fd_handler(
@@ -148,8 +159,15 @@ void mir::GLibMainLoop::register_fd_handler(
     void const* owner,
     std::function<void(int)> const& handler)
 {
+    auto const handler_with_exception_handling =
+        [this, handler] (int fd)
+        {
+            try { handler(fd); }
+            catch (...) { handle_exception(std::current_exception()); }
+        };
+
     for (auto fd : fds)
-        fd_sources.add(fd, owner, handler);
+        fd_sources.add(fd, owner, handler_with_exception_handling);
 }
 
 void mir::GLibMainLoop::unregister_fd_handler(
@@ -160,7 +178,15 @@ void mir::GLibMainLoop::unregister_fd_handler(
 
 void mir::GLibMainLoop::enqueue(void const* owner, ServerAction const& action)
 {
-    detail::add_server_action_gsource(main_context, owner, action,
+    auto const action_with_exception_handling =
+        [this, action]
+        {
+            try { action(); }
+            catch (...) { handle_exception(std::current_exception()); }
+        };
+
+    detail::add_server_action_gsource(main_context, owner,
+        action_with_exception_handling,
         [this] (void const* owner)
         {
             return should_process_actions_for(owner);
@@ -220,8 +246,15 @@ std::unique_ptr<mir::time::Alarm> mir::GLibMainLoop::notify_at(
 std::unique_ptr<mir::time::Alarm> mir::GLibMainLoop::create_alarm(
     std::function<void()> callback)
 {
+    auto const callback_with_exception_handling =
+        [this, callback]
+        {
+            try { callback(); }
+            catch (...) { handle_exception(std::current_exception()); }
+        };
+
     return std::unique_ptr<mir::time::Alarm>{
-        new AlarmImpl(main_context, clock, callback)};
+        new AlarmImpl(main_context, clock, callback_with_exception_handling)};
 }
 
 void mir::GLibMainLoop::reprocess_all_sources()
@@ -264,4 +297,10 @@ void mir::GLibMainLoop::reprocess_all_sources()
 
     std::unique_lock<std::mutex> reprocessed_lock{reprocessed_mutex};
     reprocessed_cv.wait(reprocessed_lock, [&] { return reprocessed == true; });
+}
+
+void mir::GLibMainLoop::handle_exception(std::exception_ptr const& e)
+{
+    main_loop_exception = e;
+    stop();
 }

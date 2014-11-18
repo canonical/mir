@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_MESA_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
-#include "mir/graphics/drm_authenticator.h"
 #include "display_helpers.h"
 
 #include "mir_toolkit/mesa/native_display.h"
@@ -41,7 +40,6 @@ enum class BypassOption
 class VirtualTerminal;
 class InternalNativeDisplay;
 class Platform : public graphics::Platform,
-                 public DRMAuthenticator,
                  public std::enable_shared_from_this<Platform>
 {
 public:
@@ -63,9 +61,6 @@ public:
     std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
 
     EGLNativeDisplayType egl_native_display() const override;
-
-    /* From DRMAuthenticator */
-    void drm_auth_magic(unsigned int magic) override;
 
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<helpers::DRMHelper> const drm;

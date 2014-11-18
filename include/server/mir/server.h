@@ -28,6 +28,7 @@ namespace compositor { class Compositor; class DisplayBufferCompositorFactory; }
 namespace frontend { class SessionAuthorizer; class Session; }
 namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; }
+namespace logging { class Logger; }
 namespace options { class Option; }
 namespace shell { class FocusController; class FocusSetter; class DisplayLayout; }
 namespace scene
@@ -205,6 +206,9 @@ public:
 
     /// Sets an override functor for creating the input dispatcher.
     void override_the_input_dispatcher(Builder<input::InputDispatcher> const& input_dispatcher_builder);
+
+    /// Sets an override functor for creating the logger.
+    void override_the_logger(Builder<logging::Logger> const& logger_builder);
 
     /// Sets an override functor for creating the placement strategy.
     void override_the_placement_strategy(Builder<scene::PlacementStrategy> const& placement_strategy_builder);

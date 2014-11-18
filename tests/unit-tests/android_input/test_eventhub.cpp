@@ -20,6 +20,7 @@
 
 #include "src/server/report/null_report_factory.h"
 
+#include "mir/udev/wrapper.h"
 #include <umockdev.h>
 #include "mir_test_framework/udev_environment.h"
 
