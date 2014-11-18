@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_MESA_DRM_AUTHENTICATION_H_
 #define MIR_GRAPHICS_MESA_DRM_AUTHENTICATION_H_
 
-#include <xf86drmMode.h>
+#include <xf86drm.h>
 #include "mir/fd.h"
 
 namespace mir
