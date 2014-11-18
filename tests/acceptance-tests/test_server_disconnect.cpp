@@ -48,40 +48,6 @@ struct MockEventHandler
 void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
 {
 }
-
-/*
- * This client will self-terminate on server connection break (through the default
- * lifecycle handler).
- */
-struct TerminatingTestingClientConfiguration
-{
-    void exec()
-    {
-        MirConnection* connection{nullptr};
-
-        connect.exec([&] {
-            connection = mir_connect_sync(mtf::test_socket_file().c_str() , __PRETTY_FUNCTION__);
-            EXPECT_TRUE(mir_connection_is_valid(connection));
-        });
-
-        create_surface_sync.wait_for_signal_ready_for();
-
-        MirSurfaceParameters const parameters =
-        {
-            __PRETTY_FUNCTION__,
-            1, 1,
-            mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware,
-            mir_display_output_id_invalid
-        };
-        mir_connection_create_surface_sync(connection, &parameters);
-
-        mir_connection_release(connection);
-    }
-
-    mt::CrossProcessAction connect;
-    mtf::CrossProcessSync create_surface_sync;
-};
 }
 
 TEST_F(ServerDisconnect, client_detects_server_shutdown)
@@ -197,19 +163,43 @@ TEST_F(ServerDisconnect, causes_client_to_terminate_by_default)
 {
     run_in_server([]{});
 
-    TerminatingTestingClientConfiguration client_config;
-    auto const client = new_client_process([&] { client_config.exec(); });
+    mt::CrossProcessAction connect;
+    mtf::CrossProcessSync create_surface_sync;
+
+    auto const client = new_client_process([&]
+        {
+            MirConnection* connection{nullptr};
+
+            connect.exec([&] {
+                connection = mir_connect_sync(mtf::test_socket_file().c_str() , __PRETTY_FUNCTION__);
+                EXPECT_TRUE(mir_connection_is_valid(connection));
+            });
+
+            create_surface_sync.wait_for_signal_ready_for();
+
+            MirSurfaceParameters const parameters =
+            {
+                __PRETTY_FUNCTION__,
+                1, 1,
+                mir_pixel_format_abgr_8888,
+                mir_buffer_usage_hardware,
+                mir_display_output_id_invalid
+            };
+            mir_connection_create_surface_sync(connection, &parameters);
+
+            mir_connection_release(connection);
+        });
 
     if (is_test_process())
     {
-        client_config.connect();
+        connect();
         stop_server();
 
         /*
          * While trying to create a surface the connection break will be detected
          * and the client should self-terminate.
          */
-        client_config.create_surface_sync.signal_ready();
+        create_surface_sync.signal_ready();
 
         auto const client_result = client->wait_for_termination();
         EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal,
