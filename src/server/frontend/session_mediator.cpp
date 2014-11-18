@@ -37,7 +37,6 @@
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/drm_authenticator.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"

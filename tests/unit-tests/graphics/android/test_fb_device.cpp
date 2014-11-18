@@ -18,6 +18,7 @@
 
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/mock_buffer.h"
+#include "mir_test_doubles/stub_android_native_buffer.h"
 #include "src/platform/graphics/android/fb_device.h"
 #include "src/platform/graphics/android/hwc_fallback_gl_renderer.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"

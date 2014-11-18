@@ -22,6 +22,7 @@
 #include "mir_test_doubles/mock_fence.h"
 #include "mir_test_doubles/mock_interpreter_resource_cache.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
+#include "mir_test_doubles/stub_android_native_buffer.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 
