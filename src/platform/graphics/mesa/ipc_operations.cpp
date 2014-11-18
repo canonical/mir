@@ -25,9 +25,6 @@
 #include "drm_close_threadsafe.h"
 #include "ipc_operations.h"
 
-#include <boost/exception/errinfo_errno.hpp>
-#include <boost/throw_exception.hpp>
-
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 
@@ -92,44 +89,3 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_packa
 {
     return std::make_shared<MesaPlatformIPCPackage>(drm_auth->authenticated_fd());
 }
-
-#if 0
-std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()
-{
-    if (master)
-    {
-        return std::make_shared<MesaPlatformIPCPackage>(drm_auth->get_authenticated_fd());
-    }
-    else
-    {
-        //TODO: very close to the code in mgmh::DRMHelper::get_authenticated_fd()
-        struct MesaNativePlatformIPCPackage : public mg::PlatformIPCPackage
-        {
-            MesaNativePlatformIPCPackage(int fd)
-            {
-                ipc_fds.push_back(fd);
-            }
-        };
-        char* busid = drm_authGetBusid(drm_auth->fd);
-        if (!busid)
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::runtime_error("Failed to get BusID of DRM device")) << boost::errinfo_errno(errno));
-        int auth_fd = drm_authOpen(NULL, busid);
-        free(busid);
-
-        drm_auth_magic_t magic;
-        int ret = -1;
-        if ((ret = drm_authGetMagic(auth_fd, &magic)) < 0)
-        {
-            close(auth_fd);
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(-ret));
-        }
-
-        nested_context->drm_auth_auth_magic(magic);
-        return std::make_shared<MesaNativePlatformIPCPackage>(auth_fd);
-    }
-}
-#endif
