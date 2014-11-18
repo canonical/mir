@@ -46,6 +46,10 @@ else
 endif
 endif
 
+# Only build the docs when we need them
+override_dh_auto_build-indep:
+	dh_auto_build -- doc
+
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
 	dh_makeshlibs -V
