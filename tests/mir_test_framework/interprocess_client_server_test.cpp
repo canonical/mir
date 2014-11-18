@@ -82,7 +82,7 @@ void mtf::InterprocessClientServerTest::run_in_server(std::function<void()> cons
 
 void mtf::InterprocessClientServerTest::run_in_client(std::function<void()> const& client_code)
 {
-    auto const client_process = client_process_running(client_code);
+    auto const client_process = new_client_process(client_code);
 
     if (test_process_id != getpid()) return;
 
@@ -90,7 +90,7 @@ void mtf::InterprocessClientServerTest::run_in_client(std::function<void()> cons
     EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
 }
 
-auto mtf::InterprocessClientServerTest::client_process_running(std::function<void()> const& client_code)
+auto mtf::InterprocessClientServerTest::new_client_process(std::function<void()> const& client_code)
 -> std::shared_ptr<Process>
 {
     if (test_process_id != getpid())

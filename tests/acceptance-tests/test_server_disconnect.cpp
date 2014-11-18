@@ -21,7 +21,6 @@
 #include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test_framework/cross_process_sync.h"
 #include "mir_test_framework/process.h"
-#include "mir_test_framework/testing_client_configuration.h"
 #include "mir_test/cross_process_action.h"
 
 #include <gtest/gtest.h>
@@ -46,9 +45,9 @@ struct MockEventHandler
     }
 };
 
-struct MyTestingClientConfiguration : mtf::TestingClientConfiguration
+struct MyTestingClientConfiguration
 {
-    void exec() override
+    void exec()
     {
         static MirSurfaceParameters const params =
             { __PRETTY_FUNCTION__, 33, 45, mir_pixel_format_abgr_8888,
@@ -82,9 +81,9 @@ struct MyTestingClientConfiguration : mtf::TestingClientConfiguration
     mtf::CrossProcessSync sync;
 };
 
-struct DisconnectingTestingClientConfiguration : mtf::TestingClientConfiguration
+struct DisconnectingTestingClientConfiguration
 {
-    void exec() override
+    void exec()
     {
         MirConnection* connection{nullptr};
 
@@ -140,9 +139,9 @@ private:
  * This client will self-terminate on server connection break (through the default
  * lifecycle handler).
  */
-struct TerminatingTestingClientConfiguration : mtf::TestingClientConfiguration
+struct TerminatingTestingClientConfiguration
 {
-    void exec() override
+    void exec()
     {
         MirConnection* connection{nullptr};
 
@@ -176,7 +175,7 @@ TEST_F(ServerDisconnect, client_detects_server_shutdown)
     run_in_server([]{});
 
     MyTestingClientConfiguration client_config;
-    auto const client = client_process_running([&] { client_config.exec(); });
+    auto const client = new_client_process([&] { client_config.exec(); });
 
     if (is_test_process())
     {
@@ -190,7 +189,7 @@ TEST_F(ServerDisconnect, client_can_call_connection_functions_after_connection_b
     run_in_server([]{});
 
     DisconnectingTestingClientConfiguration client_config;
-    auto const client = client_process_running([&] { client_config.exec(); });
+    auto const client = new_client_process([&] { client_config.exec(); });
 
     if (is_test_process())
     {
@@ -211,7 +210,7 @@ TEST_F(ServerDisconnect, causes_client_to_terminate_by_default)
     run_in_server([]{});
 
     TerminatingTestingClientConfiguration client_config;
-    auto const client = client_process_running([&] { client_config.exec(); });
+    auto const client = new_client_process([&] { client_config.exec(); });
 
     if (is_test_process())
     {

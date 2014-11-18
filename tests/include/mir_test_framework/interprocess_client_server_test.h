@@ -40,7 +40,7 @@ public:
 
     void run_in_client(std::function<void()> const& client_code);
 
-    auto client_process_running(std::function<void()> const& client_code) -> std::shared_ptr<Process>;
+    auto new_client_process(std::function<void()> const& client_code) -> std::shared_ptr<Process>;
 
     bool is_test_process() const;
 
