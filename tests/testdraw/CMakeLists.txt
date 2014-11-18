@@ -1,10 +1,3 @@
-include_directories(
-    ${Boost_INCLUDE_DIRS}
-    ${GLESv2_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}
-    ${PROJECT_SOURCE_DIR}/include/client
-)
-
 set(
   DRAW_SRCS
 

@@ -27,7 +27,8 @@
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test/validity_matchers.h"
-#include "draw_pattern_checkered-inl.h"
+#include "tests/testdraw/patterns.h"
+#include "tests/testdraw/graphics_region_factory.h"
 
 #include "mir/frontend/connector.h"
 

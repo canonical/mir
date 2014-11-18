@@ -17,20 +17,23 @@
  */
 
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
-#include "src/platform/graphics/android/buffer_writer.h"
 #include "src/server/compositor/buffer_queue.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_properties.h"
+
+#include "tests/testdraw/graphics_region_factory.h"
+#include "tests/testdraw/patterns.h"
+
 #include "mir_test_doubles/stub_frame_dropping_policy_factory.h"
 
-#include <hardware/gralloc.h>
 #include <gtest/gtest.h>
 
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
+namespace mtd=mir::test::draw;
 
 namespace
 {
@@ -43,11 +46,13 @@ protected:
         size = geom::Size{334, 122};
         pf  = mir_pixel_format_abgr_8888;
         buffer_properties = mg::BufferProperties{size, pf, mg::BufferUsage::software};
+        graphics_region_factory = mtd::create_graphics_region_factory();
     }
 
     geom::Size size;
     MirPixelFormat pf;
     mg::BufferProperties buffer_properties;
+    std::shared_ptr<mtd::GraphicsRegionFactory> graphics_region_factory;
     mir::test::doubles::StubFrameDroppingPolicyFactory policy_factory;
 };
 
@@ -81,46 +86,16 @@ TEST_F(AndroidBufferIntegration, allocator_can_create_sw_buffer)
 {
     using namespace testing;
 
-    mga::BufferWriter writer;
     auto allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
 
     mg::BufferProperties sw_properties{size, pf, mg::BufferUsage::software};
     auto test_buffer = allocator->alloc_buffer(sw_properties);
 
-    writer.write(*test_buffer, nullptr, 0);
-
-    auto native_buffer = test_buffer->native_buffer_handle();
-    native_buffer->ensure_available_for(mga::BufferAccess::write);
-
-    //read using native interface
-    gralloc_module_t* module;
-    alloc_device_t* alloc_dev;
-    const hw_module_t *hw_module;
-    if (hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module) != 0)
-        throw std::runtime_error("error, hw module not available!\n");
-    gralloc_open(hw_module, &alloc_dev);
-    module = (gralloc_module_t*) hw_module;
-    int *vaddr;
-    module->lock(
-        module, native_buffer->handle(), GRALLOC_USAGE_SW_READ_OFTEN,
-        0, 0, native_buffer->anwb()->width, native_buffer->anwb()->height,
-        (void**) &vaddr);
-
-
-//    module->unlock();
-#if 0 //test should read red back
-    for(auto i = 0; i < region.height; i++)
-    {
-        for(auto j = 0; j < region.width; j++)
-        {
-            uint32_t *pixel = (uint32_t*) &region.vaddr[i*region.stride + (j * bpp)];
-            if (*pixel != color_value)
-            {
-                return false;
-            }
-        }
-    }
-#endif
+    auto region = graphics_region_factory->graphic_region_from_handle(
+        *test_buffer->native_buffer_handle());
+    mtd::DrawPatternSolid red_pattern(0xFF0000FF);
+    red_pattern.draw(*region);
+    EXPECT_TRUE(red_pattern.check(*region));
 }
 
 TEST_F(AndroidBufferIntegration, allocator_can_create_hw_buffer)

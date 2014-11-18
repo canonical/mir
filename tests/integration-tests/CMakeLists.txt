@@ -87,6 +87,7 @@ target_link_libraries(
   mirclient-debug-extension
 
   mirdraw
+  mirtestdraw
   mirclientrpc
   mirclientlttngstatic
 
@@ -100,7 +101,6 @@ target_link_libraries(
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
-  ${LIBHARDWARE_LIBRARY}
   ${MIR_PLATFORM_REFERENCES}
   ${MIR_COMMON_REFERENCES}
   ${MIR_SERVER_REFERENCES}
