@@ -31,10 +31,17 @@
 namespace mtf = mir_test_framework;
 namespace mt = mir::test;
 
-using ServerDisconnect = mtf::InterprocessClientServerTest;
-
 namespace
 {
+struct ServerDisconnect : mtf::InterprocessClientServerTest
+{
+    void SetUp() override
+    {
+        mtf::InterprocessClientServerTest::SetUp();
+        run_in_server([]{});
+    }
+};
+
 struct MockEventHandler
 {
     MOCK_METHOD1(handle, void(MirLifecycleState transition));
@@ -50,10 +57,8 @@ void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
 }
 }
 
-TEST_F(ServerDisconnect, client_detects_server_shutdown)
+TEST_F(ServerDisconnect, is_detected_by_client)
 {
-    run_in_server([]{});
-
     mtf::CrossProcessSync sync;
 
     auto const client = new_client_process([&]
@@ -94,10 +99,8 @@ TEST_F(ServerDisconnect, client_detects_server_shutdown)
     }
 }
 
-TEST_F(ServerDisconnect, client_can_call_connection_functions_after_connection_break_is_detected)
+TEST_F(ServerDisconnect, doesnt_stop_client_calling_API_functions)
 {
-    run_in_server([]{});
-
     mt::CrossProcessAction connect;
     mt::CrossProcessAction create_surface;
     mt::CrossProcessAction configure_display;
@@ -161,8 +164,6 @@ TEST_F(ServerDisconnect, client_can_call_connection_functions_after_connection_b
 
 TEST_F(ServerDisconnect, causes_client_to_terminate_by_default)
 {
-    run_in_server([]{});
-
     mt::CrossProcessAction connect;
     mtf::CrossProcessSync create_surface_sync;
 
