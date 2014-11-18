@@ -45,59 +45,9 @@ struct MockEventHandler
     }
 };
 
-struct DisconnectingTestingClientConfiguration
+void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
 {
-    void exec()
-    {
-        MirConnection* connection{nullptr};
-
-        connect.exec([&] {
-            connection = mir_connect_sync(mtf::test_socket_file().c_str() , __PRETTY_FUNCTION__);
-            EXPECT_TRUE(mir_connection_is_valid(connection));
-            /*
-             * Set a null callback to avoid killing the process
-             * (default callback raises SIGHUP).
-             */
-            mir_connection_set_lifecycle_event_callback(connection,
-                                                        null_lifecycle_callback,
-                                                        nullptr);
-        });
-
-        create_surface.exec([&] {
-            MirSurfaceParameters const parameters =
-            {
-                __PRETTY_FUNCTION__,
-                1, 1,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-            surf = mir_connection_create_surface_sync(connection, &parameters);
-        });
-
-        configure_display.exec([&] {
-            auto config = mir_connection_create_display_config(connection);
-            mir_wait_for(mir_connection_apply_display_config(connection, config));
-            mir_display_config_destroy(config);
-        });
-
-        disconnect.exec([&] {
-            mir_surface_release_sync(surf);
-            mir_connection_release(connection);
-        });
-    }
-
-    static void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
-    {
-    }
-
-    mt::CrossProcessAction connect;
-    mt::CrossProcessAction create_surface;
-    mt::CrossProcessAction configure_display;
-    mt::CrossProcessAction disconnect;
-private:
-    MirSurface* surf;
-};
+}
 
 /*
  * This client will self-terminate on server connection break (through the default
@@ -182,20 +132,64 @@ TEST_F(ServerDisconnect, client_can_call_connection_functions_after_connection_b
 {
     run_in_server([]{});
 
-    DisconnectingTestingClientConfiguration client_config;
-    auto const client = new_client_process([&] { client_config.exec(); });
+    mt::CrossProcessAction connect;
+    mt::CrossProcessAction create_surface;
+    mt::CrossProcessAction configure_display;
+    mt::CrossProcessAction disconnect;
+
+    auto const client = new_client_process([&]
+        {
+            MirConnection* connection{nullptr};
+
+            connect.exec([&] {
+                connection = mir_connect_sync(mtf::test_socket_file().c_str() , __PRETTY_FUNCTION__);
+                EXPECT_TRUE(mir_connection_is_valid(connection));
+                /*
+                 * Set a null callback to avoid killing the process
+                 * (default callback raises SIGHUP).
+                 */
+                mir_connection_set_lifecycle_event_callback(connection,
+                                                            null_lifecycle_callback,
+                                                            nullptr);
+            });
+
+            MirSurface* surf;
+
+            create_surface.exec([&] {
+                MirSurfaceParameters const parameters =
+                {
+                    __PRETTY_FUNCTION__,
+                    1, 1,
+                    mir_pixel_format_abgr_8888,
+                    mir_buffer_usage_hardware,
+                    mir_display_output_id_invalid
+                };
+                surf = mir_connection_create_surface_sync(connection, &parameters);
+            });
+
+            configure_display.exec([&] {
+                auto config = mir_connection_create_display_config(connection);
+                mir_wait_for(mir_connection_apply_display_config(connection, config));
+                mir_display_config_destroy(config);
+            });
+
+            disconnect.exec([&] {
+                mir_surface_release_sync(surf);
+                mir_connection_release(connection);
+            });
+        });
 
     if (is_test_process())
     {
-        client_config.connect();
+        connect();
         stop_server();
         /* While trying to create a surface the connection break will be detected */
-        client_config.create_surface();
+        create_surface();
 
         /* Trying to configure the display shouldn't block */
-        client_config.configure_display();
+        configure_display();
         /* Trying to disconnect at this point shouldn't block */
-        client_config.disconnect();
+        disconnect();
     }
 }
 
