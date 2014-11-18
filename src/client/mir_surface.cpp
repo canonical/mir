@@ -113,6 +113,11 @@ MirSurface::MirSurface(
     for (int i = 0; i < mir_surface_attribs; i++)
         attrib_cache[i] = -1;
 
+    if (params.name)
+    {
+        name = params.name;
+    }
+
     mir::protobuf::SurfaceParameters message;
     message.set_surface_name(params.name ? params.name : std::string());
     message.set_width(params.width);
@@ -167,7 +172,7 @@ MirSurfaceSpec* MirSurface::get_surface_spec() const
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     auto spec = new MirSurfaceSpec;
-    spec->name = "The magnificent Dandy Warhols";
+    spec->name = name;
     spec->width = surface.width();
     spec->height = surface.height();
     spec->pixel_format = convert_ipc_pf_to_geometry(surface.pixel_format());

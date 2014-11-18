@@ -658,6 +658,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
     EXPECT_THAT(surface, IsValid());
     auto resultant_spec = mir_surface_get_spec(surface);
 
+    EXPECT_THAT(mir_surface_spec_get_name(resultant_spec), StrEq(""));
     EXPECT_THAT(mir_surface_spec_get_width(resultant_spec), Eq(width));
     EXPECT_THAT(mir_surface_spec_get_height(resultant_spec), Eq(height));
     EXPECT_THAT(mir_surface_spec_get_pixel_format(resultant_spec), Eq(format));
