@@ -42,7 +42,10 @@ typedef enum
     mir_event_type_surface,
     mir_event_type_resize,
     mir_event_type_prompt_session_state_change,
-    mir_event_type_orientation
+    mir_event_type_orientation,
+// Type for new style input event. Will be returned from mir_event_get_type for old style
+// key and motion events.
+    mir_event_type_input
 } MirEventType;
 
 typedef enum {
