@@ -24,26 +24,6 @@
 
 namespace mga = mir::graphics::android;
 namespace mt = mir::test;
-namespace
-{
-struct RegionDeleter
-{
-    RegionDeleter(gralloc_module_t* grmod, native_handle_t const* handle)
-     : grmod(grmod),
-       handle(handle)
-    {
-    }
-
-    void operator()(MirGraphicsRegion* region)
-    {
-        grmod->unlock(grmod, handle);
-        delete region;
-    }
-
-    gralloc_module_t *grmod;
-    native_handle_t const* handle;
-};
-}
 
 mt::GraphicsRegionFactory::GraphicsRegionFactory()
 {
@@ -64,22 +44,25 @@ std::shared_ptr<MirGraphicsRegion> mt::GraphicsRegionFactory::graphic_region_fro
 {
     native_buffer.ensure_available_for(mga::BufferAccess::write);
     auto anwb = native_buffer.anwb();
-    int *vaddr;
+    char* vaddr;
     int usage = GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN;
     module->lock(
         module,
         anwb->handle, usage,
         0, 0, anwb->width, anwb->height,
-        (void**) &vaddr);
+        reinterpret_cast<void**>(&vaddr));
 
-    MirGraphicsRegion* region = new MirGraphicsRegion;
-    RegionDeleter del(module, anwb->handle);
-
-    region->vaddr = (char*) vaddr;
+    auto* region = new MirGraphicsRegion;
+    region->vaddr = vaddr;
     region->stride = anwb->stride * MIR_BYTES_PER_PIXEL(mir_pixel_format_abgr_8888);
     region->width = anwb->width;
     region->height = anwb->height;
     region->pixel_format = mir_pixel_format_abgr_8888;
 
-    return std::shared_ptr<MirGraphicsRegion>(region, del);
+    return std::shared_ptr<MirGraphicsRegion>(region,
+        [this, anwb](MirGraphicsRegion* region)
+        {
+            module->unlock(module, anwb->handle);
+            delete region;
+        });
 }
