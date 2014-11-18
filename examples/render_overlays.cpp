@@ -44,6 +44,35 @@ void signal_handler(int /*signum*/)
     running = false;
 }
 
+class PixelBufferABGR
+{
+public:
+    PixelBufferABGR(geom::Size sz, uint32_t color) :
+        size{sz.width.as_uint32_t() * sz.height.as_uint32_t()},
+        data{static_cast<uint32_t*>(::operator new(size * sizeof(color)))}
+    {
+        fill(color);
+    }
+
+    void fill(uint32_t color)
+    {
+        for(auto i = 0u; i < size; i++)
+            data.get()[i] = color;
+    }
+
+    unsigned char* pixels()
+    {
+        return reinterpret_cast<unsigned char*>(data.get());
+    }
+    size_t pixel_size()
+    {
+        return size * sizeof(uint32_t);
+    }
+private:
+    size_t size;
+    std::shared_ptr<uint32_t> data;
+};
+
 class DemoOverlayClient
 {
 public:
@@ -55,7 +84,8 @@ public:
            back_buffer(buffer_allocator.alloc_buffer(buffer_properties)),
            color{color},
            last_tick{std::chrono::high_resolution_clock::now()},
-           buffer_writer{buffer_writer}
+           buffer_writer{buffer_writer},
+           pixel_buffer{buffer_properties.size, color}
     {
     }
 
@@ -65,8 +95,9 @@ public:
         green_value += compute_update_value();
         color &= 0xFFFF00FF;
         color |= (green_value << 8);
+        pixel_buffer.fill(color);
 
-        buffer_writer->write(*back_buffer, nullptr, 0);
+        buffer_writer->write(*back_buffer, pixel_buffer.pixels(), pixel_buffer.pixel_size());
         std::swap(front_buffer, back_buffer);
     }
 
@@ -92,6 +123,7 @@ private:
     unsigned int color;
     std::chrono::time_point<std::chrono::high_resolution_clock> last_tick;
     std::shared_ptr<mg::BufferWriter> const buffer_writer;
+    PixelBufferABGR pixel_buffer;
 };
 
 class DemoRenderable : public mg::Renderable
