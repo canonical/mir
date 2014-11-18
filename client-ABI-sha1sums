@@ -6,7 +6,6 @@ b53736bcb22ddc09aab8275cfdd05c109fdd0f12  include/client/mir_toolkit/mir_client_
 9d50df5a141ca03ee8a79f7e844ed4b8b3b7d5d3  include/client/mir_toolkit/mir_prompt_session.h
 21d07e655e85eeec8a3523e1c6f9c2252176ec01  include/client/mir_toolkit/mir_screencast.h
 883eba2b2323336d63b387df8fd62be2f6594438  include/client/mir_toolkit/mir_surface.h
-44713da6991dc9689c0b44460b0bd7bb6470aa55  include/client/mir_toolkit/mir_surface.h.~1~
 b141c4d79802ad626d969249c0004744e5c2a525  include/client/mir_toolkit/mir_wait.h
 371c4020b80a672fa6864b0c7df2cfc03a5fbccc  include/common/mir_toolkit/client_types.h
 2100c0674d9d882c1845550847357f6a5de5af66  include/common/mir_toolkit/common.h
