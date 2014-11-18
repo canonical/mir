@@ -73,7 +73,6 @@ target_link_libraries(
   mir_unit_tests
 
   mirdraw
-  mirtestdraw
   mirclientrpc
   mirclientlttngstatic
   demo-shell

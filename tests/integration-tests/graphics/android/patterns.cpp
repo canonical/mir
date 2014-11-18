@@ -19,14 +19,14 @@
 #include "patterns.h"
 #include "mir_toolkit/common.h"
 
-namespace mtd=mir::test::draw;
+namespace mt=mir::test;
 
-mtd::DrawPatternSolid::DrawPatternSolid(uint32_t color_value)
- : color_value(color_value)
+mt::DrawPatternSolid::DrawPatternSolid(uint32_t color_value) :
+    color_value(color_value)
 {
 }
 
-void mtd::DrawPatternSolid::draw(MirGraphicsRegion const& region) const
+void mt::DrawPatternSolid::draw(MirGraphicsRegion const& region) const
 {
     if (region.pixel_format != mir_pixel_format_abgr_8888 )
         throw(std::runtime_error("cannot draw region, incorrect format"));
@@ -42,7 +42,7 @@ void mtd::DrawPatternSolid::draw(MirGraphicsRegion const& region) const
     }
 }
 
-bool mtd::DrawPatternSolid::check(MirGraphicsRegion const& region) const
+bool mt::DrawPatternSolid::check(MirGraphicsRegion const& region) const
 {
     if (region.pixel_format != mir_pixel_format_abgr_8888 )
         throw(std::runtime_error("cannot check region, incorrect format"));
