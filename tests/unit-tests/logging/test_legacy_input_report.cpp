@@ -36,7 +36,7 @@ namespace
 class MockLogger : public ml::Logger
 {
 public:
-    MOCK_METHOD3(log, void(Severity severity, const std::string& message, const std::string& component));
+    MOCK_METHOD3(log, void(ml::Severity severity, const std::string& message, const std::string& component));
     ~MockLogger() noexcept(true) {}
 };
 
@@ -86,7 +86,7 @@ TEST_F(InputReport, verbose_message)
 TEST_F(InputReport, info_message)
 {
     EXPECT_CALL(logger, log(
-            ml::Logger::informational,
+            ml::Severity::informational,
             "[Foo]Some informational message",
             component));
 
@@ -96,7 +96,7 @@ TEST_F(InputReport, info_message)
 TEST_F(InputReport, warning_message)
 {
     EXPECT_CALL(logger, log(
-            ml::Logger::warning,
+            ml::Severity::warning,
             "[Foo]Warning!!!",
             component));
 
@@ -106,7 +106,7 @@ TEST_F(InputReport, warning_message)
 TEST_F(InputReport, error_message)
 {
     EXPECT_CALL(logger, log(
-            ml::Logger::error,
+            ml::Severity::error,
             "[Foo]An error occurred!",
             component));
 

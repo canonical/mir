@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -18,12 +18,6 @@
 
 #ifndef MIR_TEST_DOUBLES_STUB_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_BUFFER_H_
-
-#ifdef ANDROID
-#include "mir_test_doubles/stub_android_native_buffer.h"
-#else
-#include "stub_gbm_native_buffer.h"
-#endif
 
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/buffer_properties.h"
@@ -113,14 +107,7 @@ public:
     geometry::Stride const buf_stride;
     graphics::BufferID const buf_id;
 
-    std::shared_ptr<graphics::NativeBuffer> create_native_buffer()
-    {
-#ifndef ANDROID
-        return std::make_shared<StubGBMNativeBuffer>(geometry::Size{0,0});
-#else
-        return std::make_shared<StubAndroidNativeBuffer>();
-#endif
-    }
+    std::shared_ptr<graphics::NativeBuffer> create_native_buffer();
 };
 }
 }

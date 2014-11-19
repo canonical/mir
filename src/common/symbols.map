@@ -151,6 +151,8 @@ MIR_COMMON_3 {
     mir::default_server_socket;
     mir::input::android::Lexicon::translate*;
     mir::logging::input_timestamp*;
+    mir::logging::log*;
+    mir::logging::set_logger*;
     mir::logging::SharedLibraryProberReport::SharedLibraryProberReport*;
     mir::RecursiveReadLock::?RecursiveReadLock*;
     mir::RecursiveReadLock::RecursiveReadLock*;
