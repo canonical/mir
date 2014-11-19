@@ -119,9 +119,9 @@ bool mir_surface_plan_set_pixel_format(MirSurfacePlan* spec, MirPixelFormat form
 bool mir_surface_plan_set_buffer_usage(MirSurfacePlan* spec, MirBufferUsage usage);
 
 /**
- * \param [in] spec     Specification to mutate
- * \param output_id
- * \return              False if name is not a valid attribute of this surface type.
+ * \param [in] spec         Specification to mutate
+ * \param [in] output_id    ID of output to place surface on. From MirDisplayOutput.output_id
+ * \return                  False if setting surface fullscreen is invalid for this surface.
  */
 bool mir_surface_plan_set_fullscreen_on_output(MirSurfacePlan* spec, uint32_t output_id);
 
