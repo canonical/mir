@@ -17,7 +17,6 @@
  */
 
 #include "mir/fatal.h"
-#include "mir/main_loop.h"
 
 #include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test_framework/process.h"
@@ -211,3 +210,4 @@ TEST_P(OnSignal, removes_endpoint)
 INSTANTIATE_TEST_CASE_P(ServerShutdown,
     OnSignal,
     ::testing::Values(SIGQUIT, SIGABRT, SIGFPE, SIGSEGV, SIGBUS));
+
