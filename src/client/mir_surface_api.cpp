@@ -52,11 +52,11 @@ MirSurfacePlan* mir_connection_create_plan_for_normal_surface(MirConnection* con
     return spec;
 }
 
-MirSurface* mir_surface_realise_sync(MirSurfacePlan* requested_specification)
+MirSurface* mir_surface_create_sync(MirSurfacePlan* requested_specification)
 {
     MirSurface* surface = nullptr;
 
-    mir_wait_for(mir_surface_realise(requested_specification,
+    mir_wait_for(mir_surface_create(requested_specification,
         reinterpret_cast<mir_surface_callback>(assign_result),
         &surface));
 
@@ -72,8 +72,8 @@ void mir_surface_realise_thunk(MirSurface* surface, void* context)
 }
 }
 
-MirWaitHandle* mir_surface_realise(MirSurfacePlan* requested_specification,
-                                   mir_surface_callback callback, void* context)
+MirWaitHandle* mir_surface_create(MirSurfacePlan* requested_specification,
+                                  mir_surface_callback callback, void* context)
 {
     MirSurfaceParameters params;
     params.name = requested_specification->name.c_str();

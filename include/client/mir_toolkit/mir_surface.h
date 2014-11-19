@@ -58,8 +58,8 @@ MirSurfacePlan* mir_connection_create_plan_for_normal_surface(MirConnection* con
  * \return                              A handle that can be passed to mir_wait_for
  * \note    This consumes requested_specification. No further calls should be made with it.
  */
-MirWaitHandle* mir_surface_realise(MirSurfacePlan* requested_specification,
-                                   mir_surface_callback callback, void* context);
+MirWaitHandle* mir_surface_create(MirSurfacePlan* requested_specification,
+                                  mir_surface_callback callback, void* context);
 
 /**
  * Create a surface from a given specification and wait for the result.
@@ -68,7 +68,7 @@ MirWaitHandle* mir_surface_realise(MirSurfacePlan* requested_specification,
  *                                      in the case of error.
  * \note    This consumes requested_specification. No further calls should be made with it.
  */
-MirSurface* mir_surface_realise_sync(MirSurfacePlan* requested_specification);
+MirSurface* mir_surface_create_sync(MirSurfacePlan* requested_specification);
 
 /**
  * Set the requested name.
@@ -191,6 +191,8 @@ void mir_surface_plan_release(MirSurfacePlan* spec);
  *   \warning callback could be called from another thread. You must do any
  *            locking appropriate to protect your data accessed in the
  *            callback.
+ *   \note    This will soon be deprecated. Use the create_plan_for/mir_surface_create
+ *            two-stage process instead.
  *   \param [in] connection          The connection
  *   \param [in] surface_parameters  Request surface parameters
  *   \param [in] callback            Callback function to be invoked when
@@ -208,6 +210,8 @@ MirWaitHandle *mir_connection_create_surface(
 /**
  * Create a surface like in mir_connection_create_surface(), but also wait for
  * creation to complete and return the resulting surface.
+ *   \note    This will soon be deprecated. Use the create_plan_for/mir_surface_create
+ *            two-stage process instead.
  *   \param [in] connection  The connection
  *   \param [in] params      Parameters describing the desired surface
  *   \return                 The resulting surface
