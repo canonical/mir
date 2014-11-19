@@ -49,7 +49,7 @@ class PixelBufferABGR
 public:
     PixelBufferABGR(geom::Size sz, uint32_t color) :
         size{sz.width.as_uint32_t() * sz.height.as_uint32_t()},
-        data{static_cast<uint32_t*>(::operator new(size * sizeof(color)))}
+        data{new uint32_t[size]}
     {
         fill(color);
     }
@@ -57,20 +57,21 @@ public:
     void fill(uint32_t color)
     {
         for(auto i = 0u; i < size; i++)
-            data.get()[i] = color;
+            data[i] = color;
     }
 
     unsigned char* pixels()
     {
         return reinterpret_cast<unsigned char*>(data.get());
     }
+
     size_t pixel_size()
     {
         return size * sizeof(uint32_t);
     }
 private:
     size_t size;
-    std::shared_ptr<uint32_t> data;
+    std::unique_ptr<uint32_t[]> data;
 };
 
 class DemoOverlayClient
