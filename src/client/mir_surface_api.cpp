@@ -40,11 +40,11 @@ void assign_result(void* result, void** context)
 
 }
 
-MirSurfaceSpec* mir_spec_for_normal_surface(MirConnection* connection,
-                                            int width, int height,
-                                            MirPixelFormat format)
+MirSurfacePlan* mir_connection_create_plan_for_normal_surface(MirConnection* connection,
+                                                              int width, int height,
+                                                              MirPixelFormat format)
 {
-    auto spec = new MirSurfaceSpec;
+    auto spec = new MirSurfacePlan;
     spec->connection = connection;
     spec->width = width;
     spec->height = height;
@@ -52,7 +52,7 @@ MirSurfaceSpec* mir_spec_for_normal_surface(MirConnection* connection,
     return spec;
 }
 
-MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification)
+MirSurface* mir_surface_realise_sync(MirSurfacePlan* requested_specification)
 {
     MirSurface* surface = nullptr;
 
@@ -72,7 +72,7 @@ void mir_surface_realise_thunk(MirSurface* surface, void* context)
 }
 }
 
-MirWaitHandle* mir_surface_realise(MirSurfaceSpec* requested_specification,
+MirWaitHandle* mir_surface_realise(MirSurfacePlan* requested_specification,
                                    mir_surface_callback callback, void* context)
 {
     MirSurfaceParameters params;
@@ -101,74 +101,74 @@ MirWaitHandle* mir_surface_realise(MirSurfaceSpec* requested_specification,
                                          mir_surface_realise_thunk, shim_callback);
 }
 
-bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)
+bool mir_surface_plan_set_name(MirSurfacePlan* spec, char const* name)
 {
     spec->name = name;
     return true;
 }
 
-bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width)
+bool mir_surface_plan_set_width(MirSurfacePlan* spec, unsigned width)
 {
     spec->width = width;
     return true;
 }
 
-bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height)
+bool mir_surface_plan_set_height(MirSurfacePlan* spec, unsigned height)
 {
     spec->height = height;
     return true;
 }
 
-bool mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format)
+bool mir_surface_plan_set_pixel_format(MirSurfacePlan* spec, MirPixelFormat format)
 {
     spec->pixel_format = format;
     return true;
 }
 
-bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage)
+bool mir_surface_plan_set_buffer_usage(MirSurfacePlan* spec, MirBufferUsage usage)
 {
     spec->buffer_usage = usage;
     return true;
 }
 
-bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id)
+bool mir_surface_plan_set_fullscreen_on_output(MirSurfacePlan* spec, uint32_t output_id)
 {
     spec->output_id = output_id;
     spec->fullscreen = true;
     return true;
 }
 
-MirSurfaceSpec* mir_surface_get_spec(MirSurface* surf)
+MirSurfacePlan* mir_surface_get_plan(MirSurface* surf)
 {
     return surf->get_surface_spec();
 }
 
-char const* mir_surface_spec_get_name(MirSurfaceSpec* spec)
+char const* mir_surface_plan_get_name(MirSurfacePlan* spec)
 {
     return spec->name.c_str();
 }
 
-int mir_surface_spec_get_width(MirSurfaceSpec* spec)
+int mir_surface_plan_get_width(MirSurfacePlan* spec)
 {
     return spec->width;
 }
 
-int mir_surface_spec_get_height(MirSurfaceSpec* spec)
+int mir_surface_plan_get_height(MirSurfacePlan* spec)
 {
     return spec->height;
 }
 
-MirPixelFormat mir_surface_spec_get_pixel_format(MirSurfaceSpec* spec)
+MirPixelFormat mir_surface_plan_get_pixel_format(MirSurfacePlan* spec)
 {
     return spec->pixel_format;
 }
 
-MirBufferUsage mir_surface_spec_get_buffer_usage(MirSurfaceSpec* spec)
+MirBufferUsage mir_surface_plan_get_buffer_usage(MirSurfacePlan* spec)
 {
     return spec->buffer_usage;
 }
 
-void mir_surface_spec_release(MirSurfaceSpec* spec)
+void mir_surface_plan_release(MirSurfacePlan* spec)
 {
     delete spec;
 }

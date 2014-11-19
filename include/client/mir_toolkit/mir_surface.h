@@ -41,7 +41,10 @@ extern "C" {
  * \param [in] format       Pixel format for the surface.
  * \return                  A handle that can be passed to mir_surface_realise to complete construction.
  */
-MirSurfaceSpec* mir_spec_for_normal_surface(MirConnection* connection, int width, int height, MirPixelFormat format);
+MirSurfacePlan* mir_connection_create_plan_for_normal_surface(MirConnection* connection,
+                                                              int width,
+                                                              int height,
+                                                              MirPixelFormat format);
 
 /**
  * Create a surface from a given specification
@@ -51,7 +54,7 @@ MirSurfaceSpec* mir_spec_for_normal_surface(MirConnection* connection, int width
  * \return                              A handle that can be passed to mir_wait_for
  * \note    This consumes requested_specification. No further calls should be made with it.
  */
-MirWaitHandle* mir_surface_realise(MirSurfaceSpec* requested_specification,
+MirWaitHandle* mir_surface_realise(MirSurfacePlan* requested_specification,
                                    mir_surface_callback callback, void* context);
 
 /**
@@ -61,7 +64,7 @@ MirWaitHandle* mir_surface_realise(MirSurfaceSpec* requested_specification,
  *                                      in the case of error.
  * \note    This consumes requested_specification. No further calls should be made with it.
  */
-MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification);
+MirSurface* mir_surface_realise_sync(MirSurfacePlan* requested_specification);
 
 /**
  * Set the requested name.
@@ -75,7 +78,7 @@ MirSurface* mir_surface_realise_sync(MirSurfaceSpec* requested_specification);
  *                      after this call.
  * \return              False if name is not a valid attribute of this surface type.
  */
-bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name);
+bool mir_surface_plan_set_name(MirSurfacePlan* spec, char const* name);
 
 /**
  * Set the requested width, in pixels
@@ -86,7 +89,7 @@ bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name);
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          surface of any specific width or height.
  */
-bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width);
+bool mir_surface_plan_set_width(MirSurfacePlan* spec, unsigned width);
 
 /**
  * Set the requested height, in pixels
@@ -97,7 +100,7 @@ bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width);
  * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
  *          surface of any specific width or height.
  */
-bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height);
+bool mir_surface_plan_set_height(MirSurfacePlan* spec, unsigned height);
 
 /**
  * Set the requested pixel format.
@@ -105,7 +108,7 @@ bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height);
  * \param [in] format   Requested pixel format
  * \return              False if format is not a valid pixel format for this surface type.
  */
-bool mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format);
+bool mir_surface_plan_set_pixel_format(MirSurfacePlan* spec, MirPixelFormat format);
 
 /**
  * Set the requested buffer usage.
@@ -113,14 +116,14 @@ bool mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat form
  * \param [in] usage    Requested buffer usage
  * \return              False if the requested buffer usage is invalid for this surface.
  */
-bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage);
+bool mir_surface_plan_set_buffer_usage(MirSurfacePlan* spec, MirBufferUsage usage);
 
 /**
  * \param [in] spec     Specification to mutate
  * \param output_id
  * \return              False if name is not a valid attribute of this surface type.
  */
-bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id);
+bool mir_surface_plan_set_fullscreen_on_output(MirSurfacePlan* spec, uint32_t output_id);
 
 /**
  * Get a surface specification based on a surface's current state
@@ -130,42 +133,42 @@ bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t ou
  * \note    Caller owns this MirSurfaceSpec. If the spec is not passed to mir_surface_realise
  *          use mir_surface_spec_release to free the associated resources.
  */
-MirSurfaceSpec* mir_surface_get_spec(MirSurface* surf);
+MirSurfacePlan* mir_surface_get_plan(MirSurface* surf);
 
 /**
  * Get the requested name
  * \param [in] spec     Specification to query
  * \return              The name. This buffer is owned by the MirSurfaceSpec; do not free it.
  */
-char const* mir_surface_spec_get_name(MirSurfaceSpec* spec);
+char const* mir_surface_plan_get_name(MirSurfacePlan* spec);
 
 /**
  * Get the requested width
  * \param [in] spec     Specification to query
  * \return              The width, in pixels, or -1 if the width is unset
  */
-int mir_surface_spec_get_width(MirSurfaceSpec* spec);
+int mir_surface_plan_get_width(MirSurfacePlan* spec);
 
 /**
  * Get the requested height
  * \param [in] spec     Specification to query
  * \return              The height, in pixels, or -1 if the height is unset
  */
-int mir_surface_spec_get_height(MirSurfaceSpec* spec);
+int mir_surface_plan_get_height(MirSurfacePlan* spec);
 
 /**
  * Get the requested pixel format
  * \param [in] spec     Specification to query
  * \return              The pixel format
  */
-MirPixelFormat mir_surface_spec_get_pixel_format(MirSurfaceSpec* spec);
+MirPixelFormat mir_surface_plan_get_pixel_format(MirSurfacePlan* spec);
 
 /**
  * Get the requested buffer usage
  * \param [in] spec     Specification to query
  * \return              The buffer usage
  */
-MirBufferUsage mir_surface_spec_get_buffer_usage(MirSurfaceSpec* spec);
+MirBufferUsage mir_surface_plan_get_buffer_usage(MirSurfacePlan* spec);
 
 /**
  * Release the resources held by a MirSurfaceSpec.
@@ -175,7 +178,7 @@ MirBufferUsage mir_surface_spec_get_buffer_usage(MirSurfaceSpec* spec);
  *       passed to these functions.
  * \param [in] spec     Specification to release
  */
-void mir_surface_spec_release(MirSurfaceSpec* spec);
+void mir_surface_plan_release(MirSurfacePlan* spec);
 
 /**
  * Request a new Mir surface on the supplied connection with the supplied

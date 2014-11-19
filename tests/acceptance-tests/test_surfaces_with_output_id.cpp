@@ -174,13 +174,13 @@ TEST_F(SurfacesWithOutputId, requested_size_is_ignored_in_favour_of_display_size
         EXPECT_THAT(surface.get(), IsValid());
 
         auto expected_mode = config->outputs[n].modes[config->outputs[n].current_mode];
-        auto resultant_spec = mir_surface_get_spec(surface.get());
+        auto resultant_spec = mir_surface_get_plan(surface.get());
 
-        EXPECT_THAT(mir_surface_spec_get_width(resultant_spec),
+        EXPECT_THAT(mir_surface_plan_get_width(resultant_spec),
                     testing::Eq(expected_mode.horizontal_resolution));
-        EXPECT_THAT(mir_surface_spec_get_height(resultant_spec),
+        EXPECT_THAT(mir_surface_plan_get_height(resultant_spec),
                     testing::Eq(expected_mode.vertical_resolution));
 
-        mir_surface_spec_release(resultant_spec);
+        mir_surface_plan_release(resultant_spec);
     }
 }

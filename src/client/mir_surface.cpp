@@ -47,7 +47,7 @@ std::mutex handle_mutex;
 std::unordered_set<MirSurface*> valid_surfaces;
 }
 
-MirSurfaceSpec::MirSurfaceSpec()
+MirSurfacePlan::MirSurfacePlan()
     : width{-1},
       height{-1},
       buffer_usage{mir_buffer_usage_hardware},
@@ -167,11 +167,11 @@ MirSurfaceParameters MirSurface::get_parameters() const
         mir_display_output_id_invalid};
 }
 
-MirSurfaceSpec* MirSurface::get_surface_spec() const
+MirSurfacePlan* MirSurface::get_surface_spec() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
 
-    auto spec = new MirSurfaceSpec;
+    auto spec = new MirSurfacePlan;
     spec->name = name;
     spec->width = surface.width();
     spec->height = surface.height();

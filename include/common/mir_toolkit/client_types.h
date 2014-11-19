@@ -45,7 +45,7 @@ typedef void* MirEGLNativeWindowType;
 typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
 typedef struct MirSurface MirSurface;
-typedef struct MirSurfaceSpec MirSurfaceSpec;
+typedef struct MirSurfacePlan MirSurfacePlan;
 typedef struct MirScreencast MirScreencast;
 typedef struct MirPromptSession MirPromptSession;
 
