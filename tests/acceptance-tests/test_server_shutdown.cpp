@@ -17,6 +17,7 @@
  */
 
 #include "mir/fatal.h"
+#include "mir/main_loop.h"
 
 #include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test_framework/process.h"
@@ -151,59 +152,32 @@ TEST_F(ServerShutdown, setting_on_fatal_error_abort_option_causes_abort_on_fatal
     }
 }
 
-#if 0
-// TODO There's no easy way to inject the fatal error with the new API test fixtures.
-// TODO It can be placed into server.add_init_callback() but then prevents the
-// TODO server actually starting the main loop and signalling that the test process
-// TODO can continue.
-// TODO I'm not convinced it adds enough value to justify reworking it
 TEST_F(ServerShutdown, server_removes_endpoint_on_mir_fatal_error_except)
 {   // Even fatal errors sometimes need to be caught for critical cleanup...
+
+    add_to_environment("MIR_SERVER_FILE", mir_test_socket);
+    server.add_init_callback([&] { mir::fatal_error("Bang"); });
+    server.apply_settings();
+
     mtf::CrossProcessSync sync;
 
-    run_in_server([&]
-        {
-            sync.wait_for_signal_ready_for();
-            mir::fatal_error("Bang");
-        });
-
-    if (is_test_process())
+    if (auto const pid = fork())
     {
-        ASSERT_TRUE(file_exists(server_config.the_socket_file()));
-
-        server_config.sync.signal_ready();
-
-        auto result = wait_for_shutdown_server_process();
-        EXPECT_EQ(mtf::TerminationReason::child_terminated_normally, result.reason);
-
-        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
-    });
-}
-
-// Here's a failing attempt...
-TEST_F(ServerShutdown, server_removes_endpoint_on_mir_fatal_error_except)
-{   // Even fatal errors sometimes need to be caught for critical cleanup...
-    mtf::CrossProcessSync sync;
-
-    run_in_server([&]
-        {
-            sync.wait_for_signal_ready_for();
-            server.the_main_loop()->enqueue(this, [&] { mir::fatal_error("Bang"); });
-        });
-
-    if (is_test_process())
-    {
-        ASSERT_TRUE(file_exists(mir_test_socket));
+        auto const server_process = std::make_shared<mtf::Process>(pid);
 
         sync.signal_ready();
 
-        auto result = wait_for_shutdown_server_process();
-        EXPECT_EQ(mtf::TerminationReason::child_terminated_normally, result.reason);
+        auto result = server_process->wait_for_termination();
 
+        EXPECT_EQ(mtf::TerminationReason::child_terminated_normally, result.reason);
         EXPECT_FALSE(file_exists(mir_test_socket));
     }
+    else
+    {
+        sync.wait_for_signal_ready_for();
+        server.run();
+    }
 }
-#endif
 
 struct OnSignal : ServerShutdown, ::testing::WithParamInterface<int> {};
 
