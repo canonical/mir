@@ -34,7 +34,11 @@ extern "C" {
 #endif
 
 /**
- * Create a surface specification for a normal surface - that is, a surface of type mir_surface_type_normal
+ * Create a surface specification for a normal surface.
+ *
+ * A normal surface is suitable for most application windows. It has no special semantics.
+ * On a desktop shell it will typically have a title-bar, be movable, resizeable, etc.
+ *
  * \param [in] connection   Connection the surface will be created on
  * \param [in] width        Requested width. The server is not guaranteed to return a surface of this width.
  * \param [in] height       Requested height. The server is not guaranteed to return a surface with this height.
