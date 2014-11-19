@@ -20,6 +20,7 @@
 #include "mir/fatal.h"
 #include "mir/options/default_configuration.h"
 #include "mir/abnormal_exit.h"
+#include "mir/glib_main_loop.h"
 #include "mir/asio_main_loop.h"
 #include "mir/default_server_status_listener.h"
 #include "mir/emergency_cleanup.h"
@@ -152,8 +153,6 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         });
 }
 
-mir::CachedPtr<mir::time::Clock> mir::DefaultServerConfiguration::clock;
-
 std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()
 {
     return clock(
@@ -166,9 +165,12 @@ std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()
 std::shared_ptr<mir::MainLoop> mir::DefaultServerConfiguration::the_main_loop()
 {
     return main_loop(
-        [this]()
+        [this]() -> std::shared_ptr<mir::MainLoop>
         {
-            return std::make_shared<mir::AsioMainLoop>(the_clock());
+            if (the_options()->is_set(options::use_asio_main_loop_opt))
+                return std::make_shared<mir::AsioMainLoop>(the_clock());
+            else
+                return std::make_shared<mir::GLibMainLoop>(the_clock());
         });
 }
 

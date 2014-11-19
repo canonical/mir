@@ -28,7 +28,7 @@
 #include "mir/report/legacy_input_report.h"
 #include "mir_test/fake_event_hub.h"
 
-namespace ml   = mir::logging;
+namespace ml = mir::logging;
 
 using std::string;
 using mir::input::android::FakeEventHub;
@@ -38,7 +38,7 @@ namespace
 class TestLogger : public ml::Logger
 {
 public:
-    void log(Severity severity, const string& message, const string& component) override {
+    void log(ml::Severity severity, const string& message, const string& component) override {
         (void)severity;
         (void)message;
         (void)component;

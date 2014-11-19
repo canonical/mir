@@ -181,6 +181,7 @@ MIRPLATFORM_4 {
     mir::options::server_socket_opt*;
     mir::options::session_mediator_report_opt*;
     mir::options::touchspots_opt*;
+    mir::options::use_asio_main_loop_opt*;
     non-virtual?thunk?to?mir::graphics::BasicPlatform::?BasicPlatform*;
     non-virtual?thunk?to?mir::graphics::Cursor::?Cursor*;
     non-virtual?thunk?to?mir::graphics::CursorImage::?CursorImage*;
