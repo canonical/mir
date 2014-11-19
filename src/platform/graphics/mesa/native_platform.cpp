@@ -38,8 +38,7 @@
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 
-void mgm::NativePlatform::initialize(
-    std::shared_ptr<NestedContext> const& nested_context_arg)
+mgm::NativePlatform::NativePlatform(std::shared_ptr<NestedContext> const& nested_context_arg)
 {
     nested_context = nested_context_arg;
     auto fds = nested_context->platform_fd_items();
@@ -118,9 +117,11 @@ void mgm::NativePlatform::fill_buffer_package(
     }
 }
 
-extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& /*report*/)
+extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(
+    std::shared_ptr<mg::DisplayReport> const&,
+    std::shared_ptr<mg::NestedContext> const& nested_context)
 {
-    return std::make_shared<mgm::NativePlatform>();
+    return std::make_shared<mgm::NativePlatform>(nested_context);
 }
 
 namespace

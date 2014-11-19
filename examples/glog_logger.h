@@ -20,9 +20,9 @@
 
 namespace mir
 {
-namespace logging
+namespace examples
 {
-class GlogLogger : public Logger
+class GlogLogger : public logging::Logger
 {
 public:
     GlogLogger(
@@ -33,9 +33,9 @@ public:
 
 private:
     virtual void log(
-        Severity severity,
-        const std::string& message,
-        const std::string& component) override;
+        mir::logging::Severity severity,
+        std::string const& message,
+        std::string const& component) override;
 };
 }
 }

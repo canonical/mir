@@ -21,6 +21,8 @@
 #include <mir_toolkit/client_types.h>
 #include <mir_toolkit/common.h>
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 /**
  * \addtogroup mir_toolkit
@@ -66,7 +68,7 @@ MirConnection *mir_connect_sync(char const *server, char const *app_name);
  * \return                 True if the supplied connection is valid, or
  *                         false otherwise.
  */
-MirBool mir_connection_is_valid(MirConnection *connection);
+bool mir_connection_is_valid(MirConnection *connection);
 
 /**
  * Retrieve a text description of the last error. The returned string is owned

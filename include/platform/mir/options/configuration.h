@@ -44,14 +44,10 @@ extern char const* const frontend_threads_opt;
 extern char const* const touchspots_opt;
 extern char const* const fatal_abort_opt;
 extern char const* const debug_opt;
+extern char const* const use_asio_main_loop_opt;
 
 extern char const* const name_opt;
 extern char const* const offscreen_opt;
-
-extern char const* const glog;
-extern char const* const glog_stderrthreshold;
-extern char const* const glog_minloglevel;
-extern char const* const glog_log_dir;
 
 extern char const* const off_opt_value;
 extern char const* const log_opt_value;

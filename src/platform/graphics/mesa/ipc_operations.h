@@ -37,6 +37,9 @@ public:
     void pack_buffer(BufferIpcMessage& message, Buffer const& buffer, BufferIpcMsgType msg_type) const override;
     void unpack_buffer(BufferIpcMessage& message, Buffer const& buffer) const override;
     std::shared_ptr<PlatformIPCPackage> connection_ipc_package() override;
+    PlatformIPCPackage platform_operation(
+        unsigned int const opcode,
+        PlatformIPCPackage const& package) override; 
 private:
     std::shared_ptr<helpers::DRMHelper> const drm;
 };

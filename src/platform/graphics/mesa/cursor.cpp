@@ -101,28 +101,35 @@ void mgm::Cursor::write_buffer_data_locked(std::lock_guard<std::mutex> const&, v
 
 void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> const& lg, CursorImage const& image)
 {
-    uint32_t const* image_argb = static_cast<uint32_t const*>(image.as_argb_8888());
+    auto image_argb = static_cast<uint8_t const*>(image.as_argb_8888());
     auto image_width = image.size().width.as_uint32_t();
     auto image_height = image.size().height.as_uint32_t();
+    auto image_stride = image_width * 4;
 
     if (image_width > buffer_width || image_height > buffer_height)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Image is too big for GBM cursor buffer"));
     }
     
-    uint32_t pixels[buffer_width*buffer_height] {};
-    // 'pixels' is initialized to transparent so we just need to copy the initial image
-    //  in to the top left corner.
-    for (unsigned int i = 0; i < image_height; i++)
+    size_t buffer_stride = gbm_bo_get_stride(buffer);  // in bytes
+    size_t padded_size = buffer_stride * buffer_height;
+    auto padded = std::unique_ptr<uint8_t[]>(new uint8_t[padded_size]);
+    size_t rhs_padding = buffer_stride - image_stride;
+
+    uint8_t* dest = &padded[0];
+    uint8_t const* src = image_argb;
+
+    for (unsigned int y = 0; y < image_height; y++)
     {
-        for (unsigned int j = 0; j < image_width; j++)
-        {
-            pixels[buffer_width*i+j] = image_argb[image_width*i + j];
-        }
+        memcpy(dest, src, image_stride);
+        memset(dest + image_stride, 0, rhs_padding);
+        dest += buffer_stride;
+        src += image_stride;
     }
 
-    auto const count = buffer_width * buffer_height * sizeof(uint32_t);
-    write_buffer_data_locked(lg, pixels, count);
+    memset(dest, 0, buffer_stride * (buffer_height - image_height));
+
+    write_buffer_data_locked(lg, &padded[0], padded_size);
 }
 
 void mgm::Cursor::show(CursorImage const& cursor_image)

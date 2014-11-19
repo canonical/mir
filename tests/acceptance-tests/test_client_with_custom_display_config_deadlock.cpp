@@ -18,27 +18,11 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/connected_client_headless_server.h"
 
 #include <gtest/gtest.h>
 
-namespace mtf = mir_test_framework;
-
-namespace
-{
-
-struct StubServerConfig : mtf::StubbedServerConfiguration
-{
-    std::shared_ptr<mir::input::InputSender> the_input_sender()
-    {
-        return DefaultServerConfiguration::the_input_sender();
-    }
-};
-
-using ClientWithCustomDisplayConfiguration = mtf::BasicClientServerFixture<StubServerConfig>;
-
-}
+using ClientWithCustomDisplayConfiguration = mir_test_framework::ConnectedClientHeadlessServer;
 
 // Regression test for LP:#1340669
 // Test is not deterministic since we are testing a race, but failure can be
