@@ -146,6 +146,8 @@ TEST(GraphicsDisplayLayoutTest, place_in_output_places_in_correct_output)
 
 TEST(GraphicsDisplayLayoutTest, place_in_output_updates_size_of_non_fullscreen_request)
 {
+    using namespace testing;
+
     auto stub_display = std::make_shared<StubDisplay>();
 
     msh::GraphicsDisplayLayout display_layout{stub_display};
@@ -174,6 +176,6 @@ TEST(GraphicsDisplayLayoutTest, place_in_output_updates_size_of_non_fullscreen_r
         display_layout.place_in_output(output_id, submitted_rect);
 
         EXPECT_THAT(submitted_rect.size,
-                    testing::Eq(stub_display->output_rects[output_id.as_value() - 1].size));
+                    Eq(stub_display->output_rects[output_id.as_value() - 1].size));
     }
 }

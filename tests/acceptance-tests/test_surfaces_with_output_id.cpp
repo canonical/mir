@@ -167,6 +167,8 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
 
 TEST_F(SurfacesWithOutputId, requested_size_is_ignored_in_favour_of_display_size)
 {
+    using namespace testing;
+
     for (uint32_t n = 0; n < config->num_outputs; ++n)
     {
         auto surface = create_non_fullscreen_surface_for(config->outputs[n]);
@@ -177,9 +179,9 @@ TEST_F(SurfacesWithOutputId, requested_size_is_ignored_in_favour_of_display_size
         auto resultant_spec = mir_surface_get_plan(surface.get());
 
         EXPECT_THAT(mir_surface_plan_get_width(resultant_spec),
-                    testing::Eq(expected_mode.horizontal_resolution));
+                    Eq(expected_mode.horizontal_resolution));
         EXPECT_THAT(mir_surface_plan_get_height(resultant_spec),
-                    testing::Eq(expected_mode.vertical_resolution));
+                    Eq(expected_mode.vertical_resolution));
 
         mir_surface_plan_release(resultant_spec);
     }
