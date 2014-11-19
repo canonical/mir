@@ -24,6 +24,8 @@
 #include <mutex>
 #include <cstdlib>
 
+namespace ml=mir::logging;
+
 namespace
 {
 std::once_flag init_flag;
@@ -66,7 +68,7 @@ mir::examples::GlogLogger::GlogLogger(
     static google_glog_guard_t guard(argv0);
 }
 
-void mir::examples::GlogLogger::log(Severity severity, std::string const& message, std::string const& component)
+void mir::examples::GlogLogger::log(ml::Severity severity, std::string const& message, std::string const& component)
 {
     static int glog_level[] =
     {
@@ -78,6 +80,6 @@ void mir::examples::GlogLogger::log(Severity severity, std::string const& messag
     };
 
     // Since we're not collecting __FILE__ or __LINE__ this is misleading
-    google::LogMessage(__FILE__, __LINE__, glog_level[severity]).stream()
+    google::LogMessage(__FILE__, __LINE__, glog_level[static_cast<int>(severity)]).stream()
         << '[' << component << "] " << message;
 }

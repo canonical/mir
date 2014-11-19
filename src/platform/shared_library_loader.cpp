@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -18,8 +18,11 @@
 
 #include "mir/shared_library_loader.h"
 #include "mir/shared_library.h"
+#include "mir/logging/logger.h"
 #include <memory>
 #include <map>
+
+namespace ml = mir::logging;
 
 mir::SharedLibrary const* mir::load_library(std::string const& libname)
 {
@@ -32,6 +35,7 @@ mir::SharedLibrary const* mir::load_library(std::string const& libname)
     }
     else
     {
+        ml::log(ml::Severity::informational, "Loading library : " + libname);
         ptr = std::make_shared<mir::SharedLibrary>(libname);
         return ptr.get();
     }

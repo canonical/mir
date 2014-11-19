@@ -33,7 +33,7 @@ namespace
 class MockLogger : public ml::Logger
 {
 public:
-    MOCK_METHOD3(log, void(Severity severity, const std::string& message, const std::string& component));
+    MOCK_METHOD3(log, void(ml::Severity severity, const std::string& message, const std::string& component));
     ~MockLogger() noexcept(true) {}
 };
 
@@ -112,13 +112,13 @@ TEST_F(DisplayReport, eglconfig)
         .WillRepeatedly(DoAll(SetArgPointee<3>(dummy_value),Return(EGL_TRUE)));
 
     EXPECT_CALL(*logger, log(
-        ml::Logger::informational,
+        ml::Severity::informational,
         "Display EGL Configuration:",
         component));
     for(auto &i : egl_string_mapping)
     {
         EXPECT_CALL(*logger, log(
-            ml::Logger::informational,
+            ml::Severity::informational,
             "    [" + i + "] : " + std::to_string(dummy_value),
             component));
     }
