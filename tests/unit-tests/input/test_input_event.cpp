@@ -156,5 +156,57 @@ TEST(KeyInputEventProperties, keycode_scancode_and_modifiers_taken_from_old_styl
     EXPECT_EQ(mir_key_input_event_modifier_shift, mir_key_input_event_get_modifiers(new_kev));
 }
 
-// TODO: Touch event getters
+TEST(TouchInputEventProperties, touch_count_taken_from_pointer_count)
+{
+    unsigned const pointer_count = 3;
+
+    MirEvent old_ev;
+    old_ev.type = mir_event_type_motion;
+    old_ev.motion.action = mir_motion_action_down;
+    old_ev.motion.pointer_count = pointer_count;
+    
+    auto tev = mir_input_event_get_touch_input_event(mir_event_get_input_event(&old_ev));
+    EXPECT_EQ(pointer_count, mir_touch_input_event_get_touch_count(tev));
+}
+
+TEST(TouchInputEventProperties, touch_id_comes_from_pointer_coordinates)
+{
+    unsigned const touch_id = 31;
+    MirEvent old_ev;
+    old_ev.type = mir_event_type_motion;
+    old_ev.motion.action = mir_motion_action_down;
+    old_ev.motion.pointer_count = 1;
+    old_ev.motion.pointer_coordinates[0].id = touch_id;
+
+    auto tev = mir_input_event_get_touch_input_event(mir_event_get_input_event(&old_ev));
+    EXPECT_EQ(touch_id, mir_touch_input_event_get_touch_id(tev, 0));
+}
+
+// mir_motion_action_up/down represent the start of a gesture. pointers only go up/down one at a time
+TEST(TouchInputEventProperties, down_and_up_actions_are_taken_from_old_event)
+{
+    MirEvent old_ev;
+    old_ev.type = mir_event_type_motion;
+    old_ev.motion.action = mir_motion_action_down;
+    old_ev.motion.pointer_count = 1;
+
+    auto tev = mir_input_event_get_touch_input_event(mir_event_get_input_event(&old_ev));
+    EXPECT_EQ(mir_touch_input_event_action_down, mir_touch_input_event_get_touch_action(tev, 0));
+}
+
+TEST(TouchInputEventProperties, pointer_up_down_applies_only_to_masked_action)
+{
+    int const masked_pointer_index = 1;
+
+    MirEvent old_ev;
+    old_ev.type = mir_event_type_motion;
+    old_ev.action = masked_pointer_index << MIR_EVENT_ACTION_POINTER_INDEX_SHIFT;
+    old_ev.action = (old_ev.action & MIR_EVENT_ACTION_POINTER_INDEX_MASK) | mir_motion_action_pointer_up;
+    old_ev.pointer_count = 3;
+
+    auto tev = mir_input_event_get_touch_input_event(mir_event_get_input_event(&old_ev));
+    EXPECT_EQ(mir_touch_input_event_action_change, mir_touch_input_event_get_touch_action(tev, 0));
+    EXPECT_EQ(mir_touch_input_event_action_up, mir_touch_input_event_get_touch_action(tev, 1));
+    EXPECT_EQ(mir_touch_input_event_action_change, mir_touch_input_event_get_touch_action(tev, 2));
+}
 // TODO: Pointer event getters

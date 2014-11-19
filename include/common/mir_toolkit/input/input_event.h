@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/event.h"
 #include "mir_toolkit/input/key_input_event.h"
+#include "mir_toolkit/input/touch_input_event.h"
 
 #include <stdint.h>
 
@@ -54,6 +55,7 @@ MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev);
 MirInputEventTime mir_input_event_get_event_time(MirInputEvent const* ev);
 
 MirKeyInputEvent* mir_input_event_get_key_input_event(MirInputEvent* ev);
+MirTouchInputEvent* mir_input_event_get_touch_input_event(MirInputEvent* ev);
 
 #ifdef __cplusplus
 }

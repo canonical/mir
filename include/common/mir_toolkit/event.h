@@ -33,6 +33,10 @@ extern "C" {
 /* TODO: To the moon. */
 #define MIR_INPUT_EVENT_MAX_POINTER_COUNT 16
 
+#define MIR_EVENT_ACTION_MASK 0xff;
+#define MIR_EVENT_ACTION_POINTER_INDEX_MASK 0xff00;
+#define MIR_EVENT_ACTION_POINTER_INDEX_SHIFT 8;
+
 typedef int64_t nsecs_t;
 
 typedef enum
@@ -71,7 +75,7 @@ typedef enum {
 typedef enum {
     mir_key_modifier_none        = 0,
     mir_key_modifier_alt         = 0x02,
-    mir_key_modifier_alt_left    = 0x10,
+    mir_key_modifieralt_left    = 0x10,
     mir_key_modifier_alt_right   = 0x20,
     mir_key_modifier_shift       = 0x01,
     mir_key_modifier_shift_left  = 0x40,

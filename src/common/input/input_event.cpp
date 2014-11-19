@@ -160,3 +160,31 @@ MirKeyInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent con
     auto const& old_kev = reinterpret_cast<MirEvent const*>(kev)->key;
     return static_cast<MirKeyInputEventModifiers>(old_kev.modifiers);
 }
+
+/* Touch events */
+
+MirTouchInputEvent* mir_input_event_get_touch_input_event(MirInputEvent* ev)
+{
+    switch (mir_input_event_get_type(ev))
+    {
+        case mir_input_event_type_touch:
+            return reinterpret_cast<MirTouchInputEvent*>(ev);
+        default:
+            return nullptr;
+    }
+}
+
+unsigned int mir_touch_input_event_get_touch_count(MirTouchInputEvent const* event)
+{
+    auto const& old_mev = reinterpret_cast<MirEvent const*>(event)->motion;
+    return old_mev.pointer_count;
+}
+
+MirTouchInputEventTouchId mir_touch_input_event_get_touch_id(MirTouchInputEvent const* event, size_t index)
+{
+    // TODO: How to handle bounds checking? assert surely...
+    auto const& old_mev = reinterpret_cast<MirEvent const*>(event)->motion;
+    return old_mev.pointer_coordinates[index].id;
+}
+
+
