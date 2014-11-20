@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -18,13 +18,14 @@
 
 #include "mir/fatal.h"
 
-#include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/interprocess_client_server_test.h"
+#include "mir_test_framework/process.h"
 
 #include <gtest/gtest.h>
 
 namespace mtf = mir_test_framework;
 
-using ServerShutdown = BespokeDisplayServerTestFixture;
+using ServerShutdown = mtf::InterprocessClientServerTest;
 
 namespace
 {
@@ -35,43 +36,34 @@ bool file_exists(std::string const& filename)
 }
 }
 
-TEST_F(ServerShutdown, server_removes_endpoint_on_normal_exit)
+TEST_F(ServerShutdown, normal_exit_removes_endpoint)
 {
-    using ServerConfig = TestingServerConfiguration;
+    run_in_server([]{});
 
-    ServerConfig server_config;
-    launch_server_process(server_config);
-
-    run_in_test_process([&]
+    if (is_test_process())
     {
-        ASSERT_TRUE(file_exists(server_config.the_socket_file()));
+        ASSERT_TRUE(file_exists(mir_test_socket));
 
-        shutdown_server_process();
-        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
-    });
+        stop_server();
+        EXPECT_FALSE(file_exists(mir_test_socket));
+    }
 }
 
-TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
+TEST_F(ServerShutdown, abort_removes_endpoint)
 {
-    struct ServerConfig : TestingServerConfiguration
-    {
-        void on_start() override
+    mtf::CrossProcessSync sync;
+
+    run_in_server([&]
         {
             sync.wait_for_signal_ready_for();
             abort();
-        }
+        });
 
-        mtf::CrossProcessSync sync;
-    };
-
-    ServerConfig server_config;
-    launch_server_process(server_config);
-
-    run_in_test_process([&]
+    if (is_test_process())
     {
-        ASSERT_TRUE(file_exists(server_config.the_socket_file()));
+        ASSERT_TRUE(file_exists(mir_test_socket));
 
-        server_config.sync.signal_ready();
+        sync.signal_ready();
 
         auto result = wait_for_shutdown_server_process();
         EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal, result.reason);
@@ -80,32 +72,26 @@ TEST_F(ServerShutdown, server_removes_endpoint_on_abort)
         // TODO: Investigate if we can do better than this workaround
         EXPECT_TRUE(result.signal == SIGABRT || result.signal == SIGKILL);
 
-        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
-    });
+        EXPECT_FALSE(file_exists(mir_test_socket));
+    }
 }
 
-TEST_F(ServerShutdown, the_fatal_error_default_can_be_changed_to_abort)
+TEST_F(ServerShutdown, fatal_error_abort_causes_abort_on_fatal_error)
 {
     // Change the fatal error strategy before starting the Mir server
     mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
 
-    struct ServerConfig : TestingServerConfiguration
-    {
-        void on_start() override
+    mtf::CrossProcessSync sync;
+
+    run_in_server([&]
         {
             sync.wait_for_signal_ready_for();
             mir::fatal_error("Bang");
-        }
+        });
 
-        mtf::CrossProcessSync sync;
-    };
-
-    ServerConfig server_config;
-    launch_server_process(server_config);
-
-    run_in_test_process([&]
+    if (is_test_process())
     {
-        server_config.sync.signal_ready();
+        sync.signal_ready();
 
         auto result = wait_for_shutdown_server_process();
         EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal, result.reason);
@@ -113,61 +99,48 @@ TEST_F(ServerShutdown, the_fatal_error_default_can_be_changed_to_abort)
         // by SIGKILL because of multithreading madness.
         // TODO: Investigate if we can do better than this workaround
         EXPECT_TRUE(result.signal == SIGABRT || result.signal == SIGKILL);
-    });
+    }
 }
 
-TEST_F(ServerShutdown, server_removes_endpoint_on_mir_fatal_error_abort)
+TEST_F(ServerShutdown, fatal_error_abort_removes_endpoint)
 {   // Even fatal errors sometimes need to be caught for critical cleanup...
-    struct ServerConfig : TestingServerConfiguration
-    {
-        void on_start() override
+    mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
+
+    mtf::CrossProcessSync sync;
+
+    run_in_server([&]
         {
             sync.wait_for_signal_ready_for();
             mir::fatal_error("Bang");
-        }
+        });
 
-        mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
-        mtf::CrossProcessSync sync;
-    };
-
-    ServerConfig server_config;
-    launch_server_process(server_config);
-
-    run_in_test_process([&]
+    if (is_test_process())
     {
-        ASSERT_TRUE(file_exists(server_config.the_socket_file()));
+        ASSERT_TRUE(file_exists(mir_test_socket));
 
-        server_config.sync.signal_ready();
+        sync.signal_ready();
 
         wait_for_shutdown_server_process();
 
-        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
-    });
+        EXPECT_FALSE(file_exists(mir_test_socket));
+    };
 }
 
-TEST_F(ServerShutdown, setting_on_fatal_error_abort_option_causes_abort_on_fatal_error)
+TEST_F(ServerShutdown, on_fatal_error_abort_option_causes_abort_on_fatal_error)
 {
-    static auto const env_on_fatal_error_abort = "MIR_SERVER_ON_FATAL_ERROR_ABORT";
-    auto const old_env(getenv(env_on_fatal_error_abort));
-    if (!old_env) setenv(env_on_fatal_error_abort, "", true);
+    add_to_environment( "MIR_SERVER_ON_FATAL_ERROR_ABORT", "");
 
-    struct ServerConfig : TestingServerConfiguration
-    {
-        void on_start() override
+    mtf::CrossProcessSync sync;
+
+    run_in_server([&]
         {
             sync.wait_for_signal_ready_for();
             mir::fatal_error("Bang");
-        }
+        });
 
-        mtf::CrossProcessSync sync;
-    };
-
-    ServerConfig server_config;
-    launch_server_process(server_config);
-
-    run_in_test_process([&]
+    if (is_test_process())
     {
-        server_config.sync.signal_ready();
+        sync.signal_ready();
 
         auto result = wait_for_shutdown_server_process();
         EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal, result.reason);
@@ -175,66 +148,53 @@ TEST_F(ServerShutdown, setting_on_fatal_error_abort_option_causes_abort_on_fatal
         // by SIGKILL because of multithreading madness.
         // TODO: Investigate if we can do better than this workaround
         EXPECT_TRUE(result.signal == SIGABRT || result.signal == SIGKILL);
-    });
-
-    if (!old_env) unsetenv(env_on_fatal_error_abort);
+    }
 }
 
-TEST_F(ServerShutdown, server_removes_endpoint_on_mir_fatal_error_except)
+TEST_F(ServerShutdown, mir_fatal_error_during_init_removes_endpoint)
 {   // Even fatal errors sometimes need to be caught for critical cleanup...
-    struct ServerConfig : TestingServerConfiguration
+
+    add_to_environment("MIR_SERVER_FILE", mir_test_socket);
+    server.add_init_callback([&] { mir::fatal_error("Bang"); });
+    server.apply_settings();
+
+    mtf::CrossProcessSync sync;
+
+    if (auto const pid = fork())
     {
-        void on_start() override
-        {
-            sync.wait_for_signal_ready_for();
-            mir::fatal_error("Bang");
-        }
+        auto const server_process = std::make_shared<mtf::Process>(pid);
 
-        mtf::CrossProcessSync sync;
-    };
+        sync.signal_ready();
 
-    ServerConfig server_config;
-    launch_server_process(server_config);
+        auto result = server_process->wait_for_termination();
 
-    run_in_test_process([&]
-    {
-        ASSERT_TRUE(file_exists(server_config.the_socket_file()));
-
-        server_config.sync.signal_ready();
-
-        auto result = wait_for_shutdown_server_process();
         EXPECT_EQ(mtf::TerminationReason::child_terminated_normally, result.reason);
-
-        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
-    });
+        EXPECT_FALSE(file_exists(mir_test_socket));
+    }
+    else
+    {
+        sync.wait_for_signal_ready_for();
+        server.run();
+    }
 }
 
 struct OnSignal : ServerShutdown, ::testing::WithParamInterface<int> {};
 
-TEST_P(OnSignal, removes_endpoint_on_signal)
+TEST_P(OnSignal, removes_endpoint)
 {
-    struct ServerConfig : TestingServerConfiguration
-    {
-        void on_start() override
+    mtf::CrossProcessSync sync;
+
+    run_in_server([&]
         {
             sync.wait_for_signal_ready_for();
-            raise(sig);
-        }
+            raise(GetParam());
+        });
 
-        ServerConfig(int sig) : sig(sig) {}
-
-        int const sig;
-        mtf::CrossProcessSync sync;
-    };
-
-    ServerConfig server_config(GetParam());
-    launch_server_process(server_config);
-
-    run_in_test_process([&]
+    if (is_test_process())
     {
-        ASSERT_TRUE(file_exists(server_config.the_socket_file()));
+        ASSERT_TRUE(file_exists(mir_test_socket));
 
-        server_config.sync.signal_ready();
+        sync.signal_ready();
 
         auto result = wait_for_shutdown_server_process();
         EXPECT_EQ(mtf::TerminationReason::child_terminated_by_signal, result.reason);
@@ -243,8 +203,8 @@ TEST_P(OnSignal, removes_endpoint_on_signal)
         // TODO: Investigate if we can do better than this workaround
         EXPECT_TRUE(result.signal == GetParam() || result.signal == SIGKILL);
 
-        EXPECT_FALSE(file_exists(server_config.the_socket_file()));
-    });
+        EXPECT_FALSE(file_exists(mir_test_socket));
+    }
 }
 
 INSTANTIATE_TEST_CASE_P(ServerShutdown,

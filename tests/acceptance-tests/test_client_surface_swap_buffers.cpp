@@ -18,7 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_test_framework/connected_client_headless_server.h"
+#include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test_doubles/null_display_buffer_compositor_factory.h"
 #include "mir_test/signal.h"
 
@@ -38,35 +38,7 @@ void swap_buffers_callback(MirSurface*, void* ctx)
     buffers_swapped->raise();
 }
 
-struct ConnectedClientWithASurface : mtf::ConnectedClientHeadlessServer
-{
-    MirSurface* surface{nullptr};
-
-    void SetUp() override
-    {
-        mtf::ConnectedClientHeadlessServer::SetUp();
-
-        MirSurfaceParameters request_params =
-        {
-            __PRETTY_FUNCTION__,
-            640, 480,
-            mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware,
-            mir_display_output_id_invalid
-        };
-
-        surface = mir_connection_create_surface_sync(connection, &request_params);
-        ASSERT_TRUE(mir_surface_is_valid(surface));
-    }
-
-    void TearDown() override
-    {
-        mir_surface_release_sync(surface);
-        mtf::ConnectedClientHeadlessServer::TearDown();
-    }
-};
-
-struct SurfaceSwapBuffers : ConnectedClientWithASurface
+struct SurfaceSwapBuffers : mtf::ConnectedClientWithASurface
 {
     void SetUp() override
     {

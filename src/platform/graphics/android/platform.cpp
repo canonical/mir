@@ -112,11 +112,6 @@ std::shared_ptr<mga::GraphicBufferAllocator> mga::Platform::create_mga_buffer_al
     return std::make_shared<mga::AndroidGraphicBufferAllocator>();
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mga::Platform::connection_ipc_package()
-{
-    return std::make_shared<mg::PlatformIPCPackage>();
-}
-
 std::shared_ptr<mg::Display> mga::Platform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
@@ -129,12 +124,6 @@ std::shared_ptr<mg::Display> mga::Platform::create_display(
 std::shared_ptr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operations() const
 {
     return ipc_operations;
-}
-
-void mga::Platform::fill_buffer_package(
-    BufferIpcMessage* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const
-{
-    ipc_operations->pack_buffer(*packer, *buffer, msg_type);
 }
 
 EGLNativeDisplayType mga::Platform::egl_native_display() const
