@@ -69,7 +69,7 @@ std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client(
     return std::make_shared<mgm::InternalClient>(nd);
 }
 
-extern "C" std::shared_ptr<mg::Platform> create_native_platform(
+extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& nested_context)
 {

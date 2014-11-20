@@ -112,11 +112,11 @@ public:
  *
  * \ingroup platform_enablement
  */
-extern "C" typedef std::shared_ptr<Platform>(*CreatePlatform)(
+extern "C" typedef std::shared_ptr<Platform>(*CreateHostPlatform)(
     std::shared_ptr<options::Option> const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<DisplayReport> const& report);
-extern "C" std::shared_ptr<Platform> create_platform(
+extern "C" std::shared_ptr<Platform> create_host_platform(
     std::shared_ptr<options::Option> const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<DisplayReport> const& report);
@@ -132,10 +132,10 @@ extern "C" std::shared_ptr<Platform> create_platform(
  *
  * \ingroup platform_enablement
  */
-extern "C" typedef std::shared_ptr<Platform>(*CreateNativePlatform)(
+extern "C" typedef std::shared_ptr<Platform>(*CreateGuestPlatform)(
     std::shared_ptr<DisplayReport> const& report,
     std::shared_ptr<NestedContext> const& nested_context);
-extern "C" std::shared_ptr<Platform> create_native_platform(
+extern "C" std::shared_ptr<Platform> create_guest_platform(
     std::shared_ptr<DisplayReport> const& report,
     std::shared_ptr<NestedContext> const& nested_context);
 

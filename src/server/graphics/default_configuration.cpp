@@ -102,16 +102,17 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
         {
             auto graphics_lib = mir::load_library(the_options()->get<std::string>(options::platform_graphics_lib));
 
-            auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
-            auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
+            auto create_host_platform = graphics_lib->load_function<mg::CreateHostPlatform>("create_host_platform");
+            auto create_guest_platform = graphics_lib->load_function<mg::CreateGuestPlatform>("create_guest_platform");
             if (the_options()->is_set(options::host_socket_opt))
             {
-                auto context = std::make_shared<MirConnectionNestedContext>(the_host_connection());
-                return create_native_platform(the_display_report(), context);
+                return create_guest_platform(
+                    the_display_report(),
+                    std::make_shared<MirConnectionNestedContext>(the_host_connection()));
             }
             else
             {
-                return create_platform(the_options(), the_emergency_cleanup(), the_display_report());
+                return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report());
             }
         });
 }

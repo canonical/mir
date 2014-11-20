@@ -20,8 +20,8 @@ MIRPLATFORM_4 {
     mir::graphics::Buffer::pixel_format*;
     mir::graphics::Buffer::size*;
     mir::graphics::Buffer::stride*;
-    mir::graphics::create_native_platform*;
-    mir::graphics::create_platform*;
+    mir::graphics::create_guest_platform*;
+    mir::graphics::create_host_platform*;
     mir::graphics::Cursor::?Cursor*;
     mir::graphics::Cursor::Cursor*;
     mir::graphics::Cursor::hide*;

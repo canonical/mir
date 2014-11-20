@@ -191,7 +191,7 @@ std::shared_ptr<mg::BufferWriter> mtf::StubGraphicPlatform::make_buffer_writer()
     return std::make_shared<NullWriter>();
 }
 
-extern "C" std::shared_ptr<mg::Platform> create_platform(
+extern "C" std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
@@ -200,7 +200,7 @@ extern "C" std::shared_ptr<mg::Platform> create_platform(
     return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
 }
 
-extern "C" std::shared_ptr<mg::Platform> create_native_platform(
+extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const&)
 {

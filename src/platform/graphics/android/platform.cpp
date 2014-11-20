@@ -141,7 +141,7 @@ std::shared_ptr<mg::BufferWriter> mga::Platform::make_buffer_writer()
     return std::make_shared<mga::BufferWriter>();
 }
 
-extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
+extern "C" std::shared_ptr<mg::Platform> mg::create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<DisplayReport> const& display_report)
@@ -156,7 +156,7 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
     return std::make_shared<mga::Platform>(display_builder, display_report);
 }
 
-extern "C" std::shared_ptr<mg::Platform> create_native_platform(
+extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::NestedContext> const&)
 {
