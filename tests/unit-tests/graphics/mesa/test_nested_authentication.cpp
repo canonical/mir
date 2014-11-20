@@ -87,7 +87,8 @@ TEST_F(NestedAuthentication, failure_in_getmagic_throws)
     int stub_fd = 33;
     int auth_fd = 34;
     //this should get freed by the implementation
-    auto fake_busid = new char('a');
+    auto fake_busid = static_cast<char*>(malloc(sizeof(char)));
+    *fake_busid = 'a';
     int magic{332211};
 
     InSequence seq;
@@ -111,7 +112,8 @@ TEST_F(NestedAuthentication, creates_new_fd)
     int stub_fd = 33;
     int auth_fd = 34;
     //this should get freed by the implementation
-    auto fake_busid = new char('a');
+    auto fake_busid = static_cast<char*>(malloc(sizeof(char)));
+    *fake_busid = 'a';
     int magic{332211};
 
     InSequence seq;
