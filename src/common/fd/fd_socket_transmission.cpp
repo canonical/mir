@@ -181,8 +181,9 @@ void mir::receive_data(mir::Fd const& socket, void* buffer, size_t bytes_request
     if (fds_read < fds.size())
     {
         for(auto fd : fds)
-            if (fd > 0)
+            if (fd >= 0)
                 ::close(fd);
-        BOOST_THROW_EXCEPTION(std::runtime_error("Receieved fewer fds than expected"));
+        fds.clear();
+        BOOST_THROW_EXCEPTION(std::runtime_error("Received fewer fds than expected"));
     }
 }
