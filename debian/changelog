@@ -1,3 +1,9 @@
+mir (0.8.0+14.10.20141010-0ubuntu2) vivid; urgency=medium
+
+  * No change rebuild to get debug symbols on all architectures.
+
+ -- Brian Murray <brian@ubuntu.com>  Wed, 19 Nov 2014 11:33:10 -0800
+
 mir (0.8.0+14.10.20141010-0ubuntu1) utopic; urgency=medium
 
   [ Daniel van Vugt ]
