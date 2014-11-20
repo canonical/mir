@@ -22,6 +22,13 @@
 #include <memory>
 #include <string>
 
+#ifndef MIR_LOGGING_COMPONENT
+#ifndef MIR_LOGGING_COMPONENT_FALLBACK
+#define MIR_LOGGING_COMPONENT_FALLBACK "?"
+#endif
+#define MIR_LOGGING_COMPONENT MIR_LOGGING_COMPONENT_FALLBACK
+#endif
+
 namespace mir
 {
 namespace logging
@@ -43,7 +50,7 @@ class Logger
 public:
     virtual void log(Severity severity,
                      const std::string& message,
-                     const std::string& component = "UnknownComponent") = 0;
+                     const std::string& component = MIR_LOGGING_COMPONENT) = 0;
 
 protected:
     Logger() {}
@@ -52,8 +59,7 @@ protected:
     Logger& operator=(const Logger&) = delete;
 };
 
-void log(Severity severity, const std::string& message);
-void log(Severity severity, const std::string& message, const std::string& component);
+void log(Severity severity, const std::string& message, const std::string& component = MIR_LOGGING_COMPONENT);
 void set_logger(std::shared_ptr<Logger> const& new_logger);
 
 }
