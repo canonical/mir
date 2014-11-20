@@ -46,13 +46,12 @@ public:
     ms::SurfaceCreationParameters place(ms::Session const& /*session*/,
                                         ms::SurfaceCreationParameters const& request_parameters) override
     {
-        auto placed = request_parameters;
-        placed.top_left = placement.top_left;
-        placed.size = placement.size;
-        return placed;
+        return ms::SurfaceCreationParameters(request_parameters)
+            .of_position(placement.top_left)
+            .of_size(placement.size);
     }
 
-    mir::geometry::Rectangle placement;
+    mir::geometry::Rectangle placement{{0, 0}, {100, 100}};
 };
 
 char const* const debugenv = "MIR_SERVER_DEBUG";
@@ -69,13 +68,6 @@ public:
     {
         add_to_environment("MIR_SERVER_NO_FILE", "");
 
-        mir::geometry::Rectangle surface_location;
-        surface_location.top_left.x = mir::geometry::X{0};
-        surface_location.top_left.y = mir::geometry::Y{0};
-        surface_location.size.width = mir::geometry::Width{100};
-        surface_location.size.height = mir::geometry::Height{100};
-
-        set_surface_placement(surface_location);
         server.override_the_placement_strategy([&]{ return placement_strategy; });
         mtf::HeadlessTest::SetUp();
     }
@@ -130,11 +122,7 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
 {
     start_server_with_debug(true);
 
-    mir::geometry::Rectangle surface_location;
-    surface_location.top_left.x = mir::geometry::X{200};
-    surface_location.top_left.y = mir::geometry::Y{100};
-    surface_location.size.width = mir::geometry::Width{800};
-    surface_location.size.height = mir::geometry::Height{600};
+    mir::geometry::Rectangle surface_location{{200, 100}, {800, 600}};
 
     set_surface_placement(surface_location);
 
