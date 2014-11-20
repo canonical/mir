@@ -53,9 +53,9 @@ struct MemoryRegion;
 }
 }
 
-struct MirSurfacePlan
+struct MirSurfaceSpec
 {
-    MirSurfacePlan();
+    MirSurfaceSpec();
 
     MirConnection* connection;
     std::string name;
@@ -98,7 +98,7 @@ public:
         void *context);
 
     MirSurfaceParameters get_parameters() const;
-    MirSurfacePlan* get_surface_spec() const;
+    MirSurfaceSpec* get_surface_spec() const;
     char const * get_error_message();
     int id() const;
     MirWaitHandle* next_buffer(mir_surface_callback callback, void * context);
