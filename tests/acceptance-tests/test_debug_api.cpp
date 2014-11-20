@@ -139,7 +139,7 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
 
     mir_surface_release_sync(surf);
 
-    surface_location.top_left = mir::geometry::Point{100, 250};
+    surface_location.top_left = {100, 250};
 
     set_surface_placement(surface_location);
 
