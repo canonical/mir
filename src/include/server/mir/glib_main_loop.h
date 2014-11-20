@@ -47,7 +47,7 @@ private:
 
 }
 
-class GLibMainLoop
+class GLibMainLoop : public MainLoop
 {
 public:
     GLibMainLoop(std::shared_ptr<time::Clock> const& clock);
@@ -57,29 +57,29 @@ public:
 
     void register_signal_handler(
         std::initializer_list<int> signals,
-        std::function<void(int)> const& handler);
+        std::function<void(int)> const& handler) override;
 
     void register_fd_handler(
         std::initializer_list<int> fds,
         void const* owner,
-        std::function<void(int)> const& handler);
+        std::function<void(int)> const& handler) override;
 
-    void unregister_fd_handler(void const* owner);
+    void unregister_fd_handler(void const* owner) override;
 
-    void enqueue(void const* owner, ServerAction const& action);
-    void pause_processing_for(void const* owner);
-    void resume_processing_for(void const* owner);
+    void enqueue(void const* owner, ServerAction const& action) override;
+    void pause_processing_for(void const* owner) override;
+    void resume_processing_for(void const* owner) override;
 
     std::unique_ptr<mir::time::Alarm> notify_in(
         std::chrono::milliseconds delay,
-        std::function<void()> callback);
+        std::function<void()> callback) override;
 
     std::unique_ptr<mir::time::Alarm> notify_at(
         mir::time::Timestamp t,
-        std::function<void()> callback);
+        std::function<void()> callback) override;
 
     std::unique_ptr<mir::time::Alarm> create_alarm(
-        std::function<void()> callback);
+        std::function<void()> callback) override;
 
     void reprocess_all_sources();
 

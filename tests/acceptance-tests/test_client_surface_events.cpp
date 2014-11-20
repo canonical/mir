@@ -24,8 +24,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 
-#include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/connected_client_with_a_surface.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -60,32 +59,7 @@ struct MockSurfaceCoordinator : msh::SurfaceCoordinatorWrapper
     std::shared_ptr<ms::Surface> latest_surface;
 };
 
-struct MyConfig : mtf::StubbedServerConfiguration
-{
-    std::shared_ptr<ms::SurfaceCoordinator> wrap_surface_coordinator(
-        std::shared_ptr<ms::SurfaceCoordinator> const& wrapped) override
-    {
-        auto const msc = std::make_shared<MockSurfaceCoordinator>(wrapped);
-        mock_surface_coordinator = msc;
-        return msc;
-    }
-
-    std::shared_ptr<MockSurfaceCoordinator> the_mock_surface_coordinator() const
-    {
-        return mock_surface_coordinator.lock();
-    }
-
-    std::shared_ptr<ms::Surface> the_latest_surface() const
-    {
-        return the_mock_surface_coordinator()->latest_surface;
-    }
-
-    std::weak_ptr<MockSurfaceCoordinator> mock_surface_coordinator;
-};
-
-using BasicClientServerFixture = mtf::BasicClientServerFixture<MyConfig>;
-
-struct ClientSurfaceEvents : BasicClientServerFixture
+struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 {
     MirSurfaceParameters const request_params
     {
@@ -96,7 +70,6 @@ struct ClientSurfaceEvents : BasicClientServerFixture
         mir_display_output_id_invalid
     };
 
-    MirSurface* surface{nullptr};
     MirSurface* other_surface;
 
     std::mutex last_event_mutex;
@@ -139,14 +112,31 @@ struct ClientSurfaceEvents : BasicClientServerFixture
         last_event_surface = nullptr;
     }
 
+    std::shared_ptr<MockSurfaceCoordinator> the_mock_surface_coordinator() const
+    {
+        return mock_surface_coordinator.lock();
+    }
+
+    std::shared_ptr<ms::Surface> the_latest_surface() const
+    {
+        return the_mock_surface_coordinator()->latest_surface;
+    }
+
     void SetUp() override
     {
-        BasicClientServerFixture::SetUp();
+        server.wrap_surface_coordinator([&](std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
+            -> std::shared_ptr<ms::SurfaceCoordinator>
+        {
+            auto const msc = std::make_shared<MockSurfaceCoordinator>(wrapped);
+            mock_surface_coordinator = msc;
+            return msc;
+        });
 
-        surface = mir_connection_create_surface_sync(connection, &request_params);
+        mtf::ConnectedClientWithASurface::SetUp();
+
         mir_surface_set_event_handler(surface, &delegate);
 
-        scene_surface = server_configuration.the_latest_surface();
+        scene_surface = the_latest_surface();
 
         other_surface = mir_connection_create_surface_sync(connection, &request_params);
         mir_surface_set_event_handler(other_surface, nullptr);
@@ -158,10 +148,11 @@ struct ClientSurfaceEvents : BasicClientServerFixture
     {
         mir_surface_release_sync(other_surface);
         scene_surface.reset();
-        mir_surface_release_sync(surface);
 
-        BasicClientServerFixture::TearDown();
+        mtf::ConnectedClientWithASurface::TearDown();
     }
+
+    std::weak_ptr<MockSurfaceCoordinator> mock_surface_coordinator;
 };
 }
 
