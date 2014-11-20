@@ -16,16 +16,9 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir/options/option.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/placement_strategy.h"
-#include "mir/scene/surface.h"
-#include "src/server/scene/session_container.h"
-#include "mir/shell/surface_coordinator_wrapper.h"
 
-#include "mir_test/wait_condition.h"
-#include "mir_test/client_event_matchers.h"
-#include "mir_test/barrier.h"
 #include "mir_test_framework/headless_test.h"
 
 #include "mir_toolkit/mir_client_library.h"
@@ -112,6 +105,14 @@ public:
 
     MirConnection* connection{nullptr};
 
+    MirSurfaceParameters const creation_parameters{
+        "DebugAPI",
+        800, 600,
+        mir_pixel_format_argb_8888,
+        mir_buffer_usage_hardware,
+        mir_display_output_id_invalid
+    };
+
 private:
     std::shared_ptr<SimpleConfigurablePlacementStrategy> const placement_strategy
         {std::make_shared<SimpleConfigurablePlacementStrategy>()};
@@ -128,13 +129,6 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
 
     ASSERT_TRUE(mir_connection_is_valid(connection));
 
-    MirSurfaceParameters const creation_parameters = {
-        __PRETTY_FUNCTION__,
-        800, 600,
-        mir_pixel_format_argb_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
     auto surf = mir_connection_create_surface_sync(connection, &creation_parameters);
     ASSERT_TRUE(mir_surface_is_valid(surf));
 
@@ -166,13 +160,6 @@ TEST_F(DebugAPI, is_unavaliable_when_server_not_started_with_debug)
 {
     start_server_with_debug(false);
 
-    MirSurfaceParameters const creation_parameters = {
-        __PRETTY_FUNCTION__,
-        800, 600,
-        mir_pixel_format_argb_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
     auto surf = mir_connection_create_surface_sync(connection, &creation_parameters);
     ASSERT_TRUE(mir_surface_is_valid(surf));
 
