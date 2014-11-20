@@ -180,7 +180,7 @@ void mir::receive_data(mir::Fd const& socket, void* buffer, size_t bytes_request
 
     if (fds_read < fds.size())
     {
-        for(auto fd : fds)
+        for (auto fd : fds)
             if (fd >= 0)
                 ::close(fd);
         fds.clear();
