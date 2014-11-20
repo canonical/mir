@@ -29,16 +29,27 @@
 extern "C" {
 #endif
 
+/**
+ * An event type describing a change in keyboard state
+ */
 typedef struct _MirKeyInputEvent MirKeyInputEvent;
 
+/**
+ * Possible actions for changing key state
+ */
 typedef enum {
+    /* A key has gone down */
     mir_key_input_event_action_up,
-    // TODO: Is there value in supporting cancellation?
+    /* A key has come up */
     mir_key_input_event_action_down,
+    /* System policy has triggered a key repeat on a key
+       which was already down */
     mir_key_input_event_action_repeat
 } MirKeyInputEventAction;
 
-// TODO: Investigate ~racarr
+/**
+ * Description of key modifier state.
+ */
 typedef enum {
     mir_key_input_event_modifier_none        = 0,
     mir_key_input_event_modifier_alt         = 0x02,
@@ -60,11 +71,38 @@ typedef enum {
     mir_key_input_event_modifier_scroll_lock = 0x400000
 } MirKeyInputEventModifiers;
 
+/**
+ * Retreive the action responsible for generating a MirKeyInputEvent
+ * 
+ *  \param [in] event The key event
+ *  \return           The assosciated action
+ */
 MirKeyInputEventAction mir_key_input_event_get_action(MirKeyInputEvent const* event);
 
+/**
+ * Retreive the xkb mapped keycode assosciated with a MirKeyInputEvent. May
+ * be interpreted as per <xkbcommon/xkb-keysyms.h>
+ *
+ *   \param [in] event The key event
+ *   \return           The xkb_keysym
+ */
 xkb_keysym_t mir_key_input_event_get_key_code(MirKeyInputEvent const* event);
+
+/**
+ * Retreive the raw hardware scan code assosciated with a MirKeyInputEvent. May
+ * be interpreted as per <linux/input.h>
+ *
+ *   \param [in] event The key event
+ *   \return           The scancode
+ */
 int mir_key_input_event_get_scan_code(MirKeyInputEvent const* event);
 
+/**
+ * Retreive the modifier keys enabled when the key action was performed.
+ *
+ *   \param [in] event The key event
+ *   \return           The modifier mask
+ */
 MirKeyInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const* event);
 
 #ifdef __cplusplus

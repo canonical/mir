@@ -35,27 +35,73 @@ extern "C" {
 
 typedef struct _MirInputEvent MirInputEvent;
 
-// TODO: Notes about validity e.g. -1 value as e.c.
-typedef int64_t MirInputDeviceId; // TODO: Perhaps belongs in another header with device API
+typedef int64_t MirInputDeviceId;
 typedef int64_t MirInputEventTime;
 
 typedef enum {
-    mir_input_event_type_key,
-    mir_input_event_type_touch,
-    mir_input_event_type_pointer,
-    mir_input_event_type_invalid
+    mir_input_event_type_key = 0,
+    mir_input_event_type_touch = 1
 } MirInputEventType;
 
-// TODO: Comment about header file location on these two
+/*
+ * Retrieves the type of a MirEvent. Now preferred to direct access to ev->type.
+ * In particular ev->type will never be mir_event_type_input and mir_event_get_type
+ * is the only way to ensure mir_event_get_input_event will succeed
+ *
+ * \param [in] event The event
+ * \return           The event type
+ */
 MirEventType mir_event_get_type(MirEvent const* ev);
-MirInputEvent* mir_event_get_input_event(MirEvent* ev);
+/*
+ * Retreive the MirInputEvent assosciated with a MirEvent of 
+ * type mir_event_type_input
+ *
+ * \param [in] event The input event
+ * \return           The associated MirInputEvent
+ */
+MirInputEvent const* mir_event_get_input_event(MirEvent const* ev);
 
-MirInputEventType mir_input_event_get_type(MirInputEvent const* ev);
+/*
+ * Retreives the device id responsible for generating an input event
+ *
+ * \param [in] event The event
+ * \return           The id of the generating device
+ */
 MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev);
+
+/*
+ * Retreive the time at which an input event occured.
+ *
+ * \param [in] event The input event
+ * \return           A timestamp in nanoseconds-since-epoch
+ */
 MirInputEventTime mir_input_event_get_event_time(MirInputEvent const* ev);
 
-MirKeyInputEvent* mir_input_event_get_key_input_event(MirInputEvent* ev);
-MirTouchInputEvent* mir_input_event_get_touch_input_event(MirInputEvent* ev);
+/*
+ * Retreive the type of an input event (e.g. key, touch...)
+ *
+ * \param [in] event The input event
+ * \return           The input event type
+ */
+MirInputEventType mir_input_event_get_type(MirInputEvent const* ev);
+
+/*
+ * Retreive the MirKeyInputEvent assosciated with a MirInputEvent
+ *
+ * \param[in] event The input event
+ * \return          The MirKeyInputEvent or NULL if event type is not 
+ *                  mir_input_event_type_key
+ */
+MirKeyInputEvent const* mir_input_event_get_key_input_event(MirInputEvent const* ev);
+
+/*
+ * Retreive the MirTouchInputEvent assosciated with a MirInputEvent
+ *
+ * \param[in] event The input event
+ * \return          The MirTouchInputEvent or NULL if event type is not 
+ *                  mir_input_event_type_touch
+ */
+MirTouchInputEvent const* mir_input_event_get_touch_input_event(MirInputEvent const* ev);
 
 #ifdef __cplusplus
 }

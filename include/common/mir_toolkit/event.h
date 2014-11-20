@@ -33,8 +33,8 @@ extern "C" {
 /* TODO: To the moon. */
 #define MIR_INPUT_EVENT_MAX_POINTER_COUNT 16
 
-#define MIR_EVENT_ACTION_MASK 0xff;
-#define MIR_EVENT_ACTION_POINTER_INDEX_MASK 0xff00;
+#define MIR_EVENT_ACTION_MASK 0xff
+#define MIR_EVENT_ACTION_POINTER_INDEX_MASK 0xff00
 #define MIR_EVENT_ACTION_POINTER_INDEX_SHIFT 8;
 
 typedef int64_t nsecs_t;
@@ -75,7 +75,7 @@ typedef enum {
 typedef enum {
     mir_key_modifier_none        = 0,
     mir_key_modifier_alt         = 0x02,
-    mir_key_modifieralt_left    = 0x10,
+    mir_key_modifier_alt_left    = 0x10,
     mir_key_modifier_alt_right   = 0x20,
     mir_key_modifier_shift       = 0x01,
     mir_key_modifier_shift_left  = 0x40,
@@ -127,6 +127,9 @@ typedef enum {
    mir_motion_tool_type_eraser  = 4
 } MirMotionToolType;
 
+// DEPRECATED
+// Direct access to MirKeyEvent is deprecated. Please use mir_event_get_input_event
+// and the mir_input_event* family of functions.
 typedef struct
 {
     MirEventType type;
@@ -163,6 +166,9 @@ typedef struct
     int unused3;
 } MirMotionPointer;
 
+// DEPRECATED
+// Direct access to MirMotionEvent is deprecated. Please use mir_event_get_input_event
+// and the mir_input_event* family of function.s
 typedef struct
 {
     MirEventType type;
