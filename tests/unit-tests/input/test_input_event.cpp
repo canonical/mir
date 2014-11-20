@@ -192,7 +192,7 @@ TEST(TouchInputEventProperties, tool_type_copied_from_old_pc)
 
 TEST(TouchInputEventProperties, axis_values_used_by_qtmir_copied)
 {
-    float x_value = 19, y_value = 23, touch_major = .3, touch_minor = .2, pressure = .9;
+    float x_value = 19, y_value = 23, touch_major = .3, touch_minor = .2, pressure = .9, size = 1111;
     MirEvent old_ev;
     old_ev.type = mir_event_type_motion;
     old_ev.motion.pointer_count = 0;
@@ -202,11 +202,13 @@ TEST(TouchInputEventProperties, axis_values_used_by_qtmir_copied)
     old_pc.touch_major = touch_major;
     old_pc.touch_minor = touch_minor;
     old_pc.pressure = pressure;
+    old_pc.size = size;
 
     auto tev = mir_input_event_get_touch_input_event(mir_event_get_input_event(&old_ev));
-    EXPECT_EQ(x_value, mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_event_touch_axis_x));
-    EXPECT_EQ(y_value, mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_event_touch_axis_y));
-    EXPECT_EQ(touch_major, mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_event_touch_axis_touch_major));
-    EXPECT_EQ(touch_minor, mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_event_touch_axis_touch_minor));
-    EXPECT_EQ(pressure, mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_event_touch_axis_pressure));
+    EXPECT_EQ(x_value, mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_x));
+    EXPECT_EQ(y_value, mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_y));
+    EXPECT_EQ(touch_major, mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_touch_major));
+    EXPECT_EQ(touch_minor, mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_touch_minor));
+    EXPECT_EQ(pressure, mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_pressure));
+    EXPECT_EQ(size, mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_size));
 }

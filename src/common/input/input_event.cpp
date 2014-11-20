@@ -238,16 +238,18 @@ float mir_touch_input_event_get_touch_axis_value(MirTouchInputEvent const* event
     auto const& old_pc = old_mev.pointer_coordinates[touch_index];
     switch (axis)
     {
-    case mir_touch_input_event_touch_axis_x:
+    case mir_touch_input_axis_x:
         return old_pc.x;
-    case mir_touch_input_event_touch_axis_y:
+    case mir_touch_input_axis_y:
         return old_pc.y;
-    case mir_touch_input_event_touch_axis_pressure:
+    case mir_touch_input_axis_pressure:
         return old_pc.pressure;
-    case mir_touch_input_event_touch_axis_touch_major:
+    case mir_touch_input_axis_touch_major:
         return old_pc.touch_major;
-    case mir_touch_input_event_touch_axis_touch_minor:
+    case mir_touch_input_axis_touch_minor:
         return old_pc.touch_minor;
+    case mir_touch_input_axis_size:
+        return old_pc.size;
     default:
         return -1;
     }

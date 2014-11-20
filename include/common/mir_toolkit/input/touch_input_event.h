@@ -62,17 +62,20 @@ typedef enum {
  */
 typedef enum {
 /* Axis representing the x coordinate for the touch */
-    mir_touch_input_event_touch_axis_x = 0,
+    mir_touch_input_axis_x = 0,
 /* Axis representing the y coordinate for the touch */
-    mir_touch_input_event_touch_axis_y = 1,
+    mir_touch_input_axis_y = 1,
 /* Axis representing pressure of the touch */
-    mir_touch_input_event_touch_axis_pressure = 2,
+    mir_touch_input_axis_pressure = 2,
 /* Axis representing the length of the major axis of an ellipse
    centered at the touch point */
-    mir_touch_input_event_touch_axis_touch_major = 3,
+    mir_touch_input_axis_touch_major = 3,
 /* Axis representing the length of the minor axis of an ellipse
    centered at the touch point */
-    mir_touch_input_event_touch_axis_touch_minor = 4,
+    mir_touch_input_axis_touch_minor = 4,
+/* Axis representing the diameter of a circle centered on the touch
+   point */
+    mir_touch_input_axis_size = 5
 } MirTouchInputEventTouchAxis;
 
 /**
@@ -125,7 +128,8 @@ MirTouchInputEventTouchAction mir_touch_input_event_get_touch_action(MirTouchInp
  *  \param [in] touch_index The touch index. Must be less than touch_count.
  *  \return                 Tooltype used for the touch at index
  */
-MirTouchInputEventTouchTooltype mir_touch_input_event_get_touch_tooltype(MirTouchInputEvent const* event, size_t touch_index);
+MirTouchInputEventTouchTooltype mir_touch_input_event_get_touch_tooltype(MirTouchInputEvent const* event,
+    size_t touch_index);
 
 
 /**
