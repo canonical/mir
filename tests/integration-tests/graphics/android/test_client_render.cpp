@@ -24,11 +24,11 @@
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
 
 #include "mir_test_framework/cross_process_sync.h"
-#include "examples/testdraw/graphics_region_factory.h"
-#include "examples/testdraw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test/validity_matchers.h"
+#include "patterns.h"
+#include "graphics_region_factory.h"
 
 #include "mir/frontend/connector.h"
 
@@ -40,7 +40,6 @@
 
 namespace mtf = mir_test_framework;
 namespace mt=mir::test;
-namespace mtd=mir::test::draw;
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
@@ -53,8 +52,8 @@ static uint32_t pattern0 [2][2] = {{0x12345678, 0x23456789},
                                    {0x34567890, 0x45678901}};
 static uint32_t pattern1 [2][2] = {{0xFFFFFFFF, 0xFFFF0000},
                                    {0xFF00FF00, 0xFF0000FF}};
-static mtd::DrawPatternCheckered<2,2> draw_pattern0(pattern0);
-static mtd::DrawPatternCheckered<2,2> draw_pattern1(pattern1);
+static mt::DrawPatternCheckered<2,2> draw_pattern0(pattern0);
+static mt::DrawPatternCheckered<2,2> draw_pattern1(pattern1);
 static const char socket_file[] = "./test_client_ipc_render_socket";
 
 struct TestClient
@@ -327,7 +326,7 @@ struct TestClientIPCRender : public testing::Test
     }
 
     void SetUp() {
-        buffer_converter = mtd::create_graphics_region_factory();
+        buffer_converter = std::make_shared<mt::GraphicsRegionFactory>();
 
         /* start a server */
         mock_server = std::make_shared<StubServerGenerator>();
@@ -344,7 +343,7 @@ struct TestClientIPCRender : public testing::Test
     std::shared_ptr<mt::TestProtobufServer> test_server;
     std::shared_ptr<StubServerGenerator> mock_server;
 
-    std::shared_ptr<mtd::GraphicsRegionFactory> buffer_converter;
+    std::shared_ptr<mt::GraphicsRegionFactory> buffer_converter;
 
     static std::shared_ptr<mtf::Process> render_single_client_process;
     static std::shared_ptr<mtf::Process> render_double_client_process;
@@ -393,7 +392,7 @@ TEST_F(TestClientIPCRender, test_render_double)
 
 TEST_F(TestClientIPCRender, test_accelerated_render)
 {
-    mtd::DrawPatternSolid red_pattern(0xFF0000FF);
+    mt::DrawPatternSolid red_pattern(0xFF0000FF);
 
     sync3.try_signal_ready_for();
     /* wait for client to finish */
@@ -407,8 +406,8 @@ TEST_F(TestClientIPCRender, test_accelerated_render)
 
 TEST_F(TestClientIPCRender, test_accelerated_render_double)
 {
-    mtd::DrawPatternSolid red_pattern(0xFF0000FF);
-    mtd::DrawPatternSolid green_pattern(0xFF00FF00);
+    mt::DrawPatternSolid red_pattern(0xFF0000FF);
+    mt::DrawPatternSolid green_pattern(0xFF00FF00);
 
     sync4.try_signal_ready_for();
     /* wait for client to finish */

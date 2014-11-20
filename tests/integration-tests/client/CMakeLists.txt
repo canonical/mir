@@ -1,11 +1,3 @@
-# TODO(tvoss): These tests are failing for me when run in an emulator
-if( MIR_TEST_PLATFORM STREQUAL "android")
-list(
-  APPEND INTEGRATION_TESTS_SRCS
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_client_render.cpp
-)
-endif()
-
 list(
   APPEND INTEGRATION_TESTS_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/test_screencast.cpp
