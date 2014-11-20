@@ -120,7 +120,6 @@ extern "C" std::shared_ptr<Platform> create_platform(
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<DisplayReport> const& report);
 
-
 extern "C" typedef std::shared_ptr<Platform>(*CreateNativePlatform)(
     std::shared_ptr<DisplayReport> const&,
     std::shared_ptr<NestedContext> const&);

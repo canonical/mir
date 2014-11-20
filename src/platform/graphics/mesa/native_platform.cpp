@@ -124,10 +124,10 @@ std::shared_ptr<mg::Display> mgm::NativePlatform::create_display(
     std::shared_ptr<graphics::GLProgramFactory> const&,
     std::shared_ptr<graphics::GLConfig> const& /*gl_config*/)
 {
-    throw std::runtime_error("oooo");
+    BOOST_THROW_EXCEPTION(std::runtime_error("mgm::NativePlatform cannot create display\n"));
 }
 
 EGLNativeDisplayType mgm::NativePlatform::egl_native_display() const
 {
-    throw std::runtime_error("oooo");
+    return gbm.device;
 }
