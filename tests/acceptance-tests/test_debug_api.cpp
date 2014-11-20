@@ -61,7 +61,7 @@ void dont_kill_me_bro(MirConnection* /*unused*/, MirLifecycleState /*unused*/, v
 {
 }
 
-class TestDebugAPI : public mtf::HeadlessTest
+class DebugAPI : public mtf::HeadlessTest
 {
 public:
 
@@ -126,7 +126,7 @@ private:
 };
 }
 
-TEST_F(TestDebugAPI, TranslatesSurfaceCoordinatesToScreenCoordinates)
+TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
 {
     start_server_with_debug(true);
 
@@ -174,7 +174,7 @@ TEST_F(TestDebugAPI, TranslatesSurfaceCoordinatesToScreenCoordinates)
     mir_surface_release_sync(surf);
 }
 
-TEST_F(TestDebugAPI, ApiIsUnavaliableWhenServerNotStartedWithDebug)
+TEST_F(DebugAPI, is_unavaliable_when_server_not_started_with_debug)
 {
     start_server_with_debug(false);
 
