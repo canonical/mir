@@ -92,7 +92,6 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
             mir_surface_set_state(surface, mir_surface_state_fullscreen);
         }
         callback(surface, context);
-        delete requested_specification;
         delete shim_callback;
     };
 

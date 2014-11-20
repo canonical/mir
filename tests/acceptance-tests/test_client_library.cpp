@@ -654,6 +654,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
                                                                       format);
 
     auto surface = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
 
     EXPECT_THAT(surface, IsValid());
     auto resultant_spec = mir_surface_get_spec(surface);
@@ -680,6 +681,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
                                                                       format);
 
     mir_wait_for(mir_surface_create(surface_spec, create_surface_callback, this));
+    mir_surface_spec_release(surface_spec);
 
     EXPECT_THAT(surface, IsValid());
     auto resultant_spec = mir_surface_get_spec(surface);
@@ -718,6 +720,7 @@ TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
     EXPECT_TRUE(mir_surface_spec_set_buffer_usage(surface_spec, buffer_usage));
 
     auto surface = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
     EXPECT_THAT(surface, IsValid());
 
     auto resultant_spec = mir_surface_get_spec(surface);
@@ -753,6 +756,7 @@ TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
     mir_surface_spec_set_fullscreen_on_output(surface_spec, requested_output.output_id);
 
     auto surface = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
 
     EXPECT_THAT(surface, IsValid());
 

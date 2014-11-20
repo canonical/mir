@@ -56,7 +56,6 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
  * \param [in] callback                 Callback function to be invoked when realisation is complete
  * \param [in, out] context             User data passed to callback function.
  * \return                              A handle that can be passed to mir_wait_for
- * \note    This consumes requested_specification. No further calls should be made with it.
  */
 MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
                                   mir_surface_callback callback, void* context);
@@ -66,7 +65,6 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
  * \param [in] requested_specification  Specification of the attributes for the created surface
  * \return                              The new surface. This is guaranteed non-null, but may be invalid
  *                                      in the case of error.
- * \note    This consumes requested_specification. No further calls should be made with it.
  */
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
 
@@ -134,8 +132,7 @@ bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t ou
  * \param [in] surf     Surface to generate specification from
  * \return              A surface specification that would construct a surface with
  *                      identical attributes to surf.
- * \note    Caller owns this MirSurfaceSpec. If the spec is not passed to mir_surface_realise
- *          use mir_surface_spec_release to free the associated resources.
+ * \note    Caller owns this MirSurfaceSpec. Call mir_surface_spec_release to free the associated resources.
  */
 MirSurfaceSpec* mir_surface_get_spec(MirSurface* surf);
 
@@ -177,9 +174,6 @@ MirBufferUsage mir_surface_spec_get_buffer_usage(MirSurfaceSpec* spec);
 /**
  * Release the resources held by a MirSurfaceSpec.
  *
- * \note mir_surface_realise/mir_surface_realise_sync consume the MirSurfaceSpec passed
- *       to them. It is incorrect to call mir_surface_spec_release on a MirSurfaceSpec
- *       passed to these functions.
  * \param [in] spec     Specification to release
  */
 void mir_surface_spec_release(MirSurfaceSpec* spec);
