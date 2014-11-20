@@ -24,7 +24,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
 #include "mir/time/steady_clock.h"
-#include "mir/asio_main_loop.h"
+#include "mir/glib_main_loop.h"
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
@@ -717,7 +717,7 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
 
     auto display = create_display(create_platform());
 
-    mir::AsioMainLoop ml{std::make_shared<mir::time::SteadyClock>()};
+    mir::GLibMainLoop ml{std::make_shared<mir::time::SteadyClock>()};
     std::condition_variable done;
 
     int const device_add_count{1};
