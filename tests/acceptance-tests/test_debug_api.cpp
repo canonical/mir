@@ -26,8 +26,7 @@
 #include "mir_test/wait_condition.h"
 #include "mir_test/client_event_matchers.h"
 #include "mir_test/barrier.h"
-#include "mir_test_framework/deferred_in_process_server.h"
-#include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/headless_test.h"
 
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
@@ -56,17 +55,29 @@ public:
     mir::geometry::Rectangle placement;
 };
 
-class SurfacePlacingConfiguration : public mtf::StubbedServerConfiguration
+char const* const debugenv = "MIR_SERVER_DEBUG";
+
+void dont_kill_me_bro(MirConnection* /*unused*/, MirLifecycleState /*unused*/, void* /*unused*/)
+{
+}
+
+class TestDebugAPI : public mtf::HeadlessTest
 {
 public:
-    SurfacePlacingConfiguration()
-        : placement_strategy{std::make_shared<SimpleConfigurablePlacementStrategy>()}
-    {
-    }
 
-    std::shared_ptr<ms::PlacementStrategy> the_placement_strategy() override
+    void SetUp() override
     {
-        return placement_strategy;
+        add_to_environment("MIR_SERVER_NO_FILE", "");
+
+        mir::geometry::Rectangle surface_location;
+        surface_location.top_left.x = mir::geometry::X{0};
+        surface_location.top_left.y = mir::geometry::Y{0};
+        surface_location.size.width = mir::geometry::Width{100};
+        surface_location.size.height = mir::geometry::Height{100};
+
+        set_surface_placement(surface_location);
+        server.override_the_placement_strategy([&]{ return placement_strategy; });
+        mtf::HeadlessTest::SetUp();
     }
 
     void set_surface_placement(mir::geometry::Rectangle const& where)
@@ -74,62 +85,19 @@ public:
         placement_strategy->placement = where;
     }
 
-    bool is_debug_server()
-    {
-        return the_options()->is_set("debug");
-    }
-
-private:
-    std::shared_ptr<SimpleConfigurablePlacementStrategy> placement_strategy;
-};
-
-char const* debugenv = "MIR_SERVER_DEBUG";
-
-void dont_kill_me_bro(MirConnection* /*unused*/, MirLifecycleState /*unused*/, void* /*unused*/)
-{
-}
-
-class TestDebugAPI : public mtf::DeferredInProcessServer
-{
-public:
-    TestDebugAPI()
-        : old_debug_env{::getenv(debugenv)}
-    {
-        mir::geometry::Rectangle surface_location;
-        surface_location.top_left.x = mir::geometry::X{0};
-        surface_location.top_left.y = mir::geometry::Y{0};
-        surface_location.size.width = mir::geometry::Width{100};
-        surface_location.size.height = mir::geometry::Height{100};
-
-        server_configuration.set_surface_placement(surface_location);
-    }
-
-    ~TestDebugAPI()
-    {
-        ::unsetenv(debugenv);
-        if (old_debug_env)
-        {
-            ::setenv(debugenv, old_debug_env, 1);
-        }
-    }
-
     void start_server_with_debug(bool debug)
     {
         if (debug)
         {
-            ::setenv(debugenv, "", 1);
+            add_to_environment(debugenv, "");
         }
         else
         {
-            ::unsetenv(debugenv);
-        }
-
-        if (server_configuration.is_debug_server() != debug)
-        {
-            throw std::runtime_error{"Failed to set the debug flag correctly. Have you overriden this with --debug?"};
+            add_to_environment(debugenv, nullptr);
         }
 
         start_server();
+
         connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
         if (!mir_connection_is_valid(connection))
         {
@@ -145,19 +113,16 @@ public:
         {
             mir_connection_release(connection);
         }
-        DeferredInProcessServer::TearDown();
+
+        stop_server();
+        mtf::HeadlessTest::TearDown();
     }
 
-    mir::DefaultServerConfiguration& server_config() override
-    {
-        return server_configuration;
-    }
-
-    SurfacePlacingConfiguration server_configuration;
     MirConnection* connection{nullptr};
 
 private:
-    char const* old_debug_env;
+    std::shared_ptr<SimpleConfigurablePlacementStrategy> const placement_strategy
+        {std::make_shared<SimpleConfigurablePlacementStrategy>()};
 };
 }
 
@@ -171,7 +136,7 @@ TEST_F(TestDebugAPI, TranslatesSurfaceCoordinatesToScreenCoordinates)
     surface_location.size.width = mir::geometry::Width{800};
     surface_location.size.height = mir::geometry::Height{600};
 
-    server_configuration.set_surface_placement(surface_location);
+    set_surface_placement(surface_location);
 
     ASSERT_TRUE(mir_connection_is_valid(connection));
 
@@ -197,7 +162,7 @@ TEST_F(TestDebugAPI, TranslatesSurfaceCoordinatesToScreenCoordinates)
     surface_location.top_left.x = mir::geometry::X{100};
     surface_location.top_left.y = mir::geometry::Y{250};
 
-    server_configuration.set_surface_placement(surface_location);
+    set_surface_placement(surface_location);
 
     surf = mir_connection_create_surface_sync(connection, &creation_parameters);
     ASSERT_TRUE(mir_surface_is_valid(surf));
