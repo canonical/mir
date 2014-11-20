@@ -16,7 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#define MIR_LOGGING_COMPONENT "SharedLibrary"
 #include "mir/shared_library_loader.h"
 #include "mir/shared_library.h"
 #include "mir/logging/logger.h"
@@ -36,7 +35,7 @@ mir::SharedLibrary const* mir::load_library(std::string const& libname)
     }
     else
     {
-        ml::log(ml::Severity::informational, "Loading " + libname);
+        ml::log(ml::Severity::informational, "Loading library : " + libname);
         ptr = std::make_shared<mir::SharedLibrary>(libname);
         return ptr.get();
     }
