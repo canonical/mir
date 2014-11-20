@@ -67,7 +67,7 @@ green background
 
 ###Visual check of posting to the display using Overlays###
 
-    mir_demo_standalone_render_to_fb --disable-overlays false
+    mir_demo_standalone_render_overlays
 
 This will use the HWC module to drive the display by displaying overlays.
 The animation should:
