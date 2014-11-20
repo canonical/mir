@@ -21,6 +21,7 @@
 #include "mir/time/steady_clock.h"
 
 using namespace mir::client;
+namespace ml = mir::logging;
 
 namespace
 {
@@ -49,5 +50,5 @@ void logging::PerfReport::display(const char *name, long fps100,
              nbuffers
              );
 
-    logger->log(mir::logging::Logger::informational, msg, component);
+    logger->log(ml::Severity::informational, msg, component);
 }

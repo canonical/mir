@@ -48,7 +48,7 @@ void mrl::CompositorReport::added_display(int width, int height, int x, int y, S
     char msg[128];
     snprintf(msg, sizeof msg, "Added display %p: %dx%d %+d%+d",
              id, width, height, x, y);
-    logger->log(ml::Logger::informational, msg, component);
+    logger->log(ml::Severity::informational, msg, component);
 }
 
 void mrl::CompositorReport::began_frame(SubCompositorId id)
@@ -109,7 +109,7 @@ void mrl::CompositorReport::Instance::log(ml::Logger& logger, SubCompositorId id
                  bypass_percent
                  );
 
-        logger.log(ml::Logger::informational, msg, component);
+        logger.log(ml::Severity::informational, msg, component);
     }
 
     last_reported_total_time_sum = total_time_sum;
@@ -150,19 +150,19 @@ void mrl::CompositorReport::finished_frame(bool bypassed,
         char msg[128];
         snprintf(msg, sizeof msg, "Display %p bypass %s",
                  id, bypassed ? "ON" : "OFF");
-        logger->log(ml::Logger::informational, msg, component);
+        logger->log(ml::Severity::informational, msg, component);
     }
     inst.prev_bypassed = bypassed;
 }
 
 void mrl::CompositorReport::started()
 {
-    logger->log(ml::Logger::informational, "Started", component);
+    logger->log(ml::Severity::informational, "Started", component);
 }
 
 void mrl::CompositorReport::stopped()
 {
-    logger->log(ml::Logger::informational, "Stopped", component);
+    logger->log(ml::Severity::informational, "Stopped", component);
 
     std::lock_guard<std::mutex> lock(mutex);
     instance.clear();

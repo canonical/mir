@@ -20,11 +20,13 @@
 #include "mir/fatal.h"
 #include "mir/options/default_configuration.h"
 #include "mir/abnormal_exit.h"
+#include "mir/glib_main_loop.h"
 #include "mir/asio_main_loop.h"
 #include "mir/default_server_status_listener.h"
 #include "mir/emergency_cleanup.h"
 #include "mir/default_configuration.h"
 
+#include "mir/logging/dumb_console_logger.h"
 #include "mir/options/program_option.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
@@ -45,6 +47,7 @@ namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace ml = mir::logging;
 namespace mo = mir::options;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -150,8 +153,6 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         });
 }
 
-mir::CachedPtr<mir::time::Clock> mir::DefaultServerConfiguration::clock;
-
 std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()
 {
     return clock(
@@ -164,9 +165,12 @@ std::shared_ptr<mir::time::Clock> mir::DefaultServerConfiguration::the_clock()
 std::shared_ptr<mir::MainLoop> mir::DefaultServerConfiguration::the_main_loop()
 {
     return main_loop(
-        [this]()
+        [this]() -> std::shared_ptr<mir::MainLoop>
         {
-            return std::make_shared<mir::AsioMainLoop>(the_clock());
+            if (the_options()->is_set(options::use_asio_main_loop_opt))
+                return std::make_shared<mir::AsioMainLoop>(the_clock());
+            else
+                return std::make_shared<mir::GLibMainLoop>(the_clock());
         });
 }
 
@@ -200,4 +204,14 @@ auto mir::DefaultServerConfiguration::the_fatal_error_strategy()
         return &fatal_error_abort;
     else
         return fatal_error;
+}
+
+auto mir::DefaultServerConfiguration::the_logger()
+    -> std::shared_ptr<ml::Logger>
+{
+    return logger(
+        [this]() -> std::shared_ptr<ml::Logger>
+        {
+            return std::make_shared<ml::DumbConsoleLogger>();
+        });
 }

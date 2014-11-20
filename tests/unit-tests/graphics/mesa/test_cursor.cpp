@@ -300,7 +300,12 @@ TEST_F(MesaCursorTest, show_cursor_pads_missing_data)
     };
 
     // We expect a full 64x64 pixel write as we will pad missing data with transparency.
-    size_t const buffer_size_bytes{64 * 64 * sizeof(uint32_t)};
+    size_t const height = 64;
+    size_t const width = 64;
+    size_t const stride = width * 4;
+    size_t const buffer_size_bytes{height * stride};
+    ON_CALL(mock_gbm, gbm_bo_get_stride(_))
+        .WillByDefault(Return(stride));
     EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, ContainsASingleWhitePixel(), buffer_size_bytes));
 
     cursor.show(SinglePixelCursorImage());

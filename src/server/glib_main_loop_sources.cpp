@@ -18,9 +18,19 @@
 
 #include "mir/glib_main_loop_sources.h"
 #include "mir/recursive_read_write_mutex.h"
+#include "mir/thread_safe_list.h"
 
-#include <glib-unix.h>
 #include <algorithm>
+#include <atomic>
+#include <system_error>
+#include <sstream>
+
+#include <csignal>
+#include <unistd.h>
+#include <fcntl.h>
+
+#include <boost/throw_exception.hpp>
+#include <glib-unix.h>
 
 namespace md = mir::detail;
 
@@ -47,9 +57,14 @@ private:
  * GSourceHandle *
  *****************/
 
+md::GSourceHandle::GSourceHandle()
+    : GSourceHandle(nullptr, [](GSource*){})
+{
+}
+
 md::GSourceHandle::GSourceHandle(
     GSource* gsource,
-    std::function<void()> const& pre_destruction_hook)
+    std::function<void(GSource*)> const& pre_destruction_hook)
     : gsource{gsource},
       pre_destruction_hook{pre_destruction_hook}
 {
@@ -60,14 +75,21 @@ md::GSourceHandle::GSourceHandle(GSourceHandle&& other)
       pre_destruction_hook{std::move(other.pre_destruction_hook)}
 {
     other.gsource = nullptr;
-    other.pre_destruction_hook = []{};
+    other.pre_destruction_hook = [](GSource*){};
+}
+
+md::GSourceHandle& md::GSourceHandle::operator=(GSourceHandle other)
+{
+    std::swap(other.gsource, gsource);
+    std::swap(other.pre_destruction_hook, pre_destruction_hook);
+    return *this;
 }
 
 md::GSourceHandle::~GSourceHandle()
 {
     if (gsource)
     {
-        pre_destruction_hook();
+        pre_destruction_hook(gsource);
         g_source_destroy(gsource);
         g_source_unref(gsource);
     }
@@ -78,9 +100,9 @@ md::GSourceHandle::operator GSource*() const
     return gsource;
 }
 
-/******************
- * make_*_gsource *
- ******************/
+/*****************
+ * add_*_gsource *
+ *****************/
 
 void md::add_idle_gsource(
     GMainContext* main_context, int priority, std::function<void()> const& callback)
@@ -108,31 +130,170 @@ void md::add_idle_gsource(
     g_source_attach(gsource, main_context);
 }
 
-void md::add_signal_gsource(
+void md::add_server_action_gsource(
     GMainContext* main_context,
-    int sig, std::function<void(int)> const& callback)
+    void const* owner,
+    std::function<void()> const& action,
+    std::function<bool(void const*)> const& should_dispatch)
 {
-    struct SignalContext
+    struct ServerActionContext
     {
-        static gboolean static_call(SignalContext* ctx)
-        {
-            ctx->callback(ctx->sig);
-            return G_SOURCE_CONTINUE;
-        }
-        static void static_destroy(SignalContext* ctx) { delete ctx; }
-        std::function<void(int)> const callback;
-        int sig;
+        void const* const owner;
+        std::function<void(void)> const action;
+        std::function<bool(void const*)> const should_dispatch;
     };
 
-    GSourceRef gsource{g_unix_signal_source_new(sig)};
+    struct ServerActionGSource
+    {
+        GSource gsource;
+        ServerActionContext ctx;
+        bool ctx_constructed;
 
-    g_source_set_callback(
-        gsource,
-        reinterpret_cast<GSourceFunc>(&SignalContext::static_call),
-        new SignalContext{callback, sig},
-        reinterpret_cast<GDestroyNotify>(&SignalContext::static_destroy));
+        static gboolean prepare(GSource* source, gint *timeout)
+        {
+            *timeout = -1;
+            auto const& ctx = reinterpret_cast<ServerActionGSource*>(source)->ctx;
+            return ctx.should_dispatch(ctx.owner);
+        }
+
+        static gboolean check(GSource* source)
+        {
+            auto const& ctx = reinterpret_cast<ServerActionGSource*>(source)->ctx;
+            return ctx.should_dispatch(ctx.owner);
+        }
+
+        static gboolean dispatch(GSource* source, GSourceFunc, gpointer)
+        {
+            auto const& ctx = reinterpret_cast<ServerActionGSource*>(source)->ctx;
+            ctx.action();
+            return FALSE;
+        }
+
+        static void finalize(GSource* source)
+        {
+            auto const sa_gsource = reinterpret_cast<ServerActionGSource*>(source);
+            if (sa_gsource->ctx_constructed)
+                sa_gsource->ctx.~ServerActionContext();
+        }
+    };
+
+    static GSourceFuncs gsource_funcs{
+        ServerActionGSource::prepare,
+        ServerActionGSource::check,
+        ServerActionGSource::dispatch,
+        ServerActionGSource::finalize,
+        nullptr,
+        nullptr
+    };
+
+    GSourceRef gsource{g_source_new(&gsource_funcs, sizeof(ServerActionGSource))};
+    auto const sa_gsource = reinterpret_cast<ServerActionGSource*>(static_cast<GSource*>(gsource));
+
+    sa_gsource->ctx_constructed = false;
+    new (&sa_gsource->ctx) decltype(sa_gsource->ctx){owner, action, should_dispatch};
+    sa_gsource->ctx_constructed = true;
 
     g_source_attach(gsource, main_context);
+}
+
+md::GSourceHandle md::add_timer_gsource(
+    GMainContext* main_context,
+    std::shared_ptr<time::Clock> const& clock,
+    std::function<void()> const& handler,
+    time::Timestamp target_time)
+{
+    struct TimerContext
+    {
+        TimerContext(std::shared_ptr<time::Clock> const& clock,
+                     std::function<void()> const& handler,
+                     time::Timestamp target_time)
+            : clock{clock}, handler{handler}, target_time{target_time}, enabled{true}
+        {
+        }
+        std::shared_ptr<time::Clock> clock;
+        std::function<void()> handler;
+        time::Timestamp target_time;
+        bool enabled;
+        mir::RecursiveReadWriteMutex mutex;
+    };
+
+    struct TimerGSource
+    {
+        GSource gsource;
+        TimerContext ctx;
+        bool ctx_constructed;
+
+        static gboolean prepare(GSource* source, gint *timeout)
+        {
+            auto const& ctx = reinterpret_cast<TimerGSource*>(source)->ctx;
+
+            auto const now = ctx.clock->now();
+            bool const ready = (now >= ctx.target_time);
+            if (ready)
+                *timeout = -1;
+            else
+                *timeout = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    ctx.clock->min_wait_until(ctx.target_time)).count();
+
+            return ready;
+        }
+
+        static gboolean check(GSource* source)
+        {
+            auto const& ctx = reinterpret_cast<TimerGSource*>(source)->ctx;
+
+            auto const now = ctx.clock->now();
+            bool const ready = (now >= ctx.target_time);
+            return ready;
+        }
+
+        static gboolean dispatch(GSource* source, GSourceFunc, gpointer)
+        {
+            auto& ctx = reinterpret_cast<TimerGSource*>(source)->ctx;
+
+            RecursiveReadLock lock{ctx.mutex};
+            if (ctx.enabled)
+                ctx.handler();
+
+            return FALSE;
+        }
+
+        static void finalize(GSource* source)
+        {
+            auto const timer_gsource = reinterpret_cast<TimerGSource*>(source);
+            if (timer_gsource->ctx_constructed)
+                timer_gsource->ctx.~TimerContext();
+        }
+
+        static void disable(GSource* source)
+        {
+            auto& ctx = reinterpret_cast<TimerGSource*>(source)->ctx;
+            RecursiveWriteLock lock{ctx.mutex};
+            ctx.enabled = false;
+        }
+    };
+
+    static GSourceFuncs gsource_funcs{
+        TimerGSource::prepare,
+        TimerGSource::check,
+        TimerGSource::dispatch,
+        TimerGSource::finalize,
+        nullptr,
+        nullptr
+    };
+
+    GSourceHandle gsource{
+        g_source_new(&gsource_funcs, sizeof(TimerGSource)),
+        [](GSource* gsource) { TimerGSource::disable(gsource); }};
+    auto const timer_gsource = reinterpret_cast<TimerGSource*>(static_cast<GSource*>(gsource));
+
+    timer_gsource->ctx_constructed = false;
+    new (&timer_gsource->ctx) TimerContext{clock, handler, target_time};
+    timer_gsource->ctx_constructed = true;
+
+    g_source_attach(gsource, main_context);
+
+    return gsource;
 }
 
 /*************
@@ -198,7 +359,7 @@ void md::FdSources::add(
     // destruction.
     GSourceHandle gsource{
         g_unix_fd_source_new(fd, G_IO_IN),
-        [=] { fd_context->disable_callback(); }};
+        [=] (GSource*) { fd_context->disable_callback(); }};
 
     g_source_set_callback(
         gsource,
@@ -224,4 +385,189 @@ void md::FdSources::remove_all_owned_by(void const* owner)
         });
 
     sources.erase(new_end, sources.end());
+}
+
+/*****************
+ * SignalSources *
+ *****************/
+
+class md::SignalSources::SourceRegistration
+{
+public:
+    SourceRegistration(int write_fd)
+        : write_fd{write_fd}
+    {
+        init_write_fds();
+        add_write_fd();
+    }
+
+    ~SourceRegistration()
+    {
+        remove_write_fd();
+    }
+
+    static void notify_sources_of_signal(int sig)
+    {
+        for (auto const& write_fd : write_fds)
+        {
+            // There is a benign race here: write_fd may have changed
+            // between checking and using it. This doesn't matter
+            // since in the worst case we will call write() with an invalid
+            // fd (-1) which is harmless.
+            if (write_fd >= 0 && write(write_fd, &sig, sizeof(sig))) {}
+        }
+    }
+
+private:
+    void init_write_fds()
+    {
+        static std::once_flag once;
+        std::call_once(once,
+            [&]
+            {
+                for (auto& wfd : write_fds)
+                    wfd = -1;
+            });
+    }
+
+    void add_write_fd()
+    {
+        for (auto& wfd : write_fds)
+        {
+            int v = -1;
+            if (wfd.compare_exchange_strong(v, write_fd))
+                return;
+        }
+
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error(
+                "Failed to add signal write fd. Have you created too many main loops?"));
+    }
+
+    void remove_write_fd()
+    {
+        for (auto& wfd : write_fds)
+        {
+            int v = write_fd;
+            if (wfd.compare_exchange_strong(v, -1))
+                break;
+        }
+    }
+
+    static int const max_write_fds{10};
+    static std::array<std::atomic<int>, max_write_fds> write_fds;
+    int const write_fd;
+};
+
+std::array<std::atomic<int>,10> md::SignalSources::SourceRegistration::write_fds;
+
+md::SignalSources::SignalSources(md::FdSources& fd_sources)
+    : fd_sources{fd_sources}
+{
+    int pipefd[2];
+
+    if (pipe(pipefd) == -1)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "Failed to create signal pipe"));
+    }
+
+    signal_read_fd = mir::Fd(pipefd[0]);
+    signal_write_fd = mir::Fd(pipefd[1]);
+
+    fcntl(signal_read_fd, F_SETFD, FD_CLOEXEC);
+    fcntl(signal_write_fd, F_SETFD, FD_CLOEXEC);
+    // Make the signal_write_fd non-blocking, to avoid blocking in the signal handler
+    fcntl(signal_write_fd, F_SETFL, O_NONBLOCK);
+
+    source_registration.reset(new SourceRegistration{signal_write_fd});
+
+    fd_sources.add(signal_read_fd, this,
+        [this] (int) { dispatch_pending_signal(); });
+}
+
+md::SignalSources::~SignalSources()
+{
+    for (auto const& handled : handled_signals)
+        sigaction(handled.first, &handled.second, nullptr);
+
+    fd_sources.remove_all_owned_by(this);
+}
+
+void md::SignalSources::dispatch_pending_signal()
+{
+    auto const sig = read_pending_signal();
+    if (sig != -1)
+        dispatch_signal(sig);
+}
+
+int md::SignalSources::read_pending_signal()
+{
+    int sig = -1;
+    size_t total = 0;
+
+    do
+    {
+        auto const nread = read(
+            signal_read_fd,
+            reinterpret_cast<char*>(&sig) + total,
+            sizeof(sig) - total);
+
+        if (nread < 0)
+        {
+            if (errno != EINTR)
+                return -1;
+        }
+        else
+        {
+            total += nread;
+        }
+    }
+    while (total < sizeof(sig));
+
+    return sig;
+}
+
+void md::SignalSources::add(
+    std::vector<int> const& sigs, std::function<void(int)> const& handler)
+{
+    handlers.add({sigs, handler});
+    for (auto sig : sigs)
+        ensure_signal_is_handled(sig);
+}
+
+void md::SignalSources::ensure_signal_is_handled(int sig)
+{
+    std::lock_guard<std::mutex> lock{handled_signals_mutex};
+
+    if (handled_signals.find(sig) != handled_signals.end())
+        return;
+
+    static int const no_flags{0};
+    struct sigaction old_action;
+    struct sigaction new_action;
+
+    new_action.sa_handler = SourceRegistration::notify_sources_of_signal;
+    sigfillset(&new_action.sa_mask);
+    new_action.sa_flags = no_flags;
+
+    if (sigaction(sig, &new_action, &old_action) == -1)
+    {
+        std::stringstream msg;
+        msg << "Failed to register action for signal " << sig;
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), msg.str()));
+    }
+
+    handled_signals.emplace(sig, old_action);
+}
+
+void md::SignalSources::dispatch_signal(int sig)
+{
+    handlers.for_each(
+        [&] (HandlerElement const& element)
+        {
+            if (std::find(element.sigs.begin(), element.sigs.end(), sig) != element.sigs.end())
+                element.handler(sig);
+        });
 }

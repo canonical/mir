@@ -17,7 +17,6 @@
  */
 
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/event_handler_register.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "src/platform/graphics/mesa/platform.h"
@@ -200,9 +199,13 @@ TEST_F(MesaGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
     EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
         .WillOnce(Return(0));
 
+    mg::PlatformIPCPackage magic_pkg{{magic}, {}};
+    int drm_opcode{44};
     auto platform = create_platform();
-    auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(platform);
-    authenticator->drm_auth_magic(magic);
+    auto ipc_ops = platform->make_ipc_operations();
+    auto response_pkg = ipc_ops->platform_operation(drm_opcode, magic_pkg);
+    ASSERT_THAT(response_pkg.ipc_data.size(), Eq(1));
+    EXPECT_THAT(response_pkg.ipc_data[0], Eq(0));
 }
 
 TEST_F(MesaGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
@@ -214,11 +217,13 @@ TEST_F(MesaGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
     EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
         .WillOnce(Return(-1));
 
+    int drm_opcode{44};
     auto platform = create_platform();
-    auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(platform);
+    auto ipc_ops = platform->make_ipc_operations();
+    mg::PlatformIPCPackage magic_pkg{{magic}, {}};
 
     EXPECT_THROW({
-        authenticator->drm_auth_magic(magic);
+        ipc_ops->platform_operation(drm_opcode, magic_pkg);
     }, std::runtime_error);
 }
 

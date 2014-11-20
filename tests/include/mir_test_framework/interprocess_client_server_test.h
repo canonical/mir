@@ -25,6 +25,7 @@
 namespace mir_test_framework
 {
 class Process;
+class Result;
 
 class InterprocessClientServerTest : public HeadlessTest
 {
@@ -39,6 +40,8 @@ public:
 
     void run_in_client(std::function<void()> const& client_code);
 
+    auto new_client_process(std::function<void()> const& client_code) -> std::shared_ptr<Process>;
+
     bool is_test_process() const;
 
     pid_t client_pid() const { return client_process_id; }
@@ -49,6 +52,12 @@ public:
     auto process_type() const -> char const* { return process_tag; }
 
     void expect_server_signalled(int signal);
+
+    void stop_server();
+
+    bool sigkill_server_process();
+
+    Result wait_for_shutdown_server_process();
 
 private:
 

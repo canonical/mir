@@ -82,7 +82,19 @@ void mtf::InterprocessClientServerTest::run_in_server(std::function<void()> cons
 
 void mtf::InterprocessClientServerTest::run_in_client(std::function<void()> const& client_code)
 {
+    auto const client_process = new_client_process(client_code);
+
     if (test_process_id != getpid()) return;
+
+    Result result = client_process->wait_for_termination();
+    EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
+}
+
+auto mtf::InterprocessClientServerTest::new_client_process(std::function<void()> const& client_code)
+-> std::shared_ptr<Process>
+{
+    if (test_process_id != getpid())
+        return std::shared_ptr<Process>{};
 
     pid_t pid = fork();
 
@@ -96,13 +108,12 @@ void mtf::InterprocessClientServerTest::run_in_client(std::function<void()> cons
         process_tag = "client";
         add_to_environment("MIR_SOCKET", mir_test_socket);
         client_code();
+        return std::shared_ptr<Process>{};
     }
     else
     {
         client_process_id = pid;
-        auto const client_process = std::make_shared<Process>(pid);
-        Result result = client_process->wait_for_termination();
-        EXPECT_THAT(result.exit_code, Eq(EXIT_SUCCESS));
+        return std::make_shared<Process>(pid);
     }
 }
 
@@ -116,7 +127,16 @@ void mtf::InterprocessClientServerTest::TearDown()
     if (server_process_id == getpid())
     {
         shutdown_sync.wait_for_signal_ready_for();
-        stop_server();
+    }
+
+    stop_server();
+}
+
+void mtf::InterprocessClientServerTest::stop_server()
+{
+    if (server_process_id == getpid())
+    {
+        HeadlessTest::stop_server();
     }
 
     if (test_process_id != getpid()) return;
@@ -145,4 +165,30 @@ void mtf::InterprocessClientServerTest::expect_server_signalled(int signal)
 {
     server_signal_expected = true;
     expected_server_failure_signal = signal;
+}
+
+bool mtf::InterprocessClientServerTest::sigkill_server_process()
+{
+    if (test_process_id != getpid())
+        throw std::logic_error("Only the test process may kill the server");
+
+    if (!server_process)
+        throw std::logic_error("No server process to kill");
+
+    server_process->kill();
+    auto result = wait_for_shutdown_server_process();
+
+    return result.reason == TerminationReason::child_terminated_by_signal &&
+           result.signal == SIGKILL;
+}
+
+mtf::Result mtf::InterprocessClientServerTest::wait_for_shutdown_server_process()
+{
+
+    if (!server_process)
+        throw std::logic_error("No server process to monitor");
+
+    Result result = server_process->wait_for_termination();
+    server_process.reset();
+    return result;
 }

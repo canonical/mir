@@ -24,7 +24,6 @@
 #include "mir/graphics/display_buffer.h"
 
 #include <csignal>
-#include <iostream>
 
 namespace mg=mir::graphics;
 namespace mo=mir::options;
@@ -88,6 +87,6 @@ try
 }
 catch (...)
 {
-    mir::report_exception(std::cerr);
+    mir::report_exception();
     return EXIT_FAILURE;
 }
