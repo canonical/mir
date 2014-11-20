@@ -66,4 +66,3 @@ TEST(ClientHeaderVersion, mir_client_version_ge_is_usable_in_preprocessor)
     FAIL() << "MIR_CLIENT_VERSION >= MIR_VERSION_NUMBER(MIR_CLIENT_MAJOR_VERSION, MIR_CLIENT_MINOR_VERSION, MIR_CLIENT_MICRO_VERSION + 1)";
 #endif
 }
-
