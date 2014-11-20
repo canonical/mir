@@ -25,8 +25,7 @@
 
 #include "mir_test/validity_matchers.h"
 
-#include "mir_test_framework/in_process_server.h"
-#include "mir_test_framework/stubbed_server_configuration.h"
+#include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/stub_client_connection_configuration.h"
 
@@ -132,18 +131,9 @@ class ConfigurableFailureConfiguration : public mtf::StubConnectionConfiguration
         return std::make_shared<ConfigurableFailureFactory<failure_set>>();
     }
 };
-
-class ClientLibraryErrors : public mtf::InProcessServer
-{
-private:
-    mtf::StubbedServerConfiguration config;
-
-    mir::DefaultServerConfiguration &server_config() override
-    {
-        return config;
-    }
-};
 }
+
+using ClientLibraryErrors = mtf::HeadlessInProcessServer;
 
 TEST_F(ClientLibraryErrors, exception_in_client_configuration_constructor_generates_error)
 {
