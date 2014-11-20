@@ -127,8 +127,6 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
 
     set_surface_placement(surface_location);
 
-    ASSERT_TRUE(mir_connection_is_valid(connection));
-
     auto surf = mir_connection_create_surface_sync(connection, &creation_parameters);
     ASSERT_TRUE(mir_surface_is_valid(surf));
 
@@ -141,8 +139,7 @@ TEST_F(DebugAPI, translates_surface_coordinates_to_screen_coordinates)
 
     mir_surface_release_sync(surf);
 
-    surface_location.top_left.x = mir::geometry::X{100};
-    surface_location.top_left.y = mir::geometry::Y{250};
+    surface_location.top_left = mir::geometry::Point{100, 250};
 
     set_surface_placement(surface_location);
 
