@@ -51,8 +51,10 @@ public:
         std::shared_ptr<PromptSession> const& prompt_session) const override;
 
     void suspend_prompt_session(
-        std::shared_ptr<PromptSession> const& prompt_session,
-        bool suspended) const override;
+        std::shared_ptr<PromptSession> const& prompt_session) const override;
+
+    void resume_prompt_session(
+        std::shared_ptr<PromptSession> const& prompt_session) const override;
 
     void add_prompt_provider(
         std::shared_ptr<PromptSession> const& prompt_session,

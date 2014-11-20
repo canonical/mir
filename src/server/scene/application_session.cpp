@@ -203,12 +203,20 @@ void ms::ApplicationSession::stop_prompt_session()
     event_sink->handle_event(stop_event);
 }
 
-void ms::ApplicationSession::suspend_prompt_session(bool suspended)
+void ms::ApplicationSession::suspend_prompt_session()
 {
-    // All sessions which are part of the prompt session get this event.
     MirEvent start_event;
     memset(&start_event, 0, sizeof start_event);
     start_event.type = mir_event_type_prompt_session_state_change;
-    start_event.prompt_session.new_state = suspended ? mir_prompt_session_state_suspended : mir_prompt_session_state_started;
+    start_event.prompt_session.new_state = mir_prompt_session_state_suspended;
+    event_sink->handle_event(start_event);
+}
+
+void ms::ApplicationSession::resume_prompt_session()
+{
+    MirEvent start_event;
+    memset(&start_event, 0, sizeof start_event);
+    start_event.type = mir_event_type_prompt_session_state_change;
+    start_event.prompt_session.new_state = mir_prompt_session_state_started;
     event_sink->handle_event(start_event);
 }

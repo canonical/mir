@@ -41,8 +41,11 @@ public:
     {
     }
 
-    void suspend_prompt_session(std::shared_ptr<scene::PromptSession> const&,
-                                bool) const override
+    void suspend_prompt_session(std::shared_ptr<scene::PromptSession> const&) const override
+    {
+    }
+
+    void resume_prompt_session(std::shared_ptr<scene::PromptSession> const&) const override
     {
     }
 

@@ -54,7 +54,13 @@ public:
      * Suspend a prompt session
      *   \param [in] prompt_session  The prompt session
      */
-    virtual void suspend_prompt_session(std::shared_ptr<PromptSession> const& prompt_session, bool suspended) const = 0;
+    virtual void suspend_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) const = 0;
+
+    /**
+     * Resume a suspended prompt session
+     *   \param [in] prompt_session  The prompt session
+     */
+    virtual void resume_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) const = 0;
 
     /**
      * Add a prompt provider to an existing prompt session

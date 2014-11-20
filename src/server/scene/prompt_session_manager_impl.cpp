@@ -105,22 +105,26 @@ void ms::PromptSessionManagerImpl::stop_prompt_session(std::shared_ptr<PromptSes
     stop_prompt_session_locked(lock, prompt_session);
 }
 
-void ms::PromptSessionManagerImpl::suspend_prompt_session(
-    std::shared_ptr<PromptSession> const& prompt_session,
-    bool suspended) const
+void ms::PromptSessionManagerImpl::suspend_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) const
 {
-    if (suspended && prompt_session->state() == mir_prompt_session_state_started)
-    {
-        prompt_session->set_state(mir_prompt_session_state_suspended);
-    }
-    else if (!suspended && prompt_session->state() == mir_prompt_session_state_suspended)
-    {
-        prompt_session->set_state(mir_prompt_session_state_started);
-    }
+    if (prompt_session->state() != mir_prompt_session_state_started) return;
+
+    prompt_session->set_state(mir_prompt_session_state_suspended);
 
     auto helper_session = helper_for(prompt_session);
     if (helper_session)
-        helper_session->suspend_prompt_session(suspended);
+        helper_session->suspend_prompt_session();
+}
+
+void ms::PromptSessionManagerImpl::resume_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) const
+{
+    if (prompt_session->state() != mir_prompt_session_state_suspended) return;
+
+    prompt_session->set_state(mir_prompt_session_state_started);
+
+    auto helper_session = helper_for(prompt_session);
+    if (helper_session)
+        helper_session->resume_prompt_session();
 }
 
 std::shared_ptr<ms::PromptSession> ms::PromptSessionManagerImpl::start_prompt_session_for(
