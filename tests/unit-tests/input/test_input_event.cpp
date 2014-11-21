@@ -1,16 +1,16 @@
 /*
  * Copyright © 2014 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Robert Carr <robert.carr@canonical.com>
@@ -171,6 +171,8 @@ TEST(TouchInputEventProperties, pointer_up_down_applies_only_to_masked_action)
 TEST(TouchInputEventProperties, tool_type_copied_from_old_pc)
 {
     MirEvent old_ev;
+    old_ev.type = mir_event_type_motion;
+
     auto& old_mev = old_ev.motion;
     old_mev.pointer_count = 5;
     old_mev.pointer_coordinates[0].tool_type = mir_motion_tool_type_unknown;
