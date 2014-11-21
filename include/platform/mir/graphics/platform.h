@@ -20,9 +20,8 @@
 #ifndef MIR_GRAPHICS_PLATFORM_H_
 #define MIR_GRAPHICS_PLATFORM_H_
 
-#include "basic_platform.h"
-
 #include <boost/program_options/options_description.hpp>
+#include <EGL/egl.h>
 #include <memory>
 
 namespace mir
@@ -63,7 +62,7 @@ class BufferWriter;
  * Interface to platform specific support for graphics operations.
  * \ingroup platform_enablement
  */
-class Platform : public BasicPlatform
+class Platform
 {
 public:
     Platform() = default;
@@ -92,6 +91,8 @@ public:
      * before they are sent or after they are recieved accross IPC
      */
     virtual std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const = 0;
+
+    virtual EGLNativeDisplayType egl_native_display() const = 0;
 };
 
 /**
