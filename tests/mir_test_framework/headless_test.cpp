@@ -17,9 +17,11 @@
  */
 
 #include "mir_test_framework/headless_test.h"
+#include "mir_test_framework/command_line_server_configuration.h"
 
 #include "mir/fd.h"
 #include "mir/main_loop.h"
+#include "mir/options/option.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -32,6 +34,7 @@ std::chrono::seconds const timeout{10};
 
 mtf::HeadlessTest::HeadlessTest()
 {
+    configure_from_commandline(server);
     add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", "libmirplatformstub.so");
 }
 
