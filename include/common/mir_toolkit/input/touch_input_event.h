@@ -99,7 +99,7 @@ unsigned int mir_touch_input_event_get_touch_count(MirTouchInputEvent const* eve
  * Retrieve the TouchID for a touch at given index.
  *
  *  \param [in] event       The touch event
- *  \param [in] touch_index The touch index. Must be less than touch_count.
+ *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \return                 ID of the touch at index
  */
 MirTouchInputEventTouchId mir_touch_input_event_get_touch_id(MirTouchInputEvent const* event, size_t touch_index);
@@ -108,7 +108,7 @@ MirTouchInputEventTouchId mir_touch_input_event_get_touch_id(MirTouchInputEvent 
  * Retrieve the action for touch at given index.
  *
  *  \param [in] event       The touch event
- *  \param [in] touch_index The touch index. Must be less than touch_count.
+ *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \return                 Action performed for the touch at index.
  */
 MirTouchInputEventTouchAction mir_touch_input_event_get_touch_action(MirTouchInputEvent const* event, size_t touch_index);
@@ -117,7 +117,7 @@ MirTouchInputEventTouchAction mir_touch_input_event_get_touch_action(MirTouchInp
  * Retrieve the tooltype for touch at given index.
  *
  *  \param [in] event       The touch event
- *  \param [in] touch_index The touch index. Must be less than touch_count.
+ *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \return                 Tooltype used for the touch at index
  */
 MirTouchInputEventTouchTooltype mir_touch_input_event_get_touch_tooltype(MirTouchInputEvent const* event,
@@ -128,7 +128,7 @@ MirTouchInputEventTouchTooltype mir_touch_input_event_get_touch_tooltype(MirTouc
  * Retrieve the axis value for a given axis on an indexed touch.
  *
  *  \param [in] event       The touch event
- *  \param [in] touch_index The touch index. Must be less than touch_count.
+ *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \param [in] axis        The axis to retreive a value from
  *  \return                 The value of the given axis
  */
