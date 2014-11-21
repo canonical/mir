@@ -657,16 +657,21 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
     mir_surface_spec_release(surface_spec);
 
     EXPECT_THAT(surface, IsValid());
-    auto resultant_spec = mir_surface_get_spec(surface);
 
-    EXPECT_THAT(mir_surface_spec_get_name(resultant_spec), StrEq(""));
-    EXPECT_THAT(mir_surface_spec_get_width(resultant_spec), Eq(width));
-    EXPECT_THAT(mir_surface_spec_get_height(resultant_spec), Eq(height));
-    EXPECT_THAT(mir_surface_spec_get_pixel_format(resultant_spec), Eq(format));
+    MirNativeBuffer* native_buffer;
+    mir_surface_get_current_buffer(surface, &native_buffer);
+
+    EXPECT_THAT(native_buffer->width, Eq(width));
+    EXPECT_THAT(native_buffer->height, Eq(height));
+    /* Amusingly it turns out that there's no way for a mesa client to work out
+     * what format its buffer is in.
+     */
+#ifdef ANDROID
+    EXPECT_THAT(native_buffer->format, Eq(format));
+#endif
     EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_normal));
 
     mir_surface_release_sync(surface);
-    mir_surface_spec_release(resultant_spec);
     mir_connection_release(connection);
 }
 
@@ -675,7 +680,7 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     int const width{800}, height{600};
-    MirPixelFormat const format{mir_pixel_format_bgr_888};
+    MirPixelFormat const format{mir_pixel_format_xbgr_8888};
     auto surface_spec = mir_connection_create_spec_for_normal_surface(connection,
                                                                       width, height,
                                                                       format);
@@ -684,15 +689,21 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
     mir_surface_spec_release(surface_spec);
 
     EXPECT_THAT(surface, IsValid());
-    auto resultant_spec = mir_surface_get_spec(surface);
 
-    EXPECT_THAT(mir_surface_spec_get_width(resultant_spec), Eq(width));
-    EXPECT_THAT(mir_surface_spec_get_height(resultant_spec), Eq(height));
-    EXPECT_THAT(mir_surface_spec_get_pixel_format(resultant_spec), Eq(format));
+    MirNativeBuffer* native_buffer;
+    mir_surface_get_current_buffer(surface, &native_buffer);
+
+    EXPECT_THAT(native_buffer->width, Eq(width));
+    EXPECT_THAT(native_buffer->height, Eq(height));
+    /* Amusingly it turns out that there's no way for a mesa client to work out
+     * what format its buffer is in.
+     */
+#ifdef ANDROID
+    EXPECT_THAT(native_buffer->format, Eq(format));
+#endif
     EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_normal));
 
     mir_surface_release_sync(surface);
-    mir_surface_spec_release(resultant_spec);
     mir_connection_release(connection);
 }
 
@@ -716,22 +727,13 @@ TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
     MirPixelFormat const pixel_format{mir_pixel_format_argb_8888};
     EXPECT_TRUE(mir_surface_spec_set_pixel_format(surface_spec, pixel_format));
 
-    MirBufferUsage const buffer_usage{mir_buffer_usage_software};
+    MirBufferUsage const buffer_usage{mir_buffer_usage_hardware};
     EXPECT_TRUE(mir_surface_spec_set_buffer_usage(surface_spec, buffer_usage));
 
     auto surface = mir_surface_create_sync(surface_spec);
     mir_surface_spec_release(surface_spec);
+
     EXPECT_THAT(surface, IsValid());
-
-    auto resultant_spec = mir_surface_get_spec(surface);
-
-    EXPECT_THAT(mir_surface_spec_get_name(resultant_spec), StrEq(name));
-    EXPECT_THAT(mir_surface_spec_get_width(resultant_spec), Eq(width));
-    EXPECT_THAT(mir_surface_spec_get_height(resultant_spec), Eq(height));
-    EXPECT_THAT(mir_surface_spec_get_pixel_format(resultant_spec), Eq(pixel_format));
-    EXPECT_THAT(mir_surface_spec_get_buffer_usage(resultant_spec), Eq(buffer_usage));
-
-    mir_surface_spec_release(resultant_spec);
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
@@ -760,18 +762,83 @@ TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
 
     EXPECT_THAT(surface, IsValid());
 
-    auto resultant_spec = mir_surface_get_spec(surface);
+    MirNativeBuffer* native_buffer;
+    mir_surface_get_current_buffer(surface, &native_buffer);
 
-    EXPECT_THAT(mir_surface_spec_get_width(resultant_spec),
+    EXPECT_THAT(native_buffer->width,
                 Eq(requested_output.modes[requested_output.current_mode].horizontal_resolution));
-    EXPECT_THAT(mir_surface_spec_get_height(resultant_spec),
+    EXPECT_THAT(native_buffer->height,
                 Eq(requested_output.modes[requested_output.current_mode].vertical_resolution));
 
 // TODO: This is racy. Fix in subsequent "send all the things on construction" branch
 //    EXPECT_THAT(mir_surface_get_state(surface), Eq(mir_surface_state_fullscreen));
 
-    mir_surface_spec_release(resultant_spec);
     mir_surface_release_sync(surface);
     mir_display_config_destroy(configuration);
+    mir_connection_release(connection);
+}
+
+/* TODO: Our stub platform support is a bit terrible.
+ *       These acceptance tests accidentally work because the hardware client platforms
+ * currently don't validate any of their input. If they did, the fact that they're
+ * receiving buffers from a stub server platform would cause all manner of problems.
+ *
+ * So we disable these tests that rely on the behaviour of a stub client platform
+ */
+TEST_F(ClientLibrary, DISABLED_can_create_buffer_usage_hardware_surface)
+{
+    using namespace testing;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto surface_spec = mir_connection_create_spec_for_normal_surface(connection,
+                                                                      800, 600,
+                                                                      mir_pixel_format_bgr_888);
+
+    MirBufferUsage const buffer_usage{mir_buffer_usage_hardware};
+    EXPECT_TRUE(mir_surface_spec_set_buffer_usage(surface_spec, buffer_usage));
+
+    auto surface = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    EXPECT_THAT(surface, IsValid());
+
+    MirNativeBuffer* native_buffer;
+    // We use the fact that our stub client platform returns NULL if asked for a native
+    // buffer on a surface with mir_buffer_usage_software set.
+    mir_surface_get_current_buffer(surface, &native_buffer);
+
+    EXPECT_THAT(native_buffer, Not(Eq(nullptr)));
+
+    mir_surface_release_sync(surface);
+    mir_connection_release(connection);
+}
+
+TEST_F(ClientLibrary, DISABLED_can_create_buffer_usage_software_surface)
+{
+    using namespace testing;
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    auto surface_spec = mir_connection_create_spec_for_normal_surface(connection,
+                                                                      800, 600,
+                                                                      mir_pixel_format_bgr_888);
+
+    MirBufferUsage const buffer_usage{mir_buffer_usage_software};
+    EXPECT_TRUE(mir_surface_spec_set_buffer_usage(surface_spec, buffer_usage));
+
+    auto surface = mir_surface_create_sync(surface_spec);
+    mir_surface_spec_release(surface_spec);
+
+    EXPECT_THAT(surface, IsValid());
+
+    MirGraphicsRegion graphics_region;
+    // We use the fact that our stub client platform returns a NULL vaddr if
+    // asked to map a hardware buffer.
+    mir_surface_get_graphics_region(surface, &graphics_region);
+
+    EXPECT_THAT(graphics_region.vaddr, Not(Eq(nullptr)));
+
+    mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }

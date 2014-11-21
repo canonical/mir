@@ -137,11 +137,6 @@ bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t ou
     return true;
 }
 
-MirSurfaceSpec* mir_surface_get_spec(MirSurface* surf)
-{
-    return surf->get_surface_spec();
-}
-
 char const* mir_surface_spec_get_name(MirSurfaceSpec* spec)
 {
     return spec->name.c_str();

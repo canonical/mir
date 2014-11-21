@@ -139,19 +139,6 @@ bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usag
 bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id);
 
 /**
- * Get a surface specification based on a surface's current state
- *
- * This will not necessarily be the same as the specification used to create the surface.
- * The server may modify or ignore some requested attributes.
- *
- * \param [in] surf     Surface to generate specification from
- * \return              A surface specification that would construct a surface with
- *                      identical attributes to surf.
- * \note    Caller owns this MirSurfaceSpec. Call mir_surface_spec_release() to free the associated resources.
- */
-MirSurfaceSpec* mir_surface_get_spec(MirSurface* surf);
-
-/**
  * Get the requested name
  * \param [in] spec     Specification to query
  * \return              The name. This buffer is owned by the MirSurfaceSpec; do not free it.
