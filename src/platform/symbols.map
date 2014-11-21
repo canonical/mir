@@ -7,10 +7,6 @@ MIRPLATFORM_4 {
     mir::fatal_error_abort*;
     mir::fatal_error_except*;
     mir::graphics::add_platform_options*;
-    mir::graphics::BasicPlatform::?BasicPlatform*;
-    mir::graphics::BasicPlatform::BasicPlatform*;
-    mir::graphics::BasicPlatform::egl_native_display*;
-    mir::graphics::BasicPlatform::operator*;
     mir::graphics::BufferBasic::BufferBasic*;
     mir::graphics::Buffer::Buffer*;
     mir::graphics::Buffer::can_bypass*;
@@ -182,7 +178,6 @@ MIRPLATFORM_4 {
     mir::options::session_mediator_report_opt*;
     mir::options::touchspots_opt*;
     mir::options::use_asio_main_loop_opt*;
-    non-virtual?thunk?to?mir::graphics::BasicPlatform::?BasicPlatform*;
     non-virtual?thunk?to?mir::graphics::Cursor::?Cursor*;
     non-virtual?thunk?to?mir::graphics::CursorImage::?CursorImage*;
     non-virtual?thunk?to?mir::graphics::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
@@ -207,7 +202,6 @@ MIRPLATFORM_4 {
     non-virtual?thunk?to?mir::options::ProgramOption::is_set*;
     typeinfo?for?mir::AbnormalExit;
     typeinfo?for?mir::FatalErrorStrategy;
-    typeinfo?for?mir::graphics::BasicPlatform;
     typeinfo?for?mir::graphics::Buffer;
     typeinfo?for?mir::graphics::BufferBasic;
     typeinfo?for?mir::graphics::BufferProperties;
@@ -238,7 +232,6 @@ MIRPLATFORM_4 {
     typeinfo?for?mir::options::ProgramOption;
     vtable?for?mir::AbnormalExit;
     vtable?for?mir::FatalErrorStrategy;
-    vtable?for?mir::graphics::BasicPlatform;
     vtable?for?mir::graphics::Buffer;
     vtable?for?mir::graphics::BufferBasic;
     vtable?for?mir::graphics::BufferProperties;

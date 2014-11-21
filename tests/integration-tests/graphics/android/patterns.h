@@ -22,15 +22,12 @@
 
 #include <memory>
 #include <stdexcept>
-/* todo: replace with color value types */
 #include <stdint.h>
 #include <cstring>
 
 namespace mir
 {
 namespace test
-{
-namespace draw
 {
 
 class DrawPattern
@@ -74,7 +71,6 @@ private:
 };
 #include "draw_pattern_checkered-inl.h"
 
-}
 }
 }
 
