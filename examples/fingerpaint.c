@@ -234,8 +234,8 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             {
                 int x = mir_touch_input_event_get_touch_axis_value(tev, p, mir_touch_input_axis_x);
                 int y = mir_touch_input_event_get_touch_axis_value(tev, p, mir_touch_input_axis_y);
-                float size = mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_size);
-                float pressure = mir_touch_input_event_get_touch_axis_value(tev, 0, mir_touch_input_axis_pressure);
+                float size = mir_touch_input_event_get_touch_axis_value(tev, p, mir_touch_input_axis_size);
+                float pressure = mir_touch_input_event_get_touch_axis_value(tev, p, mir_touch_input_axis_pressure);
 
                 int radius = size * 50.0f
                              + 1.0f;
