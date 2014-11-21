@@ -21,8 +21,6 @@
 #include "mir_toolkit/event.h"
 #include "mir_toolkit/input/input_event.h"
 
-// TODO: Zero out events
-
 TEST(InputEvent, old_style_key_and_motion_events_are_input_events)
 {
     MirEvent key_ev;
@@ -72,7 +70,6 @@ TEST(CommonInputEventProperties, event_time_taken_from_old_style_event)
         mir_event_get_input_event(&old_ev)));
 }
 
-// TODO: Key event getters
 TEST(KeyInputEventProperties, up_and_down_actions_copied_from_old_style_event)
 {
     MirEvent old_ev;
