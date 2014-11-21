@@ -61,6 +61,29 @@ private:
     std::function<void()> const apply;
 };
 
+class Barrier
+{
+public:
+    explicit Barrier() : wait_threads{1} {}
+
+    void add_thread() { std::lock_guard<decltype(mutex)> lock(mutex); ++ wait_threads; }
+
+    void ready()
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+        --wait_threads;
+        cv.notify_all();
+        if (!cv.wait_for(lock, std::chrono::minutes(1), [&]{ return wait_threads == 0; }))
+            throw std::runtime_error("Timeout");
+    }
+
+private:
+    Barrier(Barrier const&) = default;
+    Barrier& operator=(Barrier const&) = default;
+    unsigned wait_threads;
+    std::mutex mutex;
+    std::condition_variable cv;
+};
 }
 
 namespace mir
@@ -92,12 +115,14 @@ public:
     CompositingFunctor(std::shared_ptr<mc::DisplayBufferCompositorFactory> const& db_compositor_factory,
                        mg::DisplayBuffer& buffer,
                        std::shared_ptr<mc::Scene> const& scene,
+                       Barrier* startup_barrier,
                        std::shared_ptr<CompositorReport> const& report)
         : display_buffer_compositor_factory{db_compositor_factory},
           buffer(buffer),
           scene(scene),
           running{true},
           frames_scheduled{0},
+          startup_barrier{startup_barrier},
           report{report}
     {
     }
@@ -126,6 +151,8 @@ public:
         auto compositor_registration = mir::raii::paired_calls(
             [this,&display_buffer_compositor]{scene->register_compositor(display_buffer_compositor.get());},
             [this,&display_buffer_compositor]{scene->unregister_compositor(display_buffer_compositor.get());});
+
+        startup_barrier->ready();
 
         std::unique_lock<std::mutex> lock{run_mutex};
         while (running)
@@ -187,6 +214,7 @@ private:
     int frames_scheduled;
     std::mutex run_mutex;
     std::condition_variable run_cv;
+    Barrier* const startup_barrier;
     std::shared_ptr<CompositorReport> const report;
 };
 
@@ -293,10 +321,12 @@ void mc::MultiThreadedCompositor::stop()
 
 void mc::MultiThreadedCompositor::create_compositing_threads()
 {
+    Barrier startup_barrier;
     /* Start the display buffer compositing threads */
-    display->for_each_display_buffer([this](mg::DisplayBuffer& buffer)
+    display->for_each_display_buffer([&](mg::DisplayBuffer& buffer)
     {
-        auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, buffer, scene, report};
+        startup_barrier.add_thread();
+        auto thread_functor_raw = new mc::CompositingFunctor{display_buffer_compositor_factory, buffer, scene, &startup_barrier, report};
         auto thread_functor = std::unique_ptr<mc::CompositingFunctor>(thread_functor_raw);
 
         futures.push_back(thread_pool.run(std::ref(*thread_functor), &buffer));
@@ -305,6 +335,7 @@ void mc::MultiThreadedCompositor::create_compositing_threads()
 
     thread_pool.shrink();
 
+    startup_barrier.ready();
     state = CompositorState::started;
 }
 
