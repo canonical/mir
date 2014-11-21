@@ -26,9 +26,4 @@ MIR_CLIENT_8.1 {
     mir_surface_spec_set_pixel_format;
     mir_surface_spec_set_buffer_usage;
     mir_surface_spec_set_fullscreen_on_output;
-    mir_surface_spec_get_name;
-    mir_surface_spec_get_width;
-    mir_surface_spec_get_height;
-    mir_surface_spec_get_pixel_format;
-    mir_surface_spec_get_buffer_usage;
 } MIR_CLIENT_8;

@@ -139,41 +139,6 @@ bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usag
 bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id);
 
 /**
- * Get the requested name
- * \param [in] spec     Specification to query
- * \return              The name. This buffer is owned by the MirSurfaceSpec; do not free it.
- */
-char const* mir_surface_spec_get_name(MirSurfaceSpec* spec);
-
-/**
- * Get the requested width
- * \param [in] spec     Specification to query
- * \return              The width, in pixels, or -1 if the width is unset
- */
-int mir_surface_spec_get_width(MirSurfaceSpec* spec);
-
-/**
- * Get the requested height
- * \param [in] spec     Specification to query
- * \return              The height, in pixels, or -1 if the height is unset
- */
-int mir_surface_spec_get_height(MirSurfaceSpec* spec);
-
-/**
- * Get the requested pixel format
- * \param [in] spec     Specification to query
- * \return              The pixel format
- */
-MirPixelFormat mir_surface_spec_get_pixel_format(MirSurfaceSpec* spec);
-
-/**
- * Get the requested buffer usage
- * \param [in] spec     Specification to query
- * \return              The buffer usage
- */
-MirBufferUsage mir_surface_spec_get_buffer_usage(MirSurfaceSpec* spec);
-
-/**
  * Release the resources held by a MirSurfaceSpec.
  *
  * \param [in] spec     Specification to release

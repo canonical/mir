@@ -137,31 +137,6 @@ bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t ou
     return true;
 }
 
-char const* mir_surface_spec_get_name(MirSurfaceSpec* spec)
-{
-    return spec->name.c_str();
-}
-
-int mir_surface_spec_get_width(MirSurfaceSpec* spec)
-{
-    return spec->width;
-}
-
-int mir_surface_spec_get_height(MirSurfaceSpec* spec)
-{
-    return spec->height;
-}
-
-MirPixelFormat mir_surface_spec_get_pixel_format(MirSurfaceSpec* spec)
-{
-    return spec->pixel_format;
-}
-
-MirBufferUsage mir_surface_spec_get_buffer_usage(MirSurfaceSpec* spec)
-{
-    return spec->buffer_usage;
-}
-
 void mir_surface_spec_release(MirSurfaceSpec* spec)
 {
     delete spec;
