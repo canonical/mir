@@ -72,15 +72,15 @@ typedef enum {
 } MirKeyInputEventModifiers;
 
 /**
- * Retreive the action responsible for generating a MirKeyInputEvent
+ * Retrieve the action responsible for generating a given key event.
  * 
  *  \param [in] event The key event
- *  \return           The assosciated action
+ *  \return           The associated action
  */
 MirKeyInputEventAction mir_key_input_event_get_action(MirKeyInputEvent const* event);
 
 /**
- * Retreive the xkb mapped keycode assosciated with a MirKeyInputEvent. May
+ * Retrieve the xkb mapped keycode associated with a given key event. May
  * be interpreted as per <xkbcommon/xkb-keysyms.h>
  *
  *   \param [in] event The key event
@@ -89,7 +89,7 @@ MirKeyInputEventAction mir_key_input_event_get_action(MirKeyInputEvent const* ev
 xkb_keysym_t mir_key_input_event_get_key_code(MirKeyInputEvent const* event);
 
 /**
- * Retreive the raw hardware scan code assosciated with a MirKeyInputEvent. May
+ * Retrieve the raw hardware scan code associated with a given key event. May
  * be interpreted as per <linux/input.h>
  *
  *   \param [in] event The key event
@@ -98,7 +98,7 @@ xkb_keysym_t mir_key_input_event_get_key_code(MirKeyInputEvent const* event);
 int mir_key_input_event_get_scan_code(MirKeyInputEvent const* event);
 
 /**
- * Retreive the modifier keys enabled when the key action was performed.
+ * Retrieve the modifier keys pressed when the given key event occured.
  *
  *   \param [in] event The key event
  *   \return           The modifier mask

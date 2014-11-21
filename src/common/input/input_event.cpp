@@ -20,6 +20,11 @@
 
 #include <assert.h>
 
+// See: https://bugs.launchpad.net/mir/+bug/1311699
+#define MIR_EVENT_ACTION_MASK 0xff
+#define MIR_EVENT_ACTION_POINTER_INDEX_MASK 0xff00
+#define MIR_EVENT_ACTION_POINTER_INDEX_SHIFT 8;
+
 namespace
 {
 MirEvent const* old_ev_from_new(MirInputEvent const* ev)
@@ -218,10 +223,9 @@ MirTouchInputEventTouchTooltype mir_touch_input_event_get_touch_tooltype(MirTouc
         return mir_touch_input_tool_type_finger;
     case mir_motion_tool_type_stylus:
         return mir_touch_input_tool_type_stylus;
-    case mir_motion_tool_type_mouse:
-        return mir_touch_input_tool_type_mouse;
     case mir_motion_tool_type_eraser:
         return mir_touch_input_tool_type_eraser;
+    case mir_motion_tool_type_mouse:
     case mir_motion_tool_type_unknown:
     default:
         return mir_touch_input_tool_type_unknown;

@@ -33,10 +33,6 @@ extern "C" {
 /* TODO: To the moon. */
 #define MIR_INPUT_EVENT_MAX_POINTER_COUNT 16
 
-#define MIR_EVENT_ACTION_MASK 0xff
-#define MIR_EVENT_ACTION_POINTER_INDEX_MASK 0xff00
-#define MIR_EVENT_ACTION_POINTER_INDEX_SHIFT 8;
-
 typedef int64_t nsecs_t;
 
 typedef enum
@@ -168,7 +164,7 @@ typedef struct
 
 // DEPRECATED
 // Direct access to MirMotionEvent is deprecated. Please use mir_event_get_input_event
-// and the mir_input_event* family of function.s
+// and the mir_input_event* family of functions.
 typedef struct
 {
     MirEventType type;

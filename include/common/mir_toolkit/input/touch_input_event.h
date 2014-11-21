@@ -87,7 +87,7 @@ typedef enum {
 } MirTouchInputEventTouchTooltype;
 
 /**
- * Retreive the number of touches reported for a given touch event. Each touch
+ * Retrieve the number of touches reported for a given touch event. Each touch
  * is said to be index in the event and may be accessed by index 0, 1, ... , (touch_count - 1)
  *
  *   \param [in] event The touch event
@@ -96,7 +96,7 @@ typedef enum {
 unsigned int mir_touch_input_event_get_touch_count(MirTouchInputEvent const* event);
 
 /**
- * Retreive the TouchID for a touch at given index.
+ * Retrieve the TouchID for a touch at given index.
  *
  *  \param [in] event       The touch event
  *  \param [in] touch_index The touch index. Must be less than touch_count.
@@ -105,7 +105,7 @@ unsigned int mir_touch_input_event_get_touch_count(MirTouchInputEvent const* eve
 MirTouchInputEventTouchId mir_touch_input_event_get_touch_id(MirTouchInputEvent const* event, size_t touch_index);
 
 /**
- * Retreive the action for touch at given index.
+ * Retrieve the action for touch at given index.
  *
  *  \param [in] event       The touch event
  *  \param [in] touch_index The touch index. Must be less than touch_count.
@@ -114,7 +114,7 @@ MirTouchInputEventTouchId mir_touch_input_event_get_touch_id(MirTouchInputEvent 
 MirTouchInputEventTouchAction mir_touch_input_event_get_touch_action(MirTouchInputEvent const* event, size_t touch_index);
 
 /**
- * Retreive the tooltype for touch at given index.
+ * Retrieve the tooltype for touch at given index.
  *
  *  \param [in] event       The touch event
  *  \param [in] touch_index The touch index. Must be less than touch_count.
@@ -125,7 +125,7 @@ MirTouchInputEventTouchTooltype mir_touch_input_event_get_touch_tooltype(MirTouc
 
 
 /**
- * Retreive the axis value for a given axis on an indexed touch.
+ * Retrieve the axis value for a given axis on an indexed touch.
  *
  *  \param [in] event       The touch event
  *  \param [in] touch_index The touch index. Must be less than touch_count.

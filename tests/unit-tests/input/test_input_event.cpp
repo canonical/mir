@@ -21,6 +21,10 @@
 #include "mir_toolkit/event.h"
 #include "mir_toolkit/input/input_event.h"
 
+// See: https://bugs.launchpad.net/mir/+bug/1311699
+#define MIR_EVENT_ACTION_POINTER_INDEX_MASK 0xff00
+#define MIR_EVENT_ACTION_POINTER_INDEX_SHIFT 8;
+
 TEST(InputEvent, old_style_key_and_motion_events_are_input_events)
 {
     MirEvent key_ev;
