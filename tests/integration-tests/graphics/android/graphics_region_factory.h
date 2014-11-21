@@ -20,31 +20,29 @@
 
 #include "mir/graphics/native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
+#include <hardware/gralloc.h>
 #include <memory>
 
 namespace mir
 {
 namespace test
 {
-namespace draw
-{
-
 class GraphicsRegionFactory
 {
 public:
-    virtual ~GraphicsRegionFactory() {}
-    virtual std::shared_ptr<MirGraphicsRegion> graphic_region_from_handle(
-        graphics::NativeBuffer& native_buffer) = 0;
+    GraphicsRegionFactory();
+    ~GraphicsRegionFactory();
+    std::shared_ptr<MirGraphicsRegion> graphic_region_from_handle(
+        graphics::NativeBuffer& native_buffer);
 
 protected:
-    GraphicsRegionFactory() = default;
     GraphicsRegionFactory(GraphicsRegionFactory const&) = delete;
     GraphicsRegionFactory& operator=(GraphicsRegionFactory const&) = delete;
+
+private:
+    gralloc_module_t* module;
+    alloc_device_t* alloc_dev;
 };
-
-std::shared_ptr<GraphicsRegionFactory> create_graphics_region_factory();
-
-}
 }
 }
 #endif /* MIR_TEST_DRAW_GRAPHICS_REGION_FACTORY */

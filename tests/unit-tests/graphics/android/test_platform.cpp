@@ -113,8 +113,8 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     EXPECT_CALL(mock_ipc_msg, pack_size(_))
         .Times(1);
 
-    platform.fill_buffer_package(
-        &mock_ipc_msg, mock_buffer.get(), mg::BufferIpcMsgType::full_msg);
+    auto ipc_ops = platform.make_ipc_operations();
+    ipc_ops->pack_buffer(mock_ipc_msg, *mock_buffer, mg::BufferIpcMsgType::full_msg);
 }
 
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_without_fence)
@@ -152,8 +152,8 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     EXPECT_CALL(mock_ipc_msg, pack_size(_))
         .Times(1);
 
-    platform.fill_buffer_package(
-        &mock_ipc_msg, mock_buffer.get(), mg::BufferIpcMsgType::full_msg);
+    auto ipc_ops = platform.make_ipc_operations();
+    ipc_ops->pack_buffer(mock_ipc_msg, *mock_buffer, mg::BufferIpcMsgType::full_msg);
 }
 
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
@@ -188,7 +188,8 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
     EXPECT_CALL(mock_ipc_msg, pack_size(_))
         .Times(1);
 
-    platform.fill_buffer_package(&mock_ipc_msg, mock_buffer.get(), mg::BufferIpcMsgType::full_msg);
+    auto ipc_ops = platform.make_ipc_operations();
+    ipc_ops->pack_buffer(mock_ipc_msg, *mock_buffer, mg::BufferIpcMsgType::full_msg);
 }
 
 TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ipc)

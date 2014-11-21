@@ -47,14 +47,9 @@ public:
 
     virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() = 0;
 
-    virtual std::shared_ptr<PlatformIPCPackage> connection_ipc_package() = 0;
-
     virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
 
-    virtual void fill_buffer_package(
-        BufferIpcMessage* message,
-        Buffer const* buffer,
-        BufferIpcMsgType msg_type) const = 0;
+    virtual std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const = 0;
 
     virtual std::shared_ptr<BufferWriter> make_buffer_writer() = 0;
 
