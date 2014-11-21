@@ -30,14 +30,14 @@ extern "C" {
 /**
  * An event type describing a change in touch device state.
  */
-typedef struct _MirTouchInputEvent MirTouchInputEvent;
+typedef struct MirTouchInputEvent MirTouchInputEvent;
 
 /** 
  * An identifier for a touch-point. TouchId's are unique per-gesture.
  * That is to say, once a touch has gone down at time T, no other touch will
  * use that touch's ID until all touches at time T have come up.
  */
-typedef int64_t MirTouchInputEventTouchId;
+typedef int32_t MirTouchInputEventTouchId;
 
 /**
  * Possible per touch actions for state changing
@@ -48,13 +48,7 @@ typedef enum {
     /* This touch point is going down */
     mir_touch_input_event_action_down = 1,
     /* Axis values have changed on this touch point */
-    mir_touch_input_event_action_change = 2,
-    /* This touch point was cancelled, an down should have been
-       received but an up will never come. */
-    mir_touch_input_event_action_cancel = 3,
-    /* This touch point is unchanged but is reported as part of
-       a full state update. */
-    mir_touch_input_event_action_none = 4
+    mir_touch_input_event_action_change = 2
 } MirTouchInputEventTouchAction;
 
 /**
@@ -88,10 +82,8 @@ typedef enum {
     mir_touch_input_tool_type_finger = 1,
 // Touch is made with a stylus
     mir_touch_input_tool_type_stylus = 2,
-// Touch is made with a mouse through touch emulation
-    mir_touch_input_tool_type_mouse = 3,
 // Touch is made with a stylus eraser tool
-    mir_touch_input_tool_type_eraser = 4,
+    mir_touch_input_tool_type_eraser = 3
 } MirTouchInputEventTouchTooltype;
 
 /**

@@ -78,7 +78,7 @@ MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev)
     }
 }
 
-MirInputEventTime mir_input_event_get_event_time(MirInputEvent const* ev)
+int64_t mir_input_event_get_event_time(MirInputEvent const* ev)
 {
     auto old_ev = old_ev_from_new(ev);
     assert(mir_event_get_type(old_ev) == mir_event_type_input);
@@ -185,8 +185,6 @@ MirTouchInputEventTouchAction mir_touch_input_event_get_touch_action(MirTouchInp
     case mir_motion_action_hover_move:
         return mir_touch_input_event_action_change;
     // All touch points are handled at once so we don't know the index
-    case mir_motion_action_cancel:
-        return mir_touch_input_event_action_cancel;
     case mir_motion_action_pointer_down:
         if (touch_index == masked_index)
             return mir_touch_input_event_action_down;
@@ -198,12 +196,13 @@ MirTouchInputEventTouchAction mir_touch_input_event_get_touch_action(MirTouchInp
         else
             return mir_touch_input_event_action_change;
     // TODO: How to deal with these?
+    case mir_motion_action_cancel:
     case mir_motion_action_outside:
     case mir_motion_action_scroll:
     case mir_motion_action_hover_enter:
     case mir_motion_action_hover_exit:
     default:
-        return mir_touch_input_event_action_none;
+        return mir_touch_input_event_action_change;
     }
 }
 

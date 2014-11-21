@@ -32,7 +32,7 @@ extern "C" {
 /**
  * An event type describing a change in keyboard state
  */
-typedef struct _MirKeyInputEvent MirKeyInputEvent;
+typedef struct MirKeyInputEvent MirKeyInputEvent;
 
 /**
  * Possible actions for changing key state
