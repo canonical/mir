@@ -55,8 +55,11 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
  *
  *
  * \param [in] requested_specification  Specification of the attributes for the created surface
- * \param [in] callback                 Callback function to be invoked when realisation is complete
+ * \param [in] callback                 Callback function to be invoked when creation is complete
  * \param [in, out] context             User data passed to callback function.
+ *                                      This callback is guaranteed to be called, and called with a
+ *                                      non-null MirSurface*, but the surface may be invalid in
+ *                                      case of an error.
  * \return                              A handle that can be passed to mir_wait_for()
  */
 MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
