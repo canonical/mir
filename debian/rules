@@ -24,7 +24,6 @@ override_dh_auto_test:
 	GTEST_OUTPUT=xml:./ dh_auto_test --max-parallel=1 -- ARGS="-V"
 
 COMMON_CONFIGURE_OPTIONS = \
-  -DBUILD_DOXYGEN=YES \
   -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"
 
 override_dh_auto_configure:
@@ -45,6 +44,10 @@ else
 	  -DMIR_PLATFORM=mesa\;android
 endif
 endif
+
+# Only build the docs when we need them
+override_dh_auto_build-indep:
+	dh_auto_build -- doc
 
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
