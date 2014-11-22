@@ -26,6 +26,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/nested_context.h"
 
+#include "nested_authentication.h"
 #include "internal_client.h"
 #include "internal_native_display.h"
 
@@ -42,15 +43,13 @@ namespace mgm = mg::mesa;
 
 mgm::NativePlatform::NativePlatform(std::shared_ptr<NestedContext> const& nested_context_arg)
 {
+    //TODO: a bit of round-about initialization to clean up here
     nested_context = nested_context_arg;
     auto fds = nested_context->platform_fd_items();
-    drm_fd = fds.at(0);
-    gbm.setup(drm_fd);
+    gbm.setup(fds.at(0));
     nested_context->drm_set_gbm_device(gbm.device);
-
-    auto drm_helper = std::make_shared<helpers::DRMHelper>();
-    drm_helper->fd = drm_fd;
-    ipc_ops = std::make_shared<mgm::IpcOperations>(drm_helper, nested_context);
+    ipc_ops = std::make_shared<mgm::IpcOperations>(
+        std::make_shared<mgm::NestedAuthentication>(nested_context)); 
 }
 
 mgm::NativePlatform::~NativePlatform()

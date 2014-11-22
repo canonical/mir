@@ -46,7 +46,7 @@ void mgmh::DRMHelper::setup(std::shared_ptr<mir::udev::Context> const& udev)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to open DRM device\n"));
 }
 
-int mgmh::DRMHelper::get_authenticated_fd()
+mir::Fd mgmh::DRMHelper::authenticated_fd()
 {
     /* We must have our own device fd first, so that it has become the DRM master */
     if (fd < 0)
@@ -91,10 +91,11 @@ int mgmh::DRMHelper::get_authenticated_fd()
                 std::runtime_error("Failed to authenticate DRM device magic cookie")) << boost::errinfo_errno(-ret));
     }
 
-    return auth_fd;
+    //TODO: remove IntOwnedFd, its how the code works now though
+    return mir::Fd{IntOwnedFd{auth_fd}};
 }
 
-void mgmh::DRMHelper::auth_magic(drm_magic_t magic) const
+void mgmh::DRMHelper::auth_magic(drm_magic_t magic)
 {
     /* We must have our own device fd first, so that it has become the DRM master */
     if (fd < 0)
