@@ -35,6 +35,7 @@ add_library(mirplatformgraphicsmesaobjects OBJECT
   bypass.cpp
   ipc_operations.cpp
   buffer_writer.cpp
+  nested_authentication.cpp
 )
 
 add_library(mirplatformgraphicsmesa SHARED

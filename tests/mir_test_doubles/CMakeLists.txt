@@ -18,6 +18,7 @@ set(
   test_protobuf_socket_server.cpp
   mock_timer.cpp
   mock_frame_dropping_policy_factory.cpp
+  null_logger.cpp
   platform_factory.cpp
   stub_buffer.cpp
 )
