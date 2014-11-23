@@ -182,6 +182,11 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
      * the client just yet. We need to balance supply and demand so that it's
      * not permanently biased toward the ready queue being full (N-1 buffers)
      * and creating visible lag.
+     * The important thing to remember here is to check
+     * ready_to_composite_queue is not empty, so as to guarantee we're not
+     * throttling the client so much as to starve it (and hence starve the
+     * compositor). This ensures the client will definitely get some buffer
+     * given to it within one frame still.
      */
     if (client_keeping_up && !ready_to_composite_queue.empty())
         return;
@@ -474,8 +479,15 @@ void mc::BufferQueue::release(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
+    /*
+     * Be careful to not oversupply the client with buffers, so that it can't
+     * over-produce ready frames (looks laggy). At the same time, be careful
+     * to not over-throttle the client: If there are no "ready" frames yet
+     * then we want it to try harder and don't care if it holds more than
+     * one in order to catch up...
+     */
     if (!pending_client_notifications.empty() &&
-        ready_to_composite_queue.empty())  // Don't oversupply the client (lag)
+        ready_to_composite_queue.empty())
     {
         framedrop_policy->swap_unblocked();
         give_buffer_to_client(buffer, std::move(lock));
