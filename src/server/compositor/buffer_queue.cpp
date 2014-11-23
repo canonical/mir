@@ -101,7 +101,8 @@ mc::BufferQueue::BufferQueue(
       the_properties{props},
       force_new_compositor_buffer{false},
       callbacks_allowed{true},
-      gralloc{gralloc}
+      gralloc{gralloc},
+      impossible_user_id{this}
 {
     if (nbuffers < 1)
     {
@@ -317,7 +318,6 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
         // Ensure current_compositor_buffer gets reused by the next
         // compositor_acquire:
         current_buffer_users.clear();
-        void const* const impossible_user_id = this;
         current_buffer_users.push_back(impossible_user_id);
     }
 
@@ -387,11 +387,15 @@ int mc::BufferQueue::buffers_ready_for_compositor() const
 {
     std::lock_guard<decltype(guard)> lock(guard);
 
-    /*TODO: this api also needs to know the caller user id
-     * as the number of buffers that are truly ready
-     * vary depending on concurrent compositors.
-     */
-    return ready_to_composite_queue.size();
+    int nready = ready_to_composite_queue.size();
+
+    // A ready frame might have been promoted to current_compositor_buffer,
+    // before the compositor asked for it...
+    if (current_buffer_users.size() == 1 &&
+        current_buffer_users[0] == impossible_user_id)
+        ++nready;
+
+    return nready;
 }
 
 int mc::BufferQueue::buffers_free_for_client() const
@@ -481,7 +485,6 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
     if (!contains(current_compositor_buffer, buffers_sent_to_compositor))
     {
        current_buffer_users.clear();
-       void const* const impossible_user_id = this;
        current_buffer_users.push_back(impossible_user_id);
        std::swap(buffer_to_give, current_compositor_buffer);
     }

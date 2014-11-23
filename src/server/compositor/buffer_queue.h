@@ -98,6 +98,8 @@ private:
     // Ensure framedrop_policy gets destroyed first so the callback installed
     // does not access dead objects.
     std::unique_ptr<FrameDroppingPolicy> framedrop_policy;
+
+    void const* const impossible_user_id;
 };
 
 }
