@@ -183,9 +183,6 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
      * not permanently biased toward the ready queue being full (N-1 buffers)
      * and creating visible lag.
      */
-    fprintf(stderr, "Ready %d, keeping up? %s\n",
-        (int)ready_to_composite_queue.size(),
-        client_keeping_up?"Y":"n");
     if (client_keeping_up && !ready_to_composite_queue.empty())
         return;
 
@@ -478,7 +475,7 @@ void mc::BufferQueue::release(
     std::unique_lock<std::mutex> lock)
 {
     if (!pending_client_notifications.empty() &&
-        ready_to_composite_queue.empty())
+        ready_to_composite_queue.empty())  // Don't oversupply the client (lag)
     {
         framedrop_policy->swap_unblocked();
         give_buffer_to_client(buffer, std::move(lock));
