@@ -477,7 +477,8 @@ void mc::BufferQueue::release(
     mg::Buffer* buffer,
     std::unique_lock<std::mutex> lock)
 {
-    if (!pending_client_notifications.empty())
+    if (!pending_client_notifications.empty() &&
+        ready_to_composite_queue.empty())
     {
         framedrop_policy->swap_unblocked();
         give_buffer_to_client(buffer, std::move(lock));
