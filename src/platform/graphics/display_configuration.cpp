@@ -225,7 +225,7 @@ bool mg::DisplayConfigurationOutput::valid() const
         return false;
 
     auto nmodes = modes.size();
-    if (preferred_mode_index >= nmodes || current_mode_index >= nmodes)
+    if (current_mode_index >= nmodes)
         return false;
 
     return true;
