@@ -1200,6 +1200,33 @@ TEST_F(BufferQueueTest, composite_on_demand_never_deadlocks_with_2_buffers)
     }
 }
 
+TEST_F(BufferQueueTest, buffers_ready_is_not_underestimated)
+{
+    using namespace testing;
+
+    mc::BufferQueue q{2, allocator, basic_properties, policy_factory};
+
+    // Produce frame 1
+    q.client_release(client_acquire_sync(q));
+    // Acquire frame 1
+    auto a = q.compositor_acquire(this);
+
+    // Produce frame 2
+    q.client_release(client_acquire_sync(q));
+    // Acquire frame 2
+    auto b = q.compositor_acquire(this);
+
+    // Release frame 1
+    q.compositor_release(a);
+    // Produce frame 3
+    q.client_release(client_acquire_sync(q));
+    // Release frame 2
+    q.compositor_release(b);
+
+    // Verify frame 3 is ready
+    EXPECT_EQ(1, q.buffers_ready_for_compositor());
+}
+
 /* Regression test for LP: #1306464 */
 TEST_F(BufferQueueTest, framedropping_client_acquire_does_not_block_when_no_available_buffers)
 {
