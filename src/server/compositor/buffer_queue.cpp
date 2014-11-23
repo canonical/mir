@@ -98,6 +98,7 @@ mc::BufferQueue::BufferQueue(
     mc::FrameDroppingPolicyFactory const& policy_provider)
     : nbuffers{nbuffers},
       frame_dropping_enabled{false},
+      client_keeping_up{true},
       the_properties{props},
       force_new_compositor_buffer{false},
       callbacks_allowed{true},
@@ -175,6 +176,18 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
     std::unique_lock<decltype(guard)> lock(guard);
 
     pending_client_notifications.push_back(std::move(complete));
+
+    /*
+     * Just because we have free buffers doesn't mean we want to give one to
+     * the client just yet. We need to balance supply and demand so that it's
+     * not permanently biased toward the ready queue being full (N-1 buffers)
+     * and creating visible lag.
+     */
+    fprintf(stderr, "Ready %d, keeping up? %s\n",
+        (int)ready_to_composite_queue.size(),
+        client_keeping_up?"Y":"n");
+    if (client_keeping_up && !ready_to_composite_queue.empty())
+        return;
 
     if (!free_buffers.empty())
     {
@@ -309,8 +322,9 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
      * that one immediately will free up the old compositor buffer, allowing
      * us to call back the client with a buffer where otherwise we couldn't.
      */
-    if (current_compositor_buffer == buffer.get() &&
-        !ready_to_composite_queue.empty())
+    client_keeping_up = (current_compositor_buffer == buffer.get() &&
+                        !ready_to_composite_queue.empty());
+    if (client_keeping_up)
     {
         current_compositor_buffer = pop(ready_to_composite_queue);
 
