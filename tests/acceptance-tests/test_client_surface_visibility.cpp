@@ -97,6 +97,9 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
 
         mtf::ConnectedClientHeadlessServer::SetUp();
 
+        // TODO for some reason the server isn't really started here
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
         client_create_surface();
     }
 
