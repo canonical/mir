@@ -30,10 +30,7 @@
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 
-namespace
-{
-    char const* const mir_test_socket = mtf::test_socket_file().c_str();
-}
+using namespace ::testing;
 
 namespace
 {
@@ -42,7 +39,7 @@ struct MockEventObserver
     MOCK_METHOD1(see, void(MirEvent const*));
 };
 
-struct FocusNotification : mtf::InterprocessClientServerTest
+struct ClientFocusNotification : mtf::InterprocessClientServerTest
 {
     void SetUp() override
     {
@@ -84,13 +81,13 @@ private:
 
     static void handle_event(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
-        auto self = static_cast<FocusNotification*>(context);
+        auto self = static_cast<ClientFocusNotification*>(context);
         self->observer.see(ev);
     }
 
     static void surface_created(MirSurface *surface_, void *ctx)
     {
-        auto self = static_cast<FocusNotification*>(ctx);
+        auto self = static_cast<ClientFocusNotification*>(ctx);
 
         self->surface = surface_;
         // We need to set the event delegate from the surface_created
@@ -106,9 +103,7 @@ private:
 };
 }
 
-using namespace ::testing;
-
-TEST_F(FocusNotification, a_surface_is_notified_of_receiving_focus)
+TEST_F(ClientFocusNotification, a_surface_is_notified_of_receiving_focus)
 {
     run_in_client([&]
         {
@@ -131,7 +126,7 @@ ACTION_P(SignalFence, fence)
 
 }
 
-TEST_F(FocusNotification, two_surfaces_are_notified_of_gaining_and_losing_focus)
+TEST_F(ClientFocusNotification, two_surfaces_are_notified_of_gaining_and_losing_focus)
 {
     // We use this for synchronization to ensure the two clients
     // are launched in a defined order.
