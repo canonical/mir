@@ -18,10 +18,8 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir/compositor/scene.h"
 #include "mir/scene/surface.h"
 #include "mir/shell/surface_coordinator_wrapper.h"
-#include "mir/shell/focus_setter.h"
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test/wait_condition.h"
