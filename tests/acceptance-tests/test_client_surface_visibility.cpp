@@ -23,7 +23,7 @@
 #include "mir/shell/surface_coordinator_wrapper.h"
 #include "mir/shell/focus_setter.h"
 
-#include "mir_test_framework/connected_client_headless_server.h"
+#include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test/wait_condition.h"
 
 #include <mutex>
@@ -84,7 +84,7 @@ void event_callback(MirSurface* surface, MirEvent const* event, void* ctx)
     }
 }
 
-struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
+struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
 {
 
     void SetUp() override
@@ -95,9 +95,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
                 return std::make_shared<StoringSurfaceCoordinator>(wrapped);
             });
 
-        mtf::ConnectedClientHeadlessServer::SetUp();
-
-        client_create_surface();
+        mtf::ConnectedClientWithASurface::SetUp();
 
         MirEventDelegate delegate{&event_callback, &mock_visibility_callback};
         mir_surface_set_event_handler(surface, &delegate);
@@ -114,21 +112,6 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
             mir_surface_release_sync(second_surface);
 
         mtf::ConnectedClientHeadlessServer::TearDown();
-    }
-
-    void client_create_surface()
-    {
-        MirSurfaceParameters const request_params =
-        {
-            __PRETTY_FUNCTION__,
-            640, 480,
-            mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware,
-            mir_display_output_id_invalid
-        };
-
-        surface = mir_connection_create_surface_sync(connection, &request_params);
-        ASSERT_TRUE(mir_surface_is_valid(surface));
     }
 
     void create_larger_surface_on_top()
@@ -194,7 +177,6 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
         Mock::VerifyAndClearExpectations(&mock_visibility_callback);
     }
 
-    MirSurface* surface = nullptr;
     MirSurface* second_surface = nullptr;
     testing::NiceMock<MockVisibilityCallback> mock_visibility_callback;
 };
