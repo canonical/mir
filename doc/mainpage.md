@@ -27,7 +27,7 @@ If you are curious about Mir internals or intend to contribute to it, you should
 get the source and build it:
 
  - \ref building_source_for_pc
- - \ref building_source_for_android
+ - \ref building_source_for_arm
 
 ### Preparing a VM to run Mir
 

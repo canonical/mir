@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_MESA_DISPLAY_HELPERS_H_
 
 #include "drm_mode_resources.h"
+#include "drm_authentication.h"
 #include "mir/udev/wrapper.h"
 
 #include <cstddef>
@@ -47,7 +48,7 @@ typedef std::unique_ptr<gbm_surface,std::function<void(gbm_surface*)>> GBMSurfac
 namespace helpers
 {
 
-class DRMHelper
+class DRMHelper : public DRMAuthentication
 {
 public:
     DRMHelper() : fd{-1} {}
@@ -57,8 +58,8 @@ public:
     DRMHelper& operator=(const DRMHelper&) = delete;
 
     void setup(std::shared_ptr<mir::udev::Context> const& udev);
-    int get_authenticated_fd();
-    void auth_magic(drm_magic_t magic) const;
+    mir::Fd authenticated_fd();
+    void auth_magic(drm_magic_t magic);
 
     void drop_master() const;
     void set_master() const;

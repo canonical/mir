@@ -1,6 +1,7 @@
 include_directories(
   ${CMAKE_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/src/include/platform
+  ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
     ${Boost_INCLUDE_DIRS}

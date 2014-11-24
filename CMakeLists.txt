@@ -27,7 +27,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 9) # This should change at least with every MIRSERVER_ABI
+set(MIR_VERSION_MINOR 10) # This should change at least with every MIRSERVER_ABI
 set(MIR_VERSION_PATCH 0)
 
 set(MIR_VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH})
@@ -104,7 +104,7 @@ add_definitions(-DLOG_NDEBUG=1)
 
 enable_testing()
 
-include_directories(include/common src/include/common)
+include_directories(include/common)
 
 # Check for boost
 find_package(Boost 1.48.0 COMPONENTS date_time system program_options iostreams filesystem REQUIRED)
