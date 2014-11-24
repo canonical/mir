@@ -13,29 +13,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Josh Arenson <joshua.arenson@canonical.com>
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION
-#define MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION
+#include "mir_test_doubles/null_logger.h"
 
-#include <memory>
+namespace mtd = mir::test::doubles;
 
-namespace mir
+char const* const mtd::logging_opt = "logging";
+char const* const mtd::logging_descr = "output log during tests";
+
+void mtd::NullLogger::log(mir::logging::Severity, const std::string&, const std::string&)
 {
-namespace options
-{
-class DefaultConfiguration;
 }
-class Server;
-}
-
-namespace mir_test_framework
-{
-    auto configuration_from_commandline() 
-    -> std::shared_ptr<mir::options::DefaultConfiguration>;
-
-    void configure_from_commandline(mir::Server& server);
-}
-
-#endif /* MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION */

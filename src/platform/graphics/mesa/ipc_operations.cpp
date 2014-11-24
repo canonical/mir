@@ -21,11 +21,9 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/nested_context.h"
 #include "display_helpers.h"
+#include "drm_authentication.h"
 #include "drm_close_threadsafe.h"
 #include "ipc_operations.h"
-
-#include <boost/exception/errinfo_errno.hpp>
-#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -47,17 +45,8 @@ struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
 };
 }
 
-mgm::IpcOperations::IpcOperations(std::shared_ptr<helpers::DRMHelper> const& drm) :
-    drm{drm},
-    nested_context{nullptr},
-    master{true}
-{
-}
-
-mgm::IpcOperations::IpcOperations(
-    std::shared_ptr<helpers::DRMHelper> const& drm,
-        std::shared_ptr<NestedContext> const& nested_context) :
-    drm(drm), nested_context(nested_context),master(false)
+mgm::IpcOperations::IpcOperations(std::shared_ptr<DRMAuthentication> const& drm_auth) :
+    drm_auth{drm_auth}
 {
 }
 
@@ -92,50 +81,11 @@ mg::PlatformIPCPackage mgm::IpcOperations::platform_operation(
     int magic{0};
     if (request.ipc_data.size() > 0)
         magic = request.ipc_data[0];
-
-    if (master)
-        drm->auth_magic(magic);
-    else
-        nested_context->drm_auth_magic(magic);
-
+    drm_auth->auth_magic(magic);
     return mg::PlatformIPCPackage{{0},{}};
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()
 {
-    if (master)
-    {
-        return std::make_shared<MesaPlatformIPCPackage>(drm->get_authenticated_fd());
-    }
-    else
-    {
-        //TODO: very close to the code in mgmh::DRMHelper::get_authenticated_fd()
-        struct MesaNativePlatformIPCPackage : public mg::PlatformIPCPackage
-        {
-            MesaNativePlatformIPCPackage(int fd)
-            {
-                ipc_fds.push_back(fd);
-            }
-        };
-        char* busid = drmGetBusid(drm->fd);
-        if (!busid)
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::runtime_error("Failed to get BusID of DRM device")) << boost::errinfo_errno(errno));
-        int auth_fd = drmOpen(NULL, busid);
-        free(busid);
-
-        drm_magic_t magic;
-        int ret = -1;
-        if ((ret = drmGetMagic(auth_fd, &magic)) < 0)
-        {
-            close(auth_fd);
-            BOOST_THROW_EXCEPTION(
-                boost::enable_error_info(
-                    std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(-ret));
-        }
-
-        nested_context->drm_auth_magic(magic);
-        return std::make_shared<MesaNativePlatformIPCPackage>(auth_fd);
-    }
+    return std::make_shared<MesaPlatformIPCPackage>(drm_auth->authenticated_fd());
 }

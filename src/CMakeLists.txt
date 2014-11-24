@@ -1,3 +1,4 @@
+include_directories(${PROJECT_SOURCE_DIR}/src/include/common)
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(common/)
 add_subdirectory(protobuf/)
