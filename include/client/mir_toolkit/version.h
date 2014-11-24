@@ -55,22 +55,30 @@
 #define MIR_CLIENT_MICRO_VERSION (0)
 
 /**
- * MIR_CLIENT_VERSION_GE
+ * MIR_VERSION_NUMBER
  * \param major [in]    The major version (eg: 3 for version 3.2.33)
  * \param minor [in]    The minor version (eg: 2 for version 3.2.33)
  * \param micro [in]    The micro version (eg: 33 for version 3.2.33)
  * 
- * Test whether the version of the Mir client headers is greater than or equal
- * to major.minor.micro.
+ * Returns the combined version information as a single 32-bit value for
+ * logical comparisons. For example:
+ *     #if MIR_CLIENT_VERSION >= MIR_VERSION_NUMBER(2,3,4)
  *
  * This can be useful to conditionally build code depending on new features or
  * specific bugfixes in the Mir client library.
  */
-#define MIR_CLIENT_VERSION_GE(major,minor,micro)                                  \
-  (MIR_CLIENT_MAJOR_VERSION > (major) ||                                          \
-  (MIR_CLIENT_MAJOR_VERSION == (major) && MIR_CLIENT_MINOR_VERSION > (minor)) ||  \
-  (MIR_CLIENT_MAJOR_VERSION == (major) && MIR_CLIENT_MINOR_VERSION == (minor) &&  \
-   MIR_CLIENT_MICRO_VERSION >= (micro)))
+#define MIR_VERSION_NUMBER(major,minor,micro) \
+    (((major) << 22) + ((minor) << 12) + (micro))
+
+/**
+ * MIR_CLIENT_VERSION
+ *
+ * The current version of the Mir client headers in use.
+ */
+#define MIR_CLIENT_VERSION \
+    MIR_VERSION_NUMBER(MIR_CLIENT_MAJOR_VERSION, \
+                       MIR_CLIENT_MINOR_VERSION, \
+                       MIR_CLIENT_MICRO_VERSION)
 
 /**@}*/
 

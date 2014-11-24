@@ -163,6 +163,7 @@ try
             wm->set_focus_controller(config.the_focus_controller());
             wm->set_display(config.the_display());
             wm->set_compositor(config.the_compositor());
+            wm->set_input_scene(config.the_input_scene());
         });
     return 0;
 }

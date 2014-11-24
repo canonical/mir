@@ -46,7 +46,6 @@ public:
     static bool internal_native_display_in_use();
 
 private:
-    int drm_fd;
     std::shared_ptr<NestedContext> nested_context;
     helpers::GBMHelper gbm;
     std::shared_ptr<PlatformIpcOperations> ipc_ops;

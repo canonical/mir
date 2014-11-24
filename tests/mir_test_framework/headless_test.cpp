@@ -17,12 +17,17 @@
  */
 
 #include "mir_test_framework/headless_test.h"
+#include "mir_test_framework/command_line_server_configuration.h"
 
 #include "mir/fd.h"
 #include "mir/main_loop.h"
+#include "mir/options/option.h"
+#include "mir_test_doubles/null_logger.h"
 
 #include <boost/throw_exception.hpp>
 
+namespace ml = mir::logging;
+namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
 namespace
@@ -32,7 +37,18 @@ std::chrono::seconds const timeout{10};
 
 mtf::HeadlessTest::HeadlessTest()
 {
+    configure_from_commandline(server);
     add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", "libmirplatformstub.so");
+    server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
+    server.override_the_logger([&]()
+        {
+            std::shared_ptr<ml::Logger> result{};
+
+            if (!server.get_options()->get<bool>(mtd::logging_opt))
+                result = std::make_shared<mtd::NullLogger>();
+
+            return result;
+        });
 }
 
 void mtf::HeadlessTest::add_to_environment(char const* key, char const* value)
