@@ -178,6 +178,8 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
 
         mt::WaitCondition event_received;
 
+        Mock::VerifyAndClearExpectations(&mock_visibility_callback);
+
         EXPECT_CALL(mock_visibility_callback, handle(surface, visibility))
             .WillOnce(DoAll(Invoke([&visibility](MirSurface *s, MirSurfaceVisibility)
                 {
