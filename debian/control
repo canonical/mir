@@ -324,7 +324,7 @@ Description: Display server for Ubuntu - platform library for Android
 
 Package: mir-graphics-drivers-desktop
 Section: libs
-Architecture: any
+Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -339,7 +339,7 @@ Description: Display server for Ubuntu - desktop driver metapackage
 
 Package: mir-graphics-drivers-android
 Section: libs
-Architecture: any
+Architecture: i386 amd64 armhf
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
