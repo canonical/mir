@@ -197,7 +197,7 @@ TEST(TouchInputEventProperties, axis_values_used_by_qtmir_copied)
     float x_value = 19, y_value = 23, touch_major = .3, touch_minor = .2, pressure = .9, size = 1111;
     MirEvent old_ev;
     old_ev.type = mir_event_type_motion;
-    old_ev.motion.pointer_count = 0;
+    old_ev.motion.pointer_count = 1;
     auto &old_pc = old_ev.motion.pointer_coordinates[0];
     old_pc.x = x_value;
     old_pc.y = y_value;
