@@ -240,7 +240,8 @@ typedef struct MirDisplayOutput
 {
     uint32_t num_modes;
     MirDisplayMode* modes;
-    uint32_t preferred_mode;
+    uint32_t preferred_mode;  /**< There might be no preferred mode, which
+                                   is indicated by a value >=num_modes. */
     uint32_t current_mode;
 
     uint32_t num_output_formats;
