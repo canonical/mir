@@ -201,3 +201,13 @@ MIR_COMMON_3 {
   };
  local: *;
 };
+
+MIR_COMMON_3.1 {
+ global:
+  extern "C++" {
+    mir::log_info*;
+    mir::log_warn*;
+  };
+ local: *;
+};
+

@@ -19,11 +19,9 @@
 #define MIR_LOGGING_COMPONENT "SharedLibrary"
 #include "mir/shared_library_loader.h"
 #include "mir/shared_library.h"
-#include "mir/logging/logger.h"
+#include "mir/log.h"
 #include <memory>
 #include <map>
-
-namespace ml = mir::logging;
 
 mir::SharedLibrary const* mir::load_library(std::string const& libname)
 {
@@ -36,7 +34,7 @@ mir::SharedLibrary const* mir::load_library(std::string const& libname)
     }
     else
     {
-        ml::log(ml::Severity::informational, "Loading " + libname);
+        mir::log_info("Loading " + libname);
         ptr = std::make_shared<mir::SharedLibrary>(libname);
         return ptr.get();
     }
