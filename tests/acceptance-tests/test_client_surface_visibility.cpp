@@ -20,6 +20,7 @@
 
 #include "mir/scene/surface.h"
 #include "mir/shell/surface_coordinator_wrapper.h"
+#include "mir/shell/focus_setter.h"
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
 #include "mir_test/wait_condition.h"
@@ -91,6 +92,20 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
             (std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
             {
                 return std::make_shared<StoringSurfaceCoordinator>(wrapped);
+            });
+
+        /*
+         * Use a null focus setter so that it doesn't change the surface
+         * order and introduce races to our tests.
+         */
+        server.override_the_shell_focus_setter([]
+            {
+                struct NullFocusSetter : msh::FocusSetter
+                {
+                    void set_focus_to(std::shared_ptr<ms::Session> const&) override {}
+                };
+
+                return std::make_shared<NullFocusSetter>();
             });
 
         mtf::ConnectedClientWithASurface::SetUp();
