@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
-#include "src/platform/graphics/android/display_builder.h"
+#include "src/platform/graphics/android/display_buffer_builder.h"
 #include "src/platform/graphics/android/configurable_display_buffer.h"
 #include <gmock/gmock.h>
 
@@ -59,7 +59,7 @@ private:
     geometry::Rectangle rect;
 };
 
-struct StubDisplayBuilder : public graphics::android::DisplayBuilder
+struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
 {
     StubDisplayBuilder(geometry::Size sz)
         : sz(sz)

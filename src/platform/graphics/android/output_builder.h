@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_OUTPUT_BUILDER_H_
 #define MIR_GRAPHICS_ANDROID_OUTPUT_BUILDER_H_
 
-#include "display_builder.h"
+#include "display_buffer_builder.h"
 #include "overlay_optimization.h"
 #include "hardware/hwcomposer.h"
 #include "hardware/fb.h"
@@ -38,7 +38,7 @@ class DisplayDevice;
 class HwcWrapper;
 class HwcLogger;
 
-class OutputBuilder : public DisplayBuilder
+class OutputBuilder : public DisplayBufferBuilder
 {
 public:
     OutputBuilder(
