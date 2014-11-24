@@ -167,20 +167,6 @@ MirSurfaceParameters MirSurface::get_parameters() const
         mir_display_output_id_invalid};
 }
 
-MirSurfaceSpec* MirSurface::get_surface_spec() const
-{
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    auto spec = new MirSurfaceSpec;
-    spec->name = name;
-    spec->width = surface.width();
-    spec->height = surface.height();
-    spec->pixel_format = convert_ipc_pf_to_geometry(surface.pixel_format());
-    spec->buffer_usage = static_cast<MirBufferUsage>(surface.buffer_usage());
-
-    return spec;
-}
-
 char const * MirSurface::get_error_message()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
