@@ -189,7 +189,6 @@ TEST(TouchInputEventProperties, tool_type_copied_from_old_pc)
     EXPECT_EQ(mir_touch_input_tool_type_unknown, mir_touch_input_event_get_touch_tooltype(tev, 0));
     EXPECT_EQ(mir_touch_input_tool_type_finger, mir_touch_input_event_get_touch_tooltype(tev, 1));
     EXPECT_EQ(mir_touch_input_tool_type_stylus, mir_touch_input_event_get_touch_tooltype(tev, 2));
-    EXPECT_EQ(mir_touch_input_tool_type_mouse, mir_touch_input_event_get_touch_tooltype(tev, 3));
     EXPECT_EQ(mir_touch_input_tool_type_eraser, mir_touch_input_event_get_touch_tooltype(tev, 4));
 }
 
