@@ -97,10 +97,14 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
 
         mtf::ConnectedClientHeadlessServer::SetUp();
 
-        // TODO for some reason the server isn't really started here
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
         client_create_surface();
+
+        MirEventDelegate delegate{&event_callback, &mock_visibility_callback};
+        mir_surface_set_event_handler(surface, &delegate);
+
+        // Swap enough buffers to ensure compositor threads are into run loop
+        for (auto i = 0; i != 11; ++i)
+            mir_surface_swap_buffers_sync(surface);
     }
 
     void TearDown() override
@@ -125,11 +129,6 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientHeadlessServer
 
         surface = mir_connection_create_surface_sync(connection, &request_params);
         ASSERT_TRUE(mir_surface_is_valid(surface));
-
-        MirEventDelegate delegate{&event_callback, &mock_visibility_callback};
-        mir_surface_set_event_handler(surface, &delegate);
-
-        mir_surface_swap_buffers_sync(surface);
     }
 
     void create_larger_surface_on_top()
