@@ -1225,8 +1225,14 @@ TEST_F(BufferQueueTest, buffers_ready_is_not_underestimated)
         // Release frame 2
         q.compositor_release(b);
     
-        // Verify frame 3 is ready
-        EXPECT_EQ(1, q.buffers_ready_for_compositor());
+        // Verify frame 3 is ready for the first compositor
+        ASSERT_THAT(q.buffers_ready_for_compositor(), Ge(1));
+        auto c = q.compositor_acquire(this);
+
+        // Verify frame 3 is ready for a second compositor
+        ASSERT_THAT(q.buffers_ready_for_compositor(), Ge(1));
+
+        q.compositor_release(c);
     }
 }
 

@@ -101,8 +101,7 @@ mc::BufferQueue::BufferQueue(
       the_properties{props},
       force_new_compositor_buffer{false},
       callbacks_allowed{true},
-      gralloc{gralloc},
-      impossible_user_id{this}
+      gralloc{gralloc}
 {
     if (nbuffers < 1)
     {
@@ -318,6 +317,7 @@ void mc::BufferQueue::compositor_release(std::shared_ptr<graphics::Buffer> const
         // Ensure current_compositor_buffer gets reused by the next
         // compositor_acquire:
         current_buffer_users.clear();
+        void const* const impossible_user_id = this;
         current_buffer_users.push_back(impossible_user_id);
     }
 
@@ -387,15 +387,18 @@ int mc::BufferQueue::buffers_ready_for_compositor() const
 {
     std::lock_guard<decltype(guard)> lock(guard);
 
-    int nready = ready_to_composite_queue.size();
-
-    // A ready frame might have been promoted to current_compositor_buffer,
-    // before the compositor asked for it...
-    if (current_buffer_users.size() == 1 &&
-        current_buffer_users[0] == impossible_user_id)
-        ++nready;
-
-    return nready;
+    /*
+     * NOTE: The true answer for how many buffers are ready for a compositor
+     * will vary between compositors. Because it's not just the size of the
+     * ready queue, but also +1 if the compositor in question hasn't yet
+     * used the latest current_compositor_buffer. So in the absence of knowing
+     * which compositor is asking, we must always overestimate by one, to
+     * ensure current_compositor_buffer gets counted.
+     * In double buffering this is particularly important as the ready queue
+     * will often be empty due to the latest ready buffer getting promoted
+     * to current_compositor_buffer early in compositor_release().
+     */
+    return 1 + ready_to_composite_queue.size();
 }
 
 int mc::BufferQueue::buffers_free_for_client() const
@@ -485,6 +488,7 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
     if (!contains(current_compositor_buffer, buffers_sent_to_compositor))
     {
        current_buffer_users.clear();
+       void const* const impossible_user_id = this;
        current_buffer_users.push_back(impossible_user_id);
        std::swap(buffer_to_give, current_compositor_buffer);
     }
