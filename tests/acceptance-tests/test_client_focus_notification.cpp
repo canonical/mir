@@ -42,33 +42,22 @@ struct MockEventObserver
     MOCK_METHOD1(see, void(MirEvent const*));
 };
 
-struct EventObservingClient
+struct FocusNotification : mtf::InterprocessClientServerTest
 {
-    static void handle_event(MirSurface* /* surface */, MirEvent const* ev, void* context)
+    void SetUp() override
     {
-        auto client = static_cast<EventObservingClient *>(context);
-        client->observer.see(ev);
+        run_in_server([]{});
     }
 
-    static void surface_created(MirSurface *surface_, void *ctx)
-    {
-        auto client = static_cast<EventObservingClient*>(ctx);
+    MockEventObserver observer;
+    mt::WaitCondition all_events_received;
 
-        client->surface = surface_;
-        // We need to set the event delegate from the surface_created
-        // callback so we can block the reading of new events
-        // until we are ready
-        MirEventDelegate const event_delegate =
-            {
-                handle_event,
-                client
-            };
-        mir_surface_set_event_handler(surface_, &event_delegate);
-    }
-
-    void exec()
+    void do_stuff_and_verify_notifications()
     {
-        connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
+        static int const surface_width = 100;
+        static int const surface_height = 100;
+
+        MirConnection *connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
         ASSERT_TRUE(mir_connection_is_valid(connection));
 
         MirSurfaceParameters const request_params =
@@ -88,24 +77,31 @@ struct EventObservingClient
         // exits.
         testing::Mock::VerifyAndClearExpectations(&observer);
     }
-    MockEventObserver observer;
-    static int const surface_width = 100;
-    static int const surface_height = 100;
 
-    MirConnection *connection;
+private:
+
     MirSurface *surface;
 
-    mt::WaitCondition all_events_received;
-
-protected:
-    virtual ~EventObservingClient() = default;
-};
-
-struct FocusNotification : mtf::InterprocessClientServerTest, EventObservingClient
-{
-    void SetUp() override
+    static void handle_event(MirSurface* /* surface */, MirEvent const* ev, void* context)
     {
-        run_in_server([]{});
+        auto self = static_cast<FocusNotification*>(context);
+        self->observer.see(ev);
+    }
+
+    static void surface_created(MirSurface *surface_, void *ctx)
+    {
+        auto self = static_cast<FocusNotification*>(ctx);
+
+        self->surface = surface_;
+        // We need to set the event delegate from the surface_created
+        // callback so we can block the reading of new events
+        // until we are ready
+        MirEventDelegate const event_delegate =
+            {
+                handle_event,
+                self
+            };
+        mir_surface_set_event_handler(surface_, &event_delegate);
     }
 };
 }
@@ -121,7 +117,7 @@ TEST_F(FocusNotification, a_surface_is_notified_of_receiving_focus)
             // We may not see mir_surface_unfocused before connection closes
             EXPECT_CALL(observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_unfocused)))).Times(AtMost(1));
 
-            exec();
+            do_stuff_and_verify_notifications();
         });
 }
 
@@ -159,7 +155,7 @@ TEST_F(FocusNotification, two_surfaces_are_notified_of_gaining_and_losing_focus)
             EXPECT_CALL(observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
                 mir_surface_unfocused)))).Times(AtMost(1));
 
-            exec();
+            do_stuff_and_verify_notifications();
         });
 
     auto const client_two = new_client_process([&]
@@ -174,6 +170,6 @@ TEST_F(FocusNotification, two_surfaces_are_notified_of_gaining_and_losing_focus)
                 mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_unfocused))))
                     .Times(AtMost(1));
 
-            exec();
+            do_stuff_and_verify_notifications();
         });
 }
