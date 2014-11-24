@@ -21,7 +21,7 @@
 #include "mir_test/wait_condition.h"
 #include "mir_test/event_matchers.h"
 
-#include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test_framework/cross_process_sync.h"
 
 #include <gtest/gtest.h>
@@ -42,7 +42,7 @@ struct MockEventObserver
     MOCK_METHOD1(see, void(MirEvent const*));
 };
 
-struct EventObservingClient : mtf::TestingClientConfiguration
+struct EventObservingClient
 {
     EventObservingClient()
         : observer(std::make_shared<MockEventObserver>())
@@ -103,16 +103,23 @@ struct EventObservingClient : mtf::TestingClientConfiguration
 
     MirConnection *connection;
     MirSurface *surface;
+
+protected:
+    virtual ~EventObservingClient() = default;
 };
 
+struct FocusNotification : mtf::InterprocessClientServerTest
+{
+    void SetUp() override
+    {
+        run_in_server([]{});
+    }
+};
 }
 
-TEST_F(BespokeDisplayServerTestFixture, a_surface_is_notified_of_receiving_focus)
+TEST_F(FocusNotification, a_surface_is_notified_of_receiving_focus)
 {
     using namespace ::testing;
-
-    TestingServerConfiguration server_config;
-    launch_server_process(server_config);
 
     struct FocusObservingClient : public EventObservingClient
     {
@@ -124,7 +131,8 @@ TEST_F(BespokeDisplayServerTestFixture, a_surface_is_notified_of_receiving_focus
             EXPECT_CALL(*observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_unfocused)))).Times(AtMost(1));
         }
     } client_config;
-    launch_client_process(client_config);
+
+    run_in_client([&] { client_config.exec(); });
 }
 
 namespace
@@ -137,12 +145,9 @@ ACTION_P(SignalFence, fence)
 
 }
 
-TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and_losing_focus)
+TEST_F(FocusNotification, two_surfaces_are_notified_of_gaining_and_losing_focus)
 {
     using namespace ::testing;
-
-    TestingServerConfiguration server_config;
-    launch_server_process(server_config);
 
     // We use this for synchronization to ensure the two clients
     // are launched in a defined order.
@@ -176,7 +181,8 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
         }
 
     } client_one_config(ready_for_second_client);
-    launch_client_process(client_one_config);
+
+    auto const client_one = new_client_process([&] { client_one_config.exec(); });
 
     struct FocusObservingClientTwo : public EventObservingClient
     {
@@ -185,7 +191,7 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
             : ready_for_second_client(ready_for_second_client)
         {
         }
-        void exec() override
+        void exec()
         {
             // We need some synchronization to ensure client two does not connect before client one.
             ready_for_second_client.wait_for_signal_ready_for();
@@ -204,5 +210,5 @@ TEST_F(BespokeDisplayServerTestFixture, two_surfaces_are_notified_of_gaining_and
         }
     } client_two_config(ready_for_second_client);
 
-    launch_client_process(client_two_config);
+    auto const client_two = new_client_process([&] { client_two_config.exec(); });
 }
