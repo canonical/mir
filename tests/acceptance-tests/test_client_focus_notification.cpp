@@ -49,7 +49,7 @@ struct ClientFocusNotification : mtf::InterprocessClientServerTest
     MockEventObserver observer;
     mt::WaitCondition all_events_received;
 
-    void do_stuff_and_verify_notifications()
+    void connect_and_create_surface()
     {
         static int const surface_width = 100;
         static int const surface_height = 100;
@@ -69,10 +69,6 @@ struct ClientFocusNotification : mtf::InterprocessClientServerTest
         all_events_received.wait_for_at_most_seconds(60);
         mir_surface_release_sync(surface);
         mir_connection_release(connection);
-
-        // The ClientConfig is not destroyed before the testing process
-        // exits.
-        testing::Mock::VerifyAndClearExpectations(&observer);
     }
 
 private:
@@ -112,7 +108,7 @@ TEST_F(ClientFocusNotification, a_surface_is_notified_of_receiving_focus)
             // We may not see mir_surface_unfocused before connection closes
             EXPECT_CALL(observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_unfocused)))).Times(AtMost(1));
 
-            do_stuff_and_verify_notifications();
+            connect_and_create_surface();
         });
 }
 
@@ -150,7 +146,7 @@ TEST_F(ClientFocusNotification, two_surfaces_are_notified_of_gaining_and_losing_
             EXPECT_CALL(observer, see(Pointee(mt::SurfaceEvent(mir_surface_attrib_focus,
                 mir_surface_unfocused)))).Times(AtMost(1));
 
-            do_stuff_and_verify_notifications();
+            connect_and_create_surface();
         });
 
     auto const client_two = new_client_process([&]
@@ -165,6 +161,6 @@ TEST_F(ClientFocusNotification, two_surfaces_are_notified_of_gaining_and_losing_
                 mt::SurfaceEvent(mir_surface_attrib_focus, mir_surface_unfocused))))
                     .Times(AtMost(1));
 
-            do_stuff_and_verify_notifications();
+            connect_and_create_surface();
         });
 }
