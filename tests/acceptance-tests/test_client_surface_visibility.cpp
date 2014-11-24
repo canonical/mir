@@ -107,6 +107,7 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
 
     void TearDown() override
     {
+        // Don't call ConnectedClientWithASurface::TearDown() - the sequence matters
         mir_surface_release_sync(surface);
         if (second_surface)
             mir_surface_release_sync(second_surface);
