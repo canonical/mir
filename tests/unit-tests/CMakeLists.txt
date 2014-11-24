@@ -5,6 +5,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
+  ${PROJECT_SOURCE_DIR}/src/include/common
   ${GLIB_INCLUDE_DIRS}
 )
 
@@ -50,7 +51,6 @@ add_subdirectory(graphics/)
 add_subdirectory(input/)
 add_subdirectory(android_input/)
 add_subdirectory(scene/)
-add_subdirectory(draw/)
 add_subdirectory(examples/)
 add_subdirectory(thread/)
 
@@ -74,7 +74,6 @@ target_link_libraries(
   mir_unit_tests
 
   mirdraw
-  mirtestdraw
   mirclientrpc
   mirclientlttngstatic
   demo-shell

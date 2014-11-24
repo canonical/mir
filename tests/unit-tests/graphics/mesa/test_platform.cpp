@@ -143,53 +143,6 @@ TEST_F(MesaGraphicsPlatform, fails_if_no_resources)
 }
 
 /* ipc packaging tests */
-TEST_F(MesaGraphicsPlatform, test_ipc_data_packed_correctly)
-{
-    using namespace testing;
-    mtd::MockBuffer mock_buffer;
-    mir::geometry::Stride dummy_stride(4390);
-
-    auto native_handle = std::make_shared<MirBufferPackage>();
-    native_handle->data_items = 4;
-    native_handle->fd_items = 2;
-    for(auto i=0; i<mir_buffer_package_max; i++)
-    {
-        native_handle->fd[i] = i;
-        native_handle->data[i] = i;
-    }
-
-    EXPECT_CALL(mock_buffer, native_buffer_handle())
-        .WillOnce(testing::Return(native_handle));
-    EXPECT_CALL(mock_buffer, stride())
-        .WillOnce(testing::Return(mir::geometry::Stride{dummy_stride}));
-    EXPECT_CALL(mock_buffer, size())
-        .WillOnce(testing::Return(mir::geometry::Size{123, 456}));
-
-    auto platform = create_platform();
-
-    mtd::MockBufferIpcMessage mock_buffer_msg;
-    for(auto i=0; i < native_handle->fd_items; i++)
-    {
-        EXPECT_CALL(mock_buffer_msg, pack_fd(mtd::RawFdMatcher(native_handle->fd[i])))
-            .Times(Exactly(1));
-    }
-    for(auto i=0; i < native_handle->data_items; i++)
-    {
-        EXPECT_CALL(mock_buffer_msg, pack_data(native_handle->data[i]))
-            .Times(Exactly(1));
-    }
-    EXPECT_CALL(mock_buffer_msg, pack_stride(dummy_stride))
-        .Times(Exactly(1));
-    EXPECT_CALL(mock_buffer_msg, pack_flags(testing::_))
-        .Times(Exactly(1));
-    EXPECT_CALL(mock_buffer_msg, pack_size(testing::_))
-        .Times(Exactly(1));
-
-    auto ipc_ops = platform->make_ipc_operations();
-    ipc_ops->pack_buffer(mock_buffer_msg, mock_buffer, mg::BufferIpcMsgType::full_msg);
-    ipc_ops->pack_buffer(mock_buffer_msg, mock_buffer, mg::BufferIpcMsgType::update_msg);
-}
-
 TEST_F(MesaGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
 {
     using namespace testing;

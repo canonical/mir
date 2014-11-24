@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,33 +13,32 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_BASIC_PLATFORM_H_
-#define MIR_GRAPHICS_BASIC_PLATFORM_H_
+#ifndef MIR_GRAPHICS_MESA_NESTED_AUTHENTICATION_H_
+#define MIR_GRAPHICS_MESA_NESTED_AUTHENTICATION_H_
 
-#include <EGL/egl.h>
+#include "drm_authentication.h"
 
 namespace mir
 {
 namespace graphics
 {
-
-class BasicPlatform
+class NestedContext;
+namespace mesa
+{
+class NestedAuthentication : public DRMAuthentication
 {
 public:
-    virtual ~BasicPlatform() = default;
-
-    virtual EGLNativeDisplayType egl_native_display() const = 0;
-
-protected:
-    BasicPlatform() = default;
-    BasicPlatform(BasicPlatform const&) = delete;
-    BasicPlatform& operator=(BasicPlatform const&) = delete;
+    NestedAuthentication(std::shared_ptr<NestedContext> const& nested_context);
+    void auth_magic(drm_magic_t magic) override;
+    mir::Fd authenticated_fd() override;
+private:
+    std::shared_ptr<NestedContext> const nested_context;
 };
-
 }
 }
+}
 
-#endif /* MIR_GRAPHICS_BASIC_PLATFORM_H_ */
+#endif /* MIR_GRAPHICS_MESA_NESTED_AUTHENTICATION_H_ */
