@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#define MIR_LOGGING_COMPONENT "SharedLibrary"
+#define MIR_LOG_COMPONENT "SharedLibrary"
 #include "mir/shared_library_loader.h"
 #include "mir/shared_library.h"
 #include "mir/log.h"

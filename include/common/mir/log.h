@@ -1,4 +1,6 @@
 /*
+ * Convenience functions to make logging in Mir easy
+ * ~~~
  * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -21,19 +23,29 @@
 
 #include <string>
 
-#ifndef MIR_LOGGING_COMPONENT
-#ifndef MIR_LOGGING_COMPONENT_FALLBACK
-#define MIR_LOGGING_COMPONENT_FALLBACK "?"
+#ifndef MIR_LOG_COMPONENT
+#ifndef MIR_LOG_COMPONENT_FALLBACK
+#define MIR_LOG_COMPONENT_FALLBACK "?"
 #endif
-#define MIR_LOGGING_COMPONENT MIR_LOGGING_COMPONENT_FALLBACK
+#define MIR_LOG_COMPONENT MIR_LOG_COMPONENT_FALLBACK
 #endif
 
 namespace mir
 {
+
 void log_warn(std::string const& message,
-              std::string const& component = MIR_LOGGING_COMPONENT);
+              std::string const& component = MIR_LOG_COMPONENT);
 void log_info(std::string const& message,
-              std::string const& component = MIR_LOGGING_COMPONENT);
+              std::string const& component = MIR_LOG_COMPONENT);
+
+/*
+ * "error" and "critical" are intentionally omitted because they're presently
+ * more appropriately reported via exceptions.
+ *
+ * "debug" is also omitted for now, because we have yet to figure out the
+ * semantics (ie. debug always logged? thresholded? include source line?)
+ */
+
 } // namespace mir
 
 #endif // MIR_LOG_H_

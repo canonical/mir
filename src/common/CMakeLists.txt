@@ -1,4 +1,4 @@
-add_definitions(-DMIR_LOGGING_COMPONENT_FALLBACK="mircommon")
+add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mircommon")
 
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 set(MIR_COMMON_SOURCES)
