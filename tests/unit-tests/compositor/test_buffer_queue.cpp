@@ -1089,6 +1089,42 @@ TEST_F(BufferQueueTest, framedropping_policy_never_drops_newest_frame)
     }
 }
 
+TEST_F(BufferQueueTest, framedropping_never_drops_newest_frame)
+{  // Second regression test for LP: #1396006
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
+    {
+        mc::BufferQueue q(nbuffers,
+                          allocator,
+                          basic_properties,
+                          policy_factory);
+
+        q.allow_framedropping(true);
+
+        // Fill 'er up
+        std::vector<mg::Buffer*> order;
+        for (int f = 0; f < nbuffers; ++f)
+        {
+            auto b = client_acquire_sync(q);
+            order.push_back(b);
+            q.client_release(b);
+        }
+
+        // Composite all but one
+        std::vector<std::shared_ptr<mg::Buffer>> compositing;
+        for (int n = 0; n < nbuffers-1; ++n)
+        {
+            auto c = q.compositor_acquire(nullptr);
+            compositing.push_back(c);
+            ASSERT_EQ(order[n], c.get());
+        }
+
+        // Ensure it's not the newest frame that gets dropped to satisfy the
+        // client.
+        auto end = client_acquire_sync(q);
+        ASSERT_NE(order.back(), end);
+    }
+}
+
 TEST_F(BufferQueueTest, uncomposited_client_swaps_when_policy_triggered)
 {
     for (int nbuffers = 2;
