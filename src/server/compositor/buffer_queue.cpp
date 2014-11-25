@@ -451,8 +451,17 @@ void mc::BufferQueue::release(
         framedrop_policy->swap_unblocked();
         give_buffer_to_client(buffer, std::move(lock));
     }
-    else if (buffers.size() > size_t(nbuffers))
+    else if (!frame_dropping_enabled && buffers.size() > size_t(nbuffers))
     {
+        /*
+         * We're overallocated.
+         * If frame_dropping_enabled, keep it that way to avoid having
+         * to repeatedly reallocate. We must need the overallocation due to a
+         * greedy compositor and insufficient nbuffers (LP: #1379685).
+         * If not framedropping then we only overallocated to briefly
+         * guarantee the framedropping policy and poke the client. Safe
+         * to free it then because that's a rare occurrence.
+         */
         for (auto i = buffers.begin(); i != buffers.end(); ++i)
         {
             if (i->get() == buffer)
