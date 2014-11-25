@@ -21,6 +21,16 @@
 
 namespace mir {
 
+void log_critical(std::string const& message, std::string const& component)
+{
+    logging::log(logging::Severity::critical, message, component);
+}
+
+void log_error(std::string const& message, std::string const& component)
+{
+    logging::log(logging::Severity::error, message, component);
+}
+
 void log_warn(std::string const& message, std::string const& component)
 {
     logging::log(logging::Severity::warning, message, component);

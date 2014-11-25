@@ -38,15 +38,16 @@
 namespace mir
 {
 
+void log_error(std::string const& message,
+               std::string const& component MIR_LOG_ASSIGN_COMPONENT);
+void log_critical(std::string const& message,
+                  std::string const& component MIR_LOG_ASSIGN_COMPONENT);
 void log_warn(std::string const& message,
               std::string const& component MIR_LOG_ASSIGN_COMPONENT);
 void log_info(std::string const& message,
               std::string const& component MIR_LOG_ASSIGN_COMPONENT);
 
 /*
- * "error" and "critical" are intentionally omitted because they're presently
- * more appropriately reported via exceptions.
- *
  * "debug" is also omitted for now, because we have yet to figure out the
  * semantics (ie. debug always logged? thresholded? include source line?)
  */
