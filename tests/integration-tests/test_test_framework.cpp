@@ -94,7 +94,7 @@ TEST_F(DemoInProcessServer, client_can_connect)
 }
 
 // Regression test for https://bugs.launchpad.net/mir/+bug/1395762
-TEST_F(DemoInProcessServerWithStubClientPlatform, surface_allocation_does_not_leak_fds)
+TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak_fds)
 {
     mir::test::Signal connection_released;
 
@@ -129,6 +129,6 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_allocation_does_not_le
             connection_released.raise();
         }}.detach();
 
-    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{10}))
+    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{60}))
         << "Client hung, possibly because of fd leaks" << std::endl;
 }
