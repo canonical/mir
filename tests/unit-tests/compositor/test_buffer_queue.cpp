@@ -1050,6 +1050,45 @@ TEST_F(BufferQueueTest, compositor_acquires_resized_frames)
     }
 }
 
+TEST_F(BufferQueueTest, framedropping_policy_never_drops_newest_frame)
+{  // Regression test for LP: #1396006
+    for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
+    {
+        mtd::MockFrameDroppingPolicyFactory policy_factory;
+        mc::BufferQueue q(nbuffers,
+                          allocator,
+                          basic_properties,
+                          policy_factory);
+
+        auto first = client_acquire_sync(q);
+        q.client_release(first);
+
+        // Start rendering one (don't finish)
+        auto d = q.compositor_acquire(nullptr);
+        ASSERT_EQ(first, d.get());
+
+        auto second = client_acquire_sync(q);
+        q.client_release(second);
+
+        // Client waits for a new frame
+        auto end = client_acquire_async(q);
+        ASSERT_FALSE(end->has_acquired_buffer());
+
+        // Surface goes offscreen or occluded; trigger a timeout
+        policy_factory.trigger_policies();
+
+        // Client gets a new buffer...
+        ASSERT_TRUE(end->has_acquired_buffer());
+
+        // ... but the client doesn't use it for some indefinite time (due to
+        // no input requiring it to redraw again. Ensure it's not the newest
+        // frame we're asking the client to hold indefinitely and overwrite:
+        ASSERT_NE(second, end->buffer());
+
+        q.compositor_release(d);
+    }
+}
+
 TEST_F(BufferQueueTest, uncomposited_client_swaps_when_policy_triggered)
 {
     for (int nbuffers = 2;
