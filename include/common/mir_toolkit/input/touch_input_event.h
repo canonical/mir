@@ -103,7 +103,7 @@ unsigned int mir_touch_input_event_get_touch_count(MirTouchInputEvent const* eve
 MirTouchInputEventTouchId mir_touch_input_event_get_touch_id(MirTouchInputEvent const* event, size_t touch_index);
 
 /**
- * Retrieve the action for touch at given index.
+ * Retrieve the action which occured for a touch at given index.
  *
  *  \param [in] event       The touch event
  *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
