@@ -729,9 +729,7 @@ TEST_F(BasicSurfaceTest, notifies_of_client_close_request)
 
     MockCloseObserver mock_surface_observer;
 
-    InSequence s;
-    EXPECT_CALL(mock_surface_observer, client_close_requested())
-        .Times(1);
+    EXPECT_CALL(mock_surface_observer, client_close_requested()).Times(1);
 
     surface.add_observer(mt::fake_shared(mock_surface_observer));
 

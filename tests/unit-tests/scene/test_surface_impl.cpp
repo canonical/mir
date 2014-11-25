@@ -455,8 +455,8 @@ TEST_F(Surface, emits_client_close_events)
     memset(&e, 0, sizeof e);
     e.type = mir_event_type_close;
     e.close.surface_id = stub_id.as_value();
-    EXPECT_CALL(*sink, handle_event(e))
-        .Times(1);
+
+    EXPECT_CALL(*sink, handle_event(e)).Times(1);
 
     surf.request_client_close();
 }
