@@ -482,9 +482,6 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
     if (ready_to_composite_queue.size() > 1)
     {
         buffer_to_give = pop(ready_to_composite_queue);
-        /* Advance compositor buffer so it always points to the most recent
-         * client content
-         */
         if (!contains(current_compositor_buffer, buffers_sent_to_compositor))
         {
            current_buffer_users.clear();
