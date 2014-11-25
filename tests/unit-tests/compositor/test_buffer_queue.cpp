@@ -1090,7 +1090,7 @@ TEST_F(BufferQueueTest, framedropping_policy_never_drops_newest_frame)
 }
 
 TEST_F(BufferQueueTest, framedropping_never_drops_newest_frame)
-{  // Second regression test for LP: #1396006
+{  // Second regression test for LP: #1396006, LP: #1379685
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
         mc::BufferQueue q(nbuffers,
@@ -1120,8 +1120,9 @@ TEST_F(BufferQueueTest, framedropping_never_drops_newest_frame)
 
         // Ensure it's not the newest frame that gets dropped to satisfy the
         // client.
-        auto end = client_acquire_sync(q);
-        ASSERT_NE(order.back(), end);
+        auto end = client_acquire_async(q);
+        ASSERT_TRUE(!end->has_acquired_buffer() ||
+                    end->buffer() != order.back());
     }
 }
 
