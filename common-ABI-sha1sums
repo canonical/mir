@@ -13,7 +13,7 @@ dcf8b8982f138bdde39a241825c610e955cd5e33  include/common/mir/input/input_platfor
 208cd6aed5ef5f8f39b3eb86604e4133cb840485  include/common/mir/input/input_receiver_thread.h
 be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
 2de47e2790d0f7643e23eada2d8aa2987f58d086  include/common/mir/logging/logger.h
-c723647a85f8544d76dcb04c129bc44c25605de2  include/common/mir/log.h
+4c385fdce63f11185a351e3bedccd6dac2631bb0  include/common/mir/log.h
 9ae8473df05dd9e048a73797f01a2f34f7447554  include/common/mir/time/types.h
 ee337f546bca8f151e0f5adafb3ce91dabedebba  include/common/mir_toolkit/client_types.h
 2100c0674d9d882c1845550847357f6a5de5af66  include/common/mir_toolkit/common.h
