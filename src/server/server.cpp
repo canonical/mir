@@ -16,6 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#define MIR_LOGGING_COMPONENT "Server"
 #include "mir/server.h"
 
 #include "mir/emergency_cleanup.h"
@@ -355,7 +356,7 @@ void mir::Server::apply_settings()
 void mir::Server::run()
 try
 {
-    ml::log(ml::Severity::informational, "Starting Mir server");
+    ml::log(ml::Severity::informational, "Starting");
     verify_accessing_allowed(self->server_config);
 
     auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
@@ -383,7 +384,7 @@ catch (...)
 
 void mir::Server::stop()
 {
-    ml::log(ml::Severity::informational, "Stopping Mir Server");
+    ml::log(ml::Severity::informational, "Stopping");
     if (self->server_config)
         if (auto const main_loop = the_main_loop())
             main_loop->stop();
