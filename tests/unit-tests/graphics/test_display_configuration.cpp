@@ -300,10 +300,10 @@ TEST(DisplayConfiguration, unsupported_current_mode_invalid)
     EXPECT_FALSE(out.valid());
 }
 
-TEST(DisplayConfiguration, unsupported_preferred_mode_invalid)
-{
+TEST(DisplayConfiguration, unsupported_preferred_mode_valid)
+{   // Not having a preferred mode is allowed (LP: #1395405)
     mg::DisplayConfigurationOutput out = tmpl_output;
     out.preferred_mode_index = 456;
 
-    EXPECT_FALSE(out.valid());
+    EXPECT_TRUE(out.valid());
 }
