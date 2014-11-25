@@ -27,7 +27,6 @@ namespace test
 {
 namespace doubles
 {
-
 class NullPromptSession : public scene::PromptSession
 {
 public:
@@ -47,7 +46,6 @@ public:
     {
     }
 };
-
 }
 }
 }
