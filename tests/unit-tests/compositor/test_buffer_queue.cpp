@@ -1076,10 +1076,11 @@ TEST_F(BufferQueueTest, framedropping_policy_never_drops_newest_frame)
         // Surface goes offscreen or occluded; trigger a timeout
         policy_factory.trigger_policies();
 
-        // Client gets a new buffer...
-        // ... but the client doesn't use it for some indefinite time (due to
-        // no input requiring it to redraw again. Ensure it's not the newest
-        // frame we're asking the client to hold indefinitely and overwrite:
+        // If the queue is still willing to drop under these difficult
+        // circumstances (and we don't mind if it doesn't), then ensure
+        // it's never the newest frame that's been discarded.
+        // That could be catastrophic as you never know if a client ever
+        // will produce another frame.
         if (end->has_acquired_buffer())
             ASSERT_NE(second, end->buffer());
 
@@ -1100,8 +1101,7 @@ TEST_F(BufferQueueTest, framedropping_never_drops_newest_frame)
 
         // Fill 'er up
         std::vector<mg::Buffer*> order;
-        int max = q.buffers_free_for_client();
-        for (int f = 0; f < max; ++f)
+        for (int f = 0; f < nbuffers; ++f)
         {
             auto b = client_acquire_sync(q);
             order.push_back(b);
@@ -1124,7 +1124,8 @@ TEST_F(BufferQueueTest, framedropping_never_drops_newest_frame)
         // The queue could solve this problem a few ways. It might choose to
         // defer framedropping till it's safe, or even allocate additional
         // buffers. We don't care which, just verify it's not losing the
-        // latest frame that's not on screen still...
+        // latest frame. Because the screen could be indefinitely out of date
+        // if that happens...
         ASSERT_TRUE(!end->has_acquired_buffer() ||
                     end->buffer() != order.back());
     }
