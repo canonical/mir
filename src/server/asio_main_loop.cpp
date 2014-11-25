@@ -17,6 +17,7 @@
  */
 
 #include "mir/asio_main_loop.h"
+#include "mir/time/clock.h"
 
 #include "boost/date_time/posix_time/conversion.hpp"
 
@@ -78,7 +79,7 @@ struct MirClockTimerTraits
             auto clock = timer_service_clock.lock();
             if (!clock)
                 BOOST_THROW_EXCEPTION(std::logic_error("No clock available to create time stamp"));
-            return clock->sample();
+            return clock->now();
         }
     private:
         std::mutex timer_service_mutex;

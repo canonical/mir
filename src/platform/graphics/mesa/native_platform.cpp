@@ -26,8 +26,11 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/nested_context.h"
 
+#include "nested_authentication.h"
 #include "internal_client.h"
 #include "internal_native_display.h"
+
+#include "ipc_operations.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -38,14 +41,15 @@
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 
-void mgm::NativePlatform::initialize(
-    std::shared_ptr<NestedContext> const& nested_context_arg)
+mgm::NativePlatform::NativePlatform(std::shared_ptr<NestedContext> const& nested_context_arg)
 {
+    //TODO: a bit of round-about initialization to clean up here
     nested_context = nested_context_arg;
     auto fds = nested_context->platform_fd_items();
-    drm_fd = fds.at(0);
-    gbm.setup(drm_fd);
+    gbm.setup(fds.at(0));
     nested_context->drm_set_gbm_device(gbm.device);
+    ipc_ops = std::make_shared<mgm::IpcOperations>(
+        std::make_shared<mgm::NestedAuthentication>(nested_context)); 
 }
 
 mgm::NativePlatform::~NativePlatform()
@@ -58,69 +62,17 @@ std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_a
     return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited);
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::connection_ipc_package()
-{
-    struct MesaNativePlatformIPCPackage : public mg::PlatformIPCPackage
-    {
-        MesaNativePlatformIPCPackage(int fd)
-        {
-            ipc_fds.push_back(fd);
-        }
-    };
-    char* busid = drmGetBusid(drm_fd);
-    if (!busid)
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to get BusID of DRM device")) << boost::errinfo_errno(errno));
-    int auth_fd = drmOpen(NULL, busid);
-    free(busid);
-
-    drm_magic_t magic;
-    int ret = -1;
-    if ((ret = drmGetMagic(auth_fd, &magic)) < 0)
-    {
-        close(auth_fd);
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to get DRM device magic cookie")) << boost::errinfo_errno(-ret));
-    }
-
-    nested_context->drm_auth_magic(magic);
-
-    return std::make_shared<MesaNativePlatformIPCPackage>(auth_fd);
-}
-
 std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
 {
-    auto nd = ensure_internal_native_display(connection_ipc_package());
+    auto nd = ensure_internal_native_display(ipc_ops->connection_ipc_package());
     return std::make_shared<mgm::InternalClient>(nd);
 }
 
-/* TODO : this is just a duplication of mgm::BufferPacker::pack_buffer */
-void mgm::NativePlatform::fill_buffer_package(
-    BufferIpcMessage* message, Buffer const* buffer, BufferIpcMsgType msg_type) const
+extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(
+    std::shared_ptr<mg::DisplayReport> const&,
+    std::shared_ptr<mg::NestedContext> const& nested_context)
 {
-    if (msg_type == mg::BufferIpcMsgType::full_msg)
-    {
-        auto native_handle = buffer->native_buffer_handle();
-        for(auto i=0; i<native_handle->data_items; i++)
-        {
-            message->pack_data(native_handle->data[i]);
-        }
-        for(auto i=0; i<native_handle->fd_items; i++)
-        {
-            message->pack_fd(mir::Fd(IntOwnedFd{native_handle->fd[i]}));
-        }
-
-        message->pack_stride(buffer->stride());
-        message->pack_flags(native_handle->flags);
-        message->pack_size(buffer->size());
-    }
-}
-
-extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& /*report*/)
-{
-    return std::make_shared<mgm::NativePlatform>();
+    return std::make_shared<mgm::NativePlatform>(nested_context);
 }
 
 namespace
@@ -159,4 +111,9 @@ void mgm::NativePlatform::finish_internal_native_display()
 std::shared_ptr<mg::BufferWriter> mgm::NativePlatform::make_buffer_writer()
 {
     return std::make_shared<mgm::BufferWriter>();
+}
+
+std::shared_ptr<mg::PlatformIpcOperations> mgm::NativePlatform::make_ipc_operations() const
+{
+    return ipc_ops;
 }

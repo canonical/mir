@@ -19,6 +19,7 @@
 #include "mir_basic_rpc_channel.h"
 #include "rpc_report.h"
 
+#include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/variable_length_array.h"
@@ -104,7 +105,8 @@ mclr::MirBasicRpcChannel::~MirBasicRpcChannel()
 
 mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     google::protobuf::MethodDescriptor const* method,
-    google::protobuf::Message const* request)
+    google::protobuf::Message const* request,
+    size_t num_side_channel_fds)
 {
     mir::VariableLengthArray<mir::frontend::serialization_buffer_size>
         buffer{static_cast<size_t>(request->ByteSize())};
@@ -117,7 +119,7 @@ mir::protobuf::wire::Invocation mclr::MirBasicRpcChannel::invocation_for(
     invoke.set_method_name(method->name());
     invoke.set_parameters(buffer.data(), buffer.size());
     invoke.set_protocol_version(1);
-    invoke.set_side_channel_fds(0);
+    invoke.set_side_channel_fds(num_side_channel_fds);
 
     return invoke;
 }

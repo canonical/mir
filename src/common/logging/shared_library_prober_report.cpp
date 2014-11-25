@@ -29,14 +29,14 @@ ml::SharedLibraryProberReport::SharedLibraryProberReport(std::shared_ptr<Logger>
 
 void ml::SharedLibraryProberReport::probing_path(boost::filesystem::path const& path)
 {
-    logger->log(ml::Logger::Severity::informational,
+    logger->log(ml::Severity::informational,
                 std::string("Loading modules from: ") + path.string(),
                 "Loader");
 }
 
 void ml::SharedLibraryProberReport::probing_failed(boost::filesystem::path const& path, std::exception const& error)
 {
-    logger->log(ml::Logger::Severity::error,
+    logger->log(ml::Severity::error,
                 std::string("Failed to load libraries from path: ") + path.string() +
                 " (error was:" + error.what() + ")",
                 "Loader");
@@ -44,14 +44,14 @@ void ml::SharedLibraryProberReport::probing_failed(boost::filesystem::path const
 
 void ml::SharedLibraryProberReport::loading_library(boost::filesystem::path const& filename)
 {
-    logger->log(ml::Logger::Severity::informational,
+    logger->log(ml::Severity::informational,
                 std::string("Loading module: ") + filename.string(),
                 "Loader");
 }
 
 void ml::SharedLibraryProberReport::loading_failed(boost::filesystem::path const& filename, std::exception const& error)
 {
-    logger->log(ml::Logger::Severity::warning,
+    logger->log(ml::Severity::warning,
                 std::string("Failed to load module: ") + filename.string() +
                 " (error was:" + error.what() + ")",
                 "Loader");

@@ -35,41 +35,44 @@ namespace
 {
 class StubClientBuffer : public mcl::ClientBuffer
 {
-    std::shared_ptr<mcl::MemoryRegion> secure_for_cpu_write()
+    std::shared_ptr<mcl::MemoryRegion> secure_for_cpu_write() override
     {
         return nullptr;
     }
 
-    geom::Size size() const
+    geom::Size size() const override
     {
         return geom::Size{};
     }
 
-    geom::Stride stride() const
+    geom::Stride stride() const override
     {
         return geom::Stride{};
     }
 
-    MirPixelFormat pixel_format() const
+    MirPixelFormat pixel_format() const override
     {
         return mir_pixel_format_abgr_8888;
     }
 
-    uint32_t age() const
+    uint32_t age() const override
     {
         return 0;
     }
-    void increment_age()
+    void increment_age() override
     {
     }
-    void mark_as_submitted()
+    void mark_as_submitted() override
     {
     }
-    std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const
+    std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const override
     {
         return nullptr;
     }
     void update_from(MirBufferPackage const&) override
+    {
+    }
+    void fill_update_msg(MirBufferPackage&) override
     {
     }
 };

@@ -10,6 +10,7 @@ add_library(
   popen.cpp
   wait_object.cpp
   current_thread_name.cpp
+  validity_matchers.cpp
 )
 
-add_dependencies(mir-test mirprotobuf)
+target_link_libraries(mir-test mirprotobuf)

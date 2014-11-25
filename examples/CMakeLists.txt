@@ -154,11 +154,14 @@ install(TARGETS ${INSTALL_DEMOS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_executable(mir_demo_server_basic
   basic_server.cpp
+  glog_logger.cpp
 )
 
 target_link_libraries(mir_demo_server_basic
   mirserver
   exampleserverconfig
+  ${GLog_LIBRARY}
+  ${GFlags_LIBRARY}
   ${Boost_LIBRARIES}
 )
 
@@ -178,12 +181,9 @@ add_executable(mir_demo_standalone_render_overlays
 
 target_link_libraries(mir_demo_standalone_render_overlays
     mirserver
-    mirtestdraw
     mircommon
 )
 
 install(TARGETS mir_demo_standalone_render_overlays
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-
-add_subdirectory(testdraw/)

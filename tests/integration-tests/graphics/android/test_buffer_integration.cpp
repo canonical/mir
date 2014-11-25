@@ -21,23 +21,20 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "mir/graphics/buffer_properties.h"
-
-#include "examples/testdraw/graphics_region_factory.h"
-#include "examples/testdraw/patterns.h"
+#include "graphics_region_factory.h"
+#include "patterns.h"
 
 #include "mir_test_doubles/stub_frame_dropping_policy_factory.h"
-
 #include <gtest/gtest.h>
 
 namespace mc=mir::compositor;
 namespace geom=mir::geometry;
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
-namespace mtd=mir::test::draw;
+namespace mt=mir::test;
 
 namespace
 {
-
 class AndroidBufferIntegration : public ::testing::Test
 {
 protected:
@@ -46,13 +43,13 @@ protected:
         size = geom::Size{334, 122};
         pf  = mir_pixel_format_abgr_8888;
         buffer_properties = mg::BufferProperties{size, pf, mg::BufferUsage::software};
-        graphics_region_factory = mtd::create_graphics_region_factory();
+        graphics_region_factory = std::make_shared<mt::GraphicsRegionFactory>();
     }
 
     geom::Size size;
     MirPixelFormat pf;
     mg::BufferProperties buffer_properties;
-    std::shared_ptr<mtd::GraphicsRegionFactory> graphics_region_factory;
+    std::shared_ptr<mt::GraphicsRegionFactory> graphics_region_factory;
     mir::test::doubles::StubFrameDroppingPolicyFactory policy_factory;
 };
 
@@ -93,7 +90,7 @@ TEST_F(AndroidBufferIntegration, allocator_can_create_sw_buffer)
 
     auto region = graphics_region_factory->graphic_region_from_handle(
         *test_buffer->native_buffer_handle());
-    mtd::DrawPatternSolid red_pattern(0xFF0000FF);
+    mt::DrawPatternSolid red_pattern(0xFF0000FF);
     red_pattern.draw(*region);
     EXPECT_TRUE(red_pattern.check(*region));
 }

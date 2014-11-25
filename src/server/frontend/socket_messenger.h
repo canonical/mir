@@ -53,8 +53,6 @@ private:
 
     std::mutex message_lock;
     SessionCredentials session_creds{0, 0, 0};
-
-    void send_fds_locked(std::unique_lock<std::mutex> const& lock, std::vector<Fd> const& fds);
 };
 }
 }

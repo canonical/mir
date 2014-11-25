@@ -284,10 +284,19 @@ mir::DefaultServerConfiguration::the_cursor_listener()
     return cursor_listener(
         [this]() -> std::shared_ptr<mi::CursorListener>
         {
-            return std::make_shared<mi::CursorController>(the_input_scene(), 
-                the_cursor(), the_default_cursor_image());
+            return wrap_cursor_listener(std::make_shared<mi::CursorController>(
+                    the_input_scene(),
+                    the_cursor(),
+                    the_default_cursor_image()));
         });
 
+}
+
+std::shared_ptr<mi::CursorListener>
+mir::DefaultServerConfiguration::wrap_cursor_listener(
+    std::shared_ptr<mi::CursorListener> const& wrapped)
+{
+    return wrapped;
 }
 
 std::shared_ptr<mi::TouchVisualizer>

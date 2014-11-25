@@ -3,17 +3,26 @@ set(CLIENT_DRIVER client${MIRCLIENT_ABI}driver)
 set(MIR_CLIENT_DRIVER mir${CLIENT_DRIVER})
 set(MIR_CLIENT_DRIVER_BINARY lib${MIR_CLIENT_DRIVER}.so
     CACHE STRING "File name of Mir client drivers")
-add_definitions(-DMIR_CLIENT_DRIVER_BINARY="${MIR_CLIENT_DRIVER_BINARY}")
+add_definitions(
+  -DMIR_CLIENT_DRIVER_BINARY="${MIR_CLIENT_DRIVER_BINARY}"
+  -DMIR_LOGGING_COMPONENT_FALLBACK="mirclient"
+)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
-set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirclient")
-set(COMMON_INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mircommon")
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirclient.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
+  @ONLY
+)
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/mirclient-debug-extension.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/mirclient-debug-extension.pc
+  @ONLY
 )
 
 include_directories(
@@ -82,21 +91,15 @@ set_target_properties(
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
-set(
-  MIR_CLIENT_LIBRARIES
+target_link_libraries(mirclient
   mirclientrpc
   mirclientlttngstatic
   mircommon
+  mirprotobuf
 
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   ${XKBCOMMON_LIBRARIES}
-)
-
-target_link_libraries(
-  mirclient
-
-  ${MIR_CLIENT_LIBRARIES}
 )
 
 install(
@@ -113,3 +116,47 @@ install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
+
+# TODO: Extension apparatus so that mirclient-debug-extension can be a MODULE and not
+#       duplicate (almost) the entirity of mirclient
+
+set(MIRCLIENT_DEBUG_EXTENSION_ABI 1)
+
+add_library(
+  mirclient-debug-extension SHARED
+
+  mir_debug_api.cpp
+  $<TARGET_OBJECTS:mirclientobjects>
+)
+
+target_link_libraries(
+  mirclient-debug-extension
+
+  mirclient
+)
+
+set(debug_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-debug.map)
+
+set_target_properties(
+  mirclient-debug-extension
+
+  PROPERTIES
+  SOVERSION ${MIRCLIENT_DEBUG_EXTENSION_ABI}
+  LINK_FLAGS "-Wl,--version-script,${debug_symbol_map}"
+)
+
+install(
+  DIRECTORY ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/debug
+  DESTINATION "include/mirclient/mir_toolkit/debug"
+)
+
+install(
+  TARGETS mirclient-debug-extension
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient-debug-extension.pc
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+)
+

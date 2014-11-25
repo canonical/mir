@@ -19,6 +19,7 @@
 #include "src/platform/graphics/android/interpreter_cache.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test_doubles/stub_android_native_buffer.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>

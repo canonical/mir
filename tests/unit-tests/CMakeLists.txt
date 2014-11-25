@@ -5,6 +5,8 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
+  ${PROJECT_SOURCE_DIR}/src/include/common
+  ${GLIB_INCLUDE_DIRS}
 )
 
 add_definitions(
@@ -25,13 +27,14 @@ set(
   test_gmock_fixes.cpp
   test_recursive_read_write_mutex.cpp
   test_asio_main_loop.cpp
+  test_glib_main_loop.cpp
   shared_library_test.cpp
   test_raii.cpp
   test_udev_wrapper.cpp
   test_variable_length_array.cpp
   test_thread_name.cpp
   test_default_emergency_cleanup.cpp
-  test_basic_observers.cpp
+  test_thread_safe_list.cpp
   test_fatal.cpp
   test_fd.cpp
   test_shared_library_prober.cpp
@@ -48,7 +51,6 @@ add_subdirectory(graphics/)
 add_subdirectory(input/)
 add_subdirectory(android_input/)
 add_subdirectory(scene/)
-add_subdirectory(draw/)
 add_subdirectory(examples/)
 add_subdirectory(thread/)
 
@@ -72,7 +74,6 @@ target_link_libraries(
   mir_unit_tests
 
   mirdraw
-  mirtestdraw
   mirclientrpc
   mirclientlttngstatic
   demo-shell

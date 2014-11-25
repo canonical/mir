@@ -17,10 +17,8 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_debug.h"
 
-#include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 
 #include "src/client/client_buffer.h"
@@ -51,15 +49,10 @@ namespace mf = mir::frontend;
 namespace mc = mir::compositor;
 namespace mcl = mir::client;
 namespace mtf = mir_test_framework;
-
 namespace
 {
-struct ClientLibrary : mir_test_framework::InProcessServer
+struct ClientLibrary : mtf::HeadlessInProcessServer
 {
-    mtf::StubbedServerConfiguration server_configuration;
-    mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
-    mtf::UsingStubClientPlatform using_stub_client_platform;
-
     std::set<MirSurface*> surfaces;
     MirConnection* connection = nullptr;
     MirSurface* surface  = nullptr;
@@ -262,10 +255,10 @@ TEST_F(ClientLibrary, can_set_surface_types)
         mir_surface_set_type(surface, mir_surface_type_normal);
         mir_surface_set_type(surface, mir_surface_type_utility);
         mir_surface_set_type(surface, mir_surface_type_dialog);
-        mir_surface_set_type(surface, mir_surface_type_overlay);
+        mir_surface_set_type(surface, mir_surface_type_gloss);
         mir_surface_set_type(surface, mir_surface_type_freestyle);
-        mir_wait_for(mir_surface_set_type(surface, mir_surface_type_popover));
-        ASSERT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_popover));
+        mir_wait_for(mir_surface_set_type(surface, mir_surface_type_menu));
+        ASSERT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_menu));
     }
 
     mir_wait_for(mir_surface_release(surface, release_surface_callback, this));
@@ -599,42 +592,6 @@ TEST_F(ClientLibrary, accesses_display_info)
     }
 
     mir_display_config_destroy(configuration);
-    mir_connection_release(connection);
-}
-
-TEST_F(ClientLibrary, connect_errors_handled)
-{
-    mir_wait_for(mir_connect("garbage", __PRETTY_FUNCTION__, connection_callback, this));
-    ASSERT_THAT(connection, NotNull());
-
-    char const* error = mir_connection_get_error_message(connection);
-
-    if (std::strcmp("connect: No such file or directory", error) &&
-        std::strcmp("Can't find MIR server", error) &&
-        !std::strstr(error, "Failed to connect to server socket"))
-    {
-        FAIL() << error;
-    }
-}
-
-TEST_F(ClientLibrary, connect_errors_dont_blow_up)
-{
-    mir_wait_for(mir_connect("garbage", __PRETTY_FUNCTION__, connection_callback, this));
-
-    MirSurfaceParameters const request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-
-    mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
-// TODO surface_create needs to fail safe too. After that is done we should add the following:
-// TODO    mir_wait_for(mir_surface_swap_buffers(surface, next_buffer_callback, this));
-// TODO    mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
-
     mir_connection_release(connection);
 }
 

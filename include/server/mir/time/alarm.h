@@ -19,7 +19,7 @@
 #ifndef MIR_TIME_ALARM_H_
 #define MIR_TIME_ALARM_H_
 
-#include "mir/time/clock.h"
+#include "mir/time/types.h"
 
 namespace mir
 {

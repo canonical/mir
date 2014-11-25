@@ -37,9 +37,11 @@ touch alternatives for phones/tablets:
  - Move window: *Alt-leftmousebutton* or *3-finger drag*
  - Resize window: *Alt-middlemousebutton* or *3-finger pinch/zoom*
  - Sleep/wake all displays: *Alt-P* or *Android power button*
- - Rotate the focussed monitor: *Ctrl-Alt-(Left/Right/Up/Down)*
+ - Rotate the focussed monitor: *Ctrl-Alt-(Left/Right/Up/Down)* or
+   *Volume up/down while touching the screen*
  - Change display mode of the focussed monitor: *Ctrl-Alt-(=/-)*
  - Reset display mode to default, on focussed monitor: *Ctrl-Alt-0*
  - Adjust window opacity/alpha: *Alt-mousewheel*
+ - Zoom in/out: *Super-mousewheel*
 
 Want more? Log your requests at: https://bugs.launchpad.net/mir/+filebug

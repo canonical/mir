@@ -19,7 +19,9 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/nested_context.h"
 #include "display_helpers.h"
+#include "drm_authentication.h"
 #include "drm_close_threadsafe.h"
 #include "ipc_operations.h"
 
@@ -43,8 +45,8 @@ struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
 };
 }
 
-mgm::IpcOperations::IpcOperations(std::shared_ptr<helpers::DRMHelper> const& drm) :
-    drm{drm}
+mgm::IpcOperations::IpcOperations(std::shared_ptr<DRMAuthentication> const& drm_auth) :
+    drm_auth{drm_auth}
 {
 }
 
@@ -69,11 +71,21 @@ void mgm::IpcOperations::pack_buffer(
     }
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()
-{
-    return std::make_shared<MesaPlatformIPCPackage>(drm->get_authenticated_fd());
-}
-
 void mgm::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 {
+}
+
+mg::PlatformIPCPackage mgm::IpcOperations::platform_operation(
+    unsigned int const, mg::PlatformIPCPackage const& request)
+{
+    int magic{0};
+    if (request.ipc_data.size() > 0)
+        magic = request.ipc_data[0];
+    drm_auth->auth_magic(magic);
+    return mg::PlatformIPCPackage{{0},{}};
+}
+
+std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()
+{
+    return std::make_shared<MesaPlatformIPCPackage>(drm_auth->authenticated_fd());
 }

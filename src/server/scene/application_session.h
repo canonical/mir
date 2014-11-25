@@ -52,24 +52,24 @@ public:
 
     ~ApplicationSession();
 
-    frontend::SurfaceId create_surface(SurfaceCreationParameters const& params);
-    void destroy_surface(frontend::SurfaceId surface);
-    std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const;
+    frontend::SurfaceId create_surface(SurfaceCreationParameters const& params) override;
+    void destroy_surface(frontend::SurfaceId surface) override;
+    std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const override;
 
-    void take_snapshot(SnapshotCallback const& snapshot_taken);
-    std::shared_ptr<Surface> default_surface() const;
+    void take_snapshot(SnapshotCallback const& snapshot_taken) override;
+    std::shared_ptr<Surface> default_surface() const override;
 
-    std::string name() const;
+    std::string name() const override;
     pid_t process_id() const override;
 
-    void force_requests_to_complete();
+    void force_requests_to_complete() override;
 
-    void hide();
-    void show();
+    void hide() override;
+    void show() override;
 
-    void send_display_config(graphics::DisplayConfiguration const& info);
+    void send_display_config(graphics::DisplayConfiguration const& info) override;
 
-    void set_lifecycle_state(MirLifecycleState state);
+    void set_lifecycle_state(MirLifecycleState state) override;
 
     void start_prompt_session() override;
     void stop_prompt_session() override;

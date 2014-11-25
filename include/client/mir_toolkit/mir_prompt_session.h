@@ -20,6 +20,7 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include <sys/types.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 /**
@@ -74,7 +75,7 @@ void mir_prompt_session_release_sync(MirPromptSession *prompt_session);
  *   \param [in] prompt_session  The prompt session
  *   \return                     True if prompt_session is valid, false otherwise
  */
-MirBool mir_prompt_session_is_valid(MirPromptSession *prompt_session);
+bool mir_prompt_session_is_valid(MirPromptSession *prompt_session);
 
 /**
  * Retrieve a text description of the last error. The returned string is owned

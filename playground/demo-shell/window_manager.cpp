@@ -18,6 +18,7 @@
  */
 
 #include "window_manager.h"
+#include "demo_compositor.h"
 
 #include "mir/shell/focus_controller.h"
 #include "mir/scene/session.h"
@@ -36,6 +37,7 @@ namespace me = mir::examples;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace mi = mir::input;
 
 namespace
 {
@@ -60,6 +62,18 @@ void me::WindowManager::set_display(std::shared_ptr<mg::Display> const& dpy)
 void me::WindowManager::set_compositor(std::shared_ptr<mc::Compositor> const& cptor)
 {
     compositor = cptor;
+}
+
+void me::WindowManager::set_input_scene(std::shared_ptr<mi::Scene> const& s)
+{
+    input_scene = s;
+}
+
+void me::WindowManager::force_redraw()
+{
+    // This is clumsy, but the only option our architecture allows us for now
+    // Same hack as used in TouchspotController...
+    input_scene->emit_scene_changed();
 }
 
 namespace
@@ -123,7 +137,6 @@ bool me::WindowManager::handle(MirEvent const& event)
     assert(compositor);
 
     bool handled = false;
-    static int const ANDROID_KEYCODE_POWER = 26;
 
     if (event.key.type == mir_event_type_key &&
         event.key.action == mir_key_action_down)
@@ -136,7 +149,7 @@ bool me::WindowManager::handle(MirEvent const& event)
         }
         else if ((event.key.modifiers & mir_key_modifier_alt &&
                   event.key.scan_code == KEY_P) ||
-                 (event.key.key_code == ANDROID_KEYCODE_POWER))
+                 (event.key.scan_code == KEY_POWER))
         {
             compositor->stop();
             auto conf = display->configuration();
@@ -232,7 +245,37 @@ bool me::WindowManager::handle(MirEvent const& event)
                 return true;
             }
         }
+        else if ((event.key.scan_code == KEY_VOLUMEDOWN ||
+                  event.key.scan_code == KEY_VOLUMEUP) &&
+                 max_fingers == 1)
+        {
+            int delta = (event.key.scan_code == KEY_VOLUMEDOWN) ? -1 : +1;
+            static const MirOrientation order[4] =
+            {
+                mir_orientation_normal,
+                mir_orientation_right,
+                mir_orientation_inverted,
+                mir_orientation_left
+            };
 
+            compositor->stop();
+            auto conf = display->configuration();
+            conf->for_each_output(
+                [&](mg::UserDisplayConfigurationOutput& output)
+                {
+                    int i = 0;
+                    for (; i < 4; ++i)
+                    {
+                        if (output.orientation == order[i])
+                            break;
+                    }
+                    output.orientation = order[(i+4+delta) % 4];
+                }
+            );
+            display->configure(*conf.get());
+            compositor->start();
+            return true;
+        }
     }
     else if (event.type == mir_event_type_motion &&
              focus_controller)
@@ -241,6 +284,33 @@ bool me::WindowManager::handle(MirEvent const& event)
 
         // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
         MirMotionAction action = static_cast<MirMotionAction>(event.motion.action & ~0xff00);
+
+        float new_zoom_mag = 0.0f;  // zero means unchanged
+
+        if (event.motion.modifiers & mir_key_modifier_meta &&
+            action == mir_motion_action_scroll)
+        {
+            zoom_exponent += event.motion.pointer_coordinates[0].vscroll;
+
+            // Negative exponents do work too, but disable them until
+            // there's a clear edge to the desktop.
+            if (zoom_exponent < 0)
+                zoom_exponent = 0;
+    
+            new_zoom_mag = powf(1.2f, zoom_exponent);
+            handled = true;
+        }
+
+        me::DemoCompositor::for_each(
+            [new_zoom_mag,&cursor](me::DemoCompositor& c)
+            {
+                if (new_zoom_mag > 0.0f)
+                    c.zoom(new_zoom_mag);
+                c.on_cursor_movement(cursor);
+            });
+
+        if (zoom_exponent || new_zoom_mag)
+            force_redraw();
 
         auto const app = focus_controller->focussed_application().lock();
 
@@ -345,6 +415,9 @@ bool me::WindowManager::handle(MirEvent const& event)
                 handled = true;
             }
         }
+
+        if (fingers == 1 && action == mir_motion_action_up)
+            max_fingers = 0;
 
         old_cursor = cursor;
     }

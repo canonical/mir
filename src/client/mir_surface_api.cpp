@@ -18,11 +18,12 @@
 
 #include "mir_toolkit/mir_surface.h"
 #include "mir_toolkit/mir_wait.h"
-#include "mir_toolkit/mir_client_library_debug.h"
 
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "error_connections.h"
+
+#include <boost/exception/diagnostic_information.hpp>
 
 namespace mcl = mir::client;
 
@@ -44,15 +45,17 @@ MirWaitHandle* mir_connection_create_surface(
     mir_surface_callback callback,
     void* context)
 {
-    if (mcl::ErrorConnections::instance().contains(connection)) return 0;
+    if (!mir_connection_is_valid(connection)) abort();
 
     try
     {
         return connection->create_surface(*params, callback, context);
     }
-    catch (std::exception const&)
+    catch (std::exception const& error)
     {
-        // TODO callback with an error surface
+        auto error_surf = new MirSurface{std::string{"Failed to create surface: "} +
+                                         boost::diagnostic_information(error)};
+        (*callback)(error_surf, context);
         return nullptr;
     }
 }
@@ -81,9 +84,9 @@ MirEGLNativeWindowType mir_surface_get_egl_native_window(MirSurface* surface)
     return reinterpret_cast<MirEGLNativeWindowType>(surface->generate_native_window());
 }
 
-MirBool mir_surface_is_valid(MirSurface* surface)
+bool mir_surface_is_valid(MirSurface* surface)
 {
-    return MirSurface::is_valid(surface) ? mir_true : mir_false;
+    return MirSurface::is_valid(surface);
 }
 
 char const* mir_surface_get_error_message(MirSurface* surface)
@@ -152,9 +155,9 @@ void mir_surface_release_sync(MirSurface* surface)
         nullptr));
 }
 
-int mir_surface_get_id(MirSurface* surface)
+int mir_surface_get_id(MirSurface* /*surface*/)
 {
-    return mir_debug_surface_id(surface);
+    return 0;
 }
 
 MirWaitHandle* mir_surface_set_type(MirSurface* surf,
@@ -328,16 +331,4 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfig
     }
 
     return result;
-}
-
-/* Debug functions */
-
-uint32_t mir_debug_surface_current_buffer_id(MirSurface* surface)
-{
-    return surface->get_current_buffer_id();
-}
-
-int mir_debug_surface_id(MirSurface* surface)
-{
-    return surface->id();
 }

@@ -45,18 +45,11 @@ class NativePlatform
 public:
     NativePlatform() {}
 
-    virtual void initialize(std::shared_ptr<NestedContext> const& nested_context) = 0;
-
     virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() = 0;
-
-    virtual std::shared_ptr<PlatformIPCPackage> connection_ipc_package() = 0;
 
     virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
 
-    virtual void fill_buffer_package(
-        BufferIpcMessage* message,
-        Buffer const* buffer,
-        BufferIpcMsgType msg_type) const = 0;
+    virtual std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const = 0;
 
     virtual std::shared_ptr<BufferWriter> make_buffer_writer() = 0;
 
@@ -65,8 +58,12 @@ public:
     NativePlatform& operator=(NativePlatform const&) = delete;
 };
 
-extern "C" typedef std::shared_ptr<NativePlatform>(*CreateNativePlatform)(std::shared_ptr<DisplayReport> const& report);
-extern "C" std::shared_ptr<NativePlatform> create_native_platform(std::shared_ptr<DisplayReport> const& report);
+extern "C" typedef std::shared_ptr<NativePlatform>(*CreateNativePlatform)(
+    std::shared_ptr<DisplayReport> const&,
+    std::shared_ptr<NestedContext> const&);
+extern "C" std::shared_ptr<NativePlatform> create_native_platform(
+    std::shared_ptr<DisplayReport> const& report,
+    std::shared_ptr<NestedContext> const&);
 }
 }
 

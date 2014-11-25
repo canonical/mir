@@ -33,7 +33,6 @@ namespace mir
 namespace graphics
 {
 
-class BasicPlatform;
 class DisplayConfigurationPolicy;
 class DisplayReport;
 
@@ -64,33 +63,32 @@ private:
 class Display : public graphics::Display
 {
 public:
-    Display(std::shared_ptr<BasicPlatform> const& basic_platform,
+    Display(EGLNativeDisplayType egl_native_display,
             std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
             std::shared_ptr<DisplayReport> const& listener);
     ~Display() noexcept;
 
-    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f);
+    void for_each_display_buffer(std::function<void(DisplayBuffer&)> const& f) override;
 
     std::unique_ptr<graphics::DisplayConfiguration> configuration() const override;
     void configure(graphics::DisplayConfiguration const& conf) override;
 
     void register_configuration_change_handler(
         EventHandlerRegister& handlers,
-        DisplayConfigurationChangeHandler const& conf_change_handler);
+        DisplayConfigurationChangeHandler const& conf_change_handler) override;
 
     void register_pause_resume_handlers(
         EventHandlerRegister& handlers,
         DisplayPauseHandler const& pause_handler,
-        DisplayResumeHandler const& resume_handler);
+        DisplayResumeHandler const& resume_handler) override;
 
-    void pause();
-    void resume();
+    void pause() override;
+    void resume() override;
 
-    std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image);
-    std::unique_ptr<GLContext> create_gl_context();
+    std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
+    std::unique_ptr<GLContext> create_gl_context() override;
 
 private:
-    std::shared_ptr<BasicPlatform> const basic_platform;
     detail::EGLDisplayHandle const egl_display;
     SurfacelessEGLContext const egl_context_shared;
     mutable std::mutex configuration_mutex;

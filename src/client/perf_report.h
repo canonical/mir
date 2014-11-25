@@ -36,7 +36,7 @@ public:
 class NullPerfReport : public PerfReport
 {
 public:
-    virtual void name_surface(char const*) {}
+    virtual void name_surface(char const*) override {}
     void begin_frame(int) override {}
     void end_frame(int) override {}
 };

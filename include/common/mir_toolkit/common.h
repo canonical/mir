@@ -48,13 +48,17 @@ typedef enum MirSurfaceAttrib
 
 typedef enum MirSurfaceType
 {
-    mir_surface_type_normal,
-    mir_surface_type_utility,
+    mir_surface_type_normal,       /**< AKA "regular"                       */
+    mir_surface_type_utility,      /**< AKA "floating"                      */
     mir_surface_type_dialog,
-    mir_surface_type_overlay,
+    mir_surface_type_overlay,      /**< \deprecated  Use "gloss" instead.   */
+    mir_surface_type_gloss = mir_surface_type_overlay,
     mir_surface_type_freestyle,
-    mir_surface_type_popover,
-    mir_surface_type_inputmethod,
+    mir_surface_type_popover,      /**< \deprecated  Choose "menu" or "tip" */
+    mir_surface_type_menu = mir_surface_type_popover,
+    mir_surface_type_inputmethod,  /**< AKA "OSK" or handwriting etc.       */
+    mir_surface_type_satellite,    /**< AKA "toolbox"/"toolbar"             */
+    mir_surface_type_tip,          /**< AKA "tooltip"                       */
     mir_surface_types
 } MirSurfaceType;
 

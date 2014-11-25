@@ -7,6 +7,8 @@ set(SOURCES
 include_directories(
   ${Mir_SOURCE_DIR}/tests/include
   ${Mir_SOURCE_DIR}/include/platform
+  ${MIR_ANDROID_INCLUDE_DIRECTORIES}
+  ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES}
 )
 
 add_executable(input-reader-perf ${SOURCES})

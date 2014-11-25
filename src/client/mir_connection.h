@@ -149,6 +149,7 @@ private:
 
     std::shared_ptr<google::protobuf::RpcChannel> const channel;
     mir::protobuf::DisplayServer::Stub server;
+    mir::protobuf::Debug::Stub debug;
     std::shared_ptr<mir::logging::Logger> const logger;
     mir::protobuf::Void void_response;
     mir::protobuf::Connection connect_result;
@@ -156,6 +157,7 @@ private:
     mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::DRMAuthMagicStatus drm_auth_magic_status;
     mir::protobuf::DisplayConfiguration display_configuration_response;
+    bool disconnecting{false};
 
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientPlatform> platform;

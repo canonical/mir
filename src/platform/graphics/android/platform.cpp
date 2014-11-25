@@ -112,11 +112,6 @@ std::shared_ptr<mga::GraphicBufferAllocator> mga::Platform::create_mga_buffer_al
     return std::make_shared<mga::AndroidGraphicBufferAllocator>();
 }
 
-std::shared_ptr<mg::PlatformIPCPackage> mga::Platform::connection_ipc_package()
-{
-    return std::make_shared<mg::PlatformIPCPackage>();
-}
-
 std::shared_ptr<mg::Display> mga::Platform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
@@ -131,19 +126,9 @@ std::shared_ptr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operations() 
     return ipc_operations;
 }
 
-void mga::Platform::fill_buffer_package(
-    BufferIpcMessage* packer, graphics::Buffer const* buffer, BufferIpcMsgType msg_type) const
-{
-    ipc_operations->pack_buffer(*packer, *buffer, msg_type);
-}
-
 EGLNativeDisplayType mga::Platform::egl_native_display() const
 {
     return EGL_DEFAULT_DISPLAY;
-}
-
-void mga::Platform::initialize(std::shared_ptr<NestedContext> const&)
-{
 }
 
 std::shared_ptr<mg::InternalClient> mga::Platform::create_internal_client()
@@ -171,7 +156,9 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
     return std::make_shared<mga::Platform>(display_builder, display_report);
 }
 
-extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& display_report)
+extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    std::shared_ptr<mg::NestedContext> const&)
 {
     //TODO: remove nullptr parameter once platform classes are sorted.
     //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder

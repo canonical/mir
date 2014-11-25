@@ -58,7 +58,7 @@ public:
    void surfaces_reordered() override;
    void scene_changed() override;
    void surface_exists(Surface* surface) override;
-   void end_observation();
+   void end_observation() override;
 
    using BasicObservers<Observer>::add;
    using BasicObservers<Observer>::remove;
@@ -77,7 +77,7 @@ public:
     void unregister_compositor(compositor::CompositorID id) override;
 
     // From Scene
-    void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback);
+    void for_each(std::function<void(std::shared_ptr<input::Surface> const&)> const& callback) override;
 
     virtual void remove_surface(std::weak_ptr<Surface> const& surface) override;
 
@@ -92,8 +92,8 @@ public:
     void remove_observer(std::weak_ptr<Observer> const& observer) override;
     
     // Intended for input overlays, as described in mir::input::Scene documentation.
-    void add_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay);
-    void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& overlay);
+    void add_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay) override;
+    void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& overlay) override;
     
     void emit_scene_changed() override;
 

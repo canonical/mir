@@ -24,4 +24,5 @@ ADD_LIBRARY(
   prompt_session_impl.cpp
   prompt_session_manager_impl.cpp
   rendering_tracker.cpp
+  default_coordinate_translator.cpp
 )

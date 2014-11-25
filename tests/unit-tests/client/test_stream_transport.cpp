@@ -307,7 +307,8 @@ TYPED_TEST(StreamTransportTest, WritesCorrectData)
     std::vector<uint8_t> send_buffer{expected.begin(), expected.end()};
     std::vector<char> received(expected.size());
 
-    this->transport->send_data(send_buffer);
+    std::vector<mir::Fd> fds;
+    this->transport->send_message(send_buffer, fds);
 
     pollfd read_listener;
     read_listener.fd = this->test_fd;
@@ -985,6 +986,7 @@ TYPED_TEST(StreamTransportTest, SendsFullMessagesWhenInterrupted)
         byte = counter++;
     }
     std::vector<uint8_t> received(expected.size());
+    std::vector<mir::Fd> fds;
 
     TemporarySignalHandler sig_alarm_handler{SIGALRM, &set_alarm_raised};
     auto write_now_waiting = std::make_shared<mir::test::Signal>();
@@ -993,7 +995,7 @@ TYPED_TEST(StreamTransportTest, SendsFullMessagesWhenInterrupted)
                                      {
                                          alarm_raised = false;
                                          write_now_waiting->raise();
-                                         this->transport->send_data(expected);
+                                         this->transport->send_message(expected, fds);
                                          EXPECT_TRUE(alarm_raised);
                                      });
 

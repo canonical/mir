@@ -22,7 +22,6 @@
 #include "display_server.h"
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
-#include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir_toolkit/common.h"
 #include "surface_tracker.h"
@@ -37,13 +36,17 @@ namespace mir
 namespace graphics
 {
 class Buffer;
-class Platform;
 class Display;
 class GraphicBufferAllocator;
 }
 namespace input
 {
 class CursorImages;
+}
+
+namespace scene
+{
+class CoordinateTranslator;
 }
 
 /// Frontend interface. Mediates the interaction between client
@@ -62,13 +65,13 @@ class Screencast;
 class PromptSession;
 
 // SessionMediator relays requests from the client process into the server.
-class SessionMediator : public detail::DisplayServer
+class SessionMediator : public detail::DisplayServer, public mir::protobuf::Debug
 {
 public:
 
     SessionMediator(
         std::shared_ptr<Shell> const& shell,
-        std::shared_ptr<graphics::Platform> const& graphics_platform,
+        std::shared_ptr<graphics::PlatformIpcOperations> const& ipc_operations,
         std::shared_ptr<frontend::DisplayChanger> const& display_changer,
         std::vector<MirPixelFormat> const& surface_pixel_formats,
         std::shared_ptr<SessionMediatorReport> const& report,
@@ -76,7 +79,8 @@ public:
         std::shared_ptr<MessageResourceCache> const& resource_cache,
         std::shared_ptr<Screencast> const& screencast,
         ConnectionContext const& connection_context,
-        std::shared_ptr<input::CursorImages> const& cursor_images);
+        std::shared_ptr<input::CursorImages> const& cursor_images,
+        std::shared_ptr<scene::CoordinateTranslator> const& translator);
 
     ~SessionMediator() noexcept;
 
@@ -138,22 +142,22 @@ public:
     void screencast_buffer(google::protobuf::RpcController*,
                            const mir::protobuf::ScreencastId*,
                            mir::protobuf::Buffer*,
-                           google::protobuf::Closure* done);
+                           google::protobuf::Closure* done) override;
 
     void configure_cursor(google::protobuf::RpcController*,
                           mir::protobuf::CursorSetting const*,
                           mir::protobuf::Void*,
-                          google::protobuf::Closure* done);
+                          google::protobuf::Closure* done) override;
 
     void start_prompt_session(::google::protobuf::RpcController* controller,
                             const ::mir::protobuf::PromptSessionParameters* request,
                             ::mir::protobuf::Void* response,
-                            ::google::protobuf::Closure* done);
+                            ::google::protobuf::Closure* done) override;
 
     void stop_prompt_session(::google::protobuf::RpcController* controller,
                             const ::mir::protobuf::Void* request,
                             ::mir::protobuf::Void* response,
-                            ::google::protobuf::Closure* done);
+                            ::google::protobuf::Closure* done) override;
 
     /* Platform specific requests */
     void drm_auth_magic(google::protobuf::RpcController* controller,
@@ -166,6 +170,13 @@ public:
         ::mir::protobuf::SocketFDRequest const* parameters,
         ::mir::protobuf::SocketFD* response,
         ::google::protobuf::Closure* done) override;
+
+    // TODO: Split this into a separate thing
+    void translate_surface_to_screen(
+        ::google::protobuf::RpcController* controller,
+        ::mir::protobuf::CoordinateTranslationRequest const* request,
+        ::mir::protobuf::CoordinateTranslationResponse* response,
+        ::google::protobuf::Closure *done) override;
 
 private:
     void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
@@ -181,7 +192,6 @@ private:
 
     pid_t client_pid_;
     std::shared_ptr<Shell> const shell;
-    std::shared_ptr<graphics::Platform> const graphics_platform;
     std::shared_ptr<graphics::PlatformIpcOperations> const ipc_operations;
 
     std::vector<MirPixelFormat> const surface_pixel_formats;
@@ -193,6 +203,7 @@ private:
     std::shared_ptr<Screencast> const screencast;
     ConnectionContext const connection_context;
     std::shared_ptr<input::CursorImages> const cursor_images;
+    std::shared_ptr<scene::CoordinateTranslator> const translator;
 
     SurfaceTracker surface_tracker;
 
