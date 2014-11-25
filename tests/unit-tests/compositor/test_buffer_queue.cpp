@@ -1088,7 +1088,7 @@ TEST_F(BufferQueueTest, framedropping_policy_never_drops_newest_frame)
     }
 }
 
-TEST_F(BufferQueueTest, framedropping_never_drops_newest_frame)
+TEST_F(BufferQueueTest, framedropping_surface_never_drops_newest_frame)
 {  // Second regression test for LP: #1396006, LP: #1379685
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
