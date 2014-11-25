@@ -28,6 +28,7 @@
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test_framework/stub_client_connection_configuration.h"
+#include "mir_test_doubles/stub_client_buffer_factory.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -38,6 +39,7 @@
 
 namespace mcl = mir::client;
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -57,16 +59,6 @@ bool should_fail()
 {
     return (name & failure_set);
 }
-
-class StubClientBufferFactory : public mir::client::ClientBufferFactory
-{
-    std::shared_ptr<mir::client::ClientBuffer> create_buffer(const std::shared_ptr<MirBufferPackage>&,
-                                                             mir::geometry::Size,
-                                                             MirPixelFormat)
-    {
-        return std::shared_ptr<mir::client::ClientBuffer>{};
-    }
-};
 
 template<Method failure_set>
 class ConfigurableFailurePlatform : public mir::client::ClientPlatform
@@ -90,7 +82,7 @@ class ConfigurableFailurePlatform : public mir::client::ClientPlatform
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{exception_text});
         }
-        return std::make_shared<StubClientBufferFactory>();
+        return std::make_shared<mtd::StubClientBufferFactory>();
     }
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display()
     {
