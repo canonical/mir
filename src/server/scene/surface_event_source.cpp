@@ -74,3 +74,14 @@ void ms::SurfaceEventSource::orientation_set_to(MirOrientation orientation)
 
     event_sink->handle_event(e);
 }
+
+void ms::SurfaceEventSource::client_close_requested()
+{
+    MirEvent e;
+    memset(&e, 0, sizeof e);
+
+    e.type = mir_event_type_close;
+    e.close.surface_id = id.as_value();
+
+    event_sink->handle_event(e);
+}
