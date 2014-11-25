@@ -643,7 +643,21 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
     mir_connection_release(connection);
 }
 
+/* TODO: Our stub platform support is a bit terrible.
+ *
+ * These acceptance tests accidentally work on mesa because the mesa client
+ * platform doesn't validate any of its input and we don't touch anything that requires
+ * syscalls.
+ *
+ * The Android client platform *does* care about its input, and so the fact that it's
+ * trying to marshall stub buffers causes crashes.
+ */
+
+#ifndef ANDROID
 TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
+#else
+TEST_F(ClientLibrary, DISABLED_create_simple_normal_surface_from_spec)
+#endif
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -663,19 +677,17 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
 
     EXPECT_THAT(native_buffer->width, Eq(width));
     EXPECT_THAT(native_buffer->height, Eq(height));
-    /* Amusingly it turns out that there's no way for a mesa client to work out
-     * what format its buffer is in.
-     */
-#ifdef ANDROID
-    EXPECT_THAT(native_buffer->format, Eq(format));
-#endif
     EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_normal));
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
 
+#ifndef ANDROID
 TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
+#else
+TEST_F(ClientLibrary, DISABLED_create_simple_normal_surface_from_spec_async)
+#endif
 {
     auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -695,19 +707,17 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
 
     EXPECT_THAT(native_buffer->width, Eq(width));
     EXPECT_THAT(native_buffer->height, Eq(height));
-    /* Amusingly it turns out that there's no way for a mesa client to work out
-     * what format its buffer is in.
-     */
-#ifdef ANDROID
-    EXPECT_THAT(native_buffer->format, Eq(format));
-#endif
     EXPECT_THAT(mir_surface_get_type(surface), Eq(mir_surface_type_normal));
 
     mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
 
+#ifndef ANDROID
 TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
+#else
+TEST_F(ClientLibrary, DISABLED_can_specify_all_normal_surface_parameters_from_spec)
+#endif
 {
     using namespace testing;
 
@@ -739,7 +749,11 @@ TEST_F(ClientLibrary, can_specify_all_normal_surface_parameters_from_spec)
     mir_connection_release(connection);
 }
 
+#ifndef ANDROID
 TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
+#else
+TEST_F(ClientLibrary, DISABLED_set_fullscreen_on_output_makes_fullscreen_surface)
+#endif
 {
     using namespace testing;
 
@@ -778,12 +792,12 @@ TEST_F(ClientLibrary, set_fullscreen_on_output_makes_fullscreen_surface)
     mir_connection_release(connection);
 }
 
-/* TODO: Our stub platform support is a bit terrible.
- *       These acceptance tests accidentally work because the hardware client platforms
- * currently don't validate any of their input. If they did, the fact that they're
- * receiving buffers from a stub server platform would cause all manner of problems.
+/*
+ * We don't (yet) use a stub client platform, so can't rely on its behaviour
+ * in these tests.
  *
- * So we disable these tests that rely on the behaviour of a stub client platform
+ * At the moment, enabling them will either spuriously pass (hardware buffer, mesa)
+ * or crash (everything else).
  */
 TEST_F(ClientLibrary, DISABLED_can_create_buffer_usage_hardware_surface)
 {
