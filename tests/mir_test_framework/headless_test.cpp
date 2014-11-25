@@ -135,3 +135,8 @@ auto mtf::HeadlessTest::connection(mir::Fd fd) -> std::string
     sprintf(connect_string, "fd://%d", fd.operator int());
     return connect_string;
 }
+
+void mtf::HeadlessTest::preset_display(std::shared_ptr<mir::graphics::Display> const& /*display*/)
+{
+
+}

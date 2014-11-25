@@ -22,8 +22,7 @@
 #include "mir/graphics/event_handler_register.h"
 #include "src/server/scene/global_event_sender.h"
 
-#include "mir_test_framework/display_server_test_fixture.h"
-#include "mir_test_framework/cross_process_sync.h"
+#include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_doubles/null_platform.h"
 #include "mir_test_doubles/null_display.h"
 #include "mir_test_doubles/null_display_changer.h"
@@ -55,24 +54,7 @@ namespace mt = mir::test;
 
 namespace
 {
-
-char const* const mir_test_socket = mtf::test_socket_file().c_str();
-
-class StubChanger : public mtd::NullDisplayChanger
-{
-public:
-    std::shared_ptr<mg::DisplayConfiguration> active_configuration() override
-    {
-        return mt::fake_shared(stub_display_config);
-    }
-
-    static mtd::StubDisplayConfig stub_display_config;
-
-private:
-    mtd::NullDisplayBuffer display_buffer;
-};
-
-mtd::StubDisplayConfig StubChanger::stub_display_config;
+mtd::StubDisplayConfig stub_display_config;
 
 mtd::StubDisplayConfig changed_stub_display_config{1};
 
@@ -137,25 +119,7 @@ private:
     std::atomic<bool> handler_called;
 };
 
-class StubPlatform : public mtd::NullPlatform
-{
-public:
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
-    {
-        return std::make_shared<mtd::StubBufferAllocator>();
-    }
-
-    std::shared_ptr<mg::Display> create_display(
-        std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-        std::shared_ptr<mg::GLProgramFactory> const&,
-        std::shared_ptr<mg::GLConfig> const&) override
-    {
-        return mt::fake_shared(mock_display);
-    }
-
-    testing::NiceMock<MockDisplay> mock_display;
-};
-
+#if 0
 void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_queue)
 {
     mt::WaitCondition last_action_done;
@@ -165,45 +129,31 @@ void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_que
 
     last_action_done.wait_for_at_most_seconds(5);
 }
-
+#endif
 }
 
-using DisplayConfigurationTest = BespokeDisplayServerTestFixture;
+struct DisplayConfigurationTest : mtf::ConnectedClientHeadlessServer
+{
+    void SetUp() override
+    {
+        preset_display(mt::fake_shared(mock_display));
+        mtf::ConnectedClientHeadlessServer::SetUp();
+    }
+
+    testing::NiceMock<MockDisplay> mock_display;
+};
 
 TEST_F(DisplayConfigurationTest, display_configuration_reaches_client)
 {
-    struct ServerConfig : TestingServerConfiguration
-    {
-        std::shared_ptr<mf::DisplayChanger> the_frontend_display_changer() override
-        {
-            if (!changer)
-                changer = std::make_shared<StubChanger>();
-            return changer;
-        }
+    auto configuration = mir_connection_create_display_config(connection);
 
-        std::shared_ptr<StubChanger> changer;
-    } server_config;
+    EXPECT_THAT(*configuration,
+                mt::DisplayConfigMatches(std::cref(stub_display_config)));
 
-    launch_server_process(server_config);
-
-    struct Client : TestingClientConfiguration
-    {
-        void exec()
-        {
-            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-            auto configuration = mir_connection_create_display_config(connection);
-
-            EXPECT_THAT(*configuration,
-                        mt::DisplayConfigMatches(std::cref(StubChanger::stub_display_config)));
-
-            mir_display_config_destroy(configuration);
-            mir_connection_release(connection);
-        }
-    } client_config;
-
-    launch_client_process(client_config);
+    mir_display_config_destroy(configuration);
 }
 
+#if 0
 TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clients)
 {
     mtf::CrossProcessSync client_ready_fence;
@@ -802,3 +752,4 @@ TEST_F(DisplayConfigurationTest, hw_display_change_doesnt_apply_base_config_if_p
         display_client_disconnect();
     });
 }
+#endif

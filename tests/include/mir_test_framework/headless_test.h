@@ -30,6 +30,8 @@
 #include <mutex>
 #include <thread>
 
+namespace mir { namespace graphics { class Display; }}
+
 namespace mir_test_framework
 {
 /** Basic fixture for tests that don't use graphics hardware.
@@ -59,6 +61,8 @@ public:
 
     /// \return a connection string for a client to connect to the server
     auto connection(mir::Fd fd) -> std::string;
+
+    void preset_display(std::shared_ptr<mir::graphics::Display> const& display);
 
     mir::Server server;
 
