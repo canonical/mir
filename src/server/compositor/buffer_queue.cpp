@@ -479,16 +479,18 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
 {
     mg::Buffer* buffer_to_give = nullptr;
 
-    if (ready_to_composite_queue.size() > 1)
+    if (!ready_to_composite_queue.empty() &&
+        !contains(current_compositor_buffer, buffers_sent_to_compositor))
+    {
+        buffer_to_give = current_compositor_buffer;
+        current_compositor_buffer = pop(ready_to_composite_queue);
+        current_buffer_users.clear();
+        void const* const impossible_user_id = this;
+        current_buffer_users.push_back(impossible_user_id);
+    }
+    else if (ready_to_composite_queue.size() > 1)
     {
         buffer_to_give = pop(ready_to_composite_queue);
-        if (!contains(current_compositor_buffer, buffers_sent_to_compositor))
-        {
-           current_buffer_users.clear();
-           void const* const impossible_user_id = this;
-           current_buffer_users.push_back(impossible_user_id);
-           std::swap(buffer_to_give, current_compositor_buffer);
-        }
     }
     else 
     {
