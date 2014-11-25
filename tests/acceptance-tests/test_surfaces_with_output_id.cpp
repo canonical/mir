@@ -26,6 +26,7 @@
 #include <gtest/gtest.h>
 
 #include <vector>
+#include <tuple>
 #include <algorithm>
 
 namespace ms = mir::scene;
@@ -180,7 +181,7 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
         surfaces.push_back(surface);
     }
 
-    auto surface_rects = tracking_surface_coordinator->server_surface_rectangles();;
+    auto surface_rects = tracking_surface_coordinator->server_surface_rectangles();
     auto sorted_display_rects = display_rects;
     std::sort(sorted_display_rects.begin(), sorted_display_rects.end(), RectangleCompare());
     std::sort(surface_rects.begin(), surface_rects.end(), RectangleCompare());
