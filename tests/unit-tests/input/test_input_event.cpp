@@ -178,18 +178,16 @@ TEST(TouchInputEventProperties, tool_type_copied_from_old_pc)
     old_ev.type = mir_event_type_motion;
 
     auto& old_mev = old_ev.motion;
-    old_mev.pointer_count = 5;
+    old_mev.pointer_count = 4;
     old_mev.pointer_coordinates[0].tool_type = mir_motion_tool_type_unknown;
     old_mev.pointer_coordinates[1].tool_type = mir_motion_tool_type_finger;
     old_mev.pointer_coordinates[2].tool_type = mir_motion_tool_type_stylus;
     old_mev.pointer_coordinates[3].tool_type = mir_motion_tool_type_mouse;
-    old_mev.pointer_coordinates[4].tool_type = mir_motion_tool_type_eraser;
 
     auto tev = mir_input_event_get_touch_input_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(mir_touch_input_tool_type_unknown, mir_touch_input_event_get_touch_tooltype(tev, 0));
     EXPECT_EQ(mir_touch_input_tool_type_finger, mir_touch_input_event_get_touch_tooltype(tev, 1));
     EXPECT_EQ(mir_touch_input_tool_type_stylus, mir_touch_input_event_get_touch_tooltype(tev, 2));
-    EXPECT_EQ(mir_touch_input_tool_type_eraser, mir_touch_input_event_get_touch_tooltype(tev, 4));
 }
 
 TEST(TouchInputEventProperties, axis_values_used_by_qtmir_copied)

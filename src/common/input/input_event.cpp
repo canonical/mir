@@ -222,9 +222,8 @@ MirTouchInputEventTouchTooltype mir_touch_input_event_get_touch_tooltype(MirTouc
     case mir_motion_tool_type_finger:
         return mir_touch_input_tool_type_finger;
     case mir_motion_tool_type_stylus:
-        return mir_touch_input_tool_type_stylus;
     case mir_motion_tool_type_eraser:
-        return mir_touch_input_tool_type_eraser;
+        return mir_touch_input_tool_type_stylus;
     case mir_motion_tool_type_mouse:
     case mir_motion_tool_type_unknown:
     default:

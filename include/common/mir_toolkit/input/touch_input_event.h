@@ -81,9 +81,7 @@ typedef enum {
 // Touch is made with a finger
     mir_touch_input_tool_type_finger = 1,
 // Touch is made with a stylus
-    mir_touch_input_tool_type_stylus = 2,
-// Touch is made with a stylus eraser tool
-    mir_touch_input_tool_type_eraser = 3
+    mir_touch_input_tool_type_stylus = 2
 } MirTouchInputEventTouchTooltype;
 
 /**
