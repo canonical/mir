@@ -1121,6 +1121,11 @@ TEST_F(BufferQueueTest, framedropping_never_drops_newest_frame)
         // Ensure it's not the newest frame that gets dropped to satisfy the
         // client.
         auto end = client_acquire_async(q);
+
+        // The queue could solve this problem a few ways. It might choose to
+        // defer framedropping till it's safe, or even allocate additional
+        // buffers. We don't care which, just verify it's not losing the
+        // latest frame that's not on screen still...
         ASSERT_TRUE(!end->has_acquired_buffer() ||
                     end->buffer() != order.back());
     }
