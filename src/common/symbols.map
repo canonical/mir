@@ -205,8 +205,10 @@ MIR_COMMON_3 {
 MIR_COMMON_3.1 {
  global:
   extern "C++" {
-    mir::log_info*;
+    mir::log_critical*;
+    mir::log_error*;
     mir::log_warn*;
+    mir::log_info*;
   };
  local: *;
 };
