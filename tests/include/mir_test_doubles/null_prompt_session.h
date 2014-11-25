@@ -31,8 +31,21 @@ namespace doubles
 class NullPromptSession : public scene::PromptSession
 {
 public:
-    void set_state(MirPromptSessionState) override { }
-    MirPromptSessionState state() const override { return mir_prompt_session_state_stopped; }
+    void start(std::shared_ptr<scene::Session> const&) override
+    {
+    }
+
+    void stop(std::shared_ptr<scene::Session> const&) override
+    {
+    }
+
+    void suspend(std::shared_ptr<scene::Session> const&) override
+    {
+    }
+
+    void resume(std::shared_ptr<scene::Session> const&) override
+    {
+    }
 };
 
 }

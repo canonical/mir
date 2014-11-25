@@ -26,6 +26,7 @@
 #include "mir/fd.h"
 
 #include "mir_test_doubles/stub_session_authorizer.h"
+#include "mir_test_doubles/mock_prompt_session_listener.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
@@ -46,7 +47,7 @@ using namespace testing;
 
 namespace
 {
-struct MockPromptSessionListener : ms::PromptSessionListener
+struct MockPromptSessionListener : mtd::MockPromptSessionListener
 {
     MockPromptSessionListener(std::shared_ptr<ms::PromptSessionListener> const& wrapped) :
         wrapped(wrapped)
@@ -57,21 +58,18 @@ struct MockPromptSessionListener : ms::PromptSessionListener
         ON_CALL(*this, stopping(_)).WillByDefault(Invoke(
             wrapped.get(), &ms::PromptSessionListener::stopping));
 
+        ON_CALL(*this, starting(_)).WillByDefault(Invoke(
+            wrapped.get(), &ms::PromptSessionListener::suspending));
+
+        ON_CALL(*this, stopping(_)).WillByDefault(Invoke(
+            wrapped.get(), &ms::PromptSessionListener::resuming));
+
         ON_CALL(*this, prompt_provider_added(_, _)).WillByDefault(Invoke(
             wrapped.get(), &ms::PromptSessionListener::prompt_provider_added));
 
         ON_CALL(*this, prompt_provider_removed(_, _)).WillByDefault(Invoke(
             wrapped.get(), &ms::PromptSessionListener::prompt_provider_removed));
     }
-
-    MOCK_METHOD1(starting, void(std::shared_ptr<ms::PromptSession> const& prompt_session));
-    MOCK_METHOD1(stopping, void(std::shared_ptr<ms::PromptSession> const& prompt_session));
-
-    MOCK_METHOD2(prompt_provider_added,
-        void(ms::PromptSession const& session, std::shared_ptr<ms::Session> const& provider));
-
-    MOCK_METHOD2(prompt_provider_removed,
-        void(ms::PromptSession const& session, std::shared_ptr<ms::Session> const& provider));
 
     std::shared_ptr<ms::PromptSessionListener> const wrapped;
 };

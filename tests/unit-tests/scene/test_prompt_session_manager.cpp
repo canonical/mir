@@ -24,6 +24,7 @@
 #include "mir/scene/prompt_session_creation_parameters.h"
 
 #include "mir_test_doubles/mock_prompt_session_listener.h"
+#include "mir_test_doubles/mock_scene_session.h"
 #include "mir_test_doubles/stub_scene_session.h"
 #include "mir_test/fake_shared.h"
 
@@ -68,7 +69,7 @@ struct PromptSessionManager : public testing::Test
     pid_t const helper_pid = __LINE__;
     pid_t const application_pid = __LINE__;
     pid_t const prompt_provider_pid = __LINE__;
-    std::shared_ptr<ms::Session> const helper{std::make_shared<mtd::StubSceneSession>(helper_pid)};
+    std::shared_ptr<mtd::MockSceneSession> const helper{std::make_shared<::testing::NiceMock<mtd::MockSceneSession>>()};
     std::shared_ptr<ms::Session> const application_session{std::make_shared<mtd::StubSceneSession>(application_pid)};
     std::shared_ptr<ms::Session> const provider_session{std::make_shared<mtd::StubSceneSession>(prompt_provider_pid)};
     std::shared_ptr<ms::Session> const another_prompt_provider{std::make_shared<mtd::StubSceneSession>(__LINE__)};
@@ -83,6 +84,8 @@ struct PromptSessionManager : public testing::Test
 
     void SetUp()
     {
+        ON_CALL(*helper, process_id()).WillByDefault(Return(helper_pid));
+
         existing_sessions.insert_session(application_session);
 
         parameters.application_pid = application_pid;
@@ -123,12 +126,32 @@ struct PromptSessionManager : public testing::Test
 TEST_F(PromptSessionManager, notifies_provider_of_start_and_stop)
 {
     InSequence seq;
+    EXPECT_CALL(*helper, start_prompt_session()).Times(1);
     EXPECT_CALL(prompt_session_listener, starting(_)).Times(1);
 
     auto const prompt_session = session_manager.start_prompt_session_for(helper, parameters);
 
+    EXPECT_CALL(*helper, stop_prompt_session()).Times(1);
     EXPECT_CALL(prompt_session_listener, stopping(Eq(prompt_session))).Times(1);
+
     session_manager.stop_prompt_session(prompt_session);
+
+    // Need to verify explicitly as we see unmatched callbacks during teardown of fixture
+    Mock::VerifyAndClearExpectations(&prompt_session_listener);
+}
+
+TEST_F(PromptSessionManager, notifies_provider_of_suspend_and_resume)
+{
+    InSequence seq;
+    EXPECT_CALL(*helper, suspend_prompt_session()).Times(1);
+    EXPECT_CALL(prompt_session_listener, suspending(_)).Times(1);
+
+    session_manager.suspend_prompt_session(prompt_session);
+
+    EXPECT_CALL(*helper, resume_prompt_session()).Times(1);
+    EXPECT_CALL(prompt_session_listener, resuming(Eq(prompt_session))).Times(1);
+
+    session_manager.resume_prompt_session(prompt_session);
 
     // Need to verify explicitly as we see unmatched callbacks during teardown of fixture
     Mock::VerifyAndClearExpectations(&prompt_session_listener);

@@ -45,12 +45,7 @@ void ms::PromptSessionManagerImpl::stop_prompt_session_locked(
     prompt_session_container->for_each_participant_in_prompt_session(prompt_session.get(),
         [&](std::weak_ptr<Session> const& session, PromptSessionContainer::ParticipantType type)
         {
-            if (type == PromptSessionContainer::ParticipantType::helper)
-            {
-                if (auto locked_session = session.lock())
-                    locked_session->stop_prompt_session();
-            }
-            else if (type == PromptSessionContainer::ParticipantType::prompt_provider)
+            if (type == PromptSessionContainer::ParticipantType::prompt_provider)
             {
                 if (auto locked_session = session.lock())
                     participants.push_back(locked_session);
@@ -62,7 +57,8 @@ void ms::PromptSessionManagerImpl::stop_prompt_session_locked(
         if (prompt_session_container->remove_participant(prompt_session.get(), participant, PromptSessionContainer::ParticipantType::prompt_provider))
             prompt_session_listener->prompt_provider_removed(*prompt_session, participant);
     }
-    prompt_session->set_state(mir_prompt_session_state_stopped);
+
+    prompt_session->stop(helper_for(prompt_session));
 
     prompt_session_container->remove_prompt_session(prompt_session);
 
@@ -107,24 +103,18 @@ void ms::PromptSessionManagerImpl::stop_prompt_session(std::shared_ptr<PromptSes
 
 void ms::PromptSessionManagerImpl::suspend_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) const
 {
-    if (prompt_session->state() != mir_prompt_session_state_started) return;
+    std::lock_guard<std::mutex> lock(prompt_sessions_mutex);
 
-    prompt_session->set_state(mir_prompt_session_state_suspended);
-
-    auto helper_session = helper_for(prompt_session);
-    if (helper_session)
-        helper_session->suspend_prompt_session();
+    prompt_session->suspend(helper_for(prompt_session));
+    prompt_session_listener->suspending(prompt_session);
 }
 
 void ms::PromptSessionManagerImpl::resume_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) const
 {
-    if (prompt_session->state() != mir_prompt_session_state_suspended) return;
+    std::lock_guard<std::mutex> lock(prompt_sessions_mutex);
 
-    prompt_session->set_state(mir_prompt_session_state_started);
-
-    auto helper_session = helper_for(prompt_session);
-    if (helper_session)
-        helper_session->resume_prompt_session();
+    prompt_session->resume(helper_for(prompt_session));
+    prompt_session_listener->resuming(prompt_session);
 }
 
 std::shared_ptr<ms::PromptSession> ms::PromptSessionManagerImpl::start_prompt_session_for(
@@ -152,8 +142,7 @@ std::shared_ptr<ms::PromptSession> ms::PromptSessionManagerImpl::start_prompt_se
     if (!prompt_session_container->insert_participant(prompt_session.get(), session, PromptSessionContainer::ParticipantType::helper))
         BOOST_THROW_EXCEPTION(std::runtime_error("Could not set prompt session helper"));
 
-    prompt_session->set_state(mir_prompt_session_state_started);
-    session->start_prompt_session();
+    prompt_session->start(session);
     prompt_session_listener->starting(prompt_session);
 
     prompt_session_container->insert_participant(prompt_session.get(), application_session, PromptSessionContainer::ParticipantType::application);

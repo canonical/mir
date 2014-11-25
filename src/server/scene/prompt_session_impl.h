@@ -33,12 +33,16 @@ class PromptSessionImpl : public scene::PromptSession
 public:
     explicit PromptSessionImpl();
 
-    void set_state(MirPromptSessionState state) override;
-    MirPromptSessionState state() const override;
+    void start(std::shared_ptr<Session> const& helper_session) override;
+    void stop(std::shared_ptr<Session> const& helper_session) override;
+    void suspend(std::shared_ptr<Session> const& helper_session) override;
+    void resume(std::shared_ptr<Session> const& helper_session) override;
+
+    MirPromptSessionState state() const;
 
 private:
     std::mutex mutable guard;
-    MirPromptSessionState m_state;
+    MirPromptSessionState current_state;
 };
 }
 }

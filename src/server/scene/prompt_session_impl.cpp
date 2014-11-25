@@ -18,21 +18,64 @@
 
 #include "prompt_session_impl.h"
 
+#include <mir/scene/session.h>
+
 namespace ms = mir::scene;
 
 ms::PromptSessionImpl::PromptSessionImpl() :
-    m_state(mir_prompt_session_state_stopped)
+    current_state(mir_prompt_session_state_stopped)
 {
 }
 
-void ms::PromptSessionImpl::set_state(MirPromptSessionState state)
+void ms::PromptSessionImpl::start(std::shared_ptr<Session> const& helper_session)
 {
     std::unique_lock<std::mutex> lk(guard);
-    m_state = state;
+
+    if (current_state == mir_prompt_session_state_stopped)
+    {
+        current_state = mir_prompt_session_state_started;
+        if (helper_session)
+            helper_session->start_prompt_session();
+    }
+}
+
+void ms::PromptSessionImpl::stop(std::shared_ptr<Session> const& helper_session)
+{
+    std::unique_lock<std::mutex> lk(guard);
+
+    if (current_state != mir_prompt_session_state_stopped)
+    {
+        current_state = mir_prompt_session_state_stopped;
+        if (helper_session)
+            helper_session->stop_prompt_session();
+    }
+}
+
+void ms::PromptSessionImpl::suspend(std::shared_ptr<Session> const& helper_session)
+{
+    std::unique_lock<std::mutex> lk(guard);
+
+    if (current_state == mir_prompt_session_state_started)
+    {
+        current_state = mir_prompt_session_state_suspended;
+        if (helper_session)
+            helper_session->suspend_prompt_session();
+    }
+}
+
+void ms::PromptSessionImpl::resume(std::shared_ptr<Session> const& helper_session)
+{
+    std::unique_lock<std::mutex> lk(guard);
+
+    if (current_state == mir_prompt_session_state_suspended)
+    {
+        current_state = mir_prompt_session_state_started;
+        if (helper_session)
+            helper_session->resume_prompt_session();
+    }
 }
 
 MirPromptSessionState ms::PromptSessionImpl::state() const
 {
-    std::unique_lock<std::mutex> lk(guard);
-    return m_state;
+    return current_state;
 }
