@@ -24,19 +24,24 @@
 #include <string>
 
 #ifndef MIR_LOG_COMPONENT
-#ifndef MIR_LOG_COMPONENT_FALLBACK
-#define MIR_LOG_COMPONENT_FALLBACK "?"
-#endif
+#ifdef MIR_LOG_COMPONENT_FALLBACK
 #define MIR_LOG_COMPONENT MIR_LOG_COMPONENT_FALLBACK
+#endif
+#endif
+
+#ifdef MIR_LOG_COMPONENT
+#define MIR_LOG_ASSIGN_COMPONENT =MIR_LOG_COMPONENT
+#else
+#define MIR_LOG_ASSIGN_COMPONENT
 #endif
 
 namespace mir
 {
 
 void log_warn(std::string const& message,
-              std::string const& component = MIR_LOG_COMPONENT);
+              std::string const& component MIR_LOG_ASSIGN_COMPONENT);
 void log_info(std::string const& message,
-              std::string const& component = MIR_LOG_COMPONENT);
+              std::string const& component MIR_LOG_ASSIGN_COMPONENT);
 
 /*
  * "error" and "critical" are intentionally omitted because they're presently
