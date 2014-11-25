@@ -1,5 +1,6 @@
-mir (0.9.0) UNRELEASED; urgency=medium
+mir (0.9.0+15.04.20141125-0ubuntu1) vivid; urgency=medium
 
+  [ Alberto Aguirre ]
   * New upstream release 0.9.0 (https://launchpad.net/mir/+milestone/0.9.0)
     - Enhancements:
       . New simpler API to configure and run a mir server.
@@ -44,7 +45,10 @@ mir (0.9.0) UNRELEASED; urgency=medium
       . [regression] Mir fails to build with MIR_ENABLE_TESTS=OFF (LP: #1388539)
       . [regression] mir_demo_server_basic does not start (LP: #1391923)
 
- -- Alberto Aguirre <alberto.aguirre@canonical.com>  Thu, 20 Nov 2014 10:04:54 -0600
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 25 Nov 2014 17:49:24 +0000
 
 mir (0.8.0+14.10.20141010-0ubuntu2) vivid; urgency=medium
 
