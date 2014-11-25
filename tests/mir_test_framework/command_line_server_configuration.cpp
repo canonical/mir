@@ -17,6 +17,7 @@
 
 #include "mir_test_framework/command_line_server_configuration.h"
 #include "mir/options/default_configuration.h"
+#include "mir/server.h"
 
 #include <gtest/gtest.h>
 
@@ -31,26 +32,25 @@ int argc;
 char const** argv;
 }
 
-namespace mir_test_framework
+auto mir_test_framework::configuration_from_commandline()
+-> std::shared_ptr<mo::DefaultConfiguration>
 {
-    auto configuration_from_commandline()
-    -> std::shared_ptr<mo::DefaultConfiguration>
-    {
-        return std::make_shared<mo::DefaultConfiguration>(::argc, ::argv);
-    }
+    return std::make_shared<mo::DefaultConfiguration>(::argc, ::argv);
+}
+
+void mir_test_framework::configure_from_commandline(mir::Server& server)
+{
+    server.set_command_line(::argc, ::argv);
 }
 
 int main(int argc, char** argv)
 {
     // Override this standard gtest message
     std::cout << "Running main() from " << basename(__FILE__) << std::endl;
-    ::argc = std::remove_if(
-        argv,
-        argv+argc,
-        [](char const* arg) { return !strncmp(arg, "--gtest_", 8); }) - argv;
-    ::argv = const_cast<char const**>(argv);
-
     ::testing::InitGoogleTest(&argc, argv);
+
+    ::argv = const_cast<char const**>(argv);
+    ::argc = argc;
 
     return RUN_ALL_TESTS();
 }

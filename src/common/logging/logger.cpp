@@ -46,11 +46,6 @@ std::shared_ptr<ml::Logger> get_logger()
 }
 }
 
-void ml::log(ml::Severity severity, const std::string& message)
-{
-    log(severity, message, "UnknownComponent");
-}
-
 void ml::log(ml::Severity severity, const std::string& message, const std::string& component)
 {
     auto const logger = get_logger();
@@ -60,7 +55,7 @@ void ml::log(ml::Severity severity, const std::string& message, const std::strin
 
 void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
 {
-    if (!new_logger)
+    if (new_logger)
     {
         std::lock_guard<decltype(log_mutex)> lock{log_mutex};
         the_logger = new_logger;

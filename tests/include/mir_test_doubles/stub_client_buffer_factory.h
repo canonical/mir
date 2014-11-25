@@ -13,29 +13,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Josh Arenson <joshua.arenson@canonical.com>
+ * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION
-#define MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION
+#ifndef MIR_TEST_DOUBLES_STUB_CLIENT_BUFFER_FACTORY_H_
+#define MIR_TEST_DOUBLES_STUB_CLIENT_BUFFER_FACTORY_H_
 
-#include <memory>
+#include "src/client/client_buffer_factory.h"
+#include "stub_client_buffer.h"
 
 namespace mir
 {
-namespace options
+namespace test
 {
-class DefaultConfiguration;
-}
-class Server;
-}
-
-namespace mir_test_framework
+namespace doubles
 {
-    auto configuration_from_commandline() 
-    -> std::shared_ptr<mir::options::DefaultConfiguration>;
 
-    void configure_from_commandline(mir::Server& server);
+struct StubClientBufferFactory : public client::ClientBufferFactory
+{
+    std::shared_ptr<client::ClientBuffer> create_buffer(
+        std::shared_ptr<MirBufferPackage> const& package,
+        geometry::Size size, MirPixelFormat pf)
+    {
+        return std::make_shared<StubClientBuffer>(package, size, pf);
+    }
+};
+
+}
+}
 }
 
-#endif /* MIR_TEST_FRAMEWORK_COMMAND_LINE_SERVER_CONFIGURATION */
+#endif
