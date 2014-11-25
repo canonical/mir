@@ -33,8 +33,7 @@ namespace doubles
 class NullPlatform : public graphics::Platform
 {
  public:
-    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<graphics::BufferInitializer>& /*buffer_initializer*/)
+    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator() override
     {
         return nullptr;
     }
@@ -42,7 +41,7 @@ class NullPlatform : public graphics::Platform
     std::shared_ptr<graphics::Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLProgramFactory> const&,
-        std::shared_ptr<graphics::GLConfig> const&)
+        std::shared_ptr<graphics::GLConfig> const&) override
     {
         return std::make_shared<NullDisplay>();
     }
@@ -52,12 +51,12 @@ class NullPlatform : public graphics::Platform
         return std::make_shared<graphics::PlatformIPCPackage>();
     }
 
-    std::shared_ptr<graphics::InternalClient> create_internal_client()
+    std::shared_ptr<graphics::InternalClient> create_internal_client() override
     {
         return nullptr;
     }
     
-    std::shared_ptr<graphics::BufferWriter> make_buffer_writer()
+    std::shared_ptr<graphics::BufferWriter> make_buffer_writer() override
     {
         return nullptr;
     }
@@ -67,7 +66,7 @@ class NullPlatform : public graphics::Platform
         return std::make_shared<NullPlatformIpcOperations>();
     }
 
-    EGLNativeDisplayType egl_native_display() const
+    EGLNativeDisplayType egl_native_display() const override
     {
         return EGLNativeDisplayType();
     }

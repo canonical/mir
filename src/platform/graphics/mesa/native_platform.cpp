@@ -38,8 +38,7 @@
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 
-void mgm::NativePlatform::initialize(
-    std::shared_ptr<NestedContext> const& nested_context_arg)
+mgm::NativePlatform::NativePlatform(std::shared_ptr<NestedContext> const& nested_context_arg)
 {
     nested_context = nested_context_arg;
     auto fds = nested_context->platform_fd_items();
@@ -53,11 +52,9 @@ mgm::NativePlatform::~NativePlatform()
     finish_internal_native_display();
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator(
-        std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
+std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator()
 {
-    return std::make_shared<mgm::BufferAllocator>(
-        gbm.device, buffer_initializer, mgm::BypassOption::prohibited);
+    return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited);
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::NativePlatform::connection_ipc_package()
@@ -120,9 +117,11 @@ void mgm::NativePlatform::fill_buffer_package(
     }
 }
 
-extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& /*report*/)
+extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(
+    std::shared_ptr<mg::DisplayReport> const&,
+    std::shared_ptr<mg::NestedContext> const& nested_context)
 {
-    return std::make_shared<mgm::NativePlatform>();
+    return std::make_shared<mgm::NativePlatform>(nested_context);
 }
 
 namespace

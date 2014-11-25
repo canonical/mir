@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,20 +16,20 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir/run_mir.h"
-#include "mir/abnormal_exit.h"
+#include "mir/server.h"
+#include "mir/report_exception.h"
+
+#include "example_input_event_filter.h"
 #include "mir/input/composite_event_filter.h"
-#include "server_configuration.h"
 
-#include <boost/exception/diagnostic_information.hpp>
-
+#include <cstdlib>
 #include <iostream>
 
+namespace me = mir::examples;
 namespace mi = mir::input;
 
 namespace
 {
-
 struct PrintingEventFilter : public mi::EventFilter
 {
     void print_motion_event(MirMotionEvent const& ev)
@@ -62,48 +62,29 @@ struct PrintingEventFilter : public mi::EventFilter
         return false;
     }
 };
-
-struct DemoServerConfiguration : public mir::examples::ServerConfiguration
-{
-    DemoServerConfiguration(int argc, char const* argv[])
-      : ServerConfiguration(argc, argv),
-        event_filter(std::make_shared<PrintingEventFilter>())
-    {
-    }
-
-    std::shared_ptr<mi::CompositeEventFilter> the_composite_event_filter() override
-    {
-        auto composite_filter = ServerConfiguration::the_composite_event_filter();
-        composite_filter->prepend(event_filter);
-        return composite_filter;
-    }
-
-    std::shared_ptr<PrintingEventFilter> const event_filter;
-};
-
-}
-
-
-void my_write_to_log(int /*prio*/, char const* buffer)
-{
-    printf("%s\n", buffer);
 }
 
 int main(int argc, char const* argv[])
 try
 {
-    DemoServerConfiguration config(argc, argv);
+    mir::Server server;
 
-    mir::run_mir(config, [](mir::DisplayServer&) {/* empty init */});
-    return 0;
+    // Set up Ctrl+Alt+BkSp => quit
+    auto const quit_filter = std::make_shared<me::QuitFilter>([&]{ server.stop(); });
+    server.add_init_callback([&] { server.the_composite_event_filter()->append(quit_filter); });
+
+    // Set up a PrintingEventFilter
+    auto const printing_filter = std::make_shared<PrintingEventFilter>();
+    server.add_init_callback([&] { server.the_composite_event_filter()->prepend(printing_filter); });
+
+    // Provide the command line and run the server
+    server.set_command_line(argc, argv);
+    server.apply_settings();
+    server.run();
+    return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
-catch (mir::AbnormalExit const& error)
+catch (...)
 {
-    std::cerr << error.what() << std::endl;
-    return 1;
-}
-catch (std::exception const& error)
-{
-    std::cerr << "ERROR: " << boost::diagnostic_information(error) << std::endl;
-    return 1;
+    mir::report_exception(std::cerr);
+    return EXIT_FAILURE;
 }

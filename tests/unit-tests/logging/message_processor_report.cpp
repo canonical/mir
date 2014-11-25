@@ -26,20 +26,24 @@
 
 using namespace testing;
 
+namespace ml  = mir::logging;
+namespace mrl = mir::report::logging;
+
 namespace
 {
 class MockClock : public mir::time::Clock
 {
 public:
-    MOCK_CONST_METHOD0(sample, mir::time::Timestamp());
+    MOCK_CONST_METHOD0(now, mir::time::Timestamp());
+    MOCK_CONST_METHOD1(min_wait_until, mir::time::Duration(mir::time::Timestamp));
 
     ~MockClock() noexcept(true) {}
 };
 
-class MockLogger : public mir::logging::Logger
+class MockLogger : public ml::Logger
 {
 public:
-    MOCK_METHOD3(log, void(Severity severity, const std::string& message, const std::string& component));
+    MOCK_METHOD3(log, void(ml::Severity severity, const std::string& message, const std::string& component));
     ~MockLogger() noexcept(true) {}
 };
 
@@ -54,7 +58,7 @@ struct MessageProcessorReport : public Test
         report(mir::test::fake_shared(logger), mir::test::fake_shared(clock))
     {
         EXPECT_CALL(logger, log(
-            mir::logging::Logger::debug,
+            ml::Severity::debug,
             _,
             "frontend::MessageProcessor")).Times(AnyNumber());
     }
@@ -64,9 +68,9 @@ struct MessageProcessorReport : public Test
 TEST_F(MessageProcessorReport, everything_fine)
 {
     mir::time::Timestamp a_time;
-    EXPECT_CALL(clock, sample()).Times(2).WillRepeatedly(Return(a_time));
+    EXPECT_CALL(clock, now()).Times(2).WillRepeatedly(Return(a_time));
     EXPECT_CALL(logger, log(
-        mir::logging::Logger::informational,
+        ml::Severity::informational,
         EndsWith(": a_function(), elapsed=0µs"),
         "frontend::MessageProcessor")).Times(1);
 
@@ -79,11 +83,11 @@ TEST_F(MessageProcessorReport, slow_call)
     mir::time::Timestamp a_time;
     mir::time::Timestamp another_time = a_time + std::chrono::microseconds(1234);
 
-    EXPECT_CALL(clock, sample()).Times(2)
+    EXPECT_CALL(clock, now()).Times(2)
     .WillOnce(Return(a_time)).WillOnce(Return(another_time));
 
     EXPECT_CALL(logger, log(
-        mir::logging::Logger::informational,
+        ml::Severity::informational,
         EndsWith("elapsed=1234µs"),
         "frontend::MessageProcessor")).Times(1);
 
@@ -94,9 +98,9 @@ TEST_F(MessageProcessorReport, slow_call)
 TEST_F(MessageProcessorReport, reports_disconnect)
 {
     mir::time::Timestamp a_time;
-    EXPECT_CALL(clock, sample()).Times(2).WillRepeatedly(Return(a_time));
+    EXPECT_CALL(clock, now()).Times(2).WillRepeatedly(Return(a_time));
     EXPECT_CALL(logger, log(
-        mir::logging::Logger::informational,
+        ml::Severity::informational,
         HasSubstr("(disconnecting)"),
         "frontend::MessageProcessor")).Times(1);
 
@@ -109,9 +113,9 @@ TEST_F(MessageProcessorReport, reports_error_during_call)
     const char* testError = "***Test error***";
 
     mir::time::Timestamp a_time;
-    EXPECT_CALL(clock, sample()).Times(2).WillRepeatedly(Return(a_time));
+    EXPECT_CALL(clock, now()).Times(2).WillRepeatedly(Return(a_time));
     EXPECT_CALL(logger, log(
-        mir::logging::Logger::informational,
+        ml::Severity::informational,
         HasSubstr(testError),
         "frontend::MessageProcessor")).Times(1);
 
@@ -122,9 +126,9 @@ TEST_F(MessageProcessorReport, reports_error_during_call)
 
 TEST_F(MessageProcessorReport, reports_unknown_method)
 {
-    EXPECT_CALL(clock, sample()).Times(0);
+    EXPECT_CALL(clock, now()).Times(0);
     EXPECT_CALL(logger, log(
-        mir::logging::Logger::warning,
+        ml::Severity::warning,
         HasSubstr("UNKNOWN method=\"unknown_function_name\""),
         "frontend::MessageProcessor")).Times(1);
 
@@ -136,7 +140,7 @@ TEST_F(MessageProcessorReport, reports_error_deserializing_call)
     const char* testError = "***Test error***";
 
     EXPECT_CALL(logger, log(
-        mir::logging::Logger::informational,
+        ml::Severity::informational,
         HasSubstr(testError),
         "frontend::MessageProcessor")).Times(1);
 
@@ -146,14 +150,14 @@ TEST_F(MessageProcessorReport, reports_error_deserializing_call)
 TEST_F(MessageProcessorReport, logs_a_debug_message_when_invocation_starts)
 {
     mir::time::Timestamp a_time;
-    EXPECT_CALL(clock, sample()).Times(AnyNumber()).WillRepeatedly(Return(a_time));
+    EXPECT_CALL(clock, now()).Times(AnyNumber()).WillRepeatedly(Return(a_time));
     EXPECT_CALL(logger, log(
-        mir::logging::Logger::informational,
+        ml::Severity::informational,
         HasSubstr("Calls outstanding on exit:"),
         "frontend::MessageProcessor")).Times(AnyNumber());
 
     EXPECT_CALL(logger, log(
-        mir::logging::Logger::debug,
+        ml::Severity::debug,
         _,
         "frontend::MessageProcessor")).Times(1);
 
@@ -163,10 +167,10 @@ TEST_F(MessageProcessorReport, logs_a_debug_message_when_invocation_starts)
 TEST_F(MessageProcessorReport, logs_incomplete_calls_on_destruction)
 {
     mir::time::Timestamp a_time;
-    EXPECT_CALL(clock, sample()).Times(AnyNumber()).WillRepeatedly(Return(a_time));
+    EXPECT_CALL(clock, now()).Times(AnyNumber()).WillRepeatedly(Return(a_time));
 
     EXPECT_CALL(logger, log(
-        mir::logging::Logger::informational,
+        ml::Severity::informational,
         HasSubstr("Calls outstanding on exit:"),
         "frontend::MessageProcessor")).Times(1);
 

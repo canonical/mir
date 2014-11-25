@@ -101,13 +101,20 @@ try
     if (!invocation.has_protocol_version() || invocation.protocol_version() != 1)
         BOOST_THROW_EXCEPTION(std::runtime_error("Unsupported protocol version"));
 
+    std::vector<mir::Fd> fds;
+    if (invocation.side_channel_fds() > 0)
+    {
+        fds.resize(invocation.side_channel_fds());
+        message_receiver->receive_fds(fds);
+    }
+
     if (!client_pid)
     {
         client_pid = message_receiver->client_creds().pid();
         processor->client_pid(client_pid);
     }
 
-    if (processor->dispatch(invocation))
+    if (processor->dispatch(invocation, fds))
     {
         read_next_message();
     }

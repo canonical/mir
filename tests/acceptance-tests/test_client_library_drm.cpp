@@ -18,8 +18,7 @@
 
 #include "mir_toolkit/mir_client_library_drm.h"
 
-#include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/connected_client_headless_server.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -27,7 +26,7 @@
 namespace mtf = mir_test_framework;
 using namespace testing;
 
-using MirClientLibraryDrmTest = mtf::BasicClientServerFixture<mtf::StubbedServerConfiguration>;
+using MirClientLibraryDrmTest = mtf::ConnectedClientHeadlessServer;
 
 TEST_F(MirClientLibraryDrmTest, sets_gbm_device_in_platform_data)
 {

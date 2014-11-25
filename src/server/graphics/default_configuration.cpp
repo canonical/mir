@@ -23,9 +23,9 @@
 #include "default_display_configuration_policy.h"
 #include "nested/mir_client_host_connection.h"
 #include "nested/nested_platform.h"
+#include "mir/graphics/nested_context.h"
 #include "offscreen/display.h"
 
-#include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/cursor.h"
 #include "program_factory.h"
@@ -42,26 +42,26 @@
 #include <map>
 
 namespace mg = mir::graphics;
-
-std::shared_ptr<mg::BufferInitializer>
-mir::DefaultServerConfiguration::the_buffer_initializer()
-{
-    return buffer_initializer(
-        []()
-        {
-             return std::make_shared<mg::NullBufferInitializer>();
-        });
-}
+namespace mgn = mir::graphics::nested;
 
 std::shared_ptr<mg::DisplayConfigurationPolicy>
 mir::DefaultServerConfiguration::the_display_configuration_policy()
 {
     return display_configuration_policy(
-        []
+        [this]
         {
-            return std::make_shared<mg::DefaultDisplayConfigurationPolicy>();
+            return wrap_display_configuration_policy(
+                std::make_shared<mg::DefaultDisplayConfigurationPolicy>());
         });
 }
+
+std::shared_ptr<mg::DisplayConfigurationPolicy>
+mir::DefaultServerConfiguration::wrap_display_configuration_policy(
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
+{
+    return wrapped;
+}
+
 
 std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
@@ -84,6 +84,38 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
         });
 }
 
+namespace
+{
+
+class MirConnectionNestedContext : public mg::NestedContext
+{
+public:
+    MirConnectionNestedContext(std::shared_ptr<mgn::HostConnection> const& connection)
+        : connection{connection}
+    {
+    }
+
+    std::vector<int> platform_fd_items()
+    {
+        return connection->platform_fd_items();
+    }
+
+    void drm_auth_magic(int magic)
+    {
+        connection->drm_auth_magic(magic);
+    }
+
+    void drm_set_gbm_device(struct gbm_device* dev)
+    {
+        connection->drm_set_gbm_device(dev);
+    }
+
+private:
+    std::shared_ptr<mgn::HostConnection> const connection;
+};
+
+}
+
 std::shared_ptr<mg::NativePlatform>  mir::DefaultServerConfiguration::the_graphics_native_platform()
 {
     return graphics_native_platform(
@@ -91,8 +123,8 @@ std::shared_ptr<mg::NativePlatform>  mir::DefaultServerConfiguration::the_graphi
         {
             auto graphics_lib = mir::load_library(the_options()->get<std::string>(options::platform_graphics_lib));
             auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
-
-            return create_native_platform(the_display_report());
+            auto context = std::make_shared<MirConnectionNestedContext>(the_host_connection());
+            return create_native_platform(the_display_report(), context);
         });
 }
 
@@ -102,7 +134,7 @@ mir::DefaultServerConfiguration::the_buffer_allocator()
     return buffer_allocator(
         [&]()
         {
-            return the_graphics_platform()->create_buffer_allocator(the_buffer_initializer());
+            return the_graphics_platform()->create_buffer_allocator();
         });
 }
 

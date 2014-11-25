@@ -25,12 +25,17 @@ namespace mir
 {
 namespace graphics
 {
-class Platform;
+class PlatformIpcOperations;
 class GraphicBufferAllocator;
 }
 namespace input
 {
 class CursorImages;
+}
+
+namespace scene
+{
+class CoordinateTranslator;
 }
 
 namespace frontend
@@ -47,12 +52,13 @@ public:
     explicit DefaultIpcFactory(
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<SessionMediatorReport> const& sm_report,
-        std::shared_ptr<graphics::Platform> const& graphics_platform,
+        std::shared_ptr<graphics::PlatformIpcOperations> const& platform_ipc_operations,
         std::shared_ptr<DisplayChanger> const& display_changer,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<Screencast> const& screencast,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-        std::shared_ptr<input::CursorImages> const& cursor_images);
+        std::shared_ptr<input::CursorImages> const& cursor_images,
+        std::shared_ptr<scene::CoordinateTranslator> const& translator);
 
     std::shared_ptr<detail::DisplayServer> make_ipc_server(
         SessionCredentials const& creds,
@@ -63,7 +69,7 @@ public:
 
     virtual std::shared_ptr<detail::DisplayServer> make_mediator(
         std::shared_ptr<Shell> const& shell,
-        std::shared_ptr<graphics::Platform> const& graphics_platform,
+        std::shared_ptr<graphics::PlatformIpcOperations> const& platform_ipc_operations,
         std::shared_ptr<DisplayChanger> const& changer,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<SessionMediatorReport> const& sm_report,
@@ -77,12 +83,13 @@ private:
     std::shared_ptr<Shell> const no_prompt_shell;
     std::shared_ptr<SessionMediatorReport> const sm_report;
     std::shared_ptr<ResourceCache> const cache;
-    std::shared_ptr<graphics::Platform> const graphics_platform;
+    std::shared_ptr<graphics::PlatformIpcOperations> const platform_ipc_operations;
     std::shared_ptr<DisplayChanger> const display_changer;
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<Screencast> const screencast;
     std::shared_ptr<SessionAuthorizer> const session_authorizer;
     std::shared_ptr<input::CursorImages> const cursor_images;
+    std::shared_ptr<scene::CoordinateTranslator> const translator;
 };
 }
 }

@@ -25,59 +25,21 @@
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
 
-namespace
-{
-
-class MirConnectionNestedContext : public mg::NestedContext
-{
-public:
-    MirConnectionNestedContext(std::shared_ptr<mgn::HostConnection> const& connection)
-        : connection{connection}
-    {
-    }
-
-    std::vector<int> platform_fd_items()
-    {
-        return connection->platform_fd_items();
-    }
-
-    void drm_auth_magic(int magic)
-    {
-        connection->drm_auth_magic(magic);
-    }
-
-    void drm_set_gbm_device(struct gbm_device* dev)
-    {
-        connection->drm_set_gbm_device(dev);
-    }
-
-private:
-    std::shared_ptr<mgn::HostConnection> const connection;
-};
-
-}
-
 mgn::NestedPlatform::NestedPlatform(
     std::shared_ptr<HostConnection> const& connection,
     std::shared_ptr<input::InputDispatcher> const& dispatcher,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::NativePlatform> const& native_platform) :
-native_platform{native_platform},
-dispatcher{dispatcher},
-display_report{display_report},
-connection{connection}
-{
-    native_platform->initialize(std::make_shared<MirConnectionNestedContext>(connection));
-}
-
-mgn::NestedPlatform::~NestedPlatform() noexcept
+    native_platform{native_platform},
+    dispatcher{dispatcher},
+    display_report{display_report},
+    connection{connection}
 {
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_allocator(
-        std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
+std::shared_ptr<mg::GraphicBufferAllocator> mgn::NestedPlatform::create_buffer_allocator()
 {
-    return native_platform->create_buffer_allocator(buffer_initializer);
+    return native_platform->create_buffer_allocator();
 }
 
 std::shared_ptr<mg::BufferWriter> mgn::NestedPlatform::make_buffer_writer()
@@ -108,16 +70,23 @@ public:
         native_platform{native_platform}
     {}
     void pack_buffer(
-        mg::BufferIpcMessage& message, mg::Buffer const& buffer, mg::BufferIpcMsgType msg_type) const
+        mg::BufferIpcMessage& message, mg::Buffer const& buffer, mg::BufferIpcMsgType msg_type) const override
     {
         native_platform->fill_buffer_package(&message, &buffer, msg_type);
     }
-    void unpack_buffer(mg::BufferIpcMessage&, mg::Buffer const&) const {}
 
-    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package()
+    void unpack_buffer(mg::BufferIpcMessage&, mg::Buffer const&) const override {}
+
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
         return native_platform->connection_ipc_package();
     }
+
+    mg::PlatformIPCPackage platform_operation(unsigned int const, mg::PlatformIPCPackage const&) override
+    {
+        return mg::PlatformIPCPackage();
+    }
+
 private:
     std::shared_ptr<mg::NativePlatform> const native_platform;
 };

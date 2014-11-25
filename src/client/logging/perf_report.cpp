@@ -18,9 +18,10 @@
 
 #include "perf_report.h"
 #include "mir/logging/logger.h"
-#include "mir/time/high_resolution_clock.h"
+#include "mir/time/steady_clock.h"
 
 using namespace mir::client;
+namespace ml = mir::logging;
 
 namespace
 {
@@ -30,7 +31,7 @@ const char * const component = "perf"; // Note context is already within client
 logging::PerfReport::PerfReport(
         std::shared_ptr<mir::logging::Logger> const& logger)
     : PeriodicPerfReport(std::chrono::seconds(1),
-                         std::make_shared<mir::time::HighResolutionClock>())
+                         std::make_shared<mir::time::SteadyClock>())
     , logger(logger)
 {
 }
@@ -49,5 +50,5 @@ void logging::PerfReport::display(const char *name, long fps100,
              nbuffers
              );
 
-    logger->log(mir::logging::Logger::informational, msg, component);
+    logger->log(ml::Severity::informational, msg, component);
 }

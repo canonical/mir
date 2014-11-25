@@ -57,32 +57,32 @@ public:
         return buffer_;
     }
     
-    geom::Rectangle screen_position() const
+    geom::Rectangle screen_position() const override
     {
         return {position, buffer_->size()};
     }
     
-    float alpha() const
+    float alpha() const override
     {
         return 1.0;
     }
     
-    glm::mat4 transformation() const
+    glm::mat4 transformation() const override
     {
         return glm::mat4();
     }
 
-    bool visible() const
+    bool visible() const override
     {
         return true;
     }
     
-    bool shaped() const
+    bool shaped() const override
     {
         return true;
     }
 
-    int buffers_ready_for_compositor() const
+    int buffers_ready_for_compositor() const override
     {
         return 1;
     }

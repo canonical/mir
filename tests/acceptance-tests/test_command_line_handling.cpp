@@ -16,18 +16,14 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/run_mir.h"
-#include "mir/default_server_configuration.h"
-#include "mir/options/default_configuration.h"
+#include "mir_test_framework/headless_test.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 using namespace testing;
 
-namespace mo = mir::options;
-
-struct CommandLineHandling : Test
+struct CommandLineHandling : mir_test_framework::HeadlessTest
 {
     MOCK_METHOD1(callback, void(std::vector<char const*> const&));
 
@@ -38,9 +34,6 @@ struct CommandLineHandling : Test
             std::vector<char const*> const copy{argv, argv+argc};
             callback(copy);
         };
-
-    void invoke_parsing(mo::Configuration& config) { config.the_options(); }
-
 };
 
 TEST_F(CommandLineHandling, valid_options_are_accepted_by_default_callback)
@@ -50,9 +43,9 @@ TEST_F(CommandLineHandling, valid_options_are_accepted_by_default_callback)
 
     int const argc = std::distance(std::begin(argv), std::end(argv));
 
-    mo::DefaultConfiguration config{argc, argv};
+    server.set_command_line(argc, argv);
 
-    invoke_parsing(config);
+    server.apply_settings();
 }
 
 TEST_F(CommandLineHandling, unrecognised_tokens_cause_default_callback_to_throw)
@@ -62,9 +55,9 @@ TEST_F(CommandLineHandling, unrecognised_tokens_cause_default_callback_to_throw)
 
     int const argc = std::distance(std::begin(argv), std::end(argv));
 
-    mo::DefaultConfiguration config{argc, argv};
+    server.set_command_line(argc, argv);
 
-    EXPECT_THROW(invoke_parsing(config), std::runtime_error);
+    EXPECT_THROW(server.apply_settings(), std::runtime_error);
 }
 
 TEST_F(CommandLineHandling, valid_options_are_not_passed_to_callback)
@@ -74,11 +67,12 @@ TEST_F(CommandLineHandling, valid_options_are_not_passed_to_callback)
 
     int const argc = std::distance(std::begin(argv), std::end(argv));
 
-    EXPECT_CALL(*this, callback(ElementsAre()));
+    server.set_command_line_handler(callback_functor);
+    server.set_command_line(argc, argv);
 
-    mo::DefaultConfiguration config{argc, argv, callback_functor};
+    EXPECT_CALL(*this, callback(_)).Times(Exactly(0));
 
-    invoke_parsing(config);
+    server.apply_settings();
 }
 
 TEST_F(CommandLineHandling, unrecognised_tokens_are_passed_to_callback)
@@ -88,9 +82,10 @@ TEST_F(CommandLineHandling, unrecognised_tokens_are_passed_to_callback)
 
     int const argc = std::distance(std::begin(argv), std::end(argv));
 
+    server.set_command_line_handler(callback_functor);
+    server.set_command_line(argc, argv);
+
     EXPECT_CALL(*this, callback(ElementsAre(StrEq("--hello"), StrEq("world"))));
 
-    mo::DefaultConfiguration config{argc, argv, callback_functor};
-
-    invoke_parsing(config);
+    server.apply_settings();
 }

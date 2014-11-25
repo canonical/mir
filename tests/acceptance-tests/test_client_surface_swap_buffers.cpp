@@ -18,8 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_doubles/null_display_buffer_compositor_factory.h"
 #include "mir_test/signal.h"
 
@@ -28,47 +27,62 @@
 namespace mtf = mir_test_framework;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
-namespace mc = mir::compositor;
+
+using namespace testing;
 
 namespace
 {
-
-struct StubServerConfig : mtf::StubbedServerConfiguration
-{
-    auto the_display_buffer_compositor_factory()
-        -> std::shared_ptr<mc::DisplayBufferCompositorFactory> override
-    {
-        return std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
-    }
-};
-
 void swap_buffers_callback(MirSurface*, void* ctx)
 {
     auto buffers_swapped = static_cast<mt::Signal*>(ctx);
     buffers_swapped->raise();
 }
 
-using MirSurfaceSwapBuffersTest = mtf::BasicClientServerFixture<StubServerConfig>;
+struct ConnectedClientWithASurface : mtf::ConnectedClientHeadlessServer
+{
+    MirSurface* surface{nullptr};
 
+    void SetUp() override
+    {
+        mtf::ConnectedClientHeadlessServer::SetUp();
+
+        MirSurfaceParameters request_params =
+        {
+            __PRETTY_FUNCTION__,
+            640, 480,
+            mir_pixel_format_abgr_8888,
+            mir_buffer_usage_hardware,
+            mir_display_output_id_invalid
+        };
+
+        surface = mir_connection_create_surface_sync(connection, &request_params);
+        ASSERT_TRUE(mir_surface_is_valid(surface));
+    }
+
+    void TearDown() override
+    {
+        mir_surface_release_sync(surface);
+        mtf::ConnectedClientHeadlessServer::TearDown();
+    }
+};
+
+struct SurfaceSwapBuffers : ConnectedClientWithASurface
+{
+    void SetUp() override
+    {
+        server.override_the_display_buffer_compositor_factory([]
+        {
+            return std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
+        });
+
+        ConnectedClientWithASurface::SetUp();
+    }
+};
 }
 
-TEST_F(MirSurfaceSwapBuffersTest, swap_buffers_does_not_block_when_surface_is_not_composited)
+TEST_F(SurfaceSwapBuffers, does_not_block_when_surface_is_not_composited)
 {
-    using namespace testing;
-
-    MirSurfaceParameters request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-
-    auto const surface = mir_connection_create_surface_sync(connection, &request_params);
-    ASSERT_TRUE(mir_surface_is_valid(surface));
-
-    for (int i = 0; i < 10; ++i)
+    for (int i = 0; i != 10; ++i)
     {
         mt::Signal buffers_swapped;
 
@@ -80,6 +94,4 @@ TEST_F(MirSurfaceSwapBuffersTest, swap_buffers_does_not_block_when_surface_is_no
          */
         ASSERT_TRUE(buffers_swapped.wait_for(std::chrono::seconds{5}));
     }
-
-    mir_surface_release_sync(surface);
 }

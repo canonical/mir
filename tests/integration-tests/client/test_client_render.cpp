@@ -19,7 +19,6 @@
 #include "mir_test_framework/process.h"
 
 #include "mir/graphics/buffer_properties.h"
-#include "mir/graphics/buffer_initializer.h"
 #include "src/platform/graphics/android/buffer.h"
 #include "mir/graphics/android/native_buffer.h"
 #include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
@@ -29,6 +28,7 @@
 #include "examples/testdraw/patterns.h"
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/test_protobuf_server.h"
+#include "mir_test/validity_matchers.h"
 
 #include "mir/frontend/connector.h"
 
@@ -56,10 +56,6 @@ static uint32_t pattern1 [2][2] = {{0xFFFFFFFF, 0xFFFF0000},
 static mtd::DrawPatternCheckered<2,2> draw_pattern0(pattern0);
 static mtd::DrawPatternCheckered<2,2> draw_pattern1(pattern1);
 static const char socket_file[] = "./test_client_ipc_render_socket";
-
-void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
-{
-}
 
 struct TestClient
 {
@@ -97,7 +93,9 @@ struct TestClient
             mir_buffer_usage_software, mir_display_output_id_invalid
         };
         auto connection = mir_connect_sync(socket_file, "test_renderer");
+        EXPECT_THAT(connection, IsValid());
         auto surface = mir_connection_create_surface_sync(connection, &surface_parameters);
+        EXPECT_THAT(surface, IsValid());
         MirGraphicsRegion graphics_region;
         for(int i=0u; i < num_frames; i++)
         {
@@ -114,9 +112,6 @@ struct TestClient
         }
 
         mir_surface_release_sync(surface);
-        // Clear the lifecycle callback in order not to get SIGHUP by the
-        // default lifecycle handler during connection teardown
-        mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
         mir_connection_release(connection);
         return 0;
     }
@@ -127,6 +122,7 @@ struct TestClient
         process_sync.wait_for_signal_ready_for();
 
         auto connection = mir_connect_sync(socket_file, "test_renderer");
+        EXPECT_THAT(connection, IsValid());
 
         /* set up egl context */
         int major, minor, n;
@@ -145,7 +141,9 @@ struct TestClient
         eglInitialize(egl_display, &major, &minor);
         eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
 
-        auto mir_surface = create_mir_surface(connection, egl_display, egl_config);
+        auto mir_surface = create_mir_surface(connection, egl_display, egl_config);        
+        EXPECT_THAT(mir_surface, IsValid());
+
         auto native_window = static_cast<EGLNativeWindowType>(
             mir_surface_get_egl_native_window(mir_surface));
 
@@ -174,9 +172,6 @@ struct TestClient
         }
 
         mir_surface_release_sync(mir_surface);
-        // Clear the lifecycle callback in order not to get SIGHUP by the
-        // default lifecycle handler during connection teardown
-        mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
         mir_connection_release(connection);
         return 0;
     }
@@ -192,8 +187,7 @@ struct StubServerGenerator : public mt::StubServerTool
 {
     StubServerGenerator()
     {
-        auto initializer = std::make_shared<mg::NullBufferInitializer>();
-        allocator = std::make_shared<mga::AndroidGraphicBufferAllocator> (initializer);
+        allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
         auto size = geom::Size{test_width, test_height};
         surface_pf = mir_pixel_format_abgr_8888;
         last_posted = allocator->alloc_buffer_platform(size, surface_pf, mga::BufferUsage::use_hardware);
@@ -222,9 +216,10 @@ struct StubServerGenerator : public mt::StubServerTool
 
         response->mutable_buffer()->set_fds_on_side_channel(1);
         native_handle_t const* native_handle = buf->handle();
-        for(auto i=0; i<native_handle->numFds; i++)
+        for (auto i = 0; i < native_handle->numFds; i++)
             response->mutable_buffer()->add_fd(dup(native_handle->data[i]));
-        for(auto i=0; i < native_handle->numInts; i++)
+        response->mutable_buffer()->add_data(static_cast<int>(mga::BufferFlag::unfenced));
+        for (auto i = 0; i < native_handle->numInts; i++)
             response->mutable_buffer()->add_data(native_handle->data[native_handle->numFds+i]);
 
         std::unique_lock<std::mutex> lock(guard);
@@ -234,9 +229,9 @@ struct StubServerGenerator : public mt::StubServerTool
         done->Run();
     }
 
-    virtual void next_buffer(
+    virtual void exchange_buffer(
         ::google::protobuf::RpcController* /*controller*/,
-        ::mir::protobuf::SurfaceId const* /*request*/,
+        ::mir::protobuf::BufferRequest const* /*request*/,
         ::mir::protobuf::Buffer* response,
         ::google::protobuf::Closure* done)
     {
@@ -254,9 +249,10 @@ struct StubServerGenerator : public mt::StubServerTool
         response->set_width(size.width.as_int());
         response->set_height(size.height.as_int());
 
-        for(auto i=0; i<native_handle->numFds; i++)
+        for (auto i = 0; i < native_handle->numFds; i++)
             response->add_fd(dup(native_handle->data[i]));
-        for(auto i=0; i<native_handle->numInts; i++)
+        response->add_data(static_cast<int>(mga::BufferFlag::unfenced));
+        for (auto i = 0; i < native_handle->numInts; i++)
             response->add_data(native_handle->data[native_handle->numFds+i]);
         done->Run();
     }

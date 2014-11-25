@@ -17,8 +17,8 @@
  */
 
 #include "mir/graphics/display.h"
-#include "mir/graphics/drm_authenticator.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/buffer_basic.h"
 
 #include <boost/exception/errinfo_errno.hpp>
@@ -44,16 +44,34 @@ namespace
 
 char const* const mir_test_socket = mtf::test_socket_file().c_str();
 
-class MockAuthenticatingPlatform : public mtd::NullPlatform, public mg::DRMAuthenticator
+struct MockAuthenticatingIpcOps : public mg::PlatformIpcOperations
+{
+    MOCK_CONST_METHOD3(pack_buffer, void(mg::BufferIpcMessage&, mg::Buffer const&, mg::BufferIpcMsgType));
+    MOCK_CONST_METHOD2(unpack_buffer, void(mg::BufferIpcMessage&, mg::Buffer const&));
+    MOCK_METHOD0(connection_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
+    MOCK_METHOD2(platform_operation, mg::PlatformIPCPackage(
+        unsigned int const, mg::PlatformIPCPackage const&));
+};
+
+class StubAuthenticatingPlatform : public mtd::NullPlatform
 {
 public:
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
-        std::shared_ptr<mg::BufferInitializer> const& /*buffer_initializer*/) override
+    StubAuthenticatingPlatform(std::shared_ptr<mg::PlatformIpcOperations> const& ops) :
+        ops{ops}
+    {
+    }
+
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
     {
         return std::make_shared<mtd::StubBufferAllocator>();
     }
+    std::shared_ptr<mg::PlatformIpcOperations> make_ipc_operations() const override
+    {
+        return ops;
+    }
 
-    MOCK_METHOD1(drm_auth_magic, void(unsigned int));
+private:
+    std::shared_ptr<mg::PlatformIpcOperations> const ops;
 };
 
 void connection_callback(MirConnection* connection, void* context)
@@ -81,15 +99,20 @@ TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
             using namespace testing;
             if (!platform)
             {
-                platform = std::make_shared<MockAuthenticatingPlatform>();
-                EXPECT_CALL(*platform, drm_auth_magic(magic))
-                    .Times(1);
+                mg::PlatformIPCPackage pkg{{0},{}};
+                auto ipc_ops = std::make_shared<NiceMock<MockAuthenticatingIpcOps>>();
+                EXPECT_CALL(*ipc_ops, platform_operation(_,_))
+                    .Times(1)
+                    .WillRepeatedly(Return(pkg));
+                ON_CALL(*ipc_ops, connection_ipc_package())
+                    .WillByDefault(Return(std::make_shared<mg::PlatformIPCPackage>()));
+                platform = std::make_shared<StubAuthenticatingPlatform>(ipc_ops);
             }
 
             return platform;
         }
 
-        std::shared_ptr<MockAuthenticatingPlatform> platform;
+        std::shared_ptr<StubAuthenticatingPlatform> platform;
     } server_config;
 
     launch_server_process(server_config);
@@ -131,16 +154,17 @@ TEST_F(BespokeDisplayServerTestFixture, drm_auth_magic_platform_error_reaches_cl
             using namespace testing;
             if (!platform)
             {
-                platform = std::make_shared<MockAuthenticatingPlatform>();
-                EXPECT_CALL(*platform, drm_auth_magic(magic))
+                auto ipc_ops = std::make_shared<NiceMock<MockAuthenticatingIpcOps>>();
+                EXPECT_CALL(*ipc_ops, platform_operation(_,_))
                     .WillOnce(Throw(::boost::enable_error_info(std::exception())
                         << boost::errinfo_errno(auth_magic_error)));
+                platform = std::make_shared<StubAuthenticatingPlatform>(ipc_ops);
             }
 
             return platform;
         }
 
-        std::shared_ptr<MockAuthenticatingPlatform> platform;
+        std::shared_ptr<StubAuthenticatingPlatform> platform;
     } server_config;
 
     launch_server_process(server_config);

@@ -17,13 +17,13 @@
  */
 
 #include "session_mediator.h"
-#include "client_buffer_tracker.h"
 
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
+#include "mir/scene/coordinate_translator.h"
 #include "mir/frontend/display_changer.h"
 #include "resource_cache.h"
 #include "mir_toolkit/common.h"
@@ -35,8 +35,8 @@
 #include "mir/frontend/display_changer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/pixel_format_utils.h"
+#include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/graphics/drm_authenticator.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
@@ -64,8 +64,8 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 
 mf::SessionMediator::SessionMediator(
-    std::shared_ptr<frontend::Shell> const& shell,
-    std::shared_ptr<graphics::Platform> const & graphics_platform,
+    std::shared_ptr<mf::Shell> const& shell,
+    std::shared_ptr<mg::PlatformIpcOperations> const& ipc_operations,
     std::shared_ptr<mf::DisplayChanger> const& display_changer,
     std::vector<MirPixelFormat> const& surface_pixel_formats,
     std::shared_ptr<SessionMediatorReport> const& report,
@@ -73,11 +73,11 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<MessageResourceCache> const& resource_cache,
     std::shared_ptr<Screencast> const& screencast,
     ConnectionContext const& connection_context,
-    std::shared_ptr<mi::CursorImages> const& cursor_images) :
+    std::shared_ptr<mi::CursorImages> const& cursor_images,
+    std::shared_ptr<scene::CoordinateTranslator> const& translator) :
     client_pid_(0),
     shell(shell),
-    graphics_platform(graphics_platform),
-    ipc_operations(graphics_platform->make_ipc_operations()),
+    ipc_operations(ipc_operations),
     surface_pixel_formats(surface_pixel_formats),
     display_changer(display_changer),
     report(report),
@@ -86,6 +86,7 @@ mf::SessionMediator::SessionMediator(
     screencast(screencast),
     connection_context(connection_context),
     cursor_images(cursor_images),
+    translator{translator},
     surface_tracker{static_cast<size_t>(client_buffer_cache_size)}
 {
 }
@@ -146,14 +147,6 @@ void mf::SessionMediator::advance_buffer(
     std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete)
 {
     auto client_buffer = surface_tracker.last_buffer(surf_id);
-    if (client_buffer)
-    {
-        //TODO: once we are doing an exchange_buffer, we should use the request buffer
-        static mir::protobuf::Buffer dummy_raw_msg;
-        mfd::ProtobufBufferPacker dummy_msg{&dummy_raw_msg};
-        ipc_operations->unpack_buffer(dummy_msg, *client_buffer);
-    }
-
     surface.swap_buffers(
         client_buffer, 
         [this, surf_id, complete](mg::Buffer* new_buffer)
@@ -266,6 +259,9 @@ void mf::SessionMediator::exchange_buffer(
     mf::SurfaceId const surface_id{request->id().value()};
     mg::BufferID const buffer_id{static_cast<uint32_t>(request->buffer().buffer_id())};
 
+    mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
+    ipc_operations->unpack_buffer(request_msg, *surface_tracker.last_buffer(surface_id));
+
     auto const lock = std::make_shared<std::unique_lock<std::mutex>>(session_mutex);
     auto const session = weak_session.lock();
     if (!session)
@@ -360,7 +356,7 @@ void mf::SessionMediator::configure_surface(
 
         report->session_configure_surface_called(session->name());
 
-        auto const id = frontend::SurfaceId(request->surfaceid().value());
+        auto const id = mf::SurfaceId(request->surfaceid().value());
         int value = request->ivalue();
         auto const surface = session->get_surface(id);
         int newvalue = surface->configure(attrib, value);
@@ -477,7 +473,7 @@ void mf::SessionMediator::screencast_buffer(
 
 std::function<void(std::shared_ptr<mf::Session> const&)> mf::SessionMediator::prompt_session_connect_handler() const
 {
-    return [this](std::shared_ptr<frontend::Session> const& session)
+    return [this](std::shared_ptr<mf::Session> const& session)
     {
         auto prompt_session = weak_prompt_session.lock();
         if (prompt_session.get() == nullptr)
@@ -503,7 +499,7 @@ void mf::SessionMediator::configure_cursor(
 
         report->session_configure_surface_cursor_called(session->name());
 
-        auto const id = frontend::SurfaceId(cursor_request->surfaceid().value());
+        auto const id = mf::SurfaceId(cursor_request->surfaceid().value());
         auto const surface = session->get_surface(id);
 
         if (cursor_request->has_name())
@@ -551,6 +547,32 @@ void mf::SessionMediator::new_fds_for_prompt_providers(
     done->Run();
 }
 
+void mf::SessionMediator::translate_surface_to_screen(
+    ::google::protobuf::RpcController* ,
+    ::mir::protobuf::CoordinateTranslationRequest const* request,
+    ::mir::protobuf::CoordinateTranslationResponse* response,
+    ::google::protobuf::Closure *done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+        auto const id = mf::SurfaceId(request->surfaceid().value());
+
+        auto const coords = translator->surface_to_screen(session->get_surface(id),
+                                                          request->x(),
+                                                          request->y());
+
+        response->set_x(coords.x.as_uint32_t());
+        response->set_y(coords.y.as_uint32_t());
+    }
+    done->Run();
+}
+
 void mf::SessionMediator::drm_auth_magic(
     google::protobuf::RpcController* /*controller*/,
     const mir::protobuf::DRMMagic* request,
@@ -567,16 +589,14 @@ void mf::SessionMediator::drm_auth_magic(
         report->session_drm_auth_magic_called(session->name());
     }
 
-    auto const magic = static_cast<unsigned int>(request->magic());
-    //FIXME: don't dynamic cast like this drm_auth_magic should be a part of PlatformIpcOperations 
-    auto authenticator = std::dynamic_pointer_cast<mg::DRMAuthenticator>(graphics_platform);
-    if (!authenticator)
-        BOOST_THROW_EXCEPTION(std::logic_error("drm_auth_magic request not supported by the active platform"));
-
+    //TODO: the opcode should be provided as part of the request, and should be opaque to the server code.
+    unsigned int const made_up_opcode{0};
+    mg::PlatformIPCPackage platform_request{{static_cast<int32_t>(request->magic())},{}};
     try
     {
-        authenticator->drm_auth_magic(magic);
-        response->set_status_code(0);
+        auto platform_response = ipc_operations->platform_operation(made_up_opcode, platform_request);
+        if (platform_response.ipc_data.size() > 0)
+            response->set_status_code(platform_response.ipc_data[0]);
     }
     catch (std::exception const& e)
     {

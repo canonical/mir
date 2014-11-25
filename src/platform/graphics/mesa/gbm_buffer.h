@@ -56,13 +56,13 @@ public:
 
     GBMBuffer& operator=(const GBMBuffer&) = delete;
 
-    virtual geometry::Size size() const;
+    virtual geometry::Size size() const override;
 
-    virtual geometry::Stride stride() const;
+    virtual geometry::Stride stride() const override;
 
-    virtual MirPixelFormat pixel_format() const;
+    virtual MirPixelFormat pixel_format() const override;
 
-    virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const;
+    virtual std::shared_ptr<MirNativeBuffer> native_buffer_handle() const override;
 
     virtual void gl_bind_to_texture() override;
 

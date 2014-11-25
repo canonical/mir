@@ -18,7 +18,6 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/compositor_report.h"
-#include "mir/compositor/scene.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/compositor/destination_alpha.h"
 #include "demo_compositor.h"
@@ -38,11 +37,9 @@ mc::DestinationAlpha destination_alpha(mg::DisplayBuffer const& db)
 
 me::DemoCompositor::DemoCompositor(
     mg::DisplayBuffer& display_buffer,
-    std::shared_ptr<mc::Scene> const& scene,
     mg::GLProgramFactory const& factory,
     std::shared_ptr<mc::CompositorReport> const& report) :
     display_buffer(display_buffer),
-    scene(scene),
     report(report),
     renderer(
         factory,
@@ -51,15 +48,13 @@ me::DemoCompositor::DemoCompositor(
         30.0f, //titlebar_height
         80.0f) //shadow_radius
 {
-    scene->register_compositor(this);
 }
 
 me::DemoCompositor::~DemoCompositor()
 {
-    scene->unregister_compositor(this);
 }
 
-void me::DemoCompositor::composite()
+void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
 {
     report->began_frame(this);
     //a simple filtering out of renderables that shouldn't be drawn
@@ -68,7 +63,6 @@ void me::DemoCompositor::composite()
     mg::RenderableList renderable_list;
     std::unordered_set<mg::Renderable::ID> decoration_skip_list;
 
-    auto elements = scene->scene_elements_for(this);
     for(auto const& it : elements)
     {
         auto const& renderable = it->renderable();
@@ -81,14 +75,34 @@ void me::DemoCompositor::composite()
         if (renderable->visible() && any_part_drawn)
         {
             renderable_list.push_back(renderable);
-            it->rendered_in(this);
+
+            // Fullscreen and opaque? Definitely no embellishment
+            if (renderable->screen_position() == view_area &&
+                renderable->alpha() == 1.0f &&
+                !renderable->shaped() &&
+                renderable->transformation() == glm::mat4())
+            {
+                embellished = false;
+                nonrenderlist_elements = false; // Don't care what's underneath
+            }
+
+            it->rendered();
         }
         else
         {
-            it->occluded_in(this);
+            it->occluded();
         }
         nonrenderlist_elements |= embellished;
     }
+
+    /*
+     * Note: Buffer lifetimes are ensured by the two objects holding
+     *       references to them; elements and renderable_list.
+     *       So no buffer is going to be released back to the client till
+     *       both of those containers get destroyed (end of the function).
+     *       Actually, there's a third reference held by the texture cache
+     *       in GLRenderer, but that gets released earlier in render().
+     */
 
     if (!nonrenderlist_elements &&
         display_buffer.post_renderables_if_optimizable(renderable_list))
@@ -104,7 +118,6 @@ void me::DemoCompositor::composite()
         renderer.begin(std::move(decoration_skip_list));
         renderer.render(renderable_list);
         display_buffer.post_update();
-        renderer.end();
         report->finished_frame(false, this);
     }
 }

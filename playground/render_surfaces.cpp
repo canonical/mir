@@ -25,7 +25,6 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangles.h"
-#include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/gl_context.h"
@@ -72,9 +71,7 @@ namespace me = mir::examples;
 ///\section RenderSurfacesServerConfiguration RenderSurfacesServerConfiguration
 /// The configuration stubs out client connectivity and input.
 /// \snippet render_surfaces.cpp RenderSurfacesServerConfiguration_stubs_tag
-/// it also provides a bespoke buffer initializer
-/// \snippet render_surfaces.cpp RenderResourcesBufferInitializer_tag
-/// and a bespoke display buffer compositor
+/// it also provides a bespoke display buffer compositor
 /// \snippet render_surfaces.cpp RenderSurfacesDisplayBufferCompositor_tag
 ///\section Utilities Utility classes
 /// For smooth animation we need to track time and move surfaces accordingly
@@ -238,8 +235,8 @@ public:
     {
         struct NullConnector : public mf::Connector
         {
-            void start() {}
-            void stop() {}
+            void start() override {}
+            void stop() override {}
             int client_socket_fd() const override { return 0; }
             int client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const override { return 0; }
         };
@@ -248,44 +245,9 @@ public:
     }
     ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
 
-    ///\internal [RenderResourcesBufferInitializer_tag]
-    // Override for a bespoke buffer initializer
-    std::shared_ptr<mg::BufferInitializer> the_buffer_initializer() override
-    {
-        class RenderResourcesBufferInitializer : public mg::BufferInitializer
-        {
-        public:
-            RenderResourcesBufferInitializer(std::unique_ptr<mg::GLContext> gl_context)
-                : gl_context{std::move(gl_context)}
-            {
-            }
-
-            void operator()(mg::Buffer& buffer)
-            {
-                auto using_gl_context = mir::raii::paired_calls(
-                    [this] { gl_context->make_current(); },
-                    [this] { gl_context->release_current(); });
-
-                mt::ImageRenderer img_renderer{mir_image.pixel_data,
-                               geom::Size{mir_image.width, mir_image.height},
-                               mir_image.bytes_per_pixel};
-                mt::BufferRenderTarget brt{buffer};
-                brt.make_current();
-                img_renderer.render();
-            }
-
-        private:
-            std::unique_ptr<mg::GLContext> const gl_context;
-
-        };
-
-        return std::make_shared<RenderResourcesBufferInitializer>(the_display()->create_gl_context());
-    }
-    ///\internal [RenderResourcesBufferInitializer_tag]
-
     // Unless the compositor starts before we create the surfaces it won't respond to
     // the change notification that causes.
-    std::shared_ptr<mir::ServerStatusListener> the_server_status_listener()
+    std::shared_ptr<mir::ServerStatusListener> the_server_status_listener() override
     {
         struct ServerStatusListener : mir::ServerStatusListener
         {
@@ -324,7 +286,7 @@ public:
             {
             }
 
-            void composite()
+            void composite(mc::SceneElementSequence&& scene_sequence) override
             {
                 while (!created) std::this_thread::yield();
                 stop_watch.stop();
@@ -336,7 +298,7 @@ public:
                 }
 
                 glClearColor(0.0, 1.0, 0.0, 1.0);
-                db_compositor->composite();
+                db_compositor->composite(std::move(scene_sequence));
 
                 for (auto& m : moveables)
                     m.step();
@@ -389,6 +351,8 @@ public:
 
         auto const display = the_display();
         auto const surface_coordinator = the_surface_coordinator();
+        auto const gl_context = the_display()->create_gl_context();
+
         /* TODO: Get proper configuration */
         geom::Rectangles view_area;
         display->for_each_display_buffer([&view_area](mg::DisplayBuffer const& db)
@@ -413,16 +377,23 @@ public:
                                    .of_buffer_usage(mg::BufferUsage::hardware),
                     nullptr);
 
-            /*
-             * We call swap_buffers() twice so that the surface is
-             * considers the first buffer to be posted.
-             * (TODO There must be a better way!)
-             */
             {
                 mg::Buffer* buffer{nullptr};
                 auto const complete = [&](mg::Buffer* new_buf){ buffer = new_buf; };
-                s->swap_buffers(buffer, complete);
-                s->swap_buffers(buffer, complete);
+                s->swap_buffers(buffer, complete); // Fetch buffer for rendering
+                {
+                    auto using_gl_context = mir::raii::paired_calls(
+                        [&gl_context] { gl_context->make_current(); },
+                        [&gl_context] { gl_context->release_current(); });
+
+                    mt::ImageRenderer img_renderer{mir_image.pixel_data,
+                                   geom::Size{mir_image.width, mir_image.height},
+                                   mir_image.bytes_per_pixel};
+                    mt::BufferRenderTarget brt{*buffer};
+                    brt.make_current();
+                    img_renderer.render();
+                }
+                s->swap_buffers(buffer, complete); // Post rendered buffer
             }
 
             /*

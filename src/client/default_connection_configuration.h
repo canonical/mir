@@ -50,15 +50,15 @@ class DefaultConnectionConfiguration : public ConnectionConfiguration
 public:
     DefaultConnectionConfiguration(std::string const& socket_file);
 
-    std::shared_ptr<ConnectionSurfaceMap> the_surface_map();
-    std::shared_ptr<google::protobuf::RpcChannel> the_rpc_channel();
-    std::shared_ptr<mir::logging::Logger> the_logger();
-    std::shared_ptr<ClientPlatformFactory> the_client_platform_factory();
-    std::shared_ptr<input::receiver::InputPlatform> the_input_platform();
-    std::shared_ptr<DisplayConfiguration> the_display_configuration();
-    std::shared_ptr<LifecycleControl> the_lifecycle_control();
-    std::shared_ptr<EventSink> the_event_sink();
-    std::shared_ptr<EventHandlerRegister> the_event_handler_register();
+    std::shared_ptr<ConnectionSurfaceMap> the_surface_map() override;
+    std::shared_ptr<google::protobuf::RpcChannel> the_rpc_channel() override;
+    std::shared_ptr<mir::logging::Logger> the_logger() override;
+    std::shared_ptr<ClientPlatformFactory> the_client_platform_factory() override;
+    std::shared_ptr<input::receiver::InputPlatform> the_input_platform() override;
+    std::shared_ptr<DisplayConfiguration> the_display_configuration() override;
+    std::shared_ptr<LifecycleControl> the_lifecycle_control() override;
+    std::shared_ptr<EventSink> the_event_sink() override;
+    std::shared_ptr<EventHandlerRegister> the_event_handler_register() override;
     std::shared_ptr<mir::SharedLibraryProberReport> the_shared_library_prober_report();
     std::shared_ptr<SharedLibrary> the_platform_library() override;
 

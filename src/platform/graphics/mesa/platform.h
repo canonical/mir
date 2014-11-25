@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_MESA_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
-#include "mir/graphics/drm_authenticator.h"
 #include "display_helpers.h"
 
 #include "mir_toolkit/mesa/native_display.h"
@@ -41,7 +40,6 @@ enum class BypassOption
 class VirtualTerminal;
 class InternalNativeDisplay;
 class Platform : public graphics::Platform,
-                 public DRMAuthenticator,
                  public std::enable_shared_from_this<Platform>
 {
 public:
@@ -52,21 +50,17 @@ public:
     ~Platform();
 
     /* From Platform */
-    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator(
-            const std::shared_ptr<BufferInitializer>& buffer_initializer);
-    std::shared_ptr<graphics::BufferWriter> make_buffer_writer();
+    std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
+    std::shared_ptr<graphics::BufferWriter> make_buffer_writer() override;
     std::shared_ptr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLProgramFactory> const& program_factory,
-        std::shared_ptr<GLConfig> const& gl_config);
-    std::shared_ptr<InternalClient> create_internal_client();
+        std::shared_ptr<GLConfig> const& gl_config) override;
+    std::shared_ptr<InternalClient> create_internal_client() override;
 
     std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
 
-    EGLNativeDisplayType egl_native_display() const;
-
-    /* From DRMAuthenticator */
-    void drm_auth_magic(unsigned int magic);
+    EGLNativeDisplayType egl_native_display() const override;
 
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<helpers::DRMHelper> const drm;

@@ -17,65 +17,27 @@
  */
 
 #include "mir_test_framework/using_stub_client_platform.h"
-#include "mir_test_framework/stub_client_connection_configuration.h"
 #include "mir_toolkit/mir_client_library.h"
-#include "src/client/mir_connection_api.h"
 
 namespace mtf = mir_test_framework;
 namespace mcl = mir::client;
 
-namespace
-{
-
-void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
-{
-}
-
-class StubMirConnectionAPI : public mcl::MirConnectionAPI
-{
-public:
-    StubMirConnectionAPI(mcl::MirConnectionAPI* prev_api)
-        : prev_api{prev_api}
-    {
-    }
-
-    MirWaitHandle* connect(
+MirWaitHandle* mtf::StubMirConnectionAPI::connect(
+        mcl::ConfigurationFactory /*configuration*/,
         char const* socket_file,
         char const* name,
         mir_connected_callback callback,
-        void* context) override
-    {
-        return prev_api->connect(socket_file, name, callback, context);
-    }
-
-    void release(MirConnection* connection) override
-    {
-        // Clear the lifecycle callback in order not to get SIGHUP by the
-        // default lifecycle handler during connection teardown
-        mir_connection_set_lifecycle_event_callback(connection, null_lifecycle_callback, nullptr);
-        return prev_api->release(connection);
-    }
-
-    std::unique_ptr<mcl::ConnectionConfiguration> configuration(std::string const& socket) override
-    {
-        return std::unique_ptr<mcl::ConnectionConfiguration>{
-            new mtf::StubConnectionConfiguration{socket}};
-    }
-
-private:
-    mcl::MirConnectionAPI* const prev_api;
-};
-
+        void* context)
+{
+    return prev_api->connect(configuration_factory(), socket_file, name, callback, context);
 }
 
-mtf::UsingStubClientPlatform::UsingStubClientPlatform()
-    : prev_api{mir_connection_api_impl},
-      stub_api{new StubMirConnectionAPI{prev_api}}
+void mtf::StubMirConnectionAPI::release(MirConnection* connection)
 {
-    mir_connection_api_impl = stub_api.get();
+    return prev_api->release(connection);
 }
 
-mtf::UsingStubClientPlatform::~UsingStubClientPlatform()
+mcl::ConfigurationFactory mtf::StubMirConnectionAPI::configuration_factory()
 {
-    mir_connection_api_impl = prev_api;
+    return factory;
 }

@@ -47,10 +47,7 @@ public:
 class StubNativePlatform : public mg::NativePlatform
 {
 public:
-    void initialize(std::shared_ptr<mg::NestedContext> const&) override {}
-
-    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator(
-        std::shared_ptr<mg::BufferInitializer> const&) override
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
     {
         return {};
     }

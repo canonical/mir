@@ -21,6 +21,8 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/android/android_native_buffer.h"
 #include "ipc_operations.h"
+#include <stdexcept>
+#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
@@ -29,8 +31,17 @@ void mga::IpcOperations::pack_buffer(BufferIpcMessage& msg, Buffer const& buffer
 {
     auto native_buffer = buffer.native_buffer_handle();
 
-    /* TODO: instead of waiting, pack the fence fd in the message to the client */ 
-    native_buffer->ensure_available_for(mga::BufferAccess::write);
+    mir::Fd fence_fd(native_buffer->copy_fence());
+    if (fence_fd != mir::Fd::invalid)
+    {
+        msg.pack_data(static_cast<int>(mga::BufferFlag::fenced));
+        msg.pack_fd(fence_fd);
+    }
+    else
+    {
+        msg.pack_data(static_cast<int>(mga::BufferFlag::unfenced));
+    }
+
     if (msg_type == mg::BufferIpcMsgType::full_msg)
     {
         auto buffer_handle = native_buffer->handle();
@@ -57,4 +68,10 @@ void mga::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 std::shared_ptr<mg::PlatformIPCPackage> mga::IpcOperations::connection_ipc_package()
 {
     return std::make_shared<mg::PlatformIPCPackage>();
+}
+
+mg::PlatformIPCPackage mga::IpcOperations::platform_operation(
+    unsigned int const, mg::PlatformIPCPackage const&)
+{
+    BOOST_THROW_EXCEPTION(std::invalid_argument("android platform does not support any platform operations"));
 }

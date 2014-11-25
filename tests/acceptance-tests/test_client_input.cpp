@@ -60,16 +60,21 @@ struct MockInputHandler
 struct InputClient
 {
     InputClient(std::string const& connect_string, std::string const& client_name)
-        : connect_string{connect_string}, client_name{client_name},
-          client_thread{[this] { run(); }}
+        : connect_string{connect_string}, client_name{client_name}
     {
-        ready_to_accept_events.wait_for_at_most_seconds(5);
     }
+
 
     ~InputClient()
     {
         if (client_thread.joinable())
             client_thread.join();
+    }
+
+    void start()
+    {
+        client_thread = std::thread{[this] { run(); }};
+        ready_to_accept_events.wait_for_at_most_seconds(5);
     }
 
     void run()
@@ -204,7 +209,7 @@ struct TestClientInput : mtf::InProcessServer
         return server_configuration_;
     }
 
-    mir::input::android::FakeEventHub* fake_event_hub()
+    std::shared_ptr<mir::input::android::FakeEventHub> fake_event_hub()
     {
         return server_configuration_.fake_event_hub;
     }
@@ -231,6 +236,8 @@ TEST_F(TestClientInput, clients_receive_key_input)
 
     int const num_events_produced = 3;
 
+    client.start();
+
     for (int i = 0; i < num_events_produced; i++)
         fake_event_hub()->synthesize_event(
             mis::a_key_down_event().of_scancode(KEY_ENTER));
@@ -251,6 +258,8 @@ TEST_F(TestClientInput, clients_receive_us_english_mapped_keys)
                 handle_input(
                     AllOf(mt::KeyDownEvent(), mt::KeyOfSymbol(XKB_KEY_dollar))))
         .WillOnce(mt::WakeUp(&client.all_events_received));
+
+    client.start();
 
     fake_event_hub()->synthesize_event(
         mis::a_key_down_event().of_scancode(KEY_LEFTSHIFT));
@@ -276,6 +285,8 @@ TEST_F(TestClientInput, clients_receive_motion_inside_window)
         .WillOnce(mt::WakeUp(&client.all_events_received));
     // But we should not receive an event for the second movement outside of our surface!
 
+    client.start();
+
     fake_event_hub()->synthesize_event(
         mis::a_motion_event().with_movement(
             InputClient::surface_width - 1,
@@ -292,6 +303,8 @@ TEST_F(TestClientInput, clients_receive_button_events_inside_window)
     // The cursor starts at (0, 0).
     EXPECT_CALL(client.handler, handle_input(mt::ButtonDownEvent(0, 0)))
         .WillOnce(mt::WakeUp(&client.all_events_received));
+
+    client.start();
 
     fake_event_hub()->synthesize_event(
         mis::a_button_down_event()
@@ -335,6 +348,9 @@ TEST_F(TestClientInput, multiple_clients_receive_motion_inside_windows)
             .WillOnce(mt::WakeUp(&client2.all_events_received));
     }
 
+    client1.start();
+    client2.start();
+
     // In the bounds of the first surface
     fake_event_hub()->synthesize_event(
         mis::a_motion_event().with_movement(screen_width / 2 - 1, screen_height / 2 - 1));
@@ -369,6 +385,8 @@ TEST_F(TestClientInput, clients_do_not_receive_motion_outside_input_region)
         EXPECT_CALL(client.handler, handle_input(mt::ButtonUpEvent(99, 99)))
             .WillOnce(mt::WakeUp(&client.all_events_received));
     }
+
+    client.start();
 
     // First we will move the cursor in to the input region on the left side of
     // the window. We should see a click here.
@@ -434,6 +452,9 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
             .WillOnce(mt::WakeUp(&client2.all_events_received));
     }
 
+    client1.start();
+    client2.start();
+
     // First we will move the cursor in to the region where client 2 obscures client 1
     fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1, 1));
     fake_event_hub()->synthesize_event(
@@ -468,6 +489,9 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
     EXPECT_CALL(client2.handler, handle_input(mt::MotionEventWithPosition(1, 1)))
         .WillOnce(DoAll(mt::WakeUp(&second_client_done),
                         mt::WakeUp(&client2.all_events_received)));
+
+    client1.start();
+    client2.start();
 
     // We send one event and then hide the surface on top before sending the next.
     // So we expect each of the two surfaces to receive one even
@@ -505,6 +529,8 @@ TEST_F(TestClientInput, clients_receive_motion_within_coordinate_system_of_windo
     EXPECT_CALL(client1.handler, handle_input(mt::MotionEventWithPosition(80, 170)))
         .Times(AnyNumber())
         .WillOnce(mt::WakeUp(&client1.all_events_received));
+
+    client1.start();
 
     server_config().the_session_container()->for_each(
         [&](std::shared_ptr<ms::Session> const& session) -> void
@@ -559,6 +585,8 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
                                    expected_motion_y_2)))
         .WillOnce(mt::WakeUp(&client1.all_events_received));
 
+    client1.start();
+
     fake_event_hub()->synthesize_event(
         mis::a_touch_event().at_position({abs_touch_x_1, abs_touch_y_1}));
     // Sleep here to trigger more failures (simulate slow machine)
@@ -573,6 +601,8 @@ TEST_F(TestClientInput, send_mir_input_events_through_surface)
 
     EXPECT_CALL(client1.handler, handle_input(mt::KeyDownEvent()))
         .WillOnce(mt::WakeUp(&client1.all_events_received));
+
+    client1.start();
 
     server_config().the_session_container()->for_each(
         [] (std::shared_ptr<ms::Session> const& session) -> void

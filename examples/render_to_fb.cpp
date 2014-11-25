@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -18,13 +18,12 @@
 
 #include "graphics.h"
 
-#include "mir/default_server_configuration.h"
+#include "mir/server.h"
+#include "mir/report_exception.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
-#include "mir/report_exception.h"
 
 #include <csignal>
-#include <iostream>
 
 namespace mg=mir::graphics;
 namespace mo=mir::options;
@@ -39,8 +38,7 @@ void signal_handler(int /*signum*/)
 }
 }
 
-int main(int argc, char const** argv)
-try
+void render_loop(mir::Server& server)
 {
     /* Set up graceful exit on SIGINT and SIGTERM */
     struct sigaction sa;
@@ -51,9 +49,7 @@ try
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
 
-    mir::DefaultServerConfiguration conf{argc, argv};
-
-    auto display = conf.the_display();
+    auto display = server.the_display();
 
     mir::draw::glAnimationBasic gl_animation;
 
@@ -76,11 +72,21 @@ try
 
         gl_animation.step();
     }
+}
 
-    return 0;
+int main(int argc, char const** argv)
+try
+{
+    mir::Server server;
+    server.set_command_line(argc, argv);
+    server.apply_settings();
+
+    render_loop(server);
+
+    return EXIT_SUCCESS;
 }
 catch (...)
 {
-    mir::report_exception(std::cerr);
-    return 1;
+    mir::report_exception();
+    return EXIT_FAILURE;
 }

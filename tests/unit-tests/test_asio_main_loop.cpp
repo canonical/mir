@@ -17,11 +17,12 @@
  */
 
 #include "mir/asio_main_loop.h"
-#include "mir/time/high_resolution_clock.h"
+#include "mir/time/steady_clock.h"
 #include "mir_test/pipe.h"
 #include "mir_test/auto_unblock_thread.h"
 #include "mir_test/signal.h"
 #include "mir_test/wait_object.h"
+#include "mir_test_doubles/advanceable_clock.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -38,6 +39,7 @@
 #include <unistd.h>
 
 namespace mt = mir::test;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -45,27 +47,19 @@ namespace
 class AsioMainLoopTest : public ::testing::Test
 {
 public:
-    mir::AsioMainLoop ml{std::make_shared<mir::time::HighResolutionClock>()};
+    mir::AsioMainLoop ml{std::make_shared<mir::time::SteadyClock>()};
 };
 
-class AdvanceableClock : public mir::time::Clock
+struct AdvanceableClock : mtd::AdvanceableClock
 {
-public:
-    mir::time::Timestamp sample() const override
+    void advance_by(mir::time::Duration step, mir::AsioMainLoop& ml)
     {
-        std::lock_guard<std::mutex> lock(time_mutex);
-        return current_time;
-    }
-    void advance_by(std::chrono::milliseconds const step, mir::AsioMainLoop & ml)
-    {
+        mtd::AdvanceableClock::advance_by(step);
+
         bool done = false;
         std::mutex checkpoint_mutex;
         std::condition_variable checkpoint;
 
-        {
-            std::lock_guard<std::mutex> lock(time_mutex);
-            current_time += step;
-        }
         auto evaluate_clock_alarm = ml.notify_in(
             std::chrono::milliseconds{0},
             [&done, &checkpoint_mutex, &checkpoint]
@@ -77,17 +71,7 @@ public:
 
         std::unique_lock<std::mutex> lock(checkpoint_mutex);
         while(!done) checkpoint.wait(lock);
-
     }
-private:
-    mutable std::mutex time_mutex;
-    mir::time::Timestamp current_time{
-        []
-        {
-           mir::time::HighResolutionClock clock;
-           return clock.sample();
-        }()
-        };
 };
 
 
@@ -100,13 +84,14 @@ public:
     mt::WaitObject wait;
     std::chrono::milliseconds delay{50};
 
-    struct UnblockMainLoop : mt::AutoUnblockThread
-    {
-        UnblockMainLoop(mir::AsioMainLoop & loop)
-            : mt::AutoUnblockThread([&loop]() {loop.stop();},
-                                    [&loop]() {loop.run();})
-        {}
-    };
+};
+
+struct UnblockMainLoop : mt::AutoUnblockThread
+{
+    UnblockMainLoop(mir::AsioMainLoop & loop)
+        : mt::AutoUnblockThread([&loop]() {loop.stop();},
+                                [&loop]() {loop.run();})
+    {}
 };
 
 class Counter
@@ -633,7 +618,7 @@ TEST_F(AsioMainLoopAlarmTest, rescheduled_alarm_cancels_previous_scheduling)
 
 TEST_F(AsioMainLoopAlarmTest, alarm_callback_cannot_deadlock)
 {   // Regression test for deadlock bug LP: #1339700
-    std::mutex m;
+    std::timed_mutex m;
     std::atomic_bool failed(false);
     int i = 0;
     int const loops = 5;
@@ -641,13 +626,7 @@ TEST_F(AsioMainLoopAlarmTest, alarm_callback_cannot_deadlock)
     auto alarm = ml.notify_in(std::chrono::milliseconds{0}, [&]()
     {
         // From this angle, ensure we can lock m (alarm should be unlocked)
-        int tries = 0;
-        while (!m.try_lock() && tries < 100) // 100 x 100 = try for 10 seconds
-        {
-            ++tries;
-            std::this_thread::sleep_for(std::chrono::milliseconds{100});
-        }
-        failed = (tries >= 100);
+        failed = !m.try_lock_for(std::chrono::seconds{5});
         ASSERT_FALSE(failed);
         ++i;
         m.unlock();
@@ -670,8 +649,8 @@ TEST_F(AsioMainLoopAlarmTest, alarm_callback_cannot_deadlock)
     UnblockMainLoop unblocker(ml);
     for (int j = 0; j < loops; ++j)
     {
-        clock->advance_by(std::chrono::milliseconds{101}, ml);
-        alarm->reschedule_in(std::chrono::milliseconds{100});
+        clock->advance_by(std::chrono::milliseconds{11}, ml);
+        alarm->reschedule_in(std::chrono::milliseconds{10});
     }
 
     t.join();
@@ -679,7 +658,7 @@ TEST_F(AsioMainLoopAlarmTest, alarm_callback_cannot_deadlock)
 
 TEST_F(AsioMainLoopAlarmTest, alarm_fires_at_correct_time_point)
 {
-    mir::time::Timestamp real_soon = clock->sample() + std::chrono::milliseconds{120};
+    mir::time::Timestamp real_soon = clock->now() + std::chrono::milliseconds{120};
 
     auto alarm = ml.notify_at(real_soon, []{});
 
@@ -858,4 +837,23 @@ TEST_F(AsioMainLoopTest, handles_enqueue_from_within_action)
     ASSERT_THAT(actions.size(), Eq(num_actions));
     for (int i = 0; i < num_actions; ++i)
         EXPECT_THAT(actions[i], Eq(i)) << "i = " << i;
+}
+
+// More targeted regression test for LP: #1381925
+TEST_F(AsioMainLoopTest, stress_emits_alarm_notification_with_zero_timeout)
+{
+    using namespace ::testing;
+
+    UnblockMainLoop unblocker{ml};
+
+    for (int i = 0; i < 1000; ++i)
+    {
+        mt::WaitObject notification_called;
+
+        auto alarm = ml.notify_in(
+            std::chrono::milliseconds{0},
+            [&] { notification_called.notify_ready(); });
+
+        notification_called.wait_until_ready(std::chrono::seconds{5});
+    }
 }

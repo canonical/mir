@@ -81,9 +81,9 @@ struct MockServerPackageGenerator : public mt::StubServerTool
         done->Run();
     }
 
-    void next_buffer(
+    void exchange_buffer(
         ::google::protobuf::RpcController* /*controller*/,
-        ::mir::protobuf::SurfaceId const* /*request*/,
+        ::mir::protobuf::BufferRequest const* /*request*/,
         ::mir::protobuf::Buffer* response,
         ::google::protobuf::Closure* done) override
     {
@@ -207,6 +207,7 @@ struct MockBuffer : public mcl::ClientBuffer
     MOCK_METHOD0(mark_as_submitted, void());
     MOCK_CONST_METHOD0(native_buffer_handle, std::shared_ptr<mg::NativeBuffer>());
     MOCK_METHOD1(update_from, void(MirBufferPackage const&));
+    MOCK_METHOD1(fill_update_msg, void(MirBufferPackage&));
 };
 
 struct MockClientBufferFactory : public mcl::ClientBufferFactory
@@ -346,6 +347,7 @@ struct StubBuffer : public mcl::ClientBuffer
         return std::shared_ptr<mg::NativeBuffer>();
     }
     void update_from(MirBufferPackage const&) {}
+    void fill_update_msg(MirBufferPackage&) {}
 
     std::shared_ptr<MirBufferPackage> const package;
     geom::Size size_;

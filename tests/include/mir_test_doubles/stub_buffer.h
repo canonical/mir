@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -18,12 +18,6 @@
 
 #ifndef MIR_TEST_DOUBLES_STUB_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_BUFFER_H_
-
-#ifdef ANDROID
-#include "mock_android_native_buffer.h"
-#else
-#include "stub_gbm_native_buffer.h"
-#endif
 
 #include "mir/graphics/buffer_basic.h"
 #include "mir/graphics/buffer_properties.h"
@@ -94,15 +88,15 @@ public:
     {
     }
 
-    virtual graphics::BufferID id() const { return buf_id; }
+    virtual graphics::BufferID id() const override { return buf_id; }
 
-    virtual geometry::Size size() const { return buf_size; }
+    virtual geometry::Size size() const override { return buf_size; }
 
-    virtual geometry::Stride stride() const { return buf_stride; }
+    virtual geometry::Stride stride() const override { return buf_stride; }
 
-    virtual MirPixelFormat pixel_format() const { return buf_pixel_format; }
+    virtual MirPixelFormat pixel_format() const override { return buf_pixel_format; }
 
-    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const { return native_buffer; }
+    virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override { return native_buffer; }
     virtual void gl_bind_to_texture() override {}
 
     virtual bool can_bypass() const override { return true; }
@@ -113,14 +107,7 @@ public:
     geometry::Stride const buf_stride;
     graphics::BufferID const buf_id;
 
-    std::shared_ptr<graphics::NativeBuffer> create_native_buffer()
-    {
-#ifndef ANDROID
-        return std::make_shared<StubGBMNativeBuffer>(geometry::Size{0,0});
-#else
-        return std::make_shared<StubAndroidNativeBuffer>();
-#endif
-    }
+    std::shared_ptr<graphics::NativeBuffer> create_native_buffer();
 };
 }
 }

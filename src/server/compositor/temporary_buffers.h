@@ -35,12 +35,12 @@ class BackBufferStrategy;
 class TemporaryBuffer : public mg::Buffer
 {
 public:
-    geometry::Size size() const;
-    geometry::Stride stride() const;
-    MirPixelFormat pixel_format() const;
-    mg::BufferID id() const;
+    geometry::Size size() const override;
+    geometry::Stride stride() const override;
+    MirPixelFormat pixel_format() const override;
+    mg::BufferID id() const override;
     void gl_bind_to_texture() override;
-    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const;
+    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override;
     bool can_bypass() const override;
 
 protected:

@@ -3,7 +3,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/platform
 )
 
-set(MIRPLATFORM_ABI 3)
+set(MIRPLATFORM_ABI 4)
 
 set(PLATFORM_DRIVER platform${MIRPLATFORM_ABI}driver)
 set(MIR_PLATFORM_DRIVER mir${PLATFORM_DRIVER})

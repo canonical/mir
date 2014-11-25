@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/mir_client_library_debug.h"
+#include "mir_toolkit/debug/surface.h"
 
 #include "mir/compositor/compositor.h"
 #include "mir/compositor/renderer_factory.h"
@@ -189,16 +189,44 @@ TEST_F(StaleFrames, are_dropped_when_restarting_compositor)
 
     stop_compositor();
 
-    auto const stale_buffer_id1 = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
+    std::set<mg::BufferID> stale_buffers;
+
+    stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
     mir_surface_swap_buffers_sync(surface);
 
-    auto const stale_buffer_id2 = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
+    stale_buffers.emplace(mir_debug_surface_current_buffer_id(surface));
     mir_surface_swap_buffers_sync(surface);
 
+    EXPECT_THAT(stale_buffers.size(), Eq(2));
+
+    auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
+    mir_surface_swap_buffers_sync(surface);
+
+    start_compositor();
+
+    // Note first stale buffer and fresh_buffer may be equal when defaulting to double buffers
+    stale_buffers.erase(fresh_buffer);
+
+    auto const new_buffers = wait_for_new_rendered_buffers();
+    ASSERT_THAT(new_buffers.size(), Eq(1));
+    EXPECT_THAT(stale_buffers, Not(Contains(new_buffers[0])));
+}
+
+TEST_F(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
+{
+    using namespace testing;
+
+    stop_compositor();
+
+    mir_surface_swap_buffers_sync(surface);
+    mir_surface_swap_buffers_sync(surface);
+
+    auto const fresh_buffer = mg::BufferID{mir_debug_surface_current_buffer_id(surface)};
     mir_surface_swap_buffers_sync(surface);
 
     start_compositor();
 
     auto const new_buffers = wait_for_new_rendered_buffers();
-    EXPECT_THAT(new_buffers, Not(AnyOf(Contains(stale_buffer_id1), Contains(stale_buffer_id2))));
+    ASSERT_THAT(new_buffers.size(), Eq(1));
+    EXPECT_THAT(new_buffers[0], Eq(fresh_buffer));
 }

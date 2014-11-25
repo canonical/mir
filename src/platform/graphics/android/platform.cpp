@@ -30,7 +30,6 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/android/native_buffer.h"
-#include "mir/graphics/buffer_initializer.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/display_report.h"
 #include "mir/options/option.h"
@@ -90,12 +89,11 @@ mga::Platform::Platform(
 {
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_allocator(
-        std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
+std::shared_ptr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_allocator()
 {
     if (quirks.gralloc_reopenable_after_close())
     {
-        return std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
+        return std::make_shared<mga::AndroidGraphicBufferAllocator>();
     }
     else
     {
@@ -104,15 +102,14 @@ std::shared_ptr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_allocat
         std::unique_lock<std::mutex> lk(allocator_mutex);
         static std::shared_ptr<mg::GraphicBufferAllocator> preserved_allocator;
         if (!preserved_allocator)
-            preserved_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
+            preserved_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
         return preserved_allocator;
     }
 }
 
-std::shared_ptr<mga::GraphicBufferAllocator> mga::Platform::create_mga_buffer_allocator(
-    std::shared_ptr<mg::BufferInitializer> const& buffer_initializer)
+std::shared_ptr<mga::GraphicBufferAllocator> mga::Platform::create_mga_buffer_allocator()
 {
-    return std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
+    return std::make_shared<mga::AndroidGraphicBufferAllocator>();
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mga::Platform::connection_ipc_package()
@@ -145,10 +142,6 @@ EGLNativeDisplayType mga::Platform::egl_native_display() const
     return EGL_DEFAULT_DISPLAY;
 }
 
-void mga::Platform::initialize(std::shared_ptr<NestedContext> const&)
-{
-}
-
 std::shared_ptr<mg::InternalClient> mga::Platform::create_internal_client()
 {
     return std::make_shared<mga::InternalClient>();
@@ -167,15 +160,16 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
     auto logger = make_logger(*options);
     auto overlay_option = should_use_overlay_optimization(*options);
     logger->log_overlay_optimization(overlay_option);
-    auto buffer_initializer = std::make_shared<mg::NullBufferInitializer>();
     auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
-    auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>(buffer_initializer);
+    auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
     auto display_builder = std::make_shared<mga::OutputBuilder>(
         fb_allocator, display_resource_factory, display_report, overlay_option, logger);
     return std::make_shared<mga::Platform>(display_builder, display_report);
 }
 
-extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(std::shared_ptr<mg::DisplayReport> const& display_report)
+extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    std::shared_ptr<mg::NestedContext> const&)
 {
     //TODO: remove nullptr parameter once platform classes are sorted.
     //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder

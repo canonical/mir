@@ -41,8 +41,10 @@ public:
     boost::system::error_code receive_msg(boost::asio::mutable_buffers_1 const& buffer) override;
     size_t available_bytes() override;
     SessionCredentials client_creds() override;
+    void receive_fds(std::vector<Fd>& fds) override;
 
 private:
+    void set_passcred(int opt);
     void update_session_creds();
     SessionCredentials creator_creds() const;
 
@@ -51,8 +53,6 @@ private:
 
     std::mutex message_lock;
     SessionCredentials session_creds{0, 0, 0};
-
-    void send_fds_locked(std::unique_lock<std::mutex> const& lock, std::vector<Fd> const& fds);
 };
 }
 }

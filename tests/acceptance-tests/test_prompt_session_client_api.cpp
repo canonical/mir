@@ -21,13 +21,14 @@
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
 #include "mir/scene/session.h"
+#include "mir/shell/session_coordinator_wrapper.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/frontend/shell.h"
+#include "mir/cached_ptr.h"
 #include "mir/fd.h"
 
 #include "mir_test_doubles/stub_session_authorizer.h"
-#include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/in_process_server.h"
+#include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
 #include "mir_test/popen.h"
 
@@ -40,6 +41,7 @@
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace mf = mir::frontend;
 
 using namespace testing;
@@ -48,20 +50,8 @@ namespace
 {
 struct MockPromptSessionListener : ms::PromptSessionListener
 {
-    MockPromptSessionListener(std::shared_ptr<ms::PromptSessionListener> const& wrapped) :
-        wrapped(wrapped)
+    MockPromptSessionListener()
     {
-        ON_CALL(*this, starting(_)).WillByDefault(Invoke(
-            wrapped.get(), &ms::PromptSessionListener::starting));
-
-        ON_CALL(*this, stopping(_)).WillByDefault(Invoke(
-            wrapped.get(), &ms::PromptSessionListener::stopping));
-
-        ON_CALL(*this, prompt_provider_added(_, _)).WillByDefault(Invoke(
-            wrapped.get(), &ms::PromptSessionListener::prompt_provider_added));
-
-        ON_CALL(*this, prompt_provider_removed(_, _)).WillByDefault(Invoke(
-            wrapped.get(), &ms::PromptSessionListener::prompt_provider_removed));
     }
 
     MOCK_METHOD1(starting, void(std::shared_ptr<ms::PromptSession> const& prompt_session));
@@ -72,8 +62,6 @@ struct MockPromptSessionListener : ms::PromptSessionListener
 
     MOCK_METHOD2(prompt_provider_removed,
         void(ms::PromptSession const& session, std::shared_ptr<ms::Session> const& provider));
-
-    std::shared_ptr<ms::PromptSessionListener> const wrapped;
 };
 
 struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
@@ -88,34 +76,47 @@ struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
     MOCK_METHOD1(prompt_session_is_allowed, bool(mf::SessionCredentials const&));
 };
 
-struct PromptSessionTestConfiguration : mtf::StubbedServerConfiguration
+// We need to fake any client_pids used to identify sessions
+class PidFakingSessionCoordinator : public msh::SessionCoordinatorWrapper
 {
-    std::shared_ptr<ms::PromptSessionListener> the_prompt_session_listener() override
+public:
+    PidFakingSessionCoordinator(
+        std::shared_ptr<ms::SessionCoordinator> const& wrapped,
+        std::vector<pid_t> const& pids) :
+            msh::SessionCoordinatorWrapper(wrapped),
+        pids(pids)
     {
-        return prompt_session_listener([this]()
-           ->std::shared_ptr<ms::PromptSessionListener>
-           {
-               return the_mock_prompt_session_listener();
-           });
     }
 
-    std::shared_ptr<MockPromptSessionListener> the_mock_prompt_session_listener()
+    auto open_session(
+        pid_t client_pid,
+        std::string const& name,
+        std::shared_ptr<mf::EventSink> const& sink)
+            -> std::shared_ptr<mf::Session> override
     {
-        return mock_prompt_session_listener([this]
-            {
-                return std::make_shared<NiceMock<MockPromptSessionListener>>(
-                    mtf::StubbedServerConfiguration::the_prompt_session_listener());
-            });
+        auto const override_pid = (next != pids.end()) ? *next++ : client_pid;
+
+        return wrapped->open_session(override_pid, name, sink);
     }
 
-    std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer() override
-    {
-        return session_authorizer([this]()
-           ->std::shared_ptr<mf::SessionAuthorizer>
-           {
-               return the_mock_session_authorizer();
-           });
-    }
+private:
+    std::vector<pid_t> const pids;
+    std::vector<pid_t>::const_iterator next{pids.begin()};
+};
+
+struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
+{
+    MirConnection* connection = nullptr;
+
+    static constexpr pid_t application_session_pid = __LINE__;
+    std::shared_ptr<mf::Session> application_session;
+    MirConnection* application_connection{nullptr};
+
+    std::shared_ptr<ms::PromptSession> server_prompt_session;
+    mtf::UsingStubClientPlatform using_stub_client_platform;
+
+    mir::CachedPtr<MockPromptSessionListener> mock_prompt_session_listener;
+    mir::CachedPtr<MockSessionAuthorizer> mock_prompt_session_authorizer;
 
     std::shared_ptr<MockSessionAuthorizer> the_mock_session_authorizer()
     {
@@ -125,73 +126,86 @@ struct PromptSessionTestConfiguration : mtf::StubbedServerConfiguration
             });
     }
 
-    mir::CachedPtr<MockPromptSessionListener> mock_prompt_session_listener;
-    mir::CachedPtr<MockSessionAuthorizer> mock_prompt_session_authorizer;
-};
+    std::shared_ptr<MockPromptSessionListener> the_mock_prompt_session_listener()
+    {
+        return mock_prompt_session_listener([]
+            {
+                return std::make_shared<NiceMock<MockPromptSessionListener>>();
+            });
+    }
 
-struct PromptSessionClientAPI : mtf::InProcessServer
-{
-    PromptSessionTestConfiguration server_configuration;
+    auto new_prompt_connection() -> std::string
+    {
+        auto const prompt_fd = server.open_prompt_socket();
+        return HeadlessInProcessServer::connection(prompt_fd);
+    }
 
-    mir::DefaultServerConfiguration& server_config() override
-        { return server_configuration; }
+    void start_application_session()
+    {
+        std::mutex application_session_mutex;
+        std::condition_variable application_session_cv;
 
-    MirConnection* connection = nullptr;
+        auto connect_handler = [&](std::shared_ptr<mf::Session> const& session)
+            {
+                std::lock_guard<std::mutex> lock(application_session_mutex);
+                application_session = session;
+                application_session_cv.notify_one();
+            };
 
-    static constexpr pid_t application_session_pid = __LINE__;
-    std::shared_ptr<mf::Session> application_session;
+        auto const fd = server.open_client_socket(connect_handler);
 
-    std::shared_ptr<ms::PromptSession> server_prompt_session;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
+        application_connection = mir_connect_sync(HeadlessInProcessServer::connection(fd).c_str(), __PRETTY_FUNCTION__);
+
+        std::unique_lock<std::mutex> lock(application_session_mutex);
+        application_session_cv.wait(lock, [&] { return !!application_session; });
+    }
 
     void SetUp() override
     {
-        mtf::InProcessServer::SetUp();
+        auto session_coordinator_wrapper = [&](std::shared_ptr<ms::SessionCoordinator> const& wrapped)
+            -> std::shared_ptr<ms::SessionCoordinator>
+            {
+                std::vector<pid_t> fake_pids;
+                fake_pids.push_back(application_session_pid);
 
-        std::shared_ptr<mf::EventSink> dummy_event_sink;
-        auto const the_frontend_shell = server_config().the_frontend_shell();
+                return std::make_shared<PidFakingSessionCoordinator>(wrapped, fake_pids);
+            };
 
-        application_session = the_frontend_shell->open_session(
-            application_session_pid, __PRETTY_FUNCTION__, dummy_event_sink);
+        server.override_the_session_authorizer([this]()
+            ->std::shared_ptr<mf::SessionAuthorizer>
+            {
+                return the_mock_session_authorizer();
+            });
+
+        server.override_the_prompt_session_listener([this]
+            {
+                 return the_mock_prompt_session_listener();
+            });
+
+        server.wrap_session_coordinator(session_coordinator_wrapper);
+
+        mtf::HeadlessInProcessServer::SetUp();
+
+        start_application_session();
     }
 
     void capture_server_prompt_session()
     {
         EXPECT_CALL(*the_mock_prompt_session_listener(), starting(_)).
-            WillOnce(DoAll(
-                Invoke(
-                    the_mock_prompt_session_listener()->wrapped.get(),
-                    &ms::PromptSessionListener::starting),
-                SaveArg<0>(&server_prompt_session)));
+            WillOnce(SaveArg<0>(&server_prompt_session));
     }
 
     void TearDown() override
     {
-        // TODO It really shouldn't be necessary to close these sessions.
-        // TODO But the MediatingDisplayChanger id destroyed without deregistering
-        // TODO callbacks from the BroadcastingSessionEventSink which gets called in
-        // TODO SessionManager::~SessionManager() in code that the comments claim
-        // TODO works around broken ownership.
-        auto const the_frontend_shell = server_config().the_frontend_shell();
-        the_frontend_shell->close_session(application_session);
-
+        application_session.reset();
+        if (application_connection) mir_connection_release(application_connection);
         if (connection) mir_connection_release(connection);
-        mtf::InProcessServer::TearDown();
-    }
-
-    MockPromptSessionListener* the_mock_prompt_session_listener()
-    {
-        return server_configuration.the_mock_prompt_session_listener().get();
-    }
-
-    MockSessionAuthorizer& the_mock_session_authorizer()
-    {
-        return *server_configuration.the_mock_session_authorizer();
+        mtf::HeadlessInProcessServer::TearDown();
     }
 
     std::shared_ptr<ms::PromptSessionManager> the_prompt_session_manager()
     {
-        return server_config().the_prompt_session_manager();
+        return server.the_prompt_session_manager();
     }
 
     MOCK_METHOD2(prompt_session_state_change,
@@ -239,6 +253,8 @@ struct PromptSessionClientAPI : mtf::InProcessServer
         "child_provider1"
     };
 };
+
+constexpr pid_t PromptSessionClientAPI::application_session_pid;
 
 mir_prompt_session_state_change_callback const null_state_change_callback{nullptr};
 constexpr char const* const PromptSessionClientAPI::provider_name[];
@@ -417,7 +433,7 @@ TEST_F(PromptSessionClientAPI, notifies_when_server_closes_prompt_session)
     the_prompt_session_manager()->stop_prompt_session(server_prompt_session);
 
     // Verify we have got the "stopped" notification before we go on and release the session
-    Mock::VerifyAndClearExpectations(the_mock_prompt_session_listener());
+    Mock::VerifyAndClearExpectations(the_mock_prompt_session_listener().get());
 
     mir_prompt_session_release_sync(prompt_session);
 }
@@ -493,7 +509,7 @@ TEST_F(PromptSessionClientAPI, server_retrieves_child_provider_sessions)
 
 TEST_F(PromptSessionClientAPI, cannot_start_a_prompt_session_without_authorization)
 {
-    EXPECT_CALL(the_mock_session_authorizer(), prompt_session_is_allowed(_))
+    EXPECT_CALL(*the_mock_session_authorizer(), prompt_session_is_allowed(_))
         .WillOnce(Return(false));
 
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
@@ -513,9 +529,9 @@ TEST_F(PromptSessionClientAPI, cannot_start_a_prompt_session_without_authorizati
 TEST_F(PromptSessionClientAPI,
     can_start_a_prompt_session_without_authorization_on_prompt_connection)
 {
-    ON_CALL(the_mock_session_authorizer(), prompt_session_is_allowed(_))
+    ON_CALL(*the_mock_session_authorizer(), prompt_session_is_allowed(_))
         .WillByDefault(Return(false));
-    EXPECT_CALL(the_mock_session_authorizer(), prompt_session_is_allowed(_)).Times(0);
+    EXPECT_CALL(*the_mock_session_authorizer(), prompt_session_is_allowed(_)).Times(0);
 
     connection = mir_connect_sync(new_prompt_connection().c_str(), __PRETTY_FUNCTION__);
 
@@ -539,7 +555,7 @@ TEST_F(PromptSessionClientAPI,
 {
     connection = mir_connect_sync(new_prompt_connection().c_str(), __PRETTY_FUNCTION__);
 
-    EXPECT_CALL(the_mock_session_authorizer(), connection_is_allowed(_)).Times(0);
+    EXPECT_CALL(*the_mock_session_authorizer(), connection_is_allowed(_)).Times(0);
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, null_state_change_callback, this);
@@ -549,6 +565,23 @@ TEST_F(PromptSessionClientAPI,
 
     DummyPromptProvider provider1{fd_connect_string(actual_fds[0]), provider_name[0]};
     DummyPromptProvider provider2{fd_connect_string(actual_fds[1]), provider_name[1]};
+
+    mir_prompt_session_release_sync(prompt_session);
+}
+
+// lp:1377968
+TEST_F(PromptSessionClientAPI, when_application_pid_is_invalid_starting_a_prompt_session_fails)
+{
+    connection = mir_connect_sync(new_prompt_connection().c_str(), __PRETTY_FUNCTION__);
+
+    EXPECT_CALL(*the_mock_prompt_session_listener(), starting(_)).Times(0);
+
+    MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
+        connection, ~application_session_pid, null_state_change_callback, this);
+
+    EXPECT_THAT(mir_prompt_session_is_valid(prompt_session), Eq(false));
+    EXPECT_THAT(mir_prompt_session_error_message(prompt_session),
+        HasSubstr("Could not identify application"));
 
     mir_prompt_session_release_sync(prompt_session);
 }

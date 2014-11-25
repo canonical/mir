@@ -26,7 +26,12 @@
 
 namespace android
 {
+class EventHubInterface;
+class InputReaderInterface;
+class InputReaderPolicyInterface;
+class InputListenerInterface;
 class InputDispatcherInterface;
+class InputEnumerator;
 class InputDispatcherPolicyInterface;
 }
 
@@ -96,13 +101,13 @@ class SurfaceStack;
 class SceneReport;
 class PromptSessionListener;
 class PromptSessionManager;
+class CoordinateTranslator;
 }
 namespace graphics
 {
 class NativePlatform;
 class Platform;
 class Display;
-class BufferInitializer;
 class DisplayReport;
 class GraphicBufferAllocator;
 class BufferWriter;
@@ -119,7 +124,6 @@ class Scene;
 class InputManager;
 class CompositeEventFilter;
 class InputChannelFactory;
-class InputConfiguration;
 class CursorListener;
 class TouchVisualizer;
 class InputRegion;
@@ -169,7 +173,6 @@ public:
     std::shared_ptr<ServerStatusListener>   the_server_status_listener() override;
     std::shared_ptr<DisplayChanger>         the_display_changer() override;
     std::shared_ptr<graphics::Platform>     the_graphics_platform() override;
-    std::shared_ptr<input::InputConfiguration> the_input_configuration() override;
     std::shared_ptr<input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<EmergencyCleanup>  the_emergency_cleanup() override;
     /**
@@ -186,7 +189,6 @@ public:
     /** @name graphics configuration - customization
      * configurable interfaces for modifying graphics
      *  @{ */
-    virtual std::shared_ptr<graphics::BufferInitializer> the_buffer_initializer();
     virtual std::shared_ptr<compositor::RendererFactory>   the_renderer_factory();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
@@ -285,6 +287,7 @@ public:
      *  @{ */
     // To customize this behaviour it is recommended you override wrap_session_coordinator().
     virtual std::shared_ptr<scene::SessionCoordinator>  the_session_coordinator();
+    virtual std::shared_ptr<scene::CoordinateTranslator> the_coordinate_translator();
     /** @} */
 
 
@@ -299,6 +302,11 @@ public:
     virtual std::shared_ptr<input::InputRegion>    the_input_region();
     virtual std::shared_ptr<input::InputSender>    the_input_sender();
     virtual std::shared_ptr<input::InputSendObserver> the_input_send_observer();
+    virtual std::shared_ptr<droidinput::EventHubInterface> the_event_hub();
+    virtual std::shared_ptr<droidinput::InputReaderInterface> the_input_reader();
+    virtual std::shared_ptr<droidinput::InputReaderPolicyInterface> the_input_reader_policy();
+    virtual std::shared_ptr<droidinput::InputListenerInterface> the_input_translator();
+    virtual std::shared_ptr<input::android::InputThread> the_input_reader_thread();
     /** @} */
 
     /** @name logging configuration - customization
@@ -323,6 +331,7 @@ protected:
      *  @{ */
     virtual std::shared_ptr<input::android::InputRegistrar> the_input_registrar();
     virtual std::shared_ptr<droidinput::InputDispatcherInterface> the_android_input_dispatcher();
+    virtual std::shared_ptr<droidinput::InputEnumerator> the_input_target_enumerator();
     virtual std::shared_ptr<input::android::InputThread> the_dispatcher_thread();
     virtual std::shared_ptr<droidinput::InputDispatcherPolicyInterface> the_dispatcher_policy();
     virtual bool is_key_repeat_enabled() const;
@@ -330,22 +339,32 @@ protected:
 
     /** @Convenience wrapper functions
      *  @{ */
+    virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> wrap_display_configuration_policy(
+        std::shared_ptr<graphics::DisplayConfigurationPolicy> const& wrapped);
+
     virtual std::shared_ptr<scene::SurfaceCoordinator>  wrap_surface_coordinator(
         std::shared_ptr<scene::SurfaceCoordinator> const& wrapped);
 
     virtual std::shared_ptr<scene::SessionCoordinator>  wrap_session_coordinator(
         std::shared_ptr<scene::SessionCoordinator> const& wrapped);
+
+    virtual std::shared_ptr<input::CursorListener>  wrap_cursor_listener(
+        std::shared_ptr<input::CursorListener> const& wrapped);
 /** @} */
 
     CachedPtr<input::android::InputRegistrar> input_registrar;
     CachedPtr<input::android::InputThread> dispatcher_thread;
+    CachedPtr<input::android::InputThread> input_reader_thread;
     CachedPtr<droidinput::InputDispatcherInterface> android_input_dispatcher;
+    CachedPtr<droidinput::InputEnumerator> input_target_enumerator;
     CachedPtr<droidinput::InputDispatcherPolicyInterface> android_dispatcher_policy;
+    CachedPtr<droidinput::EventHubInterface> event_hub;
+    CachedPtr<droidinput::InputReaderPolicyInterface> input_reader_policy;
+    CachedPtr<droidinput::InputReaderInterface> input_reader;
+    CachedPtr<droidinput::InputListenerInterface> input_translator;
 
     CachedPtr<frontend::Connector>   connector;
     CachedPtr<frontend::Connector>   prompt_connector;
-
-    CachedPtr<input::InputConfiguration> input_configuration;
 
     CachedPtr<input::InputReport> input_report;
     CachedPtr<input::CompositeEventFilter> composite_event_filter;
@@ -359,7 +378,6 @@ protected:
     CachedPtr<input::TouchVisualizer> touch_visualizer;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::NativePlatform>    graphics_native_platform;
-    CachedPtr<graphics::BufferInitializer> buffer_initializer;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::BufferWriter> buffer_writer;
     CachedPtr<graphics::Display>      display;
@@ -396,8 +414,7 @@ protected:
     CachedPtr<compositor::CompositorReport> compositor_report;
     CachedPtr<logging::Logger> logger;
     CachedPtr<graphics::DisplayReport> display_report;
-    // static to workaround the singleton clock in AsioMainLoop when running multiple servers
-    static CachedPtr<time::Clock> clock;
+    CachedPtr<time::Clock> clock;
     CachedPtr<MainLoop> main_loop;
     CachedPtr<ServerStatusListener> server_status_listener;
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
@@ -408,6 +425,7 @@ protected:
     CachedPtr<scene::PromptSessionListener> prompt_session_listener;
     CachedPtr<scene::PromptSessionManager> prompt_session_manager;
     CachedPtr<scene::SessionCoordinator> session_coordinator;
+    CachedPtr<scene::CoordinateTranslator> coordinate_translator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
     CachedPtr<shell::HostLifecycleEventListener> host_lifecycle_event_listener;
 

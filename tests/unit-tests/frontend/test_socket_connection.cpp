@@ -21,6 +21,7 @@
 #include "src/server/frontend/message_receiver.h"
 #include "mir/frontend/message_processor.h"
 #include "mir/frontend/session_credentials.h"
+#include "mir/fd.h"
 
 #include "mir_test/fake_shared.h"
 
@@ -40,9 +41,18 @@ using namespace testing;
 
 namespace
 {
+mir::Fd temp_fd()
+{
+    return mir::Fd(fileno(tmpfile()));
+}
+
 struct StubReceiver : mfd::MessageReceiver
 {
-    StubReceiver() : async_buffer{nullptr, 0} {}
+    StubReceiver() :
+        async_buffer{nullptr, 0},
+        some_fds{temp_fd(), temp_fd(), temp_fd()}
+    {
+    }
 
     void async_receive_msg(
         std::function<void(boost::system::error_code const&, size_t)> const& callback,
@@ -63,6 +73,13 @@ struct StubReceiver : mfd::MessageReceiver
                message.data(), ba::buffer_size(buffer));
 
         return boost::system::error_code();
+    }
+
+    void receive_fds(std::vector<mir::Fd>& fds) override
+    {
+        int i = 0;
+        for(auto& fd : fds)
+            fd = some_fds[i++ % some_fds.size()];
     }
 
     size_t available_bytes() override
@@ -92,13 +109,14 @@ struct StubReceiver : mfd::MessageReceiver
     std::function<void(boost::system::error_code const&, size_t)> callback_function;
     boost::asio::mutable_buffers_1 async_buffer;
     std::vector<char> message;
+    std::vector<mir::Fd> some_fds;
 
     MOCK_METHOD0(client_creds, mf::SessionCredentials());
 };
 
 struct MockProcessor : public mfd::MessageProcessor
 {
-    MOCK_METHOD1(dispatch, bool(mfd::Invocation const& invocation));
+    MOCK_METHOD2(dispatch, bool(mfd::Invocation const& invocation, std::vector<mir::Fd> const&));
     MOCK_METHOD1(client_pid, void(int pid));
 };
 }
@@ -114,7 +132,7 @@ struct SocketConnection : public Test
 
     void SetUp()
     {
-        ON_CALL(mock_processor, dispatch(_)).WillByDefault(Return(true));
+        ON_CALL(mock_processor, dispatch(_,_)).WillByDefault(Return(true));
         ON_CALL(stub_receiver, client_creds()).WillByDefault(Return(client_creds));
         connection.read_next_message();
     }
@@ -128,6 +146,7 @@ struct SocketConnection : public Test
         invocation.set_method_name("");
         invocation.set_parameters(buffer, 0);
         invocation.set_protocol_version(1);
+        invocation.set_side_channel_fds(2);
         auto const body_size = invocation.ByteSize();
         buffer[0] = body_size / 0x100;
         buffer[1] = body_size % 0x100;
@@ -139,7 +158,7 @@ struct SocketConnection : public Test
 
 TEST_F(SocketConnection, dispatches_message_on_receipt)
 {
-    EXPECT_CALL(mock_processor, dispatch(_)).Times(1);
+    EXPECT_CALL(mock_processor, dispatch(_,_)).Times(1);
 
     fake_receiving_message();
 }
@@ -148,7 +167,7 @@ TEST_F(SocketConnection, dispatches_messages_on_receipt)
 {
     auto const arbitary_no_of_messages = 5;
 
-    EXPECT_CALL(mock_processor, dispatch(_)).Times(arbitary_no_of_messages);
+    EXPECT_CALL(mock_processor, dispatch(_,_)).Times(arbitary_no_of_messages);
 
     for (int i = 0; i != arbitary_no_of_messages; ++i)
         fake_receiving_message();
@@ -165,7 +184,7 @@ TEST_F(SocketConnection, notifies_client_pid_before_message_dispatched)
 {
     InSequence seq;
     EXPECT_CALL(mock_processor, client_pid(_)).Times(1);
-    EXPECT_CALL(mock_processor, dispatch(_)).Times(1);
+    EXPECT_CALL(mock_processor, dispatch(_,_)).Times(1);
 
     fake_receiving_message();
 }
@@ -178,4 +197,11 @@ TEST_F(SocketConnection, notifies_client_pid_once_only)
 
     for (int i = 0; i != arbitary_no_of_messages; ++i)
         fake_receiving_message();
+}
+
+TEST_F(SocketConnection, receives_and_dispatches_fds)
+{
+    std::vector<mir::Fd> fds{stub_receiver.some_fds[0], stub_receiver.some_fds[1]};
+    EXPECT_CALL(mock_processor, dispatch(_, ContainerEq(fds)));
+    fake_receiving_message();
 }

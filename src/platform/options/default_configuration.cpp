@@ -45,11 +45,9 @@ char const* const mo::name_opt                    = "name";
 char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::touchspots_opt               = "enable-touchspots";
 char const* const mo::fatal_abort_opt             = "on-fatal-error-abort";
+char const* const mo::debug_opt                   = "debug";
+char const* const mo::use_asio_main_loop_opt      = "use-asio-main-loop";
 
-char const* const mo::glog                 = "glog";
-char const* const mo::glog_stderrthreshold = "glog-stderrthreshold";
-char const* const mo::glog_minloglevel     = "glog-minloglevel";
-char const* const mo::glog_log_dir         = "glog-log-dir";
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";
 char const* const mo::lttng_opt_value = "lttng";
@@ -59,9 +57,6 @@ char const* const mo::platform_graphics_lib = "platform-graphics-lib";
 namespace
 {
 int const default_ipc_threads          = 1;
-int const glog_stderrthreshold_default = 2;
-int const glog_minloglevel_default     = 0;
-char const* const glog_log_dir_default = "";
 bool const enable_input_default        = true;
 char const* const default_platform_graphics_lib = MIR_PLATFORM_DRIVER_BINARY;
 
@@ -140,21 +135,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the MessageProcessor report. [{log,lttng,off}]")
         (scene_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the scene report. [{log,lttng,off}]")
-        (glog,
-            "Use google::GLog for logging")
-        (glog_stderrthreshold, po::value<int>()->default_value(glog_stderrthreshold_default),
-            "Copy log messages at or above this level "
-            "to stderr in addition to logfiles. The numbers "
-            "of severity levels INFO, WARNING, ERROR, and "
-            "FATAL are 0, 1, 2, and 3, respectively.")
-        (glog_minloglevel, po::value<int>()->default_value(glog_minloglevel_default),
-            "Log messages at or above this level. The numbers "
-            "of severity levels INFO, WARNING, ERROR, and "
-            "FATAL are 0, 1, 2, and 3, respectively."
-            " [int:default=0]")
-        (glog_log_dir, po::value<std::string>()->default_value(glog_log_dir_default),
-            "If specified, logfiles are written into this "
-            "directory instead of the default logging directory.")
         (frontend_threads_opt, po::value<int>()->default_value(default_ipc_threads),
             "threads in frontend thread pool.")
         (name_opt, po::value<std::string>(),
@@ -164,7 +144,10 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (touchspots_opt,
             "Display visualization of touchspots (e.g. for screencasting).")
         (fatal_abort_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
-            "in unexpected ways] abort (to get a core dump)");
+            "in unexpected ways] abort (to get a core dump)")
+        (debug_opt, "Enable extra development debugging. "
+            "This is only interesting for people doing Mir server or client development.")
+        (use_asio_main_loop_opt, "Use the ASIO main loop implementation");
 
         add_platform_options();
 }
@@ -238,7 +221,7 @@ void mo::DefaultConfiguration::parse_arguments(
         std::vector<char const*> tokens;
         for (auto const& token : unparsed_arguments)
             tokens.push_back(token.c_str());
-        unparsed_arguments_handler(tokens.size(), tokens.data());
+        if (!tokens.empty()) unparsed_arguments_handler(tokens.size(), tokens.data());
 
         if (options.is_set("help"))
         {

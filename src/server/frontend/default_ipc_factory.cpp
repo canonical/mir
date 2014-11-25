@@ -33,22 +33,24 @@ namespace mi = mir::input;
 mf::DefaultIpcFactory::DefaultIpcFactory(
     std::shared_ptr<Shell> const& shell,
     std::shared_ptr<SessionMediatorReport> const& sm_report,
-    std::shared_ptr<mg::Platform> const& graphics_platform,
+    std::shared_ptr<mg::PlatformIpcOperations> const& platform_ipc_operations,
     std::shared_ptr<DisplayChanger> const& display_changer,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<Screencast> const& screencast,
     std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-    std::shared_ptr<mi::CursorImages> const& cursor_images) :
+    std::shared_ptr<mi::CursorImages> const& cursor_images,
+    std::shared_ptr<scene::CoordinateTranslator> const& translator) :
     shell(shell),
     no_prompt_shell(std::make_shared<NoPromptShell>(shell)),
     sm_report(sm_report),
     cache(std::make_shared<ResourceCache>()),
-    graphics_platform(graphics_platform),
+    platform_ipc_operations(platform_ipc_operations),
     display_changer(display_changer),
     buffer_allocator(buffer_allocator),
     screencast(screencast),
     session_authorizer(session_authorizer),
-    cursor_images(cursor_images)
+    cursor_images(cursor_images),
+    translator{translator}
 {
 }
 
@@ -85,7 +87,7 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_ipc_serve
 
     return make_mediator(
         effective_shell,
-        graphics_platform,
+        platform_ipc_operations,
         changer,
         buffer_allocator,
         sm_report,
@@ -101,7 +103,7 @@ std::shared_ptr<mf::ResourceCache> mf::DefaultIpcFactory::resource_cache()
 
 std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
     std::shared_ptr<Shell> const& shell,
-    std::shared_ptr<mg::Platform> const& graphics_platform,
+    std::shared_ptr<mg::PlatformIpcOperations> const& platform_ipc_operations,
     std::shared_ptr<DisplayChanger> const& changer,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<SessionMediatorReport> const& sm_report,
@@ -112,7 +114,7 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
 {
     return std::make_shared<SessionMediator>(
         shell,
-        graphics_platform,
+        platform_ipc_operations,
         changer,
         buffer_allocator->supported_pixel_formats(),
         sm_report,
@@ -120,5 +122,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         resource_cache(),
         effective_screencast,
         connection_context,
-        cursor_images);
+        cursor_images,
+        translator);
 }

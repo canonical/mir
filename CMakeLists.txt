@@ -27,7 +27,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 8) # This should change at least with every MIRSERVER_ABI
+set(MIR_VERSION_MINOR 9) # This should change at least with every MIRSERVER_ABI
 set(MIR_VERSION_PATCH 0)
 
 set(MIR_VERSION ${MIR_VERSION_MAJOR}.${MIR_VERSION_MINOR}.${MIR_VERSION_PATCH})
@@ -154,6 +154,7 @@ find_package(GFlags REQUIRED)
 find_package(XKBCOMMON REQUIRED)
 find_package(LTTngUST REQUIRED)
 pkg_check_modules(UDEV REQUIRED libudev)
+pkg_check_modules(GLIB REQUIRED glib-2.0)
 
 include_directories (${GLESv2_INCLUDE_DIRS})
 include_directories (${EGL_INCLUDE_DIRS})

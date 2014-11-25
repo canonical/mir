@@ -20,6 +20,8 @@
 #include "anonymous_shm_file.h"
 
 #include <boost/throw_exception.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/exception/errinfo_errno.hpp>
 #include <stdexcept>
 
 #include <vector>
@@ -36,20 +38,18 @@ namespace
 
 mir::Fd create_anonymous_file(size_t size)
 {
-    char const* const tmpl = "/mir-buffer-XXXXXX";
-    char const* const runtime_dir = getenv("XDG_RUNTIME_DIR");
-    char const* const target_dir = runtime_dir ? runtime_dir : "/tmp";
+    auto const raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
+    if (raw_fd == -1)
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(
+            std::runtime_error("Failed to open temporary file"))
+               << boost::errinfo_errno(errno));
 
-    /* We need a mutable array for mkostemp */
-    std::vector<char> path(target_dir, target_dir + strlen(target_dir));
-    path.insert(path.end(), tmpl, tmpl + strlen(tmpl));
-    path.push_back('\0');
+    mir::Fd fd = mir::Fd{raw_fd};
 
-    mir::Fd fd{mkostemp(path.data(), O_CLOEXEC)};
-    if (unlink(path.data()) < 0)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to unlink temporary file"));
-    if (ftruncate(fd, size) < 0)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to resize temporary file"));
+    if (ftruncate(fd, size) == -1)
+        BOOST_THROW_EXCEPTION(boost::enable_error_info(
+            std::runtime_error("Failed to resize temporary file"))
+                << boost::errinfo_errno(errno));
 
     return fd;
 }

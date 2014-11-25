@@ -43,7 +43,7 @@ void mrl::SceneReport::surface_created(BasicSurfaceId id, std::string const& nam
     std::stringstream ss;
     ss << "surface_created(" << id << " [\"" << name << "\"])";
 
-    logger->log(ml::Logger::informational, ss.str(), component);
+    logger->log(ml::Severity::informational, ss.str(), component);
 }
 
 void mrl::SceneReport::surface_added(BasicSurfaceId id, std::string const& name)
@@ -66,7 +66,7 @@ void mrl::SceneReport::surface_added(BasicSurfaceId id, std::string const& name)
 
     ss << " - INFO surface count=" << surfaces.size();
 
-    logger->log(ml::Logger::informational, ss.str(), component);
+    logger->log(ml::Severity::informational, ss.str(), component);
 }
 
 void mrl::SceneReport::surface_removed(BasicSurfaceId id, std::string const& name)
@@ -89,7 +89,7 @@ void mrl::SceneReport::surface_removed(BasicSurfaceId id, std::string const& nam
 
     ss << " - INFO surface count=" << surfaces.size();
 
-    logger->log(ml::Logger::informational, ss.str(), component);
+    logger->log(ml::Severity::informational, ss.str(), component);
 }
 
 void mrl::SceneReport::surface_deleted(BasicSurfaceId id, std::string const& name)
@@ -115,5 +115,5 @@ void mrl::SceneReport::surface_deleted(BasicSurfaceId id, std::string const& nam
 
     ss << " - INFO surface count=" << surfaces.size() << std::endl;
 
-    logger->log(ml::Logger::informational, ss.str(), component);
+    logger->log(ml::Severity::informational, ss.str(), component);
 }

@@ -21,7 +21,7 @@
 #include "demo_compositor.h"
 #include "window_manager.h"
 #include "fullscreen_placement_strategy.h"
-#include "server_configuration.h"
+#include "../server_configuration.h"
 
 #include "mir/options/default_configuration.h"
 #include "mir/run_mir.h"
@@ -53,10 +53,8 @@ class DisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
 public:
     DisplayBufferCompositorFactory(
-        std::shared_ptr<mc::Scene> const& scene,
         std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
         std::shared_ptr<mc::CompositorReport> const& report) :
-        scene(scene),
         gl_program_factory(gl_program_factory),
         report(report)
     {
@@ -66,11 +64,10 @@ public:
         mg::DisplayBuffer& display_buffer) override
     {
         return std::unique_ptr<mc::DisplayBufferCompositor>(
-            new me::DemoCompositor{display_buffer, scene, *gl_program_factory, report});
+            new me::DemoCompositor{display_buffer, *gl_program_factory, report});
     }
 
 private:
-    std::shared_ptr<mc::Scene> const scene;
     std::shared_ptr<mg::GLProgramFactory> const gl_program_factory;
     std::shared_ptr<mc::CompositorReport> const report;
 };
@@ -96,13 +93,12 @@ public:
     }
 
 
-    std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory()
+    std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory() override
     {
         return display_buffer_compositor_factory(
             [this]()
             {
                 return std::make_shared<me::DisplayBufferCompositorFactory>(
-                    the_scene(),
                     the_gl_program_factory(),
                     the_compositor_report());
             });

@@ -21,6 +21,7 @@
 #include "mir/frontend/session_credentials.h"
 #include "mir/variable_length_array.h"
 #include "mir/fd_socket_transmission.h"
+#include "mir/raii.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -90,12 +91,7 @@ void mfd::SocketMessenger::send(char const* data, size_t length, FdSets const& f
     ba::write(*socket, ba::buffer(whole_message.data(), whole_message.size()));
 
     for (auto const& fds : fd_set)
-        send_fds_locked(lg, fds);
-}
-
-void mfd::SocketMessenger::send_fds_locked(std::unique_lock<std::mutex> const&, std::vector<mir::Fd> const& fds)
-{
-    mir::send_fds(socket_fd, fds);
+        mir::send_fds(socket_fd, fds);
 }
 
 void mfd::SocketMessenger::async_receive_msg(
@@ -129,6 +125,12 @@ bs::error_code mfd::SocketMessenger::receive_msg(
     return e;
 }
 
+void mfd::SocketMessenger::receive_fds(std::vector<Fd>& fds)
+{
+    static char buffer;
+    mir::receive_data(socket_fd, &buffer, 1, fds);
+}
+
 size_t mfd::SocketMessenger::available_bytes()
 {
     // We call available_bytes() once the client is talking to us
@@ -139,6 +141,12 @@ size_t mfd::SocketMessenger::available_bytes()
     boost::asio::socket_base::bytes_readable command{true};
     socket->io_control(command);
     return command.get();
+}
+
+void mfd::SocketMessenger::set_passcred(int opt)
+{
+    if (setsockopt(socket_fd, SOL_SOCKET, SO_PASSCRED, &opt, sizeof(opt)) == -1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set SO_PASSCRED"));
 }
 
 void mfd::SocketMessenger::update_session_creds()
@@ -160,6 +168,10 @@ void mfd::SocketMessenger::update_session_creds()
     msgh.msg_control = control_un.control;
     msgh.msg_controllen = sizeof(control_un.control);
 
+    /* We set the SO_PASSCRED socket option in order to receive credentials */
+    auto const so_passcred_option = raii::paired_calls(
+        [this] { set_passcred(1); },
+        [this] { set_passcred(0); });
     if (recvmsg(socket_fd, &msgh, MSG_PEEK) != -1)
     {
         auto const ucredp = reinterpret_cast<ucred*>(CMSG_DATA(CMSG_FIRSTHDR(&msgh)));

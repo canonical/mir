@@ -35,6 +35,7 @@ class GraphicBufferAllocator;
 }
 namespace compositor
 {
+class Scene;
 namespace detail { struct ScreencastSessionContext; }
 
 class DisplayBufferCompositorFactory;
@@ -43,6 +44,7 @@ class CompositingScreencast : public frontend::Screencast
 {
 public:
     CompositingScreencast(
+        std::shared_ptr<Scene> const& scene,
         std::shared_ptr<graphics::Display> const& display,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<DisplayBufferCompositorFactory> const& db_compositor_factory);
@@ -62,6 +64,7 @@ private:
             MirPixelFormat pixel_format);
 
     std::mutex session_mutex;
+    std::shared_ptr<Scene> const scene;
     std::shared_ptr<graphics::Display> const display;
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<DisplayBufferCompositorFactory> const db_compositor_factory;

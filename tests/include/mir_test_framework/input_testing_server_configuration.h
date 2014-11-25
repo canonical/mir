@@ -58,15 +58,16 @@ public:
     InputTestingServerConfiguration();
     explicit InputTestingServerConfiguration(std::vector<geometry::Rectangle> const& display_rects);
 
-    void on_start();
-    void on_exit();
+    void on_start() override;
+    void on_exit() override;
 
-    std::shared_ptr<mir::input::InputConfiguration> the_input_configuration() override;
+    std::shared_ptr<droidinput::EventHubInterface> the_event_hub() override;
+    std::shared_ptr<mir::input::InputManager> the_input_manager() override;
     std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override;
     std::shared_ptr<mir::input::InputSender> the_input_sender() override;
 
-    mir::input::android::FakeEventHub* fake_event_hub;
+    std::shared_ptr<mir::input::android::FakeEventHub> fake_event_hub;
 
 protected:
     virtual void inject_input() = 0;
@@ -75,8 +76,6 @@ protected:
 
 private:
     std::thread input_injection_thread;
-
-    std::shared_ptr<mir::test::doubles::FakeEventHubInputConfiguration> input_configuration;
 };
 
 }
