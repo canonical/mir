@@ -149,23 +149,6 @@ mc::BufferQueue::BufferQueue(
            return;
        }
 
-       if (ready_to_composite_queue.empty())
-       {
-           /*
-            * NOTE: This can only happen under two circumstances:
-            * 1) Client is single buffered. Don't do that, it's a bad idea.
-            * 2) Client already has a buffer, and is asking for a new one
-            *    without submitting the old one.
-            *
-            *    This shouldn't be exposed to the client as swap_buffers
-            *    blocking, as the client already has something to render to.
-            *
-            *    Our current implementation will never hit this case. If we
-            *    later want clients to be able to own multiple buffers simultaneously
-            *    then we might want to add an entry to the CompositorReport here.
-            */
-           return;
-       }
        drop_frame(std::move(lock));
     });
 }
@@ -198,7 +181,7 @@ void mc::BufferQueue::client_acquire(mc::BufferQueue::Callback complete)
     }
 
     /* Last resort, drop oldest buffer from the ready queue */
-    if (frame_dropping_enabled && !ready_to_composite_queue.empty())
+    if (frame_dropping_enabled)
     {
         drop_frame(std::move(lock));
         return;
@@ -468,23 +451,52 @@ void mc::BufferQueue::release(
         framedrop_policy->swap_unblocked();
         give_buffer_to_client(buffer, std::move(lock));
     }
+    else if (buffers.size() > size_t(nbuffers))
+    {
+        for (auto i = buffers.begin(); i != buffers.end(); ++i)
+        {
+            if (i->get() == buffer)
+            {
+                buffers.erase(i);
+                break;
+            }
+        }
+    }
     else
         free_buffers.push_back(buffer);
 }
 
 void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
 {
-    auto buffer_to_give = pop(ready_to_composite_queue);
-    /* Advance compositor buffer so it always points to the most recent
-     * client content
-     */
-    if (!contains(current_compositor_buffer, buffers_sent_to_compositor))
+    mg::Buffer* buffer_to_give = nullptr;
+
+    if (ready_to_composite_queue.size() > 1)
     {
-       current_buffer_users.clear();
-       void const* const impossible_user_id = this;
-       current_buffer_users.push_back(impossible_user_id);
-       std::swap(buffer_to_give, current_compositor_buffer);
+        buffer_to_give = pop(ready_to_composite_queue);
+        /* Advance compositor buffer so it always points to the most recent
+         * client content
+         */
+        if (!contains(current_compositor_buffer, buffers_sent_to_compositor))
+        {
+           current_buffer_users.clear();
+           void const* const impossible_user_id = this;
+           current_buffer_users.push_back(impossible_user_id);
+           std::swap(buffer_to_give, current_compositor_buffer);
+        }
     }
+    else 
+    {
+        /*
+         * Faced with a choice between not dropping a frame, or dropping
+         * the newest frame (which could cause a surface to freeze
+         * indefinitely), I choose neither. So the third option is to
+         * overallocate...
+         */
+        auto const& buffer = gralloc->alloc_buffer(the_properties);
+        buffers.push_back(buffer);
+        buffer_to_give = buffer.get();
+    }
+        
     give_buffer_to_client(buffer_to_give, std::move(lock));
 }
 
