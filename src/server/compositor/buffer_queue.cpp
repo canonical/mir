@@ -403,11 +403,18 @@ int mc::BufferQueue::buffers_ready_for_compositor() const
 {
     std::lock_guard<decltype(guard)> lock(guard);
 
-    /*TODO: this api also needs to know the caller user id
-     * as the number of buffers that are truly ready
-     * vary depending on concurrent compositors.
+    /*
+     * NOTE: The true answer for how many buffers are ready for a compositor
+     * will vary between compositors. Because it's not just the size of the
+     * ready queue, but also +1 if the compositor in question hasn't yet
+     * used the latest current_compositor_buffer. So in the absence of knowing
+     * which compositor is asking, we must always overestimate by one, to
+     * ensure current_compositor_buffer gets counted.
+     * In double buffering this is particularly important as the ready queue
+     * will often be empty due to the latest ready buffer getting promoted
+     * to current_compositor_buffer early in compositor_release().
      */
-    return ready_to_composite_queue.size();
+    return 1 + ready_to_composite_queue.size();
 }
 
 int mc::BufferQueue::buffers_free_for_client() const
