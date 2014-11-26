@@ -39,7 +39,7 @@ protected:
         std::ofstream glmark2_output;
         int score = -1;
         glmark2_output.open(output_filename);
-        while (p.get_line(line))
+        while (score < 0 && p.get_line(line))
         {
             int match;
             if (sscanf(line.c_str(), " glmark2 Score: %d", &match) == 1)
