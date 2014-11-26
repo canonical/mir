@@ -1,5 +1,6 @@
-MIR_CLIENTPLATFORM_1 {
-  global: 
-    create_client_platform_factory;
+MIR_CLIENT_PLATFORM_2 {
+  global:
+    create_client_platform;
+    is_appropriate_module;
   local: *;
 };

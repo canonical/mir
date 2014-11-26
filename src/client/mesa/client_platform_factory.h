@@ -28,11 +28,6 @@ namespace client
 namespace mesa
 {
 
-class ClientPlatformFactory : public client::ClientPlatformFactory
-{
-public:
-    std::shared_ptr<ClientPlatform> create_client_platform(ClientContext* context) override;
-};
 
 }
 }

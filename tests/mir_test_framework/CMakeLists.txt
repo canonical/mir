@@ -4,10 +4,11 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
-    ${Boost_INCLUDE_DIRS}
-    ${GLESv2_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}
-    ${UMOCKDEV_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${GLESv2_INCLUDE_DIRS}
+  ${CMAKE_SOURCE_DIR}
+  ${UMOCKDEV_INCLUDE_DIRS}
+  ${ANDROID_HEADERS_INCLUDE_DIRS}
 )
 
 set(
@@ -31,6 +32,7 @@ set(
   display_server_test_fixture.cpp
   process.cpp
   using_stub_client_platform.cpp
+  stub_client_platform_factory.cpp
   udev_environment.cpp
   declarative_placement_strategy.cpp
   fake_event_hub_server_configuration.cpp
@@ -65,6 +67,28 @@ target_link_libraries(
   ${GMOCK_MAIN_LIBRARY}
   ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
+)
+
+set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols-client.map)
+
+add_library(
+  mirclientplatformstub MODULE
+
+  stub_client_platform_module.cpp
+)
+
+target_link_libraries(
+  mirclientplatformstub
+
+  mir-test-framework
+  ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
+)
+
+set_target_properties(
+  mirclientplatformstub PROPERTIES;
+  OUTPUT_NAME client-platform-dummy
+  PREFIX ""
+  LINK_FLAGS "-Wl,--version-script,${symbol_map}"
 )
 
 add_custom_command(TARGET mir-test-framework POST_BUILD
