@@ -18,27 +18,34 @@
 
 #include "mir/log.h"
 #include "mir/logging/logger.h"
+#include <cstdio>
 
 namespace mir {
 
-void log_critical(std::string const& message, std::string const& component)
+void logv(logging::Severity sev, char const* component,
+          char const* fmt, va_list va)
 {
-    logging::log(logging::Severity::critical, message, component);
+    char message[1024];
+    int len = vsnprintf(message, sizeof(message)-1, fmt, va);
+    message[len] = '\0';
+
+    // Suboptimal: Constructing a std::string for message/component.
+    logging::log(sev, message, component);
 }
 
-void log_error(std::string const& message, std::string const& component)
+void log(logging::Severity sev, char const* component,
+         char const* fmt, ...)
 {
-    logging::log(logging::Severity::error, message, component);
+    va_list va;
+    va_start(va, fmt);
+    logv(sev, component, fmt, va);
+    va_end(va);
 }
 
-void log_warn(std::string const& message, std::string const& component)
+void log(logging::Severity sev, char const* component,
+         std::string const& message)
 {
-    logging::log(logging::Severity::warning, message, component);
-}
-
-void log_info(std::string const& message, std::string const& component)
-{
-    logging::log(logging::Severity::informational, message, component);
+    logging::log(sev, message, component);
 }
 
 } // namespace mir

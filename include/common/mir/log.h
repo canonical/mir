@@ -21,7 +21,9 @@
 #ifndef MIR_LOG_H_
 #define MIR_LOG_H_
 
+#include "mir/logging/logger.h"  // for Severity
 #include <string>
+#include <cstdarg>
 
 #ifndef MIR_LOG_COMPONENT
 #ifdef MIR_LOG_COMPONENT_FALLBACK
@@ -29,28 +31,32 @@
 #endif
 #endif
 
-#ifdef MIR_LOG_COMPONENT
-#define MIR_LOG_ASSIGN_COMPONENT =MIR_LOG_COMPONENT
-#else
-#define MIR_LOG_ASSIGN_COMPONENT
-#endif
-
 namespace mir
 {
 
-void log_error(std::string const& message,
-               std::string const& component MIR_LOG_ASSIGN_COMPONENT);
-void log_critical(std::string const& message,
-                  std::string const& component MIR_LOG_ASSIGN_COMPONENT);
-void log_warn(std::string const& message,
-              std::string const& component MIR_LOG_ASSIGN_COMPONENT);
-void log_info(std::string const& message,
-              std::string const& component MIR_LOG_ASSIGN_COMPONENT);
+void logv(logging::Severity sev, const char *component,
+          char const* fmt, va_list va);
+void log(logging::Severity sev, const char *component,
+         char const* fmt, ...);
+void log(logging::Severity sev, const char *component,
+         std::string const& message);
 
-/*
- * "debug" is also omitted for now, because we have yet to figure out the
- * semantics (ie. debug always logged? thresholded? include source line?)
- */
+#ifdef MIR_LOG_COMPONENT
+inline void log_info(std::string const& message)
+{
+    ::mir::log(::mir::logging::Severity::informational,
+               MIR_LOG_COMPONENT, message);
+}
+
+template<typename... Args>
+void log_info(char const* fmt, Args... args)
+{
+    ::mir::log(::mir::logging::Severity::informational,
+               MIR_LOG_COMPONENT, fmt, args...);
+}
+
+// TODO later as required: error, critical, warning, debug
+#endif
 
 } // namespace mir
 
