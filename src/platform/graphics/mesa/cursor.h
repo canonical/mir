@@ -97,12 +97,6 @@ private:
 
     bool visible;
 
-    struct CursorCapabilities
-    {
-        CursorCapabilities(int connection);
-	uint64_t width, height;
-    } cursor_cap;
-
     struct GBMBOWrapper
     {
         GBMBOWrapper(gbm_device* gbm, int width, int height);
