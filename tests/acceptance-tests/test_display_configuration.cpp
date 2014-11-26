@@ -399,7 +399,6 @@ TEST_F(DisplayConfigurationTest, changing_config_for_focused_client_configures_d
     display_client_disconnect();
 }
 
-#if 0
 TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_display)
 {
     mt::CrossProcessAction display_client_connect;
@@ -410,59 +409,23 @@ TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_
     mt::CrossProcessAction verify_apply_config_expectations;
     mt::CrossProcessAction verify_focus_change_expectations;
 
-    struct ServerConfig : TestingServerConfiguration
-    {
-        ServerConfig(mt::CrossProcessAction const& verify_apply_config_expectations,
-                     mt::CrossProcessAction const& verify_focus_change_expectations)
-            : verify_apply_config_expectations{verify_apply_config_expectations},
-              verify_focus_change_expectations{verify_focus_change_expectations}
-        {
-        }
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
 
-        std::shared_ptr<mg::Platform> the_graphics_platform() override
+    auto const server_code = std::async(std::launch::async, [&]
         {
-            using namespace testing;
-
-            if (!platform)
+            verify_apply_config_expectations.exec([&]
             {
-                platform = std::make_shared<StubPlatform>();
-                EXPECT_CALL(platform->mock_display, configure(_)).Times(0);
-            }
-
-            return platform;
-        }
-
-        void exec() override
-        {
-            t = std::thread([this](){
-                verify_apply_config_expectations.exec([&]
-                {
-                    wait_for_server_actions_to_finish(*server.the_main_loop());
-                    testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
-                    EXPECT_CALL(platform->mock_display, configure(testing::_)).Times(1);
-                });
-
-                verify_focus_change_expectations.exec([&]
-                {
-                    wait_for_server_actions_to_finish(*server.the_main_loop());
-                    testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
-                });
+                wait_for_server_actions_to_finish(*server.the_main_loop());
+                testing::Mock::VerifyAndClearExpectations(&mock_display);
+                EXPECT_CALL(mock_display, configure(testing::_)).Times(1);
             });
-        }
 
-        void on_exit() override
-        {
-            t.join();
-        }
-
-        std::shared_ptr<StubPlatform> platform;
-        std::thread t;
-        mt::CrossProcessAction verify_apply_config_expectations;
-        mt::CrossProcessAction verify_focus_change_expectations;
-    } server_config{verify_apply_config_expectations,
-                    verify_focus_change_expectations};
-
-    launch_server_process(server_config);
+            verify_focus_change_expectations.exec([&]
+            {
+                wait_for_server_actions_to_finish(*server.the_main_loop());
+                testing::Mock::VerifyAndClearExpectations(&mock_display);
+            });
+        });
 
     DisplayClient display_client_config{display_client_connect,
                                         display_client_apply_config,
@@ -471,31 +434,31 @@ TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_
     SimpleClient simple_client_config{simple_client_connect,
                                       simple_client_disconnect};
 
-    launch_client_process(display_client_config);
-    launch_client_process(simple_client_config);
+    auto const display_client = std::async(std::launch::async, [&]
+        { display_client_config.exec(new_connection().c_str()); });
+    auto const simple_client = std::async(std::launch::async, [&]
+        { simple_client_config.exec(new_connection().c_str()); });
 
-    run_in_test_process([&]
-    {
-        display_client_connect();
+    display_client_connect();
 
-        /* Connect the simple client. After this the simple client should have the focus. */
-        simple_client_connect();
+    /* Connect the simple client. After this the simple client should have the focus. */
+    simple_client_connect();
 
-        /* Apply the display config while not focused */
-        display_client_apply_config();
-        verify_apply_config_expectations();
+    /* Apply the display config while not focused */
+    display_client_apply_config();
+    verify_apply_config_expectations();
 
-        /*
-         * Shut down the simple client. After this the focus should have changed to the
-         * display client and its configuration should have been applied.
-         */
-        simple_client_disconnect();
-        verify_focus_change_expectations();
+    /*
+     * Shut down the simple client. After this the focus should have changed to the
+     * display client and its configuration should have been applied.
+     */
+    simple_client_disconnect();
+    verify_focus_change_expectations();
 
-        display_client_disconnect();
-    });
+    display_client_disconnect();
 }
 
+#if 0
 TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_client_without_config_configures_display)
 {
     mt::CrossProcessAction display_client_connect;
