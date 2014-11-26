@@ -29,6 +29,7 @@
 #include "mir_test/display_config_matchers.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_session_authorizer.h"
+#include "mir_test/barrier.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/pipe.h"
 #include "mir_test/cross_process_action.h"
@@ -162,15 +163,13 @@ TEST_F(DisplayConfigurationTest, display_configuration_reaches_client)
 
 TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clients)
 {
-    mtf::CrossProcessSync client_ready_fence;
-    mtf::CrossProcessSync unsubscribed_client_ready_fence;
-    mtf::CrossProcessSync unsubscribed_check_fence;
-    mtf::CrossProcessSync send_event_fence;
-    mtf::CrossProcessSync events_all_sent;
+    mt::Barrier client_ready_fence{2};
+    mt::Barrier unsubscribed_client_ready_fence{2};
+    mt::Barrier unsubscribed_check_fence{2};
 
     struct SubscribedClient
     {
-        SubscribedClient(mtf::CrossProcessSync const& client_ready_fence)
+        SubscribedClient(mt::Barrier& client_ready_fence)
             : client_ready_fence{client_ready_fence}, callback_called{false}
         {
         }
@@ -193,7 +192,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
 
             mir_connection_set_display_config_change_callback(connection, &change_handler, this);
 
-            client_ready_fence.signal_ready();
+            client_ready_fence.ready();
 
             while (!callback_called)
                 std::this_thread::sleep_for(std::chrono::microseconds{500});
@@ -201,14 +200,14 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
             mir_connection_release(connection);
         }
 
-        mtf::CrossProcessSync client_ready_fence;
+        mt::Barrier& client_ready_fence;
         std::atomic<bool> callback_called;
     } client_config(client_ready_fence);
 
     struct UnsubscribedClient
     {
-        UnsubscribedClient(mtf::CrossProcessSync const& client_ready_fence,
-                           mtf::CrossProcessSync const& client_check_fence)
+        UnsubscribedClient(mt::Barrier & client_ready_fence,
+                           mt::Barrier& client_check_fence)
          : client_ready_fence{client_ready_fence},
            client_check_fence{client_check_fence}
         {
@@ -218,10 +217,10 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
         {
             MirConnection* connection = mir_connect_sync(mir_test_socket, "notifier");
 
-            client_ready_fence.signal_ready();
+            client_ready_fence.ready();
 
             //wait for display change signal sent
-            client_check_fence.wait_for_signal_ready();
+            client_check_fence.ready();
 
             //at this point, the message has gone out on the wire. since we're emulating a client
             //that is passively subscribed, we will just wait for the display configuration to change
@@ -241,17 +240,9 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
             mir_connection_release(connection);
         }
 
-        mtf::CrossProcessSync client_ready_fence;
-        mtf::CrossProcessSync client_check_fence;
+        mt::Barrier& client_ready_fence;
+        mt::Barrier& client_check_fence;
     } unsubscribed_client_config(unsubscribed_client_ready_fence, unsubscribed_check_fence);
-
-    auto const change_thread = std::async(std::launch::async, [&]
-        {
-            send_event_fence.wait_for_signal_ready();
-            mock_display.emit_configuration_change_event(
-                mt::fake_shared(changed_stub_display_config));
-            events_all_sent.signal_ready();
-        });
 
     auto const client = std::async(std::launch::async, [&]
         { client_config.exec(new_connection().c_str()); });
@@ -259,13 +250,13 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
     auto const unsubscribed_client = std::async(std::launch::async, [&]
         { unsubscribed_client_config.exec(new_connection().c_str()); });
 
-    client_ready_fence.wait_for_signal_ready();
-    unsubscribed_client_ready_fence.wait_for_signal_ready();
+    client_ready_fence.ready();
+    unsubscribed_client_ready_fence.ready();
 
-    send_event_fence.signal_ready();
-    events_all_sent.wait_for_signal_ready();
+    mock_display.emit_configuration_change_event(
+        mt::fake_shared(changed_stub_display_config));
 
-    unsubscribed_check_fence.signal_ready();
+    unsubscribed_check_fence.ready();
 }
 
 TEST_F(DisplayConfigurationTest, display_change_request_for_unauthorized_client_fails)
