@@ -516,7 +516,6 @@ TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_clien
     simple_client_disconnect();
 }
 
-#if 0
 TEST_F(DisplayConfigurationTest, hw_display_change_doesnt_apply_base_config_if_per_session_config_is_active)
 {
     mt::CrossProcessAction display_client_connect;
@@ -524,70 +523,36 @@ TEST_F(DisplayConfigurationTest, hw_display_change_doesnt_apply_base_config_if_p
     mt::CrossProcessAction display_client_disconnect;
     mt::CrossProcessAction verify_hw_config_change_expectations;
 
-    struct ServerConfig : TestingServerConfiguration
-    {
-        ServerConfig(mt::CrossProcessAction const& verify_hw_config_change_expectations)
-            : verify_hw_config_change_expectations{verify_hw_config_change_expectations}
+    auto const server_code = std::async(std::launch::async, [&]
         {
-        }
-
-        std::shared_ptr<mg::Platform> the_graphics_platform() override
-        {
-
-            if (!platform)
-                platform = std::make_shared<StubPlatform>();
-
-            return platform;
-        }
-
-        void exec() override
-        {
-            t = std::thread([this](){
-                verify_hw_config_change_expectations.exec([&]
-                {
-                    using namespace testing;
-
-                    wait_for_server_actions_to_finish(*server.the_main_loop());
-                    Mock::VerifyAndClearExpectations(&mock_display);
-                    /*
-                     * A client with a per-session config is active, the base configuration
-                     * shouldn't be applied.
-                     */
-                    EXPECT_CALL(mock_display, configure(_)).Times(0);
-                    mock_display.emit_configuration_change_event(
-                        mt::fake_shared(changed_stub_display_config));
-                    mock_display.wait_for_configuration_change_handler();
-                    wait_for_server_actions_to_finish(*server.the_main_loop());
-                    Mock::VerifyAndClearExpectations(&mock_display);
-                });
+            verify_hw_config_change_expectations.exec([&]
+            {
+                wait_for_server_actions_to_finish(*server.the_main_loop());
+                Mock::VerifyAndClearExpectations(&mock_display);
+                /*
+                 * A client with a per-session config is active, the base configuration
+                 * shouldn't be applied.
+                 */
+                EXPECT_CALL(mock_display, configure(_)).Times(0);
+                mock_display.emit_configuration_change_event(
+                    mt::fake_shared(changed_stub_display_config));
+                mock_display.wait_for_configuration_change_handler();
+                wait_for_server_actions_to_finish(*server.the_main_loop());
+                Mock::VerifyAndClearExpectations(&mock_display);
             });
-        }
-
-        void on_exit() override
-        {
-            t.join();
-        }
-
-        std::shared_ptr<StubPlatform> platform;
-        std::thread t;
-        mt::CrossProcessAction verify_hw_config_change_expectations;
-    } server_config{verify_hw_config_change_expectations};
+        });
 
     DisplayClient display_client_config{display_client_connect,
                                         display_client_apply_config,
                                         display_client_disconnect};
 
-    launch_server_process(server_config);
-    launch_client_process(display_client_config);
+    auto const display_client = std::async(std::launch::async, [&]
+        { display_client_config.exec(new_connection().c_str()); });
 
-    run_in_test_process([&]
-    {
-        display_client_connect();
-        display_client_apply_config();
+    display_client_connect();
+    display_client_apply_config();
 
-        verify_hw_config_change_expectations();
+    verify_hw_config_change_expectations();
 
-        display_client_disconnect();
-    });
+    display_client_disconnect();
 }
-#endif
