@@ -67,3 +67,8 @@ override_dh_installdeb:
 	sh debian/create_postinst_prerm_scripts.sh \
 	  $(DEB_HOST_ARCH) $(DEB_HOST_MULTIARCH)
 	dh_installdeb
+
+override_dh_gencontrol:
+	dh_gencontrol -- \
+		-Vplatform-driver=$(PLATFORM_DRIVER) \
+		-Vclient-driver=$(CLIENT_DRIVER)

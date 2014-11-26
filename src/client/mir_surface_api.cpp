@@ -24,6 +24,7 @@
 #include "error_connections.h"
 
 #include <boost/exception/diagnostic_information.hpp>
+#include <functional>
 
 namespace mcl = mir::client;
 
@@ -37,6 +38,108 @@ void assign_result(void* result, void** context)
         *context = result;
 }
 
+}
+
+MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* connection,
+                                                              int width, int height,
+                                                              MirPixelFormat format)
+{
+    auto spec = new MirSurfaceSpec;
+    spec->connection = connection;
+    spec->width = width;
+    spec->height = height;
+    spec->pixel_format = format;
+    return spec;
+}
+
+MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)
+{
+    MirSurface* surface = nullptr;
+
+    mir_wait_for(mir_surface_create(requested_specification,
+        reinterpret_cast<mir_surface_callback>(assign_result),
+        &surface));
+
+    return surface;
+}
+
+namespace
+{
+void mir_surface_realise_thunk(MirSurface* surface, void* context)
+{
+    auto real_callback = static_cast<std::function<void(MirSurface*)>*>(context);
+    (*real_callback)(surface);
+}
+}
+
+MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
+                                  mir_surface_callback callback, void* context)
+{
+    MirSurfaceParameters params;
+    params.name = requested_specification->name.c_str();
+    params.width = requested_specification->width;
+    params.height = requested_specification->height;
+    params.pixel_format = requested_specification->pixel_format;
+    params.buffer_usage = requested_specification->buffer_usage;
+    params.output_id = requested_specification->output_id;
+
+    auto shim_callback = new std::function<void(MirSurface*)>;
+    *shim_callback = [requested_specification, shim_callback, callback, context]
+                     (MirSurface* surface)
+    {
+        if (requested_specification->fullscreen)
+        {
+            mir_surface_set_state(surface, mir_surface_state_fullscreen);
+        }
+        callback(surface, context);
+        delete shim_callback;
+    };
+
+    return mir_connection_create_surface(requested_specification->connection,
+                                         &params,
+                                         mir_surface_realise_thunk, shim_callback);
+}
+
+bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)
+{
+    spec->name = name;
+    return true;
+}
+
+bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width)
+{
+    spec->width = width;
+    return true;
+}
+
+bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height)
+{
+    spec->height = height;
+    return true;
+}
+
+bool mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format)
+{
+    spec->pixel_format = format;
+    return true;
+}
+
+bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage)
+{
+    spec->buffer_usage = usage;
+    return true;
+}
+
+bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id)
+{
+    spec->output_id = output_id;
+    spec->fullscreen = true;
+    return true;
+}
+
+void mir_surface_spec_release(MirSurfaceSpec* spec)
+{
+    delete spec;
 }
 
 MirWaitHandle* mir_connection_create_surface(
