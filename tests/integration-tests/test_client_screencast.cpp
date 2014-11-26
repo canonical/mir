@@ -16,8 +16,6 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/frontend/session_credentials.h"
-
 #include "mir_toolkit/mir_screencast.h"
 #include "mir_toolkit/mir_client_library.h"
 
@@ -28,7 +26,6 @@
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_buffer.h"
 #include "mir_test_doubles/mock_screencast.h"
-#include "mir_test_doubles/stub_session_authorizer.h"
 #include "mir_test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -175,32 +172,4 @@ TEST_F(Screencast, fails_on_client_when_server_request_fails)
 
     auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
     ASSERT_EQ(nullptr, screencast);
-}
-
-namespace
-{
-
-struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
-{
-    MOCK_METHOD1(screencast_is_allowed, bool(mf::SessionCredentials const&));
-};
-
-struct MockAuthorizerServerConfig : mir_test_framework::StubbedServerConfiguration
-{
-    std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer() override
-    {
-        return mt::fake_shared(mock_authorizer);
-    }
-
-    MockSessionAuthorizer mock_authorizer;
-};
-
-struct UnauthorizedMirScreencastTest : mtf::BasicClientServerFixture<MockAuthorizerServerConfig>
-{
-    MockSessionAuthorizer& mock_authorizer() { return server_configuration.mock_authorizer; }
-
-    MirScreencastParameters default_screencast_params {
-        {0, 0, 1, 1}, 1, 1, mir_pixel_format_abgr_8888};
-};
-
 }
