@@ -41,6 +41,7 @@
 
 #include <thread>
 #include <atomic>
+#include <future>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -153,7 +154,6 @@ TEST_F(DisplayConfigurationTest, display_configuration_reaches_client)
     mir_display_config_destroy(configuration);
 }
 
-#if 0
 TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clients)
 {
     mtf::CrossProcessSync client_ready_fence;
@@ -162,47 +162,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
     mtf::CrossProcessSync send_event_fence;
     mtf::CrossProcessSync events_all_sent;
 
-    struct ServerConfig : TestingServerConfiguration
-    {
-        ServerConfig(mtf::CrossProcessSync const& send_event_fence,
-                     mtf::CrossProcessSync const& events_sent)
-            : send_event_fence(send_event_fence),
-              events_sent(events_sent)
-        {
-        }
-
-        std::shared_ptr<mg::Platform> the_graphics_platform() override
-        {
-            using namespace testing;
-
-            if (!platform)
-                platform = std::make_shared<StubPlatform>();
-
-            return platform;
-        }
-
-        void exec() override
-        {
-            change_thread = std::thread([this](){
-                send_event_fence.wait_for_signal_ready();
-                platform->mock_display.emit_configuration_change_event(
-                    mt::fake_shared(changed_stub_display_config));
-                events_sent.signal_ready();
-            });
-        }
-
-        void on_exit() override
-        {
-            change_thread.join();
-        }
-
-        mtf::CrossProcessSync send_event_fence;
-        mtf::CrossProcessSync events_sent;
-        std::thread change_thread;
-        std::shared_ptr<StubPlatform> platform;
-    } server_config(send_event_fence, events_all_sent);
-
-    struct SubscribedClient : TestingClientConfiguration
+    struct SubscribedClient
     {
         SubscribedClient(mtf::CrossProcessSync const& client_ready_fence)
             : client_ready_fence{client_ready_fence}, callback_called{false}
@@ -221,7 +181,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
             client_config->callback_called = true;
         }
 
-        void exec()
+        void exec(char const* mir_test_socket)
         {
             MirConnection* connection = mir_connect_sync(mir_test_socket, "notifier");
 
@@ -239,7 +199,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
         std::atomic<bool> callback_called;
     } client_config(client_ready_fence);
 
-    struct UnsubscribedClient : TestingClientConfiguration
+    struct UnsubscribedClient
     {
         UnsubscribedClient(mtf::CrossProcessSync const& client_ready_fence,
                            mtf::CrossProcessSync const& client_check_fence)
@@ -248,7 +208,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
         {
         }
 
-        void exec()
+        void exec(char const* mir_test_socket)
         {
             MirConnection* connection = mir_connect_sync(mir_test_socket, "notifier");
 
@@ -279,22 +239,30 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
         mtf::CrossProcessSync client_check_fence;
     } unsubscribed_client_config(unsubscribed_client_ready_fence, unsubscribed_check_fence);
 
-    launch_server_process(server_config);
-    launch_client_process(client_config);
-    launch_client_process(unsubscribed_client_config);
+    auto const change_thread = std::async(std::launch::async, [&]
+        {
+            send_event_fence.wait_for_signal_ready();
+            mock_display.emit_configuration_change_event(
+                mt::fake_shared(changed_stub_display_config));
+            events_all_sent.signal_ready();
+        });
 
-    run_in_test_process([&]
-    {
-        client_ready_fence.wait_for_signal_ready();
-        unsubscribed_client_ready_fence.wait_for_signal_ready();
+    auto const client = std::async(std::launch::async, [&]
+        { client_config.exec(new_connection().c_str()); });
 
-        send_event_fence.signal_ready();
-        events_all_sent.wait_for_signal_ready();
+    auto const unsubscribed_client = std::async(std::launch::async, [&]
+        { unsubscribed_client_config.exec(new_connection().c_str()); });
 
-        unsubscribed_check_fence.signal_ready();
-    });
+    client_ready_fence.wait_for_signal_ready();
+    unsubscribed_client_ready_fence.wait_for_signal_ready();
+
+    send_event_fence.signal_ready();
+    events_all_sent.wait_for_signal_ready();
+
+    unsubscribed_check_fence.signal_ready();
 }
 
+#if 0
 TEST_F(DisplayConfigurationTest, display_change_request_for_unauthorized_client_fails)
 {
     struct ServerConfig : TestingServerConfiguration
