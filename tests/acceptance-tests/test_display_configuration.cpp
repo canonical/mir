@@ -227,79 +227,41 @@ TEST_F(DisplayConfigurationTest, display_change_request_for_unauthorized_client_
 
 namespace
 {
-struct DisplayClient
-{
-    DisplayClient(mt::CrossProcessAction const& connect,
-                  mt::CrossProcessAction const& apply_config,
-                  mt::CrossProcessAction const& disconnect)
-        : connect{connect},
-          apply_config{apply_config},
-          disconnect{disconnect}
-    {
-    }
-
-    void exec(char const* mir_test_socket)
-    {
-        MirConnection* connection;
-
-        connect.exec([&]
-        {
-            connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-        });
-
-        apply_config.exec([&]
-        {
-            auto configuration = mir_connection_create_display_config(connection);
-            mir_wait_for(mir_connection_apply_display_config(connection, configuration));
-            EXPECT_STREQ("", mir_connection_get_error_message(connection));
-            mir_display_config_destroy(configuration);
-        });
-
-        disconnect.exec([&]
-        {
-            mir_connection_release(connection);
-        });
-    }
-
-    mt::CrossProcessAction connect;
-    mt::CrossProcessAction apply_config;
-    mt::CrossProcessAction disconnect;
-};
-
 struct SimpleClient
 {
-    SimpleClient(mt::CrossProcessAction const& connect,
-                 mt::CrossProcessAction const& disconnect)
-        : connect{connect},
-          disconnect{disconnect}
+    SimpleClient(std::string const& mir_test_socket) :
+        mir_test_socket{mir_test_socket} {}
+
+    void connect()
     {
+        connection = mir_connect_sync(mir_test_socket.c_str(), __PRETTY_FUNCTION__);
     }
 
-    void exec(char const* mir_test_socket)
+    void disconnect()
     {
-        MirConnection* connection;
-
-        connect.exec([&]
-        {
-            connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-        });
-
-        disconnect.exec([&]
-        {
-            mir_connection_release(connection);
-        });
+        mir_connection_release(connection);
     }
 
-    mt::CrossProcessAction connect;
-    mt::CrossProcessAction disconnect;
+    std::string mir_test_socket;
+    MirConnection* connection{nullptr};
+};
+
+struct DisplayClient : SimpleClient
+{
+    using SimpleClient::SimpleClient;
+
+    void apply_config()
+    {
+        auto configuration = mir_connection_create_display_config(connection);
+        mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+        EXPECT_STREQ("", mir_connection_get_error_message(connection));
+        mir_display_config_destroy(configuration);
+    }
 };
 }
 
 TEST_F(DisplayConfigurationTest, changing_config_for_focused_client_configures_display)
 {
-    mt::CrossProcessAction display_client_connect;
-    mt::CrossProcessAction display_client_apply_config;
-    mt::CrossProcessAction display_client_disconnect;
     mt::CrossProcessAction verify_connection_expectations;
     mt::CrossProcessAction verify_apply_config_expectations;
 
@@ -321,29 +283,19 @@ TEST_F(DisplayConfigurationTest, changing_config_for_focused_client_configures_d
             });
         });
 
-    DisplayClient display_client_config{display_client_connect,
-                                        display_client_apply_config,
-                                        display_client_disconnect};
+    DisplayClient display_client{new_connection()};
 
-    auto const client = std::async(std::launch::async, [&]
-        { display_client_config.exec(new_connection().c_str()); });
-
-    display_client_connect();
+    display_client.connect();
     verify_connection_expectations();
 
-    display_client_apply_config();
+    display_client.apply_config();
     verify_apply_config_expectations();
 
-    display_client_disconnect();
+    display_client.disconnect();
 }
 
 TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_display)
 {
-    mt::CrossProcessAction display_client_connect;
-    mt::CrossProcessAction display_client_apply_config;
-    mt::CrossProcessAction display_client_disconnect;
-    mt::CrossProcessAction simple_client_connect;
-    mt::CrossProcessAction simple_client_disconnect;
     mt::CrossProcessAction verify_apply_config_expectations;
     mt::CrossProcessAction verify_focus_change_expectations;
 
@@ -365,44 +317,31 @@ TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_
             });
         });
 
-    DisplayClient display_client_config{display_client_connect,
-                                        display_client_apply_config,
-                                        display_client_disconnect};
+    DisplayClient display_client{new_connection()};
 
-    SimpleClient simple_client_config{simple_client_connect,
-                                      simple_client_disconnect};
+    SimpleClient simple_client{new_connection()};
 
-    auto const display_client = std::async(std::launch::async, [&]
-        { display_client_config.exec(new_connection().c_str()); });
-    auto const simple_client = std::async(std::launch::async, [&]
-        { simple_client_config.exec(new_connection().c_str()); });
-
-    display_client_connect();
+    display_client.connect();
 
     /* Connect the simple client. After this the simple client should have the focus. */
-    simple_client_connect();
+    simple_client.connect();
 
     /* Apply the display config while not focused */
-    display_client_apply_config();
+    display_client.apply_config();
     verify_apply_config_expectations();
 
     /*
      * Shut down the simple client. After this the focus should have changed to the
      * display client and its configuration should have been applied.
      */
-    simple_client_disconnect();
+    simple_client.disconnect();
     verify_focus_change_expectations();
 
-    display_client_disconnect();
+    display_client.disconnect();
 }
 
 TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_client_without_config_configures_display)
 {
-    mt::CrossProcessAction display_client_connect;
-    mt::CrossProcessAction display_client_apply_config;
-    mt::CrossProcessAction display_client_disconnect;
-    mt::CrossProcessAction simple_client_connect;
-    mt::CrossProcessAction simple_client_disconnect;
     mt::CrossProcessAction verify_apply_config_expectations;
     mt::CrossProcessAction verify_focus_change_expectations;
 
@@ -424,41 +363,30 @@ TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_clien
             });
         });
 
-    DisplayClient display_client_config{display_client_connect,
-                                        display_client_apply_config,
-                                        display_client_disconnect};
+    DisplayClient display_client{new_connection()};
 
-    SimpleClient simple_client_config{simple_client_connect,
-                                      simple_client_disconnect};
-
-    auto const display_client = std::async(std::launch::async, [&]
-        { display_client_config.exec(new_connection().c_str()); });
-    auto const simple_client = std::async(std::launch::async, [&]
-        { simple_client_config.exec(new_connection().c_str()); });
+    SimpleClient simple_client{new_connection()};
 
     /* Connect the simple client. */
-    simple_client_connect();
+    simple_client.connect();
 
     /* Connect the display config client and apply a display config. */
-    display_client_connect();
-    display_client_apply_config();
+    display_client.connect();
+    display_client.apply_config();
     verify_apply_config_expectations();
 
     /*
      * Shut down the display client. After this the focus should have changed to the
      * simple client and the base configuration should have been applied.
      */
-    display_client_disconnect();
+    display_client.disconnect();
     verify_focus_change_expectations();
 
-    simple_client_disconnect();
+    simple_client.disconnect();
 }
 
 TEST_F(DisplayConfigurationTest, hw_display_change_doesnt_apply_base_config_if_per_session_config_is_active)
 {
-    mt::CrossProcessAction display_client_connect;
-    mt::CrossProcessAction display_client_apply_config;
-    mt::CrossProcessAction display_client_disconnect;
     mt::CrossProcessAction verify_hw_config_change_expectations;
 
     auto const server_code = std::async(std::launch::async, [&]
@@ -480,17 +408,12 @@ TEST_F(DisplayConfigurationTest, hw_display_change_doesnt_apply_base_config_if_p
             });
         });
 
-    DisplayClient display_client_config{display_client_connect,
-                                        display_client_apply_config,
-                                        display_client_disconnect};
+    DisplayClient display_client{new_connection()};
 
-    auto const display_client = std::async(std::launch::async, [&]
-        { display_client_config.exec(new_connection().c_str()); });
-
-    display_client_connect();
-    display_client_apply_config();
+    display_client.connect();
+    display_client.apply_config();
 
     verify_hw_config_change_expectations();
 
-    display_client_disconnect();
+    display_client.disconnect();
 }
