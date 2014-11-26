@@ -29,6 +29,9 @@ mt::Popen::Popen(std::string const& cmd)
 bool mt::Popen::get_line(std::string& line)
 {
     FILE* in = raw_stream.get();
+    if (!in)
+        return false;
+
     char* got = 0;
     char buf[1024];
 
