@@ -32,7 +32,7 @@ bool mt::Popen::get_line(std::string& line)
     char* got = 0;
     char buf[1024];
 
-    line.resize(0);
+    line.clear();
     do
     {
         got = fgets(buf, sizeof buf, in);
