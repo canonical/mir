@@ -34,12 +34,129 @@ extern "C" {
 #endif
 
 /**
+ * Create a surface specification for a normal surface.
+ *
+ * A normal surface is suitable for most application windows. It has no special semantics.
+ * On a desktop shell it will typically have a title-bar, be movable, resizeable, etc.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a surface of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a surface of this height.
+ * \param [in] format       Pixel format for the surface.
+ * \return                  A handle that can be passed to mir_surface_create() to complete construction.
+ */
+MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* connection,
+                                                              int width,
+                                                              int height,
+                                                              MirPixelFormat format);
+
+/**
+ * Create a surface from a given specification
+ *
+ *
+ * \param [in] requested_specification  Specification of the attributes for the created surface
+ * \param [in] callback                 Callback function to be invoked when creation is complete
+ * \param [in, out] context             User data passed to callback function.
+ *                                      This callback is guaranteed to be called, and called with a
+ *                                      non-null MirSurface*, but the surface may be invalid in
+ *                                      case of an error.
+ * \return                              A handle that can be passed to mir_wait_for()
+ */
+MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
+                                  mir_surface_callback callback, void* context);
+
+/**
+ * Create a surface from a given specification and wait for the result.
+ * \param [in] requested_specification  Specification of the attributes for the created surface
+ * \return                              The new surface. This is guaranteed non-null, but may be invalid
+ *                                      in the case of error.
+ */
+MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification);
+
+/**
+ * Set the requested name.
+ *
+ * The surface name helps the user to distinguish between multiple surfaces
+ * from the same application. A typical desktop shell may use it to provide
+ * text in the window titlebar, in an alt-tab switcher, or equivalent.
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] name     Requested name. This must be valid UTF-8.
+ *                      Copied into spec; clients can free the buffer passed after this call.
+ * \return              False if name is not a valid attribute of this surface type.
+ */
+bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name);
+
+/**
+ * Set the requested width, in pixels
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] width    Requested width.
+ * \return              False if width is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          surface of any specific width or height.
+ */
+bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width);
+
+/**
+ * Set the requested height, in pixels
+ *
+ * \param [in] spec     Specification to mutate
+ * \param [in] height   Requested height.
+ * \return              False if height is invalid for a surface of this type
+ * \note    The requested dimensions are a hint only. The server is not guaranteed to create a
+ *          surface of any specific width or height.
+ */
+bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height);
+
+/**
+ * Set the requested pixel format.
+ * \param [in] spec     Specification to mutate
+ * \param [in] format   Requested pixel format
+ * \return              False if format is not a valid pixel format for this surface type.
+ * \note    If this call returns %true then the server is guaranteed to honour this request.
+ *          If the server is unable to create a surface with this pixel format at
+ *          the point mir_surface_create() is called it will instead return an invalid surface.
+ */
+bool mir_surface_spec_set_pixel_format(MirSurfaceSpec* spec, MirPixelFormat format);
+
+/**
+ * Set the requested buffer usage.
+ * \param [in] spec     Specification to mutate
+ * \param [in] usage    Requested buffer usage
+ * \return              False if the requested buffer usage is invalid for this surface.
+ * \note    If this call returns %true then the server is guaranteed to honour this request.
+ *          If the server is unable to create a surface with this buffer usage at
+ *          the point mir_surface_create() is called it will instead return an invalid surface.
+ */
+bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usage);
+
+/**
+ * \param [in] spec         Specification to mutate
+ * \param [in] output_id    ID of output to place surface on. From MirDisplayOutput.output_id
+ * \return                  False if setting surface fullscreen is invalid for this surface.
+ * \note    If this call returns %true then a valid surface returned from mir_surface_create() is
+ *          guaranteed to be fullscreen on the specified output. An invalid surface is returned
+ *          if the server unable to, or policy prevents it from, honouring this request.
+ */
+bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id);
+
+/**
+ * Release the resources held by a MirSurfaceSpec.
+ *
+ * \param [in] spec     Specification to release
+ */
+void mir_surface_spec_release(MirSurfaceSpec* spec);
+
+/**
  * Request a new Mir surface on the supplied connection with the supplied
  * parameters. The returned handle remains valid until the surface has been
  * released.
  *   \warning callback could be called from another thread. You must do any
  *            locking appropriate to protect your data accessed in the
  *            callback.
+ *   \note    This will soon be deprecated. Use the *_spec_for_* / mir_surface_create()
+ *            two-stage process instead.
  *   \param [in] connection          The connection
  *   \param [in] surface_parameters  Request surface parameters
  *   \param [in] callback            Callback function to be invoked when
@@ -57,6 +174,8 @@ MirWaitHandle *mir_connection_create_surface(
 /**
  * Create a surface like in mir_connection_create_surface(), but also wait for
  * creation to complete and return the resulting surface.
+ *   \note    This will soon be deprecated. Use the create_spec_for/mir_surface_create()
+ *            two-stage process instead.
  *   \param [in] connection  The connection
  *   \param [in] params      Parameters describing the desired surface
  *   \return                 The resulting surface
