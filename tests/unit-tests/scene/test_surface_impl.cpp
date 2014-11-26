@@ -430,3 +430,58 @@ TEST_F(Surface, with_most_recent_buffer_do_uses_compositor_buffer)
 
     EXPECT_EQ(stub_buffer_stream->stub_compositor_buffer.get(), buf_ptr);
 }
+
+TEST_F(Surface, permitted_orientations_defaults_to_all)
+{
+    using namespace testing;
+
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
+        null_configurator,
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+
+    EXPECT_EQ(mir_permitted_orientation_all, surf.query(mir_surface_attrib_permitted_orientations));
+}
+
+TEST_F(Surface, emits_orientation_events_only_on_allowed_orientations)
+{
+    using namespace testing;
+
+    MockEventSink sink;
+    auto const orientation = mir_orientation_left;
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, mt::fake_shared(sink));
+
+    EXPECT_CALL(sink,
+        handle_event(mt::SurfaceEvent(mir_surface_attrib_permitted_orientations, mir_permitted_orientation_inverted)))
+        .Times(1);
+    EXPECT_CALL(sink,
+        handle_event(mt::SurfaceEvent(mir_surface_attrib_permitted_orientations, mir_permitted_orientation_left)))
+        .Times(1);
+    EXPECT_CALL(sink, handle_event(mt::OrientationEvent(orientation)))
+        .Times(1);
+
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
+        null_configurator,
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+
+    surf.add_observer(observer);
+
+    surf.configure(mir_surface_attrib_permitted_orientations, mir_permitted_orientation_inverted);
+    surf.set_orientation(orientation);
+
+    surf.configure(mir_surface_attrib_permitted_orientations, mir_permitted_orientation_left);
+    surf.set_orientation(orientation);
+}

@@ -141,6 +141,7 @@ void ms::BasicSurface::initialize_attributes()
     attrib_values[mir_surface_attrib_focus] = mir_surface_unfocused;
     attrib_values[mir_surface_attrib_dpi] = 0;
     attrib_values[mir_surface_attrib_visibility] = mir_surface_visibility_exposed;
+    attrib_values[mir_surface_attrib_permitted_orientations] = mir_permitted_orientation_all;
 }
 
 void ms::BasicSurface::force_requests_to_complete()
@@ -336,7 +337,29 @@ void ms::BasicSurface::set_alpha(float alpha)
 
 void ms::BasicSurface::set_orientation(MirOrientation orientation)
 {
-    observers.orientation_set_to(orientation);
+    auto const permitted_orientations = query(mir_surface_attrib_permitted_orientations);
+
+    MirPermittedOrientations req_orientation;
+    switch(orientation)
+    {
+    case mir_orientation_normal:
+        req_orientation = mir_permitted_orientation_normal;
+        break;
+    case mir_orientation_inverted:
+        req_orientation = mir_permitted_orientation_inverted;
+        break;
+    case mir_orientation_left:
+        req_orientation = mir_permitted_orientation_left;
+        break;
+    case mir_orientation_right:
+        req_orientation = mir_permitted_orientation_right;
+        break;
+    default:
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid orientation."));
+    }
+
+    if (req_orientation & permitted_orientations)
+        observers.orientation_set_to(orientation);
 }
 
 void ms::BasicSurface::set_transformation(glm::mat4 const& t)
@@ -472,6 +495,25 @@ MirSurfaceFocusState ms::BasicSurface::set_focus_state(MirSurfaceFocusState new_
     return new_state;
 }
 
+MirPermittedOrientations ms::BasicSurface::set_permitted_orientations(MirPermittedOrientations orientations)
+{
+    if ((orientations & mir_permitted_orientation_all) == 0)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid permitted orientations"));
+    }
+
+    std::unique_lock<std::mutex> lg(guard);
+    if (attrib_values[mir_surface_attrib_permitted_orientations] != orientations)
+    {
+        attrib_values[mir_surface_attrib_permitted_orientations] = orientations;
+        lg.unlock();
+
+        observers.attrib_changed(mir_surface_attrib_permitted_orientations, orientations);
+    }
+
+    return orientations;
+}
+
 void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
 {
     targeter->focus_changed(input_channel());
@@ -499,6 +541,9 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
         break;
     case mir_surface_attrib_visibility:
         result = set_visibility(static_cast<MirSurfaceVisibility>(result));
+        break;
+    case mir_surface_attrib_permitted_orientations:
+        result = set_permitted_orientations(static_cast<MirPermittedOrientations>(result));
         break;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "

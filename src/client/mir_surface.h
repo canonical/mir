@@ -108,7 +108,8 @@ public:
     int attrib(MirSurfaceAttrib a) const;
 
     MirOrientation get_orientation() const;
-    
+    MirWaitHandle* set_permitted_orientations(MirPermittedOrientations orientations);
+
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
     void set_event_handler(MirEventDelegate const* delegate);

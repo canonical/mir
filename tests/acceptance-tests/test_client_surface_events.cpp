@@ -32,6 +32,7 @@
 #include <condition_variable>
 #include <chrono>
 #include <mutex>
+#include <vector>
 
 namespace mtf = mir_test_framework;
 namespace ms = mir::scene;
@@ -154,6 +155,39 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 
     std::weak_ptr<MockSurfaceCoordinator> mock_surface_coordinator;
 };
+
+MirPermittedOrientations permitted_orientation_from(MirOrientation orientation)
+{
+    MirPermittedOrientations perm_orientation;
+    switch(orientation)
+    {
+    case mir_orientation_normal:
+        perm_orientation = mir_permitted_orientation_normal;
+        break;
+    case mir_orientation_inverted:
+        perm_orientation = mir_permitted_orientation_inverted;
+        break;
+    case mir_orientation_left:
+        perm_orientation = mir_permitted_orientation_left;
+        break;
+    case mir_orientation_right:
+        perm_orientation = mir_permitted_orientation_right;
+        break;
+    default:
+        throw std::logic_error("Invalid orientation");
+    }
+    return perm_orientation;
+}
+
+std::vector<MirOrientation> orientations_excluding(MirOrientation orientation)
+{
+    std::vector<MirOrientation> list{
+        mir_orientation_normal, mir_orientation_left,
+        mir_orientation_inverted, mir_orientation_right};
+
+    list.erase(std::remove(list.begin(), list.end(), orientation));
+    return list;
+}
 }
 
 TEST_F(ClientSurfaceEvents, surface_receives_state_events)
@@ -254,5 +288,43 @@ TEST_F(ClientSurfaceEvents, client_can_query_current_orientation)
         EXPECT_TRUE(wait_for_event(std::chrono::seconds(1)));
 
         EXPECT_THAT(mir_surface_get_orientation(surface), Eq(direction));
+    }
+}
+
+TEST_F(ClientSurfaceEvents, client_can_query_permitted_orientations)
+{
+    for (auto const allowed_orientations:
+        {mir_permitted_orientation_normal, mir_permitted_orientation_left,
+         mir_permitted_orientation_right, mir_permitted_orientation_inverted,
+         mir_permitted_orientation_all, mir_permitted_orientation_left_right,
+         mir_permitted_orientation_normal_inverted})
+    {
+        reset_last_event();
+
+        mir_wait_for(mir_surface_set_permitted_orientations(surface, allowed_orientations));
+        EXPECT_THAT(mir_surface_get_permitted_orientations(surface), Eq(allowed_orientations));
+    }
+}
+
+TEST_F(ClientSurfaceEvents, surface_does_not_receive_orientation_events)
+{
+    set_event_filter(mir_event_type_orientation);
+
+    auto const default_orientation = mir_surface_get_orientation(surface);
+    auto const perm_orientations = permitted_orientation_from(default_orientation);
+
+    mir_wait_for(mir_surface_set_permitted_orientations(surface, perm_orientations));
+    EXPECT_THAT(mir_surface_get_permitted_orientations(surface), Eq(perm_orientations));
+
+    auto const orientations_to_test = orientations_excluding(default_orientation);
+    for (auto const direction: orientations_to_test)
+    {
+        reset_last_event();
+
+        scene_surface->set_orientation(direction);
+
+        EXPECT_FALSE(wait_for_event(std::chrono::milliseconds(10)));
+
+        EXPECT_THAT(mir_surface_get_orientation(surface), Ne(direction));
     }
 }
