@@ -19,11 +19,16 @@
 
 #include <mir_test/popen.h>
 
+#include <system_error>
+
 namespace mt = mir::test;
 
 mt::Popen::Popen(std::string const& cmd)
     : raw_stream{popen(cmd.c_str(), "r"), [](FILE* f){ pclose(f); }}
 {
+    if (!raw_stream)
+        throw std::system_error(errno, std::system_category(),
+                                "popen failed for `"+cmd+"'");
 }
 
 bool mt::Popen::get_line(std::string& line)
