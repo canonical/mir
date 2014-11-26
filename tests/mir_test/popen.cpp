@@ -31,11 +31,17 @@ bool mt::Popen::get_line(std::string& line)
     FILE* in = raw_stream.get();
     char* got = 0;
     char buf[1024];
+
     line.resize(0);
     do
     {
         got = fgets(buf, sizeof buf, in);
-        if (got) line.append(got);
+        if (got)
+            line.append(got);
     } while (got && !feof(in) && !line.empty() && line.back() != '\n');
-    return got;
+
+    if (line.back() == '\n')
+        line.pop_back();
+
+    return !feof(in);
 }
