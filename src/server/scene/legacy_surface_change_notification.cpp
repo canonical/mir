@@ -82,6 +82,6 @@ void ms::LegacySurfaceChangeNotification::reception_mode_set_to(mi::InputRecepti
 }
 
 // A client close request is not enough to trigger recomposition.
-void ms::LegacySurfaceChangeNotification::client_close_requested()
+void ms::LegacySurfaceChangeNotification::client_surface_close_requested()
 {
 }

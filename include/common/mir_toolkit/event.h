@@ -43,7 +43,7 @@ typedef enum
     mir_event_type_resize,
     mir_event_type_prompt_session_state_change,
     mir_event_type_orientation,
-    mir_event_type_close
+    mir_event_type_close_surface
 } MirEventType;
 
 typedef enum {
@@ -225,12 +225,12 @@ typedef struct MirOrientationEvent
     MirOrientation direction;
 } MirOrientationEvent;
 
-typedef struct MirCloseEvent
+typedef struct MirCloseSurfaceEvent
 {
     MirEventType type;
 
     int surface_id;
-} MirCloseEvent;
+} MirCloseSurfaceEvent;
 
 typedef union
 {
@@ -241,7 +241,7 @@ typedef union
     MirResizeEvent  resize;
     MirPromptSessionEvent  prompt_session;
     MirOrientationEvent orientation;
-    MirCloseEvent   close;
+    MirCloseSurfaceEvent   close_surface;
 } MirEvent;
 
 #ifdef __cplusplus

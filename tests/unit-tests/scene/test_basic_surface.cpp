@@ -67,7 +67,7 @@ public:
 class MockCloseObserver : public ms::NullSurfaceObserver
 {
 public:
-    MOCK_METHOD0(client_close_requested, void());
+    MOCK_METHOD0(client_surface_close_requested, void());
 };
 
 class StubEventSink : public mir::frontend::EventSink
@@ -729,9 +729,9 @@ TEST_F(BasicSurfaceTest, notifies_of_client_close_request)
 
     MockCloseObserver mock_surface_observer;
 
-    EXPECT_CALL(mock_surface_observer, client_close_requested()).Times(1);
+    EXPECT_CALL(mock_surface_observer, client_surface_close_requested()).Times(1);
 
     surface.add_observer(mt::fake_shared(mock_surface_observer));
 
-    surface.request_client_close();
+    surface.request_client_surface_close();
 }

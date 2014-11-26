@@ -86,7 +86,7 @@ struct UpdateCursorOnSurfaceChanges : ms::SurfaceObserver
     {
         // No need to update cursor for orientation property change alone.
     }
-    void client_close_requested() override
+    void client_surface_close_requested() override
     {
         // No need to update cursor for client close requests
     }

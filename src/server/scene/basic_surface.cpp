@@ -101,10 +101,10 @@ void ms::SurfaceObservers::reception_mode_set_to(mi::InputReceptionMode mode)
         { observer->reception_mode_set_to(mode); });
 }
 
-void ms::SurfaceObservers::client_close_requested()
+void ms::SurfaceObservers::client_surface_close_requested()
 {
     for_each([](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->client_close_requested(); });
+        { observer->client_surface_close_requested(); });
 }
 
 
@@ -554,9 +554,9 @@ std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image() const
     return cursor_image_;
 }
 
-void ms::BasicSurface::request_client_close()
+void ms::BasicSurface::request_client_surface_close()
 {
-    observers.client_close_requested();
+    observers.client_surface_close_requested();
 }
 
 int ms::BasicSurface::dpi() const

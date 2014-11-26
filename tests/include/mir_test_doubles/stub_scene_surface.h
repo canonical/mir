@@ -89,7 +89,7 @@ public:
     void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& /* image */) {}
     std::shared_ptr<graphics::CursorImage> cursor_image() const { return {}; }
 
-    void request_client_close() override {}
+    void request_client_surface_close() override {}
 
     MirPixelFormat pixel_format() const override { return mir_pixel_format_xrgb_8888; }
 
