@@ -97,9 +97,15 @@ private:
 
     bool visible;
 
+    struct CursorCapabilities
+    {
+        CursorCapabilities(int connection);
+	uint64_t width, height;
+    } cursor_cap;
+
     struct GBMBOWrapper
     {
-        GBMBOWrapper(gbm_device* gbm);
+        GBMBOWrapper(gbm_device* gbm, int width, int height);
         operator gbm_bo*();
         ~GBMBOWrapper();
     private:
@@ -107,6 +113,9 @@ private:
         GBMBOWrapper(GBMBOWrapper const&) = delete;
         GBMBOWrapper& operator=(GBMBOWrapper const&) = delete;
     } buffer;
+
+    uint32_t buffer_width;
+    uint32_t buffer_height;
 
     std::shared_ptr<CurrentConfiguration> const current_configuration;
 };

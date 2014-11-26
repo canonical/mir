@@ -21,8 +21,16 @@
 
 #include <gmock/gmock.h>
 
+#define virtual virtual_
+#include <drm/drm.h>
+#undef virtual
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+
+#ifndef DRM_CAP_CURSOR_WIDTH
+#define DRM_CAP_CURSOR_WIDTH 0x8
+#define DRM_CAP_CURSOR_HEIGHT 0x9
+#endif
 
 namespace mir
 {
@@ -129,6 +137,8 @@ public:
 
     MOCK_METHOD2(drmSetInterfaceVersion, int (int fd, drmSetVersion* sv));
     MOCK_METHOD1(drmGetBusid, char* (int fd));
+
+    MOCK_METHOD3(drmGetCap, int(int fd, uint64_t capability, uint64_t *value));
 
     FakeDRMResources fake_drm;
 };

@@ -24,6 +24,9 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/cursor_image.h"
 
+#include <xf86drm.h>
+#include <drm/drm.h>
+
 #include <boost/exception/errinfo_errno.hpp>
 
 #include <stdexcept>
@@ -35,9 +38,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-int const buffer_width = 64;
-int const buffer_height = 64;
-
 // Transforms a relative position within the display bounds described by \a rect which is rotated with \a orientation
 geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement const& vector, MirOrientation orientation)
 {
@@ -56,13 +56,33 @@ geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement con
 }
 }
 
-mgm::Cursor::GBMBOWrapper::GBMBOWrapper(gbm_device* gbm) :
+// support for older drm headers
+#ifndef DRM_CAP_CURSOR_WIDTH
+#define DRM_CAP_CURSOR_WIDTH		0x8
+#define DRM_CAP_CURSOR_HEIGHT		0x9
+#endif
+
+mgm::Cursor::CursorCapabilities::CursorCapabilities(int fd)
+{
+    const uint64_t fallback_size = 64;
+    if (drmGetCap(fd, DRM_CAP_CURSOR_WIDTH, &width) < 0)
+        width = fallback_size;
+    if (drmGetCap(fd, DRM_CAP_CURSOR_HEIGHT, &height) < 0)
+        height = fallback_size;
+}
+
+// support for older mesa versions
+#ifndef GBM_BO_USE_CURSOR
+#define GBM_BO_USE_CURSOR GBM_BO_USE_CURSOR_64X64
+#endif
+
+mgm::Cursor::GBMBOWrapper::GBMBOWrapper(gbm_device* gbm, int buffer_width, int buffer_height) :
     buffer(gbm_bo_create(
                 gbm,
                 buffer_width,
                 buffer_height,
                 GBM_FORMAT_ARGB8888,
-                GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE))
+                GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE))
 {
     if (!buffer) BOOST_THROW_EXCEPTION(std::runtime_error("failed to create gbm buffer"));
 }
@@ -78,7 +98,10 @@ mgm::Cursor::Cursor(
         output_container(output_container),
         current_position(),
         visible(true),
-        buffer(gbm),
+        cursor_cap(gbm_device_get_fd(gbm)),
+        buffer(gbm, cursor_cap.width, cursor_cap.height),
+        buffer_width(gbm_bo_get_width(buffer)),
+        buffer_height(gbm_bo_get_height(buffer)),
         current_configuration(current_configuration)
 {
     show(*initial_image);
@@ -110,7 +133,7 @@ void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> co
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Image is too big for GBM cursor buffer"));
     }
-    
+
     size_t buffer_stride = gbm_bo_get_stride(buffer);  // in bytes
     size_t padded_size = buffer_stride * buffer_height;
     auto padded = std::unique_ptr<uint8_t[]>(new uint8_t[padded_size]);

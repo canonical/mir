@@ -252,6 +252,22 @@ mtd::MockDRM::MockDRM()
 
     ON_CALL(*this, drmGetBusid(_))
     .WillByDefault(WithoutArgs(Invoke([]{ return static_cast<char*>(malloc(10)); })));
+
+    ON_CALL(*this, drmGetCap(_,DRM_CAP_CURSOR_WIDTH,_))
+    .WillByDefault(Invoke([](int, uint64_t, uint64_t *val) -> int
+                          {
+                              *val = 64;
+                              return 1;
+                          })
+                       );
+
+    ON_CALL(*this, drmGetCap(_,DRM_CAP_CURSOR_HEIGHT,_))
+    .WillByDefault(Invoke([](int, uint64_t, uint64_t *val) -> int
+                          {
+                              *val = 64;
+                              return 1;
+                          })
+                       );
 }
 
 mtd::MockDRM::~MockDRM() noexcept
@@ -352,6 +368,11 @@ int drmHandleEvent(int fd, drmEventContextPtr evctx)
 int drmGetMagic(int fd, drm_magic_t *magic)
 {
     return global_mock->drmGetMagic(fd, magic);
+}
+
+int drmGetCap(int fd, uint64_t capability, uint64_t* value)
+{
+    return global_mock->drmGetCap(fd, capability, value);
 }
 
 int drmAuthMagic(int fd, drm_magic_t magic)
