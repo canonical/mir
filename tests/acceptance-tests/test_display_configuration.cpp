@@ -35,9 +35,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include <thread>
 #include <atomic>
-#include <future>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -285,7 +283,6 @@ TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_
     EXPECT_CALL(mock_display, configure(_)).Times(0);
 
     DisplayClient display_client{new_connection()};
-
     SimpleClient simple_client{new_connection()};
 
     display_client.connect();
