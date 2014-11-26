@@ -120,6 +120,13 @@ private:
     std::atomic<bool> handler_called;
 };
 
+struct StubAuthorizer : mtd::StubSessionAuthorizer
+{
+    bool configure_display_is_allowed(mf::SessionCredentials const&) override { return result; }
+
+    std::atomic<bool> result{true};
+};
+
 #if 0
 void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_queue)
 {
@@ -137,11 +144,13 @@ struct DisplayConfigurationTest : mtf::ConnectedClientHeadlessServer
 {
     void SetUp() override
     {
+        server.override_the_session_authorizer([this] { return mt::fake_shared(stub_authorizer); });
         preset_display(mt::fake_shared(mock_display));
         mtf::ConnectedClientHeadlessServer::SetUp();
     }
 
     testing::NiceMock<MockDisplay> mock_display;
+    StubAuthorizer stub_authorizer;
 };
 
 TEST_F(DisplayConfigurationTest, display_configuration_reaches_client)
@@ -262,48 +271,23 @@ TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clie
     unsubscribed_check_fence.signal_ready();
 }
 
-#if 0
 TEST_F(DisplayConfigurationTest, display_change_request_for_unauthorized_client_fails)
 {
-    struct ServerConfig : TestingServerConfiguration
-    {
-        std::shared_ptr<mf::SessionAuthorizer> the_session_authorizer() override
-        {
-            class StubAuthorizer : public mtd::StubSessionAuthorizer
-            {
-                bool configure_display_is_allowed(mf::SessionCredentials const&) override { return false; }
-            };
+    stub_authorizer.result = false;
 
-            if (!authorizer)
-                authorizer = std::make_shared<StubAuthorizer>();
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-            return authorizer;
-        }
+    auto configuration = mir_connection_create_display_config(connection);
 
-        std::shared_ptr<mf::SessionAuthorizer> authorizer;
-    } server_config;
+    mir_wait_for(mir_connection_apply_display_config(connection, configuration));
+    EXPECT_THAT(mir_connection_get_error_message(connection),
+                testing::HasSubstr("not authorized to apply display configurations"));
 
-    launch_server_process(server_config);
-
-    struct Client : TestingClientConfiguration
-    {
-        void exec()
-        {
-            auto connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
-            auto configuration = mir_connection_create_display_config(connection);
-
-            mir_wait_for(mir_connection_apply_display_config(connection, configuration));
-            EXPECT_THAT(mir_connection_get_error_message(connection),
-                        testing::HasSubstr("not authorized to apply display configurations"));
-
-            mir_display_config_destroy(configuration);
-            mir_connection_release(connection);
-        }
-    } client_config;
-
-    launch_client_process(client_config);
+    mir_display_config_destroy(configuration);
+    mir_connection_release(connection);
 }
 
+#if 0
 namespace
 {
 
