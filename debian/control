@@ -67,7 +67,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         libmirplatform4driver-mesa | libmirplatform4driver-android,
+         libmir${platform-driver}-mesa | libmir${platform-driver}-android,
 Description: Display server for Ubuntu - server library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -144,7 +144,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         libmirclient8driver-mesa | libmirclient8driver-android,
+         libmir${client-driver}-mesa | libmir${client-driver}-android,
 Description: Display server for Ubuntu - client library
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -328,8 +328,8 @@ Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-	 libmirplatform3driver-mesa,
-	 libmirclient8driver-mesa
+         libmir${platform-driver}-mesa,
+         libmir${client-driver}-mesa
 Description: Display server for Ubuntu - desktop driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -343,8 +343,8 @@ Architecture: i386 amd64 armhf
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-	 libmirplatform4driver-android,
-	 libmirclient8driver-android
+         libmir${platform-driver}-android,
+         libmir${client-driver}-android
 Description: Display server for Ubuntu - android driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
