@@ -14,3 +14,16 @@ MIR_CLIENT_8 {
   }; 
  local: *;
 };
+
+MIR_CLIENT_8.1 {
+  global:
+    mir_connection_create_spec_for_normal_surface;
+    mir_surface_create;
+    mir_surface_create_sync;
+    mir_surface_spec_set_name;
+    mir_surface_spec_set_width;
+    mir_surface_spec_set_height;
+    mir_surface_spec_set_pixel_format;
+    mir_surface_spec_set_buffer_usage;
+    mir_surface_spec_set_fullscreen_on_output;
+} MIR_CLIENT_8;

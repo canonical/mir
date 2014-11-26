@@ -5,10 +5,10 @@ b53736bcb22ddc09aab8275cfdd05c109fdd0f12  include/client/mir_toolkit/mir_client_
 1ef8f51a3e3f8d1559266c5af58fbfde7cfabf0a  include/client/mir_toolkit/mir_cursor_configuration.h
 9d50df5a141ca03ee8a79f7e844ed4b8b3b7d5d3  include/client/mir_toolkit/mir_prompt_session.h
 21d07e655e85eeec8a3523e1c6f9c2252176ec01  include/client/mir_toolkit/mir_screencast.h
-4f85e3d00314a7df869e56c3701a45310909fae2  include/client/mir_toolkit/mir_surface.h
+b9a11709737d6178c4bf30d067922ca823957045  include/client/mir_toolkit/mir_surface.h
 b141c4d79802ad626d969249c0004744e5c2a525  include/client/mir_toolkit/mir_wait.h
 c367f5c9285936820fbd50961827d6ce58fb7ff4  include/client/mir_toolkit/version.h
-ee337f546bca8f151e0f5adafb3ce91dabedebba  include/common/mir_toolkit/client_types.h
+1863a7fe3a382061f2752c0236cc971e7e68f93f  include/common/mir_toolkit/client_types.h
 2100c0674d9d882c1845550847357f6a5de5af66  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 bdaceadd56e41d2cb708f7c4da97acf84dfc75b7  include/common/mir_toolkit/event.h
