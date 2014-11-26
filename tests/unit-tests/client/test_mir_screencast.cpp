@@ -21,6 +21,7 @@
 #include "src/client/client_platform.h"
 
 #include "mir_test_doubles/null_client_buffer.h"
+#include "mir_test_doubles/stub_client_buffer_factory.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -125,16 +126,6 @@ struct StubEGLNativeWindowFactory : mcl::EGLNativeWindowFactory
 
 EGLNativeWindowType StubEGLNativeWindowFactory::egl_native_window{
     reinterpret_cast<EGLNativeWindowType>(&StubEGLNativeWindowFactory::egl_native_window)};
-
-class StubClientBufferFactory : public mcl::ClientBufferFactory
-{
-    std::shared_ptr<mcl::ClientBuffer> create_buffer(
-        std::shared_ptr<MirBufferPackage> const& /*package*/,
-        mir::geometry::Size /*size*/, MirPixelFormat /*pf*/)
-    {
-        return std::make_shared<mtd::NullClientBuffer>();
-    }
-};
 
 struct MockClientBufferFactory : mcl::ClientBufferFactory
 {
@@ -244,7 +235,7 @@ public:
           default_region{{0, 0}, {1, 1}},
           default_pixel_format{mir_pixel_format_xbgr_8888},
           stub_egl_native_window_factory{std::make_shared<StubEGLNativeWindowFactory>()},
-          stub_client_buffer_factory{std::make_shared<StubClientBufferFactory>()},
+          stub_client_buffer_factory{std::make_shared<mtd::StubClientBufferFactory>()},
           mock_client_buffer_factory{std::make_shared<MockClientBufferFactory>()}
     {
     }
@@ -255,7 +246,7 @@ public:
     mir::geometry::Rectangle default_region;
     MirPixelFormat default_pixel_format;
     std::shared_ptr<StubEGLNativeWindowFactory> const stub_egl_native_window_factory;
-    std::shared_ptr<StubClientBufferFactory> const stub_client_buffer_factory;
+    std::shared_ptr<mtd::StubClientBufferFactory> const stub_client_buffer_factory;
     std::shared_ptr<MockClientBufferFactory> const mock_client_buffer_factory;
 };
 

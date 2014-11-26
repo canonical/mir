@@ -25,6 +25,8 @@
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
 
+#include "mir_test/validity_matchers.h"
+
 #include <gtest/gtest.h>
 
 #include <vector>
@@ -163,12 +165,29 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
     EXPECT_EQ(display_rects, surface_rects);
 }
 
-TEST_F(SurfacesWithOutputId, non_fullscreen_surfaces_are_not_accepted)
+TEST_F(SurfacesWithOutputId, requested_size_is_ignored_in_favour_of_display_size)
 {
+    using namespace testing;
+
+    std::vector<std::pair<int, int>> expected_dimensions;
+    std::vector<std::shared_ptr<MirSurface>> surfaces;
     for (uint32_t n = 0; n < config->num_outputs; ++n)
     {
         auto surface = create_non_fullscreen_surface_for(config->outputs[n]);
 
-        EXPECT_FALSE(mir_surface_is_valid(surface.get()));
+        EXPECT_THAT(surface.get(), IsValid());
+        surfaces.push_back(surface);
+
+        auto expected_mode = config->outputs[n].modes[config->outputs[n].current_mode];
+        expected_dimensions.push_back(std::pair<int,int>{expected_mode.horizontal_resolution,
+                                                         expected_mode.vertical_resolution});
+
     }
+
+    auto surface_rects = server_surface_rectangles();
+    auto display_rects = ServerConfig::display_rects;
+
+    std::sort(display_rects.begin(), display_rects.end(), RectangleCompare());
+    std::sort(surface_rects.begin(), surface_rects.end(), RectangleCompare());
+    EXPECT_EQ(display_rects, surface_rects);
 }

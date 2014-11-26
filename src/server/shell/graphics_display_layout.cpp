@@ -79,10 +79,10 @@ void msh::GraphicsDisplayLayout::place_in_output(
     config->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         if (output.id == id &&
-            output.current_mode_index < output.modes.size() &&
-            rect.size == output.extents().size)
+            output.current_mode_index < output.modes.size())
         {
             rect.top_left = output.top_left;
+            rect.size = output.extents().size;
             placed = true;
         }
     });

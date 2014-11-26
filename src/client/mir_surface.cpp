@@ -47,6 +47,15 @@ std::mutex handle_mutex;
 std::unordered_set<MirSurface*> valid_surfaces;
 }
 
+MirSurfaceSpec::MirSurfaceSpec()
+    : width{-1},
+      height{-1},
+      buffer_usage{mir_buffer_usage_hardware},
+      output_id{mir_display_output_id_invalid},
+      fullscreen{false}
+{
+}
+
 MirSurface::MirSurface(std::string const& error)
     : server{null_server},
       connection{nullptr}
@@ -103,6 +112,11 @@ MirSurface::MirSurface(
 
     for (int i = 0; i < mir_surface_attribs; i++)
         attrib_cache[i] = -1;
+
+    if (params.name)
+    {
+        name = params.name;
+    }
 
     mir::protobuf::SurfaceParameters message;
     message.set_surface_name(params.name ? params.name : std::string());
@@ -228,7 +242,7 @@ MirWaitHandle* MirSurface::get_create_wait_handle()
 
 /* todo: all these conversion functions are a bit of a kludge, probably
          better to have a more developed MirPixelFormat that can handle this */
-MirPixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf)
+MirPixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf) const
 {
     return static_cast<MirPixelFormat>(pf);
 }
