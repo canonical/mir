@@ -17,7 +17,7 @@
  *              Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/server_action_queue.h"
+#include "mir/main_loop.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/graphics/event_handler_register.h"
 #include "src/server/scene/global_event_sender.h"
@@ -52,6 +52,8 @@ namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
+
+using namespace testing;
 
 namespace
 {
@@ -127,7 +129,6 @@ struct StubAuthorizer : mtd::StubSessionAuthorizer
     std::atomic<bool> result{true};
 };
 
-#if 0
 void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_queue)
 {
     mt::WaitCondition last_action_done;
@@ -137,7 +138,6 @@ void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_que
 
     last_action_done.wait_for_at_most_seconds(5);
 }
-#endif
 }
 
 struct DisplayConfigurationTest : mtf::ConnectedClientHeadlessServer
@@ -287,11 +287,9 @@ TEST_F(DisplayConfigurationTest, display_change_request_for_unauthorized_client_
     mir_connection_release(connection);
 }
 
-#if 0
 namespace
 {
-
-struct DisplayClient : TestingClientConfiguration
+struct DisplayClient
 {
     DisplayClient(mt::CrossProcessAction const& connect,
                   mt::CrossProcessAction const& apply_config,
@@ -302,7 +300,7 @@ struct DisplayClient : TestingClientConfiguration
     {
     }
 
-    void exec()
+    void exec(char const* mir_test_socket)
     {
         MirConnection* connection;
 
@@ -330,7 +328,7 @@ struct DisplayClient : TestingClientConfiguration
     mt::CrossProcessAction disconnect;
 };
 
-struct SimpleClient : TestingClientConfiguration
+struct SimpleClient
 {
     SimpleClient(mt::CrossProcessAction const& connect,
                  mt::CrossProcessAction const& disconnect)
@@ -339,7 +337,7 @@ struct SimpleClient : TestingClientConfiguration
     {
     }
 
-    void exec()
+    void exec(char const* mir_test_socket)
     {
         MirConnection* connection;
 
@@ -357,7 +355,6 @@ struct SimpleClient : TestingClientConfiguration
     mt::CrossProcessAction connect;
     mt::CrossProcessAction disconnect;
 };
-
 }
 
 TEST_F(DisplayConfigurationTest, changing_config_for_focused_client_configures_display)
@@ -368,78 +365,41 @@ TEST_F(DisplayConfigurationTest, changing_config_for_focused_client_configures_d
     mt::CrossProcessAction verify_connection_expectations;
     mt::CrossProcessAction verify_apply_config_expectations;
 
-    struct ServerConfig : TestingServerConfiguration
-    {
-        ServerConfig(mt::CrossProcessAction const& verify_connection_expectations,
-                     mt::CrossProcessAction const& verify_apply_config_expectations)
-            : verify_connection_expectations{verify_connection_expectations},
-              verify_apply_config_expectations{verify_apply_config_expectations}
-        {
-        }
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
 
-        std::shared_ptr<mg::Platform> the_graphics_platform() override
+    auto const server_code = std::async(std::launch::async, [&]
         {
-            using namespace testing;
-
-            if (!platform)
+            verify_connection_expectations.exec([&]
             {
-                platform = std::make_shared<StubPlatform>();
-                EXPECT_CALL(platform->mock_display, configure(_)).Times(0);
-            }
-
-            return platform;
-        }
-
-        void exec() override
-        {
-            t = std::thread([this](){
-                verify_connection_expectations.exec([&]
-                {
-                    wait_for_server_actions_to_finish(*the_server_action_queue());
-                    testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
-                    EXPECT_CALL(platform->mock_display, configure(testing::_)).Times(1);
-                });
-
-                verify_apply_config_expectations.exec([&]
-                {
-                    wait_for_server_actions_to_finish(*the_server_action_queue());
-                    testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
-                });
+                wait_for_server_actions_to_finish(*server.the_main_loop());
+                testing::Mock::VerifyAndClearExpectations(&mock_display);
+                EXPECT_CALL(mock_display, configure(testing::_)).Times(1);
             });
-        }
 
-        void on_exit() override
-        {
-            t.join();
-        }
-
-        std::shared_ptr<StubPlatform> platform;
-        std::thread t;
-        mt::CrossProcessAction verify_connection_expectations;
-        mt::CrossProcessAction verify_apply_config_expectations;
-    } server_config{verify_connection_expectations,
-                    verify_apply_config_expectations};
-
-    launch_server_process(server_config);
+            verify_apply_config_expectations.exec([&]
+            {
+                wait_for_server_actions_to_finish(*server.the_main_loop());
+                testing::Mock::VerifyAndClearExpectations(&mock_display);
+            });
+        });
 
     DisplayClient display_client_config{display_client_connect,
                                         display_client_apply_config,
                                         display_client_disconnect};
 
-    launch_client_process(display_client_config);
+    auto const client = std::async(std::launch::async, [&]
+        { display_client_config.exec(new_connection().c_str()); });
 
-    run_in_test_process([&]
-    {
-        display_client_connect();
-        verify_connection_expectations();
+    display_client_connect();
+    verify_connection_expectations();
 
-        display_client_apply_config();
-        verify_apply_config_expectations();
+    display_client_apply_config();
+    verify_apply_config_expectations();
 
-        display_client_disconnect();
-    });
+    display_client_disconnect();
 }
 
+#if 0
 TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_display)
 {
     mt::CrossProcessAction display_client_connect;
@@ -477,14 +437,14 @@ TEST_F(DisplayConfigurationTest, focusing_client_with_display_config_configures_
             t = std::thread([this](){
                 verify_apply_config_expectations.exec([&]
                 {
-                    wait_for_server_actions_to_finish(*the_server_action_queue());
+                    wait_for_server_actions_to_finish(*server.the_main_loop());
                     testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
                     EXPECT_CALL(platform->mock_display, configure(testing::_)).Times(1);
                 });
 
                 verify_focus_change_expectations.exec([&]
                 {
-                    wait_for_server_actions_to_finish(*the_server_action_queue());
+                    wait_for_server_actions_to_finish(*server.the_main_loop());
                     testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
                 });
             });
@@ -573,14 +533,14 @@ TEST_F(DisplayConfigurationTest, changing_focus_from_client_with_config_to_clien
             t = std::thread([this](){
                 verify_apply_config_expectations.exec([&]
                 {
-                    wait_for_server_actions_to_finish(*the_server_action_queue());
+                    wait_for_server_actions_to_finish(*server.the_main_loop());
                     testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
                     EXPECT_CALL(platform->mock_display, configure(testing::_)).Times(1);
                 });
 
                 verify_focus_change_expectations.exec([&]
                 {
-                    wait_for_server_actions_to_finish(*the_server_action_queue());
+                    wait_for_server_actions_to_finish(*server.the_main_loop());
                     testing::Mock::VerifyAndClearExpectations(&platform->mock_display);
                 });
             });
@@ -661,7 +621,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_doesnt_apply_base_config_if_p
                 {
                     using namespace testing;
 
-                    wait_for_server_actions_to_finish(*the_server_action_queue());
+                    wait_for_server_actions_to_finish(*server.the_main_loop());
                     Mock::VerifyAndClearExpectations(&platform->mock_display);
                     /*
                      * A client with a per-session config is active, the base configuration
@@ -671,7 +631,7 @@ TEST_F(DisplayConfigurationTest, hw_display_change_doesnt_apply_base_config_if_p
                     platform->mock_display.emit_configuration_change_event(
                         mt::fake_shared(changed_stub_display_config));
                     platform->mock_display.wait_for_configuration_change_handler();
-                    wait_for_server_actions_to_finish(*the_server_action_queue());
+                    wait_for_server_actions_to_finish(*server.the_main_loop());
                     Mock::VerifyAndClearExpectations(&platform->mock_display);
                 });
             });
