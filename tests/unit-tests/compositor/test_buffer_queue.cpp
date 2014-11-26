@@ -1206,7 +1206,7 @@ TEST_F(BufferQueueTest, buffers_ready_is_not_underestimated)
  
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
     {
-        mc::BufferQueue q{2, allocator, basic_properties, policy_factory};
+        mc::BufferQueue q{nbuffers, allocator, basic_properties, policy_factory};
     
         // Produce frame 1
         q.client_release(client_acquire_sync(q));
