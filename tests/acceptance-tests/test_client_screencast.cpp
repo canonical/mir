@@ -57,6 +57,8 @@ struct Screencast : mtf::HeadlessInProcessServer
 };
 }
 
+// TODO test case(s) showing screencast works. lp:1396681
+
 TEST_F(Screencast, with_invalid_connection_fails)
 {
     using namespace testing;
