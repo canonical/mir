@@ -29,7 +29,6 @@
 #include "mir_test/display_config_matchers.h"
 #include "mir_test_doubles/stub_display_configuration.h"
 #include "mir_test_doubles/stub_session_authorizer.h"
-#include "mir_test/barrier.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test/pipe.h"
 #include "mir_test/cross_process_action.h"
@@ -161,102 +160,53 @@ TEST_F(DisplayConfigurationTest, display_configuration_reaches_client)
     mir_display_config_destroy(configuration);
 }
 
+namespace
+{
+void display_change_handler(MirConnection* connection, void* context)
+{
+    auto configuration = mir_connection_create_display_config(connection);
+
+    EXPECT_THAT(*configuration,
+                mt::DisplayConfigMatches(std::cref(changed_stub_display_config)));
+    mir_display_config_destroy(configuration);
+
+    auto callback_called = static_cast<std::atomic<bool>*>(context);
+    *callback_called = true;
+}
+}
+
 TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clients)
 {
-    mt::Barrier client_ready_fence{2};
-    mt::Barrier unsubscribed_client_ready_fence{2};
-    mt::Barrier unsubscribed_check_fence{2};
+    std::atomic<bool> callback_called;
 
-    struct SubscribedClient
-    {
-        SubscribedClient(mt::Barrier& client_ready_fence)
-            : client_ready_fence{client_ready_fence}, callback_called{false}
-        {
-        }
+    mir_connection_set_display_config_change_callback(connection, &display_change_handler, &callback_called);
 
-        static void change_handler(MirConnection* connection, void* context)
-        {
-            auto configuration = mir_connection_create_display_config(connection);
-
-            EXPECT_THAT(*configuration,
-                        mt::DisplayConfigMatches(std::cref(changed_stub_display_config)));
-            mir_display_config_destroy(configuration);
-
-            auto client_config = static_cast<SubscribedClient*>(context);
-            client_config->callback_called = true;
-        }
-
-        void exec(char const* mir_test_socket)
-        {
-            MirConnection* connection = mir_connect_sync(mir_test_socket, "notifier");
-
-            mir_connection_set_display_config_change_callback(connection, &change_handler, this);
-
-            client_ready_fence.ready();
-
-            while (!callback_called)
-                std::this_thread::sleep_for(std::chrono::microseconds{500});
-
-            mir_connection_release(connection);
-        }
-
-        mt::Barrier& client_ready_fence;
-        std::atomic<bool> callback_called;
-    } client_config(client_ready_fence);
-
-    struct UnsubscribedClient
-    {
-        UnsubscribedClient(mt::Barrier & client_ready_fence,
-                           mt::Barrier& client_check_fence)
-         : client_ready_fence{client_ready_fence},
-           client_check_fence{client_check_fence}
-        {
-        }
-
-        void exec(char const* mir_test_socket)
-        {
-            MirConnection* connection = mir_connect_sync(mir_test_socket, "notifier");
-
-            client_ready_fence.ready();
-
-            //wait for display change signal sent
-            client_check_fence.ready();
-
-            //at this point, the message has gone out on the wire. since we're emulating a client
-            //that is passively subscribed, we will just wait for the display configuration to change
-            //and then will check the new config.
-            auto configuration = mir_connection_create_display_config(connection);
-            while(configuration->num_outputs != changed_stub_display_config.outputs.size())
-            {
-                mir_display_config_destroy(configuration);
-                std::this_thread::sleep_for(std::chrono::microseconds(500));
-                configuration = mir_connection_create_display_config(connection);
-            }
-
-            EXPECT_THAT(*configuration,
-                        mt::DisplayConfigMatches(std::cref(changed_stub_display_config)));
-            mir_display_config_destroy(configuration);
-
-            mir_connection_release(connection);
-        }
-
-        mt::Barrier& client_ready_fence;
-        mt::Barrier& client_check_fence;
-    } unsubscribed_client_config(unsubscribed_client_ready_fence, unsubscribed_check_fence);
-
-    auto const client = std::async(std::launch::async, [&]
-        { client_config.exec(new_connection().c_str()); });
-
-    auto const unsubscribed_client = std::async(std::launch::async, [&]
-        { unsubscribed_client_config.exec(new_connection().c_str()); });
-
-    client_ready_fence.ready();
-    unsubscribed_client_ready_fence.ready();
+    MirConnection* unsubscribed_connection = mir_connect_sync(new_connection().c_str(), "notifier");
 
     mock_display.emit_configuration_change_event(
         mt::fake_shared(changed_stub_display_config));
 
-    unsubscribed_check_fence.ready();
+    while (!callback_called)
+        std::this_thread::sleep_for(std::chrono::microseconds{500});
+
+    // At this point, the message has gone out on the wire. since with unsubscribed_connection
+    // we're emulating a client that is passively subscribed, we will just wait for the display
+    // configuration to change and then will check the new config.
+
+    auto configuration = mir_connection_create_display_config(unsubscribed_connection);
+    while(configuration->num_outputs != changed_stub_display_config.outputs.size())
+    {
+        mir_display_config_destroy(configuration);
+        std::this_thread::sleep_for(std::chrono::microseconds(500));
+        configuration = mir_connection_create_display_config(unsubscribed_connection);
+    }
+
+    EXPECT_THAT(*configuration,
+                mt::DisplayConfigMatches(std::cref(changed_stub_display_config)));
+
+    mir_display_config_destroy(configuration);
+
+    mir_connection_release(unsubscribed_connection);
 }
 
 TEST_F(DisplayConfigurationTest, display_change_request_for_unauthorized_client_fails)
