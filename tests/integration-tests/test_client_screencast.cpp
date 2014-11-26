@@ -93,14 +93,6 @@ struct Screencast : mtf::BasicClientServerFixture<StubServerConfig>
 
 }
 
-TEST_F(Screencast, creation_with_invalid_connection_fails)
-{
-    using namespace testing;
-
-    auto screencast = mir_connection_create_screencast_sync(nullptr, &default_screencast_params);
-    ASSERT_EQ(nullptr, screencast);
-}
-
 TEST_F(Screencast, contacts_server_screencast_for_create_and_release)
 {
     using namespace testing;
@@ -150,27 +142,6 @@ TEST_F(Screencast, contacts_server_screencast_with_provided_params)
     ASSERT_NE(nullptr, screencast);
 
     mir_screencast_release_sync(screencast);
-}
-
-TEST_F(Screencast, creation_with_invalid_params_fails)
-{
-    using namespace testing;
-
-    MirScreencastParameters params = default_screencast_params;
-    params.width = params.height = 0;
-    auto screencast = mir_connection_create_screencast_sync(connection, &params);
-    ASSERT_EQ(nullptr, screencast);
-
-    params = default_screencast_params;
-    params.region.width = params.region.height = 0;
-    screencast = mir_connection_create_screencast_sync(connection, &params);
-    ASSERT_EQ(nullptr, screencast);
-
-    params = default_screencast_params;
-    params.pixel_format = mir_pixel_format_invalid;
-
-    screencast = mir_connection_create_screencast_sync(connection, &params);
-    ASSERT_EQ(nullptr, screencast);
 }
 
 TEST_F(Screencast, gets_valid_egl_native_window)
@@ -232,20 +203,4 @@ struct UnauthorizedMirScreencastTest : mtf::BasicClientServerFixture<MockAuthori
         {0, 0, 1, 1}, 1, 1, mir_pixel_format_abgr_8888};
 };
 
-}
-
-TEST_F(UnauthorizedMirScreencastTest, fails_to_create_screencast)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_authorizer(), screencast_is_allowed(_))
-        .WillOnce(Return(false));
-
-    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    ASSERT_TRUE(mir_connection_is_valid(connection));
-
-    auto screencast = mir_connection_create_screencast_sync(connection, &default_screencast_params);
-    ASSERT_EQ(nullptr, screencast);
-
-    mir_connection_release(connection);
 }
