@@ -338,6 +338,9 @@ typedef void (*mir_prompt_session_callback)(MirPromptSession* prompt_provider, v
 typedef void (*mir_prompt_session_state_change_callback)(
     MirPromptSession* prompt_provider, MirPromptSessionState state, void* context);
 
+typedef void (*mir_platform_operation_callback)(
+    MirConnection* connection, MirPlatformPackage const* reply, void* context);
+
 #ifdef __cplusplus
 }
 /**@}*/

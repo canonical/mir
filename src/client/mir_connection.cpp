@@ -351,6 +351,45 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
     return &drm_auth_magic_wait_handle;
 }
 
+void MirConnection::done_platform_operation(
+    mir_platform_operation_callback callback, void* context)
+{
+    MirPlatformPackage reply;
+
+    set_error_message(platform_operation_reply.error());
+
+    reply.fd_items = 0;
+    reply.data_items = platform_operation_reply.data_size();
+    for (int i = 0; i != platform_operation_reply.data_size(); ++i)
+        reply.data[i] = platform_operation_reply.data(i);
+
+    callback(this, &reply, context);
+    platform_operation_wait_handle.result_received();
+}
+
+MirWaitHandle* MirConnection::platform_operation(
+    unsigned int opcode,
+    MirPlatformPackage const* request,
+    mir_platform_operation_callback callback, void* context)
+{
+    mir::protobuf::PlatformOperationRequest protobuf_request;
+
+    protobuf_request.set_opcode(opcode);
+    for (int i = 0; i < request->data_items; ++i)
+        protobuf_request.mutable_message()->add_data(request->data[i]);
+
+    platform_operation_wait_handle.expect_result();
+    server.platform_operation(
+        0,
+        &protobuf_request,
+        &platform_operation_reply,
+        google::protobuf::NewCallback(this, &MirConnection::done_platform_operation,
+                                      callback, context));
+
+    return &platform_operation_wait_handle;
+}
+
+
 bool MirConnection::is_valid(MirConnection *connection)
 {
     {
