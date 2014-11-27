@@ -37,6 +37,7 @@
 #include "mir_test_doubles/null_pixel_buffer.h"
 
 #include <gtest/gtest.h>
+#include <condition_variable>
 
 namespace mc = mir::compositor;
 namespace mtd = mir::test::doubles;
@@ -126,7 +127,27 @@ struct TestServerConfiguration : public mir::DefaultServerConfiguration
     std::shared_ptr<mi::NullInputManager> input_manager;
 };
 
+void swap_buffers_blocking(mf::Surface& surf, mg::Buffer*& buffer)
+{
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool done = false;
+
+    surf.swap_buffers(buffer,
+        [&](mg::Buffer* new_buffer)
+        {
+            std::unique_lock<decltype(mutex)> lock(mutex);
+            buffer = new_buffer;
+            done = true;
+            cv.notify_one();
+        });
+
+    std::unique_lock<decltype(mutex)> lock(mutex);
+
+    cv.wait(lock, [&]{ return done; });
 }
+
+} // anonymouse namespace
 
 TEST(ApplicationSession, stress_test_take_snapshot)
 {
@@ -154,7 +175,7 @@ TEST(ApplicationSession, stress_test_take_snapshot)
             for (int i = 0; i < 500; ++i)
             {
                 auto surface = session.default_surface();
-                surface->swap_buffers_blocking(buffer);
+                swap_buffers_blocking(*surface, buffer);
                 std::this_thread::sleep_for(std::chrono::microseconds{50});
             }
         }};
