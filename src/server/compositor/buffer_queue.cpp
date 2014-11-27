@@ -508,6 +508,9 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
          *     as if framedropping was disabled. That's pretty nice, but we
          *     can do better still...
          *  5. Overallocate; more buffers! Yes, see below.
+         *
+         * FIXME: This kills GLMark2 on Android. Android can't deal with
+         *        four buffers at all. It flickers then hangs.
          */
         auto const& buffer = gralloc->alloc_buffer(the_properties);
         buffers.push_back(buffer);
