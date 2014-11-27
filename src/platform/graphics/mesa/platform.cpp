@@ -20,7 +20,6 @@
 #include "native_platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
-#include "internal_client.h"
 #include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
 #include "ipc_operations.h"
@@ -160,15 +159,6 @@ std::shared_ptr<mg::Display> mgm::Platform::create_display(
         initial_conf_policy,
         gl_config,
         listener);
-}
-
-std::shared_ptr<mg::InternalClient> mgm::Platform::create_internal_client()
-{
-    auto packer = make_ipc_operations();
-    if (!internal_native_display)
-        internal_native_display = std::make_shared<mgm::InternalNativeDisplay>(packer->connection_ipc_package());
-    internal_display_clients_present = true;
-    return std::make_shared<mgm::InternalClient>(internal_native_display);
 }
 
 std::shared_ptr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const

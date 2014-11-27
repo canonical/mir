@@ -27,7 +27,6 @@
 #include "mir/graphics/nested_context.h"
 
 #include "nested_authentication.h"
-#include "internal_client.h"
 #include "internal_native_display.h"
 
 #include "ipc_operations.h"
@@ -60,12 +59,6 @@ mgm::NativePlatform::~NativePlatform()
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator()
 {
     return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited);
-}
-
-std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
-{
-    auto nd = ensure_internal_native_display(ipc_ops->connection_ipc_package());
-    return std::make_shared<mgm::InternalClient>(nd);
 }
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(

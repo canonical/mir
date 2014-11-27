@@ -191,16 +191,34 @@ std::shared_ptr<mg::BufferWriter> mtf::StubGraphicPlatform::make_buffer_writer()
     return std::make_shared<NullWriter>();
 }
 
+namespace
+{
+std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
+}
+
 extern "C" std::shared_ptr<mg::Platform> create_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
-    static std::vector<geom::Rectangle> const display_rects{geom::Rectangle{{0,0},{1600,1600}}};
-    return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
+    if (auto const display_rects = std::move(chosen_display_rects))
+    {
+        return std::make_shared<mtf::StubGraphicPlatform>(*display_rects);
+    }
+    else
+    {
+        static std::vector<geom::Rectangle> const default_display_rects{geom::Rectangle{{0,0},{1600,1600}}};
+        return std::make_shared<mtf::StubGraphicPlatform>(default_display_rects);
+    }
 }
 
 extern "C" void add_platform_options(
     boost::program_options::options_description& /*config*/)
 {
+}
+
+extern "C" void set_display_rects(
+    std::unique_ptr<std::vector<geom::Rectangle>>&& display_rects)
+{
+    chosen_display_rects = std::move(display_rects);
 }

@@ -64,6 +64,12 @@ public:
     MOCK_METHOD1(hidden_set_to, void(bool));
 };
 
+class MockCloseObserver : public ms::NullSurfaceObserver
+{
+public:
+    MOCK_METHOD0(client_surface_close_requested, void());
+};
+
 class StubEventSink : public mir::frontend::EventSink
 {
 public:
@@ -715,4 +721,17 @@ TEST_F(BasicSurfaceTest, observer_can_remove_itself_within_notification)
 
     surface.set_hidden(true);
     surface.set_hidden(true);
+}
+
+TEST_F(BasicSurfaceTest, notifies_of_client_close_request)
+{
+    using namespace testing;
+
+    MockCloseObserver mock_surface_observer;
+
+    EXPECT_CALL(mock_surface_observer, client_surface_close_requested()).Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+
+    surface.request_client_surface_close();
 }
