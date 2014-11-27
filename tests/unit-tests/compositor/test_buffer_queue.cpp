@@ -1282,7 +1282,7 @@ TEST_F(BufferQueueTest, composite_on_demand_never_deadlocks_with_2_buffers)
 }
 
 TEST_F(BufferQueueTest, buffers_ready_is_not_underestimated)
-{
+{  // Regression test for LP: #1395581
     using namespace testing;
  
     for (int nbuffers = 2; nbuffers <= max_nbuffers_to_test; ++nbuffers)
