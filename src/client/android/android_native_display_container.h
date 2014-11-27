@@ -23,6 +23,9 @@
 
 #include "mir_toolkit/client_types.h"
 
+#include <unordered_set>
+#include <mutex>
+
 namespace mir
 {
 namespace client
@@ -36,7 +39,7 @@ public:
     AndroidNativeDisplayContainer();
     virtual ~AndroidNativeDisplayContainer();
 
-    MirEGLNativeDisplayType create(MirConnection* connection);
+    MirEGLNativeDisplayType create(ClientContext* context) override;
     void release(MirEGLNativeDisplayType display);
 
     bool validate(MirEGLNativeDisplayType display) const;
@@ -44,6 +47,10 @@ public:
 protected:
     AndroidNativeDisplayContainer(AndroidNativeDisplayContainer const&) = delete;
     AndroidNativeDisplayContainer& operator=(AndroidNativeDisplayContainer const&) = delete;
+
+private:
+    std::mutex mutable guard;
+    std::unordered_set<MirEGLNativeDisplayType> valid_displays;
 };
 
 }

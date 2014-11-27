@@ -117,8 +117,6 @@ public:
 
     static bool is_valid(MirConnection *connection);
 
-    MirConnection* mir_connection();
-
     EGLNativeDisplayType egl_native_display();
 
     void on_surface_created(int id, MirSurface* surface);

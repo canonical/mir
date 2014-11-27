@@ -62,16 +62,28 @@ mcla::AndroidNativeDisplayContainer::~AndroidNativeDisplayContainer()
 bool
 mcla::AndroidNativeDisplayContainer::validate(MirEGLNativeDisplayType display) const
 {
-    return mir_connection_is_valid(static_cast<MirConnection*>(display));
+    std::lock_guard<std::mutex> lg(guard);
+    return (valid_displays.find(display) != valid_displays.end());
 }
 
 MirEGLNativeDisplayType
-mcla::AndroidNativeDisplayContainer::create(MirConnection* connection)
+mcla::AndroidNativeDisplayContainer::create(ClientContext* context)
 {
-    return static_cast<MirEGLNativeDisplayType>(connection);
+    std::lock_guard<std::mutex> lg(guard);
+    auto egl_display = static_cast<MirEGLNativeDisplayType>(context);
+    valid_displays.insert(egl_display);
+
+    return egl_display;
 }
 
 void
-mcla::AndroidNativeDisplayContainer::release(MirEGLNativeDisplayType /* display */)
+mcla::AndroidNativeDisplayContainer::release(MirEGLNativeDisplayType display)
 {
+    std::lock_guard<std::mutex> lg(guard);
+
+    auto it = valid_displays.find(display);
+    if (it == valid_displays.end())
+        return;
+
+    valid_displays.erase(it);
 }

@@ -29,7 +29,6 @@ class ClientContext
 public:
     virtual ~ClientContext() {}
 
-    virtual MirConnection* mir_connection() = 0;
     virtual void populate(MirPlatformPackage& platform_package) = 0;
 
 protected:
