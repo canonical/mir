@@ -26,7 +26,10 @@ void logv(logging::Severity sev, char const* component,
           char const* fmt, va_list va)
 {
     char message[1024];
-    int len = vsnprintf(message, sizeof(message)-1, fmt, va);
+    int max = sizeof(message) - 1;
+    int len = vsnprintf(message, max, fmt, va);
+    if (len > max)
+        len = max;
     message[len] = '\0';
 
     // Suboptimal: Constructing a std::string for message/component.
