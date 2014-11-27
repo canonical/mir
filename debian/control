@@ -60,7 +60,7 @@ Description: Display server for Ubuntu - RPC definitions
  Contains the shared library containing the Google Protobuf definitions
  required for Mir clients and servers.
 
-Package: libmirserver27
+Package: libmirserver28
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -126,7 +126,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver27 (= ${binary:Version}),
+Depends: libmirserver28 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,

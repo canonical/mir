@@ -30,6 +30,9 @@
 #include <mutex>
 #include <thread>
 
+namespace mir { class SharedLibrary; }
+namespace mir { namespace geometry { class Rectangle; }}
+
 namespace mir_test_framework
 {
 /** Basic fixture for tests that don't use graphics hardware.
@@ -60,6 +63,9 @@ public:
     /// \return a connection string for a client to connect to the server
     auto connection(mir::Fd fd) -> std::string;
 
+    /// Override initial display layout
+    void initial_display_layout(std::vector<mir::geometry::Rectangle> const& display_rects);
+
     mir::Server server;
 
 private:
@@ -71,6 +77,8 @@ private:
     std::mutex mutex;
     std::condition_variable started;
     bool server_running{false};
+
+    std::unique_ptr<mir::SharedLibrary> server_platform_graphics_lib;
 };
 
 std::string const& test_socket_file();

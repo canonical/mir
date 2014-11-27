@@ -82,7 +82,6 @@ Mir server is written as a library which allows the server code to be adapted
 for bespoke applications.
 
  - \subpage render_surfaces-example "render_surfaces.cpp: A simple program using the Mir library"
- - \ref demo_inprocess_egl
 
 Working on Mir code
 -------------------

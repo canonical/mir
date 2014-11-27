@@ -41,6 +41,7 @@ public:
     void transformation_set_to(glm::mat4 const& t) override;
     void cursor_image_set_to(graphics::CursorImage const& image) override;
     void reception_mode_set_to(input::InputReceptionMode mode) override;
+    void client_surface_close_requested() override;
 
 protected:
     NullSurfaceObserver(NullSurfaceObserver const&) = delete;

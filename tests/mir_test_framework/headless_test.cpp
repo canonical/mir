@@ -21,24 +21,29 @@
 
 #include "mir/fd.h"
 #include "mir/main_loop.h"
+#include "mir/shared_library.h"
+#include "mir/geometry/rectangle.h"
 #include "mir/options/option.h"
 #include "mir_test_doubles/null_logger.h"
 
 #include <boost/throw_exception.hpp>
 
+namespace geom = mir::geometry;
 namespace ml = mir::logging;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 
 namespace
 {
+const char* const mir_server_platform_graphics_lib = "MIR_SERVER_PLATFORM_GRAPHICS_LIB";
+
 std::chrono::seconds const timeout{10};
 }
 
 mtf::HeadlessTest::HeadlessTest()
 {
     configure_from_commandline(server);
-    add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", "libmirplatformstub.so");
+    add_to_environment(mir_server_platform_graphics_lib, "libmirplatformstub.so");
     server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
     server.override_the_logger([&]()
         {
@@ -135,3 +140,16 @@ auto mtf::HeadlessTest::connection(mir::Fd fd) -> std::string
     sprintf(connect_string, "fd://%d", fd.operator int());
     return connect_string;
 }
+
+void mtf::HeadlessTest::initial_display_layout(std::vector<geom::Rectangle> const& display_rects)
+{
+    server_platform_graphics_lib.reset(new mir::SharedLibrary{getenv(mir_server_platform_graphics_lib)});
+
+    typedef void (*SetDisplayRects)(std::unique_ptr<std::vector<geom::Rectangle>>&&);
+
+    auto const set_display_rects =
+        server_platform_graphics_lib->load_function<SetDisplayRects>("set_display_rects");
+
+    set_display_rects(std::unique_ptr<std::vector<geom::Rectangle>>(new std::vector<geom::Rectangle>(display_rects)));
+}
+
