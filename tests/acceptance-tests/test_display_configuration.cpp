@@ -174,7 +174,7 @@ void display_change_handler(MirConnection* connection, void* context)
 
 TEST_F(DisplayConfigurationTest, hw_display_change_notification_reaches_all_clients)
 {
-    std::atomic<bool> callback_called;
+    std::atomic<bool> callback_called{false};
 
     mir_connection_set_display_config_change_callback(connection, &display_change_handler, &callback_called);
 
