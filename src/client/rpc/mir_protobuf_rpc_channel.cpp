@@ -265,6 +265,10 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                     surface_map->with_surface_do(e.orientation.surface_id, send_e);
                     break;
 
+                case mir_event_type_close_surface:
+                    surface_map->with_surface_do(e.close_surface.surface_id, send_e);
+                    break;
+
                 default:
                     event_sink->handle_event(e);
                 }
