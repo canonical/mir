@@ -17,7 +17,7 @@ be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
 1863a7fe3a382061f2752c0236cc971e7e68f93f  include/common/mir_toolkit/client_types.h
 2100c0674d9d882c1845550847357f6a5de5af66  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
-bdaceadd56e41d2cb708f7c4da97acf84dfc75b7  include/common/mir_toolkit/event.h
+bccde9cdbc2f0d07e186c2950ef88d3a7d5f0d3b  include/common/mir_toolkit/event.h
 4975998aa1056ed0d39dcc538127453e516ad8e9  include/common/mir_toolkit/mesa/native_display.h
 101017c17714a57db57d79b7b5e7df40a3568236  include/common/mir_toolkit/mir_native_buffer.h
 871e609c0fed0d566ddbaaa8ac2d7cd5c06dd09a  include/platform/mir/abnormal_exit.h
@@ -37,10 +37,8 @@ f53a0020b8f1bd4a941a201eb26271cffee0a7dd  include/platform/mir/graphics/display_
 5dc095474ef3e294c0aa4008e9ed997bdb21d34c  include/platform/mir/graphics/gl_config.h
 d0442a5d5d88a4be6e3e1f99e433c1c43a86bfce  include/platform/mir/graphics/gl_context.h
 979d2c1ac723ccef538d9a378228a02b0f173bd7  include/platform/mir/graphics/graphic_buffer_allocator.h
-f90a35371e236a6cfec8e9a8474dbb3305c7621e  include/platform/mir/graphics/internal_client.h
-c9730cac4a3a101f9706ec6f444958abe047fd88  include/platform/mir/graphics/internal_surface.h
-c187e4d1ca333ded84d4599c6527b13a658dd77a  include/platform/mir/graphics/native_platform.h
-dcac7cae1bfb80d33d92ae8c7ff710f09a327b99  include/platform/mir/graphics/platform.h
+9bbe7eef3a470d7c2daf74de2943a2d03f80aa20  include/platform/mir/graphics/native_platform.h
+3bd5f663b62fd1e4be92518a27ed5a0f6a82f20b  include/platform/mir/graphics/platform.h
 3b3463d2513f4c3985f2400496dab333518f9a13  include/platform/mir/graphics/platform_ipc_operations.h
 1b77fb3290af00dc7d1c11dcc5388972dacb9ec3  include/platform/mir/graphics/platform_ipc_package.h
 84c063346b3bd51b4624d9f940008d4c3f8be066  include/platform/mir/graphics/renderable.h
