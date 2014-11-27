@@ -136,20 +136,8 @@ mc::BufferQueue::BufferQueue(
     {
        std::unique_lock<decltype(guard)> lock{guard};
 
-       if (pending_client_notifications.empty())
-       {
-           /*
-            * This framedrop handler may be in the process of being dispatched
-            * when we try to cancel it by calling swap_unblocked() when we
-            * get a buffer to give back to the client. In this case we cannot
-            * cancel and this function may be called without any pending client
-            * notifications. This is a benign race that we can deal with by
-            * just ignoring the framedrop request.
-            */
-           return;
-       }
-
-       drop_frame(std::move(lock));
+       if (!pending_client_notifications.empty())
+           drop_frame(std::move(lock));
     });
 }
 
@@ -479,8 +467,13 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
 {
     mg::Buffer* buffer_to_give = nullptr;
 
-    if (!ready_to_composite_queue.empty() &&
-        !contains(current_compositor_buffer, buffers_sent_to_compositor))
+    if (!free_buffers.empty())
+    {  // We expect this to usually be empty, but always check free list first
+        buffer_to_give = free_buffers.back();
+        free_buffers.pop_back();
+    }
+    else if (!ready_to_composite_queue.empty() &&
+             !contains(current_compositor_buffer, buffers_sent_to_compositor))
     {
         buffer_to_give = current_compositor_buffer;
         current_compositor_buffer = pop(ready_to_composite_queue);
@@ -495,10 +488,19 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
     else 
     {
         /*
-         * Faced with a choice between not dropping a frame, or dropping
-         * the newest frame (which could cause a surface to freeze
-         * indefinitely), I choose neither. So the third option is to
-         * overallocate...
+         * Insufficient nbuffers for frame dropping? This means you're either
+         * trying to use frame dropping with bypass/multimonitor or have
+         * supplied nbuffers < 3. So consider the options...
+         *  1. Crash. No, that's really unhelpful.
+         *  2. Drop the visible frame. Probably not; it looks pretty awful.
+         *     Not just tearing but you'll see very ugly polygon rendering
+         *     artefacts.
+         *  3. Drop the newest ready frame. Absolutely not; that will cause
+         *     indefinite freezes or at least stuttering.
+         *  4. Just give a warning and carry on at regular frame rate
+         *     as if framedropping was disabled. That's pretty nice, but we
+         *     can do better still...
+         *  5. Overallocate; more buffers! Yes, see below.
          */
         auto const& buffer = gralloc->alloc_buffer(the_properties);
         buffers.push_back(buffer);
