@@ -19,7 +19,6 @@
 #include "mir/frontend/session_mediator_report.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/display_server.h"
 #include "mir/main_loop.h"
 #include "mir/shell/focus_controller.h"
 #include "mir/scene/session.h"
@@ -34,7 +33,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <future>
 #include <mutex>
 #include <condition_variable>
 
