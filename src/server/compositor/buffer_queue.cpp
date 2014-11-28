@@ -475,6 +475,8 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
     else if (!ready_to_composite_queue.empty() &&
              !contains(current_compositor_buffer, buffers_sent_to_compositor))
     {
+        // Remember current_compositor_buffer is implicitly the front
+        // of the ready queue.
         buffer_to_give = current_compositor_buffer;
         current_compositor_buffer = pop(ready_to_composite_queue);
         current_buffer_users.clear();
