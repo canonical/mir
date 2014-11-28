@@ -13,9 +13,7 @@ include /usr/share/dpkg/default.mk
 export CC=$(DEB_HOST_GNU_TYPE)-gcc-4.9
 export CXX=$(DEB_HOST_GNU_TYPE)-g++-4.9
 
-export PLATFORM_ABI = 5
-
-export PLATFORM_DRIVER = platform$(PLATFORM_ABI)driver
+export PLATFORM_DRIVER = platform4driver
 export CLIENT_DRIVER = client8driver
 
 %:
@@ -72,6 +70,5 @@ override_dh_installdeb:
 
 override_dh_gencontrol:
 	dh_gencontrol -- \
-		-Vplatform-abi=$(PLATFORM_ABI) \
 		-Vplatform-driver=$(PLATFORM_DRIVER) \
 		-Vclient-driver=$(CLIENT_DRIVER)
