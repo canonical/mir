@@ -25,7 +25,7 @@
 namespace mir
 {
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; }
-namespace frontend { class SessionAuthorizer; class Session; }
+namespace frontend { class SessionAuthorizer; class Session; class SessionMediatorReport; }
 namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; }
 namespace logging { class Logger; }
@@ -227,6 +227,9 @@ public:
 
     /// Sets an override functor for creating the session listener.
     void override_the_session_listener(Builder<scene::SessionListener> const& session_listener_builder);
+
+    /// Sets an override functor for creating the session mediator report.
+    void override_the_session_mediator_report(Builder<frontend::SessionMediatorReport> const& session_mediator_builder);
 
     /// Sets an override functor for creating the shell focus setter.
     void override_the_shell_focus_setter(Builder<shell::FocusSetter> const& focus_setter_builder);

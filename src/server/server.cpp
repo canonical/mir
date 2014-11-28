@@ -57,6 +57,7 @@ namespace ml = mir::logging;
     MACRO(server_status_listener)\
     MACRO(session_authorizer)\
     MACRO(session_listener)\
+    MACRO(session_mediator_report)\
     MACRO(shell_focus_setter)\
     MACRO(surface_configurator)
 
