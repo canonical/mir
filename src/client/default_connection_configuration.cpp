@@ -112,7 +112,7 @@ mcl::DefaultConnectionConfiguration::the_client_platform_factory()
     return client_platform_factory(
         [this]
         {
-	    ensure_loaded_with_rtld_global();
+            ensure_loaded_with_rtld_global();
             auto const platform_override = getenv("MIR_CLIENT_PLATFORM_LIB");
             std::vector<std::shared_ptr<mir::SharedLibrary>> platform_plugins;
             if (platform_override)
