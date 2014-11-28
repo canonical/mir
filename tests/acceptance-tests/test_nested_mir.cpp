@@ -160,18 +160,18 @@ std::vector<geom::Rectangle> const display_geometry
 
 std::chrono::seconds const timeout{10};
 
-class NestedMirRunner
+class NestedMirRunner : mir::Server
 {
 public:
     NestedMirRunner(std::string const& connection_string)
     {
         FakeCommandLine nested_command_line(connection_string);
 
-        nested_server.set_command_line(nested_command_line.argc, nested_command_line.argv);
+        set_command_line(nested_command_line.argc, nested_command_line.argv);
 
-        nested_server.add_init_callback([&]
+        add_init_callback([&]
             {
-                auto const main_loop = nested_server.the_main_loop();
+                auto const main_loop = the_main_loop();
                 // By enqueuing the notification code in the main loop, we are
                 // ensuring that the server has really and fully started before
                 // leaving start_mir_server().
@@ -185,13 +185,13 @@ public:
                     });
             });
 
-        nested_server.apply_settings();
+        apply_settings();
 
         nested_server_thread = std::thread([&]
             {
                 try
                 {
-                    nested_server.run();
+                    run();
                 }
                 catch (std::exception const& e)
                 {
@@ -213,7 +213,7 @@ public:
 
     ~NestedMirRunner()
     {
-        nested_server.stop();
+        stop();
 
         std::unique_lock<std::mutex> lock(nested_mutex);
         nested_started.wait_for(lock, timeout, [&] { return !nested_server_running; });
@@ -223,8 +223,9 @@ public:
         if (nested_server_thread.joinable()) nested_server_thread.join();
     }
 
+    using mir::Server::the_display;
+
 private:
-    mir::Server nested_server;
     std::thread nested_server_thread;
     std::mutex nested_mutex;
     std::condition_variable nested_started;
@@ -248,8 +249,6 @@ struct NestedServer : mtf::HeadlessInProcessServer
             });
 
         mtf::HeadlessInProcessServer::SetUp();
-        connection_string = new_connection();
-
     }
 
     void trigger_lifecycle_event(MirLifecycleState const lifecycle_state)
@@ -263,8 +262,6 @@ struct NestedServer : mtf::HeadlessInProcessServer
            app->set_lifecycle_state(lifecycle_state);
         }
     }
-
-    std::string connection_string;
 };
 }
 
@@ -274,16 +271,14 @@ TEST_F(NestedServer, nested_platform_connects_and_disconnects)
     EXPECT_CALL(*mock_session_mediator_report, session_connect_called(_)).Times(1);
     EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(1);
 
-    NestedMirRunner{connection_string};
+    NestedMirRunner{new_connection()};
 }
 
-#if 0
 TEST_F(NestedServer, sees_expected_outputs)
 {
-    NestedServerConfiguration nested_config{connection_string, the_graphics_platform()};
-    NestedMirRunner nested_mir{nested_config};
+    NestedMirRunner nested_mir{new_connection()};
 
-    auto const display = nested_config.the_display();
+    auto const display = nested_mir.the_display();
     auto const display_config = display->configuration();
 
     std::vector<geom::Rectangle> outputs;
@@ -299,6 +294,7 @@ TEST_F(NestedServer, sees_expected_outputs)
     EXPECT_THAT(outputs, ContainerEq(display_geometry));
 }
 
+#if 0
 //////////////////////////////////////////////////////////////////
 // TODO the following test was used in investigating lifetime issues.
 // TODO it may not have much long term value, but decide that later.
