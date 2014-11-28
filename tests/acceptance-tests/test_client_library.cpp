@@ -568,8 +568,7 @@ TEST_F(ClientLibrary, accesses_platform_package)
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
 
     MirPlatformPackage platform_package;
-    platform_package.data_items = -1;
-    platform_package.fd_items = -1;
+    ::memset(&platform_package, -1, sizeof(platform_package));
 
     mir_connection_get_platform(connection, &platform_package);
     EXPECT_THAT(platform_package, mtf::IsStubPlatformPackage());
