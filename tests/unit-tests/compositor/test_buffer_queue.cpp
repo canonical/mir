@@ -1319,6 +1319,9 @@ TEST_F(BufferQueueTest, framedropping_client_acquire_does_not_block_when_no_avai
      * so the next client request should not be satisfied until
      * a compositor releases its buffers */
     auto handle = client_acquire_async(q);
+    /* ... unless the BufferQueue is overallocating. In that case it will
+     * have succeeding in acquiring immediately.
+     */ 
     if (!handle->has_acquired_buffer())
     {
         /* Release compositor buffers so that the client can get one */
