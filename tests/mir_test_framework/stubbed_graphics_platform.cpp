@@ -145,7 +145,10 @@ class StubIpcOps : public mg::PlatformIpcOperations
 
     std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
-        return std::make_shared<mg::PlatformIPCPackage>();
+        auto package = std::make_shared<mg::PlatformIPCPackage>();
+        package->ipc_data = std::vector<int32_t>(42);
+        package->ipc_data[0] = 0x0eadbeef;
+        return package;
     }
 
     mg::PlatformIPCPackage platform_operation(

@@ -40,9 +40,9 @@ public:
     virtual ~AndroidNativeDisplayContainer();
 
     MirEGLNativeDisplayType create(ClientContext* context) override;
-    void release(MirEGLNativeDisplayType display);
+    void release(MirEGLNativeDisplayType display) override;
 
-    bool validate(MirEGLNativeDisplayType display) const;
+    bool validate(MirEGLNativeDisplayType display) const override;
 
 protected:
     AndroidNativeDisplayContainer(AndroidNativeDisplayContainer const&) = delete;

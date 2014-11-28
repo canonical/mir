@@ -6,7 +6,6 @@ include_directories(
 
 add_definitions(
   -DMIR_PLATFORM_DRIVER_BINARY="${MIR_PLATFORM_DRIVER_BINARY}"
-  -DMIR_CLIENT_DRIVER_BINARY="${MIR_CLIENT_DRIVER_BINARY}"
 )
 
 set(
@@ -74,9 +73,9 @@ target_link_libraries(
   mirplatform
 
   mir-test
-  mir-test-framework
   mir-test-doubles
   mir-test-doubles-platform
+  mir-test-framework
   3rd_party
 
   ${PROTOBUF_LIBRARIES}
@@ -95,7 +94,7 @@ CMAKE_DEPENDENT_OPTION(
   OFF)
 
 if (MIR_RUN_ACCEPTANCE_TESTS)
-  mir_discover_tests(mir_acceptance_tests)
+  mir_discover_tests(mir_acceptance_tests MIR_CLIENT_PLATFORM_PATH=${LIBRARY_OUTPUT_PATH}/client-modules)
 endif (MIR_RUN_ACCEPTANCE_TESTS)
 
 install(

@@ -28,11 +28,8 @@ namespace client
 namespace android
 {
 
-class ClientPlatformFactory : public client::ClientPlatformFactory
-{
-public:
-    std::shared_ptr<ClientPlatform> create_client_platform(ClientContext* context) override;
-};
+extern "C" std::shared_ptr<ClientPlatform>
+create_client_platform(ClientContext* context);
 
 }
 }

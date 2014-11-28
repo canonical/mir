@@ -19,6 +19,8 @@
 #ifndef MIR_CLIENT_CLIENT_CONTEXT_H_
 #define MIR_CLIENT_CLIENT_CONTEXT_H_
 
+#include "mir_toolkit/client_types.h"
+
 namespace mir
 {
 namespace client
