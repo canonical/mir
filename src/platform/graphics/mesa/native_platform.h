@@ -39,7 +39,6 @@ public:
     virtual ~NativePlatform();
 
     std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() override;
-    std::shared_ptr<InternalClient> create_internal_client() override;
     std::shared_ptr<graphics::BufferWriter> make_buffer_writer() override;
     std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
     

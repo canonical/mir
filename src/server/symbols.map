@@ -130,7 +130,6 @@ MIR_SERVER_28 {
     mir::DisplayServer::run*;
     mir::DisplayServer::stop*;
     mir::EmergencyCleanup::operator*;
-    mir::frontend::as_internal_surface*;
     mir::frontend::DisplayChanger::active_configuration*;
     mir::frontend::DisplayChanger::configure*;
     mir::frontend::DisplayChanger::?DisplayChanger*;
@@ -204,7 +203,6 @@ MIR_SERVER_28 {
     mir::frontend::Surface::?Surface*;
     mir::frontend::Surface::Surface*;
     mir::frontend::Surface::swap_buffers*;
-    mir::frontend::Surface::swap_buffers_blocking*;
     mir::input::CompositeEventFilter::append*;
     mir::input::CompositeEventFilter::prepend*;
     mir::input::CursorImages::?CursorImages*;
