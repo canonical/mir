@@ -20,7 +20,9 @@
 #include "src/client/client_context.h"
 
 #include "mir_test_framework/stub_client_platform_factory.h"
+#include "mir_test_framework/stub_platform_helpers.h"
 #include <memory>
+#include <gmock/gmock.h>
 
 namespace mtf = mir_test_framework;
 namespace mcl = mir::client;
@@ -32,7 +34,8 @@ extern "C" std::shared_ptr<mcl::ClientPlatform> create_client_platform(mcl::Clie
 
 extern "C" bool is_appropriate_module(mcl::ClientContext* context)
 {
+    using namespace testing;
     MirPlatformPackage package;
     context->populate(package);
-    return (package.data_items == 42) && (package.data[0] == 0x0eadbeef);
+    return Matches(mtf::IsStubPlatformPackage())(package);
 }

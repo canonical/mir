@@ -21,6 +21,7 @@
 #include "mir_test_doubles/mock_client_context.h"
 #include "mir_test_doubles/mock_client_surface.h"
 #include "mir_test_framework/executable_path.h"
+#include "mir_test_framework/stub_platform_helpers.h"
 
 #ifdef MIR_BUILD_PLATFORM_ANDROID
 #include "mir_test_doubles/mock_android_hw.h"
@@ -110,9 +111,7 @@ INSTANTIATE_TEST_CASE_P(Mesa,
 ClientPlatformTraits const dummy_platform{"/client-modules/dummy.so",
                                           [](MirPlatformPackage& pkg)
                                           {
-                                              ::memset(&pkg, 0, sizeof(pkg));
-                                              pkg.data_items = 42;
-                                              pkg.data[0] = 0x0eadbeef;
+                                              mtf::create_stub_platform_package(pkg);
                                           },
                                           mir_platform_type_gbm
                                          };
@@ -165,7 +164,7 @@ TEST_P(ClientPlatformTest, platform_probe_returns_false_when_not_matching)
                                   //Mock up something that hopefully looks nothing like
                                   //what the platform is expecting...
                                   ::memset(&pkg, 0, sizeof(pkg));
-                                  pkg.data_items = 0xdeadbeef;
+                                  pkg.data_items = mir_platform_package_max + 1;
                                   pkg.fd_items = -23;
                               }));
 

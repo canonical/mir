@@ -21,6 +21,8 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/buffer_writer.h"
 
+#include "mir_test_framework/stub_platform_helpers.h"
+
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display.h"
 
@@ -146,8 +148,7 @@ class StubIpcOps : public mg::PlatformIpcOperations
     std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
         auto package = std::make_shared<mg::PlatformIPCPackage>();
-        package->ipc_data = std::vector<int32_t>(42);
-        package->ipc_data[0] = 0x0eadbeef;
+        mtf::pack_stub_ipc_package(*package);
         return package;
     }
 

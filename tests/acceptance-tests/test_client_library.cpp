@@ -20,6 +20,7 @@
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_framework/stub_platform_helpers.h"
 #include "mir_test/validity_matchers.h"
 
 #include "src/client/client_buffer.h"
@@ -571,9 +572,7 @@ TEST_F(ClientLibrary, accesses_platform_package)
     platform_package.fd_items = -1;
 
     mir_connection_get_platform(connection, &platform_package);
-    EXPECT_THAT(platform_package.data_items, Eq(42));
-    EXPECT_THAT(platform_package.data[0], Eq(0x0eadbeef));
-    EXPECT_THAT(platform_package.fd_items, Eq(0));
+    EXPECT_THAT(platform_package, mtf::IsStubPlatformPackage());
 
     mir_connection_release(connection);
 }
