@@ -135,9 +135,7 @@ mc::BufferQueue::BufferQueue(
     framedrop_policy = policy_provider.create_policy([this]
     {
        std::unique_lock<decltype(guard)> lock{guard};
-
-       if (!pending_client_notifications.empty())
-           drop_frame(std::move(lock));
+       drop_frame(std::move(lock));
     });
 }
 
@@ -465,6 +463,11 @@ void mc::BufferQueue::release(
 
 void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
 {
+    // Make sure there is a client waiting for the frame before we drop it.
+    // If not, then there's nothing to do.
+    if (pending_client_notifications.empty())
+        return;
+
     mg::Buffer* buffer_to_give = nullptr;
 
     if (!free_buffers.empty())
