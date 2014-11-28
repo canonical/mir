@@ -158,46 +158,12 @@ std::vector<geom::Rectangle> const display_geometry
     {{480, 0}, {1920, 1080}}
 };
 
-std::chrono::minutes const timeout{10};
+std::chrono::seconds const timeout{10};
 
-struct NestedServer : mtf::HeadlessInProcessServer
+class NestedMirRunner
 {
-    NestedMockEGL mock_egl;
-    mtf::UsingStubClientPlatform using_stub_client_platform;
-
-    std::shared_ptr<MockSessionMediatorReport> mock_session_mediator_report;
-
-    mir::Server nested_server;
-
-    void SetUp() override
-    {
-        initial_display_layout(display_geometry);
-        server.override_the_session_mediator_report([this]
-            {
-                mock_session_mediator_report = std::make_shared<MockSessionMediatorReport>();
-                return mock_session_mediator_report;
-            });
-
-        mtf::HeadlessInProcessServer::SetUp();
-        connection_string = new_connection();
-
-    }
-
-    void trigger_lifecycle_event(MirLifecycleState const lifecycle_state)
-    {
-        auto const app = server.the_focus_controller()->focussed_application().lock();
-
-        EXPECT_TRUE(app != nullptr) << "Nested server not connected";
-
-        if (app)
-        {
-           app->set_lifecycle_state(lifecycle_state);
-        }
-    }
-
-    std::string connection_string;
-
-    void start_nested_server()
+public:
+    NestedMirRunner(std::string const& connection_string)
     {
         FakeCommandLine nested_command_line(connection_string);
 
@@ -245,25 +211,60 @@ struct NestedServer : mtf::HeadlessInProcessServer
         }
     }
 
-    void stop_nested_server()
+    ~NestedMirRunner()
     {
         nested_server.stop();
 
         std::unique_lock<std::mutex> lock(nested_mutex);
         nested_started.wait_for(lock, timeout, [&] { return !nested_server_running; });
 
-        if (nested_server_running)
-        {
-            throw std::logic_error{"failed to stop nested server"};
-        }
+        EXPECT_FALSE(nested_server_running);
+
+        if (nested_server_thread.joinable()) nested_server_thread.join();
     }
 
+private:
+    mir::Server nested_server;
     std::thread nested_server_thread;
     std::mutex nested_mutex;
     std::condition_variable nested_started;
     bool nested_server_running{false};
+};
 
-    ~NestedServer() { if (nested_server_thread.joinable()) nested_server_thread.join(); }
+struct NestedServer : mtf::HeadlessInProcessServer
+{
+    NestedMockEGL mock_egl;
+    mtf::UsingStubClientPlatform using_stub_client_platform;
+
+    std::shared_ptr<MockSessionMediatorReport> mock_session_mediator_report;
+
+    void SetUp() override
+    {
+        initial_display_layout(display_geometry);
+        server.override_the_session_mediator_report([this]
+            {
+                mock_session_mediator_report = std::make_shared<MockSessionMediatorReport>();
+                return mock_session_mediator_report;
+            });
+
+        mtf::HeadlessInProcessServer::SetUp();
+        connection_string = new_connection();
+
+    }
+
+    void trigger_lifecycle_event(MirLifecycleState const lifecycle_state)
+    {
+        auto const app = server.the_focus_controller()->focussed_application().lock();
+
+        EXPECT_TRUE(app != nullptr) << "Nested server not connected";
+
+        if (app)
+        {
+           app->set_lifecycle_state(lifecycle_state);
+        }
+    }
+
+    std::string connection_string;
 };
 }
 
@@ -273,9 +274,7 @@ TEST_F(NestedServer, nested_platform_connects_and_disconnects)
     EXPECT_CALL(*mock_session_mediator_report, session_connect_called(_)).Times(1);
     EXPECT_CALL(*mock_session_mediator_report, session_disconnect_called(_)).Times(1);
 
-    start_nested_server();
-
-    stop_nested_server();
+    NestedMirRunner{connection_string};
 }
 
 #if 0
