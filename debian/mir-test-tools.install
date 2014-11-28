@@ -6,3 +6,4 @@ usr/bin/mir_performance_tests
 usr/lib/*/mir/tools/libmirclientlttng.so
 usr/lib/*/mir/tools/libmirserverlttng.so
 usr/lib/*/libmirplatformstub.so
+usr/lib/*/mir/client-platform/dummy.so

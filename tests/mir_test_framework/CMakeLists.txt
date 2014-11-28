@@ -120,3 +120,4 @@ set_target_properties(mirplatformstub
 )
 
 install(TARGETS mirplatformstub LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS mirclientplatformstub LIBRARY DESTINATION ${MIR_CLIENT_PLATFORM_PATH})
