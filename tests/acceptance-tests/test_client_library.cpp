@@ -563,6 +563,7 @@ TEST_F(ClientLibrary, highly_threaded_client)
 
 TEST_F(ClientLibrary, accesses_platform_package)
 {
+    using namespace testing;
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
 
     MirPlatformPackage platform_package;
@@ -570,8 +571,9 @@ TEST_F(ClientLibrary, accesses_platform_package)
     platform_package.fd_items = -1;
 
     mir_connection_get_platform(connection, &platform_package);
-    EXPECT_GE(0, platform_package.data_items);
-    EXPECT_GE(0, platform_package.fd_items);
+    EXPECT_THAT(platform_package.data_items, Eq(42));
+    EXPECT_THAT(platform_package.data[0], Eq(0x0eadbeef));
+    EXPECT_THAT(platform_package.fd_items, Eq(0));
 
     mir_connection_release(connection);
 }
