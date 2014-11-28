@@ -489,21 +489,19 @@ void mc::BufferQueue::drop_frame(std::unique_lock<std::mutex> lock)
     {
         /*
          * Insufficient nbuffers for frame dropping? This means you're either
-         * trying to use frame dropping with bypass/multimonitor or have
-         * supplied nbuffers < 3. So consider the options...
+         * trying to use frame dropping with bypass/overlays/multimonitor or
+         * have chosen nbuffers too low, or some combination thereof. So
+         * consider the options...
          *  1. Crash. No, that's really unhelpful.
-         *  2. Drop the visible frame. Probably not; it looks pretty awful.
+         *  2. Drop the visible frame. Probably not; that looks pretty awful.
          *     Not just tearing but you'll see very ugly polygon rendering
-         *     artefacts.
+         *     artifacts.
          *  3. Drop the newest ready frame. Absolutely not; that will cause
          *     indefinite freezes or at least stuttering.
          *  4. Just give a warning and carry on at regular frame rate
          *     as if framedropping was disabled. That's pretty nice, but we
          *     can do better still...
          *  5. Overallocate; more buffers! Yes, see below.
-         *
-         * FIXME: This kills GLMark2 on Android. Android can't deal with
-         *        four buffers at all. It flickers then hangs.
          */
         auto const& buffer = gralloc->alloc_buffer(the_properties);
         buffers.push_back(buffer);
