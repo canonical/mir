@@ -28,6 +28,7 @@ public:
 
     mir::DefaultServerConfiguration& server_config() override
     {
+#ifdef ANDROID
         /*
          * Workaround instability that causes freezes when combining
          * Android overlays with high-speed frame dropping (LP: #1391261).
@@ -35,6 +36,7 @@ public:
          * right now.
          */
         setenv("MIR_SERVER_DISABLE_OVERLAYS", "true", 1);
+#endif
         return config;
     };
 
