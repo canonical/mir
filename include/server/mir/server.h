@@ -30,7 +30,7 @@ namespace graphics { class Platform; class Display; class GLConfig; class Displa
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; }
 namespace logging { class Logger; }
 namespace options { class Option; }
-namespace shell { class FocusController; class FocusSetter; class DisplayLayout; }
+namespace shell { class FocusController; class FocusSetter; class DisplayLayout; class HostLifecycleEventListener; }
 namespace scene
 {
 class PlacementStrategy;
@@ -203,6 +203,10 @@ public:
 
     /// Sets an override functor for creating the gl config.
     void override_the_gl_config(Builder<graphics::GLConfig> const& gl_config_builder);
+
+    /// Sets an override functor for creating the host lifecycle event listener.
+    void override_the_host_lifecycle_event_listener(
+        Builder<shell::HostLifecycleEventListener> const& host_lifecycle_event_listener_builder);
 
     /// Sets an override functor for creating the input dispatcher.
     void override_the_input_dispatcher(Builder<input::InputDispatcher> const& input_dispatcher_builder);

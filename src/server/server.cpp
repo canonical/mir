@@ -49,6 +49,7 @@ namespace ml = mir::logging;
     MACRO(compositor)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(gl_config)\
+    MACRO(host_lifecycle_event_listener)\
     MACRO(input_dispatcher)\
     MACRO(logger)\
     MACRO(placement_strategy)\
