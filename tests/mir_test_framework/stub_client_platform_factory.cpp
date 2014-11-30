@@ -21,6 +21,7 @@
 #include "src/client/client_buffer.h"
 #include "src/client/client_platform.h"
 
+#include <unistd.h>
 #include <string.h>
 
 namespace mcl = mir::client;
@@ -34,10 +35,13 @@ class StubClientBuffer : public mcl::ClientBuffer
 public:
     StubClientBuffer(std::shared_ptr<MirBufferPackage> const& package)
     {
-        static_cast<void>(package);
 #ifndef ANDROID
         native = package;
 #endif
+        for (int i = 0; i < package->fd_items; ++i)
+        {
+            ::close(package->fd[i]);
+        }
     }
 
     std::shared_ptr<mcl::MemoryRegion> secure_for_cpu_write()

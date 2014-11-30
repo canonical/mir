@@ -92,6 +92,7 @@ MIRPLATFORM_4 {
     mir::graphics::InternalSurface::pixel_format*;
     mir::graphics::InternalSurface::size*;
     mir::graphics::InternalSurface::swap_buffers*;
+    mir::graphics::module_for_device*;
     mir::graphics::NativePlatform::connection_ipc_package*;
     mir::graphics::NativePlatform::create_buffer_allocator*;
     mir::graphics::NativePlatform::fill_buffer_package*;
@@ -147,6 +148,7 @@ MIRPLATFORM_4 {
     mir::options::glog_log_dir*;
     mir::options::glog_minloglevel*;
     mir::options::glog_stderrthreshold*;
+    mir::options::platform_graphics_path*;
     mir::options::host_socket_opt*;
     mir::options::input_report_opt*;
     mir::options::legacy_input_report_opt*;

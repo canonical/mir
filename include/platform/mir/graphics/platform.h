@@ -96,6 +96,33 @@ public:
 };
 
 /**
+ * A measure of how good this module is at supporting the current device
+ *
+ * \note This is compared as an integer; best + 1 is a valid PlatformPriority that
+ *       will be used in preference to a module that reports best.
+ *       Platform modules distributed with Mir will never use a priority higher
+ *       than best.
+ */
+enum PlatformPriority : uint32_t
+{
+    unsupported = 0,    /**< Unable to function at all on this device */
+    supported = 128,    /**< Capable of providing a functioning Platform on this device,
+                         *   possibly with degraded performance or features.
+                         */
+    best = 256          /**< Capable of providing a Platform with the best features and
+                         *   performance this device is capable of.
+                         */
+};
+
+/**
+ * Describes a platform module
+ */
+struct ModuleProperties
+{
+    char const* name;
+};
+
+/**
  * Function prototype used to return a new graphics platform.
  *
  * \param [in] options options to use for this platform
@@ -118,6 +145,15 @@ extern "C" typedef void(*AddPlatformOptions)(
     boost::program_options::options_description& config);
 extern "C" void add_platform_options(
     boost::program_options::options_description& config);
+
+// TODO: We actually need to be more granular here; on a device with more
+//       than one graphics system we may need a different platform per GPU,
+//       so we should be associating platforms with graphics devices in some way
+extern "C" typedef PlatformPriority(*PlatformProbe)();
+extern "C" PlatformPriority probe_platform();
+
+extern "C" typedef ModuleProperties const*(*DescribeModule)();
+extern "C" ModuleProperties const* describe_module();
 }
 }
 

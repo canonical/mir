@@ -170,3 +170,22 @@ extern "C" void add_platform_options(
          boost::program_options::value<bool>()->default_value(false),
          "[platform-specific] Whether to disable overlay optimizations [{on,off}]");
 }
+
+extern "C" mg::PlatformPriority probe_platform()
+{
+    int err;
+    hw_module_t const* hw_module;
+
+    err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, &hw_module);
+
+    return err < 0 ? mg::PlatformPriority::unsupported : mg::PlatformPriority::best;
+}
+
+mg::ModuleProperties const description = {
+    "android"
+};
+
+extern "C" mg::ModuleProperties const* describe_module()
+{
+    return &description;
+}

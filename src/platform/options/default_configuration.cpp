@@ -17,11 +17,12 @@
  */
 
 #include "mir/shared_library.h"
-#include "mir/shared_library_loader.h"
 #include "mir/options/default_configuration.h"
 #include "mir/graphics/platform.h"
 #include "mir/default_configuration.h"
 #include "mir/abnormal_exit.h"
+#include "mir/shared_library_prober.h"
+#include "../graphics/platform_probe.h"
 
 #include <dlfcn.h>
 
@@ -53,12 +54,14 @@ char const* const mo::log_opt_value = "log";
 char const* const mo::lttng_opt_value = "lttng";
 
 char const* const mo::platform_graphics_lib = "platform-graphics-lib";
+char const* const mo::platform_graphics_path = "platform-graphics-path";
 
 namespace
 {
 int const default_ipc_threads          = 1;
 bool const enable_input_default        = true;
-char const* const default_platform_graphics_lib = MIR_PLATFORM_DRIVER_BINARY;
+
+std::shared_ptr<mir::SharedLibrary> graphics_lib;
 
 // Hack around the way Qt loads mir:
 // platform_api and therefore Mir are loaded via dlopen(..., RTLD_LOCAL).
@@ -115,8 +118,10 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Socket filename [string:default=$XDG_RUNTIME_DIR/mir_socket or /tmp/mir_socket]")
         (no_server_socket_opt, "Do not provide a socket filename for client connections")
         (prompt_socket_opt, "Provide a \"..._trusted\" filename for prompt helper connections")
-        (platform_graphics_lib, po::value<std::string>()->default_value(default_platform_graphics_lib),
-            "Library to use for platform graphics support")
+        (platform_graphics_lib, po::value<std::string>(),
+            "Library to use for platform graphics support (default: autodetect)")
+        (platform_graphics_path, po::value<std::string>()->default_value(MIR_SERVER_PLATFORM_PATH),
+            "Library to use for platform graphics support (default: " MIR_SERVER_PLATFORM_PATH ")")
         (enable_input_opt, po::value<bool>()->default_value(enable_input_default),
             "Enable input.")
         (compositor_report_opt, po::value<std::string>()->default_value(off_opt_value),
@@ -152,32 +157,74 @@ mo::DefaultConfiguration::DefaultConfiguration(
         add_platform_options();
 }
 
+namespace
+{
+class NullSharedLibraryProberReport : public mir::SharedLibraryProberReport
+{
+public:
+    void probing_path(boost::filesystem::path const& /*path*/) override
+    {
+    }
+    void probing_failed(boost::filesystem::path const& /*path*/, std::exception const& /*error*/) override
+    {
+    }
+    void loading_library(boost::filesystem::path const& /*filename*/) override
+    {
+    }
+    void loading_failed(boost::filesystem::path const& /*filename*/, std::exception const& /*error*/) override
+    {
+    }
+};
+}
+
 void mo::DefaultConfiguration::add_platform_options()
 {
     namespace po = boost::program_options;
     po::options_description program_options;
     program_options.add_options()
         (platform_graphics_lib,
-         po::value<std::string>()->default_value(default_platform_graphics_lib), "");
+         po::value<std::string>(), "");
+    program_options.add_options()
+        (platform_graphics_path,
+         po::value<std::string>()->default_value(MIR_SERVER_PLATFORM_PATH),
+        "");
     mo::ProgramOption options;
     options.parse_arguments(program_options, argc, argv);
 
-    std::string graphics_libname;
-    auto env_libname = ::getenv("MIR_SERVER_PLATFORM_GRAPHICS_LIB");
-    if (!options.is_set(platform_graphics_lib) && env_libname)
-    {
-        graphics_libname = std::string{env_libname};
-    }
-    else
-    {
-        graphics_libname = options.get<std::string>(platform_graphics_lib);
-    }
-
     ensure_loaded_with_rtld_global();
 
-    auto graphics_lib = load_library(graphics_libname);
-    auto add_platform_options = graphics_lib->load_function<mir::graphics::AddPlatformOptions>(std::string("add_platform_options"));
-    add_platform_options(*this->program_options);
+    // TODO: We should just load all the platform plugins we can and present their options.
+    auto env_libname = ::getenv("MIR_SERVER_PLATFORM_GRAPHICS_LIB");
+    auto env_libpath = ::getenv("MIR_SERVER_PLATFORM_GRAPHICS_PATH");
+    try
+    {
+        if (options.is_set(platform_graphics_lib))
+        {
+            graphics_lib = std::make_shared<mir::SharedLibrary>(options.get<std::string>(platform_graphics_lib));
+        }
+        else if (env_libname)
+        {
+            graphics_lib = std::make_shared<mir::SharedLibrary>(std::string{env_libname});
+        }
+        else
+        {
+            auto const plugin_path = env_libpath ? env_libpath : options.get<std::string>(platform_graphics_path);
+            NullSharedLibraryProberReport nuller;
+            auto plugins = mir::libraries_for_path(plugin_path, nuller);
+            graphics_lib = mir::graphics::module_for_device(plugins);
+        }
+
+        auto add_platform_options = graphics_lib->load_function<mir::graphics::AddPlatformOptions>(std::string("add_platform_options"));
+        add_platform_options(*this->program_options);
+    }
+    catch(...)
+    {
+        // We don't actually care at this point if this failed.
+        // Maybe we've been pointed at the wrong place. Maybe this platform doesn't actually
+        // *have* platform-specific options.
+        // Regardless, if we need a platform and can't find one then we'll bail later
+        // in startup with a useful error.
+    }
 }
 
 boost::program_options::options_description_easy_init mo::DefaultConfiguration::add_options()

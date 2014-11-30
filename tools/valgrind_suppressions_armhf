@@ -127,6 +127,15 @@
 # memory errors.
 
 {
+   spurious_strlen_addr4
+   Memcheck:Addr4
+   ...
+   fun:dlsym
+   ...
+   fun:_ZN50SharedLibrary_load_nonexistent_function_fails_Test8TestBodyEv
+}
+
+{
     mir_sharedlibrary_cond
     Memcheck:Cond
     fun:_ZN3mir13SharedLibraryC1EPKc

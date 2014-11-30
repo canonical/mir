@@ -22,6 +22,7 @@
 #include "src/platform/graphics/mesa/platform.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/emergency_cleanup_registry.h"
+#include "mir/shared_library.h"
 
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_buffer_ipc_message.h"
@@ -32,6 +33,7 @@
 #include <gtest/gtest.h>
 
 #include "mir_test_framework/udev_environment.h"
+#include "mir_test_framework/executable_path.h"
 #include "mir_test/pipe.h"
 
 #include "mir_test_doubles/mock_drm.h"
@@ -331,4 +333,24 @@ TEST_F(MesaGraphicsPlatform, does_not_propagate_emergency_cleanup_exceptions)
     emergency_cleanup_registry.handler();
 
     Mock::VerifyAndClearExpectations(&mock_drm);
+}
+
+TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_no_drm_udev_devices)
+{
+    mtf::UdevEnvironment udev_environment;
+
+    mir::SharedLibrary platform_lib{mtf::library_path() + "/server-modules/graphics-mesa.so"};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>("probe_platform");
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe());
+}
+
+TEST_F(MesaGraphicsPlatform, probe_returns_best_when_drm_devices_exist)
+{
+    mtf::UdevEnvironment udev_environment;
+
+    udev_environment.add_standard_device("standard-drm-devices");
+
+    mir::SharedLibrary platform_lib{mtf::library_path() + "/server-modules/graphics-mesa.so"};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>("probe_platform");
+    EXPECT_EQ(mg::PlatformPriority::best, probe());
 }

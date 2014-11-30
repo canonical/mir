@@ -186,7 +186,7 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     {
         auto const graphics_lib = the_options()->get<std::string>(options::platform_graphics_lib);
 
-        if (graphics_lib != "libmirplatformstub.so")
+        if (graphics_lib.find("graphics-dummy.so") == std::string::npos)
             return mir::DefaultServerConfiguration::the_renderer_factory();
         else
             return std::make_shared<StubRendererFactory>();

@@ -54,6 +54,7 @@ extern char const* const log_opt_value;
 extern char const* const lttng_opt_value;
 
 extern char const* const platform_graphics_lib;
+extern char const* const platform_graphics_path;
 
 class Configuration
 {

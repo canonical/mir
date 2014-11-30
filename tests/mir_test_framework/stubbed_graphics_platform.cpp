@@ -198,6 +198,12 @@ std::shared_ptr<mg::BufferWriter> mtf::StubGraphicPlatform::make_buffer_writer()
 namespace
 {
 std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
+
+}
+
+extern "C" std::shared_ptr<mg::Platform> create_stub_platform(std::vector<geom::Rectangle> const& display_rects)
+{
+    return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
 }
 
 extern "C" std::shared_ptr<mg::Platform> create_platform(
@@ -207,12 +213,12 @@ extern "C" std::shared_ptr<mg::Platform> create_platform(
 {
     if (auto const display_rects = std::move(chosen_display_rects))
     {
-        return std::make_shared<mtf::StubGraphicPlatform>(*display_rects);
+        return create_stub_platform(*display_rects);
     }
     else
     {
         static std::vector<geom::Rectangle> const default_display_rects{geom::Rectangle{{0,0},{1600,1600}}};
-        return std::make_shared<mtf::StubGraphicPlatform>(default_display_rects);
+        return create_stub_platform(default_display_rects);
     }
 }
 
@@ -221,7 +227,7 @@ extern "C" void add_platform_options(
 {
 }
 
-extern "C" void set_display_rects(
+extern "C" void set_next_display_rects(
     std::unique_ptr<std::vector<geom::Rectangle>>&& display_rects)
 {
     chosen_display_rects = std::move(display_rects);

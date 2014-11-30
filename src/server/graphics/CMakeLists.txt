@@ -1,4 +1,4 @@
-include_directories(${GLESv2_INCLUDE_DIRS})
+include_directories(${GLESv2_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR})
 
 add_library(
   mirgraphics OBJECT
