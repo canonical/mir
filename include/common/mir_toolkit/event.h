@@ -244,6 +244,7 @@ typedef struct MirCloseSurfaceEvent
 
 typedef union
 {
+    // Direct access to the type member is deprecated. Instead use mir_event_get_type. 
     MirEventType    type;
     MirKeyEvent     key;
     MirMotionEvent  motion;
@@ -253,6 +254,16 @@ typedef union
     MirOrientationEvent orientation;
     MirCloseSurfaceEvent   close_surface;
 } MirEvent;
+
+/*
+ * Retrieves the type of a MirEvent. Now preferred over direct access to ev->type.
+ * In particular ev->type will never be mir_event_type_input and mir_event_get_type
+ * is the only way to ensure mir_event_get_input_event will succeed.
+ *
+ * \param [in] event The event
+ * \return           The event type
+ */
+MirEventType mir_event_get_type(MirEvent const* ev);
 
 #ifdef __cplusplus
 }
