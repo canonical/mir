@@ -43,8 +43,9 @@ typedef enum
     mir_event_type_resize,
     mir_event_type_prompt_session_state_change,
     mir_event_type_orientation,
-// Type for new style input event. Will be returned from mir_event_get_type for old style
-// key and motion events.
+    mir_event_type_close_surface,
+    /* Type for new style input event will be returned from mir_event_get_type
+       when old style event type was mir_event_type_key or mir_event_type_motion */
     mir_event_type_input
 } MirEventType;
 
@@ -140,6 +141,7 @@ typedef struct
     int32_t scan_code;
     int32_t repeat_count;
     nsecs_t down_time;
+
     nsecs_t event_time;
     int is_system_key;
 } MirKeyEvent;
@@ -233,6 +235,13 @@ typedef struct MirOrientationEvent
     MirOrientation direction;
 } MirOrientationEvent;
 
+typedef struct MirCloseSurfaceEvent
+{
+    MirEventType type;
+
+    int surface_id;
+} MirCloseSurfaceEvent;
+
 typedef union
 {
     MirEventType    type;
@@ -242,6 +251,7 @@ typedef union
     MirResizeEvent  resize;
     MirPromptSessionEvent  prompt_session;
     MirOrientationEvent orientation;
+    MirCloseSurfaceEvent   close_surface;
 } MirEvent;
 
 #ifdef __cplusplus

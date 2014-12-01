@@ -51,24 +51,24 @@ typedef enum {
  * Description of key modifier state.
  */
 typedef enum {
-    mir_key_input_event_modifier_none        = 0,
-    mir_key_input_event_modifier_alt         = 0x02,
-    mir_key_input_event_modifier_alt_left    = 0x10,
-    mir_key_input_event_modifier_alt_right   = 0x20,
-    mir_key_input_event_modifier_shift       = 0x01,
-    mir_key_input_event_modifier_shift_left  = 0x40,
-    mir_key_input_event_modifier_shift_right = 0x80,
-    mir_key_input_event_modifier_sym         = 0x04,
-    mir_key_input_event_modifier_function    = 0x08,
-    mir_key_input_event_modifier_ctrl        = 0x1000,
-    mir_key_input_event_modifier_ctrl_left   = 0x2000,
-    mir_key_input_event_modifier_ctrl_right  = 0x4000,
-    mir_key_input_event_modifier_meta        = 0x10000,
-    mir_key_input_event_modifier_meta_left   = 0x20000,
-    mir_key_input_event_modifier_meta_right  = 0x40000,
-    mir_key_input_event_modifier_caps_lock   = 0x100000,
-    mir_key_input_event_modifier_num_lock    = 0x200000,
-    mir_key_input_event_modifier_scroll_lock = 0x400000
+    mir_key_input_event_modifier_none        = 1 << 0,
+    mir_key_input_event_modifier_alt         = 1 << 1,
+    mir_key_input_event_modifier_alt_left    = 1 << 2,
+    mir_key_input_event_modifier_alt_right   = 1 << 3,
+    mir_key_input_event_modifier_shift       = 1 << 4,
+    mir_key_input_event_modifier_shift_left  = 1 << 5,
+    mir_key_input_event_modifier_shift_right = 1 << 6,
+    mir_key_input_event_modifier_sym         = 1 << 7,
+    mir_key_input_event_modifier_function    = 1 << 8,
+    mir_key_input_event_modifier_ctrl        = 1 << 9,
+    mir_key_input_event_modifier_ctrl_left   = 1 << 10,
+    mir_key_input_event_modifier_ctrl_right  = 1 << 11,
+    mir_key_input_event_modifier_meta        = 1 << 12,
+    mir_key_input_event_modifier_meta_left   = 1 << 13,
+    mir_key_input_event_modifier_meta_right  = 1 << 14,
+    mir_key_input_event_modifier_caps_lock   = 1 << 15,
+    mir_key_input_event_modifier_num_lock    = 1 << 16,
+    mir_key_input_event_modifier_scroll_lock = 1 << 17
 } MirKeyInputEventModifiers;
 
 /**

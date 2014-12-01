@@ -18,7 +18,9 @@ protobuf_generate_cpp(
 set(
   INTEGRATION_TESTS_SRCS
   test_surface_stack_with_compositor.cpp
+  test_client_screencast.cpp
   test_client_surface_swap_buffers.cpp
+  test_large_messages.cpp
   test_protobuf.cpp
   test_surfaceloop.cpp
   test_stale_frames.cpp

@@ -57,11 +57,6 @@ public:
         return {};
     }
 
-    std::shared_ptr<mg::InternalClient> create_internal_client() override
-    {
-        return {};
-    }
-    
     std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
     {
         return {};

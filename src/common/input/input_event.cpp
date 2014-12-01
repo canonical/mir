@@ -52,11 +52,11 @@ MirEventType mir_event_get_type(MirEvent const* ev)
 {
     switch (ev->type)
     {
-        case mir_event_type_key:
-        case mir_event_type_motion:
-            return mir_event_type_input;
-        default:
-            return ev->type;
+    case mir_event_type_key:
+    case mir_event_type_motion:
+        return mir_event_type_input;
+    default:
+        return ev->type;
     }
 }
 
@@ -91,12 +91,12 @@ MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev)
 
     switch (old_ev->type)
     {
-        case mir_event_type_motion:
-            return old_ev->motion.device_id;
-        case mir_event_type_key:
-            return old_ev->key.device_id;
-        default:
-            abort();
+    case mir_event_type_motion:
+        return old_ev->motion.device_id;
+    case mir_event_type_key:
+        return old_ev->key.device_id;
+    default:
+        abort();
     }
 }
 
@@ -107,12 +107,12 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev)
 
     switch (old_ev->type)
     {
-        case mir_event_type_motion:
-            return old_ev->motion.event_time;
-        case mir_event_type_key:
-            return old_ev->key.event_time;
-        default:
-            abort();
+    case mir_event_type_motion:
+        return old_ev->motion.event_time;
+    case mir_event_type_key:
+        return old_ev->key.event_time;
+    default:
+        abort();
     }
 }
 
@@ -132,18 +132,18 @@ MirKeyInputEventAction mir_key_input_event_get_action(MirKeyInputEvent const* ke
     
     switch (old_kev.action)
     {
-        case mir_key_action_down:
-            if (old_kev.repeat_count != 0)
-                return mir_key_input_event_action_repeat;
-            else
-                return mir_key_input_event_action_down;
-        case mir_key_action_up:
-            return mir_key_input_event_action_up;
-        default:
-            // TODO:? This means we got key_action_multiple which I dont think is 
-            // actually emitted yet (and never will be as in the future it would fall under text
-            // event in the new model).
+    case mir_key_action_down:
+        if (old_kev.repeat_count != 0)
+            return mir_key_input_event_action_repeat;
+        else
             return mir_key_input_event_action_down;
+    case mir_key_action_up:
+        return mir_key_input_event_action_up;
+    default:
+        // TODO:? This means we got key_action_multiple which I dont think is 
+        // actually emitted yet (and never will be as in the future it would fall under text
+        // event in the new model).
+        return mir_key_input_event_action_down;
     }
 }
 
@@ -159,12 +159,55 @@ int mir_key_input_event_get_scan_code(MirKeyInputEvent const* kev)
     return old_kev.scan_code;
 }
 
-MirKeyInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const* kev)
+namespace
 {
-    auto const& old_kev = old_kev_from_new(kev);
-    return static_cast<MirKeyInputEventModifiers>(old_kev.modifiers);
-}
+MirKeyInputEventModifiers old_modifiers_to_new(MirKeyModifier old_modifier)
+{
+    unsigned modifier = 0;
 
+    if (old_modifier & mir_key_modifier_none)
+        modifier |= mir_key_input_event_modifier_none;
+    if (old_modifier & mir_key_modifier_alt)
+        modifier |= mir_key_input_event_modifier_alt;
+    if (old_modifier & mir_key_modifier_alt_left)
+        modifier |= mir_key_input_event_modifier_alt_left;
+    if (old_modifier & mir_key_modifier_alt_right)
+        modifier |= mir_key_input_event_modifier_alt_right;
+    if (old_modifier & mir_key_modifier_shift)
+        modifier |= mir_key_input_event_modifier_shift;
+    if (old_modifier & mir_key_modifier_shift_left)
+        modifier |= mir_key_input_event_modifier_shift_left;
+    if (old_modifier & mir_key_modifier_shift_right)
+        modifier |= mir_key_input_event_modifier_shift_right;
+    if (old_modifier & mir_key_modifier_sym)
+        modifier |= mir_key_input_event_modifier_sym;
+    if (old_modifier & mir_key_modifier_function)
+        modifier |= mir_key_input_event_modifier_function;
+    if (old_modifier & mir_key_modifier_ctrl)
+        modifier |= mir_key_input_event_modifier_ctrl;
+    if (old_modifier & mir_key_modifier_ctrl_left)
+        modifier |= mir_key_input_event_modifier_ctrl_left;
+    if (old_modifier & mir_key_modifier_ctrl_right)
+        modifier |= mir_key_input_event_modifier_ctrl_right;
+    if (old_modifier & mir_key_modifier_meta)
+        modifier |= mir_key_input_event_modifier_meta;
+    if (old_modifier & mir_key_modifier_meta_left)
+        modifier |= mir_key_input_event_modifier_meta_left;
+    if (old_modifier & mir_key_modifier_meta_right)
+        modifier |= mir_key_input_event_modifier_meta_right;
+    if (old_modifier & mir_key_modifier_caps_lock)
+        modifier |= mir_key_input_event_modifier_caps_lock;
+    if (old_modifier & mir_key_modifier_num_lock)
+        modifier |= mir_key_input_event_modifier_num_lock;
+    if (old_modifier & mir_key_modifier_scroll_lock)
+        modifier |= mir_key_input_event_modifier_scroll_lock;
+    return static_cast<MirKeyInputEventModifiers>(modifier);
+}
+}
+MirKeyInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const* kev)
+{    auto const& old_kev = old_kev_from_new(kev);
+    return old_modifiers_to_new(static_cast<MirKeyModifier>(old_kev.modifiers));
+}
 /* Touch event accessors */
 
 MirTouchInputEvent const* mir_input_event_get_touch_input_event(MirInputEvent const* ev)

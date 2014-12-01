@@ -31,3 +31,4 @@ void ms::NullSurfaceObserver::orientation_set_to(MirOrientation /*orientation*/)
 void ms::NullSurfaceObserver::transformation_set_to(glm::mat4 const& /*t*/) {}
 void ms::NullSurfaceObserver::reception_mode_set_to(input::InputReceptionMode /*mode*/) {}
 void ms::NullSurfaceObserver::cursor_image_set_to(mg::CursorImage const& /*image*/) {}
+void ms::NullSurfaceObserver::client_surface_close_requested() {}

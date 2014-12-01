@@ -22,7 +22,6 @@
 #include "android_graphic_buffer_allocator.h"
 #include "resource_factory.h"
 #include "display.h"
-#include "internal_client.h"
 #include "output_builder.h"
 #include "buffer_writer.h"
 #include "hwc_loggers.h"
@@ -129,11 +128,6 @@ std::shared_ptr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operations() 
 EGLNativeDisplayType mga::Platform::egl_native_display() const
 {
     return EGL_DEFAULT_DISPLAY;
-}
-
-std::shared_ptr<mg::InternalClient> mga::Platform::create_internal_client()
-{
-    return std::make_shared<mga::InternalClient>();
 }
 
 std::shared_ptr<mg::BufferWriter> mga::Platform::make_buffer_writer()

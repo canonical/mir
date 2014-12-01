@@ -129,11 +129,6 @@ struct NativePlatformAdapter : mg::NativePlatform
         return ipc_ops;
     }
 
-    std::shared_ptr<mg::InternalClient> create_internal_client() override
-    {
-        return adaptee->create_internal_client();
-    }
-
     std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
     {
         return adaptee->make_buffer_writer();

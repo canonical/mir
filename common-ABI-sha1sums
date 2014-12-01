@@ -17,9 +17,9 @@ be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
 1863a7fe3a382061f2752c0236cc971e7e68f93f  include/common/mir_toolkit/client_types.h
 2100c0674d9d882c1845550847357f6a5de5af66  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
-2b590805b8b99616368c5905177172bbf3d6dc06  include/common/mir_toolkit/event.h
+796e46288556e107947d78299ae83b3881956207  include/common/mir_toolkit/event.h
 2b558740c59a86d40ac8213919e962228ce98cd0  include/common/mir_toolkit/input/input_event.h
-7bef80f99b562465533ac5e62fe2d3abe81a6c30  include/common/mir_toolkit/input/key_input_event.h
+f531c6a49883884a6c694393d5614f9942fe2703  include/common/mir_toolkit/input/key_input_event.h
 fd6d86becfa5ffa367480fd2654180f6ffcbf059  include/common/mir_toolkit/input/touch_input_event.h
 4975998aa1056ed0d39dcc538127453e516ad8e9  include/common/mir_toolkit/mesa/native_display.h
 101017c17714a57db57d79b7b5e7df40a3568236  include/common/mir_toolkit/mir_native_buffer.h
