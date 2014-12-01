@@ -26,7 +26,19 @@ public:
     {
     }
 
-    mir::DefaultServerConfiguration& server_config() override {return config;};
+    mir::DefaultServerConfiguration& server_config() override
+    {
+#ifdef ANDROID
+        /*
+         * Workaround instability that causes freezes when combining
+         * Android overlays with high-speed frame dropping (LP: #1391261).
+         * Fortunately glmark2 is the only use case that exploits this issue
+         * right now.
+         */
+        setenv("MIR_SERVER_DISABLE_OVERLAYS", "true", 1);
+#endif
+        return config;
+    };
 
 protected:
     enum ResultFileType {raw, json};
