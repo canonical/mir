@@ -38,7 +38,7 @@ mtf::HeadlessTest::HeadlessTest()
     add_to_environment(mir_server_platform_graphics_lib, "libmirplatformstub.so");
 }
 
-mtf::HeadlessTest::~HeadlessTest() = default;
+mtf::HeadlessTest::~HeadlessTest() noexcept = default;
 
 
 void mtf::HeadlessTest::initial_display_layout(std::vector<geom::Rectangle> const& display_rects)
