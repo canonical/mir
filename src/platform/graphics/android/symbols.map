@@ -5,4 +5,6 @@ MIR_GRAPHICS_PLATFORM_1 {
     create_native_platform;
     probe_platform;
     describe_module;
+  local:
+    *;
 };
