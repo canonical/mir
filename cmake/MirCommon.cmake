@@ -168,3 +168,24 @@ function (mir_precompiled_header TARGET HEADER)
     add_dependencies(${TARGET} ${TARGET}_pch)
   endif()
 endfunction()
+
+function (mir_add_wrapped_executable TARGET)
+  add_executable(${TARGET} ${ARGN})
+  set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME .${TARGET}-uninstalled)
+
+  add_custom_command(
+    TARGET ${TARGET}
+    COMMAND sed "s^@EXECUTABLE@^.${TARGET}-uninstalled^g"
+                ${PROJECT_SOURCE_DIR}/cmake/wrapper-script
+                > ${CMAKE_BINARY_DIR}/bin/${TARGET}
+    COMMAND sed -i "s^@BUILD_PREFIX@^${CMAKE_BINARY_DIR}^g"
+                ${CMAKE_BINARY_DIR}/bin/${TARGET}
+    COMMAND chmod +x ${CMAKE_BINARY_DIR}/bin/${TARGET}
+    DEPENDS ${PROJECT_SOURCE_DIR}/cmake/wrapper-script
+  )
+
+  install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/.${TARGET}-uninstalled
+          DESTINATION ${CMAKE_INSTALL_BINDIR}
+          RENAME ${TARGET}
+  )
+endfunction()

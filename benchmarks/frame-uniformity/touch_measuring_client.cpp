@@ -27,6 +27,7 @@
 #include <vector>
 
 #include <assert.h>
+#include <error.h>
 
 namespace mt = mir::test;
 
@@ -45,7 +46,10 @@ MirSurface *create_surface(MirConnection *connection)
         mir_display_output_id_invalid};
     
     auto surface = mir_connection_create_surface_sync(connection, &surface_params);
-    assert(mir_surface_is_valid(surface));
+    if (!mir_surface_is_valid(surface))
+    {
+        error(1, 0, "Surface creation failed: %s\n", mir_surface_get_error_message(surface));
+    }
 
     return surface;
 }
@@ -93,7 +97,10 @@ void null_lifecycle_callback(MirConnection*, MirLifecycleState, void*)
 void TouchMeasuringClient::run(std::string const& connect_string)
 {
     auto connection = mir_connect_sync(connect_string.c_str(), "frame-uniformity-test");
-    assert(mir_connection_is_valid(connection));
+    if (!mir_connection_is_valid(connection))
+    {
+        error(1, 0, "Connection to Mir failed: %s\n", mir_connection_get_error_message(connection));
+    }
     
     /*
      * Set a null callback to avoid killing the process

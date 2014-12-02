@@ -24,6 +24,7 @@
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display.h"
+#include "mir_test_framework/stub_platform_helpers.h"
 
 #include <chrono>
 #include <functional>
@@ -59,7 +60,9 @@ class StubIpcOps : public mg::PlatformIpcOperations
 
     std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
-        return std::make_shared<mg::PlatformIPCPackage>();
+        auto package = std::make_shared<mg::PlatformIPCPackage>();
+        mir_test_framework::pack_stub_ipc_package(*package);
+        return package;
     }
 
     mg::PlatformIPCPackage platform_operation(unsigned int const, mg::PlatformIPCPackage const&) override

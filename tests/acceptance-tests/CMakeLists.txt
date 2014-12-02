@@ -51,7 +51,7 @@ if (MIR_TEST_PLATFORM STREQUAL "mesa")
   list(APPEND SOURCES test_symbols_required_by_mesa.cpp)
 endif()
 
-add_executable(
+mir_add_wrapped_executable(
   mir_acceptance_tests
 
   ${SOURCES}
@@ -94,10 +94,5 @@ CMAKE_DEPENDENT_OPTION(
   OFF)
 
 if (MIR_RUN_ACCEPTANCE_TESTS)
-  mir_discover_tests(mir_acceptance_tests MIR_CLIENT_PLATFORM_PATH=${LIBRARY_OUTPUT_PATH}/client-modules)
+  mir_discover_tests(mir_acceptance_tests)
 endif (MIR_RUN_ACCEPTANCE_TESTS)
-
-install(
-    TARGETS mir_acceptance_tests
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
