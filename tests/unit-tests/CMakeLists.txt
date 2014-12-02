@@ -117,11 +117,6 @@ if (MIR_RUN_UNIT_TESTS)
   mir_discover_tests(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=always-malloc G_DEBUG=gc-friendly)
 endif (MIR_RUN_UNIT_TESTS)
 
-install(
-    TARGETS mir_unit_tests
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-
 add_custom_command(TARGET mir_unit_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
   ${CMAKE_CURRENT_SOURCE_DIR}/test_data ${CMAKE_BINARY_DIR}/bin/test_data

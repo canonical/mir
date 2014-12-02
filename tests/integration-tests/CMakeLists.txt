@@ -126,8 +126,3 @@ CMAKE_DEPENDENT_OPTION(
 if (MIR_RUN_INTEGRATION_TESTS)
   mir_discover_tests(mir_integration_tests)
 endif (MIR_RUN_INTEGRATION_TESTS)
-
-install(
-    TARGETS mir_integration_tests
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
