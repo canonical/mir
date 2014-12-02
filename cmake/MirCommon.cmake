@@ -183,8 +183,7 @@ function (mir_add_wrapped_executable TARGET)
                APPEND_STRING PROPERTY COMPILE_FLAGS " -D_BSD_SOURCE")
   set_property(TARGET ${TARGET}-wrapper
 	       PROPERTY OUTPUT_NAME ${TARGET})
-	       
-	     
+
   add_dependencies(${TARGET} ${TARGET}-wrapper)
   
   install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/${REAL_EXECUTABLE}
