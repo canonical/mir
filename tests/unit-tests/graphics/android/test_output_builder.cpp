@@ -240,3 +240,21 @@ TEST_F(OutputBuilder, hwc_version_12)
         mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report), mga::OverlayOptimization::disabled, logger);
     factory.create_display_buffer(stub_program_factory, gl_context);
 }
+
+TEST_F(OutputBuilder, hwc_version_13)
+{
+    using namespace testing;
+
+    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_3;
+
+    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
+        .Times(1);
+    EXPECT_CALL(*mock_resource_factory, create_hwc_device(_))
+        .Times(1);
+    EXPECT_CALL(mock_display_report, report_hwc_composition_in_use(1,3))
+        .Times(1);
+
+    mga::OutputBuilder factory(
+        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report), mga::OverlayOptimization::disabled, logger);
+    factory.create_display_buffer(stub_program_factory, gl_context);
+}

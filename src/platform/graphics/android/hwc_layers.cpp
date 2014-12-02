@@ -38,8 +38,14 @@ decltype(hwc_layer_1_t::planeAlpha) static const plane_alpha_max{
 };
 }
 
+void mga::IntegerSourceCrop::fill_source_crop(
+    hwc_layer_1_t&, geometry::Rectangle const&) const
+{
+}
+
 mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer && other)
 {
+    source_crop = std::move(other.source_crop);
     hwc_layer = other.hwc_layer;
     hwc_list = std::move(other.hwc_list);
     visible_rect = std::move(other.visible_rect);
@@ -47,15 +53,20 @@ mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer && other)
 }
 
 mga::HWCLayer::HWCLayer(HWCLayer && other)
-    : hwc_layer(std::move(other.hwc_layer)),
+    : source_crop{std::move(other.source_crop)},
+      hwc_layer(std::move(other.hwc_layer)),
       hwc_list(std::move(other.hwc_list)),
       visible_rect(std::move(other.visible_rect))
 {
 }
 
-mga::HWCLayer::HWCLayer(std::shared_ptr<hwc_display_contents_1_t> list, size_t layer_index)
-    : hwc_layer(&list->hwLayers[layer_index]),
-      hwc_list(list)
+mga::HWCLayer::HWCLayer(
+    std::shared_ptr<LayerSourceCrop> const& source_crop,
+    std::shared_ptr<hwc_display_contents_1_t> const& list,
+    size_t layer_index) :
+    source_crop(source_crop),
+    hwc_layer(&list->hwLayers[layer_index]),
+    hwc_list(list)
 {
     memset(hwc_layer, 0, sizeof(hwc_layer_1_t));
     memset(&visible_rect, 0, sizeof(hwc_rect_t));
@@ -72,13 +83,14 @@ mga::HWCLayer::HWCLayer(std::shared_ptr<hwc_display_contents_1_t> list, size_t l
 }
 
 mga::HWCLayer::HWCLayer(
+    std::shared_ptr<LayerSourceCrop> const& source_crop,
+    std::shared_ptr<hwc_display_contents_1_t> const& list,
+    size_t layer_index,
     LayerType type,
     geometry::Rectangle const& position,
     bool alpha_enabled,
-    Buffer const& buffer,
-    std::shared_ptr<hwc_display_contents_1_t> list,
-    size_t layer_index)
-     : HWCLayer(list, layer_index)
+    Buffer const& buffer) :
+    HWCLayer(source_crop, list, layer_index)
 {
     setup_layer(type, position, alpha_enabled, buffer);
 }

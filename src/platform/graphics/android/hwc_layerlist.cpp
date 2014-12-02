@@ -87,16 +87,16 @@ void mga::LayerList::update_list(RenderableList const& renderlist, size_t additi
         {
             new_layers.emplace_back(
                 mga::HWCLayer(
+                    source_crop, hwc_representation, i++,
                     mga::LayerType::gl_rendered,
                     renderable->screen_position(),
                     renderable->shaped(), // TODO: support alpha() in future
-                    *renderable->buffer(),
-                    hwc_representation, i++), true);
+                    *renderable->buffer()), true);
         }
 
         for(; i < needed_size; i++)
         {
-            new_layers.emplace_back(mga::HWCLayer(hwc_representation, i), false);
+            new_layers.emplace_back(mga::HWCLayer(source_crop, hwc_representation, i), false);
         }
         layers = std::move(new_layers);
     }

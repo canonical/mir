@@ -156,7 +156,7 @@ TEST_F(HwcDevice, prepares_a_skip_and_target_layer_by_default)
         &target_layer
     };
 
-    EXPECT_CALL(*mock_device, prepare(MatchesList(expected_list)))
+    EXPECT_CALL(*mock_device, prepare(MatchesLegacyCropList(expected_list)))
         .Times(1);
 
     mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
@@ -180,7 +180,7 @@ TEST_F(HwcDevice, calls_backup_compositor_when_overlay_rejected)
     };
 
     Sequence seq;
-    EXPECT_CALL(*mock_device, prepare(MatchesList(expected_prepare_list)))
+    EXPECT_CALL(*mock_device, prepare(MatchesLegacyCropList(expected_prepare_list)))
         .InSequence(seq)
         .WillOnce(Invoke([&](hwc_display_contents_1_t& contents)
         {
@@ -214,9 +214,9 @@ TEST_F(HwcDevice, resets_layers_when_prepare_gl_called)
     };
 
     Sequence seq;
-    EXPECT_CALL(*mock_device, prepare(MatchesList(expected_list1)))
+    EXPECT_CALL(*mock_device, prepare(MatchesLegacyCropList(expected_list1)))
         .InSequence(seq);
-    EXPECT_CALL(*mock_device, prepare(MatchesList(expected_list2)))
+    EXPECT_CALL(*mock_device, prepare(MatchesLegacyCropList(expected_list2)))
         .InSequence(seq);
     mga::HwcDevice device(mock_device, mock_vsync, mock_file_ops);
 
@@ -245,7 +245,7 @@ TEST_F(HwcDevice, sets_and_updates_fences)
     };
 
     Sequence seq;
-    EXPECT_CALL(*mock_device, set(MatchesList(expected_list)))
+    EXPECT_CALL(*mock_device, set(MatchesLegacyCropList(expected_list)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
     EXPECT_CALL(*mock_native_buffer3, update_usage(fb_release_fence, mga::BufferAccess::read))
@@ -296,7 +296,7 @@ TEST_F(HwcDevice, commits_correct_list_with_rejected_renderables)
     EXPECT_CALL(*mock_native_buffer3, copy_fence())
         .InSequence(seq)
         .WillOnce(Return(fb_acquire_fence));
-    EXPECT_CALL(*mock_device, set(MatchesList(expected_list)))
+    EXPECT_CALL(*mock_device, set(MatchesLegacyCropList(expected_list)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
     EXPECT_CALL(*mock_native_buffer3, update_usage(fb_release_fence, mga::BufferAccess::read))
@@ -356,7 +356,7 @@ TEST_F(HwcDevice, commits_correct_list_when_all_accepted_as_overlays)
     EXPECT_CALL(*mock_native_buffer2, copy_fence())
         .InSequence(seq)
         .WillOnce(Return(overlay_acquire_fence2));
-    EXPECT_CALL(*mock_device, set(MatchesList(expected_list)))
+    EXPECT_CALL(*mock_device, set(MatchesLegacyCropList(expected_list)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
     EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence1, mga::BufferAccess::read))
@@ -412,10 +412,10 @@ TEST_F(HwcDevice, resets_composition_type_with_prepare) //lp:1314399
     std::list<hwc_layer_1_t*> expected_list2 { &layer2, &target_layer };
 
     Sequence seq; 
-    EXPECT_CALL(*mock_device, prepare(MatchesList(expected_list1)))
+    EXPECT_CALL(*mock_device, prepare(MatchesLegacyCropList(expected_list1)))
         .InSequence(seq)
         .WillOnce(Invoke(set_all_layers_to_overlay));
-    EXPECT_CALL(*mock_device, prepare(MatchesList(expected_list2)))
+    EXPECT_CALL(*mock_device, prepare(MatchesLegacyCropList(expected_list2)))
         .InSequence(seq);
 
     EXPECT_TRUE(device.post_overlays(stub_context, renderlist, stub_compositor));
@@ -500,7 +500,7 @@ TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_wit
     EXPECT_CALL(*mock_native_buffer2, copy_fence())
         .InSequence(seq)
         .WillOnce(Return(acquire_fence2));
-    EXPECT_CALL(*mock_device, set(MatchesList(expected_list1)))
+    EXPECT_CALL(*mock_device, set(MatchesLegacyCropList(expected_list1)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
     EXPECT_CALL(*mock_device, prepare(_))
@@ -509,7 +509,7 @@ TEST_F(HwcDevice, does_not_set_acquirefences_when_it_has_set_them_previously_wit
     EXPECT_CALL(*native_buffer, copy_fence())
         .InSequence(seq)
         .WillOnce(Return(acquire_fence3));
-    EXPECT_CALL(*mock_device, set(MatchesList(expected_list2)))
+    EXPECT_CALL(*mock_device, set(MatchesLegacyCropList(expected_list2)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences_fn));
 
@@ -644,7 +644,7 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_even_across_list_changes)
     EXPECT_CALL(*mock_native_buffer1, copy_fence())
         .InSequence(seq)
         .WillOnce(Return(acquire_fence1));
-    EXPECT_CALL(*mock_device, set(MatchesList(expected_list1)))
+    EXPECT_CALL(*mock_device, set(MatchesLegacyCropList(expected_list1)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences));
     EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence1, mga::BufferAccess::read))
@@ -658,7 +658,7 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_even_across_list_changes)
     EXPECT_CALL(*mock_native_buffer2, copy_fence())
         .InSequence(seq)
         .WillOnce(Return(acquire_fence2));
-    EXPECT_CALL(*mock_device, set(MatchesList(expected_list2)))
+    EXPECT_CALL(*mock_device, set(MatchesLegacyCropList(expected_list2)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences2));
     EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence2, mga::BufferAccess::read))
@@ -747,7 +747,7 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_across_list_rearrange)
     EXPECT_CALL(*mock_native_buffer2, copy_fence())
         .InSequence(seq)
         .WillOnce(Return(acquire_fence2));
-    EXPECT_CALL(*mock_device, set(MatchesList(expected_list1)))
+    EXPECT_CALL(*mock_device, set(MatchesLegacyCropList(expected_list1)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences));
     EXPECT_CALL(*mock_native_buffer1, update_usage(release_fence1, mga::BufferAccess::read))
@@ -760,7 +760,7 @@ TEST_F(HwcDevice, tracks_hwc_owned_fences_across_list_rearrange)
         .InSequence(seq)
         .WillOnce(Invoke(set_all_layers_to_overlay));
     //note that the buffers just flipped position, no acquire fence copying.
-    EXPECT_CALL(*mock_device, set(MatchesList(expected_list2)))
+    EXPECT_CALL(*mock_device, set(MatchesLegacyCropList(expected_list2)))
         .InSequence(seq)
         .WillOnce(Invoke(set_fences2));
     EXPECT_CALL(*mock_native_buffer2, update_usage(release_fence3, mga::BufferAccess::read))

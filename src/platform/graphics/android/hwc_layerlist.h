@@ -68,6 +68,7 @@ private:
     LayerList& operator=(LayerList const&) = delete;
     LayerList(LayerList const&) = delete;
 
+    std::shared_ptr<LayerSourceCrop> source_crop{std::make_shared<IntegerSourceCrop>()};
     std::list<HwcLayerEntry> layers;
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
     std::list<HwcLayerEntry>::iterator first_additional_layer;
