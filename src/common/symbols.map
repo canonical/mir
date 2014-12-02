@@ -150,7 +150,6 @@ MIR_COMMON_3 {
     # but they are used by libmirplatform, libmirclient or libmirserver
     mir::default_server_socket;
     mir::input::android::Lexicon::translate*;
-    mir::libraries_for_path*;
     mir::logging::input_timestamp*;
     mir::logging::log*;
     mir::logging::set_logger*;
@@ -202,3 +201,10 @@ MIR_COMMON_3 {
   };
  local: *;
 };
+
+MIR_COMMON_3.1 {
+  global:
+    extern "C++" {
+      mir::libraries_for_path*;
+    };
+} MIR_COMMON_3;
