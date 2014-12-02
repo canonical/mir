@@ -1,3 +1,61 @@
+mir (0.9.0+15.04.20141125-0ubuntu1) vivid; urgency=medium
+
+  [ Alberto Aguirre ]
+  * New upstream release 0.9.0 (https://launchpad.net/mir/+milestone/0.9.0)
+    - Enhancements:
+      . New simpler API to configure and run a mir server.
+      . The event loop is now based on GLib's main loop library instead of
+        Boost.Asio.
+      . For Android platforms, the server now sends buffer fence fds to its
+        clients instead of potentially stalling the compositor thread waiting
+        for them to be signalled.
+      . New client debug interface to translate from surface to screen
+        coordinates.
+    - ABI summary: Servers need rebuilding, but clients do not;
+      . Mirclient ABI unchanged at 8
+      . Mircommon ABI bumped to 3
+      . Mirplatform ABI bumped to 4
+      . Mirserver ABI bumped to 27
+    - Bug fixes:
+      . Add a debug interface to translate from surface to screen coordinates
+        (LP: #1346633)
+      . Ensure a buffer requested by a surface is not delivered 
+        after the surface is deleted (LP: #1376324)
+      . Overlays are not displayed onscreen in some positions (LP: #1378326)
+      . Server aborts when an exception is thrown from the main thread
+        (LP: #1378740)
+      . Fix race causing lost alarm notifications (LP: #1381925)
+      . Avoid lifecycle notifications racing with connection release
+        (LP: #1386646)
+      . Improve error checking and reporting for the client library
+       (LP: #1390388)
+      . Mir demo-shell now detects power button using proper Linux scan codes
+       (LP: #1303817)
+      . A prompt session with an invalid application pid should be an error
+        (LP: #1377968)
+      . When XDG_RUNTIME_DIR is defined but pointing to a non-existing 
+        directory use "/tmp" (LP: #1304873)
+      . [regression] demo-shell bypass is not used on fullscreen surfaces if 
+        there are windowed surfaces behind (LP: #1378706)
+      . Mir upgrade through dist-upgrade installs incorrect platform
+        (LP: #1378995)
+      . Fix Mir progressbar example using internal glibc defines(LP: #239272)
+      . Stop the default_lifecycle_event_handler raising SIGHUP while 
+        disconnecting (LP: #1386185)
+      . [regression] Mir fails to build with MIR_ENABLE_TESTS=OFF (LP: #1388539)
+      . [regression] mir_demo_server_basic does not start (LP: #1391923)
+
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 25 Nov 2014 17:49:24 +0000
+
+mir (0.8.0+14.10.20141010-0ubuntu2) vivid; urgency=medium
+
+  * No change rebuild to get debug symbols on all architectures.
+
+ -- Brian Murray <brian@ubuntu.com>  Wed, 19 Nov 2014 11:33:10 -0800
+
 mir (0.8.0+14.10.20141010-0ubuntu1) utopic; urgency=medium
 
   [ Daniel van Vugt ]
