@@ -38,9 +38,28 @@ decltype(hwc_layer_1_t::planeAlpha) static const plane_alpha_max{
 };
 }
 
-void mga::IntegerSourceCrop::fill_source_crop(
-    hwc_layer_1_t&, geometry::Rectangle const&) const
+void mga::FloatSourceCrop::fill_source_crop(
+    hwc_layer_1_t& hwc_layer, geometry::Rectangle const& crop_rect) const
 {
+    hwc_layer.sourceCropf = 
+    {
+        crop_rect.top_left.x.as_float(),
+        crop_rect.top_left.y.as_float(),
+        crop_rect.size.width.as_float(),
+        crop_rect.size.height.as_float()
+    };
+}
+
+void mga::IntegerSourceCrop::fill_source_crop(
+    hwc_layer_1_t& hwc_layer, geometry::Rectangle const& crop_rect) const
+{
+    hwc_layer.sourceCropi = 
+    {
+        crop_rect.top_left.x.as_int(),
+        crop_rect.top_left.y.as_int(),
+        crop_rect.size.width.as_int(),
+        crop_rect.size.height.as_int()
+    };
 }
 
 mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer && other)
@@ -155,12 +174,9 @@ bool mga::HWCLayer::setup_layer(
         position.bottom_right().x.as_int(),
         position.bottom_right().y.as_int()
     };
-    hwc_layer->sourceCrop = 
-    {
-        0, 0,
-        buffer.size().width.as_int(),
-        buffer.size().height.as_int()
-    };
+
+    geom::Rectangle crop_rect{{0,0}, buffer.size()};
+    source_crop->fill_source_crop(*hwc_layer, crop_rect);
 
     visible_rect = hwc_layer->displayFrame;
 

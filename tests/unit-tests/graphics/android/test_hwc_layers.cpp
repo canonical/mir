@@ -40,7 +40,7 @@ public:
     {
         using namespace testing;
 
-        native_handle_1 = std::make_shared<mtd::MockAndroidNativeBuffer>(buffer_size);
+        native_handle_1 = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>(buffer_size);
         ON_CALL(mock_buffer, size())
             .WillByDefault(Return(buffer_size));
         ON_CALL(mock_buffer, native_buffer_handle())
@@ -311,8 +311,8 @@ TEST_F(HWCLayersTest, has_float_sourcecrop)
     hwc_frect_t crop
     {
         0.0f, 0.0f,
-        static_cast<float>(buffer_size.width.as_int()),
-        static_cast<float>(buffer_size.height.as_int())
+        buffer_size.width.as_float(),
+        buffer_size.height.as_float()
     };
 
     hwc_rect_t screen_pos
@@ -339,7 +339,7 @@ TEST_F(HWCLayersTest, has_float_sourcecrop)
     expected_layer.releaseFenceFd = -1;
     expected_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
 
-    mga::HWCLayer layer(source_crop, list, list_index);
+    mga::HWCLayer layer(std::make_shared<mga::FloatSourceCrop>(), list, list_index);
     layer.setup_layer(
         mga::LayerType::gl_rendered,
         screen_position,

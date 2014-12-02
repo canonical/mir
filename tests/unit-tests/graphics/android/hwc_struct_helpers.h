@@ -80,7 +80,7 @@ MATCHER_P(MatchesCommonFields, value, std::string(testing::PrintToString(value))
 MATCHER_P(MatchesLegacyLayer, value, std::string(testing::PrintToString(value)) )
 {
     EXPECT_THAT(arg, MatchesCommonFields(value));
-    EXPECT_THAT(arg.sourceCrop, MatchesRect(value.sourceCrop, "sourceCrop (int)"));
+    EXPECT_THAT(arg.sourceCropi, MatchesRect(value.sourceCropi, "sourceCrop (int)"));
 
     return !(::testing::Test::HasFailure());
 }
@@ -88,7 +88,7 @@ MATCHER_P(MatchesLegacyLayer, value, std::string(testing::PrintToString(value)) 
 MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
 {
     EXPECT_THAT(arg, MatchesCommonFields(value));
-    EXPECT_THAT(arg.sourceCropf, MatchesRectf(value.sourceCrop, "sourceCrop (float)"));
+    EXPECT_THAT(arg.sourceCropf, MatchesRectf(value.sourceCropf, "sourceCrop (float)"));
 
     return !(::testing::Test::HasFailure());
 }
