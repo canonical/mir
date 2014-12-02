@@ -170,21 +170,24 @@ function (mir_precompiled_header TARGET HEADER)
 endfunction()
 
 function (mir_add_wrapped_executable TARGET)
+  set(REAL_EXECUTABLE .${TARGET}-uninstalled)
   add_executable(${TARGET} ${ARGN})
-  set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME .${TARGET}-uninstalled)
+  set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${REAL_EXECUTABLE})
 
-  add_custom_command(
-    TARGET ${TARGET}
-    COMMAND sed "s^@EXECUTABLE@^.${TARGET}-uninstalled^g"
-                ${PROJECT_SOURCE_DIR}/cmake/wrapper-script
-                > ${CMAKE_BINARY_DIR}/bin/${TARGET}
-    COMMAND sed -i "s^@BUILD_PREFIX@^${CMAKE_BINARY_DIR}^g"
-                ${CMAKE_BINARY_DIR}/bin/${TARGET}
-    COMMAND chmod +x ${CMAKE_BINARY_DIR}/bin/${TARGET}
-    DEPENDS ${PROJECT_SOURCE_DIR}/cmake/wrapper-script
-  )
-
-  install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/.${TARGET}-uninstalled
+  add_executable(${TARGET}-wrapper ${PROJECT_SOURCE_DIR}/cmake/src/wrapper.c)
+  set_property(TARGET ${TARGET}-wrapper
+               APPEND_STRING PROPERTY COMPILE_FLAGS " -DEXECUTABLE=\\\"${REAL_EXECUTABLE}\\\"")
+  set_property(TARGET ${TARGET}-wrapper
+               APPEND_STRING PROPERTY COMPILE_FLAGS " -DBUILD_PREFIX=\\\"${CMAKE_BINARY_DIR}\\\"")
+  set_property(TARGET ${TARGET}-wrapper
+               APPEND_STRING PROPERTY COMPILE_FLAGS " -D_BSD_SOURCE")
+  set_property(TARGET ${TARGET}-wrapper
+	       PROPERTY OUTPUT_NAME ${TARGET})
+	       
+	     
+  add_dependencies(${TARGET} ${TARGET}-wrapper)
+  
+  install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/${REAL_EXECUTABLE}
           DESTINATION ${CMAKE_INSTALL_BINDIR}
           RENAME ${TARGET}
   )
