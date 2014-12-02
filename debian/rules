@@ -13,7 +13,7 @@ include /usr/share/dpkg/default.mk
 export CC=$(DEB_HOST_GNU_TYPE)-gcc-4.9
 export CXX=$(DEB_HOST_GNU_TYPE)-g++-4.9
 
-export PLATFORM_DRIVER = platform4driver
+export PLATFORM_DRIVER = platform5driver
 export CLIENT_DRIVER = client8driver
 
 %:
