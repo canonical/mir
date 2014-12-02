@@ -90,11 +90,11 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_fb_device(
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_device(
-    std::shared_ptr<HwcWrapper> const& wrapper) const
+    std::shared_ptr<HwcWrapper> const& wrapper,
+    std::shared_ptr<LayerSourceCrop> const& source_crop) const
 {
     auto syncer = std::make_shared<mga::HWCVsync>();
-    auto file_ops = std::make_shared<mga::RealSyncFileOps>();
-    return std::make_shared<mga::HwcDevice>(wrapper, syncer, file_ops);
+    return std::make_shared<mga::HwcDevice>(wrapper, syncer, source_crop);
 }
 
 std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_fb_device(

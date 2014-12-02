@@ -23,6 +23,7 @@
 #include "display_device.h"
 #include "framebuffers.h"
 #include "real_hwc_wrapper.h"
+#include "hwc_layers.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_report.h"
@@ -90,7 +91,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
         }
         else //versions 1.1, 1.2
         {
-            device = res_factory->create_hwc_device(hwc_wrapper);
+            device = res_factory->create_hwc_device(hwc_wrapper, std::make_shared<mga::IntegerSourceCrop>());
         }
 
         switch (hwc_native->common.version)

@@ -66,7 +66,7 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
         ON_CALL(*this, create_fb_native_device()).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_native_window(_)).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_fb_device(_)).WillByDefault(Return(nullptr));
-        ON_CALL(*this, create_hwc_device(_)).WillByDefault(Return(nullptr));
+        ON_CALL(*this, create_hwc_device(_,_)).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_hwc_fb_device(_,_)).WillByDefault(Return(nullptr));
     }
 
@@ -78,8 +78,8 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
 
     MOCK_CONST_METHOD1(create_fb_device,
         std::shared_ptr<mga::DisplayDevice>(std::shared_ptr<framebuffer_device_t> const&));
-    MOCK_CONST_METHOD1(create_hwc_device,
-        std::shared_ptr<mga::DisplayDevice>(std::shared_ptr<mga::HwcWrapper> const&));
+    MOCK_CONST_METHOD2(create_hwc_device,
+        std::shared_ptr<mga::DisplayDevice>(std::shared_ptr<mga::HwcWrapper> const&, std::shared_ptr<mga::LayerSourceCrop> const&));
     MOCK_CONST_METHOD2(create_hwc_fb_device,
         std::shared_ptr<mga::DisplayDevice>(
             std::shared_ptr<mga::HwcWrapper> const&, std::shared_ptr<framebuffer_device_t> const&));
@@ -165,7 +165,7 @@ TEST_F(OutputBuilder, hwc_version_11_success)
 
     EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_hwc_device(_))
+    EXPECT_CALL(*mock_resource_factory, create_hwc_device(_,_))
         .Times(1);
     EXPECT_CALL(mock_display_report, report_hwc_composition_in_use(1,1))
         .Times(1);
@@ -231,7 +231,7 @@ TEST_F(OutputBuilder, hwc_version_12)
 
     EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_hwc_device(_))
+    EXPECT_CALL(*mock_resource_factory, create_hwc_device(_,_))
         .Times(1);
     EXPECT_CALL(mock_display_report, report_hwc_composition_in_use(1,2))
         .Times(1);
@@ -249,7 +249,7 @@ TEST_F(OutputBuilder, hwc_version_13)
 
     EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
         .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_hwc_device(_))
+    EXPECT_CALL(*mock_resource_factory, create_hwc_device(_,_))
         .Times(1);
     EXPECT_CALL(mock_display_report, report_hwc_composition_in_use(1,3))
         .Times(1);
