@@ -40,7 +40,7 @@ public:
         std::shared_ptr<framebuffer_device_t> const& fb_native_device) const override;
     std::shared_ptr<DisplayDevice> create_hwc_device(
         std::shared_ptr<HwcWrapper> const& hwc_native_device,
-        std::shared_ptr<LayerSourceCrop> const& source_crop) const override;
+        std::shared_ptr<LayerAdapter> const& source_crop) const override;
     std::shared_ptr<DisplayDevice> create_hwc_fb_device(
         std::shared_ptr<HwcWrapper> const& hwc_native_device,
         std::shared_ptr<framebuffer_device_t> const& fb_native_device) const override;

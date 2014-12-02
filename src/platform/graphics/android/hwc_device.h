@@ -44,7 +44,7 @@ public:
     HwcDevice(
         std::shared_ptr<HwcWrapper> const& hwc_wrapper,
         std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
-        std::shared_ptr<LayerSourceCrop> const& source_crop);
+        std::shared_ptr<LayerAdapter> const& source_crop);
 
     virtual void post_gl(SwappingGLContext const& context) override;
     virtual bool post_overlays(

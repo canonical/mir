@@ -79,7 +79,7 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
     MOCK_CONST_METHOD1(create_fb_device,
         std::shared_ptr<mga::DisplayDevice>(std::shared_ptr<framebuffer_device_t> const&));
     MOCK_CONST_METHOD2(create_hwc_device,
-        std::shared_ptr<mga::DisplayDevice>(std::shared_ptr<mga::HwcWrapper> const&, std::shared_ptr<mga::LayerSourceCrop> const&));
+        std::shared_ptr<mga::DisplayDevice>(std::shared_ptr<mga::HwcWrapper> const&, std::shared_ptr<mga::LayerAdapter> const&));
     MOCK_CONST_METHOD2(create_hwc_fb_device,
         std::shared_ptr<mga::DisplayDevice>(
             std::shared_ptr<mga::HwcWrapper> const&, std::shared_ptr<framebuffer_device_t> const&));

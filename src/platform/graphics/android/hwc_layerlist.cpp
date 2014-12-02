@@ -138,7 +138,7 @@ mga::NativeFence mga::LayerList::retirement_fence()
 }
 
 mga::LayerList::LayerList(
-    std::shared_ptr<LayerSourceCrop> const& source_crop,
+    std::shared_ptr<LayerAdapter> const& source_crop,
     RenderableList const& renderlist,
     size_t additional_layers) : 
     source_crop{source_crop}

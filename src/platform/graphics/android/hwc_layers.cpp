@@ -64,7 +64,7 @@ void mga::IntegerSourceCrop::fill_source_crop(
 
 mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer && other)
 {
-    source_crop = std::move(other.source_crop);
+    layer_adapter = std::move(other.layer_adapter);
     hwc_layer = other.hwc_layer;
     hwc_list = std::move(other.hwc_list);
     visible_rect = std::move(other.visible_rect);
@@ -72,7 +72,7 @@ mga::HWCLayer& mga::HWCLayer::operator=(HWCLayer && other)
 }
 
 mga::HWCLayer::HWCLayer(HWCLayer && other)
-    : source_crop{std::move(other.source_crop)},
+    : layer_adapter{std::move(other.layer_adapter)},
       hwc_layer(std::move(other.hwc_layer)),
       hwc_list(std::move(other.hwc_list)),
       visible_rect(std::move(other.visible_rect))
@@ -80,10 +80,10 @@ mga::HWCLayer::HWCLayer(HWCLayer && other)
 }
 
 mga::HWCLayer::HWCLayer(
-    std::shared_ptr<LayerSourceCrop> const& source_crop,
+    std::shared_ptr<LayerAdapter> const& layer_adapter,
     std::shared_ptr<hwc_display_contents_1_t> const& list,
     size_t layer_index) :
-    source_crop(source_crop),
+    layer_adapter(layer_adapter),
     hwc_layer(&list->hwLayers[layer_index]),
     hwc_list(list)
 {
@@ -102,14 +102,14 @@ mga::HWCLayer::HWCLayer(
 }
 
 mga::HWCLayer::HWCLayer(
-    std::shared_ptr<LayerSourceCrop> const& source_crop,
+    std::shared_ptr<LayerAdapter> const& layer_adapter,
     std::shared_ptr<hwc_display_contents_1_t> const& list,
     size_t layer_index,
     LayerType type,
     geometry::Rectangle const& position,
     bool alpha_enabled,
     Buffer const& buffer) :
-    HWCLayer(source_crop, list, layer_index)
+    HWCLayer(layer_adapter, list, layer_index)
 {
     setup_layer(type, position, alpha_enabled, buffer);
 }
@@ -176,7 +176,7 @@ bool mga::HWCLayer::setup_layer(
     };
 
     geom::Rectangle crop_rect{{0,0}, buffer.size()};
-    source_crop->fill_source_crop(*hwc_layer, crop_rect);
+    layer_adapter->fill_source_crop(*hwc_layer, crop_rect);
 
     visible_rect = hwc_layer->displayFrame;
 

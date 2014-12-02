@@ -47,24 +47,24 @@ enum LayerType
     skip
 };
 
-class LayerSourceCrop
+class LayerAdapter
 {
 public:
     virtual void fill_source_crop(hwc_layer_1_t&, geometry::Rectangle const& crop_size) const = 0;
-    virtual ~LayerSourceCrop() = default;
-    LayerSourceCrop() = default;
-    LayerSourceCrop(LayerSourceCrop const&) = delete; 
-    LayerSourceCrop& operator=(LayerSourceCrop const&) = delete; 
+    virtual ~LayerAdapter() = default;
+    LayerAdapter() = default;
+    LayerAdapter(LayerAdapter const&) = delete; 
+    LayerAdapter& operator=(LayerAdapter const&) = delete; 
 };
 
 //HWC 1.0 to 1.2 have int sourceCrop
-class IntegerSourceCrop : public LayerSourceCrop
+class IntegerSourceCrop : public LayerAdapter
 {
     void fill_source_crop(hwc_layer_1_t&, geometry::Rectangle const& crop_size) const override;
 };
 
 //HWC 1.3 and later have float sourceCrop
-class FloatSourceCrop : public LayerSourceCrop
+class FloatSourceCrop : public LayerAdapter
 {
     void fill_source_crop(hwc_layer_1_t&, geometry::Rectangle const& crop_size) const override;
 };
@@ -73,12 +73,12 @@ class HWCLayer
 {
 public:
     HWCLayer(
-        std::shared_ptr<LayerSourceCrop> const&,
+        std::shared_ptr<LayerAdapter> const&,
         std::shared_ptr<hwc_display_contents_1_t> const& list,
         size_t layer_index);
 
     HWCLayer(
-        std::shared_ptr<LayerSourceCrop> const&,
+        std::shared_ptr<LayerAdapter> const&,
         std::shared_ptr<hwc_display_contents_1_t> const& list,
         size_t layer_index,
         LayerType,
@@ -101,7 +101,7 @@ public:
     void set_acquirefence_from(Buffer const& buffer);
     void update_from_releasefence(Buffer const& buffer);
 private:
-    std::shared_ptr<LayerSourceCrop> source_crop;
+    std::shared_ptr<LayerAdapter> layer_adapter;
     hwc_layer_1_t* hwc_layer;
     std::shared_ptr<hwc_display_contents_1_t> hwc_list;
     hwc_rect_t visible_rect;
