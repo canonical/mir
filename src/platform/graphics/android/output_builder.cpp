@@ -91,8 +91,8 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
                 device = res_factory->create_hwc_fb_device(hwc_wrapper, fb_native);
             break;
 
-            case HWC_DEVICE_API_VERSION_1_2:
             case HWC_DEVICE_API_VERSION_1_1:
+            case HWC_DEVICE_API_VERSION_1_2:
                 device = res_factory->create_hwc_device(
                     hwc_wrapper, std::make_shared<mga::IntegerSourceCrop>());
             break;

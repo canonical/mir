@@ -87,7 +87,7 @@ void mga::LayerList::update_list(RenderableList const& renderlist, size_t additi
         {
             new_layers.emplace_back(
                 mga::HWCLayer(
-                    source_crop, hwc_representation, i++,
+                    layer_adapter, hwc_representation, i++,
                     mga::LayerType::gl_rendered,
                     renderable->screen_position(),
                     renderable->shaped(), // TODO: support alpha() in future
@@ -96,7 +96,7 @@ void mga::LayerList::update_list(RenderableList const& renderlist, size_t additi
 
         for(; i < needed_size; i++)
         {
-            new_layers.emplace_back(mga::HWCLayer(source_crop, hwc_representation, i), false);
+            new_layers.emplace_back(mga::HWCLayer(layer_adapter, hwc_representation, i), false);
         }
         layers = std::move(new_layers);
     }
@@ -138,10 +138,10 @@ mga::NativeFence mga::LayerList::retirement_fence()
 }
 
 mga::LayerList::LayerList(
-    std::shared_ptr<LayerAdapter> const& source_crop,
+    std::shared_ptr<LayerAdapter> const& layer_adapter,
     RenderableList const& renderlist,
     size_t additional_layers) : 
-    source_crop{source_crop}
+    layer_adapter{layer_adapter}
 {
     update_list(renderlist, additional_layers);
 }
