@@ -109,7 +109,7 @@ bool ms::operator==(
         lhs.pixel_format == rhs.pixel_format &&
         lhs.depth == rhs.depth &&
         lhs.input_mode == rhs.input_mode &&
-        lhs.output_id == lhs.output_id;
+        lhs.output_id == rhs.output_id;
 }
 
 bool ms::operator!=(
