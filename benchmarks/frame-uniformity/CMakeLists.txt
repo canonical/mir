@@ -31,9 +31,6 @@ target_link_libraries(frame_uniformity_test_client
   mir-test-doubles-platform
   mir-test-framework
 
-  # Why does this have to come after mir-test-framework here but not in tests/acceptance-tests/
-  # /CMakeLists.txt? ~racarr
-
   3rd_party
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
