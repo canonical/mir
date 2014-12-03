@@ -1,0 +1,5 @@
+#!/bin/sh
+
+export MIR_CLIENT_PLATFORM_PATH=@BUILD_PREFIX@/lib/client-modules
+
+exec @BUILD_PREFIX@/bin/@EXECUTABLE@ $@

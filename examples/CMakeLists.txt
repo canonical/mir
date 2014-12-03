@@ -15,38 +15,38 @@ target_link_libraries(eglapp
   ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}
 )
-add_executable(mir_demo_client_eglflash
+mir_add_wrapped_executable(mir_demo_client_eglflash
   eglflash.c
 )
 target_link_libraries(mir_demo_client_eglflash
   eglapp
 )
-add_executable(mir_demo_client_egltriangle
+mir_add_wrapped_executable(mir_demo_client_egltriangle
   egltriangle.c
 )
 target_link_libraries(mir_demo_client_egltriangle
   eglapp
 )
-add_executable(mir_demo_client_eglcounter
+mir_add_wrapped_executable(mir_demo_client_eglcounter
   eglcounter.cpp
 )
 target_link_libraries(mir_demo_client_eglcounter
   eglapp
 )
-add_executable(mir_demo_client_eglplasma
+mir_add_wrapped_executable(mir_demo_client_eglplasma
   eglplasma.c
 )
 target_link_libraries(mir_demo_client_eglplasma
   eglapp
 )
-add_executable(mir_demo_client_cursors
+mir_add_wrapped_executable(mir_demo_client_cursors
   cursors_demo_client.c
 )
 target_link_libraries(mir_demo_client_cursors
   eglapp
 )
 
-add_executable(mir_demo_client_basic
+mir_add_wrapped_executable(mir_demo_client_basic
   basic.c
 )
 
@@ -58,22 +58,22 @@ target_link_libraries(mir_demo_client_basic
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
-add_executable(mir_test_client_release_at_exit release_at_exit.c)
-target_link_libraries(mir_test_client_release_at_exit mirclient)
+mir_add_wrapped_executable(mir_demo_client_release_at_exit release_at_exit.c)
+target_link_libraries(mir_demo_client_release_at_exit mirclient)
 
-add_executable(mir_demo_client_multiwin multiwin.c)
+mir_add_wrapped_executable(mir_demo_client_multiwin multiwin.c)
 target_link_libraries(mir_demo_client_multiwin mirclient)
 
-add_executable(mir_demo_client_fingerpaint fingerpaint.c)
+mir_add_wrapped_executable(mir_demo_client_fingerpaint fingerpaint.c)
 target_link_libraries(mir_demo_client_fingerpaint mirclient)
 
-add_executable(mir_demo_client_progressbar progressbar.c)
+mir_add_wrapped_executable(mir_demo_client_progressbar progressbar.c)
 target_link_libraries(mir_demo_client_progressbar mirclient)
 
-add_executable(mir_demo_client_display_config demo_client_display_config.c)
+mir_add_wrapped_executable(mir_demo_client_display_config demo_client_display_config.c)
 target_link_libraries(mir_demo_client_display_config eglapp)
 
-add_executable(mir_demo_client_flicker
+mir_add_wrapped_executable(mir_demo_client_flicker
   flicker.c
 )
 
@@ -85,7 +85,7 @@ target_link_libraries(mir_demo_client_flicker
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
-add_executable(mir_demo_client_scroll
+mir_add_wrapped_executable(mir_demo_client_scroll
   scroll.cpp
 )
 
@@ -101,7 +101,7 @@ target_link_libraries(mir_demo_client_scroll
 
 )
 
-add_executable(mir_demo_client_prompt_session prompt_session.c)
+mir_add_wrapped_executable(mir_demo_client_prompt_session prompt_session.c)
 target_link_libraries(mir_demo_client_prompt_session mirclient)
 
 add_library(mirdraw STATIC graphics_utils.cpp)
@@ -114,7 +114,7 @@ include_directories(
   ${GLESv2_INCLUDE_DIRS}
 )
 
-add_executable(mir_demo_standalone_render_to_fb
+mir_add_wrapped_executable(mir_demo_standalone_render_to_fb
     render_to_fb.cpp
 )
 
@@ -124,7 +124,7 @@ target_link_libraries(mir_demo_standalone_render_to_fb
     ${Boost_LIBRARIES}
 )
 
-add_executable(mir_demo_standalone_input_filter
+mir_add_wrapped_executable(mir_demo_standalone_input_filter
   demo_input_filter.cpp
 )
 
@@ -133,26 +133,7 @@ target_link_libraries(mir_demo_standalone_input_filter
   exampleserverconfig
 )
 
-set (INSTALL_DEMOS
-  mir_demo_client_basic
-  mir_demo_client_flicker
-  mir_demo_client_scroll
-  mir_demo_client_eglflash
-  mir_demo_client_egltriangle
-  mir_demo_client_eglplasma
-  mir_demo_client_eglcounter
-  mir_demo_client_fingerpaint
-  mir_demo_client_multiwin
-  mir_demo_client_display_config
-  mir_demo_client_progressbar
-  mir_demo_client_prompt_session
-  mir_demo_standalone_input_filter
-  mir_demo_standalone_render_to_fb
-)
-
-install(TARGETS ${INSTALL_DEMOS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-add_executable(mir_demo_server_basic
+mir_add_wrapped_executable(mir_demo_server_basic
   basic_server.cpp
   glog_logger.cpp
 )
@@ -165,25 +146,14 @@ target_link_libraries(mir_demo_server_basic
   ${Boost_LIBRARIES}
 )
 
-install(TARGETS mir_demo_server_basic
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-
-add_executable(mir_demo_server_minimal minimal_server.cpp)
+mir_add_wrapped_executable(mir_demo_server_minimal minimal_server.cpp)
 target_link_libraries(mir_demo_server_minimal mirserver)
-install(TARGETS mir_demo_server_minimal
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
 
-add_executable(mir_demo_standalone_render_overlays
+mir_add_wrapped_executable(mir_demo_standalone_render_overlays
     render_overlays.cpp
 )
 
 target_link_libraries(mir_demo_standalone_render_overlays
     mirserver
     mircommon
-)
-
-install(TARGETS mir_demo_standalone_render_overlays
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

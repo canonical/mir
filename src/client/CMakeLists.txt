@@ -80,14 +80,12 @@ add_library(mirclientobjects OBJECT
   periodic_perf_report.cpp
 )
 
-add_library(
-  mirclient SHARED
+add_library(mirclient SHARED
 
   $<TARGET_OBJECTS:mirclientobjects>
 )
 
-set_target_properties(
-  mirclient
+set_target_properties(mirclient
 
   PROPERTIES
   SOVERSION ${MIRCLIENT_ABI}
