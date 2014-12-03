@@ -187,19 +187,20 @@ TEST_F(HwcLogger, report_display_on)
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
 
-#if 0
 TEST_F(HwcLogger, report_hwc_version)
 {
     std::stringstream str;
-    str << "HWC version 1.0 in use for display." << std::endl
-        << "HWC version 1.1 in use for display." << std::endl
-        << "HWC version 1.2 in use for display." << std::endl
-        << "HWC version 1.3 in use for display." << std::endl;
+    str << "HWC version 1.0" << std::endl
+        << "HWC version 1.1" << std::endl
+        << "HWC version 1.2" << std::endl
+        << "HWC version 1.3" << std::endl
+        << "HWC version unknown (0x33)" << std::endl;
 
     mga::HwcFormattedLogger logger;
-    logger.report_hwc_composition_in_use(1, 0);
-    logger.report_hwc_composition_in_use(1, 1);
-    logger.report_hwc_composition_in_use(1, 2);
+    logger.report_hwc_version(HWC_DEVICE_API_VERSION_1_0);
+    logger.report_hwc_version(HWC_DEVICE_API_VERSION_1_1);
+    logger.report_hwc_version(HWC_DEVICE_API_VERSION_1_2);
+    logger.report_hwc_version(HWC_DEVICE_API_VERSION_1_3);
+    logger.report_hwc_version(51);
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
-#endif
