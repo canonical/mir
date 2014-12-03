@@ -48,26 +48,6 @@ MirMotionEvent const& old_mev_from_new(MirTouchInputEvent const* ev)
 }
 }
 
-MirEventType mir_event_get_type(MirEvent const* ev)
-{
-    switch (ev->type)
-    {
-    case mir_event_type_key:
-    case mir_event_type_motion:
-        return mir_event_type_input;
-    default:
-        return ev->type;
-    }
-}
-
-MirInputEvent const* mir_event_get_input_event(MirEvent  const* ev)
-{
-    if(mir_event_get_type(ev) != mir_event_type_input)
-        abort();
-
-    return reinterpret_cast<MirInputEvent const*>(ev);
-}
-
 MirInputEventType mir_input_event_get_type(MirInputEvent const* ev)
 {
     auto old_ev = old_ev_from_new(ev);

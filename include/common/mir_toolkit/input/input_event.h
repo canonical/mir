@@ -33,8 +33,6 @@
 extern "C" {
 #endif
 
-typedef struct MirInputEvent MirInputEvent;
-
 typedef int64_t MirInputDeviceId;
 
 typedef enum {
@@ -42,14 +40,6 @@ typedef enum {
     mir_input_event_type_touch = 1
 } MirInputEventType;
 
-/*
- * Retrieve the MirInputEvent associated with a MirEvent of 
- * type mir_event_type_input.
- *
- * \param [in] event The event
- * \return           The associated MirInputEvent
- */
-MirInputEvent const* mir_event_get_input_event(MirEvent const* ev);
 
 /*
  * Retrieves the device id responsible for generating an input event.
