@@ -211,7 +211,26 @@ void mga::HwcFormattedLogger::report_vsync_off() const
 
 void mga::HwcFormattedLogger::report_hwc_version(uint32_t version) const
 {
-    (void) version;
+    std::cout << "HWC version ";
+    switch (version)
+    {
+        case HWC_DEVICE_API_VERSION_1_0:
+            std::cout << "1.0";
+            break;
+        case HWC_DEVICE_API_VERSION_1_1:
+            std::cout << "1.1";
+            break;
+        case HWC_DEVICE_API_VERSION_1_2:
+            std::cout << "1.2";
+            break;
+        case HWC_DEVICE_API_VERSION_1_3:
+            std::cout << "1.3";
+            break;
+        default:
+            std::cout << "unknown (0x" << std::hex << version << std::dec << ")";
+            break;
+    }
+    std::cout << std::endl;
 }
 
 void mga::HwcFormattedLogger::report_legacy_fb_module() const
