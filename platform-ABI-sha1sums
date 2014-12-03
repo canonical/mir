@@ -38,11 +38,11 @@ f53a0020b8f1bd4a941a201eb26271cffee0a7dd  include/platform/mir/graphics/display_
 d0442a5d5d88a4be6e3e1f99e433c1c43a86bfce  include/platform/mir/graphics/gl_context.h
 979d2c1ac723ccef538d9a378228a02b0f173bd7  include/platform/mir/graphics/graphic_buffer_allocator.h
 9bbe7eef3a470d7c2daf74de2943a2d03f80aa20  include/platform/mir/graphics/native_platform.h
-012005d408529b0ac1f4fa39a2405a514bb34686  include/platform/mir/graphics/platform.h
+d1b30f36442f05c14f5ea544d8a87effea331d07  include/platform/mir/graphics/platform.h
 3b3463d2513f4c3985f2400496dab333518f9a13  include/platform/mir/graphics/platform_ipc_operations.h
 1b77fb3290af00dc7d1c11dcc5388972dacb9ec3  include/platform/mir/graphics/platform_ipc_package.h
 84c063346b3bd51b4624d9f940008d4c3f8be066  include/platform/mir/graphics/renderable.h
 93a154564a8b25a36c91492b6dc3d8663604ad06  include/platform/mir/options/configuration.h
-47007c783c174f8e94d332c4b13c6b01358b48fb  include/platform/mir/options/default_configuration.h
+f36bbb771b6e594c5f1f7f5cd675a42f6838e4c5  include/platform/mir/options/default_configuration.h
 b45f14082c4f8b29efaa1b13de795dcb29deb738  include/platform/mir/options/option.h
 3c37cc31e8b290b89c311d82f02e07d342766451  include/platform/mir/options/program_option.h
