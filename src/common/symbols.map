@@ -206,7 +206,7 @@ MIR_COMMON_3.1 {
  global:
   extern "C++" {
     mir::log*;
-    mir::log_info*;
+    mir::logv*;
   };
  local: *;
 };
