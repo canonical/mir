@@ -120,7 +120,7 @@ TEST(FrameUniformity, average_frame_offset)
 
     // Ensure we load the correct platform libraries
     setenv("MIR_CLIENT_PLATFORM_PATH",
-           (mtf::executable_path() + "/../lib/client-modules").c_str(),
+           (mtf::library_path() + "/client-modules").c_str(),
            true);
     
     for (int i = 0; i < run_count; i++)
