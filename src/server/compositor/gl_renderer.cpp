@@ -87,7 +87,7 @@ mc::GLRenderer::GLRenderer(
       rotation(NAN), // ensure the first set_rotation succeeds
       dest_alpha(dest_alpha)
 {
-    const struct {GLenum id; const char* label;} glstrings[] =
+    struct {GLenum id; char const* label;} const glstrings[] =
     {
         {GL_VENDOR,   "GL vendor"},
         {GL_RENDERER, "GL renderer"},
@@ -95,11 +95,11 @@ mc::GLRenderer::GLRenderer(
         {GL_SHADING_LANGUAGE_VERSION,  "GLSL version"},
     };
 
-    for (auto const& s : glstrings)
+    for (auto& s : glstrings)
     {
-        auto val = reinterpret_cast<const char*>(glGetString(s.id));
+        auto val = reinterpret_cast<char const*>(glGetString(s.id));
         if (!val) val = "";
-        mir::log_info("%s: %s", s.label, val);
+        mir_log_info("%s: %s", s.label, val);
     }
              
     glUseProgram(*program);
