@@ -177,8 +177,13 @@ private:
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
 
-    void initialize_attributes();
-    int attrib_values[mir_surface_attribs];
+    // Surface attributes:
+    MirSurfaceType _type = mir_surface_type_normal;
+    MirSurfaceState _state = mir_surface_state_restored;
+    int _swapinterval = 1;
+    MirSurfaceFocusState _focus = mir_surface_unfocused;
+    int _dpi = 0;
+    MirSurfaceVisibility _visibility = mir_surface_visibility_exposed;
 };
 
 }
