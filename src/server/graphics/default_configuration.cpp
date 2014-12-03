@@ -119,7 +119,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                     }
                     platform_library = mir::graphics::module_for_device(platforms);
                 }
-                        auto create_platform = platform_library->load_function<mg::CreatePlatform>("create_platform",
+                auto create_platform = platform_library->load_function<mg::CreatePlatform>("create_platform",
                                                                                            SERVER_PLATFORM_VERSION);
                 return create_platform(the_options(), the_emergency_cleanup(), the_display_report());
             }
