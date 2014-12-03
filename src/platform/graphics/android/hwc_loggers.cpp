@@ -141,7 +141,7 @@ std::ostream& operator<<(std::ostream& str, mga::OverlayOptimization opt)
 }
 }
 
-void mga::HwcFormattedLogger::log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const
+void mga::HwcFormattedLogger::report_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const
 {
     std::cout << "before prepare():" << std::endl
               << " # | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending | "
@@ -160,7 +160,7 @@ void mga::HwcFormattedLogger::log_list_submitted_to_prepare(hwc_display_contents
                   << std::endl;
 }
 
-void mga::HwcFormattedLogger::log_prepare_done(hwc_display_contents_1_t const& list) const
+void mga::HwcFormattedLogger::report_prepare_done(hwc_display_contents_1_t const& list) const
 {
     std::cout << "after prepare():" << std::endl
               << " # | Type      | " << std::endl;
@@ -172,7 +172,7 @@ void mga::HwcFormattedLogger::log_prepare_done(hwc_display_contents_1_t const& l
                   << std::endl;
 }
 
-void mga::HwcFormattedLogger::log_set_list(hwc_display_contents_1_t const& list) const
+void mga::HwcFormattedLogger::report_set_list(hwc_display_contents_1_t const& list) const
 {
     std::cout << "set list():" << std::endl
               << " # | handle" << std::endl;
@@ -184,59 +184,89 @@ void mga::HwcFormattedLogger::log_set_list(hwc_display_contents_1_t const& list)
                   << std::endl;
 }
 
-void mga::HwcFormattedLogger::log_overlay_optimization(OverlayOptimization overlay_optimization) const
+void mga::HwcFormattedLogger::report_overlay_optimization(OverlayOptimization overlay_optimization) const
 {
     std::cout << "HWC overlay optimizations are " << overlay_optimization << std::endl;
 }
 
-void mga::HwcFormattedLogger::log_display_on() const
+void mga::HwcFormattedLogger::report_display_on() const
 {
     std::cout << "HWC: display on" << std::endl;
 }
 
-void mga::HwcFormattedLogger::log_display_off() const
+void mga::HwcFormattedLogger::report_display_off() const
 {
     std::cout << "HWC: display off" << std::endl;
 }
 
-void mga::HwcFormattedLogger::log_vsync_on() const
+void mga::HwcFormattedLogger::report_vsync_on() const
 {
     std::cout << "HWC: vsync signal on" << std::endl;
 }
 
-void mga::HwcFormattedLogger::log_vsync_off() const
+void mga::HwcFormattedLogger::report_vsync_off() const
 {
     std::cout << "HWC: vsync signal off" << std::endl;
 }
 
-void mga::NullHwcLogger::log_list_submitted_to_prepare(hwc_display_contents_1_t const&) const
+void mga::HwcFormattedLogger::report_hwc_composition_in_use(int major, int minor) const
+{
+    (void) major; (void) minor;
+}
+
+void mga::HwcFormattedLogger::report_gpu_composition_in_use() const
+{
+}
+#if 0
+void mrl::DisplayReport::report_hwc_composition_in_use(int major, int minor)
+{
+    std::stringstream ss;
+    ss << "HWC version " << major << "." << minor << " in use for display.";
+    logger->log(ml::Severity::informational, ss.str(), component());
+}
+
+void mrl::DisplayReport::report_gpu_composition_in_use()
+{
+    logger->log(ml::Severity::informational, "GPU backup in use for display.", component());
+}
+#endif
+
+void mga::NullHwcLogger::report_list_submitted_to_prepare(hwc_display_contents_1_t const&) const
 {
 }
 
-void mga::NullHwcLogger::log_prepare_done(hwc_display_contents_1_t const&) const
+void mga::NullHwcLogger::report_prepare_done(hwc_display_contents_1_t const&) const
 {
 }
 
-void mga::NullHwcLogger::log_set_list(hwc_display_contents_1_t const&) const
+void mga::NullHwcLogger::report_set_list(hwc_display_contents_1_t const&) const
 {
 }
 
-void mga::NullHwcLogger::log_overlay_optimization(OverlayOptimization) const
+void mga::NullHwcLogger::report_overlay_optimization(OverlayOptimization) const
 {
 }
 
-void mga::NullHwcLogger::log_display_on() const
+void mga::NullHwcLogger::report_display_on() const
 {
 }
 
-void mga::NullHwcLogger::log_display_off() const
+void mga::NullHwcLogger::report_display_off() const
 {
 }
 
-void mga::NullHwcLogger::log_vsync_on() const
+void mga::NullHwcLogger::report_vsync_on() const
 {
 }
 
-void mga::NullHwcLogger::log_vsync_off() const
+void mga::NullHwcLogger::report_vsync_off() const
+{
+}
+
+void mga::NullHwcLogger::report_hwc_composition_in_use(int, int) const
+{
+}
+
+void mga::NullHwcLogger::report_gpu_composition_in_use() const
 {
 }

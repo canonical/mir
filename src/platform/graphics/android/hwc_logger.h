@@ -33,14 +33,16 @@ class HwcLogger
 public:
     virtual ~HwcLogger() = default;
 
-    virtual void log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const = 0;
-    virtual void log_prepare_done(hwc_display_contents_1_t const& list) const = 0;
-    virtual void log_set_list(hwc_display_contents_1_t const& list) const = 0;
-    virtual void log_overlay_optimization(OverlayOptimization optimization_option) const = 0;
-    virtual void log_display_on() const = 0;
-    virtual void log_display_off() const = 0;
-    virtual void log_vsync_on() const = 0;
-    virtual void log_vsync_off() const = 0;
+    virtual void report_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const = 0;
+    virtual void report_prepare_done(hwc_display_contents_1_t const& list) const = 0;
+    virtual void report_set_list(hwc_display_contents_1_t const& list) const = 0;
+    virtual void report_overlay_optimization(OverlayOptimization optimization_option) const = 0;
+    virtual void report_display_on() const = 0;
+    virtual void report_display_off() const = 0;
+    virtual void report_vsync_on() const = 0;
+    virtual void report_vsync_off() const = 0;
+    virtual void report_hwc_composition_in_use(int major, int minor) const = 0;
+    virtual void report_gpu_composition_in_use() const = 0;
 
 protected:
     HwcLogger() = default;

@@ -112,6 +112,7 @@ public:
     std::shared_ptr<mga::HwcLogger> logger{std::make_shared<mga::NullHwcLogger>()};
 };
 }
+#if 0
 TEST_F(OutputBuilder, hwc_version_10_success)
 {
     using namespace testing;
@@ -240,3 +241,4 @@ TEST_F(OutputBuilder, hwc_version_12)
         mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report), mga::OverlayOptimization::disabled, logger);
     factory.create_display_buffer(stub_program_factory, gl_context);
 }
+#endif

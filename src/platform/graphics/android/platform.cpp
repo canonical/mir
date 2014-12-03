@@ -50,7 +50,7 @@ namespace
 char const* const hwc_log_opt = "hwc-report";
 char const* const hwc_overlay_opt = "disable-overlays";
 
-std::shared_ptr<mga::HwcLogger> make_logger(mo::Option const& options)
+std::shared_ptr<mga::HwcLogger> make_hwc_report(mo::Option const& options)
 {
     if (!options.is_set(hwc_log_opt))
         return std::make_shared<mga::NullHwcLogger>();
@@ -140,13 +140,13 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<DisplayReport> const& display_report)
 {
-    auto logger = make_logger(*options);
+    auto hwc_report = make_hwc_report(*options);
     auto overlay_option = should_use_overlay_optimization(*options);
-    logger->log_overlay_optimization(overlay_option);
+    hwc_report->report_overlay_optimization(overlay_option);
     auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
     auto display_builder = std::make_shared<mga::OutputBuilder>(
-        fb_allocator, display_resource_factory, display_report, overlay_option, logger);
+        fb_allocator, display_resource_factory, overlay_option, hwc_report);
     return std::make_shared<mga::Platform>(display_builder, display_report);
 }
 

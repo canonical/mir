@@ -23,9 +23,9 @@
 #include "display_device.h"
 #include "framebuffers.h"
 #include "real_hwc_wrapper.h"
+#include "hwc_logger.h"
 
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/display_report.h"
 #include "mir/graphics/egl_resources.h"
 
 namespace mg = mir::graphics;
@@ -35,19 +35,18 @@ namespace geom = mir::geometry;
 mga::OutputBuilder::OutputBuilder(
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mga::DisplayResourceFactory> const& res_factory,
-    std::shared_ptr<mg::DisplayReport> const& display_report,
     mga::OverlayOptimization overlay_optimization,
-    std::shared_ptr<HwcLogger> const& logger)
+    std::shared_ptr<HwcLogger> const& hwc_report)
     : buffer_allocator(buffer_allocator),
       res_factory(res_factory),
-      display_report(display_report),
+      hwc_report(hwc_report),
       force_backup_display(false),
       overlay_optimization(overlay_optimization)
 {
     try
     {
         hwc_native = res_factory->create_hwc_native_device();
-        hwc_wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native, logger);
+        hwc_wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native, hwc_report);
     } catch (...)
     {
         force_backup_display = true;
@@ -80,7 +79,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
     if (force_backup_display)
     {
         device = res_factory->create_fb_device(fb_native);
-        display_report->report_gpu_composition_in_use();
+        hwc_report->report_gpu_composition_in_use();
     }
     else
     {
@@ -96,13 +95,13 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
         switch (hwc_native->common.version)
         {
             case HWC_DEVICE_API_VERSION_1_2:
-                display_report->report_hwc_composition_in_use(1,2);
+                hwc_report->report_hwc_composition_in_use(1,2);
                 break;
             case HWC_DEVICE_API_VERSION_1_1:
-                display_report->report_hwc_composition_in_use(1,1);
+                hwc_report->report_hwc_composition_in_use(1,1);
                 break;
             case HWC_DEVICE_API_VERSION_1_0:
-                display_report->report_hwc_composition_in_use(1,0);
+                hwc_report->report_hwc_composition_in_use(1,0);
                 break;
             default:
                 break;

@@ -31,28 +31,32 @@ class HwcFormattedLogger : public HwcLogger
 {
 public:
     HwcFormattedLogger() = default;
-    void log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const override;
-    void log_prepare_done(hwc_display_contents_1_t const& list) const override;
-    void log_set_list(hwc_display_contents_1_t const& list) const override;
-    void log_overlay_optimization(OverlayOptimization optimization_option) const override;
-    void log_display_on() const override;
-    void log_display_off() const override;
-    void log_vsync_on() const override;
-    void log_vsync_off() const override;
+    void report_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const override;
+    void report_prepare_done(hwc_display_contents_1_t const& list) const override;
+    void report_set_list(hwc_display_contents_1_t const& list) const override;
+    void report_overlay_optimization(OverlayOptimization optimization_option) const override;
+    void report_display_on() const override;
+    void report_display_off() const override;
+    void report_vsync_on() const override;
+    void report_vsync_off() const override;
+    void report_hwc_composition_in_use(int major, int minor) const override;
+    void report_gpu_composition_in_use() const override;
 };
 
 class NullHwcLogger : public HwcLogger
 {
 public:
     NullHwcLogger() = default;
-    void log_list_submitted_to_prepare(hwc_display_contents_1_t const&) const override;
-    void log_prepare_done(hwc_display_contents_1_t const&) const override;
-    void log_set_list(hwc_display_contents_1_t const&) const override;
-    void log_overlay_optimization(OverlayOptimization optimization_option) const override;
-    void log_display_on() const override;
-    void log_display_off() const override;
-    void log_vsync_on() const override;
-    void log_vsync_off() const override;
+    void report_list_submitted_to_prepare(hwc_display_contents_1_t const&) const override;
+    void report_prepare_done(hwc_display_contents_1_t const&) const override;
+    void report_set_list(hwc_display_contents_1_t const&) const override;
+    void report_overlay_optimization(OverlayOptimization optimization_option) const override;
+    void report_display_on() const override;
+    void report_display_off() const override;
+    void report_vsync_on() const override;
+    void report_vsync_off() const override;
+    void report_hwc_composition_in_use(int major, int minor) const override;
+    void report_gpu_composition_in_use() const override;
 };
 }
 }
