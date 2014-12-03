@@ -32,9 +32,6 @@ struct ClientPlatformOperation : mtf::ConnectedClientHeadlessServer
 
     MirPlatformMessage* platform_operation_add(std::vector<int> const& nums)
     {
-        unsigned int const add_opcode =
-            static_cast<unsigned int>(mtf::StubGraphicsPlatformOperation::add);
-
         auto const request = mir_platform_message_create(add_opcode);
         mir_platform_message_set_data(request, nums.data(), nums.size());
         MirPlatformMessage* reply;
@@ -47,6 +44,9 @@ struct ClientPlatformOperation : mtf::ConnectedClientHeadlessServer
 
         return reply;
     }
+
+    unsigned int const add_opcode =
+        static_cast<unsigned int>(mtf::StubGraphicsPlatformOperation::add);
 };
 
 MATCHER_P(MessageDataEq, v, "")
@@ -62,6 +62,12 @@ MATCHER(MessageDataIsEmpty, "")
 {
     auto msg_data = mir_platform_message_get_data(arg);
     return msg_data.num_data == 0 && msg_data.data == nullptr;
+}
+
+MATCHER_P(MessageOpcodeEq, opcode, "")
+{
+    auto const msg_opcode = mir_platform_message_get_opcode(arg);
+    return msg_opcode == opcode;
 }
 
 }
@@ -87,6 +93,17 @@ TEST_F(ClientPlatformOperation, does_not_set_connection_error_message_on_success
     auto const reply = platform_operation_add(7, 11);
 
     EXPECT_THAT(mir_connection_get_error_message(connection), StrEq(""));
+
+    mir_platform_message_unref(reply);
+}
+
+TEST_F(ClientPlatformOperation, reply_has_opcode_of_request)
+{
+    using namespace testing;
+
+    auto const reply = platform_operation_add(7, 11);
+
+    EXPECT_THAT(reply, MessageOpcodeEq(add_opcode));
 
     mir_platform_message_unref(reply);
 }

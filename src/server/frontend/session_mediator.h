@@ -167,8 +167,8 @@ public:
 
     void platform_operation(
         google::protobuf::RpcController* /*controller*/,
-        mir::protobuf::PlatformOperationRequest const* request,
-        mir::protobuf::Platform* response,
+        mir::protobuf::PlatformOperationMessage const* request,
+        mir::protobuf::PlatformOperationMessage* response,
         google::protobuf::Closure* done);
 
     void new_fds_for_prompt_providers(

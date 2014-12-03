@@ -161,7 +161,7 @@ private:
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::DRMAuthMagicStatus drm_auth_magic_status;
-    mir::protobuf::Platform platform_operation_reply;
+    mir::protobuf::PlatformOperationMessage platform_operation_reply;
     mir::protobuf::DisplayConfiguration display_configuration_response;
     bool disconnecting{false};
 

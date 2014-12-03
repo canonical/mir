@@ -613,8 +613,8 @@ void mf::SessionMediator::drm_auth_magic(
 
 void mf::SessionMediator::platform_operation(
     google::protobuf::RpcController* /*controller*/,
-    mir::protobuf::PlatformOperationRequest const* request,
-    mir::protobuf::Platform* response,
+    mir::protobuf::PlatformOperationMessage const* request,
+    mir::protobuf::PlatformOperationMessage* response,
     google::protobuf::Closure* done)
 {
     {
@@ -628,11 +628,14 @@ void mf::SessionMediator::platform_operation(
     mg::PlatformIPCPackage platform_request;
     unsigned int const opcode = request->opcode();
     platform_request.ipc_data.assign(request->message().data().begin(),
-                                 request->message().data().end());
+                                     request->message().data().end());
 
     auto const& platform_response = ipc_operations->platform_operation(opcode, platform_request);
+
+    response->set_opcode(opcode);
+    auto const response_msg = response->mutable_message();
     for (auto d : platform_response.ipc_data)
-        response->add_data(d);
+        response_msg->add_data(d);
 
     done->Run();
 }

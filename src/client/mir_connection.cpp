@@ -355,14 +355,14 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
 void MirConnection::done_platform_operation(
     mir_platform_operation_callback callback, void* context)
 {
-    auto reply = mir_platform_message_create(0);
+    auto reply = mir_platform_message_create(platform_operation_reply.opcode());
 
     set_error_message(platform_operation_reply.error());
 
     mir_platform_message_set_data(
         reply,
-        platform_operation_reply.data().data(),
-        platform_operation_reply.data().size());
+        platform_operation_reply.message().data().data(),
+        platform_operation_reply.message().data().size());
 
     callback(this, reply, context);
 
@@ -376,7 +376,7 @@ MirWaitHandle* MirConnection::platform_operation(
     MirPlatformMessage const* request,
     mir_platform_operation_callback callback, void* context)
 {
-    mir::protobuf::PlatformOperationRequest protobuf_request;
+    mir::protobuf::PlatformOperationMessage protobuf_request;
 
     protobuf_request.set_opcode(opcode);
     auto const request_data = mir_platform_message_get_data(request);

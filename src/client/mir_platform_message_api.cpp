@@ -69,3 +69,8 @@ MirPlatformMessageData mir_platform_message_get_data(MirPlatformMessage const* m
 {
     return {message->data.data(), message->data.size()};
 }
+
+unsigned int mir_platform_message_get_opcode(MirPlatformMessage const* message)
+{
+    return message->opcode;
+}

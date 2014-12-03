@@ -90,6 +90,14 @@ void mir_platform_message_set_data(MirPlatformMessage* message, int const* data,
  */
 MirPlatformMessageData mir_platform_message_get_data(MirPlatformMessage const* message);
 
+/**
+ * Gets the opcode of a message.
+ *
+ *   \param [in] message   The MirPlatformMessage
+ *   \return               The data
+ */
+unsigned int mir_platform_message_get_opcode(MirPlatformMessage const* message);
+
 #ifdef __cplusplus
 }
 /**@}*/
