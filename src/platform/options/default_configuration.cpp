@@ -61,8 +61,6 @@ namespace
 int const default_ipc_threads          = 1;
 bool const enable_input_default        = true;
 
-std::shared_ptr<mir::SharedLibrary> graphics_lib;
-
 // Hack around the way Qt loads mir:
 // platform_api and therefore Mir are loaded via dlopen(..., RTLD_LOCAL).
 // While this is sensible for a plugin it would mean that some symbols
@@ -200,21 +198,21 @@ void mo::DefaultConfiguration::add_platform_options()
     {
         if (options.is_set(platform_graphics_lib))
         {
-            graphics_lib = std::make_shared<mir::SharedLibrary>(options.get<std::string>(platform_graphics_lib));
+            platform_library = std::make_shared<mir::SharedLibrary>(options.get<std::string>(platform_graphics_lib));
         }
         else if (env_libname)
         {
-            graphics_lib = std::make_shared<mir::SharedLibrary>(std::string{env_libname});
+            platform_library = std::make_shared<mir::SharedLibrary>(std::string{env_libname});
         }
         else
         {
             auto const plugin_path = env_libpath ? env_libpath : options.get<std::string>(platform_graphics_path);
             NullSharedLibraryProberReport nuller;
             auto plugins = mir::libraries_for_path(plugin_path, nuller);
-            graphics_lib = mir::graphics::module_for_device(plugins);
+            platform_library = mir::graphics::module_for_device(plugins);
         }
 
-        auto add_platform_options = graphics_lib->load_function<mir::graphics::AddPlatformOptions>(std::string("add_platform_options"));
+        auto add_platform_options = platform_library->load_function<mir::graphics::AddPlatformOptions>("add_platform_options");
         add_platform_options(*this->program_options);
     }
     catch(...)
