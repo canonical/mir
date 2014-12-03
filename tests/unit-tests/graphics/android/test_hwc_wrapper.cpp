@@ -17,7 +17,7 @@
  */
 
 #include "src/platform/graphics/android/real_hwc_wrapper.h"
-#include "src/platform/graphics/android/hwc_logger.h"
+#include "src/platform/graphics/android/hwc_report.h"
 #include "src/platform/graphics/android/hwc_common_device.h"
 #include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_hwc_report.h"

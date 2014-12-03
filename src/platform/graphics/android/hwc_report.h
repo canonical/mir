@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_HWC_LOGGER_H_
-#define MIR_GRAPHICS_ANDROID_HWC_LOGGER_H_
+#ifndef MIR_GRAPHICS_ANDROID_HWC_REPORT_H_
+#define MIR_GRAPHICS_ANDROID_HWC_REPORT_H_
 
 #include "overlay_optimization.h"
 #include <hardware/hwcomposer.h>
@@ -28,10 +28,10 @@ namespace graphics
 {
 namespace android
 {
-class HwcLogger
+class HwcReport
 {
 public:
-    virtual ~HwcLogger() = default;
+    virtual ~HwcReport() = default;
 
     virtual void report_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const = 0;
     virtual void report_prepare_done(hwc_display_contents_1_t const& list) const = 0;
@@ -45,11 +45,11 @@ public:
     virtual void report_legacy_fb_module() const = 0;
 
 protected:
-    HwcLogger() = default;
-    HwcLogger& operator=(HwcLogger const&) = delete;
-    HwcLogger(HwcLogger const&) = delete;
+    HwcReport() = default;
+    HwcReport& operator=(HwcReport const&) = delete;
+    HwcReport(HwcReport const&) = delete;
 };
 }
 }
 }
-#endif /* MIR_GRAPHICS_ANDROID_HWC_LOGGER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_HWC_REPORT_H_ */

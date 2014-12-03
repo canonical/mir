@@ -50,16 +50,16 @@ namespace
 char const* const hwc_log_opt = "hwc-report";
 char const* const hwc_overlay_opt = "disable-overlays";
 
-std::shared_ptr<mga::HwcLogger> make_hwc_report(mo::Option const& options)
+std::shared_ptr<mga::HwcReport> make_hwc_report(mo::Option const& options)
 {
     if (!options.is_set(hwc_log_opt))
-        return std::make_shared<mga::NullHwcLogger>();
+        return std::make_shared<mga::NullHwcReport>();
 
     auto opt = options.get<std::string>(hwc_log_opt);
     if (opt == mo::log_opt_value)
         return std::make_shared<mga::HwcFormattedLogger>();
     else if (opt == mo::off_opt_value)
-        return std::make_shared<mga::NullHwcLogger>();
+        return std::make_shared<mga::NullHwcReport>();
     else
         throw mir::AbnormalExit(
             std::string("Invalid hwc-report option: " + opt + " (valid options are: \"" +

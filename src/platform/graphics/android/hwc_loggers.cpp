@@ -237,56 +237,14 @@ void mga::HwcFormattedLogger::report_legacy_fb_module() const
 {
     std::cout << "Legacy FB module" << std::endl;
 }
-#if 0
-void mrl::DisplayReport::report_hwc_composition_in_use(int major, int minor)
-{
-    std::stringstream ss;
-    ss << "HWC version " << major << "." << minor << " in use for display.";
-    logger->log(ml::Severity::informational, ss.str(), component());
-}
 
-void mrl::DisplayReport::report_legacy_fb_module()
-{
-    logger->log(ml::Severity::informational, "GPU backup in use for display.", component());
-}
-#endif
-
-void mga::NullHwcLogger::report_list_submitted_to_prepare(hwc_display_contents_1_t const&) const
-{
-}
-
-void mga::NullHwcLogger::report_prepare_done(hwc_display_contents_1_t const&) const
-{
-}
-
-void mga::NullHwcLogger::report_set_list(hwc_display_contents_1_t const&) const
-{
-}
-
-void mga::NullHwcLogger::report_overlay_optimization(OverlayOptimization) const
-{
-}
-
-void mga::NullHwcLogger::report_display_on() const
-{
-}
-
-void mga::NullHwcLogger::report_display_off() const
-{
-}
-
-void mga::NullHwcLogger::report_vsync_on() const
-{
-}
-
-void mga::NullHwcLogger::report_vsync_off() const
-{
-}
-
-void mga::NullHwcLogger::report_hwc_version(uint32_t) const
-{
-}
-
-void mga::NullHwcLogger::report_legacy_fb_module() const
-{
-}
+void mga::NullHwcReport::report_list_submitted_to_prepare(hwc_display_contents_1_t const&) const {}
+void mga::NullHwcReport::report_prepare_done(hwc_display_contents_1_t const&) const {}
+void mga::NullHwcReport::report_set_list(hwc_display_contents_1_t const&) const {}
+void mga::NullHwcReport::report_overlay_optimization(OverlayOptimization) const {}
+void mga::NullHwcReport::report_display_on() const {}
+void mga::NullHwcReport::report_display_off() const {}
+void mga::NullHwcReport::report_vsync_on() const {}
+void mga::NullHwcReport::report_vsync_off() const {}
+void mga::NullHwcReport::report_hwc_version(uint32_t) const {}
+void mga::NullHwcReport::report_legacy_fb_module() const {}

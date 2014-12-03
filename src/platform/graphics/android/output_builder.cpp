@@ -23,7 +23,7 @@
 #include "display_device.h"
 #include "framebuffers.h"
 #include "real_hwc_wrapper.h"
-#include "hwc_logger.h"
+#include "hwc_report.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"
@@ -36,7 +36,7 @@ mga::OutputBuilder::OutputBuilder(
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mga::DisplayResourceFactory> const& res_factory,
     mga::OverlayOptimization overlay_optimization,
-    std::shared_ptr<HwcLogger> const& hwc_report)
+    std::shared_ptr<HwcReport> const& hwc_report)
     : buffer_allocator(buffer_allocator),
       res_factory(res_factory),
       hwc_report(hwc_report),
