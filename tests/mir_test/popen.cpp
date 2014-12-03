@@ -51,5 +51,5 @@ bool mt::Popen::get_line(std::string& line)
     if (line.back() == '\n')
         line.pop_back();
 
-    return !feof(in);
+    return !line.empty() || !feof(in);
 }
