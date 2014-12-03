@@ -95,6 +95,8 @@ public:
     // TODO from the scene and is probably not cleanest interface for this.
     virtual std::shared_ptr<input::InputChannel> input_channel() const override = 0;
     virtual void set_reception_mode(input::InputReceptionMode mode) = 0;
+
+    virtual void request_client_surface_close() = 0;
 };
 }
 }

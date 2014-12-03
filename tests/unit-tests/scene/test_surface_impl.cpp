@@ -430,3 +430,33 @@ TEST_F(Surface, with_most_recent_buffer_do_uses_compositor_buffer)
 
     EXPECT_EQ(stub_buffer_stream->stub_compositor_buffer.get(), buf_ptr);
 }
+
+TEST_F(Surface, emits_client_close_events)
+{
+    using namespace testing;
+
+    auto sink = std::make_shared<MockEventSink>();
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(stub_id, sink);
+
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
+        null_configurator,
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+
+    surf.add_observer(observer);
+
+    MirEvent e;
+    memset(&e, 0, sizeof e);
+    e.type = mir_event_type_close_surface;
+    e.close_surface.surface_id = stub_id.as_value();
+
+    EXPECT_CALL(*sink, handle_event(e)).Times(1);
+
+    surf.request_client_surface_close();
+}

@@ -28,9 +28,7 @@ add_library(mirplatformgraphicsandroidobjects OBJECT
   resource_factory.cpp
   framebuffers.cpp
   fb_device.cpp
-  internal_client_window.cpp
   interpreter_cache.cpp
-  internal_client.cpp
   gl_context.cpp
   device_quirks.cpp
   real_hwc_wrapper.cpp
