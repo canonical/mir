@@ -25,6 +25,7 @@
 
 
 namespace mir { class SharedLibrary; }
+namespace mir { namespace graphics { class Display; }}
 namespace mir { namespace geometry { class Rectangle; }}
 
 namespace mir_test_framework
@@ -39,6 +40,9 @@ class HeadlessTest : public ::testing::Test, public AsyncServerRunner
 public:
     HeadlessTest();
     ~HeadlessTest() noexcept;
+
+
+    void preset_display(std::shared_ptr<mir::graphics::Display> const& display);
 
     /// Override initial display layout
     void initial_display_layout(std::vector<mir::geometry::Rectangle> const& display_rects);
