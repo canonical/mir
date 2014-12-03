@@ -106,7 +106,7 @@ public:
 
     MirWaitHandle* platform_operation(
         unsigned int opcode,
-        MirPlatformPackage const* request,
+        MirPlatformMessage const* request,
         mir_platform_operation_callback callback, void* context);
 
     void register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context);

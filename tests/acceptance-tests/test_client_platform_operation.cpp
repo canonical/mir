@@ -12,44 +12,57 @@ namespace mtf = mir_test_framework;
 namespace
 {
 
-void assign_package(MirConnection*, MirPlatformPackage const* reply, void* context)
+void assign_reply(MirConnection*, MirPlatformMessage const* reply, void* context)
 {
-    auto package = static_cast<MirPlatformPackage*>(context);
-    package->data_items = reply->data_items;
-    package->fd_items = reply->fd_items;
-    memcpy(package->data, reply->data, sizeof(package->data[0]) * package->data_items);
-    memcpy(package->fd, reply->fd, sizeof(package->fd[0]) * package->fd_items);
+    auto message = static_cast<MirPlatformMessage**>(context);
+    *message = mir_platform_message_ref(reply);
 }
 
 struct ClientPlatformOperation : mtf::ConnectedClientHeadlessServer
 {
-    MirPlatformPackage platform_operation_add(int num1, int num2)
+    MirPlatformMessage* platform_operation_add(int num1, int num2)
     {
         return platform_operation_add({num1,num2});
     }
 
-    MirPlatformPackage incorrect_platform_operation_add()
+    MirPlatformMessage* incorrect_platform_operation_add()
     {
         return platform_operation_add({7});
     }
 
-    MirPlatformPackage platform_operation_add(std::vector<int> const& nums)
+    MirPlatformMessage* platform_operation_add(std::vector<int> const& nums)
     {
         unsigned int const add_opcode =
             static_cast<unsigned int>(mtf::StubGraphicsPlatformOperation::add);
 
-        MirPlatformPackage request{0, 0, {}, {}};
-        MirPlatformPackage reply{0, 0, {}, {}};
-        request.data_items = nums.size();
-        std::copy(nums.begin(), nums.end(), request.data);
+        auto const request = mir_platform_message_create(add_opcode);
+        mir_platform_message_set_data(request, nums.data(), nums.size());
+        MirPlatformMessage* reply;
 
         auto const platform_op_done = mir_connection_platform_operation(
-            connection, add_opcode, &request, assign_package, &reply);
+            connection, add_opcode, request, assign_reply, &reply);
         mir_wait_for(platform_op_done);
+
+        mir_platform_message_unref(request);
 
         return reply;
     }
 };
+
+MATCHER_P(MessageDataEq, v, "")
+{
+    using namespace testing;
+    auto msg_data = mir_platform_message_get_data(arg);
+    std::vector<int> data{msg_data.data, msg_data.data + msg_data.num_data};
+
+    return v == data;
+}
+
+MATCHER(MessageDataIsEmpty, "")
+{
+    auto msg_data = mir_platform_message_get_data(arg);
+    return msg_data.num_data == 0 && msg_data.data == nullptr;
+}
 
 }
 
@@ -62,18 +75,20 @@ TEST_F(ClientPlatformOperation, exchanges_data_items_with_platform)
 
     auto const reply = platform_operation_add(num1, num2);
 
-    EXPECT_THAT(reply.fd_items, Eq(0));
-    EXPECT_THAT(reply.data_items, Eq(1));
-    EXPECT_THAT(reply.data[0], Eq(num1 + num2));
+    EXPECT_THAT(reply, MessageDataEq(std::vector<int>{num1 + num2}));
+
+    mir_platform_message_unref(reply);
 }
 
 TEST_F(ClientPlatformOperation, does_not_set_connection_error_message_on_success)
 {
     using namespace testing;
 
-    platform_operation_add(7, 11);
+    auto const reply = platform_operation_add(7, 11);
 
     EXPECT_THAT(mir_connection_get_error_message(connection), StrEq(""));
+
+    mir_platform_message_unref(reply);
 }
 
 TEST_F(ClientPlatformOperation, returns_empty_reply_on_error)
@@ -82,15 +97,18 @@ TEST_F(ClientPlatformOperation, returns_empty_reply_on_error)
 
     auto const reply = incorrect_platform_operation_add();
 
-    EXPECT_THAT(reply.data_items, Eq(0));
-    EXPECT_THAT(reply.fd_items, Eq(0));
+    EXPECT_THAT(reply, MessageDataIsEmpty());
+
+    mir_platform_message_unref(reply);
 }
 
 TEST_F(ClientPlatformOperation, sets_connection_error_message_on_error)
 {
     using namespace testing;
 
-    incorrect_platform_operation_add();
+    auto const reply = incorrect_platform_operation_add();
 
     EXPECT_THAT(mir_connection_get_error_message(connection), StrNe(""));
+
+    mir_platform_message_unref(reply);
 }

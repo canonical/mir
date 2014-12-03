@@ -19,6 +19,7 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
+#include "mir_toolkit/mir_platform_message.h"
 #include "client_platform.h"
 #include "client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"
@@ -354,29 +355,33 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
 void MirConnection::done_platform_operation(
     mir_platform_operation_callback callback, void* context)
 {
-    MirPlatformPackage reply;
+    auto reply = mir_platform_message_create(0);
 
     set_error_message(platform_operation_reply.error());
 
-    reply.fd_items = 0;
-    reply.data_items = platform_operation_reply.data_size();
-    for (int i = 0; i != platform_operation_reply.data_size(); ++i)
-        reply.data[i] = platform_operation_reply.data(i);
+    mir_platform_message_set_data(
+        reply,
+        platform_operation_reply.data().data(),
+        platform_operation_reply.data().size());
 
-    callback(this, &reply, context);
+    callback(this, reply, context);
+
+    mir_platform_message_unref(reply);
+
     platform_operation_wait_handle.result_received();
 }
 
 MirWaitHandle* MirConnection::platform_operation(
     unsigned int opcode,
-    MirPlatformPackage const* request,
+    MirPlatformMessage const* request,
     mir_platform_operation_callback callback, void* context)
 {
     mir::protobuf::PlatformOperationRequest protobuf_request;
 
     protobuf_request.set_opcode(opcode);
-    for (int i = 0; i < request->data_items; ++i)
-        protobuf_request.mutable_message()->add_data(request->data[i]);
+    auto const request_data = mir_platform_message_get_data(request);
+    for (auto i = 0u; i < request_data.num_data; ++i)
+        protobuf_request.mutable_message()->add_data(request_data.data[i]);
 
     platform_operation_wait_handle.expect_result();
     server.platform_operation(

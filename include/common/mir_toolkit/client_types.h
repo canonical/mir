@@ -56,6 +56,8 @@ typedef struct MirPromptSession MirPromptSession;
  */
 typedef struct MirWaitHandle MirWaitHandle;
 
+typedef struct MirPlatformMessage MirPlatformMessage;
+
 /**
  * Callback to be passed when issuing a mir_connect request.
  *   \param [in] connection          the new connection
@@ -338,8 +340,19 @@ typedef void (*mir_prompt_session_callback)(MirPromptSession* prompt_provider, v
 typedef void (*mir_prompt_session_state_change_callback)(
     MirPromptSession* prompt_provider, MirPromptSessionState state, void* context);
 
+/**
+ * Callback called when a platform operation completes.
+ *
+ *   \warning The reply is released after the callback is finished. If you want
+ *            to use it outside the callback you must get a new reference to the
+ *            reply using mir_platform_message_ref().
+ *
+ *   \param [in] connection   The connection associated with the platform operation
+ *   \param [in] reply        The platform operation reply
+ *   \param [in,out] context  The context provided by the client
+ */
 typedef void (*mir_platform_operation_callback)(
-    MirConnection* connection, MirPlatformPackage const* reply, void* context);
+    MirConnection* connection, MirPlatformMessage const* reply, void* context);
 
 #ifdef __cplusplus
 }

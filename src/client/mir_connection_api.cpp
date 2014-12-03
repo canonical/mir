@@ -300,7 +300,7 @@ void mir_connection_get_available_surface_formats(
 
 MirWaitHandle* mir_connection_platform_operation(
     MirConnection* connection, unsigned int opcode,
-    MirPlatformPackage const* request,
+    MirPlatformMessage const* request,
     mir_platform_operation_callback callback, void* context)
 {
     try
