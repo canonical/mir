@@ -182,7 +182,10 @@ extern "C" mg::PlatformPriority probe_platform()
 }
 
 mg::ModuleProperties const description = {
-    "android"
+    "android",
+    MIR_VERSION_MAJOR,
+    MIR_VERSION_MINOR,
+    MIR_VERSION_MICRO
 };
 
 extern "C" mg::ModuleProperties const* describe_module()

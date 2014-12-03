@@ -125,7 +125,10 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                                                                                            SERVER_PLATFORM_VERSION);
                 auto description = describe_module();
                 ml::log(ml::Severity::informational,
-                        std::string{"Selected driver: "} + description->name,
+                        std::string{"Selected driver: "} + description->name + " (version " +
+                        std::to_string(description->major_version) + "." +
+                        std::to_string(description->minor_version) + "." +
+                        std::to_string(description->micro_version) + ")",
                         "Platform Loader");
                 return create_platform(the_options(), the_emergency_cleanup(), the_display_report());
             }
@@ -196,7 +199,10 @@ std::shared_ptr<mg::NativePlatform>  mir::DefaultServerConfiguration::the_graphi
                                                                                        SERVER_PLATFORM_VERSION);
             auto description = describe_module();
             ml::log(ml::Severity::informational,
-                    std::string{"Selected driver: "} + description->name,
+                    std::string{"Selected driver: "} + description->name + " (version " +
+                    std::to_string(description->major_version) + "." +
+                    std::to_string(description->minor_version) + "." +
+                    std::to_string(description->micro_version) + ")",
                     "Platform Loader");
 
             auto context = std::make_shared<MirConnectionNestedContext>(the_host_connection());

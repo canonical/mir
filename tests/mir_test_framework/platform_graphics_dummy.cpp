@@ -24,7 +24,10 @@ extern "C" mir::graphics::PlatformPriority probe_platform()
 }
 
 mir::graphics::ModuleProperties const description {
-    "dummy"
+    "dummy",
+    MIR_VERSION_MAJOR,
+    MIR_VERSION_MINOR,
+    MIR_VERSION_MICRO
 };
 
 extern "C" mir::graphics::ModuleProperties const* describe_module()

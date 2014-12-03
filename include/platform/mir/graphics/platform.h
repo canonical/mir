@@ -120,6 +120,9 @@ enum PlatformPriority : uint32_t
 struct ModuleProperties
 {
     char const* name;
+    int major_version;
+    int minor_version;
+    int micro_version;
 };
 
 /**
