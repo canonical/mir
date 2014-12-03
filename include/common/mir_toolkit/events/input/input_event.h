@@ -19,9 +19,9 @@
 #ifndef MIR_TOOLKIT_INPUT_EVENT_H_
 #define MIR_TOOLKIT_INPUT_EVENT_H_
 
-#include "mir_toolkit/event.h"
-#include "mir_toolkit/input/key_input_event.h"
-#include "mir_toolkit/input/touch_input_event.h"
+#include "mir_toolkit/events/event.h"
+#include "mir_toolkit/events/input/key_input_event.h"
+#include "mir_toolkit/events/input/touch_input_event.h"
 
 #include <stdint.h>
 

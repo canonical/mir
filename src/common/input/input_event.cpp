@@ -16,7 +16,7 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "mir_toolkit/input/input_event.h"
+#include "mir_toolkit/events/input/input_event.h"
 
 #include <assert.h>
 #include <stdlib.h>

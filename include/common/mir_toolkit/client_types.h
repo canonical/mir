@@ -21,7 +21,7 @@
 #ifndef MIR_TOOLKIT_CLIENT_TYPES_H_
 #define MIR_TOOLKIT_CLIENT_TYPES_H_
 
-#include <mir_toolkit/event.h>
+#include <mir_toolkit/events/event.h>
 #include <mir_toolkit/common.h>
 
 #include <stddef.h>

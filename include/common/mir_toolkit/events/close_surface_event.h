@@ -16,9 +16,30 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_
-#define MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_
+#ifndef MIR_TOOLKIT_EVENTS_CLOSE_SURFACE_EVENT_H_
+#define MIR_TOOLKIT_EVENTS_CLOSE_SURFACE_EVENT_H_
 
-#include "mir_toolkit/events/event.h"
+#include <mir_toolkit/events/event.h>
 
-#endif /* MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_ */
+#ifdef __cplusplus
+/**
+ * \addtogroup mir_toolkit
+ * @{
+ */
+extern "C" {
+#endif
+
+/*
+ * Retrieve the surface ID associated wih this MirCloseSurfaceEvent
+ *
+ * \param [in] ev    The close-surface event
+ * \return           The associated surface-id
+ */
+int mir_close_surface_event_get_surface_id(MirCloseSurfaceEvent const* ev);
+
+#ifdef __cplusplus
+}
+/**@}*/
+#endif
+
+#endif /* MIR_TOOLKIT_CLOSE_SURFACE_EVENT_H_ */
