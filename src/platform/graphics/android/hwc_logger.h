@@ -41,8 +41,8 @@ public:
     virtual void report_display_off() const = 0;
     virtual void report_vsync_on() const = 0;
     virtual void report_vsync_off() const = 0;
-    virtual void report_hwc_composition_in_use(int major, int minor) const = 0;
-    virtual void report_gpu_composition_in_use() const = 0;
+    virtual void report_hwc_version(uint32_t) const = 0;
+    virtual void report_legacy_fb_module() const = 0;
 
 protected:
     HwcLogger() = default;

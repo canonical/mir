@@ -187,6 +187,16 @@ TEST_F(HwcLogger, report_display_on)
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
 
+TEST_F(HwcLogger, report_legacy_fb)
+{
+    std::stringstream str;
+    str << "Legacy FB module" << std::endl;
+
+    mga::HwcFormattedLogger logger;
+    logger.report_legacy_fb_module();
+    EXPECT_EQ(str.str(), test_stream.str()); 
+}
+
 TEST_F(HwcLogger, report_hwc_version)
 {
     std::stringstream str;

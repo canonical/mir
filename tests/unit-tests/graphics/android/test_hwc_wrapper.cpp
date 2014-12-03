@@ -38,8 +38,8 @@ struct MockHwcLogger : public mga::HwcLogger
     MOCK_CONST_METHOD0(report_display_off, void());
     MOCK_CONST_METHOD0(report_vsync_on, void());
     MOCK_CONST_METHOD0(report_vsync_off, void());
-    MOCK_CONST_METHOD2(report_hwc_composition_in_use, void(int , int));
-    MOCK_CONST_METHOD0(report_gpu_composition_in_use, void());
+    MOCK_CONST_METHOD1(report_hwc_version, void(uint32_t));
+    MOCK_CONST_METHOD0(report_legacy_fb_module, void());
 };
 }
 

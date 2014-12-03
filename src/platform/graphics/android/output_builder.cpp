@@ -79,7 +79,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
     if (force_backup_display)
     {
         device = res_factory->create_fb_device(fb_native);
-        hwc_report->report_gpu_composition_in_use();
+        hwc_report->report_legacy_fb_module();
     }
     else
     {
@@ -92,20 +92,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
             device = res_factory->create_hwc_device(hwc_wrapper);
         }
 
-        switch (hwc_native->common.version)
-        {
-            case HWC_DEVICE_API_VERSION_1_2:
-                hwc_report->report_hwc_composition_in_use(1,2);
-                break;
-            case HWC_DEVICE_API_VERSION_1_1:
-                hwc_report->report_hwc_composition_in_use(1,1);
-                break;
-            case HWC_DEVICE_API_VERSION_1_0:
-                hwc_report->report_hwc_composition_in_use(1,0);
-                break;
-            default:
-                break;
-        } 
+        hwc_report->report_hwc_version(hwc_native->common.version);
     }
 
     auto native_window = res_factory->create_native_window(framebuffers);

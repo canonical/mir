@@ -209,13 +209,14 @@ void mga::HwcFormattedLogger::report_vsync_off() const
     std::cout << "HWC: vsync signal off" << std::endl;
 }
 
-void mga::HwcFormattedLogger::report_hwc_composition_in_use(int major, int minor) const
+void mga::HwcFormattedLogger::report_hwc_version(uint32_t version) const
 {
-    (void) major; (void) minor;
+    (void) version;
 }
 
-void mga::HwcFormattedLogger::report_gpu_composition_in_use() const
+void mga::HwcFormattedLogger::report_legacy_fb_module() const
 {
+    std::cout << "Legacy FB module" << std::endl;
 }
 #if 0
 void mrl::DisplayReport::report_hwc_composition_in_use(int major, int minor)
@@ -225,7 +226,7 @@ void mrl::DisplayReport::report_hwc_composition_in_use(int major, int minor)
     logger->log(ml::Severity::informational, ss.str(), component());
 }
 
-void mrl::DisplayReport::report_gpu_composition_in_use()
+void mrl::DisplayReport::report_legacy_fb_module()
 {
     logger->log(ml::Severity::informational, "GPU backup in use for display.", component());
 }
@@ -263,10 +264,10 @@ void mga::NullHwcLogger::report_vsync_off() const
 {
 }
 
-void mga::NullHwcLogger::report_hwc_composition_in_use(int, int) const
+void mga::NullHwcLogger::report_hwc_version(uint32_t) const
 {
 }
 
-void mga::NullHwcLogger::report_gpu_composition_in_use() const
+void mga::NullHwcLogger::report_legacy_fb_module() const
 {
 }

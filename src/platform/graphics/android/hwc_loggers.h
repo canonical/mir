@@ -39,8 +39,8 @@ public:
     void report_display_off() const override;
     void report_vsync_on() const override;
     void report_vsync_off() const override;
-    void report_hwc_composition_in_use(int major, int minor) const override;
-    void report_gpu_composition_in_use() const override;
+    void report_hwc_version(uint32_t) const override;
+    void report_legacy_fb_module() const override;
 };
 
 class NullHwcLogger : public HwcLogger
@@ -55,8 +55,8 @@ public:
     void report_display_off() const override;
     void report_vsync_on() const override;
     void report_vsync_off() const override;
-    void report_hwc_composition_in_use(int major, int minor) const override;
-    void report_gpu_composition_in_use() const override;
+    void report_hwc_version(uint32_t) const override;
+    void report_legacy_fb_module() const override;
 };
 }
 }
