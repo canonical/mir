@@ -31,6 +31,7 @@
 #include <thread>
 
 namespace mir { class SharedLibrary; }
+namespace mir { namespace graphics { class Display; }}
 namespace mir { namespace geometry { class Rectangle; }}
 
 namespace mir_test_framework
@@ -62,6 +63,8 @@ public:
 
     /// \return a connection string for a client to connect to the server
     auto connection(mir::Fd fd) -> std::string;
+
+    void preset_display(std::shared_ptr<mir::graphics::Display> const& display);
 
     /// Override initial display layout
     void initial_display_layout(std::vector<mir::geometry::Rectangle> const& display_rects);
