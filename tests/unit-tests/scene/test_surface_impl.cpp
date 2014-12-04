@@ -281,7 +281,7 @@ TEST_F(Surface, configurator_selects_attribute_values)
         std::shared_ptr<mg::CursorImage>(),
         report);
 
-    EXPECT_EQ(mir_surface_state_minimized, surface->configure(mir_surface_attrib_state, mir_surface_state_restored));
+    EXPECT_EQ(mir_surface_state_minimized, surf.configure(mir_surface_attrib_state, mir_surface_state_restored));
 }
 
 TEST_F(Surface, take_input_focus)

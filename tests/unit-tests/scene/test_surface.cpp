@@ -441,6 +441,16 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
     using namespace testing;
 
     NiceMock<mtd::MockInputSender> mock_sender;
+    ms::BasicSurface surface(
+        surface_name,
+        rect,
+        false,
+        mock_buffer_stream,
+        std::make_shared<mtd::StubInputChannel>(),
+        mt::fake_shared(mock_sender),
+        std::make_shared<mtd::NullSurfaceConfigurator>(),
+        std::shared_ptr<mg::CursorImage>(),
+        report);
 
     MirEvent key_event;
     MirEvent motion_event;
@@ -452,6 +462,6 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
     EXPECT_CALL(mock_sender, send_event(mt::MirKeyEventMatches(key_event), _)).Times(1);
     EXPECT_CALL(mock_sender, send_event(mt::MirMotionEventMatches(motion_event), _)).Times(1);
 
-    surface->consume(key_event);
-    surface->consume(motion_event);
+    surface.consume(key_event);
+    surface.consume(motion_event);
 }
