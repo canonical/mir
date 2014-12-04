@@ -316,9 +316,11 @@ MATCHER_P(ContainsASingleWhitePixel, buffersize, "")
     if (pixels[0] != 0xffffffff)
         return false;
     for (decltype(buffersize) i = 1; i < buffersize; i++)
+    {
         if (pixels[i] != 0x0)
             return false;
-    return true;
+    }
+    return true; 
 }
 
 TEST_F(MesaCursorTest, show_cursor_pads_missing_data)

@@ -99,7 +99,7 @@ private:
 
     struct GBMBOWrapper
     {
-        GBMBOWrapper(gbm_device* gbm, int width, int height);
+        GBMBOWrapper(gbm_device* gbm);
         operator gbm_bo*();
         ~GBMBOWrapper();
     private:

@@ -36,6 +36,7 @@ namespace geom = mir::geometry;
 namespace
 {
 const uint64_t requested_cursor_size = 64;
+
 // Transforms a relative position within the display bounds described by \a rect which is rotated with \a orientation
 geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement const& vector, MirOrientation orientation)
 {
@@ -54,16 +55,11 @@ geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement con
 }
 }
 
-// support for older mesa versions
-#ifndef GBM_BO_USE_CURSOR
-#define GBM_BO_USE_CURSOR GBM_BO_USE_CURSOR_64X64
-#endif
-
-mgm::Cursor::GBMBOWrapper::GBMBOWrapper(gbm_device* gbm, int buffer_width, int buffer_height) :
+mgm::Cursor::GBMBOWrapper::GBMBOWrapper(gbm_device* gbm) :
     buffer(gbm_bo_create(
                 gbm,
-                buffer_width,
-                buffer_height,
+                requested_cursor_size,
+                requested_cursor_size,
                 GBM_FORMAT_ARGB8888,
                 GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE))
 {
@@ -81,10 +77,7 @@ mgm::Cursor::Cursor(
         output_container(output_container),
         current_position(),
         visible(true),
-        buffer(gbm,
-               requested_cursor_size,
-               requested_cursor_size
-              ),
+        buffer(gbm),
         buffer_width(gbm_bo_get_width(buffer)),
         buffer_height(gbm_bo_get_height(buffer)),
         current_configuration(current_configuration)
