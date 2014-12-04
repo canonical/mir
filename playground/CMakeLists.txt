@@ -29,4 +29,3 @@ target_link_libraries(mir_demo_standalone_render_surfaces
 install(TARGETS mir_demo_standalone_render_surfaces RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory(demo-shell/)
-add_subdirectory(demo-inprocess-surface-client/)

@@ -423,7 +423,7 @@ MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
 MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)
 {
     MirWaitHandle *result = nullptr;
-
+    
     try
     {
         if (surface)

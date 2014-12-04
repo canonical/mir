@@ -78,16 +78,6 @@ MATCHER_P2(SurfaceEvent, attrib, value, "")
     return true;
 }
 
-MATCHER_P(OrientationEvent, value, "")
-{
-    if (arg.type != mir_event_type_orientation)
-        return false;
-    auto orientation_ev = arg.orientation;
-    if (orientation_ev.direction != value)
-        return false;
-    return true;
-}
-
 }
 } // namespace mir
 

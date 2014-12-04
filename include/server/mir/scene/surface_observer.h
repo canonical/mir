@@ -52,6 +52,7 @@ public:
     virtual void transformation_set_to(glm::mat4 const& t) = 0;
     virtual void reception_mode_set_to(input::InputReceptionMode mode) = 0;
     virtual void cursor_image_set_to(graphics::CursorImage const& image) = 0;
+    virtual void client_surface_close_requested() = 0;
 
 protected:
     SurfaceObserver() = default;

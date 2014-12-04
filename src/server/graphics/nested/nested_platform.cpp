@@ -56,11 +56,6 @@ std::shared_ptr<mg::Display> mgn::NestedPlatform::create_display(
         shared_from_this(), connection, dispatcher, display_report, conf_policy, gl_config);
 }
 
-std::shared_ptr<mg::InternalClient> mgn::NestedPlatform::create_internal_client()
-{
-    return native_platform->create_internal_client();
-}
-
 std::shared_ptr<mg::PlatformIpcOperations> mgn::NestedPlatform::make_ipc_operations() const
 {
     return native_platform->make_ipc_operations();
