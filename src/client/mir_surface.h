@@ -121,7 +121,7 @@ public:
     int attrib(MirSurfaceAttrib a) const;
 
     MirOrientation get_orientation() const;
-    MirWaitHandle* set_permitted_orientations(MirPermittedOrientations orientations);
+    MirWaitHandle* set_preferred_orientation(MirOrientationMode mode);
 
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 

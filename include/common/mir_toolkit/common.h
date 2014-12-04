@@ -42,7 +42,7 @@ typedef enum MirSurfaceAttrib
     mir_surface_attrib_focus,
     mir_surface_attrib_dpi,
     mir_surface_attrib_visibility,
-    mir_surface_attrib_permitted_orientations,
+    mir_surface_attrib_preferred_orientation,
     /* Must be last */
     mir_surface_attribs
 } MirSurfaceAttrib;
@@ -144,22 +144,19 @@ typedef enum MirOrientation
     mir_orientation_right = 270
 } MirOrientation;
 
-/** Direction relative to the "natural" orientation of the display */
-typedef enum MirPermittedOrientations
+typedef enum MirOrientationMode
 {
-    mir_permitted_orientation_normal = 1 << 0,
-    mir_permitted_orientation_left = 1 << 1,
-    mir_permitted_orientation_right = 1 << 2,
-    mir_permitted_orientation_inverted = 1 << 3,
-    mir_permitted_orientation_all = mir_permitted_orientation_normal |
-                                    mir_permitted_orientation_left |
-                                    mir_permitted_orientation_right |
-                                    mir_permitted_orientation_inverted,
-    mir_permitted_orientation_left_right = mir_permitted_orientation_left |
-                                           mir_permitted_orientation_right,
-    mir_permitted_orientation_normal_inverted = mir_permitted_orientation_normal |
-                                                mir_permitted_orientation_inverted
-} MirPermittedOrientations;
+    mir_orientation_mode_portrait = 1 << 0,
+    mir_orientation_mode_landscape = 1 << 1,
+    mir_orientation_mode_portrait_inverted = 1 << 2,
+    mir_orientation_mode_landscape_inverted = 1 << 3,
+    mir_orientation_mode_portrait_any = mir_orientation_mode_portrait |
+                                        mir_orientation_mode_portrait_inverted,
+    mir_orientation_mode_landscape_any = mir_orientation_mode_landscape |
+                                         mir_orientation_mode_landscape_inverted,
+    mir_orientation_mode_any = mir_orientation_mode_portrait_any |
+                               mir_orientation_mode_landscape_any
+} MirOrientationMode;
 
 /**@}*/
 

@@ -409,21 +409,21 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface *surface, MirCursorConfig
 MirOrientation mir_surface_get_orientation(MirSurface *surface);
 
 /**
- * Set the orientations a surface is allowed to change into.
- * The server may reject the request so you may have to wait on the function
- * and check the result using mir_surface_get_permitted_orientations.
- *   \param [in] surface      The surface to operate on
- *   \param [in] orientations The allowed orientations
- *   \return                  A wait handle that can be passed to mir_wait_for
+ * Request to set the preferred orientations of a surface.
+ * The request may be rejected by the server; to check wait on the
+ * result and check the applied value using mir_surface_get_preferred_orientation
+ *   \param [in] surface     The surface to operate on
+ *   \param [in] orientation The preferred orientation modes
+ *   \return                 A wait handle that can be passed to mir_wait_for
  */
-MirWaitHandle* mir_surface_set_permitted_orientations(MirSurface *surface, MirPermittedOrientations orientations);
+MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surface, MirOrientationMode orientation);
 
 /**
- * Get the permitted orientations of a surface.
+ * Get the preferred orientation modes of a surface.
  *   \param [in] surface  The surface to query
- *   \return              The permitted orientations
+ *   \return              The preferred orientation modes
  */
-MirPermittedOrientations mir_surface_get_permitted_orientations(MirSurface *surface);
+MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surface);
 
 #ifdef __cplusplus
 }

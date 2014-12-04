@@ -336,12 +336,6 @@ MirOrientation mir_surface_get_orientation(MirSurface *surface)
     return surface->get_orientation();
 }
 
-MirWaitHandle* mir_surface_set_permitted_orientations(MirSurface *surface,
-    MirPermittedOrientations orientations)
-{
-    return surface->set_permitted_orientations(orientations);
-}
-
 MirWaitHandle* mir_surface_set_swapinterval(MirSurface* surf, int interval)
 {
     if ((interval < 0) || (interval > 1))
@@ -426,30 +420,10 @@ MirSurfaceVisibility mir_surface_get_visibility(MirSurface* surf)
     return state;
 }
 
-MirPermittedOrientations mir_surface_get_permitted_orientations(MirSurface *surf)
-{
-    MirPermittedOrientations perm_orientations = mir_permitted_orientation_all;
-
-    try
-    {
-        if (surf)
-        {
-            perm_orientations =
-                static_cast<MirPermittedOrientations>(
-                    surf->attrib(mir_surface_attrib_permitted_orientations));
-        }
-    }
-    catch (...)
-    {
-    }
-
-    return perm_orientations;
-}
-
 MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfiguration const* cursor)
 {
     MirWaitHandle *result = nullptr;
-    
+
     try
     {
         if (surface)
@@ -460,4 +434,30 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfig
     }
 
     return result;
+}
+
+MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
+{
+    MirOrientationMode mode = mir_orientation_mode_any;
+
+    try
+    {
+        if (surf)
+        {
+            mode =
+                static_cast<MirOrientationMode>(
+                    surf->attrib(mir_surface_attrib_preferred_orientation));
+        }
+    }
+    catch (...)
+    {
+    }
+
+    return mode;
+}
+
+MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surface,
+    MirOrientationMode mode)
+{
+    return surface->set_preferred_orientation(mode);
 }

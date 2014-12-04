@@ -501,7 +501,7 @@ void MirSurface::on_configured()
         case mir_surface_attrib_focus:
         case mir_surface_attrib_swapinterval:
         case mir_surface_attrib_dpi:
-        case mir_surface_attrib_permitted_orientations:
+        case mir_surface_attrib_preferred_orientation:
             if (configure_result.has_ivalue())
                 attrib_cache[a] = configure_result.ivalue();
             else
@@ -609,8 +609,8 @@ MirOrientation MirSurface::get_orientation() const
     return orientation;
 }
 
-MirWaitHandle* MirSurface::set_permitted_orientations(MirPermittedOrientations orientations)
+MirWaitHandle* MirSurface::set_preferred_orientation(MirOrientationMode mode)
 {
-    return configure(mir_surface_attrib_permitted_orientations, orientations);
+    return configure(mir_surface_attrib_preferred_orientation, mode);
 }
 

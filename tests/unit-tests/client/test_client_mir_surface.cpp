@@ -189,7 +189,7 @@ std::map<int, int> MockServerPackageGenerator::sent_surface_attributes = {
     { mir_surface_attrib_focus, mir_surface_focused },
     { mir_surface_attrib_dpi, 19 },
     { mir_surface_attrib_visibility, mir_surface_visibility_exposed },
-    { mir_surface_attrib_permitted_orientations, mir_permitted_orientation_all }
+    { mir_surface_attrib_preferred_orientation, mir_orientation_mode_any }
 };
 
 struct MockBuffer : public mcl::ClientBuffer
