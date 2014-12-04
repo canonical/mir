@@ -40,49 +40,37 @@ namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
-template<class T>
-std::shared_ptr<mga::HWCCommonDevice> make_hwc_device(
-    std::shared_ptr<mga::HwcWrapper> const& hwc_device,
-    std::shared_ptr<framebuffer_device_t> const& fb_device,
-    std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator);
-
-template <>
-std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HwcFbDevice>(
-    std::shared_ptr<mga::HwcWrapper> const& hwc_device,
-    std::shared_ptr<framebuffer_device_t> const& fb_device,
-    std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
-{
-    return std::make_shared<mga::HwcFbDevice>(hwc_device, fb_device, coordinator);
-}
-
-template <>
-std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HwcDevice>(
-    std::shared_ptr<mga::HwcWrapper> const& hwc_device,
-    std::shared_ptr<framebuffer_device_t> const&,
-    std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
-{
-    auto file_ops = std::make_shared<mga::RealSyncFileOps>();
-    return std::make_shared<mga::HwcDevice>(hwc_device, coordinator, file_ops);
-}
-
 template<typename T>
 class HWCCommon : public ::testing::Test
 {
 protected:
     virtual void SetUp()
     {
-        using namespace testing;
-
         mock_fbdev = std::make_shared<mtd::MockFBHalDevice>();
         mock_device = std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>();
         mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
     }
+
+    std::shared_ptr<mga::DisplayDevice> make_display_device();
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
     std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_device;
     std::shared_ptr<mtd::MockFBHalDevice> mock_fbdev;
 };
+
+template <>
+std::shared_ptr<mga::DisplayDevice> HWCCommon<mga::HwcFbDevice>::make_display_device()
+{
+    return std::make_shared<mga::HwcFbDevice>(mock_device, mock_fbdev, mock_vsync);
+}
+
+template <>
+std::shared_ptr<mga::DisplayDevice> HWCCommon<mga::HwcDevice>::make_display_device()
+{
+    auto file_ops = std::make_shared<mga::RealSyncFileOps>();
+    return std::make_shared<mga::HwcDevice>(mock_device, mock_vsync, file_ops);
+}
 
 typedef ::testing::Types<mga::HwcFbDevice, mga::HwcDevice> HWCDeviceTestTypes;
 TYPED_TEST_CASE(HWCCommon, HWCDeviceTestTypes);
@@ -95,7 +83,7 @@ TYPED_TEST(HWCCommon, test_proc_registration)
         .Times(1)
         .WillOnce(SaveArg<0>(&callbacks));
 
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+    auto device = this->make_display_device();
 
     ASSERT_THAT(callbacks, Ne(nullptr));
     EXPECT_THAT(callbacks->hooks.invalidate, Ne(nullptr));
@@ -111,7 +99,7 @@ TYPED_TEST(HWCCommon, test_device_destruction_unregisters_self_from_hooks)
         .Times(1)
         .WillOnce(SaveArg<0>(&callbacks));
 
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+    auto device = this->make_display_device();
 
     ASSERT_THAT(callbacks, Ne(nullptr));
     EXPECT_THAT(callbacks->self, Eq(device.get()));
@@ -131,14 +119,13 @@ TYPED_TEST(HWCCommon, registerst_hooks_and_turns_on_display)
     EXPECT_CALL(*this->mock_device, vsync_signal_on())
         .InSequence(seq);
 
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+    auto device = this->make_display_device();
     testing::Mock::VerifyAndClearExpectations(this->mock_device.get());
 }
 
 TYPED_TEST(HWCCommon, test_hwc_suspend_standby_throw)
 {
-    using namespace testing;
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+    auto device = this->make_display_device();
 
     EXPECT_THROW({
         device->mode(mir_power_mode_suspend);
@@ -162,13 +149,13 @@ TYPED_TEST(HWCCommon, test_hwc_deactivates_vsync_on_blank)
     EXPECT_CALL(*this->mock_device, display_off())
         .Times(1);
 
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+    auto device = this->make_display_device();
     device->mode(mir_power_mode_off);
 }
 
 TYPED_TEST(HWCCommon, test_hwc_display_is_deactivated_on_destroy)
 {
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+    auto device = this->make_display_device();
 
     testing::InSequence seq;
     EXPECT_CALL(*this->mock_device, vsync_signal_off())
@@ -180,7 +167,7 @@ TYPED_TEST(HWCCommon, test_hwc_display_is_deactivated_on_destroy)
 
 TYPED_TEST(HWCCommon, catches_exception_during_destruction)
 {
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+    auto device = this->make_display_device();
     EXPECT_CALL(*this->mock_device, display_off())
         .WillOnce(testing::Throw(std::runtime_error("")));
     device.reset();
@@ -194,7 +181,7 @@ TYPED_TEST(HWCCommon, callback_calls_hwcvsync)
         .Times(1)
         .WillOnce(SaveArg<0>(&callbacks));
 
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+    auto device = this->make_display_device();
 
     EXPECT_CALL(*this->mock_vsync, notify_vsync())
         .Times(1);
@@ -207,7 +194,7 @@ TYPED_TEST(HWCCommon, callback_calls_hwcvsync)
 
 TYPED_TEST(HWCCommon, set_orientation)
 {
-    auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+    auto device = this->make_display_device();
     EXPECT_FALSE(device->apply_orientation(mir_orientation_left));
 }
 
@@ -216,7 +203,7 @@ TYPED_TEST(HWCCommon, first_unblank_failure_is_not_fatal) //lp:1345533
     ON_CALL(*this->mock_device, display_on())
         .WillByDefault(testing::Throw(std::runtime_error("error")));
     EXPECT_NO_THROW({
-        auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+        auto device = this->make_display_device();
     });
 }
 
@@ -225,6 +212,6 @@ TYPED_TEST(HWCCommon, first_vsync_failure_is_not_fatal) //lp:1345533
     ON_CALL(*this->mock_device, vsync_signal_on())
         .WillByDefault(testing::Throw(std::runtime_error("error")));
     EXPECT_NO_THROW({
-        auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
+        auto device = this->make_display_device();
     });
 }
