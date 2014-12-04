@@ -25,12 +25,12 @@
 namespace mir
 {
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; }
-namespace frontend { class SessionAuthorizer; class Session; }
+namespace frontend { class SessionAuthorizer; class Session; class SessionMediatorReport; }
 namespace graphics { class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class TouchVisualizer; }
 namespace logging { class Logger; }
 namespace options { class Option; }
-namespace shell { class FocusController; class FocusSetter; class DisplayLayout; }
+namespace shell { class FocusController; class FocusSetter; class DisplayLayout; class HostLifecycleEventListener; }
 namespace scene
 {
 class PlacementStrategy;
@@ -204,6 +204,10 @@ public:
     /// Sets an override functor for creating the gl config.
     void override_the_gl_config(Builder<graphics::GLConfig> const& gl_config_builder);
 
+    /// Sets an override functor for creating the host lifecycle event listener.
+    void override_the_host_lifecycle_event_listener(
+        Builder<shell::HostLifecycleEventListener> const& host_lifecycle_event_listener_builder);
+
     /// Sets an override functor for creating the input dispatcher.
     void override_the_input_dispatcher(Builder<input::InputDispatcher> const& input_dispatcher_builder);
 
@@ -227,6 +231,9 @@ public:
 
     /// Sets an override functor for creating the session listener.
     void override_the_session_listener(Builder<scene::SessionListener> const& session_listener_builder);
+
+    /// Sets an override functor for creating the session mediator report.
+    void override_the_session_mediator_report(Builder<frontend::SessionMediatorReport> const& session_mediator_builder);
 
     /// Sets an override functor for creating the shell focus setter.
     void override_the_shell_focus_setter(Builder<shell::FocusSetter> const& focus_setter_builder);

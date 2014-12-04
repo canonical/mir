@@ -20,6 +20,7 @@
 
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/buffer_writer.h"
+#include "mir/graphics/native_platform.h"
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display.h"
@@ -194,6 +195,39 @@ std::shared_ptr<mg::BufferWriter> mtf::StubGraphicPlatform::make_buffer_writer()
 namespace
 {
 std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
+
+struct NativePlatformAdapter : mg::NativePlatform
+{
+    NativePlatformAdapter(
+        std::shared_ptr<mg::NestedContext> const& context,
+        std::shared_ptr<mg::Platform> const& adaptee) :
+        context(context),
+        adaptee(adaptee),
+        ipc_ops(adaptee->make_ipc_operations())
+    {
+    }
+
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
+    {
+        return adaptee->create_buffer_allocator();
+    }
+
+    std::shared_ptr<mg::PlatformIpcOperations> make_ipc_operations() const override
+    {
+        return ipc_ops;
+    }
+
+    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
+    {
+        return adaptee->make_buffer_writer();
+    }
+
+    std::shared_ptr<mg::NestedContext> const context;
+    std::shared_ptr<mg::Platform> const adaptee;
+    std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
+};
+
+std::weak_ptr<mg::Platform> the_graphics_platform{};
 }
 
 extern "C" std::shared_ptr<mg::Platform> create_platform(
@@ -201,15 +235,27 @@ extern "C" std::shared_ptr<mg::Platform> create_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
+    std::shared_ptr<mg::Platform> result{};
+
     if (auto const display_rects = std::move(chosen_display_rects))
     {
-        return std::make_shared<mtf::StubGraphicPlatform>(*display_rects);
+        result = std::make_shared<mtf::StubGraphicPlatform>(*display_rects);
     }
     else
     {
         static std::vector<geom::Rectangle> const default_display_rects{geom::Rectangle{{0,0},{1600,1600}}};
-        return std::make_shared<mtf::StubGraphicPlatform>(default_display_rects);
+        result = std::make_shared<mtf::StubGraphicPlatform>(default_display_rects);
     }
+    the_graphics_platform = result;
+    return result;
+}
+
+extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(
+    std::shared_ptr<mg::DisplayReport> const&,
+    std::shared_ptr<mg::NestedContext> const& context)
+{
+    auto graphics_platform = the_graphics_platform.lock();
+    return std::make_shared<NativePlatformAdapter>(context, graphics_platform);
 }
 
 extern "C" void add_platform_options(
