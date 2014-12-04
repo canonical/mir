@@ -70,7 +70,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mga::IpcOperations::connection_ipc_packa
     return std::make_shared<mg::PlatformIPCPackage>();
 }
 
-mg::PlatformIPCPackage mga::IpcOperations::platform_operation(
+mg::PlatformOperationMessage mga::IpcOperations::platform_operation(
     unsigned int const, mg::PlatformIPCPackage const&)
 {
     BOOST_THROW_EXCEPTION(std::invalid_argument("android platform does not support any platform operations"));

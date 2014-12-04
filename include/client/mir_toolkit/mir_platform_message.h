@@ -32,7 +32,7 @@ struct MirPlatformMessage;
 
 typedef struct
 {
-    int const* const data;
+    void const* const data;
     size_t const num_data;
 } MirPlatformMessageData;
 
@@ -73,10 +73,10 @@ void mir_platform_message_unref(MirPlatformMessage const* message);
  * The data is copied into the message.
  *
  *   \param [in] message   The MirPlatformMessage
- *   \param [in] data      Pointer to the data items
- *   \param [in] ndata     The number of data items
+ *   \param [in] data      Pointer to the data
+ *   \param [in] ndata     The size of the data items in bytes
  */
-void mir_platform_message_set_data(MirPlatformMessage* message, int const* data, size_t ndata);
+void mir_platform_message_set_data(MirPlatformMessage* message, void const* data, size_t data_size);
 
 /**
  * Gets the data associated with a message.

@@ -41,7 +41,7 @@ struct MirPlatformMessage
     }
 
     unsigned int const opcode;
-    std::vector<int> data;
+    std::vector<char> data;
     mutable std::atomic<int> use_count;
 };
 
@@ -60,9 +60,10 @@ void mir_platform_message_unref(MirPlatformMessage const* message)
     message->unref();
 }
 
-void mir_platform_message_set_data(MirPlatformMessage* message, int const* data, size_t ndata)
+void mir_platform_message_set_data(MirPlatformMessage* message, void const* data, size_t data_size)
 {
-    message->data.assign(data, data + ndata);
+    auto const char_data = static_cast<char const*>(data);
+    message->data.assign(char_data, char_data + data_size);
 }
 
 MirPlatformMessageData mir_platform_message_get_data(MirPlatformMessage const* message)

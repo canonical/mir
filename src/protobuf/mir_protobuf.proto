@@ -204,8 +204,8 @@ message PromptSessionParameters {
 }
 
 message PlatformOperationMessage {
-  required uint32 opcode = 1;
-  required Platform message = 2;
+  optional uint32 opcode = 1;
+  optional bytes data = 2;
   optional string error = 127;
 }
 

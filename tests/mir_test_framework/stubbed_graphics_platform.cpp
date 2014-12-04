@@ -149,19 +149,22 @@ class StubIpcOps : public mg::PlatformIpcOperations
         return std::make_shared<mg::PlatformIPCPackage>();
     }
 
-    mg::PlatformIPCPackage platform_operation(
-         unsigned int const opcode, mg::PlatformIPCPackage const& package) override
+    mg::PlatformOperationMessage platform_operation(
+         unsigned int const opcode, mg::PlatformOperationMessage const& message) override
     {
         if (opcode == static_cast<unsigned int>(mtf::StubGraphicsPlatformOperation::add))
         {
-            mg::PlatformIPCPackage reply;
-
-            if (package.ipc_data.size() != 2)
+            if (message.data.size() != 2 * sizeof(int))
             {
                 BOOST_THROW_EXCEPTION(
                     std::runtime_error("Invalid parameters for 'add' platform operation"));
             }
-            reply.ipc_data.push_back(package.ipc_data[0] + package.ipc_data[1]);
+
+            auto const int_data = reinterpret_cast<int const*>(message.data.data());
+
+            mg::PlatformOperationMessage reply;
+            reply.data.resize(sizeof(int));
+            *(reinterpret_cast<int*>(reply.data.data())) = int_data[0] + int_data[1];
 
             return reply;
         }

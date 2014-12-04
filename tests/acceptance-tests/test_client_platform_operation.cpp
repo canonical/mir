@@ -33,7 +33,7 @@ struct ClientPlatformOperation : mtf::ConnectedClientHeadlessServer
     MirPlatformMessage* platform_operation_add(std::vector<int> const& nums)
     {
         auto const request = mir_platform_message_create(add_opcode);
-        mir_platform_message_set_data(request, nums.data(), nums.size());
+        mir_platform_message_set_data(request, nums.data(), sizeof(int) * nums.size());
         MirPlatformMessage* reply;
 
         auto const platform_op_done = mir_connection_platform_operation(
@@ -49,11 +49,15 @@ struct ClientPlatformOperation : mtf::ConnectedClientHeadlessServer
         static_cast<unsigned int>(mtf::StubGraphicsPlatformOperation::add);
 };
 
-MATCHER_P(MessageDataEq, v, "")
+MATCHER_P(MessageDataAsIntsEq, v, "")
 {
     using namespace testing;
     auto msg_data = mir_platform_message_get_data(arg);
-    std::vector<int> data{msg_data.data, msg_data.data + msg_data.num_data};
+    if (msg_data.num_data % sizeof(int) != 0)
+        throw std::runtime_error("Data is not an array of ints");
+
+    std::vector<int> data(msg_data.num_data / sizeof(int));
+    memcpy(data.data(), msg_data.data, msg_data.num_data);
 
     return v == data;
 }
@@ -81,7 +85,7 @@ TEST_F(ClientPlatformOperation, exchanges_data_items_with_platform)
 
     auto const reply = platform_operation_add(num1, num2);
 
-    EXPECT_THAT(reply, MessageDataEq(std::vector<int>{num1 + num2}));
+    EXPECT_THAT(reply, MessageDataAsIntsEq(std::vector<int>{num1 + num2}));
 
     mir_platform_message_unref(reply);
 }
