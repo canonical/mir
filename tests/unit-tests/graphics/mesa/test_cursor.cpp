@@ -643,3 +643,4 @@ TEST_F(MesaCursorTest, show_cursor_sets_cursor_with_hotspot)
     cursor.move_to(cursor_location_1);
     cursor.move_to(cursor_location_2);
 }
+
