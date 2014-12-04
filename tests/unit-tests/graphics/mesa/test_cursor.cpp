@@ -23,7 +23,6 @@
 
 #include "mir/graphics/cursor_image.h"
 
-#include "mir_test_doubles/mock_drm.h"
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test/fake_shared.h"
 #include "mock_kms_output.h"
@@ -223,7 +222,6 @@ void const* StubCursorImage::image_data = reinterpret_cast<void*>(&StubCursorIma
 
 struct MesaCursorTest : ::testing::Test
 {
-
     struct MockGBM : testing::NiceMock<mtd::MockGBM>
     {
         MockGBM()
@@ -237,7 +235,6 @@ struct MesaCursorTest : ::testing::Test
 
         }
     } mock_gbm;
-    testing::NiceMock<mtd::MockDRM> mock_drm;
 
     MesaCursorTest()
         : cursor{mock_gbm.fake_gbm.device, output_container,
