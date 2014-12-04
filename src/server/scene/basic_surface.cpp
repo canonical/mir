@@ -377,7 +377,7 @@ void ms::BasicSurface::with_most_recent_buffer_do(
 MirSurfaceType ms::BasicSurface::type() const
 {    
     std::unique_lock<std::mutex> lg(guard);
-    return _type;
+    return type_;
 }
 
 MirSurfaceType ms::BasicSurface::set_type(MirSurfaceType t)
@@ -390,12 +390,12 @@ MirSurfaceType ms::BasicSurface::set_type(MirSurfaceType t)
             "type."));
     }
 
-    if (_type != t)
+    if (type_ != t)
     {
-        _type = t;
+        type_ = t;
         lg.unlock();
 
-        observers.attrib_changed(mir_surface_attrib_type, _type); 
+        observers.attrib_changed(mir_surface_attrib_type, type_); 
     }
 
     return t;
@@ -404,7 +404,7 @@ MirSurfaceType ms::BasicSurface::set_type(MirSurfaceType t)
 MirSurfaceState ms::BasicSurface::state() const
 {
     std::unique_lock<std::mutex> lg(guard);
-    return _state;
+    return state_;
 }
 
 MirSurfaceState ms::BasicSurface::set_state(MirSurfaceState s)
@@ -413,9 +413,9 @@ MirSurfaceState ms::BasicSurface::set_state(MirSurfaceState s)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
 
     std::unique_lock<std::mutex> lg(guard);
-    if (_state != s)
+    if (state_ != s)
     {
-        _state = s;
+        state_ = s;
         lg.unlock();
         
         observers.attrib_changed(mir_surface_attrib_state, s);
@@ -432,9 +432,9 @@ int ms::BasicSurface::set_swap_interval(int interval)
     }
 
     std::unique_lock<std::mutex> lg(guard);
-    if (_swapinterval != interval)
+    if (swapinterval_ != interval)
     {
-        _swapinterval = interval;
+        swapinterval_ = interval;
         bool allow_dropping = (interval == 0);
         allow_framedropping(allow_dropping);
 
@@ -454,9 +454,9 @@ MirSurfaceFocusState ms::BasicSurface::set_focus_state(MirSurfaceFocusState new_
     }
 
     std::unique_lock<std::mutex> lg(guard);
-    if (_focus != new_state)
+    if (focus_ != new_state)
     {
-        _focus = new_state;
+        focus_ = new_state;
 
         lg.unlock();
         observers.attrib_changed(mir_surface_attrib_focus, new_state);
@@ -509,12 +509,12 @@ int ms::BasicSurface::query(MirSurfaceAttrib attrib)
     std::unique_lock<std::mutex> lg(guard);
     switch (attrib)
     {
-        case mir_surface_attrib_type: return _type;
-        case mir_surface_attrib_state: return _state;
-        case mir_surface_attrib_swapinterval: return _swapinterval;
-        case mir_surface_attrib_focus: return _focus;
-        case mir_surface_attrib_dpi: return _dpi;
-        case mir_surface_attrib_visibility: return _visibility;
+        case mir_surface_attrib_type: return type_;
+        case mir_surface_attrib_state: return state_;
+        case mir_surface_attrib_swapinterval: return swapinterval_;
+        case mir_surface_attrib_focus: return focus_;
+        case mir_surface_attrib_dpi: return dpi_;
+        case mir_surface_attrib_visibility: return visibility_;
         default: BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                         "attribute."));
     }
@@ -555,7 +555,7 @@ void ms::BasicSurface::request_client_surface_close()
 int ms::BasicSurface::dpi() const
 {
     std::unique_lock<std::mutex> lock(guard);
-    return _dpi;
+    return dpi_;
 }
 
 int ms::BasicSurface::set_dpi(int new_dpi)
@@ -566,9 +566,9 @@ int ms::BasicSurface::set_dpi(int new_dpi)
     }
 
     std::unique_lock<std::mutex> lg(guard);
-    if (_dpi != new_dpi)
+    if (dpi_ != new_dpi)
     {
-        _dpi = new_dpi;
+        dpi_ = new_dpi;
         lg.unlock();
         observers.attrib_changed(mir_surface_attrib_dpi, new_dpi);
     }
@@ -585,13 +585,13 @@ MirSurfaceVisibility ms::BasicSurface::set_visibility(MirSurfaceVisibility new_v
     }
 
     std::unique_lock<std::mutex> lg(guard);
-    if (_visibility != new_visibility)
+    if (visibility_ != new_visibility)
     {
-        _visibility = new_visibility;
+        visibility_ = new_visibility;
         lg.unlock();
         if (new_visibility == mir_surface_visibility_exposed)
             surface_buffer_stream->drop_old_buffers();
-        observers.attrib_changed(mir_surface_attrib_visibility, _visibility);
+        observers.attrib_changed(mir_surface_attrib_visibility, visibility_);
     }
 
     return new_visibility;

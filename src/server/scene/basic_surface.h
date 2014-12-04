@@ -178,12 +178,12 @@ private:
     std::shared_ptr<SceneReport> const report;
 
     // Surface attributes:
-    MirSurfaceType _type = mir_surface_type_normal;
-    MirSurfaceState _state = mir_surface_state_restored;
-    int _swapinterval = 1;
-    MirSurfaceFocusState _focus = mir_surface_unfocused;
-    int _dpi = 0;
-    MirSurfaceVisibility _visibility = mir_surface_visibility_exposed;
+    MirSurfaceType type_ = mir_surface_type_normal;
+    MirSurfaceState state_ = mir_surface_state_restored;
+    int swapinterval_ = 1;
+    MirSurfaceFocusState focus_ = mir_surface_unfocused;
+    int dpi_ = 0;
+    MirSurfaceVisibility visibility_ = mir_surface_visibility_exposed;
 };
 
 }
