@@ -343,16 +343,15 @@ typedef void (*mir_prompt_session_state_change_callback)(
 /**
  * Callback called when a platform operation completes.
  *
- *   \warning The reply is released after the callback is finished. If you want
- *            to use it outside the callback you must get a new reference to the
- *            reply using mir_platform_message_ref().
+ *   \warning The reply is owned by the callee, who should release it when it's
+ *            not needed any more.
  *
  *   \param [in] connection   The connection associated with the platform operation
  *   \param [in] reply        The platform operation reply
  *   \param [in,out] context  The context provided by the client
  */
 typedef void (*mir_platform_operation_callback)(
-    MirConnection* connection, MirPlatformMessage const* reply, void* context);
+    MirConnection* connection, MirPlatformMessage* reply, void* context);
 
 #ifdef __cplusplus
 }

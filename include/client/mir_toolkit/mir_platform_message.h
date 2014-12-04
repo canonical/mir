@@ -48,24 +48,11 @@ typedef struct
 MirPlatformMessage* mir_platform_message_create(unsigned int opcode);
 
 /**
- * Increase the reference count of the platform message.
- *
- * Each call to mir_platform_message_ref() should be matched by
- * a call to mir_platform_message_unref() to avoid memory leaks.
- *
- *   \param [in] message   The MirPlatformMessage
- *   \return               The same MirPlatformMessage
- */
-MirPlatformMessage* mir_platform_message_ref(MirPlatformMessage const* message);
-
-/**
- * Decrease the reference count of the platform message.
- *
- * If the reference count reaches zero the message is released.
+ * Releases the platform message.
  *
  *   \param [in] message   The MirPlatformMessage
  */
-void mir_platform_message_unref(MirPlatformMessage const* message);
+void mir_platform_message_release(MirPlatformMessage const* message);
 
 /**
  * Sets the data associated with a message.
@@ -79,6 +66,14 @@ void mir_platform_message_unref(MirPlatformMessage const* message);
 void mir_platform_message_set_data(MirPlatformMessage* message, void const* data, size_t data_size);
 
 /**
+ * Gets the opcode of a message.
+ *
+ *   \param [in] message   The MirPlatformMessage
+ *   \return               The data
+ */
+unsigned int mir_platform_message_get_opcode(MirPlatformMessage const* message);
+
+/**
  * Gets the data associated with a message.
  *
  * The returned data is owned by the message and is valid only as long as the
@@ -89,14 +84,6 @@ void mir_platform_message_set_data(MirPlatformMessage* message, void const* data
  *   \return               The data
  */
 MirPlatformMessageData mir_platform_message_get_data(MirPlatformMessage const* message);
-
-/**
- * Gets the opcode of a message.
- *
- *   \param [in] message   The MirPlatformMessage
- *   \return               The data
- */
-unsigned int mir_platform_message_get_opcode(MirPlatformMessage const* message);
 
 #ifdef __cplusplus
 }

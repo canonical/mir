@@ -12,10 +12,10 @@ namespace mtf = mir_test_framework;
 namespace
 {
 
-void assign_reply(MirConnection*, MirPlatformMessage const* reply, void* context)
+void assign_reply(MirConnection*, MirPlatformMessage* reply, void* context)
 {
     auto message = static_cast<MirPlatformMessage**>(context);
-    *message = mir_platform_message_ref(reply);
+    *message = reply;
 }
 
 struct ClientPlatformOperation : mtf::ConnectedClientHeadlessServer
@@ -40,7 +40,7 @@ struct ClientPlatformOperation : mtf::ConnectedClientHeadlessServer
             connection, add_opcode, request, assign_reply, &reply);
         mir_wait_for(platform_op_done);
 
-        mir_platform_message_unref(request);
+        mir_platform_message_release(request);
 
         return reply;
     }
@@ -87,7 +87,7 @@ TEST_F(ClientPlatformOperation, exchanges_data_items_with_platform)
 
     EXPECT_THAT(reply, MessageDataAsIntsEq(std::vector<int>{num1 + num2}));
 
-    mir_platform_message_unref(reply);
+    mir_platform_message_release(reply);
 }
 
 TEST_F(ClientPlatformOperation, does_not_set_connection_error_message_on_success)
@@ -98,7 +98,7 @@ TEST_F(ClientPlatformOperation, does_not_set_connection_error_message_on_success
 
     EXPECT_THAT(mir_connection_get_error_message(connection), StrEq(""));
 
-    mir_platform_message_unref(reply);
+    mir_platform_message_release(reply);
 }
 
 TEST_F(ClientPlatformOperation, reply_has_opcode_of_request)
@@ -109,7 +109,7 @@ TEST_F(ClientPlatformOperation, reply_has_opcode_of_request)
 
     EXPECT_THAT(reply, MessageOpcodeEq(add_opcode));
 
-    mir_platform_message_unref(reply);
+    mir_platform_message_release(reply);
 }
 
 TEST_F(ClientPlatformOperation, returns_empty_reply_on_error)
@@ -120,7 +120,7 @@ TEST_F(ClientPlatformOperation, returns_empty_reply_on_error)
 
     EXPECT_THAT(reply, MessageDataIsEmpty());
 
-    mir_platform_message_unref(reply);
+    mir_platform_message_release(reply);
 }
 
 TEST_F(ClientPlatformOperation, sets_connection_error_message_on_error)
@@ -131,5 +131,5 @@ TEST_F(ClientPlatformOperation, sets_connection_error_message_on_error)
 
     EXPECT_THAT(mir_connection_get_error_message(connection), StrNe(""));
 
-    mir_platform_message_unref(reply);
+    mir_platform_message_release(reply);
 }

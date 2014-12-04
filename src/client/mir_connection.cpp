@@ -366,8 +366,6 @@ void MirConnection::done_platform_operation(
 
     callback(this, reply, context);
 
-    mir_platform_message_unref(reply);
-
     platform_operation_wait_handle.result_received();
 }
 

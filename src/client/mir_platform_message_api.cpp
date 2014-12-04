@@ -17,32 +17,14 @@
  */
 
 #include "mir_toolkit/mir_platform_message.h"
-#include <memory>
 #include <vector>
-#include <atomic>
 
 struct MirPlatformMessage
 {
-    MirPlatformMessage(unsigned int opcode)
-        : opcode{opcode}, use_count{1}
-    {
-    }
-
-    MirPlatformMessage* ref() const
-    {
-        ++use_count;
-        return const_cast<MirPlatformMessage*>(this);
-    }
-
-    void unref() const
-    {
-        if (--use_count == 0)
-            delete this;
-    }
+    MirPlatformMessage(unsigned int opcode) : opcode{opcode} {}
 
     unsigned int const opcode;
     std::vector<char> data;
-    mutable std::atomic<int> use_count;
 };
 
 MirPlatformMessage* mir_platform_message_create(unsigned int opcode)
@@ -50,14 +32,9 @@ MirPlatformMessage* mir_platform_message_create(unsigned int opcode)
     return new MirPlatformMessage{opcode};
 }
 
-MirPlatformMessage* mir_platform_message_ref(MirPlatformMessage const* message)
+void mir_platform_message_release(MirPlatformMessage const* message)
 {
-    return message->ref();
-}
-
-void mir_platform_message_unref(MirPlatformMessage const* message)
-{
-    message->unref();
+    delete message;
 }
 
 void mir_platform_message_set_data(MirPlatformMessage* message, void const* data, size_t data_size)
