@@ -283,12 +283,9 @@ TEST_F(MesaCursorTest, creates_cursor_bo_image)
         std::make_shared<StubCursorImage>()};
 }
 
-TEST_F(MesaCursorTest, queries_supported_and_received_cursor_size)
+TEST_F(MesaCursorTest, queries_received_cursor_size)
 {
     using namespace ::testing;
-
-    EXPECT_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_WIDTH, _));
-    EXPECT_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_HEIGHT, _));
 
     EXPECT_CALL(mock_gbm, gbm_bo_get_width(_));
     EXPECT_CALL(mock_gbm, gbm_bo_get_height(_));
@@ -319,13 +316,8 @@ MATCHER_P(ContainsASingleWhitePixel, buffersize, "")
     if (pixels[0] != 0xffffffff)
         return false;
     for (decltype(buffersize) i = 1; i < buffersize; i++)
-    {
         if (pixels[i] != 0x0)
-        {
-            std::cout << "  p" << i << "=" << int(pixels[i]);
             return false;
-        }
-    }
     return true;
 }
 
@@ -347,22 +339,6 @@ TEST_F(MesaCursorTest, show_cursor_pads_missing_data)
 TEST_F(MesaCursorTest, pads_missing_data_when_buffer_size_differs)
 {
     using namespace ::testing;
-    uint64_t const max_height = 512;
-    uint64_t const max_width = 512;
-    ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_WIDTH, _))
-        .WillByDefault(Invoke([](int, uint64_t, uint64_t *val) -> int
-                              {
-                                  *val = max_width;
-                                  return 1;
-                              })
-                       );
-    ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_HEIGHT, _))
-        .WillByDefault(Invoke([](int, uint64_t, uint64_t *val) -> int
-                              {
-                                  *val = max_height;
-                                  return 1;
-                              })
-                       );
 
     size_t const height = 128;
     size_t const width = 128;

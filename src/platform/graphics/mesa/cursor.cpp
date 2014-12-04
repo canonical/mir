@@ -24,9 +24,6 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/cursor_image.h"
 
-#include <xf86drm.h>
-#include <drm/drm.h>
-
 #include <boost/exception/errinfo_errno.hpp>
 
 #include <stdexcept>
@@ -38,7 +35,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
-const uint64_t fallback_cursor_size = 64;
+const uint64_t requested_cursor_size = 64;
 // Transforms a relative position within the display bounds described by \a rect which is rotated with \a orientation
 geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement const& vector, MirOrientation orientation)
 {
@@ -54,28 +51,6 @@ geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement con
     case mir_orientation_normal:
         return vector;
     }
-}
-
-// support for older drm headers
-#ifndef DRM_CAP_CURSOR_WIDTH
-#define DRM_CAP_CURSOR_WIDTH		0x8
-#define DRM_CAP_CURSOR_HEIGHT		0x9
-#endif
-
-auto get_drm_cursor_height(int fd) -> int
-{
-   uint64_t height;
-   if (drmGetCap(fd, DRM_CAP_CURSOR_HEIGHT, &height) < 0)
-       height = fallback_cursor_size;
-   return int(height);
-}
-
-auto get_drm_cursor_width(int fd) -> int
-{
-   uint64_t width;
-   if (drmGetCap(fd, DRM_CAP_CURSOR_WIDTH, &width) < 0)
-       width = fallback_cursor_size;
-   return int(width);
 }
 }
 
@@ -107,8 +82,8 @@ mgm::Cursor::Cursor(
         current_position(),
         visible(true),
         buffer(gbm,
-               get_drm_cursor_width(gbm_device_get_fd(gbm)),
-               get_drm_cursor_height(gbm_device_get_fd(gbm))
+               requested_cursor_size,
+               requested_cursor_size
               ),
         buffer_width(gbm_bo_get_width(buffer)),
         buffer_height(gbm_bo_get_height(buffer)),
@@ -143,7 +118,7 @@ void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> co
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Image is too big for GBM cursor buffer"));
     }
-
+    
     size_t buffer_stride = gbm_bo_get_stride(buffer);  // in bytes
     size_t padded_size = buffer_stride * buffer_height;
     auto padded = std::unique_ptr<uint8_t[]>(new uint8_t[padded_size]);
