@@ -131,8 +131,14 @@ This is the list that Mir submits to HWC, the decision of hwc (overlay or GLES),
 and the final handles submitted to HWC during the display post. The HWC version
 vsync signal and the blanking are also logged.
 
+The "--hwc-report log" option should work with all android-based mir servers
+and demo standalone programs. If its more convenient, setting 
+MIR_SERVER_HWC_REPORT=log to the environment of the running server will give 
+the hwc report on stdout.
+
 ###Note on HWC versions###
-The --hwc-report will log the HWC version at the beginning of the report, e.g.
+The "--hwc-report log" will log the HWC version at the beginning of the report,
+ e.g.
 
     HWC version 1.2
 
