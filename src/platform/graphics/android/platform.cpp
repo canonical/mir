@@ -80,9 +80,9 @@ mga::OverlayOptimization should_use_overlay_optimization(mo::Option const& optio
 }
 
 mga::Platform::Platform(
-    std::shared_ptr<mga::DisplayBuilder> const& display_builder,
+    std::shared_ptr<mga::DisplayBufferBuilder> const& display_buffer_builder,
     std::shared_ptr<mg::DisplayReport> const& display_report)
-    : display_builder(display_builder),
+    : display_buffer_builder(display_buffer_builder),
       display_report(display_report),
       ipc_operations(std::make_shared<mga::IpcOperations>())
 {
@@ -117,7 +117,7 @@ std::shared_ptr<mg::Display> mga::Platform::create_display(
     std::shared_ptr<mg::GLConfig> const& gl_config)
 {
     return std::make_shared<mga::Display>(
-        display_builder, gl_program_factory, gl_config, display_report);
+        display_buffer_builder, gl_program_factory, gl_config, display_report);
 }
 
 std::shared_ptr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operations() const
@@ -145,9 +145,9 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
     logger->log_overlay_optimization(overlay_option);
     auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
-    auto display_builder = std::make_shared<mga::OutputBuilder>(
+    auto display_buffer_builder = std::make_shared<mga::OutputBuilder>(
         fb_allocator, display_resource_factory, display_report, overlay_option, logger);
-    return std::make_shared<mga::Platform>(display_builder, display_report);
+    return std::make_shared<mga::Platform>(display_buffer_builder, display_report);
 }
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(
