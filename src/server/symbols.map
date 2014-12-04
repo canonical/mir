@@ -413,6 +413,7 @@ MIR_SERVER_28 {
     mir::Server::override_the_compositor*;
     mir::Server::override_the_display_buffer_compositor_factory*;
     mir::Server::override_the_gl_config*;
+    mir::Server::override_the_host_lifecycle_event_listener*;
     mir::Server::override_the_input_dispatcher*;
     mir::Server::override_the_logger*;
     mir::Server::override_the_placement_strategy*;
@@ -421,6 +422,7 @@ MIR_SERVER_28 {
     mir::Server::override_the_server_status_listener*;
     mir::Server::override_the_session_authorizer*;
     mir::Server::override_the_session_listener*;
+    mir::Server::override_the_session_mediator_report*;
     mir::Server::override_the_shell_focus_setter*;
     mir::Server::override_the_surface_configurator*;
     mir::Server::run*;
