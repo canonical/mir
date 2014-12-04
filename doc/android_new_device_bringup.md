@@ -146,7 +146,7 @@ If you see something like:
 
     HWC version unknown (<version>)
 
-This means that Mir does support the version of hwc on the device.
+This means that Mir does not support the version of hwc on the device.
 As of Dec 2014, Mir supports the legacy FB module, as well as HWC versions
 1.0, 1.1, 1.2, and 1.3. 
 
