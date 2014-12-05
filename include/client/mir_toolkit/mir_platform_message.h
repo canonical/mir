@@ -43,42 +43,42 @@ typedef struct
  * a call to mir_platform_message_unref() to avoid memory leaks.
  *
  *   \param [in] opcode    The platform message opcode
- *   \return               The resulting MirPlatformMessage
+ *   \return               The created MirPlatformMessage
  */
 MirPlatformMessage* mir_platform_message_create(unsigned int opcode);
 
 /**
- * Releases the platform message.
+ * Release a platform message.
  *
  *   \param [in] message   The MirPlatformMessage
  */
 void mir_platform_message_release(MirPlatformMessage const* message);
 
 /**
- * Sets the data associated with a message.
+ * Set the data associated with a message.
  *
  * The data is copied into the message.
  *
- *   \param [in] message   The MirPlatformMessage
- *   \param [in] data      Pointer to the data
- *   \param [in] ndata     The size of the data items in bytes
+ *   \param [in] message    The MirPlatformMessage
+ *   \param [in] data       Pointer to the data
+ *   \param [in] data_size  The size of the data in bytes
  */
 void mir_platform_message_set_data(MirPlatformMessage* message, void const* data, size_t data_size);
 
 /**
- * Gets the opcode of a message.
+ * Get the opcode of a message.
  *
  *   \param [in] message   The MirPlatformMessage
- *   \return               The data
+ *   \return               The opcode
  */
 unsigned int mir_platform_message_get_opcode(MirPlatformMessage const* message);
 
 /**
- * Gets the data associated with a message.
+ * Get the data associated with a message.
  *
  * The returned data is owned by the message and is valid only as long as the
  * message is valid and mir_platform_set_data() is not called. You must not
- * change the data or free the returned data.
+ * change or free the returned data.
  *
  *   \param [in] message   The MirPlatformMessage
  *   \return               The data
