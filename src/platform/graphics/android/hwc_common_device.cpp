@@ -21,10 +21,6 @@
 #include "hwc_configuration.h"
 #include "hwc_vsync_coordinator.h"
 
-#include <boost/throw_exception.hpp>
-#include <boost/exception/errinfo_errno.hpp>
-#include <stdexcept>
-
 namespace mga=mir::graphics::android;
 
 namespace
@@ -123,36 +119,3 @@ bool mga::HWCCommonDevice::apply_orientation(MirOrientation) const
 {
     return false; 
 }
-
-#if 0
-    if ((mode_request == mir_power_mode_suspend) ||
-        (mode_request == mir_power_mode_standby))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("cannot set to suspend or standby"));
-    }
-
-    if ((mode_request == mir_power_mode_on) &&
-        (current_mode == mir_power_mode_off))
-    {
-        turn_screen_on();
-    }
-    else if ((mode_request == mir_power_mode_off) &&
-             (current_mode == mir_power_mode_on))
-    {
-        turn_screen_off();
-    }
-#endif
-#if 0
-void mga::HWCCommonDevice::turn_screen_on() const
-{
-    hwc_device->display_on();
-    hwc_device->vsync_signal_on();
-}
-
-void mga::HWCCommonDevice::turn_screen_off()
-{
-    hwc_device->vsync_signal_off();
-    hwc_device->display_off();
-    turned_screen_off();
-}
-#endif
