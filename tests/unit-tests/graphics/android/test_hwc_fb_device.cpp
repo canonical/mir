@@ -97,6 +97,7 @@ protected:
     hwc_layer_1_t skip_layer;
 };
 
+#if 0
 TEST_F(HwcFbDevice, hwc10_post_gl_only)
 {
     using namespace testing;
@@ -153,3 +154,4 @@ TEST_F(HwcFbDevice, hwc10_post)
     mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
     device.post_gl(mock_context);
 }
+#endif

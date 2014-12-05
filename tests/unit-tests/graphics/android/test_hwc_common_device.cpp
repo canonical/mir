@@ -73,14 +73,14 @@ protected:
 template <>
 std::shared_ptr<mga::DisplayDevice> HWCCommon<mga::HwcFbDevice>::make_display_device()
 {
-    return std::make_shared<mga::HwcFbDevice>(mock_device, mock_fbdev, mock_vsync);
+    return std::make_shared<mga::HwcFbDevice>(mock_device, mock_fbdev, mock_config, mock_vsync);
 }
 
 template <>
 std::shared_ptr<mga::DisplayDevice> HWCCommon<mga::HwcDevice>::make_display_device()
 {
     auto file_ops = std::make_shared<mga::RealSyncFileOps>();
-    return std::make_shared<mga::HwcDevice>(mock_device, mock_vsync, file_ops);
+    return std::make_shared<mga::HwcDevice>(mock_device, mock_config, mock_vsync, file_ops);
 }
 
 typedef ::testing::Types<mga::HwcFbDevice, mga::HwcDevice> HWCDeviceTestTypes;
@@ -129,39 +129,8 @@ TYPED_TEST(HWCCommon, registers_hooks_before_turning_on_display)
         .InSequence(seq);
 
     auto device = this->make_display_device();
-    testing::Mock::VerifyAndClearExpectations(this->mock_device.get());
+    testing::Mock::VerifyAndClearExpectations(this->mock_config.get());
 }
-
-#if 0
-TYPED_TEST(HWCCommon, test_hwc_suspend_standby_throw)
-{
-    auto device = this->make_display_device();
-
-    EXPECT_THROW({
-        device->mode(mir_power_mode_suspend);
-    }, std::runtime_error);
-    EXPECT_THROW({
-        device->mode(mir_power_mode_standby);
-    }, std::runtime_error);
-}
-
-
-TYPED_TEST(HWCCommon, test_hwc_deactivates_vsync_on_blank)
-{
-    testing::InSequence seq;
-    EXPECT_CALL(*this->mock_device, display_on())
-        .Times(1);
-    EXPECT_CALL(*this->mock_device, vsync_signal_on())
-        .Times(1);
-    EXPECT_CALL(*this->mock_device, vsync_signal_off())
-        .Times(1);
-    EXPECT_CALL(*this->mock_device, display_off())
-        .Times(1);
-
-    auto device = this->make_display_device();
-    device->mode(mir_power_mode_off);
-}
-#endif
 
 TYPED_TEST(HWCCommon, test_hwc_display_is_deactivated_on_destroy)
 {
