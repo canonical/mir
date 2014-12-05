@@ -66,7 +66,7 @@ TEST(GraphicsDisplayLayoutTest, clips_correctly)
             geom::Rectangle{geom::Point{899,99}, geom::Size{1,1}}),
         std::make_tuple(
             geom::Rectangle{geom::Point{-1,-1}, geom::Size{100,100}},
-            geom::Rectangle{geom::Point{-1,-1}, geom::Size{0,0}})
+            geom::Rectangle{geom::Point{0,0}, geom::Size{99,99}})
     };
 
     for (auto const& t : rect_tuples)

@@ -93,19 +93,47 @@ void msh::GraphicsDisplayLayout::place_in_output(
 
 geom::Rectangle msh::GraphicsDisplayLayout::get_output_for(geometry::Rectangle& rect)
 {
-    geom::Rectangle output;
+    geom::Rectangle any, container, overlaps, middle_container;
+    bool got_any = false, got_container = false,
+         got_overlaps = false, got_middle_container = false;
 
-    /*
-     * TODO: We need a better heuristic to decide in which output a
-     * rectangle/surface belongs.
-     */
+    geometry::Point middle{
+        rect.top_left.x.as_int() + rect.size.width.as_int()/2,
+        rect.top_left.y.as_int() + rect.size.height.as_int()/2};
+
     display->for_each_display_buffer(
-        [&output,&rect](mg::DisplayBuffer const& db)
+        [&](mg::DisplayBuffer const& db)
         {
-            auto view_area = db.view_area();
-            if (view_area.contains(rect.top_left))
-                output = view_area;
+            auto const& area = db.view_area();
+
+            if (!got_any)
+            {
+                any = area;
+                got_any = true;
+            }
+
+            if (!got_container && area.contains(rect))
+            {
+                container = area;
+                got_container = true;
+            }
+
+            if (!got_middle_container && area.contains(middle))
+            {
+                middle_container = area;
+                got_middle_container = true;
+            }
+
+            if (!got_overlaps && area.overlaps(rect))
+            {
+                overlaps = area;
+                got_overlaps = true;
+            }
         });
 
-    return output;
+    return got_container? container:
+           got_middle_container? middle_container:
+           got_overlaps? overlaps:
+           got_any? any:
+           rect;
 }
