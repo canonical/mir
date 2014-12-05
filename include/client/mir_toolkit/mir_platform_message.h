@@ -33,7 +33,7 @@ struct MirPlatformMessage;
 typedef struct
 {
     void const* const data;
-    size_t const num_data;
+    size_t const size;
 } MirPlatformMessageData;
 
 /**

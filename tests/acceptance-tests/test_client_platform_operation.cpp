@@ -53,11 +53,11 @@ MATCHER_P(MessageDataAsIntsEq, v, "")
 {
     using namespace testing;
     auto msg_data = mir_platform_message_get_data(arg);
-    if (msg_data.num_data % sizeof(int) != 0)
+    if (msg_data.size % sizeof(int) != 0)
         throw std::runtime_error("Data is not an array of ints");
 
-    std::vector<int> data(msg_data.num_data / sizeof(int));
-    memcpy(data.data(), msg_data.data, msg_data.num_data);
+    std::vector<int> data(msg_data.size / sizeof(int));
+    memcpy(data.data(), msg_data.data, msg_data.size);
 
     return v == data;
 }
@@ -65,7 +65,7 @@ MATCHER_P(MessageDataAsIntsEq, v, "")
 MATCHER(MessageDataIsEmpty, "")
 {
     auto msg_data = mir_platform_message_get_data(arg);
-    return msg_data.num_data == 0 && msg_data.data == nullptr;
+    return msg_data.size == 0 && msg_data.data == nullptr;
 }
 
 MATCHER_P(MessageOpcodeEq, opcode, "")

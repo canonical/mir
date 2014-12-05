@@ -378,7 +378,7 @@ MirWaitHandle* MirConnection::platform_operation(
 
     protobuf_request.set_opcode(opcode);
     auto const request_data = mir_platform_message_get_data(request);
-    protobuf_request.set_data(request_data.data, request_data.num_data);
+    protobuf_request.set_data(request_data.data, request_data.size);
 
     platform_operation_wait_handle.expect_result();
     server.platform_operation(
