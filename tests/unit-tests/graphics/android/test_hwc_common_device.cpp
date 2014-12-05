@@ -79,8 +79,7 @@ std::shared_ptr<mga::DisplayDevice> HWCCommon<mga::HwcFbDevice>::make_display_de
 template <>
 std::shared_ptr<mga::DisplayDevice> HWCCommon<mga::HwcDevice>::make_display_device()
 {
-    auto file_ops = std::make_shared<mga::RealSyncFileOps>();
-    return std::make_shared<mga::HwcDevice>(mock_device, mock_config, mock_vsync, file_ops);
+    return std::make_shared<mga::HwcDevice>(mock_device, mock_config, mock_vsync, std::make_shared<mga::IntegerSourceCrop>());
 }
 
 typedef ::testing::Types<mga::HwcFbDevice, mga::HwcDevice> HWCDeviceTestTypes;

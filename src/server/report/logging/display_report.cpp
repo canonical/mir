@@ -85,18 +85,6 @@ void mrl::DisplayReport::report_vt_switch_back_failure()
     logger->log(ml::Severity::warning, "Failed to switch back to Mir VT.", component());
 }
 
-void mrl::DisplayReport::report_hwc_composition_in_use(int major, int minor)
-{
-    std::stringstream ss;
-    ss << "HWC version " << major << "." << minor << " in use for display.";
-    logger->log(ml::Severity::informational, ss.str(), component());
-}
-
-void mrl::DisplayReport::report_gpu_composition_in_use()
-{
-    logger->log(ml::Severity::informational, "GPU backup in use for display.", component());
-}
-
 void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig config)
 {
     #define STRMACRO(X) {#X, X}
