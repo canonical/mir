@@ -63,8 +63,8 @@ void geom::Rectangles::clear()
 void geom::Rectangles::confine(geom::Point& point) const
 {
     geom::Point ret_point{point};
-    geom::Displacement min_dp{geom::DeltaX{std::numeric_limits<int>::max()},
-                              geom::DeltaY{std::numeric_limits<int>::max()}};
+    geom::Displacement min_dp;
+    bool have_min_dp = false;
 
     for (auto const& rect : rectangles)
     {
@@ -95,10 +95,11 @@ void geom::Rectangles::confine(geom::Point& point) const
              * original point
              */
             auto dp = confined_point - point;
-            if (dp < min_dp)
+            if (!have_min_dp || dp < min_dp)
             {
                 ret_point = confined_point;
                 min_dp = dp;
+                have_min_dp = true;
             }
         }
     }
