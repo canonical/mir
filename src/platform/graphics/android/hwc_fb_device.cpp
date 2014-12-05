@@ -42,7 +42,7 @@ mga::HwcFbDevice::HwcFbDevice(
     HWCCommonDevice(hwc_wrapper, coordinator),
     hwc_wrapper(hwc_wrapper), 
     fb_device(fb_device),
-    layer_list{{},1}
+    layer_list{std::make_shared<IntegerSourceCrop>(), {}, 1}
 {
 }
 

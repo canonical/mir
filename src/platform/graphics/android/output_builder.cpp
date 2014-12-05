@@ -24,6 +24,7 @@
 #include "framebuffers.h"
 #include "real_hwc_wrapper.h"
 #include "hwc_report.h"
+#include "hwc_layers.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"
@@ -83,13 +84,23 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
     }
     else
     {
-        if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
+        switch (hwc_native->common.version)
         {
-            device = res_factory->create_hwc_fb_device(hwc_wrapper, fb_native);
-        }
-        else //versions 1.1, 1.2
-        {
-            device = res_factory->create_hwc_device(hwc_wrapper);
+            case HWC_DEVICE_API_VERSION_1_0:
+                device = res_factory->create_hwc_fb_device(hwc_wrapper, fb_native);
+            break;
+
+            case HWC_DEVICE_API_VERSION_1_1:
+            case HWC_DEVICE_API_VERSION_1_2:
+                device = res_factory->create_hwc_device(
+                    hwc_wrapper, std::make_shared<mga::IntegerSourceCrop>());
+            break;
+
+            default:
+            case HWC_DEVICE_API_VERSION_1_3:
+                device = res_factory->create_hwc_device(
+                    hwc_wrapper, std::make_shared<mga::FloatSourceCrop>());
+            break;
         }
 
         hwc_report->report_hwc_version(hwc_native->common.version);
