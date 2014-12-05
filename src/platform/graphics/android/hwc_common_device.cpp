@@ -97,6 +97,7 @@ void mga::HWCCommonDevice::mode(MirPowerMode mode_request)
     //TODO: fix this
     if (mode_request == mir_power_mode_off)
         turned_screen_off();
+
     //TODO the mode should be in the display mode structure that gets passed to the rest of
     // the system
     current_mode = mode_request;
