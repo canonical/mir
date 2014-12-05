@@ -440,6 +440,7 @@ MIR_SERVER_28 {
     mir::ServerStatusListener::ServerStatusListener*;
     mir::ServerStatusListener::started*;
     mir::Server::stop*;
+    mir::Server::supported_pixel_formats*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_compositor*;
     mir::Server::the_cursor_listener*;
