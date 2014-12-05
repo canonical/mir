@@ -16,21 +16,22 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/compositor/display_buffer_compositor_factory.h"
+#include "example_input_event_filter.h"
+#include "example_display_configuration_policy.h"
 #include "mir/server_status_listener.h"
 #include "mir/compositor/display_buffer_compositor.h"
-#include "mir/options/default_configuration.h"
+#include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "mir/frontend/connector.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/gl_context.h"
+#include "mir/options/option.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_coordinator.h"
-#include "mir/run_mir.h"
+#include "mir/server.h"
 #include "mir/report_exception.h"
 #include "mir/raii.h"
 
@@ -210,143 +211,121 @@ private:
 
 ///\internal [RenderSurfacesServerConfiguration_tag]
 // Extend the default configuration to manage moveables.
-class RenderSurfacesServerConfiguration : public me::ServerConfiguration
+class RenderSurfacesServerConfiguration : private mir::Server
 {
+    std::shared_ptr<mir::input::EventFilter> const quit_filter{me::make_quit_filter_for(*this)};
 public:
-    RenderSurfacesServerConfiguration(int argc, char const** argv) :
-        ServerConfiguration([argc, argv]
-        {
-            auto result = std::make_shared<mo::DefaultConfiguration>(argc, argv);
-
-            namespace po = boost::program_options;
-
-            result->add_options()
-                (surfaces_to_render, po::value<int>()->default_value(5),
-                    "Number of surfaces to render");
-
-            return result;
-        }())
+    RenderSurfacesServerConfiguration(int argc, char const** argv)
     {
-    }
+        me::add_display_configuration_options_to(*this);
 
-    ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
-    // Stub out server connectivity.
-    std::shared_ptr<mf::Connector> the_connector() override
-    {
-        struct NullConnector : public mf::Connector
-        {
-            void start() override {}
-            void stop() override {}
-            int client_socket_fd() const override { return 0; }
-            int client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const override { return 0; }
-        };
-
-        return std::make_shared<NullConnector>();
-    }
-    ///\internal [RenderSurfacesServerConfiguration_stubs_tag]
-
-    // Unless the compositor starts before we create the surfaces it won't respond to
-    // the change notification that causes.
-    std::shared_ptr<mir::ServerStatusListener> the_server_status_listener() override
-    {
-        struct ServerStatusListener : mir::ServerStatusListener
-        {
-            ServerStatusListener(std::function<void()> create_surfaces, std::shared_ptr<mir::ServerStatusListener> wrapped) :
-                create_surfaces(create_surfaces), wrapped(wrapped) {}
-
-            virtual void paused() override { wrapped->paused(); }
-            virtual void resumed() override { wrapped->resumed(); }
-            virtual void started() override { wrapped->started(); create_surfaces(); create_surfaces = []{}; }
-
-            std::function<void()> create_surfaces;
-            std::shared_ptr<mir::ServerStatusListener> const wrapped;
-        };
-
-        return server_status_listener(
-            [this]()
+        // Unless the compositor starts before we create the surfaces it won't respond to
+        // the change notification that causes.
+        override_the_server_status_listener([this]
             {
-                auto wrapped = ServerConfiguration::the_server_status_listener();
-                return std::make_shared<ServerStatusListener>([this] { create_surfaces(); }, wrapped);
-            });
-    }
-
-    ///\internal [RenderSurfacesDisplayBufferCompositor_tag]
-    // Decorate the DefaultDisplayBufferCompositor in order to move surfaces.
-    std::shared_ptr<mc::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory() override
-    {
-        class RenderSurfacesDisplayBufferCompositor : public mc::DisplayBufferCompositor
-        {
-        public:
-            RenderSurfacesDisplayBufferCompositor(
-                std::unique_ptr<DisplayBufferCompositor> db_compositor,
-                std::vector<Moveable>& moveables)
-                : db_compositor{std::move(db_compositor)},
-                  moveables(moveables),
-                  frames{0}
-            {
-            }
-
-            void composite(mc::SceneElementSequence&& scene_sequence) override
-            {
-                while (!created) std::this_thread::yield();
-                stop_watch.stop();
-                if (stop_watch.elapsed_seconds_since_last_restart() >= 1)
+                struct ServerStatusListener : mir::ServerStatusListener
                 {
-                    std::cout << "FPS: " << frames << " Frame Time: " << 1.0 / frames << std::endl;
-                    frames = 0;
-                    stop_watch.restart();
-                }
+                    ServerStatusListener(std::function<void()> create_surfaces) :
+                        create_surfaces(create_surfaces) {}
 
-                glClearColor(0.0, 1.0, 0.0, 1.0);
-                db_compositor->composite(std::move(scene_sequence));
+                    virtual void paused() override {}
+                    virtual void resumed() override {}
+                    virtual void started() override {create_surfaces(); create_surfaces = []{}; }
 
-                for (auto& m : moveables)
-                    m.step();
+                    std::function<void()> create_surfaces;
+                };
 
-                frames++;
-            }
+                return std::make_shared<ServerStatusListener>([this] { create_surfaces(); });
+            });
 
-        private:
-            std::unique_ptr<DisplayBufferCompositor> const db_compositor;
-            StopWatch stop_watch;
-            std::vector<Moveable>& moveables;
-            uint32_t frames;
-        };
-
-        class RenderSurfacesDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
-        {
-        public:
-            RenderSurfacesDisplayBufferCompositorFactory(
-                std::shared_ptr<mc::DisplayBufferCompositorFactory> const& factory,
-                std::vector<Moveable>& moveables)
-                : factory{factory},
-                  moveables(moveables)
+        ///\internal [RenderSurfacesDisplayBufferCompositor_tag]
+        // Decorate the DefaultDisplayBufferCompositor in order to move surfaces.
+        wrap_display_buffer_compositor_factory([this](std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped)
             {
-            }
+                class RenderSurfacesDisplayBufferCompositor : public mc::DisplayBufferCompositor
+                {
+                public:
+                    RenderSurfacesDisplayBufferCompositor(
+                        std::unique_ptr<DisplayBufferCompositor> db_compositor,
+                        std::vector<Moveable>& moveables)
+                        : db_compositor{std::move(db_compositor)},
+                          moveables(moveables),
+                          frames{0}
+                    {
+                    }
 
-            std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer& display_buffer)
-            {
-                auto compositor = factory->create_compositor_for(display_buffer);
-                auto raw = new RenderSurfacesDisplayBufferCompositor(
-                    std::move(compositor), moveables);
-                return std::unique_ptr<RenderSurfacesDisplayBufferCompositor>(raw);
-            }
+                    void composite(mc::SceneElementSequence&& scene_sequence) override
+                    {
+                        while (!created) std::this_thread::yield();
+                        stop_watch.stop();
+                        if (stop_watch.elapsed_seconds_since_last_restart() >= 1)
+                        {
+                            std::cout << "FPS: " << frames << " Frame Time: " << 1.0 / frames << std::endl;
+                            frames = 0;
+                            stop_watch.restart();
+                        }
 
-        private:
-            std::shared_ptr<mc::DisplayBufferCompositorFactory> const factory;
-            std::vector<Moveable>& moveables;
-        };
+                        glClearColor(0.0, 1.0, 0.0, 1.0);
+                        db_compositor->composite(std::move(scene_sequence));
 
-        return std::make_shared<RenderSurfacesDisplayBufferCompositorFactory>(
-            me::ServerConfiguration::the_display_buffer_compositor_factory(),
-            moveables);
+                        for (auto& m : moveables)
+                            m.step();
+
+                        frames++;
+                    }
+
+                private:
+                    std::unique_ptr<DisplayBufferCompositor> const db_compositor;
+                    StopWatch stop_watch;
+                    std::vector<Moveable>& moveables;
+                    uint32_t frames;
+                };
+
+                class RenderSurfacesDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
+                {
+                public:
+                    RenderSurfacesDisplayBufferCompositorFactory(
+                        std::shared_ptr<mc::DisplayBufferCompositorFactory> const& factory,
+                        std::vector<Moveable>& moveables)
+                        : factory{factory},
+                          moveables(moveables)
+                    {
+                    }
+
+                    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer& display_buffer)
+                    {
+                        auto compositor = factory->create_compositor_for(display_buffer);
+                        auto raw = new RenderSurfacesDisplayBufferCompositor(
+                            std::move(compositor), moveables);
+                        return std::unique_ptr<RenderSurfacesDisplayBufferCompositor>(raw);
+                    }
+
+                private:
+                    std::shared_ptr<mc::DisplayBufferCompositorFactory> const factory;
+                    std::vector<Moveable>& moveables;
+                };
+
+                return std::make_shared<RenderSurfacesDisplayBufferCompositorFactory>(
+                    wrapped,
+                    moveables);
+            });
+        ///\internal [RenderSurfacesDisplayBufferCompositor_tag]
+
+        add_configuration_option(surfaces_to_render, "Number of surfaces to render", 5);
+        // Provide the command line and run the *this
+        set_command_line(argc, argv);
+        setenv("MIR_SERVER_NO_FILE", "", 1);
+        apply_settings();
+
     }
-    ///\internal [RenderSurfacesDisplayBufferCompositor_tag]
+
+    using mir::Server::run;
+    using mir::Server::exited_normally;
 
     // New function to initialize moveables with surfaces
     void create_surfaces()
     {
-        moveables.resize(the_options()->get<int>(surfaces_to_render));
+        moveables.resize(get_options()->get<int>(surfaces_to_render));
         std::cout << "Rendering " << moveables.size() << " surfaces" << std::endl;
 
         auto const display = the_display();
@@ -366,7 +345,8 @@ public:
         float const angular_step = 2.0 * M_PI / moveables.size();
         float const w = display_size.width.as_uint32_t();
         float const h = display_size.height.as_uint32_t();
-        auto const surface_pf = the_buffer_allocator()->supported_pixel_formats()[0];
+        auto const surface_pf = mir_pixel_format_argb_8888;
+            // TODO can't find valid format by "the_buffer_allocator()->supported_pixel_formats()[0];"
 
         int i = 0;
         for (auto& m : moveables)
@@ -427,15 +407,12 @@ try
     ///\internal [main_tag]
     RenderSurfacesServerConfiguration conf{argc, argv};
 
-    mir::run_mir(conf, [&](mir::DisplayServer&)
-    {
-    });
-    ///\internal [main_tag]
+    conf.run();
 
-    return 0;
+    return conf.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 catch (...)
 {
-    mir::report_exception(std::cerr);
-    return 1;
+    mir::report_exception();
+    return EXIT_FAILURE;
 }
