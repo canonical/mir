@@ -62,6 +62,17 @@ struct PrintingEventFilter : public mi::EventFilter
         return false;
     }
 };
+
+auto make_printing_filter_for(mir::Server& server)
+-> std::shared_ptr<mi::EventFilter>
+{
+    auto const printing_filter = std::make_shared<PrintingEventFilter>();
+
+    server.add_init_callback([printing_filter, &server]
+        { server.the_composite_event_filter()->prepend(printing_filter); });
+
+    return printing_filter;
+}
 }
 
 int main(int argc, char const* argv[])
@@ -73,8 +84,7 @@ try
     auto const quit_filter = me::make_quit_filter_for(server);
 
     // Set up a PrintingEventFilter
-    auto const printing_filter = std::make_shared<PrintingEventFilter>();
-    server.add_init_callback([&] { server.the_composite_event_filter()->prepend(printing_filter); });
+    auto const printing_filter = make_printing_filter_for(server);
 
     // Provide the command line and run the server
     server.set_command_line(argc, argv);
