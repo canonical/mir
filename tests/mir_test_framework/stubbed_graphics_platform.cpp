@@ -172,11 +172,19 @@ std::shared_ptr<mg::PlatformIpcOperations> mtf::StubGraphicPlatform::make_ipc_op
     return std::make_shared<StubIpcOps>();
 }
 
+namespace
+{
+std::shared_ptr<mg::Display> display_preset;
+}
+
 std::shared_ptr<mg::Display> mtf::StubGraphicPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
     std::shared_ptr<mg::GLProgramFactory> const&,
     std::shared_ptr<mg::GLConfig> const&)
 {
+    if (display_preset)
+        return std::move(display_preset);
+
     return std::make_shared<mtd::StubDisplay>(display_rects);
 }
 
@@ -267,4 +275,9 @@ extern "C" void set_display_rects(
     std::unique_ptr<std::vector<geom::Rectangle>>&& display_rects)
 {
     chosen_display_rects = std::move(display_rects);
+}
+
+extern "C" void preset_display(std::shared_ptr<mir::graphics::Display> const& display)
+{
+    display_preset = display;
 }
