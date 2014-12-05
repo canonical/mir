@@ -23,7 +23,6 @@
 #include "mir/server.h"
 #include "mir/report_exception.h"
 #include "mir/options/option.h"
-#include "mir/input/composite_event_filter.h"
 
 #include <cstdlib>
 
@@ -99,9 +98,7 @@ try
 {
     mir::Server server;
 
-    // Set up a Ctrl+Alt+BkSp => quit
-    auto const quit_filter = std::make_shared<me::QuitFilter>([&]{ server.stop(); });
-    server.add_init_callback([&] { server.the_composite_event_filter()->append(quit_filter); });
+    auto const quit_filter = me::make_quit_filter_for(server);
 
     me::add_display_configuration_options_to(server);
     add_glog_options_to(server);

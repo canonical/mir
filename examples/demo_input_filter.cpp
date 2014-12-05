@@ -70,8 +70,7 @@ try
     mir::Server server;
 
     // Set up Ctrl+Alt+BkSp => quit
-    auto const quit_filter = std::make_shared<me::QuitFilter>([&]{ server.stop(); });
-    server.add_init_callback([&] { server.the_composite_event_filter()->append(quit_filter); });
+    auto const quit_filter = me::make_quit_filter_for(server);
 
     // Set up a PrintingEventFilter
     auto const printing_filter = std::make_shared<PrintingEventFilter>();
