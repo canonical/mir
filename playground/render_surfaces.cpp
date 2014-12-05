@@ -349,8 +349,7 @@ public:
         float const angular_step = 2.0 * M_PI / moveables.size();
         float const w = display_size.width.as_uint32_t();
         float const h = display_size.height.as_uint32_t();
-        auto const surface_pf = mir_pixel_format_argb_8888;
-            // TODO can't find valid format by "the_buffer_allocator()->supported_pixel_formats()[0];"
+        auto const surface_pf = supported_pixel_formats()[0];
 
         int i = 0;
         for (auto& m : moveables)
