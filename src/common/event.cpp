@@ -52,7 +52,7 @@ MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* ev)
     if (mir_event_get_type(ev) != mir_event_type_surface)
         abort();
     
-    return reinterpret_cast<MirSurfaceEvent const*>(ev);
+    return &ev->surface;
 }
 
 MirResizeEvent const* mir_event_get_resize_event(MirEvent const* ev)
@@ -60,7 +60,7 @@ MirResizeEvent const* mir_event_get_resize_event(MirEvent const* ev)
     if (mir_event_get_type(ev) != mir_event_type_resize)
         abort();
     
-    return reinterpret_cast<MirResizeEvent const*>(ev);
+    return &ev->resize;
 }
 
 MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* ev)
@@ -68,7 +68,7 @@ MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* 
     if (mir_event_get_type(ev) != mir_event_type_prompt_session_state_change)
         abort();
     
-    return reinterpret_cast<MirPromptSessionEvent const*>(ev);
+    return &ev->prompt_session;
 }
 
 MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev)
@@ -76,7 +76,7 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev)
     if (mir_event_get_type(ev) != mir_event_type_orientation)
         abort();
     
-    return reinterpret_cast<MirOrientationEvent const*>(ev);
+    return &ev->orientation;
 }
 
 MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev)
@@ -84,7 +84,7 @@ MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev
     if (mir_event_get_type(ev) != mir_event_type_close_surface)
         abort();
     
-    return reinterpret_cast<MirCloseSurfaceEvent const*>(ev);
+    return &ev->close_surface;
 }
 
 /* Surface event accessors */
