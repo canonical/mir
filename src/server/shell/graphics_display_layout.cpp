@@ -95,47 +95,23 @@ void msh::GraphicsDisplayLayout::place_in_output(
 
 geom::Rectangle msh::GraphicsDisplayLayout::get_output_for(geometry::Rectangle& rect)
 {
-    geom::Rectangle any, container, overlaps, middle_container;
-    bool got_any = false, got_container = false,
-         got_overlaps = false, got_middle_container = false;
-
-    geometry::Point middle{
-        rect.top_left.x.as_int() + rect.size.width.as_int()/2,
-        rect.top_left.y.as_int() + rect.size.height.as_int()/2};
+    int max_area = -1;
+    geometry::Rectangle best = rect;
 
     display->for_each_display_buffer(
         [&](mg::DisplayBuffer const& db)
         {
-            auto const& area = db.view_area();
+            auto const& screen = db.view_area();
+            auto const& overlap = rect.intersection_with(screen);
+            int area = overlap.size.width.as_int() *
+                       overlap.size.height.as_int();
 
-            if (!got_any)
+            if (area > max_area)
             {
-                any = area;
-                got_any = true;
-            }
-
-            if (!got_container && area.contains(rect))
-            {
-                container = area;
-                got_container = true;
-            }
-
-            if (!got_middle_container && area.contains(middle))
-            {
-                middle_container = area;
-                got_middle_container = true;
-            }
-
-            if (!got_overlaps && area.overlaps(rect))
-            {
-                overlaps = area;
-                got_overlaps = true;
+                best = screen;
+                max_area = area;
             }
         });
 
-    return got_container? container:
-           got_middle_container? middle_container:
-           got_overlaps? overlaps:
-           got_any? any:
-           rect;
+    return best;
 }
