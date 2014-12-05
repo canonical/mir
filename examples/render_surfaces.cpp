@@ -32,7 +32,6 @@
 #include "mir/scene/surface_coordinator.h"
 #include "mir/server.h"
 #include "mir/report_exception.h"
-#include "mir/raii.h"
 
 #include "mir_image.h"
 #include "buffer_render_target.h"
@@ -365,9 +364,7 @@ public:
                 auto const complete = [&](mg::Buffer* new_buf){ buffer = new_buf; };
                 s->swap_buffers(buffer, complete); // Fetch buffer for rendering
                 {
-                    auto using_gl_context = mir::raii::paired_calls(
-                        [&gl_context] { gl_context->make_current(); },
-                        [&gl_context] { gl_context->release_current(); });
+                    gl_context->make_current();
 
                     mt::ImageRenderer img_renderer{mir_image.pixel_data,
                                    geom::Size{mir_image.width, mir_image.height},
@@ -375,6 +372,8 @@ public:
                     mt::BufferRenderTarget brt{*buffer};
                     brt.make_current();
                     img_renderer.render();
+
+                    gl_context->release_current();
                 }
                 s->swap_buffers(buffer, complete); // Post rendered buffer
             }
