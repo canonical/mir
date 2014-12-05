@@ -41,6 +41,7 @@ namespace ml = mir::logging;
 
 #define FOREACH_WRAPPER(MACRO)\
     MACRO(cursor_listener)\
+    MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
     MACRO(session_coordinator)\
     MACRO(surface_coordinator)
