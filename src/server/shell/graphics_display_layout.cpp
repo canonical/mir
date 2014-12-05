@@ -44,17 +44,19 @@ void msh::GraphicsDisplayLayout::clip_to_output(geometry::Rectangle& rect)
     if (output.size.width > geom::Width{0} && output.size.height > geom::Height{0} &&
         rect.size.width > geom::Width{0} && rect.size.height > geom::Height{0})
     {
-        auto tl = rect.top_left;
+        auto tl_closed = rect.top_left;
         auto br_closed = rect.bottom_right() - geom::Displacement{1,1};
 
         geom::Rectangles rectangles;
         rectangles.add(output);
 
+        rectangles.confine(tl_closed);
         rectangles.confine(br_closed);
 
+        rect.top_left = tl_closed;
         rect.size =
-            geom::Size{br_closed.x.as_int() - tl.x.as_int() + 1,
-                       br_closed.y.as_int() - tl.y.as_int() + 1};
+            geom::Size{br_closed.x.as_int() - tl_closed.x.as_int() + 1,
+                       br_closed.y.as_int() - tl_closed.y.as_int() + 1};
     }
     else
     {
