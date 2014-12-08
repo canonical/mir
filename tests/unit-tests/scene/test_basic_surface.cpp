@@ -396,7 +396,6 @@ TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
         std::shared_ptr<mg::CursorImage>(),
         report};
 
-    post_a_frame(surface);
     EXPECT_FALSE(surface.input_area_contains({50,50}));
     post_a_frame(surface);
     EXPECT_TRUE(surface.input_area_contains({50,50}));
