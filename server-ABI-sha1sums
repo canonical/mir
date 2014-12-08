@@ -15,7 +15,7 @@ be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
 2fd7274766a92f22e8784cb64af91947ba03d0de  include/common/mir/logging/logger.h
 9ae8473df05dd9e048a73797f01a2f34f7447554  include/common/mir/time/types.h
 1863a7fe3a382061f2752c0236cc971e7e68f93f  include/common/mir_toolkit/client_types.h
-2100c0674d9d882c1845550847357f6a5de5af66  include/common/mir_toolkit/common.h
+3e85c6d9dd1dca9767ea8bdf13ea6bbd1cb11c30  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 bccde9cdbc2f0d07e186c2950ef88d3a7d5f0d3b  include/common/mir_toolkit/event.h
 4975998aa1056ed0d39dcc538127453e516ad8e9  include/common/mir_toolkit/mesa/native_display.h
