@@ -40,7 +40,7 @@ typedef struct
  * Create a platform message to use with mir_connection_platform_operation().
  *
  * Each call to mir_platform_message_create() should be matched by
- * a call to mir_platform_message_unref() to avoid memory leaks.
+ * a call to mir_platform_message_release() to avoid memory leaks.
  *
  *   \param [in] opcode    The platform message opcode
  *   \return               The created MirPlatformMessage
