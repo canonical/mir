@@ -18,7 +18,7 @@
  * Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "native_platform.h"
+#include "guest_platform.h"
 
 #include "buffer_allocator.h"
 #include "buffer_writer.h"
@@ -40,7 +40,7 @@
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 
-mgm::NativePlatform::NativePlatform(std::shared_ptr<NestedContext> const& nested_context_arg)
+mgm::GuestPlatform::GuestPlatform(std::shared_ptr<NestedContext> const& nested_context_arg)
 {
     nested_context = nested_context_arg;
     auto fds = nested_context->platform_fd_items();
@@ -53,17 +53,17 @@ mgm::NativePlatform::NativePlatform(std::shared_ptr<NestedContext> const& nested
     ipc_ops = std::make_shared<mgm::IpcOperations>(drm_helper, nested_context);
 }
 
-mgm::NativePlatform::~NativePlatform()
+mgm::GuestPlatform::~GuestPlatform()
 {
     finish_internal_native_display();
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator()
+std::shared_ptr<mg::GraphicBufferAllocator> mgm::GuestPlatform::create_buffer_allocator()
 {
     return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited);
 }
 
-std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
+std::shared_ptr<mg::InternalClient> mgm::GuestPlatform::create_internal_client()
 {
     auto nd = ensure_internal_native_display(ipc_ops->connection_ipc_package());
     return std::make_shared<mgm::InternalClient>(nd);
@@ -73,7 +73,7 @@ extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& nested_context)
 {
-    return std::make_shared<mgm::NativePlatform>(nested_context);
+    return std::make_shared<mgm::GuestPlatform>(nested_context);
 }
 
 namespace
@@ -82,19 +82,19 @@ std::shared_ptr<mgm::InternalNativeDisplay> native_display = nullptr;
 std::mutex native_display_guard;
 }
 
-bool mgm::NativePlatform::internal_native_display_in_use()
+bool mgm::GuestPlatform::internal_native_display_in_use()
 {
     std::unique_lock<std::mutex> lg(native_display_guard);
     return native_display != nullptr;
 }
 
-std::shared_ptr<mgm::InternalNativeDisplay> mgm::NativePlatform::internal_native_display()
+std::shared_ptr<mgm::InternalNativeDisplay> mgm::GuestPlatform::internal_native_display()
 {
     std::unique_lock<std::mutex> lg(native_display_guard);
     return native_display;
 }
 
-std::shared_ptr<mgm::InternalNativeDisplay> mgm::NativePlatform::ensure_internal_native_display(
+std::shared_ptr<mgm::InternalNativeDisplay> mgm::GuestPlatform::ensure_internal_native_display(
     std::shared_ptr<mg::PlatformIPCPackage> const& package)
 {
     std::unique_lock<std::mutex> lg(native_display_guard);
@@ -103,31 +103,31 @@ std::shared_ptr<mgm::InternalNativeDisplay> mgm::NativePlatform::ensure_internal
     return native_display;
 }
 
-void mgm::NativePlatform::finish_internal_native_display()
+void mgm::GuestPlatform::finish_internal_native_display()
 {
     std::unique_lock<std::mutex> lg(native_display_guard);
     native_display.reset();
 }
 
-std::shared_ptr<mg::BufferWriter> mgm::NativePlatform::make_buffer_writer()
+std::shared_ptr<mg::BufferWriter> mgm::GuestPlatform::make_buffer_writer()
 {
     return std::make_shared<mgm::BufferWriter>();
 }
 
-std::shared_ptr<mg::PlatformIpcOperations> mgm::NativePlatform::make_ipc_operations() const
+std::shared_ptr<mg::PlatformIpcOperations> mgm::GuestPlatform::make_ipc_operations() const
 {
     return ipc_ops;
 }
 
-std::shared_ptr<mg::Display> mgm::NativePlatform::create_display(
+std::shared_ptr<mg::Display> mgm::GuestPlatform::create_display(
     std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
     std::shared_ptr<graphics::GLProgramFactory> const&,
     std::shared_ptr<graphics::GLConfig> const& /*gl_config*/)
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("mgm::NativePlatform cannot create display\n"));
+    BOOST_THROW_EXCEPTION(std::runtime_error("mgm::GuestPlatform cannot create display\n"));
 }
 
-EGLNativeDisplayType mgm::NativePlatform::egl_native_display() const
+EGLNativeDisplayType mgm::GuestPlatform::egl_native_display() const
 {
     return gbm.device;
 }

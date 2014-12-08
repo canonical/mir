@@ -18,8 +18,8 @@
  * Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_GRAPHICS_MESA_NATIVE_PLATFORM_H_
-#define MIR_GRAPHICS_MESA_NATIVE_PLATFORM_H_
+#ifndef MIR_GRAPHICS_MESA_GUEST_PLATFORM_H_
+#define MIR_GRAPHICS_MESA_GUEST_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -33,11 +33,11 @@ namespace mesa
 {
 class InternalNativeDisplay; 
 
-class NativePlatform : public graphics::Platform
+class GuestPlatform : public graphics::Platform
 {
 public:
-    NativePlatform(std::shared_ptr<NestedContext> const& nested_context_arg);
-    virtual ~NativePlatform();
+    GuestPlatform(std::shared_ptr<NestedContext> const& nested_context_arg);
+    virtual ~GuestPlatform();
 
     std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() override;
     std::shared_ptr<InternalClient> create_internal_client() override;
@@ -66,4 +66,4 @@ private:
 }
 }
 
-#endif // MIR_GRAPHICS_MESA_NATIVE_PLATFORM_H_
+#endif // MIR_GRAPHICS_MESA_GUEST_PLATFORM_H_

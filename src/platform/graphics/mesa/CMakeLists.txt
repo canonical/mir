@@ -29,7 +29,7 @@ add_library(mirplatformgraphicsmesaobjects OBJECT
   internal_native_surface.cpp
   internal_client.cpp
   drm_close_threadsafe.cpp
-  native_platform.cpp
+  guest_platform.cpp
   anonymous_shm_file.cpp
   shm_buffer.cpp
   bypass.cpp
