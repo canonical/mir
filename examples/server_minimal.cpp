@@ -21,7 +21,7 @@
 
 #include <cstdlib>
 
-///\example minimal_server.cpp
+///\example server_minimal.cpp
 /// A minimal server illustrating default operation
 int main(int argc, char const* argv[])
 try
