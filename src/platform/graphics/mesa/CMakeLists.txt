@@ -26,8 +26,6 @@ add_library(mirplatformgraphicsmesaobjects OBJECT
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
   internal_native_display.cpp
-  internal_native_surface.cpp
-  internal_client.cpp
   drm_close_threadsafe.cpp
   guest_platform.cpp
   anonymous_shm_file.cpp
@@ -35,6 +33,7 @@ add_library(mirplatformgraphicsmesaobjects OBJECT
   bypass.cpp
   ipc_operations.cpp
   buffer_writer.cpp
+  nested_authentication.cpp
 )
 
 add_library(mirplatformgraphicsmesa SHARED

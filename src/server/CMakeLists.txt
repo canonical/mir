@@ -1,3 +1,5 @@
+add_definitions(-DMIR_LOGGING_COMPONENT_FALLBACK="mirserver")
+
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/platform
@@ -93,7 +95,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
 )
 
-set(MIRSERVER_ABI 27) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 28) # Be sure to increment MIR_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(

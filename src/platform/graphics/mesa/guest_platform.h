@@ -40,7 +40,6 @@ public:
     virtual ~GuestPlatform();
 
     std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() override;
-    std::shared_ptr<InternalClient> create_internal_client() override;
     std::shared_ptr<graphics::BufferWriter> make_buffer_writer() override;
     std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
     
@@ -54,7 +53,6 @@ public:
     EGLNativeDisplayType egl_native_display() const override;
 
 private:
-    int drm_fd;
     std::shared_ptr<NestedContext> nested_context;
     helpers::GBMHelper gbm;
     std::shared_ptr<PlatformIpcOperations> ipc_ops;

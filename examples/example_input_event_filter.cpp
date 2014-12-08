@@ -19,6 +19,7 @@
 #include "example_input_event_filter.h"
 
 #include "mir/server.h"
+#include "mir/input/composite_event_filter.h"
 
 #include <linux/input.h>
 
@@ -42,4 +43,15 @@ bool me::QuitFilter::handle(MirEvent const& event)
     }
 
     return false;
+}
+
+auto me::make_quit_filter_for(mir::Server& server)
+-> std::shared_ptr<mir::input::EventFilter>
+{
+    auto const quit_filter = std::make_shared<me::QuitFilter>([&]{ server.stop(); });
+
+    server.add_init_callback([quit_filter, &server]
+        { server.the_composite_event_filter()->append(quit_filter); });
+
+    return quit_filter;
 }

@@ -23,7 +23,7 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "display.h"
-#include "display_builder.h"
+#include "display_buffer_builder.h"
 #include "mir/geometry/rectangle.h"
 
 #include <boost/throw_exception.hpp>
@@ -32,13 +32,13 @@ namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
-mga::Display::Display(std::shared_ptr<mga::DisplayBuilder> const& display_builder,
+mga::Display::Display(std::shared_ptr<mga::DisplayBufferBuilder> const& display_buffer_builder,
                                     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
                                     std::shared_ptr<GLConfig> const& gl_config,
                                     std::shared_ptr<DisplayReport> const& display_report)
-    : display_builder{display_builder},
-      gl_context{display_builder->display_format(), *gl_config, *display_report},
-      display_buffer{display_builder->create_display_buffer(*gl_program_factory, gl_context)}
+    : display_buffer_builder{display_buffer_builder},
+      gl_context{display_buffer_builder->display_format(), *gl_config, *display_report},
+      display_buffer{display_buffer_builder->create_display_buffer(*gl_program_factory, gl_context)}
 {
     display_report->report_successful_setup_of_native_resources();
 

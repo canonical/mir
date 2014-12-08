@@ -26,7 +26,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/nested_context.h"
 
-#include "internal_client.h"
+#include "nested_authentication.h"
 #include "internal_native_display.h"
 
 #include "ipc_operations.h"
@@ -42,15 +42,13 @@ namespace mgm = mg::mesa;
 
 mgm::GuestPlatform::GuestPlatform(std::shared_ptr<NestedContext> const& nested_context_arg)
 {
+    //TODO: a bit of round-about initialization to clean up here
     nested_context = nested_context_arg;
     auto fds = nested_context->platform_fd_items();
-    drm_fd = fds.at(0);
-    gbm.setup(drm_fd);
+    gbm.setup(fds.at(0));
     nested_context->drm_set_gbm_device(gbm.device);
-
-    auto drm_helper = std::make_shared<helpers::DRMHelper>();
-    drm_helper->fd = drm_fd;
-    ipc_ops = std::make_shared<mgm::IpcOperations>(drm_helper, nested_context);
+    ipc_ops = std::make_shared<mgm::IpcOperations>(
+        std::make_shared<mgm::NestedAuthentication>(nested_context)); 
 }
 
 mgm::GuestPlatform::~GuestPlatform()
@@ -61,12 +59,6 @@ mgm::GuestPlatform::~GuestPlatform()
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::GuestPlatform::create_buffer_allocator()
 {
     return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited);
-}
-
-std::shared_ptr<mg::InternalClient> mgm::GuestPlatform::create_internal_client()
-{
-    auto nd = ensure_internal_native_display(ipc_ops->connection_ipc_package());
-    return std::make_shared<mgm::InternalClient>(nd);
 }
 
 extern "C" std::shared_ptr<mg::Platform> create_guest_platform(

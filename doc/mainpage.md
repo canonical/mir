@@ -27,7 +27,7 @@ If you are curious about Mir internals or intend to contribute to it, you should
 get the source and build it:
 
  - \ref building_source_for_pc
- - \ref building_source_for_android
+ - \ref building_source_for_arm
 
 ### Preparing a VM to run Mir
 
@@ -82,7 +82,6 @@ Mir server is written as a library which allows the server code to be adapted
 for bespoke applications.
 
  - \subpage render_surfaces-example "render_surfaces.cpp: A simple program using the Mir library"
- - \ref demo_inprocess_egl
 
 Working on Mir code
 -------------------

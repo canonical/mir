@@ -171,11 +171,19 @@ std::shared_ptr<mg::PlatformIpcOperations> mtf::StubGraphicPlatform::make_ipc_op
     return std::make_shared<StubIpcOps>();
 }
 
+namespace
+{
+std::shared_ptr<mg::Display> display_preset;
+}
+
 std::shared_ptr<mg::Display> mtf::StubGraphicPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
     std::shared_ptr<mg::GLProgramFactory> const&,
     std::shared_ptr<mg::GLConfig> const&)
 {
+    if (display_preset)
+        return std::move(display_preset);
+
     return std::make_shared<mtd::StubDisplay>(display_rects);
 }
 
@@ -191,24 +199,97 @@ std::shared_ptr<mg::BufferWriter> mtf::StubGraphicPlatform::make_buffer_writer()
     return std::make_shared<NullWriter>();
 }
 
+namespace
+{
+std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
+
+struct GuestPlatformAdapter : mg::Platform
+{
+    GuestPlatformAdapter(
+        std::shared_ptr<mg::NestedContext> const& context,
+        std::shared_ptr<mg::Platform> const& adaptee) :
+        context(context),
+        adaptee(adaptee),
+        ipc_ops(adaptee->make_ipc_operations())
+    {
+    }
+
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
+    {
+        return adaptee->create_buffer_allocator();
+    }
+
+    std::shared_ptr<mg::PlatformIpcOperations> make_ipc_operations() const override
+    {
+        return ipc_ops;
+    }
+
+    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
+    {
+        return adaptee->make_buffer_writer();
+    }
+
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
+        std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
+        std::shared_ptr<mg::GLConfig> const& gl_config) override
+    {
+        return adaptee->create_display(initial_conf_policy, gl_program_factory, gl_config);
+    }
+
+    EGLNativeDisplayType egl_native_display() const override
+    {
+        return adaptee->egl_native_display();
+    }
+
+    std::shared_ptr<mg::NestedContext> const context;
+    std::shared_ptr<mg::Platform> const adaptee;
+    std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
+};
+
+std::weak_ptr<mg::Platform> the_graphics_platform{};
+}
+
 extern "C" std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
-    static std::vector<geom::Rectangle> const display_rects{geom::Rectangle{{0,0},{1600,1600}}};
-    return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
+    std::shared_ptr<mg::Platform> result{};
+
+    if (auto const display_rects = std::move(chosen_display_rects))
+    {
+        result = std::make_shared<mtf::StubGraphicPlatform>(*display_rects);
+    }
+    else
+    {
+        static std::vector<geom::Rectangle> const default_display_rects{geom::Rectangle{{0,0},{1600,1600}}};
+        result = std::make_shared<mtf::StubGraphicPlatform>(default_display_rects);
+    }
+    the_graphics_platform = result;
+    return result;
 }
 
 extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::NestedContext> const&)
+    std::shared_ptr<mg::NestedContext> const& context)
 {
-    static std::vector<geom::Rectangle> const display_rects{geom::Rectangle{{0,0},{1600,1600}}};
-    return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
+    auto graphics_platform = the_graphics_platform.lock();
+    return std::make_shared<GuestPlatformAdapter>(context, graphics_platform);
 }
 
 extern "C" void add_platform_options(
     boost::program_options::options_description& /*config*/)
 {
+}
+
+extern "C" void set_display_rects(
+    std::unique_ptr<std::vector<geom::Rectangle>>&& display_rects)
+{
+    chosen_display_rects = std::move(display_rects);
+}
+
+extern "C" void preset_display(std::shared_ptr<mir::graphics::Display> const& display)
+{
+    display_preset = display;
 }

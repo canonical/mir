@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,32 +16,31 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_INTERNAL_CLIENT_H_
-#define MIR_GRAPHICS_ANDROID_INTERNAL_CLIENT_H_
+#ifndef MIR_GRAPHICS_MESA_DRM_AUTHENTICATION_H_
+#define MIR_GRAPHICS_MESA_DRM_AUTHENTICATION_H_
 
-#include "mir/graphics/internal_client.h"
-#include <memory>
-#include <map>
+#include <xf86drm.h>
+#include "mir/fd.h"
 
 namespace mir
 {
 namespace graphics
 {
-namespace android
+namespace mesa
 {
-class MirNativeWindow;
-class InternalClient : public mir::graphics::InternalClient
+class DRMAuthentication
 {
 public:
-    InternalClient();
-    EGLNativeDisplayType egl_native_display();
-    EGLNativeWindowType egl_native_window(std::shared_ptr<InternalSurface> const&);
+    DRMAuthentication() = default;
+    virtual ~DRMAuthentication() = default;
+    DRMAuthentication(DRMAuthentication const&) = delete;
+    DRMAuthentication& operator=(DRMAuthentication const&) = delete;
 
-private:
-    std::map<std::shared_ptr<InternalSurface>, std::shared_ptr<MirNativeWindow>> client_windows;
+    virtual void auth_magic(drm_magic_t magic) = 0;
+    virtual mir::Fd authenticated_fd() = 0;
 };
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_INTERNAL_CLIENT_H_ */
+#endif /* MIR_GRAPHICS_MESA_DRM_AUTHENTICATION_H_ */

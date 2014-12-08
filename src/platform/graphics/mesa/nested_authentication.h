@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,27 +16,29 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "internal_client.h"
+#ifndef MIR_GRAPHICS_MESA_NESTED_AUTHENTICATION_H_
+#define MIR_GRAPHICS_MESA_NESTED_AUTHENTICATION_H_
 
-namespace mg=mir::graphics;
-namespace mgm=mir::graphics::mesa;
+#include "drm_authentication.h"
 
-mgm::InternalClient::InternalClient(std::shared_ptr<MirMesaEGLNativeDisplay> const& native_display)
-    : native_display(native_display)
+namespace mir
 {
+namespace graphics
+{
+class NestedContext;
+namespace mesa
+{
+class NestedAuthentication : public DRMAuthentication
+{
+public:
+    NestedAuthentication(std::shared_ptr<NestedContext> const& nested_context);
+    void auth_magic(drm_magic_t magic) override;
+    mir::Fd authenticated_fd() override;
+private:
+    std::shared_ptr<NestedContext> const nested_context;
+};
+}
+}
 }
 
-EGLNativeDisplayType mgm::InternalClient::egl_native_display()
-{
-    return reinterpret_cast<EGLNativeDisplayType>(native_display.get());
-}
-
-EGLNativeWindowType mgm::InternalClient::egl_native_window(std::shared_ptr<InternalSurface> const& surface)
-{
-    if (!client_window)
-    {
-        client_window = std::make_shared<mgm::InternalNativeSurface>(surface);
-    }
-
-    return client_window.get();
-}
+#endif /* MIR_GRAPHICS_MESA_NESTED_AUTHENTICATION_H_ */

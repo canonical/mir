@@ -31,13 +31,13 @@ namespace android
 {
 class GraphicBufferAllocator;
 class FramebufferFactory;
-class DisplayBuilder;
+class DisplayBufferBuilder;
 
 class Platform : public graphics::Platform
 {
 public:
     Platform(
-        std::shared_ptr<DisplayBuilder> const& display_builder,
+        std::shared_ptr<DisplayBufferBuilder> const& display_buffer_builder,
         std::shared_ptr<DisplayReport> const& display_report);
 
     /* From Platform */
@@ -47,8 +47,6 @@ public:
         std::shared_ptr<graphics::GLProgramFactory> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
     std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
-
-    std::shared_ptr<InternalClient> create_internal_client() override;
     std::shared_ptr<graphics::BufferWriter> make_buffer_writer() override;
     EGLNativeDisplayType egl_native_display() const override;
 
@@ -57,7 +55,7 @@ private:
 
     std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator();
 
-    std::shared_ptr<DisplayBuilder> const display_builder;
+    std::shared_ptr<DisplayBufferBuilder> const display_buffer_builder;
     std::shared_ptr<DisplayReport> const display_report;
     std::shared_ptr<PlatformIpcOperations> const ipc_operations;
     DeviceQuirks quirks{PropertiesOps{}};

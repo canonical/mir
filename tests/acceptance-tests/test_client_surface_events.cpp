@@ -256,3 +256,33 @@ TEST_F(ClientSurfaceEvents, client_can_query_current_orientation)
         EXPECT_THAT(mir_surface_get_orientation(surface), Eq(direction));
     }
 }
+
+TEST_F(ClientSurfaceEvents, surface_receives_close_event)
+{
+    set_event_filter(mir_event_type_close_surface);
+
+    scene_surface->request_client_surface_close();
+
+    EXPECT_TRUE(wait_for_event(std::chrono::seconds(1)));
+
+    std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
+
+    EXPECT_THAT(last_event_surface, Eq(surface));
+    EXPECT_THAT(last_event.type, Eq(mir_event_type_close_surface));
+}
+
+TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)
+{
+
+    for (auto const mode:
+        {mir_orientation_mode_portrait, mir_orientation_mode_portrait_inverted,
+         mir_orientation_mode_landscape, mir_orientation_mode_landscape_inverted,
+         mir_orientation_mode_portrait_any, mir_orientation_mode_landscape_any,
+         mir_orientation_mode_any})
+    {
+        reset_last_event();
+
+        mir_wait_for(mir_surface_set_preferred_orientation(surface, mode));
+        EXPECT_THAT(mir_surface_get_preferred_orientation(surface), Eq(mode));
+    }
+}
