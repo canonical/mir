@@ -23,6 +23,7 @@
 #include "display_device.h"
 #include "framebuffers.h"
 #include "real_hwc_wrapper.h"
+#include "hwc_layers.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_report.h"
@@ -84,17 +85,31 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
     }
     else
     {
-        if (hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
-        {
-            device = res_factory->create_hwc_fb_device(hwc_wrapper, fb_native);
-        }
-        else //versions 1.1, 1.2
-        {
-            device = res_factory->create_hwc_device(hwc_wrapper);
-        }
-
         switch (hwc_native->common.version)
         {
+            case HWC_DEVICE_API_VERSION_1_0:
+                device = res_factory->create_hwc_fb_device(hwc_wrapper, fb_native);
+            break;
+
+            case HWC_DEVICE_API_VERSION_1_1:
+            case HWC_DEVICE_API_VERSION_1_2:
+                device = res_factory->create_hwc_device(
+                    hwc_wrapper, std::make_shared<mga::IntegerSourceCrop>());
+            break;
+
+            default:
+            case HWC_DEVICE_API_VERSION_1_3:
+                device = res_factory->create_hwc_device(
+                    hwc_wrapper, std::make_shared<mga::FloatSourceCrop>());
+            break;
+        }
+
+        //TODO: take the hwc version reporting out of display report and into hwc report
+        switch (hwc_native->common.version)
+        {
+            case HWC_DEVICE_API_VERSION_1_3:
+                display_report->report_hwc_composition_in_use(1,3);
+                break;
             case HWC_DEVICE_API_VERSION_1_2:
                 display_report->report_hwc_composition_in_use(1,2);
                 break;

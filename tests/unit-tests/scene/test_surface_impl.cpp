@@ -460,3 +460,21 @@ TEST_F(Surface, emits_client_close_events)
 
     surf.request_client_surface_close();
 }
+
+TEST_F(Surface, preferred_orientation_mode_defaults_to_any)
+{
+    using namespace testing;
+
+    ms::BasicSurface surf(
+        std::string("stub"),
+        geom::Rectangle{{},{}},
+        false,
+        buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
+        null_configurator,
+        std::shared_ptr<mg::CursorImage>(),
+        report);
+
+    EXPECT_EQ(mir_orientation_mode_any, surf.query(mir_surface_attrib_preferred_orientation));
+}

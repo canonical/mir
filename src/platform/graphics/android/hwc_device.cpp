@@ -67,11 +67,10 @@ bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
 
 mga::HwcDevice::HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
                           std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
-                          std::shared_ptr<SyncFileOps> const& sync_ops)
+                          std::shared_ptr<LayerAdapter> const& layer_adapter)
     : HWCCommonDevice(hwc_wrapper, coordinator),
-      hwc_list{{}, fbtarget_plus_skip_size},
-      hwc_wrapper(hwc_wrapper), 
-      sync_ops(sync_ops)
+      hwc_list{layer_adapter, {}, fbtarget_plus_skip_size},
+      hwc_wrapper(hwc_wrapper)
 {
 }
 
