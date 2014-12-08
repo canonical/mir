@@ -16,9 +16,9 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "example_add_glog_options.h"
 #include "example_input_event_filter.h"
 #include "example_display_configuration_policy.h"
-#include "glog_logger.h"
 
 #include "mir/server.h"
 #include "mir/report_exception.h"
@@ -30,54 +30,10 @@
 
 namespace me = mir::examples;
 namespace mi = mir::input;
-namespace ml = mir::logging;
 namespace mg = mir::graphics;
 
 namespace
 {
-void add_glog_options_to(mir::Server& server)
-{
-    static char const* const glog                 = "glog";
-    static char const* const glog_stderrthreshold = "glog-stderrthreshold";
-    static char const* const glog_minloglevel     = "glog-minloglevel";
-    static char const* const glog_log_dir         = "glog-log-dir";
-
-    static int const glog_stderrthreshold_default = 2;
-    static int const glog_minloglevel_default     = 0;
-    static char const* const glog_log_dir_default = "";
-
-    server.add_configuration_option(glog, "Use google::GLog for logging", mir::OptionType::null);
-    server.add_configuration_option(glog_stderrthreshold,
-        "Copy log messages at or above this level "
-        "to stderr in addition to logfiles. The numbers "
-        "of severity levels INFO, WARNING, ERROR, and "
-        "FATAL are 0, 1, 2, and 3, respectively.",
-        glog_stderrthreshold_default);
-    server.add_configuration_option(glog_minloglevel,
-        "Log messages at or above this level. The numbers "
-        "of severity levels INFO, WARNING, ERROR, and "
-        "FATAL are 0, 1, 2, and 3, respectively.",
-        glog_minloglevel_default);
-    server.add_configuration_option(glog_log_dir, "logfiles are written into this directory.", glog_log_dir_default);
-
-    server.override_the_logger(
-        [&]() -> std::shared_ptr<ml::Logger>
-        {
-            if (server.get_options()->is_set(glog))
-            {
-                return std::make_shared<me::GlogLogger>(
-                    "mir",
-                    server.get_options()->get<int>(glog_stderrthreshold),
-                    server.get_options()->get<int>(glog_minloglevel),
-                    server.get_options()->get<std::string>(glog_log_dir));
-            }
-            else
-            {
-                return std::shared_ptr<ml::Logger>{};
-            }
-        });
-}
-
 void add_launcher_option_to(mir::Server& server)
 {
     static const char* const launch_child_opt = "launch-client";
@@ -158,7 +114,7 @@ try
     auto const printing_filter = make_printing_filter_for(server);
 
     me::add_display_configuration_options_to(server);
-    add_glog_options_to(server);
+    me::add_glog_options_to(server);
     add_launcher_option_to(server);
 
     // Provide the command line and run the server
