@@ -220,8 +220,22 @@ struct StubCursorImage : public mg::CursorImage
 };
 void const* StubCursorImage::image_data = reinterpret_cast<void*>(&StubCursorImage::image_data);
 
-struct MesaCursorTest : public ::testing::Test
+struct MesaCursorTest : ::testing::Test
 {
+    struct MockGBM : testing::NiceMock<mtd::MockGBM>
+    {
+        MockGBM()
+        {
+            using namespace ::testing;
+            const uint32_t default_cursor_size = 64;
+            ON_CALL(*this, gbm_bo_get_width(_))
+                .WillByDefault(Return(default_cursor_size));
+            ON_CALL(*this, gbm_bo_get_height(_))
+                .WillByDefault(Return(default_cursor_size));
+
+        }
+    } mock_gbm;
+
     MesaCursorTest()
         : cursor{mock_gbm.fake_gbm.device, output_container,
             mt::fake_shared(current_configuration),
@@ -231,9 +245,24 @@ struct MesaCursorTest : public ::testing::Test
 
     StubCurrentConfiguration current_configuration;
     StubCursorImage stub_image;
-    testing::NiceMock<mtd::MockGBM> mock_gbm;
     StubKMSOutputContainer output_container;
     mgm::Cursor cursor;
+};
+
+struct SinglePixelCursorImage : public StubCursorImage
+{
+    geom::Size size() const
+    {
+        return small_cursor_size;
+    }
+    void const* as_argb_8888() const
+    {
+        static uint32_t const pixel = 0xffffffff;
+        return &pixel;
+    }
+
+    size_t const cursor_side{1};
+    geom::Size const small_cursor_size{cursor_side, cursor_side};
 };
 
 }
@@ -244,7 +273,19 @@ TEST_F(MesaCursorTest, creates_cursor_bo_image)
     EXPECT_CALL(mock_gbm, gbm_bo_create(mock_gbm.fake_gbm.device,
                                         cursor_side, cursor_side,
                                         GBM_FORMAT_ARGB8888,
-                                        GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE));
+                                        GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE));
+
+    mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+        std::make_shared<StubCurrentConfiguration>(),
+        std::make_shared<StubCursorImage>()};
+}
+
+TEST_F(MesaCursorTest, queries_received_cursor_size)
+{
+    using namespace ::testing;
+
+    EXPECT_CALL(mock_gbm, gbm_bo_get_width(_));
+    EXPECT_CALL(mock_gbm, gbm_bo_get_height(_));
 
     mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
         std::make_shared<StubCurrentConfiguration>(),
@@ -266,12 +307,12 @@ TEST_F(MesaCursorTest, show_cursor_writes_to_bo)
 }
 
 // When we upload our 1x1 cursor we should upload a single white pixel and then transparency filling a 64x64 buffer.
-MATCHER(ContainsASingleWhitePixel, "")
+MATCHER_P(ContainsASingleWhitePixel, buffersize, "")
 {
     auto pixels = static_cast<uint32_t const*>(arg);
     if (pixels[0] != 0xffffffff)
         return false;
-    for (int i = 1; i < 64*64; i++)
+    for (decltype(buffersize) i = 1; i < buffersize; i++)
     {
         if (pixels[i] != 0x0)
             return false;
@@ -282,23 +323,6 @@ MATCHER(ContainsASingleWhitePixel, "")
 TEST_F(MesaCursorTest, show_cursor_pads_missing_data)
 {
     using namespace testing;
-
-    struct SinglePixelCursorImage : public StubCursorImage
-    {
-        geom::Size size() const
-        {
-            return small_cursor_size;
-        }
-        void const* as_argb_8888() const
-        {
-            static uint32_t const pixel = 0xffffffff;
-            return &pixel;
-        }
-
-        size_t const cursor_side{1};
-        geom::Size const small_cursor_size{cursor_side, cursor_side};
-    };
-
     // We expect a full 64x64 pixel write as we will pad missing data with transparency.
     size_t const height = 64;
     size_t const width = 64;
@@ -306,9 +330,32 @@ TEST_F(MesaCursorTest, show_cursor_pads_missing_data)
     size_t const buffer_size_bytes{height * stride};
     ON_CALL(mock_gbm, gbm_bo_get_stride(_))
         .WillByDefault(Return(stride));
-    EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, ContainsASingleWhitePixel(), buffer_size_bytes));
+    EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, ContainsASingleWhitePixel(width*height), buffer_size_bytes));
 
     cursor.show(SinglePixelCursorImage());
+}
+
+TEST_F(MesaCursorTest, pads_missing_data_when_buffer_size_differs)
+{
+    using namespace ::testing;
+
+    size_t const height = 128;
+    size_t const width = 128;
+    size_t const stride = width * 4;
+    size_t const buffer_size_bytes{height * stride};
+
+    ON_CALL(mock_gbm, gbm_bo_get_width(mock_gbm.fake_gbm.bo))
+        .WillByDefault(Return(width));
+    ON_CALL(mock_gbm, gbm_bo_get_height(mock_gbm.fake_gbm.bo))
+        .WillByDefault(Return(height));
+    ON_CALL(mock_gbm, gbm_bo_get_stride(mock_gbm.fake_gbm.bo))
+        .WillByDefault(Return(stride));
+
+    EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, ContainsASingleWhitePixel(width*height), buffer_size_bytes));
+
+    mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+        std::make_shared<StubCurrentConfiguration>(),
+        std::make_shared<SinglePixelCursorImage>()};
 }
 
 TEST_F(MesaCursorTest, throws_when_images_are_too_large)

@@ -55,7 +55,10 @@ struct HwcLayerEntry
 class LayerList
 {
 public:
-    LayerList(RenderableList const& renderlist, size_t additional_layers);
+    LayerList(
+        std::shared_ptr<LayerAdapter> const& layer_adapter,
+        RenderableList const& renderlist,
+        size_t additional_layers);
     void update_list(RenderableList const& renderlist, size_t additional_layers);
 
     std::list<HwcLayerEntry>::iterator begin();
@@ -68,6 +71,7 @@ private:
     LayerList& operator=(LayerList const&) = delete;
     LayerList(LayerList const&) = delete;
 
+    std::shared_ptr<LayerAdapter> const layer_adapter;
     std::list<HwcLayerEntry> layers;
     std::shared_ptr<hwc_display_contents_1_t> hwc_representation;
     std::list<HwcLayerEntry>::iterator first_additional_layer;
