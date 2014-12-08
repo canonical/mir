@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "example_display_configuration_policy.h"
+#include "server_example_display_configuration_policy.h"
 
 #include "mir/graphics/display_configuration.h"
 #include "mir/server.h"

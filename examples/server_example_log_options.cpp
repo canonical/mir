@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "example_log_options.h"
+#include "server_example_log_options.h"
 #include "glog_logger.h"
 
 #include "mir/server.h"
@@ -25,7 +25,7 @@
 namespace me = mir::examples;
 namespace ml = mir::logging;
 
-///\example example_log_options.cpp
+///\example server_example_log_options.pp
 /// Demonstrate adding custom logging options to a server (using glog as the example)
 void me::add_glog_options_to(mir::Server& server)
 {

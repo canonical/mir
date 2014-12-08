@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "example_input_filter.h"
+#include "server_example_input_filter.h"
 
 #include "mir/server.h"
 
@@ -28,7 +28,7 @@
 namespace me = mir::examples;
 namespace mi = mir::input;
 
-///\example example_input_filter.cpp
+///\example server_example_input_filter.cpp
 /// Demonstrate adding a custom input filter to a server
 namespace
 {

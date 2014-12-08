@@ -6,10 +6,10 @@ add_library(eglapp STATIC
 )
 
 add_library(exampleserverconfig STATIC
-  example_display_configuration_policy.cpp
-  example_input_event_filter.cpp
-  example_log_options.cpp
-  example_input_filter.cpp
+  server_example_display_configuration_policy.cpp
+  server_example_input_event_filter.cpp
+  server_example_log_options.cpp
+  server_example_input_filter.cpp
 )
 
 target_link_libraries(eglapp
@@ -145,7 +145,7 @@ set (INSTALL_DEMOS
 install(TARGETS ${INSTALL_DEMOS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_executable(mir_demo_server_basic
-  basic_server.cpp
+  server_example.cpp
   glog_logger.cpp
 )
 

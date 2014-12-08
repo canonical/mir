@@ -16,10 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "example_log_options.h"
-#include "example_input_event_filter.h"
-#include "example_input_filter.h"
-#include "example_display_configuration_policy.h"
+#include "server_example_log_options.h"
+#include "server_example_input_event_filter.h"
+#include "server_example_input_filter.h"
+#include "server_example_display_configuration_policy.h"
 
 #include "mir/server.h"
 #include "mir/main_loop.h"
@@ -32,7 +32,7 @@
 
 namespace me = mir::examples;
 
-///\example basic_server.cpp
+///\example server_example.cpp
 /// A simple server illustrating several customisations
 
 namespace
