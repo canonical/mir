@@ -22,8 +22,12 @@
 #include "example_display_configuration_policy.h"
 
 #include "mir/server.h"
+#include "mir/main_loop.h"
+
 #include "mir/report_exception.h"
 #include "mir/options/option.h"
+
+#include <chrono>
 
 namespace me = mir::examples;
 
@@ -45,6 +49,25 @@ void add_launcher_option_to(mir::Server& server)
         }
     });
 }
+
+void add_timeout_option_to(mir::Server& server)
+{
+    static const char* const timeout_opt = "timeout";
+    static const char* const timeout_descr = "Seconds to run before exiting";
+
+    server.add_configuration_option(timeout_opt, timeout_descr, mir::OptionType::integer);
+
+    server.add_init_callback([&]
+    {
+        const auto options = server.get_options();
+        if (options->is_set(timeout_opt))
+        {
+            static auto const exit_action = server.the_main_loop()->notify_in(
+                std::chrono::seconds(options->get<int>(timeout_opt)),
+                [&] { server.stop(); });
+        }
+    });
+}
 }
 
 int main(int argc, char const* argv[])
@@ -57,7 +80,9 @@ try
 
     me::add_display_configuration_options_to(server);
     me::add_glog_options_to(server);
+
     add_launcher_option_to(server);
+    add_timeout_option_to(server);
 
     // Provide the command line and run the server
     server.set_command_line(argc, argv);
