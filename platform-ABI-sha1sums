@@ -1,7 +1,7 @@
 3329ada91412ded2f127aee9a92f065e57b81cb2  include/common/mir/cached_ptr.h
 82ff9499ef62739379616e02164dc98f9914c329  include/common/mir/fd.h
 b399dc08514751c86e23824612a52378dd9b1e23  include/common/mir/geometry/dimensions.h
-40eb312d3ca6b0dfcefd647f56a74e77e10d8920  include/common/mir/geometry/displacement.h
+5870ce0fdde3546bfb67997c730fa51379359cae  include/common/mir/geometry/displacement.h
 283cb0ecf9d544300681fc2ab86bec568e2d20ff  include/common/mir/geometry/forward.h
 bfd87d9fb800c1c1b528c00185570abac569caf2  include/common/mir/geometry/length.h
 d954464ef2d20c2876db68c94512a443186da09b  include/common/mir/geometry/point.h
@@ -15,7 +15,7 @@ be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
 2fd7274766a92f22e8784cb64af91947ba03d0de  include/common/mir/logging/logger.h
 9ae8473df05dd9e048a73797f01a2f34f7447554  include/common/mir/time/types.h
 1863a7fe3a382061f2752c0236cc971e7e68f93f  include/common/mir_toolkit/client_types.h
-2100c0674d9d882c1845550847357f6a5de5af66  include/common/mir_toolkit/common.h
+3e85c6d9dd1dca9767ea8bdf13ea6bbd1cb11c30  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 bccde9cdbc2f0d07e186c2950ef88d3a7d5f0d3b  include/common/mir_toolkit/event.h
 4975998aa1056ed0d39dcc538127453e516ad8e9  include/common/mir_toolkit/mesa/native_display.h
