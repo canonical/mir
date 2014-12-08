@@ -16,17 +16,22 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_EXAMPLES_EXAMPLE_ADD_GLOG_OPTIONS_H_
-#define MIR_EXAMPLES_EXAMPLE_ADD_GLOG_OPTIONS_H_
+#ifndef MIR_EXAMPLES_EXAMPLE_INPUT_FILTER_H_
+#define MIR_EXAMPLES_EXAMPLE_INPUT_FILTER_H_
+
+#include <memory>
 
 namespace mir
 {
 class Server;
 
+namespace input { class EventFilter; }
+
 namespace examples
 {
-void add_glog_options_to(Server& server);
+auto make_printing_input_filter_for(mir::Server& server)
+-> std::shared_ptr<input::EventFilter>;
 }
 }
 
-#endif /* MIR_EXAMPLES_EXAMPLE_ADD_GLOG_OPTIONS_H_ */
+#endif /* MIR_EXAMPLES_EXAMPLE_INPUT_FILTER_H_ */

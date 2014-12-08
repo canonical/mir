@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "example_add_glog_options.h"
+#include "example_log_options.h"
 #include "glog_logger.h"
 
 #include "mir/server.h"

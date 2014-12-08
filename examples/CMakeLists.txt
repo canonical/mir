@@ -8,7 +8,8 @@ add_library(eglapp STATIC
 add_library(exampleserverconfig STATIC
   example_display_configuration_policy.cpp
   example_input_event_filter.cpp
-  example_add_glog_options.cpp
+  example_log_options.cpp
+  example_input_filter.cpp
 )
 
 target_link_libraries(eglapp
