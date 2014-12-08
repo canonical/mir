@@ -82,7 +82,6 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
     pending_calls.force_completion();
 }
 
-
 template<class MessageType>
 void mclr::MirProtobufRpcChannel::receive_any_file_descriptors_for(MessageType* response)
 {
@@ -175,10 +174,17 @@ void mclr::MirProtobufRpcChannel::CallMethod(
     std::shared_ptr<google::protobuf::Closure> callback(
         google::protobuf::NewPermanentCallback(this, &MirProtobufRpcChannel::receive_file_descriptors, response, complete));
 
-    // Only save details after serialization succeeds
     pending_calls.save_completion_details(invocation, response, callback);
 
-    send_message(invocation, invocation, fds);
+    try
+    {
+        send_message(invocation, invocation, fds);
+    }
+    catch (...)
+    {
+        if (!disconnected.load())
+            throw;
+    }
 }
 
 void mclr::MirProtobufRpcChannel::send_message(
