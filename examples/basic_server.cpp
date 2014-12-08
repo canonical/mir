@@ -25,12 +25,10 @@
 #include "mir/input/composite_event_filter.h"
 #include "mir/options/option.h"
 
-#include <cstdlib>
 #include <iostream>
 
 namespace me = mir::examples;
 namespace mi = mir::input;
-namespace mg = mir::graphics;
 
 namespace
 {
