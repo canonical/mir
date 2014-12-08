@@ -372,6 +372,13 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
     float alpha = 0.5f;
 
     surface->set_alpha(alpha);
+    EXPECT_FLOAT_EQ(alpha, surface->alpha());
+    EXPECT_FLOAT_EQ(alpha, surface->compositor_snapshot(nullptr)->alpha());
+    
+    alpha = 0.1;
+
+    surface->set_alpha(alpha);
+    EXPECT_FLOAT_EQ(alpha, surface->alpha());
     EXPECT_FLOAT_EQ(alpha, surface->compositor_snapshot(nullptr)->alpha());
 }
 
