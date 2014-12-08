@@ -17,6 +17,7 @@
  */
 
 #include "mir_test_framework/stub_client_platform_factory.h"
+#include "mir_test_doubles/stub_client_buffer_factory.h"
 #include "src/client/client_buffer_factory.h"
 #include "src/client/client_buffer.h"
 #include "src/client/client_platform.h"
@@ -26,84 +27,10 @@
 namespace mcl = mir::client;
 namespace geom = mir::geometry;
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
-class StubClientBuffer : public mcl::ClientBuffer
-{
-public:
-    StubClientBuffer(std::shared_ptr<MirBufferPackage> const& package)
-    {
-        static_cast<void>(package);
-#ifndef ANDROID
-        native = package;
-#endif
-    }
-
-    std::shared_ptr<mcl::MemoryRegion> secure_for_cpu_write()
-    {
-        return nullptr;
-    }
-
-    geom::Size size() const
-    {
-        return geom::Size{};
-    }
-
-    geom::Stride stride() const
-    {
-        return geom::Stride{};
-    }
-
-    MirPixelFormat pixel_format() const
-    {
-        return mir_pixel_format_abgr_8888;
-    }
-
-    uint32_t age() const
-    {
-        return 0;
-    }
-    void increment_age()
-    {
-    }
-    void mark_as_submitted()
-    {
-    }
-    std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const
-    {
-#ifdef ANDROID
-        return nullptr;
-#else
-        return native;
-#endif
-    }
-    void update_from(MirBufferPackage const& package) override
-    {
-        static_cast<void>(package);
-#ifndef ANDROID
-        ::memcpy(native.get(), &package, sizeof(package));
-#endif
-    }
-private:
-#ifndef ANDROID
-    std::shared_ptr<mir::graphics::NativeBuffer> native;
-#endif
-
-    virtual void fill_update_msg(MirBufferPackage& /*message*/) override
-    {
-    }
-};
-
-struct StubClientBufferFactory : public mcl::ClientBufferFactory
-{
-    std::shared_ptr<mcl::ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> const& package,
-                                                     geom::Size, MirPixelFormat)
-    {
-        return std::make_shared<StubClientBuffer>(package);
-    }
-};
-
 struct StubClientPlatform : public mcl::ClientPlatform
 {
     MirPlatformType platform_type() const
@@ -113,7 +40,7 @@ struct StubClientPlatform : public mcl::ClientPlatform
 
     std::shared_ptr<mcl::ClientBufferFactory> create_buffer_factory()
     {
-        return std::make_shared<StubClientBufferFactory>();
+        return std::make_shared<mtd::StubClientBufferFactory>();
     }
 
     std::shared_ptr<EGLNativeWindowType> create_egl_native_window(mcl::ClientSurface*)
