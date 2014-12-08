@@ -28,6 +28,8 @@
 namespace me = mir::examples;
 namespace mi = mir::input;
 
+///\example example_input_filter.cpp
+/// Demonstrate adding a custom input filter to a server
 namespace
 {
 struct PrintingEventFilter : public mi::EventFilter

@@ -25,6 +25,9 @@
 
 namespace me = mir::examples;
 
+///\example example_input_event_filter.cpp
+/// Demonstrate a custom input filter to a server by making Ctrl+Alt+BkSp stop the server
+
 me::QuitFilter::QuitFilter(std::function<void()> const& quit_action)
     : quit_action{quit_action}
 {
