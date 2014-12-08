@@ -293,7 +293,7 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (hidden)
+    if (!visible(lock))
         return false;
 
     // Restrict to bounding rectangle
