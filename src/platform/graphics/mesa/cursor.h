@@ -108,6 +108,9 @@ private:
         GBMBOWrapper& operator=(GBMBOWrapper const&) = delete;
     } buffer;
 
+    uint32_t buffer_width;
+    uint32_t buffer_height;
+
     std::shared_ptr<CurrentConfiguration> const current_configuration;
 };
 }
