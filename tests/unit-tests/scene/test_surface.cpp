@@ -171,6 +171,16 @@ struct MockEventSink : mtd::NullEventSink
 
 struct SurfaceCreation : public ::testing::Test
 {
+    SurfaceCreation()
+        : surface(surface_name,
+            rect, false, mock_buffer_stream, 
+            std::make_shared<mtd::StubInputChannel>(),
+            std::make_shared<mtd::StubInputSender>(),
+            std::make_shared<mtd::NullSurfaceConfigurator>(),
+            nullptr /* cursor_image */, report)
+    {
+    }
+
     virtual void SetUp()
     {
         using namespace testing;
@@ -181,31 +191,22 @@ struct SurfaceCreation : public ::testing::Test
             notification_count++;
         };
 
-        mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();;
         ON_CALL(*mock_buffer_stream, acquire_client_buffer(_))
             .WillByDefault(InvokeArgument<0>(&stub_buffer));
-        
-        surface = std::make_shared<ms::BasicSurface>(surface_name,
-            rect, false, mock_buffer_stream, 
-            std::make_shared<mtd::StubInputChannel>(),
-            std::make_shared<mtd::StubInputSender>(),
-            std::make_shared<mtd::NullSurfaceConfigurator>(),
-            nullptr /* cursor_image */, report);
     }
 
-    std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream;
+    std::shared_ptr<testing::NiceMock<mtd::MockBufferStream>> mock_buffer_stream = std::make_shared<testing::NiceMock<mtd::MockBufferStream>>();
     std::function<void()> change_notification;
     int notification_count = 0;
     mtd::StubBuffer stub_buffer;
     
-    std::shared_ptr<ms::BasicSurface> surface;
-
     std::string surface_name = "test_surfaceA";
     MirPixelFormat pf = mir_pixel_format_abgr_8888;
     geom::Stride stride = geom::Stride{4 * size.width.as_uint32_t()};
     geom::Size size = geom::Size{43, 420};
     geom::Rectangle rect = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, size};
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
+    ms::BasicSurface surface;
 };
 
 }
@@ -218,19 +219,19 @@ TEST_F(SurfaceCreation, test_surface_queries_stream_for_pf)
         .Times(1)
         .WillOnce(Return(pf));
 
-    auto ret_pf = surface->pixel_format();
+    auto ret_pf = surface.pixel_format();
 
     EXPECT_EQ(ret_pf, pf);
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_right_name)
 {
-    EXPECT_EQ(surface_name, surface->name());
+    EXPECT_EQ(surface_name, surface.name());
 }
 
 TEST_F(SurfaceCreation, test_surface_queries_state_for_size)
 {
-    EXPECT_EQ(size, surface->size());
+    EXPECT_EQ(size, surface.size());
 }
 
 TEST_F(SurfaceCreation, test_surface_next_buffer)
@@ -243,7 +244,7 @@ TEST_F(SurfaceCreation, test_surface_next_buffer)
         .Times(1)
         .WillOnce(InvokeArgument<0>(&graphics_resource));
 
-    surface->swap_buffers(
+    surface.swap_buffers(
         nullptr,
         [&graphics_resource](mg::Buffer* result){ EXPECT_THAT(result, Eq(&graphics_resource)); });
 }
@@ -258,14 +259,14 @@ TEST_F(SurfaceCreation, test_surface_gets_ipc_from_stream)
         .Times(1)
         .WillOnce(InvokeArgument<0>(&stub_buffer));
 
-    surface->swap_buffers(
+    surface.swap_buffers(
         nullptr,
         [&stub_buffer](mg::Buffer* result){ EXPECT_THAT(result, Eq(&stub_buffer)); });
 }
 
 TEST_F(SurfaceCreation, test_surface_gets_top_left)
 {
-    auto ret_top_left = surface->top_left();
+    auto ret_top_left = surface.top_left();
     EXPECT_EQ(geom::Point(), ret_top_left);
 }
 
@@ -273,8 +274,8 @@ TEST_F(SurfaceCreation, test_surface_move_to)
 {
     geom::Point p{55, 66};
 
-    surface->move_to(p);
-    EXPECT_EQ(p, surface->top_left());
+    surface.move_to(p);
+    EXPECT_EQ(p, surface.top_left());
 }
 
 TEST_F(SurfaceCreation, resize_updates_stream_and_state)
@@ -288,13 +289,13 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
     auto const mock_event_sink = std::make_shared<MockEventSink>();
     auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), mock_event_sink);
 
-    surface->add_observer(observer);
+    surface.add_observer(observer);
 
-    ASSERT_THAT(surface->size(), Ne(new_size));
+    ASSERT_THAT(surface.size(), Ne(new_size));
 
     EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(1);
-    surface->resize(new_size);
-    EXPECT_THAT(surface->size(), Eq(new_size));
+    surface.resize(new_size);
+    EXPECT_THAT(surface.size(), Eq(new_size));
 }
 
 TEST_F(SurfaceCreation, duplicate_resize_ignored)
@@ -304,22 +305,22 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
     auto const mock_event_sink = std::make_shared<MockEventSink>();
     auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), mock_event_sink);
 
-    surface->add_observer(observer);
+    surface.add_observer(observer);
 
-    ASSERT_THAT(surface->size(), Ne(new_size));
+    ASSERT_THAT(surface.size(), Ne(new_size));
 
     EXPECT_CALL(*mock_buffer_stream, resize(new_size)).Times(1);
     EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(1);
-    surface->resize(new_size);
-    EXPECT_THAT(surface->size(), Eq(new_size));
+    surface.resize(new_size);
+    EXPECT_THAT(surface.size(), Eq(new_size));
 
     Mock::VerifyAndClearExpectations(mock_buffer_stream.get());
     Mock::VerifyAndClearExpectations(mock_event_sink.get());
 
     EXPECT_CALL(*mock_buffer_stream, resize(_)).Times(0);
     EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(0);
-    surface->resize(new_size);
-    EXPECT_THAT(surface->size(), Eq(new_size));
+    surface.resize(new_size);
+    EXPECT_THAT(surface.size(), Eq(new_size));
 }
 
 TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
@@ -332,10 +333,10 @@ TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
         .WillOnce(Throw(std::runtime_error("bad resize")));
 
     EXPECT_THROW({
-        surface->resize(new_size);
+        surface.resize(new_size);
     }, std::runtime_error);
 
-    EXPECT_EQ(size, surface->size());
+    EXPECT_EQ(size, surface.size());
 }
 
 TEST_F(SurfaceCreation, impossible_resize_clamps)
@@ -360,8 +361,8 @@ TEST_F(SurfaceCreation, impossible_resize_clamps)
             expect_size.height = geom::Height{1};
 
         EXPECT_CALL(*mock_buffer_stream, resize(expect_size)).Times(1);
-        EXPECT_NO_THROW({ surface->resize(size); });
-        EXPECT_EQ(expect_size, surface->size());
+        EXPECT_NO_THROW({ surface.resize(size); });
+        EXPECT_EQ(expect_size, surface.size());
     }
 }
 
@@ -371,15 +372,15 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
 
     float alpha = 0.5f;
 
-    surface->set_alpha(alpha);
-    EXPECT_FLOAT_EQ(alpha, surface->alpha());
-    EXPECT_FLOAT_EQ(alpha, surface->compositor_snapshot(nullptr)->alpha());
+    surface.set_alpha(alpha);
+    EXPECT_FLOAT_EQ(alpha, surface.alpha());
+    EXPECT_FLOAT_EQ(alpha, surface.compositor_snapshot(nullptr)->alpha());
     
     alpha = 0.1;
 
-    surface->set_alpha(alpha);
-    EXPECT_FLOAT_EQ(alpha, surface->alpha());
-    EXPECT_FLOAT_EQ(alpha, surface->compositor_snapshot(nullptr)->alpha());
+    surface.set_alpha(alpha);
+    EXPECT_FLOAT_EQ(alpha, surface.alpha());
+    EXPECT_FLOAT_EQ(alpha, surface.compositor_snapshot(nullptr)->alpha());
 }
 
 // Perhaps this test and the following (surface_allow_framedropping)
@@ -390,7 +391,7 @@ TEST_F(SurfaceCreation, test_surface_force_requests_to_complete)
 
     EXPECT_CALL(*mock_buffer_stream, force_requests_to_complete()).Times(Exactly(1));
 
-    surface->force_requests_to_complete();
+    surface.force_requests_to_complete();
 }
 
 TEST_F(SurfaceCreation, test_surface_allow_framedropping)
@@ -400,7 +401,7 @@ TEST_F(SurfaceCreation, test_surface_allow_framedropping)
     EXPECT_CALL(*mock_buffer_stream, allow_framedropping(true))
         .Times(1);
 
-    surface->allow_framedropping(true);
+    surface.allow_framedropping(true);
 }
 
 TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
@@ -408,15 +409,15 @@ TEST_F(SurfaceCreation, test_surface_next_buffer_tells_state_on_first_frame)
     auto const observer = std::make_shared<ms::LegacySurfaceChangeNotification>(
         change_notification,
         [this](int){change_notification();});
-    surface->add_observer(observer);
+    surface.add_observer(observer);
 
     mg::Buffer* buffer{nullptr};
 
     auto const complete = [&buffer](mg::Buffer* new_buffer){ buffer = new_buffer; };
-    surface->swap_buffers(buffer, complete);
-    surface->swap_buffers(buffer, complete);
-    surface->swap_buffers(buffer, complete);
-    surface->swap_buffers(buffer, complete);
+    surface.swap_buffers(buffer, complete);
+    surface.swap_buffers(buffer, complete);
+    surface.swap_buffers(buffer, complete);
+    surface.swap_buffers(buffer, complete);
 
     EXPECT_EQ(3, notification_count);
 }
