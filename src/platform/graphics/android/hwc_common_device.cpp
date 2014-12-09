@@ -124,14 +124,14 @@ std::unique_lock<std::mutex> mga::HWCCommonDevice::lock_unblanked()
 
 void mga::HWCCommonDevice::turn_screen_on() const
 {
-    hwc_device->display_on();
-    hwc_device->vsync_signal_on();
+    hwc_device->display_on(mga::DisplayName::primary);
+    hwc_device->vsync_signal_on(mga::DisplayName::primary);
 }
 
 void mga::HWCCommonDevice::turn_screen_off()
 {
-    hwc_device->vsync_signal_off();
-    hwc_device->display_off();
+    hwc_device->vsync_signal_off(mga::DisplayName::primary);
+    hwc_device->display_off(mga::DisplayName::primary);
     turned_screen_off();
 }
 

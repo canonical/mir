@@ -197,9 +197,9 @@ TEST_F(HwcWrapper, turns_display_on)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.display_on(mga::HwcDisplay::primary);
+    wrapper.display_on(mga::DisplayType::primary);
     EXPECT_THROW({
-        wrapper.display_on(mga::HwcDisplay::external);
+        wrapper.display_on(mga::DisplayType::external);
     }, std::runtime_error);
 }
 
@@ -217,9 +217,9 @@ TEST_F(HwcWrapper, turns_display_off)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.display_off(mga::HwcDisplay::primary);
+    wrapper.display_off(mga::DisplayType::primary);
     EXPECT_THROW({
-        wrapper.display_off(mga::HwcDisplay::external);
+        wrapper.display_off(mga::DisplayType::external);
     }, std::runtime_error);
 }
 
@@ -237,9 +237,9 @@ TEST_F(HwcWrapper, turns_vsync_on)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.vsync_signal_on(mga::HwcDisplay::external);
+    wrapper.vsync_signal_on(mga::DisplayType::external);
     EXPECT_THROW({
-        wrapper.vsync_signal_on(mga::HwcDisplay::primary);
+        wrapper.vsync_signal_on(mga::DisplayType::primary);
     }, std::runtime_error);
 }
 
@@ -257,7 +257,7 @@ TEST_F(HwcWrapper, turns_vsync_off)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.vsync_signal_off(mga::HwcDisplay::external);
+    wrapper.vsync_signal_off(mga::DisplayType::external);
     EXPECT_THROW({
         wrapper.vsync_signal_off(mga::HwcDisplay::primary);
     }, std::runtime_error);
