@@ -26,6 +26,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <stdexcept>
+#include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
 namespace mclm = mcl::mesa;
@@ -66,7 +67,7 @@ extern "C" std::shared_ptr<mcl::ClientPlatform> mcl::create_client_platform(mcl:
     context->populate(package);
     if (package.data_items != 0 || package.fd_items != 1)
     {
-        throw std::runtime_error{"Attempted to create Mesa client platform on non-Mesa server"};
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Attempted to create Mesa client platform on non-Mesa server"}));
     }
     auto buffer_file_ops = std::make_shared<RealBufferFileOps>();
     return std::make_shared<mclm::ClientPlatform>(
