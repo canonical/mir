@@ -99,7 +99,7 @@ mc::GLRenderer::GLRenderer(
     {
         auto val = reinterpret_cast<char const*>(glGetString(s.id));
         if (!val) val = "";
-        mir_log_info("%s: %s", s.label, val);
+        mir::log_info("%s: %s", s.label, val);
     }
              
     glUseProgram(*program);
