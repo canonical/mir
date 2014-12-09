@@ -1,9 +1,9 @@
 afd66e984f4f8c0303fd25fb6fea32fa47bbd37f  include/client/mir_toolkit/debug/surface.h
 b53736bcb22ddc09aab8275cfdd05c109fdd0f12  include/client/mir_toolkit/mir_client_library_drm.h
 532af89e0f48d8d2a7cf01621db25d3338ae3abf  include/client/mir_toolkit/mir_client_library.h
-32382201460e7177e07c00b21526354392e8e729  include/client/mir_toolkit/mir_connection.h
+750aa35e6a5173bcba47cb524c508d05a4df746c  include/client/mir_toolkit/mir_connection.h
 1ef8f51a3e3f8d1559266c5af58fbfde7cfabf0a  include/client/mir_toolkit/mir_cursor_configuration.h
-ed16a90cfbfce282830f16a9a1d1b08f57bf2314  include/client/mir_toolkit/mir_platform_message.h
+d739af6e64db6b314a727b5fb00be662b98ccd57  include/client/mir_toolkit/mir_platform_message.h
 9d50df5a141ca03ee8a79f7e844ed4b8b3b7d5d3  include/client/mir_toolkit/mir_prompt_session.h
 21d07e655e85eeec8a3523e1c6f9c2252176ec01  include/client/mir_toolkit/mir_screencast.h
 42bcad3a72b47f4d904e6b7033b0001b89cb9779  include/client/mir_toolkit/mir_surface.h
