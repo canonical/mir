@@ -81,9 +81,5 @@ mcla::AndroidNativeDisplayContainer::release(MirEGLNativeDisplayType display)
 {
     std::lock_guard<std::mutex> lg(guard);
 
-    auto it = valid_displays.find(display);
-    if (it == valid_displays.end())
-        return;
-
-    valid_displays.erase(it);
+    valid_displays.erase(display);
 }
