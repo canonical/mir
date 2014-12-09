@@ -66,7 +66,7 @@ TEST(GraphicsDisplayLayoutTest, clips_correctly)
             geom::Rectangle{geom::Point{899,99}, geom::Size{1,1}}),
         std::make_tuple(
             geom::Rectangle{geom::Point{-1,-1}, geom::Size{100,100}},
-            geom::Rectangle{geom::Point{-1,-1}, geom::Size{0,0}})
+            geom::Rectangle{geom::Point{0,0}, geom::Size{99,99}})
     };
 
     for (auto const& t : rect_tuples)
@@ -95,8 +95,20 @@ TEST(GraphicsDisplayLayoutTest, makes_fullscreen_in_correct_screen)
             geom::Rectangle{geom::Point{899,99}, geom::Size{30,40}},
             geom::Rectangle{geom::Point{800,0}, geom::Size{100,100}}),
         std::make_tuple(
+            geom::Rectangle{geom::Point{850,-10}, geom::Size{30,40}},
+            geom::Rectangle{geom::Point{800,0}, geom::Size{100,100}}),
+        std::make_tuple(
+            geom::Rectangle{geom::Point{749,20}, geom::Size{60,60}},
+            geom::Rectangle{geom::Point{0,0}, geom::Size{800,600}}),
+        std::make_tuple(
+            geom::Rectangle{geom::Point{790,20}, geom::Size{60,60}},
+            geom::Rectangle{geom::Point{800,0}, geom::Size{100,100}}),
+        std::make_tuple(
+            geom::Rectangle{geom::Point{-1000,-1000}, geom::Size{100,100}},
+            geom::Rectangle{geom::Point{0,0}, geom::Size{800,600}}),
+        std::make_tuple(
             geom::Rectangle{geom::Point{-1,-1}, geom::Size{100,100}},
-            geom::Rectangle{geom::Point{0,0}, geom::Size{0,0}})
+            geom::Rectangle{geom::Point{0,0}, geom::Size{800,600}})
     };
 
     for (auto const& t : rect_tuples)
