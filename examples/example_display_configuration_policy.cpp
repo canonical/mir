@@ -19,6 +19,8 @@
 #include "example_display_configuration_policy.h"
 
 #include "mir/graphics/display_configuration.h"
+#include "mir/server.h"
+#include "mir/options/option.h"
 
 #include <algorithm>
 #include <unordered_map>
@@ -136,5 +138,33 @@ void me::PixelFormatSelector::apply_to(graphics::DisplayConfiguration & conf)
                 return;
 
             conf_output.current_format = *pos;
+        });
+}
+
+void me::add_display_configuration_options_to(mir::Server& server)
+{
+    // Add choice of monitor configuration
+    server.add_configuration_option(
+        me::display_config_opt, me::display_config_descr,   me::clone_opt_val);
+    server.add_configuration_option(
+        me::display_alpha_opt,  me::display_alpha_descr,    me::display_alpha_off);
+
+    server.wrap_display_configuration_policy(
+        [&](std::shared_ptr<mg::DisplayConfigurationPolicy> const& wrapped)
+        -> std::shared_ptr<mg::DisplayConfigurationPolicy>
+        {
+            auto const options = server.get_options();
+            auto display_layout = options->get<std::string>(me::display_config_opt);
+            auto with_alpha = options->get<std::string>(me::display_alpha_opt) == me::display_alpha_on;
+
+            auto layout_selector = wrapped;
+
+            if (display_layout == me::sidebyside_opt_val)
+                layout_selector = std::make_shared<me::SideBySideDisplayConfigurationPolicy>();
+            else if (display_layout == me::single_opt_val)
+                layout_selector = std::make_shared<me::SingleDisplayConfigurationPolicy>();
+
+            // Whatever the layout select a pixel format with requested alpha
+            return std::make_shared<me::PixelFormatSelector>(layout_selector, with_alpha);
         });
 }
