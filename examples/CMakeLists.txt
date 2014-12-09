@@ -6,7 +6,6 @@ set(RENDER_SURFACES_SOURCES
 add_executable(mir_demo_standalone_render_surfaces ${RENDER_SURFACES_SOURCES})
 target_link_libraries(mir_demo_standalone_render_surfaces
     mirserver
-    playgroundserverconfig
     exampleserverconfig
     ${Boost_LIBRARIES}
 )
