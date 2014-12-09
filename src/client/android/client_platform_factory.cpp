@@ -21,6 +21,7 @@
 #include "../client_context.h"
 #include "android_client_platform.h"
 
+#include <boost/throw_exception.hpp>
 #include <stdexcept>
 
 namespace mcl = mir::client;
@@ -33,7 +34,7 @@ mcl::create_client_platform(mcl::ClientContext* context)
     context->populate(platform);
     if (platform.data_items != 0 || platform.fd_items != 0)
     {
-        throw new std::runtime_error{"Attempted to create Android client platform on non-Android server"};
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Attempted to create Android client platform on non-Android server"}));
     }
     return std::make_shared<mcla::AndroidClientPlatform>();
 }
