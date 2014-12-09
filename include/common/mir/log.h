@@ -25,12 +25,6 @@
 #include <string>
 #include <cstdarg>
 
-#ifndef MIR_LOG_COMPONENT
-#ifdef MIR_LOG_COMPONENT_FALLBACK
-#define MIR_LOG_COMPONENT MIR_LOG_COMPONENT_FALLBACK
-#endif
-#endif
-
 namespace mir
 {
 
@@ -40,21 +34,26 @@ void log(logging::Severity sev, const char *component,
          char const* fmt, ...);
 void log(logging::Severity sev, const char *component,
          std::string const& message);
-} // namespace mir
+
+#ifndef MIR_LOG_COMPONENT
+#ifdef MIR_LOG_COMPONENT_FALLBACK
+#define MIR_LOG_COMPONENT MIR_LOG_COMPONENT_FALLBACK
+#endif
+#endif
 
 #ifdef MIR_LOG_COMPONENT
 namespace {
 // Isolated namespace so that the component string is always correct for
 // where it's used.
 
-inline void mir_log_info(std::string const& message)
+inline void log_info(std::string const& message)
 {
     ::mir::log(::mir::logging::Severity::informational,
                MIR_LOG_COMPONENT, message);
 }
 
 template<typename... Args>
-void mir_log_info(char const* fmt, Args... args)
+void log_info(char const* fmt, Args... args)
 {
     ::mir::log(::mir::logging::Severity::informational,
                MIR_LOG_COMPONENT, fmt, args...);
@@ -62,7 +61,9 @@ void mir_log_info(char const* fmt, Args... args)
 
 // TODO later as required: error, critical, warning, debug
 
-} // namespace
+} // (nested anonymous) namespace
 #endif
+
+} // namespace mir
 
 #endif // MIR_LOG_H_

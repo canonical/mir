@@ -358,7 +358,7 @@ void mir::Server::apply_settings()
 void mir::Server::run()
 try
 {
-    mir_log_info("Starting");
+    mir::log_info("Starting");
     verify_accessing_allowed(self->server_config);
 
     auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
@@ -386,7 +386,7 @@ catch (...)
 
 void mir::Server::stop()
 {
-    mir_log_info("Stopping");
+    mir::log_info("Stopping");
     if (self->server_config)
         if (auto const main_loop = the_main_loop())
             main_loop->stop();

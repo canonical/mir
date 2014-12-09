@@ -435,3 +435,36 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfig
 
     return result;
 }
+
+MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
+{
+    if (!mir_surface_is_valid(surf)) abort();
+
+    MirOrientationMode mode = mir_orientation_mode_any;
+
+    try
+    {
+        mode = static_cast<MirOrientationMode>(surf->attrib(mir_surface_attrib_preferred_orientation));
+    }
+    catch (...)
+    {
+    }
+
+    return mode;
+}
+
+MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrientationMode mode)
+{
+    if (!mir_surface_is_valid(surf)) abort();
+
+    MirWaitHandle *result{nullptr};
+    try
+    {
+        result = surf->set_preferred_orientation(mode);
+    }
+    catch (...)
+    {
+    }
+
+    return result;
+}

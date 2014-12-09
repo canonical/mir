@@ -22,9 +22,12 @@
 #include "mir/input/event_filter.h"
 
 #include <functional>
+#include <memory>
 
 namespace mir
 {
+class Server;
+
 namespace examples
 {
 class QuitFilter : public mir::input::EventFilter
@@ -37,6 +40,9 @@ public:
 private:
     std::function<void()> const quit_action;
 };
+
+// Set up a Ctrl+Alt+BkSp => quit
+auto make_quit_filter_for(Server& server) -> std::shared_ptr<mir::input::EventFilter>;
 }
 }
 
