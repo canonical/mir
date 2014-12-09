@@ -50,7 +50,18 @@ MATCHER_P2(MatchesRect, value, str,
             (arg.bottom == value.bottom));
 }
 
-MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
+MATCHER_P2(MatchesRectf, value, str,
+          std::string("rectangle " + std::string(str) + " should be: " + testing::PrintToString(value)))
+{
+    using namespace testing;
+    EXPECT_THAT(arg.left, FloatEq(value.left));
+    EXPECT_THAT(arg.top, FloatEq(value.top));
+    EXPECT_THAT(arg.right, FloatEq(value.right));
+    EXPECT_THAT(arg.bottom, FloatEq(value.bottom));
+    return !(::testing::Test::HasFailure());
+}
+
+MATCHER_P(MatchesCommonFields, value, std::string(testing::PrintToString(value)))
 {
     EXPECT_THAT(arg.compositionType, MatchesMember(value.compositionType, "compositionType"));
     EXPECT_THAT(arg.hints, MatchesMember(value.hints, "hints"));
@@ -58,23 +69,37 @@ MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
     EXPECT_THAT(arg.handle, MatchesMember(value.handle, "handle"));
     EXPECT_THAT(arg.transform, MatchesMember(value.transform, "transform"));
     EXPECT_THAT(arg.blending, MatchesMember(value.blending, "blending"));
-    EXPECT_THAT(arg.sourceCrop, MatchesRect(value.sourceCrop, "sourceCrop"));
     EXPECT_THAT(arg.displayFrame, MatchesRect(value.displayFrame, "displayFrame"));
     EXPECT_THAT(arg.visibleRegionScreen.numRects, MatchesMember(value.visibleRegionScreen.numRects, "visibleRegionScreen.numRects"));
     EXPECT_THAT(arg.planeAlpha, MatchesMember(value.planeAlpha, "planeAlpha"));
     EXPECT_THAT(arg.acquireFenceFd, MatchesMember(value.acquireFenceFd, "acquireFenceFd"));
-    EXPECT_THAT(arg.releaseFenceFd, MatchesMember(value.releaseFenceFd, "releaseFenceFd"));
+    EXPECT_THAT(arg.releaseFenceFd, MatchesMember(value.releaseFenceFd, "releaseFenceFd")); 
+    return !(::testing::Test::HasFailure());
+}
+
+MATCHER_P(MatchesLegacyLayer, value, std::string(testing::PrintToString(value)) )
+{
+    EXPECT_THAT(arg, MatchesCommonFields(value));
+    EXPECT_THAT(arg.sourceCropi, MatchesRect(value.sourceCropi, "sourceCrop (int)"));
 
     return !(::testing::Test::HasFailure());
 }
 
-MATCHER_P(MatchesList, value, std::string(""))
+MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
+{
+    EXPECT_THAT(arg, MatchesCommonFields(value));
+    EXPECT_THAT(arg.sourceCropf, MatchesRectf(value.sourceCropf, "sourceCrop (float)"));
+
+    return !(::testing::Test::HasFailure());
+}
+
+MATCHER_P(MatchesLegacyCropList, value, std::string(""))
 {
     EXPECT_EQ(arg.numHwLayers, value.size());
     auto i = 0u;
     for(auto layer : value)
     {
-        EXPECT_THAT(arg.hwLayers[i++], MatchesLayer(*layer));
+        EXPECT_THAT(arg.hwLayers[i++], MatchesLegacyLayer(*layer));
         if (::testing::Test::HasFailure())
             return false;
     }
@@ -85,7 +110,7 @@ MATCHER_P3(MatchesListWithEglFields, value, dpy, sur, std::string(""))
 {
     EXPECT_EQ(arg.dpy, dpy);
     EXPECT_EQ(arg.sur, sur);
-    EXPECT_THAT(arg, MatchesList(value));
+    EXPECT_THAT(arg, MatchesLegacyCropList(value));
     return !(::testing::Test::HasFailure());
 }
 

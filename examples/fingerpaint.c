@@ -17,6 +17,8 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/input/input_event.h"
+
 #include <stdio.h>
 #include <signal.h>
 #include <stdint.h>
@@ -200,41 +202,46 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
         {0x00, 0xff, 0x00, 0xff},
         {0x00, 0x00, 0xff, 0xff},
     };
+    
+    MirEventType event_type = mir_event_get_type(event);
 
-    if (event->type == mir_event_type_motion)
+    if (event_type == mir_event_type_input)
     {
         static size_t base_color = 0;
         static size_t max_fingers = 0;
         static float max_pressure = 1.0f;
-        
-        // FIXME: https://bugs.launchpad.net/mir/+bug/1311699
-        MirMotionAction masked_action = event->motion.action & ~0xff00;
 
-        if (masked_action == mir_motion_action_up)
+        MirInputEvent const* input_event = mir_event_get_input_event(event);
+        if (mir_input_event_get_type(input_event) != mir_input_event_type_touch)
+            return;
+        MirTouchInputEvent const* tev = mir_input_event_get_touch_input_event(input_event);
+        unsigned touch_count = mir_touch_input_event_get_touch_count(tev);
+        
+        if (touch_count == 1 && mir_touch_input_event_get_touch_action(tev, 0) == mir_touch_input_event_action_up)
         {
             base_color = (base_color + max_fingers) %
                          (sizeof(color)/sizeof(color[0]));
             max_fingers = 0;
         }
-
-        if (masked_action == mir_motion_action_move ||
-            masked_action == mir_motion_action_down)
+        else
         {
             size_t p;
 
-            if (event->motion.pointer_count > max_fingers)
-                max_fingers = event->motion.pointer_count;
+            if (touch_count > max_fingers)
+                max_fingers = touch_count;
 
-            for (p = 0; p < event->motion.pointer_count; p++)
+            for (p = 0; p < touch_count; p++)
             {
-                int x = event->motion.pointer_coordinates[p].x;
-                int y = event->motion.pointer_coordinates[p].y;
-                int radius = event->motion.pointer_coordinates[p].size * 50.0f
+                int x = mir_touch_input_event_get_touch_axis_value(tev, p, mir_touch_input_axis_x);
+                int y = mir_touch_input_event_get_touch_axis_value(tev, p, mir_touch_input_axis_y);
+                float size = mir_touch_input_event_get_touch_axis_value(tev, p, mir_touch_input_axis_size);
+                float pressure = mir_touch_input_event_get_touch_axis_value(tev, p, mir_touch_input_axis_pressure);
+
+                int radius = size * 50.0f
                              + 1.0f;
                 size_t c = (base_color + p) %
                            (sizeof(color)/sizeof(color[0]));
                 Color tone = color[c];
-                float pressure = event->motion.pointer_coordinates[p].pressure;
 
                 if (pressure > max_pressure)
                     max_pressure = pressure;
@@ -247,7 +254,7 @@ static void on_event(MirSurface *surface, const MirEvent *event, void *context)
             redraw(surface, canvas);
         }
     }
-    else if (event->type == mir_event_type_resize)
+    else if (event_type == mir_event_type_resize)
     {
         /* FIXME: https://bugs.launchpad.net/mir/+bug/1194384
          * mir_event_type_resize will arrive in a different thread to that of

@@ -36,7 +36,7 @@ void PrintTo(const hwc_layer_1& layer , ::std::ostream* os)
     << "\ttransform: " << layer.transform << std::endl
     << "\tblending: " << layer.blending << std::endl
     << "\tsourceCrop:  ";
-    PrintTo(layer.sourceCrop, os);
+    PrintTo(layer.sourceCropi, os);
     *os << std::endl << "\tdisplayFrame:";
     PrintTo(layer.displayFrame, os);
     *os << std::endl;

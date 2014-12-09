@@ -32,13 +32,13 @@ namespace android
 {
 class GraphicBufferAllocator;
 class FramebufferFactory;
-class DisplayBuilder;
+class DisplayBufferBuilder;
 
 class Platform : public graphics::Platform, public NativePlatform
 {
 public:
     Platform(
-        std::shared_ptr<DisplayBuilder> const& display_builder,
+        std::shared_ptr<DisplayBufferBuilder> const& display_buffer_builder,
         std::shared_ptr<DisplayReport> const& display_report);
 
     /* From Platform */
@@ -56,7 +56,7 @@ private:
 
     std::shared_ptr<GraphicBufferAllocator> create_mga_buffer_allocator();
 
-    std::shared_ptr<DisplayBuilder> const display_builder;
+    std::shared_ptr<DisplayBufferBuilder> const display_buffer_builder;
     std::shared_ptr<DisplayReport> const display_report;
     std::shared_ptr<PlatformIpcOperations> const ipc_operations;
     DeviceQuirks quirks{PropertiesOps{}};

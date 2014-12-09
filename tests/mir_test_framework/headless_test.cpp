@@ -141,9 +141,23 @@ auto mtf::HeadlessTest::connection(mir::Fd fd) -> std::string
     return connect_string;
 }
 
+void mtf::HeadlessTest::preset_display(std::shared_ptr<mir::graphics::Display> const& display)
+{
+    if (!server_platform_graphics_lib)
+        server_platform_graphics_lib.reset(new mir::SharedLibrary{getenv(mir_server_platform_graphics_lib)});
+
+    typedef void (*PresetDisplay)(std::shared_ptr<mir::graphics::Display> const&);
+
+    auto const preset_display =
+        server_platform_graphics_lib->load_function<PresetDisplay>("preset_display");
+
+    preset_display(display);
+}
+
 void mtf::HeadlessTest::initial_display_layout(std::vector<geom::Rectangle> const& display_rects)
 {
-    server_platform_graphics_lib.reset(new mir::SharedLibrary{getenv(mir_server_platform_graphics_lib)});
+    if (!server_platform_graphics_lib)
+        server_platform_graphics_lib.reset(new mir::SharedLibrary{getenv(mir_server_platform_graphics_lib)});
 
     typedef void (*SetDisplayRects)(std::unique_ptr<std::vector<geom::Rectangle>>&&);
 
@@ -152,4 +166,3 @@ void mtf::HeadlessTest::initial_display_layout(std::vector<geom::Rectangle> cons
 
     set_display_rects(std::unique_ptr<std::vector<geom::Rectangle>>(new std::vector<geom::Rectangle>(display_rects)));
 }
-

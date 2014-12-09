@@ -158,6 +158,7 @@ private:
     MirSurfaceVisibility set_visibility(MirSurfaceVisibility v);
     int set_swap_interval(int);
     MirSurfaceFocusState set_focus_state(MirSurfaceFocusState f);
+    MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
 
     SurfaceObservers observers;
     std::mutex mutable guard;
@@ -177,8 +178,14 @@ private:
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
 
-    void initialize_attributes();
-    int attrib_values[mir_surface_attribs];
+    // Surface attributes:
+    MirSurfaceType type_ = mir_surface_type_normal;
+    MirSurfaceState state_ = mir_surface_state_restored;
+    int swapinterval_ = 1;
+    MirSurfaceFocusState focus_ = mir_surface_unfocused;
+    int dpi_ = 0;
+    MirSurfaceVisibility visibility_ = mir_surface_visibility_exposed;
+    MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
 };
 
 }

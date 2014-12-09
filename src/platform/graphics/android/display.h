@@ -36,14 +36,14 @@ class GLProgramFactory;
 
 namespace android
 {
-class DisplayBuilder;
+class DisplayBufferBuilder;
 class DisplaySupportProvider;
 class ConfigurableDisplayBuffer;
 
 class Display : public graphics::Display
 {
 public:
-    explicit Display(std::shared_ptr<DisplayBuilder> const& display_builder,
+    explicit Display(std::shared_ptr<DisplayBufferBuilder> const& display_buffer_builder,
                             std::shared_ptr<GLProgramFactory> const& gl_program_factory,
                             std::shared_ptr<GLConfig> const& gl_config,
                             std::shared_ptr<DisplayReport> const& display_report);
@@ -69,7 +69,7 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
-    std::shared_ptr<DisplayBuilder> const display_builder;
+    std::shared_ptr<DisplayBufferBuilder> const display_buffer_builder;
     PbufferGLContext gl_context;
     mutable std::mutex configuration_mutex;
 
