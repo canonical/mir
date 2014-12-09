@@ -30,6 +30,9 @@ namespace geom = mir::geometry;
 namespace me = mir::examples;
 namespace mg = mir::graphics;
 
+///\example server_example_display_configuration_policy.cpp
+/// Demonstrate custom display configuration policies for "sidebyside" and "single"
+
 char const* const me::display_config_opt = "display-config";
 char const* const me::display_config_descr = "Display configuration [{clone,sidebyside,single}]";
 
