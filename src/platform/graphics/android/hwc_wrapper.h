@@ -28,6 +28,7 @@ namespace graphics
 {
 namespace android
 {
+
 struct HWCCallbacks;
 class HwcWrapper
 {

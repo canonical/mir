@@ -69,7 +69,8 @@ struct HwcWrapper : public ::testing::Test
         return 0;
     }
 
-    hwc_display_contents_1_t list;
+    hwc_display_contents_1_t primary_list;
+    hwc_display_contents_1_t external_list;
     std::shared_ptr<mtd::MockHWCComposerDevice1> const mock_device;
     std::shared_ptr<MockHwcLogger> const mock_logger;
     hwc_display_contents_1_t *virtual_display;
@@ -90,10 +91,30 @@ TEST_F(HwcWrapper, submits_correct_prepare_parameters)
         .InSequence(seq);
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.prepare(list);
+    wrapper.prepare({&primary_list, nullptr, nullptr});
 
-    EXPECT_EQ(&list, primary_display);
+    EXPECT_EQ(&primary_list, primary_display);
     EXPECT_EQ(nullptr, virtual_display);
+    EXPECT_EQ(nullptr, external_display);
+}
+
+TEST_F(HwcWrapper, submits_correct_prepare_parameters_with_external_display)
+{
+    using namespace testing;
+    Sequence seq;
+    EXPECT_CALL(*mock_logger, log_list_submitted_to_prepare(Ref(list)))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 2, _))
+        .InSequence(seq)
+        .WillOnce(Invoke(this, &HwcWrapper::display_saving_fn));
+    EXPECT_CALL(*mock_logger, log_prepare_done(Ref(list)))
+        .InSequence(seq);
+
+    mga::RealHwcWrapper wrapper(mock_device, mock_logger);
+    wrapper.prepare({&primary_list, &external_list, nullptr});
+
+    EXPECT_EQ(&primary_list, primary_display);
+    EXPECT_EQ(&external_list, external_display);
     EXPECT_EQ(nullptr, external_display);
 }
 
@@ -108,7 +129,7 @@ TEST_F(HwcWrapper, throws_on_prepare_failure)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        wrapper.prepare(list);
+        wrapper.prepare({&primary_list, nullptr, nullptr});
     }, std::runtime_error);
 }
 
@@ -118,16 +139,16 @@ TEST_F(HwcWrapper, submits_correct_set_parameters)
     Sequence seq;
     EXPECT_CALL(*mock_logger, log_set_list(Ref(list)))
         .InSequence(seq);
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 1, _))
+    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 2, _))
         .InSequence(seq)
         .WillOnce(Invoke(this, &HwcWrapper::display_saving_fn));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.set(list);
+    wrapper.set({&primary_list, &external_list, nullptr});
 
-    EXPECT_EQ(&list, primary_display);
+    EXPECT_EQ(&primary_list, primary_display);
+    EXPECT_EQ(&external_list, external_display);
     EXPECT_EQ(nullptr, virtual_display);
-    EXPECT_EQ(nullptr, external_display);
 }
 
 TEST_F(HwcWrapper, throws_on_set_failure)
@@ -141,7 +162,7 @@ TEST_F(HwcWrapper, throws_on_set_failure)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        wrapper.set(list);
+        wrapper.set({&primary_list, nullptr, nullptr});
     }, std::runtime_error);
 }
 
@@ -171,14 +192,14 @@ TEST_F(HwcWrapper, turns_display_on)
         .WillOnce(Return(0));
     EXPECT_CALL(*mock_logger, log_display_on()) 
         .InSequence(seq);
-    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 0))
+    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_EXTERNAL, 0))
         .InSequence(seq)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.display_on();
+    wrapper.display_on(mga::HwcDisplay::primary);
     EXPECT_THROW({
-        wrapper.display_on();
+        wrapper.display_on(mga::HwcDisplay::external);
     }, std::runtime_error);
 }
 
@@ -191,14 +212,14 @@ TEST_F(HwcWrapper, turns_display_off)
         .WillOnce(Return(0));
     EXPECT_CALL(*mock_logger, log_display_off()) 
         .InSequence(seq);
-    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, 1))
+    EXPECT_CALL(*mock_device, blank_interface(mock_device.get(), HWC_DISPLAY_EXTERNAL, 1))
         .InSequence(seq)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.display_off();
+    wrapper.display_off(mga::HwcDisplay::primary);
     EXPECT_THROW({
-        wrapper.display_off();
+        wrapper.display_off(mga::HwcDisplay::external);
     }, std::runtime_error);
 }
 
@@ -206,7 +227,7 @@ TEST_F(HwcWrapper, turns_vsync_on)
 {
     using namespace testing;
     Sequence seq;
-    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 1))
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_EXTERNAL, 1))
         .InSequence(seq)
         .WillOnce(Return(0));
     EXPECT_CALL(*mock_logger, log_vsync_on()) 
@@ -216,9 +237,9 @@ TEST_F(HwcWrapper, turns_vsync_on)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.vsync_signal_on();
+    wrapper.vsync_signal_on(mga::HwcDisplay::external);
     EXPECT_THROW({
-        wrapper.vsync_signal_on();
+        wrapper.vsync_signal_on(mga::HwcDisplay::primary);
     }, std::runtime_error);
 }
 
@@ -226,7 +247,7 @@ TEST_F(HwcWrapper, turns_vsync_off)
 {
     using namespace testing;
     Sequence seq;
-    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 0))
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_EXTERNAL, 0))
         .InSequence(seq)
         .WillOnce(Return(0));
     EXPECT_CALL(*mock_logger, log_vsync_off()) 
@@ -236,8 +257,8 @@ TEST_F(HwcWrapper, turns_vsync_off)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.vsync_signal_off();
+    wrapper.vsync_signal_off(mga::HwcDisplay::external);
     EXPECT_THROW({
-        wrapper.vsync_signal_off();
+        wrapper.vsync_signal_off(mga::HwcDisplay::primary);
     }, std::runtime_error);
 }
