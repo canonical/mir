@@ -38,6 +38,7 @@
 
 #include <condition_variable>
 #include <mutex>
+#include <atomic>
 
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
@@ -102,6 +103,8 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
 
     mir::CachedPtr<mtd::MockPromptSessionListener> mock_prompt_session_listener;
     mir::CachedPtr<MockSessionAuthorizer> mock_prompt_session_authorizer;
+
+    std::atomic<bool> prompt_session_state_change_callback_called;
 
     std::shared_ptr<MockSessionAuthorizer> the_mock_session_authorizer()
     {
@@ -180,6 +183,17 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
             WillOnce(SaveArg<0>(&server_prompt_session));
     }
 
+    void wait_for_state_change_callback()
+    {
+        for (int i = 0; !prompt_session_state_change_callback_called.load() && i < 5000; ++i)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::yield();
+        }
+
+        prompt_session_state_change_callback_called.store(false);
+    }
+
     void TearDown() override
     {
         application_session.reset();
@@ -251,6 +265,7 @@ extern "C" void prompt_session_state_change_callback(
 {
     PromptSessionClientAPI* self = static_cast<PromptSessionClientAPI*>(context);
     self->prompt_session_state_change(prompt_provider, state);
+    self->prompt_session_state_change_callback_called.store(true);
 }
 
 void client_fd_callback(MirPromptSession*, size_t count, int const* fds, void* context)
@@ -406,20 +421,49 @@ TEST_F(PromptSessionClientAPI, notifies_when_server_closes_prompt_session)
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    EXPECT_CALL(*this, prompt_session_state_change(_, mir_prompt_session_state_started));
+    {
+        InSequence seq;
+        EXPECT_CALL(*this, prompt_session_state_change(_, mir_prompt_session_state_started));
+        EXPECT_CALL(*this, prompt_session_state_change(_, mir_prompt_session_state_stopped));
+    }
 
     capture_server_prompt_session();
 
     MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
         connection, application_session_pid, prompt_session_state_change_callback, this);
-
-    EXPECT_CALL(*this, prompt_session_state_change(_, mir_prompt_session_state_stopped));
+    wait_for_state_change_callback();
 
     the_prompt_session_manager()->stop_prompt_session(server_prompt_session);
+    wait_for_state_change_callback();
 
     // Verify we have got the "stopped" notification before we go on and release the session
-    Mock::VerifyAndClearExpectations(the_mock_prompt_session_listener().get());
+    Mock::VerifyAndClearExpectations(this);
 
+    mir_prompt_session_release_sync(prompt_session);
+}
+
+TEST_F(PromptSessionClientAPI, notifies_when_server_suspends_prompt_session)
+{
+    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+    {
+        InSequence seq;
+        EXPECT_CALL(*this, prompt_session_state_change(_, mir_prompt_session_state_started));
+        EXPECT_CALL(*this, prompt_session_state_change(_, mir_prompt_session_state_suspended));
+    }
+
+    capture_server_prompt_session();
+
+    MirPromptSession* prompt_session = mir_connection_create_prompt_session_sync(
+        connection, application_session_pid, prompt_session_state_change_callback, this);
+    wait_for_state_change_callback();
+
+    the_prompt_session_manager()->suspend_prompt_session(server_prompt_session);
+    wait_for_state_change_callback();
+
+    // Verify we have got the "suspend" notification before we go on and release the session
+    Mock::VerifyAndClearExpectations(this);
+
+    EXPECT_CALL(*this, prompt_session_state_change(_, mir_prompt_session_state_stopped));
     mir_prompt_session_release_sync(prompt_session);
 }
 
