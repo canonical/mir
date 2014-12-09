@@ -34,7 +34,7 @@ mir::SharedLibrary const* mir::load_library(std::string const& libname)
     }
     else
     {
-        mir_log_info("Loading " + libname);
+        mir::log_info("Loading " + libname);
         ptr = std::make_shared<mir::SharedLibrary>(libname);
         return ptr.get();
     }

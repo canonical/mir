@@ -210,7 +210,7 @@ mir::DisplayServer::~DisplayServer() = default;
 
 void mir::DisplayServer::run()
 {
-    mir_log_info("Mir version " MIR_VERSION);
+    mir::log_info("Mir version " MIR_VERSION);
 
     p->connector->start();
     p->prompt_connector->start();
