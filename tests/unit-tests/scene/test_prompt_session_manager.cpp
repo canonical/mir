@@ -135,9 +135,6 @@ TEST_F(PromptSessionManager, notifies_provider_of_start_and_stop)
     EXPECT_CALL(prompt_session_listener, stopping(Eq(prompt_session))).Times(1);
 
     session_manager.stop_prompt_session(prompt_session);
-
-    // Need to verify explicitly as we see unmatched callbacks during teardown of fixture
-    Mock::VerifyAndClearExpectations(&prompt_session_listener);
 }
 
 TEST_F(PromptSessionManager, notifies_provider_of_suspend_and_resume)
@@ -152,9 +149,6 @@ TEST_F(PromptSessionManager, notifies_provider_of_suspend_and_resume)
     EXPECT_CALL(prompt_session_listener, resuming(Eq(prompt_session))).Times(1);
 
     session_manager.resume_prompt_session(prompt_session);
-
-    // Need to verify explicitly as we see unmatched callbacks during teardown of fixture
-    Mock::VerifyAndClearExpectations(&prompt_session_listener);
 }
 
 TEST_F(PromptSessionManager, sets_helper_for)

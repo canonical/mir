@@ -41,7 +41,7 @@ struct PromptSession : public testing::Test
 
 }
 
-TEST_F(PromptSession, start_prompt_session_when_stopped)
+TEST_F(PromptSession, start_when_stopped)
 {
     ms::PromptSessionImpl prompt_session;
     EXPECT_EQ(prompt_session.state(), mir_prompt_session_state_stopped);
@@ -52,7 +52,7 @@ TEST_F(PromptSession, start_prompt_session_when_stopped)
     EXPECT_EQ(prompt_session.state(), mir_prompt_session_state_started);
 }
 
-TEST_F(PromptSession, stop_prompt_session_when_started)
+TEST_F(PromptSession, stop_when_started)
 {
     ms::PromptSessionImpl prompt_session;
     prompt_session.start(helper);
@@ -64,7 +64,7 @@ TEST_F(PromptSession, stop_prompt_session_when_started)
     EXPECT_EQ(prompt_session.state(), mir_prompt_session_state_stopped);
 }
 
-TEST_F(PromptSession, suspend_prompt_session_when_started)
+TEST_F(PromptSession, suspend_when_started)
 {
     ms::PromptSessionImpl prompt_session;
     prompt_session.start(helper);
@@ -76,7 +76,7 @@ TEST_F(PromptSession, suspend_prompt_session_when_started)
     EXPECT_EQ(prompt_session.state(), mir_prompt_session_state_suspended);
 }
 
-TEST_F(PromptSession, suspend_prompt_session_fails_to_stop_helper_when_not_started)
+TEST_F(PromptSession, suspend_fails_to_stop_helper_when_not_started)
 {
     ms::PromptSessionImpl prompt_session;
 
@@ -86,7 +86,7 @@ TEST_F(PromptSession, suspend_prompt_session_fails_to_stop_helper_when_not_start
     EXPECT_EQ(prompt_session.state(), mir_prompt_session_state_stopped);
 }
 
-TEST_F(PromptSession, resume_prompt_session_when_suspended)
+TEST_F(PromptSession, resume_when_suspended)
 {
     ms::PromptSessionImpl prompt_session;
     prompt_session.start(helper);
@@ -99,7 +99,7 @@ TEST_F(PromptSession, resume_prompt_session_when_suspended)
     EXPECT_EQ(prompt_session.state(), mir_prompt_session_state_started);
 }
 
-TEST_F(PromptSession, resume_prompt_session_fails_to_stop_helper_when_not_started)
+TEST_F(PromptSession, resume_fails_to_stop_helper_when_not_started)
 {
     ms::PromptSessionImpl prompt_session;
 
