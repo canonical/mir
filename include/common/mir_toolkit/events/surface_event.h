@@ -30,14 +30,6 @@ extern "C" {
 #endif
 
 /*
- * Retrieve the surface ID associated with a given MirSurfaceEvent
- *
- * \param [in] Event The event
- * \return           The associated surface-id
- */
-int mir_surface_event_get_surface_id(MirSurfaceEvent const* ev);
-
-/*
  * Retrieve the attribute index configured with a given MirSurfaceEvent
  *
  * \param [in] Event The event

@@ -23,7 +23,6 @@
 #include "mir_toolkit/events/resize_event.h"
 #include "mir_toolkit/events/prompt_session_event.h"
 #include "mir_toolkit/events/orientation_event.h"
-#include "mir_toolkit/events/close_surface_event.h"
 
 #include <stdlib.h>
 
@@ -89,14 +88,6 @@ MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev
 
 /* Surface event accessors */
 
-int mir_surface_event_get_surface_id(MirSurfaceEvent const* ev)
-{
-    if (ev->type != mir_event_type_surface)
-        abort();
-
-    return ev->id;
-}
-
 MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* ev)
 {
     if (ev->type != mir_event_type_surface)
@@ -114,13 +105,6 @@ int mir_surface_event_get_attribute_value(MirSurfaceEvent const* ev)
 }
 
 /* Resize event accessors */
-
-int mir_resize_event_get_surface_id(MirResizeEvent const* ev)
-{
-    if (ev->type != mir_event_type_resize)
-        abort();
-    return ev->surface_id;
-}
 
 int mir_resize_event_get_width(MirResizeEvent const* ev)
 {
@@ -147,14 +131,6 @@ MirPromptSessionState mir_prompt_session_event_get_state(MirPromptSessionEvent c
 
 /* Orientation event accessors */
 
-int mir_orientation_event_get_surface_id(MirOrientationEvent const* ev)
-{
-    if (ev->type != mir_event_type_orientation)
-        abort();
-
-    return ev->surface_id;
-}
-
 MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev)
 {
     if (ev->type != mir_event_type_orientation)
@@ -162,16 +138,3 @@ MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev
 
     return ev->direction;
 }
-
-/* Close surface event accessors */
-
-int mir_close_surface_event_get_surface_id(MirCloseSurfaceEvent const* ev)
-{
-    if (ev->type != mir_event_type_close_surface)
-        abort();
-    
-    return ev->surface_id;
-}
-
-
-

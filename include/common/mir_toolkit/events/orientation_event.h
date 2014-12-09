@@ -30,14 +30,6 @@ extern "C" {
 #endif
 
 /*
- * Retrieve the surface ID associated wih this MirOrientationEvent
- *
- * \param [in] ev    The orientation event
- * \return           The associated surface-id
- */
-int mir_orientation_event_get_surface_id(MirOrientationEvent const* ev);
-
-/*
  * Retrieve the new orientation reported by this MirOrientationEvent
  *
  * \param[in] ev The orientation event
