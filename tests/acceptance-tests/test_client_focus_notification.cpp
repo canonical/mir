@@ -52,21 +52,14 @@ struct ClientFocusNotification : mtf::InterprocessClientServerTest
 
     void connect_and_create_surface()
     {
-        static int const surface_width = 100;
-        static int const surface_height = 100;
-
         MirConnection *connection = mir_connect_sync(mir_test_socket, __PRETTY_FUNCTION__);
         ASSERT_TRUE(mir_connection_is_valid(connection));
+        
+        auto spec = mir_connection_create_spec_for_normal_surface(connection, 100, 100, mir_pixel_format_abgr_8888);
 
-        MirSurfaceParameters const request_params =
-            {
-                __PRETTY_FUNCTION__,
-                surface_width, surface_height,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-        mir_wait_for(mir_connection_create_surface(connection, &request_params, surface_created, this));
+        mir_wait_for(mir_surface_create(spec, surface_created, this));
+        mir_surface_spec_release(spec);
+
         all_events_received.wait_for_at_most_seconds(60);
         mir_surface_release_sync(surface);
         mir_connection_release(connection);
