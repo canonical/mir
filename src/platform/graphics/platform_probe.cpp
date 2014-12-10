@@ -24,7 +24,7 @@ mir::graphics::module_for_device(std::vector<std::shared_ptr<SharedLibrary>> con
 {
     mir::graphics::PlatformPriority best_priority_so_far = mir::graphics::unsupported;
     std::shared_ptr<mir::SharedLibrary> best_module_so_far;
-    for(auto& module : modules)
+    for (auto& module : modules)
     {
         try
         {

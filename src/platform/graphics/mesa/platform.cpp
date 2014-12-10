@@ -235,7 +235,7 @@ extern "C" mg::PlatformPriority probe_platform()
     drm_devices.match_sysname("card[0-9]*");
     drm_devices.scan_devices();
 
-    for(auto& device : drm_devices)
+    for (auto& device : drm_devices)
     {
         static_cast<void>(device);
         return mg::PlatformPriority::best;
