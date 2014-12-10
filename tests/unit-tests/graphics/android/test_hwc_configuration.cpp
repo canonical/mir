@@ -30,17 +30,6 @@ struct HwcConfiguration : public testing::Test
     mga::HwcBlankingConfiguration config{mock_hwc_wrapper};
 };
 
-//HWC version 1.3 and prior do not support anything more than on and off
-TEST_F(HwcConfiguration, throws_on_hwc_suspend_standby_throw)
-{
-    EXPECT_THROW({
-        config.power_mode(mir_power_mode_suspend);
-    }, std::runtime_error);
-    EXPECT_THROW({
-        config.power_mode(mir_power_mode_standby);
-    }, std::runtime_error);
-}
-
 TEST_F(HwcConfiguration, turns_screen_on)
 {
     testing::InSequence seq;
@@ -52,7 +41,14 @@ TEST_F(HwcConfiguration, turns_screen_on)
 TEST_F(HwcConfiguration, turns_screen_off)
 {
     testing::InSequence seq;
-    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off());
-    EXPECT_CALL(*mock_hwc_wrapper, display_off());
+    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off())
+        .Times(3);
+    EXPECT_CALL(*mock_hwc_wrapper, display_off())
+        .Times(3);
     config.power_mode(mir_power_mode_off);
+
+    //HWC version 1.3 and prior do not support anything more than on and off.
+    //translate this into blanking the screen
+    config.power_mode(mir_power_mode_suspend);
+    config.power_mode(mir_power_mode_standby);
 }
