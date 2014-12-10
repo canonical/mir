@@ -22,6 +22,7 @@
 #include "mir/emergency_cleanup.h"
 #include "mir/fd.h"
 #include "mir/frontend/connector.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/options/default_configuration.h"
 #include "mir/default_server_configuration.h"
 #include "mir/logging/logger.h"
@@ -41,6 +42,7 @@ namespace ml = mir::logging;
 
 #define FOREACH_WRAPPER(MACRO)\
     MACRO(cursor_listener)\
+    MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
     MACRO(session_coordinator)\
     MACRO(surface_coordinator)
@@ -382,6 +384,11 @@ catch (...)
         self->exception_handler();
     else
         mir::report_exception(std::cerr);
+}
+
+auto mir::Server::supported_pixel_formats() const -> std::vector<MirPixelFormat>
+{
+    return self->server_config->the_buffer_allocator()->supported_pixel_formats();
 }
 
 void mir::Server::stop()

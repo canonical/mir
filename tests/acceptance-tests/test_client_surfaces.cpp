@@ -21,6 +21,7 @@
 
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/any_surface.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -69,16 +70,6 @@ struct ClientSurfaces : mtf::BasicClientServerFixture<mtf::StubbedServerConfigur
 {
     static const int max_surface_count = 5;
     SurfaceSync ssync[max_surface_count];
-
-    MirSurfaceParameters surface_params
-    {
-        "Arbitrary surface name",
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-
 };
 
 extern "C" void create_surface_callback(MirSurface* surface, void * context)
@@ -106,14 +97,19 @@ void wait_for_surface_release(SurfaceSync* context)
 
 TEST_F(ClientSurfaces, are_created_with_correct_size)
 {
-    mir_connection_create_surface(connection, &surface_params, create_surface_callback, ssync);
+    int width_1 = 640, height_1 = 480, width_2 = 1600, height_2 = 1200;
+    
+    auto spec = mir_connection_create_spec_for_normal_surface(connection, width_1, height_1, mir_pixel_format_abgr_8888);
+    mir_surface_create(spec, create_surface_callback, ssync);
     wait_for_surface_create(ssync);
 
-    surface_params.width = 1600;
-    surface_params.height = 1200;
+    mir_surface_spec_set_width(spec, width_2);
+    mir_surface_spec_set_height(spec, height_2);
 
-    mir_connection_create_surface(connection, &surface_params, create_surface_callback, ssync+1);
+    mir_surface_create(spec, create_surface_callback, ssync+1);
     wait_for_surface_create(ssync+1);
+    
+    mir_surface_spec_release(spec);
 
     MirSurfaceParameters response_params;
     mir_surface_get_parameters(ssync->surface, &response_params);
@@ -137,30 +133,24 @@ TEST_F(ClientSurfaces, are_created_with_correct_size)
 
 TEST_F(ClientSurfaces, have_distinct_ids)
 {
-    mir_connection_create_surface(connection, &surface_params, create_surface_callback, ssync);
-    wait_for_surface_create(ssync);
+    auto surface_1 = mtf::make_any_surface(connection);
+    auto surface_2 = mtf::make_any_surface(connection);
+    
+    EXPECT_NE(mir_debug_surface_id(surface_1),
+        mir_debug_surface_id(surface_2));
 
-    surface_params.width = 1600;
-    surface_params.height = 1200;
-
-    mir_connection_create_surface(connection, &surface_params, create_surface_callback, ssync+1);
-    wait_for_surface_create(ssync+1);
-
-    EXPECT_NE(
-        mir_debug_surface_id(ssync[0].surface),
-        mir_debug_surface_id(ssync[1].surface));
-
-    mir_surface_release(ssync[1].surface, release_surface_callback, ssync+1);
-    wait_for_surface_release(ssync+1);
-
-    mir_surface_release(ssync[0].surface, release_surface_callback, ssync);
-    wait_for_surface_release(ssync);
+    mir_surface_release_sync(surface_1);
+    mir_surface_release_sync(surface_2);
 }
 
 TEST_F(ClientSurfaces, creates_need_not_be_serialized)
 {
     for (int i = 0; i != max_surface_count; ++i)
-        mir_connection_create_surface(connection, &surface_params, create_surface_callback, ssync+i);
+    {
+        auto spec = mir_connection_create_spec_for_normal_surface(connection, 1, 1, mir_pixel_format_abgr_8888);
+        mir_surface_create(spec, create_surface_callback, ssync+i);
+        mir_surface_spec_release(spec);
+    }
 
     for (int i = 0; i != max_surface_count; ++i)
         wait_for_surface_create(ssync+i);
