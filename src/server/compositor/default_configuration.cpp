@@ -63,9 +63,16 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
     return display_buffer_compositor_factory(
         [this]()
         {
-            return std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                the_renderer_factory(), the_compositor_report());
+            return wrap_display_buffer_compositor_factory(std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
+                the_renderer_factory(), the_compositor_report()));
         });
+}
+
+std::shared_ptr<mc::DisplayBufferCompositorFactory>
+mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory(
+    std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped)
+{
+    return wrapped;
 }
 
 std::shared_ptr<mc::Compositor>

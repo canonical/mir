@@ -122,6 +122,7 @@ MIR_SERVER_28 {
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
     mir::DefaultServerConfiguration::wrap_cursor_listener*;
+    mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
     mir::DefaultServerConfiguration::wrap_session_coordinator*;
     mir::DefaultServerConfiguration::wrap_surface_coordinator*;
@@ -439,6 +440,7 @@ MIR_SERVER_28 {
     mir::ServerStatusListener::ServerStatusListener*;
     mir::ServerStatusListener::started*;
     mir::Server::stop*;
+    mir::Server::supported_pixel_formats*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_compositor*;
     mir::Server::the_cursor_listener*;
@@ -457,6 +459,7 @@ MIR_SERVER_28 {
     mir::Server::the_surface_coordinator*;
     mir::Server::the_touch_visualizer*;
     mir::Server::wrap_cursor_listener*;
+    mir::Server::wrap_display_buffer_compositor_factory*;
     mir::Server::wrap_display_configuration_policy*;
     mir::Server::wrap_session_coordinator*;
     mir::Server::wrap_surface_coordinator*;

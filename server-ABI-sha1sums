@@ -55,7 +55,7 @@ a9f284ba4b05d58fd3eeb628d1f56fe4ac188526  include/server/mir/compositor/composit
 d49eae4f986645b32e29ce2c1f99f524703ba3c0  include/server/mir/compositor/display_buffer_compositor.h
 878ab5c4007d16dac213a3eb0105421d8ffad206  include/server/mir/compositor/scene_element.h
 4fcf34e424128b87ddc76733594e32e09ebbd486  include/server/mir/compositor/scene.h
-4b2f91f817b130a44bb0b40400d1086e86eeaecf  include/server/mir/default_server_configuration.h
+27a9e95846f83126b6aed4f910188c6d2491c47c  include/server/mir/default_server_configuration.h
 af1ff0714be973ac76d56006a2e5991f68cd1dec  include/server/mir/display_server.h
 a35c5495d8fd28fc0e375b17495fc5caab51b329  include/server/mir/emergency_cleanup.h
 938de641cb0e01e1098b007b39b151a7dfe4adc1  include/server/mir/frontend/display_changer.h
@@ -104,7 +104,7 @@ dd8f054f786b9746d9e513f2656e931234b5283a  include/server/mir/scene/surface_creat
 587e22d751656ce2d9536afdf5659276ff9bbc46  include/server/mir/scene/surface_observer.h
 7ef3e99901168cda296d74d05a979f47bf9c3ff1  include/server/mir/server_action_queue.h
 8d83a51c278b8b71866d2178d9b6387c1f91a7d0  include/server/mir/server_configuration.h
-3dc7c445fa63f2d14bf1666381a54c7d4f4d91f1  include/server/mir/server.h
+e56a255135af4099001b7e31f76530b40d3bd7fa  include/server/mir/server.h
 86098b500339bfccd07a9bed8298f75a68b18f5c  include/server/mir/server_status_listener.h
 860c04f32b60e680140148dc9dc2295de145b9c1  include/server/mir/shell/display_layout.h
 6a2107b01feae13060d5c305804906e53c52e0be  include/server/mir/shell/focus_controller.h
