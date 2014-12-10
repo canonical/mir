@@ -198,21 +198,21 @@ void mo::DefaultConfiguration::add_platform_options()
     {
         if (options.is_set(platform_graphics_lib))
         {
-            platform_library = std::make_shared<mir::SharedLibrary>(options.get<std::string>(platform_graphics_lib));
+            platform_graphics_library = std::make_shared<mir::SharedLibrary>(options.get<std::string>(platform_graphics_lib));
         }
         else if (env_libname)
         {
-            platform_library = std::make_shared<mir::SharedLibrary>(std::string{env_libname});
+            platform_graphics_library = std::make_shared<mir::SharedLibrary>(std::string{env_libname});
         }
         else
         {
             auto const plugin_path = env_libpath ? env_libpath : options.get<std::string>(platform_graphics_path);
             NullSharedLibraryProberReport nuller;
             auto plugins = mir::libraries_for_path(plugin_path, nuller);
-            platform_library = mir::graphics::module_for_device(plugins);
+            platform_graphics_library = mir::graphics::module_for_device(plugins);
         }
 
-        auto add_platform_options = platform_library->load_function<mir::graphics::AddPlatformOptions>("add_platform_options");
+        auto add_platform_options = platform_graphics_library->load_function<mir::graphics::AddPlatformOptions>("add_platform_options");
         add_platform_options(*this->program_options);
     }
     catch(...)

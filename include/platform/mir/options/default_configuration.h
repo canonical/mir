@@ -45,7 +45,7 @@ public:
 private:
     // MUST be the first member to ensure it's destroyed last, lest we attempt to
     // call destructors in DSOs we've unloaded.
-    std::shared_ptr<SharedLibrary> platform_library;
+    std::shared_ptr<SharedLibrary> platform_graphics_library;
 
     void add_platform_options();
     // accessed via the base interface, when access to add_options() has been "lost"
