@@ -125,7 +125,7 @@ public:
     void set_orientation(MirOrientation orientation) override;
     void set_transformation(glm::mat4 const&) override;
 
-    bool visible() const;
+    bool visible() const override;
     
     std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const override;
 
