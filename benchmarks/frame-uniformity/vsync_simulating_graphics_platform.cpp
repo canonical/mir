@@ -24,7 +24,6 @@
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display.h"
-#include "mir_test_doubles/null_platform_ipc_operations.h"
 
 #include <chrono>
 #include <functional>
@@ -41,6 +40,31 @@ struct StubBufferWriter : public mg::BufferWriter
 {
     void write(mg::Buffer&, unsigned char const*, size_t) override
     {
+    }
+};
+
+class StubIpcOps : public mg::PlatformIpcOperations
+{
+    void pack_buffer(
+        mg::BufferIpcMessage&,
+        mg::Buffer const&,
+        mg::BufferIpcMsgType) const override
+    {
+    }
+
+    void unpack_buffer(
+        mg::BufferIpcMessage&, mg::Buffer const&) const override
+    {
+    }
+
+    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
+    {
+        return std::make_shared<mg::PlatformIPCPackage>();
+    }
+
+    mg::PlatformIPCPackage platform_operation(unsigned int const, mg::PlatformIPCPackage const&) override
+    {
+        return mg::PlatformIPCPackage();
     }
 };
 
@@ -112,7 +136,7 @@ std::shared_ptr<mg::Display> VsyncSimulatingPlatform::create_display(
     
 std::shared_ptr<mg::PlatformIpcOperations> VsyncSimulatingPlatform::make_ipc_operations() const
 {
-    return std::make_shared<mtd::NullPlatformIpcOperations>();
+    return std::make_shared<StubIpcOps>();
 }
 
 std::shared_ptr<mg::InternalClient> VsyncSimulatingPlatform::create_internal_client()

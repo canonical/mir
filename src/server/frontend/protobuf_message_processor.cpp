@@ -196,10 +196,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::drm_auth_magic, invocation);
         }
-        else if ("platform_operation" == invocation.method_name())
-        {
-            invoke(this, display_server.get(), &protobuf::DisplayServer::platform_operation, invocation);
-        }
         else if ("configure_display" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::configure_display, invocation);

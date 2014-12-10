@@ -73,7 +73,6 @@ add_library(mirclientobjects OBJECT
   mir_prompt_session_api.cpp
   mir_event_distributor.cpp
   periodic_perf_report.cpp
-  mir_platform_message_api.cpp
 )
 
 add_library(

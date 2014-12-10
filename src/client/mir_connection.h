@@ -104,11 +104,6 @@ public:
                                   mir_drm_auth_magic_callback callback,
                                   void* context);
 
-    MirWaitHandle* platform_operation(
-        unsigned int opcode,
-        MirPlatformMessage const* request,
-        mir_platform_operation_callback callback, void* context);
-
     void register_lifecycle_event_callback(mir_lifecycle_event_callback callback, void* context);
 
     void register_display_change_callback(mir_display_config_callback callback, void* context);
@@ -161,7 +156,6 @@ private:
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::DRMAuthMagicStatus drm_auth_magic_status;
-    mir::protobuf::PlatformOperationMessage platform_operation_reply;
     mir::protobuf::DisplayConfiguration display_configuration_response;
     bool disconnecting{false};
 
@@ -176,7 +170,6 @@ private:
     MirWaitHandle connect_wait_handle;
     MirWaitHandle disconnect_wait_handle;
     MirWaitHandle drm_auth_magic_wait_handle;
-    MirWaitHandle platform_operation_wait_handle;
     MirWaitHandle configure_display_wait_handle;
 
     std::mutex release_wait_handle_guard;
@@ -201,7 +194,6 @@ private:
     void connected(mir_connected_callback callback, void * context);
     void released(SurfaceRelease );
     void done_drm_auth_magic(mir_drm_auth_magic_callback callback, void* context);
-    void done_platform_operation(mir_platform_operation_callback, void* context);
     bool validate_user_display_config(MirDisplayConfiguration* config);
 };
 

@@ -171,11 +171,6 @@ void mir_connection_get_available_surface_formats(
     MirConnection* connection, MirPixelFormat* formats,
     unsigned const int format_size, unsigned int *num_valid_formats);
 
-MirWaitHandle* mir_connection_platform_operation(
-    MirConnection* connection, unsigned int opcode,
-    MirPlatformMessage const* request,
-    mir_platform_operation_callback callback, void* context);
-
 #ifdef __cplusplus
 }
 /**@}*/

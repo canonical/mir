@@ -17,7 +17,6 @@
  */
 
 #include "stubbed_graphics_platform.h"
-#include "mir_test_framework/stub_graphics_platform_operation.h"
 
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/buffer_writer.h"
@@ -150,31 +149,10 @@ class StubIpcOps : public mg::PlatformIpcOperations
         return std::make_shared<mg::PlatformIPCPackage>();
     }
 
-    mg::PlatformOperationMessage platform_operation(
-         unsigned int const opcode, mg::PlatformOperationMessage const& message) override
+    mg::PlatformIPCPackage platform_operation(
+         unsigned int const, mg::PlatformIPCPackage const&) override
     {
-        if (opcode == static_cast<unsigned int>(mtf::StubGraphicsPlatformOperation::add))
-        {
-            if (message.data.size() != 2 * sizeof(int))
-            {
-                BOOST_THROW_EXCEPTION(
-                    std::runtime_error("Invalid parameters for 'add' platform operation"));
-            }
-
-            auto const int_data = reinterpret_cast<int const*>(message.data.data());
-
-            mg::PlatformOperationMessage reply;
-            reply.data.resize(sizeof(int));
-            *(reinterpret_cast<int*>(reply.data.data())) = int_data[0] + int_data[1];
-
-            return reply;
-        }
-        else
-        {
-            BOOST_THROW_EXCEPTION(
-                std::runtime_error("Invalid platform operation"));
-        }
-
+        return mg::PlatformIPCPackage();
     }
 };
 }

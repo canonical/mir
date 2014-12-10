@@ -20,7 +20,6 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/nested_context.h"
-#include "mir/graphics/platform_operation_message.h"
 #include "display_helpers.h"
 #include "drm_authentication.h"
 #include "drm_close_threadsafe.h"
@@ -76,19 +75,14 @@ void mgm::IpcOperations::unpack_buffer(BufferIpcMessage&, Buffer const&) const
 {
 }
 
-mg::PlatformOperationMessage mgm::IpcOperations::platform_operation(
-    unsigned int const, mg::PlatformOperationMessage const& request)
+mg::PlatformIPCPackage mgm::IpcOperations::platform_operation(
+    unsigned int const, mg::PlatformIPCPackage const& request)
 {
     int magic{0};
-    if (request.data.size() == sizeof(int))
-        magic = *reinterpret_cast<int const*>(request.data.data());
+    if (request.ipc_data.size() > 0)
+        magic = request.ipc_data[0];
     drm_auth->auth_magic(magic);
-
-    mg::PlatformOperationMessage response;
-    response.data.resize(sizeof(int));
-    *reinterpret_cast<int*>(response.data.data()) = 0;
-
-    return response;
+    return mg::PlatformIPCPackage{{0},{}};
 }
 
 std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_package()
