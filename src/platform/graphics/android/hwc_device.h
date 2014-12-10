@@ -41,9 +41,10 @@ class HwcWrapper;
 class HwcDevice : public HWCCommonDevice
 {
 public:
-    HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
-              std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
-              std::shared_ptr<SyncFileOps> const& sync_ops);
+    HwcDevice(
+        std::shared_ptr<HwcWrapper> const& hwc_wrapper,
+        std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
+        std::shared_ptr<LayerAdapter> const& layer_adapter);
 
     virtual void post_gl(SwappingGLContext const& context) override;
     virtual bool post_overlays(

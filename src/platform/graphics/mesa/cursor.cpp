@@ -35,8 +35,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
-int const buffer_width = 64;
-int const buffer_height = 64;
+const uint64_t requested_cursor_size = 64;
 
 // Transforms a relative position within the display bounds described by \a rect which is rotated with \a orientation
 geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement const& vector, MirOrientation orientation)
@@ -59,10 +58,10 @@ geom::Displacement transform(geom::Rectangle const& rect, geom::Displacement con
 mgm::Cursor::GBMBOWrapper::GBMBOWrapper(gbm_device* gbm) :
     buffer(gbm_bo_create(
                 gbm,
-                buffer_width,
-                buffer_height,
+                requested_cursor_size,
+                requested_cursor_size,
                 GBM_FORMAT_ARGB8888,
-                GBM_BO_USE_CURSOR_64X64 | GBM_BO_USE_WRITE))
+                GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE))
 {
     if (!buffer) BOOST_THROW_EXCEPTION(std::runtime_error("failed to create gbm buffer"));
 }
@@ -79,6 +78,8 @@ mgm::Cursor::Cursor(
         current_position(),
         visible(true),
         buffer(gbm),
+        buffer_width(gbm_bo_get_width(buffer)),
+        buffer_height(gbm_bo_get_height(buffer)),
         current_configuration(current_configuration)
 {
     show(*initial_image);

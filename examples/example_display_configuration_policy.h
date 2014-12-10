@@ -25,6 +25,8 @@
 
 namespace mir
 {
+class Server;
+
 namespace examples
 {
 extern char const* const display_config_opt;
@@ -66,6 +68,7 @@ private:
     bool const with_alpha;
 };
 
+void add_display_configuration_options_to(Server& server);
 }
 }
 

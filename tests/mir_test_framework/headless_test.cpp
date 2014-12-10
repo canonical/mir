@@ -141,8 +141,12 @@ auto mtf::HeadlessTest::connection(mir::Fd fd) -> std::string
     return connect_string;
 }
 
+void mtf::HeadlessTest::preset_display(std::shared_ptr<mir::graphics::Display> const& display)
+{
+    mtf::set_next_preset_display(display);
+}
+
 void mtf::HeadlessTest::initial_display_layout(std::vector<geom::Rectangle> const& display_rects)
 {
     mtf::set_next_display_rects(std::unique_ptr<std::vector<geom::Rectangle>>(new std::vector<geom::Rectangle>(display_rects)));
 }
-

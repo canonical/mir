@@ -104,6 +104,7 @@ target_link_libraries(
   mirplatformgraphicsstub
 
   mir-test-framework
+  mir-test-doubles
 )
 
 set_target_properties(

@@ -43,5 +43,7 @@ std::shared_ptr<mg::Platform> make_stubbed_server_graphics_platform(std::vector<
 
 void set_next_display_rects(std::unique_ptr<std::vector<geom::Rectangle>>&& display_rects);
 
+void set_next_preset_display(std::shared_ptr<mir::graphics::Display> const& display);
+ 
 }
 #endif /* MIR_TEST_FRAMEWORK_STUB_SERVER_PLATFORM_FACTORY_ */

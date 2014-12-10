@@ -124,15 +124,6 @@ target_link_libraries(mir_demo_standalone_render_to_fb
     ${Boost_LIBRARIES}
 )
 
-mir_add_wrapped_executable(mir_demo_standalone_input_filter
-  demo_input_filter.cpp
-)
-
-target_link_libraries(mir_demo_standalone_input_filter
-  mirserver
-  exampleserverconfig
-)
-
 mir_add_wrapped_executable(mir_demo_server_basic
   basic_server.cpp
   glog_logger.cpp

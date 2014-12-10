@@ -61,3 +61,12 @@ void mtf::set_next_display_rects(std::unique_ptr<std::vector<geom::Rectangle>>&&
 
     rect_setter(std::move(display_rects));
 }
+
+void mtf::set_next_preset_display(std::shared_ptr<mir::graphics::Display> const& display)
+{
+    ensure_platform_library();
+
+    auto display_setter = platform_lib->load_function<void(*)(std::shared_ptr<mir::graphics::Display> const&)>("set_next_preset_display");
+
+    display_setter(display);
+}

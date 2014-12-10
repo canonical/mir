@@ -27,7 +27,6 @@ add_library(
   real_kms_output_container.cpp
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
-  internal_native_display.cpp
   drm_close_threadsafe.cpp
   native_platform.cpp
   anonymous_shm_file.cpp

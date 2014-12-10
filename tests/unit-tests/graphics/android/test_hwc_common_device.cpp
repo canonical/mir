@@ -61,8 +61,8 @@ std::shared_ptr<mga::HWCCommonDevice> make_hwc_device<mga::HwcDevice>(
     std::shared_ptr<framebuffer_device_t> const&,
     std::shared_ptr<mga::HWCVsyncCoordinator> const& coordinator)
 {
-    auto file_ops = std::make_shared<mga::RealSyncFileOps>();
-    return std::make_shared<mga::HwcDevice>(hwc_device, coordinator, file_ops);
+    return std::make_shared<mga::HwcDevice>(
+        hwc_device, coordinator, std::make_shared<mga::IntegerSourceCrop>());
 }
 
 template<typename T>
