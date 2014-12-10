@@ -73,7 +73,7 @@ Description: Display server for Ubuntu - server library
  .
  Contains the shared library needed by server applications for Mir.
 
-Package: libmirplatform6
+Package: libmirplatform5
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -108,7 +108,7 @@ Section: libdevel
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirplatform6 (= ${binary:Version}), 
+Depends: libmirplatform5 (= ${binary:Version}), 
          libmircommon-dev,
          libboost-program-options-dev,
          ${misc:Depends},
@@ -293,7 +293,7 @@ Description: Display server for Ubuntu - client platform library for Android
  Contains the shared libraries required for the Mir clients to interact with
  the underlying hardware platform using the Android drivers.
 
-Package: libmirplatform6driver-mesa
+Package: libmirplatform5driver-mesa
 Section: libs
 Architecture: i386 amd64 armhf arm64
 Multi-Arch: same
@@ -307,7 +307,7 @@ Description: Display server for Ubuntu - platform library for Mesa
  Contains the shared libraries required for the Mir server to interact with
  the hardware platform using the Mesa drivers.
 
-Package: libmirplatform6driver-android
+Package: libmirplatform5driver-android
 Section: libs
 Architecture: i386 amd64 armhf
 Multi-Arch: same
