@@ -37,6 +37,7 @@
 #include "mir/graphics/pixel_format_utils.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/graphics/platform_operation_message.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/screencast.h"
@@ -591,12 +592,22 @@ void mf::SessionMediator::drm_auth_magic(
 
     //TODO: the opcode should be provided as part of the request, and should be opaque to the server code.
     unsigned int const made_up_opcode{0};
-    mg::PlatformIPCPackage platform_request{{static_cast<int32_t>(request->magic())},{}};
+    mg::PlatformOperationMessage platform_request;
+
+    auto const magic = request->magic();
+    platform_request.data.resize(sizeof(int));
+    auto const data_ptr = reinterpret_cast<int*>(platform_request.data.data());
+    *data_ptr = magic;
+
     try
     {
         auto platform_response = ipc_operations->platform_operation(made_up_opcode, platform_request);
-        if (platform_response.ipc_data.size() > 0)
-            response->set_status_code(platform_response.ipc_data[0]);
+        if (platform_response.data.size() >= sizeof(int))
+        {
+            auto const status =
+                *reinterpret_cast<int const*>(platform_response.data.data());
+            response->set_status_code(status);
+        }
     }
     catch (std::exception const& e)
     {
@@ -607,6 +618,34 @@ void mf::SessionMediator::drm_auth_magic(
         else
             throw;
     }
+
+    done->Run();
+}
+
+void mf::SessionMediator::platform_operation(
+    google::protobuf::RpcController* /*controller*/,
+    mir::protobuf::PlatformOperationMessage const* request,
+    mir::protobuf::PlatformOperationMessage* response,
+    google::protobuf::Closure* done)
+{
+    {
+        std::unique_lock<std::mutex> lock(session_mutex);
+        auto session = weak_session.lock();
+
+        if (session.get() == nullptr)
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+    }
+
+    mg::PlatformOperationMessage platform_request;
+    unsigned int const opcode = request->opcode();
+    platform_request.data.assign(request->data().begin(),
+                                 request->data().end());
+
+    auto const& platform_response = ipc_operations->platform_operation(opcode, platform_request);
+
+    response->set_opcode(opcode);
+    response->set_data(platform_response.data.data(),
+                       platform_response.data.size());
 
     done->Run();
 }
