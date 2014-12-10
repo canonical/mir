@@ -142,6 +142,10 @@ std::shared_ptr<mg::NativeBuffer> mga::Buffer::native_buffer_handle() const
 
 void mga::Buffer::write(unsigned char const* data, size_t data_size)
 {
+    std::unique_lock<std::mutex> lk(content_lock);
+
+    native_buffer->ensure_available_for(mga::BufferAccess::write);
+    
     size_t buffer_size_bytes = stride().as_int() * size().height.as_int();
     if (buffer_size_bytes != data_size)
         BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
