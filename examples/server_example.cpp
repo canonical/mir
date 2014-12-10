@@ -19,6 +19,7 @@
 #include "server_example_log_options.h"
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
+#include "server_example_fullscreen_placement_strategy.h"
 #include "server_example_display_configuration_policy.h"
 
 #include "mir/server.h"
@@ -86,6 +87,7 @@ try
     // Add example options for display layout, logging, launching clients and timeout
     me::add_display_configuration_options_to(server);
     me::add_glog_options_to(server);
+    me::add_fullscreen_option_to(server);
     add_launcher_option_to(server);
     add_timeout_option_to(server);
 
