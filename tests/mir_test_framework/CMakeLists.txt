@@ -88,6 +88,7 @@ add_library(
 
 target_link_libraries(mirplatformstub 
   mir-test-doubles
+  mir-test
 )
 
 set_target_properties(mirplatformstub

@@ -640,12 +640,19 @@ void mf::SessionMediator::platform_operation(
     unsigned int const opcode = request->opcode();
     platform_request.data.assign(request->data().begin(),
                                  request->data().end());
+    platform_request.fds.assign(request->fd().begin(),
+                                request->fd().end());
 
     auto const& platform_response = ipc_operations->platform_operation(opcode, platform_request);
 
     response->set_opcode(opcode);
     response->set_data(platform_response.data.data(),
                        platform_response.data.size());
+    for (auto fd : platform_response.fds)
+    {
+        response->add_fd(fd);
+        resource_cache->save_fd(response, mir::Fd{fd});
+    }
 
     done->Run();
 }

@@ -22,7 +22,11 @@
 namespace mir_test_framework
 {
 
-enum class StubGraphicsPlatformOperation : unsigned int { add = 13 };
+enum class StubGraphicsPlatformOperation : unsigned int
+{
+    add = 13,
+    echo_fd = 15
+};
 
 }
 

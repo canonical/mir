@@ -36,6 +36,12 @@ typedef struct
     size_t const size;
 } MirPlatformMessageData;
 
+typedef struct
+{
+    int const* const fds;
+    size_t const num_fds;
+} MirPlatformMessageFds;
+
 /**
  * Create a platform message to use with mir_connection_platform_operation().
  *
@@ -66,6 +72,23 @@ void mir_platform_message_release(MirPlatformMessage const* message);
 void mir_platform_message_set_data(MirPlatformMessage* message, void const* data, size_t data_size);
 
 /**
+ * Sets the fds associated with a message.
+ *
+ * The fd array is copied into the message, but the message does not take
+ * ownership of the fds, i.e., the caller is responsible for keeping
+ * the fds open for as long as this message needs to remain valid.
+ *
+ * Note that the fds associated with a message are not closed when the message
+ * is released. The caller is responsible for closing the fds when the message
+ * doesn't need them anymore (see also mir_platform_message_get_fds()).
+ *
+ *   \param [in] message   The MirPlatformMessage
+ *   \param [in] fds       Pointer to the array of fds
+ *   \param [in] num_fds   The number of fds
+ */
+void mir_platform_message_set_fds(MirPlatformMessage* message, int const* fds, size_t num_fds);
+
+/**
  * Get the opcode of a message.
  *
  *   \param [in] message   The MirPlatformMessage
@@ -76,14 +99,30 @@ unsigned int mir_platform_message_get_opcode(MirPlatformMessage const* message);
 /**
  * Get the data associated with a message.
  *
- * The returned data is owned by the message and is valid only as long as the
- * message is valid and mir_platform_set_data() is not called. You must not
- * change or free the returned data.
+ * The memory holding the returned data array is owned by the message and is
+ * valid only as long as the message is valid and mir_platform_set_data() is
+ * not called. You must not change or free the returned data array.
  *
  *   \param [in] message   The MirPlatformMessage
  *   \return               The data
  */
 MirPlatformMessageData mir_platform_message_get_data(MirPlatformMessage const* message);
+
+/**
+ * Gets the fds associated with a message.
+ *
+ * The memory of the returned fd array is owned by the message and is valid
+ * only as long as the message is valid and mir_platform_set_fds() is not
+ * called. You must not change or free the returned fd array.
+ *
+ * Note that the fds associated with a message will not be closed when the
+ * message is released. Users are responsible for getting and closing the
+ * fds to avoid leaks.
+ *
+ *   \param [in] message   The MirPlatformMessage
+ *   \return               The fds
+ */
+MirPlatformMessageFds mir_platform_message_get_fds(MirPlatformMessage const* message);
 
 #ifdef __cplusplus
 }

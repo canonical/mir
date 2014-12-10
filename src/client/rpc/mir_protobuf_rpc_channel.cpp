@@ -113,6 +113,7 @@ void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Mes
     mir::protobuf::Buffer* buffer = nullptr;
     mir::protobuf::Platform* platform = nullptr;
     mir::protobuf::SocketFD* socket_fd = nullptr;
+    mir::protobuf::PlatformOperationMessage* platform_operation_message = nullptr;
 
     if (message_type == "mir.protobuf.Buffer")
     {
@@ -144,11 +145,17 @@ void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Mes
     {
         socket_fd = static_cast<mir::protobuf::SocketFD*>(response);
     }
+    else if (message_type == "mir.protobuf.PlatformOperationMessage")
+    {
+        platform_operation_message =
+            static_cast<mir::protobuf::PlatformOperationMessage*>(response);
+    }
 
     receive_any_file_descriptors_for(surface);
     receive_any_file_descriptors_for(buffer);
     receive_any_file_descriptors_for(platform);
     receive_any_file_descriptors_for(socket_fd);
+    receive_any_file_descriptors_for(platform_operation_message);
     complete->Run();
 }
 
@@ -165,6 +172,13 @@ void mclr::MirProtobufRpcChannel::CallMethod(
     {
         auto const* buffer = reinterpret_cast<mir::protobuf::BufferRequest const*>(parameters);
         for (auto& fd : buffer->buffer().fd())
+            fds.emplace_back(mir::Fd{IntOwnedFd{fd}});
+    }
+    else if (parameters->GetTypeName() == "mir.protobuf.PlatformOperationMessage")
+    {
+        auto const* request =
+            reinterpret_cast<mir::protobuf::PlatformOperationMessage const*>(parameters);
+        for (auto& fd : request->fd())
             fds.emplace_back(mir::Fd{IntOwnedFd{fd}});
     }
 
