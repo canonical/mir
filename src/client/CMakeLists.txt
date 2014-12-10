@@ -78,6 +78,7 @@ add_library(mirclientobjects OBJECT
   mir_event_distributor.cpp
   probing_client_platform_factory.cpp
   periodic_perf_report.cpp
+  mir_platform_message_api.cpp
 )
 
 add_library(mirclient SHARED
@@ -92,8 +93,7 @@ set_target_properties(mirclient
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
-target_link_libraries(
-  mirclient
+target_link_libraries(mirclient
 
   mirclientrpc
   mirclientlttngstatic

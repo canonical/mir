@@ -22,6 +22,7 @@
 #include "mir/shell/surface_coordinator_wrapper.h"
 
 #include "mir_test_framework/connected_client_headless_server.h"
+#include "mir_test_framework/any_surface.h"
 
 #include "mir_test/validity_matchers.h"
 
@@ -119,17 +120,15 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
     {
         auto const& mode = output.modes[output.current_mode];
 
-        MirSurfaceParameters const request_params =
-        {
-            __PRETTY_FUNCTION__,
+        auto spec = mir_connection_create_spec_for_normal_surface(connection, 
             static_cast<int>(mode.horizontal_resolution) - 1,
             static_cast<int>(mode.vertical_resolution) + 1,
-            mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware,
-            output.output_id
-        };
+            mir_pixel_format_abgr_8888);
+        mir_surface_spec_set_fullscreen_on_output(spec, output.output_id);
+        
+        auto surface_raw = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
 
-        auto surface_raw = mir_connection_create_surface_sync(connection, &request_params);
         return shared_ptr_surface(surface_raw);
     }
 
@@ -137,17 +136,15 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
     {
         auto const& mode = output.modes[output.current_mode];
 
-        MirSurfaceParameters const request_params =
-        {
-            __PRETTY_FUNCTION__,
+        auto spec = mir_connection_create_spec_for_normal_surface(connection,
             static_cast<int>(mode.horizontal_resolution),
             static_cast<int>(mode.vertical_resolution),
-            mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware,
-            output.output_id
-        };
+            mir_pixel_format_abgr_8888);
+        mir_surface_spec_set_fullscreen_on_output(spec, output.output_id);
 
-        auto surface_raw = mir_connection_create_surface_sync(connection, &request_params);
+        auto surface_raw = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
+
         return shared_ptr_surface(surface_raw);
     }
 
