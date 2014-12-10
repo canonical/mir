@@ -25,7 +25,7 @@
 namespace me = mir::examples;
 namespace ml = mir::logging;
 
-///\example server_example_log_options.pp
+///\example server_example_log_options.cpp
 /// Demonstrate adding custom logging options to a server (using glog as the example)
 void me::add_glog_options_to(mir::Server& server)
 {
