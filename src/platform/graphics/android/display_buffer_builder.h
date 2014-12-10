@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_BUILDER_H_
-#define MIR_GRAPHICS_ANDROID_DISPLAY_BUILDER_H_
+#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_BUILDER_H_
+#define MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_BUILDER_H_
 
 #include "configurable_display_buffer.h"
 #include "mir_toolkit/common.h"
@@ -32,23 +32,23 @@ namespace android
 {
 class GLContext;
 
-class DisplayBuilder
+class DisplayBufferBuilder
 {
 public:
-    virtual ~DisplayBuilder() = default;
+    virtual ~DisplayBufferBuilder() = default;
 
     virtual MirPixelFormat display_format() = 0;
     virtual std::unique_ptr<ConfigurableDisplayBuffer> create_display_buffer(
         GLProgramFactory const& gl_program_factory, GLContext const& gl_context) = 0;
 
 protected:
-    DisplayBuilder() = default;
-    DisplayBuilder(DisplayBuilder const&) = delete;
-    DisplayBuilder& operator=(DisplayBuilder const&) = delete;
+    DisplayBufferBuilder() = default;
+    DisplayBufferBuilder(DisplayBufferBuilder const&) = delete;
+    DisplayBufferBuilder& operator=(DisplayBufferBuilder const&) = delete;
 };
 
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_BUILDER_H_ */
+#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_BUILDER_H_ */

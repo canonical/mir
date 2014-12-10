@@ -38,9 +38,10 @@ struct Displacement
     template<typename DeltaXType, typename DeltaYType>
     Displacement(DeltaXType&& dx, DeltaYType&& dy) : dx{dx}, dy{dy} {}
 
-    float length_squared() const
+    long long length_squared() const
     {
-        return dx.as_float() * dx.as_float() + dy.as_float() * dy.as_float();
+        long long x = dx.as_int(), y = dy.as_int();
+        return x * x + y * y;
     }
 
     DeltaX dx;

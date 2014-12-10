@@ -36,22 +36,15 @@ class NativePlatform : public graphics::NativePlatform
 {
 public:
     NativePlatform(std::shared_ptr<NestedContext> const& nested_context_arg);
-    virtual ~NativePlatform();
 
     std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() override;
     std::shared_ptr<graphics::BufferWriter> make_buffer_writer() override;
     std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
     
-    static std::shared_ptr<InternalNativeDisplay> internal_native_display();
-    static bool internal_native_display_in_use();
-
 private:
     std::shared_ptr<NestedContext> nested_context;
     helpers::GBMHelper gbm;
     std::shared_ptr<PlatformIpcOperations> ipc_ops;
-
-    static std::shared_ptr<InternalNativeDisplay> ensure_internal_native_display(std::shared_ptr<PlatformIPCPackage> const& package);
-    static void finish_internal_native_display();
 };
 }
 }

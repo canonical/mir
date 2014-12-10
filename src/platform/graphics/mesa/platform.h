@@ -47,7 +47,6 @@ public:
                       std::shared_ptr<VirtualTerminal> const& vt,
                       EmergencyCleanupRegistry& emergency_cleanup_registry,
                       BypassOption bypass_option);
-    ~Platform();
 
     /* From Platform */
     std::shared_ptr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
@@ -69,10 +68,6 @@ public:
     std::shared_ptr<VirtualTerminal> const vt;
 
     BypassOption bypass_option() const;
-
-    //connection shared by all internal clients
-    static bool internal_display_clients_present;
-    static std::shared_ptr<InternalNativeDisplay> internal_native_display;
 private:
     BypassOption const bypass_option_;
 };
