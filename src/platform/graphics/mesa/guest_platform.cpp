@@ -27,7 +27,6 @@
 #include "mir/graphics/nested_context.h"
 
 #include "nested_authentication.h"
-#include "internal_native_display.h"
 
 #include "ipc_operations.h"
 
@@ -51,11 +50,6 @@ mgm::GuestPlatform::GuestPlatform(std::shared_ptr<NestedContext> const& nested_c
         std::make_shared<mgm::NestedAuthentication>(nested_context)); 
 }
 
-mgm::GuestPlatform::~GuestPlatform()
-{
-    finish_internal_native_display();
-}
-
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::GuestPlatform::create_buffer_allocator()
 {
     return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited);
@@ -72,33 +66,6 @@ namespace
 {
 std::shared_ptr<mgm::InternalNativeDisplay> native_display = nullptr;
 std::mutex native_display_guard;
-}
-
-bool mgm::GuestPlatform::internal_native_display_in_use()
-{
-    std::unique_lock<std::mutex> lg(native_display_guard);
-    return native_display != nullptr;
-}
-
-std::shared_ptr<mgm::InternalNativeDisplay> mgm::GuestPlatform::internal_native_display()
-{
-    std::unique_lock<std::mutex> lg(native_display_guard);
-    return native_display;
-}
-
-std::shared_ptr<mgm::InternalNativeDisplay> mgm::GuestPlatform::ensure_internal_native_display(
-    std::shared_ptr<mg::PlatformIPCPackage> const& package)
-{
-    std::unique_lock<std::mutex> lg(native_display_guard);
-    if (!native_display)
-        native_display = std::make_shared<mgm::InternalNativeDisplay>(package);
-    return native_display;
-}
-
-void mgm::GuestPlatform::finish_internal_native_display()
-{
-    std::unique_lock<std::mutex> lg(native_display_guard);
-    native_display.reset();
 }
 
 std::shared_ptr<mg::BufferWriter> mgm::GuestPlatform::make_buffer_writer()

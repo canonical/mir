@@ -82,16 +82,11 @@ struct InputClient
         auto const connection =
             mir_connect_sync(connect_string.c_str(), client_name.c_str());
 
-        MirSurfaceParameters const request_params =
-        {
-            client_name.c_str(),
-            surface_width, surface_height,
-            mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware,
-            mir_display_output_id_invalid
-        };
-        auto const surface =
-            mir_connection_create_surface_sync(connection, &request_params);
+        auto spec = mir_connection_create_spec_for_normal_surface(connection, surface_width,
+            surface_height, mir_pixel_format_bgr_888);
+        mir_surface_spec_set_name(spec, client_name.c_str());
+        auto surface = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
 
         MirEventDelegate const event_delegate { handle_input, this };
         mir_surface_set_event_handler(surface, &event_delegate);

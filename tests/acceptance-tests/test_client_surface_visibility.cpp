@@ -130,17 +130,12 @@ struct MirSurfaceVisibilityEvent : mtf::ConnectedClientWithASurface
 
     void create_larger_surface_on_top()
     {
-        MirSurfaceParameters const request_params =
-        {
-            __PRETTY_FUNCTION__,
-            800, 600,
-            mir_pixel_format_bgr_888,
-            mir_buffer_usage_hardware,
-            mir_display_output_id_invalid
-        };
+        auto spec = mir_connection_create_spec_for_normal_surface(connection, 800, 600, mir_pixel_format_bgr_888);
 
-        second_surface = mir_connection_create_surface_sync(connection, &request_params);
+        second_surface = mir_surface_create_sync(spec);
         ASSERT_TRUE(mir_surface_is_valid(second_surface));
+    
+        mir_surface_spec_release(spec);
 
         server.the_surface_coordinator()->raise(server_surface(1));
 
