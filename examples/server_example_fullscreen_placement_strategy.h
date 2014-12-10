@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -25,13 +25,15 @@
 
 namespace mir
 {
+class Server;
+
 namespace shell
 {
 class DisplayLayout;
 }
+
 namespace examples
 {
-
 class FullscreenPlacementStrategy : public scene::PlacementStrategy
 {
 public:
@@ -48,6 +50,7 @@ private:
     std::shared_ptr<shell::DisplayLayout> const display_layout;
 };
 
+void add_fullscreen_option_to(Server& server);
 }
 } // namespace mir
 
