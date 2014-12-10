@@ -19,25 +19,20 @@
 
 #include "clients.h"
 #include "mir_test_framework/testing_process_manager.h"
+#include "mir_test_framework/any_surface.h"
 
 #include <gtest/gtest.h>
 
-char const* const mir_test_framework::mir_test_socket = mir_test_framework::test_socket_file().c_str();
+namespace mtf = mir_test_framework;
 
-void mir_test_framework::SurfaceCreatingClient::exec()
+char const* const mtf::mir_test_socket = mtf::test_socket_file().c_str();
+
+void mtf::SurfaceCreatingClient::exec()
 {
     connection = mir_connect_sync(
         mir_test_socket,
         __PRETTY_FUNCTION__);
     ASSERT_TRUE(connection != NULL);
-    MirSurfaceParameters const request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-    surface = mir_connection_create_surface_sync(connection, &request_params);
+    surface = mtf::make_any_surface(connection);
     mir_connection_release(connection);
 }

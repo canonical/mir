@@ -141,7 +141,7 @@ std::ostream& operator<<(std::ostream& str, mga::OverlayOptimization opt)
 }
 }
 
-void mga::HwcFormattedLogger::log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const
+void mga::HwcFormattedLogger::report_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const
 {
     std::cout << "before prepare():" << std::endl
               << " # | pos {l,t,r,b}         | crop {l,t,r,b}        | transform | blending | "
@@ -160,7 +160,7 @@ void mga::HwcFormattedLogger::log_list_submitted_to_prepare(hwc_display_contents
                   << std::endl;
 }
 
-void mga::HwcFormattedLogger::log_prepare_done(hwc_display_contents_1_t const& list) const
+void mga::HwcFormattedLogger::report_prepare_done(hwc_display_contents_1_t const& list) const
 {
     std::cout << "after prepare():" << std::endl
               << " # | Type      | " << std::endl;
@@ -172,7 +172,7 @@ void mga::HwcFormattedLogger::log_prepare_done(hwc_display_contents_1_t const& l
                   << std::endl;
 }
 
-void mga::HwcFormattedLogger::log_set_list(hwc_display_contents_1_t const& list) const
+void mga::HwcFormattedLogger::report_set_list(hwc_display_contents_1_t const& list) const
 {
     std::cout << "set list():" << std::endl
               << " # | handle" << std::endl;
@@ -184,59 +184,67 @@ void mga::HwcFormattedLogger::log_set_list(hwc_display_contents_1_t const& list)
                   << std::endl;
 }
 
-void mga::HwcFormattedLogger::log_overlay_optimization(OverlayOptimization overlay_optimization) const
+void mga::HwcFormattedLogger::report_overlay_optimization(OverlayOptimization overlay_optimization) const
 {
     std::cout << "HWC overlay optimizations are " << overlay_optimization << std::endl;
 }
 
-void mga::HwcFormattedLogger::log_display_on() const
+void mga::HwcFormattedLogger::report_display_on() const
 {
     std::cout << "HWC: display on" << std::endl;
 }
 
-void mga::HwcFormattedLogger::log_display_off() const
+void mga::HwcFormattedLogger::report_display_off() const
 {
     std::cout << "HWC: display off" << std::endl;
 }
 
-void mga::HwcFormattedLogger::log_vsync_on() const
+void mga::HwcFormattedLogger::report_vsync_on() const
 {
     std::cout << "HWC: vsync signal on" << std::endl;
 }
 
-void mga::HwcFormattedLogger::log_vsync_off() const
+void mga::HwcFormattedLogger::report_vsync_off() const
 {
     std::cout << "HWC: vsync signal off" << std::endl;
 }
 
-void mga::NullHwcLogger::log_list_submitted_to_prepare(hwc_display_contents_1_t const&) const
+void mga::HwcFormattedLogger::report_hwc_version(uint32_t version) const
 {
+    std::cout << "HWC version ";
+    switch (version)
+    {
+        case HWC_DEVICE_API_VERSION_1_0:
+            std::cout << "1.0";
+            break;
+        case HWC_DEVICE_API_VERSION_1_1:
+            std::cout << "1.1";
+            break;
+        case HWC_DEVICE_API_VERSION_1_2:
+            std::cout << "1.2";
+            break;
+        case HWC_DEVICE_API_VERSION_1_3:
+            std::cout << "1.3";
+            break;
+        default:
+            std::cout << "unknown (0x" << std::hex << version << std::dec << ")";
+            break;
+    }
+    std::cout << std::endl;
 }
 
-void mga::NullHwcLogger::log_prepare_done(hwc_display_contents_1_t const&) const
+void mga::HwcFormattedLogger::report_legacy_fb_module() const
 {
+    std::cout << "Legacy FB module" << std::endl;
 }
 
-void mga::NullHwcLogger::log_set_list(hwc_display_contents_1_t const&) const
-{
-}
-
-void mga::NullHwcLogger::log_overlay_optimization(OverlayOptimization) const
-{
-}
-
-void mga::NullHwcLogger::log_display_on() const
-{
-}
-
-void mga::NullHwcLogger::log_display_off() const
-{
-}
-
-void mga::NullHwcLogger::log_vsync_on() const
-{
-}
-
-void mga::NullHwcLogger::log_vsync_off() const
-{
-}
+void mga::NullHwcReport::report_list_submitted_to_prepare(hwc_display_contents_1_t const&) const {}
+void mga::NullHwcReport::report_prepare_done(hwc_display_contents_1_t const&) const {}
+void mga::NullHwcReport::report_set_list(hwc_display_contents_1_t const&) const {}
+void mga::NullHwcReport::report_overlay_optimization(OverlayOptimization) const {}
+void mga::NullHwcReport::report_display_on() const {}
+void mga::NullHwcReport::report_display_off() const {}
+void mga::NullHwcReport::report_vsync_on() const {}
+void mga::NullHwcReport::report_vsync_off() const {}
+void mga::NullHwcReport::report_hwc_version(uint32_t) const {}
+void mga::NullHwcReport::report_legacy_fb_module() const {}

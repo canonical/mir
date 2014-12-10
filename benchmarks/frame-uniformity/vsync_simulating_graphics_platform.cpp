@@ -28,6 +28,7 @@
 
 #include <chrono>
 #include <functional>
+#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -65,9 +66,10 @@ class StubIpcOps : public mg::PlatformIpcOperations
         return package;
     }
 
-    mg::PlatformIPCPackage platform_operation(unsigned int const, mg::PlatformIPCPackage const&) override
+    mg::PlatformOperationMessage platform_operation(const unsigned int,
+                                                    mg::PlatformOperationMessage const&) override
     {
-        return mg::PlatformIPCPackage();
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Stub platform has no operations"}));
     }
 };
 

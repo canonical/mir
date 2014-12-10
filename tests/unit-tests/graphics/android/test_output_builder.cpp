@@ -30,6 +30,7 @@
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test_doubles/mock_hwc_report.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_gl_program_factory.h"
 #include <system/window.h>
@@ -109,152 +110,77 @@ public:
     mga::PbufferGLContext gl_context{
         mga::to_mir_format(mock_egl.fake_visual_id), stub_gl_config, mock_display_report};
     mtd::StubGLProgramFactory const stub_program_factory;
-    std::shared_ptr<mga::HwcLogger> logger{std::make_shared<mga::NullHwcLogger>()};
+    std::shared_ptr<mtd::MockHwcReport> mock_hwc_report{
+        std::make_shared<testing::NiceMock<mtd::MockHwcReport>>()};
 };
 }
-TEST_F(OutputBuilder, hwc_version_10_success)
+
+TEST_F(OutputBuilder, builds_hwc_version_10)
 {
     using namespace testing;
-
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_0;
-
-    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_hwc_fb_device(_,_))
-        .Times(1);
-    EXPECT_CALL(mock_display_report, report_hwc_composition_in_use(1,0))
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
-        .Times(1);
+    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device());
+    EXPECT_CALL(*mock_resource_factory, create_fb_native_device());
+    EXPECT_CALL(*mock_resource_factory, create_hwc_fb_device(_,_));
+    EXPECT_CALL(*mock_hwc_report, report_hwc_version(HWC_DEVICE_API_VERSION_1_0));
+    EXPECT_CALL(*mock_resource_factory, create_native_window(_));
 
     mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report), mga::OverlayOptimization::disabled, logger);
+        mt::fake_shared(mock_buffer_allocator),
+        mock_resource_factory,
+        mga::OverlayOptimization::disabled,
+        mock_hwc_report);
     factory.create_display_buffer(stub_program_factory, gl_context);
 }
 
-TEST_F(OutputBuilder, hwc_version_10_failure_uses_gpu)
+TEST_F(OutputBuilder, builds_hwc_version_11_and_later)
 {
     using namespace testing;
+    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
+    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device());
+    EXPECT_CALL(*mock_resource_factory, create_hwc_device(_,_));
+    EXPECT_CALL(*mock_hwc_report, report_hwc_version(HWC_DEVICE_API_VERSION_1_1));
 
-    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_0;
+    mga::OutputBuilder factory(
+        mt::fake_shared(mock_buffer_allocator),
+        mock_resource_factory,
+        mga::OverlayOptimization::disabled,
+        mock_hwc_report);
+    factory.create_display_buffer(stub_program_factory, gl_context);
+}
 
+TEST_F(OutputBuilder, hwc_failure_falls_back_to_fb)
+{
+    using namespace testing;
     EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
-        .Times(1)
+        .WillOnce(Throw(std::runtime_error("")));
+    EXPECT_CALL(*mock_resource_factory, create_fb_native_device());
+    EXPECT_CALL(*mock_resource_factory, create_fb_device(_));
+    EXPECT_CALL(*mock_hwc_report, report_legacy_fb_module());
+    EXPECT_CALL(*mock_resource_factory, create_native_window(_));
+
+    mga::OutputBuilder factory(
+        mt::fake_shared(mock_buffer_allocator),
+        mock_resource_factory,
+        mga::OverlayOptimization::disabled,
+        mock_hwc_report);
+    factory.create_display_buffer(stub_program_factory, gl_context);
+}
+
+TEST_F(OutputBuilder, hwc_and_fb_failure_fatal)
+{
+    using namespace testing;
+    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
+    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
         .WillOnce(Throw(std::runtime_error("")));
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_fb_device(_))
-        .Times(1);
-    EXPECT_CALL(mock_display_report, report_gpu_composition_in_use())
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
-        .Times(1);
-
-    mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report), mga::OverlayOptimization::disabled, logger);
-    factory.create_display_buffer(stub_program_factory, gl_context);
-}
-
-TEST_F(OutputBuilder, hwc_version_11_success)
-{
-    using namespace testing;
-
-    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
-
-    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_hwc_device(_,_))
-        .Times(1);
-    EXPECT_CALL(mock_display_report, report_hwc_composition_in_use(1,1))
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
-        .Times(1);
-
-    mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report), mga::OverlayOptimization::disabled, logger);
-    factory.create_display_buffer(stub_program_factory, gl_context);
-}
-
-TEST_F(OutputBuilder, hwc_version_11_hwc_failure)
-{
-    using namespace testing;
-
-    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
-
-    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
-        .Times(1)
-        .WillOnce(Throw(std::runtime_error("")));
-    EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_fb_device(_))
-        .Times(1);
-    EXPECT_CALL(mock_display_report, report_gpu_composition_in_use())
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_native_window(_))
-        .Times(1);
-
-    mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report), mga::OverlayOptimization::disabled, logger);
-    factory.create_display_buffer(stub_program_factory, gl_context);
-}
-
-TEST_F(OutputBuilder, hwc_version_11_hwc_and_fb_failure_fatal)
-{
-    using namespace testing;
-
-    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
-
-    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
-        .Times(1)
-        .WillOnce(Throw(std::runtime_error("")));
-    EXPECT_CALL(*mock_resource_factory, create_fb_native_device())
-        .Times(1)
         .WillOnce(Throw(std::runtime_error("")));
 
     EXPECT_THROW({
         mga::OutputBuilder factory(
             mt::fake_shared(mock_buffer_allocator),
             mock_resource_factory,
-            mt::fake_shared(mock_display_report),
             mga::OverlayOptimization::disabled,
-            logger);
+            mock_hwc_report);
     }, std::runtime_error);
-}
-
-TEST_F(OutputBuilder, hwc_version_12)
-{
-    using namespace testing;
-
-    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_2;
-
-    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_hwc_device(_,_))
-        .Times(1);
-    EXPECT_CALL(mock_display_report, report_hwc_composition_in_use(1,2))
-        .Times(1);
-
-    mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report), mga::OverlayOptimization::disabled, logger);
-    factory.create_display_buffer(stub_program_factory, gl_context);
-}
-
-TEST_F(OutputBuilder, hwc_version_13)
-{
-    using namespace testing;
-
-    hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_3;
-
-    EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
-        .Times(1);
-    EXPECT_CALL(*mock_resource_factory, create_hwc_device(_,_))
-        .Times(1);
-    EXPECT_CALL(mock_display_report, report_hwc_composition_in_use(1,3))
-        .Times(1);
-
-    mga::OutputBuilder factory(
-        mt::fake_shared(mock_buffer_allocator),mock_resource_factory, mt::fake_shared(mock_display_report), mga::OverlayOptimization::disabled, logger);
-    factory.create_display_buffer(stub_program_factory, gl_context);
 }

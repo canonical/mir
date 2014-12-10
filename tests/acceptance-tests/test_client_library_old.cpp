@@ -17,6 +17,7 @@
  */
 
 #include "mir_test_framework/interprocess_client_server_test.h"
+#include "mir_test_framework/any_surface.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -71,16 +72,7 @@ TEST_F(ClientLibraryThread, handles_no_signals)
                 FAIL() << "Failed to send SIGIO signal";
 
             // Make a roundtrip to the server to ensure the SIGIO has time to be handled
-            MirSurfaceParameters const request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_software,
-                mir_display_output_id_invalid
-            };
-
-            MirSurface* surface = mir_connection_create_surface_sync(conn, &request_params);
+            auto surface = mtf::make_any_surface(conn);
             mir_surface_release_sync(surface);
             mir_connection_release(conn);
 
