@@ -26,10 +26,9 @@ fd6d86becfa5ffa367480fd2654180f6ffcbf059  include/common/mir_toolkit/input/touch
 871e609c0fed0d566ddbaaa8ac2d7cd5c06dd09a  include/platform/mir/abnormal_exit.h
 8f47feb6d983aa5c9ebd58e9d1524361c9f5e651  include/platform/mir/fatal.h
 05c154bbfa81e16795c18f27000711741d5592e0  include/platform/mir/graphics/buffer_basic.h
-54328767ca330ba166160a486bd0688406ab0222  include/platform/mir/graphics/buffer.h
+990c2c78f68214a54a1f92aa223813548af42998  include/platform/mir/graphics/buffer.h
 5875f13f5b029a4b5291e9baec3ae434b72be27c  include/platform/mir/graphics/buffer_id.h
 748f5c2aab11189aa02c4a89ab900561548e7304  include/platform/mir/graphics/buffer_properties.h
-44acfdf6d97069a910e192cba04cd0fe594cd68a  include/platform/mir/graphics/buffer_writer.h
 ffa857f624f1c8cbd50a190107137346fc3204d6  include/platform/mir/graphics/cursor.h
 fe2b5f13ccd3ec6b78d90d3abbb7d88b48238578  include/platform/mir/graphics/cursor_image.h
 986f5d0d8ea2c6a42cc320f468e682f81fec46ae  include/platform/mir/graphics/display_buffer.h
@@ -40,8 +39,8 @@ f53a0020b8f1bd4a941a201eb26271cffee0a7dd  include/platform/mir/graphics/display_
 5dc095474ef3e294c0aa4008e9ed997bdb21d34c  include/platform/mir/graphics/gl_config.h
 d0442a5d5d88a4be6e3e1f99e433c1c43a86bfce  include/platform/mir/graphics/gl_context.h
 979d2c1ac723ccef538d9a378228a02b0f173bd7  include/platform/mir/graphics/graphic_buffer_allocator.h
-9bbe7eef3a470d7c2daf74de2943a2d03f80aa20  include/platform/mir/graphics/native_platform.h
-3bd5f663b62fd1e4be92518a27ed5a0f6a82f20b  include/platform/mir/graphics/platform.h
+ee780513a8b2108056e75e162cb1e1e2dd52e266  include/platform/mir/graphics/native_platform.h
+60f4fa6b9fbc64f137884b81f1d2278369946a49  include/platform/mir/graphics/platform.h
 3b3463d2513f4c3985f2400496dab333518f9a13  include/platform/mir/graphics/platform_ipc_operations.h
 1b77fb3290af00dc7d1c11dcc5388972dacb9ec3  include/platform/mir/graphics/platform_ipc_package.h
 84c063346b3bd51b4624d9f940008d4c3f8be066  include/platform/mir/graphics/renderable.h

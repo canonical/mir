@@ -19,7 +19,6 @@
 #include "stubbed_graphics_platform.h"
 
 #include "mir/graphics/buffer_ipc_message.h"
-#include "mir/graphics/buffer_writer.h"
 #include "mir/graphics/native_platform.h"
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
@@ -188,18 +187,6 @@ std::shared_ptr<mg::Display> mtf::StubGraphicPlatform::create_display(
     return std::make_shared<mtd::StubDisplay>(display_rects);
 }
 
-std::shared_ptr<mg::BufferWriter> mtf::StubGraphicPlatform::make_buffer_writer()
-{
-    struct NullWriter : mg::BufferWriter
-    {
-        void write(mg::Buffer& /* buffer */,
-            unsigned char const* /* data */, size_t /* size */) override
-        {
-        }
-    };
-    return std::make_shared<NullWriter>();
-}
-
 namespace
 {
 std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
@@ -223,11 +210,6 @@ struct NativePlatformAdapter : mg::NativePlatform
     std::shared_ptr<mg::PlatformIpcOperations> make_ipc_operations() const override
     {
         return ipc_ops;
-    }
-
-    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
-    {
-        return adaptee->make_buffer_writer();
     }
 
     std::shared_ptr<mg::NestedContext> const context;

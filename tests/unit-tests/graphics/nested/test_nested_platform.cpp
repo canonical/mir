@@ -56,11 +56,6 @@ public:
     {
         return {};
     }
-
-    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
-    {
-        return {};
-    }
 };
 
 TEST(NestedGraphicsPlatform, egl_native_display_is_host_connection_native_display)

@@ -49,8 +49,6 @@ public:
 
     virtual std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const = 0;
 
-    virtual std::shared_ptr<BufferWriter> make_buffer_writer() = 0;
-
     virtual ~NativePlatform() = default;
     NativePlatform(NativePlatform const&) = delete;
     NativePlatform& operator=(NativePlatform const&) = delete;

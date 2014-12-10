@@ -23,6 +23,8 @@
 #include "mir/graphics/buffer_basic.h"
 #include "buffer_usage.h"
 
+#include <hardware/gralloc.h>
+
 #include <mutex>
 #include <condition_variable>
 #include <map>
@@ -57,7 +59,11 @@ public:
     //the fences associated with the buffer. You must close these fences
     std::shared_ptr<NativeBuffer> native_buffer_handle() const override;
 
+    void write(unsigned char const* pixels, size_t size) override;
+
 private:
+    gralloc_module_t const* hw_module;
+
     typedef std::pair<EGLDisplay, EGLContext> DispContextPair;
     std::map<DispContextPair,EGLImageKHR> egl_image_map;
 

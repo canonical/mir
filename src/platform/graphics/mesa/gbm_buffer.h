@@ -68,6 +68,8 @@ public:
 
     bool can_bypass() const override;
 
+    void write(unsigned char const* pixels, size_t size) override;
+
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;
     uint32_t bo_flags;
