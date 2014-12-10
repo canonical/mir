@@ -59,12 +59,12 @@ protected:
         /* note about fb_device: OMAP4 drivers seem to only be able to open fb once
            per process (repeated framebuffer_{open,close}() doesn't seem to work). once we
            figure out why, we can remove fb_device in the test fixture */
-        auto logger = std::make_shared<mga::NullHwcLogger>();
+        auto report = std::make_shared<mga::NullHwcReport>();
         auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
         auto null_display_report = mir::report::null_display_report();
         auto stub_gl_config = std::make_shared<mtd::StubGLConfig>();
         auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
-            buffer_allocator, display_resource_factory, null_display_report, mga::OverlayOptimization::enabled, logger);
+            buffer_allocator, display_resource_factory, mga::OverlayOptimization::enabled, report);
         auto program_factory = std::make_shared<mg::ProgramFactory>();
         display = std::make_shared<mga::Display>(
             display_buffer_factory, program_factory, stub_gl_config, null_display_report);

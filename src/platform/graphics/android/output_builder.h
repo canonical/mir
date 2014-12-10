@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_OUTPUT_BUILDER_H_
 #define MIR_GRAPHICS_ANDROID_OUTPUT_BUILDER_H_
 
-#include "display_builder.h"
+#include "display_buffer_builder.h"
 #include "overlay_optimization.h"
 #include "hardware/hwcomposer.h"
 #include "hardware/fb.h"
@@ -36,17 +36,16 @@ class DisplayResourceFactory;
 class GraphicBufferAllocator;
 class DisplayDevice;
 class HwcWrapper;
-class HwcLogger;
+class HwcReport;
 
-class OutputBuilder : public DisplayBuilder
+class OutputBuilder : public DisplayBufferBuilder
 {
 public:
     OutputBuilder(
         std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<DisplayResourceFactory> const& res_factory,
-        std::shared_ptr<DisplayReport> const& display_report,
         OverlayOptimization overlay_option,
-        std::shared_ptr<HwcLogger> const& logger);
+        std::shared_ptr<HwcReport> const& hwc_report);
 
     MirPixelFormat display_format();
     std::unique_ptr<ConfigurableDisplayBuffer> create_display_buffer(
@@ -56,7 +55,7 @@ public:
 private:
     std::shared_ptr<GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<DisplayResourceFactory> const res_factory;
-    std::shared_ptr<DisplayReport> const display_report;
+    std::shared_ptr<HwcReport> const hwc_report;
 
     std::shared_ptr<FramebufferBundle> framebuffers;
     bool force_backup_display;

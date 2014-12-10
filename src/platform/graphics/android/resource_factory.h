@@ -32,20 +32,21 @@ class ResourceFactory : public DisplayResourceFactory
 {
 public:
     //native allocations
-    std::shared_ptr<hwc_composer_device_1> create_hwc_native_device() const;
-    std::shared_ptr<framebuffer_device_t> create_fb_native_device() const;
+    std::shared_ptr<hwc_composer_device_1> create_hwc_native_device() const override;
+    std::shared_ptr<framebuffer_device_t> create_fb_native_device() const override;
 
     //devices
     std::shared_ptr<DisplayDevice> create_fb_device(
-        std::shared_ptr<framebuffer_device_t> const& fb_native_device) const;
+        std::shared_ptr<framebuffer_device_t> const& fb_native_device) const override;
     std::shared_ptr<DisplayDevice> create_hwc_device(
-        std::shared_ptr<HwcWrapper> const& hwc_native_device) const;
+        std::shared_ptr<HwcWrapper> const& hwc_native_device,
+        std::shared_ptr<LayerAdapter> const& layer_adapter) const override;
     std::shared_ptr<DisplayDevice> create_hwc_fb_device(
         std::shared_ptr<HwcWrapper> const& hwc_native_device,
-        std::shared_ptr<framebuffer_device_t> const& fb_native_device) const;
+        std::shared_ptr<framebuffer_device_t> const& fb_native_device) const override;
 
     std::shared_ptr<ANativeWindow> create_native_window(
-        std::shared_ptr<FramebufferBundle> const& fb_bundle) const;
+        std::shared_ptr<FramebufferBundle> const& fb_bundle) const override;
 };
 
 }

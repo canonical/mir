@@ -13,43 +13,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alberto Aguirre <alberto.aguirre@canonical.com>
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#ifndef EXAMPLE_INPUT_EVENT_FILTER_H_
+#define EXAMPLE_INPUT_EVENT_FILTER_H_
 
-#ifndef MIR_TEST_POPEN_H_
-#define MIR_TEST_POPEN_H_
+#include "mir/input/event_filter.h"
 
-#include <cstdio>
+#include <functional>
 #include <memory>
-#include <string>
 
 namespace mir
 {
-namespace test
+class Server;
+
+namespace examples
 {
-/**
- *  Popen - A popen c++ wrapper
- */
-class Popen
+class QuitFilter : public mir::input::EventFilter
 {
 public:
-    Popen(std::string const& cmd);
+    QuitFilter(std::function<void()> const& quit_action);
 
-    /**
-     * Read a line from the output of the executed command
-     * returns false if there is nothing more to read
-     */
-    bool get_line(std::string& line);
+    bool handle(MirEvent const& event) override;
 
 private:
-    Popen() = delete;
-    Popen(Popen const&) = delete;
-    Popen& operator=(Popen const&) = delete;
-    std::unique_ptr<std::FILE, void(*)(FILE* f)> raw_stream;
+    std::function<void()> const quit_action;
 };
 
+// Set up a Ctrl+Alt+BkSp => quit
+auto make_quit_filter_for(Server& server) -> std::shared_ptr<mir::input::EventFilter>;
 }
 }
 
-#endif
+#endif /* EXAMPLE_INPUT_EVENT_FILTER_H_ */
