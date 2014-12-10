@@ -126,9 +126,9 @@ TYPED_TEST(HWCCommon, registerst_hooks_and_turns_on_display)
     Sequence seq;
     EXPECT_CALL(*this->mock_device, register_hooks(_))
         .InSequence(seq);
-    EXPECT_CALL(*this->mock_device, display_on())
+    EXPECT_CALL(*this->mock_device, display_on(mga::DisplayName::primary))
         .InSequence(seq);
-    EXPECT_CALL(*this->mock_device, vsync_signal_on())
+    EXPECT_CALL(*this->mock_device, vsync_signal_on(mga::DisplayName::primary))
         .InSequence(seq);
 
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
@@ -153,13 +153,13 @@ TYPED_TEST(HWCCommon, test_hwc_deactivates_vsync_on_blank)
     using namespace testing;
 
     InSequence seq;
-    EXPECT_CALL(*this->mock_device, display_on())
+    EXPECT_CALL(*this->mock_device, display_on(mga::DisplayName::primary))
         .Times(1);
-    EXPECT_CALL(*this->mock_device, vsync_signal_on())
+    EXPECT_CALL(*this->mock_device, vsync_signal_on(mga::DisplayName::primary))
         .Times(1);
-    EXPECT_CALL(*this->mock_device, vsync_signal_off())
+    EXPECT_CALL(*this->mock_device, vsync_signal_off(mga::DisplayName::primary))
         .Times(1);
-    EXPECT_CALL(*this->mock_device, display_off())
+    EXPECT_CALL(*this->mock_device, display_off(mga::DisplayName::primary))
         .Times(1);
 
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
@@ -171,9 +171,9 @@ TYPED_TEST(HWCCommon, test_hwc_display_is_deactivated_on_destroy)
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
 
     testing::InSequence seq;
-    EXPECT_CALL(*this->mock_device, vsync_signal_off())
+    EXPECT_CALL(*this->mock_device, vsync_signal_off(mga::DisplayName::primary))
         .Times(1);
-    EXPECT_CALL(*this->mock_device, display_off())
+    EXPECT_CALL(*this->mock_device, display_off(mga::DisplayName::primary))
         .Times(1);
     device.reset();
 }
@@ -181,7 +181,7 @@ TYPED_TEST(HWCCommon, test_hwc_display_is_deactivated_on_destroy)
 TYPED_TEST(HWCCommon, catches_exception_during_destruction)
 {
     auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
-    EXPECT_CALL(*this->mock_device, display_off())
+    EXPECT_CALL(*this->mock_device, display_off(mga::DisplayName::primary))
         .WillOnce(testing::Throw(std::runtime_error("")));
     device.reset();
 }
@@ -213,7 +213,7 @@ TYPED_TEST(HWCCommon, set_orientation)
 
 TYPED_TEST(HWCCommon, first_unblank_failure_is_not_fatal) //lp:1345533
 {
-    ON_CALL(*this->mock_device, display_on())
+    ON_CALL(*this->mock_device, display_on(mga::DisplayName::primary))
         .WillByDefault(testing::Throw(std::runtime_error("error")));
     EXPECT_NO_THROW({
         auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);
@@ -222,7 +222,7 @@ TYPED_TEST(HWCCommon, first_unblank_failure_is_not_fatal) //lp:1345533
 
 TYPED_TEST(HWCCommon, first_vsync_failure_is_not_fatal) //lp:1345533
 {
-    ON_CALL(*this->mock_device, vsync_signal_on())
+    ON_CALL(*this->mock_device, vsync_signal_on(mga::DisplayName::primary))
         .WillByDefault(testing::Throw(std::runtime_error("error")));
     EXPECT_NO_THROW({
         auto device = make_hwc_device<TypeParam>(this->mock_device, this->mock_fbdev, this->mock_vsync);

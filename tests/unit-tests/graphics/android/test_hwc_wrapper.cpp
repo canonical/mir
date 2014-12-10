@@ -82,12 +82,12 @@ TEST_F(HwcWrapper, submits_correct_prepare_parameters)
 {
     using namespace testing;
     Sequence seq;
-    EXPECT_CALL(*mock_logger, log_list_submitted_to_prepare(Ref(list)))
+    EXPECT_CALL(*mock_logger, log_list_submitted_to_prepare(Ref(primary_list)))
         .InSequence(seq);
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 1, _))
         .InSequence(seq)
         .WillOnce(Invoke(this, &HwcWrapper::display_saving_fn));
-    EXPECT_CALL(*mock_logger, log_prepare_done(Ref(list)))
+    EXPECT_CALL(*mock_logger, log_prepare_done(Ref(primary_list)))
         .InSequence(seq);
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
@@ -102,12 +102,12 @@ TEST_F(HwcWrapper, submits_correct_prepare_parameters_with_external_display)
 {
     using namespace testing;
     Sequence seq;
-    EXPECT_CALL(*mock_logger, log_list_submitted_to_prepare(Ref(list)))
+    EXPECT_CALL(*mock_logger, log_list_submitted_to_prepare(Ref(primary_list)))
         .InSequence(seq);
     EXPECT_CALL(*mock_device, prepare_interface(mock_device.get(), 2, _))
         .InSequence(seq)
         .WillOnce(Invoke(this, &HwcWrapper::display_saving_fn));
-    EXPECT_CALL(*mock_logger, log_prepare_done(Ref(list)))
+    EXPECT_CALL(*mock_logger, log_prepare_done(Ref(primary_list)))
         .InSequence(seq);
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
@@ -137,7 +137,7 @@ TEST_F(HwcWrapper, submits_correct_set_parameters)
 {
     using namespace testing;
     Sequence seq;
-    EXPECT_CALL(*mock_logger, log_set_list(Ref(list)))
+    EXPECT_CALL(*mock_logger, log_set_list(Ref(primary_list)))
         .InSequence(seq);
     EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 2, _))
         .InSequence(seq)
@@ -197,9 +197,9 @@ TEST_F(HwcWrapper, turns_display_on)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.display_on(mga::DisplayType::primary);
+    wrapper.display_on(mga::DisplayName::primary);
     EXPECT_THROW({
-        wrapper.display_on(mga::DisplayType::external);
+        wrapper.display_on(mga::DisplayName::external);
     }, std::runtime_error);
 }
 
@@ -217,9 +217,9 @@ TEST_F(HwcWrapper, turns_display_off)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.display_off(mga::DisplayType::primary);
+    wrapper.display_off(mga::DisplayName::primary);
     EXPECT_THROW({
-        wrapper.display_off(mga::DisplayType::external);
+        wrapper.display_off(mga::DisplayName::external);
     }, std::runtime_error);
 }
 
@@ -237,9 +237,9 @@ TEST_F(HwcWrapper, turns_vsync_on)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.vsync_signal_on(mga::DisplayType::external);
+    wrapper.vsync_signal_on(mga::DisplayName::external);
     EXPECT_THROW({
-        wrapper.vsync_signal_on(mga::DisplayType::primary);
+        wrapper.vsync_signal_on(mga::DisplayName::primary);
     }, std::runtime_error);
 }
 
@@ -257,8 +257,8 @@ TEST_F(HwcWrapper, turns_vsync_off)
         .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.vsync_signal_off(mga::DisplayType::external);
+    wrapper.vsync_signal_off(mga::DisplayName::external);
     EXPECT_THROW({
-        wrapper.vsync_signal_off(mga::HwcDisplay::primary);
+        wrapper.vsync_signal_off(mga::DisplayName::primary);
     }, std::runtime_error);
 }
