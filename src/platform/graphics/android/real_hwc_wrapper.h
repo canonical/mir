@@ -29,13 +29,13 @@ namespace graphics
 {
 namespace android
 {
-class HwcLogger;
+class HwcReport;
 class RealHwcWrapper : public HwcWrapper
 {
 public:
     RealHwcWrapper(
         std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-        std::shared_ptr<HwcLogger> const& logger);
+        std::shared_ptr<HwcReport> const& report);
 
     void prepare(hwc_display_contents_1_t&) const override;
     void set(hwc_display_contents_1_t&) const override;
@@ -50,7 +50,7 @@ private:
     //      devices (LP: 1364637)
     std::shared_ptr<HWCCallbacks> registered_callbacks;
     std::shared_ptr<hwc_composer_device_1> const hwc_device;
-    std::shared_ptr<HwcLogger> const logger;
+    std::shared_ptr<HwcReport> const report;
 };
 
 }
