@@ -206,9 +206,6 @@ message PromptSessionParameters {
 message PlatformOperationMessage {
   optional uint32 opcode = 1;
   optional bytes data = 2;
-  repeated sint32 fd = 3;
-  optional int32  fds_on_side_channel = 4;
-
   optional string error = 127;
 }
 

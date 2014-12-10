@@ -364,11 +364,6 @@ void MirConnection::done_platform_operation(
         platform_operation_reply.data().data(),
         platform_operation_reply.data().size());
 
-    mir_platform_message_set_fds(
-        reply,
-        platform_operation_reply.fd().data(),
-        platform_operation_reply.fd().size());
-
     callback(this, reply, context);
 
     platform_operation_wait_handle.result_received();
@@ -383,11 +378,7 @@ MirWaitHandle* MirConnection::platform_operation(
 
     protobuf_request.set_opcode(opcode);
     auto const request_data = mir_platform_message_get_data(request);
-    auto const request_fds = mir_platform_message_get_fds(request);
-
     protobuf_request.set_data(request_data.data, request_data.size);
-    for (size_t i = 0; i != request_fds.num_fds; ++i)
-        protobuf_request.add_fd(request_fds.fds[i]);
 
     platform_operation_wait_handle.expect_result();
     server.platform_operation(

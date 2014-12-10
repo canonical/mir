@@ -25,7 +25,6 @@ struct MirPlatformMessage
 
     unsigned int const opcode;
     std::vector<char> data;
-    std::vector<int> fds;
 };
 
 MirPlatformMessage* mir_platform_message_create(unsigned int opcode)
@@ -44,22 +43,12 @@ void mir_platform_message_set_data(MirPlatformMessage* message, void const* data
     message->data.assign(char_data, char_data + data_size);
 }
 
-void mir_platform_message_set_fds(MirPlatformMessage* message, int const* fds, size_t num_fds)
-{
-    message->fds.assign(fds, fds + num_fds);
-}
-
-unsigned int mir_platform_message_get_opcode(MirPlatformMessage const* message)
-{
-    return message->opcode;
-}
-
 MirPlatformMessageData mir_platform_message_get_data(MirPlatformMessage const* message)
 {
     return {message->data.data(), message->data.size()};
 }
 
-MirPlatformMessageFds mir_platform_message_get_fds(MirPlatformMessage const* message)
+unsigned int mir_platform_message_get_opcode(MirPlatformMessage const* message)
 {
-    return {message->fds.data(), message->fds.size()};
+    return message->opcode;
 }

@@ -25,8 +25,6 @@
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display.h"
-#include "mir/fd.h"
-#include "mir_test/pipe.h"
 
 #ifdef ANDROID
 #include "mir_test_doubles/stub_android_native_buffer.h"
@@ -35,7 +33,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <unistd.h>
 
 #include <system_error>
 #include <boost/exception/errinfo_errno.hpp>
@@ -156,8 +153,6 @@ class StubIpcOps : public mg::PlatformIpcOperations
     mg::PlatformOperationMessage platform_operation(
          unsigned int const opcode, mg::PlatformOperationMessage const& message) override
     {
-        mg::PlatformOperationMessage reply;
-
         if (opcode == static_cast<unsigned int>(mtf::StubGraphicsPlatformOperation::add))
         {
             if (message.data.size() != 2 * sizeof(int))
@@ -168,34 +163,11 @@ class StubIpcOps : public mg::PlatformIpcOperations
 
             auto const int_data = reinterpret_cast<int const*>(message.data.data());
 
+            mg::PlatformOperationMessage reply;
             reply.data.resize(sizeof(int));
             *(reinterpret_cast<int*>(reply.data.data())) = int_data[0] + int_data[1];
-        }
-        else if (opcode == static_cast<unsigned int>(mtf::StubGraphicsPlatformOperation::echo_fd))
-        {
-            if (message.fds.size() != 1)
-            {
-                BOOST_THROW_EXCEPTION(
-                    std::runtime_error("Invalid parameters for 'echo_fd' platform operation"));
-            }
 
-            mir::Fd const request_fd{message.fds[0]};
-            char request_char{0};
-            if (read(request_fd, &request_char, 1) != 1)
-            {
-                BOOST_THROW_EXCEPTION(
-                    std::runtime_error("Failed to read character from request fd in 'echo_fd' operation"));
-            }
-
-            mir::test::Pipe pipe;
-
-            if (write(pipe.write_fd(), &request_char, 1) != 1)
-            {
-                BOOST_THROW_EXCEPTION(
-                    std::runtime_error("Failed to write to pipe in 'echo_fd' operation"));
-            }
-
-            reply.fds.push_back(dup(pipe.read_fd()));
+            return reply;
         }
         else
         {
@@ -203,7 +175,6 @@ class StubIpcOps : public mg::PlatformIpcOperations
                 std::runtime_error("Invalid platform operation"));
         }
 
-        return reply;
     }
 };
 }
