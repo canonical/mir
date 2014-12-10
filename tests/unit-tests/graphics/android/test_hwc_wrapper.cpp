@@ -71,6 +71,7 @@ struct HwcWrapper : public ::testing::Test
 
     hwc_display_contents_1_t primary_list;
     hwc_display_contents_1_t external_list;
+    hwc_display_contents_1_t virtual_list;
     std::shared_ptr<mtd::MockHWCComposerDevice1> const mock_device;
     std::shared_ptr<MockHwcLogger> const mock_logger;
     hwc_display_contents_1_t *virtual_display;
@@ -115,7 +116,7 @@ TEST_F(HwcWrapper, submits_correct_prepare_parameters_with_external_display)
 
     EXPECT_EQ(&primary_list, primary_display);
     EXPECT_EQ(&external_list, external_display);
-    EXPECT_EQ(nullptr, external_display);
+    EXPECT_EQ(nullptr, virtual_display);
 }
 
 TEST_F(HwcWrapper, throws_on_prepare_failure)
@@ -139,16 +140,16 @@ TEST_F(HwcWrapper, submits_correct_set_parameters)
     Sequence seq;
     EXPECT_CALL(*mock_logger, log_set_list(Ref(primary_list)))
         .InSequence(seq);
-    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 2, _))
+    EXPECT_CALL(*mock_device, set_interface(mock_device.get(), 3, _))
         .InSequence(seq)
         .WillOnce(Invoke(this, &HwcWrapper::display_saving_fn));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_logger);
-    wrapper.set({&primary_list, &external_list, nullptr});
+    wrapper.set({&primary_list, &external_list, &virtual_list});
 
     EXPECT_EQ(&primary_list, primary_display);
     EXPECT_EQ(&external_list, external_display);
-    EXPECT_EQ(nullptr, virtual_display);
+    EXPECT_EQ(&virtual_list, virtual_display);
 }
 
 TEST_F(HwcWrapper, throws_on_set_failure)
@@ -227,12 +228,12 @@ TEST_F(HwcWrapper, turns_vsync_on)
 {
     using namespace testing;
     Sequence seq;
-    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_EXTERNAL, 1))
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), HWC_DISPLAY_EXTERNAL, HWC_EVENT_VSYNC, 1))
         .InSequence(seq)
         .WillOnce(Return(0));
     EXPECT_CALL(*mock_logger, log_vsync_on()) 
         .InSequence(seq);
-    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 1))
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, 1))
         .InSequence(seq)
         .WillOnce(Return(-1));
 
@@ -247,12 +248,12 @@ TEST_F(HwcWrapper, turns_vsync_off)
 {
     using namespace testing;
     Sequence seq;
-    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_EXTERNAL, 0))
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), HWC_DISPLAY_EXTERNAL, HWC_EVENT_VSYNC, 0))
         .InSequence(seq)
         .WillOnce(Return(0));
     EXPECT_CALL(*mock_logger, log_vsync_off()) 
         .InSequence(seq);
-    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), 0, HWC_DISPLAY_PRIMARY, 0))
+    EXPECT_CALL(*mock_device, eventControl_interface(mock_device.get(), HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, 0))
         .InSequence(seq)
         .WillOnce(Return(-1));
 

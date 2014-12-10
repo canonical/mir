@@ -22,6 +22,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <sstream>
+#include <algorithm>
 
 namespace mga=mir::graphics::android;
 
@@ -33,13 +34,24 @@ mga::RealHwcWrapper::RealHwcWrapper(
 {
 }
 
+namespace
+{
+int num_displays(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays)
+{
+    return std::distance(displays.begin(), 
+        std::find_if(displays.begin(), displays.end(),
+            [](hwc_display_contents_1_t* d){ return d == nullptr; }));
+}
+}
+
 void mga::RealHwcWrapper::prepare(
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
     //note, although we only have a primary display right now,
     //      set the external and virtual displays to null as some drivers check for that
     logger->log_list_submitted_to_prepare(*displays[0]);
-    if (auto rc = hwc_device->prepare(hwc_device.get(), 1,
+
+    if (auto rc = hwc_device->prepare(hwc_device.get(), num_displays(displays),
         const_cast<hwc_display_contents_1**>(displays.data())))
     {
         std::stringstream ss;
@@ -53,7 +65,7 @@ void mga::RealHwcWrapper::set(
     std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
     logger->log_set_list(*displays[0]);
-    if (auto rc = hwc_device->set(hwc_device.get(), 1,
+    if (auto rc = hwc_device->set(hwc_device.get(), num_displays(displays),
         const_cast<hwc_display_contents_1**>(displays.data())))
     {
         std::stringstream ss;

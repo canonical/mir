@@ -45,7 +45,6 @@ public:
     void display_on(DisplayName) const override;
     void display_off(DisplayName) const override;
 private:
-    static size_t const num_displays{3}; //primary, external, virtual
     //note: the callbacks have to extend past the lifetime of the hwc_composer_device_1 for some
     //      devices (LP: 1364637)
     std::shared_ptr<HWCCallbacks> registered_callbacks;
