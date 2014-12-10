@@ -16,8 +16,14 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include "mir/logging/logger.h"
 #include "mir/graphics/platform.h"
 #include "platform_probe.h"
+
+#include <string>
+#include <boost/throw_exception.hpp>
+
+namespace ml = mir::logging;
 
 std::shared_ptr<mir::SharedLibrary>
 mir::graphics::module_for_device(std::vector<std::shared_ptr<SharedLibrary>> const& modules)
@@ -37,14 +43,17 @@ mir::graphics::module_for_device(std::vector<std::shared_ptr<SharedLibrary>> con
                 best_module_so_far = module;
             }
         }
-        catch (std::runtime_error)
+        catch (std::runtime_error const& err)
         {
             // Tried to probe a SharedLibrary that isn't a platform module?
+            ml::log(ml::Severity::warning,
+                    std::string{"Failed to probe module. Not a platform library? Error: "} + err.what(),
+                    "Platform Probing");
         }
     }
     if (best_priority_so_far > mir::graphics::unsupported)
     {
         return best_module_so_far;
     }
-    throw std::runtime_error{"Failed to find platform for current system"};
+    BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find platform for current system"}));
 }
