@@ -176,20 +176,7 @@ void mclr::MirProtobufRpcChannel::CallMethod(
 
     pending_calls.save_completion_details(invocation, response, callback);
 
-    try
-    {
-        send_message(invocation, invocation, fds);
-    }
-    // In general we propagate this exception up to the client
-    // library so that it may invoke appropriate error callbacks,
-    // etc...however in the case of disconnect the notify_disconnect
-    // codepath will take care of this and we need to surpress the
-    // exception here. (lp:1394873)
-    catch (...)
-    {
-        if (!disconnected.load())
-            throw;
-    }
+    send_message(invocation, invocation, fds);
 }
 
 void mclr::MirProtobufRpcChannel::send_message(

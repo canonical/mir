@@ -127,7 +127,15 @@ MirSurface::MirSurface(
     message.set_output_id(params.output_id);
 
     create_wait_handle.expect_result();
-    server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
+    try 
+    {
+        server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
+    }
+    catch (std::exception const& ex)
+    {
+        surface.set_error(std::string{"Error invoking create surface: "} +
+                          boost::diagnostic_information(ex));
+    }
 
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
@@ -283,8 +291,19 @@ void MirSurface::process_incoming_buffer()
 
 void MirSurface::created(mir_surface_callback callback, void * context)
 {
-    auto platform = connection->get_client_platform();
+    {
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    if (!surface.has_id())
+    {
+        if (!surface.has_error())
+            surface.set_error("Error processing surface create response, no ID (disconnected?)");
+        callback(this, context);
+        create_wait_handle.result_received();
+        return;
+    }
+    }
 
+    auto platform = connection->get_client_platform();
     try
     {
         {
