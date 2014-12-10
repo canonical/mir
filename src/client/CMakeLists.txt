@@ -92,8 +92,7 @@ set_target_properties(mirclient
   LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
 )
 
-target_link_libraries(
-  mirclient
+target_link_libraries(mirclient
 
   mirclientrpc
   mirclientlttngstatic
