@@ -181,14 +181,14 @@ extern "C" mg::PlatformPriority probe_platform()
     return err < 0 ? mg::PlatformPriority::unsupported : mg::PlatformPriority::best;
 }
 
-mg::ModuleProperties const description = {
+mir::ModuleProperties const description = {
     "android",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO
 };
 
-extern "C" mg::ModuleProperties const* describe_module()
+extern "C" mir::ModuleProperties const* describe_module()
 {
     return &description;
 }

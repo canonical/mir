@@ -244,14 +244,14 @@ extern "C" mg::PlatformPriority probe_platform()
     return mg::PlatformPriority::unsupported;
 }
 
-mg::ModuleProperties const description = {
+mir::ModuleProperties const description = {
     "mesa",
     MIR_VERSION_MAJOR,
     MIR_VERSION_MINOR,
     MIR_VERSION_MICRO
 };
 
-extern "C" mg::ModuleProperties const* describe_module()
+extern "C" mir::ModuleProperties const* describe_module()
 {
     return &description;
 }

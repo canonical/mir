@@ -24,6 +24,8 @@
 #include <EGL/egl.h>
 #include <memory>
 
+#include "mir/module_properties.h"
+
 namespace mir
 {
 class EmergencyCleanupRegistry;
@@ -112,17 +114,6 @@ enum PlatformPriority : uint32_t
     best = 256          /**< Capable of providing a Platform with the best features and
                          *   performance this device is capable of.
                          */
-};
-
-/**
- * Describes a platform module
- */
-struct ModuleProperties
-{
-    char const* name;
-    int major_version;
-    int minor_version;
-    int micro_version;
 };
 
 /**
