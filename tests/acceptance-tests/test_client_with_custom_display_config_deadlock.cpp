@@ -19,10 +19,13 @@
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir_test_framework/connected_client_headless_server.h"
+#include "mir_test_framework/any_surface.h"
 
 #include <gtest/gtest.h>
 
-using ClientWithCustomDisplayConfiguration = mir_test_framework::ConnectedClientHeadlessServer;
+namespace mtf = mir_test_framework;
+
+using ClientWithCustomDisplayConfiguration = mtf::ConnectedClientHeadlessServer;
 
 // Regression test for LP:#1340669
 // Test is not deterministic since we are testing a race, but failure can be
@@ -31,16 +34,8 @@ TEST_F(ClientWithCustomDisplayConfiguration,
        does_not_deadlock_server_with_existing_client_when_disconnecting)
 {
     auto second_connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    MirSurfaceParameters const request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
 
-    auto second_surface = mir_connection_create_surface_sync(second_connection, &request_params);
+    auto second_surface = mtf::make_any_surface(connection);
     ASSERT_TRUE(mir_surface_is_valid(second_surface));
 
     auto configuration = mir_connection_create_display_config(connection);

@@ -22,6 +22,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_surface_configurator.h"
 #include "mir_test_framework/display_server_test_fixture.h"
+#include "mir_test_framework/any_surface.h"
 
 #include "mir_toolkit/mir_client_library.h"
 
@@ -51,17 +52,7 @@ struct SurfaceCreatingClient : public mtf::TestingClientConfiguration
         EXPECT_TRUE(mir_connection_is_valid(connection));
         EXPECT_STREQ(mir_connection_get_error_message(connection), "");
 
-        MirSurfaceParameters const request_params =
-            {
-                __PRETTY_FUNCTION__,
-                640, 480,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-
-        surface = mir_connection_create_surface_sync(connection,
-                                                     &request_params);
+        surface = mtf::make_any_surface(connection);
     }
 
     MirConnection* connection;

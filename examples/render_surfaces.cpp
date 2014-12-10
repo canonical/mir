@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "example_input_event_filter.h"
-#include "example_display_configuration_policy.h"
+#include "server_example_input_event_filter.h"
+#include "server_example_display_configuration_policy.h"
 #include "mir/server_status_listener.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
