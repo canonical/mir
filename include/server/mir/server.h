@@ -19,8 +19,11 @@
 #ifndef MIR_SERVER_H_
 #define MIR_SERVER_H_
 
+#include "mir_toolkit/common.h"
+
 #include <functional>
 #include <memory>
+#include <vector>
 
 namespace mir
 {
@@ -70,6 +73,9 @@ public:
     /// Applies any configuration options, hooks, or custom implementations.
     /// Must be called before calling run() or accessing any mir subsystems.
     void apply_settings();
+
+    /// The pixel formats that may be used when creating surfaces
+    auto supported_pixel_formats() const -> std::vector<MirPixelFormat>;
 
     /// Run the Mir server until it exits
     void run();
@@ -246,6 +252,10 @@ public:
 
     /// Sets a wrapper functor for creating the cursor listener.
     void wrap_cursor_listener(Wrapper<input::CursorListener> const& wrapper);
+
+    /// Sets a wrapper functor for creating the per-display rendering code.
+    void wrap_display_buffer_compositor_factory(
+        Wrapper<compositor::DisplayBufferCompositorFactory> const& wrapper);
 
     /// Sets a wrapper functor for creating the display configuration policy.
     void wrap_display_configuration_policy(Wrapper<graphics::DisplayConfigurationPolicy> const& wrapper);

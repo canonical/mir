@@ -211,6 +211,8 @@ public:
      *  @{ */
     virtual std::shared_ptr<compositor::CompositorReport> the_compositor_report();
     virtual std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory();
+    virtual std::shared_ptr<compositor::DisplayBufferCompositorFactory> wrap_display_buffer_compositor_factory(
+        std::shared_ptr<compositor::DisplayBufferCompositorFactory> const& wrapped);
     /** @} */
 
     /** @name compositor configuration - dependencies
