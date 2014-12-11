@@ -313,13 +313,20 @@ TEST_F(DisplayBuffer, disregards_double_display_power_mode_request)
 
     EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off))
         .Times(1);
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_suspend))
+        .Times(1);
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_standby))
+        .Times(1);
 
     auto config = db.configuration();
     config.power_mode = mir_power_mode_off;
     db.configure(config);
+    db.configure(config);
     config.power_mode = mir_power_mode_suspend;
     db.configure(config);
+    db.configure(config);
     config.power_mode = mir_power_mode_standby;
+    db.configure(config);
     db.configure(config);
 }
 
