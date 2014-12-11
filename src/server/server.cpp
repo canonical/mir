@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_LOGGING_COMPONENT "Server"
+#define MIR_LOG_COMPONENT "Server"
 #include "mir/server.h"
 
 #include "mir/emergency_cleanup.h"
@@ -26,6 +26,7 @@
 #include "mir/options/default_configuration.h"
 #include "mir/default_server_configuration.h"
 #include "mir/logging/logger.h"
+#include "mir/log.h"
 #include "mir/main_loop.h"
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
@@ -38,7 +39,6 @@
 #include <iostream>
 
 namespace mo = mir::options;
-namespace ml = mir::logging;
 
 #define FOREACH_WRAPPER(MACRO)\
     MACRO(cursor_listener)\
@@ -354,13 +354,13 @@ void mir::Server::apply_settings()
     self->server_config = config;
     self->options = config->the_options();
 
-    ml::set_logger(config->the_logger());
+    mir::logging::set_logger(config->the_logger());
 }
 
 void mir::Server::run()
 try
 {
-    ml::log(ml::Severity::informational, "Starting");
+    mir::log_info("Starting");
     verify_accessing_allowed(self->server_config);
 
     auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
@@ -393,7 +393,7 @@ auto mir::Server::supported_pixel_formats() const -> std::vector<MirPixelFormat>
 
 void mir::Server::stop()
 {
-    ml::log(ml::Severity::informational, "Stopping");
+    mir::log_info("Stopping");
     if (self->server_config)
         if (auto const main_loop = the_main_loop())
             main_loop->stop();
