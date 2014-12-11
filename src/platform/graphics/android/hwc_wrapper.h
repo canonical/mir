@@ -19,7 +19,9 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_WRAPPER_H_
 #define MIR_GRAPHICS_ANDROID_HWC_WRAPPER_H_
 
+#include "display_name.h"
 #include <hardware/hwcomposer.h>
+#include <array>
 #include <memory>
 
 namespace mir
@@ -28,19 +30,20 @@ namespace graphics
 {
 namespace android
 {
+
 struct HWCCallbacks;
 class HwcWrapper
 {
 public:
     virtual ~HwcWrapper() = default;
 
-    virtual void prepare(hwc_display_contents_1_t&) const = 0;
-    virtual void set(hwc_display_contents_1_t&) const = 0;
+    virtual void prepare(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const = 0;
+    virtual void set(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const = 0;
     virtual void register_hooks(std::shared_ptr<HWCCallbacks> const& callbacks) = 0;
-    virtual void vsync_signal_on() const = 0;
-    virtual void vsync_signal_off() const = 0;
-    virtual void display_on() const = 0;
-    virtual void display_off() const = 0;
+    virtual void vsync_signal_on(DisplayName) const = 0;
+    virtual void vsync_signal_off(DisplayName) const = 0;
+    virtual void display_on(DisplayName) const = 0;
+    virtual void display_off(DisplayName) const = 0;
 
 protected:
     HwcWrapper() = default;

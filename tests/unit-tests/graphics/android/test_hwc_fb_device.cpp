@@ -45,7 +45,7 @@ namespace
 {
 struct StubConfig : public mga::HwcConfiguration
 {
-    void power_mode(MirPowerMode) {}
+    void power_mode(mga::DisplayName, MirPowerMode) {}
 };
 class HwcFbDevice : public ::testing::Test
 {
@@ -114,7 +114,7 @@ TEST_F(HwcFbDevice, hwc10_post_gl_only)
     std::list<hwc_layer_1_t*> expected_list{&skip_layer};
 
     Sequence seq;
-    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesLegacyCropList(expected_list)))
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesPrimaryList(expected_list)))
         .InSequence(seq);
     EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
         .InSequence(seq)

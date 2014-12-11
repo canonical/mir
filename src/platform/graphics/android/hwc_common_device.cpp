@@ -90,7 +90,7 @@ void mga::HWCCommonDevice::notify_vsync()
 
 void mga::HWCCommonDevice::mode(MirPowerMode mode_request)
 {
-    hwc_config->power_mode(mode_request);
+    hwc_config->power_mode(mga::DisplayName::primary, mode_request);
 
     if (mode_request == mir_power_mode_off)
         turned_screen_off();

@@ -22,6 +22,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <sstream>
+#include <algorithm>
 
 namespace mga=mir::graphics::android;
 
@@ -33,28 +34,38 @@ mga::RealHwcWrapper::RealHwcWrapper(
 {
 }
 
-void mga::RealHwcWrapper::prepare(hwc_display_contents_1_t& display_list) const
+namespace
 {
-    //note, although we only have a primary display right now,
-    //      set the external and virtual displays to null as some drivers check for that
-    hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
+int num_displays(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays)
+{
+    return std::distance(displays.begin(), 
+        std::find_if(displays.begin(), displays.end(),
+            [](hwc_display_contents_1_t* d){ return d == nullptr; }));
+}
+}
 
-    report->report_list_submitted_to_prepare(display_list);
-    if (auto rc = hwc_device->prepare(hwc_device.get(), 1, displays))
+void mga::RealHwcWrapper::prepare(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
+{
+    //TODO: convert report to reporting multimonitor
+    if (displays[0]) report->report_list_submitted_to_prepare(*displays[0]);
+    if (auto rc = hwc_device->prepare(hwc_device.get(), num_displays(displays),
+        const_cast<hwc_display_contents_1**>(displays.data())))
     {
         std::stringstream ss;
         ss << "error during hwc prepare(). rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
-    report->report_prepare_done(display_list);
+
+    if (displays[0]) report->report_prepare_done(*displays[0]);
 }
 
-void mga::RealHwcWrapper::set(hwc_display_contents_1_t& display_list) const
+void mga::RealHwcWrapper::set(
+    std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays) const
 {
-    hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
-
-    report->report_set_list(display_list);
-    if (auto rc = hwc_device->set(hwc_device.get(), 1, displays))
+    if (displays[0]) report->report_set_list(*displays[0]);
+    if (auto rc = hwc_device->set(hwc_device.get(), num_displays(displays),
+        const_cast<hwc_display_contents_1**>(displays.data())))
     {
         std::stringstream ss;
         ss << "error during hwc prepare(). rc = " << std::hex << rc;
@@ -68,9 +79,9 @@ void mga::RealHwcWrapper::register_hooks(std::shared_ptr<HWCCallbacks> const& ca
     registered_callbacks = callbacks;
 }
 
-void mga::RealHwcWrapper::vsync_signal_on() const
+void mga::RealHwcWrapper::vsync_signal_on(DisplayName display_name) const
 {
-    if (auto rc = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 1))
+    if (auto rc = hwc_device->eventControl(hwc_device.get(), display_name, HWC_EVENT_VSYNC, 1))
     {
         std::stringstream ss;
         ss << "error turning vsync signal on. rc = " << std::hex << rc;
@@ -79,9 +90,9 @@ void mga::RealHwcWrapper::vsync_signal_on() const
     report->report_vsync_on();
 }
 
-void mga::RealHwcWrapper::vsync_signal_off() const
+void mga::RealHwcWrapper::vsync_signal_off(DisplayName display_name) const
 {
-    if (auto rc = hwc_device->eventControl(hwc_device.get(), 0, HWC_EVENT_VSYNC, 0))
+    if (auto rc = hwc_device->eventControl(hwc_device.get(), display_name, HWC_EVENT_VSYNC, 0))
     {
         std::stringstream ss;
         ss << "error turning vsync signal off. rc = " << std::hex << rc;
@@ -90,9 +101,9 @@ void mga::RealHwcWrapper::vsync_signal_off() const
     report->report_vsync_off();
 }
 
-void mga::RealHwcWrapper::display_on() const
+void mga::RealHwcWrapper::display_on(DisplayName display_name) const
 {
-    if (auto rc = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 0))
+    if (auto rc = hwc_device->blank(hwc_device.get(), display_name, 0))
     {
         std::stringstream ss;
         ss << "error turning display on. rc = " << std::hex << rc;
@@ -101,9 +112,9 @@ void mga::RealHwcWrapper::display_on() const
     report->report_display_on();
 }
 
-void mga::RealHwcWrapper::display_off() const
+void mga::RealHwcWrapper::display_off(DisplayName display_name) const
 {
-    if (auto rc = hwc_device->blank(hwc_device.get(), HWC_DISPLAY_PRIMARY, 1))
+    if (auto rc = hwc_device->blank(hwc_device.get(), display_name, 1))
     {
         std::stringstream ss;
         ss << "error turning display off. rc = " << std::hex << rc;
