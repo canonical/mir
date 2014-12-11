@@ -158,12 +158,12 @@ set (INSTALL_DEMOS
 
 install(TARGETS ${INSTALL_DEMOS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-add_executable(mir_demo_server_basic
+add_executable(mir_demo_server
   server_example.cpp
   glog_logger.cpp
 )
 
-target_link_libraries(mir_demo_server_basic
+target_link_libraries(mir_demo_server
   mirserver
   exampleserverconfig
   ${GLog_LIBRARY}
@@ -171,7 +171,7 @@ target_link_libraries(mir_demo_server_basic
   ${Boost_LIBRARIES}
 )
 
-install(TARGETS mir_demo_server_basic
+install(TARGETS mir_demo_server
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
