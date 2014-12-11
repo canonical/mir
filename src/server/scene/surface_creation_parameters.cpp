@@ -29,7 +29,10 @@ namespace
 bool parent_id_matches(const ms::SurfaceCreationParameters& lhs,
     const ms::SurfaceCreationParameters& rhs)
 {
-    return lhs.has_parent && rhs.has_parent && (lhs.parent_id == rhs.parent_id);
+    if (lhs.has_parent && rhs.has_parent)
+        return lhs.parent_id == rhs.parent_id;
+
+    return lhs.has_parent == rhs.has_parent;
 }
 }
 
@@ -40,7 +43,8 @@ ms::SurfaceCreationParameters::SurfaceCreationParameters()
       state{mir_surface_state_unknown},
       type{mir_surface_type_normal},
       preferred_orientation{mir_orientation_mode_any},
-      has_parent{false}
+      has_parent{false},
+      parent_id{0}
 {
 }
 
