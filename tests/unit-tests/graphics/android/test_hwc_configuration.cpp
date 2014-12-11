@@ -27,7 +27,7 @@ struct HwcConfiguration : public testing::Test
 {
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_hwc_wrapper{
         std::make_shared<mtd::MockHWCDeviceWrapper>()};
-    mga::HwcBlankingConfiguration config{mock_hwc_wrapper};
+    mga::HwcBlankingControl config{mock_hwc_wrapper};
 };
 
 TEST_F(HwcConfiguration, turns_screen_on)

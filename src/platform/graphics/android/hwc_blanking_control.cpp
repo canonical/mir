@@ -18,31 +18,23 @@
 
 #include "hwc_configuration.h"
 #include "hwc_wrapper.h"
-#include <boost/throw_exception.hpp>
-#include <stdexcept>
 
 namespace mga = mir::graphics::android;
 
-mga::HwcBlankingConfiguration::HwcBlankingConfiguration(
+mga::HwcBlankingControl::HwcBlankingControl(
     std::shared_ptr<mga::HwcWrapper> const& hwc_device) :
     hwc_device{hwc_device}
 {
 }
 
-void mga::HwcBlankingConfiguration::power_mode(MirPowerMode mode_request)
+void mga::HwcBlankingControl::power_mode(MirPowerMode mode_request)
 {
-    if ((mode_request == mir_power_mode_suspend) ||
-        (mode_request == mir_power_mode_standby))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("cannot set to suspend or standby"));
-    }
-
     if (mode_request == mir_power_mode_on)
     {
         hwc_device->display_on();
         hwc_device->vsync_signal_on();
     }
-    else if (mode_request == mir_power_mode_off)
+    else
     {
         hwc_device->vsync_signal_off();
         hwc_device->display_off();

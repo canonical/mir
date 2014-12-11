@@ -42,10 +42,10 @@ protected:
 };
 
 class HwcWrapper;
-class HwcBlankingConfiguration : public HwcConfiguration
+class HwcBlankingControl : public HwcConfiguration
 {
 public:
-    HwcBlankingConfiguration(std::shared_ptr<HwcWrapper> const&);
+    HwcBlankingControl(std::shared_ptr<HwcWrapper> const&);
     void power_mode(MirPowerMode) override;
 private:
     std::shared_ptr<HwcWrapper> const hwc_device;
