@@ -41,10 +41,12 @@ TEST_F(HwcConfiguration, turns_screen_on)
 TEST_F(HwcConfiguration, turns_screen_off)
 {
     testing::InSequence seq;
-    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off())
-        .Times(3);
-    EXPECT_CALL(*mock_hwc_wrapper, display_off())
-        .Times(3);
+    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off());
+    EXPECT_CALL(*mock_hwc_wrapper, display_off());
+    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off());
+    EXPECT_CALL(*mock_hwc_wrapper, display_off());
+    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off());
+    EXPECT_CALL(*mock_hwc_wrapper, display_off());
     config.power_mode(mir_power_mode_off);
 
     //HWC version 1.3 and prior do not support anything more than on and off.
