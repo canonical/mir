@@ -49,8 +49,8 @@ struct MockAuthenticatingIpcOps : public mg::PlatformIpcOperations
     MOCK_CONST_METHOD3(pack_buffer, void(mg::BufferIpcMessage&, mg::Buffer const&, mg::BufferIpcMsgType));
     MOCK_CONST_METHOD2(unpack_buffer, void(mg::BufferIpcMessage&, mg::Buffer const&));
     MOCK_METHOD0(connection_ipc_package, std::shared_ptr<mg::PlatformIPCPackage>());
-    MOCK_METHOD2(platform_operation, mg::PlatformOperationMessage(
-        unsigned int const, mg::PlatformOperationMessage const&));
+    MOCK_METHOD2(platform_operation, mg::PlatformIPCPackage(
+        unsigned int const, mg::PlatformIPCPackage const&));
 };
 
 class StubAuthenticatingPlatform : public mtd::NullPlatform
@@ -99,7 +99,7 @@ TEST_F(BespokeDisplayServerTestFixture, client_drm_auth_magic_calls_platform)
             using namespace testing;
             if (!platform)
             {
-                mg::PlatformOperationMessage pkg{{0},{}};
+                mg::PlatformIPCPackage pkg{{0},{}};
                 auto ipc_ops = std::make_shared<NiceMock<MockAuthenticatingIpcOps>>();
                 EXPECT_CALL(*ipc_ops, platform_operation(_,_))
                     .Times(1)

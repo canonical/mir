@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "example_display_configuration_policy.h"
+#include "server_example_display_configuration_policy.h"
 
 #include "mir/graphics/display_configuration.h"
 #include "mir/server.h"
@@ -29,6 +29,9 @@
 namespace geom = mir::geometry;
 namespace me = mir::examples;
 namespace mg = mir::graphics;
+
+///\example server_example_display_configuration_policy.cpp
+/// Demonstrate custom display configuration policies for "sidebyside" and "single"
 
 char const* const me::display_config_opt = "display-config";
 char const* const me::display_config_descr = "Display configuration [{clone,sidebyside,single}]";

@@ -25,7 +25,6 @@
 #include "mir_test_doubles/null_platform.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/buffer_ipc_message.h"
-#include "mir/graphics/platform_operation_message.h"
 #include "mir/scene/buffer_stream_factory.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir_toolkit/mir_client_library.h"
@@ -132,10 +131,10 @@ struct StubBufferPacker : public mg::PlatformIpcOperations
         return last_fd;
     }
 
-    mg::PlatformOperationMessage platform_operation(
-        unsigned int const, mg::PlatformOperationMessage const&) override
+    mg::PlatformIPCPackage platform_operation(
+        unsigned int const, mg::PlatformIPCPackage const&) override
     {
-        return mg::PlatformOperationMessage();
+        return mg::PlatformIPCPackage();
     }
 private:
     mir::Fd mutable last_fd;

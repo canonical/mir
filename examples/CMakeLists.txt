@@ -1,3 +1,16 @@
+set(RENDER_SURFACES_SOURCES
+    render_surfaces.cpp
+    buffer_render_target.cpp
+    image_renderer.cpp
+)
+add_executable(mir_demo_standalone_render_surfaces ${RENDER_SURFACES_SOURCES})
+target_link_libraries(mir_demo_standalone_render_surfaces
+    mirserver
+    exampleserverconfig
+    ${Boost_LIBRARIES}
+)
+
+install(TARGETS mir_demo_standalone_render_surfaces RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
@@ -6,8 +19,11 @@ add_library(eglapp STATIC
 )
 
 add_library(exampleserverconfig STATIC
-  example_display_configuration_policy.cpp
-  example_input_event_filter.cpp
+  server_example_display_configuration_policy.cpp
+  server_example_input_event_filter.cpp
+  server_example_log_options.cpp
+  server_example_input_filter.cpp
+  server_example_fullscreen_placement_strategy.cpp
 )
 
 target_link_libraries(eglapp
@@ -124,12 +140,12 @@ target_link_libraries(mir_demo_standalone_render_to_fb
     ${Boost_LIBRARIES}
 )
 
-mir_add_wrapped_executable(mir_demo_server_basic
-  basic_server.cpp
+mir_add_wrapped_executable(mir_demo_server
+  server_example.cpp
   glog_logger.cpp
 )
 
-target_link_libraries(mir_demo_server_basic
+target_link_libraries(mir_demo_server
   mirserver
   exampleserverconfig
   ${GLog_LIBRARY}
@@ -137,7 +153,7 @@ target_link_libraries(mir_demo_server_basic
   ${Boost_LIBRARIES}
 )
 
-mir_add_wrapped_executable(mir_demo_server_minimal minimal_server.cpp)
+mir_add_wrapped_executable(mir_demo_server_minimal server_minimal.cpp)
 target_link_libraries(mir_demo_server_minimal mirserver)
 
 mir_add_wrapped_executable(mir_demo_standalone_render_overlays

@@ -13,21 +13,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_FRAMEWORK_STUB_GRAPHICS_PLATFORM_OPERATION_H_
-#define MIR_TEST_FRAMEWORK_STUB_GRAPHICS_PLATFORM_OPERATION_H_
+#ifndef MIR_EXAMPLES_EXAMPLE_INPUT_FILTER_H_
+#define MIR_EXAMPLES_EXAMPLE_INPUT_FILTER_H_
 
-namespace mir_test_framework
+#include <memory>
+
+namespace mir
 {
+class Server;
 
-enum class StubGraphicsPlatformOperation : unsigned int
+namespace input { class EventFilter; }
+
+namespace examples
 {
-    add = 13,
-    echo_fd = 15
-};
-
+auto make_printing_input_filter_for(mir::Server& server)
+-> std::shared_ptr<input::EventFilter>;
+}
 }
 
-#endif
+#endif /* MIR_EXAMPLES_EXAMPLE_INPUT_FILTER_H_ */

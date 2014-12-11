@@ -1,4 +1,7 @@
-add_definitions(-DMIR_LOGGING_COMPONENT_FALLBACK="mirserver")
+add_definitions(
+  -DMIR_LOG_COMPONENT_FALLBACK="mirserver"
+  -DMIR_VERSION="${MIR_VERSION}"
+)
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform

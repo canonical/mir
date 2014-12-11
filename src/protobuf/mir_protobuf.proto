@@ -203,15 +203,6 @@ message PromptSessionParameters {
   required int32 application_pid = 1;
 }
 
-message PlatformOperationMessage {
-  optional uint32 opcode = 1;
-  optional bytes data = 2;
-  repeated sint32 fd = 3;
-  optional int32  fds_on_side_channel = 4;
-
-  optional string error = 127;
-}
-
 service DisplayServer {
   // Platform independent requests
   rpc connect(ConnectParameters) returns (Connection);
@@ -222,7 +213,6 @@ service DisplayServer {
 
   // Platform specific requests
   rpc drm_auth_magic(DRMMagic) returns (DRMAuthMagicStatus);
-  rpc platform_operation(PlatformOperationMessage) returns (PlatformOperationMessage);
 
   rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
   rpc configure_display(DisplayConfiguration) returns (DisplayConfiguration);
