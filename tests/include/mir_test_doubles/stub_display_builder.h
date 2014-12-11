@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
 #include "src/platform/graphics/android/display_buffer_builder.h"
+#include "src/platform/graphics/android/hwc_configuration.h"
 #include "src/platform/graphics/android/configurable_display_buffer.h"
 #include <gmock/gmock.h>
 
@@ -59,10 +60,16 @@ private:
     geometry::Rectangle rect;
 };
 
+struct MockHwcConfiguration : public graphics::android::HwcConfiguration
+{
+    MOCK_METHOD2(power_mode, void(graphics::android::DisplayName, MirPowerMode));
+};
+
 struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
 {
     StubDisplayBuilder(geometry::Size sz)
-        : sz(sz)
+        : sz(sz),
+          next_mock_display_config{new MockHwcConfiguration}
     {
     }
 
@@ -86,9 +93,18 @@ struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
 
     std::unique_ptr<graphics::android::HwcConfiguration> create_hwc_config()
     {
+        auto config = std::unique_ptr<MockHwcConfiguration>(new MockHwcConfiguration);
+        std::swap(config, next_mock_display_config);
+        return std::move(config);
     }
-    
+
+    void with_next_config(std::function<void(MockHwcConfiguration&)> const& config)
+    {
+        config(*next_mock_display_config);
+    }
+private: 
     geometry::Size sz;
+    std::unique_ptr<MockHwcConfiguration> next_mock_display_config;
 };
 }
 }

@@ -32,6 +32,9 @@ namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
 
+//register procs
+//turn on display
+
 mga::Display::Display(std::shared_ptr<mga::DisplayBufferBuilder> const& display_buffer_builder,
                                     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
                                     std::shared_ptr<GLConfig> const& gl_config,
@@ -46,6 +49,8 @@ mga::Display::Display(std::shared_ptr<mga::DisplayBufferBuilder> const& display_
 
     display_report->report_successful_egl_make_current_on_construction();
     display_report->report_successful_display_construction();
+
+    //turn on display
 }
 
 void mga::Display::for_each_display_buffer(std::function<void(mg::DisplayBuffer&)> const& f)
@@ -74,10 +79,11 @@ void mga::Display::configure(mg::DisplayConfiguration const& configuration)
 
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
-    configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
-    {
-        display_buffer->configure(output);
-    });
+//    configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
+//    {
+//        hwc_config->power_mode(mga::Display::primary, output.power_mode);
+//        display_buffer->configure(output);
+//    });
 }
 
 void mga::Display::register_configuration_change_handler(
