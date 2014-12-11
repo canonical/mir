@@ -16,8 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "event-access"
+
 #include "mir/event_type_to_string.h"
-#include "mir/logging/logger.h"
+#include "mir/log.h"
 
 #include "mir_toolkit/events/event.h"
 #include "mir_toolkit/events/event_private.h"
@@ -38,7 +40,7 @@ void expect_event_type(EventType const* ev, MirEventType t)
 {
     if (ev->type != t)
     {
-        ml::log(ml::Severity::critical, "Expected " + mir::event_type_to_string(t) + " but event is of type " +
+        mir::log_critical("Expected " + mir::event_type_to_string(t) + " but event is of type " +
             mir::event_type_to_string(ev->type));
     }
 }

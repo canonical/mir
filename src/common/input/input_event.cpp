@@ -16,10 +16,10 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_LOGGING_COMPONENT "events"
+#define MIR_LOGGING_COMPONENT "input-event-access"
 
 #include "mir/event_type_to_string.h"
-#include "mir/logging/logger.h"
+#include "mir/log.h"
 
 #include "mir_toolkit/events/input/input_event.h"
 
@@ -39,7 +39,7 @@ void expect_event_type(MirEvent const* ev, MirEventType t)
 {
     if (ev->type != t)
     {
-        ml::log(ml::Severity::critical, "Expected " + mir::event_type_to_string(t) + " but event is of type " +
+        mir::log_critical("Expected " + mir::event_type_to_string(t) + " but event is of type " +
             mir::event_type_to_string(mir_event_get_type(ev)));
     }
 }
@@ -81,7 +81,7 @@ MirInputEventType mir_input_event_get_type(MirInputEvent const* ev)
     
     if (old_ev->type != mir_event_type_key && old_ev->type != mir_event_type_motion)
     {
-        ml::log(ml::Severity::critical, "expected input event but event was of type " + mir::event_type_to_string(old_ev->type));
+        mir::log_critical("expected input event but event was of type " + mir::event_type_to_string(old_ev->type));
         abort();
     }
 
@@ -102,7 +102,7 @@ MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev)
 
     if(mir_event_get_type(old_ev) != mir_event_type_input)
     {
-        ml::log(ml::Severity::critical, "expected input event but event was of type " + mir::event_type_to_string(old_ev->type));
+        mir::log_critical("expected input event but event was of type " + mir::event_type_to_string(old_ev->type));
         abort();
     }
 
@@ -122,7 +122,7 @@ int64_t mir_input_event_get_event_time(MirInputEvent const* ev)
     auto old_ev = old_ev_from_new(ev);
     if(mir_event_get_type(old_ev) != mir_event_type_input)
     {
-        ml::log(ml::Severity::critical, "expected input event but event was of type " + mir::event_type_to_string(old_ev->type));
+        mir::log_critical("expected input event but event was of type " + mir::event_type_to_string(old_ev->type));
         abort();
     }
 
@@ -143,7 +143,7 @@ MirKeyInputEvent const* mir_input_event_get_key_input_event(MirInputEvent const*
 {
     if (mir_input_event_get_type(ev) != mir_input_event_type_key)
     {
-        ml::log(ml::Severity::critical, "expected key input event but event was of type " +
+        mir::log_critical("expected key input event but event was of type " +
             input_event_type_to_string(mir_input_event_get_type(ev)));
         abort();
     }
@@ -239,7 +239,7 @@ MirTouchInputEvent const* mir_input_event_get_touch_input_event(MirInputEvent co
 {
     if(mir_input_event_get_type(ev) != mir_input_event_type_touch)
     {
-        ml::log(ml::Severity::critical, "expected touch input event but event was of type " +
+        mir::log_critical("expected touch input event but event was of type " +
             input_event_type_to_string(mir_input_event_get_type(ev)));
         abort();
     }
@@ -259,7 +259,7 @@ MirTouchInputEventTouchId mir_touch_input_event_get_touch_id(MirTouchInputEvent 
 
     if (touch_index >= old_mev.pointer_count)
     {
-        ml::log(ml::Severity::critical, "touch index is greater than pointer count");
+        mir::log_critical("touch index is greater than pointer count");
         abort();
     }
 
@@ -272,7 +272,7 @@ MirTouchInputEventTouchAction mir_touch_input_event_get_touch_action(MirTouchInp
 
     if(touch_index > old_mev.pointer_count)
     {
-        ml::log(ml::Severity::critical, "touch index is greater than pointer count");
+        mir::log_critical("touch index is greater than pointer count");
         abort();
     }
     
@@ -321,7 +321,7 @@ MirTouchInputEventTouchTooltype mir_touch_input_event_get_touch_tooltype(MirTouc
 
     if(touch_index > old_mev.pointer_count)
     {
-        ml::log(ml::Severity::critical, "touch index is greater than pointer count");
+        mir::log_critical("touch index is greater than pointer count");
         abort();
     }
 
@@ -346,7 +346,7 @@ float mir_touch_input_event_get_touch_axis_value(MirTouchInputEvent const* event
 
     if(touch_index > old_mev.pointer_count)
     {
-        ml::log(ml::Severity::critical, "touch index is greater than pointer count");
+        mir::log_critical("touch index is greater than pointer count");
         abort();
     }
 
