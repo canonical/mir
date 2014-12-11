@@ -19,7 +19,6 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/event_handler_register.h"
 #include "mir/graphics/platform_ipc_operations.h"
-#include "mir/graphics/platform_operation_message.h"
 #include "src/platform/graphics/mesa/platform.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/emergency_cleanup_registry.h"
@@ -152,16 +151,13 @@ TEST_F(MesaGraphicsPlatform, drm_auth_magic_calls_drm_function_correctly)
     EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),magic))
         .WillOnce(Return(0));
 
-    mg::PlatformOperationMessage magic_msg;
-    magic_msg.data.resize(sizeof(unsigned int));
-    *(reinterpret_cast<unsigned int*>(magic_msg.data.data())) = magic;
-
+    mg::PlatformIPCPackage magic_pkg{{magic}, {}};
     int drm_opcode{44};
     auto platform = create_platform();
     auto ipc_ops = platform->make_ipc_operations();
-    auto response_msg = ipc_ops->platform_operation(drm_opcode, magic_msg);
-    ASSERT_THAT(response_msg.data.size(), Eq(sizeof(int)));
-    EXPECT_THAT(*(reinterpret_cast<int*>(response_msg.data.data())), Eq(0));
+    auto response_pkg = ipc_ops->platform_operation(drm_opcode, magic_pkg);
+    ASSERT_THAT(response_pkg.ipc_data.size(), Eq(1));
+    EXPECT_THAT(response_pkg.ipc_data[0], Eq(0));
 }
 
 TEST_F(MesaGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
@@ -176,12 +172,10 @@ TEST_F(MesaGraphicsPlatform, drm_auth_magic_throws_if_drm_function_fails)
     int drm_opcode{44};
     auto platform = create_platform();
     auto ipc_ops = platform->make_ipc_operations();
-    mg::PlatformOperationMessage magic_msg;
-    magic_msg.data.resize(sizeof(unsigned int));
-    *(reinterpret_cast<unsigned int*>(magic_msg.data.data())) = magic;
+    mg::PlatformIPCPackage magic_pkg{{magic}, {}};
 
     EXPECT_THROW({
-        ipc_ops->platform_operation(drm_opcode, magic_msg);
+        ipc_ops->platform_operation(drm_opcode, magic_pkg);
     }, std::runtime_error);
 }
 

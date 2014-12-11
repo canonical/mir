@@ -66,8 +66,8 @@ class StubIpcOps : public mg::PlatformIpcOperations
         return package;
     }
 
-    mg::PlatformOperationMessage platform_operation(const unsigned int,
-                                                    mg::PlatformOperationMessage const&) override
+    mg::PlatformIPCPackage platform_operation(const unsigned int,
+                                              mg::PlatformIPCPackage const&) override
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Stub platform has no operations"}));
     }

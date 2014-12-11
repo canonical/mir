@@ -18,6 +18,7 @@
  *   Thomas Voss <thomas.voss@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "DisplayServer"
 #include "mir/display_server.h"
 #include "mir/server_configuration.h"
 #include "mir/main_loop.h"
@@ -30,6 +31,7 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/input/input_manager.h"
 #include "mir/input/input_dispatcher.h"
+#include "mir/log.h"
 
 #include <stdexcept>
 
@@ -208,6 +210,8 @@ mir::DisplayServer::~DisplayServer() = default;
 
 void mir::DisplayServer::run()
 {
+    mir::log_info("Mir version " MIR_VERSION);
+
     p->connector->start();
     p->prompt_connector->start();
     p->compositor->start();

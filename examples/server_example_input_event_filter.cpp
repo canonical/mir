@@ -16,7 +16,7 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "example_input_event_filter.h"
+#include "server_example_input_event_filter.h"
 
 #include "mir/server.h"
 #include "mir/input/composite_event_filter.h"
@@ -24,6 +24,9 @@
 #include <linux/input.h>
 
 namespace me = mir::examples;
+
+///\example server_example_input_event_filter.cpp
+/// Demonstrate a custom input by making Ctrl+Alt+BkSp stop the server
 
 me::QuitFilter::QuitFilter(std::function<void()> const& quit_action)
     : quit_action{quit_action}
