@@ -15,6 +15,7 @@
  * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "GLRenderer"
 #include "mir/compositor/gl_renderer.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/compositor/destination_alpha.h"
@@ -23,6 +24,7 @@
 #include "mir/graphics/gl_texture_cache.h"
 #include "mir/graphics/gl_texture.h"
 #include "mir/graphics/tessellation_helpers.h"
+#include "mir/log.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
@@ -85,6 +87,21 @@ mc::GLRenderer::GLRenderer(
       rotation(NAN), // ensure the first set_rotation succeeds
       dest_alpha(dest_alpha)
 {
+    struct {GLenum id; char const* label;} const glstrings[] =
+    {
+        {GL_VENDOR,   "GL vendor"},
+        {GL_RENDERER, "GL renderer"},
+        {GL_VERSION,  "GL version"},
+        {GL_SHADING_LANGUAGE_VERSION,  "GLSL version"},
+    };
+
+    for (auto& s : glstrings)
+    {
+        auto val = reinterpret_cast<char const*>(glGetString(s.id));
+        if (!val) val = "";
+        mir::log_info("%s: %s", s.label, val);
+    }
+             
     glUseProgram(*program);
 
     /* Set up program variables */
