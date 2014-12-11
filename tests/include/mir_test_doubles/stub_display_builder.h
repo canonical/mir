@@ -69,7 +69,7 @@ struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
 {
     StubDisplayBuilder(geometry::Size sz)
         : sz(sz),
-          next_mock_display_config{new MockHwcConfiguration}
+          mock_config{new MockHwcConfiguration}
     {
     }
 
@@ -91,20 +91,20 @@ struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
                 new StubConfigurableDisplayBuffer(geometry::Rectangle{{0,0},sz}));
     }
 
-    std::unique_ptr<graphics::android::HwcConfiguration> create_hwc_config()
+    std::unique_ptr<graphics::android::HwcConfiguration> create_hwc_configuration() override
     {
         auto config = std::unique_ptr<MockHwcConfiguration>(new MockHwcConfiguration);
-        std::swap(config, next_mock_display_config);
+        std::swap(config, mock_config);
         return std::move(config);
     }
-
-    void with_next_config(std::function<void(MockHwcConfiguration&)> const& config)
+    
+    void with_next_config(std::function<void(MockHwcConfiguration& mock_config)> const& fn)
     {
-        config(*next_mock_display_config);
+        fn(*mock_config); 
     }
-private: 
+
     geometry::Size sz;
-    std::unique_ptr<MockHwcConfiguration> next_mock_display_config;
+    std::unique_ptr<MockHwcConfiguration> mock_config;
 };
 }
 }

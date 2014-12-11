@@ -24,6 +24,7 @@
 #include "framebuffers.h"
 #include "real_hwc_wrapper.h"
 #include "hwc_report.h"
+#include "hwc_configuration.h"
 #include "hwc_layers.h"
 
 #include "mir/graphics/display_buffer.h"
@@ -114,4 +115,9 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
         gl_context,
         gl_program_factory,
         overlay_optimization));
+}
+
+std::unique_ptr<mga::HwcConfiguration> mga::OutputBuilder::create_hwc_configuration()
+{
+    return std::unique_ptr<mga::HwcConfiguration>(new mga::HwcBlankingControl(hwc_wrapper));
 }
