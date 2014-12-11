@@ -38,8 +38,9 @@ namespace geom = mir::geometry;
 mga::HwcFbDevice::HwcFbDevice(
     std::shared_ptr<HwcWrapper> const& hwc_wrapper,
     std::shared_ptr<framebuffer_device_t> const& fb_device,
+    std::shared_ptr<HwcConfiguration> const& config,
     std::shared_ptr<HWCVsyncCoordinator> const& coordinator) :
-    HWCCommonDevice(hwc_wrapper, coordinator),
+    HWCCommonDevice(hwc_wrapper, config, coordinator),
     hwc_wrapper(hwc_wrapper), 
     fb_device(fb_device),
     layer_list{std::make_shared<IntegerSourceCrop>(), {}, 1}
@@ -67,8 +68,6 @@ void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
         ss << "error accessing list during hwc prepare()";
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
-
-    auto lg = lock_unblanked();
 
     buffer = *context.last_rendered_buffer();
     auto native_buffer = buffer.native_buffer_handle();

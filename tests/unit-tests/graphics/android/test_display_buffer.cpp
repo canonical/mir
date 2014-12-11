@@ -324,32 +324,9 @@ TEST_F(DisplayBuffer, disregards_double_display_power_mode_request)
 }
 
 //configuration tests
-TEST_F(DisplayBuffer, display_orientation_supported)
-{
-    using namespace testing;
-
-    EXPECT_CALL(*mock_display_device, apply_orientation(mir_orientation_left))
-        .Times(1)
-        .WillOnce(Return(true));
-
-    mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
-
-    auto config = db.configuration();
-    config.orientation = mir_orientation_left;
-    db.configure(config); 
-
-    config = db.configuration();
-    EXPECT_EQ(mir_orientation_normal, config.orientation);
-}
-
+//TODO: the list does not support fb target rotation yet
 TEST_F(DisplayBuffer, display_orientation_not_supported)
 {
-    using namespace testing;
-    EXPECT_CALL(*mock_display_device, apply_orientation(mir_orientation_left))
-        .Times(1)
-        .WillOnce(Return(false));
-
     mga::DisplayBuffer db(
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
 

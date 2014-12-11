@@ -66,9 +66,10 @@ bool renderable_list_is_hwc_incompatible(mg::RenderableList const& list)
 }
 
 mga::HwcDevice::HwcDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
+                          std::shared_ptr<HwcConfiguration> const& hwc_config,
                           std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
                           std::shared_ptr<LayerAdapter> const& layer_adapter)
-    : HWCCommonDevice(hwc_wrapper, coordinator),
+    : HWCCommonDevice(hwc_wrapper, hwc_config, coordinator),
       hwc_list{layer_adapter, {}, fbtarget_plus_skip_size},
       hwc_wrapper(hwc_wrapper)
 {
@@ -89,7 +90,6 @@ bool mga::HwcDevice::buffer_is_onscreen(mg::Buffer const& buffer) const
 
 void mga::HwcDevice::post_gl(SwappingGLContext const& context)
 {
-    auto lg = lock_unblanked();
     hwc_list.update_list({}, fbtarget_plus_skip_size);
     auto& skip = *hwc_list.additional_layers_begin();
     auto& fbtarget = *(++hwc_list.additional_layers_begin());
@@ -135,7 +135,6 @@ bool mga::HwcDevice::post_overlays(
     if (!needs_commit)
         return false;
 
-    auto lg = lock_unblanked();
     auto& fbtarget = *hwc_list.additional_layers_begin();
 
     auto buffer = context.last_rendered_buffer();
