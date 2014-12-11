@@ -21,6 +21,7 @@
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_fence.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
+#include "mir_test_doubles/mock_android_hw.h"
 
 #include <system/window.h>
 #include <stdexcept>
@@ -48,6 +49,7 @@ public:
     MirPixelFormat pf;
 
     testing::NiceMock<mtd::MockEGL> mock_egl;
+    testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
     std::shared_ptr<mg::EGLExtensions> extensions;
     std::shared_ptr<mtd::MockAndroidNativeBuffer> mock_native_buffer;
 };

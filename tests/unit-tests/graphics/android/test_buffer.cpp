@@ -20,9 +20,10 @@
 #include "src/platform/graphics/android/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
+#include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_fence.h"
-#include "mir_test/fake_shared.h"
+#include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 
 #include <hardware/gralloc.h>
@@ -63,6 +64,7 @@ protected:
     geom::Size size;
     mga::BufferUsage default_use;
     std::shared_ptr<mg::EGLExtensions> extensions;
+    testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
 };
 
 TEST_F(AndroidGraphicBufferBasic, size_query_test)
