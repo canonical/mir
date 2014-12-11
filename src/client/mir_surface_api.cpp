@@ -63,41 +63,25 @@ MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)
     return surface;
 }
 
-namespace
-{
-void mir_surface_realise_thunk(MirSurface* surface, void* context)
-{
-    auto real_callback = static_cast<std::function<void(MirSurface*)>*>(context);
-    (*real_callback)(surface);
-}
-}
-
 MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
                                   mir_surface_callback callback, void* context)
 {
-    MirSurfaceParameters params;
-    params.name = requested_specification->name.c_str();
-    params.width = requested_specification->width;
-    params.height = requested_specification->height;
-    params.pixel_format = requested_specification->pixel_format;
-    params.buffer_usage = requested_specification->buffer_usage;
-    params.output_id = requested_specification->output_id;
+    if (!requested_specification) abort();
 
-    auto shim_callback = new std::function<void(MirSurface*)>;
-    *shim_callback = [requested_specification, shim_callback, callback, context]
-                     (MirSurface* surface)
+    auto conn = requested_specification->connection;
+    if (!mir_connection_is_valid(conn)) abort();
+
+    try
     {
-        if (requested_specification->fullscreen)
-        {
-            mir_surface_set_state(surface, mir_surface_state_fullscreen);
-        }
-        callback(surface, context);
-        delete shim_callback;
-    };
-
-    return mir_connection_create_surface(requested_specification->connection,
-                                         &params,
-                                         mir_surface_realise_thunk, shim_callback);
+        return conn->create_surface(*requested_specification, callback, context);
+    }
+    catch (std::exception const& error)
+    {
+        auto error_surf = new MirSurface{std::string{"Failed to create surface: "} +
+                                         boost::diagnostic_information(error)};
+        (*callback)(error_surf, context);
+        return nullptr;
+    }
 }
 
 bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)
@@ -133,7 +117,7 @@ bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usag
 bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id)
 {
     spec->output_id = output_id;
-    spec->fullscreen = true;
+    spec->state = mir_surface_state_fullscreen;
     return true;
 }
 
@@ -148,19 +132,9 @@ MirWaitHandle* mir_connection_create_surface(
     mir_surface_callback callback,
     void* context)
 {
-    if (!mir_connection_is_valid(connection)) abort();
-
-    try
-    {
-        return connection->create_surface(*params, callback, context);
-    }
-    catch (std::exception const& error)
-    {
-        auto error_surf = new MirSurface{std::string{"Failed to create surface: "} +
-                                         boost::diagnostic_information(error)};
-        (*callback)(error_surf, context);
-        return nullptr;
-    }
+    MirSurfaceSpec spec{*params};
+    spec.connection = connection;
+    return mir_surface_create(&spec, callback, context);
 }
 
 MirSurface* mir_connection_create_surface_sync(

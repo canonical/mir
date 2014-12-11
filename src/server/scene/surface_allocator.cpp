@@ -72,5 +72,10 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(SurfaceCreatio
         default_cursor_image,
         report);
 
+    if (params.state != mir_surface_state_unknown)
+        surface->configure(mir_surface_attrib_state, params.state);
+
+    surface->configure(mir_surface_attrib_preferred_orientation, params.preferred_orientation);
+
     return surface;
 }

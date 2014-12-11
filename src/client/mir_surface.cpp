@@ -41,24 +41,25 @@ namespace gp = google::protobuf;
 namespace
 {
 void null_callback(MirSurface*, void*) {}
-mp::DisplayServer::Stub null_server{nullptr};
 
 std::mutex handle_mutex;
 std::unordered_set<MirSurface*> valid_surfaces;
 }
 
-MirSurfaceSpec::MirSurfaceSpec()
-    : width{-1},
-      height{-1},
-      buffer_usage{mir_buffer_usage_hardware},
-      output_id{mir_display_output_id_invalid},
-      fullscreen{false}
+MirSurfaceSpec::MirSurfaceSpec(MirSurfaceParameters const& params)
+    : width{params.width},
+      height{params.height},
+      pixel_format{params.pixel_format},
+      buffer_usage{params.buffer_usage},
+      output_id{params.output_id},
+      state{
+          output_id != mir_display_output_id_invalid ?
+              mir_surface_state_fullscreen : mir_surface_state_unknown
+      }
 {
 }
 
 MirSurface::MirSurface(std::string const& error)
-    : server{null_server},
-      connection{nullptr}
 {
     surface.set_error(error);
 
@@ -68,32 +69,15 @@ MirSurface::MirSurface(std::string const& error)
 
 MirSurface::MirSurface(
     MirConnection *allocating_connection,
-    mp::DisplayServer::Stub & server,
-    std::shared_ptr<mcl::ClientBufferFactory> const& factory,
-    std::shared_ptr<mircv::InputPlatform> const& input_platform,
-    MirSurfaceParameters const & params,
-    mir_surface_callback callback, void * context)
-    : MirSurface(allocating_connection,
-                 server,
-                 nullptr,
-                 factory,
-                 input_platform,
-                 params,
-                 callback, context)
-{
-}
-
-
-MirSurface::MirSurface(
-    MirConnection *allocating_connection,
-    mp::DisplayServer::Stub & server,
+    mp::DisplayServer::Stub& the_server,
     mp::Debug::Stub* debug,
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
     std::shared_ptr<mircv::InputPlatform> const& input_platform,
-    MirSurfaceParameters const & params,
+    MirSurfaceSpec const& spec,
     mir_surface_callback callback, void * context)
-    : server(server),
+    : server{&the_server},
       debug{debug},
+      name{spec.name},
       connection(allocating_connection),
       buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
       input_platform(input_platform)
@@ -108,26 +92,26 @@ MirSurface::MirSurface(
     {
         perf_report = std::make_shared<mir::client::NullPerfReport>();
     }
-    perf_report->name_surface(params.name);
+    perf_report->name_surface(name.c_str());
 
     for (int i = 0; i < mir_surface_attribs; i++)
         attrib_cache[i] = -1;
 
-    if (params.name)
-    {
-        name = params.name;
-    }
-
     mir::protobuf::SurfaceParameters message;
-    message.set_surface_name(params.name ? params.name : std::string());
-    message.set_width(params.width);
-    message.set_height(params.height);
-    message.set_pixel_format(params.pixel_format);
-    message.set_buffer_usage(params.buffer_usage);
-    message.set_output_id(params.output_id);
+    message.set_surface_name(name);
+    message.set_width(spec.width);
+    message.set_height(spec.height);
+    message.set_pixel_format(spec.pixel_format);
+    message.set_buffer_usage(spec.buffer_usage);
+    message.set_output_id(spec.output_id);
+    message.set_state(spec.state);
+    message.set_type(spec.type);
+    message.set_pref_orientation(spec.preferred_orientation);
+    if (spec.parent)
+        message.set_parent_id(spec.parent->id());
 
     create_wait_handle.expect_result();
-    server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
+    server->create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
 
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
     valid_surfaces.insert(this);
@@ -226,7 +210,7 @@ MirWaitHandle* MirSurface::next_buffer(mir_surface_callback callback, void * con
     lock.unlock();
 
     next_buffer_wait_handle.expect_result();
-    server.exchange_buffer(
+    server->exchange_buffer(
         0,
         &buffer_request,
         surface.mutable_buffer(),
@@ -419,7 +403,7 @@ MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor
     }
     
     configure_cursor_wait_handle.expect_result();
-    server.configure_cursor(0, &setting, &void_response,
+    server->configure_cursor(0, &setting, &void_response,
         google::protobuf::NewCallback(this, &MirSurface::on_cursor_configured));
     
     return &configure_cursor_wait_handle;
@@ -435,7 +419,7 @@ MirWaitHandle* MirSurface::configure(MirSurfaceAttrib at, int value)
     lock.unlock();
 
     configure_wait_handle.expect_result();
-    server.configure_surface(0, &setting, &configure_result,
+    server->configure_surface(0, &setting, &configure_result,
               google::protobuf::NewCallback(this, &MirSurface::on_configured));
 
     return &configure_wait_handle;

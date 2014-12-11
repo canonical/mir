@@ -81,7 +81,7 @@ public:
     MirConnection& operator=(MirConnection const &) = delete;
 
     MirWaitHandle* create_surface(
-        MirSurfaceParameters const & params,
+        MirSurfaceSpec const& spec,
         mir_surface_callback callback,
         void * context);
     MirWaitHandle* release_surface(

@@ -174,12 +174,20 @@ void mf::SessionMediator::create_surface(
 
     report->session_create_surface_called(session->name());
 
-    auto const surf_id = session->create_surface(ms::SurfaceCreationParameters()
+    auto params = ms::SurfaceCreationParameters()
         .of_name(request->surface_name())
         .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
         .of_pixel_format(static_cast<MirPixelFormat>(request->pixel_format()))
-        .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id())));
+        .of_type(static_cast<MirSurfaceType>(request->type()))
+        .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id()))
+        .with_state(static_cast<MirSurfaceState>(request->state()))
+        .with_preferred_orientation(static_cast<MirOrientationMode>(request->pref_orientation()));
+
+    if(request->has_parent_id())
+        params.with_parent_id(SurfaceId{request->parent_id()});
+
+    auto const surf_id = session->create_surface(params);
 
     auto surface = session->get_surface(surf_id);
     auto const& client_size = surface->client_size();

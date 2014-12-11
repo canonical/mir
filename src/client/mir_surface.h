@@ -55,15 +55,19 @@ struct MemoryRegion;
 
 struct MirSurfaceSpec
 {
-    MirSurfaceSpec();
+    MirSurfaceSpec() = default;
+    MirSurfaceSpec(MirSurfaceParameters const& params);
 
-    MirConnection* connection;
+    MirConnection* connection{nullptr};
     std::string name;
-    int width, height;
-    MirPixelFormat pixel_format;
-    MirBufferUsage buffer_usage;
-    uint32_t output_id;
-    bool fullscreen;
+    int width{-1}, height{-1};
+    MirPixelFormat pixel_format{mir_pixel_format_invalid};
+    MirBufferUsage buffer_usage{mir_buffer_usage_hardware};
+    uint32_t output_id{mir_display_output_id_invalid};
+    MirSurfaceState state{mir_surface_state_unknown};
+    MirSurfaceType type{mir_surface_type_normal};
+    MirOrientationMode preferred_orientation{mir_orientation_mode_any};
+    MirSurface* parent{nullptr};
 };
 
 struct MirSurface : public mir::client::ClientSurface
@@ -76,19 +80,11 @@ public:
 
     MirSurface(
         MirConnection *allocating_connection,
-        mir::protobuf::DisplayServer::Stub & server,
+        mir::protobuf::DisplayServer::Stub& server,
         mir::protobuf::Debug::Stub* debug,
         std::shared_ptr<mir::client::ClientBufferFactory> const& buffer_factory,
         std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
-        MirSurfaceParameters const& params,
-        mir_surface_callback callback, void * context);
-
-    MirSurface(
-        MirConnection *allocating_connection,
-        mir::protobuf::DisplayServer::Stub & server,
-        std::shared_ptr<mir::client::ClientBufferFactory> const& buffer_factory,
-        std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
-        MirSurfaceParameters const& params,
+        MirSurfaceSpec const& spec,
         mir_surface_callback callback, void * context);
 
     ~MirSurface();
@@ -145,15 +141,15 @@ private:
     MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
     void release_cpu_region();
 
-    mir::protobuf::DisplayServer::Stub& server;
-    mir::protobuf::Debug::Stub* debug;
+    mir::protobuf::DisplayServer::Stub* server{nullptr};
+    mir::protobuf::Debug::Stub* debug{nullptr};
     mir::protobuf::Surface surface;
     mir::protobuf::BufferRequest buffer_request;
     std::string error_message;
     std::string name;
     mir::protobuf::Void void_response;
 
-    MirConnection* const connection;
+    MirConnection* const connection{nullptr};
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle configure_wait_handle;
