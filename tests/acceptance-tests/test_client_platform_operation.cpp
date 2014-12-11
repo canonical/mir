@@ -168,7 +168,7 @@ TEST_F(ClientPlatformOperation, exchanges_fd_items_with_platform)
     char const sent_char{'#'};
 
     mir::test::Pipe pipe;
-    write(pipe.write_fd(), &sent_char, 1);
+    EXPECT_THAT(write(pipe.write_fd(), &sent_char, 1), Eq(1));
 
     auto const reply = platform_operation_echo_fd(pipe.read_fd());
     EXPECT_THAT(reply, MessageDataIsEmpty());
