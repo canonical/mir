@@ -25,6 +25,7 @@
 #include "mir/scene/surface_creation_parameters.h"
 
 #include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/any_surface.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -61,15 +62,6 @@ struct MockSurfaceCoordinator : msh::SurfaceCoordinatorWrapper
 
 struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 {
-    MirSurfaceParameters const request_params
-    {
-        __FILE__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
-
     MirSurface* other_surface;
 
     std::mutex last_event_mutex;
@@ -138,7 +130,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
 
         scene_surface = the_latest_surface();
 
-        other_surface = mir_connection_create_surface_sync(connection, &request_params);
+        other_surface = mtf::make_any_surface(connection);
         mir_surface_set_event_handler(other_surface, nullptr);
 
         reset_last_event();
@@ -254,5 +246,35 @@ TEST_F(ClientSurfaceEvents, client_can_query_current_orientation)
         EXPECT_TRUE(wait_for_event(std::chrono::seconds(1)));
 
         EXPECT_THAT(mir_surface_get_orientation(surface), Eq(direction));
+    }
+}
+
+TEST_F(ClientSurfaceEvents, surface_receives_close_event)
+{
+    set_event_filter(mir_event_type_close_surface);
+
+    scene_surface->request_client_surface_close();
+
+    EXPECT_TRUE(wait_for_event(std::chrono::seconds(1)));
+
+    std::lock_guard<decltype(last_event_mutex)> last_event_lock{last_event_mutex};
+
+    EXPECT_THAT(last_event_surface, Eq(surface));
+    EXPECT_THAT(last_event.type, Eq(mir_event_type_close_surface));
+}
+
+TEST_F(ClientSurfaceEvents, client_can_query_preferred_orientation)
+{
+
+    for (auto const mode:
+        {mir_orientation_mode_portrait, mir_orientation_mode_portrait_inverted,
+         mir_orientation_mode_landscape, mir_orientation_mode_landscape_inverted,
+         mir_orientation_mode_portrait_any, mir_orientation_mode_landscape_any,
+         mir_orientation_mode_any})
+    {
+        reset_last_event();
+
+        mir_wait_for(mir_surface_set_preferred_orientation(surface, mode));
+        EXPECT_THAT(mir_surface_get_preferred_orientation(surface), Eq(mode));
     }
 }

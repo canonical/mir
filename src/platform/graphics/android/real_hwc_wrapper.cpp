@@ -18,7 +18,7 @@
 
 #include "real_hwc_wrapper.h"
 #include "hwc_common_device.h"
-#include "hwc_logger.h"
+#include "hwc_report.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <sstream>
@@ -27,9 +27,9 @@ namespace mga=mir::graphics::android;
 
 mga::RealHwcWrapper::RealHwcWrapper(
     std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-    std::shared_ptr<mga::HwcLogger> const& logger)
+    std::shared_ptr<mga::HwcReport> const& report)
     : hwc_device(hwc_device),
-      logger(logger)
+      report(report)
 {
 }
 
@@ -39,21 +39,21 @@ void mga::RealHwcWrapper::prepare(hwc_display_contents_1_t& display_list) const
     //      set the external and virtual displays to null as some drivers check for that
     hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
 
-    logger->log_list_submitted_to_prepare(display_list);
+    report->report_list_submitted_to_prepare(display_list);
     if (auto rc = hwc_device->prepare(hwc_device.get(), 1, displays))
     {
         std::stringstream ss;
         ss << "error during hwc prepare(). rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
-    logger->log_prepare_done(display_list);
+    report->report_prepare_done(display_list);
 }
 
 void mga::RealHwcWrapper::set(hwc_display_contents_1_t& display_list) const
 {
     hwc_display_contents_1_t* displays[num_displays] {&display_list, nullptr, nullptr};
 
-    logger->log_set_list(display_list);
+    report->report_set_list(display_list);
     if (auto rc = hwc_device->set(hwc_device.get(), 1, displays))
     {
         std::stringstream ss;
@@ -76,7 +76,7 @@ void mga::RealHwcWrapper::vsync_signal_on() const
         ss << "error turning vsync signal on. rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
-    logger->log_vsync_on();
+    report->report_vsync_on();
 }
 
 void mga::RealHwcWrapper::vsync_signal_off() const
@@ -87,7 +87,7 @@ void mga::RealHwcWrapper::vsync_signal_off() const
         ss << "error turning vsync signal off. rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
-    logger->log_vsync_off();
+    report->report_vsync_off();
 }
 
 void mga::RealHwcWrapper::display_on() const
@@ -98,7 +98,7 @@ void mga::RealHwcWrapper::display_on() const
         ss << "error turning display on. rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
-    logger->log_display_on();
+    report->report_display_on();
 }
 
 void mga::RealHwcWrapper::display_off() const
@@ -109,5 +109,5 @@ void mga::RealHwcWrapper::display_off() const
         ss << "error turning display off. rc = " << std::hex << rc;
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
-    logger->log_display_off();
+    report->report_display_off();
 }

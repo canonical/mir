@@ -35,6 +35,7 @@ namespace android
 class DisplayDevice;
 class FramebufferBundle;
 class HwcWrapper;
+class LayerAdapter;
 
 class DisplayResourceFactory
 {
@@ -50,7 +51,8 @@ public:
     virtual std::shared_ptr<DisplayDevice> create_fb_device(
         std::shared_ptr<framebuffer_device_t> const& fb_native_device) const = 0;
     virtual std::shared_ptr<DisplayDevice> create_hwc_device(
-        std::shared_ptr<HwcWrapper> const& hwc_native_device) const = 0;
+        std::shared_ptr<HwcWrapper> const& hwc_native_device,
+        std::shared_ptr<LayerAdapter> const& layer_adapter) const = 0;
     virtual std::shared_ptr<DisplayDevice> create_hwc_fb_device(
         std::shared_ptr<HwcWrapper> const& hwc_native_device,
         std::shared_ptr<framebuffer_device_t> const& fb_native_device) const = 0;

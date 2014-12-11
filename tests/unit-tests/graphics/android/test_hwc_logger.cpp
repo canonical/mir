@@ -88,7 +88,7 @@ struct HwcLogger : public ::testing::Test
 };
 }
 
-TEST_F(HwcLogger, log_pre_prepare)
+TEST_F(HwcLogger, report_pre_prepare)
 {
     std::stringstream str;
     str << "before prepare():" << std::endl
@@ -98,11 +98,11 @@ TEST_F(HwcLogger, log_pre_prepare)
         << " 2 | {  55,  34,  89,  55} | { 144,  89, 233, 144} | ROT_270   | COVERAGE | " << std::endl
         << " 3 | { 377, 233, 610, 337} | { 987, 610,1597, 987} | NONE      | NONE     | " << std::endl;
     mga::HwcFormattedLogger logger;
-    logger.log_list_submitted_to_prepare(*display_list);
+    logger.report_list_submitted_to_prepare(*display_list);
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
 
-TEST_F(HwcLogger, log_post_prepare)
+TEST_F(HwcLogger, report_post_prepare)
 {
     std::stringstream str;
     str << "after prepare():" << std::endl 
@@ -112,11 +112,11 @@ TEST_F(HwcLogger, log_post_prepare)
         << " 2 | FORCE_GL  | " << std::endl
         << " 3 | FB_TARGET | " << std::endl;
     mga::HwcFormattedLogger logger;
-    logger.log_prepare_done(*display_list);
+    logger.report_prepare_done(*display_list);
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
 
-TEST_F(HwcLogger, log_set)
+TEST_F(HwcLogger, report_set)
 {
     std::stringstream str;
     str << "set list():" << std::endl
@@ -127,11 +127,11 @@ TEST_F(HwcLogger, log_set)
         << " 3 | " << &native_handle4 << std::endl; 
 
     mga::HwcFormattedLogger logger;
-    logger.log_set_list(*display_list);
+    logger.report_set_list(*display_list);
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
 
-TEST_F(HwcLogger, log_optimization)
+TEST_F(HwcLogger, report_optimization)
 {
     std::stringstream enabled_str;
     std::stringstream disabled_str;
@@ -139,50 +139,78 @@ TEST_F(HwcLogger, log_optimization)
     disabled_str << "HWC overlay optimizations are OFF" << std::endl;
 
     mga::HwcFormattedLogger logger;
-    logger.log_overlay_optimization(mga::OverlayOptimization::enabled);
+    logger.report_overlay_optimization(mga::OverlayOptimization::enabled);
     EXPECT_EQ(enabled_str.str(), test_stream.str()); 
     test_stream.str("");
     test_stream.clear();
-    logger.log_overlay_optimization(mga::OverlayOptimization::disabled);
+    logger.report_overlay_optimization(mga::OverlayOptimization::disabled);
     EXPECT_EQ(disabled_str.str(), test_stream.str()); 
 }
 
-TEST_F(HwcLogger, log_vsync_on)
+TEST_F(HwcLogger, report_vsync_on)
 {
     std::stringstream str;
     str << "HWC: vsync signal on" << std::endl;
 
     mga::HwcFormattedLogger logger;
-    logger.log_vsync_on();
+    logger.report_vsync_on();
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
 
-TEST_F(HwcLogger, log_vsync_off)
+TEST_F(HwcLogger, report_vsync_off)
 {
     std::stringstream str;
     str << "HWC: vsync signal off" << std::endl;
 
     mga::HwcFormattedLogger logger;
-    logger.log_vsync_off();
+    logger.report_vsync_off();
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
 
-TEST_F(HwcLogger, log_display_off)
+TEST_F(HwcLogger, report_display_off)
 {
     std::stringstream str;
     str << "HWC: display off" << std::endl;
 
     mga::HwcFormattedLogger logger;
-    logger.log_display_off();
+    logger.report_display_off();
     EXPECT_EQ(str.str(), test_stream.str()); 
 }
 
-TEST_F(HwcLogger, log_display_on)
+TEST_F(HwcLogger, report_display_on)
 {
     std::stringstream str;
     str << "HWC: display on" << std::endl;
 
     mga::HwcFormattedLogger logger;
-    logger.log_display_on();
+    logger.report_display_on();
+    EXPECT_EQ(str.str(), test_stream.str()); 
+}
+
+TEST_F(HwcLogger, report_legacy_fb)
+{
+    std::stringstream str;
+    str << "Legacy FB module" << std::endl;
+
+    mga::HwcFormattedLogger logger;
+    logger.report_legacy_fb_module();
+    EXPECT_EQ(str.str(), test_stream.str()); 
+}
+
+TEST_F(HwcLogger, report_hwc_version)
+{
+    std::stringstream str;
+    str << "HWC version 1.0" << std::endl
+        << "HWC version 1.1" << std::endl
+        << "HWC version 1.2" << std::endl
+        << "HWC version 1.3" << std::endl
+        << "HWC version unknown (0x33)" << std::endl;
+
+    mga::HwcFormattedLogger logger;
+    logger.report_hwc_version(HWC_DEVICE_API_VERSION_1_0);
+    logger.report_hwc_version(HWC_DEVICE_API_VERSION_1_1);
+    logger.report_hwc_version(HWC_DEVICE_API_VERSION_1_2);
+    logger.report_hwc_version(HWC_DEVICE_API_VERSION_1_3);
+    logger.report_hwc_version(51);
     EXPECT_EQ(str.str(), test_stream.str()); 
 }

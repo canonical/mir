@@ -53,6 +53,19 @@ struct MemoryRegion;
 }
 }
 
+struct MirSurfaceSpec
+{
+    MirSurfaceSpec();
+
+    MirConnection* connection;
+    std::string name;
+    int width, height;
+    MirPixelFormat pixel_format;
+    MirBufferUsage buffer_usage;
+    uint32_t output_id;
+    bool fullscreen;
+};
+
 struct MirSurface : public mir::client::ClientSurface
 {
 public:
@@ -108,7 +121,8 @@ public:
     int attrib(MirSurfaceAttrib a) const;
 
     MirOrientation get_orientation() const;
-    
+    MirWaitHandle* set_preferred_orientation(MirOrientationMode mode);
+
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
     void set_event_handler(MirEventDelegate const* delegate);
@@ -128,7 +142,7 @@ private:
     void populate(MirBufferPackage& buffer_package);
     void created(mir_surface_callback callback, void * context);
     void new_buffer(mir_surface_callback callback, void * context);
-    MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf);
+    MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
     void release_cpu_region();
 
     mir::protobuf::DisplayServer::Stub& server;
@@ -136,6 +150,7 @@ private:
     mir::protobuf::Surface surface;
     mir::protobuf::BufferRequest buffer_request;
     std::string error_message;
+    std::string name;
     mir::protobuf::Void void_response;
 
     MirConnection* const connection;

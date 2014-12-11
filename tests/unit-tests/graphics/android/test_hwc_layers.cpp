@@ -30,6 +30,9 @@ namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
+namespace
+{
+
 class HWCLayersTest : public ::testing::Test
 {
 public:
@@ -37,7 +40,7 @@ public:
     {
         using namespace testing;
 
-        native_handle_1 = std::make_shared<mtd::MockAndroidNativeBuffer>(buffer_size);
+        native_handle_1 = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>(buffer_size);
         ON_CALL(mock_buffer, size())
             .WillByDefault(Return(buffer_size));
         ON_CALL(mock_buffer, native_buffer_handle())
@@ -90,11 +93,13 @@ public:
     size_t list_index;
     hwc_layer_1 expected_layer;
     hwc_rect_t region{0,0,0,0};
+    std::shared_ptr<mga::LayerAdapter> layer_adapter{std::make_shared<mga::IntegerSourceCrop>()};
 };
+}
 
 TEST_F(HWCLayersTest, check_if_layer_needs_gl_render)
 {
-    mga::HWCLayer layer(list, list_index);
+    mga::HWCLayer layer(layer_adapter, list, list_index);
 
     hwc_layer->compositionType = HWC_OVERLAY;
     hwc_layer->flags = 0;
@@ -111,10 +116,10 @@ TEST_F(HWCLayersTest, check_if_layer_needs_gl_render)
 
 TEST_F(HWCLayersTest, move_layer_positions)
 {
-    mga::HWCLayer layer(type, screen_position, false, mock_buffer, list, list_index);
+    mga::HWCLayer layer(layer_adapter, list, list_index, type, screen_position, false, mock_buffer);
     mga::HWCLayer second_layer(std::move(layer));
 
-    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
 }
 
 TEST_F(HWCLayersTest, change_layer_types)
@@ -123,9 +128,10 @@ TEST_F(HWCLayersTest, change_layer_types)
 
     type = mga::LayerType::framebuffer_target;
     mga::HWCLayer layer(
+        layer_adapter, list, list_index,
         mga::LayerType::framebuffer_target,
-        screen_position, alpha_enabled, mock_buffer, list, list_index);
-    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+        screen_position, alpha_enabled, mock_buffer);
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
 
     EXPECT_THROW({
         layer.setup_layer(
@@ -137,17 +143,17 @@ TEST_F(HWCLayersTest, change_layer_types)
 
     expected_layer.compositionType = HWC_FRAMEBUFFER;
     layer.setup_layer(mga::LayerType::gl_rendered, screen_position, alpha_enabled, mock_buffer);
-    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
 
     expected_layer.compositionType = HWC_FRAMEBUFFER;
     expected_layer.flags = HWC_SKIP_LAYER;
     layer.setup_layer(mga::LayerType::skip, screen_position, alpha_enabled, mock_buffer);
-    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
 
     expected_layer.compositionType = HWC_FRAMEBUFFER;
     expected_layer.flags = 0;
     layer.setup_layer(mga::LayerType::gl_rendered, screen_position, alpha_enabled, mock_buffer);
-    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
 }
 
 TEST_F(HWCLayersTest, apply_buffer_updates_to_framebuffer_layer)
@@ -162,9 +168,9 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_framebuffer_layer)
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
-    mga::HWCLayer layer(type, screen_position, alpha_enabled, mock_buffer, list, list_index);
+    mga::HWCLayer layer(layer_adapter, list, list_index, type, screen_position, alpha_enabled, mock_buffer);
 
-    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
 }
 
 TEST_F(HWCLayersTest, apply_buffer_updates_to_overlay_layers)
@@ -178,9 +184,9 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_overlay_layers)
     expected_layer.acquireFenceFd = -1;
     expected_layer.releaseFenceFd = -1;
 
-    mga::HWCLayer layer(type, screen_position, alpha_enabled, mock_buffer, list, list_index);
+    mga::HWCLayer layer(layer_adapter, list, list_index, type, screen_position, alpha_enabled, mock_buffer);
     hwc_layer->compositionType = HWC_OVERLAY;
-    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
 
     //set_acquirefence_from should set the fence
     //mir must reset releaseFenceFd to -1
@@ -190,7 +196,7 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_overlay_layers)
         .WillOnce(testing::Return(fake_fence));
     expected_layer.acquireFenceFd = fake_fence;
     layer.set_acquirefence_from(mock_buffer);
-    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
 }
 
 TEST_F(HWCLayersTest, apply_buffer_updates_to_fbtarget)
@@ -205,10 +211,11 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_fbtarget)
     expected_layer.releaseFenceFd = -1;
 
     mga::HWCLayer layer(
+        layer_adapter, list, list_index,
         mga::LayerType::framebuffer_target,
-        screen_position, alpha_enabled, mock_buffer, list, list_index);
+        screen_position, alpha_enabled, mock_buffer);
 
-    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
 
     //mir must reset releaseFenceFd to -1 if hwc has changed it
     hwc_layer->releaseFenceFd = fake_fence;
@@ -217,7 +224,7 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_fbtarget)
         .WillOnce(testing::Return(fake_fence));
     expected_layer.acquireFenceFd = fake_fence;
     layer.set_acquirefence_from(mock_buffer);
-    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
 
     //hwc will set this to -1 to acknowledge that its adopted this layer's fence.
     //multiple sequential updates to the same layer must not set the acquireFenceFds on the calls
@@ -229,7 +236,7 @@ TEST_F(HWCLayersTest, apply_buffer_updates_to_fbtarget)
         screen_position,
         false,
         mock_buffer);
-    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
 }
 
 TEST_F(HWCLayersTest, buffer_fence_updates)
@@ -238,8 +245,9 @@ TEST_F(HWCLayersTest, buffer_fence_updates)
     EXPECT_CALL(*native_handle_1, update_usage(fake_fence, mga::BufferAccess::read))
         .Times(1);
     mga::HWCLayer layer(
+        layer_adapter, list, list_index,
         mga::LayerType::framebuffer_target,
-        screen_position, alpha_enabled, mock_buffer, list, list_index);
+        screen_position, alpha_enabled, mock_buffer);
 
     hwc_layer->releaseFenceFd = fake_fence;
     layer.update_from_releasefence(mock_buffer);
@@ -280,19 +288,62 @@ TEST_F(HWCLayersTest, check_layer_defaults_and_alpha)
     expected_layer.releaseFenceFd = -1;
     expected_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
 
-    mga::HWCLayer layer(list, list_index);
+    mga::HWCLayer layer(layer_adapter, list, list_index);
     layer.setup_layer(
         mga::LayerType::gl_rendered,
         screen_position,
         true,
         mock_buffer);
-    EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
 
     expected_layer.blending = HWC_BLENDING_NONE;
     layer.setup_layer(
         mga::LayerType::gl_rendered,
         screen_position,
         false,
+        mock_buffer);
+    EXPECT_THAT(*hwc_layer, MatchesLegacyLayer(expected_layer));
+}
+
+//HWC 1.3 and later started using floats for the sourceCrop field, and ints for the displayFrame
+TEST_F(HWCLayersTest, has_float_sourcecrop)
+{
+    hwc_frect_t crop
+    {
+        0.0f, 0.0f,
+        buffer_size.width.as_float(),
+        buffer_size.height.as_float()
+    };
+
+    hwc_rect_t screen_pos
+    {
+        screen_position.top_left.x.as_int(),
+        screen_position.top_left.y.as_int(),
+        screen_position.bottom_right().x.as_int(),
+        screen_position.bottom_right().y.as_int()
+    };
+
+    hwc_region_t visible_region {1, &screen_pos};
+    hwc_layer_1 expected_layer;
+
+    expected_layer.compositionType = HWC_FRAMEBUFFER;
+    expected_layer.hints = 0;
+    expected_layer.flags = 0;
+    expected_layer.handle = native_handle_1->handle();
+    expected_layer.transform = 0;
+    expected_layer.blending = HWC_BLENDING_PREMULT;
+    expected_layer.sourceCropf = crop;
+    expected_layer.displayFrame = screen_pos;
+    expected_layer.visibleRegionScreen = visible_region;
+    expected_layer.acquireFenceFd = -1;
+    expected_layer.releaseFenceFd = -1;
+    expected_layer.planeAlpha = std::numeric_limits<decltype(hwc_layer_1_t::planeAlpha)>::max();
+
+    mga::HWCLayer layer(std::make_shared<mga::FloatSourceCrop>(), list, list_index);
+    layer.setup_layer(
+        mga::LayerType::gl_rendered,
+        screen_position,
+        true,
         mock_buffer);
     EXPECT_THAT(*hwc_layer, MatchesLayer(expected_layer));
 }

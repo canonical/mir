@@ -1,4 +1,4 @@
-MIRPLATFORM_4 {
+MIRPLATFORM_5 {
  global:
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
@@ -94,7 +94,6 @@ MIRPLATFORM_4 {
     mir::graphics::InternalSurface::swap_buffers*;
     mir::graphics::NativePlatform::connection_ipc_package*;
     mir::graphics::NativePlatform::create_buffer_allocator*;
-    mir::graphics::NativePlatform::create_internal_client*;
     mir::graphics::NativePlatform::fill_buffer_package*;
     mir::graphics::NativePlatform::make_buffer_writer*;
     mir::graphics::NativePlatform::?NativePlatform*;
@@ -103,7 +102,6 @@ MIRPLATFORM_4 {
     mir::graphics::operator*;
     mir::graphics::Platform::create_buffer_allocator*;
     mir::graphics::Platform::create_display*;
-    mir::graphics::Platform::create_internal_client*;
     mir::graphics::PlatformIpcOperations::connection_ipc_package*;
     mir::graphics::PlatformIpcOperations::operator*;
     mir::graphics::PlatformIpcOperations::pack_buffer*;

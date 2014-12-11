@@ -42,7 +42,11 @@ typedef enum
     mir_event_type_surface,
     mir_event_type_resize,
     mir_event_type_prompt_session_state_change,
-    mir_event_type_orientation
+    mir_event_type_orientation,
+    mir_event_type_close_surface,
+    /* Type for new style input event will be returned from mir_event_get_type
+       when old style event type was mir_event_type_key or mir_event_type_motion */
+    mir_event_type_input
 } MirEventType;
 
 typedef enum {
@@ -120,6 +124,9 @@ typedef enum {
    mir_motion_tool_type_eraser  = 4
 } MirMotionToolType;
 
+// DEPRECATED
+// Direct access to MirKeyEvent is deprecated. Please use mir_event_get_input_event
+// and the mir_input_event* family of functions.
 typedef struct
 {
     MirEventType type;
@@ -134,6 +141,7 @@ typedef struct
     int32_t scan_code;
     int32_t repeat_count;
     nsecs_t down_time;
+
     nsecs_t event_time;
     int is_system_key;
 } MirKeyEvent;
@@ -156,6 +164,9 @@ typedef struct
     int unused3;
 } MirMotionPointer;
 
+// DEPRECATED
+// Direct access to MirMotionEvent is deprecated. Please use mir_event_get_input_event
+// and the mir_input_event* family of functions.
 typedef struct
 {
     MirEventType type;
@@ -224,8 +235,16 @@ typedef struct MirOrientationEvent
     MirOrientation direction;
 } MirOrientationEvent;
 
+typedef struct MirCloseSurfaceEvent
+{
+    MirEventType type;
+
+    int surface_id;
+} MirCloseSurfaceEvent;
+
 typedef union
 {
+    // Direct access to the type member is deprecated. Instead use mir_event_get_type. 
     MirEventType    type;
     MirKeyEvent     key;
     MirMotionEvent  motion;
@@ -233,7 +252,18 @@ typedef union
     MirResizeEvent  resize;
     MirPromptSessionEvent  prompt_session;
     MirOrientationEvent orientation;
+    MirCloseSurfaceEvent   close_surface;
 } MirEvent;
+
+/*
+ * Retrieves the type of a MirEvent. Now preferred over direct access to ev->type.
+ * In particular ev->type will never be mir_event_type_input and mir_event_get_type
+ * is the only way to ensure mir_event_get_input_event will succeed.
+ *
+ * \param [in] event The event
+ * \return           The event type
+ */
+MirEventType mir_event_get_type(MirEvent const* ev);
 
 #ifdef __cplusplus
 }

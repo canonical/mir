@@ -27,8 +27,6 @@
 #include "mir/graphics/nested_context.h"
 
 #include "nested_authentication.h"
-#include "internal_client.h"
-#include "internal_native_display.h"
 
 #include "ipc_operations.h"
 
@@ -52,20 +50,9 @@ mgm::NativePlatform::NativePlatform(std::shared_ptr<NestedContext> const& nested
         std::make_shared<mgm::NestedAuthentication>(nested_context)); 
 }
 
-mgm::NativePlatform::~NativePlatform()
-{
-    finish_internal_native_display();
-}
-
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator()
 {
     return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited);
-}
-
-std::shared_ptr<mg::InternalClient> mgm::NativePlatform::create_internal_client()
-{
-    auto nd = ensure_internal_native_display(ipc_ops->connection_ipc_package());
-    return std::make_shared<mgm::InternalClient>(nd);
 }
 
 extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(
@@ -79,33 +66,6 @@ namespace
 {
 std::shared_ptr<mgm::InternalNativeDisplay> native_display = nullptr;
 std::mutex native_display_guard;
-}
-
-bool mgm::NativePlatform::internal_native_display_in_use()
-{
-    std::unique_lock<std::mutex> lg(native_display_guard);
-    return native_display != nullptr;
-}
-
-std::shared_ptr<mgm::InternalNativeDisplay> mgm::NativePlatform::internal_native_display()
-{
-    std::unique_lock<std::mutex> lg(native_display_guard);
-    return native_display;
-}
-
-std::shared_ptr<mgm::InternalNativeDisplay> mgm::NativePlatform::ensure_internal_native_display(
-    std::shared_ptr<mg::PlatformIPCPackage> const& package)
-{
-    std::unique_lock<std::mutex> lg(native_display_guard);
-    if (!native_display)
-        native_display = std::make_shared<mgm::InternalNativeDisplay>(package);
-    return native_display;
-}
-
-void mgm::NativePlatform::finish_internal_native_display()
-{
-    std::unique_lock<std::mutex> lg(native_display_guard);
-    native_display.reset();
 }
 
 std::shared_ptr<mg::BufferWriter> mgm::NativePlatform::make_buffer_writer()

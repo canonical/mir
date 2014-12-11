@@ -92,11 +92,6 @@ public:
      */
     virtual std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const = 0;
 
-    /**
-     * Creates the in-process client support object.
-     */
-    virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
-
     virtual EGLNativeDisplayType egl_native_display() const = 0;
 };
 

@@ -23,8 +23,6 @@
 #include <cstdio>
 #include <memory>
 #include <string>
-#include <streambuf>
-#include <istream>
 
 namespace mir
 {
@@ -49,8 +47,6 @@ private:
     Popen(Popen const&) = delete;
     Popen& operator=(Popen const&) = delete;
     std::unique_ptr<std::FILE, void(*)(FILE* f)> raw_stream;
-    std::unique_ptr<std::streambuf> stream_buffer;
-    std::istream stream;
 };
 
 }

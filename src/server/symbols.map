@@ -1,4 +1,4 @@
-MIR_SERVER_27 {
+MIR_SERVER_28 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -122,6 +122,7 @@ MIR_SERVER_27 {
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
     mir::DefaultServerConfiguration::wrap_cursor_listener*;
+    mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
     mir::DefaultServerConfiguration::wrap_session_coordinator*;
     mir::DefaultServerConfiguration::wrap_surface_coordinator*;
@@ -130,7 +131,6 @@ MIR_SERVER_27 {
     mir::DisplayServer::run*;
     mir::DisplayServer::stop*;
     mir::EmergencyCleanup::operator*;
-    mir::frontend::as_internal_surface*;
     mir::frontend::DisplayChanger::active_configuration*;
     mir::frontend::DisplayChanger::configure*;
     mir::frontend::DisplayChanger::?DisplayChanger*;
@@ -204,7 +204,6 @@ MIR_SERVER_27 {
     mir::frontend::Surface::?Surface*;
     mir::frontend::Surface::Surface*;
     mir::frontend::Surface::swap_buffers*;
-    mir::frontend::Surface::swap_buffers_blocking*;
     mir::input::CompositeEventFilter::append*;
     mir::input::CompositeEventFilter::prepend*;
     mir::input::CursorImages::?CursorImages*;
@@ -258,6 +257,7 @@ MIR_SERVER_27 {
     mir::scene::CoordinateTranslator::surface_to_screen*;
     mir::scene::NullSurfaceObserver::alpha_set_to*;
     mir::scene::NullSurfaceObserver::attrib_changed*;
+    mir::scene::NullSurfaceObserver::client_surface_close_requested*;
     mir::scene::NullSurfaceObserver::cursor_image_set_to*;
     mir::scene::NullSurfaceObserver::frame_posted*;
     mir::scene::NullSurfaceObserver::hidden_set_to*;
@@ -355,6 +355,7 @@ MIR_SERVER_27 {
     mir::scene::Surface::name*;
     mir::scene::SurfaceObserver::alpha_set_to*;
     mir::scene::SurfaceObserver::attrib_changed*;
+    mir::scene::SurfaceObserver::client_surface_close_requested*;
     mir::scene::SurfaceObserver::cursor_image_set_to*;
     mir::scene::SurfaceObserver::frame_posted*;
     mir::scene::SurfaceObserver::hidden_set_to*;
@@ -367,6 +368,7 @@ MIR_SERVER_27 {
     mir::scene::SurfaceObserver::SurfaceObserver*;
     mir::scene::SurfaceObserver::transformation_set_to*;
     mir::scene::Surface::remove_observer*;
+    mir::scene::Surface::request_client_surface_close*;
     mir::scene::Surface::resize*;
     mir::scene::Surface::set_alpha*;
     mir::scene::Surface::set_cursor_image*;
@@ -412,6 +414,7 @@ MIR_SERVER_27 {
     mir::Server::override_the_compositor*;
     mir::Server::override_the_display_buffer_compositor_factory*;
     mir::Server::override_the_gl_config*;
+    mir::Server::override_the_host_lifecycle_event_listener*;
     mir::Server::override_the_input_dispatcher*;
     mir::Server::override_the_logger*;
     mir::Server::override_the_placement_strategy*;
@@ -420,6 +423,7 @@ MIR_SERVER_27 {
     mir::Server::override_the_server_status_listener*;
     mir::Server::override_the_session_authorizer*;
     mir::Server::override_the_session_listener*;
+    mir::Server::override_the_session_mediator_report*;
     mir::Server::override_the_shell_focus_setter*;
     mir::Server::override_the_surface_configurator*;
     mir::Server::run*;
@@ -436,6 +440,7 @@ MIR_SERVER_27 {
     mir::ServerStatusListener::ServerStatusListener*;
     mir::ServerStatusListener::started*;
     mir::Server::stop*;
+    mir::Server::supported_pixel_formats*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_compositor*;
     mir::Server::the_cursor_listener*;
@@ -454,6 +459,7 @@ MIR_SERVER_27 {
     mir::Server::the_surface_coordinator*;
     mir::Server::the_touch_visualizer*;
     mir::Server::wrap_cursor_listener*;
+    mir::Server::wrap_display_buffer_compositor_factory*;
     mir::Server::wrap_display_configuration_policy*;
     mir::Server::wrap_session_coordinator*;
     mir::Server::wrap_surface_coordinator*;
@@ -617,6 +623,7 @@ MIR_SERVER_27 {
     non-virtual?thunk?to?mir::scene::CoordinateTranslator::?CoordinateTranslator*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::alpha_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::attrib_changed*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::client_surface_close_requested*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::cursor_image_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::frame_posted*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::hidden_set_to*;
