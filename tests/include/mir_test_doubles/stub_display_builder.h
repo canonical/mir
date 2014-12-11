@@ -83,6 +83,10 @@ struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
         return std::unique_ptr<graphics::android::ConfigurableDisplayBuffer>(
                 new StubConfigurableDisplayBuffer(geometry::Rectangle{{0,0},sz}));
     }
+
+    std::unique_ptr<graphics::android::HwcConfiguration> create_hwc_config()
+    {
+    }
     
     geometry::Size sz;
 };
