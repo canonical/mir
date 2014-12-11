@@ -52,6 +52,6 @@ TEST_F(HwcConfiguration, turns_screen_off_for_off_suspend_and_standby)
     config.power_mode(mir_power_mode_suspend);
     config.power_mode(mir_power_mode_off);
     config.power_mode(mir_power_mode_standby);
-    config.power_mode(mir_power_on);
+    config.power_mode(mir_power_mode_on);
     config.power_mode(mir_power_mode_standby);
 }
