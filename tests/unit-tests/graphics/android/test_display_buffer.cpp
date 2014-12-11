@@ -307,19 +307,25 @@ TEST_F(DisplayBuffer, changes_display_power_mode)
 
 TEST_F(DisplayBuffer, disregards_double_display_power_mode_request)
 {
-    using namespace testing;
     mga::DisplayBuffer db(
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
 
     EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off))
         .Times(1);
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_suspend))
+        .Times(1);
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_standby))
+        .Times(1);
 
     auto config = db.configuration();
     config.power_mode = mir_power_mode_off;
     db.configure(config);
+    db.configure(config);
     config.power_mode = mir_power_mode_suspend;
     db.configure(config);
+    db.configure(config);
     config.power_mode = mir_power_mode_standby;
+    db.configure(config);
     db.configure(config);
 }
 

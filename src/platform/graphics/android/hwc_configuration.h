@@ -50,6 +50,7 @@ public:
     void power_mode(DisplayName, MirPowerMode) override;
 private:
     std::shared_ptr<HwcWrapper> const hwc_device;
+    bool off;
 };
 
 }
