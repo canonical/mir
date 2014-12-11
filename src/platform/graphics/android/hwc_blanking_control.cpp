@@ -29,6 +29,7 @@ mga::HwcBlankingControl::HwcBlankingControl(
 
 void mga::HwcBlankingControl::power_mode(DisplayName display, MirPowerMode mode_request)
 {
+    //FIXME!!!! REMOVE BEFORE LANDING
     if (mode_request == mir_power_mode_on)
     {
         hwc_device->display_on(display);
