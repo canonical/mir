@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_NULL_EVENT_SINK_H_
 
 #include "mir/frontend/event_sink.h"
+
 namespace mir
 {
 namespace test
@@ -35,4 +36,5 @@ struct NullEventSink : public frontend::EventSink
 }
 }
 }
+
 #endif /* MIR_TEST_DOUBLES_NULL_EVENT_SINK_H_*/
