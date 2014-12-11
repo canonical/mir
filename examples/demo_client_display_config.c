@@ -20,8 +20,6 @@
 
 #include "eglapp.h"
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/events/event.h"
-#include "mir_toolkit/events/input/input_event.h"
 
 #include <GLES2/gl2.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
