@@ -21,13 +21,13 @@ namespace mga = mg::android;
 namespace geom = mir::geometry;
 
 mga::DisplayConfiguration::DisplayConfiguration(mg::DisplayConfigurationOutput && output)
-    : output(std::move(output)),
+    : configuration(std::move(output)),
       card{mg::DisplayConfigurationCardId{0}, 1}
 {
 }
 
 mga::DisplayConfiguration::DisplayConfiguration(DisplayConfiguration const& other)
-    : mg::DisplayConfiguration(), output(other.output),
+    : mg::DisplayConfiguration(), configuration(other.configuration),
       card(other.card)
 {
 }
@@ -36,7 +36,7 @@ mga::DisplayConfiguration& mga::DisplayConfiguration::operator=(DisplayConfigura
 {
     if (&other != this)
     {
-        output = other.output;
+    	configuration = other.configuration;
         card = other.card;
     }
     return *this;
@@ -49,12 +49,12 @@ void mga::DisplayConfiguration::for_each_card(std::function<void(mg::DisplayConf
 
 void mga::DisplayConfiguration::for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
 {
-    f(output);
+    f(configuration);
 }
 
 void mga::DisplayConfiguration::for_each_output(std::function<void(mg::UserDisplayConfigurationOutput&)> f)
 {
-    mg::UserDisplayConfigurationOutput user(output);
+    mg::UserDisplayConfigurationOutput user(configuration);
     f(user);
 }
 

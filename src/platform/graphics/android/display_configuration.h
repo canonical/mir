@@ -40,7 +40,7 @@ public:
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
 
 private:
-    DisplayConfigurationOutput output;
+    DisplayConfigurationOutput configuration;
     DisplayConfigurationCard card;
 };
 
