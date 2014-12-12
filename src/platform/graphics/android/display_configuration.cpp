@@ -36,7 +36,7 @@ mga::DisplayConfiguration& mga::DisplayConfiguration::operator=(DisplayConfigura
 {
     if (&other != this)
     {
-    	configuration = other.configuration;
+        configuration = other.configuration;
         card = other.card;
     }
     return *this;
