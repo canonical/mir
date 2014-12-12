@@ -52,6 +52,23 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
     return spec;
 }
 
+MirSurfaceSpec* mir_connection_create_spec_for_menu_surface(MirConnection* connection,
+                                                            MirSurface* parent,
+                                                            MirRectangle* rect,
+                                                            MirPixelFormat format)
+{
+    if (!mir_surface_is_valid(parent)) abort();
+    if (!rect) abort();
+
+    auto spec = new MirSurfaceSpec;
+    spec->connection = connection;
+    spec->type = mir_surface_type_menu;
+    spec->parent = parent;
+    spec->rect = *rect;
+    spec->pixel_format = format;
+    return spec;
+}
+
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)
 {
     MirSurface* surface = nullptr;

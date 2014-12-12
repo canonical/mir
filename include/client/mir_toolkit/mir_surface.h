@@ -51,6 +51,22 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
                                                               MirPixelFormat format);
 
 /**
+ * Create a surface specification for a menu surface.
+ *
+ * \param [in] connection   Connection the surface will be created on
+ * \param [in] parent       A valid parent surface for this menu.
+ * \param [in] rect         The requested relative location (with respect to parent)
+ *                          and size for the surface. The server is not guaranteed
+ *                          to create a surface of with the requested location or size.
+ * \param [in] format       Pixel format for the surface.
+ * \return                  A handle that can be passed to mir_surface_create() to complete construction.
+ */
+MirSurfaceSpec* mir_connection_create_spec_for_menu_surface(MirConnection* connection,
+                                                            MirSurface* parent,
+                                                            MirRectangle* rect,
+                                                            MirPixelFormat format);
+
+/**
  * Create a surface from a given specification
  *
  *
