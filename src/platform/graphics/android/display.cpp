@@ -23,6 +23,7 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "display.h"
+#include "display_buffer.h"
 #include "display_buffer_builder.h"
 #include "mir/geometry/rectangle.h"
 
@@ -49,7 +50,23 @@ mga::Display::Display(
     display_buffer_builder{display_buffer_builder},
     gl_context{display_buffer_builder->display_format(), *gl_config, *display_report},
     display_buffer{display_buffer_builder->create_display_buffer(*gl_program_factory, gl_context)},
-    hwc_config{display_buffer_builder->create_hwc_configuration()}
+    hwc_config{display_buffer_builder->create_hwc_configuration()},
+    primary_configuration{
+        mg::DisplayConfigurationOutputId{1},
+        mg::DisplayConfigurationCardId{0},
+        mg::DisplayConfigurationOutputType::lvds,
+        {display_buffer_builder->display_format()},
+//        {mg::DisplayConfigurationMode{fb_bundle->fb_size(), fb_bundle->fb_refresh_rate()}},
+        {mg::DisplayConfigurationMode{display_buffer->view_area().size, 0.0f}},
+        0,
+        geom::Size{0,0}, //could use DPI information to fill this
+        true,
+        true,
+        geom::Point{0,0},
+        0,
+        display_buffer_builder->display_format(),
+        mir_power_mode_on,
+        mir_orientation_normal}
 {
     safe_power_mode(*hwc_config, mir_power_mode_on);
 
@@ -65,7 +82,7 @@ mga::Display::Display(
 
 mga::Display::~Display()
 {
-    if (display_buffer->configuration().power_mode != mir_power_mode_off)
+    if (primary_configuration.power_mode != mir_power_mode_off)
         safe_power_mode(*hwc_config, mir_power_mode_off);
 }
 
@@ -73,7 +90,7 @@ void mga::Display::for_each_display_buffer(std::function<void(mg::DisplayBuffer&
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
-    if (display_buffer->configuration().power_mode == mir_power_mode_on)
+    if (primary_configuration.power_mode == mir_power_mode_on)
         f(*display_buffer);
 }
 
@@ -82,26 +99,31 @@ std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
     return std::unique_ptr<mg::DisplayConfiguration>(
-        new mga::DisplayConfiguration(display_buffer->configuration()));
+        new mga::DisplayConfiguration(mg::DisplayConfigurationOutput(primary_configuration)));
 }
 
-void mga::Display::configure(mg::DisplayConfiguration const& configuration)
+void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
 {
-    if (!configuration.valid())
+    if (!new_configuration.valid())
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid or inconsistent display configuration"));
-
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
-    configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
-    {
-        if (display_buffer->configuration().power_mode != output.power_mode)
+    new_configuration.for_each_output([this](mg::DisplayConfigurationOutput const& output) {
+        //power
+        if (output.power_mode != primary_configuration.power_mode)
         {
             hwc_config->power_mode(mga::DisplayName::primary, output.power_mode);
-            //TODO: this class only maintains output state. Remove ConfigurableDisplayBuffer
-            //interface once mga::Display maintains output state
-            display_buffer->configure(output);
-//          display_buffer->reset_layers();
+            primary_configuration.power_mode = output.power_mode;
+            //reset dd
         }
+
+        //TODO: We don't support rotation yet, so
+        //we preserve this orientation change so the compositor can rotate everything in GL 
+        primary_configuration.orientation = output.orientation;
+        //update db
+
+        if (output.current_format != primary_configuration.current_format)
+            BOOST_THROW_EXCEPTION(std::runtime_error("could not change display buffer format"));
     });
 }
 

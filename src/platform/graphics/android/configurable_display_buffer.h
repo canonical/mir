@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_ANDROID_CONFIGURABLE_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
-#include "mir/graphics/display_configuration.h"
 
 namespace mir
 {
@@ -31,9 +30,6 @@ namespace android
 
 class ConfigurableDisplayBuffer : public graphics::DisplayBuffer
 {
-public:
-    virtual DisplayConfigurationOutput configuration() const = 0;
-    virtual void configure(DisplayConfigurationOutput const&) = 0;
 };
 
 }

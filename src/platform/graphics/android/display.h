@@ -22,6 +22,7 @@
 #include "mir/graphics/display.h"
 #include "gl_context.h"
 #include "hwc_configuration.h"
+#include "display_configuration.h"
 
 #include <memory>
 #include <mutex>
@@ -78,6 +79,7 @@ private:
     //we only have a primary display at the moment
     std::unique_ptr<ConfigurableDisplayBuffer> const display_buffer;
     std::unique_ptr<HwcConfiguration> const hwc_config;
+    DisplayConfigurationOutput primary_configuration;
 };
 
 }

@@ -44,23 +44,6 @@ mga::DisplayBuffer::DisplayBuffer(
       gl_context{shared_gl_context, fb_bundle, native_window},
       overlay_program{program_factory, gl_context, geom::Rectangle{{0,0},fb_bundle->fb_size()}},
       overlay_enabled{overlay_option == mga::OverlayOptimization::enabled},
-      current_configuration{
-          mg::DisplayConfigurationOutputId{1},
-          mg::DisplayConfigurationCardId{0},
-          mg::DisplayConfigurationOutputType::lvds,
-          {
-              fb_bundle->fb_format()
-          },
-          {mg::DisplayConfigurationMode{fb_bundle->fb_size(), fb_bundle->fb_refresh_rate()}},
-          0,
-          geom::Size{0,0}, //could use DPI information to fill this
-          true,
-          true,
-          geom::Point{0,0},
-          0,
-          fb_bundle->fb_format(),
-          mir_power_mode_on,
-          mir_orientation_normal},
       orientation_{orientation}
 {
 }
@@ -114,31 +97,4 @@ MirOrientation mga::DisplayBuffer::orientation() const
 bool mga::DisplayBuffer::uses_alpha() const
 {
     return false;
-}
-
-mg::DisplayConfigurationOutput mga::DisplayBuffer::configuration() const
-{
-    return mg::DisplayConfigurationOutput(current_configuration);
-}
-
-void mga::DisplayBuffer::configure(DisplayConfigurationOutput const& new_configuration)
-{
-    if (new_configuration.power_mode != current_configuration.power_mode)
-    {
-        display_device->mode(new_configuration.power_mode);
-        current_configuration.power_mode = new_configuration.power_mode;
-    }
-
-    //TODO: We don't support rotation yet, so
-    //we preserve this orientation change so the compositor can rotate everything in GL 
-    current_configuration.orientation = new_configuration.orientation;
-
-    //do not allow fb format reallocation
-    if (new_configuration.current_format != current_configuration.current_format)
-    {
-        std::stringstream err_msg; 
-        err_msg << std::string("could not change display buffer format to request: ")
-                << new_configuration.current_format;
-        BOOST_THROW_EXCEPTION(std::runtime_error(err_msg.str()));
-    }
 }
