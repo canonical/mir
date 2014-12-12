@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -21,13 +21,13 @@ namespace mga = mg::android;
 namespace geom = mir::geometry;
 
 mga::DisplayConfiguration::DisplayConfiguration(mg::DisplayConfigurationOutput && output)
-    : configuration(std::move(output)),
+    : output(std::move(output)),
       card{mg::DisplayConfigurationCardId{0}, 1}
 {
 }
 
 mga::DisplayConfiguration::DisplayConfiguration(DisplayConfiguration const& other)
-    : mg::DisplayConfiguration(), configuration(other.configuration),
+    : mg::DisplayConfiguration(), output(other.output),
       card(other.card)
 {
 }
@@ -36,7 +36,7 @@ mga::DisplayConfiguration& mga::DisplayConfiguration::operator=(DisplayConfigura
 {
     if (&other != this)
     {
-        configuration = other.configuration;
+        output = other.output;
         card = other.card;
     }
     return *this;
@@ -49,12 +49,12 @@ void mga::DisplayConfiguration::for_each_card(std::function<void(mg::DisplayConf
 
 void mga::DisplayConfiguration::for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
 {
-    f(configuration);
+    f(output);
 }
 
 void mga::DisplayConfiguration::for_each_output(std::function<void(mg::UserDisplayConfigurationOutput&)> f)
 {
-    mg::UserDisplayConfigurationOutput user(configuration);
+    mg::UserDisplayConfigurationOutput user(output);
     f(user);
 }
 

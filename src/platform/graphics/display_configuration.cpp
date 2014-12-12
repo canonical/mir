@@ -150,6 +150,7 @@ bool mg::operator!=(mg::DisplayConfigurationMode const& val1,
     return !(val1 == val2);
 }
 
+// This function does not check exactness, only compatibility.
 bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
                     mg::DisplayConfigurationOutput const& val2)
 {
@@ -161,7 +162,10 @@ bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
                (val1.connected == val2.connected) &&
                (val1.used == val2.used) &&
                (val1.top_left == val2.top_left) &&
-               (val1.orientation == val2.orientation) &&
+// Difference in orientation does not mean incompatibility.
+// Leave it commented out as reminder, though.
+// TODO: Are there others?
+/*               (val1.orientation == val2.orientation) && */
                (val1.current_mode_index == val2.current_mode_index) &&
                (val1.modes.size() == val2.modes.size())};
 

@@ -30,7 +30,7 @@ namespace graphics
 namespace mesa
 {
 
-class RealKMSDisplayConfiguration : public KMSDisplayConfiguration
+struct RealKMSDisplayConfiguration : public KMSDisplayConfiguration
 {
 public:
     RealKMSDisplayConfiguration(int drm_fd);
@@ -50,10 +50,14 @@ private:
     std::vector<DisplayConfigurationOutput>::iterator find_output_with_id(DisplayConfigurationOutputId id);
     std::vector<DisplayConfigurationOutput>::const_iterator find_output_with_id(DisplayConfigurationOutputId id) const;
 
+public:
     int drm_fd;
     DisplayConfigurationCard card;
     std::vector<DisplayConfigurationOutput> outputs;
 };
+
+// Compatibility check
+bool operator==(RealKMSDisplayConfiguration const& conf1, RealKMSDisplayConfiguration const& conf2);
 
 }
 }

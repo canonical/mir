@@ -64,6 +64,7 @@ public:
     bool uses_alpha() const override;
     void schedule_set_crtc();
     void wait_for_page_flip();
+    void rotate(MirOrientation rot, geometry::Rectangle const& area);
 
 private:
     void post_update(std::shared_ptr<graphics::Buffer> bypass_buf);
