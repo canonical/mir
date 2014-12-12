@@ -36,6 +36,7 @@ mga::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<ANativeWindow> const& native_window,
     mga::GLContext const& shared_gl_context,
     mg::GLProgramFactory const& program_factory,
+    MirOrientation orientation,
     mga::OverlayOptimization overlay_option)
     : fb_bundle{fb_bundle},
       display_device{display_device},
@@ -59,7 +60,8 @@ mga::DisplayBuffer::DisplayBuffer(
           0,
           fb_bundle->fb_format(),
           mir_power_mode_on,
-          mir_orientation_normal}
+          mir_orientation_normal},
+      orientation_{orientation}
 {
 }
 

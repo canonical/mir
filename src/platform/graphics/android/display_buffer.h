@@ -69,6 +69,7 @@ private:
     HWCFallbackGLRenderer overlay_program;
     bool overlay_enabled;
     DisplayConfigurationOutput current_configuration;
+    MirOrientation orientation_;
 };
 
 }
