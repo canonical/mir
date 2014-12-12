@@ -227,3 +227,77 @@ TEST_F(HwcWrapper, turns_vsync_off)
         wrapper.vsync_signal_off();
     }, std::runtime_error);
 }
+
+static int display_attribute_handler(struct hwc_composer_device_1*, int, uint32_t,
+                                     const uint32_t* attribute_list, int32_t* values)
+{
+}
+TEST_F(HwcWrapper, queries_display_properties)
+{
+    using namespace testing;
+    geom::Size px_size {343, 254};
+    geom::Size dpi_mm {343, 254};
+    auto hwc_config = 0xA1;
+    std::chrono::milliseconds vrefresh_period{16};
+
+    EXPECT_CALL(*mock_device, getDisplayConfigs_interface(
+        mock_device.get(), HWC_DISPLAY_PRIMARY, _, Pointee(1)))
+            .WillOnce(DoAll(SetArgPointee<2>(hwc_config), Return(0)));
+    EXPECT_CALL(*mock_device, getDisplayAttributes_interface(
+        mock_device.get(), HWC_DISPLAY_PRIMARY, hwc_config, _, _))
+            .WillOnce(Invoke([&]
+            (struct hwc_composer_device_1*, int, uint32_t,
+             const uint32_t* attribute_list, int32_t* values) -> int
+            {
+                int i = 0;
+                while(attribute_list[i] != HWC_DISPLAY_NO_ATTRIBUTE)
+                {
+                    switch(attribute_list[i])
+                    {
+                        case HWC_DISPLAY_WIDTH:
+                            values[i] = px_size.width.as_int();
+                            break;
+                        case HWC_DISPLAY_HEIGHT:
+                            values[i] = px_size.height.as_int();
+                            break;
+                        case HWC_DISPLAY_VSYNC_PERIOD:
+                            values[i] = std::chrono::duration_cast<nanoseconds>(vrefresh_period).count();
+                            break;
+                        case HWC_DISPLAY_DPI_X:
+                            values[i] = dpi_mm.width.as_int();
+                            break;
+                        case HWC_DISPLAY_DPI_Y:
+                            values[i] = dpi_mm.width.as_int();
+                            break;
+                        default:
+                            break;
+                    }
+                    i++;
+                }
+
+                //the attribute list should be at least this long, as some qcom drivers always deref attribute_list[5]
+                EXPECT_EQ(5, i);
+                return 0;
+            }));
+
+    auto vrefresh_hz = 1000.0 / vrefresh_period.count();
+    mga::RealHwcWrapper wrapper(mock_device, mock_report);
+    auto attribs = wrapper.display_attribs();
+    EXPECT_THAT(attribs.size, Eq(px_size));
+    EXPECT_THAT(attribs.dpi, Eq(dpi_mm));
+    EXPECT_THAT(attribs.vrefresh_hz, Eq(vrefresh_hz));
+}
+
+//apparently this can happen if the display is in the 'unplugged state'
+TEST_F(PostingFBBundleTest, test_hwc_device_display_config_failure_throws)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_hwc_device, getDisplayConfigs_interface(mock_hwc_device.get(),HWC_DISPLAY_PRIMARY,_,_))
+        .WillOnce(Return(-1));
+
+    EXPECT_THROW({
+        mga::RealHwcWrapper wrapper(mock_device, mock_report);
+        auto attribs = wrapper.display_attribs();
+    }, std::runtime_error);
+}
+

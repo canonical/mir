@@ -58,7 +58,7 @@ public:
         buffer2 = std::make_shared<mtd::MockBuffer>();
         buffer3 = std::make_shared<mtd::MockBuffer>();
         mock_allocator = std::make_shared<MockGraphicBufferAllocator>();
-        mock_hwc_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
+//        mock_hwc_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_fb_hal = std::make_shared<mtd::MockFBHalDevice>(display_width, display_height, format, fbnum);
         EXPECT_CALL(*mock_allocator, alloc_buffer_platform(_,_,_))
             .Times(AtLeast(0))
@@ -69,60 +69,29 @@ public:
 
     int format;
     int fbnum;
+    double vrefresh_hz{55.330};
     std::shared_ptr<mtd::MockFBHalDevice> mock_fb_hal;
     std::shared_ptr<MockGraphicBufferAllocator> mock_allocator;
     std::shared_ptr<mg::Buffer> buffer1;
     std::shared_ptr<mg::Buffer> buffer2;
     std::shared_ptr<mg::Buffer> buffer3;
-    std::shared_ptr<mtd::MockHWCComposerDevice1> mock_hwc_device;
+//    std::shared_ptr<mtd::MockHWCComposerDevice1> mock_hwc_device;
     testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
-static int display_attribute_handler(struct hwc_composer_device_1*, int, uint32_t,
-                                     const uint32_t* attribute_list, int32_t* values)
-{
-    int i = 0;
-    while(attribute_list[i] != HWC_DISPLAY_NO_ATTRIBUTE)
-    {
-        switch(attribute_list[i])
-        {
-            case HWC_DISPLAY_WIDTH:
-                values[i] = display_width;
-                break;
-            case HWC_DISPLAY_HEIGHT:
-                values[i] = display_height;
-                break;
-            default:
-                break;
-        }
-        i++;
-    }
-
-    //the attribute list should be at least this long, as some qcom drivers always deref attribute_list[5]
-    EXPECT_EQ(5, i);
-    return 0;
-}
 }
 
 TEST_F(PostingFBBundleTest, hwc_fb_size_allocation)
 {
     using namespace testing;
 
-    unsigned int hwc_configs = 0xA1;
-    EXPECT_CALL(*mock_hwc_device, getDisplayConfigs_interface(mock_hwc_device.get(),HWC_DISPLAY_PRIMARY,_,Pointee(1)))
-        .Times(1)
-        .WillOnce(DoAll(SetArgPointee<2>(hwc_configs), Return(0)));
-    EXPECT_CALL(*mock_hwc_device, getDisplayAttributes_interface(mock_hwc_device.get(), HWC_DISPLAY_PRIMARY, hwc_configs,_,_))
-        .Times(1)
-        .WillOnce(Invoke(display_attribute_handler));
-
-    auto display_size = mir::geometry::Size{display_width, display_height};
     EXPECT_CALL(*mock_allocator, alloc_buffer_platform(display_size, _, mga::BufferUsage::use_framebuffer_gles))
         .Times(2)
         .WillRepeatedly(Return(nullptr));
 
-    mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device, 2u);
+    mga::Framebuffers framebuffers(mock_allocator, display_size, vrefresh_hz, 2u);
     EXPECT_EQ(display_size, framebuffers.fb_size());
+    EXPECT_EQ(vrefresh, framebuffers.vrefresh());
 }
 
 TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
@@ -155,23 +124,9 @@ TEST_F(PostingFBBundleTest, hwc_fb_format_selection)
     EXPECT_CALL(mock_egl, eglTerminate(fake_display))
         .InSequence(seq);
 
-    mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device, 2u);
+    mga::Framebuffers framebuffers(mock_allocator, display_size, vrefresh_hz, 2u);
     EXPECT_EQ(mir_pixel_format_argb_8888, framebuffers.fb_format());
 }
-
-//apparently this can happen if the display is in the 'unplugged state'
-TEST_F(PostingFBBundleTest, test_hwc_device_display_config_failure_throws)
-{
-    using namespace testing;
-    EXPECT_CALL(*mock_hwc_device, getDisplayConfigs_interface(mock_hwc_device.get(),HWC_DISPLAY_PRIMARY,_,_))
-        .Times(1)
-        .WillOnce(Return(-1));
-
-    EXPECT_THROW({
-        mga::Framebuffers framebuffers(mock_allocator, mock_hwc_device, 2u);
-    }, std::runtime_error);
-}
-
 
 //not all hwc11 implementations give a hint about their framebuffer formats in their configuration.
 //prefer abgr_8888 if we can't figure things out
