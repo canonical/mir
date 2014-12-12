@@ -111,3 +111,43 @@ void mga::RealHwcWrapper::display_off() const
     }
     report->report_display_off();
 }
+
+#if 0
+std::pair<geom::Size, double> determine_hwc11_size_and_rate(
+    std::shared_ptr<hwc_composer_device_1> const& hwc_device)
+{
+    size_t num_configs = 1;
+    uint32_t primary_display_config;
+    auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
+    if (rc != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config"));
+    }
+
+    /* note: some drivers (qcom msm8960) choke if this is not the same size array
+       as the one surfaceflinger submits */
+    static uint32_t const display_attribute_request[] =
+    {
+        HWC_DISPLAY_WIDTH,
+        HWC_DISPLAY_HEIGHT,
+        HWC_DISPLAY_VSYNC_PERIOD,
+        HWC_DISPLAY_DPI_X,
+        HWC_DISPLAY_DPI_Y,
+        HWC_DISPLAY_NO_ATTRIBUTE,
+    };
+
+    int32_t size_values[sizeof(display_attribute_request) / sizeof (display_attribute_request[0])] = {};
+    hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
+                                     display_attribute_request, size_values);
+
+    //HWC_DISPLAY_VSYNC_PERIOD is specified in nanoseconds
+    double refresh_rate_hz = (size_values[2] > 0 ) ? 1000000000.0/size_values[2] : 0.0;
+    return {{size_values[0], size_values[1]}, refresh_rate_hz};
+}
+#endif
+mga::HwcAttribs mga::RealHwcWrapper::display_attribs(DisplayName name) const
+{
+    (void) name;
+    mga::HwcAttribs attribs;
+    return attribs;
+}

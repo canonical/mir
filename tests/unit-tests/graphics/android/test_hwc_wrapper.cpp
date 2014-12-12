@@ -23,10 +23,11 @@
 #include "mir_test_doubles/mock_hwc_report.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <chrono>
 
-namespace mga=mir::graphics::android;
-namespace mtd=mir::test::doubles;
-
+namespace mga = mir::graphics::android;
+namespace mtd = mir::test::doubles;
+namespace geom = mir::geometry;
 struct HwcWrapper : public ::testing::Test
 {
     HwcWrapper()
@@ -228,10 +229,6 @@ TEST_F(HwcWrapper, turns_vsync_off)
     }, std::runtime_error);
 }
 
-static int display_attribute_handler(struct hwc_composer_device_1*, int, uint32_t,
-                                     const uint32_t* attribute_list, int32_t* values)
-{
-}
 TEST_F(HwcWrapper, queries_display_properties)
 {
     using namespace testing;
@@ -261,7 +258,7 @@ TEST_F(HwcWrapper, queries_display_properties)
                             values[i] = px_size.height.as_int();
                             break;
                         case HWC_DISPLAY_VSYNC_PERIOD:
-                            values[i] = std::chrono::duration_cast<nanoseconds>(vrefresh_period).count();
+                            values[i] = std::chrono::duration_cast<std::chrono::nanoseconds>(vrefresh_period).count();
                             break;
                         case HWC_DISPLAY_DPI_X:
                             values[i] = dpi_mm.width.as_int();
@@ -282,22 +279,21 @@ TEST_F(HwcWrapper, queries_display_properties)
 
     auto vrefresh_hz = 1000.0 / vrefresh_period.count();
     mga::RealHwcWrapper wrapper(mock_device, mock_report);
-    auto attribs = wrapper.display_attribs();
-    EXPECT_THAT(attribs.size, Eq(px_size));
-    EXPECT_THAT(attribs.dpi, Eq(dpi_mm));
+    auto attribs = wrapper.display_attribs(mga::DisplayName::primary);
+    EXPECT_THAT(attribs.pixel_size, Eq(px_size));
+    EXPECT_THAT(attribs.dpi_mm, Eq(dpi_mm));
     EXPECT_THAT(attribs.vrefresh_hz, Eq(vrefresh_hz));
 }
 
 //apparently this can happen if the display is in the 'unplugged state'
-TEST_F(PostingFBBundleTest, test_hwc_device_display_config_failure_throws)
+TEST_F(HwcWrapper, test_hwc_device_display_config_failure_throws)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_hwc_device, getDisplayConfigs_interface(mock_hwc_device.get(),HWC_DISPLAY_PRIMARY,_,_))
+    EXPECT_CALL(*mock_device, getDisplayConfigs_interface(mock_device.get(),HWC_DISPLAY_PRIMARY,_,_))
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
         mga::RealHwcWrapper wrapper(mock_device, mock_report);
-        auto attribs = wrapper.display_attribs();
+        wrapper.display_attribs(mga::DisplayName::primary);
     }, std::runtime_error);
 }
-

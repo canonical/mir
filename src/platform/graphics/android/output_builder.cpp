@@ -62,8 +62,9 @@ mga::OutputBuilder::OutputBuilder(
     {
         mga::PropertiesOps ops;
         mga::DeviceQuirks quirks(ops);
+        auto attribs = hwc_wrapper->display_attribs(mga::DisplayName::primary);
         framebuffers = std::make_shared<mga::Framebuffers>(
-            buffer_allocator, hwc_native, quirks.num_framebuffers());
+            buffer_allocator, attribs.pixel_size, attribs.vrefresh_hz, quirks.num_framebuffers());
     }
 }
 

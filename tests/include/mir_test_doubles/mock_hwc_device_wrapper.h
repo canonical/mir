@@ -39,6 +39,7 @@ struct MockHWCDeviceWrapper : public graphics::android::HwcWrapper
     MOCK_CONST_METHOD0(vsync_signal_off, void());
     MOCK_CONST_METHOD0(display_on, void());
     MOCK_CONST_METHOD0(display_off, void());
+    MOCK_CONST_METHOD1(display_attribs, graphics::android::HwcAttribs(graphics::android::DisplayName));
 };
 
 }
