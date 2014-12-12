@@ -44,7 +44,7 @@ done
 
 
 if [ "${MIR_NDK_PATH}" = "" ]; then
-    export MIR_NDK_PATH=$(pwd)/partial-armhf-chroot
+    export MIR_NDK_PATH=~/.cache/mir-armhf-chroot
 fi
 
 if [ ! -d ${MIR_NDK_PATH} ]; then 
