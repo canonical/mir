@@ -350,13 +350,11 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     };
 
     MirSurfaceSpec *spec =
-        mir_connection_create_spec_for_normal_surface(connection, *width,
-                                                      *height, pixel_format);
+        mir_connection_create_spec_for_normal_surface(connection, *width, *height, pixel_format);
 
     CHECK(spec != NULL, "Can't create a surface spec");
 
     mir_surface_spec_set_name(spec, "eglappsurface");
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
     if (output_id != mir_display_output_id_invalid)
         mir_surface_spec_set_fullscreen_on_output(spec, output_id);
 

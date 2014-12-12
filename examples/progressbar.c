@@ -250,8 +250,7 @@ int main(int argc, char *argv[])
     int width = 500;
     int height = 500;
     MirSurfaceSpec *spec =
-        mir_connection_create_spec_for_normal_surface(conn, width,
-                                                      height, pixel_format);
+        mir_connection_create_spec_for_normal_surface(conn, width, height, pixel_format);
     if (spec == NULL)
     {
         fprintf(stderr, "Could not create a surface spec.\n");

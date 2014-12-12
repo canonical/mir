@@ -133,7 +133,6 @@ int demo_client(const char* server, int buffer_swap_count)
         mir_connection_create_spec_for_normal_surface(mcd.connection, 640, 480, pixel_format);
     assert(spec != NULL);
     mir_surface_spec_set_name(spec, __PRETTY_FUNCTION__);
-    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
     ///\internal [surface_create_tag]
     // ...we create a surface using that format and wait for callback to complete.
