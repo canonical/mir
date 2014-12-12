@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/nested_context.h"
-#include "src/platform/graphics/mesa/native_platform.h"
+#include "src/platform-mesa/native_platform.h"
 #include "mir/graphics/buffer_properties.h"
 
 #include "mir_test/fake_shared.h"

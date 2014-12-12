@@ -14,7 +14,7 @@ add_definitions(-DMIR_PLATFORM_DRIVER_BINARY="${MIR_PLATFORM_DRIVER_BINARY}")
 
 include_directories(${PROJECT_SOURCE_DIR}/src/include/common)
 
-set(symbol_map ${PROJECT_SOURCE_DIR}/src/platform/symbols.map)
+set(symbol_map ${PROJECT_SOURCE_DIR}/src/platform/graphics/symbols.map)
 ### END FRIG
 
 include_directories(

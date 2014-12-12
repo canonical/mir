@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/mesa/ipc_operations.h"
-#include "src/platform/graphics/mesa/drm_authentication.h"
+#include "src/platform-mesa/ipc_operations.h"
+#include "src/platform-mesa/drm_authentication.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_buffer.h"

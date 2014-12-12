@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_GBM_NATIVE_BUFFER_H_
 #define MIR_TEST_DOUBLES_STUB_GBM_NATIVE_BUFFER_H_
 
-#include "src/platform/graphics/mesa/gbm_buffer.h"
+#include "src/platform-mesa/gbm_buffer.h"
 #include "mir/geometry/size.h"
 #include <unistd.h>
 #include <fcntl.h>

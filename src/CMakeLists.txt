@@ -2,6 +2,10 @@ if (MIR_BUILD_PLATFORM_MESA)
     add_subdirectory(platform-mesa/)
 endif()
 
+if (MIR_BUILD_PLATFORM_ANDROID)
+  add_subdirectory(platform-android/)
+endif()
+
 include_directories(${PROJECT_SOURCE_DIR}/src/include/common)
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(common/)

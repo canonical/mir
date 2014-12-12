@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/android/ipc_operations.h"
+#include "src/platform-android/ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include <gtest/gtest.h>
 

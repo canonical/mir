@@ -20,7 +20,7 @@
 #include "mir/graphics/native_platform.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/options/program_option.h"
-#include "src/platform/graphics/android/platform.h"
+#include "src/platform-android/platform.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_buffer_ipc_message.h"
