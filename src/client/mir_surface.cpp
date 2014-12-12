@@ -47,8 +47,9 @@ std::unordered_set<MirSurface*> valid_surfaces;
 }
 
 MirSurfaceSpec::MirSurfaceSpec(MirSurfaceParameters const& params)
-    : width{params.width},
-      height{params.height},
+    : rect{0, 0,
+           static_cast<unsigned int>(params.width),
+           static_cast<unsigned int>(params.height)},
       pixel_format{params.pixel_format},
       buffer_usage{params.buffer_usage},
       output_id{params.output_id},
@@ -99,8 +100,8 @@ MirSurface::MirSurface(
 
     mir::protobuf::SurfaceParameters message;
     message.set_surface_name(name);
-    message.set_width(spec.width);
-    message.set_height(spec.height);
+    message.set_width(spec.rect.width);
+    message.set_height(spec.rect.height);
     message.set_pixel_format(spec.pixel_format);
     message.set_buffer_usage(spec.buffer_usage);
     message.set_output_id(spec.output_id);
@@ -108,7 +109,11 @@ MirSurface::MirSurface(
     message.set_type(spec.type);
     message.set_pref_orientation(spec.preferred_orientation);
     if (spec.parent)
+    {
         message.set_parent_id(spec.parent->id());
+        message.set_left(spec.rect.left);
+        message.set_top(spec.rect.top);
+    }
 
     create_wait_handle.expect_result();
     server->create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));

@@ -185,7 +185,10 @@ void mf::SessionMediator::create_surface(
         .with_preferred_orientation(static_cast<MirOrientationMode>(request->pref_orientation()));
 
     if(request->has_parent_id())
+    {
         params.with_parent_id(SurfaceId{request->parent_id()});
+        params.of_position(geometry::Point{request->left(), request->top()});
+    }
 
     auto const surf_id = session->create_surface(params);
 

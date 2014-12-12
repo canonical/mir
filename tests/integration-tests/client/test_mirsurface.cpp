@@ -54,18 +54,29 @@ bool parent_field_matches(ms::SurfaceCreationParameters const& params, MirSurfac
     return surf->id() == params.parent_id.as_value();
 }
 
+bool relative_location_matches(ms::SurfaceCreationParameters const& params, MirRectangle const& location)
+{
+    if (params.has_parent)
+    {
+        return params.top_left.x.as_int() == location.left &&
+               params.top_left.y.as_int() == location.top;
+    }
+    return true;
+}
+
 MATCHER_P(MatchesSpec, spec, "")
 {
     return spec->name == arg.name &&
-           spec->width == arg.size.width.as_int() &&
-           spec->height == arg.size.height.as_int() &&
+           spec->rect.width == arg.size.width.as_uint32_t() &&
+           spec->rect.height == arg.size.height.as_uint32_t() &&
            spec->state == arg.state &&
            spec->type == arg.type &&
            spec->preferred_orientation == arg.preferred_orientation &&
            static_cast<int>(spec->output_id) == arg.output_id.as_value() &&
            spec->pixel_format == arg.pixel_format &&
            static_cast<mg::BufferUsage>(spec->buffer_usage) == arg.buffer_usage &&
-           parent_field_matches(arg, spec->parent);
+           parent_field_matches(arg, spec->parent) &&
+           relative_location_matches(arg, spec->rect);
 }
 
 }
@@ -90,8 +101,8 @@ struct ClientMirSurface : mtf::ConnectedClientHeadlessServer
             .WillByDefault(Invoke(wrapped_coord.get(), &ms::SurfaceCoordinator::add_surface));
 
         spec.connection = connection;
-        spec.width = 640;
-        spec.height = 480;
+        spec.rect.width = 640;
+        spec.rect.height = 480;
         spec.buffer_usage = mir_buffer_usage_software;
         spec.state = mir_surface_state_minimized;
         spec.type = mir_surface_type_dialog;
@@ -119,6 +130,8 @@ TEST_F(ClientMirSurface, sends_all_mirspec_params_to_server)
     // A valid surface is needed to be specified as a parent
     ASSERT_TRUE(mir_surface_is_valid(surf.get()));
     spec.parent = surf.get();
+    spec.rect.top = 200;
+    spec.rect.left = 300;
 
     // The second time around we don't care if the surface gets created,
     // but we'd like to validate that the server received the output id specified

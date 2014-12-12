@@ -60,7 +60,7 @@ struct MirSurfaceSpec
 
     MirConnection* connection{nullptr};
     std::string name;
-    int width{-1}, height{-1};
+    MirRectangle rect{0, 0, 0, 0};
     MirPixelFormat pixel_format{mir_pixel_format_invalid};
     MirBufferUsage buffer_usage{mir_buffer_usage_hardware};
     uint32_t output_id{mir_display_output_id_invalid};
