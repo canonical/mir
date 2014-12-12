@@ -264,7 +264,7 @@ TEST_F(HwcWrapper, queries_display_properties)
                             values[i] = dpi_mm.width.as_int();
                             break;
                         case HWC_DISPLAY_DPI_Y:
-                            values[i] = dpi_mm.width.as_int();
+                            values[i] = dpi_mm.height.as_int();
                             break;
                         default:
                             break;

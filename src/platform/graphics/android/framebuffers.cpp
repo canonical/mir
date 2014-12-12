@@ -21,10 +21,6 @@
 #include "android_format_conversion-inl.h"
 #include "graphic_buffer_allocator.h"
 
-#include <algorithm>
-#include <tuple>
-#include <utility>
-
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
@@ -70,7 +66,6 @@ MirPixelFormat determine_hwc11_fb_format()
     eglTerminate(egl_display);
     return fb_format;
 }
-
 }
 
 mga::Framebuffers::Framebuffers(
@@ -81,11 +76,8 @@ mga::Framebuffers::Framebuffers(
     size{size},
     refresh_rate_hz{vrefresh_hz}
 {
-    //std::tie(size, refresh_rate_hz) = determine_hwc11_size_and_rate(hwc);
     for(auto i = 0u; i < num_framebuffers; i++)
-    {
         queue.push(buffer_allocator->alloc_buffer_platform(size, format, mga::BufferUsage::use_framebuffer_gles));
-    }
 }
 
 mga::Framebuffers::Framebuffers(
@@ -99,9 +91,7 @@ mga::Framebuffers::Framebuffers(
     auto fb_num = static_cast<unsigned int>(fb->numFramebuffers);
     fb_num = std::max(2u, fb_num);
     for(auto i = 0u; i < fb_num; i++)
-    {
         queue.push(buffer_allocator->alloc_buffer_platform(size, format, mga::BufferUsage::use_framebuffer_gles));
-    }
 }
 
 MirPixelFormat mga::Framebuffers::fb_format()
