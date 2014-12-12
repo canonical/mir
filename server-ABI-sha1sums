@@ -116,3 +116,4 @@ de7d7ad64da45b4c5dedef8eaa1d720c9f307f4c  include/server/mir/shell/session_coord
 18e869c5b87ab8be4bc185d2cd55a93d699cde72  include/server/mir/shell/surface_coordinator_wrapper.h
 1b8c2a763c8f5f00b737c3a187db2304676f8076  include/server/mir/time/alarm.h
 a134c7b86e9c3b191f1004abe7bbdceed8ac42ee  include/server/mir/time/timer.h
+c4f249570f734621332e914a75a1093442b309fc  include/server/mir/version.h
