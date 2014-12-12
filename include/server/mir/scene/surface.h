@@ -63,6 +63,7 @@ public:
     virtual MirSurfaceState state() const = 0;
     virtual void hide() = 0;
     virtual void show() = 0;
+    virtual bool visible() const = 0;
     virtual void move_to(geometry::Point const& top_left) = 0;
     virtual void take_input_focus(std::shared_ptr<shell::InputTargeter> const& targeter) = 0;
 
