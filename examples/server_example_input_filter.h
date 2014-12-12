@@ -13,20 +13,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "default_coordinate_translator.h"
-#include "mir/scene/surface.h"
+#ifndef MIR_EXAMPLES_EXAMPLE_INPUT_FILTER_H_
+#define MIR_EXAMPLES_EXAMPLE_INPUT_FILTER_H_
 
-namespace geom = mir::geometry;
-namespace mf = mir::frontend;
-namespace ms = mir::scene;
+#include <memory>
 
-geom::Point ms::DefaultCoordinateTranslator::surface_to_screen(std::shared_ptr<mf::Surface> surface, int32_t x,
-                                                               int32_t y)
+namespace mir
 {
-    auto const scene_surface = std::dynamic_pointer_cast<ms::Surface>(surface);
+class Server;
 
-    return geom::Point{x + scene_surface->top_left().x.as_int(), y + scene_surface->top_left().y.as_int()};
+namespace input { class EventFilter; }
+
+namespace examples
+{
+auto make_printing_input_filter_for(mir::Server& server)
+-> std::shared_ptr<input::EventFilter>;
 }
+}
+
+#endif /* MIR_EXAMPLES_EXAMPLE_INPUT_FILTER_H_ */

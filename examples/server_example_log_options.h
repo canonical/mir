@@ -13,20 +13,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "default_coordinate_translator.h"
-#include "mir/scene/surface.h"
+#ifndef MIR_EXAMPLES_EXAMPLE_LOG_OPTIONS_H_
+#define MIR_EXAMPLES_EXAMPLE_LOG_OPTIONS_H_
 
-namespace geom = mir::geometry;
-namespace mf = mir::frontend;
-namespace ms = mir::scene;
-
-geom::Point ms::DefaultCoordinateTranslator::surface_to_screen(std::shared_ptr<mf::Surface> surface, int32_t x,
-                                                               int32_t y)
+namespace mir
 {
-    auto const scene_surface = std::dynamic_pointer_cast<ms::Surface>(surface);
+class Server;
 
-    return geom::Point{x + scene_surface->top_left().x.as_int(), y + scene_surface->top_left().y.as_int()};
+namespace examples
+{
+void add_glog_options_to(Server& server);
 }
+}
+
+#endif /* MIR_EXAMPLES_EXAMPLE_LOG_OPTIONS_H_ */
