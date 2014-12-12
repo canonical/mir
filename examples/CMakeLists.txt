@@ -140,12 +140,12 @@ target_link_libraries(mir_demo_standalone_render_to_fb
     ${Boost_LIBRARIES}
 )
 
-mir_add_wrapped_executable(mir_demo_server
+mir_add_wrapped_executable(mir_demo_server_basic
   server_example.cpp
   glog_logger.cpp
 )
 
-target_link_libraries(mir_demo_server
+target_link_libraries(mir_demo_server_basic
   mirserver
   exampleserverconfig
   ${GLog_LIBRARY}
