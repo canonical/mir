@@ -143,7 +143,7 @@ TEST(DisplayConfiguration, outputs_with_different_ids_compare_unequal)
     EXPECT_NE(output3, output1);
 }
 
-TEST(DisplayConfiguration, outupts_with_different_modes_compare_unequal)
+TEST(DisplayConfiguration, outputs_with_different_modes_compare_unequal)
 {
     mg::DisplayConfigurationOutput const output1 = tmpl_output;
     mg::DisplayConfigurationOutput output2 = tmpl_output;
@@ -218,7 +218,7 @@ TEST(DisplayConfiguration, outputs_with_different_preferred_mode_index_compare_u
     EXPECT_NE(output2, output1);
 }
 
-TEST(DisplayConfiguration, output_orientation_affects_equality)
+TEST(DisplayConfiguration, output_orientation_does_not_affect_compatibility)
 {
     mg::DisplayConfigurationOutput a = tmpl_output;
     mg::DisplayConfigurationOutput b = tmpl_output;
@@ -227,8 +227,8 @@ TEST(DisplayConfiguration, output_orientation_affects_equality)
     EXPECT_EQ(b, a);
     a.orientation = mir_orientation_left;
     b.orientation = mir_orientation_inverted;
-    EXPECT_NE(a, b);
-    EXPECT_NE(b, a);
+    EXPECT_EQ(a, b);
+    EXPECT_EQ(b, a);
 }
 
 TEST(DisplayConfiguration, output_extents_uses_current_mode)
