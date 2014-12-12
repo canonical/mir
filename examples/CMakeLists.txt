@@ -1,3 +1,16 @@
+set(RENDER_SURFACES_SOURCES
+    render_surfaces.cpp
+    buffer_render_target.cpp
+    image_renderer.cpp
+)
+add_executable(mir_demo_standalone_render_surfaces ${RENDER_SURFACES_SOURCES})
+target_link_libraries(mir_demo_standalone_render_surfaces
+    mirserver
+    exampleserverconfig
+    ${Boost_LIBRARIES}
+)
+
+install(TARGETS mir_demo_standalone_render_surfaces RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
@@ -6,8 +19,11 @@ add_library(eglapp STATIC
 )
 
 add_library(exampleserverconfig STATIC
-  example_display_configuration_policy.cpp
-  example_input_event_filter.cpp
+  server_example_display_configuration_policy.cpp
+  server_example_input_event_filter.cpp
+  server_example_log_options.cpp
+  server_example_input_filter.cpp
+  server_example_fullscreen_placement_strategy.cpp
 )
 
 target_link_libraries(eglapp
@@ -124,15 +140,6 @@ target_link_libraries(mir_demo_standalone_render_to_fb
     ${Boost_LIBRARIES}
 )
 
-add_executable(mir_demo_standalone_input_filter
-  demo_input_filter.cpp
-)
-
-target_link_libraries(mir_demo_standalone_input_filter
-  mirserver
-  exampleserverconfig
-)
-
 set (INSTALL_DEMOS
   mir_demo_client_basic
   mir_demo_client_flicker
@@ -146,14 +153,13 @@ set (INSTALL_DEMOS
   mir_demo_client_display_config
   mir_demo_client_progressbar
   mir_demo_client_prompt_session
-  mir_demo_standalone_input_filter
   mir_demo_standalone_render_to_fb
 )
 
 install(TARGETS ${INSTALL_DEMOS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_executable(mir_demo_server_basic
-  basic_server.cpp
+  server_example.cpp
   glog_logger.cpp
 )
 
@@ -169,7 +175,7 @@ install(TARGETS mir_demo_server_basic
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-add_executable(mir_demo_server_minimal minimal_server.cpp)
+add_executable(mir_demo_server_minimal server_minimal.cpp)
 target_link_libraries(mir_demo_server_minimal mirserver)
 install(TARGETS mir_demo_server_minimal
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

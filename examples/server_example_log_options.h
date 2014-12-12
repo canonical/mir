@@ -16,28 +16,17 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef EXAMPLE_INPUT_EVENT_FILTER_H_
-#define EXAMPLE_INPUT_EVENT_FILTER_H_
-
-#include "mir/input/event_filter.h"
-
-#include <functional>
+#ifndef MIR_EXAMPLES_EXAMPLE_LOG_OPTIONS_H_
+#define MIR_EXAMPLES_EXAMPLE_LOG_OPTIONS_H_
 
 namespace mir
 {
+class Server;
+
 namespace examples
 {
-class QuitFilter : public mir::input::EventFilter
-{
-public:
-    QuitFilter(std::function<void()> const& quit_action);
-
-    bool handle(MirEvent const& event) override;
-
-private:
-    std::function<void()> const quit_action;
-};
+void add_glog_options_to(Server& server);
 }
 }
 
-#endif /* EXAMPLE_INPUT_EVENT_FILTER_H_ */
+#endif /* MIR_EXAMPLES_EXAMPLE_LOG_OPTIONS_H_ */

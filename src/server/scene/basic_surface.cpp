@@ -293,7 +293,7 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 {
     std::unique_lock<std::mutex> lock(guard);
 
-    if (hidden)
+    if (!visible(lock))
         return false;
 
     // Restrict to bounding rectangle
@@ -465,6 +465,25 @@ MirSurfaceFocusState ms::BasicSurface::set_focus_state(MirSurfaceFocusState new_
     return new_state;
 }
 
+MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMode new_orientation_mode)
+{
+    if ((new_orientation_mode & mir_orientation_mode_any) == 0)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid orientation mode"));
+    }
+
+    std::unique_lock<std::mutex> lg(guard);
+    if (pref_orientation_mode != new_orientation_mode)
+    {
+        pref_orientation_mode = new_orientation_mode;
+        lg.unlock();
+
+        observers.attrib_changed(mir_surface_attrib_preferred_orientation, new_orientation_mode);
+    }
+
+    return new_orientation_mode;
+}
+
 void ms::BasicSurface::take_input_focus(std::shared_ptr<msh::InputTargeter> const& targeter)
 {
     targeter->focus_changed(input_channel());
@@ -493,6 +512,9 @@ int ms::BasicSurface::configure(MirSurfaceAttrib attrib, int value)
     case mir_surface_attrib_visibility:
         result = set_visibility(static_cast<MirSurfaceVisibility>(result));
         break;
+    case mir_surface_attrib_preferred_orientation:
+        result = set_preferred_orientation(static_cast<MirOrientationMode>(result));
+        break;
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                "attribute."));
@@ -515,6 +537,7 @@ int ms::BasicSurface::query(MirSurfaceAttrib attrib)
         case mir_surface_attrib_focus: return focus_;
         case mir_surface_attrib_dpi: return dpi_;
         case mir_surface_attrib_visibility: return visibility_;
+        case mir_surface_attrib_preferred_orientation: return pref_orientation_mode;
         default: BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                         "attribute."));
     }

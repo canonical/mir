@@ -125,7 +125,7 @@ public:
     void set_orientation(MirOrientation orientation) override;
     void set_transformation(glm::mat4 const&) override;
 
-    bool visible() const;
+    bool visible() const override;
     
     std::unique_ptr<graphics::Renderable> compositor_snapshot(void const* compositor_id) const override;
 
@@ -158,6 +158,7 @@ private:
     MirSurfaceVisibility set_visibility(MirSurfaceVisibility v);
     int set_swap_interval(int);
     MirSurfaceFocusState set_focus_state(MirSurfaceFocusState f);
+    MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
 
     SurfaceObservers observers;
     std::mutex mutable guard;
@@ -184,6 +185,7 @@ private:
     MirSurfaceFocusState focus_ = mir_surface_unfocused;
     int dpi_ = 0;
     MirSurfaceVisibility visibility_ = mir_surface_visibility_exposed;
+    MirOrientationMode pref_orientation_mode = mir_orientation_mode_any;
 };
 
 }

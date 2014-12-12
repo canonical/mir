@@ -83,11 +83,13 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
     params.buffer_usage = requested_specification->buffer_usage;
     params.output_id = requested_specification->output_id;
 
+    bool fullscreen_tmp = requested_specification->fullscreen;
+
     auto shim_callback = new std::function<void(MirSurface*)>;
-    *shim_callback = [requested_specification, shim_callback, callback, context]
+    *shim_callback = [fullscreen_tmp, shim_callback, callback, context]
                      (MirSurface* surface)
     {
-        if (requested_specification->fullscreen)
+        if (fullscreen_tmp)
         {
             mir_surface_set_state(surface, mir_surface_state_fullscreen);
         }
@@ -428,6 +430,39 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfig
     {
         if (surface)
             result = surface->configure_cursor(cursor);
+    }
+    catch (...)
+    {
+    }
+
+    return result;
+}
+
+MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
+{
+    if (!mir_surface_is_valid(surf)) abort();
+
+    MirOrientationMode mode = mir_orientation_mode_any;
+
+    try
+    {
+        mode = static_cast<MirOrientationMode>(surf->attrib(mir_surface_attrib_preferred_orientation));
+    }
+    catch (...)
+    {
+    }
+
+    return mode;
+}
+
+MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrientationMode mode)
+{
+    if (!mir_surface_is_valid(surf)) abort();
+
+    MirWaitHandle *result{nullptr};
+    try
+    {
+        result = surf->set_preferred_orientation(mode);
     }
     catch (...)
     {

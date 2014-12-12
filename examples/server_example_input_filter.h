@@ -16,30 +16,22 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "example_input_event_filter.h"
+#ifndef MIR_EXAMPLES_EXAMPLE_INPUT_FILTER_H_
+#define MIR_EXAMPLES_EXAMPLE_INPUT_FILTER_H_
 
-#include "mir/server.h"
+#include <memory>
 
-#include <linux/input.h>
-
-namespace me = mir::examples;
-
-me::QuitFilter::QuitFilter(std::function<void()> const& quit_action)
-    : quit_action{quit_action}
+namespace mir
 {
+class Server;
+
+namespace input { class EventFilter; }
+
+namespace examples
+{
+auto make_printing_input_filter_for(mir::Server& server)
+-> std::shared_ptr<input::EventFilter>;
+}
 }
 
-bool me::QuitFilter::handle(MirEvent const& event)
-{
-    if (event.type == mir_event_type_key &&
-        event.key.action == mir_key_action_down &&
-        (event.key.modifiers & mir_key_modifier_alt) &&
-        (event.key.modifiers & mir_key_modifier_ctrl) &&
-        event.key.scan_code == KEY_BACKSPACE)
-    {
-        quit_action();
-        return true;
-    }
-
-    return false;
-}
+#endif /* MIR_EXAMPLES_EXAMPLE_INPUT_FILTER_H_ */

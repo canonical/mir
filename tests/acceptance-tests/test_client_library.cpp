@@ -179,16 +179,15 @@ TEST_F(ClientLibrary, creates_surface)
 {
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
 
-    MirSurfaceParameters const request_params =
-    {
-        __PRETTY_FUNCTION__,
-        640, 480,
-        mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
+    int request_width = 640, request_height = 480;
+    MirPixelFormat request_format = mir_pixel_format_abgr_8888;
+    MirBufferUsage request_buffer_usage = mir_buffer_usage_hardware;
 
-    mir_wait_for(mir_connection_create_surface(connection, &request_params, create_surface_callback, this));
+    auto spec = mir_connection_create_spec_for_normal_surface(connection, request_width,
+                                                              request_height, request_format);
+    mir_surface_spec_set_buffer_usage(spec, request_buffer_usage);
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
 
     ASSERT_THAT(surface, NotNull());
     EXPECT_TRUE(mir_surface_is_valid(surface));
@@ -196,28 +195,12 @@ TEST_F(ClientLibrary, creates_surface)
 
     MirSurfaceParameters response_params;
     mir_surface_get_parameters(surface, &response_params);
-    EXPECT_EQ(request_params.width, response_params.width);
-    EXPECT_EQ(request_params.height, response_params.height);
-    EXPECT_EQ(request_params.pixel_format, response_params.pixel_format);
-    EXPECT_EQ(request_params.buffer_usage, response_params.buffer_usage);
+    EXPECT_EQ(request_width, response_params.width);
+    EXPECT_EQ(request_height, response_params.height);
+    EXPECT_EQ(request_format, response_params.pixel_format);
+    EXPECT_EQ(request_buffer_usage, response_params.buffer_usage);
 
     mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
-
-    ASSERT_THAT(surface, IsNull());
-
-    surface = mir_connection_create_surface_sync(connection, &request_params);
-
-    ASSERT_THAT(surface, NotNull());
-    EXPECT_TRUE(mir_surface_is_valid(surface));
-    EXPECT_THAT(mir_surface_get_error_message(surface), StrEq(""));
-
-    mir_surface_get_parameters(surface, &response_params);
-    EXPECT_THAT(response_params.width, Eq(request_params.width));
-    EXPECT_THAT(response_params.height, Eq(request_params.height));
-    EXPECT_THAT(response_params.pixel_format, Eq(request_params.pixel_format));
-    EXPECT_THAT(response_params.buffer_usage, Eq(request_params.buffer_usage));
-
-    mir_surface_release_sync(surface);
     mir_connection_release(connection);
 }
 

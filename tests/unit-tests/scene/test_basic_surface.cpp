@@ -85,6 +85,17 @@ struct StubSurfaceConfigurator : ms::SurfaceConfigurator
     void attribute_set(ms::Surface const&, MirSurfaceAttrib, int) override { }
 };
 
+void post_a_frame(ms::BasicSurface& surface)
+{
+    /*
+     * Make sure there's a frame ready. Otherwise visible()==false and the
+     * input_area will never report it containing anything for all the tests
+     * that use it.
+     */
+    mtd::StubBuffer buffer;
+    surface.swap_buffers(&buffer, [&](mir::graphics::Buffer*){});
+}
+
 struct BasicSurfaceTest : public testing::Test
 {
     std::string const name{"aa"};
@@ -113,6 +124,11 @@ struct BasicSurfaceTest : public testing::Test
         stub_configurator,
         std::shared_ptr<mg::CursorImage>(),
         report};
+
+    BasicSurfaceTest()
+    {
+        post_a_frame(surface);
+    }
 };
 
 }
@@ -264,6 +280,18 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
     mir::graphics::Buffer* buffer = nullptr;
     auto const callback = [&](mir::graphics::Buffer* new_buffer) { buffer = new_buffer; };
 
+    // Must be a fresh surface to guarantee no frames posted yet...
+    ms::BasicSurface surface{
+        name,
+        rect,
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
+        stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
+        report};
+
     //not visible by default
     EXPECT_FALSE(surface.visible());
 
@@ -330,6 +358,7 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         report};
 
     surface.add_observer(observer);
+    post_a_frame(surface);
 
     std::vector<geom::Point> contained_pt
     {
@@ -352,6 +381,24 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
             }
         }
     }
+}
+
+TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
+{
+    ms::BasicSurface surface{
+        name,
+        geom::Rectangle{{0,0}, {100,100}},
+        false,
+        mock_buffer_stream,
+        std::shared_ptr<mi::InputChannel>(),
+        stub_input_sender,
+        stub_configurator,
+        std::shared_ptr<mg::CursorImage>(),
+        report};
+
+    EXPECT_FALSE(surface.input_area_contains({50,50}));
+    post_a_frame(surface);
+    EXPECT_TRUE(surface.input_area_contains({50,50}));
 }
 
 TEST_F(BasicSurfaceTest, set_input_region)

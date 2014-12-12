@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_LOGGERS_H_
 #define MIR_GRAPHICS_ANDROID_HWC_LOGGERS_H_
 
-#include "hwc_logger.h"
+#include "hwc_report.h"
 
 namespace mir
 {
@@ -27,32 +27,36 @@ namespace graphics
 {
 namespace android
 {
-class HwcFormattedLogger : public HwcLogger
+class HwcFormattedLogger : public HwcReport
 {
 public:
     HwcFormattedLogger() = default;
-    void log_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const override;
-    void log_prepare_done(hwc_display_contents_1_t const& list) const override;
-    void log_set_list(hwc_display_contents_1_t const& list) const override;
-    void log_overlay_optimization(OverlayOptimization optimization_option) const override;
-    void log_display_on() const override;
-    void log_display_off() const override;
-    void log_vsync_on() const override;
-    void log_vsync_off() const override;
+    void report_list_submitted_to_prepare(hwc_display_contents_1_t const& list) const override;
+    void report_prepare_done(hwc_display_contents_1_t const& list) const override;
+    void report_set_list(hwc_display_contents_1_t const& list) const override;
+    void report_overlay_optimization(OverlayOptimization optimization_option) const override;
+    void report_display_on() const override;
+    void report_display_off() const override;
+    void report_vsync_on() const override;
+    void report_vsync_off() const override;
+    void report_hwc_version(uint32_t) const override;
+    void report_legacy_fb_module() const override;
 };
 
-class NullHwcLogger : public HwcLogger
+class NullHwcReport : public HwcReport
 {
 public:
-    NullHwcLogger() = default;
-    void log_list_submitted_to_prepare(hwc_display_contents_1_t const&) const override;
-    void log_prepare_done(hwc_display_contents_1_t const&) const override;
-    void log_set_list(hwc_display_contents_1_t const&) const override;
-    void log_overlay_optimization(OverlayOptimization optimization_option) const override;
-    void log_display_on() const override;
-    void log_display_off() const override;
-    void log_vsync_on() const override;
-    void log_vsync_off() const override;
+    NullHwcReport() = default;
+    void report_list_submitted_to_prepare(hwc_display_contents_1_t const&) const override;
+    void report_prepare_done(hwc_display_contents_1_t const&) const override;
+    void report_set_list(hwc_display_contents_1_t const&) const override;
+    void report_overlay_optimization(OverlayOptimization optimization_option) const override;
+    void report_display_on() const override;
+    void report_display_off() const override;
+    void report_vsync_on() const override;
+    void report_vsync_off() const override;
+    void report_hwc_version(uint32_t) const override;
+    void report_legacy_fb_module() const override;
 };
 }
 }

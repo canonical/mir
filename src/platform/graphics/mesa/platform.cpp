@@ -20,7 +20,6 @@
 #include "native_platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
-#include "internal_native_display.h"
 #include "linux_virtual_terminal.h"
 #include "ipc_operations.h"
 #include "mir/graphics/platform_ipc_operations.h"
@@ -108,8 +107,6 @@ struct RealPosixProcessOperations : public mgm::PosixProcessOperations
 
 }
 
-std::shared_ptr<mgm::InternalNativeDisplay> mgm::Platform::internal_native_display;
-bool mgm::Platform::internal_display_clients_present;
 mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                         std::shared_ptr<VirtualTerminal> const& vt,
                         EmergencyCleanupRegistry& emergency_cleanup_registry,
@@ -122,7 +119,6 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
 {
     drm->setup(udev);
     gbm.setup(*drm);
-    internal_display_clients_present = false;
 
     std::weak_ptr<VirtualTerminal> weak_vt = vt;
     std::weak_ptr<helpers::DRMHelper> weak_drm = drm;
@@ -136,13 +132,6 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                 try { drm->drop_master(); } catch (...) {}
         });
 }
-
-mgm::Platform::~Platform()
-{
-    internal_native_display.reset();
-    internal_display_clients_present = false;
-}
-
 
 std::shared_ptr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator()
 {
@@ -202,16 +191,11 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
         report, vt, *emergency_cleanup_registry, bypass_option);
 }
 
-extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay* display)
+//TODO: internal client support was dropped. should remove this call from the mesa egl impl
+//and remove this function
+extern "C" int mir_server_mesa_egl_native_display_is_valid(MirMesaEGLNativeDisplay*)
 {
-    bool nested_internal_display_in_use = mgm::NativePlatform::internal_native_display_in_use();
-    bool host_internal_display_in_use = mgm::Platform::internal_display_clients_present;
-
-    if (host_internal_display_in_use)
-        return (display == mgm::Platform::internal_native_display.get());
-    else if (nested_internal_display_in_use)
-        return (display == mgm::NativePlatform::internal_native_display().get());
-    return 0;
+    return false;
 }
 
 extern "C" void add_platform_options(boost::program_options::options_description& config)
