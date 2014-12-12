@@ -46,6 +46,7 @@ public:
                   std::shared_ptr<ANativeWindow> const& native_window,
                   GLContext const& shared_gl_context,
                   GLProgramFactory const& program_factory,
+                  MirOrientation orientation,
                   OverlayOptimization overlay_option);
 
     geometry::Rectangle view_area() const override;
