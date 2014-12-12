@@ -83,11 +83,13 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
     params.buffer_usage = requested_specification->buffer_usage;
     params.output_id = requested_specification->output_id;
 
+    bool fullscreen_tmp = requested_specification->fullscreen;
+
     auto shim_callback = new std::function<void(MirSurface*)>;
-    *shim_callback = [requested_specification, shim_callback, callback, context]
+    *shim_callback = [fullscreen_tmp, shim_callback, callback, context]
                      (MirSurface* surface)
     {
-        if (requested_specification->fullscreen)
+        if (fullscreen_tmp)
         {
             mir_surface_set_state(surface, mir_surface_state_fullscreen);
         }
