@@ -278,6 +278,11 @@ TEST_F(Display, turns_on_db_at_construction_and_off_at_destruction)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report);
+
+    auto config = display.configuration();
+    config->for_each_output([](mg::DisplayConfigurationOutput const& c){
+        EXPECT_EQ(mir_power_mode_on, c.power_mode);
+    });
 }
 
 TEST_F(Display, first_power_on_is_not_fatal) //lp:1345533
@@ -305,7 +310,7 @@ TEST_F(Display, catches_exceptions_when_turning_off_in_destructor)
     mga::Display display(stub_db_factory, stub_gl_program_factory, stub_gl_config, null_display_report);
 }
 
-TEST_F(Display, configures_display_buffer)
+TEST_F(Display, configures_display_buffer_power_modes)
 {
     stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
     {
@@ -320,29 +325,34 @@ TEST_F(Display, configures_display_buffer)
     mga::Display display(stub_db_factory, stub_gl_program_factory, stub_gl_config, null_display_report);
 
     auto configuration = display.configuration();
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-    {
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        //on by default
+        EXPECT_EQ(output.power_mode, mir_power_mode_on);
         output.power_mode = mir_power_mode_on;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-    {
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        EXPECT_EQ(output.power_mode, mir_power_mode_on);
         output.power_mode = mir_power_mode_standby;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-    {
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        EXPECT_EQ(output.power_mode, mir_power_mode_standby);
         output.power_mode = mir_power_mode_off;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-    {
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        EXPECT_EQ(output.power_mode, mir_power_mode_off);
         output.power_mode = mir_power_mode_suspend;
     });
     display.configure(*configuration);
+
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        EXPECT_EQ(output.power_mode, mir_power_mode_suspend);
+    });
 }
 
 //we only have single display and single mode on android for the time being
@@ -356,115 +366,68 @@ TEST_F(Display, supports_one_output_configuration)
     auto config = display.configuration();
 
     size_t num_configs = 0;
-    config->for_each_output([&](mg::DisplayConfigurationOutput const&)
+    config->for_each_output([&](mg::DisplayConfigurationOutput const& disp_conf)
     {
+        ASSERT_EQ(1u, disp_conf.modes.size());
+//        auto& disp_mode = disp_conf.modes[0];
+//        EXPECT_EQ(display_size, disp_mode.size);
+
+        EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id);
+        EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id);
+        EXPECT_TRUE(disp_conf.connected);
+        EXPECT_TRUE(disp_conf.used);
+        auto origin = geom::Point{0,0};
+        EXPECT_EQ(origin, disp_conf.top_left);
+        EXPECT_EQ(0, disp_conf.current_mode_index);
+
+//        EXPECT_EQ(refresh_rate, disp_mode.vrefresh_hz);
+        //TODO fill physical_size_mm fields accordingly;
         num_configs++;
     });
 
     EXPECT_EQ(1u, num_configs);
 }
 
-#if 0
-TEST_F(DisplayBuffer, sets_display_power_mode_to_on_at_start)
+TEST_F(Display, incorrect_display_configure_throws)
 {
-    using namespace testing;
-    mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
-    auto config = db.configuration();
-    EXPECT_EQ(mir_power_mode_on, config.power_mode);
-}
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report);
+    auto config = display.configuration();
+    config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
+        c.current_format = mir_pixel_format_invalid;
+    });
 
-TEST_F(DisplayBuffer, changes_display_power_mode)
-{
-    using namespace testing;
-    mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
-
-    Sequence seq;
-    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off))
-        .InSequence(seq);
-    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_on))
-        .InSequence(seq);
-
-    auto config = db.configuration();
-    config.power_mode = mir_power_mode_off;
-    db.configure(config);
-
-    config = db.configuration();
-    config.power_mode = mir_power_mode_on;
-    db.configure(config); 
-}
-
-TEST_F(DisplayBuffer, power_mode_request_stored)
-{
-    mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
-
-    auto config = db.configuration();
-    EXPECT_EQ(config.power_mode, mir_power_mode_on);
-    config.power_mode = mir_power_mode_off;
-    db.configure(config);
-
-    config = db.configuration();
-    EXPECT_EQ(config.power_mode, mir_power_mode_off);
-    config.power_mode = mir_power_mode_suspend;
-    db.configure(config);
-
-    config = db.configuration();
-    EXPECT_EQ(config.power_mode, mir_power_mode_suspend);
-    config.power_mode = mir_power_mode_standby;
-    db.configure(config);
-
-    config = db.configuration();
-    EXPECT_EQ(config.power_mode, mir_power_mode_standby);
+    EXPECT_THROW({
+        display.configure(*config);
+    }, std::runtime_error); 
 }
 
 //configuration tests
 //TODO: the list does not support fb target rotation yet
-TEST_F(DisplayBuffer, display_orientation_not_supported)
+TEST_F(Display, display_orientation_not_supported)
 {
-    mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report);
 
-    auto config = db.configuration();
-    config.orientation = mir_orientation_left;
-    db.configure(config); 
+    auto config = display.configuration();
+    config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
+        c.orientation = mir_orientation_left;
+    });
+    display.configure(*config); 
 
-    config = db.configuration();
-    EXPECT_EQ(mir_orientation_left, config.orientation);
+    //This seems redundant
+    display.for_each_display_buffer([](mg::DisplayBuffer& db){
+        EXPECT_EQ(mir_orientation_left, db.orientation());
+    });
+    config = display.configuration();
+    config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
+        EXPECT_EQ(mir_orientation_left, c.orientation);
+    });
+    
 }
-
-TEST_F(DisplayBuffer, incorrect_display_configure_throws)
-{
-    mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
-    auto config = db.configuration();
-    //error
-    config.current_format = mir_pixel_format_invalid;
-    EXPECT_THROW({
-        db.configure(config);
-    }, std::runtime_error); 
-}
-
-TEST_F(DisplayBuffer, android_display_configuration_info)
-{
-    mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
-    auto disp_conf = db.configuration();
-
-    ASSERT_EQ(1u, disp_conf.modes.size());
-    auto& disp_mode = disp_conf.modes[0];
-    EXPECT_EQ(display_size, disp_mode.size);
-
-    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id);
-    EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id);
-    EXPECT_TRUE(disp_conf.connected);
-    EXPECT_TRUE(disp_conf.used);
-    auto origin = geom::Point{0,0};
-    EXPECT_EQ(origin, disp_conf.top_left);
-    EXPECT_EQ(0, disp_conf.current_mode_index);
-
-    EXPECT_EQ(refresh_rate, disp_mode.vrefresh_hz);
-    //TODO fill physical_size_mm fields accordingly;
-}
-#endif
