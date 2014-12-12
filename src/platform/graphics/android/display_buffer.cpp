@@ -71,11 +71,8 @@ geom::Rectangle mga::DisplayBuffer::view_area() const
     int width = size.width.as_int();
     int height = size.height.as_int();
 
-    if (current_configuration.orientation == mir_orientation_left
-        || current_configuration.orientation == mir_orientation_right)
-    {
+    if (orientation_ == mir_orientation_left || orientation_ == mir_orientation_right)
         std::swap(width, height);
-    }
 
     return {{0,0}, {width,height}};
 }
@@ -111,7 +108,7 @@ MirOrientation mga::DisplayBuffer::orientation() const
      * and let the renderer do it.
      * If and when we choose to implement HWC rotation, this may change.
      */
-    return current_configuration.orientation;
+    return orientation_;
 }
 
 bool mga::DisplayBuffer::uses_alpha() const

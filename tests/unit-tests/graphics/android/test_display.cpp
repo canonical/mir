@@ -114,7 +114,7 @@ TEST_F(Display, creation_creates_egl_resources_properly)
         null_display_report);
 }
 
-TEST_F(Display, selects_usable_configuration)
+TEST_F(Display, selects_usable_egl_configuration)
 {
     using namespace testing;
     int const incorrect_visual_id = 2;
@@ -363,3 +363,108 @@ TEST_F(Display, supports_one_output_configuration)
 
     EXPECT_EQ(1u, num_configs);
 }
+
+#if 0
+TEST_F(DisplayBuffer, sets_display_power_mode_to_on_at_start)
+{
+    using namespace testing;
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
+    auto config = db.configuration();
+    EXPECT_EQ(mir_power_mode_on, config.power_mode);
+}
+
+TEST_F(DisplayBuffer, changes_display_power_mode)
+{
+    using namespace testing;
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
+
+    Sequence seq;
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_off))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_display_device, mode(mir_power_mode_on))
+        .InSequence(seq);
+
+    auto config = db.configuration();
+    config.power_mode = mir_power_mode_off;
+    db.configure(config);
+
+    config = db.configuration();
+    config.power_mode = mir_power_mode_on;
+    db.configure(config); 
+}
+
+TEST_F(DisplayBuffer, power_mode_request_stored)
+{
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
+
+    auto config = db.configuration();
+    EXPECT_EQ(config.power_mode, mir_power_mode_on);
+    config.power_mode = mir_power_mode_off;
+    db.configure(config);
+
+    config = db.configuration();
+    EXPECT_EQ(config.power_mode, mir_power_mode_off);
+    config.power_mode = mir_power_mode_suspend;
+    db.configure(config);
+
+    config = db.configuration();
+    EXPECT_EQ(config.power_mode, mir_power_mode_suspend);
+    config.power_mode = mir_power_mode_standby;
+    db.configure(config);
+
+    config = db.configuration();
+    EXPECT_EQ(config.power_mode, mir_power_mode_standby);
+}
+
+//configuration tests
+//TODO: the list does not support fb target rotation yet
+TEST_F(DisplayBuffer, display_orientation_not_supported)
+{
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
+
+    auto config = db.configuration();
+    config.orientation = mir_orientation_left;
+    db.configure(config); 
+
+    config = db.configuration();
+    EXPECT_EQ(mir_orientation_left, config.orientation);
+}
+
+TEST_F(DisplayBuffer, incorrect_display_configure_throws)
+{
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
+    auto config = db.configuration();
+    //error
+    config.current_format = mir_pixel_format_invalid;
+    EXPECT_THROW({
+        db.configure(config);
+    }, std::runtime_error); 
+}
+
+TEST_F(DisplayBuffer, android_display_configuration_info)
+{
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
+    auto disp_conf = db.configuration();
+
+    ASSERT_EQ(1u, disp_conf.modes.size());
+    auto& disp_mode = disp_conf.modes[0];
+    EXPECT_EQ(display_size, disp_mode.size);
+
+    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id);
+    EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id);
+    EXPECT_TRUE(disp_conf.connected);
+    EXPECT_TRUE(disp_conf.used);
+    auto origin = geom::Point{0,0};
+    EXPECT_EQ(origin, disp_conf.top_left);
+    EXPECT_EQ(0, disp_conf.current_mode_index);
+
+    EXPECT_EQ(refresh_rate, disp_mode.vrefresh_hz);
+    //TODO fill physical_size_mm fields accordingly;
+}
+#endif
