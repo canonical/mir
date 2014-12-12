@@ -177,3 +177,20 @@ TEST_F(ClientSurfaces, creates_need_not_be_serialized)
         wait_for_surface_release(ssync+i);
 }
 
+TEST_F(ClientSurfaces, have_requested_preferred_orientation)
+{
+    auto spec = mir_connection_create_spec_for_normal_surface(connection, 1, 1, mir_pixel_format_abgr_8888);
+    ASSERT_TRUE(spec != nullptr);
+
+    MirOrientationMode mode{mir_orientation_mode_landscape};
+    mir_surface_spec_set_preferred_orientation(spec, mode);
+
+    auto surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
+    ASSERT_TRUE(mir_surface_is_valid(surface));
+    EXPECT_EQ(mir_surface_get_preferred_orientation(surface), mode);
+
+    mir_surface_release_sync(surface);
+}
+
