@@ -23,6 +23,8 @@ message SurfaceParameters {
   optional int32 type = 8;
   optional int32 pref_orientation = 9;
   optional int32 parent_id = 10;
+  optional int32 left = 11;
+  optional int32 top = 12;
 }
 
 message SurfaceId {

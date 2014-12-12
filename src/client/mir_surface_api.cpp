@@ -46,8 +46,8 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
 {
     auto spec = new MirSurfaceSpec;
     spec->connection = connection;
-    spec->width = width;
-    spec->height = height;
+    spec->rect.width = width;
+    spec->rect.height = height;
     spec->pixel_format = format;
     return spec;
 }
@@ -92,13 +92,13 @@ bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)
 
 bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width)
 {
-    spec->width = width;
+    spec->rect.width = width;
     return true;
 }
 
 bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height)
 {
-    spec->height = height;
+    spec->rect.height = height;
     return true;
 }
 
