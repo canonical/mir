@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platform-mesa/anonymous_shm_file.h"
+#include "src/platform-implementations/mesa/anonymous_shm_file.h"
 #include <gtest/gtest.h>
 
 namespace mgm = mir::graphics::mesa;

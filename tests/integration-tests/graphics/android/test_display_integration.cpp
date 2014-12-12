@@ -17,11 +17,11 @@
  */
 
 #include "mir/graphics/display_buffer.h"
-#include "src/platform-android/display.h"
-#include "src/platform-android/hwc_loggers.h"
-#include "src/platform-android/resource_factory.h"
-#include "src/platform-android/android_graphic_buffer_allocator.h"
-#include "src/platform-android/output_builder.h"
+#include "src/platform-implementations/android/display.h"
+#include "src/platform-implementations/android/hwc_loggers.h"
+#include "src/platform-implementations/android/resource_factory.h"
+#include "src/platform-implementations/android/android_graphic_buffer_allocator.h"
+#include "src/platform-implementations/android/output_builder.h"
 #include "src/server/graphics/program_factory.h"
 #include "src/server/report/null_report_factory.h"
 

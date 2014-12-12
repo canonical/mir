@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_SWAPPING_GL_CONTEXT_H_
 #define MIR_TEST_DOUBLES_STUB_SWAPPING_GL_CONTEXT_H_
 
-#include "src/platform-android/gl_context.h"
+#include "src/platform-implementations/android/gl_context.h"
 #include "stub_buffer.h"
 
 namespace mir

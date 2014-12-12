@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_ALLOC_ADAPTOR_H_
 #define MIR_TEST_DOUBLES_MOCK_ALLOC_ADAPTOR_H_
 
-#include "src/platform-android/graphic_alloc_adaptor.h"
+#include "src/platform-implementations/android/graphic_alloc_adaptor.h"
 
 #include <system/window.h>
 #include <gmock/gmock.h>

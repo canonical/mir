@@ -17,10 +17,10 @@
  */
 
 #include "mir/graphics/android/sync_fence.h"
-#include "src/platform-android/framebuffer_bundle.h"
-#include "src/platform-android/hwc_device.h"
-#include "src/platform-android/hwc_layerlist.h"
-#include "src/platform-android/gl_context.h"
+#include "src/platform-implementations/android/framebuffer_bundle.h"
+#include "src/platform-implementations/android/hwc_device.h"
+#include "src/platform-implementations/android/hwc_layerlist.h"
+#include "src/platform-implementations/android/gl_context.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/stub_renderable.h"

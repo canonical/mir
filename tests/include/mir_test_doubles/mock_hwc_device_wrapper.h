@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_HWC_DEVICE_WRAPPER_H_
 #define MIR_TEST_DOUBLES_MOCK_HWC_DEVICE_WRAPPER_H_
 
-#include "src/platform-android/hwc_wrapper.h"
+#include "src/platform-implementations/android/hwc_wrapper.h"
 
 #include <gmock/gmock.h>
 

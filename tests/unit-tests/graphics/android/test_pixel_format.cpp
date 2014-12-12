@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform-android/android_format_conversion-inl.h"
+#include "src/platform-implementations/android/android_format_conversion-inl.h"
 
 #include <gtest/gtest.h>
 

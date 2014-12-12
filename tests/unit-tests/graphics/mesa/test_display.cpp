@@ -16,9 +16,9 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 #include <boost/throw_exception.hpp>
-#include "src/platform-mesa/platform.h"
-#include "src/platform-mesa/display.h"
-#include "src/platform-mesa/virtual_terminal.h"
+#include "src/platform-implementations/mesa/platform.h"
+#include "src/platform-implementations/mesa/display.h"
+#include "src/platform-implementations/mesa/virtual_terminal.h"
 #include "src/server/report/logging/display_report.h"
 #include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"

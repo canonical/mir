@@ -15,8 +15,8 @@
  *
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
-#include "src/platform-mesa/platform.h"
-#include "src/platform-mesa/display_buffer.h"
+#include "src/platform-implementations/mesa/platform.h"
+#include "src/platform-implementations/mesa/display_buffer.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"

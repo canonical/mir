@@ -19,7 +19,7 @@
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/event_handler_register.h"
 #include "mir/graphics/platform_ipc_operations.h"
-#include "src/platform-mesa/platform.h"
+#include "src/platform-implementations/mesa/platform.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/emergency_cleanup_registry.h"
 

@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform-android/hwc_fb_device.h"
+#include "src/platform-implementations/android/hwc_fb_device.h"
 #include "mir_test_doubles/stub_android_native_buffer.h"
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -30,7 +30,7 @@
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include "mir_test_doubles/stub_renderable_list_compositor.h"
-#include "src/platform-android/hwc_fallback_gl_renderer.h"
+#include "src/platform-implementations/android/hwc_fallback_gl_renderer.h"
 #include "hwc_struct_helpers.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
