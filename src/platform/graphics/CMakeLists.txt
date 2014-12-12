@@ -25,7 +25,3 @@ if (MIR_BUILD_PLATFORM_ANDROID)
   add_subdirectory(android/)
 endif()
 
-if (MIR_BUILD_PLATFORM_MESA)
-  add_subdirectory(mesa/)
-endif()
-
