@@ -19,7 +19,6 @@
 #include "src/platform/graphics/android/framebuffers.h"
 #include "src/platform/graphics/android/graphic_buffer_allocator.h"
 #include "mir_test_doubles/mock_buffer.h"
-#include "mir_test_doubles/mock_hwc_composer_device_1.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_fb_hal_device.h"
 
@@ -58,7 +57,6 @@ public:
         buffer2 = std::make_shared<mtd::MockBuffer>();
         buffer3 = std::make_shared<mtd::MockBuffer>();
         mock_allocator = std::make_shared<MockGraphicBufferAllocator>();
-//        mock_hwc_device = std::make_shared<testing::NiceMock<mtd::MockHWCComposerDevice1>>();
         mock_fb_hal = std::make_shared<mtd::MockFBHalDevice>(display_width, display_height, format, fbnum);
         EXPECT_CALL(*mock_allocator, alloc_buffer_platform(_,_,_))
             .Times(AtLeast(0))
@@ -76,7 +74,6 @@ public:
     std::shared_ptr<mg::Buffer> buffer2;
     std::shared_ptr<mg::Buffer> buffer3;
     geom::Size display_size{display_width, display_height};
-//    std::shared_ptr<mtd::MockHWCComposerDevice1> mock_hwc_device;
     testing::NiceMock<mtd::MockEGL> mock_egl;
 };
 
