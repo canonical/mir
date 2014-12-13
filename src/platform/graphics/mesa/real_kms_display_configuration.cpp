@@ -262,12 +262,10 @@ mgm::RealKMSDisplayConfiguration::find_output_with_id(mg::DisplayConfigurationOu
                         });
 }
 
-// Equality means conf1 can be attained from conf2 (and vice versa)
+// Compatibility means conf1 can be attained from conf2 (and vice versa)
 // without recreating the display buffers (e.g. conf1 and conf2 are identical
 // except one of the outputs of conf1 is rotated w.r.t. that of conf2).
-// It does NOT mean exactness.
-// TODO: what else besides rotation?
-bool mgm::operator==(mgm::RealKMSDisplayConfiguration const& conf1, mgm::RealKMSDisplayConfiguration const& conf2)
+bool mgm::compatible(mgm::RealKMSDisplayConfiguration const& conf1, mgm::RealKMSDisplayConfiguration const& conf2)
 {
     bool compatible{(conf1.drm_fd         == conf2.drm_fd) &&
                     (conf1.card           == conf2.card)   &&
@@ -278,7 +276,7 @@ bool mgm::operator==(mgm::RealKMSDisplayConfiguration const& conf1, mgm::RealKMS
         unsigned int const count = conf1.outputs.size();
 
         for (unsigned int i = 0; i < count; ++i)
-            compatible = compatible && (conf1.outputs[i] == conf2.outputs[i]);
+            compatible = compatible && mg::compatible(conf1.outputs[i], conf2.outputs[i]);
     }
 
     return compatible;

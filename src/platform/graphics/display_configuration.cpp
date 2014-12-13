@@ -150,7 +150,6 @@ bool mg::operator!=(mg::DisplayConfigurationMode const& val1,
     return !(val1 == val2);
 }
 
-// This function does not check exactness, only compatibility.
 bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
                     mg::DisplayConfigurationOutput const& val2)
 {
@@ -162,10 +161,7 @@ bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
                (val1.connected == val2.connected) &&
                (val1.used == val2.used) &&
                (val1.top_left == val2.top_left) &&
-// Difference in orientation does not mean incompatibility.
-// Leave it commented out as reminder, though.
-// TODO: Are there others?
-/*               (val1.orientation == val2.orientation) && */
+               (val1.orientation == val2.orientation) &&
                (val1.current_mode_index == val2.current_mode_index) &&
                (val1.modes.size() == val2.modes.size())};
 
@@ -185,6 +181,34 @@ bool mg::operator!=(mg::DisplayConfigurationOutput const& val1,
                     mg::DisplayConfigurationOutput const& val2)
 {
     return !(val1 == val2);
+}
+
+// E.g. Difference in orientation does not result in incompatibility.
+bool mg::compatible(mg::DisplayConfigurationOutput const& val1,
+                    mg::DisplayConfigurationOutput const& val2)
+{
+    bool compatible{(val1.id == val2.id) &&
+                    (val1.card_id == val2.card_id) &&
+                    (val1.type == val2.type) &&
+                    (val1.physical_size_mm == val2.physical_size_mm) &&
+                    (val1.preferred_mode_index == val2.preferred_mode_index) &&
+                    (val1.connected == val2.connected) &&
+                    (val1.used == val2.used) &&
+                    (val1.top_left == val2.top_left) &&
+                    (val1.current_mode_index == val2.current_mode_index) &&
+                    (val1.modes.size() == val2.modes.size()) &&
+                    (val1.power_mode == val2.power_mode)};
+
+    if (compatible)
+    {
+        for (size_t i = 0; i < val1.modes.size(); i++)
+        {
+        	compatible = compatible && (val1.modes[i] == val2.modes[i]);
+            if (!compatible) break;
+        }
+    }
+
+    return compatible;
 }
 
 namespace
