@@ -203,7 +203,7 @@ bool mg::compatible(mg::DisplayConfigurationOutput const& val1,
     {
         for (size_t i = 0; i < val1.modes.size(); i++)
         {
-        	compatible = compatible && (val1.modes[i] == val2.modes[i]);
+            compatible = compatible && (val1.modes[i] == val2.modes[i]);
             if (!compatible) break;
         }
     }
