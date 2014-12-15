@@ -49,8 +49,6 @@ void run_mir(
     ServerConfiguration& config,
     std::function<void(DisplayServer&)> init,
     std::function<void(int)> const& terminator);
-
-void terminate_with_current_exception();
 }
 
 #endif /* MIR_RUN_MIR_H_ */

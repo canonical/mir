@@ -16,8 +16,8 @@ MIRPLATFORM_5 {
     mir::graphics::Buffer::pixel_format*;
     mir::graphics::Buffer::size*;
     mir::graphics::Buffer::stride*;
-    mir::graphics::create_native_platform*;
-    mir::graphics::create_platform*;
+    mir::graphics::create_guest_platform*;
+    mir::graphics::create_host_platform*;
     mir::graphics::Cursor::?Cursor*;
     mir::graphics::Cursor::Cursor*;
     mir::graphics::Cursor::hide*;
@@ -92,13 +92,6 @@ MIRPLATFORM_5 {
     mir::graphics::InternalSurface::pixel_format*;
     mir::graphics::InternalSurface::size*;
     mir::graphics::InternalSurface::swap_buffers*;
-    mir::graphics::NativePlatform::connection_ipc_package*;
-    mir::graphics::NativePlatform::create_buffer_allocator*;
-    mir::graphics::NativePlatform::fill_buffer_package*;
-    mir::graphics::NativePlatform::make_buffer_writer*;
-    mir::graphics::NativePlatform::?NativePlatform*;
-    mir::graphics::NativePlatform::NativePlatform*;
-    mir::graphics::NativePlatform::operator*;
     mir::graphics::operator*;
     mir::graphics::Platform::create_buffer_allocator*;
     mir::graphics::Platform::create_display*;
@@ -186,7 +179,6 @@ MIRPLATFORM_5 {
     non-virtual?thunk?to?mir::graphics::GraphicBufferAllocator::?GraphicBufferAllocator*;
     non-virtual?thunk?to?mir::graphics::InternalClient::?InternalClient*;
     non-virtual?thunk?to?mir::graphics::InternalSurface::?InternalSurface*;
-    non-virtual?thunk?to?mir::graphics::NativePlatform::?NativePlatform*;
     non-virtual?thunk?to?mir::graphics::PlatformIpcOperations::?PlatformIpcOperations*;
     non-virtual?thunk?to?mir::graphics::Renderable::?Renderable*;
     non-virtual?thunk?to?mir::options::Configuration::?Configuration*;
@@ -218,7 +210,6 @@ MIRPLATFORM_5 {
     typeinfo?for?mir::graphics::GraphicBufferAllocator;
     typeinfo?for?mir::graphics::InternalClient;
     typeinfo?for?mir::graphics::InternalSurface;
-    typeinfo?for?mir::graphics::NativePlatform;
     typeinfo?for?mir::graphics::Platform;
     typeinfo?for?mir::graphics::PlatformIpcOperations;
     typeinfo?for?mir::graphics::PlatformIPCPackage;
@@ -248,7 +239,6 @@ MIRPLATFORM_5 {
     vtable?for?mir::graphics::GraphicBufferAllocator;
     vtable?for?mir::graphics::InternalClient;
     vtable?for?mir::graphics::InternalSurface;
-    vtable?for?mir::graphics::NativePlatform;
     vtable?for?mir::graphics::Platform;
     vtable?for?mir::graphics::PlatformIpcOperations;
     vtable?for?mir::graphics::PlatformIPCPackage;

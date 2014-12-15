@@ -17,6 +17,7 @@
  */
 
 #include "src/platform/graphics/android/hwc_fb_device.h"
+#include "src/platform/graphics/android/hwc_configuration.h"
 #include "mir_test_doubles/stub_android_native_buffer.h"
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_buffer.h"
@@ -40,6 +41,12 @@ namespace mga=mir::graphics::android;
 namespace mtd=mir::test::doubles;
 namespace geom=mir::geometry;
 
+namespace
+{
+struct StubConfig : public mga::HwcConfiguration
+{
+    void power_mode(MirPowerMode) {}
+};
 class HwcFbDevice : public ::testing::Test
 {
 protected:
@@ -77,6 +84,8 @@ protected:
             .WillByDefault(Return(stub_native_buffer));
         ON_CALL(mock_context, last_rendered_buffer())
             .WillByDefault(Return(mock_buffer));
+
+        stub_config = std::make_shared<StubConfig>();
     }
 
     int fake_dpy = 0;
@@ -94,8 +103,10 @@ protected:
     std::shared_ptr<mtd::StubAndroidNativeBuffer> stub_native_buffer;
     mtd::StubSwappingGLContext stub_context;
     testing::NiceMock<mtd::MockSwappingGLContext> mock_context;
+    std::shared_ptr<mga::HwcConfiguration> stub_config;
     hwc_layer_1_t skip_layer;
 };
+}
 
 TEST_F(HwcFbDevice, hwc10_post_gl_only)
 {
@@ -114,7 +125,7 @@ TEST_F(HwcFbDevice, hwc10_post_gl_only)
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesListWithEglFields(expected_list, dpy, sur)))
         .InSequence(seq);
 
-    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config, mock_vsync);
 
     device.post_gl(mock_context);
 }
@@ -131,7 +142,7 @@ TEST_F(HwcFbDevice, hwc10_rejects_overlays)
         renderable2
     };
 
-    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config, mock_vsync);
     EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
 }
 
@@ -150,6 +161,6 @@ TEST_F(HwcFbDevice, hwc10_post)
         .InSequence(seq);
     EXPECT_CALL(*mock_vsync, wait_for_vsync())
         .InSequence(seq);
-    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config, mock_vsync);
     device.post_gl(mock_context);
 }

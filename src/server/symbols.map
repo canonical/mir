@@ -69,7 +69,6 @@ MIR_SERVER_28 {
     mir::DefaultServerConfiguration::the_gl_config*;
     mir::DefaultServerConfiguration::the_global_event_sink*;
     mir::DefaultServerConfiguration::the_gl_program_factory*;
-    mir::DefaultServerConfiguration::the_graphics_native_platform*;
     mir::DefaultServerConfiguration::the_graphics_platform*;
     mir::DefaultServerConfiguration::the_host_connection*;
     mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
@@ -551,7 +550,6 @@ MIR_SERVER_28 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_gl_config*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_global_event_sink*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_gl_program_factory*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_graphics_native_platform*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_graphics_platform*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_host_connection*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
