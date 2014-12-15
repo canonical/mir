@@ -33,8 +33,8 @@ public:
     void pack_buffer(BufferIpcMessage&, Buffer const&, BufferIpcMsgType) const override;
     void unpack_buffer(BufferIpcMessage&, Buffer const&) const override;
     std::shared_ptr<PlatformIPCPackage> connection_ipc_package() override;
-    PlatformIPCPackage platform_operation(
-        unsigned int const opcode, PlatformIPCPackage const& package) override; 
+    PlatformOperationMessage platform_operation(
+        unsigned int const opcode, PlatformOperationMessage const& message) override;
 };
 }
 }
