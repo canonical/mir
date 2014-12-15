@@ -112,6 +112,7 @@ void mga::RealHwcWrapper::display_off() const
     report->report_display_off();
 }
 
+#if 0
 mga::HwcAttribs mga::RealHwcWrapper::display_attribs(DisplayName name) const
 {
     size_t num_configs = 1;
@@ -142,4 +143,16 @@ mga::HwcAttribs mga::RealHwcWrapper::display_attribs(DisplayName name) const
         (size_values[2] > 0 ) ? 1000000000.0/size_values[2] : 0.0
     };
     return attribs;
+}
+#endif
+
+std::vector<mga::ConfigId> mga::RealHwcWrapper::display_configs(DisplayName) const
+{
+    return {};
+}
+
+void mga::RealHwcWrapper::display_attributes(
+    DisplayName display, ConfigId config, uint32_t const* attributes, int32_t* values) const
+{
+    (void) display; (void) config;  (void) attributes; (void) values;
 }
