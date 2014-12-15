@@ -200,9 +200,9 @@ void render_loop(mir::Server& server)
     };
 
     auto client1 = std::make_shared<DemoOverlayClient>(
-        *buffer_allocator, buffer_properties,0xFF0000FF);
+        *buffer_allocator, buffer_properties, 0xFF0000FF);
     auto client2 = std::make_shared<DemoOverlayClient>(
-        *buffer_allocator, buffer_properties,0xFFFFFF00);
+        *buffer_allocator, buffer_properties, 0xFFFFFF00);
 
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {
