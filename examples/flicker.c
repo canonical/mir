@@ -141,11 +141,15 @@ int main(int argc, char* argv[])
     mir_connection_get_available_surface_formats(connection, pixel_formats, num_formats, &valid_formats);
     MirPixelFormat pixel_format = find_8888_format(pixel_formats, valid_formats);
 
-    MirSurfaceParameters const request_params =
-        {__PRETTY_FUNCTION__, 640, 480, pixel_format,
-         mir_buffer_usage_software, mir_display_output_id_invalid};
+    MirSurfaceSpec *spec =
+        mir_connection_create_spec_for_normal_surface(connection, 640, 480, pixel_format);
+    assert(spec != NULL);
+    mir_surface_spec_set_name(spec, __PRETTY_FUNCTION__);
+    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
-    surface = mir_connection_create_surface_sync(connection, &request_params);
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
     assert(surface != NULL);
     assert(mir_surface_is_valid(surface));
     assert(strcmp(mir_surface_get_error_message(surface), "") == 0);

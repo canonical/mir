@@ -27,6 +27,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_device_detection.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_wrapper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_fallback_gl_renderer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_configuration.cpp
   $<TARGET_OBJECTS:mirplatformgraphicsandroidobjects>
 )
 
