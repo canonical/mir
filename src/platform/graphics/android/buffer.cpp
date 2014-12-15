@@ -146,7 +146,8 @@ void mga::Buffer::write(unsigned char const* data, size_t data_size)
 
     native_buffer->ensure_available_for(mga::BufferAccess::write);
     
-    size_t buffer_size_bytes = stride().as_int() * size().height.as_int();
+    auto bpp = MIR_BYTES_PER_PIXEL(pixel_format());
+    size_t buffer_size_bytes = size.height().as_int() * size().height.as_int() * bpp;
     if (buffer_size_bytes != data_size)
         BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
 
@@ -162,7 +163,6 @@ void mga::Buffer::write(unsigned char const* data, size_t data_size)
         usage, top, left, width, height, reinterpret_cast<void**>(&vaddr)) )
         BOOST_THROW_EXCEPTION(std::runtime_error("error securing buffer for client cpu use"));
 
-    auto bpp = MIR_BYTES_PER_PIXEL(pixel_format());
     // Copy line by line in case of stride != width*bpp
     for (int i = 0; i < height; i++)
     {
