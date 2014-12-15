@@ -18,10 +18,11 @@
  * Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_GRAPHICS_MESA_NATIVE_PLATFORM_H_
-#define MIR_GRAPHICS_MESA_NATIVE_PLATFORM_H_
+#ifndef MIR_GRAPHICS_MESA_GUEST_PLATFORM_H_
+#define MIR_GRAPHICS_MESA_GUEST_PLATFORM_H_
 
-#include "mir/graphics/native_platform.h"
+#include "mir/graphics/platform.h"
+#include "mir/graphics/platform_ipc_package.h"
 #include "display_helpers.h"
 
 namespace mir
@@ -32,15 +33,21 @@ namespace mesa
 {
 class InternalNativeDisplay; 
 
-class NativePlatform : public graphics::NativePlatform
+class GuestPlatform : public graphics::Platform
 {
 public:
-    NativePlatform(std::shared_ptr<NestedContext> const& nested_context_arg);
+    GuestPlatform(std::shared_ptr<NestedContext> const& nested_context_arg);
 
     std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() override;
     std::shared_ptr<graphics::BufferWriter> make_buffer_writer() override;
     std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
     
+    std::shared_ptr<Display> create_display(
+        std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
+        std::shared_ptr<graphics::GLProgramFactory> const&,
+        std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
+    EGLNativeDisplayType egl_native_display() const override;
+
 private:
     std::shared_ptr<NestedContext> nested_context;
     helpers::GBMHelper gbm;
@@ -50,4 +57,4 @@ private:
 }
 }
 
-#endif // MIR_GRAPHICS_MESA_NATIVE_PLATFORM_H_
+#endif // MIR_GRAPHICS_MESA_GUEST_PLATFORM_H_

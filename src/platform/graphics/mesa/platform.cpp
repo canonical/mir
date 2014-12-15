@@ -17,7 +17,7 @@
  */
 
 #include "platform.h"
-#include "native_platform.h"
+#include "guest_platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
 #include "linux_virtual_terminal.h"
@@ -170,7 +170,7 @@ mgm::BypassOption mgm::Platform::bypass_option() const
     return bypass_option_;
 }
 
-extern "C" std::shared_ptr<mg::Platform> mg::create_platform(
+extern "C" std::shared_ptr<mg::Platform> mg::create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<DisplayReport> const& report)

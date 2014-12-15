@@ -12,9 +12,10 @@ e1be9faee8b844ca2ce617f8fd82c9ee08d56bed  include/common/mir/graphics/native_buf
 dcf8b8982f138bdde39a241825c610e955cd5e33  include/common/mir/input/input_platform.h
 208cd6aed5ef5f8f39b3eb86604e4133cb840485  include/common/mir/input/input_receiver_thread.h
 be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
-2fd7274766a92f22e8784cb64af91947ba03d0de  include/common/mir/logging/logger.h
+2de47e2790d0f7643e23eada2d8aa2987f58d086  include/common/mir/logging/logger.h
+5ab81600183fdaca3fb949beb2307d1f6e4cbb61  include/common/mir/log.h
 9ae8473df05dd9e048a73797f01a2f34f7447554  include/common/mir/time/types.h
-1863a7fe3a382061f2752c0236cc971e7e68f93f  include/common/mir_toolkit/client_types.h
+23a009b06de7bac17d33d988dc8d968be8bc094a  include/common/mir_toolkit/client_types.h
 3e85c6d9dd1dca9767ea8bdf13ea6bbd1cb11c30  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 d71dddf6c4275ee423d3e0fa204e3b77b4d87401  include/common/mir_toolkit/event.h

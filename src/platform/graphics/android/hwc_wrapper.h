@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_WRAPPER_H_
 #define MIR_GRAPHICS_ANDROID_HWC_WRAPPER_H_
 
+#include "display_name.h"
 #include <hardware/hwcomposer.h>
 #include <array>
 #include <memory>
@@ -29,13 +30,6 @@ namespace graphics
 {
 namespace android
 {
-
-enum DisplayName
-{
-    primary = HWC_DISPLAY_PRIMARY,
-    external = HWC_DISPLAY_EXTERNAL,
-    virt = HWC_DISPLAY_VIRTUAL
-};
 
 struct HWCCallbacks;
 class HwcWrapper

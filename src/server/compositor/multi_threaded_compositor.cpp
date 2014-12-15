@@ -26,7 +26,7 @@
 #include "mir/scene/legacy_scene_change_notification.h"
 #include "mir/scene/surface_observer.h"
 #include "mir/scene/surface.h"
-#include "mir/run_mir.h"
+#include "mir/terminate_with_current_exception.h"
 #include "mir/raii.h"
 #include "mir/thread_name.h"
 
