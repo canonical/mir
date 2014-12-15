@@ -22,11 +22,12 @@
 
 #include "default_display_configuration_policy.h"
 #include "nested/mir_client_host_connection.h"
-#include "nested/nested_platform.h"
+#include "nested/nested_display.h"
 #include "mir/graphics/nested_context.h"
 #include "offscreen/display.h"
 
 #include "mir/graphics/gl_config.h"
+#include "mir/graphics/platform.h"
 #include "mir/graphics/cursor.h"
 #include "program_factory.h"
 
@@ -63,30 +64,9 @@ mir::DefaultServerConfiguration::wrap_display_configuration_policy(
 }
 
 
-std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
-{
-    return graphics_platform(
-        [this]()->std::shared_ptr<mg::Platform>
-        {
-            if (!the_options()->is_set(options::host_socket_opt))
-            {
-                // fallback to standalone if host socket is unset
-                auto graphics_lib = mir::load_library(the_options()->get<std::string>(options::platform_graphics_lib));
-                auto create_platform = graphics_lib->load_function<mg::CreatePlatform>("create_platform");
-                return create_platform(the_options(), the_emergency_cleanup(), the_display_report());
-            }
-
-            return std::make_shared<mir::graphics::nested::NestedPlatform>(
-                the_host_connection(),
-                the_input_dispatcher(),
-                the_display_report(),
-                the_graphics_native_platform());
-        });
-}
-
 namespace
 {
-
+//TODO: what is the point of NestedContext if its just the same as mgn:HostConnection?
 class MirConnectionNestedContext : public mg::NestedContext
 {
 public:
@@ -113,20 +93,30 @@ public:
 private:
     std::shared_ptr<mgn::HostConnection> const connection;
 };
-
 }
 
-std::shared_ptr<mg::NativePlatform>  mir::DefaultServerConfiguration::the_graphics_native_platform()
+std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_platform()
 {
-    return graphics_native_platform(
-        [this]()
+    return graphics_platform(
+        [this]()->std::shared_ptr<mg::Platform>
         {
             auto graphics_lib = mir::load_library(the_options()->get<std::string>(options::platform_graphics_lib));
-            auto create_native_platform = graphics_lib->load_function<mg::CreateNativePlatform>("create_native_platform");
-            auto context = std::make_shared<MirConnectionNestedContext>(the_host_connection());
-            return create_native_platform(the_display_report(), context);
+
+            auto create_host_platform = graphics_lib->load_function<mg::CreateHostPlatform>("create_host_platform");
+            auto create_guest_platform = graphics_lib->load_function<mg::CreateGuestPlatform>("create_guest_platform");
+            if (the_options()->is_set(options::host_socket_opt))
+            {
+                return create_guest_platform(
+                    the_display_report(),
+                    std::make_shared<MirConnectionNestedContext>(the_host_connection()));
+            }
+            else
+            {
+                return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report());
+            }
         });
 }
+
 
 std::shared_ptr<mg::GraphicBufferAllocator>
 mir::DefaultServerConfiguration::the_buffer_allocator()
@@ -161,7 +151,16 @@ mir::DefaultServerConfiguration::the_display()
                     the_display_configuration_policy(),
                     the_display_report());
             }
-            else
+            else if (the_options()->is_set(options::host_socket_opt))
+            {
+                return std::make_shared<mgn::NestedDisplay>(
+                    the_graphics_platform(),
+                    the_host_connection(),
+                    the_input_dispatcher(),
+                    the_display_report(),
+                    the_display_configuration_policy(),
+                    the_gl_config());
+            }
             {
                 return the_graphics_platform()->create_display(
                     the_display_configuration_policy(),

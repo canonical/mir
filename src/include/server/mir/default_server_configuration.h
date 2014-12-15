@@ -105,7 +105,6 @@ class CoordinateTranslator;
 }
 namespace graphics
 {
-class NativePlatform;
 class Platform;
 class Display;
 class DisplayReport;
@@ -193,7 +192,6 @@ public:
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
     virtual std::shared_ptr<graphics::nested::HostConnection> the_host_connection();
     virtual std::shared_ptr<graphics::GLConfig> the_gl_config();
-    virtual std::shared_ptr<graphics::NativePlatform>  the_graphics_native_platform();
     /** @} */
 
     /** @name graphics configuration - dependencies
@@ -379,7 +377,6 @@ protected:
     CachedPtr<input::CursorListener> cursor_listener;
     CachedPtr<input::TouchVisualizer> touch_visualizer;
     CachedPtr<graphics::Platform>     graphics_platform;
-    CachedPtr<graphics::NativePlatform>    graphics_native_platform;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
     CachedPtr<graphics::BufferWriter> buffer_writer;
     CachedPtr<graphics::Display>      display;

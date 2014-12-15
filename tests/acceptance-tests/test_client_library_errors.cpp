@@ -245,6 +245,8 @@ TEST_F(ClientLibraryErrorsDeathTest, createing_surface_on_garbage_connection_is_
     ASSERT_FALSE(mir_connection_is_valid(connection));
     EXPECT_DEATH(
         mtf::make_any_surface(connection), "");
+
+    mir_connection_release(connection);
 }
 
 
@@ -256,6 +258,8 @@ TEST_F(ClientLibraryErrorsDeathTest, creating_surface_synchronosly_on_malconstru
 
     ASSERT_FALSE(mir_connection_is_valid(connection));
     EXPECT_DEATH(mtf::make_any_surface(connection), "");
+
+    mir_connection_release(connection);
 }
 
 TEST_F(ClientLibraryErrorsDeathTest, creating_surface_synchronosly_on_invalid_connection_is_fatal)
@@ -266,4 +270,6 @@ TEST_F(ClientLibraryErrorsDeathTest, creating_surface_synchronosly_on_invalid_co
 
     ASSERT_FALSE(mir_connection_is_valid(connection));
     EXPECT_DEATH(mtf::make_any_surface(connection), "");
+
+    mir_connection_release(connection);
 }
