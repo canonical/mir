@@ -19,9 +19,11 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_WRAPPER_H_
 #define MIR_GRAPHICS_ANDROID_HWC_WRAPPER_H_
 
-#include <mir/geometry/size.h>
+#include "mir/geometry/size.h"
+#include "mir/int_wrapper.h"
 #include <hardware/hwcomposer.h>
 #include <memory>
+#include <vector>
 
 namespace mir
 {
@@ -36,12 +38,8 @@ enum DisplayName
     virt = HWC_DISPLAY_VIRTUAL
 };
 
-struct HwcAttribs
-{
-    geometry::Size pixel_size;
-    geometry::Size dpi_mm;
-    double vrefresh_hz;
-};
+struct ConfigIdTag;
+typedef IntWrapper<ConfigIdTag, uint32_t> ConfigId;
 
 struct HWCCallbacks;
 class HwcWrapper
@@ -56,7 +54,9 @@ public:
     virtual void vsync_signal_off() const = 0;
     virtual void display_on() const = 0;
     virtual void display_off() const = 0;
-    virtual HwcAttribs display_attribs(DisplayName) const = 0;
+    virtual std::vector<ConfigId> display_configs(DisplayName) const = 0;
+    virtual void display_attributes(
+        DisplayName, ConfigId, uint32_t const* attributes, int32_t* values) const = 0;
 
 protected:
     HwcWrapper() = default;

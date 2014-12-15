@@ -44,7 +44,9 @@ public:
     void vsync_signal_off() const override;
     void display_on() const override;
     void display_off() const override;
-    HwcAttribs display_attribs(DisplayName) const override;
+    std::vector<ConfigId> display_configs(DisplayName) const override;
+    void display_attributes(
+        DisplayName, ConfigId, uint32_t const* attributes, int32_t* values) const override;
 private:
     static size_t const num_displays{3}; //primary, external, virtual
     //note: the callbacks have to extend past the lifetime of the hwc_composer_device_1 for some
