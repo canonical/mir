@@ -43,13 +43,6 @@ void mga::HwcBlankingControl::power_mode(DisplayName display_name, MirPowerMode 
 
 mga::DisplayAttribs mga::HwcBlankingControl::display_attribs(DisplayName)
 {
-    return {{},{},0.0, false};
-}
-//        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config"));
-
-#if 0
-mga::HwcAttribs mga::RealHwcWrapper::display_attribs(DisplayName name) const
-{
     size_t num_configs = 1;
     uint32_t display_config = 0u;
     if (hwc_device->getDisplayConfigs(hwc_device.get(), name, &display_config, &num_configs))
@@ -78,6 +71,12 @@ mga::HwcAttribs mga::RealHwcWrapper::display_attribs(DisplayName name) const
         (size_values[2] > 0 ) ? 1000000000.0/size_values[2] : 0.0
     };
     return attribs;
+}
+//        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config"));
+
+#if 0
+mga::HwcAttribs mga::RealHwcWrapper::display_attribs(DisplayName name) const
+{
 }
 #endif
 

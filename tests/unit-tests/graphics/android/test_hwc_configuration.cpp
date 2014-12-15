@@ -110,17 +110,44 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
     EXPECT_TRUE(attribs.connected);
 }
 
-#if 0
-//the primary display should not be disconnected
+//the primary display should not be disconnected, but this is how to tell if the external one is
 TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_device, getDisplayConfigs_interface(mock_device.get(),HWC_DISPLAY_PRIMARY,_,_))
-        .WillOnce(Return(-1));
+    ON_CALL(*mock_hwc_wrapper, display_configs(_))
+        .WillByDefault(Return(std::vector<mga::ConfigId>{}));
 
     EXPECT_THROW({
-        mga::RealHwcWrapper wrapper(mock_device, mock_report);
-        wrapper.display_attribs(mga::DisplayName::primary);
+        config.display_attribs(mga::DisplayName::primary);
     }, std::runtime_error);
+    auto external_attribs = config.display_attribs(mga::DisplayName::external);
+    EXPECT_THAT(external_attribs.pixel_size, Eq(geom::Size{0,0}));
+    EXPECT_THAT(external_attribs.dpi_mm, Eq(geom::Size{0,0}));
+    EXPECT_THAT(external_attribs.vrefresh_hz, Eq(0.0));
+    EXPECT_FALSE(external_attribs.connected);
 }
-#endif
+
+TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_hwc_wrapper, display_attributes(display, _, _, _))
+            .WillOnce(Invoke([]
+            (mga::DisplayName, mga::ConfigId, uint32_t const* attribute_list, int32_t* values)
+            {
+                int i = 0;
+                while(attribute_list[i] != HWC_DISPLAY_NO_ATTRIBUTE)
+                {
+                    switch(attribute_list[i])
+                    {
+                        case HWC_DISPLAY_VSYNC_PERIOD:
+                            values[i] = 0;
+                            break;
+                        default:
+                            break;
+                    }
+                    i++;
+                }
+            }));
+    auto attribs = config.display_attribs(mga::DisplayName::external);
+    EXPECT_THAT(attribs.vrefresh_hz, Eq(0.0f));
+}
