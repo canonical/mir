@@ -32,6 +32,13 @@ namespace doubles
 
 struct MockHWCDeviceWrapper : public graphics::android::HwcWrapper
 {
+    MockHWCDeviceWrapper()
+    {
+        using namespace testing;
+        using graphics::android::ConfigId;
+        ON_CALL(*this, display_configs(_))
+            .WillByDefault(Return(std::vector<ConfigId>{ConfigId{34}}));
+    }
     MOCK_CONST_METHOD1(prepare, void(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&));
     MOCK_CONST_METHOD1(set, void(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&));
     MOCK_METHOD1(register_hooks, void(std::shared_ptr<graphics::android::HWCCallbacks> const&));

@@ -18,6 +18,8 @@
 
 #include "hwc_configuration.h"
 #include "hwc_wrapper.h"
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mga = mir::graphics::android;
 
@@ -41,16 +43,20 @@ void mga::HwcBlankingControl::power_mode(DisplayName display_name, MirPowerMode 
     }
 }
 
-mga::DisplayAttribs mga::HwcBlankingControl::display_attribs(DisplayName)
+mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName display_name)
 {
-    size_t num_configs = 1;
-    uint32_t display_config = 0u;
-    if (hwc_device->getDisplayConfigs(hwc_device.get(), name, &display_config, &num_configs))
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config"));
+    auto configs = hwc_device->display_configs(display_name);
+    if (configs.empty())
+    {
+        if (display_name == mga::DisplayName::primary)
+            BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
+        else   
+            return {{},{},0.0, false};
+    }
 
     /* note: some drivers (qcom msm8960) choke if this is not the same size array
        as the one surfaceflinger submits */
-    static uint32_t const display_attribute_request[] =
+    static uint32_t const attributes[] =
     {
         HWC_DISPLAY_WIDTH,
         HWC_DISPLAY_HEIGHT,
@@ -60,22 +66,19 @@ mga::DisplayAttribs mga::HwcBlankingControl::display_attribs(DisplayName)
         HWC_DISPLAY_NO_ATTRIBUTE,
     };
 
-    int32_t size_values[sizeof(display_attribute_request) / sizeof (display_attribute_request[0])] = {};
-    hwc_device->getDisplayAttributes(hwc_device.get(), name, display_config,
-                                     display_attribute_request, size_values);
-
-    mga::HwcAttribs attribs
-    {
-        {size_values[0], size_values[1]},
-        {size_values[3], size_values[4]},
-        (size_values[2] > 0 ) ? 1000000000.0/size_values[2] : 0.0
+    int32_t values[sizeof(attributes) / sizeof (attributes[0])] = {};
+    /* the first config is the active one in hwc 1.1 to hwc 1.3. */
+    hwc_device->display_attributes(display_name, configs.front(), attributes, values);
+    return {
+        {values[0], values[1]},
+        {values[3], values[4]},
+        (values[2] > 0 ) ? 1000000000.0/values[2] : 0.0,
+        true
     };
-    return attribs;
 }
-//        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config"));
 
 #if 0
-mga::HwcAttribs mga::RealHwcWrapper::display_attribs(DisplayName name) const
+mga::HwcAttribs mga::RealHwcWrapper::active_attribs_for(DisplayName name) const
 {
 }
 #endif

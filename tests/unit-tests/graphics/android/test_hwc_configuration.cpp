@@ -29,7 +29,7 @@ namespace geom = mir::geometry;
 struct HwcConfiguration : public testing::Test
 {
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_hwc_wrapper{
-        std::make_shared<mtd::MockHWCDeviceWrapper>()};
+        std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>()};
     mga::HwcBlankingControl config{mock_hwc_wrapper};
     mga::DisplayName display{mga::DisplayName::primary};
 };
@@ -103,7 +103,7 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
             }));
 
     auto vrefresh_hz = 1000.0 / vrefresh_period.count();
-    auto attribs = config.display_attribs(display);
+    auto attribs = config.active_attribs_for(display);
     EXPECT_THAT(attribs.pixel_size, Eq(px_size));
     EXPECT_THAT(attribs.dpi_mm, Eq(dpi_mm));
     EXPECT_THAT(attribs.vrefresh_hz, Eq(vrefresh_hz));
@@ -118,9 +118,9 @@ TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
         .WillByDefault(Return(std::vector<mga::ConfigId>{}));
 
     EXPECT_THROW({
-        config.display_attribs(mga::DisplayName::primary);
+        config.active_attribs_for(mga::DisplayName::primary);
     }, std::runtime_error);
-    auto external_attribs = config.display_attribs(mga::DisplayName::external);
+    auto external_attribs = config.active_attribs_for(mga::DisplayName::external);
     EXPECT_THAT(external_attribs.pixel_size, Eq(geom::Size{0,0}));
     EXPECT_THAT(external_attribs.dpi_mm, Eq(geom::Size{0,0}));
     EXPECT_THAT(external_attribs.vrefresh_hz, Eq(0.0));
@@ -130,7 +130,7 @@ TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
 TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
 {
     using namespace testing;
-    EXPECT_CALL(*mock_hwc_wrapper, display_attributes(display, _, _, _))
+    EXPECT_CALL(*mock_hwc_wrapper, display_attributes( _, _, _, _))
             .WillOnce(Invoke([]
             (mga::DisplayName, mga::ConfigId, uint32_t const* attribute_list, int32_t* values)
             {
@@ -148,6 +148,6 @@ TEST_F(HwcConfiguration, no_fpe_from_malformed_refresh)
                     i++;
                 }
             }));
-    auto attribs = config.display_attribs(mga::DisplayName::external);
+    auto attribs = config.active_attribs_for(mga::DisplayName::external);
     EXPECT_THAT(attribs.vrefresh_hz, Eq(0.0f));
 }

@@ -46,7 +46,7 @@ namespace
 struct StubConfig : public mga::HwcConfiguration
 {
     void power_mode(mga::DisplayName, MirPowerMode) override {}
-    mga::DisplayAttribs display_attribs(mga::DisplayName) override { return { {}, {}, 0.0, false}; }
+    mga::DisplayAttribs active_attribs_for(mga::DisplayName) override { return { {}, {}, 0.0, false}; }
 };
 class HwcFbDevice : public ::testing::Test
 {

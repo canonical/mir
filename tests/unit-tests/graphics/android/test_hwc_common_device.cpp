@@ -46,7 +46,7 @@ namespace
 struct MockDisplayConfiguration : mga::HwcConfiguration
 {
     MOCK_METHOD2(power_mode, void(mga::DisplayName, MirPowerMode));
-    MOCK_METHOD1(display_attribs, mga::DisplayAttribs(mga::DisplayName));
+    MOCK_METHOD1(active_attribs_for, mga::DisplayAttribs(mga::DisplayName));
 };
 }
 
