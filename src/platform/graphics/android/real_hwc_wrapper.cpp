@@ -123,47 +123,25 @@ void mga::RealHwcWrapper::display_off(DisplayName display_name) const
     report->report_display_off();
 }
 
-#if 0
-mga::HwcAttribs mga::RealHwcWrapper::display_attribs(DisplayName name) const
+std::vector<mga::ConfigId> mga::RealHwcWrapper::display_configs(DisplayName display_name) const
 {
-    size_t num_configs = 1;
-    uint32_t display_config = 0u;
-    if (hwc_device->getDisplayConfigs(hwc_device.get(), name, &display_config, &num_configs))
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config"));
+    //No way to get the number of display configs. SF uses 128 possible spots, but that seems excessive.
+    static size_t const max_configs = 16;
+    size_t num_configs = max_configs;
+    static uint32_t display_config[max_configs] = {};
+    if (hwc_device->getDisplayConfigs(hwc_device.get(), display_name, display_config, &num_configs))
+        return {};
 
-    /* note: some drivers (qcom msm8960) choke if this is not the same size array
-       as the one surfaceflinger submits */
-    static uint32_t const display_attribute_request[] =
-    {
-        HWC_DISPLAY_WIDTH,
-        HWC_DISPLAY_HEIGHT,
-        HWC_DISPLAY_VSYNC_PERIOD,
-        HWC_DISPLAY_DPI_X,
-        HWC_DISPLAY_DPI_Y,
-        HWC_DISPLAY_NO_ATTRIBUTE,
-    };
-
-    int32_t size_values[sizeof(display_attribute_request) / sizeof (display_attribute_request[0])] = {};
-    hwc_device->getDisplayAttributes(hwc_device.get(), name, display_config,
-                                     display_attribute_request, size_values);
-
-    mga::HwcAttribs attribs
-    {
-        {size_values[0], size_values[1]},
-        {size_values[3], size_values[4]},
-        (size_values[2] > 0 ) ? 1000000000.0/size_values[2] : 0.0
-    };
-    return attribs;
-}
-#endif
-
-std::vector<mga::ConfigId> mga::RealHwcWrapper::display_configs(DisplayName) const
-{
-    return {};
+    auto i = 0u;
+    std::vector<mga::ConfigId> config_ids{num_configs};
+    for(auto& id : config_ids)
+        id = mga::ConfigId{display_config[i++]};
+    return config_ids;
 }
 
 void mga::RealHwcWrapper::display_attributes(
-    DisplayName display, ConfigId config, uint32_t const* attributes, int32_t* values) const
+    DisplayName display_name, ConfigId config, uint32_t const* attributes, int32_t* values) const
 {
-    (void) display; (void) config;  (void) attributes; (void) values;
+    hwc_device->getDisplayAttributes(
+        hwc_device.get(), display_name, config.as_value(), attributes, values);
 }

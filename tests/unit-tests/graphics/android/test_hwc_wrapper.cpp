@@ -254,15 +254,14 @@ TEST_F(HwcWrapper, turns_vsync_off)
 TEST_F(HwcWrapper, accesses_display_config)
 {
     using namespace testing;
-    size_t array_size{8}; //sf uses 128, but that seems excessive.
-
     std::array<uint32_t, 3> id_array{ 5u, 7u, 10u };
     std::vector<mga::ConfigId> ids{id_array.size()};
-    for( auto const& i : id_array )
-        ids.push_back(mga::ConfigId{i}); 
+    auto array_it = id_array.begin();
+    for( auto& id : ids )
+        id = mga::ConfigId{*array_it++};
 
     EXPECT_CALL(*mock_device, getDisplayConfigs_interface(
-        mock_device.get(), HWC_DISPLAY_PRIMARY, _, Pointee(array_size)))
+        mock_device.get(), HWC_DISPLAY_PRIMARY, _, Pointee(Gt(0))))
             .WillOnce(DoAll(
                 SetArrayArgument<2>(id_array.begin(), id_array.end()),
                 SetArgPointee<3>(id_array.size()),

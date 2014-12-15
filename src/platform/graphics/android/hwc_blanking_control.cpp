@@ -45,3 +45,39 @@ mga::DisplayAttribs mga::HwcBlankingControl::display_attribs(DisplayName)
 {
     return {{},{},0.0, false};
 }
+//        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config"));
+
+#if 0
+mga::HwcAttribs mga::RealHwcWrapper::display_attribs(DisplayName name) const
+{
+    size_t num_configs = 1;
+    uint32_t display_config = 0u;
+    if (hwc_device->getDisplayConfigs(hwc_device.get(), name, &display_config, &num_configs))
+        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config"));
+
+    /* note: some drivers (qcom msm8960) choke if this is not the same size array
+       as the one surfaceflinger submits */
+    static uint32_t const display_attribute_request[] =
+    {
+        HWC_DISPLAY_WIDTH,
+        HWC_DISPLAY_HEIGHT,
+        HWC_DISPLAY_VSYNC_PERIOD,
+        HWC_DISPLAY_DPI_X,
+        HWC_DISPLAY_DPI_Y,
+        HWC_DISPLAY_NO_ATTRIBUTE,
+    };
+
+    int32_t size_values[sizeof(display_attribute_request) / sizeof (display_attribute_request[0])] = {};
+    hwc_device->getDisplayAttributes(hwc_device.get(), name, display_config,
+                                     display_attribute_request, size_values);
+
+    mga::HwcAttribs attribs
+    {
+        {size_values[0], size_values[1]},
+        {size_values[3], size_values[4]},
+        (size_values[2] > 0 ) ? 1000000000.0/size_values[2] : 0.0
+    };
+    return attribs;
+}
+#endif
+
