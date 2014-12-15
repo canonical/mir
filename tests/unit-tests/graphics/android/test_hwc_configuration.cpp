@@ -20,9 +20,12 @@
 #include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <chrono>
 
 namespace mga = mir::graphics::android;
 namespace mtd = mir::test::doubles;
+namespace geom = mir::geometry;
+
 struct HwcConfiguration : public testing::Test
 {
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_hwc_wrapper{
@@ -61,12 +64,12 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
     using namespace testing;
     geom::Size px_size {343, 254};
     geom::Size dpi_mm {343, 254};
-    auto hwc_config = std::vector{mga::ConfigId{0xA1}};
-    std::chrono::milliseconds vrefresh_period{16};
+    std::vector<mga::ConfigId> hwc_config {mga::ConfigId{0xA1}, mga::ConfigId{0xBEE}};
+    std::chrono::milliseconds vrefresh_period {16};
 
-    EXPECT_CALL(*mock_hwc_wrapper, display_configs(display_name, _, Pointee(1)))
-            .WillOnce(DoAll(SetArgPointee<2>(hwc_config.data()), Return(0)));
-    EXPECT_CALL(*mock_hwc_wrapper, display_attributes(display_name, hwc_config, _, _))
+    EXPECT_CALL(*mock_hwc_wrapper, display_configs(display))
+            .WillOnce(Return(hwc_config));
+    EXPECT_CALL(*mock_hwc_wrapper, display_attributes(display, hwc_config[0], _, _))
             .WillOnce(Invoke([&]
             (mga::DisplayName, mga::ConfigId, uint32_t const* attribute_list, int32_t* values)
             {
@@ -100,7 +103,7 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
             }));
 
     auto vrefresh_hz = 1000.0 / vrefresh_period.count();
-    auto attribs = config.display_attribs(mga::DisplayName::primary);
+    auto attribs = config.display_attribs(display);
     EXPECT_THAT(attribs.pixel_size, Eq(px_size));
     EXPECT_THAT(attribs.dpi_mm, Eq(dpi_mm));
     EXPECT_THAT(attribs.vrefresh_hz, Eq(vrefresh_hz));

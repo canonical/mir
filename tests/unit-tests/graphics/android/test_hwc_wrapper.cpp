@@ -253,11 +253,20 @@ TEST_F(HwcWrapper, turns_vsync_off)
 
 TEST_F(HwcWrapper, accesses_display_config)
 {
-    std::vector<mga::ConfigIds> ids{3,4,5,8};
+    using namespace testing;
+    size_t array_size{8}; //sf uses 128, but that seems excessive.
+
+    std::array<uint32_t, 3> id_array{ 5u, 7u, 10u };
+    std::vector<mga::ConfigId> ids{id_array.size()};
+    for( auto const& i : id_array )
+        ids.push_back(mga::ConfigId{i}); 
 
     EXPECT_CALL(*mock_device, getDisplayConfigs_interface(
-        mock_device.get(), HWC_DISPLAY_PRIMARY, _, Pointee(id.size())))
-            .WillOnce(DoAll(SetArgPointee<2>(id.data()), Return(0)));
+        mock_device.get(), HWC_DISPLAY_PRIMARY, _, Pointee(array_size)))
+            .WillOnce(DoAll(
+                SetArrayArgument<2>(id_array.begin(), id_array.end()),
+                SetArgPointee<3>(id_array.size()),
+                Return(0)))
             .WillOnce(Return(-1));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_report);
@@ -268,14 +277,12 @@ TEST_F(HwcWrapper, accesses_display_config)
 TEST_F(HwcWrapper, calls_access_functions)
 {
     uint32_t* attributes{nullptr};
-    int32_t* values{nullptr}
-    mga::ConfigIds hwc_config{3};
+    int32_t* values{nullptr};
+    mga::ConfigId hwc_config{3};
 
     EXPECT_CALL(*mock_device, getDisplayAttributes_interface(
-        mock_device.get(), HWC_DISPLAY_PRIMARY, hwc_config, attributes, values))
+        mock_device.get(), HWC_DISPLAY_PRIMARY, hwc_config.as_value(), attributes, values));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_report);
-    wrapper.display_attributes(mga::DisplayName::primary);
-
-    EXPECT_THAT
+    wrapper.display_attributes(mga::DisplayName::primary, hwc_config, attributes, values);
 }

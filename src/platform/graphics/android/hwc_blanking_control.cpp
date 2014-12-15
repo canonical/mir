@@ -40,3 +40,8 @@ void mga::HwcBlankingControl::power_mode(DisplayName display_name, MirPowerMode 
         hwc_device->display_off(display_name);
     }
 }
+
+mga::DisplayAttribs mga::HwcBlankingControl::display_attribs(DisplayName)
+{
+    return {{},{},0.0, false};
+}

@@ -52,7 +52,8 @@ namespace
 {
 struct StubConfig : public mga::HwcConfiguration
 {
-    void power_mode(mga::DisplayName, MirPowerMode) {}
+    void power_mode(mga::DisplayName, MirPowerMode) override {}
+    mga::DisplayAttribs display_attribs(mga::DisplayName) override { return { {}, {}, 0.0, false}; }
 };
 
 struct MockFileOps : public mga::SyncFileOps

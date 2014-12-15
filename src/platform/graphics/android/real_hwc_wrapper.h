@@ -40,20 +40,13 @@ public:
     void prepare(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const override;
     void set(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const override;
     void register_hooks(std::shared_ptr<HWCCallbacks> const& callbacks) override;
-<<<<<<< TREE
-    void vsync_signal_on() const override;
-    void vsync_signal_off() const override;
-    void display_on() const override;
-    void display_off() const override;
-    std::vector<ConfigId> display_configs(DisplayName) const override;
-    void display_attributes(
-        DisplayName, ConfigId, uint32_t const* attributes, int32_t* values) const override;
-=======
     void vsync_signal_on(DisplayName) const override;
     void vsync_signal_off(DisplayName) const override;
     void display_on(DisplayName) const override;
     void display_off(DisplayName) const override;
->>>>>>> MERGE-SOURCE
+    std::vector<ConfigId> display_configs(DisplayName) const override;
+    void display_attributes(
+        DisplayName, ConfigId, uint32_t const* attributes, int32_t* values) const override;
 private:
     //note: the callbacks have to extend past the lifetime of the hwc_composer_device_1 for some
     //      devices (LP: 1364637)

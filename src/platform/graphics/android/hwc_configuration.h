@@ -20,9 +20,9 @@
 #define MIR_GRAPHICS_ANDROID_HWC_CONFIGURATION_H_
 
 #include "mir/graphics/display_configuration.h"
+#include "mir/geometry/size.h"
 #include "display_name.h"
 #include <memory>
-
 
 namespace mir
 {
@@ -30,20 +30,14 @@ namespace graphics
 {
 namespace android
 {
-
-enum DisplayName
-{
-    primary = HWC_DISPLAY_PRIMARY,
-    external = HWC_DISPLAY_EXTERNAL,
-    virt = HWC_DISPLAY_VIRTUAL
-};
-
 struct DisplayAttribs
 {
     geometry::Size pixel_size;
     geometry::Size dpi_mm;
     double vrefresh_hz;
+    bool connected;
 };
+
 //interface adapting for the blanking interface differences between HWC 1.0-1.3 and HWC 1.4+
 class HwcConfiguration
 {
