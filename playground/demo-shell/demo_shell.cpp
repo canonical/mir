@@ -130,7 +130,7 @@ public:
        return host_lifecycle_event_listener(
            [this]()
            {
-               return std::make_shared<NestedLifecycleEventListener>(the_logger());
+               return std::make_shared<HostLifecycleEventListener>(the_logger());
            });
     }
 

@@ -26,12 +26,12 @@
 
 namespace me = mir::examples;
 
-me::NestedLifecycleEventListener::NestedLifecycleEventListener(std::shared_ptr<mir::logging::Logger> const& logger) :
+me::HostLifecycleEventListener::HostLifecycleEventListener(std::shared_ptr<mir::logging::Logger> const& logger) :
     logger(logger)
 {
 }
 
-void me::NestedLifecycleEventListener::lifecycle_event_occurred(MirLifecycleState state)
+void me::HostLifecycleEventListener::lifecycle_event_occurred(MirLifecycleState state)
 {
     static char const* const text[] =
         {
@@ -44,7 +44,7 @@ void me::NestedLifecycleEventListener::lifecycle_event_occurred(MirLifecycleStat
 
     snprintf(buffer, sizeof(buffer), "Lifecycle event occurred : state = %s", text[state]);
 
-    logger->log(logging::Severity::informational, buffer, "NestedLifecycleEventListener");
+    logger->log(logging::Severity::informational, buffer, "example");
 }
 
 void me::add_log_host_lifecycle_option_to(mir::Server& server)
@@ -58,7 +58,7 @@ void me::add_log_host_lifecycle_option_to(mir::Server& server)
        ->std::shared_ptr<shell::HostLifecycleEventListener>
        {
            if (server.get_options()->is_set(launch_child_opt))
-               return std::make_shared<NestedLifecycleEventListener>(server.the_logger());
+               return std::make_shared<HostLifecycleEventListener>(server.the_logger());
            else
                return std::shared_ptr<shell::HostLifecycleEventListener>{};
        });

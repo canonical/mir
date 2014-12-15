@@ -16,8 +16,8 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_EXAMPLE_LOST_LIFECYCLE_EVENT_LISTENER_H_
-#define MIR_EXAMPLE_LOST_LIFECYCLE_EVENT_LISTENER_H_
+#ifndef MIR_EXAMPLE_HOST_LIFECYCLE_EVENT_LISTENER_H_
+#define MIR_EXAMPLE_HOST_LIFECYCLE_EVENT_LISTENER_H_
 
 #include "mir/shell/host_lifecycle_event_listener.h"
 
@@ -31,10 +31,10 @@ namespace logging { class Logger; }
 
 namespace examples
 {
-class NestedLifecycleEventListener : public shell::HostLifecycleEventListener
+class HostLifecycleEventListener : public shell::HostLifecycleEventListener
 {
 public:
-    NestedLifecycleEventListener(std::shared_ptr<mir::logging::Logger> const& logger);
+    HostLifecycleEventListener(std::shared_ptr<mir::logging::Logger> const& logger);
     void lifecycle_event_occurred(MirLifecycleState state) override;
 
 private:
@@ -45,4 +45,4 @@ void add_log_host_lifecycle_option_to(mir::Server& server);
 }
 }
 
-#endif /* MIR_EXAMPLE_LOST_LIFECYCLE_EVENT_LISTENER_H_ */
+#endif /* MIR_EXAMPLE_HOST_LIFECYCLE_EVENT_LISTENER_H_ */
