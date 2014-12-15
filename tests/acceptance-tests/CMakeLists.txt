@@ -15,7 +15,6 @@ set(
   server_configuration_wrapping.cpp
   server_configuration_options.cpp
   server_signal_handling.cpp
-  clients.cpp
   test_client_header_version.cpp
   test_client_library.cpp
   test_client_library_errors.cpp
@@ -23,13 +22,10 @@ set(
   test_client_surface_events.cpp
   test_client_surface_swap_buffers.cpp
   test_command_line_handling.cpp
-  test_custom_input_dispatcher.cpp
   test_client_surfaces.cpp
-  test_focus_selection.cpp
   test_server_shutdown.cpp
   test_client_focus_notification.cpp
   test_client_authorization.cpp
-  test_shell_control_of_surface_configuration.cpp
   test_nested_mir.cpp
   test_display_configuration.cpp
   test_surfaces_with_output_id.cpp
@@ -37,33 +33,31 @@ set(
   test_client_library_drm.cpp
   test_prompt_session_client_api.cpp
   test_client_screencast.cpp
-  test_client_cursor_api.cpp
   test_client_surface_visibility.cpp
-  test_touchspot_visualization.cpp
   test_client_with_custom_display_config_deadlock.cpp
   test_server_without_active_outputs.cpp
-  test_client_input.cpp
   test_server_startup.cpp
   test_debug_api.cpp
   test_unresponsive_client.cpp
+  test_client_platform_operation.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa")
   list(APPEND SOURCES test_symbols_required_by_mesa.cpp)
 endif()
 
+add_subdirectory(throwback)
+
 add_executable(
   mir_acceptance_tests
 
   ${SOURCES}
+  $<TARGET_OBJECTS:acceptance-test-throwback>
 )
 
 mir_precompiled_header(mir_acceptance_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
 
 add_dependencies(mir_acceptance_tests GMock)
-
-uses_android_input(mir_acceptance_tests)
-
 
 target_link_libraries(
   mir_acceptance_tests

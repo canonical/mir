@@ -19,6 +19,7 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
+#include "mir_toolkit/mir_platform_message.h"
 #include "client_platform.h"
 #include "client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"
@@ -350,6 +351,55 @@ MirWaitHandle* MirConnection::drm_auth_magic(unsigned int magic,
 
     return &drm_auth_magic_wait_handle;
 }
+
+void MirConnection::done_platform_operation(
+    mir_platform_operation_callback callback, void* context)
+{
+    auto reply = mir_platform_message_create(platform_operation_reply.opcode());
+
+    set_error_message(platform_operation_reply.error());
+
+    mir_platform_message_set_data(
+        reply,
+        platform_operation_reply.data().data(),
+        platform_operation_reply.data().size());
+
+    mir_platform_message_set_fds(
+        reply,
+        platform_operation_reply.fd().data(),
+        platform_operation_reply.fd().size());
+
+    callback(this, reply, context);
+
+    platform_operation_wait_handle.result_received();
+}
+
+MirWaitHandle* MirConnection::platform_operation(
+    unsigned int opcode,
+    MirPlatformMessage const* request,
+    mir_platform_operation_callback callback, void* context)
+{
+    mir::protobuf::PlatformOperationMessage protobuf_request;
+
+    protobuf_request.set_opcode(opcode);
+    auto const request_data = mir_platform_message_get_data(request);
+    auto const request_fds = mir_platform_message_get_fds(request);
+
+    protobuf_request.set_data(request_data.data, request_data.size);
+    for (size_t i = 0; i != request_fds.num_fds; ++i)
+        protobuf_request.add_fd(request_fds.fds[i]);
+
+    platform_operation_wait_handle.expect_result();
+    server.platform_operation(
+        0,
+        &protobuf_request,
+        &platform_operation_reply,
+        google::protobuf::NewCallback(this, &MirConnection::done_platform_operation,
+                                      callback, context));
+
+    return &platform_operation_wait_handle;
+}
+
 
 bool MirConnection::is_valid(MirConnection *connection)
 {
