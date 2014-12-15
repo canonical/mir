@@ -21,7 +21,6 @@
 
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/buffer_writer.h"
-#include "mir/graphics/native_platform.h"
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display.h"
@@ -255,9 +254,9 @@ namespace
 {
 std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
 
-struct NativePlatformAdapter : mg::NativePlatform
+struct GuestPlatformAdapter : mg::Platform
 {
-    NativePlatformAdapter(
+    GuestPlatformAdapter(
         std::shared_ptr<mg::NestedContext> const& context,
         std::shared_ptr<mg::Platform> const& adaptee) :
         context(context),
@@ -281,6 +280,19 @@ struct NativePlatformAdapter : mg::NativePlatform
         return adaptee->make_buffer_writer();
     }
 
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
+        std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
+        std::shared_ptr<mg::GLConfig> const& gl_config) override
+    {
+        return adaptee->create_display(initial_conf_policy, gl_program_factory, gl_config);
+    }
+
+    EGLNativeDisplayType egl_native_display() const override
+    {
+        return adaptee->egl_native_display();
+    }
+
     std::shared_ptr<mg::NestedContext> const context;
     std::shared_ptr<mg::Platform> const adaptee;
     std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
@@ -289,7 +301,7 @@ struct NativePlatformAdapter : mg::NativePlatform
 std::weak_ptr<mg::Platform> the_graphics_platform{};
 }
 
-extern "C" std::shared_ptr<mg::Platform> create_platform(
+extern "C" std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
@@ -309,12 +321,12 @@ extern "C" std::shared_ptr<mg::Platform> create_platform(
     return result;
 }
 
-extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(
+extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& context)
 {
     auto graphics_platform = the_graphics_platform.lock();
-    return std::make_shared<NativePlatformAdapter>(context, graphics_platform);
+    return std::make_shared<GuestPlatformAdapter>(context, graphics_platform);
 }
 
 extern "C" void add_platform_options(
