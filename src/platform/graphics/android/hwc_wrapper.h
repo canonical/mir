@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_HWC_WRAPPER_H_
 
 #include "display_name.h"
+#include <mir/geometry/size.h>
 #include <hardware/hwcomposer.h>
 #include <array>
 #include <memory>
@@ -30,6 +31,13 @@ namespace graphics
 {
 namespace android
 {
+
+struct HwcAttribs
+{
+    geometry::Size pixel_size;
+    geometry::Size dpi_mm;
+    double vrefresh_hz;
+};
 
 struct HWCCallbacks;
 class HwcWrapper
@@ -44,6 +52,7 @@ public:
     virtual void vsync_signal_off(DisplayName) const = 0;
     virtual void display_on(DisplayName) const = 0;
     virtual void display_off(DisplayName) const = 0;
+    virtual HwcAttribs display_attribs(DisplayName) const = 0;
 
 protected:
     HwcWrapper() = default;

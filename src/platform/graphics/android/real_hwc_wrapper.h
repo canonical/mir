@@ -44,6 +44,7 @@ public:
     void vsync_signal_off(DisplayName) const override;
     void display_on(DisplayName) const override;
     void display_off(DisplayName) const override;
+    HwcAttribs display_attribs(DisplayName) const override;
 private:
     //note: the callbacks have to extend past the lifetime of the hwc_composer_device_1 for some
     //      devices (LP: 1364637)
