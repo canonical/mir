@@ -33,14 +33,13 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::Buffer::Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
-                    std::shared_ptr<mg::EGLExtensions> const& extensions)
-    : native_buffer(buffer_handle),
+mga::Buffer::Buffer(gralloc_module_t const* hw_module,
+    std::shared_ptr<NativeBuffer> const& buffer_handle,
+    std::shared_ptr<mg::EGLExtensions> const& extensions)
+    : hw_module(hw_module),
+      native_buffer(buffer_handle),
       egl_extensions(extensions)
 {
-    auto err = hw_get_module(GRALLOC_HARDWARE_MODULE_ID, (hw_module_t const **)(&hw_module));
-    if (err < 0)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Could not open hardware module"));
 }
 
 mga::Buffer::~Buffer()
@@ -147,7 +146,7 @@ void mga::Buffer::write(unsigned char const* data, size_t data_size)
     native_buffer->ensure_available_for(mga::BufferAccess::write);
     
     auto bpp = MIR_BYTES_PER_PIXEL(pixel_format());
-    size_t buffer_size_bytes = size.height().as_int() * size().height.as_int() * bpp;
+    size_t buffer_size_bytes = size().height.as_int() * size().width.as_int() * bpp;
     if (buffer_size_bytes != data_size)
         BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
 

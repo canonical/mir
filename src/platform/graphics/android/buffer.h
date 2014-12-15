@@ -45,7 +45,8 @@ namespace android
 class Buffer: public BufferBasic
 {
 public:
-    Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
+    Buffer(gralloc_module_t const* hw_module,
+           std::shared_ptr<NativeBuffer> const& buffer_handle,
            std::shared_ptr<EGLExtensions> const& extensions);
     ~Buffer();
 
