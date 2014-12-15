@@ -218,7 +218,7 @@ TEST(DisplayConfiguration, outputs_with_different_preferred_mode_index_compare_u
     EXPECT_NE(output2, output1);
 }
 
-TEST(DisplayConfiguration, output_orientation_affects_equality)
+TEST(DisplayConfiguration, outputs_with_different_orientation_compare_unequal)
 {
     mg::DisplayConfigurationOutput a = tmpl_output;
     mg::DisplayConfigurationOutput b = tmpl_output;
@@ -229,6 +229,19 @@ TEST(DisplayConfiguration, output_orientation_affects_equality)
     b.orientation = mir_orientation_inverted;
     EXPECT_NE(a, b);
     EXPECT_NE(b, a);
+}
+
+TEST(DisplayConfiguration, outputs_with_different_power_mode_compare_equal)
+{
+    mg::DisplayConfigurationOutput a = tmpl_output;
+    mg::DisplayConfigurationOutput b = tmpl_output;
+
+    EXPECT_EQ(a, b);
+    EXPECT_EQ(b, a);
+    a.power_mode = mir_power_mode_on;
+    b.power_mode = mir_power_mode_off;
+    EXPECT_EQ(a, b);
+    EXPECT_EQ(b, a);
 }
 
 TEST(DisplayConfiguration, output_extents_uses_current_mode)
@@ -306,4 +319,30 @@ TEST(DisplayConfiguration, unsupported_preferred_mode_valid)
     out.preferred_mode_index = 456;
 
     EXPECT_TRUE(out.valid());
+}
+
+TEST(DisplayConfiguration, outputs_with_different_orientation_are_compatible)
+{
+    mg::DisplayConfigurationOutput a = tmpl_output;
+    mg::DisplayConfigurationOutput b = tmpl_output;
+
+    EXPECT_TRUE(compatible(a, b));
+    EXPECT_TRUE(compatible(b, a));
+    a.orientation = mir_orientation_left;
+    b.orientation = mir_orientation_inverted;
+    EXPECT_TRUE(compatible(a, b));
+    EXPECT_TRUE(compatible(b, a));
+}
+
+TEST(DisplayConfiguration, outputs_with_different_power_mode_are_incompatible)
+{
+    mg::DisplayConfigurationOutput a = tmpl_output;
+    mg::DisplayConfigurationOutput b = tmpl_output;
+
+    EXPECT_TRUE(compatible(a, b));
+    EXPECT_TRUE(compatible(b, a));
+    a.power_mode = mir_power_mode_on;
+    b.power_mode = mir_power_mode_off;
+    EXPECT_FALSE(compatible(a, b));
+    EXPECT_FALSE(compatible(b, a));
 }
