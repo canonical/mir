@@ -23,11 +23,11 @@
 #include "mir_test_doubles/mock_hwc_report.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <chrono>
 
 namespace mga = mir::graphics::android;
 namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
+
 struct HwcWrapper : public ::testing::Test
 {
     HwcWrapper()

@@ -20,6 +20,7 @@
 #include "hwc_wrapper.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <chrono>
 
 namespace mga = mir::graphics::android;
 
@@ -43,6 +44,18 @@ void mga::HwcBlankingControl::power_mode(DisplayName display_name, MirPowerMode 
     }
 }
 
+namespace
+{
+using namespace std::chrono;
+template<class Rep, class Period>
+double period_to_hz(duration<Rep,Period> period_duration)
+{
+    if (period_duration.count() <= 0)
+        return 0.0;
+    return duration<double>{1} / period_duration;
+}
+}
+
 mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName display_name)
 {
     auto configs = hwc_device->display_configs(display_name);
@@ -51,7 +64,7 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
         if (display_name == mga::DisplayName::primary)
             BOOST_THROW_EXCEPTION(std::runtime_error("primary display disconnected"));
         else   
-            return {{},{},0.0, false};
+            return {{}, {}, 0.0, false};
     }
 
     /* note: some drivers (qcom msm8960) choke if this is not the same size array
@@ -72,14 +85,7 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
     return {
         {values[0], values[1]},
         {values[3], values[4]},
-        (values[2] > 0 ) ? 1000000000.0/values[2] : 0.0,
+        period_to_hz(std::chrono::nanoseconds{values[2]}),
         true
     };
 }
-
-#if 0
-mga::HwcAttribs mga::RealHwcWrapper::active_attribs_for(DisplayName name) const
-{
-}
-#endif
-
