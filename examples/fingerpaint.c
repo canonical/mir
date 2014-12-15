@@ -295,7 +295,6 @@ int main(int argc, char *argv[])
 {
     static const Color background = {180, 180, 150, 255};
     MirConnection *conn;
-    MirSurfaceParameters parm;
     MirSurface *surf;
     MirGraphicsRegion canvas;
     MirEventDelegate delegate = {&on_event, &canvas};
@@ -363,47 +362,50 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    parm.buffer_usage = mir_buffer_usage_software;
-    parm.output_id = mir_display_output_id_invalid;
-
     unsigned int const pf_size = 32;
     MirPixelFormat formats[pf_size];
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(conn, formats, pf_size, &valid_formats);
 
-    parm.pixel_format = mir_pixel_format_invalid;
+    MirPixelFormat pixel_format = mir_pixel_format_invalid;
     for (f = 0; f < valid_formats; f++)
     {
         if (BYTES_PER_PIXEL(formats[f]) == 4)
         {
-            parm.pixel_format = formats[f];
+            pixel_format = formats[f];
             break;
         }
     }
 
-    if (parm.pixel_format == mir_pixel_format_invalid)
+    if (pixel_format == mir_pixel_format_invalid)
     {
         fprintf(stderr, "Could not find a fast 32-bit pixel format\n");
         mir_connection_release(conn);
         return 1;
     }
 
-    parm.name = "Paint Canvas";
-    parm.width = dinfo->modes[dinfo->current_mode].horizontal_resolution;
-    parm.height = dinfo->modes[dinfo->current_mode].vertical_resolution;
+
+    int width = dinfo->modes[dinfo->current_mode].horizontal_resolution;
+    int height = dinfo->modes[dinfo->current_mode].vertical_resolution;
 
     mir_display_config_destroy(display_config);
 
-    surf = mir_connection_create_surface_sync(conn, &parm);
+    MirSurfaceSpec *spec = mir_connection_create_spec_for_normal_surface(conn, width, height, pixel_format);
+    mir_surface_spec_set_name(spec, "Paint Canvas");
+    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+
+    surf = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
     if (surf != NULL)
     {
         mir_surface_set_swapinterval(surf, swap_interval);
         mir_surface_set_event_handler(surf, &delegate);
     
-        canvas.width = parm.width;
-        canvas.height = parm.height;
-        canvas.stride = canvas.width * BYTES_PER_PIXEL(parm.pixel_format);
-        canvas.pixel_format = parm.pixel_format;
+        canvas.width = width;
+        canvas.height = height;
+        canvas.stride = canvas.width * BYTES_PER_PIXEL(pixel_format);
+        canvas.pixel_format = pixel_format;
         canvas.vaddr = (char*)malloc(canvas.stride * canvas.height);
 
         if (canvas.vaddr != NULL)
