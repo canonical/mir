@@ -33,6 +33,7 @@ enum class BufferIpcMsgType
 };
 class Buffer;
 class BufferIpcMessage;
+struct PlatformOperationMessage;
 
 class PlatformIpcOperations
 {
@@ -75,7 +76,8 @@ public:
      * \param [in]  opcode   the opcode that indicates the action to be performed 
      * \param [in]  request  the message that was sent to the server
      */
-    virtual PlatformIPCPackage platform_operation(unsigned int const opcode, PlatformIPCPackage const& package) = 0; 
+    virtual PlatformOperationMessage platform_operation(
+        unsigned int const opcode, PlatformOperationMessage const& message) = 0; 
 
 protected:
     PlatformIpcOperations() = default;
