@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_NULL_PLATFORM_IPC_OPERATIONS_H_
 
 #include "mir/graphics/platform_ipc_operations.h"
+#include "mir/graphics/platform_operation_message.h"
 
 namespace mir
 {
@@ -40,10 +41,10 @@ class NullPlatformIpcOperations : public graphics::PlatformIpcOperations
     {
         return std::make_shared<graphics::PlatformIPCPackage>();
     }
-    graphics::PlatformIPCPackage platform_operation(
-        unsigned int const, graphics::PlatformIPCPackage const&) override
+    graphics::PlatformOperationMessage platform_operation(
+        unsigned int const, graphics::PlatformOperationMessage const&) override
     {
-        return graphics::PlatformIPCPackage();
+        return graphics::PlatformOperationMessage();
     }
 };
 }
