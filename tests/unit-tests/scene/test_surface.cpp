@@ -202,8 +202,8 @@ struct SurfaceCreation : public ::testing::Test
     
     std::string surface_name = "test_surfaceA";
     MirPixelFormat pf = mir_pixel_format_abgr_8888;
-    geom::Stride stride = geom::Stride{4 * size.width.as_uint32_t()};
     geom::Size size = geom::Size{43, 420};
+    geom::Stride stride = geom::Stride{4 * size.width.as_uint32_t()};
     geom::Rectangle rect = geom::Rectangle{geom::Point{geom::X{0}, geom::Y{0}}, size};
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     ms::BasicSurface surface;

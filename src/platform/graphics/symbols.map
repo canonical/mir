@@ -1,8 +1,8 @@
 MIR_PLATFORM_1 {
   global: 
    add_platform_options;
-   create_platform;
-   create_native_platform;
+   create_host_platform;
+   create_guest_platform;
    mir_server_mesa_egl_native_display_is_valid;
   local: *;
 };
