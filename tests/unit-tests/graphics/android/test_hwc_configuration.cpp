@@ -28,6 +28,7 @@ struct HwcConfiguration : public testing::Test
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_hwc_wrapper{
         std::make_shared<mtd::MockHWCDeviceWrapper>()};
     mga::HwcBlankingControl config{mock_hwc_wrapper};
+    mga::DisplayName display_name{mga::DisplayName::primary};
 };
 
 TEST_F(HwcConfiguration, turns_screen_on)
@@ -54,3 +55,69 @@ TEST_F(HwcConfiguration, turns_screen_off)
     config.power_mode(mir_power_mode_suspend);
     config.power_mode(mir_power_mode_standby);
 }
+
+TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
+{
+    using namespace testing;
+    geom::Size px_size {343, 254};
+    geom::Size dpi_mm {343, 254};
+    auto hwc_config = std::vector{mga::ConfigId{0xA1}};
+    std::chrono::milliseconds vrefresh_period{16};
+
+    EXPECT_CALL(*mock_hwc_wrapper, display_configs(display_name, _, Pointee(1)))
+            .WillOnce(DoAll(SetArgPointee<2>(hwc_config.data()), Return(0)));
+    EXPECT_CALL(*mock_hwc_wrapper, display_attributes(display_name, hwc_config, _, _))
+            .WillOnce(Invoke([&]
+            (mga::DisplayName, mga::ConfigId, uint32_t const* attribute_list, int32_t* values)
+            {
+                int i = 0;
+                while(attribute_list[i] != HWC_DISPLAY_NO_ATTRIBUTE)
+                {
+                    switch(attribute_list[i])
+                    {
+                        case HWC_DISPLAY_WIDTH:
+                            values[i] = px_size.width.as_int();
+                            break;
+                        case HWC_DISPLAY_HEIGHT:
+                            values[i] = px_size.height.as_int();
+                            break;
+                        case HWC_DISPLAY_VSYNC_PERIOD:
+                            values[i] = std::chrono::duration_cast<std::chrono::nanoseconds>(vrefresh_period).count();
+                            break;
+                        case HWC_DISPLAY_DPI_X:
+                            values[i] = dpi_mm.width.as_int();
+                            break;
+                        case HWC_DISPLAY_DPI_Y:
+                            values[i] = dpi_mm.height.as_int();
+                            break;
+                        default:
+                            break;
+                    }
+                    i++;
+                }
+                //the attribute list should be at least this long, as some qcom drivers always deref attribute_list[5]
+                EXPECT_EQ(5, i);
+            }));
+
+    auto vrefresh_hz = 1000.0 / vrefresh_period.count();
+    auto attribs = config.display_attribs(mga::DisplayName::primary);
+    EXPECT_THAT(attribs.pixel_size, Eq(px_size));
+    EXPECT_THAT(attribs.dpi_mm, Eq(dpi_mm));
+    EXPECT_THAT(attribs.vrefresh_hz, Eq(vrefresh_hz));
+    EXPECT_TRUE(attribs.connected);
+}
+
+#if 0
+//the primary display should not be disconnected
+TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
+{
+    using namespace testing;
+    EXPECT_CALL(*mock_device, getDisplayConfigs_interface(mock_device.get(),HWC_DISPLAY_PRIMARY,_,_))
+        .WillOnce(Return(-1));
+
+    EXPECT_THROW({
+        mga::RealHwcWrapper wrapper(mock_device, mock_report);
+        wrapper.display_attribs(mga::DisplayName::primary);
+    }, std::runtime_error);
+}
+#endif
