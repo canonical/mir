@@ -18,7 +18,7 @@
  * Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "native_platform.h"
+#include "guest_platform.h"
 
 #include "buffer_allocator.h"
 #include "mir/graphics/buffer_ipc_message.h"
@@ -38,7 +38,7 @@
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 
-mgm::NativePlatform::NativePlatform(std::shared_ptr<NestedContext> const& nested_context_arg)
+mgm::GuestPlatform::GuestPlatform(std::shared_ptr<NestedContext> const& nested_context_arg)
 {
     //TODO: a bit of round-about initialization to clean up here
     nested_context = nested_context_arg;
@@ -49,16 +49,16 @@ mgm::NativePlatform::NativePlatform(std::shared_ptr<NestedContext> const& nested
         std::make_shared<mgm::NestedAuthentication>(nested_context)); 
 }
 
-std::shared_ptr<mg::GraphicBufferAllocator> mgm::NativePlatform::create_buffer_allocator()
+std::shared_ptr<mg::GraphicBufferAllocator> mgm::GuestPlatform::create_buffer_allocator()
 {
     return std::make_shared<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited);
 }
 
-extern "C" std::shared_ptr<mg::NativePlatform> create_native_platform(
+extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::NestedContext> const& nested_context)
 {
-    return std::make_shared<mgm::NativePlatform>(nested_context);
+    return std::make_shared<mgm::GuestPlatform>(nested_context);
 }
 
 namespace
@@ -67,7 +67,20 @@ std::shared_ptr<mgm::InternalNativeDisplay> native_display = nullptr;
 std::mutex native_display_guard;
 }
 
-std::shared_ptr<mg::PlatformIpcOperations> mgm::NativePlatform::make_ipc_operations() const
+std::shared_ptr<mg::PlatformIpcOperations> mgm::GuestPlatform::make_ipc_operations() const
 {
     return ipc_ops;
+}
+
+std::shared_ptr<mg::Display> mgm::GuestPlatform::create_display(
+    std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
+    std::shared_ptr<graphics::GLProgramFactory> const&,
+    std::shared_ptr<graphics::GLConfig> const& /*gl_config*/)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("mgm::GuestPlatform cannot create display\n"));
+}
+
+EGLNativeDisplayType mgm::GuestPlatform::egl_native_display() const
+{
+    return gbm.device;
 }

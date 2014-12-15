@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_ANDROID_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
-#include "mir/graphics/native_platform.h"
 #include "device_quirks.h"
 
 namespace mir
@@ -34,7 +33,7 @@ class GraphicBufferAllocator;
 class FramebufferFactory;
 class DisplayBufferBuilder;
 
-class Platform : public graphics::Platform, public NativePlatform
+class Platform : public graphics::Platform
 {
 public:
     Platform(
