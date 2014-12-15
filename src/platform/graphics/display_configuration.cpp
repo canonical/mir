@@ -177,7 +177,7 @@ static bool mg::equivalent(mg::DisplayConfigurationOutput const& val1,
     {
         for (size_t i = 0; i < val1.modes.size(); i++)
         {
-        	equivalent = equivalent && (val1.modes[i] == val2.modes[i]);
+            equivalent = equivalent && (val1.modes[i] == val2.modes[i]);
             if (!equivalent) break;
         }
     }
