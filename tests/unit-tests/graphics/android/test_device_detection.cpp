@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform-implementations/android/device_quirks.h"
+#include "src/platforms/android/device_quirks.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

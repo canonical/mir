@@ -9,7 +9,7 @@ set(MIR_PLATFORM_DRIVER_BINARY lib${MIR_PLATFORM_DRIVER}.so
 add_definitions(-DMIR_PLATFORM_DRIVER_BINARY="${MIR_PLATFORM_DRIVER_BINARY}")
 
 # Add the platform implementations before exposing any private APIs
-add_subdirectory(platform-implementations/)
+add_subdirectory(platforms/)
 
 # the src/include/... directories should be private to the implementation
 include_directories(${PROJECT_SOURCE_DIR}/src/include/common)

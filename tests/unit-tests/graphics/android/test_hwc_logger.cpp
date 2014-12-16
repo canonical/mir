@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform-implementations/android/hwc_loggers.h"
+#include "src/platforms/android/hwc_loggers.h"
 #include <memory>
 #include <iostream>
 #include <gmock/gmock.h>
