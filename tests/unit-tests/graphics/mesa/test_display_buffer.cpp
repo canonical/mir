@@ -162,7 +162,7 @@ TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, width, height, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, width, height, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
@@ -180,7 +180,7 @@ TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, height, width, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, height, width, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
@@ -198,7 +198,7 @@ TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, width, height, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, width, height, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
@@ -216,7 +216,7 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, height, width, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, height, width, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(

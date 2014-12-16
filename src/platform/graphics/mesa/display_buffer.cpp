@@ -341,6 +341,10 @@ mgm::BufferObject* mgm::DisplayBuffer::get_buffer_object(
     uint32_t offsets[4] = {0, 0, 0, 0};
 
     auto format = gbm_bo_get_format(bo);
+    /*
+     * Mir might use the old GBM_BO_ enum formats, but KMS and the rest of
+     * the world need fourcc formats, so convert...
+     */
     if (format == GBM_BO_FORMAT_XRGB8888)
         format = GBM_FORMAT_XRGB8888;
     else if (format == GBM_BO_FORMAT_ARGB8888)
