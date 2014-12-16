@@ -59,8 +59,6 @@ mga::Display::Display(
 
     display_report->report_successful_egl_make_current_on_construction();
     display_report->report_successful_display_construction();
-
-    //turn on display
 }
 
 mga::Display::~Display()

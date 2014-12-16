@@ -284,9 +284,8 @@ TEST_F(Display, first_power_on_is_not_fatal) //lp:1345533
 {
     stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
     {
-        testing::InSequence seq;
-        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_on))
-            .WillOnce(testing::Throw(std::runtime_error("")));
+        ON_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_on))
+            .WillByDefault(testing::Throw(std::runtime_error("")));
     });
 
     EXPECT_NO_THROW({

@@ -53,7 +53,7 @@ struct StubConfigurableDisplayBuffer : public graphics::android::ConfigurableDis
                    graphics::DisplayConfigurationCardId{0},
                    graphics::DisplayConfigurationOutputType::vga,
                    {}, {}, 0, {}, false, false, {}, 0, mir_pixel_format_abgr_8888, 
-                   mir_power_mode_off,
+                   mir_power_mode_on,
                    mir_orientation_normal};
     }
 private:
@@ -69,7 +69,7 @@ struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
 {
     StubDisplayBuilder(geometry::Size sz)
         : sz(sz),
-          mock_config{new MockHwcConfiguration}
+          mock_config{new testing::NiceMock<MockHwcConfiguration>()}
     {
     }
 
@@ -93,7 +93,7 @@ struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
 
     std::unique_ptr<graphics::android::HwcConfiguration> create_hwc_configuration() override
     {
-        auto config = std::unique_ptr<MockHwcConfiguration>(new MockHwcConfiguration);
+        auto config = std::unique_ptr<MockHwcConfiguration>(new testing::NiceMock<MockHwcConfiguration>());
         std::swap(config, mock_config);
         return std::move(config);
     }
