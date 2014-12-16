@@ -3,7 +3,7 @@ mir (0.10.0-0ubuntu1) UNRELEASED; urgency=medium
   * New upstream release 0.10.0 (https://launchpad.net/mir/+milestone/0.10.0)
     - Enhancements:
       . Added support for Android HWC 1.3 devices.
-      . Major reduction in code bloat and less build dependencies.
+      . Reduced build dependencies.
       . Client API: Added version macros.
       . demo-shell: Added desktop zoom feature (Super + mouse wheel).
       . TODO - more
