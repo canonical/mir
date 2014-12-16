@@ -61,3 +61,16 @@ void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
         the_logger = new_logger;
     }
 }
+
+namespace mir
+{
+namespace logging
+{
+// For backwards compatibility (avoid breaking ABI)
+void log(ml::Severity severity, std::string const& message)
+{
+    ml::log(severity, message, "");
+}
+}
+}
+

@@ -17,8 +17,9 @@
  */
 
 #include "mir/graphics/nested_context.h"
-#include "src/platform/graphics/mesa/native_platform.h"
+#include "src/platform/graphics/mesa/guest_platform.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/platform_ipc_operations.h"
 
 #include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_drm.h"
@@ -46,10 +47,10 @@ struct MockNestedContext : public mg::NestedContext
     MOCK_METHOD1(drm_set_gbm_device, void(struct gbm_device*));
 };
 
-class MesaNativePlatformTest : public ::testing::Test
+class MesaGuestPlatformTest : public ::testing::Test
 {
 public:
-    MesaNativePlatformTest()
+    MesaGuestPlatformTest()
     {
         using namespace testing;
 
@@ -65,18 +66,17 @@ protected:
 
 }
 
-TEST_F(MesaNativePlatformTest, auth_magic_is_delegated_to_nested_context)
+TEST_F(MesaGuestPlatformTest, auth_magic_is_delegated_to_nested_context)
 {
     using namespace testing;
-    mgm::NativePlatform native(mt::fake_shared(mock_nested_context));
-
     EXPECT_CALL(mock_nested_context, drm_auth_magic(_));
+    mgm::GuestPlatform native(mt::fake_shared(mock_nested_context));
     auto ipc_ops = native.make_ipc_operations();
     ipc_ops->connection_ipc_package();
 }
 
-TEST_F(MesaNativePlatformTest, sets_gbm_device_during_initialization)
+TEST_F(MesaGuestPlatformTest, sets_gbm_device_during_initialization)
 {
     EXPECT_CALL(mock_nested_context, drm_set_gbm_device(mock_gbm.fake_gbm.device));
-    mgm::NativePlatform native(mt::fake_shared(mock_nested_context));
+    mgm::GuestPlatform native(mt::fake_shared(mock_nested_context));
 }

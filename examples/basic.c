@@ -128,15 +128,19 @@ int demo_client(const char* server, int buffer_swap_count)
     MirPixelFormat pixel_format;
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(mcd.connection, &pixel_format, 1, &valid_formats);
-    MirSurfaceParameters const request_params =
-        {__PRETTY_FUNCTION__, 640, 480, pixel_format,
-         mir_buffer_usage_hardware, mir_display_output_id_invalid};
+
+    MirSurfaceSpec *spec =
+        mir_connection_create_spec_for_normal_surface(mcd.connection, 640, 480, pixel_format);
+    assert(spec != NULL);
+    mir_surface_spec_set_name(spec, __PRETTY_FUNCTION__);
 
     ///\internal [surface_create_tag]
     // ...we create a surface using that format and wait for callback to complete.
-    mir_wait_for(mir_connection_create_surface(mcd.connection, &request_params, surface_create_callback, &mcd));
+    mir_wait_for(mir_surface_create(spec, surface_create_callback, &mcd));
     puts("Surface created");
     ///\internal [surface_create_tag]
+
+    mir_surface_spec_release(spec);
 
     // We expect a surface handle;
     // we expect it to be valid; and,
@@ -144,17 +148,6 @@ int demo_client(const char* server, int buffer_swap_count)
     assert(mcd.surface != NULL);
     assert(mir_surface_is_valid(mcd.surface));
     assert(strcmp(mir_surface_get_error_message(mcd.surface), "") == 0);
-
-    // We can query the surface parameters...
-    {
-        MirSurfaceParameters response_params;
-        mir_surface_get_parameters(mcd.surface, &response_params);
-
-        // ...and they should match the request
-        assert(request_params.width == response_params.width);
-        assert(request_params.height ==  response_params.height);
-        assert(request_params.pixel_format == response_params.pixel_format);
-    }
 
     // We can keep exchanging the current buffer for a new one
     for (int i = 0; i < buffer_swap_count; i++)

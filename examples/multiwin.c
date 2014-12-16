@@ -130,7 +130,6 @@ static char const *socket_file = NULL;
 int main(int argc, char *argv[])
 {
     MirConnection *conn;
-    MirSurfaceParameters parm;
     Window win[3];
     unsigned int f;
 
@@ -167,54 +166,63 @@ int main(int argc, char *argv[])
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(conn, formats, pf_size, &valid_formats);
 
-    parm.buffer_usage = mir_buffer_usage_software;
-    parm.output_id = mir_display_output_id_invalid;
-    parm.pixel_format = mir_pixel_format_invalid;
+    MirPixelFormat pixel_format = mir_pixel_format_invalid;
     for (f = 0; f < valid_formats; f++)
     {
         if (formats[f] == mir_pixel_format_abgr_8888 ||
             formats[f] == mir_pixel_format_argb_8888)
         {
-            parm.pixel_format = formats[f];
+            pixel_format = formats[f];
             break;
         }
     }
-    if (parm.pixel_format == mir_pixel_format_invalid)
+    if (pixel_format == mir_pixel_format_invalid)
     {
         fprintf(stderr, "Could not find a fast 32-bit pixel format with "
                         "alpha support. Blending won't work!.\n");
-        parm.pixel_format = formats[0];
+        pixel_format = formats[0];
     }
 
-    parm.name = "red";
-    parm.width = 225;
-    parm.height = 225;
-    win[0].surface = mir_connection_create_surface_sync(conn, &parm);
+    MirSurfaceSpec *spec =
+        mir_connection_create_spec_for_normal_surface(conn, 225, 225, pixel_format);
+    if (spec == NULL)
+    {
+        fprintf(stderr, "Could not create a surface spec.\n");
+        mir_connection_release(conn);
+        return 1;
+    }
+
+    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_surface_spec_set_name(spec, "red");
+
+    win[0].surface = mir_surface_create_sync(spec);
     win[0].fill.r = 0xff;
     win[0].fill.g = 0x00;
     win[0].fill.b = 0x00;
     win[0].fill.a = 0x50;
     premultiply_alpha(&win[0].fill);
 
-    parm.name = "green";
-    parm.width = 300;
-    parm.height = 150;
-    win[1].surface = mir_connection_create_surface_sync(conn, &parm);
+    mir_surface_spec_set_name(spec, "green");
+    mir_surface_spec_set_width(spec, 300);
+    mir_surface_spec_set_height(spec, 150);
+    win[1].surface = mir_surface_create_sync(spec);
     win[1].fill.r = 0x00;
     win[1].fill.g = 0xff;
     win[1].fill.b = 0x00;
     win[1].fill.a = 0x50;
     premultiply_alpha(&win[1].fill);
 
-    parm.name = "blue";
-    parm.width = 150;
-    parm.height = 300;
-    win[2].surface = mir_connection_create_surface_sync(conn, &parm);
+    mir_surface_spec_set_name(spec, "blue");
+    mir_surface_spec_set_width(spec, 150);
+    mir_surface_spec_set_height(spec, 300);
+    win[2].surface = mir_surface_create_sync(spec);
     win[2].fill.r = 0x00;
     win[2].fill.g = 0x00;
     win[2].fill.b = 0xff;
     win[2].fill.a = 0x50;
     premultiply_alpha(&win[2].fill);
+
+    mir_surface_spec_release(spec);
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
