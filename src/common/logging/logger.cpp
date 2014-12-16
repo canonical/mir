@@ -61,3 +61,8 @@ void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
         the_logger = new_logger;
     }
 }
+
+void ml::log(ml::Severity severity, const std::string& message)
+{
+    ml::log(severity, message, "");
+}
