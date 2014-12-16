@@ -28,7 +28,7 @@ namespace graphics
 {
 namespace android
 {
-//interface adapting for the blanking interface differences between HWC 1.0-1.3 and HWC 1.4+
+//interface adapting for the blanking interface differences between fb, HWC 1.0-1.3, and HWC 1.4+
 class HwcConfiguration
 {
 public:
