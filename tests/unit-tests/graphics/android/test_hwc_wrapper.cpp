@@ -78,7 +78,7 @@ TEST_F(HwcWrapper, submits_correct_prepare_parameters)
         .InSequence(seq);
 
     mga::RealHwcWrapper wrapper(mock_device, mock_report);
-    wrapper.prepare({&primary_list, nullptr, nullptr});
+    wrapper.prepare({{&primary_list, nullptr, nullptr}});
 
     EXPECT_EQ(&primary_list, primary_display);
     EXPECT_EQ(nullptr, virtual_display);
@@ -98,7 +98,7 @@ TEST_F(HwcWrapper, submits_correct_prepare_parameters_with_external_display)
         .InSequence(seq);
 
     mga::RealHwcWrapper wrapper(mock_device, mock_report);
-    wrapper.prepare({&primary_list, &external_list, nullptr});
+    wrapper.prepare({{&primary_list, &external_list, nullptr}});
 
     EXPECT_EQ(&primary_list, primary_display);
     EXPECT_EQ(&external_list, external_display);
@@ -116,7 +116,7 @@ TEST_F(HwcWrapper, throws_on_prepare_failure)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        wrapper.prepare({&primary_list, nullptr, nullptr});
+        wrapper.prepare({{&primary_list, nullptr, nullptr}});
     }, std::runtime_error);
 }
 
@@ -131,7 +131,7 @@ TEST_F(HwcWrapper, submits_correct_set_parameters)
         .WillOnce(Invoke(this, &HwcWrapper::display_saving_fn));
 
     mga::RealHwcWrapper wrapper(mock_device, mock_report);
-    wrapper.set({&primary_list, &external_list, &virtual_list});
+    wrapper.set({{&primary_list, &external_list, &virtual_list}});
 
     EXPECT_EQ(&primary_list, primary_display);
     EXPECT_EQ(&external_list, external_display);
@@ -149,7 +149,7 @@ TEST_F(HwcWrapper, throws_on_set_failure)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        wrapper.set({&primary_list, nullptr, nullptr});
+        wrapper.set({{&primary_list, nullptr, nullptr}});
     }, std::runtime_error);
 }
 
