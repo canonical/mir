@@ -49,15 +49,15 @@ void me::HostLifecycleEventListener::lifecycle_event_occurred(MirLifecycleState 
 
 void me::add_log_host_lifecycle_option_to(mir::Server& server)
 {
-    static const char* const launch_child_opt = "log-host-lifecycle";
-    static const char* const launch_client_descr = "Write lifecycle events from host to log";
+    static const char* const host_lifecycle_opt = "log-host-lifecycle";
+    static const char* const host_lifecycle_descr = "Write lifecycle events from host to log";
 
-    server.add_configuration_option(launch_child_opt, launch_client_descr, mir::OptionType::null);
+    server.add_configuration_option(host_lifecycle_opt, host_lifecycle_descr, mir::OptionType::null);
 
     server.override_the_host_lifecycle_event_listener([&]()
        ->std::shared_ptr<shell::HostLifecycleEventListener>
        {
-           if (server.get_options()->is_set(launch_child_opt))
+           if (server.get_options()->is_set(host_lifecycle_opt))
                return std::make_shared<HostLifecycleEventListener>(server.the_logger());
            else
                return std::shared_ptr<shell::HostLifecycleEventListener>{};
