@@ -13,20 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ * Authored By: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "default_coordinate_translator.h"
-#include "mir/scene/surface.h"
+#ifndef MIR_TEST_FRAMEWORK_STUB_GRAPHICS_PLATFORM_OPERATION_H_
+#define MIR_TEST_FRAMEWORK_STUB_GRAPHICS_PLATFORM_OPERATION_H_
 
-namespace geom = mir::geometry;
-namespace mf = mir::frontend;
-namespace ms = mir::scene;
-
-geom::Point ms::DefaultCoordinateTranslator::surface_to_screen(std::shared_ptr<mf::Surface> surface, int32_t x,
-                                                               int32_t y)
+namespace mir_test_framework
 {
-    auto const scene_surface = std::dynamic_pointer_cast<ms::Surface>(surface);
 
-    return geom::Point{x + scene_surface->top_left().x.as_int(), y + scene_surface->top_left().y.as_int()};
+enum class StubGraphicsPlatformOperation : unsigned int
+{
+    add = 13,
+    echo_fd = 15
+};
+
 }
+
+#endif

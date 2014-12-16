@@ -17,6 +17,7 @@
  */
 
 #include "mir/frontend/session_mediator_report.h"
+#include "mir/graphics/platform.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/main_loop.h"
