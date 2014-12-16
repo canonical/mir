@@ -118,7 +118,7 @@ MirSurface::MirSurface(
     create_wait_handle.expect_result();
     try 
     {
-        server.create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
+        server->create_surface(0, &message, &surface, gp::NewCallback(this, &MirSurface::created, callback, context));
     }
     catch (std::exception const& ex)
     {
