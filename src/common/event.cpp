@@ -42,6 +42,7 @@ void expect_event_type(EventType const* ev, MirEventType t)
     {
         mir::log_critical("Expected " + mir::event_type_to_string(t) + " but event is of type " +
             mir::event_type_to_string(ev->type));
+        abort();
     }
 }
 }
@@ -86,7 +87,12 @@ MirEventType mir_event_get_type(MirEvent const* ev)
 
 MirInputEvent const* mir_event_get_input_event(MirEvent const* ev)
 {
-    expect_event_type(ev, mir_event_type_input);
+    if (ev->type != mir_event_type_key && ev->type != mir_event_type_motion)
+    {
+        mir::log_critical("Expected input event but event is of type " +
+            mir::event_type_to_string(ev->type));
+        abort();
+    }
 
     return reinterpret_cast<MirInputEvent const*>(ev);
 }
