@@ -43,8 +43,8 @@ TEST_F(HwcConfiguration, turns_screen_off_for_off_suspend_and_standby)
     testing::InSequence seq;
     EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off(mga::DisplayName::primary));
     EXPECT_CALL(*mock_hwc_wrapper, display_off(mga::DisplayName::primary));
-    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_on(mga::DisplayName::primary));
     EXPECT_CALL(*mock_hwc_wrapper, display_on(mga::DisplayName::primary));
+    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_on(mga::DisplayName::primary));
     EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off(mga::DisplayName::primary));
     EXPECT_CALL(*mock_hwc_wrapper, display_off(mga::DisplayName::primary));
     config.power_mode(mga::DisplayName::primary, mir_power_mode_off);
