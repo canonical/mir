@@ -55,7 +55,7 @@ protected:
 void log(Severity severity, const std::string& message, const std::string& component);
 void set_logger(std::shared_ptr<Logger> const& new_logger);
 // For backwards compatibility (to avoid breaking ABI)
-void log(Severity severity, const std::string& message);
+void log(Severity severity, std::string const& message);
 
 }
 }
