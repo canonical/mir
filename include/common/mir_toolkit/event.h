@@ -265,6 +265,22 @@ typedef union
  */
 MirEventType mir_event_get_type(MirEvent const* ev);
 
+/*
+ * Reference this MirEvent and return a pointer to the
+ * newly referenced instance
+ *
+ * \param[in] The event to reference
+ * \return    The event pointer to now use
+ */
+MirEvent* mir_event_ref(MirEvent const* ev);
+
+/*
+ * Release a reference to a MirEvent.
+ *
+ * \param[in] The event to un-reference
+ */
+void mir_event_unref(MirEvent* ev);
+
 #ifdef __cplusplus
 }
 /**@}*/
