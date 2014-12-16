@@ -147,15 +147,17 @@ public:
             .Times(Exactly(1))
             .WillOnce(Return(fake.bo_handle2));
 
-        EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                           _, _, _, _, _,
-                                           fake.bo_handle1.u32, _))
+        EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                            _, _, _,
+                                            Pointee(fake.bo_handle1.u32),
+                                            _, _, _, _))
             .Times(Exactly(1))
             .WillOnce(DoAll(SetArgPointee<7>(fake.fb_id1), Return(0)));
 
-        EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                           _, _, _, _, _,
-                                           fake.bo_handle2.u32, _))
+        EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                            _, _, _,
+                                            Pointee(fake.bo_handle2.u32),
+                                            _, _, _, _))
             .Times(Exactly(1))
             .WillOnce(DoAll(SetArgPointee<7>(fake.fb_id2), Return(0)));
     }
@@ -256,9 +258,10 @@ TEST_F(MesaDisplayTest, create_display)
         .WillOnce(Return(fake.bo_handle1));
 
     /* Create a a DRM FB with the DRM buffer attached */
-    EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                       _, _, _, _, _,
-                                       fake.bo_handle1.u32, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                       _, _, _,
+                                       Pointee(fake.bo_handle1.u32),
+                                       _, _, _, _))
         .Times(Exactly(1))
         .WillOnce(DoAll(SetArgPointee<7>(fake.fb_id1), Return(0)));
 
@@ -291,8 +294,8 @@ TEST_F(MesaDisplayTest, reset_crtc_on_destruction)
     uint32_t const fb_id{66};
 
     /* Create DRM FBs */
-    EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                       _, _, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                        _, _, _, _, _, _, _, _))
         .WillRepeatedly(DoAll(SetArgPointee<7>(fb_id), Return(0)));
 
 
