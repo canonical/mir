@@ -32,16 +32,31 @@ namespace mg = mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::FBDevice::FBDevice(
-    std::shared_ptr<framebuffer_device_t> const& fbdev)
-    : fb_device(fbdev)
+mga::FbControl::FbControl(std::shared_ptr<framebuffer_device_t> const& fbdev) :
+    fb_device(fbdev)
 {
     if (fb_device->setSwapInterval)
     {
         fb_device->setSwapInterval(fb_device.get(), 1);
     }
 
-    mode(mir_power_mode_on);
+    power_mode(mga::DisplayName::primary, mir_power_mode_on);
+}
+
+void mga::FbControl::power_mode(DisplayName, MirPowerMode mode)
+{
+    int enable = 0;
+    if (mode == mir_power_mode_on)
+        enable = 1;
+    
+    if (fb_device->enableScreen)
+        fb_device->enableScreen(fb_device.get(), enable);
+}
+
+mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev) :
+    fb_device(fbdev),
+    control(fb_device)
+{
 }
 
 void mga::FBDevice::post_gl(SwappingGLContext const& context)
@@ -64,16 +79,7 @@ bool mga::FBDevice::post_overlays(
 
 void mga::FBDevice::mode(MirPowerMode mode)
 {
-    int enable = 0;
-    if (mode == mir_power_mode_on)
-    {
-        enable = 1;
-    }
-    
-    if (fb_device->enableScreen)
-    {
-        fb_device->enableScreen(fb_device.get(), enable);
-    }
+    control.power_mode(mga::DisplayName::primary, mode);
 }
 
 void mga::FBDevice::content_cleared()
