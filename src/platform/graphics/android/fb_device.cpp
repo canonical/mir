@@ -62,11 +62,6 @@ bool mga::FBDevice::post_overlays(
     return false;
 }
 
-bool mga::FBDevice::apply_orientation(MirOrientation) const
-{
-    return false; 
-}
-
 void mga::FBDevice::mode(MirPowerMode mode)
 {
     int enable = 0;

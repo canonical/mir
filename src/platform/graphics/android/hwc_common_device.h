@@ -49,7 +49,6 @@ public:
 
     void notify_vsync();
     void mode(MirPowerMode mode);
-    bool apply_orientation(MirOrientation orientation) const;
 
 protected:
     HWCCommonDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,

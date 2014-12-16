@@ -102,8 +102,3 @@ void mga::HWCCommonDevice::mode(MirPowerMode mode_request)
 void mga::HWCCommonDevice::turned_screen_off()
 {
 }
-
-bool mga::HWCCommonDevice::apply_orientation(MirOrientation) const
-{
-    return false; 
-}

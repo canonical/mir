@@ -35,7 +35,6 @@ class FBDevice : public DisplayDevice
 public:
     FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev);
 
-    bool apply_orientation(MirOrientation orientation) const;
     void mode(MirPowerMode mode);
     virtual void post_gl(SwappingGLContext const& context);
     virtual bool post_overlays(
