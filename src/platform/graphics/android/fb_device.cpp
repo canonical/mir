@@ -75,3 +75,7 @@ void mga::FBDevice::mode(MirPowerMode mode)
         fb_device->enableScreen(fb_device.get(), enable);
     }
 }
+
+void mga::FBDevice::content_cleared()
+{
+}

@@ -44,6 +44,7 @@ public:
 
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
+    void content_cleared() override;
 };
 
 }

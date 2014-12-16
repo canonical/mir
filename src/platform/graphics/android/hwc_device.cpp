@@ -187,7 +187,7 @@ bool mga::HwcDevice::post_overlays(
     return true;
 }
 
-void mga::HwcDevice::turned_screen_off()
+void mga::HwcDevice::content_cleared()
 {
     onscreen_overlay_buffers.clear();
 }

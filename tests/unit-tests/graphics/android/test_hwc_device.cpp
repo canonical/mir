@@ -570,7 +570,6 @@ TEST_F(HwcDevice, rejects_list_containing_plane_alpha)
     EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
 }
 
-#if 0 //NEED TO PORT
 TEST_F(HwcDevice, does_not_own_overlay_buffers_after_screen_off)
 {
     using namespace testing;
@@ -583,10 +582,9 @@ TEST_F(HwcDevice, does_not_own_overlay_buffers_after_screen_off)
     EXPECT_TRUE(device.post_overlays(stub_context, {stub_renderable1}, stub_compositor));
     EXPECT_THAT(stub_buffer1.use_count(), Gt(use_count_before));
 
-    device.mode(MirPowerMode::mir_power_mode_off);
+    device.content_cleared();
     EXPECT_THAT(stub_buffer1.use_count(), Eq(use_count_before));
 }
-#endif
 
 TEST_F(HwcDevice, tracks_hwc_owned_fences_even_across_list_changes)
 {

@@ -47,15 +47,15 @@ public:
         std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
         std::shared_ptr<LayerAdapter> const& layer_adapter);
 
-    virtual void post_gl(SwappingGLContext const& context) override;
-    virtual bool post_overlays(
+    void post_gl(SwappingGLContext const& context) override;
+    bool post_overlays(
         SwappingGLContext const& context,
         RenderableList const& list,
         RenderableListCompositor const& list_compositor) override;
+    void content_cleared() override;
 
 private:
     bool buffer_is_onscreen(Buffer const&) const;
-    void turned_screen_off();
     LayerList hwc_list;
     std::vector<std::shared_ptr<Buffer>> onscreen_overlay_buffers;
 

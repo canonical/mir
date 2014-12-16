@@ -86,3 +86,7 @@ bool mga::HwcFbDevice::post_overlays(
 {
     return false;
 }
+
+void mga::HwcFbDevice::content_cleared()
+{
+}
