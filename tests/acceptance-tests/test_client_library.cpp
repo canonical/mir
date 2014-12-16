@@ -201,6 +201,7 @@ TEST_F(ClientLibrary, creates_surface)
     EXPECT_EQ(request_buffer_usage, response_params.buffer_usage);
 
     mir_wait_for(mir_surface_release( surface, release_surface_callback, this));
+    mir_connection_release(connection);
 }
 
 TEST_F(ClientLibrary, can_set_surface_types)

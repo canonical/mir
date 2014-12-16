@@ -194,7 +194,6 @@ static void redraw(MirSurface *surface, const MirGraphicsRegion *canvas)
 int main(int argc, char *argv[])
 {
     MirConnection *conn;
-    MirSurfaceParameters parm;
     MirSurface *surf;
     MirGraphicsRegion canvas;
     unsigned int f;
@@ -228,40 +227,49 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    parm.buffer_usage = mir_buffer_usage_software;
-    parm.output_id = mir_display_output_id_invalid;
-
     mir_connection_get_available_surface_formats(conn, formats, pf_size,
         &valid_formats);
 
-    parm.pixel_format = mir_pixel_format_invalid;
+    MirPixelFormat pixel_format = mir_pixel_format_invalid;
     for (f = 0; f < valid_formats; f++)
     {
         if (BYTES_PER_PIXEL(formats[f]) == 4)
         {
-            parm.pixel_format = formats[f];
+            pixel_format = formats[f];
             break;
         }
     }
 
-    if (parm.pixel_format == mir_pixel_format_invalid)
+    if (pixel_format == mir_pixel_format_invalid)
     {
         fprintf(stderr, "Could not find a fast 32-bit pixel format\n");
         mir_connection_release(conn);
         return 1;
     }
 
-    parm.name = "Progress Bars";
-    parm.width = 500;
-    parm.height = 500;
+    int width = 500;
+    int height = 500;
+    MirSurfaceSpec *spec =
+        mir_connection_create_spec_for_normal_surface(conn, width, height, pixel_format);
+    if (spec == NULL)
+    {
+        fprintf(stderr, "Could not create a surface spec.\n");
+        mir_connection_release(conn);
+        return 1;
+    }
 
-    surf = mir_connection_create_surface_sync(conn, &parm);
+    mir_surface_spec_set_name(spec, "Progress Bars");
+    mir_surface_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+
+    surf = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
     if (surf != NULL)
     {
-        canvas.width = parm.width;
-        canvas.height = parm.height;
-        canvas.stride = canvas.width * BYTES_PER_PIXEL(parm.pixel_format);
-        canvas.pixel_format = parm.pixel_format;
+        canvas.width = width;
+        canvas.height = height;
+        canvas.stride = canvas.width * BYTES_PER_PIXEL(pixel_format);
+        canvas.pixel_format = pixel_format;
         canvas.vaddr = (char*)malloc(canvas.stride * canvas.height);
 
         if (canvas.vaddr != NULL)
@@ -274,10 +282,10 @@ int main(int argc, char *argv[])
         
             while (running)
             {
-                static const int width = 8;
+                static const int box_width = 8;
                 static const int space = 1;
-                const int grid = width + 2 * space;
-                const int row = parm.width / grid;
+                const int grid = box_width + 2 * space;
+                const int row = width / grid;
                 const int square = row * row;
                 const int x = (t % row) * grid + space;
                 const int y = (t / row) * grid + space;
@@ -287,7 +295,7 @@ int main(int argc, char *argv[])
 
                 t = (t + 1) % square;
 
-                draw_box(&canvas, x, y, width, foreground);
+                draw_box(&canvas, x, y, box_width, foreground);
 
                 redraw(surf, &canvas);
                 usleep(sleep_usec);
