@@ -203,7 +203,7 @@ MIR_COMMON_3 {
 };
 
 MIR_COMMON_3.1 {
- global:
+ global: mir_*;
   extern "C++" {
     mir_event_get*;
     mir_event_get*;
