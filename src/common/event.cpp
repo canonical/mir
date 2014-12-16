@@ -30,6 +30,7 @@
 #include "mir_toolkit/events/orientation_event.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 namespace ml = mir::logging;
 
@@ -177,8 +178,12 @@ MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev
 // a ref count ref is implemented as copy.
 MirEvent* mir_event_ref(MirEvent const* ev)
 {
+    MirEvent *new_ev = new MirEvent;
+    memcpy(new_ev, ev, sizeof(MirEvent));
+    return new_ev;
 }
 
 void mir_event_unref(MirEvent* ev)
 {
+    delete ev;
 }
