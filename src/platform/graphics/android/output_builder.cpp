@@ -16,6 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "fb_device.h"
 #include "device_quirks.h"
 #include "output_builder.h"
 #include "display_resource_factory.h"
@@ -119,5 +120,8 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
 
 std::unique_ptr<mga::HwcConfiguration> mga::OutputBuilder::create_hwc_configuration()
 {
-    return std::unique_ptr<mga::HwcConfiguration>(new mga::HwcBlankingControl(hwc_wrapper));
+    if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
+        return std::unique_ptr<mga::HwcConfiguration>(new mga::FbControl(fb_native));
+    else
+        return std::unique_ptr<mga::HwcConfiguration>(new mga::HwcBlankingControl(hwc_wrapper));
 }
