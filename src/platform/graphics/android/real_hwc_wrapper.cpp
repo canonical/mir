@@ -133,7 +133,7 @@ std::vector<mga::ConfigId> mga::RealHwcWrapper::display_configs(DisplayName disp
         return {};
 
     auto i = 0u;
-    std::vector<mga::ConfigId> config_ids{num_configs};
+    std::vector<mga::ConfigId> config_ids{std::min(max_configs, num_configs)};
     for(auto& id : config_ids)
         id = mga::ConfigId{display_config[i++]};
     return config_ids;
