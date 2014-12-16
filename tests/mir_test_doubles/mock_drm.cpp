@@ -336,7 +336,6 @@ int drmModeAddFB2(int fd, uint32_t width, uint32_t height,
                   uint32_t pitches[4], uint32_t offsets[4],
                   uint32_t *buf_id, uint32_t flags)
 {
-
     return global_mock->drmModeAddFB2(fd, width, height, pixel_format,
                                       bo_handles, pitches, offsets,
                                       buf_id, flags);
