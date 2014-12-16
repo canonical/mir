@@ -180,16 +180,18 @@ void mf::SessionMediator::create_surface(
         .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
         .of_pixel_format(static_cast<MirPixelFormat>(request->pixel_format()))
-        .of_type(static_cast<MirSurfaceType>(request->type()))
         .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id()))
         .with_state(static_cast<MirSurfaceState>(request->state()))
         .with_preferred_orientation(static_cast<MirOrientationMode>(request->pref_orientation()));
 
-    if(request->has_parent_id())
-    {
+    if (request->has_type())
+        params.of_type(static_cast<MirSurfaceType>(request->type()));
+
+    if (request->has_parent_id())
         params.with_parent_id(SurfaceId{request->parent_id()});
+
+    if (request->has_left() && request->has_top())
         params.of_position(geometry::Point{request->left(), request->top()});
-    }
 
     auto const surf_id = session->create_surface(params);
 
