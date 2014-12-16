@@ -363,3 +363,5 @@ TEST_F(Display, supports_one_output_configuration)
 
     EXPECT_EQ(1u, num_configs);
 }
+
+//FIXME: have to reset on on/off

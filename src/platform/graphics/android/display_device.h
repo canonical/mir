@@ -49,9 +49,6 @@ public:
         RenderableList const& list,
         RenderableListCompositor const& list_compositor) = 0;
 
-    //TODO: remove the following from this interface
-    virtual void mode(MirPowerMode mode) = 0;
-
 protected:
     DisplayDevice() = default;
     DisplayDevice& operator=(DisplayDevice const&) = delete;

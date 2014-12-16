@@ -44,13 +44,10 @@ static void hotplug_hook(const struct hwc_procs* /*procs*/, int /*disp*/, int /*
 
 mga::HWCCommonDevice::HWCCommonDevice(
     std::shared_ptr<HwcWrapper> const& hwc_device,
-    std::shared_ptr<HwcConfiguration> const& hwc_config,
     std::shared_ptr<HWCVsyncCoordinator> const& coordinator) :
     coordinator(coordinator),
     callbacks(std::make_shared<mga::HWCCallbacks>()),
-    hwc_device(hwc_device),
-    hwc_config(hwc_config),
-    current_mode(mir_power_mode_on)
+    hwc_device(hwc_device)
 {
     callbacks->hooks.invalidate = invalidate_hook;
     callbacks->hooks.vsync = vsync_hook;
@@ -58,47 +55,14 @@ mga::HWCCommonDevice::HWCCommonDevice(
     callbacks->self = this;
 
     hwc_device->register_hooks(callbacks);
-
-    try
-    {
-        mode(mir_power_mode_on);
-    } catch (...)
-    {
-        //TODO: log failure here. some drivers will throw if the screen is already on, which
-        //      is not a fatal condition
-    }
 }
 
 mga::HWCCommonDevice::~HWCCommonDevice() noexcept
 {
-    if (current_mode == mir_power_mode_on)
-    {
-        try
-        {
-            mode(mir_power_mode_off);
-        } catch (...)
-        {
-        }
-    }
     callbacks->self = nullptr;
 }
 
 void mga::HWCCommonDevice::notify_vsync()
 {
     coordinator->notify_vsync();
-}
-
-void mga::HWCCommonDevice::mode(MirPowerMode mode_request)
-{
-    hwc_config->power_mode(mga::DisplayName::primary, mode_request);
-
-    if (mode_request == mir_power_mode_off)
-        turned_screen_off();
-
-    //TODO the mode should be in the display mode structure that gets passed to the rest of the system
-    current_mode = mode_request;
-}
-
-void mga::HWCCommonDevice::turned_screen_off()
-{
 }

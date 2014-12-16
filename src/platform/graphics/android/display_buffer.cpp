@@ -124,11 +124,7 @@ mg::DisplayConfigurationOutput mga::DisplayBuffer::configuration() const
 
 void mga::DisplayBuffer::configure(DisplayConfigurationOutput const& new_configuration)
 {
-    if (new_configuration.power_mode != current_configuration.power_mode)
-    {
-        display_device->mode(new_configuration.power_mode);
-        current_configuration.power_mode = new_configuration.power_mode;
-    }
+    current_configuration.power_mode = new_configuration.power_mode;
 
     //TODO: We don't support rotation yet, so
     //we preserve this orientation change so the compositor can rotate everything in GL 

@@ -31,14 +31,12 @@ namespace graphics
 namespace android
 {
 class HwcWrapper;
-class HwcConfiguration;
 
 class HwcFbDevice : public HWCCommonDevice
 {
 public:
     HwcFbDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
                 std::shared_ptr<framebuffer_device_t> const& fb_device,
-                std::shared_ptr<HwcConfiguration> const& hwc_config,
                 std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
     virtual void post_gl(SwappingGLContext const& context);

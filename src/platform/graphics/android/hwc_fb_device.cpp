@@ -38,9 +38,8 @@ namespace geom = mir::geometry;
 mga::HwcFbDevice::HwcFbDevice(
     std::shared_ptr<HwcWrapper> const& hwc_wrapper,
     std::shared_ptr<framebuffer_device_t> const& fb_device,
-    std::shared_ptr<HwcConfiguration> const& config,
     std::shared_ptr<HWCVsyncCoordinator> const& coordinator) :
-    HWCCommonDevice(hwc_wrapper, config, coordinator),
+    HWCCommonDevice(hwc_wrapper, coordinator),
     hwc_wrapper(hwc_wrapper), 
     fb_device(fb_device),
     layer_list{std::make_shared<IntegerSourceCrop>(), {}, 1}
