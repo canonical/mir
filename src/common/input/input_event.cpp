@@ -35,12 +35,12 @@ namespace ml = mir::logging;
 
 namespace
 {
-void expect_event_type(MirEvent const* ev, MirEventType t)
+void expect_old_event_type(MirEvent const* ev, MirEventType t)
 {
-    if (mir_event_get_type(ev) != t)
+    if (ev->type != t)
     {
         mir::log_critical("Expected " + mir::event_type_to_string(t) + " but event is of type " +
-            mir::event_type_to_string(mir_event_get_type(ev)));
+            mir::event_type_to_string(ev->type));
         abort();
     }
 }
@@ -65,13 +65,13 @@ MirEvent const* old_ev_from_new(MirInputEvent const* ev)
 MirKeyEvent const& old_kev_from_new(MirKeyInputEvent const* ev)
 {
     auto old_ev = reinterpret_cast<MirEvent const*>(ev);
-    expect_event_type(old_ev, mir_event_type_key);
+    expect_old_event_type(old_ev, mir_event_type_key);
     return old_ev->key;
 }
 MirMotionEvent const& old_mev_from_new(MirTouchInputEvent const* ev)
 {
     auto old_ev = reinterpret_cast<MirEvent const*>(ev);
-    expect_event_type(old_ev, mir_event_type_motion);
+    expect_old_event_type(old_ev, mir_event_type_motion);
     return old_ev->motion;
 }
 }
