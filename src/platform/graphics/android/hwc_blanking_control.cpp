@@ -84,7 +84,7 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
     hwc_device->display_attributes(display_name, configs.front(), attributes, values);
     return {
         {values[0], values[1]},
-        {values[3], values[4]},
+        {0, 0}, //TODO: convert DPI to MM and return
         period_to_hz(std::chrono::nanoseconds{values[2]}),
         true
     };

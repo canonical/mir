@@ -33,7 +33,7 @@ namespace android
 struct DisplayAttribs
 {
     geometry::Size pixel_size;
-    geometry::Size dpi_mm;
+    geometry::Size mm_size;
     double vrefresh_hz;
     bool connected;
 };

@@ -63,7 +63,7 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
 {
     using namespace testing;
     geom::Size px_size {343, 254};
-    geom::Size dpi_mm {343, 254};
+
     std::vector<mga::ConfigId> hwc_config {mga::ConfigId{0xA1}, mga::ConfigId{0xBEE}};
     std::chrono::milliseconds vrefresh_period {16};
 
@@ -87,12 +87,6 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
                         case HWC_DISPLAY_VSYNC_PERIOD:
                             values[i] = std::chrono::duration_cast<std::chrono::nanoseconds>(vrefresh_period).count();
                             break;
-                        case HWC_DISPLAY_DPI_X:
-                            values[i] = dpi_mm.width.as_int();
-                            break;
-                        case HWC_DISPLAY_DPI_Y:
-                            values[i] = dpi_mm.height.as_int();
-                            break;
                         default:
                             break;
                     }
@@ -105,7 +99,6 @@ TEST_F(HwcConfiguration, queries_connected_primary_display_properties)
     auto vrefresh_hz = 1000.0 / vrefresh_period.count();
     auto attribs = config.active_attribs_for(display);
     EXPECT_THAT(attribs.pixel_size, Eq(px_size));
-    EXPECT_THAT(attribs.dpi_mm, Eq(dpi_mm));
     EXPECT_THAT(attribs.vrefresh_hz, Eq(vrefresh_hz));
     EXPECT_TRUE(attribs.connected);
 }
@@ -122,7 +115,6 @@ TEST_F(HwcConfiguration, test_hwc_device_display_config_failure_throws)
     }, std::runtime_error);
     auto external_attribs = config.active_attribs_for(mga::DisplayName::external);
     EXPECT_THAT(external_attribs.pixel_size, Eq(geom::Size{0,0}));
-    EXPECT_THAT(external_attribs.dpi_mm, Eq(geom::Size{0,0}));
     EXPECT_THAT(external_attribs.vrefresh_hz, Eq(0.0));
     EXPECT_FALSE(external_attribs.connected);
 }
