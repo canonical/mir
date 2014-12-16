@@ -205,9 +205,13 @@ MIR_COMMON_3 {
 MIR_COMMON_3.1 {
  global:
   extern "C++" {
-    mir::log*;
+    mir_event_get*;
+    mir_event_get*;
+    mir_input_event_get*;
+    mir_key_input_event_get*;
+    mir::log*char*;
     mir::logv*;
+    mir_touch_input_event_get*;
   };
- local: *;
 };
 
