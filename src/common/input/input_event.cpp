@@ -37,10 +37,11 @@ namespace
 {
 void expect_event_type(MirEvent const* ev, MirEventType t)
 {
-    if (ev->type != t)
+    if (mir_event_get_type(ev) != t)
     {
         mir::log_critical("Expected " + mir::event_type_to_string(t) + " but event is of type " +
             mir::event_type_to_string(mir_event_get_type(ev)));
+        abort();
     }
 }
 
