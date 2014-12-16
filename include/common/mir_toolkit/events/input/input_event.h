@@ -19,9 +19,9 @@
 #ifndef MIR_TOOLKIT_INPUT_EVENT_H_
 #define MIR_TOOLKIT_INPUT_EVENT_H_
 
-#include "mir_toolkit/event.h"
-#include "mir_toolkit/input/key_input_event.h"
-#include "mir_toolkit/input/touch_input_event.h"
+#include "mir_toolkit/events/event.h"
+#include "mir_toolkit/events/input/key_input_event.h"
+#include "mir_toolkit/events/input/touch_input_event.h"
 
 #include <stdint.h>
 
@@ -33,8 +33,6 @@
 extern "C" {
 #endif
 
-typedef struct MirInputEvent MirInputEvent;
-
 typedef int64_t MirInputDeviceId;
 
 typedef enum {
@@ -42,14 +40,6 @@ typedef enum {
     mir_input_event_type_touch = 1
 } MirInputEventType;
 
-/*
- * Retrieve the MirInputEvent associated with a MirEvent of 
- * type mir_event_type_input.
- *
- * \param [in] event The event
- * \return           The associated MirInputEvent
- */
-MirInputEvent const* mir_event_get_input_event(MirEvent const* ev);
 
 /*
  * Retrieves the device id responsible for generating an input event.

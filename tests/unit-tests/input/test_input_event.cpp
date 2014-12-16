@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 
 #include "mir_toolkit/event.h"
-#include "mir_toolkit/input/input_event.h"
+#include "mir_toolkit/events/input/input_event.h"
 
 // See: https://bugs.launchpad.net/mir/+bug/1311699
 #define MIR_EVENT_ACTION_POINTER_INDEX_MASK 0xff00
