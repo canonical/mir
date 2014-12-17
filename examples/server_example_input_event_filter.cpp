@@ -43,8 +43,8 @@ bool me::QuitFilter::handle(MirEvent const& event)
     MirKeyInputEvent const* kev = mir_input_event_get_key_input_event(input_event);
     if (mir_key_input_event_get_action(kev) != mir_key_input_event_action_down)
         return false;
-    MirKeyInputEventModifiers mods = mir_key_input_event_get_modifiers(kev);
-    if (!(mods & mir_key_modifier_alt) || !(mods & mir_key_modifier_ctrl))
+    MirInputEventModifiers mods = mir_key_input_event_get_modifiers(kev);
+    if (!(mods & mir_input_event_modifier_alt) || !(mods & mir_input_event_modifier_ctrl))
         return false;
     if (mir_key_input_event_get_scan_code(kev) == KEY_BACKSPACE)
     {
