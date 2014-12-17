@@ -21,6 +21,7 @@
 #include "mir_test_framework/interprocess_client_server_test.h"
 #include "mir_test_framework/cross_process_sync.h"
 #include "mir_test_framework/process.h"
+#include "mir_test_framework/any_surface.h"
 #include "mir_test/cross_process_action.h"
 
 #include <gtest/gtest.h>
@@ -63,15 +64,11 @@ TEST_F(ServerDisconnect, is_detected_by_client)
 
     auto const client = new_client_process([&]
         {
-            static MirSurfaceParameters const params =
-                { __PRETTY_FUNCTION__, 33, 45, mir_pixel_format_abgr_8888,
-                  mir_buffer_usage_hardware, mir_display_output_id_invalid };
-
             MockEventHandler mock_event_handler;
 
             auto connection = mir_connect_sync(mtf::test_socket_file().c_str() , __PRETTY_FUNCTION__);
             mir_connection_set_lifecycle_event_callback(connection, &MockEventHandler::handle, &mock_event_handler);
-            auto surface = mir_connection_create_surface_sync(connection, &params);
+            auto surface = mtf::make_any_surface(connection);
 
             std::atomic<bool> signalled(false);
 
@@ -125,15 +122,7 @@ TEST_F(ServerDisconnect, doesnt_stop_client_calling_API_functions)
             MirSurface* surf;
 
             create_surface.exec([&] {
-                MirSurfaceParameters const parameters =
-                {
-                    __PRETTY_FUNCTION__,
-                    1, 1,
-                    mir_pixel_format_abgr_8888,
-                    mir_buffer_usage_hardware,
-                    mir_display_output_id_invalid
-                };
-                surf = mir_connection_create_surface_sync(connection, &parameters);
+                surf = mtf::make_any_surface(connection);
             });
 
             configure_display.exec([&] {
@@ -178,15 +167,7 @@ TEST_F(ServerDisconnect, causes_client_to_terminate_by_default)
 
             create_surface_sync.wait_for_signal_ready_for();
 
-            MirSurfaceParameters const parameters =
-            {
-                __PRETTY_FUNCTION__,
-                1, 1,
-                mir_pixel_format_abgr_8888,
-                mir_buffer_usage_hardware,
-                mir_display_output_id_invalid
-            };
-            mir_connection_create_surface_sync(connection, &parameters);
+            mtf::make_any_surface(connection);
 
             mir_connection_release(connection);
         });

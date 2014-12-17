@@ -17,7 +17,7 @@
  */
 
 #include "mir/thread/basic_thread_pool.h"
-#include <mir/run_mir.h>
+#include "mir/terminate_with_current_exception.h"
 
 #include <deque>
 #include <algorithm>

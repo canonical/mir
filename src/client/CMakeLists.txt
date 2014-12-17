@@ -5,7 +5,7 @@ set(MIR_CLIENT_DRIVER_BINARY lib${MIR_CLIENT_DRIVER}.so
     CACHE STRING "File name of Mir client drivers")
 add_definitions(
   -DMIR_CLIENT_DRIVER_BINARY="${MIR_CLIENT_DRIVER_BINARY}"
-  -DMIR_LOGGING_COMPONENT_FALLBACK="mirclient"
+  -DMIR_LOG_COMPONENT_FALLBACK="mirclient"
 )
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -73,6 +73,7 @@ add_library(mirclientobjects OBJECT
   mir_prompt_session_api.cpp
   mir_event_distributor.cpp
   periodic_perf_report.cpp
+  mir_platform_message_api.cpp
 )
 
 add_library(
