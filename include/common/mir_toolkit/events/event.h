@@ -59,7 +59,7 @@ typedef union MirEvent MirEvent;
 /**@}*/
 #endif
 
-#include "mir_toolkit/events/event_private.h"
+#include "mir_toolkit/events/event_deprecated.h"
 
 #ifdef __cplusplus
 /**
