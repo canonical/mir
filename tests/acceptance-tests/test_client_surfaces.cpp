@@ -19,8 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 
-#include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/any_surface.h"
 
 #include <gmock/gmock.h>
@@ -66,10 +65,19 @@ struct SurfaceSync
     MirSurface * surface{nullptr};
 };
 
-struct ClientSurfaces : mtf::BasicClientServerFixture<mtf::StubbedServerConfiguration>
+struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
 {
     static const int max_surface_count = 5;
     SurfaceSync ssync[max_surface_count];
+
+    MirSurfaceParameters surface_params
+    {
+        "Arbitrary surface name",
+        640, 480,
+        mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware,
+        mir_display_output_id_invalid
+    };
 };
 
 extern "C" void create_surface_callback(MirSurface* surface, void * context)
@@ -177,12 +185,14 @@ TEST_F(ClientSurfaces, creates_need_not_be_serialized)
         wait_for_surface_release(ssync+i);
 }
 
-TEST_F(ClientSurfaces, have_requested_preferred_orientation)
+struct WithOrientation : ClientSurfaces, ::testing::WithParamInterface<MirOrientationMode> {};
+
+TEST_P(WithOrientation, have_requested_preferred_orientation)
 {
     auto spec = mir_connection_create_spec_for_normal_surface(connection, 1, 1, mir_pixel_format_abgr_8888);
     ASSERT_TRUE(spec != nullptr);
 
-    MirOrientationMode mode{mir_orientation_mode_landscape};
+    MirOrientationMode mode{GetParam()};
     mir_surface_spec_set_preferred_orientation(spec, mode);
 
     auto surface = mir_surface_create_sync(spec);
@@ -193,6 +203,13 @@ TEST_F(ClientSurfaces, have_requested_preferred_orientation)
 
     mir_surface_release_sync(surface);
 }
+
+INSTANTIATE_TEST_CASE_P(ClientSurfaces,
+    WithOrientation, ::testing::Values(
+        mir_orientation_mode_portrait, mir_orientation_mode_landscape,
+        mir_orientation_mode_portrait_inverted, mir_orientation_mode_landscape_inverted,
+        mir_orientation_mode_portrait_any, mir_orientation_mode_landscape_any,
+        mir_orientation_mode_any));
 
 TEST_F(ClientSurfaces, can_be_menus)
 {
