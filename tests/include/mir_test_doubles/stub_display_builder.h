@@ -53,6 +53,7 @@ private:
 struct MockHwcConfiguration : public graphics::android::HwcConfiguration
 {
     MOCK_METHOD2(power_mode, void(graphics::android::DisplayName, MirPowerMode));
+    MOCK_METHOD1(active_attribs_for, graphics::android::DisplayAttribs(graphics::android::DisplayName));
 };
 
 struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder

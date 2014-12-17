@@ -27,6 +27,7 @@
 #include "hwc_report.h"
 #include "hwc_configuration.h"
 #include "hwc_layers.h"
+#include "hwc_configuration.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"
@@ -64,7 +65,8 @@ mga::OutputBuilder::OutputBuilder(
     {
         mga::PropertiesOps ops;
         mga::DeviceQuirks quirks(ops);
-        auto attribs = hwc_wrapper->display_attribs(mga::DisplayName::primary);
+        mga::HwcBlankingControl hwc_config{hwc_wrapper};
+        auto attribs = hwc_config.active_attribs_for(mga::DisplayName::primary);
         framebuffers = std::make_shared<mga::Framebuffers>(
             buffer_allocator, attribs.pixel_size, attribs.vrefresh_hz, quirks.num_framebuffers());
     }
