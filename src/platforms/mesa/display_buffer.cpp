@@ -230,6 +230,10 @@ bool mgm::DisplayBuffer::post_update(
     /*
      * Switching from bypass to compositing? Now is the earliest safe time
      * we can unreference the bypass buffer...
+     * Note that bypass buffers are owned by the server/client and not by
+     * us. So we do NOT release() them here. This also means the attached
+     * framebuffer object may linger for some time until the client/server
+     * gets around to releasing the buffer.
      */
     if (scheduled_bufobj)
         last_flipped_bypass_buf = nullptr;
@@ -249,7 +253,11 @@ bool mgm::DisplayBuffer::post_update(
         auto native = bypass_buf->native_buffer_handle();
         auto gbm_native = static_cast<mgm::GBMNativeBuffer*>(native.get());
         bufobj = get_buffer_object(gbm_native->bo);
-        // Bypass is allowed to fail. Just fall back to compositing...
+        /*
+         * Bypass is allowed to fail. Sometimes DRM has insufficient resources
+         * (briefly) to create the additional framebuffer object. So just fall
+         * back to compositing...
+         */
         if (!bufobj)
             return false;
     }
