@@ -34,8 +34,8 @@ mir::graphics::module_for_device(std::vector<std::shared_ptr<SharedLibrary>> con
     {
         try
         {
-            auto probe = module->load_function<mir::graphics::PlatformProbe>("probe_platform",
-                                                                             SERVER_PLATFORM_VERSION);
+            auto probe = module->load_function<mir::graphics::PlatformProbe>("probe_graphics_platform",
+                                                                             MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
             auto module_priority = probe();
             if (module_priority > best_priority_so_far)
             {

@@ -53,6 +53,7 @@ class GLConfig;
 class GLProgramFactory;
 class PlatformIpcOperations;
 class BufferWriter;
+class NestedContext;
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -117,7 +118,8 @@ enum PlatformPriority : uint32_t
 };
 
 /**
- * Function prototype used to return a new graphics platform.
+ * Function prototype used to return a new host graphics platform. The host graphics platform
+ * is the system entity that owns the physical display and is a mir host server.
  *
  * \param [in] options options to use for this platform
  * \param [in] emergency_cleanup_registry object to register emergency shutdown handlers with
@@ -127,27 +129,55 @@ enum PlatformPriority : uint32_t
  *
  * \ingroup platform_enablement
  */
-extern "C" typedef std::shared_ptr<Platform>(*CreatePlatform)(
+extern "C" typedef std::shared_ptr<Platform>(*CreateHostPlatform)(
     std::shared_ptr<options::Option> const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<DisplayReport> const& report);
-extern "C" std::shared_ptr<Platform> create_platform(
+extern "C" std::shared_ptr<Platform> create_host_platform(
     std::shared_ptr<options::Option> const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<DisplayReport> const& report);
+
+/**
+ * Function prototype used to return a new guest graphics platform. The guest graphics platform
+ * exists alongside the host platform and do not output or control the physical displays 
+ *
+ * \param [in] nested_context the object that contains resources needed from the host platform 
+ * \param [in] report the object to use to report interesting events from the display subsystem
+ *
+ * This factory function needs to be implemented by each platform.
+ *
+ * \ingroup platform_enablement
+ */
+extern "C" typedef std::shared_ptr<Platform>(*CreateGuestPlatform)(
+    std::shared_ptr<DisplayReport> const& report,
+    std::shared_ptr<NestedContext> const& nested_context);
+extern "C" std::shared_ptr<Platform> create_guest_platform(
+    std::shared_ptr<DisplayReport> const& report,
+    std::shared_ptr<NestedContext> const& nested_context);
+
+/**
+ * Function prototype used to add platform specific options to the platform-independant server options.
+ *
+ * \param [in] config a boost::program_options that can be appended with new options
+ *
+ * This factory function needs to be implemented by each platform.
+ *
+ * \ingroup platform_enablement
+ */
 extern "C" typedef void(*AddPlatformOptions)(
     boost::program_options::options_description& config);
-extern "C" void add_platform_options(
+extern "C" void add_graphics_platform_options(
     boost::program_options::options_description& config);
 
 // TODO: We actually need to be more granular here; on a device with more
 //       than one graphics system we may need a different platform per GPU,
 //       so we should be associating platforms with graphics devices in some way
 extern "C" typedef PlatformPriority(*PlatformProbe)();
-extern "C" PlatformPriority probe_platform();
+extern "C" PlatformPriority probe_graphcis_platform();
 
 extern "C" typedef ModuleProperties const*(*DescribeModule)();
-extern "C" ModuleProperties const* describe_module();
+extern "C" ModuleProperties const* describe_graphics_module();
 }
 }
 

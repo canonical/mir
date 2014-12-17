@@ -12,7 +12,7 @@ include_directories(
 )
 
 add_definitions(-DMIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}")
-add_definitions(-DSERVER_PLATFORM_VERSION="${SERVER_PLATFORM_VERSION}")
+add_definitions(-DMIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PLATFORM_VERSION}")
 
 add_subdirectory(compositor/)
 add_subdirectory(graphics/)

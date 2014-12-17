@@ -40,6 +40,8 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
+const char describe_module[] = "describe_graphics_module";
+
 std::vector<std::shared_ptr<mir::SharedLibrary>> available_platforms()
 {
     std::vector<std::shared_ptr<mir::SharedLibrary>> modules;
@@ -118,7 +120,7 @@ TEST(ServerPlatformProbe, LoadsMesaPlatformWhenDrmDevicePresent)
     auto module = mir::graphics::module_for_device(modules);
     ASSERT_NE(nullptr, module);
 
-    auto descriptor = module->load_function<mir::graphics::DescribeModule>("describe_module");
+    auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
     EXPECT_THAT(description->name, HasSubstr("mesa"));
@@ -138,7 +140,7 @@ TEST(ServerPlatformProbe, LoadsAndroidPlatformWhenHwaccessSucceeds)
     auto module = mir::graphics::module_for_device(modules);
     ASSERT_NE(nullptr, module);
 
-    auto descriptor = module->load_function<mir::graphics::DescribeModule>("describe_module");
+    auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
     EXPECT_THAT(description->name, HasSubstr("android"));
@@ -168,7 +170,7 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     auto module = mir::graphics::module_for_device(modules);
     ASSERT_NE(nullptr, module);
 
-    auto descriptor = module->load_function<mir::graphics::DescribeModule>("describe_module");
+    auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
     EXPECT_THAT(description->name, HasSubstr("dummy"));
@@ -187,7 +189,7 @@ TEST(ServerPlatformProbe, LoadsMesaOrAndroidInPreferenceToDummy)
     auto module = mir::graphics::module_for_device(modules);
     ASSERT_NE(nullptr, module);
 
-    auto descriptor = module->load_function<mir::graphics::DescribeModule>("describe_module");
+    auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
     auto description = descriptor();
 
     EXPECT_THAT(description->name, Not(HasSubstr("dummy")));

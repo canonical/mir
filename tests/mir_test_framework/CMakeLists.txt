@@ -14,6 +14,7 @@ include_directories(
 set(
   TEST_FRAMEWORK_SRCS
 
+  async_server_runner.cpp
   executable_path.cpp
   command_line_server_configuration.cpp
   connected_client_headless_server.cpp
@@ -60,6 +61,7 @@ target_link_libraries(
   mir-test-framework
 
   3rd_party
+  mir-test-doubles
 
   ${PROTOBUF_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -130,4 +132,5 @@ add_custom_command(TARGET mir-test-framework POST_BUILD
 string (REPLACE " -Wl,--no-undefined" " " CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
 
 install(TARGETS mirplatformgraphicsstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
+
 install(TARGETS mirclientplatformstub LIBRARY DESTINATION ${MIR_CLIENT_PLATFORM_PATH})

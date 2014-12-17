@@ -20,9 +20,9 @@
 #define MIR_TEST_DOUBLES_MOCK_DISPLAY_DEVICE_H_
 
 #include "mir/graphics/buffer.h"
-#include "src/platform/graphics/android/display_device.h"
-#include "src/platform/graphics/android/gl_context.h"
-#include "src/platform/graphics/android/hwc_fallback_gl_renderer.h"
+#include "src/platforms/android/display_device.h"
+#include "src/platforms/android/gl_context.h"
+#include "src/platforms/android/hwc_fallback_gl_renderer.h"
 #include <gmock/gmock.h>
 
 namespace mir

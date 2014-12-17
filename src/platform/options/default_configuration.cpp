@@ -40,6 +40,7 @@ char const* const mo::legacy_input_report_opt     = "legacy-input-report";
 char const* const mo::connector_report_opt        = "connector-report";
 char const* const mo::scene_report_opt            = "scene-report";
 char const* const mo::input_report_opt            = "input-report";
+char const* const mo::shared_library_prober_report_opt = "shared-library-prober-report";
 char const* const mo::host_socket_opt             = "host-socket";
 char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
@@ -138,6 +139,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the MessageProcessor report. [{log,lttng,off}]")
         (scene_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the scene report. [{log,lttng,off}]")
+        (shared_library_prober_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
         (frontend_threads_opt, po::value<int>()->default_value(default_ipc_threads),
             "threads in frontend thread pool.")
         (name_opt, po::value<std::string>(),

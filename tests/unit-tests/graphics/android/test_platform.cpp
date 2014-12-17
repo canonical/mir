@@ -17,10 +17,9 @@
  */
 
 #include "src/server/report/null_report_factory.h"
-#include "mir/graphics/native_platform.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/options/program_option.h"
-#include "src/platform/graphics/android/platform.h"
+#include "src/platforms/android/platform.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_buffer_ipc_message.h"
@@ -42,6 +41,8 @@ namespace mr=mir::report;
 namespace geom=mir::geometry;
 namespace mo=mir::options;
 namespace mtf=mir_test_framework;
+
+static const char probe_platform[] = "probe_graphics_platform";
 
 class PlatformBufferIPCPackaging : public ::testing::Test
 {
@@ -239,7 +240,7 @@ TEST(AndroidGraphicsPlatform, probe_returns_unsupported_when_no_hwaccess)
     ON_CALL(hwaccess, hw_get_module(_,_)).WillByDefault(Return(-1));
 
     mir::SharedLibrary platform_lib{mtf::library_path() + "/server-modules/graphics-android.so"};
-    auto probe = platform_lib.load_function<mg::PlatformProbe>("probe_platform");
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::unsupported, probe());
 }
 
@@ -248,7 +249,7 @@ TEST(AndroidGraphicsPlatform, probe_returns_best_when_hwaccess_succeeds)
     testing::NiceMock<mtd::HardwareAccessMock> hwaccess;
 
     mir::SharedLibrary platform_lib{mtf::library_path() + "/server-modules/graphics-android.so"};
-    auto probe = platform_lib.load_function<mg::PlatformProbe>("probe_platform");
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::best, probe());
 }
 
@@ -264,5 +265,5 @@ TEST(NestedPlatformCreation, doesnt_access_display_hardware)
     EXPECT_CALL(hwaccess, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(AtMost(1));
 
-    auto platform = mg::create_native_platform(mt::fake_shared(stub_report), nullptr);
+    auto platform = mg::create_guest_platform(mt::fake_shared(stub_report), nullptr);
 }

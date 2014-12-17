@@ -5,28 +5,10 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/platform
 )
 
-set(MIRPLATFORM_ABI 5)
-
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
-# This needs to change whenever the ABI between the platform
-# modules and the server changes in an incompatible way.
-# This ABI is much smaller than the full libmirplatform ABI.
-#
-# TODO: Add an extra driver-ABI check target.
-set(SERVER_PLATFORM_VERSION "MIR_GRAPHICS_PLATFORM_1")
-set(SERVER_PLATFORM_VERSION ${SERVER_PLATFORM_VERSION} PARENT_SCOPE)
-
-set(MIR_SERVER_PLATFORM_PATH
-  ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/mir/server-platform
-)
-set(MIR_SERVER_PLATFORM_PATH
-  ${MIR_SERVER_PLATFORM_PATH}
-  PARENT_SCOPE
-)
-
 add_definitions(-DMIR_SERVER_PLATFORM_PATH="${MIR_SERVER_PLATFORM_PATH}")
-add_definitions(-DSERVER_PLATFORM_VERSION="${SERVER_PLATFORM_VERSION}")
+add_definitions(-DMIR_SERVER_GRAPHICS_PLATFORM_VERSION="${MIR_SERVER_GRAPHICS_PLATFORM_VERSION}")
 
 set(MIR_PLATFORM_OBJECTS
   $<TARGET_OBJECTS:mirplatformgraphicscommon>
