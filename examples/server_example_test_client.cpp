@@ -37,7 +37,7 @@ void me::add_test_client_option_to(mir::Server& server, std::atomic<bool>& test_
     static const char* const test_client_descr = "client executable";
 
     static const char* const test_timeout_opt = "test-timeout";
-    static const char* const test_timeout_descr = "Seconds to run before terminating client";
+    static const char* const test_timeout_descr = "Seconds to run before sending SIGTERM to client";
 
     server.add_configuration_option(test_client_opt, test_client_descr, mir::OptionType::string);
     server.add_configuration_option(test_timeout_opt, test_timeout_descr, 10);
@@ -67,10 +67,20 @@ void me::add_test_client_option_to(mir::Server& server, std::atomic<bool>& test_
                     {
                         int status;
 
-                        if (waitpid(pid, &status, WNOHANG) == pid && WIFEXITED(status))
+                        auto const wait_rc = waitpid(pid, &status, WNOHANG);
+
+                        if (wait_rc == 0)
+                        {
+                            ml::log(ml::Severity::informational, "Terminating client", component);
+                            kill(pid, SIGKILL);
+                        }
+                        else if (wait_rc == pid && WIFEXITED(status))
                         {
                             if (WEXITSTATUS(status) != EXIT_SUCCESS)
+                            {
+                                ml::log(ml::Severity::informational, "Client has exited with error", component);
                                 test_failed = true;
+                            }
                         }
                         else
                         {
