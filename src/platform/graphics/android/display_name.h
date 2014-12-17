@@ -16,27 +16,27 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "hwc_configuration.h"
-#include "hwc_wrapper.h"
+#ifndef MIR_GRAPHICS_ANDROID_DISPLAY_NAME_H_
+#define MIR_GRAPHICS_ANDROID_DISPLAY_NAME_H_
 
-namespace mga = mir::graphics::android;
+#include <hardware/hwcomposer.h>
 
-mga::HwcBlankingControl::HwcBlankingControl(
-    std::shared_ptr<mga::HwcWrapper> const& hwc_device) :
-    hwc_device{hwc_device}
+namespace mir
 {
+namespace graphics
+{
+namespace android
+{
+
+enum DisplayName
+{
+    primary = HWC_DISPLAY_PRIMARY,
+    external = HWC_DISPLAY_EXTERNAL,
+    virt = HWC_DISPLAY_VIRTUAL
+};
+
+}
+}
 }
 
-void mga::HwcBlankingControl::power_mode(DisplayName display_name, MirPowerMode mode_request)
-{
-    if (mode_request == mir_power_mode_on)
-    {
-        hwc_device->display_on(display_name);
-        hwc_device->vsync_signal_on(display_name);
-    }
-    else
-    {
-        hwc_device->vsync_signal_off(display_name);
-        hwc_device->display_off(display_name);
-    }
-}
+#endif /* MIR_GRAPHICS_ANDROID_DISPLAY_NAME_H_ */
