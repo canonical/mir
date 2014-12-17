@@ -128,6 +128,28 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_with_bypassable_list_can_bypass
     EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
 }
 
+TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
+{  // Regression test for LP: #1398296
+    EXPECT_CALL(mock_drm, drmModeAddFB(_, _, _, _, _, _, _, _))
+        .WillOnce(Return(0))    // During the DisplayBuffer constructor
+        .WillOnce(Return(-22))  // Fail first bypass attempt
+        .WillOnce(Return(0));   // Succeed second bypass attempt
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    EXPECT_FALSE(db.post_renderables_if_optimizable(bypassable_list));
+    // And then we recover. DRM finds enough resources to AddFB ...
+    EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
+}
+
 TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
 {
     graphics::mesa::DisplayBuffer db(
