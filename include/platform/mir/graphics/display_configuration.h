@@ -153,8 +153,6 @@ std::ostream& operator<<(std::ostream& out, DisplayConfigurationOutput const& va
 bool operator==(DisplayConfigurationOutput const& val1, DisplayConfigurationOutput const& val2);
 bool operator!=(DisplayConfigurationOutput const& val1, DisplayConfigurationOutput const& val2);
 
-bool compatible(DisplayConfigurationOutput const& val1, DisplayConfigurationOutput const& val2);
-
 /**
  * Interface to a configuration of display cards and outputs.
  */
