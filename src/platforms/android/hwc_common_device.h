@@ -23,8 +23,6 @@
 #include <hardware/hwcomposer.h>
 
 #include <memory>
-#include <mutex>
-#include <condition_variable>
 #include <atomic>
 
 namespace mir
@@ -51,7 +49,6 @@ public:
 
     void notify_vsync();
     void mode(MirPowerMode mode);
-    bool apply_orientation(MirOrientation orientation) const;
 
 protected:
     HWCCommonDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
@@ -59,7 +56,6 @@ protected:
                     std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
 
     std::shared_ptr<HWCVsyncCoordinator> const coordinator;
-    std::unique_lock<std::mutex> lock_unblanked();
 
 private:
     virtual void turned_screen_off();
@@ -68,8 +64,6 @@ private:
     std::shared_ptr<HwcWrapper> const hwc_device;
     std::shared_ptr<HwcConfiguration> const hwc_config;
 
-    std::mutex blanked_mutex;
-    std::condition_variable blanked_cond;
     MirPowerMode current_mode;
 };
 
