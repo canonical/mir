@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_HWC_REPORT_H_
 #define MIR_TEST_DOUBLES_MOCK_HWC_REPORT_H_
 
-#include "src/platform/graphics/android/hwc_report.h"
+#include "src/platforms/android/hwc_report.h"
 #include <gmock/gmock.h>
 
 namespace mir

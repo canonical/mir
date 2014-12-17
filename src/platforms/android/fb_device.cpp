@@ -40,10 +40,10 @@ mga::FbControl::FbControl(std::shared_ptr<framebuffer_device_t> const& fbdev) :
         fb_device->setSwapInterval(fb_device.get(), 1);
     }
 
-    power_mode(mir_power_mode_on);
+    power_mode(mga::DisplayName::primary, mir_power_mode_on);
 }
 
-void mga::FbControl::power_mode(MirPowerMode mode)
+void mga::FbControl::power_mode(DisplayName, MirPowerMode mode)
 {
     int enable = 0;
     if (mode == mir_power_mode_on)
@@ -84,5 +84,5 @@ bool mga::FBDevice::apply_orientation(MirOrientation) const
 
 void mga::FBDevice::mode(MirPowerMode mode)
 {
-    control.power_mode(mode);
+    control.power_mode(mga::DisplayName::primary, mode);
 }

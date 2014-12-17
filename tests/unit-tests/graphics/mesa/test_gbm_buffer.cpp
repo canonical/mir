@@ -23,8 +23,8 @@
 
 #include "mir_test_framework/udev_environment.h"
 
-#include "src/platform/graphics/mesa/gbm_buffer.h"
-#include "src/platform/graphics/mesa/buffer_allocator.h"
+#include "src/platforms/mesa/gbm_buffer.h"
+#include "src/platforms/mesa/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir_test_doubles/platform_factory.h"
 

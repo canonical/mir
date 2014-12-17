@@ -100,7 +100,7 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
     skip.layer.setup_layer(mga::LayerType::skip, disp_frame, false, *buffer);
     fbtarget.layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *buffer);
 
-    hwc_wrapper->prepare(*hwc_list.native_list().lock());
+    hwc_wrapper->prepare({{hwc_list.native_list().lock().get(), nullptr, nullptr}});
 
     context.swap_buffers();
 
@@ -111,7 +111,7 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
     for(auto& layer : hwc_list)
         layer.layer.set_acquirefence_from(*buffer);
 
-    hwc_wrapper->set(*hwc_list.native_list().lock());
+    hwc_wrapper->set({{hwc_list.native_list().lock().get(), nullptr, nullptr}});
     onscreen_overlay_buffers.clear();
 
     for(auto& layer : hwc_list)
@@ -143,7 +143,7 @@ bool mga::HwcDevice::post_overlays(
     geom::Rectangle const disp_frame{{0,0}, {buffer->size()}};
     fbtarget.layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *buffer);
 
-    hwc_wrapper->prepare(*hwc_list.native_list().lock());
+    hwc_wrapper->prepare({{hwc_list.native_list().lock().get(), nullptr, nullptr}});
 
     mg::RenderableList rejected_renderables;
     std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
@@ -174,7 +174,7 @@ bool mga::HwcDevice::post_overlays(
         fbtarget.layer.set_acquirefence_from(*buffer);
     }
 
-    hwc_wrapper->set(*hwc_list.native_list().lock());
+    hwc_wrapper->set({{hwc_list.native_list().lock().get(), nullptr, nullptr}});
     onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
 
     it = hwc_list.begin();
