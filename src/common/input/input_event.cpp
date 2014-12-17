@@ -231,10 +231,17 @@ MirInputEventModifiers old_modifiers_to_new(MirKeyModifier old_modifier)
 }
 }
 MirInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const* kev)
-{    auto const& old_kev = old_kev_from_new(kev);
+{    
+    auto const& old_kev = old_kev_from_new(kev);
     return old_modifiers_to_new(static_cast<MirKeyModifier>(old_kev.modifiers));
 }
 /* Touch event accessors */
+
+MirInputEventModifiers mir_touch_input_event_get_modifiers(MirTouchInputEvent const* tev)
+{    
+    auto const& old_mev = old_mev_from_new(tev);
+    return old_modifiers_to_new(static_cast<MirKeyModifier>(old_mev.modifiers));
+}
 
 MirTouchInputEvent const* mir_input_event_get_touch_input_event(MirInputEvent const* ev)
 {
