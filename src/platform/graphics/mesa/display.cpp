@@ -148,7 +148,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
         // Treat the current_display_configuration as incompatible with itself,
         // before it's fully constructed, to force proper initialization.
         bool const compatible{(&conf != &current_display_configuration) &&
-                              mgm::compatible(kms_conf, current_display_configuration)};
+                              (kms_conf == current_display_configuration)};
         std::vector<std::unique_ptr<DisplayBuffer>> display_buffers_new;
 
         if (!compatible)
@@ -207,7 +207,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
 
             if (compatible)
             {
-                display_buffers[group_idx++]->rotate(orientation, bounding_rect);
+                display_buffers[group_idx++]->set_orientation(orientation, bounding_rect);
             }
             else
             {

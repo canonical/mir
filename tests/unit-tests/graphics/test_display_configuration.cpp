@@ -320,29 +320,3 @@ TEST(DisplayConfiguration, unsupported_preferred_mode_valid)
 
     EXPECT_TRUE(out.valid());
 }
-
-TEST(DisplayConfiguration, outputs_with_different_orientation_are_compatible)
-{
-    mg::DisplayConfigurationOutput a = tmpl_output;
-    mg::DisplayConfigurationOutput b = tmpl_output;
-
-    EXPECT_TRUE(compatible(a, b));
-    EXPECT_TRUE(compatible(b, a));
-    a.orientation = mir_orientation_left;
-    b.orientation = mir_orientation_inverted;
-    EXPECT_TRUE(compatible(a, b));
-    EXPECT_TRUE(compatible(b, a));
-}
-
-TEST(DisplayConfiguration, outputs_with_different_power_mode_are_incompatible)
-{
-    mg::DisplayConfigurationOutput a = tmpl_output;
-    mg::DisplayConfigurationOutput b = tmpl_output;
-
-    EXPECT_TRUE(compatible(a, b));
-    EXPECT_TRUE(compatible(b, a));
-    a.power_mode = mir_power_mode_on;
-    b.power_mode = mir_power_mode_off;
-    EXPECT_FALSE(compatible(a, b));
-    EXPECT_FALSE(compatible(b, a));
-}

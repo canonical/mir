@@ -262,10 +262,13 @@ mgm::RealKMSDisplayConfiguration::find_output_with_id(mg::DisplayConfigurationOu
                         });
 }
 
-// Compatibility means conf1 can be attained from conf2 (and vice versa)
+// Equality means conf1 can be attained from conf2 (and vice versa)
 // without recreating the display buffers (e.g. conf1 and conf2 are identical
-// except one of the outputs of conf1 is rotated w.r.t. that of conf2).
-bool mgm::compatible(mgm::RealKMSDisplayConfiguration const& conf1, mgm::RealKMSDisplayConfiguration const& conf2)
+// except one of the outputs of conf1 is rotated w.r.t. that of conf2). If
+// the two outputs differ in their power state, the display buffers would need
+// to be reallocated (or, simply destroyed), and hence should not pass '=='
+// check.
+bool mgm::operator==(mgm::RealKMSDisplayConfiguration const& conf1, mgm::RealKMSDisplayConfiguration const& conf2)
 {
     bool compatible{(conf1.drm_fd         == conf2.drm_fd) &&
                     (conf1.card           == conf2.card)   &&
@@ -274,9 +277,20 @@ bool mgm::compatible(mgm::RealKMSDisplayConfiguration const& conf1, mgm::RealKMS
     if (compatible)
     {
         unsigned int const count = conf1.outputs.size();
+        auto copy_conf2 = conf2;
 
         for (unsigned int i = 0; i < count; ++i)
-            compatible = compatible && mg::compatible(conf1.outputs[i], conf2.outputs[i]);
+        {
+            compatible &= (conf1.outputs[i].power_mode == copy_conf2.outputs[i].power_mode);
+            if (compatible)
+            {
+                // ignore difference in orientation
+                copy_conf2.outputs[i].orientation = conf1.outputs[i].orientation;
+                compatible &= (conf1.outputs[i] == copy_conf2.outputs[i]);
+            }
+            else
+            	break;
+        }
     }
 
     return compatible;

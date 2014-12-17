@@ -56,7 +56,7 @@ public:
     std::vector<DisplayConfigurationOutput> outputs;
 };
 
-bool compatible(RealKMSDisplayConfiguration const& conf1, RealKMSDisplayConfiguration const& conf2);
+bool operator==(RealKMSDisplayConfiguration const& conf1, RealKMSDisplayConfiguration const& conf2);
 
 }
 }

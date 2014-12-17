@@ -184,6 +184,12 @@ MirOrientation mgm::DisplayBuffer::orientation() const
     return rotation;
 }
 
+void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rectangle const& a)
+{
+    rotation = rot;
+    area = a;
+}
+
 bool mgm::DisplayBuffer::uses_alpha() const
 {
     return false;
@@ -395,10 +401,4 @@ void mgm::DisplayBuffer::release_current()
 void mgm::DisplayBuffer::schedule_set_crtc()
 {
     needs_set_crtc = true;
-}
-
-void mgm::DisplayBuffer::rotate(MirOrientation const rot, geometry::Rectangle const& a)
-{
-    rotation = rot;
-    area = a;
 }

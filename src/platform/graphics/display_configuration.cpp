@@ -23,14 +23,6 @@
 
 namespace mg = mir::graphics;
 
-namespace mir
-{
-namespace graphics
-{
-static bool equivalent(DisplayConfigurationOutput const& val1, DisplayConfigurationOutput const& val2);
-}
-}
-
 namespace
 {
 
@@ -158,50 +150,37 @@ bool mg::operator!=(mg::DisplayConfigurationMode const& val1,
     return !(val1 == val2);
 }
 
-// Returns true if the outputs are equivalent in general.
-static bool mg::equivalent(mg::DisplayConfigurationOutput const& val1,
-                           mg::DisplayConfigurationOutput const& val2)
-{
-    bool equivalent{(val1.id == val2.id) &&
-                    (val1.card_id == val2.card_id) &&
-                    (val1.type == val2.type) &&
-                    (val1.physical_size_mm == val2.physical_size_mm) &&
-                    (val1.preferred_mode_index == val2.preferred_mode_index) &&
-                    (val1.connected == val2.connected) &&
-                    (val1.used == val2.used) &&
-                    (val1.top_left == val2.top_left) &&
-                    (val1.current_mode_index == val2.current_mode_index) &&
-                    (val1.modes.size() == val2.modes.size())};
-
-    if (equivalent)
-    {
-        for (size_t i = 0; i < val1.modes.size(); i++)
-        {
-            equivalent = equivalent && (val1.modes[i] == val2.modes[i]);
-            if (!equivalent) break;
-        }
-    }
-
-    return equivalent;
-}
-
 bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
                     mg::DisplayConfigurationOutput const& val2)
 {
-    return ((val1.orientation == val2.orientation) && equivalent(val1, val2));
+    bool equal{(val1.id == val2.id) &&
+               (val1.card_id == val2.card_id) &&
+               (val1.type == val2.type) &&
+               (val1.physical_size_mm == val2.physical_size_mm) &&
+               (val1.preferred_mode_index == val2.preferred_mode_index) &&
+               (val1.connected == val2.connected) &&
+               (val1.used == val2.used) &&
+               (val1.top_left == val2.top_left) &&
+               (val1.orientation == val2.orientation) &&
+               (val1.current_mode_index == val2.current_mode_index) &&
+               (val1.modes.size() == val2.modes.size())};
+
+    if (equal)
+    {
+        for (size_t i = 0; i < val1.modes.size(); i++)
+        {
+            equal = equal && (val1.modes[i] == val2.modes[i]);
+            if (!equal) break;
+        }
+    }
+
+    return equal;
 }
 
 bool mg::operator!=(mg::DisplayConfigurationOutput const& val1,
                     mg::DisplayConfigurationOutput const& val2)
 {
     return !(val1 == val2);
-}
-
-// E.g. Difference in orientation does not result in incompatibility.
-bool mg::compatible(mg::DisplayConfigurationOutput const& val1,
-                    mg::DisplayConfigurationOutput const& val2)
-{
-    return ((val1.power_mode == val2.power_mode) && equivalent(val1, val2));
 }
 
 namespace
