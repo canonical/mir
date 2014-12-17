@@ -45,7 +45,6 @@ class FBDevice : public DisplayDevice
 public:
     FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev);
 
-    void mode(MirPowerMode mode);
     virtual void post_gl(SwappingGLContext const& context);
     virtual bool post_overlays(
         SwappingGLContext const& context,
@@ -54,7 +53,6 @@ public:
 
 private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
-    FbControl control;
     void content_cleared() override;
 };
 

@@ -19,7 +19,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/logging/logger.h"
-#include "src/platform/graphics/android/display.h"
+#include "src/platforms/android/display.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_display_device.h"
@@ -362,5 +362,3 @@ TEST_F(Display, supports_one_output_configuration)
 
     EXPECT_EQ(1u, num_configs);
 }
-
-//FIXME: have to reset on on/off

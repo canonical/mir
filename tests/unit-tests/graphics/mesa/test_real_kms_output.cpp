@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platform/graphics/mesa/real_kms_output.h"
-#include "src/platform/graphics/mesa/page_flipper.h"
+#include "src/platforms/mesa/real_kms_output.h"
+#include "src/platforms/mesa/page_flipper.h"
 
 #include "mir_test/fake_shared.h"
 

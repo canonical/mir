@@ -17,7 +17,7 @@
  */
 
 #include "mir/graphics/nested_context.h"
-#include "src/platform/graphics/mesa/nested_authentication.h"
+#include "src/platforms/mesa/nested_authentication.h"
 #include "mir_test_doubles/mock_drm.h"
 #include "mir_test/fake_shared.h"
 #include <gtest/gtest.h>

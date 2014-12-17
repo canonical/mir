@@ -95,10 +95,7 @@ void mga::Display::configure(mg::DisplayConfiguration const& configuration)
         if (display_buffer->configuration().power_mode != output.power_mode)
         {
             hwc_config->power_mode(mga::DisplayName::primary, output.power_mode);
-            //TODO: this class only maintains output state. Remove ConfigurableDisplayBuffer
-            //interface once mga::Display maintains output state
             display_buffer->configure(output);
-//          display_buffer->reset_layers();
         }
     });
 }

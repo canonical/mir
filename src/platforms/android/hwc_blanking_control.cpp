@@ -28,19 +28,19 @@ mga::HwcBlankingControl::HwcBlankingControl(
 {
 }
 
-void mga::HwcBlankingControl::power_mode(DisplayName display, MirPowerMode mode_request)
+void mga::HwcBlankingControl::power_mode(DisplayName display_name, MirPowerMode mode_request)
 {
     if (mode_request == mir_power_mode_on)
     {
-        hwc_device->display_on(display);
-        hwc_device->vsync_signal_on(display);
+        hwc_device->display_on(display_name);
+        hwc_device->vsync_signal_on(display_name);
         off = false;
     }
     //suspend, standby, and off all count as off
     else if (!off)
     {
-        hwc_device->vsync_signal_off(display);
-        hwc_device->display_off(display);
+        hwc_device->vsync_signal_off(display_name);
+        hwc_device->display_off(display_name);
         off = true;
     }
 }

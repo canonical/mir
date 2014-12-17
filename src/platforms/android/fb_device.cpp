@@ -36,15 +36,14 @@ mga::FbControl::FbControl(std::shared_ptr<framebuffer_device_t> const& fbdev) :
     fb_device(fbdev)
 {
     if (fb_device->setSwapInterval)
-    {
         fb_device->setSwapInterval(fb_device.get(), 1);
-    }
-
-    power_mode(mga::DisplayName::primary, mir_power_mode_on);
 }
 
-void mga::FbControl::power_mode(DisplayName, MirPowerMode mode)
+void mga::FbControl::power_mode(DisplayName display, MirPowerMode mode)
 {
+    if (display != mga::DisplayName::primary)
+        BOOST_THROW_EXCEPTION(std::runtime_error("fb device cannot activate non-primary display"));
+
     int enable = 0;
     if (mode == mir_power_mode_on)
         enable = 1;
@@ -54,8 +53,7 @@ void mga::FbControl::power_mode(DisplayName, MirPowerMode mode)
 }
 
 mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev) :
-    fb_device(fbdev),
-    control(fb_device)
+    fb_device(fbdev)
 {
 }
 
@@ -75,11 +73,6 @@ bool mga::FBDevice::post_overlays(
     SwappingGLContext const&, RenderableList const&, RenderableListCompositor const&)
 {
     return false;
-}
-
-void mga::FBDevice::mode(MirPowerMode mode)
-{
-    control.power_mode(mga::DisplayName::primary, mode);
 }
 
 void mga::FBDevice::content_cleared()

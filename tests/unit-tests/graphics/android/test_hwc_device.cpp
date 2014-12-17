@@ -17,11 +17,11 @@
  */
 
 #include "mir/graphics/android/sync_fence.h"
-#include "src/platform/graphics/android/framebuffer_bundle.h"
-#include "src/platform/graphics/android/hwc_device.h"
-#include "src/platform/graphics/android/hwc_layerlist.h"
-#include "src/platform/graphics/android/gl_context.h"
-#include "src/platform/graphics/android/hwc_configuration.h"
+#include "src/platforms/android/framebuffer_bundle.h"
+#include "src/platforms/android/hwc_device.h"
+#include "src/platforms/android/hwc_layerlist.h"
+#include "src/platforms/android/gl_context.h"
+#include "src/platforms/android/hwc_configuration.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 #include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/stub_renderable.h"
@@ -50,6 +50,11 @@ namespace mt=mir::test;
 
 namespace
 {
+struct StubConfig : public mga::HwcConfiguration
+{
+    void power_mode(mga::DisplayName, MirPowerMode) {}
+};
+
 struct MockFileOps : public mga::SyncFileOps
 {
     MOCK_METHOD3(ioctl, int(int,int,void*));
@@ -99,7 +104,8 @@ struct HwcDevice : public ::testing::Test
         mock_device(std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>()),
         stub_context{stub_fb_buffer},
         renderlist({stub_renderable1, stub_renderable2}),
-        layer_adapter{std::make_shared<mga::IntegerSourceCrop>()}
+        layer_adapter{std::make_shared<mga::IntegerSourceCrop>()},
+        stub_config{std::make_shared<StubConfig>()}
     {
         fill_hwc_layer(layer, &comp_rect, position1, *stub_buffer1, HWC_FRAMEBUFFER, 0);
         fill_hwc_layer(layer2, &comp2_rect, position2, *stub_buffer2, HWC_FRAMEBUFFER, 0);

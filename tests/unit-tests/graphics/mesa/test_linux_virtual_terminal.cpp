@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platform/graphics/mesa/linux_virtual_terminal.h"
+#include "src/platforms/mesa/linux_virtual_terminal.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/graphics/event_handler_register.h"
 
