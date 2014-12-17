@@ -201,8 +201,9 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
             auto bypass_buf = (*bypass_it)->buffer();
             if (bypass_buf->can_bypass())
             {
-                post_update(bypass_buf);
-                return true;
+                // Bypass might still fail when we try to acquire other
+                // resources, so returning false is still possible:
+                return post_update(bypass_buf);
             }
         }
     }
@@ -215,7 +216,7 @@ void mgm::DisplayBuffer::post_update()
     post_update(nullptr);
 }
 
-void mgm::DisplayBuffer::post_update(
+bool mgm::DisplayBuffer::post_update(
     std::shared_ptr<graphics::Buffer> bypass_buf)
 {
     /*
@@ -248,16 +249,22 @@ void mgm::DisplayBuffer::post_update(
         auto native = bypass_buf->native_buffer_handle();
         auto gbm_native = static_cast<mgm::GBMNativeBuffer*>(native.get());
         bufobj = get_buffer_object(gbm_native->bo);
+        /*
+         * Bypass is allowed to fail. Sometimes DRM has insufficient resources
+         * (briefly) to create the additional framebuffer object. So just fall
+         * back to compositing...
+         */
+        if (!bufobj)
+            return false;
     }
     else
     {
         if (!egl.swap_buffers())
             fatal_error("Failed to perform buffer swap");
         bufobj = get_front_buffer_object();
+        if (!bufobj)
+            fatal_error("Failed to get front buffer object");
     }
-
-    if (!bufobj)
-        fatal_error("Failed to get front buffer object");
 
     /*
      * Schedule the current front buffer object for display, and wait
@@ -308,6 +315,8 @@ void mgm::DisplayBuffer::post_update(
     {
         scheduled_bufobj = bufobj;
     }
+
+    return true;
 }
 
 mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
