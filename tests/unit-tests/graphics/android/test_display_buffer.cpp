@@ -325,6 +325,7 @@ TEST_F(DisplayBuffer, power_mode_request_stored)
 
     config = db.configuration();
     EXPECT_EQ(config.power_mode, mir_power_mode_standby);
+    config.power_mode = mir_power_mode_on;
     db.configure(config);
 }
 
