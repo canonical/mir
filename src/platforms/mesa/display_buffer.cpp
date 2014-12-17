@@ -224,7 +224,7 @@ void mgm::DisplayBuffer::post_update(
      *  2. wait_for_page_flip()
      * However only the first one has a chance of being implemented by the
      * driver asynchronously (so it returns before it's finished) as observed
-     * with Intel graphics. So for optimal parallism the EGL swap starts first.
+     * with Intel graphics. So for optimal parallelism EGL swap starts first.
      */
     if (!bypass_buf && !egl.swap_buffers())
         fatal_error("Failed to perform buffer swap");
