@@ -393,10 +393,16 @@ TEST_F(Display, incorrect_display_configure_throws)
     config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
         c.current_format = mir_pixel_format_invalid;
     });
-
     EXPECT_THROW({
         display.configure(*config);
-    }, std::runtime_error); 
+    }, std::logic_error); 
+
+    config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
+        c.current_format = mir_pixel_format_bgr_888;
+    });
+    EXPECT_THROW({
+        display.configure(*config);
+    }, std::logic_error); 
 }
 
 //configuration tests
@@ -415,10 +421,6 @@ TEST_F(Display, display_orientation_not_supported)
     });
     display.configure(*config); 
 
-    //This seems redundant
-    display.for_each_display_buffer([](mg::DisplayBuffer& db){
-        EXPECT_EQ(mir_orientation_left, db.orientation());
-    });
     config = display.configuration();
     config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
         EXPECT_EQ(mir_orientation_left, c.orientation);

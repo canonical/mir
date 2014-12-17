@@ -111,7 +111,7 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
 
     new_configuration.for_each_output([this](mg::DisplayConfigurationOutput const& output) {
         if (output.current_format != primary_configuration.current_format)
-            BOOST_THROW_EXCEPTION(std::runtime_error("could not change display buffer format"));
+            BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
 
         if (output.power_mode != primary_configuration.power_mode)
         {
