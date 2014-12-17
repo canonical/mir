@@ -52,6 +52,12 @@ private:
 
 struct MockHwcConfiguration : public graphics::android::HwcConfiguration
 {
+    MockHwcConfiguration()
+    {
+        using namespace testing;
+        ON_CALL(*this, active_attribs_for(_))
+            .WillByDefault(Return(graphics::android::DisplayAttribs{{}, {}, 0.0, true}));
+    }
     MOCK_METHOD2(power_mode, void(graphics::android::DisplayName, MirPowerMode));
     MOCK_METHOD1(active_attribs_for, graphics::android::DisplayAttribs(graphics::android::DisplayName));
 };

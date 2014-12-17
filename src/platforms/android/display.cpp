@@ -40,6 +40,27 @@ try
 {
     config.power_mode(mga::DisplayName::primary, mode);
 } catch (...) {}
+
+mg::DisplayConfigurationOutput query_config(
+    mga::HwcConfiguration& hwc_config, MirPixelFormat format)
+{
+    auto attribs = hwc_config.active_attribs_for(mga::DisplayName::primary);
+    return mg::DisplayConfigurationOutput{
+        mg::DisplayConfigurationOutputId{1},
+        mg::DisplayConfigurationCardId{0},
+        mg::DisplayConfigurationOutputType::lvds,
+        {format},
+        {mg::DisplayConfigurationMode{attribs.pixel_size, attribs.vrefresh_hz}},
+        0,
+        attribs.mm_size,
+        attribs.connected,
+        true,
+        geom::Point{0,0},
+        0,
+        format,
+        mir_power_mode_on,
+        mir_orientation_normal};
+}
 }
 
 mga::Display::Display(
@@ -51,22 +72,7 @@ mga::Display::Display(
     gl_context{display_buffer_builder->display_format(), *gl_config, *display_report},
     display_buffer{display_buffer_builder->create_display_buffer(*gl_program_factory, gl_context)},
     hwc_config{display_buffer_builder->create_hwc_configuration()},
-    primary_configuration{
-        mg::DisplayConfigurationOutputId{1},
-        mg::DisplayConfigurationCardId{0},
-        mg::DisplayConfigurationOutputType::lvds,
-        {display_buffer_builder->display_format()},
-//        {mg::DisplayConfigurationMode{fb_bundle->fb_size(), fb_bundle->fb_refresh_rate()}},
-        {mg::DisplayConfigurationMode{display_buffer->view_area().size, 0.0f}},
-        0,
-        geom::Size{0,0}, //could use DPI information to fill this
-        true,
-        true,
-        geom::Point{0,0},
-        0,
-        display_buffer_builder->display_format(),
-        mir_power_mode_on,
-        mir_orientation_normal}
+    primary_configuration(query_config(*hwc_config, display_buffer_builder->display_format()))
 {
     safe_power_mode(*hwc_config, mir_power_mode_on);
 
@@ -76,8 +82,6 @@ mga::Display::Display(
 
     display_report->report_successful_egl_make_current_on_construction();
     display_report->report_successful_display_construction();
-
-    //turn on display
 }
 
 mga::Display::~Display()

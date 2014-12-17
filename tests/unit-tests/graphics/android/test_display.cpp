@@ -304,7 +304,7 @@ TEST_F(Display, catches_exceptions_when_turning_off_in_destructor)
     mga::Display display(stub_db_factory, stub_gl_program_factory, stub_gl_config, null_display_report);
 }
 
-TEST_F(Display, configures_display_buffer_power_modes)
+TEST_F(Display, configures_power_modes)
 {
     stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
     {
