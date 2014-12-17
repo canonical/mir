@@ -162,7 +162,6 @@ MIR_COMMON_3 {
     mir::RecursiveReadWriteMutex::write_unlock*;
     mir::report::lttng::TracepointProvider::?TracepointProvider*;
     mir::report::lttng::TracepointProvider::TracepointProvider*;
-    mir::report::lttng::SharedLibraryProberReport::SharedLibraryProberReport*;
     mir::set_thread_name*;
     mir::SharedLibrary::load_symbol*;
     mir::SharedLibrary::?SharedLibrary*;

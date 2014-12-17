@@ -20,7 +20,6 @@ private:
     std::vector<std::shared_ptr<SharedLibrary>> platform_modules;
 };
 
-
 }
 }
 

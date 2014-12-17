@@ -227,7 +227,6 @@ std::shared_ptr<mir::SharedLibraryProberReport> mir::client::DefaultConnectionCo
         {
             auto val_raw = getenv("MIR_CLIENT_SHARED_LIBRARY_PROBER_REPORT");
             std::string const val{val_raw ? val_raw : off_opt_val};
-
             if (val == log_opt_val)
                 return std::make_shared<mir::logging::SharedLibraryProberReport>(the_logger());
             else if (val == lttng_opt_val)
