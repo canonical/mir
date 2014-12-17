@@ -129,7 +129,7 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_with_bypassable_list_can_bypass
 }
 
 TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
-{
+{  // Regression test for LP: #1398296
     EXPECT_CALL(mock_drm, drmModeAddFB(_, _, _, _, _, _, _, _))
         .WillOnce(Return(0))    // During the DisplayBuffer constructor
         .WillOnce(Return(-22))  // Fail first bypass attempt
