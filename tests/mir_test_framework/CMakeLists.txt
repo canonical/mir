@@ -14,6 +14,7 @@ include_directories(
 set(
   TEST_FRAMEWORK_SRCS
 
+  async_server_runner.cpp
   executable_path.cpp
   command_line_server_configuration.cpp
   connected_client_headless_server.cpp
@@ -113,6 +114,7 @@ add_library(
 
 target_link_libraries(mirplatformstub 
   mir-test-doubles
+  mir-test
 )
 
 set_target_properties(mirplatformstub

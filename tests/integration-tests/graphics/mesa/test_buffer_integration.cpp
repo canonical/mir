@@ -99,7 +99,7 @@ protected:
 
         if (options->get<bool>("tests-use-real-graphics"))
         {
-            platform = mg::create_platform(
+            platform = mg::create_host_platform(
                 options,
                 std::make_shared<mtd::NullEmergencyCleanup>(),
                 mr::null_display_report());

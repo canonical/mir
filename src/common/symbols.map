@@ -162,6 +162,7 @@ MIR_COMMON_3 {
     mir::RecursiveReadWriteMutex::write_unlock*;
     mir::report::lttng::TracepointProvider::?TracepointProvider*;
     mir::report::lttng::TracepointProvider::TracepointProvider*;
+    mir::report::lttng::SharedLibraryProberReport::SharedLibraryProberReport*;
     mir::set_thread_name*;
     mir::SharedLibrary::load_symbol*;
     mir::SharedLibrary::?SharedLibrary*;
@@ -205,7 +206,12 @@ MIR_COMMON_3 {
 MIR_COMMON_3.1 {
   global:
     extern "C++" {
-      mir::log*;
+      mir_event_get*;
+      mir_event_get*;
+      mir_input_event_get*;
+      mir_key_input_event_get*;
+      mir_touch_input_event_get*;
+      mir::log*char*;
       mir::logv*;
       mir::libraries_for_path*;
     };

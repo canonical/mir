@@ -21,7 +21,7 @@
 #include "mir/graphics/platform.h"
 
 #ifndef ANDROID
-#include "src/platform/graphics/mesa/platform.h"
+#include "src/platforms/mesa/platform.h"
 #endif
 
 #include "src/server/report/null_report_factory.h"
@@ -35,7 +35,7 @@ namespace mtd = mir::test::doubles;
 auto mtd::create_platform_with_null_dependencies()
     -> std::shared_ptr<graphics::Platform>
 {
-    return graphics::create_platform(
+    return graphics::create_host_platform(
         std::make_shared<options::ProgramOption>(),
         std::make_shared<NullEmergencyCleanup>(),
         report::null_display_report());

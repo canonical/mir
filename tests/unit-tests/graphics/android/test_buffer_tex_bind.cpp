@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/android/buffer.h"
+#include "src/platforms/android/buffer.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_fence.h"

@@ -24,6 +24,7 @@ add_library(exampleserverconfig STATIC
   server_example_log_options.cpp
   server_example_input_filter.cpp
   server_example_fullscreen_placement_strategy.cpp
+  server_example_host_lifecycle_event.cpp
 )
 
 target_link_libraries(eglapp
@@ -140,12 +141,12 @@ target_link_libraries(mir_demo_standalone_render_to_fb
     ${Boost_LIBRARIES}
 )
 
-mir_add_wrapped_executable(mir_demo_server_basic
+mir_add_wrapped_executable(mir_demo_server
   server_example.cpp
   glog_logger.cpp
 )
 
-target_link_libraries(mir_demo_server_basic
+target_link_libraries(mir_demo_server
   mirserver
   exampleserverconfig
   ${GLog_LIBRARY}

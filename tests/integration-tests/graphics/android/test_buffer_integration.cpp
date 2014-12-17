@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
+#include "src/platforms/android/android_graphic_buffer_allocator.h"
 #include "src/server/compositor/buffer_queue.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/graphics/android/native_buffer.h"

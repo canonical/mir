@@ -17,10 +17,9 @@
  */
 
 #include "src/server/report/null_report_factory.h"
-#include "mir/graphics/native_platform.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/options/program_option.h"
-#include "src/platform/graphics/android/platform.h"
+#include "src/platforms/android/platform.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_buffer_ipc_message.h"
@@ -240,5 +239,5 @@ TEST(NestedPlatformCreation, doesnt_access_display_hardware)
     EXPECT_CALL(hwaccess, hw_get_module(StrEq(GRALLOC_HARDWARE_MODULE_ID), _))
         .Times(AtMost(1));
 
-    auto platform = mg::create_native_platform(mt::fake_shared(stub_report), nullptr);
+    auto platform = mg::create_guest_platform(mt::fake_shared(stub_report), nullptr);
 }

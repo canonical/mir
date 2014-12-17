@@ -15,7 +15,7 @@ be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
 2de47e2790d0f7643e23eada2d8aa2987f58d086  include/common/mir/logging/logger.h
 5ab81600183fdaca3fb949beb2307d1f6e4cbb61  include/common/mir/log.h
 9ae8473df05dd9e048a73797f01a2f34f7447554  include/common/mir/time/types.h
-1863a7fe3a382061f2752c0236cc971e7e68f93f  include/common/mir_toolkit/client_types.h
+23a009b06de7bac17d33d988dc8d968be8bc094a  include/common/mir_toolkit/client_types.h
 3e85c6d9dd1dca9767ea8bdf13ea6bbd1cb11c30  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 d71dddf6c4275ee423d3e0fa204e3b77b4d87401  include/common/mir_toolkit/event.h
@@ -41,12 +41,9 @@ f53a0020b8f1bd4a941a201eb26271cffee0a7dd  include/platform/mir/graphics/display_
 5dc095474ef3e294c0aa4008e9ed997bdb21d34c  include/platform/mir/graphics/gl_config.h
 d0442a5d5d88a4be6e3e1f99e433c1c43a86bfce  include/platform/mir/graphics/gl_context.h
 979d2c1ac723ccef538d9a378228a02b0f173bd7  include/platform/mir/graphics/graphic_buffer_allocator.h
-9bbe7eef3a470d7c2daf74de2943a2d03f80aa20  include/platform/mir/graphics/native_platform.h
-3bd5f663b62fd1e4be92518a27ed5a0f6a82f20b  include/platform/mir/graphics/platform.h
-3b3463d2513f4c3985f2400496dab333518f9a13  include/platform/mir/graphics/platform_ipc_operations.h
+7156a26d27aa5dfe104c9e5a5a1050ec843a578c  include/platform/mir/graphics/platform.h
+d1ba61e687d75103e9e7aa0409080214f56a990b  include/platform/mir/graphics/platform_ipc_operations.h
 1b77fb3290af00dc7d1c11dcc5388972dacb9ec3  include/platform/mir/graphics/platform_ipc_package.h
+f0db0484b8ccc9091e73c80a2a200cb436b48bfb  include/platform/mir/graphics/platform_operation_message.h
 84c063346b3bd51b4624d9f940008d4c3f8be066  include/platform/mir/graphics/renderable.h
-abeb45a8c6bfc81a12136f25e455e9803c32c10e  include/platform/mir/options/configuration.h
-47007c783c174f8e94d332c4b13c6b01358b48fb  include/platform/mir/options/default_configuration.h
 b45f14082c4f8b29efaa1b13de795dcb29deb738  include/platform/mir/options/option.h
-3c37cc31e8b290b89c311d82f02e07d342766451  include/platform/mir/options/program_option.h
