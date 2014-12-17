@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/android/hwc_configuration.h"
+#include "src/platforms/android/hwc_configuration.h"
 #include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -28,32 +28,35 @@ struct HwcConfiguration : public testing::Test
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_hwc_wrapper{
         std::make_shared<mtd::MockHWCDeviceWrapper>()};
     mga::HwcBlankingControl config{mock_hwc_wrapper};
+    mga::DisplayName display{mga::DisplayName::primary};
 };
 
 TEST_F(HwcConfiguration, turns_screen_on)
 {
     testing::InSequence seq;
-    EXPECT_CALL(*mock_hwc_wrapper, display_on(mga::DisplayName::primary));
-    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_on(mga::DisplayName::primary));
-    config.power_mode(mga::DisplayName::primary, mir_power_mode_on);
+    EXPECT_CALL(*mock_hwc_wrapper, display_on(display));
+    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_on(display));
+    config.power_mode(display, mir_power_mode_on);
 }
 
 TEST_F(HwcConfiguration, turns_screen_off_for_off_suspend_and_standby)
 {
     testing::InSequence seq;
-    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off(mga::DisplayName::primary));
-    EXPECT_CALL(*mock_hwc_wrapper, display_off(mga::DisplayName::primary));
-    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_on(mga::DisplayName::primary));
-    EXPECT_CALL(*mock_hwc_wrapper, display_on(mga::DisplayName::primary));
-    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off(mga::DisplayName::primary));
-    EXPECT_CALL(*mock_hwc_wrapper, display_off(mga::DisplayName::primary));
-    config.power_mode(mga::DisplayName::primary, mir_power_mode_off);
+    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off(display));
+    EXPECT_CALL(*mock_hwc_wrapper, display_off(display));
+    EXPECT_CALL(*mock_hwc_wrapper, display_on(display));
+    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_on(display));
+    EXPECT_CALL(*mock_hwc_wrapper, vsync_signal_off(display));
+    EXPECT_CALL(*mock_hwc_wrapper, display_off(display));
+    config.power_mode(display, mir_power_mode_off);
 
     //HWC version 1.3 and prior do not support anything more than on and off.
+    config.power_mode(display, mir_power_mode_suspend);
+    config.power_mode(display, mir_power_mode_off);
+    config.power_mode(display, mir_power_mode_standby);
+    config.power_mode(display, mir_power_mode_on);
+    config.power_mode(display, mir_power_mode_standby);
     //translate this into blanking the screen
-    config.power_mode(mga::DisplayName::primary, mir_power_mode_suspend);
-    config.power_mode(mga::DisplayName::primary, mir_power_mode_off);
-    config.power_mode(mga::DisplayName::primary, mir_power_mode_standby);
-    config.power_mode(mga::DisplayName::primary, mir_power_mode_on);
-    config.power_mode(mga::DisplayName::primary, mir_power_mode_standby);
+    config.power_mode(display, mir_power_mode_suspend);
+    config.power_mode(display, mir_power_mode_standby);
 }

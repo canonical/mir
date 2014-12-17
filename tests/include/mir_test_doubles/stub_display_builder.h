@@ -19,9 +19,9 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
-#include "src/platform/graphics/android/display_buffer_builder.h"
-#include "src/platform/graphics/android/hwc_configuration.h"
-#include "src/platform/graphics/android/configurable_display_buffer.h"
+#include "src/platforms/android/display_buffer_builder.h"
+#include "src/platforms/android/configurable_display_buffer.h"
+#include "src/platforms/android/hwc_configuration.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -45,17 +45,7 @@ struct StubConfigurableDisplayBuffer : public graphics::android::ConfigurableDis
     bool post_renderables_if_optimizable(graphics::RenderableList const&) { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal; }
     bool uses_alpha() const override { return false; };
-    void configure(graphics::DisplayConfigurationOutput const&) {} 
-    graphics::DisplayConfigurationOutput configuration() const
-    {
-        return graphics::DisplayConfigurationOutput{
-                   graphics::DisplayConfigurationOutputId{1},
-                   graphics::DisplayConfigurationCardId{0},
-                   graphics::DisplayConfigurationOutputType::vga,
-                   {}, {}, 0, {}, false, false, {}, 0, mir_pixel_format_abgr_8888, 
-                   mir_power_mode_off,
-                   mir_orientation_normal};
-    }
+    void configure(MirPowerMode, MirOrientation) {}
 private:
     geometry::Rectangle rect;
 };
@@ -69,7 +59,7 @@ struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
 {
     StubDisplayBuilder(geometry::Size sz)
         : sz(sz),
-          mock_config{new MockHwcConfiguration}
+          mock_config{new testing::NiceMock<MockHwcConfiguration>()}
     {
     }
 
@@ -93,7 +83,7 @@ struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
 
     std::unique_ptr<graphics::android::HwcConfiguration> create_hwc_configuration() override
     {
-        auto config = std::unique_ptr<MockHwcConfiguration>(new MockHwcConfiguration);
+        auto config = std::unique_ptr<MockHwcConfiguration>(new testing::NiceMock<MockHwcConfiguration>());
         std::swap(config, mock_config);
         return std::move(config);
     }

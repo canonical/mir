@@ -152,14 +152,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
     };
-    MirSurfaceParameters surfaceparm =
-    {
-        "eglappsurface",
-        256, 256,
-        mir_pixel_format_xbgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid
-    };
     MirEventDelegate delegate = 
     {
         mir_eglapp_handle_event,
@@ -170,6 +162,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     EGLContext eglctx;
     EGLBoolean ok;
     EGLint swapinterval = 1;
+    unsigned int output_id = mir_display_output_id_invalid;
     char *mir_socket = NULL;
     char const* cursor_name = mir_default_cursor_name;
 
@@ -210,16 +203,16 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
                     break;
                 case 'o':
                     {
-                        unsigned int output_id = 0;
+                        unsigned int the_id = 0;
                         arg += 2;
                         if (!arg[0] && i < argc-1)
                         {
                             i++;
                             arg = argv[i];
                         }
-                        if (sscanf(arg, "%u", &output_id) == 1)
+                        if (sscanf(arg, "%u", &the_id) == 1)
                         {
-                            surfaceparm.output_id = output_id;
+                            output_id = the_id;
                         }
                         else
                         {
@@ -318,7 +311,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     mir_connection_get_available_surface_formats(connection,
         format, mir_pixel_formats, &nformats);
 
-    surfaceparm.pixel_format = format[0];
+    MirPixelFormat pixel_format = format[0];
     for (unsigned int f = 0; f < nformats; f++)
     {
         const int opaque = (format[f] == mir_pixel_format_xbgr_8888 ||
@@ -328,7 +321,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         if ((mir_eglapp_background_opacity == 1.0f && opaque) ||
             (mir_eglapp_background_opacity < 1.0f && !opaque))
         {
-            surfaceparm.pixel_format = format[f];
+            pixel_format = format[f];
             break;
         }
     }
@@ -337,14 +330,16 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
            mode->horizontal_resolution, mode->vertical_resolution,
            output->position_x, output->position_y);
 
-    surfaceparm.width = *width > 0 ? *width : mode->horizontal_resolution;
-    surfaceparm.height = *height > 0 ? *height : mode->vertical_resolution;
+    if (*width == 0)
+        *width = mode->horizontal_resolution;
+    if (*height == 0)
+        *height = mode->vertical_resolution;
 
     mir_display_config_destroy(display_config);
 
     printf("Server supports %d of %d surface pixel formats. Using format: %d\n",
-        nformats, mir_pixel_formats, surfaceparm.pixel_format);
-    unsigned int bpp = 8 * MIR_BYTES_PER_PIXEL(surfaceparm.pixel_format);
+        nformats, mir_pixel_formats, pixel_format);
+    unsigned int bpp = 8 * MIR_BYTES_PER_PIXEL(pixel_format);
     EGLint attribs[] =
     {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -354,7 +349,18 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
         EGL_NONE
     };
 
-    surface = mir_connection_create_surface_sync(connection, &surfaceparm);
+    MirSurfaceSpec *spec =
+        mir_connection_create_spec_for_normal_surface(connection, *width, *height, pixel_format);
+
+    CHECK(spec != NULL, "Can't create a surface spec");
+
+    mir_surface_spec_set_name(spec, "eglappsurface");
+    if (output_id != mir_display_output_id_invalid)
+        mir_surface_spec_set_fullscreen_on_output(spec, output_id);
+
+    surface = mir_surface_create_sync(spec);
+    mir_surface_spec_release(spec);
+
     CHECK(mir_surface_is_valid(surface), "Can't create a surface");
 
     mir_surface_set_event_handler(surface, &delegate);
@@ -389,9 +395,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char *argv[],
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
     signal(SIGHUP, shutdown);
-
-    *width = surfaceparm.width;
-    *height = surfaceparm.height;
 
     printf("Surface %d DPI\n", mir_surface_get_dpi(surface));
     eglSwapInterval(egldisplay, swapinterval);

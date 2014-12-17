@@ -71,6 +71,7 @@ namespace mo = mir::options;
     MACRO(the_focus_controller)\
     MACRO(the_gl_config)\
     MACRO(the_graphics_platform)\
+    MACRO(the_logger)\
     MACRO(the_main_loop)\
     MACRO(the_prompt_session_listener)\
     MACRO(the_session_authorizer)\

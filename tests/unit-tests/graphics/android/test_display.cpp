@@ -19,7 +19,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/logging/logger.h"
-#include "src/platform/graphics/android/display.h"
+#include "src/platforms/android/display.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/mock_display_device.h"
@@ -278,20 +278,14 @@ TEST_F(Display, turns_on_db_at_construction_and_off_at_destruction)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report);
-
-    auto config = display.configuration();
-    config->for_each_output([](mg::DisplayConfigurationOutput const& c){
-        EXPECT_EQ(mir_power_mode_on, c.power_mode);
-    });
 }
 
 TEST_F(Display, first_power_on_is_not_fatal) //lp:1345533
 {
     stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
     {
-        testing::InSequence seq;
-        EXPECT_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_on))
-            .WillOnce(testing::Throw(std::runtime_error("")));
+        ON_CALL(mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_on))
+            .WillByDefault(testing::Throw(std::runtime_error("")));
     });
 
     EXPECT_NO_THROW({

@@ -1,3 +1,22 @@
+mir (0.10.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.10.0 (https://launchpad.net/mir/+milestone/0.10.0)
+    - Enhancements:
+      . Added support for Android HWC 1.3 devices.
+      . Reduced build dependencies.
+      . Client API: Added version macros.
+      . demo-shell: Added desktop zoom feature (Super + mouse wheel).
+      . TODO - more
+    - ABI summary: Servers need rebuilding, but clients do not;
+      . Mirclient ABI unchanged at 8
+      . Mircommon ABI unchanged at 3
+      . Mirplatform ABI bumped to 5 
+      . Mirserver ABI bumped to 28
+    - Bug fixes:
+      . TODO - fill this in just before release
+ 
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 12 Dec 2014 14:33:12 +0800
+
 mir (0.9.0+15.04.20141125-0ubuntu1) vivid; urgency=medium
 
   [ Alberto Aguirre ]

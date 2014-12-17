@@ -294,6 +294,9 @@ public:
     /// \return the graphics platform.
     auto the_graphics_platform() const -> std::shared_ptr<graphics::Platform>;
 
+    /// \return the logger.
+    auto the_logger() const -> std::shared_ptr<logging::Logger>;
+
     /// \return the main loop.
     auto the_main_loop() const -> std::shared_ptr<MainLoop>;
 
