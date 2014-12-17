@@ -230,10 +230,6 @@ bool mgm::DisplayBuffer::post_update(
     /*
      * Switching from bypass to compositing? Now is the earliest safe time
      * we can unreference the bypass buffer...
-     * Note that bypass buffers are owned by the server/client and not by
-     * us. So we do NOT release() them here. This also means the attached
-     * framebuffer object may linger for some time until the client/server
-     * gets around to releasing the buffer.
      */
     if (scheduled_bufobj)
         last_flipped_bypass_buf = nullptr;
