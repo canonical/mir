@@ -28,7 +28,6 @@
 
 #include <chrono>
 #include <functional>
-#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -44,7 +43,6 @@ struct StubBufferWriter : public mg::BufferWriter
     {
     }
 };
-
 
 struct StubDisplayBuffer : mtd::StubDisplayBuffer
 {
