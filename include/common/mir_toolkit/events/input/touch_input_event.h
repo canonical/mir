@@ -85,6 +85,14 @@ typedef enum {
 } MirTouchInputEventTouchTooltype;
 
 /**
+ * Retrieve the modifier keys pressed when the touch action occured.
+ *
+ *   \param [in] event The key event
+ *   \return           The modifier mask
+ */
+MirInputEventModifiers mir_touch_input_event_get_modifiers(MirTouchInputEvent const* event);
+
+/**
  * Retrieve the number of touches reported for a given touch event. Each touch
  * is said to be index in the event and may be accessed by index 0, 1, ... , (touch_count - 1)
  *
