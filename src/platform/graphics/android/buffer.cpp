@@ -141,6 +141,8 @@ std::shared_ptr<mg::NativeBuffer> mga::Buffer::native_buffer_handle() const
 
 void mga::Buffer::write(unsigned char const* data, size_t data_size)
 {
+    auto const& handle = native_buffer_handle();
+
     std::unique_lock<std::mutex> lk(content_lock);
 
     native_buffer->ensure_available_for(mga::BufferAccess::write);
@@ -150,8 +152,6 @@ void mga::Buffer::write(unsigned char const* data, size_t data_size)
     if (buffer_size_bytes != data_size)
         BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
 
-    auto const& handle = native_buffer_handle();
-    
     char* vaddr;
     int usage = GRALLOC_USAGE_SW_WRITE_OFTEN;
     int width = size().width.as_uint32_t();
