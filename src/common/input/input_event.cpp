@@ -187,50 +187,50 @@ int mir_key_input_event_get_scan_code(MirKeyInputEvent const* kev)
 
 namespace
 {
-MirKeyInputEventModifiers old_modifiers_to_new(MirKeyModifier old_modifier)
+MirInputEventModifiers old_modifiers_to_new(MirKeyModifier old_modifier)
 {
     unsigned modifier = 0;
 
     if (old_modifier & mir_key_modifier_none)
-        modifier |= mir_key_input_event_modifier_none;
+        modifier |= mir_input_event_modifier_none;
     if (old_modifier & mir_key_modifier_alt)
-        modifier |= mir_key_input_event_modifier_alt;
+        modifier |= mir_input_event_modifier_alt;
     if (old_modifier & mir_key_modifier_alt_left)
-        modifier |= mir_key_input_event_modifier_alt_left;
+        modifier |= mir_input_event_modifier_alt_left;
     if (old_modifier & mir_key_modifier_alt_right)
-        modifier |= mir_key_input_event_modifier_alt_right;
+        modifier |= mir_input_event_modifier_alt_right;
     if (old_modifier & mir_key_modifier_shift)
-        modifier |= mir_key_input_event_modifier_shift;
+        modifier |= mir_input_event_modifier_shift;
     if (old_modifier & mir_key_modifier_shift_left)
-        modifier |= mir_key_input_event_modifier_shift_left;
+        modifier |= mir_input_event_modifier_shift_left;
     if (old_modifier & mir_key_modifier_shift_right)
-        modifier |= mir_key_input_event_modifier_shift_right;
+        modifier |= mir_input_event_modifier_shift_right;
     if (old_modifier & mir_key_modifier_sym)
-        modifier |= mir_key_input_event_modifier_sym;
+        modifier |= mir_input_event_modifier_sym;
     if (old_modifier & mir_key_modifier_function)
-        modifier |= mir_key_input_event_modifier_function;
+        modifier |= mir_input_event_modifier_function;
     if (old_modifier & mir_key_modifier_ctrl)
-        modifier |= mir_key_input_event_modifier_ctrl;
+        modifier |= mir_input_event_modifier_ctrl;
     if (old_modifier & mir_key_modifier_ctrl_left)
-        modifier |= mir_key_input_event_modifier_ctrl_left;
+        modifier |= mir_input_event_modifier_ctrl_left;
     if (old_modifier & mir_key_modifier_ctrl_right)
-        modifier |= mir_key_input_event_modifier_ctrl_right;
+        modifier |= mir_input_event_modifier_ctrl_right;
     if (old_modifier & mir_key_modifier_meta)
-        modifier |= mir_key_input_event_modifier_meta;
+        modifier |= mir_input_event_modifier_meta;
     if (old_modifier & mir_key_modifier_meta_left)
-        modifier |= mir_key_input_event_modifier_meta_left;
+        modifier |= mir_input_event_modifier_meta_left;
     if (old_modifier & mir_key_modifier_meta_right)
-        modifier |= mir_key_input_event_modifier_meta_right;
+        modifier |= mir_input_event_modifier_meta_right;
     if (old_modifier & mir_key_modifier_caps_lock)
-        modifier |= mir_key_input_event_modifier_caps_lock;
+        modifier |= mir_input_event_modifier_caps_lock;
     if (old_modifier & mir_key_modifier_num_lock)
-        modifier |= mir_key_input_event_modifier_num_lock;
+        modifier |= mir_input_event_modifier_num_lock;
     if (old_modifier & mir_key_modifier_scroll_lock)
-        modifier |= mir_key_input_event_modifier_scroll_lock;
-    return static_cast<MirKeyInputEventModifiers>(modifier);
+        modifier |= mir_input_event_modifier_scroll_lock;
+    return static_cast<MirInputEventModifiers>(modifier);
 }
 }
-MirKeyInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const* kev)
+MirInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const* kev)
 {    auto const& old_kev = old_kev_from_new(kev);
     return old_modifiers_to_new(static_cast<MirKeyModifier>(old_kev.modifiers));
 }
