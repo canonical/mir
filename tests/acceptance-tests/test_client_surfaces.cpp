@@ -19,8 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 
-#include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/any_surface.h"
 
 #include <gmock/gmock.h>
@@ -66,10 +65,19 @@ struct SurfaceSync
     MirSurface * surface{nullptr};
 };
 
-struct ClientSurfaces : mtf::BasicClientServerFixture<mtf::StubbedServerConfiguration>
+struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
 {
     static const int max_surface_count = 5;
     SurfaceSync ssync[max_surface_count];
+
+    MirSurfaceParameters surface_params
+    {
+        "Arbitrary surface name",
+        640, 480,
+        mir_pixel_format_abgr_8888,
+        mir_buffer_usage_hardware,
+        mir_display_output_id_invalid
+    };
 };
 
 extern "C" void create_surface_callback(MirSurface* surface, void * context)
