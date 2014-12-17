@@ -16,9 +16,9 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/android/display_buffer.h"
-#include "src/platform/graphics/android/gl_context.h"
-#include "src/platform/graphics/android/android_format_conversion-inl.h"
+#include "src/platforms/android/display_buffer.h"
+#include "src/platforms/android/gl_context.h"
+#include "src/platforms/android/android_format_conversion-inl.h"
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/stub_renderable.h"

@@ -93,7 +93,7 @@ dd8f054f786b9746d9e513f2656e931234b5283a  include/server/mir/scene/surface_creat
 7da48dbedb4430ce322a50ef8f4e93ce08bdf147  include/server/mir/scene/surface.h
 587e22d751656ce2d9536afdf5659276ff9bbc46  include/server/mir/scene/surface_observer.h
 7ef3e99901168cda296d74d05a979f47bf9c3ff1  include/server/mir/server_action_queue.h
-e56a255135af4099001b7e31f76530b40d3bd7fa  include/server/mir/server.h
+3f61714a65f816acbd26377e31222c410527753a  include/server/mir/server.h
 86098b500339bfccd07a9bed8298f75a68b18f5c  include/server/mir/server_status_listener.h
 860c04f32b60e680140148dc9dc2295de145b9c1  include/server/mir/shell/display_layout.h
 6a2107b01feae13060d5c305804906e53c52e0be  include/server/mir/shell/focus_controller.h

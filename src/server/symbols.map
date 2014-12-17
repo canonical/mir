@@ -447,6 +447,7 @@ MIR_SERVER_28 {
     mir::Server::the_focus_controller*;
     mir::Server::the_gl_config*;
     mir::Server::the_graphics_platform*;
+    mir::Server::the_logger*;
     mir::Server::the_main_loop*;
     mir::Server::the_prompt_session_listener*;
     mir::Server::the_prompt_session_manager*;
