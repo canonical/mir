@@ -352,6 +352,17 @@ TEST_F(Display, configures_display_buffer_power_modes)
 //we only have single display and single mode on android for the time being
 TEST_F(Display, supports_one_output_configuration)
 {
+    using namespace testing;
+    geom::Size pixel_size{344, 111};
+    geom::Size physical_size{4230, 2229};
+    double vrefresh{4442.32};
+
+    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
+    {
+        ON_CALL(mock_config, active_attribs_for(_))
+            .WillByDefault(Return(mga::DisplayAttribs{pixel_size, physical_size, vrefresh, true}));
+    });
+
     mga::Display display(
         stub_db_factory,
         stub_gl_program_factory,
@@ -363,8 +374,9 @@ TEST_F(Display, supports_one_output_configuration)
     config->for_each_output([&](mg::DisplayConfigurationOutput const& disp_conf)
     {
         ASSERT_EQ(1u, disp_conf.modes.size());
-//        auto& disp_mode = disp_conf.modes[0];
-//        EXPECT_EQ(display_size, disp_mode.size);
+        auto& disp_mode = disp_conf.modes[0];
+        EXPECT_EQ(pixel_size, disp_mode.size);
+        EXPECT_EQ(vrefresh, disp_mode.vrefresh_hz);
 
         EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id);
         EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id);
@@ -373,9 +385,7 @@ TEST_F(Display, supports_one_output_configuration)
         auto origin = geom::Point{0,0};
         EXPECT_EQ(origin, disp_conf.top_left);
         EXPECT_EQ(0, disp_conf.current_mode_index);
-
-//        EXPECT_EQ(refresh_rate, disp_mode.vrefresh_hz);
-        //TODO fill physical_size_mm fields accordingly;
+        EXPECT_EQ(physical_size, disp_conf.physical_size_mm);
         num_configs++;
     });
 
