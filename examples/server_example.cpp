@@ -22,6 +22,7 @@
 #include "server_example_fullscreen_placement_strategy.h"
 #include "server_example_display_configuration_policy.h"
 #include "server_example_host_lifecycle_event_listener.h"
+#include "server_example_test_client.h"
 
 #include "mir/server.h"
 #include "mir/main_loop.h"
@@ -31,7 +32,6 @@
 
 #include <chrono>
 #include <cstdlib>
-#include <csignal>
 
 namespace me = mir::examples;
 
@@ -53,39 +53,6 @@ void add_launcher_option_to(mir::Server& server)
         {
             auto ignore = std::system((options->get<std::string>(launch_child_opt) + "&").c_str());
             (void)(ignore);
-        }
-    });
-}
-
-void add_test_client_option_to(mir::Server& server)
-{
-    static const char* const test_client_opt = "test-client";
-    static const char* const test_client_descr = "client executable";
-
-    static const char* const test_timeout_opt = "test-timeout";
-    static const char* const test_timeout_descr = "Seconds to run before terminating client";
-
-    server.add_configuration_option(test_client_opt, test_client_descr, mir::OptionType::string);
-    server.add_configuration_option(test_timeout_opt, test_timeout_descr, 10);
-
-    server.add_init_callback([&]
-    {
-        const auto options = server.get_options();
-        if (options->is_set(test_client_opt))
-        {
-            auto const pid = fork();
-
-            if (pid == 0)
-            {
-                auto const client = options->get<std::string>(test_client_opt).c_str();
-                execl(client, client, static_cast<char const*>(nullptr));
-            }
-            else if (pid > 0)
-            {
-                static auto const kill_action = server.the_main_loop()->notify_in(
-                    std::chrono::seconds(options->get<int>(test_timeout_opt)),
-                    [pid]{ kill(pid, SIGTERM); });
-            }
         }
     });
 }
@@ -126,12 +93,21 @@ try
     me::add_fullscreen_option_to(server);
     add_launcher_option_to(server);
     add_timeout_option_to(server);
-    add_test_client_option_to(server);
+
+    std::atomic<bool> test_failed{false};
+    me::add_test_client_option_to(server, test_failed);
+
+    // If the test failed already: give up
+    if (test_failed) return EXIT_FAILURE;
 
     // Provide the command line and run the server
     server.set_command_line(argc, argv);
     server.apply_settings();
     server.run();
+
+    // Propagate any test failure
+    if (test_failed) return EXIT_FAILURE;
+
     return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 catch (...)
