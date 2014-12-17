@@ -146,7 +146,7 @@ TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
         mock_egl.fake_egl_context);
 
     EXPECT_FALSE(db.post_renderables_if_optimizable(bypassable_list));
-    // And then we recover. DRM finds enough resources too AddFB ...
+    // And then we recover. DRM finds enough resources to AddFB ...
     EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
 }
 
