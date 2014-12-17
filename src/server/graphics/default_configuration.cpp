@@ -45,6 +45,7 @@
 #include <map>
 
 namespace mg = mir::graphics;
+namespace ml = mir::logging;
 namespace mgn = mir::graphics::nested;
 
 namespace
@@ -70,33 +71,6 @@ mir::DefaultServerConfiguration::wrap_display_configuration_policy(
 {
     return wrapped;
 }
-
-namespace
-{
-namespace ml = mir::logging;
-
-class LoggingSharedLibraryReport : public mir::SharedLibraryProberReport
-{
-public:
-    void probing_path(boost::filesystem::path const& path) override
-    {
-        ml::log(ml::Severity::informational, std::string{"Scanning for platform libraries in "} + path.c_str(), "Platform Loader");
-    }
-    void probing_failed(boost::filesystem::path const& path, std::exception const& error) override
-    {
-        ml::log(ml::Severity::warning, std::string{"Failed to scan "} + path.c_str() + ": " + error.what(), "Platform Loader");
-    }
-    void loading_library(boost::filesystem::path const& filename) override
-    {
-        ml::log(ml::Severity::informational, std::string{"Loading library "} + filename.c_str(), "Platform Loader");
-    }
-    void loading_failed(boost::filesystem::path const& filename, std::exception const& error) override
-    {
-        ml::log(ml::Severity::warning, std::string{"Failed to load "} + filename.c_str() + ": " + error.what(), "Platform Loader");
-    }
-};
-}
-
 
 namespace
 {
@@ -141,9 +115,8 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
             }
             else
             {
-                LoggingSharedLibraryReport report;
                 auto const& path = the_options()->get<std::string>(options::platform_graphics_path);
-                auto platforms = mir::libraries_for_path(path, report);
+                auto platforms = mir::libraries_for_path(path, *the_shared_library_prober_report());
                 if (platforms.empty())
                 {
                     auto msg = "Failed to find any platform plugins in: " + path;

@@ -22,6 +22,7 @@
 #include "mir/default_configuration.h"
 #include "mir/abnormal_exit.h"
 #include "mir/shared_library_prober.h"
+#include "mir/logging/null_shared_library_prober_report.h"
 #include "mir/graphics/platform_probe.h"
 
 #include <dlfcn.h>
@@ -40,6 +41,7 @@ char const* const mo::legacy_input_report_opt     = "legacy-input-report";
 char const* const mo::connector_report_opt        = "connector-report";
 char const* const mo::scene_report_opt            = "scene-report";
 char const* const mo::input_report_opt            = "input-report";
+char const* const mo::shared_library_prober_report_opt = "shared-library-prober-report";
 char const* const mo::host_socket_opt             = "host-socket";
 char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
@@ -138,6 +140,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the MessageProcessor report. [{log,lttng,off}]")
         (scene_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the scene report. [{log,lttng,off}]")
+        (shared_library_prober_report_opt, po::value<std::string>()->default_value(off_opt_value),
+            "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
         (frontend_threads_opt, po::value<int>()->default_value(default_ipc_threads),
             "threads in frontend thread pool.")
         (name_opt, po::value<std::string>(),
@@ -153,26 +157,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (use_asio_main_loop_opt, "Use the ASIO main loop implementation");
 
         add_platform_options();
-}
-
-namespace
-{
-class NullSharedLibraryProberReport : public mir::SharedLibraryProberReport
-{
-public:
-    void probing_path(boost::filesystem::path const& /*path*/) override
-    {
-    }
-    void probing_failed(boost::filesystem::path const& /*path*/, std::exception const& /*error*/) override
-    {
-    }
-    void loading_library(boost::filesystem::path const& /*filename*/) override
-    {
-    }
-    void loading_failed(boost::filesystem::path const& /*filename*/, std::exception const& /*error*/) override
-    {
-    }
-};
 }
 
 void mo::DefaultConfiguration::add_platform_options()
@@ -206,9 +190,9 @@ void mo::DefaultConfiguration::add_platform_options()
         }
         else
         {
+            mir::logging::NullSharedLibraryProberReport null_report;
             auto const plugin_path = env_libpath ? env_libpath : options.get<std::string>(platform_graphics_path);
-            NullSharedLibraryProberReport nuller;
-            auto plugins = mir::libraries_for_path(plugin_path, nuller);
+            auto plugins = mir::libraries_for_path(plugin_path, null_report);
             platform_graphics_library = mir::graphics::module_for_device(plugins);
         }
 
