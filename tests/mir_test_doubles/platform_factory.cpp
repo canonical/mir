@@ -21,7 +21,7 @@
 #include "mir/graphics/platform.h"
 
 #ifndef ANDROID
-#include "src/platform/graphics/mesa/platform.h"
+#include "src/platforms/mesa/platform.h"
 #endif
 
 #include "src/server/report/null_report_factory.h"
