@@ -22,8 +22,8 @@
 //
 // ==================================
 
-#ifndef MIR_TOOLKIT_EVENT_PRIVATE_H_
-#define MIR_TOOLKIT_EVENT_PRIVATE_H_
+#ifndef MIR_TOOLKIT_EVENT_DEPRECATED_H_
+#define MIR_TOOLKIT_EVENT_DEPRECATED_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -252,4 +252,4 @@ union MirEvent
 /**@}*/
 #endif
 
-#endif /* MIR_TOOLKIT_EVENT_PRIVATE_H_ */
+#endif /* MIR_TOOLKIT_EVENT_DEPRECATED_H_ */
