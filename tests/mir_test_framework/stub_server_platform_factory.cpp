@@ -40,7 +40,7 @@ void ensure_platform_library()
 {
     if (!platform_lib)
     {
-        platform_lib = new mir::SharedLibrary{mtf::library_path() + "/server-modules/graphics-dummy.so"};
+        platform_lib = new mir::SharedLibrary{mtf::server_platform("graphics-dummy.so")};
     }
 }
 }
