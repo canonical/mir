@@ -29,7 +29,7 @@
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/cursor.h"
-#include "src/platform/graphics/platform_probe.h"
+#include "mir/graphics/platform_probe.h"
 #include "program_factory.h"
 
 #include "mir/shared_library.h"

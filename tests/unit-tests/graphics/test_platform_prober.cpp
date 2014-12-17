@@ -18,8 +18,8 @@
 
 #include <gtest/gtest.h>
 
-#include "src/platform/graphics/platform_probe.h"
 #include "mir/graphics/platform.h"
+#include "mir/graphics/platform_probe.h"
 
 #include "mir/raii.h"
 

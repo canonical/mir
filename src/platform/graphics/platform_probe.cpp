@@ -18,7 +18,7 @@
 
 #include "mir/logging/logger.h"
 #include "mir/graphics/platform.h"
-#include "platform_probe.h"
+#include "mir/graphics/platform_probe.h"
 
 #include <string>
 #include <boost/throw_exception.hpp>
