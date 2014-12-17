@@ -140,6 +140,24 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev);
 MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev);
 
 /*
+ * 
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * _________________________
+ *< Don't use mir_event_ref >
+ *-------------------------
+ *       \   ^__^
+ *        \  (oo)\_______
+*            (__)\       )\/\
+ *                ||----w |
+ *                ||     || 
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * NOTICE: mir_event_ref and mir_event_unref are implemented in terms of copy until 
+ * such point whereas direct MirEvent access as deprecated. This means you must
+ * use the return value as your new reference 
+ *
+ */
+
+/*
  * Reference this MirEvent and return a pointer to the
  * newly referenced instance
  *
