@@ -22,6 +22,7 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "error_connections.h"
+#include "mir/require.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <functional>
@@ -57,8 +58,8 @@ MirSurfaceSpec* mir_connection_create_spec_for_menu_surface(MirConnection* conne
                                                             MirRectangle* rect,
                                                             MirPixelFormat format)
 {
-    if (!mir_surface_is_valid(parent)) abort();
-    if (!rect) abort();
+    mir::require(mir_surface_is_valid(parent));
+    mir::require(rect != nullptr);
 
     auto spec = new MirSurfaceSpec;
     spec->connection = connection;
