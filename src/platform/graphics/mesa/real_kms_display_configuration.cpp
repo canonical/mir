@@ -277,16 +277,17 @@ bool mgm::operator==(mgm::RealKMSDisplayConfiguration const& conf1, mgm::RealKMS
     if (compatible)
     {
         unsigned int const count = conf1.outputs.size();
-        auto copy_conf2 = conf2;
 
         for (unsigned int i = 0; i < count; ++i)
         {
-            compatible &= (conf1.outputs[i].power_mode == copy_conf2.outputs[i].power_mode);
+            compatible &= (conf1.outputs[i].power_mode == conf2.outputs[i].power_mode);
             if (compatible)
             {
+                auto clone = conf2.outputs[i];
+
                 // ignore difference in orientation
-                copy_conf2.outputs[i].orientation = conf1.outputs[i].orientation;
-                compatible &= (conf1.outputs[i] == copy_conf2.outputs[i]);
+                clone.orientation = conf1.outputs[i].orientation;
+                compatible &= (conf1.outputs[i] == clone);
             }
             else
             	break;

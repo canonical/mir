@@ -402,3 +402,4 @@ void mgm::DisplayBuffer::schedule_set_crtc()
 {
     needs_set_crtc = true;
 }
+
