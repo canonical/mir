@@ -97,9 +97,6 @@ try
     std::atomic<bool> test_failed{false};
     me::add_test_client_option_to(server, test_failed);
 
-    // If the test failed already: give up
-    if (test_failed) return EXIT_FAILURE;
-
     // Provide the command line and run the server
     server.set_command_line(argc, argv);
     server.apply_settings();

@@ -93,8 +93,7 @@ void me::add_test_client_option_to(mir::Server& server, std::atomic<bool>& test_
             }
             else
             {
-                ml::log(ml::Severity::informational, "Client failed to launch", component);
-                test_failed = true;
+                BOOST_THROW_EXCEPTION(std::runtime_error("Client failed to launch"));
             }
         }
     });
