@@ -34,7 +34,7 @@ fd6d86becfa5ffa367480fd2654180f6ffcbf059  include/common/mir_toolkit/input/touch
 ffa857f624f1c8cbd50a190107137346fc3204d6  include/platform/mir/graphics/cursor.h
 fe2b5f13ccd3ec6b78d90d3abbb7d88b48238578  include/platform/mir/graphics/cursor_image.h
 986f5d0d8ea2c6a42cc320f468e682f81fec46ae  include/platform/mir/graphics/display_buffer.h
-4e15b5c314e26ceb17b52e3ffc36646794625c01  include/platform/mir/graphics/display_configuration.h
+f53a0020b8f1bd4a941a201eb26271cffee0a7dd  include/platform/mir/graphics/display_configuration.h
 6fe08da318c920b0d20ea8b8f560f5ac7ed389fe  include/platform/mir/graphics/display_configuration_policy.h
 41ea906d208b761e3d5d5056095de9de2d4ffa17  include/platform/mir/graphics/display.h
 815405c5aee8000bc18c1c9480bac620a451b416  include/platform/mir/graphics/event_handler_register.h
