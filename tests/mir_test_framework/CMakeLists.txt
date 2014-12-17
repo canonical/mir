@@ -113,6 +113,7 @@ target_link_libraries(
 
   mir-test-framework
   mir-test-doubles
+  ${UMOCKDEV_LDFLAGS} ${UMOCKDEV_LIBRARIES}
 )
 
 set_target_properties(
