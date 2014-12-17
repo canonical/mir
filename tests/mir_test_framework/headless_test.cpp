@@ -30,7 +30,7 @@ namespace mtf = mir_test_framework;
 
 mtf::HeadlessTest::HeadlessTest()
 {
-    add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", (mtf::library_path() + "/server-modules/graphics-dummy.so").c_str());
+    add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-dummy.so").c_str());
 }
 
 mtf::HeadlessTest::~HeadlessTest() noexcept = default;
