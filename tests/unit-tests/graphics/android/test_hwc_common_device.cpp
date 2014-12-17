@@ -45,7 +45,7 @@ namespace
 {
 struct MockDisplayConfiguration : mga::HwcConfiguration
 {
-    MOCK_METHOD1(power_mode, void(MirPowerMode));
+    MOCK_METHOD2(power_mode, void(mga::DisplayName, MirPowerMode));
 };
 }
 
@@ -124,7 +124,7 @@ TYPED_TEST(HWCCommon, registers_hooks_before_turning_on_display)
     Sequence seq;
     EXPECT_CALL(*this->mock_device, register_hooks(_))
         .InSequence(seq);
-    EXPECT_CALL(*this->mock_config, power_mode(mir_power_mode_on))
+    EXPECT_CALL(*this->mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_on))
         .InSequence(seq);
 
     auto device = this->make_display_device();
@@ -134,14 +134,14 @@ TYPED_TEST(HWCCommon, registers_hooks_before_turning_on_display)
 TYPED_TEST(HWCCommon, test_hwc_display_is_deactivated_on_destroy)
 {
     auto device = this->make_display_device();
-    EXPECT_CALL(*this->mock_config, power_mode(mir_power_mode_off));
+    EXPECT_CALL(*this->mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_off));
     device.reset();
 }
 
 TYPED_TEST(HWCCommon, catches_exception_during_destruction)
 {
     auto device = this->make_display_device();
-    EXPECT_CALL(*this->mock_config, power_mode(mir_power_mode_off))
+    EXPECT_CALL(*this->mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_off))
         .WillOnce(testing::Throw(std::runtime_error("")));
     device.reset();
 }
@@ -173,7 +173,7 @@ TYPED_TEST(HWCCommon, set_orientation)
 
 TYPED_TEST(HWCCommon, first_power_on_is_not_fatal) //lp:1345533
 {
-    ON_CALL(*this->mock_config, power_mode(mir_power_mode_on))
+    ON_CALL(*this->mock_config, power_mode(testing::_, mir_power_mode_on))
         .WillByDefault(testing::Throw(std::runtime_error("error")));
     EXPECT_NO_THROW({
         auto device = this->make_display_device();
