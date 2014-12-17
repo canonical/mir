@@ -19,6 +19,7 @@ add_library(mirsharedlogging OBJECT
   input_timestamp.cpp
   shared_library_prober_report.cpp
   logger.cpp
+  require.cpp
 )
 
 list(APPEND MIR_COMMON_SOURCES

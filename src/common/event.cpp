@@ -16,10 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#define MIR_LOG_COMPONENT "event-access"
-
 #include "mir/event_type_to_string.h"
-#include "mir/log.h"
+#include "mir/logging/require.h"
 
 #include "mir_toolkit/events/event.h"
 #include "mir_toolkit/events/event_private.h"
@@ -38,12 +36,8 @@ namespace
 template <typename EventType>
 void expect_event_type(EventType const* ev, MirEventType t)
 {
-    if (ev->type != t)
-    {
-        mir::log_critical("Expected " + mir::event_type_to_string(t) + " but event is of type " +
-            mir::event_type_to_string(ev->type));
-        abort();
-    }
+    MIR_REQUIRE(ev->type == t, "Expected " + mir::event_type_to_string(t) + " but event is of type " +
+                mir::event_type_to_string(ev->type));
 }
 }
 
@@ -87,12 +81,9 @@ MirEventType mir_event_get_type(MirEvent const* ev)
 
 MirInputEvent const* mir_event_get_input_event(MirEvent const* ev)
 {
-    if (ev->type != mir_event_type_key && ev->type != mir_event_type_motion)
-    {
-        mir::log_critical("Expected input event but event is of type " +
-            mir::event_type_to_string(ev->type));
-        abort();
-    }
+    MIR_REQUIRE(ev->type == mir_event_type_key || ev->type == mir_event_type_motion,
+        "Expected input event but event is of type " +
+                mir::event_type_to_string(ev->type));
 
     return reinterpret_cast<MirInputEvent const*>(ev);
 }
