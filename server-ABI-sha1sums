@@ -16,7 +16,7 @@ be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
 5ab81600183fdaca3fb949beb2307d1f6e4cbb61  include/common/mir/log.h
 9ae8473df05dd9e048a73797f01a2f34f7447554  include/common/mir/time/types.h
 23a009b06de7bac17d33d988dc8d968be8bc094a  include/common/mir_toolkit/client_types.h
-3e85c6d9dd1dca9767ea8bdf13ea6bbd1cb11c30  include/common/mir_toolkit/common.h
+c7c708734715a6d1b6fb2652584adb912071a518  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 d71dddf6c4275ee423d3e0fa204e3b77b4d87401  include/common/mir_toolkit/event.h
 49403c824f69fa1cc1f58bf5fe635639148765eb  include/common/mir_toolkit/input/input_event.h
@@ -79,11 +79,11 @@ cacb23805002e87fc6c4cb3e28bc77e800854cf1  include/server/mir/scene/null_session_
 d5273f3363b0b776427d5e3f1af99f0f2bcf3fa6  include/server/mir/scene/observer.h
 10db25fbaefcabb3b191177ed70f5972df7f05f0  include/server/mir/scene/placement_strategy.h
 74f7f66ffc3e15c428082fb961e748cb4f39dafc  include/server/mir/scene/prompt_session_creation_parameters.h
-4e8269c822ad2daddd92115cbe5332caaa9ef4cc  include/server/mir/scene/prompt_session.h
-79adf11e2b1778897ed97d1713ba4c3d34eb1f31  include/server/mir/scene/prompt_session_listener.h
-27f614f98ad7c249d9b12dcca30a324220cdd25b  include/server/mir/scene/prompt_session_manager.h
+b657cfb8fb31140b83b78fc19135dd0165ede67b  include/server/mir/scene/prompt_session.h
+a745a63d413ced63b82350b8c253b65dffd5bf44  include/server/mir/scene/prompt_session_listener.h
+a09a3f18ecea53dc45386c1e2baf545c4177c047  include/server/mir/scene/prompt_session_manager.h
 5edf446380070f567500069e422d293e88468ee5  include/server/mir/scene/session_coordinator.h
-f148a69caa39756d43cfaf7cc868ad681bda9ef6  include/server/mir/scene/session.h
+cf13a79b20acf9e53db6e0078df085b9a023d8da  include/server/mir/scene/session.h
 ee94083f10f890e24c0e0bbdb94842e2dd788deb  include/server/mir/scene/session_listener.h
 7f5f26000fd2312373817d05c488a6a950a47c82  include/server/mir/scene/snapshot.h
 5bab4dc0a6488b8b9d47e958c6bab94f1dcf2c57  include/server/mir/scene/surface_buffer_access.h
