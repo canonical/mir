@@ -141,9 +141,7 @@ std::shared_ptr<mg::NativeBuffer> mga::Buffer::native_buffer_handle() const
 
 void mga::Buffer::write(unsigned char const* data, size_t data_size)
 {
-    auto const& handle = native_buffer_handle();
-
-    std::unique_lock<std::mutex> lk(content_lock);
+    auto handle = native_buffer_handle();
 
     native_buffer->ensure_available_for(mga::BufferAccess::write);
     
