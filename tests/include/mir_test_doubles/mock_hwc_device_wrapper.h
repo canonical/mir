@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_HWC_DEVICE_WRAPPER_H_
 #define MIR_TEST_DOUBLES_MOCK_HWC_DEVICE_WRAPPER_H_
 
-#include "src/platform/graphics/android/hwc_wrapper.h"
+#include "src/platforms/android/hwc_wrapper.h"
 
 #include <gmock/gmock.h>
 
@@ -32,13 +32,13 @@ namespace doubles
 
 struct MockHWCDeviceWrapper : public graphics::android::HwcWrapper
 {
-    MOCK_CONST_METHOD1(prepare, void(hwc_display_contents_1_t&));
-    MOCK_CONST_METHOD1(set, void(hwc_display_contents_1_t&));
+    MOCK_CONST_METHOD1(prepare, void(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&));
+    MOCK_CONST_METHOD1(set, void(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&));
     MOCK_METHOD1(register_hooks, void(std::shared_ptr<graphics::android::HWCCallbacks> const&));
-    MOCK_CONST_METHOD0(vsync_signal_on, void());
-    MOCK_CONST_METHOD0(vsync_signal_off, void());
-    MOCK_CONST_METHOD0(display_on, void());
-    MOCK_CONST_METHOD0(display_off, void());
+    MOCK_CONST_METHOD1(vsync_signal_on, void(graphics::android::DisplayName));
+    MOCK_CONST_METHOD1(vsync_signal_off, void(graphics::android::DisplayName));
+    MOCK_CONST_METHOD1(display_on, void(graphics::android::DisplayName));
+    MOCK_CONST_METHOD1(display_off, void(graphics::android::DisplayName));
 };
 
 }

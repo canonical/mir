@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/android/hwc_fallback_gl_renderer.h"
+#include "src/platforms/android/hwc_fallback_gl_renderer.h"
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/gl_program_factory.h"
 #include "mir/graphics/gl_primitive.h"
