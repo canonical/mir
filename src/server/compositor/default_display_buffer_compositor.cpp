@@ -93,6 +93,7 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
         // Release the buffers we did use back to the clients, before starting
         // on the potentially slow flip().
+        // FIXME: This clear() call is blocking a little (LP: #1395421)
         renderable_list.clear();
 
         display_buffer.flip();

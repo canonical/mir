@@ -142,6 +142,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         // Release buffers back to the clients now that the swap has returned.
         // It's important to do this before starting on the potentially slow
         // flip() ...
+        // FIXME: This clear() call is blocking a little (LP: #1395421)
         renderable_list.clear();
 
         display_buffer.flip();
