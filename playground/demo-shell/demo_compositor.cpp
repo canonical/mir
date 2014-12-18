@@ -137,7 +137,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         renderer.render(renderable_list);
 
         display_buffer.gl_swap_buffers();
-        // TODO: report->record_end_of_render_time here. (LP: #1350716)
+        report->finished_frame(false, this);
 
         // Release buffers back to the clients now that the swap has returned.
         // It's important to do this before starting on the potentially slow
@@ -146,8 +146,6 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         renderable_list.clear();
 
         display_buffer.flip();
-
-        report->finished_frame(false, this);
     }
 }
 

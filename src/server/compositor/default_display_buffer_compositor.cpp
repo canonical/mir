@@ -88,8 +88,7 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         renderer->render(renderable_list);
 
         display_buffer.gl_swap_buffers();
-
-        // TODO: report->record_end_of_render_time here. (LP: #1350716)
+        report->finished_frame(false, this);
 
         // Release the buffers we did use back to the clients, before starting
         // on the potentially slow flip().
@@ -97,7 +96,5 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         renderable_list.clear();
 
         display_buffer.flip();
-
-        report->finished_frame(false, this);
     }
 }
