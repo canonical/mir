@@ -27,16 +27,16 @@ mga::HwcBlankingControl::HwcBlankingControl(
 {
 }
 
-void mga::HwcBlankingControl::power_mode(MirPowerMode mode_request)
+void mga::HwcBlankingControl::power_mode(DisplayName display_name, MirPowerMode mode_request)
 {
     if (mode_request == mir_power_mode_on)
     {
-        hwc_device->display_on();
-        hwc_device->vsync_signal_on();
+        hwc_device->display_on(display_name);
+        hwc_device->vsync_signal_on(display_name);
     }
     else
     {
-        hwc_device->vsync_signal_off();
-        hwc_device->display_off();
+        hwc_device->vsync_signal_off(display_name);
+        hwc_device->display_off(display_name);
     }
 }

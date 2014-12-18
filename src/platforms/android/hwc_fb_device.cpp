@@ -54,13 +54,13 @@ void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
 
     if (auto display_list = layer_list.native_list().lock())
     {
-        hwc_wrapper->prepare(*display_list);
+        hwc_wrapper->prepare({{display_list.get(), nullptr, nullptr}});
         display_list->dpy = eglGetCurrentDisplay();
         display_list->sur = eglGetCurrentSurface(EGL_DRAW);
 
         //set() may affect EGL state by calling eglSwapBuffers.
         //HWC 1.0 is the only version of HWC that can do this.
-        hwc_wrapper->set(*display_list);
+        hwc_wrapper->set({{display_list.get(), nullptr, nullptr}});
     }
     else
     {
@@ -68,8 +68,6 @@ void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
         ss << "error accessing list during hwc prepare()";
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
-
-    auto lg = lock_unblanked();
 
     buffer = *context.last_rendered_buffer();
     auto native_buffer = buffer.native_buffer_handle();

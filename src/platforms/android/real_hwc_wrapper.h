@@ -37,15 +37,14 @@ public:
         std::shared_ptr<hwc_composer_device_1> const& hwc_device,
         std::shared_ptr<HwcReport> const& report);
 
-    void prepare(hwc_display_contents_1_t&) const override;
-    void set(hwc_display_contents_1_t&) const override;
+    void prepare(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const override;
+    void set(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const override;
     void register_hooks(std::shared_ptr<HWCCallbacks> const& callbacks) override;
-    void vsync_signal_on() const override;
-    void vsync_signal_off() const override;
-    void display_on() const override;
-    void display_off() const override;
+    void vsync_signal_on(DisplayName) const override;
+    void vsync_signal_off(DisplayName) const override;
+    void display_on(DisplayName) const override;
+    void display_off(DisplayName) const override;
 private:
-    static size_t const num_displays{3}; //primary, external, virtual
     //note: the callbacks have to extend past the lifetime of the hwc_composer_device_1 for some
     //      devices (LP: 1364637)
     std::shared_ptr<HWCCallbacks> registered_callbacks;

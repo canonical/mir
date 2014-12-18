@@ -90,7 +90,6 @@ bool mga::HwcDevice::buffer_is_onscreen(mg::Buffer const& buffer) const
 
 void mga::HwcDevice::post_gl(SwappingGLContext const& context)
 {
-    auto lg = lock_unblanked();
     hwc_list.update_list({}, fbtarget_plus_skip_size);
     auto& skip = *hwc_list.additional_layers_begin();
     auto& fbtarget = *(++hwc_list.additional_layers_begin());
@@ -100,7 +99,7 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
     skip.layer.setup_layer(mga::LayerType::skip, disp_frame, false, *buffer);
     fbtarget.layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *buffer);
 
-    hwc_wrapper->prepare(*hwc_list.native_list().lock());
+    hwc_wrapper->prepare({{hwc_list.native_list().lock().get(), nullptr, nullptr}});
 
     context.swap_buffers();
 
@@ -111,7 +110,7 @@ void mga::HwcDevice::post_gl(SwappingGLContext const& context)
     for(auto& layer : hwc_list)
         layer.layer.set_acquirefence_from(*buffer);
 
-    hwc_wrapper->set(*hwc_list.native_list().lock());
+    hwc_wrapper->set({{hwc_list.native_list().lock().get(), nullptr, nullptr}});
     onscreen_overlay_buffers.clear();
 
     for(auto& layer : hwc_list)
@@ -136,14 +135,13 @@ bool mga::HwcDevice::post_overlays(
     if (!needs_commit)
         return false;
 
-    auto lg = lock_unblanked();
     auto& fbtarget = *hwc_list.additional_layers_begin();
 
     auto buffer = context.last_rendered_buffer();
     geom::Rectangle const disp_frame{{0,0}, {buffer->size()}};
     fbtarget.layer.setup_layer(mga::LayerType::framebuffer_target, disp_frame, false, *buffer);
 
-    hwc_wrapper->prepare(*hwc_list.native_list().lock());
+    hwc_wrapper->prepare({{hwc_list.native_list().lock().get(), nullptr, nullptr}});
 
     mg::RenderableList rejected_renderables;
     std::vector<std::shared_ptr<mg::Buffer>> next_onscreen_overlay_buffers;
@@ -174,7 +172,7 @@ bool mga::HwcDevice::post_overlays(
         fbtarget.layer.set_acquirefence_from(*buffer);
     }
 
-    hwc_wrapper->set(*hwc_list.native_list().lock());
+    hwc_wrapper->set({{hwc_list.native_list().lock().get(), nullptr, nullptr}});
     onscreen_overlay_buffers = std::move(next_onscreen_overlay_buffers);
 
     it = hwc_list.begin();
