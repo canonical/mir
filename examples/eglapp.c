@@ -114,7 +114,7 @@ static void mir_eglapp_handle_surface_event(MirSurfaceEvent const* sev)
         printf("Surface exposed\n");
         break;
     case mir_surface_visibility_occluded:
-        printf("Surface exposed\n");
+        printf("Surface occluded\n");
         break;
     default:
         break;
