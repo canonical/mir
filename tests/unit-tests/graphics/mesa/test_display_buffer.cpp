@@ -25,6 +25,7 @@
 #include "mir_test_doubles/mock_gbm.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/platform_factory.h"
+#include "mir_test_doubles/stub_gbm_native_buffer.h"
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_doubles/fake_renderable.h"
 #include "mock_kms_output.h"
@@ -46,7 +47,12 @@ class MesaDisplayBufferTest : public Test
 {
 public:
     MesaDisplayBufferTest()
-     : bypassable_list{std::make_shared<FakeRenderable>(display_area)}
+        : mock_bypassable_buffer{std::make_shared<NiceMock<MockBuffer>>()}
+        , fake_bypassable_renderable{
+             std::make_shared<FakeRenderable>(display_area)}
+        , stub_gbm_native_buffer{
+             std::make_shared<StubGBMNativeBuffer>(display_area.size)}
+        , bypassable_list{fake_bypassable_renderable}
     {
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
             .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
@@ -72,6 +78,14 @@ public:
             .WillByDefault(Return(true));
         ON_CALL(*mock_kms_output, schedule_page_flip(_))
             .WillByDefault(Return(true));
+
+        ON_CALL(*mock_bypassable_buffer, size())
+            .WillByDefault(Return(display_area.size));
+        ON_CALL(*mock_bypassable_buffer, can_bypass())
+            .WillByDefault(Return(true));
+        ON_CALL(*mock_bypassable_buffer, native_buffer_handle())
+            .WillByDefault(Return(stub_gbm_native_buffer));
+        fake_bypassable_renderable->set_buffer(mock_bypassable_buffer);
     }
 
     // The platform has an implicit dependency on mock_gbm etc so must be
@@ -82,18 +96,21 @@ public:
     }
 
 protected:
+    int const width{56};
+    int const height{78};
+    mir::geometry::Rectangle const display_area{{12,34}, {width,height}};
     NiceMock<MockGBM> mock_gbm;
     NiceMock<MockEGL> mock_egl;
     NiceMock<MockGL>  mock_gl;
     NiceMock<MockDRM> mock_drm; 
+    std::shared_ptr<MockBuffer> mock_bypassable_buffer;
+    std::shared_ptr<FakeRenderable> fake_bypassable_renderable;
+    std::shared_ptr<mesa::GBMNativeBuffer> stub_gbm_native_buffer;
     gbm_bo*           fake_bo;
     gbm_bo_handle     fake_handle;
     UdevEnvironment   fake_devices;
     std::shared_ptr<MockKMSOutput> mock_kms_output;
     StubGLConfig gl_config;
-    int const width{56};
-    int const height{78};
-    mir::geometry::Rectangle const display_area{{12,34}, {width,height}};
     mir::graphics::RenderableList const bypassable_list;
 
 };
@@ -148,6 +165,31 @@ TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
     EXPECT_FALSE(db.post_renderables_if_optimizable(bypassable_list));
     // And then we recover. DRM finds enough resources to AddFB ...
     EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
+}
+
+TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_lagging_resize)
+{  // Another regression test for LP: #1398296
+    auto fullscreen = std::make_shared<FakeRenderable>(display_area);
+    auto nonbypassable = std::make_shared<testing::NiceMock<MockBuffer>>();
+    ON_CALL(*nonbypassable, can_bypass())
+        .WillByDefault(Return(true));  // It has the scanout flag set
+    ON_CALL(*nonbypassable, size())
+        .WillByDefault(Return(mir::geometry::Size{12,34}));
+
+    fullscreen->set_buffer(nonbypassable);
+    graphics::RenderableList list{fullscreen};
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    EXPECT_FALSE(db.post_renderables_if_optimizable(list));
 }
 
 TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
