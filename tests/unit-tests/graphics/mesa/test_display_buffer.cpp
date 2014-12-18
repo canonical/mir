@@ -15,8 +15,8 @@
  *
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
-#include "src/platform/graphics/mesa/platform.h"
-#include "src/platform/graphics/mesa/display_buffer.h"
+#include "src/platforms/mesa/platform.h"
+#include "src/platforms/mesa/display_buffer.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
@@ -128,6 +128,28 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_with_bypassable_list_can_bypass
     EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
 }
 
+TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
+{  // Regression test for LP: #1398296
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, _, _, _, _, _, _, _, _))
+        .WillOnce(Return(0))    // During the DisplayBuffer constructor
+        .WillOnce(Return(-22))  // Fail first bypass attempt
+        .WillOnce(Return(0));   // Succeed second bypass attempt
+
+    graphics::mesa::DisplayBuffer db(
+        create_platform(),
+        null_display_report(),
+        {mock_kms_output},
+        nullptr,
+        display_area,
+        mir_orientation_normal,
+        gl_config,
+        mock_egl.fake_egl_context);
+
+    EXPECT_FALSE(db.post_renderables_if_optimizable(bypassable_list));
+    // And then we recover. DRM finds enough resources to AddFB ...
+    EXPECT_TRUE(db.post_renderables_if_optimizable(bypassable_list));
+}
+
 TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
 {
     graphics::mesa::DisplayBuffer db(
@@ -162,7 +184,7 @@ TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, width, height, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, width, height, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
@@ -180,7 +202,7 @@ TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, height, width, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, height, width, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
@@ -198,7 +220,7 @@ TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, width, height, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, width, height, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
@@ -216,7 +238,7 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, height, width, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, height, width, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(

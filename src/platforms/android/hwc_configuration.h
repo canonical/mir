@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_ANDROID_HWC_CONFIGURATION_H_
 
 #include "mir/graphics/display_configuration.h"
+#include "display_name.h"
 #include <memory>
 
 namespace mir
@@ -33,7 +34,7 @@ class HwcConfiguration
 {
 public:
     virtual ~HwcConfiguration() = default;
-    virtual void power_mode(MirPowerMode) = 0;
+    virtual void power_mode(DisplayName, MirPowerMode) = 0;
 
 protected:
     HwcConfiguration() = default;
@@ -46,7 +47,7 @@ class HwcBlankingControl : public HwcConfiguration
 {
 public:
     HwcBlankingControl(std::shared_ptr<HwcWrapper> const&);
-    void power_mode(MirPowerMode) override;
+    void power_mode(DisplayName, MirPowerMode) override;
 private:
     std::shared_ptr<HwcWrapper> const hwc_device;
 };
