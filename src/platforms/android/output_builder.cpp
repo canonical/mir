@@ -46,8 +46,7 @@ mga::OutputBuilder::OutputBuilder(
 {
     try
     {
-        hwc_native = res_factory->create_hwc_native_device();
-        hwc_wrapper = std::make_shared<mga::RealHwcWrapper>(hwc_native, hwc_report);
+        std::tie(hwc_wrapper, hwc_version) = res_factory->create_hwc_wrapper(hwc_report);
     } catch (...)
     {
         force_backup_display = true;
@@ -103,7 +102,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
             break;
         }
 
-        hwc_report->report_hwc_version(hwc_native->common.version);
+        hwc_report->report_hwc_version(hwc_version);
     }
 
     auto native_window = res_factory->create_native_window(framebuffers);

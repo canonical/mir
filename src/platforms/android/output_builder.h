@@ -20,9 +20,11 @@
 #define MIR_GRAPHICS_ANDROID_OUTPUT_BUILDER_H_
 
 #include "display_buffer_builder.h"
+#include "display_resource_factory.h"
 #include "overlay_optimization.h"
 #include "hardware/hwcomposer.h"
 #include "hardware/fb.h"
+#include <atomic>
 
 namespace mir
 {
@@ -64,6 +66,13 @@ private:
     std::shared_ptr<hwc_composer_device_1> hwc_native;
     std::shared_ptr<framebuffer_device_t> fb_native;
     OverlayOptimization overlay_optimization;
+    HwcVersion hwc_version;
+};
+
+struct HWCCallbacks
+{
+    hwc_procs_t hooks;
+    std::atomic<OutputBuilder*> self;
 };
 
 }
