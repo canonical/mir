@@ -147,11 +147,11 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
         auto const& kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
         // Treat the current_display_configuration as incompatible with itself,
         // before it's fully constructed, to force proper initialization.
-        bool const compatible{(&conf != &current_display_configuration) &&
-                              (kms_conf == current_display_configuration)};
+        bool const comp{(&conf != &current_display_configuration) &&
+                        compatible(kms_conf, current_display_configuration)};
         std::vector<std::unique_ptr<DisplayBuffer>> display_buffers_new;
 
-        if (!compatible)
+        if (!comp)
         {
             /*
              * Notice for a little while here we will have duplicate
@@ -192,7 +192,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                 auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
                                                                     conf_output.current_mode_index);
                 kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
-                if (!compatible)
+                if (!comp)
                 {
                     kms_output->set_power_mode(conf_output.power_mode);
                     kms_outputs.push_back(kms_output);
@@ -205,7 +205,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                 orientation = conf_output.orientation;
             });
 
-            if (compatible)
+            if (comp)
             {
                 display_buffers[group_idx++]->set_orientation(orientation, bounding_rect);
             }
@@ -234,13 +234,13 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
             }
         });
 
-        if (!compatible)
+        if (!comp)
             display_buffers = std::move(display_buffers_new);
 
         /* Store applied configuration */
         current_display_configuration = kms_conf;
 
-        if (!compatible)
+        if (!comp)
             /* Clear connected but unused outputs */
             clear_connected_unused_outputs();
     }
