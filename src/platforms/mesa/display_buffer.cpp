@@ -345,12 +345,23 @@ mgm::BufferObject* mgm::DisplayBuffer::get_buffer_object(
         return bufobj;
 
     uint32_t fb_id{0};
-    auto handle = gbm_bo_get_handle(bo).u32;
-    auto stride = gbm_bo_get_stride(bo);
+    uint32_t handles[4] = {gbm_bo_get_handle(bo).u32, 0, 0, 0};
+    uint32_t strides[4] = {gbm_bo_get_stride(bo), 0, 0, 0};
+    uint32_t offsets[4] = {0, 0, 0, 0};
+
+    auto format = gbm_bo_get_format(bo);
+    /*
+     * Mir might use the old GBM_BO_ enum formats, but KMS and the rest of
+     * the world need fourcc formats, so convert...
+     */
+    if (format == GBM_BO_FORMAT_XRGB8888)
+        format = GBM_FORMAT_XRGB8888;
+    else if (format == GBM_BO_FORMAT_ARGB8888)
+        format = GBM_FORMAT_ARGB8888;
 
     /* Create a KMS FB object with the gbm_bo attached to it. */
-    auto ret = drmModeAddFB(drm.fd, fb_width, fb_height,
-                            24, 32, stride, handle, &fb_id);
+    auto ret = drmModeAddFB2(drm.fd, fb_width, fb_height, format,
+                             handles, strides, offsets, &fb_id, 0);
     if (ret)
         return nullptr;
 
