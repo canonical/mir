@@ -7,7 +7,7 @@ int main(int argc, char** argv)
 {
     assert(argc > 0);
     setenv("MIR_CLIENT_PLATFORM_PATH", BUILD_PREFIX "/lib/client-modules/", 1);
-    setenv("MIR_SERVER_PLATFORM_GRAPHICS_PATH", BUILD_PREFIX "/lib/server-modules/", 1);
+    setenv("MIR_SERVER_PLATFORM_PATH", BUILD_PREFIX "/lib/server-modules/", 1);
 
     argv[0] = BUILD_PREFIX "/bin/" EXECUTABLE;
     execv(argv[0], argv);

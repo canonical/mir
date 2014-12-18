@@ -115,7 +115,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
             }
             else
             {
-                auto const& path = the_options()->get<std::string>(options::platform_graphics_path);
+                auto const& path = the_options()->get<std::string>(options::platform_path);
                 auto platforms = mir::libraries_for_path(path, *the_shared_library_prober_report());
                 if (platforms.empty())
                 {

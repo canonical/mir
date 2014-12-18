@@ -138,7 +138,7 @@ MIRPLATFORM_5 {
     mir::options::glog_log_dir*;
     mir::options::glog_minloglevel*;
     mir::options::glog_stderrthreshold*;
-    mir::options::platform_graphics_path*;
+    mir::options::platform_path*;
     mir::options::host_socket_opt*;
     mir::options::input_report_opt*;
     mir::options::legacy_input_report_opt*;
