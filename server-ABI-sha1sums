@@ -106,4 +106,3 @@ de7d7ad64da45b4c5dedef8eaa1d720c9f307f4c  include/server/mir/shell/session_coord
 114cc8c0b12ee4fd78d86c8f3309546e4dc68c9f  include/server/mir/terminate_with_current_exception.h
 1b8c2a763c8f5f00b737c3a187db2304676f8076  include/server/mir/time/alarm.h
 a134c7b86e9c3b191f1004abe7bbdceed8ac42ee  include/server/mir/time/timer.h
-11b7019cfb3c15f480756f7ea351f2a1feac99c3  include/server/mir/version.h
