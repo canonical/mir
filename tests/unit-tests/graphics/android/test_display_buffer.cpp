@@ -99,7 +99,7 @@ TEST_F(DisplayBuffer, can_post_update_with_gl_only)
     mg::RenderableList renderlist{};
     mga::DisplayBuffer db(
         mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
-    db.gl_swap_buffer();
+    db.gl_swap_buffers();
     db.flip();
 }
 
