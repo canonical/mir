@@ -140,7 +140,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the MessageProcessor report. [{log,lttng,off}]")
         (scene_report_opt, po::value<std::string>()->default_value(off_opt_value),
             "How to handle the scene report. [{log,lttng,off}]")
-        (shared_library_prober_report_opt, po::value<std::string>()->default_value(off_opt_value),
+        (shared_library_prober_report_opt, po::value<std::string>()->default_value(log_opt_value),
             "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
         (frontend_threads_opt, po::value<int>()->default_value(default_ipc_threads),
             "threads in frontend thread pool.")

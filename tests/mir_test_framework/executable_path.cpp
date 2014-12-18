@@ -48,7 +48,7 @@ std::string mir_test_framework::library_path()
 std::string mir_test_framework::server_platform(std::string const& name)
 {
     for (auto const& option :
-         {library_path() + "/server-modules/", library_path() + "/server-platform/", std::string(MIR_SERVER_PLATFORM_PATH)})
+         {library_path() + "/server-modules/", library_path() + "/server-platform/", std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
     {
         auto path_to_test = option + name;
         if (boost::filesystem::exists(path_to_test))
@@ -61,7 +61,7 @@ std::string mir_test_framework::server_platform(std::string const& name)
 std::string mir_test_framework::client_platform(std::string const& name)
 {
     for (auto const& option :
-         {library_path() + "/client-modules/", library_path() + "/client-platform/", std::string(MIR_CLIENT_PLATFORM_PATH)})
+         {library_path() + "/client-modules/", library_path() + "/client-platform/", std::string(MIR_CLIENT_PLATFORM_PATH) + '/'})
     {
         auto path_to_test = option + name;
         if (boost::filesystem::exists(path_to_test))
