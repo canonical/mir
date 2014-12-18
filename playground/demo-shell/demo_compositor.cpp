@@ -118,6 +118,7 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
      *       Actually, there's a third reference held by the texture cache
      *       in GLRenderer, but that gets released earlier in render().
      */
+    elements.clear();  // Release those that didn't make it to renderable_list
 
     if (!nonrenderlist_elements &&
         viewport == display_buffer.view_area() &&  // no bypass while zoomed
@@ -134,10 +135,17 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         renderer.set_viewport(viewport);
         renderer.begin(std::move(decoration_skip_list));
         renderer.render(renderable_list);
+
         display_buffer.gl_swap_buffers();
         // TODO: report->record_end_of_render_time here. (LP: #1350716)
-        // TODO: release buffers here, so we don't have to wait for flip().
+
+        // Release buffers back to the clients now that the swap has returned.
+        // It's important to do this before starting on the potentially slow
+        // flip() ...
+        renderable_list.clear();
+
         display_buffer.flip();
+
         report->finished_frame(false, this);
     }
 }
