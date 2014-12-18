@@ -85,7 +85,10 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         renderer->set_rotation(display_buffer.orientation());
 
         renderer->render(renderable_list);
-        display_buffer.post_update();
+        display_buffer.gl_swap_buffers();
+        // TODO: report->record_end_of_render_time here. (LP: #1350716)
+        // TODO: release buffers here, so we don't have to wait for flip().
+        display_buffer.flip();
 
         report->finished_frame(false, this);
     }

@@ -203,7 +203,7 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
             {
                 // Bypass might still fail when we try to acquire other
                 // resources, so returning false is still possible:
-                return post_update(bypass_buf);
+                return flip(bypass_buf);
             }
         }
     }
@@ -211,25 +211,20 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     return false;
 }
 
-void mgm::DisplayBuffer::post_update()
+void mgm::DisplayBuffer::flip()
 {
-    post_update(nullptr);
+    flip(nullptr);
 }
 
-bool mgm::DisplayBuffer::post_update(
+void mgm::DisplayBuffer::gl_swap_buffers()
+{
+    if (!egl.swap_buffers())
+        fatal_error("Failed to perform buffer swap");
+}
+
+bool mgm::DisplayBuffer::flip(
     std::shared_ptr<graphics::Buffer> bypass_buf)
 {
-    /*
-     * There are two potentially blocking operations in this function:
-     *  1. egl.swap_buffers()
-     *  2. wait_for_page_flip()
-     * However only the first one has a chance of being implemented by the
-     * driver asynchronously (so it returns before it's finished) as observed
-     * with Intel graphics. So for optimal parallelism EGL swap starts first.
-     */
-    if (!bypass_buf && !egl.swap_buffers())
-        fatal_error("Failed to perform buffer swap");
-
     /*
      * We might not have waited for the previous frame to page flip yet.
      * This is good because it maximizes the time available to spend rendering

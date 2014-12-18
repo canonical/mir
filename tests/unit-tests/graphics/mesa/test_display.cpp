@@ -439,7 +439,8 @@ TEST_F(MesaDisplayTest, post_update)
 
     display->for_each_display_buffer([](mg::DisplayBuffer& db)
     {
-        db.post_update();
+        db.gl_swap_buffers();
+        db.flip();
     });
 }
 
@@ -477,7 +478,8 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
 
         display->for_each_display_buffer([](mg::DisplayBuffer& db)
         {
-            db.post_update();
+            db.gl_swap_buffers();
+            db.flip();
         });
     }, std::runtime_error);
 }

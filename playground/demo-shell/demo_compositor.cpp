@@ -134,7 +134,10 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         renderer.set_viewport(viewport);
         renderer.begin(std::move(decoration_skip_list));
         renderer.render(renderable_list);
-        display_buffer.post_update();
+        display_buffer.gl_swap_buffers();
+        // TODO: report->record_end_of_render_time here. (LP: #1350716)
+        // TODO: release buffers here, so we don't have to wait for flip().
+        display_buffer.flip();
         report->finished_frame(false, this);
     }
 }
