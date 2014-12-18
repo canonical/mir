@@ -130,7 +130,7 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_with_bypassable_list_can_bypass
 
 TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
 {  // Regression test for LP: #1398296
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, _, _, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, _, _, _, _, _, _, _, _))
         .WillOnce(Return(0))    // During the DisplayBuffer constructor
         .WillOnce(Return(-22))  // Fail first bypass attempt
         .WillOnce(Return(0));   // Succeed second bypass attempt
@@ -184,7 +184,7 @@ TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, width, height, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, width, height, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
@@ -202,7 +202,7 @@ TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, height, width, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, height, width, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
@@ -220,7 +220,7 @@ TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, width, height, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, width, height, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
@@ -238,7 +238,7 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
 {
     EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
         .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB(_, height, width, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, height, width, _, _, _, _, _, _))
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
