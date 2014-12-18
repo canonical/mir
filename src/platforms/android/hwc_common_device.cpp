@@ -90,31 +90,15 @@ void mga::HWCCommonDevice::notify_vsync()
 
 void mga::HWCCommonDevice::mode(MirPowerMode mode_request)
 {
-    std::unique_lock<std::mutex> lg(blanked_mutex);
-
-    hwc_config->power_mode(mode_request);
+    hwc_config->power_mode(mga::DisplayName::primary, mode_request);
 
     if (mode_request == mir_power_mode_off)
         turned_screen_off();
 
     //TODO the mode should be in the display mode structure that gets passed to the rest of the system
     current_mode = mode_request;
-    blanked_cond.notify_all();
-}
-
-std::unique_lock<std::mutex> mga::HWCCommonDevice::lock_unblanked()
-{
-    std::unique_lock<std::mutex> lg(blanked_mutex);
-    while(current_mode == mir_power_mode_off)
-        blanked_cond.wait(lg);
-    return std::move(lg);
 }
 
 void mga::HWCCommonDevice::turned_screen_off()
 {
-}
-
-bool mga::HWCCommonDevice::apply_orientation(MirOrientation) const
-{
-    return false; 
 }

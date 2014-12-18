@@ -16,9 +16,9 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "src/platform/graphics/mesa/platform.h"
+#include "src/platforms/mesa/platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
-#include "src/platform/graphics/mesa/buffer_allocator.h"
+#include "src/platforms/mesa/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
 
 #include "mir_test_doubles/mock_drm.h"

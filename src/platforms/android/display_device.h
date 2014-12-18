@@ -40,7 +40,6 @@ class DisplayDevice
 public:
     virtual ~DisplayDevice() = default;
 
-    virtual void mode(MirPowerMode mode) = 0;
     virtual void post_gl(SwappingGLContext const& context) = 0;
     /* \returns true if the DisplayDevice can support the renderlist
                 false if the display device cannot support drawing the given renderlist.
@@ -49,7 +48,9 @@ public:
         SwappingGLContext const& context,
         RenderableList const& list,
         RenderableListCompositor const& list_compositor) = 0;
-    virtual bool apply_orientation(MirOrientation orientation) const = 0;
+
+    //TODO: remove the following from this interface
+    virtual void mode(MirPowerMode mode) = 0;
 
 protected:
     DisplayDevice() = default;
