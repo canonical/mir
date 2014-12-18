@@ -94,7 +94,6 @@ set_target_properties(mirclient
 )
 
 target_link_libraries(mirclient
-
   mirclientrpc
   mirclientlttngstatic
   mircommon
