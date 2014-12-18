@@ -30,6 +30,8 @@ class NullPromptSessionListener : public PromptSessionListener
 public:
     void starting(std::shared_ptr<PromptSession> const&) override {}
     void stopping(std::shared_ptr<PromptSession> const&) override {}
+    void suspending(std::shared_ptr<PromptSession> const&) override {}
+    void resuming(std::shared_ptr<PromptSession> const&) override {}
 
     void prompt_provider_added(PromptSession const&, std::shared_ptr<Session> const&) override {}
     void prompt_provider_removed(PromptSession const&, std::shared_ptr<Session> const&) override {}

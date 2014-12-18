@@ -66,7 +66,7 @@ public:
     void wait_for_page_flip();
 
 private:
-    void post_update(std::shared_ptr<graphics::Buffer> bypass_buf);
+    bool post_update(std::shared_ptr<graphics::Buffer> bypass_buf);
 
     BufferObject* get_front_buffer_object();
     BufferObject* get_buffer_object(struct gbm_bo *bo);

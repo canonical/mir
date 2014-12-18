@@ -235,8 +235,8 @@ TEST_F(MesaDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
     setup_outputs(num_connected_outputs, num_disconnected_outputs);
 
     /* Create DRM FBs */
-    EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                       _, _, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                        _, _, _, _, _, _, _, _))
         .WillRepeatedly(DoAll(SetArgPointee<7>(fb_id), Return(0)));
 
     ExpectationSet crtc_setups;
@@ -327,8 +327,8 @@ TEST_F(MesaDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
     setup_outputs(num_connected_outputs, num_disconnected_outputs);
 
     /* Create DRM FBs */
-    EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                       _, _, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                        _, _, _, _, _, _, _, _))
         .WillRepeatedly(DoAll(SetArgPointee<7>(fb_id), Return(0)));
 
     /* All crtcs are flipped */
@@ -374,9 +374,9 @@ struct FBIDContainer
 {
     FBIDContainer(uint32_t base_fb_id) : last_fb_id{base_fb_id} {}
 
-    int add_fb(int, uint32_t, uint32_t, uint8_t,
-               uint8_t, uint32_t, uint32_t,
-               uint32_t *buf_id)
+    int add_fb2(int, uint32_t, uint32_t, uint32_t,
+               uint32_t[4], uint32_t[4], uint32_t[4],
+               uint32_t *buf_id, uint32_t)
     {
         *buf_id = last_fb_id;
         fb_ids.insert(last_fb_id);
@@ -415,10 +415,10 @@ TEST_F(MesaDisplayMultiMonitorTest, create_display_uses_different_drm_fbs_for_si
     setup_outputs(num_connected_outputs, num_disconnected_outputs);
 
     /* Create DRM FBs */
-    EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                       _, _, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                        _, _, _, _, _, _, _, _))
         .Times(num_connected_outputs)
-        .WillRepeatedly(Invoke(&fb_id_container, &FBIDContainer::add_fb));
+        .WillRepeatedly(Invoke(&fb_id_container, &FBIDContainer::add_fb2));
 
     ExpectationSet crtc_setups;
 

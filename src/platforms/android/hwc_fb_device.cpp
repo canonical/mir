@@ -69,8 +69,6 @@ void mga::HwcFbDevice::post_gl(SwappingGLContext const& context)
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 
-    auto lg = lock_unblanked();
-
     buffer = *context.last_rendered_buffer();
     auto native_buffer = buffer.native_buffer_handle();
     native_buffer->ensure_available_for(mga::BufferAccess::read);
