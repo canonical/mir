@@ -220,6 +220,17 @@ bool mgm::DisplayBuffer::post_update(
     std::shared_ptr<graphics::Buffer> bypass_buf)
 {
     /*
+     * There are two potentially blocking operations in this function:
+     *  1. egl.swap_buffers()
+     *  2. wait_for_page_flip()
+     * However only the first one has a chance of being implemented by the
+     * driver asynchronously (so it returns before it's finished) as observed
+     * with Intel graphics. So for optimal parallelism EGL swap starts first.
+     */
+    if (!bypass_buf && !egl.swap_buffers())
+        fatal_error("Failed to perform buffer swap");
+
+    /*
      * We might not have waited for the previous frame to page flip yet.
      * This is good because it maximizes the time available to spend rendering
      * each frame. Just remember wait_for_page_flip() must be called at some
@@ -259,8 +270,6 @@ bool mgm::DisplayBuffer::post_update(
     }
     else
     {
-        if (!egl.swap_buffers())
-            fatal_error("Failed to perform buffer swap");
         bufobj = get_front_buffer_object();
         if (!bufobj)
             fatal_error("Failed to get front buffer object");
@@ -345,12 +354,23 @@ mgm::BufferObject* mgm::DisplayBuffer::get_buffer_object(
         return bufobj;
 
     uint32_t fb_id{0};
-    auto handle = gbm_bo_get_handle(bo).u32;
-    auto stride = gbm_bo_get_stride(bo);
+    uint32_t handles[4] = {gbm_bo_get_handle(bo).u32, 0, 0, 0};
+    uint32_t strides[4] = {gbm_bo_get_stride(bo), 0, 0, 0};
+    uint32_t offsets[4] = {0, 0, 0, 0};
+
+    auto format = gbm_bo_get_format(bo);
+    /*
+     * Mir might use the old GBM_BO_ enum formats, but KMS and the rest of
+     * the world need fourcc formats, so convert...
+     */
+    if (format == GBM_BO_FORMAT_XRGB8888)
+        format = GBM_FORMAT_XRGB8888;
+    else if (format == GBM_BO_FORMAT_ARGB8888)
+        format = GBM_FORMAT_ARGB8888;
 
     /* Create a KMS FB object with the gbm_bo attached to it. */
-    auto ret = drmModeAddFB(drm.fd, fb_width, fb_height,
-                            24, 32, stride, handle, &fb_id);
+    auto ret = drmModeAddFB2(drm.fd, fb_width, fb_height, format,
+                             handles, strides, offsets, &fb_id, 0);
     if (ret)
         return nullptr;
 
