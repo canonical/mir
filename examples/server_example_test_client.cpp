@@ -32,7 +32,9 @@ namespace ml = mir::logging;
 
 namespace
 {
-bool good_exit_status(pid_t pid, char const* const component)
+static auto const component = "server_example_test_client.cpp";
+
+bool exit_success(pid_t pid)
 {
     int status;
 
@@ -81,7 +83,6 @@ bool good_exit_status(pid_t pid, char const* const component)
 
 void me::add_test_client_option_to(mir::Server& server, std::atomic<bool>& test_failed)
 {
-    static auto const component = __PRETTY_FUNCTION__;
     static const char* const test_client_opt = "test-client";
     static const char* const test_client_descr = "client executable";
 
@@ -114,7 +115,7 @@ void me::add_test_client_option_to(mir::Server& server, std::atomic<bool>& test_
                     std::chrono::seconds(options->get<int>(test_timeout_opt)+1),
                     [pid, &server, &test_failed]
                     {
-                        if (!good_exit_status(pid, component))
+                        if (!exit_success(pid))
                             test_failed = true;
                         server.stop();
                     });
