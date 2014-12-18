@@ -182,14 +182,14 @@ MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev
 
 // TODO: Until we opaquify the MirEvent structure and add
 // a ref count ref is implemented as copy.
-MirEvent* mir_event_ref(MirEvent const* ev)
+MirEvent const* mir_event_ref(MirEvent const* ev)
 {
     MirEvent *new_ev = new MirEvent;
     memcpy(new_ev, ev, sizeof(MirEvent));
     return new_ev;
 }
 
-void mir_event_unref(MirEvent* ev)
+void mir_event_unref(MirEvent const* ev)
 {
-    delete ev;
+    delete const_cast<MirEvent*>(ev);
 }
