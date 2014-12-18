@@ -74,9 +74,6 @@ private:
     float old_pinch_diam;
     int max_fingers;  // Maximum number of fingers touched during gesture
     int zoom_exponent = 0;
-    
-    bool handle(MirKeyEvent const& kev);
-    bool handle(MirMotionEvent const& mev);
 };
 
 }
