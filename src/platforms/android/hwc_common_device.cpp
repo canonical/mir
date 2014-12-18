@@ -57,7 +57,7 @@ mga::HWCCommonDevice::HWCCommonDevice(
     callbacks->hooks.hotplug = hotplug_hook;
     callbacks->self = this;
 
-    hwc_device->register_hooks(callbacks);
+//    hwc_device->register_hooks(callbacks);
 
     try
     {

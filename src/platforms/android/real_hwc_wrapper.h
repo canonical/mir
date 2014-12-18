@@ -37,17 +37,23 @@ public:
         std::shared_ptr<hwc_composer_device_1> const& hwc_device,
         std::shared_ptr<HwcReport> const& report);
 
+    EventSubscription subscribe_to_events(
+        std::function<void(DisplayName, std::chrono::nanoseconds)> const& vsync_callback,
+        std::function<void(DisplayName, bool)> const& hotplug_callback,
+        std::function<void()> const& invalidate_callback) override;
     void prepare(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const override;
     void set(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const&) const override;
-    void register_hooks(std::shared_ptr<HWCCallbacks> const& callbacks) override;
     void vsync_signal_on(DisplayName) const override;
     void vsync_signal_off(DisplayName) const override;
     void display_on(DisplayName) const override;
     void display_off(DisplayName) const override;
+
 private:
+#if 0
     //note: the callbacks have to extend past the lifetime of the hwc_composer_device_1 for some
     //      devices (LP: 1364637)
     std::shared_ptr<HWCCallbacks> registered_callbacks;
+#endif
     std::shared_ptr<hwc_composer_device_1> const hwc_device;
     std::shared_ptr<HwcReport> const report;
 };

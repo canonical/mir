@@ -85,52 +85,6 @@ std::shared_ptr<mga::DisplayDevice> HWCCommon<mga::HwcDevice>::make_display_devi
 typedef ::testing::Types<mga::HwcFbDevice, mga::HwcDevice> HWCDeviceTestTypes;
 TYPED_TEST_CASE(HWCCommon, HWCDeviceTestTypes);
 
-TYPED_TEST(HWCCommon, test_proc_registration)
-{
-    using namespace testing;
-    std::shared_ptr<mga::HWCCallbacks> callbacks;
-    EXPECT_CALL(*(this->mock_device), register_hooks(_))
-        .Times(1)
-        .WillOnce(SaveArg<0>(&callbacks));
-
-    auto device = this->make_display_device();
-
-    ASSERT_THAT(callbacks, Ne(nullptr));
-    EXPECT_THAT(callbacks->hooks.invalidate, Ne(nullptr));
-    EXPECT_THAT(callbacks->hooks.vsync, Ne(nullptr));
-    EXPECT_THAT(callbacks->hooks.hotplug, Ne(nullptr));
-}
-
-TYPED_TEST(HWCCommon, test_device_destruction_unregisters_self_from_hooks)
-{
-    using namespace testing;
-    std::shared_ptr<mga::HWCCallbacks> callbacks;
-    EXPECT_CALL(*(this->mock_device), register_hooks(_))
-        .Times(1)
-        .WillOnce(SaveArg<0>(&callbacks));
-
-    auto device = this->make_display_device();
-
-    ASSERT_THAT(callbacks, Ne(nullptr));
-    EXPECT_THAT(callbacks->self, Eq(device.get()));
-    device = nullptr;
-    EXPECT_THAT(callbacks->self, Eq(nullptr));    
-}
-
-TYPED_TEST(HWCCommon, registers_hooks_before_turning_on_display)
-{
-    using namespace testing;
-
-    Sequence seq;
-    EXPECT_CALL(*this->mock_device, register_hooks(_))
-        .InSequence(seq);
-    EXPECT_CALL(*this->mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_on))
-        .InSequence(seq);
-
-    auto device = this->make_display_device();
-    testing::Mock::VerifyAndClearExpectations(this->mock_config.get());
-}
-
 TYPED_TEST(HWCCommon, test_hwc_display_is_deactivated_on_destroy)
 {
     auto device = this->make_display_device();
@@ -144,25 +98,6 @@ TYPED_TEST(HWCCommon, catches_exception_during_destruction)
     EXPECT_CALL(*this->mock_config, power_mode(mga::DisplayName::primary, mir_power_mode_off))
         .WillOnce(testing::Throw(std::runtime_error("")));
     device.reset();
-}
-
-TYPED_TEST(HWCCommon, callback_calls_hwcvsync)
-{
-    using namespace testing;
-    std::shared_ptr<mga::HWCCallbacks> callbacks;
-    EXPECT_CALL(*(this->mock_device), register_hooks(_))
-        .Times(1)
-        .WillOnce(SaveArg<0>(&callbacks));
-
-    auto device = this->make_display_device();
-
-    EXPECT_CALL(*this->mock_vsync, notify_vsync())
-        .Times(1);
-    ASSERT_THAT(callbacks, Ne(nullptr));
-    callbacks->hooks.vsync(&callbacks->hooks, 0, 0);
-
-    callbacks->self = nullptr;
-    callbacks->hooks.vsync(&callbacks->hooks, 0, 0);
 }
 
 TYPED_TEST(HWCCommon, first_power_on_is_not_fatal) //lp:1345533

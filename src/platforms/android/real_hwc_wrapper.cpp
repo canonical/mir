@@ -73,11 +73,23 @@ void mga::RealHwcWrapper::set(
     }
 }
 
+mga::EventSubscription mga::RealHwcWrapper::subscribe_to_events(
+        std::function<void(DisplayName, std::chrono::nanoseconds)> const& vsync_callback,
+        std::function<void(DisplayName, bool)> const& hotplug_callback,
+        std::function<void()> const& invalidate_callback)
+{
+    (void) vsync_callback;
+    (void) hotplug_callback;
+    (void) invalidate_callback;
+    return {};
+}
+#if 0
 void mga::RealHwcWrapper::register_hooks(std::shared_ptr<HWCCallbacks> const& callbacks)
 {
     hwc_device->registerProcs(hwc_device.get(), reinterpret_cast<hwc_procs_t*>(callbacks.get()));
     registered_callbacks = callbacks;
 }
+#endif
 
 void mga::RealHwcWrapper::vsync_signal_on(DisplayName display_name) const
 {
