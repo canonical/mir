@@ -30,6 +30,55 @@
 namespace me = mir::examples;
 namespace ml = mir::logging;
 
+namespace
+{
+bool good_exit_status(pid_t pid, char const* const component)
+{
+    int status;
+
+    auto const wait_rc = waitpid(pid, &status, WNOHANG);
+
+    if (wait_rc == 0)
+    {
+        ml::log(ml::Severity::informational, "Terminating client", component);
+        kill(pid, SIGKILL);
+    }
+    else if (wait_rc != pid)
+    {
+        ml::log(ml::Severity::informational, "No status available for client", component);
+        return false;
+    }
+    else if (WIFEXITED(status))
+    {
+        auto const exit_status = WEXITSTATUS(status);
+        if (exit_status != EXIT_SUCCESS)
+        {
+            char const format[] = "Client has exited with status %d";
+            char buffer[sizeof format + 10];
+            snprintf(buffer, sizeof buffer, format, exit_status);
+            ml::log(ml::Severity::informational, buffer, component);
+            return false;
+        }
+    }
+    else if (WIFSIGNALED(status))
+    {
+        auto const signal = WTERMSIG(status);
+        char const format[] = "Client terminated by signal %d";
+        char buffer[sizeof format];
+        snprintf(buffer, sizeof buffer, format, signal);
+        ml::log(ml::Severity::informational, buffer, component);
+        return false;
+    }
+    else
+    {
+        ml::log(ml::Severity::informational, "Client died mysteriously", component);
+        return false;
+    }
+
+    return true;
+}
+}
+
 void me::add_test_client_option_to(mir::Server& server, std::atomic<bool>& test_failed)
 {
     static auto const component = __PRETTY_FUNCTION__;
@@ -65,47 +114,8 @@ void me::add_test_client_option_to(mir::Server& server, std::atomic<bool>& test_
                     std::chrono::seconds(options->get<int>(test_timeout_opt)+1),
                     [pid, &server, &test_failed]
                     {
-                        int status;
-
-                        auto const wait_rc = waitpid(pid, &status, WNOHANG);
-
-                        if (wait_rc == 0)
-                        {
-                            ml::log(ml::Severity::informational, "Terminating client", component);
-                            kill(pid, SIGKILL);
-                        }
-                        else if (wait_rc != pid)
-                        {
-                            ml::log(ml::Severity::informational, "No status available for client", component);
+                        if (!good_exit_status(pid, component))
                             test_failed = true;
-                        }
-                        else if (WIFEXITED(status))
-                        {
-                            auto const exit_status = WEXITSTATUS(status);
-                            if (exit_status != EXIT_SUCCESS)
-                            {
-                                char const format[] = "Client has exited with status %d";
-                                char buffer[sizeof format + 10];
-                                snprintf(buffer, sizeof buffer, format, exit_status);
-                                ml::log(ml::Severity::informational, buffer, component);
-                                test_failed = true;
-                            }
-                        }
-                        else if (WIFSIGNALED(status))
-                        {
-                            auto const signal = WTERMSIG(status);
-                            char const format[] = "Client terminated by signal %d";
-                            char buffer[sizeof format];
-                            snprintf(buffer, sizeof buffer, format, signal);
-                            ml::log(ml::Severity::informational, buffer, component);
-                            test_failed = true;
-                        }
-                        else
-                        {
-                            ml::log(ml::Severity::informational, "Client died mysteriously", component);
-                            test_failed = true;
-                        }
-
                         server.stop();
                     });
             }
