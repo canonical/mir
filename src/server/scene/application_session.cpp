@@ -80,10 +80,13 @@ mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters c
     auto const observer = std::make_shared<scene::SurfaceEventSource>(id, event_sink);
     auto surf = surface_coordinator->add_surface(params, this);
 
-    if (params.state != mir_surface_state_unknown)
-        surf->configure(mir_surface_attrib_state, params.state);
-    surf->configure(mir_surface_attrib_type, params.type);
-    surf->configure(mir_surface_attrib_preferred_orientation, params.preferred_orientation);
+    if (params.state.is_set())
+        surf->configure(mir_surface_attrib_state, params.state.value());
+    if (params.type.is_set())
+        surf->configure(mir_surface_attrib_type, params.type.value());
+    if (params.preferred_orientation.is_set())
+        surf->configure(mir_surface_attrib_preferred_orientation, params.preferred_orientation.value());
+
     surf->add_observer(observer);
 
     {
