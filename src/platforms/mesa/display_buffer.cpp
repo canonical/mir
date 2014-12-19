@@ -199,10 +199,9 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
         if (bypass_it != renderable_list.rend())
         {
             auto bypass_buf = (*bypass_it)->buffer();
-            if (bypass_buf->can_bypass())
+            if (bypass_buf->can_bypass() &&
+                bypass_buf->size() == geom::Size{fb_width,fb_height})
             {
-                // Bypass might still fail when we try to acquire other
-                // resources, so returning false is still possible:
                 return flip(bypass_buf);
             }
         }
@@ -225,6 +224,17 @@ void mgm::DisplayBuffer::gl_swap_buffers()
 bool mgm::DisplayBuffer::flip(
     std::shared_ptr<graphics::Buffer> bypass_buf)
 {
+    /*
+     * There are two potentially blocking operations in this function:
+     *  1. egl.swap_buffers()
+     *  2. wait_for_page_flip()
+     * However only the first one has a chance of being implemented by the
+     * driver asynchronously (so it returns before it's finished) as observed
+     * with Intel graphics. So for optimal parallelism EGL swap starts first.
+     */
+    if (!bypass_buf && !egl.swap_buffers())
+        fatal_error("Failed to perform buffer swap");
+
     /*
      * We might not have waited for the previous frame to page flip yet.
      * This is good because it maximizes the time available to spend rendering
@@ -255,11 +265,7 @@ bool mgm::DisplayBuffer::flip(
         auto native = bypass_buf->native_buffer_handle();
         auto gbm_native = static_cast<mgm::GBMNativeBuffer*>(native.get());
         bufobj = get_buffer_object(gbm_native->bo);
-        /*
-         * Bypass is allowed to fail. Sometimes DRM has insufficient resources
-         * (briefly) to create the additional framebuffer object. So just fall
-         * back to compositing...
-         */
+        // If bypass fails, just fall back to compositing.
         if (!bufobj)
             return false;
     }
