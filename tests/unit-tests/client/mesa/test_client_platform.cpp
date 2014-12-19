@@ -17,9 +17,9 @@
  */
 
 #include "src/client/client_platform.h"
-#include "src/client/mesa/client_platform_factory.h"
+#include "mir/shared_library.h"
 #include "src/client/mesa/mesa_native_display_container.h"
-#include "mir_test_doubles/mock_client_context.h"
+#include "mir_test_framework/client_platform_factory.h"
 #include "mir_test_doubles/mock_client_surface.h"
 
 #include "mir_toolkit/mesa/native_display.h"
@@ -30,19 +30,20 @@ namespace mcl = mir::client;
 namespace mclm = mir::client::mesa;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
+namespace mtf = mir_test_framework;
 
 TEST(MesaClientPlatformTest, egl_native_display_is_valid_until_released)
 {
-    mtd::MockClientContext context;
-    mclm::ClientPlatformFactory factory;
-    auto platform = factory.create_client_platform(&context);
+    auto platform = mtf::create_mesa_client_platform();
+    auto platform_lib = mtf::get_platform_library();
 
     MirMesaEGLNativeDisplay* nd;
     {
         std::shared_ptr<EGLNativeDisplayType> native_display = platform->create_egl_native_display();
 
         nd = reinterpret_cast<MirMesaEGLNativeDisplay*>(*native_display);
-        EXPECT_EQ(MIR_MESA_TRUE, mclm::mir_client_mesa_egl_native_display_is_valid(nd));
+        auto validate = platform_lib->load_function<MirBool(*)(MirMesaEGLNativeDisplay*)>("mir_client_mesa_egl_native_display_is_valid");
+        EXPECT_EQ(MIR_MESA_TRUE, validate(nd));
     }
     EXPECT_EQ(MIR_MESA_FALSE, mclm::mir_client_mesa_egl_native_display_is_valid(nd));
 }
