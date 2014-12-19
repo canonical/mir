@@ -161,7 +161,7 @@ private:
                 auto const old_pos = surface->top_left();
                 surface->move_to(old_pos + displacement);
 
-                clip_to_tile(*surface, new_tile);
+                fit_to_new_tile(*surface, old_tile, new_tile);
             }
         }
     }
@@ -176,12 +176,16 @@ private:
         parameters.size = Size{width, height};
     }
 
-    static void clip_to_tile(ms::Surface& surface, Rectangle const& tile)
+    static void fit_to_new_tile(ms::Surface& surface, Rectangle const& old_tile, Rectangle const& new_tile)
     {
-        auto const displacement = surface.top_left() - tile.top_left;
+        auto const old_size = surface.size();
+        auto const scaled_width = old_size.width == old_tile.size.width ? new_tile.size.width : old_size.width;
+        auto const scaled_height = old_size.height == old_tile.size.height ? new_tile.size.height : old_size.height;
 
-        auto width = std::min(tile.size.width.as_int()-displacement.dx.as_int(), surface.size().width.as_int());
-        auto height = std::min(tile.size.height.as_int()-displacement.dy.as_int(), surface.size().height.as_int());
+        auto const displacement = surface.top_left() - new_tile.top_left;
+
+        auto width = std::min(new_tile.size.width.as_int()-displacement.dx.as_int(), scaled_width.as_int());
+        auto height = std::min(new_tile.size.height.as_int()-displacement.dy.as_int(), scaled_height.as_int());
 
         surface.resize({width, height});
     }
