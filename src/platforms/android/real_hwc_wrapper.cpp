@@ -35,7 +35,6 @@ static std::mutex instance_lock;
 static unsigned int instances;
 static void invalidate_hook(const struct hwc_procs* procs)
 {
-    printf("INV\n");
     mga::HwcCallbacks const* callbacks{nullptr};
     std::unique_lock<std::mutex> lk(instance_lock);
     if (instances > 0 && (callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)))
@@ -44,7 +43,6 @@ static void invalidate_hook(const struct hwc_procs* procs)
 
 static void vsync_hook(const struct hwc_procs* procs, int /*disp*/, int64_t timestamp)
 {
-    printf("NV\n");
     mga::HwcCallbacks const* callbacks{nullptr};
     std::unique_lock<std::mutex> lk(instance_lock);
     if (instances > 0 && (callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)))
@@ -53,7 +51,6 @@ static void vsync_hook(const struct hwc_procs* procs, int /*disp*/, int64_t time
 
 static void hotplug_hook(const struct hwc_procs* procs, int /*disp*/, int connected)
 {
-    printf("V\n");
     mga::HwcCallbacks const* callbacks{nullptr};
     std::unique_lock<std::mutex> lk(instance_lock);
     if (instances > 0 && (callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)))
@@ -82,12 +79,10 @@ mga::RealHwcWrapper::RealHwcWrapper(
     hwc_callbacks->hooks.hotplug = hotplug_hook;
     hwc_callbacks->self = this;
     hwc_device->registerProcs(hwc_device.get(), reinterpret_cast<hwc_procs_t*>(hwc_callbacks.get()));
-    printf("RETURN.\n");
 }
 
 mga::RealHwcWrapper::~RealHwcWrapper()
 {
-    printf("ZO\n");
     std::unique_lock<std::mutex> lk(instance_lock);
     instances--;
 }
