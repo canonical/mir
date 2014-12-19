@@ -1,3 +1,2 @@
-usr/bin/mir_demo_server_*
-usr/bin/mir_demo_client_*
-usr/bin/mir_demo_standalone_*
+usr/bin/mir_demo_*
+usr/bin/mir_proving_*

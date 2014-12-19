@@ -80,14 +80,13 @@ add_custom_command(TARGET mir-test-framework POST_BUILD
   COMMENT "Copying testing cursor themes to build dir..."
 )
 
-string (REPLACE " -Wl,--no-undefined" " " CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
-
 add_library(
   mirplatformstub SHARED
   stubbed_graphics_platform.cpp
 )
 
 target_link_libraries(mirplatformstub 
+  mirplatform
   mir-test-doubles
   mir-test
 )

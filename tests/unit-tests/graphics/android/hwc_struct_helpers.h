@@ -93,13 +93,17 @@ MATCHER_P(MatchesLayer, value, std::string(testing::PrintToString(value)) )
     return !(::testing::Test::HasFailure());
 }
 
-MATCHER_P(MatchesLegacyCropList, value, std::string(""))
+MATCHER_P(MatchesPrimaryList, value, std::string(""))
 {
-    EXPECT_EQ(arg.numHwLayers, value.size());
+    if (arg[0] == nullptr)
+        return (value.empty()); 
+    auto const& primary_list = *arg[0];
+
+    EXPECT_EQ(primary_list.numHwLayers, value.size());
     auto i = 0u;
     for(auto layer : value)
     {
-        EXPECT_THAT(arg.hwLayers[i++], MatchesLegacyLayer(*layer));
+        EXPECT_THAT(primary_list.hwLayers[i++], MatchesLegacyLayer(*layer));
         if (::testing::Test::HasFailure())
             return false;
     }
@@ -108,9 +112,11 @@ MATCHER_P(MatchesLegacyCropList, value, std::string(""))
 
 MATCHER_P3(MatchesListWithEglFields, value, dpy, sur, std::string(""))
 {
-    EXPECT_EQ(arg.dpy, dpy);
-    EXPECT_EQ(arg.sur, sur);
-    EXPECT_THAT(arg, MatchesLegacyCropList(value));
+    if (arg[0] == nullptr)
+        return (value.empty()); 
+    EXPECT_EQ(arg[0]->dpy, dpy);
+    EXPECT_EQ(arg[0]->sur, sur);
+    EXPECT_THAT(arg, MatchesPrimaryList(value));
     return !(::testing::Test::HasFailure());
 }
 

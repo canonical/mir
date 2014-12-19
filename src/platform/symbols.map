@@ -16,6 +16,7 @@ MIRPLATFORM_5 {
     mir::graphics::Buffer::pixel_format*;
     mir::graphics::Buffer::size*;
     mir::graphics::Buffer::stride*;
+    mir::graphics::Buffer::write*;
     mir::graphics::create_guest_platform*;
     mir::graphics::create_host_platform*;
     mir::graphics::Cursor::?Cursor*;
@@ -101,7 +102,6 @@ MIRPLATFORM_5 {
     mir::graphics::PlatformIpcOperations::?PlatformIpcOperations*;
     mir::graphics::PlatformIpcOperations::PlatformIpcOperations*;
     mir::graphics::PlatformIpcOperations::unpack_buffer*;
-    mir::graphics::Platform::make_buffer_writer*;
     mir::graphics::Platform::make_ipc_operations*;
     mir::graphics::Platform::operator*;
     mir::graphics::Platform::Platform*;
