@@ -32,10 +32,15 @@ TEST_F(MirClientLibraryDrmTest, sets_gbm_device_in_platform_data)
 {
     struct gbm_device* dev = reinterpret_cast<struct gbm_device*>(connection);
 
-    mir_connection_drm_set_gbm_device(connection, dev);
-
     MirPlatformPackage pkg;
+
     mir_connection_get_platform(connection, &pkg);
-    EXPECT_THAT(pkg.data_items, Eq(sizeof(dev) / sizeof(int)));
-    EXPECT_THAT(*reinterpret_cast<struct gbm_device**>(&pkg.data[0]), Eq(dev));
+    int const previous_data_count{pkg.data_items};
+
+    mir_connection_drm_set_gbm_device(connection, dev);
+    mir_connection_get_platform(connection, &pkg);
+
+    EXPECT_THAT(pkg.data_items, Eq(previous_data_count + (sizeof(dev) / sizeof(int))));
+    EXPECT_THAT(reinterpret_cast<struct gbm_device*>(pkg.data[previous_data_count]),
+                Eq(dev));
 }

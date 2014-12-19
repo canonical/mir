@@ -95,7 +95,7 @@ std::shared_ptr<EGLNativeWindowType> mclm::ClientPlatform::create_egl_native_win
 std::shared_ptr<EGLNativeDisplayType> mclm::ClientPlatform::create_egl_native_display()
 {
     MirEGLNativeDisplayType *mir_native_display = new MirEGLNativeDisplayType;
-    *mir_native_display = display_container.create(context->mir_connection());
+    *mir_native_display = display_container.create(context);
     auto egl_native_display = reinterpret_cast<EGLNativeDisplayType*>(mir_native_display);
 
     return std::shared_ptr<EGLNativeDisplayType>(egl_native_display, NativeDisplayDeleter(display_container));

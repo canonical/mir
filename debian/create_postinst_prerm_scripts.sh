@@ -6,7 +6,7 @@ dpkg_alternatives_priority=500
 deb_host_arch=$1
 deb_host_multiarch=$2
 
-mir_platform_types="${PLATFORM_DRIVER} ${CLIENT_DRIVER}"
+mir_platform_types="${PLATFORM_DRIVER}"
 case $deb_host_arch in
     arm64)
         mir_platforms="mesa"

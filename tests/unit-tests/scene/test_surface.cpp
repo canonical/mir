@@ -75,6 +75,10 @@ TEST(SurfaceCreationParametersTest, default_creation_parameters)
     EXPECT_EQ(default_point, params.top_left);
     EXPECT_EQ(mg::BufferUsage::undefined, params.buffer_usage);
     EXPECT_EQ(mir_pixel_format_invalid, params.pixel_format);
+    EXPECT_FALSE(params.type.is_set());
+    EXPECT_FALSE(params.state.is_set());
+    EXPECT_FALSE(params.preferred_orientation.is_set());
+    EXPECT_FALSE(params.parent_id.is_set());
 
     EXPECT_EQ(ms::a_surface(), params);
 }
@@ -86,16 +90,30 @@ TEST(SurfaceCreationParametersTest, builder_mutators)
     mg::BufferUsage const usage{mg::BufferUsage::hardware};
     MirPixelFormat const format{mir_pixel_format_abgr_8888};
     std::string name{"surface"};
+    MirSurfaceState state{mir_surface_state_fullscreen};
+    MirSurfaceType type{mir_surface_type_dialog};
+    MirOrientationMode mode{mir_orientation_mode_landscape};
+    mf::SurfaceId surf_id{1000};
 
-    auto params = ms::a_surface().of_name(name)
-                                 .of_size(size)
-                                 .of_buffer_usage(usage)
-                                 .of_pixel_format(format);
+    auto params = ms::a_surface()
+        .of_name(name)
+        .of_size(size)
+        .of_buffer_usage(usage)
+        .of_pixel_format(format)
+        .of_type(type)
+        .with_parent_id(surf_id)
+        .with_preferred_orientation(mode)
+        .with_state(state);
 
     EXPECT_EQ(name, params.name);
     EXPECT_EQ(size, params.size);
     EXPECT_EQ(usage, params.buffer_usage);
     EXPECT_EQ(format, params.pixel_format);
+
+    EXPECT_EQ(type, params.type);
+    EXPECT_EQ(state, params.state);
+    EXPECT_EQ(mode, params.preferred_orientation);
+    EXPECT_EQ(surf_id, params.parent_id);
 }
 
 TEST(SurfaceCreationParametersTest, equality)

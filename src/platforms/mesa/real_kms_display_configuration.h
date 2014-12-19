@@ -32,6 +32,8 @@ namespace mesa
 
 class RealKMSDisplayConfiguration : public KMSDisplayConfiguration
 {
+friend bool compatible(RealKMSDisplayConfiguration const& conf1, RealKMSDisplayConfiguration const& conf2);
+
 public:
     RealKMSDisplayConfiguration(int drm_fd);
     RealKMSDisplayConfiguration(RealKMSDisplayConfiguration const& conf);
@@ -54,6 +56,8 @@ private:
     DisplayConfigurationCard card;
     std::vector<DisplayConfigurationOutput> outputs;
 };
+
+bool compatible(RealKMSDisplayConfiguration const& conf1, RealKMSDisplayConfiguration const& conf2);
 
 }
 }
