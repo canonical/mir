@@ -116,7 +116,6 @@ std::shared_ptr<mga::DisplayDevice> mga::ResourceFactory::create_hwc_fb_device(
     std::shared_ptr<HwcWrapper> const& wrapper,
     std::shared_ptr<framebuffer_device_t> const& fb_native_device) const
 {
-//    auto config = std::make_shared<mga::FbControl>(wrapper);
     auto config = std::make_shared<mga::HwcBlankingControl>(wrapper);
     return std::make_shared<mga::HwcFbDevice>(wrapper, fb_native_device, config);
 }

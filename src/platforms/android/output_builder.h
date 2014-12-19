@@ -24,7 +24,6 @@
 #include "overlay_optimization.h"
 #include "hardware/hwcomposer.h"
 #include "hardware/fb.h"
-#include <atomic>
 
 namespace mir
 {
@@ -66,12 +65,6 @@ private:
     std::shared_ptr<framebuffer_device_t> fb_native;
     OverlayOptimization overlay_optimization;
     HwcVersion hwc_version;
-};
-
-struct HWCCallbacks
-{
-    hwc_procs_t hooks;
-    std::atomic<OutputBuilder*> self;
 };
 
 }

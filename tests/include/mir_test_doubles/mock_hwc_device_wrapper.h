@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_HWC_DEVICE_WRAPPER_H_
 
 #include "src/platforms/android/hwc_wrapper.h"
+
 #include <gmock/gmock.h>
 
 namespace mir
