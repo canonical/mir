@@ -19,6 +19,8 @@
 #include "mir_toolkit/mir_cursor_configuration.h"
 #include "cursor_configuration.h"
 
+#include "api_helpers.h"
+
 #include <memory>
 
 char const *const mir_default_cursor_name = "default";
@@ -53,8 +55,9 @@ MirCursorConfiguration* mir_cursor_configuration_from_name(char const* name)
     {
         return new MirCursorConfiguration(name);
     }
-    catch (...)
+    catch (std::exception const& ex)
     {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
 }
