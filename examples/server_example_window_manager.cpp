@@ -18,6 +18,7 @@
 
 #include "server_example_window_manager.h"
 
+#include "mir/abnormal_exit.h"
 #include "mir/server.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
@@ -323,7 +324,7 @@ void me::add_window_manager_option_to(Server& server)
             if (options->get<std::string>(option) == tiling)
                 return factory->make_tiling_wm();
 
-            BOOST_THROW_EXCEPTION(std::runtime_error("Unknown window manager: " + options->get<std::string>(option)));
+            throw AbnormalExit("Unknown window manager: " + options->get<std::string>(option));
         });
 
     server.wrap_session_coordinator([factory, &server]
@@ -338,7 +339,7 @@ void me::add_window_manager_option_to(Server& server)
             if (options->get<std::string>(option) == tiling)
                 return std::make_shared<SessionTracker>(wrapped, factory->make_tiling_wm());
 
-            BOOST_THROW_EXCEPTION(std::runtime_error("Unknown window manager: " + options->get<std::string>(option)));
+            throw AbnormalExit("Unknown window manager: " + options->get<std::string>(option));
         });
 
     server.wrap_surface_coordinator([factory, &server]
@@ -353,8 +354,21 @@ void me::add_window_manager_option_to(Server& server)
             if (options->get<std::string>(option) == tiling)
                 return std::make_shared<SurfaceTracker>(wrapped, factory->make_tiling_wm());
 
-            BOOST_THROW_EXCEPTION(std::runtime_error("Unknown window manager: " + options->get<std::string>(option)));
+            throw AbnormalExit("Unknown window manager: " + options->get<std::string>(option));
         });
 
+    server.wrap_display_buffer_compositor_factory([factory, &server]
+       (std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped)
+       -> std::shared_ptr<mc::DisplayBufferCompositorFactory>
+       {
+           auto const options = server.get_options();
 
+           if (!options->is_set(option))
+               return wrapped;
+
+           if (options->get<std::string>(option) == tiling)
+               return std::make_shared<DisplayTrackerFactory>(wrapped, factory->make_tiling_wm());
+
+           throw AbnormalExit("Unknown window manager: " + options->get<std::string>(option));
+       });
 }
