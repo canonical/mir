@@ -162,6 +162,7 @@ install(TARGETS ${INSTALL_DEMOS} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 add_executable(mir_demo_server
   server_example.cpp
   glog_logger.cpp
+  server_example_test_client.cpp
 )
 
 target_link_libraries(mir_demo_server
