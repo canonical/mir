@@ -83,7 +83,7 @@ The demo servers provide a good way to check visually that clients can connect
 and display to the screen.
 In one terminal, run
 
-    mir_demo_server_shell
+    mir_proving_server
 
 and in another terminal, run
 
@@ -105,7 +105,7 @@ option is available with mir_demo_standalone_* and mir_demo_server_*
 
 If you run 
 
-    mir_demo_server_shell --hwc-report log
+    mir_proving_server --hwc-report log
 
 You will get output similar to this:
 

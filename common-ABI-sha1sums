@@ -30,3 +30,4 @@ f623dcf3c2ed134c1be20106eb54bcccc84af462  include/common/mir_toolkit/events/prom
 5944dc0556223cc54b45b32c8aa70b8c60ee0337  include/common/mir_toolkit/events/surface_event.h
 4975998aa1056ed0d39dcc538127453e516ad8e9  include/common/mir_toolkit/mesa/native_display.h
 101017c17714a57db57d79b7b5e7df40a3568236  include/common/mir_toolkit/mir_native_buffer.h
+4ce105a3a18241f5d33db31939ca15256f353c37  include/common/mir_toolkit/mir_version_number.h

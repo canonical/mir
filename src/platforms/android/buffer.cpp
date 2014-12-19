@@ -33,9 +33,11 @@ namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
 namespace geom=mir::geometry;
 
-mga::Buffer::Buffer(std::shared_ptr<NativeBuffer> const& buffer_handle,
-                    std::shared_ptr<mg::EGLExtensions> const& extensions)
-    : native_buffer(buffer_handle),
+mga::Buffer::Buffer(gralloc_module_t const* hw_module,
+    std::shared_ptr<NativeBuffer> const& buffer_handle,
+    std::shared_ptr<mg::EGLExtensions> const& extensions)
+    : hw_module(hw_module),
+      native_buffer(buffer_handle),
       egl_extensions(extensions)
 {
 }
@@ -135,4 +137,36 @@ std::shared_ptr<mg::NativeBuffer> mga::Buffer::native_buffer_handle() const
     //lock remains in effect until the native handle is released
     lk.release();
     return native_resource;
+}
+
+void mga::Buffer::write(unsigned char const* data, size_t data_size)
+{
+    auto handle = native_buffer_handle();
+
+    native_buffer->ensure_available_for(mga::BufferAccess::write);
+    
+    auto bpp = MIR_BYTES_PER_PIXEL(pixel_format());
+    size_t buffer_size_bytes = size().height.as_int() * size().width.as_int() * bpp;
+    if (buffer_size_bytes != data_size)
+        BOOST_THROW_EXCEPTION(std::logic_error("Size of pixels is not equal to size of buffer"));
+
+    char* vaddr;
+    int usage = GRALLOC_USAGE_SW_WRITE_OFTEN;
+    int width = size().width.as_uint32_t();
+    int height = size().height.as_uint32_t();
+    int top = 0;
+    int left = 0;
+    if ( hw_module->lock(hw_module, handle->handle(),
+        usage, top, left, width, height, reinterpret_cast<void**>(&vaddr)) )
+        BOOST_THROW_EXCEPTION(std::runtime_error("error securing buffer for client cpu use"));
+
+    // Copy line by line in case of stride != width*bpp
+    for (int i = 0; i < height; i++)
+    {
+        int line_offset_in_buffer = stride().as_uint32_t()*i;
+        int line_offset_in_source = bpp*width*i;
+        memcpy(vaddr + line_offset_in_buffer, data + line_offset_in_source, width * bpp);
+    }
+    
+    hw_module->unlock(hw_module, handle->handle());
 }
