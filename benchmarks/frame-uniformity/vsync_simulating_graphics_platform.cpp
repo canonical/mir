@@ -45,7 +45,11 @@ struct StubDisplayBuffer : mtd::StubDisplayBuffer
     {
     }
     
-    void post_update() override
+    void gl_swap_buffers() override
+    {
+    }
+
+    void flip() override
     {
         auto now = std::chrono::high_resolution_clock::now();
         auto next_sync = last_sync + std::chrono::seconds(1) / vsync_rate_in_hz;
