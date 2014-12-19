@@ -10,6 +10,7 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_mediating_display_changer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_prompt_session_container.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_prompt_session_manager.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_prompt_session_impl.cpp
 
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_impl.cpp

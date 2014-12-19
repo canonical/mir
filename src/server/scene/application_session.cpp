@@ -80,10 +80,13 @@ mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters c
     auto const observer = std::make_shared<scene::SurfaceEventSource>(id, event_sink);
     auto surf = surface_coordinator->add_surface(params, this);
 
-    if (params.state != mir_surface_state_unknown)
-        surf->configure(mir_surface_attrib_state, params.state);
-    surf->configure(mir_surface_attrib_type, params.type);
-    surf->configure(mir_surface_attrib_preferred_orientation, params.preferred_orientation);
+    if (params.state.is_set())
+        surf->configure(mir_surface_attrib_state, params.state.value());
+    if (params.type.is_set())
+        surf->configure(mir_surface_attrib_type, params.type.value());
+    if (params.preferred_orientation.is_set())
+        surf->configure(mir_surface_attrib_preferred_orientation, params.preferred_orientation.value());
+
     surf->add_observer(observer);
 
     {
@@ -208,4 +211,22 @@ void ms::ApplicationSession::stop_prompt_session()
     stop_event.type = mir_event_type_prompt_session_state_change;
     stop_event.prompt_session.new_state = mir_prompt_session_state_stopped;
     event_sink->handle_event(stop_event);
+}
+
+void ms::ApplicationSession::suspend_prompt_session()
+{
+    MirEvent start_event;
+    memset(&start_event, 0, sizeof start_event);
+    start_event.type = mir_event_type_prompt_session_state_change;
+    start_event.prompt_session.new_state = mir_prompt_session_state_suspended;
+    event_sink->handle_event(start_event);
+}
+
+void ms::ApplicationSession::resume_prompt_session()
+{
+    MirEvent start_event;
+    memset(&start_event, 0, sizeof start_event);
+    start_event.type = mir_event_type_prompt_session_state_change;
+    start_event.prompt_session.new_state = mir_prompt_session_state_started;
+    event_sink->handle_event(start_event);
 }

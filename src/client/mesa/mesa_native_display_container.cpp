@@ -18,7 +18,7 @@
 
 #include "mesa_native_display_container.h"
 
-#include "mir_toolkit/mir_client_library.h"
+#include "../client_context.h"
 
 #include <cstring>
 #include <unordered_set>
@@ -35,8 +35,8 @@ extern "C"
 static int egl_display_get_platform(MirMesaEGLNativeDisplay* display,
                                     MirPlatformPackage* package)
 {
-    auto connection = static_cast<MirConnection*>(display->context);
-    mir_connection_get_platform(connection, package);
+    auto context = static_cast<mcl::ClientContext*>(display->context);
+    context->populate(*package);
     return MIR_MESA_TRUE;
 }
 
@@ -93,11 +93,11 @@ bool mclm::MesaNativeDisplayContainer::validate(MirEGLNativeDisplayType display)
 }
 
 MirEGLNativeDisplayType
-mclm::MesaNativeDisplayContainer::create(MirConnection* connection)
+mclm::MesaNativeDisplayContainer::create(ClientContext* context)
 {
     MirMesaEGLNativeDisplay* display = new MirMesaEGLNativeDisplay();
     display->display_get_platform = egl_display_get_platform;
-    display->context = connection;
+    display->context = context;
 
     std::lock_guard<std::mutex> lg(guard);
     auto egl_display = static_cast<MirEGLNativeDisplayType>(display);

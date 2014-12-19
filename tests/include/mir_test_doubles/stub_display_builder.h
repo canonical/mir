@@ -19,8 +19,8 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
-#include "src/platform/graphics/android/display_buffer_builder.h"
-#include "src/platform/graphics/android/configurable_display_buffer.h"
+#include "src/platforms/android/display_buffer_builder.h"
+#include "src/platforms/android/configurable_display_buffer.h"
 #include <gmock/gmock.h>
 
 namespace mir

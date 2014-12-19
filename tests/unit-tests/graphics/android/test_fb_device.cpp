@@ -19,8 +19,8 @@
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/stub_android_native_buffer.h"
-#include "src/platform/graphics/android/fb_device.h"
-#include "src/platform/graphics/android/hwc_fallback_gl_renderer.h"
+#include "src/platforms/android/fb_device.h"
+#include "src/platforms/android/hwc_fallback_gl_renderer.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_egl.h"
@@ -110,12 +110,6 @@ TEST_F(FBDevice, does_not_segfault_if_null_swapinterval_hook)
 {
     fb_hal_mock->setSwapInterval = nullptr;
     mga::FBDevice fbdev(fb_hal_mock);
-}
-
-TEST_F(FBDevice, does_not_accept_orientation_changes)
-{
-    mga::FBDevice fbdev(fb_hal_mock);
-    EXPECT_FALSE(fbdev.apply_orientation(mir_orientation_left));
 }
 
 TEST_F(FBDevice, can_screen_on_off)

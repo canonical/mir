@@ -75,10 +75,10 @@ TEST(SurfaceCreationParametersTest, default_creation_parameters)
     EXPECT_EQ(default_point, params.top_left);
     EXPECT_EQ(mg::BufferUsage::undefined, params.buffer_usage);
     EXPECT_EQ(mir_pixel_format_invalid, params.pixel_format);
-    EXPECT_EQ(mir_surface_type_normal, params.type);
-    EXPECT_EQ(mir_surface_state_unknown, params.state);
-    EXPECT_EQ(mir_orientation_mode_any, params.preferred_orientation);
-    EXPECT_FALSE(params.has_parent);
+    EXPECT_FALSE(params.type.is_set());
+    EXPECT_FALSE(params.state.is_set());
+    EXPECT_FALSE(params.preferred_orientation.is_set());
+    EXPECT_FALSE(params.parent_id.is_set());
 
     EXPECT_EQ(ms::a_surface(), params);
 }
@@ -113,7 +113,6 @@ TEST(SurfaceCreationParametersTest, builder_mutators)
     EXPECT_EQ(type, params.type);
     EXPECT_EQ(state, params.state);
     EXPECT_EQ(mode, params.preferred_orientation);
-    EXPECT_TRUE(params.has_parent);
     EXPECT_EQ(surf_id, params.parent_id);
 }
 

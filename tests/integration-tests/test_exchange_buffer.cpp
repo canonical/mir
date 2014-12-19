@@ -167,11 +167,6 @@ struct StubPlatform : public mtd::NullPlatform
         return std::make_shared<mtd::StubDisplay>(rect);
     }
     
-    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
-    {
-        return nullptr;
-    }
-
     std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
 };
 

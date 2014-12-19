@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_VIRTUAL_TERMINAL_H_
 #define MIR_TEST_DOUBLES_MOCK_VIRTUAL_TERMINAL_H_
 
-#include "src/platform/graphics/mesa/virtual_terminal.h"
+#include "src/platforms/mesa/virtual_terminal.h"
 
 #include <gmock/gmock.h>
 

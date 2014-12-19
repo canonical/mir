@@ -16,7 +16,7 @@
  * Authored by: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#include "src/platform/graphics/mesa/bypass.h"
+#include "src/platforms/mesa/bypass.h"
 #include "mir_test_doubles/mock_display_buffer.h"
 #include "mir_test_doubles/fake_renderable.h"
 

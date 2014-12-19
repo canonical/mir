@@ -41,8 +41,11 @@ protected:
     ClientPlatformFactory& operator=(ClientPlatformFactory const& p) = delete;
 };
 
-extern "C" typedef std::shared_ptr<ClientPlatformFactory>(*CreateClientPlatformFactory)();
-extern "C" std::shared_ptr<ClientPlatformFactory> create_client_platform_factory();
+extern "C" typedef std::shared_ptr<ClientPlatform>(*CreateClientPlatform)(ClientContext* context);
+extern "C" std::shared_ptr<ClientPlatform> create_client_platform(ClientContext* context);
+
+extern "C" typedef bool (*ClientPlatformProbe)(ClientContext* context);
+extern "C" bool is_appropriate_module(ClientContext* context);
 
 }
 }
