@@ -22,9 +22,12 @@
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/geometry/rectangles.h"
+#include "mir/geometry/displacement.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/options/option.h"
 #include "mir/scene/observer.h"
+#include "mir/scene/session.h"
+#include "mir/scene/surface.h"
 #include "mir/scene/placement_strategy.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/session_coordinator_wrapper.h"
@@ -50,16 +53,23 @@ namespace
 class WindowManager : public ms::PlacementStrategy
 {
 public:
-    auto place(ms::Session const&, ms::SurfaceCreationParameters const& request_parameters)
+    auto place(ms::Session const& session, ms::SurfaceCreationParameters const& request_parameters)
     -> ms::SurfaceCreationParameters override
     {
-        return request_parameters;
+        auto parameters = request_parameters;
+
+        // TODO put into tile
+        tiles.find(&session);
+        // TODO clipping
+
+        return parameters;
     }
 
     void add_surface(
-        std::shared_ptr<ms::Surface> const& /*new_surface*/,
-        ms::Session* /*session*/)
+        std::shared_ptr<ms::Surface> const& surface,
+        ms::Session* session)
     {
+        surfaces.emplace(session, surface);
     }
 
     void remove_surface(std::weak_ptr<ms::Surface> const& /*surface*/)
@@ -69,14 +79,15 @@ public:
     void add_session(std::shared_ptr<mf::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        tiles[session] = Rectangle{};
+        tiles[session.get()] = Rectangle{};
         update_tiles();
     }
 
     void remove_session(std::shared_ptr<mf::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        tiles.erase(session);
+        tiles.erase(session.get());
+        surfaces.erase(session.get());
         update_tiles();
     }
 
@@ -119,13 +130,36 @@ private:
             ++index;
             auto const dx = (total_width*index)/sessions - x;
 
-            tile.second = Rectangle{{x, 0}, {dx, total_height}};
+            auto const old_tile = tile.second;
+            Rectangle const new_tile{{x, 0}, {dx, total_height}};
+
+            update_surfaces(tile.first, old_tile, new_tile);
+
+            tile.second = new_tile;
+        }
+    }
+
+    void update_surfaces(mf::Session const* session, Rectangle const& old_tile, Rectangle const& new_tile)
+    {
+        auto displacement = new_tile.top_left - old_tile.top_left;
+        auto const moved = surfaces.equal_range(session);
+
+        for (auto p = moved.first; p != moved.second; ++p)
+        {
+            if (auto const surface = p->second.lock())
+            {
+                auto const old_pos = surface->top_left();
+                surface->move_to(old_pos + displacement);
+
+                // TODO clipping
+            }
         }
     }
 
     std::mutex mutex;
     std::vector<Rectangle> displays;
-    std::map<std::shared_ptr<mf::Session>, Rectangle> tiles;
+    std::map<mf::Session const*, Rectangle> tiles;
+    std::multimap<mf::Session const*, std::weak_ptr<ms::Surface>> surfaces;
 };
 
 class WindowManagmentFactory
