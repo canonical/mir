@@ -225,17 +225,6 @@ bool mgm::DisplayBuffer::flip(
     std::shared_ptr<graphics::Buffer> bypass_buf)
 {
     /*
-     * There are two potentially blocking operations in this function:
-     *  1. egl.swap_buffers()
-     *  2. wait_for_page_flip()
-     * However only the first one has a chance of being implemented by the
-     * driver asynchronously (so it returns before it's finished) as observed
-     * with Intel graphics. So for optimal parallelism EGL swap starts first.
-     */
-    if (!bypass_buf && !egl.swap_buffers())
-        fatal_error("Failed to perform buffer swap");
-
-    /*
      * We might not have waited for the previous frame to page flip yet.
      * This is good because it maximizes the time available to spend rendering
      * each frame. Just remember wait_for_page_flip() must be called at some
