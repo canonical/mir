@@ -416,9 +416,10 @@ struct MirClientSurfaceTest : public testing::Test
         return std::make_shared<MirSurface>(
             connection.get(),
             server_stub,
+            nullptr,
             buffer_factory,
             input_platform,
-            params,
+            spec,
             &null_surface_callback,
             nullptr);
     }
@@ -434,10 +435,7 @@ struct MirClientSurfaceTest : public testing::Test
 
     std::shared_ptr<MirConnection> connection;
 
-    MirSurfaceParameters const params{
-        "test", 33, 45, mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid};
+    MirSurfaceSpec const spec{nullptr, 33, 45, mir_pixel_format_abgr_8888};
     std::shared_ptr<MockClientBufferFactory> const mock_buffer_factory =
         std::make_shared<testing::NiceMock<MockClientBufferFactory>>();
     std::shared_ptr<StubClientBufferFactory> const stub_buffer_factory =
@@ -571,8 +569,8 @@ TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_fd_when_delegate_sp
     EXPECT_CALL(*mock_input_thread, start()).Times(1);
     EXPECT_CALL(*mock_input_thread, stop()).Times(1);
 
-    MirSurface surface{connection.get(), *client_comm_channel,
-        stub_buffer_factory, mock_input_platform, params, &null_surface_callback, nullptr};
+    MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+        stub_buffer_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
     auto wait_handle = surface.get_create_wait_handle();
     wait_handle->wait_for_all();
     surface.set_event_handler(&delegate);
@@ -589,8 +587,8 @@ TEST_F(MirClientSurfaceTest, does_not_create_input_thread_when_no_delegate_speci
     EXPECT_CALL(*mock_input_thread, start()).Times(0);
     EXPECT_CALL(*mock_input_thread, stop()).Times(0);
 
-    MirSurface surface{connection.get(), *client_comm_channel,
-        stub_buffer_factory, mock_input_platform, params, &null_surface_callback, nullptr};
+    MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+        stub_buffer_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
     auto wait_handle = surface.get_create_wait_handle();
     wait_handle->wait_for_all();
 }

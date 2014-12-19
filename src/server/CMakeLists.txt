@@ -30,6 +30,11 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/mirserver.pc
 )
 
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
+  ${PROJECT_SOURCE_DIR}/include/server/mir/version.h
+)
+
 add_library(mirserverobjects OBJECT
   run_mir.cpp
   report_exception.cpp

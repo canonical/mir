@@ -96,11 +96,11 @@ MirConnection::MirConnection(std::string const& error_message) :
 MirConnection::MirConnection(
     mir::client::ConnectionConfiguration& conf) :
         deregisterer{this},
-        platform_library{conf.the_platform_library()},
         channel(conf.the_rpc_channel()),
         server(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         debug(channel.get(), ::google::protobuf::Service::STUB_DOESNT_OWN_CHANNEL),
         logger(conf.the_logger()),
+        connect_done{false},
         client_platform_factory(conf.the_client_platform_factory()),
         input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
@@ -132,11 +132,11 @@ MirConnection::~MirConnection() noexcept
 }
 
 MirWaitHandle* MirConnection::create_surface(
-    MirSurfaceParameters const & params,
+    MirSurfaceSpec const& spec,
     mir_surface_callback callback,
     void * context)
 {
-    auto surface = new MirSurface(this, server, &debug, platform->create_buffer_factory(), input_platform, params, callback, context);
+    auto surface = new MirSurface(this, server, &debug, platform->create_buffer_factory(), input_platform, spec, callback, context);
 
     return surface->get_create_wait_handle();
 }
@@ -236,6 +236,9 @@ void MirConnection::connected(mir_connected_callback callback, void * context)
                 set_error_message("Connect failed");
             }
         }
+
+        connect_done = true;
+
         /*
          * We need to create the client platform after the connection has been
          * established, to ensure that the client platform has access to all
@@ -420,9 +423,9 @@ bool MirConnection::is_valid(MirConnection *connection)
 
 void MirConnection::populate(MirPlatformPackage& platform_package)
 {
-    std::lock_guard<decltype(mutex)> lock(mutex);
-
-    if (!connect_result.has_error() && connect_result.has_platform())
+    // connect_result is write-once: once it's valid, we don't need to lock
+    // to use it.
+    if (connect_done && !connect_result.has_error() && connect_result.has_platform())
     {
         auto const& platform = connect_result.platform();
 
@@ -476,11 +479,6 @@ std::shared_ptr<mir::client::ClientPlatform> MirConnection::get_client_platform(
     std::lock_guard<decltype(mutex)> lock(mutex);
 
     return platform;
-}
-
-MirConnection* MirConnection::mir_connection()
-{
-    return this;
 }
 
 EGLNativeDisplayType MirConnection::egl_native_display()
