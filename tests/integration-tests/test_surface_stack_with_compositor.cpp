@@ -71,7 +71,6 @@ struct CountingDisplayBuffer : public mtd::StubDisplayBuffer
 
     void gl_swap_buffers() override
     {
-        increment_post_count();
     }
 
     void flip() override
