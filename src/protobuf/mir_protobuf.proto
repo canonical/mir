@@ -19,12 +19,11 @@ message SurfaceParameters {
   // TODO: Make required when we bump protobuf and server ABI
   optional string surface_name = 5;
   optional uint32 output_id = 6;
-  optional int32 state = 7;
-  optional int32 type = 8;
+
+  optional int32 type = 7;
+  optional int32 state = 8;
   optional int32 pref_orientation = 9;
   optional int32 parent_id = 10;
-  optional int32 left = 11;
-  optional int32 top = 12;
 }
 
 message SurfaceId {

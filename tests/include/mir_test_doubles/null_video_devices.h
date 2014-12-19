@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_VIDEO_DEVICES_H_
 #define MIR_TEST_DOUBLES_NULL_VIDEO_DEVICES_H_
 
-#include "src/platform/graphics/mesa/video_devices.h"
+#include "src/platforms/mesa/video_devices.h"
 
 namespace mir
 {

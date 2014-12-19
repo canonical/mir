@@ -11,7 +11,7 @@ Open a shell on the device:
 
 Now, start Mir and a client application:
 
-    # mir_demo_server_basic &
+    # mir_demo_server &
     # mir_demo_client_something   # take your pick of something
 
 Getting some example client applications

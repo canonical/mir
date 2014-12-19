@@ -504,8 +504,8 @@ TEST_F(MirConnectionTest, focused_window_synthesises_unfocus_event_on_release)
 {
     using namespace testing;
 
-    MirSurfaceParameters params;
-    params.name = __PRETTY_FUNCTION__;
+    MirSurfaceSpec params{nullptr, 640, 480, mir_pixel_format_abgr_8888};
+    params.surface_name = __PRETTY_FUNCTION__;
 
     MirEventDelegate const event_delegate = {
         &surface_event_callback,
@@ -542,8 +542,8 @@ TEST_F(MirConnectionTest, unfocused_window_does_not_synthesise_unfocus_event_on_
 {
     using namespace testing;
 
-    MirSurfaceParameters params;
-    params.name = __PRETTY_FUNCTION__;
+    MirSurfaceSpec params{nullptr, 640, 480, mir_pixel_format_abgr_8888};
+    params.surface_name = __PRETTY_FUNCTION__;
 
     MirEventDelegate const event_delegate = {
         &surface_event_callback,
