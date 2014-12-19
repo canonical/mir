@@ -63,7 +63,6 @@ private:
     bool force_backup_display;
 
     std::shared_ptr<HwcWrapper> hwc_wrapper;
-    std::shared_ptr<hwc_composer_device_1> hwc_native;
     std::shared_ptr<framebuffer_device_t> fb_native;
     OverlayOptimization overlay_optimization;
     HwcVersion hwc_version;

@@ -268,6 +268,7 @@ TEST_F(HwcWrapper, registers_hooks_for_driver)
     EXPECT_THAT(callbacks->hooks.hotplug, Ne(nullptr));
 }
 
+#if 0
 TEST_F(HwcWrapper, unregisters_at_destruction)
 {
     using namespace testing;
@@ -283,8 +284,8 @@ TEST_F(HwcWrapper, unregisters_at_destruction)
     }
     EXPECT_THAT(callbacks->self, Eq(nullptr));    
 }
+#endif
 
-#if 0
 TEST_F(HwcWrapper, callback_calls_hwcvsync_and_can_continue_calling_after_destruction)
 {
     using namespace testing;
@@ -294,22 +295,23 @@ TEST_F(HwcWrapper, callback_calls_hwcvsync_and_can_continue_calling_after_destru
         .WillOnce(Invoke([&](struct hwc_composer_device_1*, hwc_procs_t const* procs)
             {callbacks = reinterpret_cast<mga::HWCCallbacks const*>(procs);}));
 
-    mga::RealHwcWrapper wrapper(mock_device, mock_report);
-    auto subscription = wrapper.subscribe_to_events(
-        [&](mga::DisplayName, std::chrono::nanoseconds){ call_count++; },
-        [](mga::DisplayName, bool){},
-        []{}
-    );
+    {
+        mga::RealHwcWrapper wrapper(mock_device, mock_report);
 
-    ASSERT_THAT(callbacks, Ne(nullptr));
-    ASSERT_THAT(callbacks->hooks.vsync, Ne(nullptr));
-    callbacks->hooks.vsync(&callbacks->hooks, 0, 0);
+        wrapper.subscribe_to_events(
+            this,
+            [&](mga::DisplayName, std::chrono::nanoseconds){ call_count++; },
+            [](mga::DisplayName, bool){},
+            []{});
+
+        ASSERT_THAT(callbacks, Ne(nullptr));
+        ASSERT_THAT(callbacks->hooks.vsync, Ne(nullptr));
+        callbacks->hooks.vsync(&callbacks->hooks, 0, 0);
+    }
 
     //some bad drivers call the hooks after we close() the module.
     //After that point, we don't care, so just make sure there's something to call 
-    callbacks->self.load(nullptr);
     callbacks->hooks.vsync(&callbacks->hooks, 0, 0);
 
     EXPECT_THAT(call_count, Eq(1));
 }
-#endif

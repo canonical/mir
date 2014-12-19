@@ -52,7 +52,7 @@ mga::OutputBuilder::OutputBuilder(
         force_backup_display = true;
     }
 
-    if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
+    if (force_backup_display || hwc_version == HWC_DEVICE_API_VERSION_1_0)
     {
         fb_native = res_factory->create_fb_native_device();
         framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, fb_native);
@@ -83,20 +83,20 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
     }
     else
     {
-        switch (hwc_native->common.version)
+        switch (hwc_version)
         {
-            case HWC_DEVICE_API_VERSION_1_0:
+            case mga::HwcVersion::hwc10:
                 device = res_factory->create_hwc_fb_device(hwc_wrapper, fb_native);
             break;
 
-            case HWC_DEVICE_API_VERSION_1_1:
-            case HWC_DEVICE_API_VERSION_1_2:
+            case mga::HwcVersion::hwc11:
+            case mga::HwcVersion::hwc12:
                 device = res_factory->create_hwc_device(
                     hwc_wrapper, std::make_shared<mga::IntegerSourceCrop>());
             break;
 
             default:
-            case HWC_DEVICE_API_VERSION_1_3:
+            case mga::HwcVersion::hwc13:
                 device = res_factory->create_hwc_device(
                     hwc_wrapper, std::make_shared<mga::FloatSourceCrop>());
             break;

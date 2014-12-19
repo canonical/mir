@@ -32,27 +32,18 @@ namespace graphics
 {
 namespace android
 {
-
-struct EventSubscription
-{
-    EventSubscription() = default;
-    virtual ~EventSubscription() = default;
-    EventSubscription(EventSubscription const&) = delete;
-    EventSubscription& operator=(EventSubscription const&) = delete;
-    EventSubscription(EventSubscription &&){}
-    EventSubscription& operator=(EventSubscription&&){ return *this; }
-};
-
 class HwcWrapper
 {
 public:
     virtual ~HwcWrapper() = default;
     //receive vsync, invalidate, and hotplug events as long as EventSubscription is referenced.
     //As with the HWC api, these events MUST NOT call-back to the other functions in HwcWrapper. 
-    virtual EventSubscription subscribe_to_events(
+    virtual void subscribe_to_events(
+        void const* subscriber,
         std::function<void(DisplayName, std::chrono::nanoseconds)> const& vsync_callback,
         std::function<void(DisplayName, bool)> const& hotplug_callback,
         std::function<void()> const& invalidate_callback) = 0;
+    virtual void unsubscribe_from_events(void const* subscriber) noexcept = 0;
 
     virtual void prepare(std::array<hwc_display_contents_1*, HWC_NUM_DISPLAY_TYPES> const&) const = 0;
     virtual void set(std::array<hwc_display_contents_1*, HWC_NUM_DISPLAY_TYPES> const&) const = 0;

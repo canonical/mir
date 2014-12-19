@@ -26,22 +26,70 @@
 
 namespace mga=mir::graphics::android;
 
-mga::RealHwcWrapper::RealHwcWrapper(
-    std::shared_ptr<hwc_composer_device_1> const& hwc_device,
-    std::shared_ptr<mga::HwcReport> const& report)
-    : hwc_device(hwc_device),
-      report(report)
-{
-}
-
 namespace
 {
+//note: The destruction ordering of RealHwcWrapper should be enough to ensure that the
+//callbacks are not called after the hwc module is closed. However, some badly synchronized
+//drivers continue to call the hooks for a short period after we call close(). (LP: 1364637)
+static std::mutex instance_lock;
+static unsigned int instances;
+static void invalidate_hook(const struct hwc_procs* procs)
+{
+    printf("INV\n");
+    mga::HwcCallbacks const* callbacks{nullptr};
+    std::unique_lock<std::mutex> lk(instance_lock);
+    if (instances > 0 && (callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)))
+        callbacks->self->invalidate();
+}
+
+static void vsync_hook(const struct hwc_procs* procs, int /*disp*/, int64_t timestamp)
+{
+    printf("NV\n");
+    mga::HwcCallbacks const* callbacks{nullptr};
+    std::unique_lock<std::mutex> lk(instance_lock);
+    if (instances > 0 && (callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)))
+        callbacks->self->vsync(mga::DisplayName::primary, std::chrono::nanoseconds{timestamp});
+}
+
+static void hotplug_hook(const struct hwc_procs* procs, int /*disp*/, int connected)
+{
+    printf("V\n");
+    mga::HwcCallbacks const* callbacks{nullptr};
+    std::unique_lock<std::mutex> lk(instance_lock);
+    if (instances > 0 && (callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)))
+        callbacks->self->hotplug(mga::DisplayName::primary, connected);
+}
 int num_displays(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays)
 {
     return std::distance(displays.begin(), 
         std::find_if(displays.begin(), displays.end(),
             [](hwc_display_contents_1_t* d){ return d == nullptr; }));
 }
+}
+
+mga::RealHwcWrapper::RealHwcWrapper(
+    std::shared_ptr<hwc_composer_device_1> const& hwc_device,
+    std::shared_ptr<mga::HwcReport> const& report) :
+    hwc_callbacks(std::make_shared<mga::HwcCallbacks>()),
+    hwc_device(hwc_device),
+    report(report)
+{
+    std::unique_lock<std::mutex> lk(instance_lock);
+    instances++;
+
+    hwc_callbacks->hooks.invalidate = invalidate_hook;
+    hwc_callbacks->hooks.vsync = vsync_hook;
+    hwc_callbacks->hooks.hotplug = hotplug_hook;
+    hwc_callbacks->self = this;
+    hwc_device->registerProcs(hwc_device.get(), reinterpret_cast<hwc_procs_t*>(hwc_callbacks.get()));
+    printf("RETURN.\n");
+}
+
+mga::RealHwcWrapper::~RealHwcWrapper()
+{
+    printf("ZO\n");
+    std::unique_lock<std::mutex> lk(instance_lock);
+    instances--;
 }
 
 void mga::RealHwcWrapper::prepare(
@@ -72,24 +120,6 @@ void mga::RealHwcWrapper::set(
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
 }
-
-mga::EventSubscription mga::RealHwcWrapper::subscribe_to_events(
-        std::function<void(DisplayName, std::chrono::nanoseconds)> const& vsync_callback,
-        std::function<void(DisplayName, bool)> const& hotplug_callback,
-        std::function<void()> const& invalidate_callback)
-{
-    (void) vsync_callback;
-    (void) hotplug_callback;
-    (void) invalidate_callback;
-    return {};
-}
-#if 0
-void mga::RealHwcWrapper::register_hooks(std::shared_ptr<HWCCallbacks> const& callbacks)
-{
-    hwc_device->registerProcs(hwc_device.get(), reinterpret_cast<hwc_procs_t*>(callbacks.get()));
-    registered_callbacks = callbacks;
-}
-#endif
 
 void mga::RealHwcWrapper::vsync_signal_on(DisplayName display_name) const
 {
@@ -133,4 +163,38 @@ void mga::RealHwcWrapper::display_off(DisplayName display_name) const
         BOOST_THROW_EXCEPTION(std::runtime_error(ss.str()));
     }
     report->report_display_off();
+}
+
+void mga::RealHwcWrapper::subscribe_to_events(
+        void const* subscriber,
+        std::function<void(DisplayName, std::chrono::nanoseconds)> const& vsync,
+        std::function<void(DisplayName, bool)> const& hotplug,
+        std::function<void()> const& invalidate)
+{
+    callback_map[subscriber] = {vsync, hotplug, invalidate};
+}
+
+void mga::RealHwcWrapper::unsubscribe_from_events(void const* subscriber) noexcept
+{
+    auto it = callback_map.find(subscriber);
+    if (it != callback_map.end())
+        callback_map.erase(it);
+}
+
+void mga::RealHwcWrapper::vsync(DisplayName name, std::chrono::nanoseconds timestamp)
+{
+    for(auto const& callbacks : callback_map)
+        callbacks.second.vsync(name, timestamp);
+}
+
+void mga::RealHwcWrapper::hotplug(DisplayName name, bool connected)
+{
+    for(auto const& callbacks : callback_map)
+        callbacks.second.hotplug(name, connected);
+}
+
+void mga::RealHwcWrapper::invalidate()
+{
+    for(auto const& callbacks : callback_map)
+        callbacks.second.invalidate();
 }

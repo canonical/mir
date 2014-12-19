@@ -36,11 +36,6 @@ class HwcWrapper;
 class HWCVsyncCoordinator;
 class HWCCommonDevice;
 class HwcConfiguration;
-struct HWCCallbacks
-{
-    hwc_procs_t hooks;
-    std::atomic<HWCCommonDevice*> self;
-};
 
 class HWCCommonDevice : public DisplayDevice
 {
@@ -60,7 +55,6 @@ protected:
 private:
     virtual void turned_screen_off();
 
-    std::shared_ptr<HWCCallbacks> const callbacks;
     std::shared_ptr<HwcWrapper> const hwc_device;
     std::shared_ptr<HwcConfiguration> const hwc_config;
 
