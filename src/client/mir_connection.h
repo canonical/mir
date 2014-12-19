@@ -22,6 +22,7 @@
 #include <memory>
 #include <unordered_set>
 #include <unordered_map>
+#include <atomic>
 
 #include <mutex>
 
@@ -81,7 +82,7 @@ public:
     MirConnection& operator=(MirConnection const &) = delete;
 
     MirWaitHandle* create_surface(
-        MirSurfaceParameters const & params,
+        MirSurfaceSpec const& spec,
         mir_surface_callback callback,
         void * context);
     MirWaitHandle* release_surface(
@@ -122,8 +123,6 @@ public:
 
     static bool is_valid(MirConnection *connection);
 
-    MirConnection* mir_connection();
-
     EGLNativeDisplayType egl_native_display();
 
     void on_surface_created(int id, MirSurface* surface);
@@ -158,6 +157,7 @@ private:
     std::shared_ptr<mir::logging::Logger> const logger;
     mir::protobuf::Void void_response;
     mir::protobuf::Connection connect_result;
+    std::atomic<bool> connect_done;
     mir::protobuf::Void ignored;
     mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::DRMAuthMagicStatus drm_auth_magic_status;

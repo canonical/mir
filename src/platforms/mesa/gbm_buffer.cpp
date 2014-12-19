@@ -144,3 +144,8 @@ bool mgm::GBMBuffer::can_bypass() const
 {
     return bo_flags & GBM_BO_USE_SCANOUT;
 }
+
+void mgm::GBMBuffer::write(unsigned char const* /* pixels */, size_t /* size */)
+{
+    BOOST_THROW_EXCEPTION(std::runtime_error("Direct write to GBM hardware allocated buffer not supported"));
+}

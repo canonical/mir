@@ -21,12 +21,13 @@
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace mi = mir::input;
+namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
 ms::SurfaceCreationParameters::SurfaceCreationParameters()
-    : name(), size(), top_left(), buffer_usage(mg::BufferUsage::undefined),
-      pixel_format(mir_pixel_format_invalid),
-      depth{0}, input_mode(mi::InputReceptionMode::normal)
+    : buffer_usage{mg::BufferUsage::undefined},
+      pixel_format{mir_pixel_format_invalid},
+      depth{0}, input_mode{mi::InputReceptionMode::normal}
 {
 }
 
@@ -98,6 +99,31 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_output_id(
     return *this;
 }
 
+
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::of_type(MirSurfaceType the_type)
+{
+    type = the_type;
+    return *this;
+}
+
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_state(MirSurfaceState the_state)
+{
+    state = the_state;
+    return *this;
+}
+
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_preferred_orientation(MirOrientationMode mode)
+{
+    preferred_orientation = mode;
+    return *this;
+}
+
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_parent_id(mf::SurfaceId const& id)
+{
+    parent_id = id;
+    return *this;
+}
+
 bool ms::operator==(
     const SurfaceCreationParameters& lhs,
     const ms::SurfaceCreationParameters& rhs)
@@ -109,7 +135,11 @@ bool ms::operator==(
         lhs.pixel_format == rhs.pixel_format &&
         lhs.depth == rhs.depth &&
         lhs.input_mode == rhs.input_mode &&
-        lhs.output_id == rhs.output_id;
+        lhs.output_id == rhs.output_id &&
+        lhs.state == rhs.state &&
+        lhs.type == rhs.type &&
+        lhs.preferred_orientation == rhs.preferred_orientation &&
+        lhs.parent_id == rhs.parent_id;
 }
 
 bool ms::operator!=(

@@ -33,18 +33,12 @@ namespace doubles
 struct MockClientContext : public client::ClientContext
 {
     MockClientContext()
-        : connection{reinterpret_cast<MirConnection*>(0xabcdef)}
     {
         using namespace testing;
 
-        ON_CALL(*this, mir_connection()).WillByDefault(Return(connection));
-        EXPECT_CALL(*this, mir_connection()).Times(AtLeast(0));
         EXPECT_CALL(*this, populate(_)).Times(AtLeast(0));
     }
 
-    MirConnection* connection;
-
-    MOCK_METHOD0(mir_connection, MirConnection*());
     MOCK_METHOD1(populate, void(MirPlatformPackage&));
 };
 

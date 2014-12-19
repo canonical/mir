@@ -145,30 +145,38 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
         std::lock_guard<std::mutex> lg{configuration_mutex};
 
         auto const& kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
+        // Treat the current_display_configuration as incompatible with itself,
+        // before it's fully constructed, to force proper initialization.
+        bool const comp{(&conf != &current_display_configuration) &&
+                        compatible(kms_conf, current_display_configuration)};
         std::vector<std::unique_ptr<DisplayBuffer>> display_buffers_new;
 
-        /*
-         * Notice for a little while here we will have duplicate
-         * DisplayBuffers attached to each output, and the display_buffers_new
-         * will take over the outputs before the old display_buffers are
-         * destroyed. So to avoid page flipping confusion in-between, make
-         * sure we wait for all pending page flips to finish before the
-         * display_buffers_new are created and take control of the outputs.
-         */
-        for (auto& db : display_buffers)
-            db->wait_for_page_flip();
-
-        /* Reset the state of all outputs */
-        kms_conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+        if (!comp)
         {
-            uint32_t const connector_id = current_display_configuration.get_kms_connector_id(conf_output.id);
-            auto kms_output = output_container.get_kms_output_for(connector_id);
-            kms_output->clear_cursor();
-            kms_output->reset();
-        });
+            /*
+             * Notice for a little while here we will have duplicate
+             * DisplayBuffers attached to each output, and the display_buffers_new
+             * will take over the outputs before the old display_buffers are
+             * destroyed. So to avoid page flipping confusion in-between, make
+             * sure we wait for all pending page flips to finish before the
+             * display_buffers_new are created and take control of the outputs.
+             */
+            for (auto& db : display_buffers)
+                db->wait_for_page_flip();
+
+            /* Reset the state of all outputs */
+            kms_conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+            {
+                uint32_t const connector_id = current_display_configuration.get_kms_connector_id(conf_output.id);
+                auto kms_output = output_container.get_kms_output_for(connector_id);
+                kms_output->clear_cursor();
+                kms_output->reset();
+            });
+        }
 
         /* Set up used outputs */
         OverlappingOutputGrouping grouping{conf};
+        auto group_idx = 0;
 
         grouping.for_each_group([&](OverlappingOutputGroup const& group)
         {
@@ -184,8 +192,11 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                 auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
                                                                     conf_output.current_mode_index);
                 kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
-                kms_output->set_power_mode(conf_output.power_mode);
-                kms_outputs.push_back(kms_output);
+                if (!comp)
+                {
+                    kms_output->set_power_mode(conf_output.power_mode);
+                    kms_outputs.push_back(kms_output);
+                }
 
                 /*
                  * Presently OverlappingOutputGroup guarantees all grouped
@@ -194,35 +205,44 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
                 orientation = conf_output.orientation;
             });
 
-            uint32_t width = bounding_rect.size.width.as_uint32_t();
-            uint32_t height = bounding_rect.size.height.as_uint32_t();
-            if (orientation == mir_orientation_left ||
-                orientation == mir_orientation_right)
+            if (comp)
             {
-                std::swap(width, height);
+                display_buffers[group_idx++]->set_orientation(orientation, bounding_rect);
             }
+            else
+            {
+                uint32_t width = bounding_rect.size.width.as_uint32_t();
+                uint32_t height = bounding_rect.size.height.as_uint32_t();
+                if (orientation == mir_orientation_left ||
+                    orientation == mir_orientation_right)
+                {
+                    std::swap(width, height);
+                }
 
-            auto surface = platform->gbm.create_scanout_surface(width, height);
+                auto surface = platform->gbm.create_scanout_surface(width, height);
 
-            std::unique_ptr<DisplayBuffer> db{
-                new DisplayBuffer{platform, listener,
-                                  kms_outputs,
-                                  std::move(surface),
-                                  bounding_rect,
-                                  orientation,
-                                  *gl_config,
-                                  shared_egl.context()}};
+                std::unique_ptr<DisplayBuffer> db{
+                    new DisplayBuffer{platform, listener,
+                                      kms_outputs,
+                                      std::move(surface),
+                                      bounding_rect,
+                                      orientation,
+                                      *gl_config,
+                                      shared_egl.context()}};
 
-            display_buffers_new.push_back(std::move(db));
+                display_buffers_new.push_back(std::move(db));
+            }
         });
 
-        display_buffers = std::move(display_buffers_new);
+        if (!comp)
+            display_buffers = std::move(display_buffers_new);
 
         /* Store applied configuration */
         current_display_configuration = kms_conf;
 
-        /* Clear connected but unused outputs */
-        clear_connected_unused_outputs();
+        if (!comp)
+            /* Clear connected but unused outputs */
+            clear_connected_unused_outputs();
     }
 
     if (auto c = cursor.lock()) c->resume();
