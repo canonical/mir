@@ -178,11 +178,12 @@ private:
 
     static void fit_to_new_tile(ms::Surface& surface, Rectangle const& old_tile, Rectangle const& new_tile)
     {
+        auto const displacement = surface.top_left() - new_tile.top_left;
+
+        // For now just scale if was filling width/height of tile
         auto const old_size = surface.size();
         auto const scaled_width = old_size.width == old_tile.size.width ? new_tile.size.width : old_size.width;
         auto const scaled_height = old_size.height == old_tile.size.height ? new_tile.size.height : old_size.height;
-
-        auto const displacement = surface.top_left() - new_tile.top_left;
 
         auto width = std::min(new_tile.size.width.as_int()-displacement.dx.as_int(), scaled_width.as_int());
         auto height = std::min(new_tile.size.height.as_int()-displacement.dy.as_int(), scaled_height.as_int());
