@@ -24,6 +24,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/common.h"
 #include "mir/graphics/native_buffer.h"
+#include "mir/optional_value.h"
 #include "client_buffer_depository.h"
 #include "mir_wait_handle.h"
 #include "mir_client_surface.h"
@@ -56,18 +57,27 @@ struct MemoryRegion;
 struct MirSurfaceSpec
 {
     MirSurfaceSpec() = default;
-    MirSurfaceSpec(MirSurfaceParameters const& params);
+    MirSurfaceSpec(MirConnection* connection, int width, int height, MirPixelFormat format);
+    MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters const& params);
 
+    mir::protobuf::SurfaceParameters serialize() const;
+
+    // Required parameters
     MirConnection* connection{nullptr};
-    std::string name;
-    MirRectangle rect{0, 0, 0, 0};
+    int width{-1};
+    int height{-1};
     MirPixelFormat pixel_format{mir_pixel_format_invalid};
     MirBufferUsage buffer_usage{mir_buffer_usage_hardware};
-    uint32_t output_id{mir_display_output_id_invalid};
-    MirSurfaceState state{mir_surface_state_unknown};
-    MirSurfaceType type{mir_surface_type_normal};
-    MirOrientationMode preferred_orientation{mir_orientation_mode_any};
-    MirSurface* parent{nullptr};
+
+    // Optional parameters
+    mir::optional_value<std::string> surface_name;
+    mir::optional_value<uint32_t> output_id;
+
+    mir::optional_value<MirSurfaceType> type;
+    mir::optional_value<MirSurfaceState> state;
+    mir::optional_value<MirOrientationMode> pref_orientation;
+
+    mir::optional_value<MirSurface*> parent;
 };
 
 struct MirSurface : public mir::client::ClientSurface

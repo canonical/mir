@@ -44,12 +44,7 @@ MirSurfaceSpec* mir_connection_create_spec_for_normal_surface(MirConnection* con
                                                               int width, int height,
                                                               MirPixelFormat format)
 {
-    auto spec = new MirSurfaceSpec;
-    spec->connection = connection;
-    spec->rect.width = width;
-    spec->rect.height = height;
-    spec->pixel_format = format;
-    return spec;
+    return new MirSurfaceSpec{connection, width, height, format};
 }
 
 MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)
@@ -86,19 +81,19 @@ MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
 
 bool mir_surface_spec_set_name(MirSurfaceSpec* spec, char const* name)
 {
-    spec->name = name;
+    spec->surface_name = name;
     return true;
 }
 
 bool mir_surface_spec_set_width(MirSurfaceSpec* spec, unsigned width)
 {
-    spec->rect.width = width;
+    spec->width = width;
     return true;
 }
 
 bool mir_surface_spec_set_height(MirSurfaceSpec* spec, unsigned height)
 {
-    spec->rect.height = height;
+    spec->height = height;
     return true;
 }
 
@@ -132,8 +127,7 @@ MirWaitHandle* mir_connection_create_surface(
     mir_surface_callback callback,
     void* context)
 {
-    MirSurfaceSpec spec{*params};
-    spec.connection = connection;
+    MirSurfaceSpec spec{connection, *params};
     return mir_surface_create(&spec, callback, context);
 }
 

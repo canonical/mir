@@ -38,6 +38,10 @@ namespace mircv = mir::input::receiver;
 namespace mp = mir::protobuf;
 namespace gp = google::protobuf;
 
+#define SERIALIZE_OPTION_IF_SET(option, message) \
+    if (option.is_set()) \
+        message.set_##option(option.value());
+
 namespace
 {
 void null_callback(MirSurface*, void*) {}
@@ -46,18 +50,47 @@ std::mutex handle_mutex;
 std::unordered_set<MirSurface*> valid_surfaces;
 }
 
-MirSurfaceSpec::MirSurfaceSpec(MirSurfaceParameters const& params)
-    : rect{0, 0,
-           static_cast<unsigned int>(params.width),
-           static_cast<unsigned int>(params.height)},
-      pixel_format{params.pixel_format},
-      buffer_usage{params.buffer_usage},
-      output_id{params.output_id},
-      state{
-          output_id != mir_display_output_id_invalid ?
-              mir_surface_state_fullscreen : mir_surface_state_unknown
-      }
+MirSurfaceSpec::MirSurfaceSpec(
+    MirConnection* connection, int width, int height, MirPixelFormat format)
+    : connection{connection},
+      width{width},
+      height{height},
+      pixel_format{format}
 {
+}
+
+MirSurfaceSpec::MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters const& params)
+    : connection{connection},
+      width{params.width},
+      height{params.height},
+      pixel_format{params.pixel_format},
+      buffer_usage{params.buffer_usage}
+{
+    if (params.output_id != mir_display_output_id_invalid)
+    {
+        output_id = params.output_id;
+        state = mir_surface_state_fullscreen;
+    }
+}
+
+mir::protobuf::SurfaceParameters MirSurfaceSpec::serialize() const
+{
+    mir::protobuf::SurfaceParameters message;
+
+    message.set_width(width);
+    message.set_height(height);
+    message.set_pixel_format(pixel_format);
+    message.set_buffer_usage(buffer_usage);
+
+    SERIALIZE_OPTION_IF_SET(surface_name, message);
+    SERIALIZE_OPTION_IF_SET(output_id, message);
+    SERIALIZE_OPTION_IF_SET(type, message);
+    SERIALIZE_OPTION_IF_SET(state, message);
+    SERIALIZE_OPTION_IF_SET(pref_orientation, message);
+    if (parent.is_set() && parent.value() != nullptr)
+        message.set_parent_id(parent.value()->id());
+
+    return message;
 }
 
 MirSurface::MirSurface(std::string const& error)
@@ -78,7 +111,7 @@ MirSurface::MirSurface(
     mir_surface_callback callback, void * context)
     : server{&the_server},
       debug{debug},
-      name{spec.name},
+      name{spec.surface_name.value()},
       connection(allocating_connection),
       buffer_depository(std::make_shared<mcl::ClientBufferDepository>(factory, mir::frontend::client_buffer_cache_size)),
       input_platform(input_platform)
@@ -98,23 +131,7 @@ MirSurface::MirSurface(
     for (int i = 0; i < mir_surface_attribs; i++)
         attrib_cache[i] = -1;
 
-    mir::protobuf::SurfaceParameters message;
-    message.set_surface_name(name);
-    message.set_width(spec.rect.width);
-    message.set_height(spec.rect.height);
-    message.set_pixel_format(spec.pixel_format);
-    message.set_buffer_usage(spec.buffer_usage);
-    message.set_output_id(spec.output_id);
-    message.set_state(spec.state);
-    message.set_type(spec.type);
-    message.set_pref_orientation(spec.preferred_orientation);
-    if (spec.parent)
-    {
-        message.set_parent_id(spec.parent->id());
-        message.set_left(spec.rect.left);
-        message.set_top(spec.rect.top);
-    }
-
+    auto const message = spec.serialize();
     create_wait_handle.expect_result();
     try 
     {
