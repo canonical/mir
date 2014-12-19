@@ -435,11 +435,7 @@ struct MirClientSurfaceTest : public testing::Test
 
     std::shared_ptr<MirConnection> connection;
 
-    MirSurfaceParameters const params{
-        "test", 33, 45, mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid};
-    MirSurfaceSpec const spec{params};
+    MirSurfaceSpec const spec{nullptr, 33, 45, mir_pixel_format_abgr_8888};
     std::shared_ptr<MockClientBufferFactory> const mock_buffer_factory =
         std::make_shared<testing::NiceMock<MockClientBufferFactory>>();
     std::shared_ptr<StubClientBufferFactory> const stub_buffer_factory =
