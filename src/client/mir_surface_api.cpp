@@ -18,6 +18,7 @@
 
 #include "mir_toolkit/mir_surface.h"
 #include "mir_toolkit/mir_wait.h"
+#include "mir/require.h"
 
 #include "mir_connection.h"
 #include "mir_surface.h"
@@ -61,10 +62,10 @@ MirSurface* mir_surface_create_sync(MirSurfaceSpec* requested_specification)
 MirWaitHandle* mir_surface_create(MirSurfaceSpec* requested_specification,
                                   mir_surface_callback callback, void* context)
 {
-    if (!requested_specification) abort();
+    mir::require(requested_specification != nullptr);
 
     auto conn = requested_specification->connection;
-    if (!mir_connection_is_valid(conn)) abort();
+    mir::require(mir_connection_is_valid(conn));
 
     try
     {
@@ -406,7 +407,7 @@ MirWaitHandle* mir_surface_configure_cursor(MirSurface* surface, MirCursorConfig
 
 MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
 {
-    if (!mir_surface_is_valid(surf)) abort();
+    mir::require(mir_surface_is_valid(surf));
 
     MirOrientationMode mode = mir_orientation_mode_any;
 
@@ -423,7 +424,7 @@ MirOrientationMode mir_surface_get_preferred_orientation(MirSurface *surf)
 
 MirWaitHandle* mir_surface_set_preferred_orientation(MirSurface *surf, MirOrientationMode mode)
 {
-    if (!mir_surface_is_valid(surf)) abort();
+    mir::require(mir_surface_is_valid(surf));
 
     MirWaitHandle *result{nullptr};
     try
