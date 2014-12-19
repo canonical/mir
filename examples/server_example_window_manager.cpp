@@ -58,9 +58,13 @@ public:
     {
         auto parameters = request_parameters;
 
-        // TODO put into tile
-        tiles.find(&session);
-        // TODO clipping
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        auto const ptile = tiles.find(&session);
+        if (ptile != end(tiles))
+        {
+            parameters.top_left = parameters.top_left + (ptile->second.top_left - Point{0, 0});
+            // TODO clipping
+        }
 
         return parameters;
     }
@@ -69,11 +73,14 @@ public:
         std::shared_ptr<ms::Surface> const& surface,
         ms::Session* session)
     {
+        std::lock_guard<decltype(mutex)> lock(mutex);
         surfaces.emplace(session, surface);
     }
 
     void remove_surface(std::weak_ptr<ms::Surface> const& /*surface*/)
     {
+        // This looks odd but we want to block in case we're using the surface
+        std::lock_guard<decltype(mutex)> lock(mutex);
     }
 
     void add_session(std::shared_ptr<mf::Session> const& session)
