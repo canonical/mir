@@ -142,6 +142,16 @@ bool mir_surface_spec_set_buffer_usage(MirSurfaceSpec* spec, MirBufferUsage usag
 bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t output_id);
 
 /**
+ * Set the requested preferred orientation mode.
+ * \param [in] spec    Specification to mutate
+ * \param [in] mode    Requested preferred orientation
+ * \return             False if the mode is not valid for this surface type.
+ * \note    If the server is unable to create a surface with the preferred orientation at
+ *          the point mir_surface_create() is called it will instead return an invalid surface.
+ */
+bool mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode);
+
+/**
  * Release the resources held by a MirSurfaceSpec.
  *
  * \param [in] spec     Specification to release

@@ -16,28 +16,38 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_BUFFER_WRITER_H_
-#define MIR_GRAPHICS_MESA_BUFFER_WRITER_H_
+#ifndef MIR_TOOLKIT_EVENTS_RESIZE_EVENT_H_
+#define MIR_TOOLKIT_EVENTS_RESIZE_EVENT_H_
 
-#include "mir/graphics/buffer_writer.h"
+#include <mir_toolkit/events/event.h>
 
-namespace mir
-{
-namespace graphics
-{
-class Buffer;
+#ifdef __cplusplus
+/**
+ * \addtogroup mir_toolkit
+ * @{
+ */
+extern "C" {
+#endif
 
-namespace mesa
-{
-class BufferWriter : public graphics::BufferWriter
-{
-public:
-    BufferWriter();
-    
-    void write(graphics::Buffer& buffer, unsigned char const* data, size_t size) override;
-};
+/*
+ * Retrieve the new width reported by a given MirResizeEvent
+ * 
+ * \param[in] ev The resize event
+ * \return       The reported width
+ */
+int mir_resize_event_get_width(MirResizeEvent const* ev);
+
+/*
+ * Retrieve the new height reported by a given MirResizeEvent
+ * 
+ * \param[in] ev The resize event
+ * \return       The reported height
+ */
+int mir_resize_event_get_height(MirResizeEvent const* ev);
+
+#ifdef __cplusplus
 }
-}
-}
+/**@}*/
+#endif
 
-#endif // MIR_GRAPHICS_MESA_BUFFER_WRITER_H_
+#endif /* MIR_TOOLKIT_RESIZE_EVENT_H_ */

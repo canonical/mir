@@ -21,7 +21,6 @@
 #include "guest_platform.h"
 
 #include "buffer_allocator.h"
-#include "buffer_writer.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/nested_context.h"
@@ -66,11 +65,6 @@ namespace
 {
 std::shared_ptr<mgm::InternalNativeDisplay> native_display = nullptr;
 std::mutex native_display_guard;
-}
-
-std::shared_ptr<mg::BufferWriter> mgm::GuestPlatform::make_buffer_writer()
-{
-    return std::make_shared<mgm::BufferWriter>();
 }
 
 std::shared_ptr<mg::PlatformIpcOperations> mgm::GuestPlatform::make_ipc_operations() const

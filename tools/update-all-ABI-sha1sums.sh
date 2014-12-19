@@ -7,7 +7,7 @@ find include/client include/common/mir_toolkit \
 # identify which headers, so we can know which mircommon/mirplatform header
 # changes are also breaking the server ABI.
 find include/server include/platform include/common \
-    -type f | egrep -v "~$|#$" | sort | xargs sha1sum > server-ABI-sha1sums
+    -name \*.h -and -not -name version.h | sort | xargs sha1sum > server-ABI-sha1sums
 
 # Platform headers include mircommon headers. TODO: Script to identify which
 # headers so we can know which mircommon header changes should also result in a

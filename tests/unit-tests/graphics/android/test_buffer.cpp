@@ -20,9 +20,10 @@
 #include "src/platforms/android/buffer.h"
 #include "mir/graphics/android/sync_fence.h"
 #include "mir/graphics/android/native_buffer.h"
+#include "mir_test/fake_shared.h"
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_fence.h"
-#include "mir_test/fake_shared.h"
+#include "mir_test_doubles/mock_android_hw.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
 
 #include <hardware/gralloc.h>
@@ -54,6 +55,7 @@ protected:
         pf = mir_pixel_format_abgr_8888;
         size = geom::Size{300, 200};
         extensions = std::make_shared<mg::EGLExtensions>();
+        gralloc = reinterpret_cast<gralloc_module_t*>(&hw_access_mock.mock_gralloc_module->mock_hw_device);
     }
 
     ANativeWindowBuffer *anwb;
@@ -63,13 +65,15 @@ protected:
     geom::Size size;
     mga::BufferUsage default_use;
     std::shared_ptr<mg::EGLExtensions> extensions;
+    testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
+    gralloc_module_t const* gralloc;
 };
 
 TEST_F(AndroidGraphicBufferBasic, size_query_test)
 {
     using namespace testing;
 
-    mga::Buffer buffer(mock_native_buffer, extensions);
+    mga::Buffer buffer(gralloc, mock_native_buffer, extensions);
 
     geom::Size expected_size{anwb->width, anwb->height};
     EXPECT_EQ(expected_size, buffer.size());
@@ -79,7 +83,7 @@ TEST_F(AndroidGraphicBufferBasic, format_query_test)
 {
     using namespace testing;
 
-    mga::Buffer buffer(mock_native_buffer, extensions);
+    mga::Buffer buffer(gralloc, mock_native_buffer, extensions);
     EXPECT_EQ(mir_pixel_format_abgr_8888, buffer.pixel_format());
 }
 
@@ -94,7 +98,7 @@ TEST_F(AndroidGraphicBufferBasic, returns_native_buffer_times_two)
     EXPECT_CALL(*mock_native_buffer, update_usage(acquire_fake_fence_fd2, mga::BufferAccess::read))
         .Times(1);
 
-    mga::Buffer buffer(mock_native_buffer, extensions);
+    mga::Buffer buffer(gralloc, mock_native_buffer, extensions);
     {
         auto native_resource = buffer.native_buffer_handle();
         EXPECT_EQ(mock_native_buffer, native_resource);
@@ -113,6 +117,6 @@ TEST_F(AndroidGraphicBufferBasic, queries_native_window_for_stride)
 
     geom::Stride expected_stride{anwb->stride *
                                  MIR_BYTES_PER_PIXEL(pf)};
-    mga::Buffer buffer(mock_native_buffer, extensions);
+    mga::Buffer buffer(gralloc, mock_native_buffer, extensions);
     EXPECT_EQ(expected_stride, buffer.stride());
 }

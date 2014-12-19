@@ -26,12 +26,14 @@ namespace mir
 namespace client
 {
 
+class ClientContext;
+
 class EGLNativeDisplayContainer
 {
 public:
     virtual ~EGLNativeDisplayContainer() {}
 
-    virtual MirEGLNativeDisplayType create(MirConnection* connection) = 0;
+    virtual MirEGLNativeDisplayType create(ClientContext* context) = 0;
     virtual void release(MirEGLNativeDisplayType display) = 0;
 
     virtual bool validate(MirEGLNativeDisplayType display) const = 0;
