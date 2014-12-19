@@ -112,7 +112,7 @@ public:
 
 protected:
     Display() = default;
-    virtual ~Display() {/* TODO: make nothrow */}
+    virtual ~Display() noexcept = default;
 private:
     Display(Display const&) = delete;
     Display& operator=(Display const&) = delete;

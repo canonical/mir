@@ -19,6 +19,9 @@
 #include "server_example_window_manager.h"
 
 #include "mir/server.h"
+#include "mir/compositor/display_buffer_compositor_factory.h"
+#include "mir/compositor/display_buffer_compositor.h"
+#include "mir/graphics/display_buffer.h"
 #include "mir/options/option.h"
 #include "mir/scene/observer.h"
 #include "mir/scene/placement_strategy.h"
@@ -26,10 +29,13 @@
 #include "mir/shell/session_coordinator_wrapper.h"
 #include "mir/shell/surface_coordinator_wrapper.h"
 
+namespace mc = mir::compositor;
 namespace me = mir::examples;
 namespace mf = mir::frontend;
+namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
+using namespace mir::geometry;
 
 ///\example server_example_window_manager.cpp
 /// Demonstrate a simple window management strategy
@@ -63,13 +69,21 @@ public:
     {
     }
 
+    void add_display(Rectangle const& /*area*/)
+    {
+    }
+
+    void remove_display(Rectangle const& /*area*/)
+    {
+    }
+
 private:
 };
 
 class WindowManagmentFactory
 {
 public:
-    auto make() -> std::shared_ptr<WindowManager>
+    auto make_tiling_wm() -> std::shared_ptr<WindowManager>
     {
         auto tmp = wm.lock();
 
@@ -86,10 +100,10 @@ private:
     std::weak_ptr<WindowManager> wm;
 };
 
-class SessionCoordinatorWrapper : public msh::SessionCoordinatorWrapper
+class SessionTracker : public msh::SessionCoordinatorWrapper
 {
 public:
-    SessionCoordinatorWrapper(
+    SessionTracker(
         std::shared_ptr<ms::SessionCoordinator> const& wrapped,
         std::shared_ptr<WindowManager> const& window_manager) :
         msh::SessionCoordinatorWrapper(wrapped),
@@ -97,6 +111,7 @@ public:
     {
     }
 
+private:
     auto open_session(pid_t client_pid, std::string const& name, std::shared_ptr<mf::EventSink> const& sink)
     -> std::shared_ptr<mf::Session> override
     {
@@ -111,15 +126,13 @@ public:
         msh::SessionCoordinatorWrapper::close_session(session);
     }
 
-
-private:
     std::shared_ptr<WindowManager> const window_manager;
 };
 
-class SurfaceCoordinatorWrapper : public msh::SurfaceCoordinatorWrapper
+class SurfaceTracker : public msh::SurfaceCoordinatorWrapper
 {
 public:
-    SurfaceCoordinatorWrapper(
+    SurfaceTracker(
         std::shared_ptr<ms::SurfaceCoordinator> const& wrapped,
         std::shared_ptr<WindowManager> const& window_manager) :
         msh::SurfaceCoordinatorWrapper(wrapped),
@@ -127,6 +140,7 @@ public:
     {
     }
 
+private:
     auto add_surface(ms::SurfaceCreationParameters const& params, ms::Session* session)
     -> std::shared_ptr<ms::Surface> override
     {
@@ -141,7 +155,60 @@ public:
         msh::SurfaceCoordinatorWrapper::remove_surface(surface);
     }
 
+    std::shared_ptr<WindowManager> const window_manager;
+};
+
+class DisplayTracker : public mc::DisplayBufferCompositor
+{
+public:
+    DisplayTracker(
+        std::unique_ptr<mc::DisplayBufferCompositor>&& wrapped,
+        Rectangle const& area,
+        std::shared_ptr<WindowManager> const& window_manager) :
+        wrapped{std::move(wrapped)},
+        area{area},
+        window_manager(window_manager)
+    {
+        window_manager->add_display(area);
+    }
+
+    ~DisplayTracker() noexcept
+    {
+        window_manager->remove_display(area);
+    }
+
 private:
+
+    void composite(mc::SceneElementSequence&& scene_sequence) override
+    {
+        wrapped->composite(std::move(scene_sequence));
+    }
+
+    std::unique_ptr<mc::DisplayBufferCompositor> const wrapped;
+    Rectangle const area;
+    std::shared_ptr<WindowManager> const window_manager;
+};
+
+class DisplayTrackerFactory : public mc::DisplayBufferCompositorFactory
+{
+public:
+    DisplayTrackerFactory(
+        std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped,
+        std::shared_ptr<WindowManager> const& window_manager) :
+        wrapped{wrapped},
+        window_manager(window_manager)
+    {
+    }
+
+private:
+    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplayBuffer& display_buffer)
+    {
+        auto compositor = wrapped->create_compositor_for(display_buffer);
+        return std::unique_ptr<mc::DisplayBufferCompositor>{
+            new DisplayTracker{std::move(compositor), display_buffer.view_area(), window_manager}};
+    }
+
+    std::shared_ptr<mc::DisplayBufferCompositorFactory> const wrapped;
     std::shared_ptr<WindowManager> const window_manager;
 };
 }
@@ -160,10 +227,14 @@ void me::add_window_manager_option_to(Server& server)
         -> std::shared_ptr<ms::PlacementStrategy>
         {
             auto const options = server.get_options();
-            if (options->is_set(option) && options->get<std::string>(option) == tiling)
-                return factory->make();
-            else
+
+            if (!options->is_set(option))
                 return std::shared_ptr<ms::PlacementStrategy>{};
+
+            if (options->get<std::string>(option) == tiling)
+                return factory->make_tiling_wm();
+
+            BOOST_THROW_EXCEPTION(std::runtime_error("Unknown window manager: " + options->get<std::string>(option)));
         });
 
     server.wrap_session_coordinator([factory, &server]
@@ -171,10 +242,14 @@ void me::add_window_manager_option_to(Server& server)
         -> std::shared_ptr<ms::SessionCoordinator>
         {
             auto const options = server.get_options();
-            if (options->is_set(option) && options->get<std::string>(option) == tiling)
-                return std::make_shared<SessionCoordinatorWrapper>(wrapped, factory->make());
-            else
+
+            if (!options->is_set(option))
                 return wrapped;
+
+            if (options->get<std::string>(option) == tiling)
+                return std::make_shared<SessionTracker>(wrapped, factory->make_tiling_wm());
+
+            BOOST_THROW_EXCEPTION(std::runtime_error("Unknown window manager: " + options->get<std::string>(option)));
         });
 
     server.wrap_surface_coordinator([factory, &server]
@@ -182,9 +257,15 @@ void me::add_window_manager_option_to(Server& server)
         -> std::shared_ptr<ms::SurfaceCoordinator>
         {
             auto const options = server.get_options();
-            if (options->is_set(option) && options->get<std::string>(option) == tiling)
-                return std::make_shared<SurfaceCoordinatorWrapper>(wrapped, factory->make());
-            else
+
+            if (!options->is_set(option))
                 return wrapped;
+
+            if (options->get<std::string>(option) == tiling)
+                return std::make_shared<SurfaceTracker>(wrapped, factory->make_tiling_wm());
+
+            BOOST_THROW_EXCEPTION(std::runtime_error("Unknown window manager: " + options->get<std::string>(option)));
         });
+
+
 }
