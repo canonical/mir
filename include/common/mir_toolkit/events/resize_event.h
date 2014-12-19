@@ -16,9 +16,38 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_
-#define MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_
+#ifndef MIR_TOOLKIT_EVENTS_RESIZE_EVENT_H_
+#define MIR_TOOLKIT_EVENTS_RESIZE_EVENT_H_
 
-#include "mir_toolkit/events/event.h"
+#include <mir_toolkit/events/event.h>
 
-#endif /* MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_ */
+#ifdef __cplusplus
+/**
+ * \addtogroup mir_toolkit
+ * @{
+ */
+extern "C" {
+#endif
+
+/*
+ * Retrieve the new width reported by a given MirResizeEvent
+ * 
+ * \param[in] ev The resize event
+ * \return       The reported width
+ */
+int mir_resize_event_get_width(MirResizeEvent const* ev);
+
+/*
+ * Retrieve the new height reported by a given MirResizeEvent
+ * 
+ * \param[in] ev The resize event
+ * \return       The reported height
+ */
+int mir_resize_event_get_height(MirResizeEvent const* ev);
+
+#ifdef __cplusplus
+}
+/**@}*/
+#endif
+
+#endif /* MIR_TOOLKIT_RESIZE_EVENT_H_ */

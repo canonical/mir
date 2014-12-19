@@ -16,9 +16,30 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_
-#define MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_
+#ifndef MIR_TOOLKIT_EVENTS_ORIENTATION_EVENT_H_
+#define MIR_TOOLKIT_EVENTS_ORIENTATION_EVENT_H_
 
-#include "mir_toolkit/events/event.h"
+#include <mir_toolkit/events/event.h>
 
-#endif /* MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_ */
+#ifdef __cplusplus
+/**
+ * \addtogroup mir_toolkit
+ * @{
+ */
+extern "C" {
+#endif
+
+/*
+ * Retrieve the new orientation reported by this MirOrientationEvent
+ *
+ * \param[in] ev The orientation event
+ * \return       The new orientation
+ */
+MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev);
+
+#ifdef __cplusplus
+}
+/**@}*/
+#endif
+
+#endif /* MIR_TOOLKIT_ORIENTATION_EVENT_H_ */
