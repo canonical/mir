@@ -23,7 +23,6 @@
 #include "resource_factory.h"
 #include "display.h"
 #include "output_builder.h"
-#include "buffer_writer.h"
 #include "hwc_loggers.h"
 #include "ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
@@ -128,11 +127,6 @@ std::shared_ptr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operations() 
 EGLNativeDisplayType mga::Platform::egl_native_display() const
 {
     return EGL_DEFAULT_DISPLAY;
-}
-
-std::shared_ptr<mg::BufferWriter> mga::Platform::make_buffer_writer()
-{
-    return std::make_shared<mga::BufferWriter>();
 }
 
 extern "C" std::shared_ptr<mg::Platform> mg::create_host_platform(

@@ -6,7 +6,6 @@ include_directories(
 
 add_definitions(
   -DMIR_PLATFORM_DRIVER_BINARY="${MIR_PLATFORM_DRIVER_BINARY}"
-  -DMIR_CLIENT_DRIVER_BINARY="${MIR_CLIENT_DRIVER_BINARY}"
 )
 
 set(
@@ -48,7 +47,7 @@ endif()
 
 add_subdirectory(throwback)
 
-add_executable(
+mir_add_wrapped_executable(
   mir_acceptance_tests
 
   ${SOURCES}
@@ -68,9 +67,9 @@ target_link_libraries(
   mirplatform
 
   mir-test
-  mir-test-framework
   mir-test-doubles
   mir-test-doubles-platform
+  mir-test-framework
   3rd_party
 
   ${PROTOBUF_LIBRARIES}
@@ -91,8 +90,3 @@ CMAKE_DEPENDENT_OPTION(
 if (MIR_RUN_ACCEPTANCE_TESTS)
   mir_discover_tests(mir_acceptance_tests)
 endif (MIR_RUN_ACCEPTANCE_TESTS)
-
-install(
-    TARGETS mir_acceptance_tests
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)

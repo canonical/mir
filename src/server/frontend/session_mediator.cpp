@@ -175,12 +175,30 @@ void mf::SessionMediator::create_surface(
 
     report->session_create_surface_called(session->name());
 
-    auto const surf_id = session->create_surface(ms::SurfaceCreationParameters()
-        .of_name(request->surface_name())
+    auto params = ms::SurfaceCreationParameters()
         .of_size(request->width(), request->height())
         .of_buffer_usage(static_cast<graphics::BufferUsage>(request->buffer_usage()))
-        .of_pixel_format(static_cast<MirPixelFormat>(request->pixel_format()))
-        .with_output_id(graphics::DisplayConfigurationOutputId(request->output_id())));
+        .of_pixel_format(static_cast<MirPixelFormat>(request->pixel_format()));
+
+    if (request->has_surface_name())
+        params.of_name(request->surface_name());
+
+    if (request->has_output_id())
+        params.with_output_id(graphics::DisplayConfigurationOutputId(request->output_id()));
+
+    if (request->has_type())
+        params.of_type(static_cast<MirSurfaceType>(request->type()));
+
+    if (request->has_state())
+        params.with_state(static_cast<MirSurfaceState>(request->state()));
+
+    if (request->has_pref_orientation())
+        params.with_preferred_orientation(static_cast<MirOrientationMode>(request->pref_orientation()));
+
+    if (request->has_parent_id())
+        params.with_parent_id(SurfaceId{request->parent_id()});
+
+    auto const surf_id = session->create_surface(params);
 
     auto surface = session->get_surface(surf_id);
     auto const& client_size = surface->client_size();
