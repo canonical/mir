@@ -20,7 +20,7 @@ c7c708734715a6d1b6fb2652584adb912071a518  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 f4d39e9893ce6308bddd83a49b90f0051f565323  include/common/mir_toolkit/event.h
 2507f2929415aa423f9551d3c595c439fe1c6efd  include/common/mir_toolkit/events/event_deprecated.h
-3d4ed820d7f52525b0052f224000f76ae029b5f6  include/common/mir_toolkit/events/event.h
+d929f623c98b3842ae72059edeba9c89c04edd0f  include/common/mir_toolkit/events/event.h
 c591a02a8e9851db342c310cf829d018a1eddb51  include/common/mir_toolkit/events/input/input_event.h
 1cc3248d5885f409cc9baed7f6a48c525e5b3e0b  include/common/mir_toolkit/events/input/key_input_event.h
 de7c23453e6d897296f32e49d9ba952a1baa0200  include/common/mir_toolkit/events/input/touch_input_event.h
