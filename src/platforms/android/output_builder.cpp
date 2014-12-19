@@ -53,7 +53,7 @@ mga::OutputBuilder::OutputBuilder(
         force_backup_display = true;
     }
 
-    if (force_backup_display || hwc_version == HWC_DEVICE_API_VERSION_1_0)
+    if (force_backup_display || hwc_version == mga::HwcVersion::hwc10)
     {
         fb_native = res_factory->create_fb_native_device();
         framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, fb_native);
