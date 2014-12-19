@@ -28,63 +28,73 @@ namespace mga=mir::graphics::android;
 
 namespace
 {
-//note: The destruction ordering of RealHwcWrapper should be enough to ensure that the
-//callbacks are not called after the hwc module is closed. However, some badly synchronized
-//drivers continue to call the hooks for a short period after we call close(). (LP: 1364637)
-static std::mutex instance_lock;
-static unsigned int instances;
-static void invalidate_hook(const struct hwc_procs* procs)
-{
-    mga::HwcCallbacks const* callbacks{nullptr};
-    std::unique_lock<std::mutex> lk(instance_lock);
-    if (instances > 0 && (callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)))
-        callbacks->self->invalidate();
-}
-
-static void vsync_hook(const struct hwc_procs* procs, int /*disp*/, int64_t timestamp)
-{
-    mga::HwcCallbacks const* callbacks{nullptr};
-    std::unique_lock<std::mutex> lk(instance_lock);
-    if (instances > 0 && (callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)))
-        callbacks->self->vsync(mga::DisplayName::primary, std::chrono::nanoseconds{timestamp});
-}
-
-static void hotplug_hook(const struct hwc_procs* procs, int /*disp*/, int connected)
-{
-    mga::HwcCallbacks const* callbacks{nullptr};
-    std::unique_lock<std::mutex> lk(instance_lock);
-    if (instances > 0 && (callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)))
-        callbacks->self->hotplug(mga::DisplayName::primary, connected);
-}
 int num_displays(std::array<hwc_display_contents_1_t*, HWC_NUM_DISPLAY_TYPES> const& displays)
 {
     return std::distance(displays.begin(), 
         std::find_if(displays.begin(), displays.end(),
             [](hwc_display_contents_1_t* d){ return d == nullptr; }));
 }
+
+mga::DisplayName display_name(int raw_name)
+{
+    switch(raw_name)
+    {
+        default:
+        case HWC_DISPLAY_PRIMARY:
+            return mga::DisplayName::primary;
+        case HWC_DISPLAY_EXTERNAL:
+            return mga::DisplayName::external;
+        case HWC_DISPLAY_VIRTUAL:
+            return mga::DisplayName::virt;
+    }
+}
+
+//note: The destruction ordering of RealHwcWrapper should be enough to ensure that the
+//callbacks are not called after the hwc module is closed. However, some badly synchronized
+//drivers continue to call the hooks for a short period after we call close(). (LP: 1364637)
+static std::mutex callback_lock;
+static void invalidate_hook(const struct hwc_procs* procs)
+{
+    mga::HwcCallbacks const* callbacks{nullptr};
+    std::unique_lock<std::mutex> lk(callback_lock);
+    if ((callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)) && callbacks->self)
+        callbacks->self->invalidate();
+}
+
+static void vsync_hook(const struct hwc_procs* procs, int display, int64_t timestamp)
+{
+    mga::HwcCallbacks const* callbacks{nullptr};
+    std::unique_lock<std::mutex> lk(callback_lock);
+    if ((callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)) && callbacks->self)
+        callbacks->self->vsync(display_name(display), std::chrono::nanoseconds{timestamp});
+}
+
+static void hotplug_hook(const struct hwc_procs* procs, int display, int connected)
+{
+    mga::HwcCallbacks const* callbacks{nullptr};
+    std::unique_lock<std::mutex> lk(callback_lock);
+    if ((callbacks = reinterpret_cast<mga::HwcCallbacks const*>(procs)) && callbacks->self)
+        callbacks->self->hotplug(display_name(display), connected);
+}
+static mga::HwcCallbacks hwc_callbacks{{invalidate_hook, vsync_hook, hotplug_hook}, nullptr};
+
 }
 
 mga::RealHwcWrapper::RealHwcWrapper(
     std::shared_ptr<hwc_composer_device_1> const& hwc_device,
     std::shared_ptr<mga::HwcReport> const& report) :
-    hwc_callbacks(std::make_shared<mga::HwcCallbacks>()),
     hwc_device(hwc_device),
     report(report)
 {
-    std::unique_lock<std::mutex> lk(instance_lock);
-    instances++;
-
-    hwc_callbacks->hooks.invalidate = invalidate_hook;
-    hwc_callbacks->hooks.vsync = vsync_hook;
-    hwc_callbacks->hooks.hotplug = hotplug_hook;
-    hwc_callbacks->self = this;
-    hwc_device->registerProcs(hwc_device.get(), reinterpret_cast<hwc_procs_t*>(hwc_callbacks.get()));
+    std::unique_lock<std::mutex> lk(callback_lock);
+    hwc_callbacks.self = this;
+    hwc_device->registerProcs(hwc_device.get(), reinterpret_cast<hwc_procs_t*>(&hwc_callbacks));
 }
 
 mga::RealHwcWrapper::~RealHwcWrapper()
 {
-    std::unique_lock<std::mutex> lk(instance_lock);
-    instances--;
+    std::unique_lock<std::mutex> lk(callback_lock);
+    hwc_callbacks.self = nullptr;
 }
 
 void mga::RealHwcWrapper::prepare(

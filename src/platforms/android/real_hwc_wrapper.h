@@ -70,7 +70,6 @@ public:
     void hotplug(DisplayName, bool);
     void invalidate();
 private:
-    std::shared_ptr<HwcCallbacks> hwc_callbacks;
     std::shared_ptr<hwc_composer_device_1> const hwc_device;
     std::shared_ptr<HwcReport> const report;
     struct Callbacks
