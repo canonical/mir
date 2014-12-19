@@ -20,7 +20,6 @@
 #include "mir_test_framework/stub_graphics_platform_operation.h"
 
 #include "mir/graphics/buffer_ipc_message.h"
-#include "mir/graphics/buffer_writer.h"
 
 #include "mir_test_framework/stub_platform_helpers.h"
 
@@ -242,18 +241,6 @@ std::shared_ptr<mg::Display> mtf::StubGraphicPlatform::create_display(
     return std::make_shared<mtd::StubDisplay>(display_rects);
 }
 
-std::shared_ptr<mg::BufferWriter> mtf::StubGraphicPlatform::make_buffer_writer()
-{
-    struct NullWriter : mg::BufferWriter
-    {
-        void write(mg::Buffer& /* buffer */,
-            unsigned char const* /* data */, size_t /* size */) override
-        {
-        }
-    };
-    return std::make_shared<NullWriter>();
-}
-
 namespace
 {
 struct GuestPlatformAdapter : mg::Platform
@@ -275,11 +262,6 @@ struct GuestPlatformAdapter : mg::Platform
     std::shared_ptr<mg::PlatformIpcOperations> make_ipc_operations() const override
     {
         return ipc_ops;
-    }
-
-    std::shared_ptr<mg::BufferWriter> make_buffer_writer() override
-    {
-        return adaptee->make_buffer_writer();
     }
 
     std::shared_ptr<mg::Display> create_display(

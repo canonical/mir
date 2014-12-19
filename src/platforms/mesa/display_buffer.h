@@ -61,12 +61,13 @@ public:
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
     MirOrientation orientation() const override;
+    void set_orientation(MirOrientation const rot, geometry::Rectangle const& a);
     bool uses_alpha() const override;
     void schedule_set_crtc();
     void wait_for_page_flip();
 
 private:
-    void post_update(std::shared_ptr<graphics::Buffer> bypass_buf);
+    bool post_update(std::shared_ptr<graphics::Buffer> bypass_buf);
 
     BufferObject* get_front_buffer_object();
     BufferObject* get_buffer_object(struct gbm_bo *bo);

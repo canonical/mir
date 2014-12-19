@@ -144,6 +144,7 @@ target_link_libraries(mir_demo_standalone_render_to_fb
 mir_add_wrapped_executable(mir_demo_server
   server_example.cpp
   glog_logger.cpp
+  server_example_test_client.cpp
 )
 
 target_link_libraries(mir_demo_server

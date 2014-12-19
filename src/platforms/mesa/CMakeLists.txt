@@ -33,7 +33,6 @@ add_library(
   shm_buffer.cpp
   bypass.cpp
   ipc_operations.cpp
-  buffer_writer.cpp
   nested_authentication.cpp
 )
 

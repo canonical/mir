@@ -52,7 +52,6 @@ class GraphicBufferAllocator;
 class GLConfig;
 class GLProgramFactory;
 class PlatformIpcOperations;
-class BufferWriter;
 class NestedContext;
 
 /**
@@ -79,8 +78,6 @@ public:
      */
     virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() = 0;
     
-    virtual std::shared_ptr<BufferWriter> make_buffer_writer() = 0;
-
     /**
      * Creates the display subsystem.
      */
