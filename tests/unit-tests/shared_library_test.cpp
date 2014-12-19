@@ -59,10 +59,10 @@ class SharedLibrary : public testing::Test
 public:
     SharedLibrary()
         : nonexistent_library{"imma_totally_not_a_library"},
-          existing_library{mtf::library_path() + "/" MIR_CLIENT_DRIVER_BINARY},
+          existing_library{mtf::library_path() + "/client-modules/mesa.so"},
           nonexistent_function{"yo_dawg"},
-          existing_function{"create_client_platform_factory"},
-          existent_version{"MIR_CLIENTPLATFORM_1"},
+          existing_function{"create_client_platform"},
+          existent_version{"MIR_CLIENT_PLATFORM_2"},
           nonexistent_version{"GOATS_ON_THE_GREEN"}
     {
     }
