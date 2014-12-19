@@ -63,8 +63,10 @@ public:
         auto const ptile = tiles.find(&session);
         if (ptile != end(tiles))
         {
-            parameters.top_left = parameters.top_left + (ptile->second.top_left - Point{0, 0});
-            // TODO clipping
+            Rectangle const& tile = ptile->second;
+            parameters.top_left = parameters.top_left + (tile.top_left - Point{0, 0});
+
+            clip_to_tile(parameters, tile);
         }
 
         return parameters;
@@ -159,9 +161,29 @@ private:
                 auto const old_pos = surface->top_left();
                 surface->move_to(old_pos + displacement);
 
-                // TODO clipping
+                clip_to_tile(*surface, new_tile);
             }
         }
+    }
+
+    static void clip_to_tile(ms::SurfaceCreationParameters& parameters, Rectangle const& tile)
+    {
+        auto const displacement = parameters.top_left - tile.top_left;
+
+        auto width = std::min(tile.size.width.as_int()-displacement.dx.as_int(), parameters.size.width.as_int());
+        auto height = std::min(tile.size.height.as_int()-displacement.dy.as_int(), parameters.size.height.as_int());
+
+        parameters.size = Size{width, height};
+    }
+
+    static void clip_to_tile(ms::Surface& surface, Rectangle const& tile)
+    {
+        auto const displacement = surface.top_left() - tile.top_left;
+
+        auto width = std::min(tile.size.width.as_int()-displacement.dx.as_int(), surface.size().width.as_int());
+        auto height = std::min(tile.size.height.as_int()-displacement.dy.as_int(), surface.size().height.as_int());
+
+        surface.resize({width, height});
     }
 
     std::mutex mutex;
