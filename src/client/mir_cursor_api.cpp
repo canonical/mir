@@ -16,6 +16,8 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "MirCursorAPI"
+
 #include "mir_toolkit/mir_cursor_configuration.h"
 #include "cursor_configuration.h"
 

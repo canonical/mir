@@ -16,6 +16,7 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "MirPromptSessionAPI"
 
 #include "mir_toolkit/mir_prompt_session.h"
 #include "mir_prompt_session.h"

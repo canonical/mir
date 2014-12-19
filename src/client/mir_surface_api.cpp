@@ -16,6 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "MirSurfaceAPI"
+
 #include "mir_toolkit/mir_surface.h"
 #include "mir_toolkit/mir_wait.h"
 #include "mir/require.h"

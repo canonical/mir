@@ -16,6 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "MirScreencastAPI"
+
 #include "mir_toolkit/mir_screencast.h"
 #include "mir_screencast.h"
 #include "mir_connection.h"

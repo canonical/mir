@@ -16,6 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "MirConnectionAPI"
+
 #include "mir_connection_api.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir_toolkit/mir_client_library_drm.h"
