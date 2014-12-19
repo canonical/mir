@@ -117,6 +117,12 @@ bool mir_surface_spec_set_fullscreen_on_output(MirSurfaceSpec* spec, uint32_t ou
     return true;
 }
 
+bool mir_surface_spec_set_preferred_orientation(MirSurfaceSpec* spec, MirOrientationMode mode)
+{
+    spec->pref_orientation = mode;
+    return true;
+}
+
 void mir_surface_spec_release(MirSurfaceSpec* spec)
 {
     delete spec;
