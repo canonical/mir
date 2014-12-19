@@ -34,7 +34,6 @@ class Buffer;
 
 namespace android
 {
-class HWCVsyncCoordinator;
 class SyncFileOps;
 class HwcWrapper;
 class HwcConfiguration;
@@ -45,7 +44,6 @@ public:
     HwcDevice(
         std::shared_ptr<HwcWrapper> const& hwc_wrapper,
         std::shared_ptr<HwcConfiguration> const& hwc_config,
-        std::shared_ptr<HWCVsyncCoordinator> const& coordinator,
         std::shared_ptr<LayerAdapter> const& layer_adapter);
 
     virtual void post_gl(SwappingGLContext const& context) override;

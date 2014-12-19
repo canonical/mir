@@ -33,7 +33,6 @@ namespace android
 {
 
 class HwcWrapper;
-class HWCVsyncCoordinator;
 class HWCCommonDevice;
 class HwcConfiguration;
 
@@ -42,16 +41,11 @@ class HWCCommonDevice : public DisplayDevice
 public:
     virtual ~HWCCommonDevice() noexcept;
 
-    void notify_vsync();
     void mode(MirPowerMode mode);
 
 protected:
     HWCCommonDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
-                    std::shared_ptr<HwcConfiguration> const& configuration,
-                    std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
-
-    std::shared_ptr<HWCVsyncCoordinator> const coordinator;
-
+                    std::shared_ptr<HwcConfiguration> const& configuration);
 private:
     virtual void turned_screen_off();
 

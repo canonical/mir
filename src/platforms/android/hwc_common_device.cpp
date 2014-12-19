@@ -19,15 +19,12 @@
 #include "hwc_common_device.h"
 #include "hwc_wrapper.h"
 #include "hwc_configuration.h"
-#include "hwc_vsync_coordinator.h"
 
 namespace mga=mir::graphics::android;
 
 mga::HWCCommonDevice::HWCCommonDevice(
     std::shared_ptr<HwcWrapper> const& hwc_device,
-    std::shared_ptr<HwcConfiguration> const& hwc_config,
-    std::shared_ptr<HWCVsyncCoordinator> const& coordinator) :
-    coordinator(coordinator),
+    std::shared_ptr<HwcConfiguration> const& hwc_config) :
     hwc_device(hwc_device),
     hwc_config(hwc_config),
     current_mode(mir_power_mode_on)
@@ -53,11 +50,6 @@ mga::HWCCommonDevice::~HWCCommonDevice() noexcept
         {
         }
     }
-}
-
-void mga::HWCCommonDevice::notify_vsync()
-{
-    coordinator->notify_vsync();
 }
 
 void mga::HWCCommonDevice::mode(MirPowerMode mode_request)

@@ -34,6 +34,7 @@
 #include "hwc_struct_helpers.h"
 #include <gtest/gtest.h>
 #include <stdexcept>
+#include <thread>
 
 namespace mg=mir::graphics;
 namespace mga=mir::graphics::android;
@@ -106,26 +107,16 @@ protected:
 };
 }
 
-TEST_F(HwcFbDevice, hwc10_post_gl_only)
+TEST_F(HwcFbDevice, hwc10_subscribes_to_vsync_events)
 {
     using namespace testing;
-    std::list<hwc_layer_1_t*> expected_list{&skip_layer};
-
     Sequence seq;
-    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesPrimaryList(expected_list)))
+    EXPECT_CALL(*mock_hwc_device_wrapper, subscribe_to_events(_,_,_,_))
         .InSequence(seq);
-    EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
-        .InSequence(seq)
-        .WillOnce(Return(dpy));
-    EXPECT_CALL(mock_egl, eglGetCurrentSurface(EGL_DRAW))
-        .InSequence(seq)
-        .WillOnce(Return(sur));
-    EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesListWithEglFields(expected_list, dpy, sur)))
+    EXPECT_CALL(*mock_hwc_device_wrapper, unsubscribe_from_events_(_))
         .InSequence(seq);
 
     mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config);
-
-    device.post_gl(mock_context);
 }
 
 TEST_F(HwcFbDevice, hwc10_rejects_overlays)
@@ -140,27 +131,50 @@ TEST_F(HwcFbDevice, hwc10_rejects_overlays)
         renderable2
     };
 
-    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config)
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config);
     EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
 }
 
 TEST_F(HwcFbDevice, hwc10_post)
 {
     using namespace testing;
-    auto native_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
-    Sequence seq;
+    std::list<hwc_layer_1_t*> expected_list{&skip_layer};
+    std::function<void(mga::DisplayName, std::chrono::nanoseconds)> vsync_cb;
     EXPECT_CALL(*mock_hwc_device_wrapper, subscribe_to_events(_,_,_,_))
-        .InSequence(seq);
-    EXPECT_CALL(*mock_buffer, native_buffer_handle())
-        .InSequence(seq)
-        .WillOnce(Return(native_buffer));
-    EXPECT_CALL(*mock_buffer, native_buffer_handle())
-        .InSequence(seq)
-        .WillOnce(Return(native_buffer));
-    EXPECT_CALL(*mock_fb_device, post_interface(mock_fb_device.get(), &native_buffer->native_handle))
-        .InSequence(seq);
-    EXPECT_CALL(*mock_hwc_device_wrapper, unsubscribe_to_events(_))
-        .InSequence(seq);
+        .WillOnce(SaveArg<1>(&vsync_cb));
     mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config);
+    std::atomic<bool> vsync_thread_on{true};
+    std::thread vsync_thread([&]{
+        while(vsync_thread_on)
+        {
+            std::this_thread::sleep_for(std::chrono::microseconds(500));
+            vsync_cb(mga::DisplayName::primary, std::chrono::nanoseconds(0));
+        }
+    });
+    Mock::VerifyAndClearExpectations(mock_hwc_device_wrapper.get());
+
+    Sequence seq;
+    EXPECT_CALL(*mock_buffer, native_buffer_handle())
+        .InSequence(seq)
+        .WillOnce(Return(stub_native_buffer));
+    EXPECT_CALL(*mock_hwc_device_wrapper, prepare(MatchesPrimaryList(expected_list)))
+        .InSequence(seq);
+    EXPECT_CALL(mock_egl, eglGetCurrentDisplay())
+        .InSequence(seq)
+        .WillOnce(Return(dpy));
+    EXPECT_CALL(mock_egl, eglGetCurrentSurface(EGL_DRAW))
+        .InSequence(seq)
+        .WillOnce(Return(sur));
+    EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesListWithEglFields(expected_list, dpy, sur)))
+        .InSequence(seq);
+    EXPECT_CALL(*mock_buffer, native_buffer_handle())
+        .InSequence(seq)
+        .WillOnce(Return(stub_native_buffer));
+    EXPECT_CALL(*mock_fb_device, post_interface(mock_fb_device.get(), &stub_native_buffer->native_handle))
+        .InSequence(seq);
+
     device.post_gl(mock_context);
+
+    vsync_thread_on = false;
+    vsync_thread.join();
 }

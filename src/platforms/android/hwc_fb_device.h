@@ -23,6 +23,10 @@
 #include "hwc_layerlist.h"
 #include "hardware/gralloc.h"
 #include "hardware/fb.h"
+#include "mir/raii.h"
+#include "display_name.h"
+#include <mutex>
+#include <condition_variable>
 
 namespace mir
 {
@@ -38,8 +42,7 @@ class HwcFbDevice : public HWCCommonDevice
 public:
     HwcFbDevice(std::shared_ptr<HwcWrapper> const& hwc_wrapper,
                 std::shared_ptr<framebuffer_device_t> const& fb_device,
-                std::shared_ptr<HwcConfiguration> const& hwc_config,
-                std::shared_ptr<HWCVsyncCoordinator> const& coordinator);
+                std::shared_ptr<HwcConfiguration> const& hwc_config);
 
     virtual void post_gl(SwappingGLContext const& context);
     virtual bool post_overlays(
@@ -52,6 +55,12 @@ private:
     std::shared_ptr<framebuffer_device_t> const fb_device;
     static int const num_displays{1};
     LayerList layer_list;
+
+    mir::raii::PairedCalls<std::function<void()>, std::function<void()>> vsync_subscription;
+    std::mutex vsync_wait_mutex;
+    std::condition_variable vsync_trigger;
+    bool vsync_occurred;
+    void notify_vsync(DisplayName, std::chrono::nanoseconds);
 };
 
 }
