@@ -27,3 +27,10 @@ MIR_CLIENT_8.1 {
     mir_surface_spec_set_buffer_usage;
     mir_surface_spec_set_fullscreen_on_output;
 } MIR_CLIENT_8;
+
+MIR_CLIENT_8.2 {
+  global:
+    mir_surface_set_preferred_orientation;
+    mir_surface_get_preferred_orientation;
+    mir_surface_spec_set_preferred_orientation;
+} MIR_CLIENT_8.1;
