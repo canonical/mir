@@ -22,7 +22,6 @@
 #include "mir_test_doubles/mock_display_device.h"
 #include "mir_test_doubles/mock_buffer.h"
 #include "mir_test_doubles/mock_android_native_buffer.h"
-#include "mir_test_doubles/mock_hwc_vsync_coordinator.h"
 #include "mir_test_doubles/mock_framebuffer_bundle.h"
 #include "mir_test_doubles/mock_fb_hal_device.h"
 #include "mir_test_doubles/stub_renderable.h"
@@ -60,7 +59,6 @@ protected:
         int fbnum = 558;
         mock_fb_device = std::make_shared<mtd::MockFBHalDevice>(
             width, height, HAL_PIXEL_FORMAT_RGBA_8888, fbnum);
-        mock_vsync = std::make_shared<testing::NiceMock<mtd::MockVsyncCoordinator>>();
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
         mock_hwc_device_wrapper = std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>();
 
@@ -98,7 +96,6 @@ protected:
 
     geom::Size test_size;
     std::shared_ptr<mtd::MockFBHalDevice> mock_fb_device;
-    std::shared_ptr<mtd::MockVsyncCoordinator> mock_vsync;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_hwc_device_wrapper;
     std::shared_ptr<mtd::StubAndroidNativeBuffer> stub_native_buffer;
@@ -126,7 +123,7 @@ TEST_F(HwcFbDevice, hwc10_post_gl_only)
     EXPECT_CALL(*mock_hwc_device_wrapper, set(MatchesListWithEglFields(expected_list, dpy, sur)))
         .InSequence(seq);
 
-    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config);
 
     device.post_gl(mock_context);
 }
@@ -143,7 +140,7 @@ TEST_F(HwcFbDevice, hwc10_rejects_overlays)
         renderable2
     };
 
-    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config)
     EXPECT_FALSE(device.post_overlays(stub_context, renderlist, stub_compositor));
 }
 
@@ -152,6 +149,8 @@ TEST_F(HwcFbDevice, hwc10_post)
     using namespace testing;
     auto native_buffer = std::make_shared<NiceMock<mtd::MockAndroidNativeBuffer>>();
     Sequence seq;
+    EXPECT_CALL(*mock_hwc_device_wrapper, subscribe_to_events(_,_,_,_))
+        .InSequence(seq);
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
         .InSequence(seq)
         .WillOnce(Return(native_buffer));
@@ -160,8 +159,8 @@ TEST_F(HwcFbDevice, hwc10_post)
         .WillOnce(Return(native_buffer));
     EXPECT_CALL(*mock_fb_device, post_interface(mock_fb_device.get(), &native_buffer->native_handle))
         .InSequence(seq);
-    EXPECT_CALL(*mock_vsync, wait_for_vsync())
+    EXPECT_CALL(*mock_hwc_device_wrapper, unsubscribe_to_events(_))
         .InSequence(seq);
-    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config, mock_vsync);
+    mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config);
     device.post_gl(mock_context);
 }
