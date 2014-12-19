@@ -63,7 +63,7 @@ public:
      * least because "flipping" is a hardware operation that is independent
      * of the graphics library (OpenGL or other). Also, flip() can be a
      * dramatically slower operation than gl_swap_buffers() and it would be
-     * an unacceptable performance hit to wait for both before before freeing
+     * an unacceptable performance hit to wait for both before freeing
      * GL resources.
      */
     virtual void flip() = 0;
