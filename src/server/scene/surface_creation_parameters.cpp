@@ -24,27 +24,10 @@ namespace mi = mir::input;
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
-namespace
-{
-bool parent_id_matches(const ms::SurfaceCreationParameters& lhs,
-    const ms::SurfaceCreationParameters& rhs)
-{
-    if (lhs.has_parent && rhs.has_parent)
-        return lhs.parent_id == rhs.parent_id;
-
-    return lhs.has_parent == rhs.has_parent;
-}
-}
-
 ms::SurfaceCreationParameters::SurfaceCreationParameters()
     : buffer_usage{mg::BufferUsage::undefined},
       pixel_format{mir_pixel_format_invalid},
-      depth{0}, input_mode{mi::InputReceptionMode::normal},
-      state{mir_surface_state_unknown},
-      type{mir_surface_type_normal},
-      preferred_orientation{mir_orientation_mode_any},
-      has_parent{false},
-      parent_id{0}
+      depth{0}, input_mode{mi::InputReceptionMode::normal}
 {
 }
 
@@ -137,7 +120,6 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_preferred_ori
 
 ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_parent_id(mf::SurfaceId const& id)
 {
-    has_parent = true;
     parent_id = id;
     return *this;
 }
@@ -157,7 +139,7 @@ bool ms::operator==(
         lhs.state == rhs.state &&
         lhs.type == rhs.type &&
         lhs.preferred_orientation == rhs.preferred_orientation &&
-        parent_id_matches(lhs, rhs);
+        lhs.parent_id == rhs.parent_id;
 }
 
 bool ms::operator!=(
