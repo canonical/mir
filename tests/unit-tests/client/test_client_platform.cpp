@@ -20,60 +20,153 @@
 #include "src/client/mir_client_surface.h"
 #include "mir_test_doubles/mock_client_context.h"
 #include "mir_test_doubles/mock_client_surface.h"
+#include "mir_test_framework/executable_path.h"
+#include "mir_test_framework/stub_platform_helpers.h"
 
-#ifdef ANDROID
+#ifdef MIR_BUILD_PLATFORM_ANDROID
 #include "mir_test_doubles/mock_android_hw.h"
-#include "src/client/android/client_platform_factory.h"
-#else
-#include "src/client/mesa/client_platform_factory.h"
 #endif
+
+#include "src/client/client_platform_factory.h"
+
+#include "mir/shared_library.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mcl=mir::client;
 namespace mtd = mir::test::doubles;
+namespace mtf = mir_test_framework;
 
-struct ClientPlatformTest : public ::testing::Test
+namespace
 {
-    mtd::MockClientContext context;
-#ifdef ANDROID
-    testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
-    mcl::android::ClientPlatformFactory factory;
-#else
-    mcl::mesa::ClientPlatformFactory factory;
-#endif
+struct ClientPlatformTraits
+{
+    ClientPlatformTraits(std::string const& library,
+                         std::function<void(MirPlatformPackage&)> populator,
+                         MirPlatformType type)
+        : platform_library_name{library},
+          populate_package_for{populator},
+          platform_type{type}
+    {
+    }
+
+    std::string const platform_library_name;
+    std::function<void(MirPlatformPackage&)> const populate_package_for;
+    MirPlatformType const platform_type;
 };
 
-TEST_F(ClientPlatformTest, platform_name)
+struct ClientPlatformTest : public ::testing::TestWithParam<ClientPlatformTraits const*>
 {
-    auto platform = factory.create_client_platform(&context);
-#ifdef ANDROID
-    auto type = mir_platform_type_android;
-#else
-    auto type = mir_platform_type_gbm;
+    ClientPlatformTest()
+        : platform_library{mtf::library_path() + "/" + GetParam()->platform_library_name},
+          create_client_platform{platform_library.load_function<mcl::CreateClientPlatform>("create_client_platform")},
+          probe{platform_library.load_function<mcl::ClientPlatformProbe>("is_appropriate_module")}
+    {
+        using namespace testing;
+        ON_CALL(context, populate(_))
+            .WillByDefault(Invoke(GetParam()->populate_package_for));
+    }
+
+    mtd::MockClientContext context;
+#ifdef MIR_BUILD_PLATFORM_ANDROID
+    testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
 #endif
-    EXPECT_EQ(type, platform->platform_type());
+    mir::SharedLibrary platform_library;
+    mcl::CreateClientPlatform const create_client_platform;
+    mcl::ClientPlatformProbe const probe;
+};
+
+#ifdef MIR_BUILD_PLATFORM_ANDROID
+ClientPlatformTraits const android_platform{"/client-modules/android.so",
+                                            [](MirPlatformPackage& pkg)
+                                            {
+                                                ::memset(&pkg, 0, sizeof(pkg));
+                                            },
+                                            mir_platform_type_android
+                                           };
+
+INSTANTIATE_TEST_CASE_P(Android,
+                        ClientPlatformTest,
+                        ::testing::Values(&android_platform));
+
+#endif
+
+#ifdef MIR_BUILD_PLATFORM_MESA
+ClientPlatformTraits const mesa_platform{"/client-modules/mesa.so",
+                                         [](MirPlatformPackage& pkg)
+                                         {
+                                             ::memset(&pkg, 0, sizeof(pkg));
+                                             pkg.fd_items = 1;
+                                         },
+                                         mir_platform_type_gbm
+                                        };
+
+INSTANTIATE_TEST_CASE_P(Mesa,
+                        ClientPlatformTest,
+                        ::testing::Values(&mesa_platform));
+
+#endif
+
+ClientPlatformTraits const dummy_platform{"/client-modules/dummy.so",
+                                          [](MirPlatformPackage& pkg)
+                                          {
+                                              mtf::create_stub_platform_package(pkg);
+                                          },
+                                          mir_platform_type_gbm
+                                         };
+
+INSTANTIATE_TEST_CASE_P(Dummy,
+                        ClientPlatformTest,
+                        ::testing::Values(&dummy_platform));
 }
 
-TEST_F(ClientPlatformTest, platform_creates)
+TEST_P(ClientPlatformTest, platform_name)
 {
-    auto platform = factory.create_client_platform(&context);
+    auto platform = create_client_platform(&context);
+
+    EXPECT_EQ(GetParam()->platform_type, platform->platform_type());
+}
+
+TEST_P(ClientPlatformTest, platform_creates)
+{
+    auto platform = create_client_platform(&context);
     auto buffer_factory = platform->create_buffer_factory();
     EXPECT_NE(buffer_factory.get(), (mcl::ClientBufferFactory*) NULL);
 }
 
-TEST_F(ClientPlatformTest, platform_creates_native_window)
+TEST_P(ClientPlatformTest, platform_creates_native_window)
 {
-    auto platform = factory.create_client_platform(&context);
+    auto platform = create_client_platform(&context);
     auto mock_client_surface = std::make_shared<mtd::MockClientSurface>();
     auto native_window = platform->create_egl_native_window(mock_client_surface.get());
     EXPECT_NE(*native_window, (EGLNativeWindowType) NULL);
 }
 
-TEST_F(ClientPlatformTest, platform_creates_egl_native_display)
+TEST_P(ClientPlatformTest, platform_creates_egl_native_display)
 {
-    auto platform = factory.create_client_platform(&context);
+    auto platform = create_client_platform(&context);
     auto native_display = platform->create_egl_native_display();
     EXPECT_NE(nullptr, native_display.get());
+}
+
+TEST_P(ClientPlatformTest, platform_probe_returns_success_when_matching)
+{
+    EXPECT_TRUE(probe(&context));
+}
+
+TEST_P(ClientPlatformTest, platform_probe_returns_false_when_not_matching)
+{
+    using namespace testing;
+    ON_CALL(context, populate(_))
+        .WillByDefault(Invoke([](MirPlatformPackage& pkg)
+                              {
+                                  //Mock up something that hopefully looks nothing like
+                                  //what the platform is expecting...
+                                  ::memset(&pkg, 0, sizeof(pkg));
+                                  pkg.data_items = mir_platform_package_max + 1;
+                                  pkg.fd_items = -23;
+                              }));
+
+    EXPECT_FALSE(probe(&context));
 }

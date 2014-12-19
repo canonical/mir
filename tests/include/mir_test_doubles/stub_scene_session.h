@@ -88,6 +88,14 @@ struct StubSceneSession : public scene::Session
     {
     }
 
+    void suspend_prompt_session() override
+    {
+    }
+
+    void resume_prompt_session() override
+    {
+    }
+
     pid_t const pid;
 };
 

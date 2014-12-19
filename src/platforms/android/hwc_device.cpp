@@ -90,7 +90,6 @@ bool mga::HwcDevice::buffer_is_onscreen(mg::Buffer const& buffer) const
 
 void mga::HwcDevice::post_gl(SwappingGLContext const& context)
 {
-    auto lg = lock_unblanked();
     hwc_list.update_list({}, fbtarget_plus_skip_size);
     auto& skip = *hwc_list.additional_layers_begin();
     auto& fbtarget = *(++hwc_list.additional_layers_begin());
@@ -136,7 +135,6 @@ bool mga::HwcDevice::post_overlays(
     if (!needs_commit)
         return false;
 
-    auto lg = lock_unblanked();
     auto& fbtarget = *hwc_list.additional_layers_begin();
 
     auto buffer = context.last_rendered_buffer();

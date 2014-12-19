@@ -20,7 +20,6 @@
 #include "../client_buffer.h"
 #include "native_surface.h"
 
-#include <iostream>
 #include <boost/exception/diagnostic_information.hpp> 
 
 namespace mclm=mir::client::mesa;

@@ -138,16 +138,9 @@ void mga::DisplayBuffer::configure(DisplayConfigurationOutput const& new_configu
         current_configuration.power_mode = intended_power_mode;
     }
 
-    //If the hardware can rotate for us, we report normal orientation. If it can't
+    //TODO: We don't support rotation yet, so
     //we preserve this orientation change so the compositor can rotate everything in GL 
-    if (display_device->apply_orientation(new_configuration.orientation))
-    {
-        current_configuration.orientation = mir_orientation_normal;
-    }
-    else
-    {
-        current_configuration.orientation = new_configuration.orientation;
-    }
+    current_configuration.orientation = new_configuration.orientation;
 
     //do not allow fb format reallocation
     if (new_configuration.current_format != current_configuration.current_format)

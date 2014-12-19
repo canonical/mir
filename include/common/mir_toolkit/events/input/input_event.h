@@ -19,9 +19,7 @@
 #ifndef MIR_TOOLKIT_INPUT_EVENT_H_
 #define MIR_TOOLKIT_INPUT_EVENT_H_
 
-#include "mir_toolkit/event.h"
-#include "mir_toolkit/input/key_input_event.h"
-#include "mir_toolkit/input/touch_input_event.h"
+#include "mir_toolkit/events/event.h"
 
 #include <stdint.h>
 
@@ -33,8 +31,6 @@
 extern "C" {
 #endif
 
-typedef struct MirInputEvent MirInputEvent;
-
 typedef int64_t MirInputDeviceId;
 
 typedef enum {
@@ -42,14 +38,45 @@ typedef enum {
     mir_input_event_type_touch = 1
 } MirInputEventType;
 
-/*
- * Retrieve the MirInputEvent associated with a MirEvent of 
- * type mir_event_type_input.
- *
- * \param [in] event The event
- * \return           The associated MirInputEvent
+/**
+ * Description of key modifier state.
  */
-MirInputEvent const* mir_event_get_input_event(MirEvent const* ev);
+typedef enum {
+    mir_input_event_modifier_none        = 1 << 0,
+    mir_input_event_modifier_alt         = 1 << 1,
+    mir_input_event_modifier_alt_left    = 1 << 2,
+    mir_input_event_modifier_alt_right   = 1 << 3,
+    mir_input_event_modifier_shift       = 1 << 4,
+    mir_input_event_modifier_shift_left  = 1 << 5,
+    mir_input_event_modifier_shift_right = 1 << 6,
+    mir_input_event_modifier_sym         = 1 << 7,
+    mir_input_event_modifier_function    = 1 << 8,
+    mir_input_event_modifier_ctrl        = 1 << 9,
+    mir_input_event_modifier_ctrl_left   = 1 << 10,
+    mir_input_event_modifier_ctrl_right  = 1 << 11,
+    mir_input_event_modifier_meta        = 1 << 12,
+    mir_input_event_modifier_meta_left   = 1 << 13,
+    mir_input_event_modifier_meta_right  = 1 << 14,
+    mir_input_event_modifier_caps_lock   = 1 << 15,
+    mir_input_event_modifier_num_lock    = 1 << 16,
+    mir_input_event_modifier_scroll_lock = 1 << 17
+} MirInputEventModifiers;
+
+#ifdef __cplusplus
+}
+/**@}*/
+#endif
+
+#include "mir_toolkit/events/input/touch_input_event.h"
+#include "mir_toolkit/events/input/key_input_event.h"
+
+#ifdef __cplusplus
+/**
+ * \addtogroup mir_toolkit
+ * @{
+ */
+extern "C" {
+#endif
 
 /*
  * Retrieves the device id responsible for generating an input event.
