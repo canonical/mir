@@ -14,6 +14,7 @@ dcf8b8982f138bdde39a241825c610e955cd5e33  include/common/mir/input/input_platfor
 be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
 2de47e2790d0f7643e23eada2d8aa2987f58d086  include/common/mir/logging/logger.h
 5ab81600183fdaca3fb949beb2307d1f6e4cbb61  include/common/mir/log.h
+31b9c24e2ce7194aeea6694e81c160354033d28a  include/common/mir/optional_value.h
 9ae8473df05dd9e048a73797f01a2f34f7447554  include/common/mir/time/types.h
 23a009b06de7bac17d33d988dc8d968be8bc094a  include/common/mir_toolkit/client_types.h
 c7c708734715a6d1b6fb2652584adb912071a518  include/common/mir_toolkit/common.h
@@ -89,7 +90,7 @@ ee94083f10f890e24c0e0bbdb94842e2dd788deb  include/server/mir/scene/session_liste
 5bab4dc0a6488b8b9d47e958c6bab94f1dcf2c57  include/server/mir/scene/surface_buffer_access.h
 bbc9e2e2bb71634cd6f1c5c0430093e10e74fa23  include/server/mir/scene/surface_configurator.h
 e5e4dd7bcaf186810043fa0f05be42d7e49b0843  include/server/mir/scene/surface_coordinator.h
-dd8f054f786b9746d9e513f2656e931234b5283a  include/server/mir/scene/surface_creation_parameters.h
+6d669f4235c2237fb35578671405db882b6aafba  include/server/mir/scene/surface_creation_parameters.h
 7da48dbedb4430ce322a50ef8f4e93ce08bdf147  include/server/mir/scene/surface.h
 587e22d751656ce2d9536afdf5659276ff9bbc46  include/server/mir/scene/surface_observer.h
 7ef3e99901168cda296d74d05a979f47bf9c3ff1  include/server/mir/server_action_queue.h

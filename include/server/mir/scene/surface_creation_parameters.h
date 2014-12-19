@@ -25,7 +25,9 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/scene/depth_id.h"
+#include "mir/frontend/surface_id.h"
 #include "mir/input/input_reception_mode.h"
+#include "mir/optional_value.h"
 
 #include <memory>
 #include <string>
@@ -57,6 +59,14 @@ struct SurfaceCreationParameters
 
     SurfaceCreationParameters& with_output_id(graphics::DisplayConfigurationOutputId const& output_id);
 
+    SurfaceCreationParameters& of_type(MirSurfaceType type);
+
+    SurfaceCreationParameters& with_state(MirSurfaceState state);
+
+    SurfaceCreationParameters& with_preferred_orientation(MirOrientationMode mode);
+
+    SurfaceCreationParameters& with_parent_id(frontend::SurfaceId const& id);
+
     std::string name;
     geometry::Size size;
     geometry::Point top_left;
@@ -65,6 +75,11 @@ struct SurfaceCreationParameters
     scene::DepthId depth;
     input::InputReceptionMode input_mode;
     graphics::DisplayConfigurationOutputId output_id;
+
+    mir::optional_value<MirSurfaceState> state;
+    mir::optional_value<MirSurfaceType> type;
+    mir::optional_value<MirOrientationMode> preferred_orientation;
+    mir::optional_value<frontend::SurfaceId> parent_id;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);
