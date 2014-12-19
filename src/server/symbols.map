@@ -39,7 +39,6 @@ MIR_SERVER_28 {
     mir::DefaultServerConfiguration::the_android_input_dispatcher*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
-    mir::DefaultServerConfiguration::the_buffer_writer*;
     mir::DefaultServerConfiguration::the_clock*;
     mir::DefaultServerConfiguration::the_composite_event_filter*;
     mir::DefaultServerConfiguration::the_compositor*;
@@ -523,7 +522,6 @@ MIR_SERVER_28 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_android_input_dispatcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_allocator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_stream_factory*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_writer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_clock*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_composite_event_filter*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_compositor*;

@@ -39,7 +39,6 @@ public:
     GuestPlatform(std::shared_ptr<NestedContext> const& nested_context_arg);
 
     std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() override;
-    std::shared_ptr<graphics::BufferWriter> make_buffer_writer() override;
     std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const override;
     
     std::shared_ptr<Display> create_display(
