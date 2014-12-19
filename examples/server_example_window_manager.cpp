@@ -21,6 +21,7 @@
 #include "mir/server.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/display_buffer_compositor.h"
+#include "mir/geometry/rectangles.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/options/option.h"
 #include "mir/scene/observer.h"
@@ -28,6 +29,10 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/session_coordinator_wrapper.h"
 #include "mir/shell/surface_coordinator_wrapper.h"
+
+#include <algorithm>
+#include <map>
+#include <mutex>
 
 namespace mc = mir::compositor;
 namespace me = mir::examples;
@@ -61,23 +66,66 @@ public:
     {
     }
 
-    void add_session(std::shared_ptr<mf::Session> const& /*session*/)
+    void add_session(std::shared_ptr<mf::Session> const& session)
     {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        tiles[session] = Rectangle{};
+        update_tiles();
     }
 
-    void remove_session(std::shared_ptr<mf::Session> const& /*session*/)
+    void remove_session(std::shared_ptr<mf::Session> const& session)
     {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        tiles.erase(session);
+        update_tiles();
     }
 
-    void add_display(Rectangle const& /*area*/)
+    void add_display(Rectangle const& area)
     {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        displays.push_back(area);
+        update_tiles();
     }
 
-    void remove_display(Rectangle const& /*area*/)
+    void remove_display(Rectangle const& area)
     {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        auto const i = std::find(begin(displays), end(displays), area);
+        if (i != end(displays)) displays.erase(i);
+        update_tiles();
     }
 
 private:
+    void update_tiles()
+    {
+        if (tiles.size() < 1 || displays.size() < 1) return;
+
+        auto const sessions = tiles.size();
+        Rectangles view;
+
+        for (auto const& display : displays)
+            view.add(display);
+
+        auto const bounding_rect = view.bounding_rectangle();
+
+        auto const total_width  = bounding_rect.size.width.as_int();
+        auto const total_height = bounding_rect.size.height.as_int();
+
+        auto index = 0;
+
+        for (auto& tile : tiles)
+        {
+            auto const x = (total_width*index)/sessions;
+            ++index;
+            auto const dx = (total_width*index)/sessions - x;
+
+            tile.second = Rectangle{{x, 0}, {dx, total_height}};
+        }
+    }
+
+    std::mutex mutex;
+    std::vector<Rectangle> displays;
+    std::map<std::shared_ptr<mf::Session>, Rectangle> tiles;
 };
 
 class WindowManagmentFactory
