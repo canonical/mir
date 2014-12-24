@@ -19,10 +19,12 @@
 #ifndef MIR_GRAPHICS_ANDROID_HWC_WRAPPER_H_
 #define MIR_GRAPHICS_ANDROID_HWC_WRAPPER_H_
 
+#include "mir/int_wrapper.h"
 #include "display_name.h"
 #include <hardware/hwcomposer.h>
 #include <array>
 #include <memory>
+#include <vector>
 
 namespace mir
 {
@@ -30,6 +32,9 @@ namespace graphics
 {
 namespace android
 {
+
+struct ConfigIdTag;
+typedef IntWrapper<ConfigIdTag, uint32_t> ConfigId;
 
 struct HWCCallbacks;
 class HwcWrapper
@@ -44,6 +49,9 @@ public:
     virtual void vsync_signal_off(DisplayName) const = 0;
     virtual void display_on(DisplayName) const = 0;
     virtual void display_off(DisplayName) const = 0;
+    virtual std::vector<ConfigId> display_configs(DisplayName) const = 0;
+    virtual void display_attributes(
+        DisplayName, ConfigId, uint32_t const* attributes, int32_t* values) const = 0;
 
 protected:
     HwcWrapper() = default;

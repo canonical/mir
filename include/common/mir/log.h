@@ -61,11 +61,16 @@ void log_info(char const* fmt, Args... args)
                MIR_LOG_COMPONENT, fmt, args...);
 }
 
-template<typename... Args>
-void log_error(char const* fmt, Args... args)
+inline void log_critical(std::string const& message)
+{
+    ::mir::log(::mir::logging::Severity::critical,
+               MIR_LOG_COMPONENT, message);
+}
+
+inline void log_error(std::string const& message)
 {
     ::mir::log(::mir::logging::Severity::error,
-               MIR_LOG_COMPONENT, fmt, args...);
+               MIR_LOG_COMPONENT, message);
 }
 
 } // (nested anonymous) namespace

@@ -122,3 +122,26 @@ void mga::RealHwcWrapper::display_off(DisplayName display_name) const
     }
     report->report_display_off();
 }
+
+std::vector<mga::ConfigId> mga::RealHwcWrapper::display_configs(DisplayName display_name) const
+{
+    //No way to get the number of display configs. SF uses 128 possible spots, but that seems excessive.
+    static size_t const max_configs = 16;
+    size_t num_configs = max_configs;
+    static uint32_t display_config[max_configs] = {};
+    if (hwc_device->getDisplayConfigs(hwc_device.get(), display_name, display_config, &num_configs))
+        return {};
+
+    auto i = 0u;
+    std::vector<mga::ConfigId> config_ids{std::min(max_configs, num_configs)};
+    for(auto& id : config_ids)
+        id = mga::ConfigId{display_config[i++]};
+    return config_ids;
+}
+
+void mga::RealHwcWrapper::display_attributes(
+    DisplayName display_name, ConfigId config, uint32_t const* attributes, int32_t* values) const
+{
+    hwc_device->getDisplayAttributes(
+        hwc_device.get(), display_name, config.as_value(), attributes, values);
+}
