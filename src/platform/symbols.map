@@ -36,7 +36,6 @@ MIRPLATFORM_5 {
     mir::graphics::DisplayBuffer::operator*;
     mir::graphics::DisplayBuffer::orientation*;
     mir::graphics::DisplayBuffer::post_renderables_if_optimizable*;
-    mir::graphics::DisplayBuffer::post_update*;
     mir::graphics::DisplayBuffer::release_current*;
     mir::graphics::DisplayBuffer::uses_alpha*;
     mir::graphics::DisplayBuffer::view_area*;
