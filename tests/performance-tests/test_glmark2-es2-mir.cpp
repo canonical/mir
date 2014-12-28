@@ -1,9 +1,5 @@
-#include "mir_test_framework/command_line_server_configuration.h"
-#include "mir/default_server_configuration.h"
-#include "mir/options/default_configuration.h"
-
+#include "mir_test_framework/async_server_runner.h"
 #include "mir_test/popen.h"
-#include "mir_test_framework/in_process_server.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -18,17 +14,27 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-class GLMark2Test : public mir_test_framework::InProcessServer
+struct GLMark2Test : testing::Test, mtf::AsyncServerRunner
 {
-public:
- GLMark2Test()
-        : config(mtf::configuration_from_commandline())
+    void SetUp() override
     {
+#ifdef ANDROID
+        /*
+         * Workaround instability that causes freezes when combining
+         * Android overlays with high-speed frame dropping (LP: #1391261).
+         * Fortunately glmark2 is the only use case that exploits this issue
+         * right now.
+         */
+        add_to_environment("MIR_SERVER_DISABLE_OVERLAYS", "true");
+#endif
+        start_server();
     }
 
-    mir::DefaultServerConfiguration& server_config() override {return config;};
+    void TearDown() override
+    {
+        stop_server();
+    }
 
-protected:
     enum ResultFileType {raw, json};
     virtual void run_glmark2(char const* output_filename, ResultFileType file_type)
     {
@@ -66,9 +72,6 @@ protected:
             glmark2_output << json;
         }
     }
-
-private:
-    mir::DefaultServerConfiguration config;
 };
 
 TEST_F(GLMark2Test, benchmark_fullscreen_default)

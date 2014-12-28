@@ -17,13 +17,14 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir/compositor/scene.h"
-#include "mir/compositor/scene_element.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/graphics/renderable.h"
+#include "mir/scene/surface.h"
+#include "mir/shell/surface_coordinator_wrapper.h"
 
-#include "mir_test_framework/stubbed_server_configuration.h"
-#include "mir_test_framework/basic_client_server_fixture.h"
+#include "mir_test_framework/connected_client_headless_server.h"
+#include "mir_test_framework/any_surface.h"
+
+#include "mir_test/validity_matchers.h"
 
 #include <gtest/gtest.h>
 
@@ -31,12 +32,15 @@
 #include <tuple>
 #include <algorithm>
 
+namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace mtf = mir_test_framework;
 namespace geom = mir::geometry;
 
+using namespace testing;
+
 namespace
 {
-
 struct RectangleCompare
 {
     bool operator()(geom::Rectangle const& rect1,
@@ -56,49 +60,75 @@ struct RectangleCompare
     }
 };
 
-struct ServerConfig : mtf::StubbedServerConfiguration
+class TrackingSurfaceCoordinator : public msh::SurfaceCoordinatorWrapper
 {
-    static std::vector<geom::Rectangle> const display_rects;
+public:
+    using msh::SurfaceCoordinatorWrapper::SurfaceCoordinatorWrapper;
 
-    ServerConfig() : mtf::StubbedServerConfiguration(display_rects) {}
+    std::shared_ptr<ms::Surface> add_surface(
+        ms::SurfaceCreationParameters const& params,
+        ms::Session* session) override
+    {
+        auto const surface = msh::SurfaceCoordinatorWrapper::add_surface(params, session);
+        surfaces.push_back(surface);
+        return surface;
+    }
+
+    std::vector<geom::Rectangle> server_surface_rectangles()
+    {
+        std::vector<geom::Rectangle> rects;
+        for (auto const& surface : surfaces)
+        {
+            if (auto const ss = surface.lock())
+                rects.push_back(ss->compositor_snapshot(this)->screen_position());
+        }
+        return rects;
+    }
+
+private:
+    std::vector<std::weak_ptr<ms::Surface>> surfaces;
 };
 
-std::vector<geom::Rectangle> const ServerConfig::display_rects{
-    {{0,0}, {800,600}},
-    {{800,600}, {200,400}}};
-
-using BasicFixture = mtf::BasicClientServerFixture<ServerConfig>;
-
-struct SurfacesWithOutputId : BasicFixture
+struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
 {
-    void SetUp()
+    void SetUp() override
     {
-        BasicFixture::SetUp();
+        server.wrap_surface_coordinator([this]
+            (std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
+            ->std::shared_ptr<ms::SurfaceCoordinator>
+            {
+                tracking_surface_coordinator = std::make_shared<TrackingSurfaceCoordinator>(wrapped);
+                return tracking_surface_coordinator;
+            });
+
+        initial_display_layout(display_rects);
+        mtf::ConnectedClientHeadlessServer::SetUp();
+        ASSERT_THAT(tracking_surface_coordinator, NotNull());
+
         config = mir_connection_create_display_config(connection);
         ASSERT_TRUE(config != NULL);
     }
 
-    void TearDown()
+    void TearDown() override
     {
         mir_display_config_destroy(config);
-        BasicFixture::TearDown();
+        tracking_surface_coordinator.reset();
+        mtf::ConnectedClientHeadlessServer::TearDown();
     }
 
     std::shared_ptr<MirSurface> create_non_fullscreen_surface_for(MirDisplayOutput const& output)
     {
         auto const& mode = output.modes[output.current_mode];
 
-        MirSurfaceParameters const request_params =
-        {
-            __PRETTY_FUNCTION__,
+        auto spec = mir_connection_create_spec_for_normal_surface(connection, 
             static_cast<int>(mode.horizontal_resolution) - 1,
             static_cast<int>(mode.vertical_resolution) + 1,
-            mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware,
-            output.output_id
-        };
+            mir_pixel_format_abgr_8888);
+        mir_surface_spec_set_fullscreen_on_output(spec, output.output_id);
+        
+        auto surface_raw = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
 
-        auto surface_raw = mir_connection_create_surface_sync(connection, &request_params);
         return shared_ptr_surface(surface_raw);
     }
 
@@ -106,17 +136,15 @@ struct SurfacesWithOutputId : BasicFixture
     {
         auto const& mode = output.modes[output.current_mode];
 
-        MirSurfaceParameters const request_params =
-        {
-            __PRETTY_FUNCTION__,
+        auto spec = mir_connection_create_spec_for_normal_surface(connection,
             static_cast<int>(mode.horizontal_resolution),
             static_cast<int>(mode.vertical_resolution),
-            mir_pixel_format_abgr_8888,
-            mir_buffer_usage_hardware,
-            output.output_id
-        };
+            mir_pixel_format_abgr_8888);
+        mir_surface_spec_set_fullscreen_on_output(spec, output.output_id);
 
-        auto surface_raw = mir_connection_create_surface_sync(connection, &request_params);
+        auto surface_raw = mir_surface_create_sync(spec);
+        mir_surface_spec_release(spec);
+
         return shared_ptr_surface(surface_raw);
     }
 
@@ -130,16 +158,13 @@ struct SurfacesWithOutputId : BasicFixture
             }};
     }
 
-    std::vector<geom::Rectangle> server_surface_rectangles()
-    {
-        std::vector<geom::Rectangle> rects;
-        auto const elements = server_config().the_scene()->scene_elements_for(this);
-        for (auto const& element : elements)
-            rects.push_back(element->renderable()->screen_position());
-        return rects;
-    }
+    std::vector<geom::Rectangle> const display_rects{
+        {{0,0}, {800,600}},
+        {{800,600}, {200,400}}};
 
     MirDisplayConfiguration* config;
+
+    std::shared_ptr<TrackingSurfaceCoordinator> tracking_surface_coordinator;
 };
 
 }
@@ -155,20 +180,36 @@ TEST_F(SurfacesWithOutputId, fullscreen_surfaces_are_placed_at_top_left_of_corre
         surfaces.push_back(surface);
     }
 
-    auto surface_rects = server_surface_rectangles();
-    auto display_rects = ServerConfig::display_rects;
-
-    std::sort(display_rects.begin(), display_rects.end(), RectangleCompare());
+    auto surface_rects = tracking_surface_coordinator->server_surface_rectangles();
+    auto sorted_display_rects = display_rects;
+    std::sort(sorted_display_rects.begin(), sorted_display_rects.end(), RectangleCompare());
     std::sort(surface_rects.begin(), surface_rects.end(), RectangleCompare());
-    EXPECT_EQ(display_rects, surface_rects);
+    EXPECT_EQ(sorted_display_rects, surface_rects);
 }
 
-TEST_F(SurfacesWithOutputId, non_fullscreen_surfaces_are_not_accepted)
+TEST_F(SurfacesWithOutputId, requested_size_is_ignored_in_favour_of_display_size)
 {
+    using namespace testing;
+
+    std::vector<std::pair<int, int>> expected_dimensions;
+    std::vector<std::shared_ptr<MirSurface>> surfaces;
     for (uint32_t n = 0; n < config->num_outputs; ++n)
     {
         auto surface = create_non_fullscreen_surface_for(config->outputs[n]);
 
-        EXPECT_FALSE(mir_surface_is_valid(surface.get()));
+        EXPECT_THAT(surface.get(), IsValid());
+        surfaces.push_back(surface);
+
+        auto expected_mode = config->outputs[n].modes[config->outputs[n].current_mode];
+        expected_dimensions.push_back(std::pair<int,int>{expected_mode.horizontal_resolution,
+                                                         expected_mode.vertical_resolution});
+
     }
+
+    auto surface_rects = tracking_surface_coordinator->server_surface_rectangles();
+    auto display_rects = this->display_rects;
+
+    std::sort(display_rects.begin(), display_rects.end(), RectangleCompare());
+    std::sort(surface_rects.begin(), surface_rects.end(), RectangleCompare());
+    EXPECT_EQ(display_rects, surface_rects);
 }

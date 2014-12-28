@@ -16,15 +16,15 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 #include <boost/throw_exception.hpp>
-#include "src/platform/graphics/mesa/platform.h"
-#include "src/platform/graphics/mesa/display.h"
-#include "src/platform/graphics/mesa/virtual_terminal.h"
+#include "src/platforms/mesa/platform.h"
+#include "src/platforms/mesa/display.h"
+#include "src/platforms/mesa/virtual_terminal.h"
 #include "src/server/report/logging/display_report.h"
 #include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
 #include "mir/time/steady_clock.h"
-#include "mir/asio_main_loop.h"
+#include "mir/glib_main_loop.h"
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
@@ -64,7 +64,7 @@ namespace
 struct MockLogger : public ml::Logger
 {
     MOCK_METHOD3(log,
-                 void(ml::Logger::Severity, const std::string&, const std::string&));
+                 void(ml::Severity, const std::string&, const std::string&));
 
     ~MockLogger() noexcept(true) {}
 };
@@ -147,15 +147,17 @@ public:
             .Times(Exactly(1))
             .WillOnce(Return(fake.bo_handle2));
 
-        EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                           _, _, _, _, _,
-                                           fake.bo_handle1.u32, _))
+        EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                            _, _, _,
+                                            Pointee(fake.bo_handle1.u32),
+                                            _, _, _, _))
             .Times(Exactly(1))
             .WillOnce(DoAll(SetArgPointee<7>(fake.fb_id1), Return(0)));
 
-        EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                           _, _, _, _, _,
-                                           fake.bo_handle2.u32, _))
+        EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                            _, _, _,
+                                            Pointee(fake.bo_handle2.u32),
+                                            _, _, _, _))
             .Times(Exactly(1))
             .WillOnce(DoAll(SetArgPointee<7>(fake.fb_id2), Return(0)));
     }
@@ -256,9 +258,10 @@ TEST_F(MesaDisplayTest, create_display)
         .WillOnce(Return(fake.bo_handle1));
 
     /* Create a a DRM FB with the DRM buffer attached */
-    EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                       _, _, _, _, _,
-                                       fake.bo_handle1.u32, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                       _, _, _,
+                                       Pointee(fake.bo_handle1.u32),
+                                       _, _, _, _))
         .Times(Exactly(1))
         .WillOnce(DoAll(SetArgPointee<7>(fake.fb_id1), Return(0)));
 
@@ -291,8 +294,8 @@ TEST_F(MesaDisplayTest, reset_crtc_on_destruction)
     uint32_t const fb_id{66};
 
     /* Create DRM FBs */
-    EXPECT_CALL(mock_drm, drmModeAddFB(mock_drm.fake_drm.fd(),
-                                       _, _, _, _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+                                        _, _, _, _, _, _, _, _))
         .WillRepeatedly(DoAll(SetArgPointee<7>(fb_id), Return(0)));
 
 
@@ -437,7 +440,8 @@ TEST_F(MesaDisplayTest, post_update)
 
     display->for_each_display_buffer([](mg::DisplayBuffer& db)
     {
-        db.post_update();
+        db.gl_swap_buffers();
+        db.flip();
     });
 }
 
@@ -475,7 +479,8 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
 
         display->for_each_display_buffer([](mg::DisplayBuffer& db)
         {
-            db.post_update();
+            db.gl_swap_buffers();
+            db.flip();
         });
     }, std::runtime_error);
 }
@@ -523,7 +528,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_setup_of_native_re
 
     EXPECT_CALL(
         *logger,
-        log(Eq(ml::Logger::informational),
+        log(Eq(ml::Severity::informational),
             StrEq("Successfully setup native resources."),
             StrEq("graphics"))).Times(Exactly(1));
 
@@ -539,7 +544,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_egl_make_current_o
 
     EXPECT_CALL(
         *logger,
-        log(Eq(ml::Logger::informational),
+        log(Eq(ml::Severity::informational),
             StrEq("Successfully made egl context current on construction."),
             StrEq("graphics"))).Times(Exactly(1));
 
@@ -555,7 +560,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_egl_buffer_swap_on
 
     EXPECT_CALL(
         *logger,
-        log(Eq(ml::Logger::informational),
+        log(Eq(ml::Severity::informational),
             StrEq("Successfully performed egl buffer swap on construction."),
             StrEq("graphics"))).Times(Exactly(1));
 
@@ -571,7 +576,7 @@ TEST_F(MesaDisplayTest, outputs_correct_string_for_successful_drm_mode_set_crtc_
 
     EXPECT_CALL(
         *logger,
-        log(Eq(ml::Logger::informational),
+        log(Eq(ml::Severity::informational),
             StrEq("Successfully performed drm mode setup on construction."),
             StrEq("graphics"))).Times(Exactly(1));
 
@@ -718,7 +723,7 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
 
     auto display = create_display(create_platform());
 
-    mir::AsioMainLoop ml{std::make_shared<mir::time::SteadyClock>()};
+    mir::GLibMainLoop ml{std::make_shared<mir::time::SteadyClock>()};
     std::condition_variable done;
 
     int const device_add_count{1};

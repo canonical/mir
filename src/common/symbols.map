@@ -1,5 +1,5 @@
 MIR_COMMON_3 {
- global:
+ global: mir_*;
   extern "C++" {
 # The following symbols come from running a script over the generated docs. Vis:
 # ../tools/process_doxygen_xml.py doc/xml/*.xml | grep "^mircommon public" | sed "s/mircommon public: /    /" | sort  
@@ -151,6 +151,8 @@ MIR_COMMON_3 {
     mir::default_server_socket;
     mir::input::android::Lexicon::translate*;
     mir::logging::input_timestamp*;
+    mir::logging::log*;
+    mir::logging::set_logger*;
     mir::logging::SharedLibraryProberReport::SharedLibraryProberReport*;
     mir::RecursiveReadLock::?RecursiveReadLock*;
     mir::RecursiveReadLock::RecursiveReadLock*;
@@ -199,3 +201,17 @@ MIR_COMMON_3 {
   };
  local: *;
 };
+
+MIR_COMMON_3.1 {
+  global:
+    extern "C++" {
+      mir_event_get*;
+      mir_event_get*;
+      mir_input_event_get*;
+      mir_key_input_event_get*;
+      mir_touch_input_event_get*;
+      mir::log*char*;
+      mir::logv*;
+      mir::libraries_for_path*;
+    };
+} MIR_COMMON_3;

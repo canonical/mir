@@ -63,6 +63,7 @@ public:
     virtual MirSurfaceState state() const = 0;
     virtual void hide() = 0;
     virtual void show() = 0;
+    virtual bool visible() const = 0;
     virtual void move_to(geometry::Point const& top_left) = 0;
     virtual void take_input_focus(std::shared_ptr<shell::InputTargeter> const& targeter) = 0;
 
@@ -95,6 +96,8 @@ public:
     // TODO from the scene and is probably not cleanest interface for this.
     virtual std::shared_ptr<input::InputChannel> input_channel() const override = 0;
     virtual void set_reception_mode(input::InputReceptionMode mode) = 0;
+
+    virtual void request_client_surface_close() = 0;
 };
 }
 }

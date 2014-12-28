@@ -6,6 +6,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_cursor_controller.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_xcursor_loader.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_touchspot_controller.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_input_event.cpp
 )
 
 set(

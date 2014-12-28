@@ -20,7 +20,7 @@
 
 #include "demo_compositor.h"
 #include "window_manager.h"
-#include "fullscreen_placement_strategy.h"
+#include "server_example_fullscreen_placement_strategy.h"
 #include "../server_configuration.h"
 
 #include "mir/options/default_configuration.h"
@@ -31,7 +31,7 @@
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/destination_alpha.h"
 #include "mir/compositor/renderer_factory.h"
-#include "mir/shell/host_lifecycle_event_listener.h"
+#include "server_example_host_lifecycle_event_listener.h"
 
 #include <iostream>
 
@@ -125,21 +125,12 @@ public:
         return composite_filter;
     }
 
-    class NestedLifecycleEventListener : public msh::HostLifecycleEventListener
-    {
-    public:
-        virtual void lifecycle_event_occurred(MirLifecycleState state) override
-        {
-            printf("Lifecycle event occurred : state = %d\n", state);
-        }
-    };
-
     std::shared_ptr<msh::HostLifecycleEventListener> the_host_lifecycle_event_listener() override
     {
        return host_lifecycle_event_listener(
-           []()
+           [this]()
            {
-               return std::make_shared<NestedLifecycleEventListener>();
+               return std::make_shared<HostLifecycleEventListener>(the_logger());
            });
     }
 
@@ -163,6 +154,7 @@ try
             wm->set_focus_controller(config.the_focus_controller());
             wm->set_display(config.the_display());
             wm->set_compositor(config.the_compositor());
+            wm->set_input_scene(config.the_input_scene());
         });
     return 0;
 }

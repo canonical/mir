@@ -21,5 +21,7 @@
 #include <mir_toolkit/mir_connection.h>
 #include <mir_toolkit/mir_surface.h>
 #include <mir_toolkit/mir_wait.h>
+#include <mir_toolkit/version.h>
+#include <mir_toolkit/mir_platform_message.h>
 
 #endif /* MIR_CLIENT_LIBRARY_H */

@@ -20,9 +20,8 @@
 #ifndef MIR_GRAPHICS_PLATFORM_H_
 #define MIR_GRAPHICS_PLATFORM_H_
 
-#include "basic_platform.h"
-
 #include <boost/program_options/options_description.hpp>
+#include <EGL/egl.h>
 #include <memory>
 
 namespace mir
@@ -51,7 +50,7 @@ class GraphicBufferAllocator;
 class GLConfig;
 class GLProgramFactory;
 class PlatformIpcOperations;
-class BufferWriter;
+class NestedContext;
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -63,7 +62,7 @@ class BufferWriter;
  * Interface to platform specific support for graphics operations.
  * \ingroup platform_enablement
  */
-class Platform : public BasicPlatform
+class Platform
 {
 public:
     Platform() = default;
@@ -77,8 +76,6 @@ public:
      */
     virtual std::shared_ptr<GraphicBufferAllocator> create_buffer_allocator() = 0;
     
-    virtual std::shared_ptr<BufferWriter> make_buffer_writer() = 0;
-
     /**
      * Creates the display subsystem.
      */
@@ -93,14 +90,12 @@ public:
      */
     virtual std::shared_ptr<PlatformIpcOperations> make_ipc_operations() const = 0;
 
-    /**
-     * Creates the in-process client support object.
-     */
-    virtual std::shared_ptr<InternalClient> create_internal_client() = 0;
+    virtual EGLNativeDisplayType egl_native_display() const = 0;
 };
 
 /**
- * Function prototype used to return a new graphics platform.
+ * Function prototype used to return a new host graphics platform. The host graphics platform
+ * is the system entity that owns the physical display and is a mir host server.
  *
  * \param [in] options options to use for this platform
  * \param [in] emergency_cleanup_registry object to register emergency shutdown handlers with
@@ -110,14 +105,42 @@ public:
  *
  * \ingroup platform_enablement
  */
-extern "C" typedef std::shared_ptr<Platform>(*CreatePlatform)(
+extern "C" typedef std::shared_ptr<Platform>(*CreateHostPlatform)(
     std::shared_ptr<options::Option> const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<DisplayReport> const& report);
-extern "C" std::shared_ptr<Platform> create_platform(
+extern "C" std::shared_ptr<Platform> create_host_platform(
     std::shared_ptr<options::Option> const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<DisplayReport> const& report);
+
+/**
+ * Function prototype used to return a new guest graphics platform. The guest graphics platform
+ * exists alongside the host platform and do not output or control the physical displays 
+ *
+ * \param [in] nested_context the object that contains resources needed from the host platform 
+ * \param [in] report the object to use to report interesting events from the display subsystem
+ *
+ * This factory function needs to be implemented by each platform.
+ *
+ * \ingroup platform_enablement
+ */
+extern "C" typedef std::shared_ptr<Platform>(*CreateGuestPlatform)(
+    std::shared_ptr<DisplayReport> const& report,
+    std::shared_ptr<NestedContext> const& nested_context);
+extern "C" std::shared_ptr<Platform> create_guest_platform(
+    std::shared_ptr<DisplayReport> const& report,
+    std::shared_ptr<NestedContext> const& nested_context);
+
+/**
+ * Function prototype used to add platform specific options to the platform-independant server options.
+ *
+ * \param [in] config a boost::program_options that can be appended with new options
+ *
+ * This factory function needs to be implemented by each platform.
+ *
+ * \ingroup platform_enablement
+ */
 extern "C" typedef void(*AddPlatformOptions)(
     boost::program_options::options_description& config);
 extern "C" void add_platform_options(

@@ -24,6 +24,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/common.h"
 #include "mir/graphics/native_buffer.h"
+#include "mir/optional_value.h"
 #include "client_buffer_depository.h"
 #include "mir_wait_handle.h"
 #include "mir_client_surface.h"
@@ -53,6 +54,32 @@ struct MemoryRegion;
 }
 }
 
+struct MirSurfaceSpec
+{
+    MirSurfaceSpec() = default;
+    MirSurfaceSpec(MirConnection* connection, int width, int height, MirPixelFormat format);
+    MirSurfaceSpec(MirConnection* connection, MirSurfaceParameters const& params);
+
+    mir::protobuf::SurfaceParameters serialize() const;
+
+    // Required parameters
+    MirConnection* connection{nullptr};
+    int width{-1};
+    int height{-1};
+    MirPixelFormat pixel_format{mir_pixel_format_invalid};
+    MirBufferUsage buffer_usage{mir_buffer_usage_hardware};
+
+    // Optional parameters
+    mir::optional_value<std::string> surface_name;
+    mir::optional_value<uint32_t> output_id;
+
+    mir::optional_value<MirSurfaceType> type;
+    mir::optional_value<MirSurfaceState> state;
+    mir::optional_value<MirOrientationMode> pref_orientation;
+
+    mir::optional_value<MirSurface*> parent;
+};
+
 struct MirSurface : public mir::client::ClientSurface
 {
 public:
@@ -63,19 +90,11 @@ public:
 
     MirSurface(
         MirConnection *allocating_connection,
-        mir::protobuf::DisplayServer::Stub & server,
+        mir::protobuf::DisplayServer::Stub& server,
         mir::protobuf::Debug::Stub* debug,
         std::shared_ptr<mir::client::ClientBufferFactory> const& buffer_factory,
         std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
-        MirSurfaceParameters const& params,
-        mir_surface_callback callback, void * context);
-
-    MirSurface(
-        MirConnection *allocating_connection,
-        mir::protobuf::DisplayServer::Stub & server,
-        std::shared_ptr<mir::client::ClientBufferFactory> const& buffer_factory,
-        std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
-        MirSurfaceParameters const& params,
+        MirSurfaceSpec const& spec,
         mir_surface_callback callback, void * context);
 
     ~MirSurface();
@@ -108,7 +127,8 @@ public:
     int attrib(MirSurfaceAttrib a) const;
 
     MirOrientation get_orientation() const;
-    
+    MirWaitHandle* set_preferred_orientation(MirOrientationMode mode);
+
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
     void set_event_handler(MirEventDelegate const* delegate);
@@ -128,17 +148,18 @@ private:
     void populate(MirBufferPackage& buffer_package);
     void created(mir_surface_callback callback, void * context);
     void new_buffer(mir_surface_callback callback, void * context);
-    MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf);
+    MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
     void release_cpu_region();
 
-    mir::protobuf::DisplayServer::Stub& server;
-    mir::protobuf::Debug::Stub* debug;
+    mir::protobuf::DisplayServer::Stub* server{nullptr};
+    mir::protobuf::Debug::Stub* debug{nullptr};
     mir::protobuf::Surface surface;
     mir::protobuf::BufferRequest buffer_request;
     std::string error_message;
+    std::string name;
     mir::protobuf::Void void_response;
 
-    MirConnection* const connection;
+    MirConnection* const connection{nullptr};
     MirWaitHandle create_wait_handle;
     MirWaitHandle next_buffer_wait_handle;
     MirWaitHandle configure_wait_handle;

@@ -4,8 +4,8 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/tests/include/
-
-  ${PROJECT_SOURCE_DIR}/src/include/platform
+  ${PROJECT_SOURCE_DIR}/src/include/server
+  ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}
   ${MIR_ANDROID_INCLUDE_DIRECTORIES}
   ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES}

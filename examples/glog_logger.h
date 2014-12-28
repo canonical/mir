@@ -33,7 +33,7 @@ public:
 
 private:
     virtual void log(
-        Severity severity,
+        mir::logging::Severity severity,
         std::string const& message,
         std::string const& component) override;
 };

@@ -42,6 +42,8 @@ public:
     void gl_bind_to_texture() override;
     std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override;
     bool can_bypass() const override;
+    
+    void write (unsigned char const* data, size_t size) override;
 
 protected:
     explicit TemporaryBuffer(std::shared_ptr<mg::Buffer> const& real_buffer);

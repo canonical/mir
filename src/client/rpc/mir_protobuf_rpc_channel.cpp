@@ -82,7 +82,6 @@ void mclr::MirProtobufRpcChannel::notify_disconnected()
     pending_calls.force_completion();
 }
 
-
 template<class MessageType>
 void mclr::MirProtobufRpcChannel::receive_any_file_descriptors_for(MessageType* response)
 {
@@ -113,6 +112,7 @@ void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Mes
     mir::protobuf::Buffer* buffer = nullptr;
     mir::protobuf::Platform* platform = nullptr;
     mir::protobuf::SocketFD* socket_fd = nullptr;
+    mir::protobuf::PlatformOperationMessage* platform_operation_message = nullptr;
 
     if (message_type == "mir.protobuf.Buffer")
     {
@@ -144,11 +144,17 @@ void mclr::MirProtobufRpcChannel::receive_file_descriptors(google::protobuf::Mes
     {
         socket_fd = static_cast<mir::protobuf::SocketFD*>(response);
     }
+    else if (message_type == "mir.protobuf.PlatformOperationMessage")
+    {
+        platform_operation_message =
+            static_cast<mir::protobuf::PlatformOperationMessage*>(response);
+    }
 
     receive_any_file_descriptors_for(surface);
     receive_any_file_descriptors_for(buffer);
     receive_any_file_descriptors_for(platform);
     receive_any_file_descriptors_for(socket_fd);
+    receive_any_file_descriptors_for(platform_operation_message);
     complete->Run();
 }
 
@@ -167,6 +173,13 @@ void mclr::MirProtobufRpcChannel::CallMethod(
         for (auto& fd : buffer->buffer().fd())
             fds.emplace_back(mir::Fd{IntOwnedFd{fd}});
     }
+    else if (parameters->GetTypeName() == "mir.protobuf.PlatformOperationMessage")
+    {
+        auto const* request =
+            reinterpret_cast<mir::protobuf::PlatformOperationMessage const*>(parameters);
+        for (auto& fd : request->fd())
+            fds.emplace_back(mir::Fd{IntOwnedFd{fd}});
+    }
 
     auto const& invocation = invocation_for(method, parameters, fds.size());
 
@@ -175,7 +188,6 @@ void mclr::MirProtobufRpcChannel::CallMethod(
     std::shared_ptr<google::protobuf::Closure> callback(
         google::protobuf::NewPermanentCallback(this, &MirProtobufRpcChannel::receive_file_descriptors, response, complete));
 
-    // Only save details after serialization succeeds
     pending_calls.save_completion_details(invocation, response, callback);
 
     send_message(invocation, invocation, fds);
@@ -263,6 +275,10 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
 
                 case mir_event_type_orientation:
                     surface_map->with_surface_do(e.orientation.surface_id, send_e);
+                    break;
+
+                case mir_event_type_close_surface:
+                    surface_map->with_surface_do(e.close_surface.surface_id, send_e);
                     break;
 
                 default:

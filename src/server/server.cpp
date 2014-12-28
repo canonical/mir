@@ -16,13 +16,17 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#define MIR_LOG_COMPONENT "Server"
 #include "mir/server.h"
 
 #include "mir/emergency_cleanup.h"
 #include "mir/fd.h"
 #include "mir/frontend/connector.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/options/default_configuration.h"
 #include "mir/default_server_configuration.h"
+#include "mir/logging/logger.h"
+#include "mir/log.h"
 #include "mir/main_loop.h"
 #include "mir/report_exception.h"
 #include "mir/run_mir.h"
@@ -38,6 +42,7 @@ namespace mo = mir::options;
 
 #define FOREACH_WRAPPER(MACRO)\
     MACRO(cursor_listener)\
+    MACRO(display_buffer_compositor_factory)\
     MACRO(display_configuration_policy)\
     MACRO(session_coordinator)\
     MACRO(surface_coordinator)
@@ -46,6 +51,7 @@ namespace mo = mir::options;
     MACRO(compositor)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(gl_config)\
+    MACRO(host_lifecycle_event_listener)\
     MACRO(input_dispatcher)\
     MACRO(logger)\
     MACRO(placement_strategy)\
@@ -54,6 +60,7 @@ namespace mo = mir::options;
     MACRO(server_status_listener)\
     MACRO(session_authorizer)\
     MACRO(session_listener)\
+    MACRO(session_mediator_report)\
     MACRO(shell_focus_setter)\
     MACRO(surface_configurator)
 
@@ -64,6 +71,7 @@ namespace mo = mir::options;
     MACRO(the_focus_controller)\
     MACRO(the_gl_config)\
     MACRO(the_graphics_platform)\
+    MACRO(the_logger)\
     MACRO(the_main_loop)\
     MACRO(the_prompt_session_listener)\
     MACRO(the_session_authorizer)\
@@ -346,11 +354,14 @@ void mir::Server::apply_settings()
     auto const config = std::make_shared<ServerConfiguration>(options, self);
     self->server_config = config;
     self->options = config->the_options();
+
+    mir::logging::set_logger(config->the_logger());
 }
 
 void mir::Server::run()
 try
 {
+    mir::log_info("Starting");
     verify_accessing_allowed(self->server_config);
 
     auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
@@ -376,8 +387,14 @@ catch (...)
         mir::report_exception(std::cerr);
 }
 
+auto mir::Server::supported_pixel_formats() const -> std::vector<MirPixelFormat>
+{
+    return self->server_config->the_buffer_allocator()->supported_pixel_formats();
+}
+
 void mir::Server::stop()
 {
+    mir::log_info("Stopping");
     if (self->server_config)
         if (auto const main_loop = the_main_loop())
             main_loop->stop();

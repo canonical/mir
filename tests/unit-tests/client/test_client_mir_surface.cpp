@@ -35,6 +35,7 @@
 #include "mir_test/stub_server_tool.h"
 #include "mir_test/gmock_fixes.h"
 #include "mir_test/fake_shared.h"
+#include "mir_test_doubles/stub_client_buffer.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -49,6 +50,7 @@ namespace mircv = mir::input::receiver;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
+namespace mtd= mir::test::doubles;
 
 namespace
 {
@@ -186,7 +188,8 @@ std::map<int, int> MockServerPackageGenerator::sent_surface_attributes = {
     { mir_surface_attrib_swapinterval, 1 },
     { mir_surface_attrib_focus, mir_surface_focused },
     { mir_surface_attrib_dpi, 19 },
-    { mir_surface_attrib_visibility, mir_surface_visibility_exposed }
+    { mir_surface_attrib_visibility, mir_surface_visibility_exposed },
+    { mir_surface_attrib_preferred_orientation, mir_orientation_mode_any }
 };
 
 struct MockBuffer : public mcl::ClientBuffer
@@ -310,50 +313,6 @@ public:
     }
 };
 
-struct StubBuffer : public mcl::ClientBuffer
-{
-    StubBuffer(std::shared_ptr<MirBufferPackage> const& package,
-               geom::Size size, MirPixelFormat pf)
-        : package{package}, size_{size}, pf_{pf}
-    {
-    }
-
-    ~StubBuffer()
-    {
-        for (int i = 0; i < package->fd_items; i++)
-            close(package->fd[i]);
-    }
-
-    std::shared_ptr<mcl::MemoryRegion> secure_for_cpu_write()
-    {
-        auto raw = new mcl::MemoryRegion{size().width,
-                                         size().height,
-                                         stride(),
-                                         pixel_format(),
-                                         nullptr};
-
-        return std::shared_ptr<mcl::MemoryRegion>(raw);
-    }
-
-    geom::Size size() const { return size_; }
-    geom::Stride stride() const { return geom::Stride{package->stride}; }
-    MirPixelFormat pixel_format() const { return pf_; }
-    uint32_t age() const { return 0; }
-    void increment_age() {}
-    void mark_as_submitted() {}
-
-    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const
-    {
-        return std::shared_ptr<mg::NativeBuffer>();
-    }
-    void update_from(MirBufferPackage const&) {}
-    void fill_update_msg(MirBufferPackage&) {}
-
-    std::shared_ptr<MirBufferPackage> const package;
-    geom::Size size_;
-    MirPixelFormat pf_;
-};
-
 struct StubClientBufferFactory : public mcl::ClientBufferFactory
 {
     std::shared_ptr<mcl::ClientBuffer> create_buffer(
@@ -362,11 +321,11 @@ struct StubClientBufferFactory : public mcl::ClientBufferFactory
     {
         last_received_package = package;
         last_created_buffer =
-            std::make_shared<StubBuffer>(package, size, pf);
+            std::make_shared<mtd::StubClientBuffer>(package, size, pf);
         return last_created_buffer;
     }
 
-    std::shared_ptr<StubBuffer> last_created_buffer;
+    std::shared_ptr<mtd::StubClientBuffer> last_created_buffer;
     std::shared_ptr<MirBufferPackage> last_received_package;
 };
 
@@ -457,9 +416,10 @@ struct MirClientSurfaceTest : public testing::Test
         return std::make_shared<MirSurface>(
             connection.get(),
             server_stub,
+            nullptr,
             buffer_factory,
             input_platform,
-            params,
+            spec,
             &null_surface_callback,
             nullptr);
     }
@@ -475,10 +435,7 @@ struct MirClientSurfaceTest : public testing::Test
 
     std::shared_ptr<MirConnection> connection;
 
-    MirSurfaceParameters const params{
-        "test", 33, 45, mir_pixel_format_abgr_8888,
-        mir_buffer_usage_hardware,
-        mir_display_output_id_invalid};
+    MirSurfaceSpec const spec{nullptr, 33, 45, mir_pixel_format_abgr_8888};
     std::shared_ptr<MockClientBufferFactory> const mock_buffer_factory =
         std::make_shared<testing::NiceMock<MockClientBufferFactory>>();
     std::shared_ptr<StubClientBufferFactory> const stub_buffer_factory =
@@ -612,8 +569,8 @@ TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_fd_when_delegate_sp
     EXPECT_CALL(*mock_input_thread, start()).Times(1);
     EXPECT_CALL(*mock_input_thread, stop()).Times(1);
 
-    MirSurface surface{connection.get(), *client_comm_channel,
-        stub_buffer_factory, mock_input_platform, params, &null_surface_callback, nullptr};
+    MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+        stub_buffer_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
     auto wait_handle = surface.get_create_wait_handle();
     wait_handle->wait_for_all();
     surface.set_event_handler(&delegate);
@@ -630,8 +587,8 @@ TEST_F(MirClientSurfaceTest, does_not_create_input_thread_when_no_delegate_speci
     EXPECT_CALL(*mock_input_thread, start()).Times(0);
     EXPECT_CALL(*mock_input_thread, stop()).Times(0);
 
-    MirSurface surface{connection.get(), *client_comm_channel,
-        stub_buffer_factory, mock_input_platform, params, &null_surface_callback, nullptr};
+    MirSurface surface{connection.get(), *client_comm_channel, nullptr,
+        stub_buffer_factory, mock_input_platform, spec, &null_surface_callback, nullptr};
     auto wait_handle = surface.get_create_wait_handle();
     wait_handle->wait_for_all();
 }

@@ -298,6 +298,22 @@ void mir_connection_get_available_surface_formats(
         connection->available_surface_formats(formats, format_size, *num_valid_formats);
 }
 
+MirWaitHandle* mir_connection_platform_operation(
+    MirConnection* connection, unsigned int opcode,
+    MirPlatformMessage const* request,
+    mir_platform_operation_callback callback, void* context)
+{
+    try
+    {
+        return connection->platform_operation(opcode, request, callback, context);
+    }
+    catch (std::exception const&)
+    {
+        return nullptr;
+    }
+
+}
+
 /**************************
  * DRM specific functions *
  **************************/

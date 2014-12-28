@@ -19,16 +19,14 @@
 #ifndef MIR_TEST_FRAMEWORK_HEADLESS_TEST_H_
 #define MIR_TEST_FRAMEWORK_HEADLESS_TEST_H_
 
-#include "mir_test_framework/temporary_environment_value.h"
-
-#include "mir/server.h"
+#include "mir_test_framework/async_server_runner.h"
 
 #include <gtest/gtest.h>
 
-#include <condition_variable>
-#include <list>
-#include <mutex>
-#include <thread>
+
+namespace mir { class SharedLibrary; }
+namespace mir { namespace graphics { class Display; }}
+namespace mir { namespace geometry { class Rectangle; }}
 
 namespace mir_test_framework
 {
@@ -37,40 +35,20 @@ namespace mir_test_framework
  *  It automatically sets "MIR_SERVER_PLATFORM_GRAPHICS_LIB" to "libmirplatformstub.so"
  *  as the tests do not hit the graphics hardware.
  */
-class HeadlessTest : public ::testing::Test
+class HeadlessTest : public ::testing::Test, public AsyncServerRunner
 {
 public:
     HeadlessTest();
     ~HeadlessTest() noexcept;
 
-    void add_to_environment(char const* key, char const* value);
 
-    /// Starts the server on a new thread
-    void start_server();
+    void preset_display(std::shared_ptr<mir::graphics::Display> const& display);
 
-    /// Stops the server and joins thread
-    void stop_server();
-
-    /// Wait for the server to exit and joins thread
-    void wait_for_server_exit();
-
-    /// \return a connection string for a new client to connect to the server
-    auto new_connection() -> std::string;
-
-    /// \return a connection string for a client to connect to the server
-    auto connection(mir::Fd fd) -> std::string;
-
-    mir::Server server;
+    /// Override initial display layout
+    void initial_display_layout(std::vector<mir::geometry::Rectangle> const& display_rects);
 
 private:
-    std::list<TemporaryEnvironmentValue> env;
-    std::thread server_thread;
-
-    std::list<mir::Fd> connections;
-
-    std::mutex mutex;
-    std::condition_variable started;
-    bool server_running{false};
+    std::unique_ptr<mir::SharedLibrary> server_platform_graphics_lib;
 };
 
 std::string const& test_socket_file();
