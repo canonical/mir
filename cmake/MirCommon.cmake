@@ -174,7 +174,9 @@ function (mir_add_wrapped_executable TARGET)
   add_executable(${TARGET} ${ARGN})
   set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${REAL_EXECUTABLE})
 
-  add_custom_target(${TARGET}-wrapped ln -s ${REAL_EXECUTABLE} ${TARGET})
+  add_custom_target(${TARGET}-wrapped
+    ln -fs wrapper ${CMAKE_BINARY_DIR}/bin/${TARGET}
+  )
   add_dependencies(${TARGET} ${TARGET}-wrapped)
   
   install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/${REAL_EXECUTABLE}
