@@ -172,7 +172,10 @@ endfunction()
 function (mir_add_wrapped_executable TARGET)
   set(REAL_EXECUTABLE .${TARGET}-uninstalled)
   add_executable(${TARGET} ${ARGN})
-  set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${REAL_EXECUTABLE})
+  set_target_properties(${TARGET} PROPERTIES
+    OUTPUT_NAME ${REAL_EXECUTABLE}
+    SKIP_BUILD_RPATH TRUE
+  )
 
   add_executable(${TARGET}-wrapper ${PROJECT_SOURCE_DIR}/cmake/src/wrapper.c)
   set_property(TARGET ${TARGET}-wrapper
