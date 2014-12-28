@@ -44,11 +44,11 @@ int main(int argc, char** argv)
 
     strncpy(pivot, "../lib/client-modules/", pivot_max);
     *dest_max = '\0';
-    setenv("MIR_CLIENT_PLATFORM_PATH", path, 0);
+    setenv("MIR_CLIENT_PLATFORM_PATH", path, 1);
     printf("MIR_CLIENT_PLATFORM_PATH=%s\n", path);
 
     pivot[6] = '\0';  /* truncate lib/client-modules to just lib */
-    setenv("LD_LIBRARY_PATH", path, 0);
+    setenv("LD_LIBRARY_PATH", path, 1);
     printf("LD_LIBRARY_PATH=%s\n", path);
 
     snprintf(pivot, pivot_max, EXECUTABLE_FORMAT, name);
