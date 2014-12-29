@@ -17,11 +17,11 @@
  */
 
 #include "mir/graphics/display_buffer.h"
-#include "src/platform/graphics/android/display.h"
-#include "src/platform/graphics/android/hwc_loggers.h"
-#include "src/platform/graphics/android/resource_factory.h"
-#include "src/platform/graphics/android/android_graphic_buffer_allocator.h"
-#include "src/platform/graphics/android/output_builder.h"
+#include "src/platforms/android/display.h"
+#include "src/platforms/android/hwc_loggers.h"
+#include "src/platforms/android/resource_factory.h"
+#include "src/platforms/android/android_graphic_buffer_allocator.h"
+#include "src/platforms/android/output_builder.h"
 #include "src/server/graphics/program_factory.h"
 #include "src/server/report/null_report_factory.h"
 
@@ -88,10 +88,12 @@ TEST_F(AndroidDisplay, display_can_post)
         gl_animation.init_gl();
 
         gl_animation.render_gl();
-        buffer.post_update();
+        buffer.gl_swap_buffers();
+        buffer.flip();
 
         gl_animation.render_gl();
-        buffer.post_update();
+        buffer.gl_swap_buffers();
+        buffer.flip();
     });
 }
 

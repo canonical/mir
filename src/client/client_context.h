@@ -19,6 +19,8 @@
 #ifndef MIR_CLIENT_CLIENT_CONTEXT_H_
 #define MIR_CLIENT_CLIENT_CONTEXT_H_
 
+#include "mir_toolkit/client_types.h"
+
 namespace mir
 {
 namespace client
@@ -29,7 +31,6 @@ class ClientContext
 public:
     virtual ~ClientContext() {}
 
-    virtual MirConnection* mir_connection() = 0;
     virtual void populate(MirPlatformPackage& platform_package) = 0;
 
 protected:

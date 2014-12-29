@@ -20,6 +20,7 @@
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/using_stub_client_platform.h"
+#include "mir_test_framework/stub_platform_helpers.h"
 #include "mir_test/validity_matchers.h"
 
 #include "src/client/client_buffer.h"
@@ -546,15 +547,14 @@ TEST_F(ClientLibrary, highly_threaded_client)
 
 TEST_F(ClientLibrary, accesses_platform_package)
 {
+    using namespace testing;
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
 
     MirPlatformPackage platform_package;
-    platform_package.data_items = -1;
-    platform_package.fd_items = -1;
+    ::memset(&platform_package, -1, sizeof(platform_package));
 
     mir_connection_get_platform(connection, &platform_package);
-    EXPECT_GE(0, platform_package.data_items);
-    EXPECT_GE(0, platform_package.fd_items);
+    EXPECT_THAT(platform_package, mtf::IsStubPlatformPackage());
 
     mir_connection_release(connection);
 }

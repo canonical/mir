@@ -19,8 +19,8 @@
 #ifndef MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
-#include "src/platform/graphics/android/display_buffer_builder.h"
-#include "src/platform/graphics/android/configurable_display_buffer.h"
+#include "src/platforms/android/display_buffer_builder.h"
+#include "src/platforms/android/configurable_display_buffer.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -40,7 +40,8 @@ struct StubConfigurableDisplayBuffer : public graphics::android::ConfigurableDis
     geometry::Rectangle view_area() const { return rect; }
     void make_current() {}
     void release_current() {}
-    void post_update() {}
+    void gl_swap_buffers() {}
+    void flip() {}
     bool post_renderables_if_optimizable(graphics::RenderableList const&) { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal; }
     bool uses_alpha() const override { return false; };
