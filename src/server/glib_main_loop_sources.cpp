@@ -52,11 +52,17 @@ private:
 };
 
 #ifndef GLIB_HAS_FIXED_LP_1401488
-gboolean unref_gsource(gpointer user_data)
+gboolean idle_callback(gpointer)
 {
+    return G_SOURCE_REMOVE; // Remove the idle source. Only needed once.
+}
+
+void destroy_idler(gpointer user_data)
+{
+    // idle_callback is never totally guaranteed to be called. However this
+    // function is, so we do the unref here...
     auto gsource = static_cast<GSource*>(user_data);
     g_source_unref(gsource);
-    return G_SOURCE_REMOVE; // Remove the idle source. Only needed once.
 }
 #endif
 
@@ -115,7 +121,7 @@ md::GSourceHandle::~GSourceHandle()
          */
         auto main_context = g_source_get_context(gsource);
         auto idler = g_idle_source_new();
-        g_source_set_callback(idler, unref_gsource, gsource, NULL);
+        g_source_set_callback(idler, idle_callback, gsource, destroy_idler);
         g_source_attach(idler, main_context);
         g_source_unref(idler);
 #endif
