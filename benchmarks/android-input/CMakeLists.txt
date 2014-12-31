@@ -11,7 +11,7 @@ include_directories(
   ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES}
 )
 
-add_executable(input-reader-perf ${SOURCES})
+mir_add_wrapped_executable(input-reader-perf ${SOURCES})
 
 target_link_libraries(
   input-reader-perf

@@ -7,7 +7,7 @@ set(SOURCES
 	src/threading.cpp
 	)
 
-add_executable(mir_stress ${SOURCES})
+mir_add_wrapped_executable(mir_stress ${SOURCES})
 
 target_link_libraries(
   mir_stress
