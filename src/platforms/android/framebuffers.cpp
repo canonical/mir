@@ -21,10 +21,6 @@
 #include "android_format_conversion-inl.h"
 #include "graphic_buffer_allocator.h"
 
-#include <algorithm>
-#include <tuple>
-#include <utility>
-
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <boost/throw_exception.hpp>
@@ -70,51 +66,18 @@ MirPixelFormat determine_hwc11_fb_format()
     eglTerminate(egl_display);
     return fb_format;
 }
-
-std::pair<geom::Size, double> determine_hwc11_size_and_rate(
-    std::shared_ptr<hwc_composer_device_1> const& hwc_device)
-{
-    size_t num_configs = 1;
-    uint32_t primary_display_config;
-    auto rc = hwc_device->getDisplayConfigs(hwc_device.get(), HWC_DISPLAY_PRIMARY, &primary_display_config, &num_configs);
-    if (rc != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not determine hwc display config"));
-    }
-
-    /* note: some drivers (qcom msm8960) choke if this is not the same size array
-       as the one surfaceflinger submits */
-    static uint32_t const display_attribute_request[] =
-    {
-        HWC_DISPLAY_WIDTH,
-        HWC_DISPLAY_HEIGHT,
-        HWC_DISPLAY_VSYNC_PERIOD,
-        HWC_DISPLAY_DPI_X,
-        HWC_DISPLAY_DPI_Y,
-        HWC_DISPLAY_NO_ATTRIBUTE,
-    };
-
-    int32_t size_values[sizeof(display_attribute_request) / sizeof (display_attribute_request[0])] = {};
-    hwc_device->getDisplayAttributes(hwc_device.get(), HWC_DISPLAY_PRIMARY, primary_display_config,
-                                     display_attribute_request, size_values);
-
-    //HWC_DISPLAY_VSYNC_PERIOD is specified in nanoseconds
-    double refresh_rate_hz = (size_values[2] > 0 ) ? 1000000000.0/size_values[2] : 0.0;
-    return {{size_values[0], size_values[1]}, refresh_rate_hz};
-}
 }
 
 mga::Framebuffers::Framebuffers(
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<hwc_composer_device_1> const& hwc,
-    unsigned int num_framebuffers)
-    : format(determine_hwc11_fb_format())
+    geom::Size size, double vrefresh_hz,
+    unsigned int num_framebuffers) :
+    format(determine_hwc11_fb_format()),
+    size{size},
+    refresh_rate_hz{vrefresh_hz}
 {
-    std::tie(size, refresh_rate_hz) = determine_hwc11_size_and_rate(hwc);
     for(auto i = 0u; i < num_framebuffers; i++)
-    {
         queue.push(buffer_allocator->alloc_buffer_platform(size, format, mga::BufferUsage::use_framebuffer_gles));
-    }
 }
 
 mga::Framebuffers::Framebuffers(
@@ -128,9 +91,7 @@ mga::Framebuffers::Framebuffers(
     auto fb_num = static_cast<unsigned int>(fb->numFramebuffers);
     fb_num = std::max(2u, fb_num);
     for(auto i = 0u; i < fb_num; i++)
-    {
         queue.push(buffer_allocator->alloc_buffer_platform(size, format, mga::BufferUsage::use_framebuffer_gles));
-    }
 }
 
 MirPixelFormat mga::Framebuffers::fb_format()

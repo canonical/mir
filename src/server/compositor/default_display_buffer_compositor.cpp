@@ -72,6 +72,7 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
      *       Actually, there's a third reference held by the texture cache
      *       in GLRenderer, but that gets released earlier in render().
      */
+    scene_elements.clear();  // Those in use are still in renderable_list
 
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
@@ -85,8 +86,15 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         renderer->set_rotation(display_buffer.orientation());
 
         renderer->render(renderable_list);
-        display_buffer.post_update();
 
+        display_buffer.gl_swap_buffers();
         report->finished_frame(false, this);
+
+        // Release the buffers we did use back to the clients, before starting
+        // on the potentially slow flip().
+        // FIXME: This clear() call is blocking a little (LP: #1395421)
+        renderable_list.clear();
+
+        display_buffer.flip();
     }
 }

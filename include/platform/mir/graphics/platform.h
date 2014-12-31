@@ -45,7 +45,6 @@ namespace graphics
 {
 class Buffer;
 class Display;
-class InternalClient;
 class DisplayReport;
 class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;

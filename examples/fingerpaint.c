@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_toolkit/input/input_event.h"
+#include "mir_toolkit/events/input/input_event.h"
 
 #include <stdio.h>
 #include <signal.h>
