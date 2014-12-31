@@ -83,7 +83,20 @@ void SetUpMockProgramData(mtd::MockGL &mock_gl)
 {
     /* Uniforms and Attributes */
     EXPECT_CALL(mock_gl, glUseProgram(stub_program));
+    EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
+        .WillOnce(Return(tex_uniform_location));
+    EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
+        .WillOnce(Return(display_transform_uniform_location));
+    EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
+        .WillOnce(Return(transform_uniform_location));
+    EXPECT_CALL(mock_gl, glGetAttribLocation(stub_program, _))
+        .WillOnce(Return(position_attr_location));
+    EXPECT_CALL(mock_gl, glGetAttribLocation(stub_program, _))
+        .WillOnce(Return(texcoord_attr_location));
+    EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
+        .WillOnce(Return(centre_uniform_location));
 
+    EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
         .WillOnce(Return(tex_uniform_location));
     EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
@@ -156,6 +169,8 @@ public:
 
         EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
             .WillOnce(Return(screen_to_gl_coords_uniform_location));
+        EXPECT_CALL(mock_gl, glGetUniformLocation(stub_program, _))
+            .WillOnce(Return(screen_to_gl_coords_uniform_location));
 
         display_area = {{1, 2}, {3, 4}};
         mock_texture_cache.reset(new testing::NiceMock<MockGLTextureCache>());
@@ -174,14 +189,16 @@ public:
 }
 
 TEST_F(GLRenderer, render_is_done_in_sequence)
-{
+{   // This is a really useless and irritating test to maintain. Delete?
     InSequence seq;
 
     EXPECT_CALL(mock_gl, glClearColor(_, _, _, _));
     EXPECT_CALL(mock_gl, glClear(_));
-    EXPECT_CALL(mock_gl, glUseProgram(stub_program));
+    EXPECT_CALL(*renderable, alpha())
+        .WillOnce(Return(1.0f));
     EXPECT_CALL(*renderable, shaped())
         .WillOnce(Return(true));
+    EXPECT_CALL(mock_gl, glUseProgram(stub_program));
     EXPECT_CALL(mock_gl, glEnable(GL_BLEND));
     EXPECT_CALL(mock_gl, glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
     EXPECT_CALL(mock_gl, glActiveTexture(GL_TEXTURE0));
@@ -190,9 +207,6 @@ TEST_F(GLRenderer, render_is_done_in_sequence)
     EXPECT_CALL(*renderable, transformation())
         .WillOnce(Return(trans));
     EXPECT_CALL(mock_gl, glUniformMatrix4fv(transform_uniform_location, 1, GL_FALSE, _));
-    EXPECT_CALL(*renderable, alpha())
-        .WillOnce(Return(0.0f));
-    EXPECT_CALL(mock_gl, glUniform1f(alpha_uniform_location, _));
 
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(position_attr_location));
     EXPECT_CALL(mock_gl, glEnableVertexAttribArray(texcoord_attr_location));

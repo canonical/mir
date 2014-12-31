@@ -170,6 +170,7 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     if (renderable.alpha() < 1.0f)
     {
         glUseProgram(*blending_program);
+        glUniform1f(alpha_uniform_loc, renderable.alpha());
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     }
@@ -195,7 +196,6 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
 
     glUniformMatrix4fv(transform_uniform_loc, 1, GL_FALSE,
                        glm::value_ptr(renderable.transformation()));
-    glUniform1f(alpha_uniform_loc, renderable.alpha());
 
     /* Draw */
     glEnableVertexAttribArray(position_attr_loc);

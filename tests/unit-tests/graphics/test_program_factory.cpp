@@ -67,16 +67,14 @@ void ExpectShaderCompileFailure(const GLint shader, mtd::MockGL &mock_gl)
 void ExpectShaderCompileSuccess(const GLint shader, mtd::MockGL &mock_gl)
 {
     EXPECT_CALL(mock_gl, glGetShaderiv(shader, GL_COMPILE_STATUS, _))
-        .WillOnce(SetArgPointee<2>(GL_TRUE));
+        .WillRepeatedly(SetArgPointee<2>(GL_TRUE));
 }
 
 void SetUpMockVertexShader(mtd::MockGL &mock_gl, const std::function<void(const GLint, mtd::MockGL &)> &shader_compile_expectation)
 {
     /* Vertex Shader */
     EXPECT_CALL(mock_gl, glCreateShader(GL_VERTEX_SHADER))
-        .WillOnce(Return(stub_v_shader));
-    EXPECT_CALL(mock_gl, glShaderSource(stub_v_shader, 1, _, 0));
-    EXPECT_CALL(mock_gl, glCompileShader(stub_v_shader));
+        .WillRepeatedly(Return(stub_v_shader));
     shader_compile_expectation(stub_v_shader, mock_gl);
 }
 
@@ -84,9 +82,7 @@ void SetUpMockFragmentShader(mtd::MockGL &mock_gl, const std::function<void(cons
 {
     /* Fragment Shader */
     EXPECT_CALL(mock_gl, glCreateShader(GL_FRAGMENT_SHADER))
-        .WillOnce(Return(stub_f_shader));
-    EXPECT_CALL(mock_gl, glShaderSource(stub_f_shader, 1, _, 0));
-    EXPECT_CALL(mock_gl, glCompileShader(stub_f_shader));
+        .WillRepeatedly(Return(stub_f_shader));
     shader_compile_expectation(stub_f_shader, mock_gl);
 }
 
@@ -99,17 +95,14 @@ void ExpectProgramLinkFailure(const GLint program, mtd::MockGL &mock_gl)
 void ExpectProgramLinkSuccess(const GLint program, mtd::MockGL &mock_gl)
 {
     EXPECT_CALL(mock_gl, glGetProgramiv(program, GL_LINK_STATUS, _))
-        .WillOnce(SetArgPointee<2>(GL_TRUE));
+        .WillRepeatedly(SetArgPointee<2>(GL_TRUE));
 }
 
 void SetUpMockGraphicsProgram(mtd::MockGL &mock_gl, const std::function<void(const GLint, mtd::MockGL &)> &program_link_expectation)
 {
     /* Graphics Program */
     EXPECT_CALL(mock_gl, glCreateProgram())
-            .WillOnce(Return(stub_program));
-    EXPECT_CALL(mock_gl, glAttachShader(stub_program, stub_v_shader));
-    EXPECT_CALL(mock_gl, glAttachShader(stub_program, stub_f_shader));
-    EXPECT_CALL(mock_gl, glLinkProgram(stub_program));
+        .WillRepeatedly(Return(stub_program));
     program_link_expectation(stub_program, mock_gl);
 }
 
