@@ -83,7 +83,7 @@ protected:
     GLfloat clear_color[4];
 
 private:
-    std::unique_ptr<graphics::GLProgram> program;
+    std::unique_ptr<graphics::GLProgram> opaque_program, blending_program;
     std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;
     GLuint position_attr_loc;
     GLuint texcoord_attr_loc;

@@ -41,7 +41,7 @@ namespace geom = mir::geometry;
 namespace
 {
 
-const GLchar* vertex_shader_src =
+const GLchar vshader[] =
 {
     "attribute vec3 position;\n"
     "attribute vec2 texcoord;\n"
@@ -58,7 +58,7 @@ const GLchar* vertex_shader_src =
     "}\n"
 };
 
-const GLchar* fragment_shader_src =
+const GLchar blending_fshader[] =
 {
     "precision mediump float;\n"
     "uniform sampler2D tex;\n"
@@ -69,6 +69,17 @@ const GLchar* fragment_shader_src =
     "   gl_FragColor = alpha*frag;\n"
     "}\n"
 };
+
+const GLchar opaque_fshader[] =  // Should be faster than blending in theory
+{
+    "precision mediump float;\n"
+    "uniform sampler2D tex;\n"
+    "varying vec2 v_texcoord;\n"
+    "void main() {\n"
+    "   gl_FragColor = texture2D(tex, v_texcoord);\n"
+    "}\n"
+};
+
 }
 
 mc::GLRenderer::GLRenderer(
@@ -77,7 +88,8 @@ mc::GLRenderer::GLRenderer(
     geom::Rectangle const& display_area,
     DestinationAlpha dest_alpha)
     : clear_color{0.0f, 0.0f, 0.0f, 1.0f},
-      program(program_factory.create_gl_program(vertex_shader_src, fragment_shader_src)),
+      opaque_program(program_factory.create_gl_program(vshader, opaque_fshader)),
+      blending_program(program_factory.create_gl_program(vshader, blending_fshader)),
       texture_cache(std::move(texture_cache)),
       position_attr_loc(0),
       texcoord_attr_loc(0),
@@ -101,17 +113,23 @@ mc::GLRenderer::GLRenderer(
         if (!val) val = "";
         mir::log_info("%s: %s", s.label, val);
     }
-             
-    glUseProgram(*program);
 
-    /* Set up program variables */
-    GLint tex_loc = glGetUniformLocation(*program, "tex");
-    display_transform_uniform_loc = glGetUniformLocation(*program, "display_transform");
-    transform_uniform_loc = glGetUniformLocation(*program, "transform");
-    alpha_uniform_loc = glGetUniformLocation(*program, "alpha");
-    position_attr_loc = glGetAttribLocation(*program, "position");
-    texcoord_attr_loc = glGetAttribLocation(*program, "texcoord");
-    centre_uniform_loc = glGetUniformLocation(*program, "centre");
+    glUseProgram(*opaque_program);
+    GLint tex_loc = glGetUniformLocation(*opaque_program, "tex");
+    display_transform_uniform_loc = glGetUniformLocation(*opaque_program, "display_transform");
+    transform_uniform_loc = glGetUniformLocation(*opaque_program, "transform");
+    position_attr_loc = glGetAttribLocation(*opaque_program, "position");
+    texcoord_attr_loc = glGetAttribLocation(*opaque_program, "texcoord");
+    centre_uniform_loc = glGetUniformLocation(*opaque_program, "centre");
+
+    glUseProgram(*blending_program);
+    tex_loc = glGetUniformLocation(*blending_program, "tex");
+    display_transform_uniform_loc = glGetUniformLocation(*blending_program, "display_transform");
+    transform_uniform_loc = glGetUniformLocation(*blending_program, "transform");
+    alpha_uniform_loc = glGetUniformLocation(*blending_program, "alpha");
+    position_attr_loc = glGetAttribLocation(*blending_program, "position");
+    texcoord_attr_loc = glGetAttribLocation(*blending_program, "texcoord");
+    centre_uniform_loc = glGetUniformLocation(*blending_program, "centre");
 
     glUniform1i(tex_loc, 0);
 
@@ -149,16 +167,21 @@ void mc::GLRenderer::render(mg::RenderableList const& renderables) const
 
 void mc::GLRenderer::render(mg::Renderable const& renderable) const
 {
-
-    glUseProgram(*program);
-
-    if (renderable.shaped() || renderable.alpha() < 1.0f)
+    if (renderable.alpha() < 1.0f)
     {
+        glUseProgram(*blending_program);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    }
+    else if (renderable.shaped())
+    {
+        glUseProgram(*opaque_program);
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     }
     else
     {
+        glUseProgram(*opaque_program);
         glDisable(GL_BLEND);
     }
     glActiveTexture(GL_TEXTURE0);
@@ -243,8 +266,11 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
                       -rect.top_left.y.as_float(),
                       0.0f});
 
-    glUseProgram(*program);
-    GLint mat_loc = glGetUniformLocation(*program, "screen_to_gl_coords");
+    glUseProgram(*opaque_program);
+    GLint mat_loc = glGetUniformLocation(*opaque_program, "screen_to_gl_coords");
+    glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
+    glUseProgram(*blending_program);
+    mat_loc = glGetUniformLocation(*blending_program, "screen_to_gl_coords");
     glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
     glUseProgram(0);
 
@@ -263,7 +289,9 @@ void mc::GLRenderer::set_rotation(float degrees)
                        -sin, cos,  0.0f, 0.0f,
                        0.0f, 0.0f, 1.0f, 0.0f,
                        0.0f, 0.0f, 0.0f, 1.0f};
-    glUseProgram(*program);
+    glUseProgram(*opaque_program);
+    glUniformMatrix4fv(display_transform_uniform_loc, 1, GL_FALSE, rot);
+    glUseProgram(*blending_program);
     glUniformMatrix4fv(display_transform_uniform_loc, 1, GL_FALSE, rot);
     glUseProgram(0);
 
