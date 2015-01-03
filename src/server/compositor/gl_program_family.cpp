@@ -44,7 +44,8 @@ void GLProgramFamily::Shader::init(GLenum type, const char* src)
                 log[sizeof log - 1] = '\0';
                 glDeleteShader(id);
                 id = 0;
-                throw std::runtime_error(std::string("Compile failed: ")+log);
+                throw std::runtime_error(std::string("Compile failed: ")+
+                                         log + " for:\n" + src);
             }
         }
     }
