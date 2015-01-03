@@ -21,9 +21,3 @@ target_link_libraries(mirscreencast
   ${GLESv2_LIBRARIES}
 )
 
-install(TARGETS
-  mirping
-  mirout
-  mirscreencast
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)

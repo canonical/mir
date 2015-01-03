@@ -9,8 +9,6 @@ target_link_libraries(mir_demo_standalone_render_surfaces
   ${Boost_LIBRARIES}
 )
 
-install(TARGETS mir_demo_standalone_render_surfaces RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
 add_library(eglapp STATIC

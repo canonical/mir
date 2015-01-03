@@ -22,7 +22,3 @@ target_link_libraries(
   ${GTEST_BOTH_LIBRARIES}
 )
 
-install(
-  TARGETS mir_performance_tests
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
