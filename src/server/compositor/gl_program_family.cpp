@@ -88,4 +88,13 @@ GLuint GLProgramFamily::add_program(const char* vshader_src,
     return p.id;
 }
 
+GLint GLProgramFamily::get_uniform_location(GLuint program_id,
+                                            const char* name)
+{
+    auto& u = uniform[{program_id, name}];
+    if (u.id < 0)
+        u.id = glGetUniformLocation(program_id, name);
+    return u.id;
+}
+
 }} // namespace mir::compositor
