@@ -19,6 +19,7 @@
 #ifndef MIR_COMPOSITOR_GL_RENDERER_H_
 #define MIR_COMPOSITOR_GL_RENDERER_H_
 
+#include <mir/compositor/gl_program_family.h>
 #include <mir/compositor/renderer.h>
 #include <mir/graphics/gl_program.h>
 #include <mir/geometry/rectangle.h>
@@ -83,6 +84,7 @@ protected:
     GLfloat clear_color[4];
 
 private:
+    GLProgramFamily programs;
     std::unique_ptr<graphics::GLProgram> opaque_program, blending_program;
     std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;
     GLuint position_attr_loc;
