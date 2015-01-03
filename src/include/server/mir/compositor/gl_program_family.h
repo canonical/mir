@@ -33,6 +33,9 @@ public:
     /// A faster cached version of glGetUniformLocation()
     GLint get_uniform_location(GLuint program_id, const char* name) const;
 
+    /// A faster cached version of glGetAttribLocation()
+    GLint get_attrib_location(GLuint program_id, const char* name) const;
+
 private:
     typedef std::pair<GLenum, const char*> ShaderKey;
     typedef GLuint ShaderId;
@@ -61,7 +64,7 @@ private:
         UniformId id = -1;
     };
     typedef std::map<UniformKey, Uniform> UniformMap;
-    mutable UniformMap uniform;
+    mutable UniformMap uniform, attrib;
 };
 
 }}  // namespace mir::compositor

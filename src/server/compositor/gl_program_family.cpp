@@ -97,4 +97,13 @@ GLint GLProgramFamily::get_uniform_location(GLuint program_id,
     return u.id;
 }
 
+GLint GLProgramFamily::get_attrib_location(GLuint program_id,
+                                           const char* name) const
+{
+    auto& a = attrib[{program_id, name}];
+    if (a.id < 0)
+        a.id = glGetAttribLocation(program_id, name);
+    return a.id;
+}
+
 }} // namespace mir::compositor

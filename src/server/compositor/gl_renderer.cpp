@@ -182,9 +182,9 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
                        glm::value_ptr(renderable.transformation()));
 
     /* Draw */
-    GLint position_attr_loc = programs.get_uniform_location(prog, "position");
+    GLint position_attr_loc = programs.get_attrib_location(prog, "position");
     glEnableVertexAttribArray(position_attr_loc);
-    GLint texcoord_attr_loc = programs.get_uniform_location(prog, "texcoord");
+    GLint texcoord_attr_loc = programs.get_attrib_location(prog, "texcoord");
     glEnableVertexAttribArray(texcoord_attr_loc);
 
     primitives.clear();
