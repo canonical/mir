@@ -69,6 +69,7 @@ GLuint GLProgramFamily::add_program(const char* vshader_src,
     if (!p.id)
     {
         p.id = glCreateProgram();
+        program_ids.insert(p.id);
         glAttachShader(p.id, v.id);
         glAttachShader(p.id, f.id);
         glLinkProgram(p.id);
@@ -104,6 +105,11 @@ GLint GLProgramFamily::get_attrib_location(GLuint program_id,
     if (a.id < 0)
         a.id = glGetAttribLocation(program_id, name);
     return a.id;
+}
+
+const std::unordered_set<GLuint>& GLProgramFamily::all() const
+{
+    return program_ids;
 }
 
 }} // namespace mir::compositor

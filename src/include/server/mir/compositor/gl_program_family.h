@@ -22,6 +22,7 @@
 #include <GLES2/gl2.h>
 #include <utility>
 #include <map>
+#include <unordered_set>
 
 namespace mir { namespace compositor {
 
@@ -35,6 +36,8 @@ public:
 
     /// A faster cached version of glGetAttribLocation()
     GLint get_attrib_location(GLuint program_id, const char* name) const;
+
+    const std::unordered_set<GLuint>& all() const;
 
 private:
     typedef std::pair<GLenum, const char*> ShaderKey;
@@ -56,6 +59,7 @@ private:
         ~Program();
     };
     std::map<ShaderPair, Program> program;
+    std::unordered_set<ProgramId> program_ids;
 
     typedef std::pair<ProgramId, const char*> UniformKey;
     typedef GLint UniformId;

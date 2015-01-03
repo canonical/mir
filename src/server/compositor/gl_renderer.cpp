@@ -252,14 +252,12 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
                       -rect.top_left.y.as_float(),
                       0.0f});
 
-    glUseProgram(default_program);
-    GLint mat_loc = programs.get_uniform_location(default_program,
-                                                  "screen_to_gl_coords");
-    glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
-    glUseProgram(alpha_program);
-    mat_loc = programs.get_uniform_location(alpha_program,
-                                            "screen_to_gl_coords");
-    glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
+    for (auto& p : programs.all())
+    {
+        glUseProgram(p);
+        GLint loc = programs.get_uniform_location(p, "screen_to_gl_coords");
+        glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
+    }
     glUseProgram(0);
 
     viewport = rect;
@@ -278,15 +276,12 @@ void mc::GLRenderer::set_rotation(float degrees)
                        0.0f, 0.0f, 1.0f, 0.0f,
                        0.0f, 0.0f, 0.0f, 1.0f};
 
-    glUseProgram(default_program);
-    auto loc = programs.get_uniform_location(default_program,
-                                             "display_transform");
-    glUniformMatrix4fv(loc, 1, GL_FALSE, rot);
-
-    glUseProgram(alpha_program);
-    loc = programs.get_uniform_location(alpha_program,
-                                        "display_transform");
-    glUniformMatrix4fv(loc, 1, GL_FALSE, rot);
+    for (auto& p : programs.all())
+    {
+        glUseProgram(p);
+        auto loc = programs.get_uniform_location(p, "display_transform");
+        glUniformMatrix4fv(loc, 1, GL_FALSE, rot);
+    }
     glUseProgram(0);
 
     rotation = degrees;
