@@ -89,7 +89,7 @@ GLuint GLProgramFamily::add_program(const char* vshader_src,
 }
 
 GLint GLProgramFamily::get_uniform_location(GLuint program_id,
-                                            const char* name)
+                                            const char* name) const
 {
     auto& u = uniform[{program_id, name}];
     if (u.id < 0)

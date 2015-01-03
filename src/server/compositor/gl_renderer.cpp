@@ -58,7 +58,7 @@ const GLchar vshader[] =
     "}\n"
 };
 
-const GLchar blending_fshader[] =
+const GLchar alpha_fshader[] =
 {
     "precision mediump float;\n"
     "uniform sampler2D tex;\n"
@@ -70,7 +70,7 @@ const GLchar blending_fshader[] =
     "}\n"
 };
 
-const GLchar opaque_fshader[] =  // Should be faster than blending in theory
+const GLchar default_fshader[] =  // Should be faster than blending in theory
 {
     "precision mediump float;\n"
     "uniform sampler2D tex;\n"
@@ -83,19 +83,11 @@ const GLchar opaque_fshader[] =  // Should be faster than blending in theory
 }
 
 mc::GLRenderer::GLRenderer(
-    mg::GLProgramFactory const& program_factory,
     std::unique_ptr<mg::GLTextureCache> && texture_cache, 
     geom::Rectangle const& display_area,
     DestinationAlpha dest_alpha)
     : clear_color{0.0f, 0.0f, 0.0f, 1.0f},
-      opaque_program(program_factory.create_gl_program(vshader, opaque_fshader)),
-      blending_program(program_factory.create_gl_program(vshader, blending_fshader)),
       texture_cache(std::move(texture_cache)),
-      position_attr_loc(0),
-      texcoord_attr_loc(0),
-      centre_uniform_loc(0),
-      transform_uniform_loc(0),
-      alpha_uniform_loc(0),
       rotation(NAN), // ensure the first set_rotation succeeds
       dest_alpha(dest_alpha)
 {
@@ -114,24 +106,8 @@ mc::GLRenderer::GLRenderer(
         mir::log_info("%s: %s", s.label, val);
     }
 
-    glUseProgram(*opaque_program);
-    GLint tex_loc = glGetUniformLocation(*opaque_program, "tex");
-    display_transform_uniform_loc = glGetUniformLocation(*opaque_program, "display_transform");
-    transform_uniform_loc = glGetUniformLocation(*opaque_program, "transform");
-    position_attr_loc = glGetAttribLocation(*opaque_program, "position");
-    texcoord_attr_loc = glGetAttribLocation(*opaque_program, "texcoord");
-    centre_uniform_loc = glGetUniformLocation(*opaque_program, "centre");
-
-    glUseProgram(*blending_program);
-    tex_loc = glGetUniformLocation(*blending_program, "tex");
-    display_transform_uniform_loc = glGetUniformLocation(*blending_program, "display_transform");
-    transform_uniform_loc = glGetUniformLocation(*blending_program, "transform");
-    alpha_uniform_loc = glGetUniformLocation(*blending_program, "alpha");
-    position_attr_loc = glGetAttribLocation(*blending_program, "position");
-    texcoord_attr_loc = glGetAttribLocation(*blending_program, "texcoord");
-    centre_uniform_loc = glGetUniformLocation(*blending_program, "centre");
-
-    glUniform1i(tex_loc, 0);
+    default_program = programs.add_program(vshader, default_fshader);
+    alpha_program = programs.add_program(vshader, alpha_fshader);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glUseProgram(0);
@@ -167,22 +143,27 @@ void mc::GLRenderer::render(mg::RenderableList const& renderables) const
 
 void mc::GLRenderer::render(mg::Renderable const& renderable) const
 {
+    GLuint prog = default_program;
+
     if (renderable.alpha() < 1.0f)
     {
-        glUseProgram(*blending_program);
+        prog = alpha_program;
+        glUseProgram(prog);
+        auto alpha_uniform_loc =
+            programs.get_uniform_location(alpha_program, "alpha");
         glUniform1f(alpha_uniform_loc, renderable.alpha());
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     }
     else if (renderable.shaped())
     {
-        glUseProgram(*opaque_program);
+        glUseProgram(prog);
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     }
     else
     {
-        glUseProgram(*opaque_program);
+        glUseProgram(prog);
         glDisable(GL_BLEND);
     }
     glActiveTexture(GL_TEXTURE0);
@@ -192,13 +173,18 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
                       rect.size.width.as_int() / 2.0f;
     GLfloat centrey = rect.top_left.y.as_int() +
                       rect.size.height.as_int() / 2.0f;
+    GLint centre_uniform_loc = programs.get_uniform_location(prog, "centre");
     glUniform2f(centre_uniform_loc, centrex, centrey);
 
+    GLint transform_uniform_loc =
+        programs.get_uniform_location(prog, "transform");
     glUniformMatrix4fv(transform_uniform_loc, 1, GL_FALSE,
                        glm::value_ptr(renderable.transformation()));
 
     /* Draw */
+    GLint position_attr_loc = programs.get_uniform_location(prog, "position");
     glEnableVertexAttribArray(position_attr_loc);
+    GLint texcoord_attr_loc = programs.get_uniform_location(prog, "texcoord");
     glEnableVertexAttribArray(texcoord_attr_loc);
 
     primitives.clear();
@@ -266,11 +252,13 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
                       -rect.top_left.y.as_float(),
                       0.0f});
 
-    glUseProgram(*opaque_program);
-    GLint mat_loc = glGetUniformLocation(*opaque_program, "screen_to_gl_coords");
+    glUseProgram(default_program);
+    GLint mat_loc = programs.get_uniform_location(default_program,
+                                                  "screen_to_gl_coords");
     glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
-    glUseProgram(*blending_program);
-    mat_loc = glGetUniformLocation(*blending_program, "screen_to_gl_coords");
+    glUseProgram(alpha_program);
+    mat_loc = programs.get_uniform_location(alpha_program,
+                                            "screen_to_gl_coords");
     glUniformMatrix4fv(mat_loc, 1, GL_FALSE, glm::value_ptr(screen_to_gl_coords));
     glUseProgram(0);
 
@@ -289,10 +277,16 @@ void mc::GLRenderer::set_rotation(float degrees)
                        -sin, cos,  0.0f, 0.0f,
                        0.0f, 0.0f, 1.0f, 0.0f,
                        0.0f, 0.0f, 0.0f, 1.0f};
-    glUseProgram(*opaque_program);
-    glUniformMatrix4fv(display_transform_uniform_loc, 1, GL_FALSE, rot);
-    glUseProgram(*blending_program);
-    glUniformMatrix4fv(display_transform_uniform_loc, 1, GL_FALSE, rot);
+
+    glUseProgram(default_program);
+    auto loc = programs.get_uniform_location(default_program,
+                                             "display_transform");
+    glUniformMatrix4fv(loc, 1, GL_FALSE, rot);
+
+    glUseProgram(alpha_program);
+    loc = programs.get_uniform_location(alpha_program,
+                                        "display_transform");
+    glUniformMatrix4fv(loc, 1, GL_FALSE, rot);
     glUseProgram(0);
 
     rotation = degrees;

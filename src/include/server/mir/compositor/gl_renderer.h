@@ -21,12 +21,10 @@
 
 #include <mir/compositor/gl_program_family.h>
 #include <mir/compositor/renderer.h>
-#include <mir/graphics/gl_program.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/renderable.h>
 #include <mir/graphics/gl_primitive.h>
-#include <mir/graphics/gl_program_factory.h>
 #include <mir/graphics/gl_texture_cache.h>
 #include <GLES2/gl2.h>
 #include <unordered_map>
@@ -44,7 +42,6 @@ class GLRenderer : public Renderer
 {
 public:
     GLRenderer(
-        graphics::GLProgramFactory const& program_factory,
         std::unique_ptr<graphics::GLTextureCache> && texture_cache, 
         geometry::Rectangle const& display_area,
         DestinationAlpha dest_alpha);
@@ -85,14 +82,9 @@ protected:
 
 private:
     GLProgramFamily programs;
-    std::unique_ptr<graphics::GLProgram> opaque_program, blending_program;
+    GLuint default_program, alpha_program;
+
     std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;
-    GLuint position_attr_loc;
-    GLuint texcoord_attr_loc;
-    GLuint centre_uniform_loc;
-    GLuint display_transform_uniform_loc;
-    GLuint transform_uniform_loc;
-    GLuint alpha_uniform_loc;
     float rotation;
     DestinationAlpha const dest_alpha;
     geometry::Rectangle viewport;
