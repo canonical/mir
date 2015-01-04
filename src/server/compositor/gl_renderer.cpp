@@ -99,8 +99,8 @@ mc::GLRenderer::GLRenderer(
     geom::Rectangle const& display_area,
     DestinationAlpha dest_alpha)
     : clear_color{0.0f, 0.0f, 0.0f, 1.0f},
-      default_program(programs.add_program(vshader, default_fshader)),
-      alpha_program(programs.add_program(vshader, alpha_fshader)),
+      default_program(family.add_program(vshader, default_fshader)),
+      alpha_program(family.add_program(vshader, alpha_fshader)),
       texture_cache(std::move(texture_cache)),
       rotation(NAN), // ensure the first set_rotation succeeds
       dest_alpha(dest_alpha)
@@ -173,9 +173,6 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
     }
 
     glUseProgram(prog->id);
-    if (prog->alpha_uniform >= 0)
-        glUniform1f(prog->alpha_uniform, renderable.alpha());
-
     glActiveTexture(GL_TEXTURE0);
 
     auto const& rect = renderable.screen_position();
@@ -187,6 +184,9 @@ void mc::GLRenderer::render(mg::Renderable const& renderable) const
 
     glUniformMatrix4fv(prog->transform_uniform, 1, GL_FALSE,
                        glm::value_ptr(renderable.transformation()));
+
+    if (prog->alpha_uniform >= 0)
+        glUniform1f(prog->alpha_uniform, renderable.alpha());
 
     /* Draw */
     glEnableVertexAttribArray(prog->position_attr);
@@ -257,12 +257,12 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
                       -rect.top_left.y.as_float(),
                       0.0f});
 
-    glUseProgram(default_program.id);
-    glUniformMatrix4fv(default_program.screen_to_gl_coords_uniform, 1, GL_FALSE,
-                       glm::value_ptr(screen_to_gl_coords));
-    glUseProgram(alpha_program.id);
-    glUniformMatrix4fv(alpha_program.screen_to_gl_coords_uniform, 1, GL_FALSE,
-                       glm::value_ptr(screen_to_gl_coords));
+    for (auto& p : all_programs)
+    {
+        glUseProgram(p->id);
+        glUniformMatrix4fv(p->screen_to_gl_coords_uniform, 1, GL_FALSE,
+                           glm::value_ptr(screen_to_gl_coords));
+    }
     glUseProgram(0);
 
     viewport = rect;
@@ -281,10 +281,11 @@ void mc::GLRenderer::set_rotation(float degrees)
                        0.0f, 0.0f, 1.0f, 0.0f,
                        0.0f, 0.0f, 0.0f, 1.0f};
 
-    glUseProgram(default_program.id);
-    glUniformMatrix4fv(default_program.display_transform_uniform, 1, GL_FALSE, rot);
-    glUseProgram(alpha_program.id);
-    glUniformMatrix4fv(alpha_program.display_transform_uniform, 1, GL_FALSE, rot);
+    for (auto& p : all_programs)
+    {
+        glUseProgram(p->id);
+        glUniformMatrix4fv(p->display_transform_uniform, 1, GL_FALSE, rot);
+    }
     glUseProgram(0);
 
     rotation = degrees;

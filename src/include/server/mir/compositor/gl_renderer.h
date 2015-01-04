@@ -80,7 +80,7 @@ protected:
 
     GLfloat clear_color[4];
 
-    GLProgramFamily programs;
+    GLProgramFamily family;
     struct Program
     {
        GLuint id = 0;
@@ -95,6 +95,9 @@ protected:
        Program(GLuint program_id);
     };
     Program const default_program, alpha_program;
+
+    // TODO: In future, this list will be variable
+    const Program* const all_programs[2] = {&default_program, &alpha_program};
 
 private:
     std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;
