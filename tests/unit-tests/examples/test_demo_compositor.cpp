@@ -85,6 +85,8 @@ struct DemoCompositor : testing::Test
             .WillByDefault(Return(12));
         ON_CALL(mock_gl, glCreateProgram())
             .WillByDefault(Return(34));
+        ON_CALL(mock_gl, glGetShaderiv(_, _, _))
+            .WillByDefault(SetArgPointee<2>(GL_TRUE));
         ON_CALL(mock_gl, glGetProgramiv(_, _, _))
             .WillByDefault(SetArgPointee<2>(GL_TRUE));
     }
