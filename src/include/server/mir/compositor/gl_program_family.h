@@ -31,14 +31,6 @@ class GLProgramFamily
 public:
     GLuint add_program(const char* vshader, const char* fshader);
 
-    /// A faster cached version of glGetUniformLocation()
-    GLint get_uniform_location(GLuint program_id, const char* name) const;
-
-    /// A faster cached version of glGetAttribLocation()
-    GLint get_attrib_location(GLuint program_id, const char* name) const;
-
-    const std::unordered_set<GLuint>& all() const;
-
 private:
     typedef std::pair<GLenum, const char*> ShaderKey;
     typedef GLuint ShaderId;
@@ -59,16 +51,6 @@ private:
         ~Program();
     };
     std::map<ShaderPair, Program> program;
-    std::unordered_set<ProgramId> program_ids;
-
-    typedef std::pair<ProgramId, const char*> UniformKey;
-    typedef GLint UniformId;
-    struct Uniform
-    {
-        UniformId id = -1;
-    };
-    typedef std::map<UniformKey, Uniform> UniformMap;
-    mutable UniformMap uniform, attrib;
 };
 
 }}  // namespace mir::compositor

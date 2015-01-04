@@ -80,10 +80,23 @@ protected:
 
     GLfloat clear_color[4];
 
-private:
     GLProgramFamily programs;
-    GLuint default_program, alpha_program;
+    struct Program
+    {
+       GLuint id = 0;
+       GLint position_attr = -1;
+       GLint texcoord_attr = -1;
+       GLint centre_uniform = -1;
+       GLint display_transform_uniform = -1;
+       GLint transform_uniform = -1;
+       GLint screen_to_gl_coords_uniform = -1;
+       GLint alpha_uniform = -1;
 
+       Program(GLuint program_id);
+    };
+    Program const default_program, alpha_program;
+
+private:
     std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;
     float rotation;
     DestinationAlpha const dest_alpha;
