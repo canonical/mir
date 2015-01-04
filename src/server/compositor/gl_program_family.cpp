@@ -20,12 +20,6 @@
 
 namespace mir { namespace compositor {
 
-GLProgramFamily::Shader::~Shader()
-{
-    if (id)
-        glDeleteShader(id);
-}
-
 void GLProgramFamily::Shader::init(GLenum type, const char* src)
 {
     if (!id)
@@ -51,10 +45,29 @@ void GLProgramFamily::Shader::init(GLenum type, const char* src)
     }
 }
 
-GLProgramFamily::Program::~Program()
+GLProgramFamily::~GLProgramFamily()
 {
-    if (id)
-        glDeleteProgram(id);
+    // shader and program lifetimes are managed manually, so that we don't
+    // need any reference counting or to worry about how many copy constructions
+    // might have been followed by destructor calls during container resizes.
+
+    for (auto& p : program)
+    {
+        if (p.second.id)
+            glDeleteProgram(p.second.id);
+    }
+
+    for (auto& v : vshader)
+    {
+        if (v.second.id)
+            glDeleteShader(v.second.id);
+    }
+
+    for (auto& f : fshader)
+    {
+        if (f.second.id)
+            glDeleteShader(f.second.id);
+    }
 }
 
 GLuint GLProgramFamily::add_program(const char* vshader_src,

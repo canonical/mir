@@ -30,13 +30,13 @@ class GLProgramFamily
 {
 public:
     GLuint add_program(const char* vshader, const char* fshader);
+    ~GLProgramFamily();
 
 private:
     struct Shader
     {
         GLuint id = 0;
         void init(GLenum type, const char* src);
-        ~Shader();
     };
     typedef std::unordered_map<const char*, Shader> ShaderMap;
     ShaderMap vshader, fshader;
@@ -45,7 +45,6 @@ private:
     struct Program
     {
         GLuint id = 0;
-        ~Program();
     };
     std::map<ShaderPair, Program> program;
 };
