@@ -71,16 +71,16 @@ void ExpectShaderCompileSuccess(const GLint shader, mtd::MockGL &mock_gl)
 void SetUpMockVertexShader(mtd::MockGL &mock_gl, const std::function<void(const GLint, mtd::MockGL &)> &shader_compile_expectation)
 {
     /* Vertex Shader */
-    EXPECT_CALL(mock_gl, glCreateShader(GL_VERTEX_SHADER))
-        .WillRepeatedly(Return(stub_v_shader));
+    ON_CALL(mock_gl, glCreateShader(GL_VERTEX_SHADER))
+        .WillByDefault(Return(stub_v_shader));
     shader_compile_expectation(stub_v_shader, mock_gl);
 }
 
 void SetUpMockFragmentShader(mtd::MockGL &mock_gl, const std::function<void(const GLint, mtd::MockGL &)> &shader_compile_expectation)
 {
     /* Fragment Shader */
-    EXPECT_CALL(mock_gl, glCreateShader(GL_FRAGMENT_SHADER))
-        .WillRepeatedly(Return(stub_f_shader));
+    ON_CALL(mock_gl, glCreateShader(GL_FRAGMENT_SHADER))
+        .WillByDefault(Return(stub_f_shader));
     shader_compile_expectation(stub_f_shader, mock_gl);
 }
 
@@ -99,8 +99,8 @@ void ExpectProgramLinkSuccess(const GLint program, mtd::MockGL &mock_gl)
 void SetUpMockGraphicsProgram(mtd::MockGL &mock_gl, const std::function<void(const GLint, mtd::MockGL &)> &program_link_expectation)
 {
     /* Graphics Program */
-    EXPECT_CALL(mock_gl, glCreateProgram())
-        .WillRepeatedly(Return(stub_program));
+    ON_CALL(mock_gl, glCreateProgram())
+        .WillByDefault(Return(stub_program));
     program_link_expectation(stub_program, mock_gl);
 }
 
