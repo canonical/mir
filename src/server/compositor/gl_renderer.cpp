@@ -41,6 +41,12 @@ namespace geom = mir::geometry;
 namespace
 {
 
+enum
+{
+    default_program_index = 0,
+    alpha_program_index = 1
+};
+
 const GLchar vshader[] =
 {
     "attribute vec3 position;\n"
@@ -99,8 +105,8 @@ mc::GLRenderer::GLRenderer(
     geom::Rectangle const& display_area,
     DestinationAlpha dest_alpha)
     : clear_color{0.0f, 0.0f, 0.0f, 1.0f},
-      default_program(family.add_program(vshader, default_fshader)),
-      alpha_program(family.add_program(vshader, alpha_fshader)),
+      programs{family.add_program(vshader, default_fshader),
+               family.add_program(vshader, alpha_fshader)},
       texture_cache(std::move(texture_cache)),
       rotation(NAN), // ensure the first set_rotation succeeds
       dest_alpha(dest_alpha)
@@ -154,11 +160,11 @@ void mc::GLRenderer::render(mg::RenderableList const& renderables) const
 
 void mc::GLRenderer::render(mg::Renderable const& renderable) const
 {
-    const Program* prog = &default_program;
+    const Program* prog = &programs[default_program_index];
 
     if (renderable.alpha() < 1.0f)
     {
-        prog = &alpha_program;
+        prog = &programs[alpha_program_index];
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     }
@@ -257,10 +263,10 @@ void mc::GLRenderer::set_viewport(geometry::Rectangle const& rect)
                       -rect.top_left.y.as_float(),
                       0.0f});
 
-    for (auto& p : all_programs)
+    for (auto& p : programs)
     {
-        glUseProgram(p->id);
-        glUniformMatrix4fv(p->screen_to_gl_coords_uniform, 1, GL_FALSE,
+        glUseProgram(p.id);
+        glUniformMatrix4fv(p.screen_to_gl_coords_uniform, 1, GL_FALSE,
                            glm::value_ptr(screen_to_gl_coords));
     }
     glUseProgram(0);
@@ -281,10 +287,10 @@ void mc::GLRenderer::set_rotation(float degrees)
                        0.0f, 0.0f, 1.0f, 0.0f,
                        0.0f, 0.0f, 0.0f, 1.0f};
 
-    for (auto& p : all_programs)
+    for (auto& p : programs)
     {
-        glUseProgram(p->id);
-        glUniformMatrix4fv(p->display_transform_uniform, 1, GL_FALSE, rot);
+        glUseProgram(p.id);
+        glUniformMatrix4fv(p.display_transform_uniform, 1, GL_FALSE, rot);
     }
     glUseProgram(0);
 

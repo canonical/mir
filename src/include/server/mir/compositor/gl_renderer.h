@@ -94,10 +94,7 @@ protected:
 
        Program(GLuint program_id);
     };
-    Program const default_program, alpha_program;
-
-    // TODO: In future, this list will be variable
-    const Program* const all_programs[2] = {&default_program, &alpha_program};
+    std::vector<Program> programs;
 
 private:
     std::unique_ptr<graphics::GLTextureCache> mutable texture_cache;
