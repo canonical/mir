@@ -22,7 +22,7 @@
 #include <GLES2/gl2.h>
 #include <utility>
 #include <map>
-#include <unordered_set>
+#include <unordered_map>
 
 namespace mir { namespace compositor {
 
@@ -38,7 +38,7 @@ private:
         void init(GLenum type, const char* src);
         ~Shader();
     };
-    typedef std::map<const char*, Shader> ShaderMap;
+    typedef std::unordered_map<const char*, Shader> ShaderMap;
     ShaderMap vshader, fshader;
 
     typedef std::pair<GLuint, GLuint> ShaderPair;
