@@ -32,22 +32,19 @@ public:
     GLuint add_program(const char* vshader, const char* fshader);
 
 private:
-    typedef std::pair<GLenum, const char*> ShaderKey;
-    typedef GLuint ShaderId;
     struct Shader
     {
-        ShaderId id = 0;
+        GLuint id = 0;
         void init(GLenum type, const char* src);
         ~Shader();
     };
     typedef std::map<const char*, Shader> ShaderMap;
     ShaderMap vshader, fshader;
 
-    typedef GLuint ProgramId;
-    typedef std::pair<ShaderId, ShaderId> ShaderPair;
+    typedef std::pair<GLuint, GLuint> ShaderPair;
     struct Program
     {
-        ProgramId id = 0;
+        GLuint id = 0;
         ~Program();
     };
     std::map<ShaderPair, Program> program;
