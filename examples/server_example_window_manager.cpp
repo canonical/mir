@@ -17,6 +17,7 @@
  */
 
 #include "server_example_window_manager.h"
+#include "server_example_fullscreen_placement_strategy.h"
 
 #include "mir/abnormal_exit.h"
 #include "mir/server.h"
@@ -70,9 +71,37 @@ public:
     virtual void remove_display(Rectangle const& area) = 0;
 };
 
-class TilingWindowManager : public WindowManager
+class FullscreenWindowManager : public WindowManager
 {
 public:
+    FullscreenWindowManager(
+        std::shared_ptr<mir::shell::DisplayLayout> const& display_layout)
+      : placement_strategy{display_layout} {}
+
+private:
+    auto place(ms::Session const& session, ms::SurfaceCreationParameters const& request_parameters)
+    -> ms::SurfaceCreationParameters override
+    {
+        return placement_strategy.place(session, request_parameters);
+    }
+
+    void add_surface(std::shared_ptr<ms::Surface> const&, ms::Session*) override {}
+
+    void remove_surface(std::weak_ptr<ms::Surface> const&) override {}
+
+    void add_session(std::shared_ptr<mf::Session> const&) override {}
+
+    void remove_session(std::shared_ptr<mf::Session> const&) override {}
+
+    void add_display(Rectangle const&) override {}
+
+    void remove_display(Rectangle const&) override {}
+
+    me::FullscreenPlacementStrategy placement_strategy;
+};
+
+class TilingWindowManager : public WindowManager
+{
     auto place(ms::Session const& session, ms::SurfaceCreationParameters const& request_parameters)
     -> ms::SurfaceCreationParameters override
     {
@@ -217,8 +246,9 @@ private:
 };
 
 auto const option = "window-manager";
-auto const description = "window management strategy [tiling]";
+auto const description = "window management strategy [tiling|fullscreen]";
 auto const tiling = "tiling";
+auto const fullscreen = "fullscreen";
 
 class WindowManagmentFactory
 {
@@ -234,10 +264,13 @@ public:
             auto const options = server.get_options();
             auto const selection = options->get<std::string>(option);
 
-            if (selection != tiling)
+            if (selection == tiling)
+                tmp = std::make_shared<TilingWindowManager>();
+            else if (selection == fullscreen)
+                tmp = std::make_shared<FullscreenWindowManager>(server.the_shell_display_layout());
+            else
                 throw mir::AbnormalExit("Unknown window manager: " + selection);
 
-            tmp = std::make_shared<TilingWindowManager>();
             wm = tmp;
         }
 
