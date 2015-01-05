@@ -40,7 +40,8 @@ struct StubConfigurableDisplayBuffer : public graphics::android::ConfigurableDis
     geometry::Rectangle view_area() const { return rect; }
     void make_current() {}
     void release_current() {}
-    void post_update() {}
+    void gl_swap_buffers() {}
+    void flip() {}
     bool post_renderables_if_optimizable(graphics::RenderableList const&) { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal; }
     bool uses_alpha() const override { return false; };

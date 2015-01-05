@@ -315,7 +315,7 @@ ACTION_P(InvokePageFlipHandler, param)
 
 }
 
-TEST_F(MesaDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
+TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
 {
     using namespace testing;
 
@@ -356,14 +356,16 @@ TEST_F(MesaDisplayMultiMonitorTest, post_update_flips_all_connected_crtcs)
     /* First frame: Page flips are scheduled, but not waited for */
     display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
-        buffer.post_update();
+        buffer.gl_swap_buffers();
+        buffer.flip();
     });
 
     /* Second frame: Previous page flips finish (drmHandleEvent) and new ones
        are scheduled */
     display->for_each_display_buffer([](mg::DisplayBuffer& buffer)
     {
-        buffer.post_update();
+        buffer.gl_swap_buffers();
+        buffer.flip();
     });
 }
 
