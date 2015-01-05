@@ -90,18 +90,51 @@ void mir_eglapp_swap_buffers(void)
     }
 }
 
+static void mir_eglapp_handle_input_event(MirInputEvent const* event)
+{
+    if (mir_input_event_get_type(event) != mir_input_event_type_key)
+        return;
+    MirKeyInputEvent const* kev = mir_input_event_get_key_input_event(event);
+    if (mir_key_input_event_get_action(kev) != mir_key_input_event_action_up)
+        return;
+    if (mir_key_input_event_get_key_code(kev) != XKB_KEY_q)
+        return;
+    
+    running = 0;
+}
+
+static void mir_eglapp_handle_surface_event(MirSurfaceEvent const* sev)
+{
+    MirSurfaceAttrib attrib = mir_surface_event_get_attribute(sev);
+    if (attrib != mir_surface_attrib_visibility)
+        return;
+    switch (mir_surface_event_get_attribute_value(sev))
+    {
+    case mir_surface_visibility_exposed:
+        printf("Surface exposed\n");
+        break;
+    case mir_surface_visibility_occluded:
+        printf("Surface occluded\n");
+        break;
+    default:
+        break;
+    }
+}
+
 static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, void* context)
 {
     (void) surface;
     (void) context;
-    if (ev->type == mir_event_type_key &&
-        ev->key.key_code == XKB_KEY_q &&
-        ev->key.action == mir_key_action_up)
+    
+    switch (mir_event_get_type(ev))
     {
-        running = 0;
-    }
-    else if (ev->type == mir_event_type_resize)
-    {
+    case mir_event_type_input:
+        mir_eglapp_handle_input_event(mir_event_get_input_event(ev));
+        break;
+    case mir_event_type_surface:
+        mir_eglapp_handle_surface_event(mir_event_get_surface_event(ev));
+        break;
+    case mir_event_type_resize:
         /*
          * FIXME: https://bugs.launchpad.net/mir/+bug/1194384
          * It is unsafe to set the width and height here because we're in a
@@ -110,14 +143,9 @@ static void mir_eglapp_handle_event(MirSurface* surface, MirEvent const* ev, voi
          * full single-threaded callbacks. (LP: #1194384).
          */
         printf("Resized to %dx%d\n", ev->resize.width, ev->resize.height);
-    }
-    else if (ev->type == mir_event_type_surface &&
-             ev->surface.attrib == mir_surface_attrib_visibility)
-    {
-        if (ev->surface.value == mir_surface_visibility_exposed)
-            printf("Surface exposed\n");
-        else if (ev->surface.value == mir_surface_visibility_occluded)
-            printf("Surface occluded\n");
+        break;
+    default:
+        break;
     }
 }
 
