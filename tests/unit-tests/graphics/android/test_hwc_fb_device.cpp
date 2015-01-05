@@ -28,6 +28,7 @@
 #include "mir_test_doubles/stub_swapping_gl_context.h"
 #include "mir_test_doubles/mock_swapping_gl_context.h"
 #include "mir_test_doubles/mock_egl.h"
+#include "mir_test/auto_unblock_thread.h"
 #include "mir_test_doubles/mock_hwc_device_wrapper.h"
 #include "mir_test_doubles/stub_renderable_list_compositor.h"
 #include "src/platforms/android/hwc_fallback_gl_renderer.h"
@@ -143,15 +144,17 @@ TEST_F(HwcFbDevice, hwc10_post)
     EXPECT_CALL(*mock_hwc_device_wrapper, subscribe_to_events(_,_,_,_))
         .WillOnce(SaveArg<1>(&vsync_cb));
     mga::HwcFbDevice device(mock_hwc_device_wrapper, mock_fb_device, stub_config);
-    std::atomic<bool> vsync_thread_on{true};
-    std::thread vsync_thread([&]{
-        while(vsync_thread_on)
-        {
-            std::this_thread::sleep_for(std::chrono::microseconds(500));
-            vsync_cb(mga::DisplayName::primary, std::chrono::nanoseconds(0));
-        }
-    });
     Mock::VerifyAndClearExpectations(mock_hwc_device_wrapper.get());
+
+    std::atomic<bool> vsync_thread_on{true};
+    mir::test::AutoUnblockThread vsync_thread(
+        [&]{ vsync_thread_on = false; },
+        [&]{
+            while(vsync_thread_on)
+            {
+                std::this_thread::sleep_for(std::chrono::microseconds(500));
+                vsync_cb(mga::DisplayName::primary, std::chrono::nanoseconds(0));
+            }});
 
     Sequence seq;
     EXPECT_CALL(*mock_buffer, native_buffer_handle())
@@ -174,7 +177,4 @@ TEST_F(HwcFbDevice, hwc10_post)
         .InSequence(seq);
 
     device.post_gl(mock_context);
-
-    vsync_thread_on = false;
-    vsync_thread.join();
 }
