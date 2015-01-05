@@ -184,6 +184,12 @@ MirOrientation mgm::DisplayBuffer::orientation() const
     return rotation;
 }
 
+void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rectangle const& a)
+{
+    rotation = rot;
+    area = a;
+}
+
 bool mgm::DisplayBuffer::uses_alpha() const
 {
     return false;
@@ -199,10 +205,10 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
         if (bypass_it != renderable_list.rend())
         {
             auto bypass_buf = (*bypass_it)->buffer();
-            if (bypass_buf->can_bypass())
+            if (bypass_buf->can_bypass() &&
+                bypass_buf->size() == geom::Size{fb_width,fb_height})
             {
-                post_update(bypass_buf);
-                return true;
+                return flip(bypass_buf);
             }
         }
     }
@@ -210,12 +216,18 @@ bool mgm::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     return false;
 }
 
-void mgm::DisplayBuffer::post_update()
+void mgm::DisplayBuffer::flip()
 {
-    post_update(nullptr);
+    flip(nullptr);
 }
 
-void mgm::DisplayBuffer::post_update(
+void mgm::DisplayBuffer::gl_swap_buffers()
+{
+    if (!egl.swap_buffers())
+        fatal_error("Failed to perform buffer swap");
+}
+
+bool mgm::DisplayBuffer::flip(
     std::shared_ptr<graphics::Buffer> bypass_buf)
 {
     /*
@@ -248,16 +260,16 @@ void mgm::DisplayBuffer::post_update(
         auto native = bypass_buf->native_buffer_handle();
         auto gbm_native = static_cast<mgm::GBMNativeBuffer*>(native.get());
         bufobj = get_buffer_object(gbm_native->bo);
+        // If bypass fails, just fall back to compositing.
+        if (!bufobj)
+            return false;
     }
     else
     {
-        if (!egl.swap_buffers())
-            fatal_error("Failed to perform buffer swap");
         bufobj = get_front_buffer_object();
+        if (!bufobj)
+            fatal_error("Failed to get front buffer object");
     }
-
-    if (!bufobj)
-        fatal_error("Failed to get front buffer object");
 
     /*
      * Schedule the current front buffer object for display, and wait
@@ -308,6 +320,8 @@ void mgm::DisplayBuffer::post_update(
     {
         scheduled_bufobj = bufobj;
     }
+
+    return true;
 }
 
 mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
@@ -336,12 +350,23 @@ mgm::BufferObject* mgm::DisplayBuffer::get_buffer_object(
         return bufobj;
 
     uint32_t fb_id{0};
-    auto handle = gbm_bo_get_handle(bo).u32;
-    auto stride = gbm_bo_get_stride(bo);
+    uint32_t handles[4] = {gbm_bo_get_handle(bo).u32, 0, 0, 0};
+    uint32_t strides[4] = {gbm_bo_get_stride(bo), 0, 0, 0};
+    uint32_t offsets[4] = {0, 0, 0, 0};
+
+    auto format = gbm_bo_get_format(bo);
+    /*
+     * Mir might use the old GBM_BO_ enum formats, but KMS and the rest of
+     * the world need fourcc formats, so convert...
+     */
+    if (format == GBM_BO_FORMAT_XRGB8888)
+        format = GBM_FORMAT_XRGB8888;
+    else if (format == GBM_BO_FORMAT_ARGB8888)
+        format = GBM_FORMAT_ARGB8888;
 
     /* Create a KMS FB object with the gbm_bo attached to it. */
-    auto ret = drmModeAddFB(drm.fd, fb_width, fb_height,
-                            24, 32, stride, handle, &fb_id);
+    auto ret = drmModeAddFB2(drm.fd, fb_width, fb_height, format,
+                             handles, strides, offsets, &fb_id, 0);
     if (ret)
         return nullptr;
 

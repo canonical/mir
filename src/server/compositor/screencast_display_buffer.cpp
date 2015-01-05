@@ -90,9 +90,13 @@ bool mc::ScreencastDisplayBuffer::post_renderables_if_optimizable(mg::Renderable
     return false;
 }
 
-void mc::ScreencastDisplayBuffer::post_update()
+void mc::ScreencastDisplayBuffer::gl_swap_buffers()
 {
     glFinish();
+}
+
+void mc::ScreencastDisplayBuffer::flip()
+{
 }
 
 MirOrientation mc::ScreencastDisplayBuffer::orientation() const

@@ -65,7 +65,8 @@ public:
     geometry::Rectangle view_area() const override;
     void make_current() override;
     void release_current() override;
-    void post_update() override;
+    void gl_swap_buffers() override;
+    void flip() override;
 
     MirOrientation orientation() const override;
     bool uses_alpha() const override;

@@ -16,29 +16,30 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include <cstddef>
+#ifndef MIR_TOOLKIT_EVENTS_ORIENTATION_EVENT_H_
+#define MIR_TOOLKIT_EVENTS_ORIENTATION_EVENT_H_
 
-namespace mir
-{
-namespace graphics
-{
-class Buffer;
+#include <mir_toolkit/events/event.h>
 
-/// An interface provided by the graphics platform allowing for writing untiled pixel data into buffers.
-class BufferWriter
-{
-public:
-    virtual ~BufferWriter() = default;
+#ifdef __cplusplus
+/**
+ * \addtogroup mir_toolkit
+ * @{
+ */
+extern "C" {
+#endif
 
-    // Expects data to be an unstrided array containing (buffer.width * buffer.height) pixels. Likewise
-    // it is expected that buffer and data match in pixel format.
-    virtual void write(Buffer& buffer, unsigned char const* data, size_t size) = 0;
+/*
+ * Retrieve the new orientation reported by this MirOrientationEvent
+ *
+ * \param[in] ev The orientation event
+ * \return       The new orientation
+ */
+MirOrientation mir_orientation_event_get_direction(MirOrientationEvent const* ev);
 
-protected:
-    BufferWriter() = default;
-    BufferWriter(BufferWriter const&) = delete;
-    BufferWriter& operator=(BufferWriter const&) = delete;
-};
-
+#ifdef __cplusplus
 }
-}
+/**@}*/
+#endif
+
+#endif /* MIR_TOOLKIT_ORIENTATION_EVENT_H_ */

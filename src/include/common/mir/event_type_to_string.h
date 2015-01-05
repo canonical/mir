@@ -16,25 +16,15 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "buffer_writer.h"
+#ifndef MIR_EVENT_TYPE_TO_STRING_H_
+#define MIR_EVENT_TYPE_TO_STRING_H_
 
-#include "shm_buffer.h"
+#include <string>
+#include "mir_toolkit/client_types.h"
 
-#include <boost/throw_exception.hpp>
-#include <stdexcept>
-
-namespace mg = mir::graphics;
-namespace mgm = mir::graphics::mesa;
-
-mgm::BufferWriter::BufferWriter()
+namespace mir
 {
+std::string event_type_to_string(MirEventType t);
 }
 
-void mgm::BufferWriter::write(mg::Buffer& buffer, unsigned char const* data, size_t size)
-{
-    auto shm_buffer = dynamic_cast<mgm::ShmBuffer*>(&buffer);
-    if (!shm_buffer)
-        BOOST_THROW_EXCEPTION(std::logic_error("Direct CPU write is only supported to software allocated buffers on mesa platform"));
-    
-    shm_buffer->write(data, size);
-}
+#endif // MIR_EVENT_TYPE_TO_STRING_H_

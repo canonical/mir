@@ -16,6 +16,7 @@ MIRPLATFORM_5 {
     mir::graphics::Buffer::pixel_format*;
     mir::graphics::Buffer::size*;
     mir::graphics::Buffer::stride*;
+    mir::graphics::Buffer::write*;
     mir::graphics::create_guest_platform*;
     mir::graphics::create_host_platform*;
     mir::graphics::Cursor::?Cursor*;
@@ -35,7 +36,6 @@ MIRPLATFORM_5 {
     mir::graphics::DisplayBuffer::operator*;
     mir::graphics::DisplayBuffer::orientation*;
     mir::graphics::DisplayBuffer::post_renderables_if_optimizable*;
-    mir::graphics::DisplayBuffer::post_update*;
     mir::graphics::DisplayBuffer::release_current*;
     mir::graphics::DisplayBuffer::uses_alpha*;
     mir::graphics::DisplayBuffer::view_area*;
@@ -81,17 +81,6 @@ MIRPLATFORM_5 {
     mir::graphics::GraphicBufferAllocator::GraphicBufferAllocator*;
     mir::graphics::GraphicBufferAllocator::operator*;
     mir::graphics::GraphicBufferAllocator::supported_pixel_formats*;
-    mir::graphics::InternalClient::egl_native_display*;
-    mir::graphics::InternalClient::egl_native_window*;
-    mir::graphics::InternalClient::?InternalClient*;
-    mir::graphics::InternalClient::InternalClient*;
-    mir::graphics::InternalClient::operator*;
-    mir::graphics::InternalSurface::?InternalSurface*;
-    mir::graphics::InternalSurface::InternalSurface*;
-    mir::graphics::InternalSurface::operator*;
-    mir::graphics::InternalSurface::pixel_format*;
-    mir::graphics::InternalSurface::size*;
-    mir::graphics::InternalSurface::swap_buffers*;
     mir::graphics::operator*;
     mir::graphics::Platform::create_buffer_allocator*;
     mir::graphics::Platform::create_display*;
@@ -101,7 +90,6 @@ MIRPLATFORM_5 {
     mir::graphics::PlatformIpcOperations::?PlatformIpcOperations*;
     mir::graphics::PlatformIpcOperations::PlatformIpcOperations*;
     mir::graphics::PlatformIpcOperations::unpack_buffer*;
-    mir::graphics::Platform::make_buffer_writer*;
     mir::graphics::Platform::make_ipc_operations*;
     mir::graphics::Platform::operator*;
     mir::graphics::Platform::Platform*;
@@ -177,8 +165,6 @@ MIRPLATFORM_5 {
     non-virtual?thunk?to?mir::graphics::GLConfig::?GLConfig*;
     non-virtual?thunk?to?mir::graphics::GLContext::?GLContext*;
     non-virtual?thunk?to?mir::graphics::GraphicBufferAllocator::?GraphicBufferAllocator*;
-    non-virtual?thunk?to?mir::graphics::InternalClient::?InternalClient*;
-    non-virtual?thunk?to?mir::graphics::InternalSurface::?InternalSurface*;
     non-virtual?thunk?to?mir::graphics::PlatformIpcOperations::?PlatformIpcOperations*;
     non-virtual?thunk?to?mir::graphics::Renderable::?Renderable*;
     non-virtual?thunk?to?mir::options::Configuration::?Configuration*;
@@ -208,8 +194,6 @@ MIRPLATFORM_5 {
     typeinfo?for?mir::graphics::GLConfig;
     typeinfo?for?mir::graphics::GLContext;
     typeinfo?for?mir::graphics::GraphicBufferAllocator;
-    typeinfo?for?mir::graphics::InternalClient;
-    typeinfo?for?mir::graphics::InternalSurface;
     typeinfo?for?mir::graphics::Platform;
     typeinfo?for?mir::graphics::PlatformIpcOperations;
     typeinfo?for?mir::graphics::PlatformIPCPackage;
@@ -237,8 +221,6 @@ MIRPLATFORM_5 {
     vtable?for?mir::graphics::GLConfig;
     vtable?for?mir::graphics::GLContext;
     vtable?for?mir::graphics::GraphicBufferAllocator;
-    vtable?for?mir::graphics::InternalClient;
-    vtable?for?mir::graphics::InternalSurface;
     vtable?for?mir::graphics::Platform;
     vtable?for?mir::graphics::PlatformIpcOperations;
     vtable?for?mir::graphics::PlatformIPCPackage;

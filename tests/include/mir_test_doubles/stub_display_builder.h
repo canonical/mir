@@ -41,7 +41,8 @@ struct StubConfigurableDisplayBuffer : public graphics::android::ConfigurableDis
     geometry::Rectangle view_area() const { return rect; }
     void make_current() {}
     void release_current() {}
-    void post_update() {}
+    void gl_swap_buffers() {}
+    void flip() {}
     bool post_renderables_if_optimizable(graphics::RenderableList const&) { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal; }
     bool uses_alpha() const override { return false; };
@@ -63,6 +64,7 @@ private:
 struct MockHwcConfiguration : public graphics::android::HwcConfiguration
 {
     MOCK_METHOD2(power_mode, void(graphics::android::DisplayName, MirPowerMode));
+    MOCK_METHOD1(active_attribs_for, graphics::android::DisplayAttribs(graphics::android::DisplayName));
 };
 
 struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder

@@ -139,9 +139,13 @@ void mgo::DisplayBuffer::release_current()
     egl_context.release_current();
 }
 
-void mgo::DisplayBuffer::post_update()
+void mgo::DisplayBuffer::gl_swap_buffers()
 {
     glFinish();
+}
+
+void mgo::DisplayBuffer::flip()
+{
 }
 
 bool mgo::DisplayBuffer::post_renderables_if_optimizable(RenderableList const&)

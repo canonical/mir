@@ -1,7 +1,9 @@
-MIR_CLIENTPLATFORM_1 {
-  global: 
-    create_client_platform_factory;
+MIR_CLIENT_PLATFORM_2 {
+  global:
+    create_client_platform;
+    is_appropriate_module;
     # Needed by our Mesa EGL platform
     mir_client_mesa_egl_native_display_is_valid;
-  local: *;
+  local:
+    *;
 };

@@ -109,7 +109,6 @@ class Platform;
 class Display;
 class DisplayReport;
 class GraphicBufferAllocator;
-class BufferWriter;
 class Cursor;
 class CursorImage;
 class GLConfig;
@@ -217,7 +216,6 @@ public:
      * dependencies of compositor on the rest of the Mir
      *  @{ */
     virtual std::shared_ptr<graphics::GraphicBufferAllocator> the_buffer_allocator();
-    virtual std::shared_ptr<graphics::BufferWriter> the_buffer_writer();
     virtual std::shared_ptr<compositor::Scene>                  the_scene();
     virtual std::shared_ptr<compositor::FrameDroppingPolicyFactory> the_frame_dropping_policy_factory();
     /** @} */
@@ -378,7 +376,6 @@ protected:
     CachedPtr<input::TouchVisualizer> touch_visualizer;
     CachedPtr<graphics::Platform>     graphics_platform;
     CachedPtr<graphics::GraphicBufferAllocator> buffer_allocator;
-    CachedPtr<graphics::BufferWriter> buffer_writer;
     CachedPtr<graphics::Display>      display;
     CachedPtr<graphics::Cursor>       cursor;
     CachedPtr<graphics::CursorImage>  default_cursor_image;

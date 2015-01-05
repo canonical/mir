@@ -24,8 +24,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-namespace mga=mir::graphics::android;
-namespace mtd=mir::test::doubles;
+namespace mga = mir::graphics::android;
+namespace mtd = mir::test::doubles;
+namespace geom = mir::geometry;
 
 struct HwcWrapper : public ::testing::Test
 {
@@ -248,4 +249,39 @@ TEST_F(HwcWrapper, turns_vsync_off)
     EXPECT_THROW({
         wrapper.vsync_signal_off(mga::DisplayName::primary);
     }, std::runtime_error);
+}
+
+TEST_F(HwcWrapper, accesses_display_config)
+{
+    using namespace testing;
+    std::array<uint32_t, 3> id_array{ 5u, 7u, 10u };
+    std::vector<mga::ConfigId> ids{id_array.size()};
+    auto array_it = id_array.begin();
+    for( auto& id : ids )
+        id = mga::ConfigId{*array_it++};
+
+    EXPECT_CALL(*mock_device, getDisplayConfigs_interface(
+        mock_device.get(), HWC_DISPLAY_PRIMARY, _, Pointee(Gt(0))))
+            .WillOnce(DoAll(
+                SetArrayArgument<2>(id_array.begin(), id_array.end()),
+                SetArgPointee<3>(id_array.size()),
+                Return(0)))
+            .WillOnce(Return(-1));
+
+    mga::RealHwcWrapper wrapper(mock_device, mock_report);
+    EXPECT_THAT(wrapper.display_configs(mga::DisplayName::primary), Eq(ids));
+    EXPECT_THAT(wrapper.display_configs(mga::DisplayName::primary), IsEmpty());
+}
+
+TEST_F(HwcWrapper, calls_access_functions)
+{
+    uint32_t* attributes{nullptr};
+    int32_t* values{nullptr};
+    mga::ConfigId hwc_config{3};
+
+    EXPECT_CALL(*mock_device, getDisplayAttributes_interface(
+        mock_device.get(), HWC_DISPLAY_PRIMARY, hwc_config.as_value(), attributes, values));
+
+    mga::RealHwcWrapper wrapper(mock_device, mock_report);
+    wrapper.display_attributes(mga::DisplayName::primary, hwc_config, attributes, values);
 }

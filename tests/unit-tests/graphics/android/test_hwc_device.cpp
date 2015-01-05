@@ -50,11 +50,6 @@ namespace mt=mir::test;
 
 namespace
 {
-struct StubConfig : public mga::HwcConfiguration
-{
-    void power_mode(mga::DisplayName, MirPowerMode) {}
-};
-
 struct MockFileOps : public mga::SyncFileOps
 {
     MOCK_METHOD3(ioctl, int(int,int,void*));
@@ -104,8 +99,7 @@ struct HwcDevice : public ::testing::Test
         mock_device(std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>()),
         stub_context{stub_fb_buffer},
         renderlist({stub_renderable1, stub_renderable2}),
-        layer_adapter{std::make_shared<mga::IntegerSourceCrop>()},
-        stub_config{std::make_shared<StubConfig>()}
+        layer_adapter{std::make_shared<mga::IntegerSourceCrop>()}
     {
         fill_hwc_layer(layer, &comp_rect, position1, *stub_buffer1, HWC_FRAMEBUFFER, 0);
         fill_hwc_layer(layer2, &comp2_rect, position2, *stub_buffer2, HWC_FRAMEBUFFER, 0);
@@ -151,7 +145,6 @@ struct HwcDevice : public ::testing::Test
     mtd::StubSwappingGLContext stub_context;
     mg::RenderableList renderlist;
     std::shared_ptr<mga::LayerAdapter> const layer_adapter;
-    std::shared_ptr<mga::HwcConfiguration> const stub_config;
 };
 }
 

@@ -96,9 +96,13 @@ bool mga::DisplayBuffer::post_renderables_if_optimizable(RenderableList const& r
     return display_device->post_overlays(gl_context, renderlist, overlay_program);
 }
 
-void mga::DisplayBuffer::post_update()
+void mga::DisplayBuffer::gl_swap_buffers()
 {
     display_device->post_gl(gl_context);
+}
+
+void mga::DisplayBuffer::flip()
+{
 }
 
 MirOrientation mga::DisplayBuffer::orientation() const

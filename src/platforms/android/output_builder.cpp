@@ -27,6 +27,7 @@
 #include "hwc_report.h"
 #include "hwc_configuration.h"
 #include "hwc_layers.h"
+#include "hwc_configuration.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"
@@ -58,14 +59,18 @@ mga::OutputBuilder::OutputBuilder(
     if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
     {
         fb_native = res_factory->create_fb_native_device();
-        framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, fb_native);
+        mga::FbControl fb_control{fb_native};
+        auto attribs = fb_control.active_attribs_for(mga::DisplayName::primary);
+        framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, attribs.pixel_size, attribs.vrefresh_hz, fb_native);
     }
     else
     {
         mga::PropertiesOps ops;
         mga::DeviceQuirks quirks(ops);
+        mga::HwcBlankingControl hwc_config{hwc_wrapper};
+        auto attribs = hwc_config.active_attribs_for(mga::DisplayName::primary);
         framebuffers = std::make_shared<mga::Framebuffers>(
-            buffer_allocator, hwc_native, quirks.num_framebuffers());
+            buffer_allocator, attribs.pixel_size, attribs.vrefresh_hz, quirks.num_framebuffers());
     }
 }
 
