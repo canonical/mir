@@ -88,10 +88,12 @@ TEST_F(AndroidDisplay, display_can_post)
         gl_animation.init_gl();
 
         gl_animation.render_gl();
-        buffer.post_update();
+        buffer.gl_swap_buffers();
+        buffer.flip();
 
         gl_animation.render_gl();
-        buffer.post_update();
+        buffer.gl_swap_buffers();
+        buffer.flip();
     });
 }
 

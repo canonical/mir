@@ -23,6 +23,12 @@ add_subdirectory(server/)
 add_subdirectory(client/)
 add_subdirectory(utils/)
 
+add_executable(wrapper wrapper.c)
+set_property(TARGET wrapper
+             APPEND_STRING PROPERTY COMPILE_FLAGS " -DEXECUTABLE_FORMAT=\\\".%s-uninstalled\\\"")
+set_property(TARGET wrapper
+             APPEND_STRING PROPERTY COMPILE_FLAGS " -D_BSD_SOURCE")
+
 set(
   MIR_GENERATED_INCLUDE_DIRECTORIES
   ${MIR_GENERATED_INCLUDE_DIRECTORIES}

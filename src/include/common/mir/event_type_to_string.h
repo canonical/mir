@@ -16,9 +16,15 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_
-#define MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_
+#ifndef MIR_EVENT_TYPE_TO_STRING_H_
+#define MIR_EVENT_TYPE_TO_STRING_H_
 
-#include "mir_toolkit/events/event.h"
+#include <string>
+#include "mir_toolkit/client_types.h"
 
-#endif /* MIR_TOOLKIT_EVENT_COMPAT_HEADER_H_ */
+namespace mir
+{
+std::string event_type_to_string(MirEventType t);
+}
+
+#endif // MIR_EVENT_TYPE_TO_STRING_H_

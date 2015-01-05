@@ -61,14 +61,14 @@ private:
         TimePoint start_of_frame;
         TimePoint end_of_frame;
         TimePoint total_time_sum;
-        TimePoint frame_time_sum;
+        TimePoint render_time_sum;
         TimePoint latency_sum;
         long nframes = 0;
         long nbypassed = 0;
         bool prev_bypassed = false;
 
         TimePoint last_reported_total_time_sum;
-        TimePoint last_reported_frame_time_sum;
+        TimePoint last_reported_render_time_sum;
         TimePoint last_reported_latency_sum;
         long last_reported_nframes = 0;
         long last_reported_bypassed = 0;

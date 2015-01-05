@@ -57,7 +57,8 @@ public:
     geometry::Rectangle view_area() const override;
     void make_current() override;
     void release_current() override;
-    void post_update() override;
+    void gl_swap_buffers() override;
+    void flip() override;
     bool post_renderables_if_optimizable(RenderableList const& renderlist) override;
 
     MirOrientation orientation() const override;
@@ -67,7 +68,7 @@ public:
     void wait_for_page_flip();
 
 private:
-    bool post_update(std::shared_ptr<graphics::Buffer> bypass_buf);
+    bool flip(std::shared_ptr<graphics::Buffer> bypass_buf);
 
     BufferObject* get_front_buffer_object();
     BufferObject* get_buffer_object(struct gbm_bo *bo);

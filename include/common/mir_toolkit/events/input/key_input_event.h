@@ -48,30 +48,6 @@ typedef enum {
 } MirKeyInputEventAction;
 
 /**
- * Description of key modifier state.
- */
-typedef enum {
-    mir_key_input_event_modifier_none        = 1 << 0,
-    mir_key_input_event_modifier_alt         = 1 << 1,
-    mir_key_input_event_modifier_alt_left    = 1 << 2,
-    mir_key_input_event_modifier_alt_right   = 1 << 3,
-    mir_key_input_event_modifier_shift       = 1 << 4,
-    mir_key_input_event_modifier_shift_left  = 1 << 5,
-    mir_key_input_event_modifier_shift_right = 1 << 6,
-    mir_key_input_event_modifier_sym         = 1 << 7,
-    mir_key_input_event_modifier_function    = 1 << 8,
-    mir_key_input_event_modifier_ctrl        = 1 << 9,
-    mir_key_input_event_modifier_ctrl_left   = 1 << 10,
-    mir_key_input_event_modifier_ctrl_right  = 1 << 11,
-    mir_key_input_event_modifier_meta        = 1 << 12,
-    mir_key_input_event_modifier_meta_left   = 1 << 13,
-    mir_key_input_event_modifier_meta_right  = 1 << 14,
-    mir_key_input_event_modifier_caps_lock   = 1 << 15,
-    mir_key_input_event_modifier_num_lock    = 1 << 16,
-    mir_key_input_event_modifier_scroll_lock = 1 << 17
-} MirKeyInputEventModifiers;
-
-/**
  * Retrieve the action which triggered a given key event.
  * 
  *  \param [in] event The key event
@@ -103,7 +79,7 @@ int mir_key_input_event_get_scan_code(MirKeyInputEvent const* event);
  *   \param [in] event The key event
  *   \return           The modifier mask
  */
-MirKeyInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const* event);
+MirInputEventModifiers mir_key_input_event_get_modifiers(MirKeyInputEvent const* event);
 
 #ifdef __cplusplus
 }
