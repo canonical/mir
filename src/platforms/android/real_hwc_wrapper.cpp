@@ -176,11 +176,13 @@ void mga::RealHwcWrapper::subscribe_to_events(
         std::function<void(DisplayName, bool)> const& hotplug,
         std::function<void()> const& invalidate)
 {
+    std::unique_lock<std::mutex> lk(callback_map_lock);
     callback_map[subscriber] = {vsync, hotplug, invalidate};
 }
 
 void mga::RealHwcWrapper::unsubscribe_from_events(void const* subscriber) noexcept
 {
+    std::unique_lock<std::mutex> lk(callback_map_lock);
     auto it = callback_map.find(subscriber);
     if (it != callback_map.end())
         callback_map.erase(it);
@@ -188,18 +190,21 @@ void mga::RealHwcWrapper::unsubscribe_from_events(void const* subscriber) noexce
 
 void mga::RealHwcWrapper::vsync(DisplayName name, std::chrono::nanoseconds timestamp)
 {
+    std::unique_lock<std::mutex> lk(callback_map_lock);
     for(auto const& callbacks : callback_map)
         callbacks.second.vsync(name, timestamp);
 }
 
 void mga::RealHwcWrapper::hotplug(DisplayName name, bool connected)
 {
+    std::unique_lock<std::mutex> lk(callback_map_lock);
     for(auto const& callbacks : callback_map)
         callbacks.second.hotplug(name, connected);
 }
 
 void mga::RealHwcWrapper::invalidate()
 {
+    std::unique_lock<std::mutex> lk(callback_map_lock);
     for(auto const& callbacks : callback_map)
         callbacks.second.invalidate();
 }
