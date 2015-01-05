@@ -29,6 +29,8 @@
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"
+#include <boost/throw_exception.hpp>
+#include <stdexcept>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
@@ -98,11 +100,16 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
                     hwc_wrapper, std::make_shared<mga::IntegerSourceCrop>());
             break;
 
-            default:
             case mga::HwcVersion::hwc13:
                 device = res_factory->create_hwc_device(
                     hwc_wrapper, std::make_shared<mga::FloatSourceCrop>());
             break;
+
+            case mga::HwcVersion::hwc14:
+            case mga::HwcVersion::unknown:
+            default:
+                BOOST_THROW_EXCEPTION(std::runtime_error("unknown or unsupported hwc version"));
+
         }
 
         hwc_report->report_hwc_version(hwc_version);

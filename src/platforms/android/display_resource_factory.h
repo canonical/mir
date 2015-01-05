@@ -45,7 +45,8 @@ enum HwcVersion
     hwc11,
     hwc12,
     hwc13,
-    hwc14
+    hwc14,
+    unknown
 };
 
 class DisplayResourceFactory
