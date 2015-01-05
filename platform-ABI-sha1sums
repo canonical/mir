@@ -48,7 +48,7 @@ f53a0020b8f1bd4a941a201eb26271cffee0a7dd  include/platform/mir/graphics/display_
 5dc095474ef3e294c0aa4008e9ed997bdb21d34c  include/platform/mir/graphics/gl_config.h
 d0442a5d5d88a4be6e3e1f99e433c1c43a86bfce  include/platform/mir/graphics/gl_context.h
 979d2c1ac723ccef538d9a378228a02b0f173bd7  include/platform/mir/graphics/graphic_buffer_allocator.h
-48d0a5b23bb217f714a86ec9a1afc470c1e4dc85  include/platform/mir/graphics/platform.h
+5d72b98aecb0611060dec8995dbe017a342f7069  include/platform/mir/graphics/platform.h
 d1ba61e687d75103e9e7aa0409080214f56a990b  include/platform/mir/graphics/platform_ipc_operations.h
 1b77fb3290af00dc7d1c11dcc5388972dacb9ec3  include/platform/mir/graphics/platform_ipc_package.h
 f0db0484b8ccc9091e73c80a2a200cb436b48bfb  include/platform/mir/graphics/platform_operation_message.h
