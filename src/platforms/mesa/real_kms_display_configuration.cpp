@@ -58,7 +58,6 @@ double calculate_vrefresh_hz(drmModeModeInfo const& mode)
                  ((long)mode.htotal * (long)mode.vtotal)
                 ) / 100.0;
 
-    fprintf(stderr, "Got %f instead of %u\n", hz, mode.vrefresh);
     // Actually we don't need floating point at all for this...
     // TODO: Consider converting our structs to fixed-point ints
     return hz;
