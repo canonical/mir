@@ -1,20 +1,12 @@
 project(mir_stress)
 
-set(SOURCES
-	src/client.cpp
-	src/mir-stress.cpp
-	src/results.cpp
-	src/threading.cpp
-	)
-
-add_executable(mir_stress ${SOURCES})
-
-target_link_libraries(
-  mir_stress
-
-  mirclient
+mir_add_wrapped_executable(mir_stress
+  src/client.cpp
+  src/mir-stress.cpp
+  src/results.cpp
+  src/threading.cpp
 )
-install(
-	TARGETS mir_stress
-	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+
+target_link_libraries(mir_stress 
+  mirclient
 )

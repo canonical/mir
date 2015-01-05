@@ -7,13 +7,13 @@ include_directories(
 )
 
 # Note that production binaries don't have underscores in their names
-add_executable(mirping ping.c)
+mir_add_wrapped_executable(mirping ping.c)
 target_link_libraries(mirping mirclient)
 
-add_executable(mirout out.c)
+mir_add_wrapped_executable(mirout out.c)
 target_link_libraries(mirout mirclient)
 
-add_executable(mirscreencast screencast.cpp)
+mir_add_wrapped_executable(mirscreencast screencast.cpp)
 
 target_link_libraries(mirscreencast
   mirclient
@@ -21,9 +21,3 @@ target_link_libraries(mirscreencast
   ${GLESv2_LIBRARIES}
 )
 
-install(TARGETS
-  mirping
-  mirout
-  mirscreencast
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
