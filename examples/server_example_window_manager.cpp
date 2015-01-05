@@ -52,7 +52,7 @@ using namespace mir::geometry;
 
 namespace
 {
-class WindowManager : public ms::PlacementStrategy
+class WindowManager : public virtual ms::PlacementStrategy
 {
 public:
 
@@ -71,20 +71,12 @@ public:
     virtual void remove_display(Rectangle const& area) = 0;
 };
 
-class FullscreenWindowManager : public WindowManager
+class FullscreenWindowManager : public WindowManager, me::FullscreenPlacementStrategy
 {
 public:
-    FullscreenWindowManager(
-        std::shared_ptr<mir::shell::DisplayLayout> const& display_layout)
-      : placement_strategy{display_layout} {}
+    using me::FullscreenPlacementStrategy::FullscreenPlacementStrategy;
 
 private:
-    auto place(ms::Session const& session, ms::SurfaceCreationParameters const& request_parameters)
-    -> ms::SurfaceCreationParameters override
-    {
-        return placement_strategy.place(session, request_parameters);
-    }
-
     void add_surface(std::shared_ptr<ms::Surface> const&, ms::Session*) override {}
 
     void remove_surface(std::weak_ptr<ms::Surface> const&) override {}
@@ -96,8 +88,6 @@ private:
     void add_display(Rectangle const&) override {}
 
     void remove_display(Rectangle const&) override {}
-
-    me::FullscreenPlacementStrategy placement_strategy;
 };
 
 class TilingWindowManager : public WindowManager
