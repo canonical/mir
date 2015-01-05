@@ -105,8 +105,3 @@ std::shared_ptr<mg::PlatformIpcOperations> VsyncSimulatingPlatform::make_ipc_ope
 {
     return std::make_shared<mtd::NullPlatformIpcOperations>();
 }
-
-std::shared_ptr<mg::InternalClient> VsyncSimulatingPlatform::create_internal_client()
-{
-    return nullptr;
-}
