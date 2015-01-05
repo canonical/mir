@@ -23,7 +23,7 @@
 #include "mir_connection.h"
 #include "mir/raii.h"
 
-#include "api_helpers.h"
+#include "uncaught.h"
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>

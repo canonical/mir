@@ -29,7 +29,7 @@
 #include "default_connection_configuration.h"
 #include "display_configuration.h"
 #include "error_connections.h"
-#include "api_helpers.h"
+#include "uncaught.h"
 
 
 #include <unordered_set>

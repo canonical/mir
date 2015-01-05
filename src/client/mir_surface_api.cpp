@@ -25,7 +25,7 @@
 #include "mir_connection.h"
 #include "mir_surface.h"
 #include "error_connections.h"
-#include "api_helpers.h"
+#include "uncaught.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <functional>
