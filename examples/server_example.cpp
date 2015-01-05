@@ -91,7 +91,6 @@ try
     me::add_display_configuration_options_to(server);
     me::add_log_host_lifecycle_option_to(server);
     me::add_glog_options_to(server);
-    me::add_fullscreen_option_to(server);
     me::add_window_manager_option_to(server);
     add_launcher_option_to(server);
     add_timeout_option_to(server);
