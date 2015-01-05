@@ -216,19 +216,26 @@ private:
     std::multimap<mf::Session const*, std::weak_ptr<ms::Surface>> surfaces;
 };
 
+auto const option = "window-manager";
+auto const description = "window management strategy [tiling]";
 auto const tiling = "tiling";
 
 class WindowManagmentFactory
 {
 public:
-    auto window_manager(std::string const& option) -> std::shared_ptr<WindowManager>
+    explicit WindowManagmentFactory(mir::Server& server) : server{server} {}
+
+    auto window_manager() -> std::shared_ptr<WindowManager>
     {
         auto tmp = wm.lock();
 
         if (!tmp)
         {
-            if (option != tiling)
-                throw mir::AbnormalExit("Unknown window manager: " + option);
+            auto const options = server.get_options();
+            auto const selection = options->get<std::string>(option);
+
+            if (selection != tiling)
+                throw mir::AbnormalExit("Unknown window manager: " + selection);
 
             tmp = std::make_shared<TilingWindowManager>();
             wm = tmp;
@@ -238,6 +245,7 @@ public:
     }
 
 private:
+    mir::Server& server;
     std::weak_ptr<WindowManager> wm;
 };
 
@@ -356,12 +364,9 @@ private:
 
 void me::add_window_manager_option_to(Server& server)
 {
-    static auto const option = "window-manager";
-    static auto const description = "window management strategy [tiling]";
-
     server.add_configuration_option(option, description, mir::OptionType::string);
 
-    auto const factory = std::make_shared<WindowManagmentFactory>();
+    auto const factory = std::make_shared<WindowManagmentFactory>(server);
 
     server.override_the_placement_strategy([factory, &server]()
         -> std::shared_ptr<ms::PlacementStrategy>
@@ -371,7 +376,7 @@ void me::add_window_manager_option_to(Server& server)
             if (!options->is_set(option))
                 return std::shared_ptr<ms::PlacementStrategy>{};
 
-            return factory->window_manager(options->get<std::string>(option));
+            return factory->window_manager();
         });
 
     server.wrap_session_coordinator([factory, &server]
@@ -383,7 +388,7 @@ void me::add_window_manager_option_to(Server& server)
             if (!options->is_set(option))
                 return wrapped;
 
-            return std::make_shared<SessionTracker>(wrapped, factory->window_manager(options->get<std::string>(option)));
+            return std::make_shared<SessionTracker>(wrapped, factory->window_manager());
         });
 
     server.wrap_surface_coordinator([factory, &server]
@@ -395,7 +400,7 @@ void me::add_window_manager_option_to(Server& server)
             if (!options->is_set(option))
                 return wrapped;
 
-            return std::make_shared<SurfaceTracker>(wrapped, factory->window_manager(options->get<std::string>(option)));
+            return std::make_shared<SurfaceTracker>(wrapped, factory->window_manager());
         });
 
     server.wrap_display_buffer_compositor_factory([factory, &server]
@@ -407,6 +412,6 @@ void me::add_window_manager_option_to(Server& server)
            if (!options->is_set(option))
                return wrapped;
 
-           return std::make_shared<DisplayTrackerFactory>(wrapped, factory->window_manager(options->get<std::string>(option)));
+           return std::make_shared<DisplayTrackerFactory>(wrapped, factory->window_manager());
        });
 }
