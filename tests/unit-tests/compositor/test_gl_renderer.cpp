@@ -71,6 +71,7 @@ const GLint alpha_uniform_location = 2;
 const GLint position_attr_location = 3;
 const GLint texcoord_attr_location = 4;
 const GLint screen_to_gl_coords_uniform_location = 5;
+const GLint tex_uniform_location = 6;
 const GLint display_transform_uniform_location = 7;
 const GLint centre_uniform_location = 8;
 const std::string stub_info_log = "something failed!";
@@ -85,6 +86,8 @@ void SetUpMockProgramData(mtd::MockGL &mock_gl)
     ON_CALL(mock_gl, glGetAttribLocation(stub_program, "texcoord"))
         .WillByDefault(Return(texcoord_attr_location));
 
+    ON_CALL(mock_gl, glGetUniformLocation(stub_program, "tex"))
+        .WillByDefault(Return(tex_uniform_location));
     ON_CALL(mock_gl, glGetUniformLocation(stub_program, "centre"))
         .WillByDefault(Return(centre_uniform_location));
     ON_CALL(mock_gl, glGetUniformLocation(stub_program, "display_transform"))

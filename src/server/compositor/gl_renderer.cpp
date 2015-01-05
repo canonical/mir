@@ -93,6 +93,7 @@ mc::GLRenderer::Program::Program(GLuint program_id)
     id = program_id;
     position_attr = glGetAttribLocation(id, "position");
     texcoord_attr = glGetAttribLocation(id, "texcoord");
+    tex_uniform = glGetUniformLocation(id, "tex");
     centre_uniform = glGetUniformLocation(id, "centre");
     display_transform_uniform = glGetUniformLocation(id, "display_transform");
     transform_uniform = glGetUniformLocation(id, "transform");
@@ -124,6 +125,12 @@ mc::GLRenderer::GLRenderer(
         auto val = reinterpret_cast<char const*>(glGetString(s.id));
         if (!val) val = "";
         mir::log_info("%s: %s", s.label, val);
+    }
+
+    for (auto& p : programs)
+    {
+        glUseProgram(p.id);
+        glUniform1i(p.tex_uniform, 0);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
