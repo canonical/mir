@@ -236,7 +236,7 @@ private:
 };
 
 auto const option = "window-manager";
-auto const description = "window management strategy [tiling|fullscreen]";
+auto const description = "window management strategy [{tiling|fullscreen}]";
 auto const tiling = "tiling";
 auto const fullscreen = "fullscreen";
 
