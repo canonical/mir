@@ -34,7 +34,7 @@ class DisplayLayout;
 
 namespace examples
 {
-class FullscreenPlacementStrategy : public scene::PlacementStrategy
+class FullscreenPlacementStrategy : public virtual scene::PlacementStrategy
 {
 public:
     FullscreenPlacementStrategy(std::shared_ptr<shell::DisplayLayout> const& display_layout);
