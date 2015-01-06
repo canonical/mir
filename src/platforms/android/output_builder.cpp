@@ -28,6 +28,9 @@
 #include "hwc_configuration.h"
 #include "hwc_layers.h"
 #include "hwc_configuration.h"
+#include "hwc_vsync.h"
+#include "hwc_device.h"
+#include "hwc_fb_device.h"
 
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"
@@ -57,70 +60,49 @@ mga::OutputBuilder::OutputBuilder(
     }
 
     if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
-    {
         fb_native = res_factory->create_fb_native_device();
-        mga::FbControl fb_control{fb_native};
-        auto attribs = fb_control.active_attribs_for(mga::DisplayName::primary);
-        framebuffers = std::make_shared<mga::Framebuffers>(buffer_allocator, attribs.pixel_size, attribs.vrefresh_hz, fb_native);
-    }
-    else
-    {
-        mga::PropertiesOps ops;
-        mga::DeviceQuirks quirks(ops);
-        mga::HwcBlankingControl hwc_config{hwc_wrapper};
-        auto attribs = hwc_config.active_attribs_for(mga::DisplayName::primary);
-        framebuffers = std::make_shared<mga::Framebuffers>(
-            buffer_allocator, attribs.pixel_size, attribs.vrefresh_hz, quirks.num_framebuffers());
-    }
 }
 
-MirPixelFormat mga::OutputBuilder::display_format()
+std::unique_ptr<mga::FramebufferBundle> mga::OutputBuilder::create_framebuffers(mga::DisplayAttribs const& attribs)
 {
-    return framebuffers->fb_format();
+    return std::unique_ptr<mga::FramebufferBundle>(new mga::Framebuffers(
+        *buffer_allocator,
+        attribs.pixel_size,
+        attribs.display_format,
+        attribs.vrefresh_hz, attribs.num_framebuffers));
 }
 
-std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_display_buffer(
-    GLProgramFactory const& gl_program_factory,
-    GLContext const& gl_context)
+std::unique_ptr<mga::DisplayDevice> mga::OutputBuilder::create_display_device()
 {
-    std::shared_ptr<mga::DisplayDevice> device;
     if (force_backup_display)
     {
-        device = res_factory->create_fb_device(fb_native);
         hwc_report->report_legacy_fb_module();
+        return std::unique_ptr<mga::DisplayDevice>{new mga::FBDevice(fb_native)};
     }
     else
     {
+        hwc_report->report_hwc_version(hwc_native->common.version);
         switch (hwc_native->common.version)
         {
             case HWC_DEVICE_API_VERSION_1_0:
-                device = res_factory->create_hwc_fb_device(hwc_wrapper, fb_native);
-            break;
-
+                return std::unique_ptr<mga::DisplayDevice>{
+                    new mga::HwcFbDevice(hwc_wrapper, fb_native, std::make_shared<mga::HWCVsync>())};
             case HWC_DEVICE_API_VERSION_1_1:
             case HWC_DEVICE_API_VERSION_1_2:
-                device = res_factory->create_hwc_device(
-                    hwc_wrapper, std::make_shared<mga::IntegerSourceCrop>());
-            break;
-
+               return std::unique_ptr<mga::DisplayDevice>(
+                    new mga::HwcDevice(
+                        hwc_wrapper,
+                        std::make_shared<mga::HWCVsync>(),
+                        std::make_shared<mga::IntegerSourceCrop>()));
             default:
             case HWC_DEVICE_API_VERSION_1_3:
-                device = res_factory->create_hwc_device(
-                    hwc_wrapper, std::make_shared<mga::FloatSourceCrop>());
-            break;
+               return std::unique_ptr<mga::DisplayDevice>(
+                    new mga::HwcDevice(
+                        hwc_wrapper,
+                        std::make_shared<mga::HWCVsync>(),
+                        std::make_shared<mga::FloatSourceCrop>()));
         }
-
-        hwc_report->report_hwc_version(hwc_native->common.version);
     }
-
-    auto native_window = res_factory->create_native_window(framebuffers);
-    return std::unique_ptr<mga::DisplayBuffer>(new DisplayBuffer(
-        framebuffers,
-        device,
-        native_window,
-        gl_context,
-        gl_program_factory,
-        overlay_optimization));
 }
 
 std::unique_ptr<mga::HwcConfiguration> mga::OutputBuilder::create_hwc_configuration()

@@ -67,7 +67,7 @@ protected:
             buffer_allocator, display_resource_factory, mga::OverlayOptimization::enabled, report);
         auto program_factory = std::make_shared<mg::ProgramFactory>();
         display = std::make_shared<mga::Display>(
-            display_buffer_factory, program_factory, stub_gl_config, null_display_report);
+            display_buffer_factory, program_factory, stub_gl_config, null_display_report, mga::OverlayOptimization::enabled);
     }
 
     static void TearDownTestCase()

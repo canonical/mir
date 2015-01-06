@@ -46,12 +46,11 @@ struct FBDevice : public ::testing::Test
     {
         using namespace testing;
 
-        width = 413;
-        height = 516;
         fbnum = 4;
         format = HAL_PIXEL_FORMAT_RGBA_8888;
 
-        fb_hal_mock = std::make_shared<NiceMock<mtd::MockFBHalDevice>>(width, height, format, fbnum);
+        fb_hal_mock = std::make_shared<NiceMock<mtd::MockFBHalDevice>>(
+            display_size.width.as_int(), display_size.height.as_int(), format, fbnum);
         mock_buffer = std::make_shared<NiceMock<mtd::MockBuffer>>();
         native_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
         ON_CALL(*mock_buffer, native_buffer_handle())
@@ -60,7 +59,8 @@ struct FBDevice : public ::testing::Test
             .WillByDefault(Return(mock_buffer));
     }
 
-    unsigned int width, height, format, fbnum;
+    unsigned int format, fbnum;
+    geom::Size display_size{413, 516};
     std::shared_ptr<mtd::MockFBHalDevice> fb_hal_mock;
     std::shared_ptr<mtd::MockBuffer> mock_buffer;
     std::shared_ptr<mir::graphics::NativeBuffer> native_buffer;
@@ -129,4 +129,23 @@ TEST_F(FBDevice, can_screen_on_off)
     EXPECT_THROW({
         fb_control.power_mode(mga::DisplayName::external, mir_power_mode_on);
     }, std::runtime_error);
+}
+
+TEST_F(FBDevice, bundle_from_fb)
+{
+    using namespace testing;
+    mga::FbControl fb_control(fb_hal_mock);
+    auto attribs = fb_control.active_attribs_for(mga::DisplayName::primary);
+    EXPECT_EQ(display_size, attribs.pixel_size);
+    EXPECT_EQ(mir_pixel_format_abgr_8888, attribs.display_format);
+    EXPECT_EQ(fbnum, attribs.num_framebuffers);
+}
+
+//some drivers incorrectly report 0 buffers available. request 2 fbs in this case.
+TEST_F(FBDevice, determine_fbnum_always_reports_2_minimum)
+{
+    auto slightly_malformed_fb_hal_mock = std::make_shared<mtd::MockFBHalDevice>(
+        display_size.width.as_int(), display_size.height.as_int(), format, 0);
+    mga::FbControl fb_control(slightly_malformed_fb_hal_mock);
+    EXPECT_EQ(2u, fb_control.active_attribs_for(mga::DisplayName::primary).num_framebuffers);
 }

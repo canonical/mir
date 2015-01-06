@@ -22,6 +22,8 @@
 #include "src/platforms/android/display_buffer_builder.h"
 #include "src/platforms/android/configurable_display_buffer.h"
 #include "src/platforms/android/hwc_configuration.h"
+#include "mock_display_device.h"
+#include "mock_framebuffer_bundle.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -30,36 +32,6 @@ namespace test
 {
 namespace doubles
 {
-
-struct StubConfigurableDisplayBuffer : public graphics::android::ConfigurableDisplayBuffer
-{
-    StubConfigurableDisplayBuffer(geometry::Rectangle rect)
-     : rect(rect)
-    {
-    }
-
-    geometry::Rectangle view_area() const { return rect; }
-    void make_current() {}
-    void release_current() {}
-    void gl_swap_buffers() {}
-    void flip() {}
-    bool post_renderables_if_optimizable(graphics::RenderableList const&) { return false; }
-    MirOrientation orientation() const override { return mir_orientation_normal; }
-    bool uses_alpha() const override { return false; };
-    void configure(graphics::DisplayConfigurationOutput const&) {} 
-    graphics::DisplayConfigurationOutput configuration() const
-    {
-        return graphics::DisplayConfigurationOutput{
-                   graphics::DisplayConfigurationOutputId{1},
-                   graphics::DisplayConfigurationCardId{0},
-                   graphics::DisplayConfigurationOutputType::vga,
-                   {}, {}, 0, {}, false, false, {}, 0, mir_pixel_format_abgr_8888, 
-                   mir_power_mode_on,
-                   mir_orientation_normal};
-    }
-private:
-    geometry::Rectangle rect;
-};
 
 struct MockHwcConfiguration : public graphics::android::HwcConfiguration
 {
@@ -80,17 +52,14 @@ struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
     {
     }
 
-    MirPixelFormat display_format()
+    std::unique_ptr<graphics::android::FramebufferBundle> create_framebuffers(graphics::android::DisplayAttribs const&) override
     {
-        return mir_pixel_format_abgr_8888;
+        return std::unique_ptr<graphics::android::FramebufferBundle>(new MockFBBundle());
     }
 
-    std::unique_ptr<graphics::android::ConfigurableDisplayBuffer> create_display_buffer(
-        graphics::GLProgramFactory const&,
-        graphics::android::GLContext const&)
+    std::unique_ptr<graphics::android::DisplayDevice> create_display_device() override
     {
-        return std::unique_ptr<graphics::android::ConfigurableDisplayBuffer>(
-                new StubConfigurableDisplayBuffer(geometry::Rectangle{{0,0},sz}));
+        return std::unique_ptr<graphics::android::DisplayDevice>(new MockDisplayDevice());
     }
 
     std::unique_ptr<graphics::android::HwcConfiguration> create_hwc_configuration() override

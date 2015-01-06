@@ -19,19 +19,18 @@
 #ifndef MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_BUILDER_H_
 #define MIR_GRAPHICS_ANDROID_DISPLAY_BUFFER_BUILDER_H_
 
-#include "configurable_display_buffer.h"
-#include "mir_toolkit/common.h"
+#include "display_device.h"
+#include "framebuffer_bundle.h"
 #include <memory>
 
 namespace mir
 {
 namespace graphics
 {
-class GLProgramFactory;
 namespace android
 {
-class GLContext;
 class HwcConfiguration;
+class DisplayAttribs;
 
 //TODO: this name needs improvement.
 class DisplayBufferBuilder
@@ -39,9 +38,8 @@ class DisplayBufferBuilder
 public:
     virtual ~DisplayBufferBuilder() = default;
 
-    virtual MirPixelFormat display_format() = 0;
-    virtual std::unique_ptr<ConfigurableDisplayBuffer> create_display_buffer(
-        GLProgramFactory const& gl_program_factory, GLContext const& gl_context) = 0;
+    virtual std::unique_ptr<FramebufferBundle> create_framebuffers(DisplayAttribs const&) = 0;
+    virtual std::unique_ptr<DisplayDevice> create_display_device() = 0;
     virtual std::unique_ptr<HwcConfiguration> create_hwc_configuration() = 0;
 
 protected:

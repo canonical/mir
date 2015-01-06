@@ -47,10 +47,8 @@ public:
         OverlayOptimization overlay_option,
         std::shared_ptr<HwcReport> const& hwc_report);
 
-    MirPixelFormat display_format() override;
-    std::unique_ptr<ConfigurableDisplayBuffer> create_display_buffer(
-        GLProgramFactory const& gl_program_factory,
-        GLContext const& gl_context) override;
+    std::unique_ptr<FramebufferBundle> create_framebuffers(DisplayAttribs const&) override;
+    std::unique_ptr<DisplayDevice> create_display_device() override;
     std::unique_ptr<HwcConfiguration> create_hwc_configuration() override;
 
 private:
