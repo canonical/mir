@@ -45,7 +45,11 @@ void GLProgramFamily::Shader::init(GLenum type, const char* src)
     }
 }
 
-GLProgramFamily::~GLProgramFamily()
+GLProgramFamily::GLProgramFamily()
+{
+}
+
+GLProgramFamily::~GLProgramFamily() noexcept
 {
     // shader and program lifetimes are managed manually, so that we don't
     // need any reference counting or to worry about how many copy constructions
