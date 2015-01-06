@@ -76,14 +76,14 @@ private:
 
     std::shared_ptr<DisplayBufferBuilder> const display_buffer_builder;
     PbufferGLContext gl_context;
-    mutable std::mutex configuration_mutex;
-    bool configuration_dirty{false};
+    std::mutex mutable configuration_mutex;
+    bool mutable configuration_dirty{false};
 
     //we only have a primary display at the moment
     std::unique_ptr<ConfigurableDisplayBuffer> const display_buffer;
     std::unique_ptr<HwcConfiguration> const hwc_config;
     ConfigChangeSubscription const hotplug_subscription;
-    DisplayConfigurationOutput primary_configuration;
+    DisplayConfigurationOutput mutable primary_configuration;
 };
 
 }

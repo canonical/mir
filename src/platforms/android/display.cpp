@@ -102,6 +102,11 @@ void mga::Display::for_each_display_buffer(std::function<void(mg::DisplayBuffer&
 std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+    if (configuration_dirty)
+    {
+        primary_configuration = query_config(*hwc_config, display_buffer_builder->display_format());
+        configuration_dirty = false;
+    }
 
     return std::unique_ptr<mg::DisplayConfiguration>(
         new mga::DisplayConfiguration(mg::DisplayConfigurationOutput(primary_configuration)));
