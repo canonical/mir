@@ -349,8 +349,7 @@ TEST_F(Display, configures_power_modes)
     });
 }
 
-//TODO: query for 2nd display on start
-TEST_F(Display, supports_one_output_configuration_at_start)
+TEST_F(Display, returns_correct_config_with_one_output_at_start)
 {
     using namespace testing;
     geom::Size pixel_size{344, 111};
@@ -359,8 +358,10 @@ TEST_F(Display, supports_one_output_configuration_at_start)
 
     stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
     {
-        ON_CALL(mock_config, active_attribs_for(_))
+        ON_CALL(mock_config, active_attribs_for(mga::DisplayName::primary))
             .WillByDefault(Return(mga::DisplayAttribs{pixel_size, physical_size, vrefresh, true}));
+        ON_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
+            .WillByDefault(Return(mga::DisplayAttribs{pixel_size, physical_size, vrefresh, false}));
     });
 
     mga::Display display(
@@ -390,6 +391,60 @@ TEST_F(Display, supports_one_output_configuration_at_start)
     });
 
     EXPECT_EQ(1u, num_configs);
+}
+
+TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start)
+{
+    using namespace testing;
+    auto origin = geom::Point{0,0};
+    geom::Size primary_pixel_size{344, 111}, external_pixel_size{75,5};
+    geom::Size primary_physical_size{4230, 2229}, external_physical_size{1, 22222};
+    double primary_vrefresh{4442.32}, external_vrefresh{0.00001};
+
+    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
+    {
+        ON_CALL(mock_config, active_attribs_for(mga::DisplayName::primary))
+            .WillByDefault(Return(mga::DisplayAttribs{primary_pixel_size, primary_physical_size, primary_vrefresh, true}));
+        ON_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
+            .WillByDefault(Return(mga::DisplayAttribs{external_pixel_size, external_physical_size, external_vrefresh, true}));
+    });
+
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report);
+    auto config = display.configuration();
+
+    std::vector<mg::DisplayConfigurationOutput> outputs;
+    config->for_each_output([&](mg::DisplayConfigurationOutput const& disp_conf) {
+        outputs.push_back(disp_conf);
+    });
+    ASSERT_EQ(2u, outputs.size());
+
+    ASSERT_EQ(1u, outputs[0].modes.size());
+    auto& disp_mode = outputs[0].modes[0];
+    EXPECT_EQ(primary_pixel_size, disp_mode.size);
+    EXPECT_EQ(primary_vrefresh, disp_mode.vrefresh_hz);
+    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, outputs[0].id);
+    EXPECT_EQ(mg::DisplayConfigurationCardId{0}, outputs[0].card_id);
+    EXPECT_TRUE(outputs[0].connected);
+    EXPECT_TRUE(outputs[0].used);
+    EXPECT_EQ(origin, outputs[0].top_left);
+    EXPECT_EQ(0, outputs[0].current_mode_index);
+    EXPECT_EQ(primary_physical_size, outputs[0].physical_size_mm);
+
+    ASSERT_EQ(1u, outputs[1].modes.size());
+    disp_mode = outputs[1].modes[0];
+    EXPECT_EQ(external_pixel_size, disp_mode.size);
+    EXPECT_EQ(external_vrefresh, disp_mode.vrefresh_hz);
+    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, outputs[1].id);
+    EXPECT_EQ(mg::DisplayConfigurationCardId{0}, outputs[1].card_id);
+    EXPECT_TRUE(outputs[1].connected);
+    EXPECT_TRUE(outputs[1].used);
+    EXPECT_EQ(origin, outputs[1].top_left);
+    EXPECT_EQ(0, outputs[1].current_mode_index);
+    EXPECT_EQ(external_physical_size, outputs[1].physical_size_mm);
 }
 
 TEST_F(Display, incorrect_display_configure_throws)
