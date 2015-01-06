@@ -462,12 +462,30 @@ TEST_F(Display, will_requery_display_configuration_after_hotplug)
     using namespace testing;
     std::shared_ptr<void> subscription = std::make_shared<int>(3433);
     std::function<void()> hotplug_fn = []{};
+
+    mga::DisplayAttribs attribs1
+    {
+        {33, 32},
+        {31, 35},
+        0.44,
+        true
+    };
+    mga::DisplayAttribs attribs2
+    {
+        {3, 3},
+        {1, 5},
+        0.5544,
+        true
+    };
+
     stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
     {
         EXPECT_CALL(mock_config, subscribe_to_config_changes(_))
             .WillOnce(DoAll(SaveArg<0>(&hotplug_fn), Return(subscription)));
         EXPECT_CALL(mock_config, active_attribs_for(_))
-            .Times(2);
+            .Times(2)
+            .WillOnce(testing::Return(attribs1))
+            .WillOnce(testing::Return(attribs2));
     });
 
     mga::Display display(
@@ -477,8 +495,14 @@ TEST_F(Display, will_requery_display_configuration_after_hotplug)
         null_display_report);
 
     auto config = display.configuration();
+    config->for_each_output([&](mg::UserDisplayConfigurationOutput const& c){
+        EXPECT_THAT(c.modes[c.current_mode_index].size, Eq(attribs1.pixel_size));
+    });
 
     hotplug_fn();
     config = display.configuration();
     config = display.configuration();
+    config->for_each_output([&](mg::UserDisplayConfigurationOutput const& c){
+        EXPECT_THAT(c.modes[c.current_mode_index].size, Eq(attribs2.pixel_size));
+    });
 }
