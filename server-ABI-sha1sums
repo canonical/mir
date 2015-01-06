@@ -13,7 +13,7 @@ dcf8b8982f138bdde39a241825c610e955cd5e33  include/common/mir/input/input_platfor
 208cd6aed5ef5f8f39b3eb86604e4133cb840485  include/common/mir/input/input_receiver_thread.h
 be7d58c9fde2ce91cc66dd6144b76e08b536266b  include/common/mir/int_wrapper.h
 2de47e2790d0f7643e23eada2d8aa2987f58d086  include/common/mir/logging/logger.h
-38f159ee67cf380ebd2bfee7a98d62bc0397c631  include/common/mir/log.h
+3c9bd47bbe0764d39aa40ddd27a861557ba1d949  include/common/mir/log.h
 31b9c24e2ce7194aeea6694e81c160354033d28a  include/common/mir/optional_value.h
 9ae8473df05dd9e048a73797f01a2f34f7447554  include/common/mir/time/types.h
 3350dac884d6006753de2a955bc7a05663cd9449  include/common/mir_toolkit/client_types.h
@@ -21,7 +21,7 @@ c7c708734715a6d1b6fb2652584adb912071a518  include/common/mir_toolkit/common.h
 fce4c1a9e0d037244f7e9e96ea2d8eaab4fc404c  include/common/mir_toolkit/cursors.h
 f4d39e9893ce6308bddd83a49b90f0051f565323  include/common/mir_toolkit/event.h
 2507f2929415aa423f9551d3c595c439fe1c6efd  include/common/mir_toolkit/events/event_deprecated.h
-d929f623c98b3842ae72059edeba9c89c04edd0f  include/common/mir_toolkit/events/event.h
+cb2358a701db2b9c8d9ba1c877f29f834af259a7  include/common/mir_toolkit/events/event.h
 c591a02a8e9851db342c310cf829d018a1eddb51  include/common/mir_toolkit/events/input/input_event.h
 7748a12138474e9be218eeb8f14b372af0fcec7e  include/common/mir_toolkit/events/input/key_input_event.h
 de7c23453e6d897296f32e49d9ba952a1baa0200  include/common/mir_toolkit/events/input/touch_input_event.h

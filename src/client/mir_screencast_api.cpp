@@ -16,10 +16,14 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "MirScreencastAPI"
+
 #include "mir_toolkit/mir_screencast.h"
 #include "mir_screencast.h"
 #include "mir_connection.h"
 #include "mir/raii.h"
+
+#include "uncaught.h"
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
@@ -70,8 +74,9 @@ MirScreencast* mir_connection_create_screencast_sync(
             screencast_uptr.release();
         }
     }
-    catch (std::exception const&)
+    catch (std::exception const& ex)
     {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
 

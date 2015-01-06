@@ -4,7 +4,7 @@ set(
   test_glmark2-es2-mir.cpp
 )
 
-add_executable(
+mir_add_wrapped_executable(
   mir_performance_tests
 
   ${PERFORMANCE_TESTS_SOURCES}
@@ -22,7 +22,3 @@ target_link_libraries(
   ${GTEST_BOTH_LIBRARIES}
 )
 
-install(
-  TARGETS mir_performance_tests
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
