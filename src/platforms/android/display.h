@@ -71,6 +71,8 @@ public:
     std::unique_ptr<graphics::GLContext> create_gl_context() override;
 
 private:
+    void on_hotplug();
+
     std::shared_ptr<DisplayBufferBuilder> const display_buffer_builder;
     PbufferGLContext gl_context;
     mutable std::mutex configuration_mutex;
@@ -78,6 +80,7 @@ private:
     //we only have a primary display at the moment
     std::unique_ptr<ConfigurableDisplayBuffer> const display_buffer;
     std::unique_ptr<HwcConfiguration> const hwc_config;
+    ConfigChangeSubscription const hotplug_subscription;
 };
 
 }

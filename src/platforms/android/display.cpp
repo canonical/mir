@@ -49,7 +49,8 @@ mga::Display::Display(
     display_buffer_builder{display_buffer_builder},
     gl_context{display_buffer_builder->display_format(), *gl_config, *display_report},
     display_buffer{display_buffer_builder->create_display_buffer(*gl_program_factory, gl_context)},
-    hwc_config{display_buffer_builder->create_hwc_configuration()}
+    hwc_config{display_buffer_builder->create_hwc_configuration()},
+    hotplug_subscription{hwc_config->subscribe_to_config_changes(std::bind(&mga::Display::on_hotplug, this))}
 {
     safe_power_mode(*hwc_config, mir_power_mode_on);
 
@@ -63,6 +64,7 @@ mga::Display::Display(
 
 mga::Display::~Display()
 {
+    printf("Destroy.d\n");
     if (display_buffer->configuration().power_mode != mir_power_mode_off)
         safe_power_mode(*hwc_config, mir_power_mode_off);
 }
@@ -98,6 +100,10 @@ void mga::Display::configure(mg::DisplayConfiguration const& configuration)
             display_buffer->configure(output);
         }
     });
+}
+
+void mga::Display::on_hotplug()
+{
 }
 
 void mga::Display::register_configuration_change_handler(

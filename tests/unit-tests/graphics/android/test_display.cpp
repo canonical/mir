@@ -367,22 +367,21 @@ TEST_F(Display, keeps_subscription_to_hotplug)
 {
     using namespace testing;
     std::shared_ptr<void> subscription = std::make_shared<int>(3433);
+    auto use_count_before = subscription.use_count();
     stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
     {
         EXPECT_CALL(mock_config, subscribe_to_config_changes(_))
             .WillOnce(Return(subscription));
     });
-
-    auto use_count_before = subscription.use_count();
     {
         mga::Display display(
             stub_db_factory,
             stub_gl_program_factory,
             stub_gl_config,
             null_display_report);
-        EXPECT_THAT(use_count_before, Lt(subscription.use_count()));
+        EXPECT_THAT(subscription.use_count(), Gt(use_count_before));
     }
-    EXPECT_THAT(use_count_before, Eq(subscription.use_count()));
+    EXPECT_THAT(subscription.use_count(), Eq(use_count_before));
 }
 
 TEST_F(Display, will_requery_display_configuration_after_hotplug)
