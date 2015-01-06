@@ -56,7 +56,7 @@ add_subdirectory(thread/)
 
 link_directories(${LIBRARY_OUTPUT_PATH})
 
-add_executable(mir_unit_tests 
+mir_add_wrapped_executable(mir_unit_tests
   ${UNIT_TEST_SOURCES}
   ${MIR_SERVER_OBJECTS}
   $<TARGET_OBJECTS:mirclientobjects>
@@ -116,11 +116,6 @@ CMAKE_DEPENDENT_OPTION(
 if (MIR_RUN_UNIT_TESTS)
   mir_discover_tests(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=always-malloc G_DEBUG=gc-friendly)
 endif (MIR_RUN_UNIT_TESTS)
-
-install(
-    TARGETS mir_unit_tests
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
 
 add_custom_command(TARGET mir_unit_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory

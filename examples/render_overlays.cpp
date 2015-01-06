@@ -24,7 +24,6 @@
 #include "mir/graphics/platform.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
-#include "mir/graphics/buffer_writer.h"
 #include "mir_image.h"
 
 #include <chrono>
@@ -79,13 +78,11 @@ class DemoOverlayClient
 public:
     DemoOverlayClient(
         mg::GraphicBufferAllocator& buffer_allocator,
-        std::shared_ptr<mg::BufferWriter> const& buffer_writer,
         mg::BufferProperties const& buffer_properties, uint32_t color)
          : front_buffer(buffer_allocator.alloc_buffer(buffer_properties)),
            back_buffer(buffer_allocator.alloc_buffer(buffer_properties)),
            color{color},
            last_tick{std::chrono::high_resolution_clock::now()},
-           buffer_writer{buffer_writer},
            pixel_buffer{buffer_properties.size, color}
     {
     }
@@ -98,7 +95,7 @@ public:
         color |= (green_value << 8);
         pixel_buffer.fill(color);
 
-        buffer_writer->write(*back_buffer, pixel_buffer.pixels(), pixel_buffer.pixel_size());
+        back_buffer->write(pixel_buffer.pixels(), pixel_buffer.pixel_size());
         std::swap(front_buffer, back_buffer);
     }
 
@@ -123,7 +120,6 @@ private:
     std::shared_ptr<mg::Buffer> back_buffer;
     unsigned int color;
     std::chrono::time_point<std::chrono::high_resolution_clock> last_tick;
-    std::shared_ptr<mg::BufferWriter> const buffer_writer;
     PixelBufferABGR pixel_buffer;
 };
 
@@ -196,7 +192,6 @@ void render_loop(mir::Server& server)
     auto platform = server.the_graphics_platform();
     auto display = server.the_display();
     auto buffer_allocator = platform->create_buffer_allocator();
-    auto buffer_writer = platform->make_buffer_writer();
 
     mg::BufferProperties buffer_properties{
         geom::Size{512, 512},
@@ -205,9 +200,9 @@ void render_loop(mir::Server& server)
     };
 
     auto client1 = std::make_shared<DemoOverlayClient>(
-        *buffer_allocator, buffer_writer, buffer_properties,0xFF0000FF);
+        *buffer_allocator, buffer_properties, 0xFF0000FF);
     auto client2 = std::make_shared<DemoOverlayClient>(
-        *buffer_allocator, buffer_writer, buffer_properties,0xFFFFFF00);
+        *buffer_allocator, buffer_properties, 0xFFFFFF00);
 
     std::list<std::shared_ptr<mg::Renderable>> renderlist
     {

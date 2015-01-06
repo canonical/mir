@@ -50,7 +50,6 @@ namespace mt=mir::test;
 
 namespace
 {
-
 struct MockFileOps : public mga::SyncFileOps
 {
     MOCK_METHOD3(ioctl, int(int,int,void*));

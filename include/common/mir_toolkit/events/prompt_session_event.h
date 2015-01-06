@@ -13,29 +13,33 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
-#ifndef MIR_CLIENT_ANDROID_CLIENT_PLATFORM_FACTORY_H_
-#define MIR_CLIENT_ANDROID_CLIENT_PLATFORM_FACTORY_H_
+#ifndef MIR_TOOLKIT_EVENTS_PROMPT_SESSION_EVENT_H_
+#define MIR_TOOLKIT_EVENTS_PROMPT_SESSION_EVENT_H_
 
-#include "../client_platform_factory.h"
+#include <mir_toolkit/events/event.h>
 
-namespace mir
-{
-namespace client
-{
-namespace android
-{
+#ifdef __cplusplus
+/**
+ * \addtogroup mir_toolkit
+ * @{
+ */
+extern "C" {
+#endif
 
-class ClientPlatformFactory : public client::ClientPlatformFactory
-{
-public:
-    std::shared_ptr<ClientPlatform> create_client_platform(ClientContext* context) override;
-};
+/*
+ * Retrieve the new prompt session state reported by a given MirPromptSessionEvent
+ *
+ * \param [in] event The prompt session event
+ * \return           The new state
+ */
+MirPromptSessionState mir_prompt_session_event_get_state(MirPromptSessionEvent const* ev);
 
+#ifdef __cplusplus
 }
-}
-}
+/**@}*/
+#endif
 
-#endif /* MIR_CLIENT_ANDROID_CLIENT_PLATFORM_FACTORY_H_ */
+#endif /* MIR_TOOLKIT_PROMPT_SESSION_EVENT_H_ */

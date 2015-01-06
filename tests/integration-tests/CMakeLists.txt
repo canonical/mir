@@ -66,7 +66,7 @@ if(MIR_TEST_PLATFORM STREQUAL "mesa")
 endif()
 
 link_directories(${LIBRARY_OUTPUT_PATH})
-add_executable(
+mir_add_wrapped_executable(
   mir_integration_tests
   ${INTEGRATION_TESTS_SRCS}
   ${MIR_SERVER_OBJECTS}
@@ -126,8 +126,3 @@ CMAKE_DEPENDENT_OPTION(
 if (MIR_RUN_INTEGRATION_TESTS)
   mir_discover_tests(mir_integration_tests)
 endif (MIR_RUN_INTEGRATION_TESTS)
-
-install(
-    TARGETS mir_integration_tests
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)

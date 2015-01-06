@@ -249,6 +249,38 @@ TEST_F(DisplayBuffer, changes_display_power_mode)
     db.configure(config); 
 }
 
+<<<<<<< TREE
+=======
+TEST_F(DisplayBuffer, power_mode_request_stored)
+{
+    mga::DisplayBuffer db(
+        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
+
+    EXPECT_CALL(*mock_display_device, content_cleared())
+        .Times(3);
+
+    auto config = db.configuration();
+    EXPECT_EQ(config.power_mode, mir_power_mode_on);
+    config.power_mode = mir_power_mode_off;
+    db.configure(config);
+
+    config = db.configuration();
+    EXPECT_EQ(config.power_mode, mir_power_mode_off);
+    config.power_mode = mir_power_mode_suspend;
+    db.configure(config);
+
+    config = db.configuration();
+    EXPECT_EQ(config.power_mode, mir_power_mode_suspend);
+    config.power_mode = mir_power_mode_standby;
+    db.configure(config);
+
+    config = db.configuration();
+    EXPECT_EQ(config.power_mode, mir_power_mode_standby);
+    config.power_mode = mir_power_mode_on;
+    db.configure(config);
+}
+
+>>>>>>> MERGE-SOURCE
 //configuration tests
 //TODO: the list does not support fb target rotation yet
 TEST_F(DisplayBuffer, display_orientation_not_supported)

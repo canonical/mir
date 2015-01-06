@@ -54,7 +54,11 @@ void mga::FbControl::power_mode(DisplayName display, MirPowerMode mode)
 
 mga::DisplayAttribs mga::FbControl::active_attribs_for(DisplayName)
 {
-    return {{},{},0.0,false};
+    return mga::DisplayAttribs{
+      {fb_device->width, fb_device->height},
+      {0,0},
+      fb_device->fps,
+      true};
 }
 
 mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev) :

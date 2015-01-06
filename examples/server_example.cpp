@@ -22,6 +22,7 @@
 #include "server_example_fullscreen_placement_strategy.h"
 #include "server_example_display_configuration_policy.h"
 #include "server_example_host_lifecycle_event_listener.h"
+#include "server_example_test_client.h"
 
 #include "mir/server.h"
 #include "mir/main_loop.h"
@@ -93,10 +94,17 @@ try
     add_launcher_option_to(server);
     add_timeout_option_to(server);
 
+    std::atomic<bool> test_failed{false};
+    me::add_test_client_option_to(server, test_failed);
+
     // Provide the command line and run the server
     server.set_command_line(argc, argv);
     server.apply_settings();
     server.run();
+
+    // Propagate any test failure
+    if (test_failed) return EXIT_FAILURE;
+
     return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 catch (...)
