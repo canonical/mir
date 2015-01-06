@@ -16,8 +16,12 @@
  * Authored by: Robert Carr <robert.carr@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "MirCursorAPI"
+
 #include "mir_toolkit/mir_cursor_configuration.h"
 #include "cursor_configuration.h"
+
+#include "uncaught.h"
 
 #include <memory>
 
@@ -53,8 +57,9 @@ MirCursorConfiguration* mir_cursor_configuration_from_name(char const* name)
     {
         return new MirCursorConfiguration(name);
     }
-    catch (...)
+    catch (std::exception const& ex)
     {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
 }

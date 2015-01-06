@@ -32,35 +32,61 @@ namespace mi = mir::input;
 /// Demonstrate adding a custom input filter to a server
 namespace
 {
+void print_key_event(MirInputEvent const* ev)
+{
+    auto event_time = mir_input_event_get_event_time(ev);
+    auto kev = mir_input_event_get_key_input_event(ev);
+    auto scan_code = mir_key_input_event_get_scan_code(kev);
+    auto key_code = mir_key_input_event_get_key_code(kev);
+
+    std::cout << "Handling key event (time, scancode, keycode): " << event_time << " " <<
+              scan_code << " " << key_code << std::endl;
+}
+
+void print_touch_event(MirInputEvent const* ev)
+{
+    auto event_time = mir_input_event_get_event_time(ev);
+    auto tev = mir_input_event_get_touch_input_event(ev);
+    auto tc = mir_touch_input_event_get_touch_count(tev);
+
+    std::cout << "Handline touch event time=" << event_time
+              << " touch_count=" << tc << std::endl;
+    for (unsigned i = 0; i < tc; i++)
+    {
+        auto id = mir_touch_input_event_get_touch_id(tev, i);
+        auto px = mir_touch_input_event_get_touch_axis_value(tev, i, 
+            mir_touch_input_axis_x);
+        auto py = mir_touch_input_event_get_touch_axis_value(tev, i, 
+            mir_touch_input_axis_y);
+
+        std::cout << "  "
+            << " id=" << id
+            << " pos=(" << px << ", " << py << ")"
+            << std::endl;
+    }
+    std::cout << "----------------" << std::endl << std::endl;
+}
+
 struct PrintingEventFilter : public mi::EventFilter
 {
-    void print_motion_event(MirMotionEvent const& ev)
-    {
-        std::cout << "Motion Event time=" << ev.event_time
-            << " pointer_count=" << ev.pointer_count << std::endl;
-
-        for (size_t i = 0; i < ev.pointer_count; ++i)
-        {
-            std::cout << "  "
-                << " id=" << ev.pointer_coordinates[i].id
-                << " pos=(" << ev.pointer_coordinates[i].x << ", " << ev.pointer_coordinates[i].y << ")"
-                << std::endl;
-        }
-        std::cout << "----------------" << std::endl << std::endl;
-    }
-
     bool handle(MirEvent const& ev) override
     {
-        // TODO: Enhance printing
-        if (ev.type == mir_event_type_key)
+        if (mir_event_get_type(&ev) != mir_event_type_input)
+            return false;
+        auto input_event = mir_event_get_input_event(&ev);
+
+        switch (mir_input_event_get_type(input_event))
         {
-            std::cout << "Handling key event (time, scancode, keycode): " << ev.key.event_time << " "
-                << ev.key.scan_code << " " << ev.key.key_code << std::endl;
+        case mir_input_event_type_key:
+            print_key_event(input_event);
+            break;
+        case mir_input_event_type_touch:
+            print_touch_event(input_event);
+            break;
+        default:
+            abort();
         }
-        else if (ev.type == mir_event_type_motion)
-        {
-            print_motion_event(ev.motion);
-        }
+
         return false;
     }
 };
