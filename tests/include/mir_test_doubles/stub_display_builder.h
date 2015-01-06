@@ -20,7 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_DISPLAY_BUILDER_H_
 
 #include "src/platforms/android/framebuffer_bundle.h"
-#include "src/platforms/android/display_buffer_builder.h"
+#include "src/platforms/android/display_component_factory.h"
 #include "src/platforms/android/configurable_display_buffer.h"
 #include "src/platforms/android/hwc_configuration.h"
 #include "mock_display_device.h"
@@ -54,7 +54,7 @@ struct MockHwcConfiguration : public graphics::android::HwcConfiguration
     MOCK_METHOD1(active_attribs_for, graphics::android::DisplayAttribs(graphics::android::DisplayName));
 };
 
-struct StubDisplayBuilder : public graphics::android::DisplayBufferBuilder
+struct StubDisplayBuilder : public graphics::android::DisplayComponentFactory
 {
     StubDisplayBuilder(geometry::Size sz)
         : sz(sz),

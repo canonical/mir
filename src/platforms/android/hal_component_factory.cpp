@@ -18,7 +18,7 @@
 
 #include "fb_device.h"
 #include "device_quirks.h"
-#include "output_builder.h"
+#include "hal_component_factory.h"
 #include "display_resource_factory.h"
 #include "display_buffer.h"
 #include "display_device.h"
@@ -39,7 +39,7 @@ namespace mg = mir::graphics;
 namespace mga = mir::graphics::android;
 namespace geom = mir::geometry;
 
-mga::OutputBuilder::OutputBuilder(
+mga::HalComponentFactory::HalComponentFactory(
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mga::DisplayResourceFactory> const& res_factory,
     mga::OverlayOptimization overlay_optimization,
@@ -63,7 +63,7 @@ mga::OutputBuilder::OutputBuilder(
         fb_native = res_factory->create_fb_native_device();
 }
 
-std::unique_ptr<mga::FramebufferBundle> mga::OutputBuilder::create_framebuffers(mga::DisplayAttribs const& attribs)
+std::unique_ptr<mga::FramebufferBundle> mga::HalComponentFactory::create_framebuffers(mga::DisplayAttribs const& attribs)
 {
     return std::unique_ptr<mga::FramebufferBundle>(new mga::Framebuffers(
         *buffer_allocator,
@@ -72,7 +72,7 @@ std::unique_ptr<mga::FramebufferBundle> mga::OutputBuilder::create_framebuffers(
         attribs.vrefresh_hz, attribs.num_framebuffers));
 }
 
-std::unique_ptr<mga::DisplayDevice> mga::OutputBuilder::create_display_device()
+std::unique_ptr<mga::DisplayDevice> mga::HalComponentFactory::create_display_device()
 {
     if (force_backup_display)
     {
@@ -105,7 +105,7 @@ std::unique_ptr<mga::DisplayDevice> mga::OutputBuilder::create_display_device()
     }
 }
 
-std::unique_ptr<mga::HwcConfiguration> mga::OutputBuilder::create_hwc_configuration()
+std::unique_ptr<mga::HwcConfiguration> mga::HalComponentFactory::create_hwc_configuration()
 {
     if (force_backup_display || hwc_native->common.version == HWC_DEVICE_API_VERSION_1_0)
         return std::unique_ptr<mga::HwcConfiguration>(new mga::FbControl(fb_native));

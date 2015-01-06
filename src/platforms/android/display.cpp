@@ -23,7 +23,7 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "display.h"
-#include "display_buffer_builder.h"
+#include "display_component_factory.h"
 #include "interpreter_cache.h"
 #include "server_render_window.h"
 #include "display_buffer.h"
@@ -46,7 +46,7 @@ try
 
 
 std::unique_ptr<mga::ConfigurableDisplayBuffer> create_primary_display_buffer(
-    mga::DisplayBufferBuilder& display_buffer_builder,
+    mga::DisplayComponentFactory& display_buffer_builder,
     mga::DisplayAttribs const& primary_attribs,
     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
     mga::PbufferGLContext const& gl_context,
@@ -67,7 +67,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_primary_display_buffer(
 }
 
 mga::Display::Display(
-    std::shared_ptr<mga::DisplayBufferBuilder> const& display_buffer_builder,
+    std::shared_ptr<mga::DisplayComponentFactory> const& display_buffer_builder,
     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
     std::shared_ptr<GLConfig> const& gl_config,
     std::shared_ptr<DisplayReport> const& display_report,

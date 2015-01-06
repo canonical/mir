@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platforms/android/output_builder.h"
+#include "src/platforms/android/hal_component_factory.h"
 #include "src/platforms/android/android_format_conversion-inl.h"
 #include "src/platforms/android/resource_factory.h"
 #include "src/platforms/android/graphic_buffer_allocator.h"
@@ -68,7 +68,7 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
     MOCK_CONST_METHOD0(create_fb_native_device, std::shared_ptr<framebuffer_device_t>());
 };
 
-class OutputBuilder : public ::testing::Test
+class HalComponentFactory : public ::testing::Test
 {
 public:
     void SetUp()
@@ -93,7 +93,7 @@ public:
 };
 }
 
-TEST_F(OutputBuilder, builds_hwc_version_10)
+TEST_F(HalComponentFactory, builds_hwc_version_10)
 {
     using namespace testing;
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_0;
@@ -101,7 +101,7 @@ TEST_F(OutputBuilder, builds_hwc_version_10)
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device());
     EXPECT_CALL(*mock_hwc_report, report_hwc_version(HWC_DEVICE_API_VERSION_1_0));
 
-    mga::OutputBuilder factory(
+    mga::HalComponentFactory factory(
         mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
         mga::OverlayOptimization::disabled,
@@ -109,14 +109,14 @@ TEST_F(OutputBuilder, builds_hwc_version_10)
     factory.create_display_device();
 }
 
-TEST_F(OutputBuilder, builds_hwc_version_11_and_later)
+TEST_F(HalComponentFactory, builds_hwc_version_11_and_later)
 {
     using namespace testing;
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
     EXPECT_CALL(*mock_resource_factory, create_hwc_native_device());
     EXPECT_CALL(*mock_hwc_report, report_hwc_version(HWC_DEVICE_API_VERSION_1_1));
 
-    mga::OutputBuilder factory(
+    mga::HalComponentFactory factory(
         mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
         mga::OverlayOptimization::disabled,
@@ -124,7 +124,7 @@ TEST_F(OutputBuilder, builds_hwc_version_11_and_later)
     factory.create_display_device();
 }
 
-TEST_F(OutputBuilder, hwc_failure_falls_back_to_fb)
+TEST_F(HalComponentFactory, hwc_failure_falls_back_to_fb)
 {
     using namespace testing;
     EXPECT_CALL(*mock_resource_factory, create_hwc_native_device())
@@ -132,7 +132,7 @@ TEST_F(OutputBuilder, hwc_failure_falls_back_to_fb)
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device());
     EXPECT_CALL(*mock_hwc_report, report_legacy_fb_module());
 
-    mga::OutputBuilder factory(
+    mga::HalComponentFactory factory(
         mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
         mga::OverlayOptimization::disabled,
@@ -140,7 +140,7 @@ TEST_F(OutputBuilder, hwc_failure_falls_back_to_fb)
     factory.create_display_device();
 }
 
-TEST_F(OutputBuilder, hwc_and_fb_failure_fatal)
+TEST_F(HalComponentFactory, hwc_and_fb_failure_fatal)
 {
     using namespace testing;
     hw_access_mock.mock_hwc_device->common.version = HWC_DEVICE_API_VERSION_1_1;
@@ -150,7 +150,7 @@ TEST_F(OutputBuilder, hwc_and_fb_failure_fatal)
         .WillOnce(Throw(std::runtime_error("")));
 
     EXPECT_THROW({
-        mga::OutputBuilder factory(
+        mga::HalComponentFactory factory(
             mt::fake_shared(mock_buffer_allocator),
             mock_resource_factory,
             mga::OverlayOptimization::disabled,
