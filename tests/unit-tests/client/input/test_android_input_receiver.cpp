@@ -65,7 +65,7 @@ public:
             0 /* down_time */,
             0 /* event_time */);
     }
-    void produce_a_motion_event(float x, float y, nsecs_t t)
+    void produce_a_pointer_event(float x, float y, nsecs_t t)
     {
         droidinput::PointerProperties filler_pointer_properties;
         droidinput::PointerCoords filler_pointer_coordinates;
@@ -191,9 +191,9 @@ TEST_F(AndroidInputReceiverSetup, receiver_consumes_batched_motion_events)
     TestingInputProducer producer(server_fd);
 
     // Produce 3 motion events before client handles any.
-    producer.produce_a_motion_event(0, 0, 0);
-    producer.produce_a_motion_event(0, 0, 0);
-    producer.produce_a_motion_event(0, 0, 0);
+    producer.produce_a_pointer_event(0, 0, 0);
+    producer.produce_a_pointer_event(0, 0, 0);
+    producer.produce_a_pointer_event(0, 0, 0);
 
     flush_channels();
 
@@ -223,7 +223,7 @@ TEST_F(AndroidInputReceiverSetup, slow_raw_input_doesnt_cause_frameskipping)
 
     MirEvent ev;
 
-    producer.produce_a_motion_event(123, 456, t);
+    producer.produce_a_pointer_event(123, 456, t);
     producer.produce_a_key_event();
     flush_channels();
 
@@ -281,7 +281,7 @@ TEST_F(AndroidInputReceiverSetup, rendering_does_not_lag_behind_input)
             float a = t * M_PI / 1000000.0f;
             float x = 500.0f * sinf(a);
             float y = 1000.0f * cosf(a);
-            producer.produce_a_motion_event(x, y, t);
+            producer.produce_a_pointer_event(x, y, t);
             flush_channels();
         }
 
@@ -329,7 +329,7 @@ TEST_F(AndroidInputReceiverSetup, input_comes_in_phase_with_rendering)
             float a = t * M_PI / 1000000.0f;
             float x = 500.0f * sinf(a);
             float y = 1000.0f * cosf(a);
-            producer.produce_a_motion_event(x, y, t);
+            producer.produce_a_pointer_event(x, y, t);
             flush_channels();
         }
 

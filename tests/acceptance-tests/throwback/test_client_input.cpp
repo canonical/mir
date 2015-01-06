@@ -284,10 +284,10 @@ TEST_F(TestClientInput, clients_receive_pointer_inside_window)
     client.start();
 
     fake_event_hub()->synthesize_event(
-        mis::a_motion_event().with_movement(
+        mis::a_pointer_event().with_movement(
             InputClient::surface_width - 1,
             InputClient::surface_height - 1));
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(2,2));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(2,2));
 }
 
 TEST_F(TestClientInput, clients_receive_button_events_inside_window)
@@ -349,10 +349,10 @@ TEST_F(TestClientInput, multiple_clients_receive_pointer_inside_windows)
 
     // In the bounds of the first surface
     fake_event_hub()->synthesize_event(
-        mis::a_motion_event().with_movement(screen_width / 2 - 1, screen_height / 2 - 1));
+        mis::a_pointer_event().with_movement(screen_width / 2 - 1, screen_height / 2 - 1));
     // In the bounds of the second surface
     fake_event_hub()->synthesize_event(
-        mis::a_motion_event().with_movement(screen_width / 2, screen_height / 2));
+        mis::a_pointer_event().with_movement(screen_width / 2, screen_height / 2));
 }
 
 TEST_F(TestClientInput, clients_do_not_receive_pointer_outside_input_region)
@@ -386,7 +386,7 @@ TEST_F(TestClientInput, clients_do_not_receive_pointer_outside_input_region)
 
     // First we will move the cursor in to the input region on the left side of
     // the window. We should see a click here.
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1, 1));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 1));
     fake_event_hub()->synthesize_event(
         mis::a_button_down_event()
             .of_button(BTN_LEFT)
@@ -394,7 +394,7 @@ TEST_F(TestClientInput, clients_do_not_receive_pointer_outside_input_region)
     fake_event_hub()->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
     // Now in to the dead zone in the center of the window. We should not see
     // a click here.
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(49, 49));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(49, 49));
     fake_event_hub()->synthesize_event(
         mis::a_button_down_event()
             .of_button(BTN_LEFT)
@@ -402,7 +402,7 @@ TEST_F(TestClientInput, clients_do_not_receive_pointer_outside_input_region)
     fake_event_hub()->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
     // Now in to the right edge of the window, in the right input region.
     // Again we should see a click.
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(49, 49));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(49, 49));
     fake_event_hub()->synthesize_event(
         mis::a_button_down_event()
             .of_button(BTN_LEFT)
@@ -452,12 +452,12 @@ TEST_F(TestClientInput, scene_obscure_motion_events_by_stacking)
     client2.start();
 
     // First we will move the cursor in to the region where client 2 obscures client 1
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1, 1));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 1));
     fake_event_hub()->synthesize_event(
         mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_event_hub()->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
     // Now we move to the unobscured region of client 1
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(500, 0));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(500, 0));
     fake_event_hub()->synthesize_event(
         mis::a_button_down_event().of_button(BTN_LEFT).with_action(mis::EventAction::Down));
     fake_event_hub()->synthesize_event(mis::a_button_up_event().of_button(BTN_LEFT));
@@ -491,7 +491,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
 
     // We send one event and then hide the surface on top before sending the next.
     // So we expect each of the two surfaces to receive one even
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1,1));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1,1));
     // We use a fence to ensure we do not hide the client
     // before event dispatch occurs
     second_client_done.wait_for_at_most_seconds(60);
@@ -503,7 +503,7 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
                 session->hide();
         });
 
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1,1));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1,1));
 }
 
 TEST_F(TestClientInput, clients_receive_pointer_within_coordinate_system_of_window)
@@ -536,7 +536,7 @@ TEST_F(TestClientInput, clients_receive_pointer_within_coordinate_system_of_wind
         });
 
     fake_event_hub()->synthesize_event(
-        mis::a_motion_event().with_movement(screen_width / 2 + 40, screen_height / 2 + 90));
+        mis::a_pointer_event().with_movement(screen_width / 2 + 40, screen_height / 2 + 90));
 }
 
 // TODO: Consider tests for more input devices with custom mapping (i.e. joysticks...)

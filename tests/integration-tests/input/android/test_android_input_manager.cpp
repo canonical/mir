@@ -176,8 +176,8 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_poin
             .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
     }
 
-    fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(100, 100));
-    fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(100, 0));
+    fake_event_hub->synthesize_event(mis::a_pointer_event().with_movement(100, 100));
+    fake_event_hub->synthesize_event(mis::a_pointer_event().with_movement(100, 0));
 
     wait_condition.wait_for_at_most_seconds(1);
 }

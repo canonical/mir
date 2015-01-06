@@ -279,7 +279,7 @@ TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
     EXPECT_CALL(test_server_config().cursor, hide())
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1, 0));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 0));
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
@@ -301,8 +301,8 @@ TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
     EXPECT_CALL(test_server_config().cursor, show(DefaultCursorImage()))
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1, 0));
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(2, 0));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 0));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(2, 0));
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
@@ -328,8 +328,8 @@ TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
     EXPECT_CALL(test_server_config().cursor, show(CursorNamed(client_cursor_2)))
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1, 0));
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1, 0));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 0));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 0));
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 
@@ -353,7 +353,7 @@ TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
     EXPECT_CALL(test_server_config().cursor, show(CursorNamed(client_cursor_2)))
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
-    fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1, 0));
+    fake_event_hub()->synthesize_event(mis::a_pointer_event().with_movement(1, 0));
 
     expectations_satisfied.wait_for_at_most_seconds(5);
 

@@ -110,7 +110,7 @@ TEST_F(CustomInputDispatcher, receives_input)
     {
         void inject_input() override
         {
-            fake_event_hub->synthesize_event(mis::a_motion_event().with_movement(1, 1));
+            fake_event_hub->synthesize_event(mis::a_pointer_event().with_movement(1, 1));
             fake_event_hub->synthesize_event(mis::a_key_down_event().of_scancode(KEY_ENTER));
         }
 

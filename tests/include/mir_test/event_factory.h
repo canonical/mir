@@ -75,7 +75,7 @@ public:
     int rel_x;
     int rel_y;
 };
-MotionParameters a_motion_event();
+MotionParameters a_pointer_event();
 
 class TouchParameters
 {

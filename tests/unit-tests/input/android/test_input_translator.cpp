@@ -361,17 +361,17 @@ TEST_P(InputTranslatorWithPolicyParam, forwards_policy_modifiers_as_flags_and_mo
 const MirKeyFlag default_key_flag = static_cast<MirKeyFlag>(0);
 INSTANTIATE_TEST_CASE_P(VariousPolicyFlags, InputTranslatorWithPolicyParam,
                         ::testing::Values(PolicyFlagTestParameter{droidinput::POLICY_FLAG_CAPS_LOCK, default_key_flag,
-                                                                  mir_key_modifier_caps_lock},
+                                                                  mir_input_event_modifier_caps_lock},
                                           PolicyFlagTestParameter{droidinput::POLICY_FLAG_ALT, default_key_flag,
-                                                                  mir_key_modifier_alt | mir_key_modifier_alt_left},
+                                                                  mir_input_event_modifier_alt | mir_input_event_modifier_alt_left},
                                           PolicyFlagTestParameter{droidinput::POLICY_FLAG_ALT_GR, default_key_flag,
-                                                                  mir_key_modifier_alt | mir_key_modifier_alt_right},
+                                                                  mir_input_event_modifier_alt | mir_input_event_modifier_alt_right},
                                           PolicyFlagTestParameter{droidinput::POLICY_FLAG_FUNCTION, default_key_flag,
-                                                                  mir_key_modifier_function},
+                                                                  mir_input_event_modifier_function},
                                           PolicyFlagTestParameter{droidinput::POLICY_FLAG_SHIFT, default_key_flag,
-                                                                  mir_key_modifier_shift | mir_key_modifier_shift_left},
+                                                                  mir_input_event_modifier_shift | mir_input_event_modifier_shift_left},
                                           PolicyFlagTestParameter{droidinput::POLICY_FLAG_VIRTUAL,
                                                                   mir_key_flag_virtual_hard_key,
-                                                                  mir_key_modifier_none}));
+                                                                  mir_input_event_modifier_none}));
 
 
