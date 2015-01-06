@@ -117,7 +117,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
 
     EXPECT_CALL(
         *event_filter,
-        handle(mt::ButtonDownEvent()))
+        handle(mt::ButtonDownEvent(0, 0)))
             .Times(1)
             .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
 
@@ -137,17 +137,17 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
       InSequence seq;
       EXPECT_CALL(
           *event_filter,
-          handle(mt::ButtonDownEvent()))
+          handle(mt::ButtonDownEvent(0, 0)))
               .Times(1)
               .WillOnce(Return(false));
       EXPECT_CALL(
           *event_filter,
-          handle(mt::ButtonUpEvent()))
+          handle(mt::ButtonUpEvent(0, 0)))
               .Times(1)
               .WillOnce(Return(false));
       EXPECT_CALL(
           *event_filter,
-          handle(mt::MotionEvent(0,0)))
+          handle(mt::PointerEventWithPosition(0,0)))
               .Times(1)
               .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
     }
@@ -158,7 +158,7 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_butt
     wait_condition.wait_for_at_most_seconds(1);
 }
 
-TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_motion_events_to_filter)
+TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_pointer_events_to_filter)
 {
     using namespace ::testing;
 
@@ -169,10 +169,10 @@ TEST_F(AndroidInputManagerAndEventFilterDispatcherSetup, manager_dispatches_moti
         InSequence seq;
 
         EXPECT_CALL(*event_filter,
-                    handle(mt::MotionEvent(100, 100)))
+                    handle(mt::PointerEventWithPosition(100, 100)))
             .WillOnce(Return(false));
         EXPECT_CALL(*event_filter,
-                    handle(mt::MotionEvent(200, 100)))
+                    handle(mt::PointerEventWithPosition(200, 100)))
             .WillOnce(mt::ReturnFalseAndWakeUp(&wait_condition));
     }
 

@@ -19,7 +19,7 @@
 #include "src/server/input/android/input_translator.h"
 #include "mir_test_doubles/mock_input_dispatcher.h"
 #include "mir_test/fake_shared.h"
-#include "mir_test/client_event_matchers.h"
+#include "mir_test/event_matchers.h"
 
 #include "InputListener.h"
 #include "androidfw/Input.h"
@@ -207,15 +207,15 @@ TEST_F(InputTranslator, forwards_pointer_positions)
 
     const float x_pos = 12.0f;
     const float y_pos = 30.0f;
-    EXPECT_CALL(dispatcher, dispatch(mt::MotionEventWithPosition(x_pos, y_pos))).Times(1);
+    EXPECT_CALL(dispatcher, dispatch(mt::PointerEventWithPosition(x_pos, y_pos))).Times(1);
 
     const uint32_t one_pointer = 1;
 
     properties[0].id = 23;
     coords[0].setAxisValue(AMOTION_EVENT_AXIS_X, x_pos);
     coords[0].setAxisValue(AMOTION_EVENT_AXIS_Y, y_pos);
-
-    droidinput::NotifyMotionArgs motion(some_time, device_id, source_id, default_policy_flags, motion_action, no_flags,
+    
+    droidinput::NotifyMotionArgs motion(some_time, device_id, AINPUT_SOURCE_MOUSE, default_policy_flags, motion_action, no_flags,
                                         meta_state, button_state, edge_flags, one_pointer, properties, coords,
                                         x_precision, y_precision, later_time);
     translator.notifyMotion(&motion);
@@ -320,7 +320,7 @@ TEST_F(InputTranslator, forwards_all_motion_event_paramters_correctly)
     properties[0].id = pointer.id;
     properties[0].toolType = pointer.tool_type;
     InSequence seq;
-    EXPECT_CALL(dispatcher, dispatch(mt::MirMotionEventMatches(expected))).Times(1);
+    EXPECT_CALL(dispatcher, dispatch(mt::MirTouchEventMatches(expected))).Times(1);
 
     droidinput::NotifyMotionArgs notified(expected.motion.event_time,
                                           expected.motion.device_id,
@@ -347,10 +347,7 @@ TEST_P(InputTranslatorWithPolicyParam, forwards_policy_modifiers_as_flags_and_mo
 
     EXPECT_CALL(dispatcher,
                 dispatch(
-                    AllOf(
-                        mt::KeyWithFlag(GetParam().expected_key_flag),
                         mt::KeyWithModifiers(GetParam().expected_modifiers)
-                        )
                     )
                 ).Times(1);
 

@@ -27,7 +27,7 @@
 #include "mir_test/fake_shared.h"
 #include "mir_test/fake_event_hub.h"
 #include "mir_test/event_factory.h"
-#include "mir_test/client_event_matchers.h"
+#include "mir_test/event_matchers.h"
 
 #include "mir/compositor/scene.h"
 #include "mir/shell/input_targeter.h"
@@ -120,7 +120,7 @@ TEST_F(CustomInputDispatcher, receives_input)
             auto const dispatcher = the_input_dispatcher_mock();
 
             InSequence seq;
-            EXPECT_CALL(*dispatcher, dispatch(mt::MotionEventWithPosition(1, 1))).Times(1);
+            EXPECT_CALL(*dispatcher, dispatch(mt::PointerEventWithPosition(1, 1))).Times(1);
             EXPECT_CALL(*dispatcher, dispatch(mt::KeyDownEvent()))
                 .WillOnce(InvokeWithoutArgs([this]{ dispatching_done.signal_ready(); }));
         }
