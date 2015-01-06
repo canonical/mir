@@ -64,7 +64,6 @@ mga::Display::Display(
 
 mga::Display::~Display()
 {
-    printf("Destroy.d\n");
     if (display_buffer->configuration().power_mode != mir_power_mode_off)
         safe_power_mode(*hwc_config, mir_power_mode_off);
 }
@@ -104,6 +103,8 @@ void mga::Display::configure(mg::DisplayConfiguration const& configuration)
 
 void mga::Display::on_hotplug()
 {
+    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+    configuration_dirty = true;
 }
 
 void mga::Display::register_configuration_change_handler(
