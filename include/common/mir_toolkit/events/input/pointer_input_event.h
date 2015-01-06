@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -52,13 +52,13 @@ typedef enum {
  * Identifiers for pointer axis
  */
 typedef enum {
-/* Absolute axis representing the x coordinate of the pointer */
+/* Absolute axis containing the x coordinate of the pointer */
     mir_pointer_input_axis_x = 0,
-/* Absolute axis representing the y coordinate of the pointer */
+/* Absolute axis containing the y coordinate of the pointer */
     mir_pointer_input_axis_y = 1,
-/* Relative axis representing the speed of the vertical scroll wheel */
+/* Relative axis containing the speed of the vertical scroll wheel */
     mir_pointer_input_axis_vscroll = 2,
-/* Relative axis representing the speed of the horizontal scroll wheel */
+/* Relative axis containing the speed of the horizontal scroll wheel */
     mir_pointer_input_axis_hscroll = 3
 } MirPointerInputEventAxis;
 
