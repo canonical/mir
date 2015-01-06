@@ -32,13 +32,14 @@ struct HwcConfiguration : public testing::Test
     testing::NiceMock<mtd::MockEGL> mock_egl;
     std::shared_ptr<mtd::MockHWCDeviceWrapper> mock_hwc_wrapper{
         std::make_shared<testing::NiceMock<mtd::MockHWCDeviceWrapper>>()};
-    mga::HwcBlankingControl config{mock_hwc_wrapper};
     mga::DisplayName display{mga::DisplayName::primary};
+    mga::HwcBlankingControl config{mock_hwc_wrapper};
 };
 
 TEST_F(HwcConfiguration, fb_format_selection)
 {
     using namespace testing;
+    Mock::VerifyAndClearExpectations(&mock_egl);
     EGLint const expected_egl_config_attr [] =
     {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -75,6 +76,7 @@ TEST_F(HwcConfiguration, fb_format_selection)
 TEST_F(HwcConfiguration, format_selection_failure_default)
 {
     using namespace testing;
+    Mock::VerifyAndClearExpectations(&mock_egl);
     EGLDisplay fake_display = reinterpret_cast<EGLDisplay>(0x11235813);
 
     Sequence seq;
@@ -90,7 +92,7 @@ TEST_F(HwcConfiguration, format_selection_failure_default)
         .InSequence(seq);
 
     mga::HwcBlankingControl hwc_config{mock_hwc_wrapper};
-    EXPECT_EQ(mir_pixel_format_argb_8888, hwc_config.active_attribs_for(mga::DisplayName::primary).display_format);
+    EXPECT_EQ(mir_pixel_format_abgr_8888, hwc_config.active_attribs_for(mga::DisplayName::primary).display_format);
 }
 
 TEST_F(HwcConfiguration, turns_screen_on)
