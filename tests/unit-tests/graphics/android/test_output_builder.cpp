@@ -62,25 +62,10 @@ struct MockResourceFactory: public mga::DisplayResourceFactory
         using namespace testing;
         ON_CALL(*this, create_hwc_native_device()).WillByDefault(Return(nullptr));
         ON_CALL(*this, create_fb_native_device()).WillByDefault(Return(nullptr));
-        ON_CALL(*this, create_native_window(_)).WillByDefault(Return(nullptr));
-        ON_CALL(*this, create_fb_device(_)).WillByDefault(Return(nullptr));
-        ON_CALL(*this, create_hwc_device(_,_)).WillByDefault(Return(nullptr));
-        ON_CALL(*this, create_hwc_fb_device(_,_)).WillByDefault(Return(nullptr));
     }
 
     MOCK_CONST_METHOD0(create_hwc_native_device, std::shared_ptr<hwc_composer_device_1>());
     MOCK_CONST_METHOD0(create_fb_native_device, std::shared_ptr<framebuffer_device_t>());
-
-    MOCK_CONST_METHOD1(create_native_window,
-        std::shared_ptr<ANativeWindow>(std::shared_ptr<mga::FramebufferBundle> const&));
-
-    MOCK_CONST_METHOD1(create_fb_device,
-        std::shared_ptr<mga::DisplayDevice>(std::shared_ptr<framebuffer_device_t> const&));
-    MOCK_CONST_METHOD2(create_hwc_device,
-        std::shared_ptr<mga::DisplayDevice>(std::shared_ptr<mga::HwcWrapper> const&, std::shared_ptr<mga::LayerAdapter> const&));
-    MOCK_CONST_METHOD2(create_hwc_fb_device,
-        std::shared_ptr<mga::DisplayDevice>(
-            std::shared_ptr<mga::HwcWrapper> const&, std::shared_ptr<framebuffer_device_t> const&));
 };
 
 class OutputBuilder : public ::testing::Test
@@ -115,7 +100,6 @@ TEST_F(OutputBuilder, builds_hwc_version_10)
     EXPECT_CALL(*mock_resource_factory, create_hwc_native_device());
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device());
     EXPECT_CALL(*mock_hwc_report, report_hwc_version(HWC_DEVICE_API_VERSION_1_0));
-    EXPECT_CALL(*mock_resource_factory, create_native_window(_));
 
     mga::OutputBuilder factory(
         mt::fake_shared(mock_buffer_allocator),
@@ -147,7 +131,6 @@ TEST_F(OutputBuilder, hwc_failure_falls_back_to_fb)
         .WillOnce(Throw(std::runtime_error("")));
     EXPECT_CALL(*mock_resource_factory, create_fb_native_device());
     EXPECT_CALL(*mock_hwc_report, report_legacy_fb_module());
-    EXPECT_CALL(*mock_resource_factory, create_native_window(_));
 
     mga::OutputBuilder factory(
         mt::fake_shared(mock_buffer_allocator),
