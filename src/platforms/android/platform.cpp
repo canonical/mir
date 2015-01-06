@@ -142,7 +142,7 @@ extern "C" std::shared_ptr<mg::Platform> mg::create_host_platform(
     auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
     auto fb_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
     auto component_factory = std::make_shared<mga::HalComponentFactory>(
-        fb_allocator, display_resource_factory, overlay_option, hwc_report);
+        fb_allocator, display_resource_factory, hwc_report);
     return std::make_shared<mga::Platform>(component_factory, display_report, overlay_option);
 }
 

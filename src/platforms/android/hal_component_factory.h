@@ -20,7 +20,6 @@
 #define MIR_GRAPHICS_ANDROID_HAL_COMPONENT_FACTORY_H_
 
 #include "display_component_factory.h"
-#include "overlay_optimization.h"
 #include "hardware/hwcomposer.h"
 #include "hardware/fb.h"
 
@@ -46,7 +45,6 @@ public:
     HalComponentFactory(
         std::shared_ptr<GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<DisplayResourceFactory> const& res_factory,
-        OverlayOptimization overlay_option,
         std::shared_ptr<HwcReport> const& hwc_report);
 
     std::unique_ptr<FramebufferBundle> create_framebuffers(DisplayAttribs const&) override;
@@ -64,7 +62,6 @@ private:
     std::shared_ptr<HwcWrapper> hwc_wrapper;
     std::shared_ptr<hwc_composer_device_1> hwc_native;
     std::shared_ptr<framebuffer_device_t> fb_native;
-    OverlayOptimization overlay_optimization;
 };
 
 }

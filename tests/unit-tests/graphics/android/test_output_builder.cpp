@@ -104,7 +104,6 @@ TEST_F(HalComponentFactory, builds_hwc_version_10)
     mga::HalComponentFactory factory(
         mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
-        mga::OverlayOptimization::disabled,
         mock_hwc_report);
     factory.create_display_device();
 }
@@ -119,7 +118,6 @@ TEST_F(HalComponentFactory, builds_hwc_version_11_and_later)
     mga::HalComponentFactory factory(
         mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
-        mga::OverlayOptimization::disabled,
         mock_hwc_report);
     factory.create_display_device();
 }
@@ -135,7 +133,6 @@ TEST_F(HalComponentFactory, hwc_failure_falls_back_to_fb)
     mga::HalComponentFactory factory(
         mt::fake_shared(mock_buffer_allocator),
         mock_resource_factory,
-        mga::OverlayOptimization::disabled,
         mock_hwc_report);
     factory.create_display_device();
 }
@@ -153,7 +150,6 @@ TEST_F(HalComponentFactory, hwc_and_fb_failure_fatal)
         mga::HalComponentFactory factory(
             mt::fake_shared(mock_buffer_allocator),
             mock_resource_factory,
-            mga::OverlayOptimization::disabled,
             mock_hwc_report);
     }, std::runtime_error);
 }

@@ -42,13 +42,11 @@ namespace geom = mir::geometry;
 mga::HalComponentFactory::HalComponentFactory(
     std::shared_ptr<mga::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mga::DisplayResourceFactory> const& res_factory,
-    mga::OverlayOptimization overlay_optimization,
     std::shared_ptr<HwcReport> const& hwc_report)
     : buffer_allocator(buffer_allocator),
       res_factory(res_factory),
       hwc_report(hwc_report),
-      force_backup_display(false),
-      overlay_optimization(overlay_optimization)
+      force_backup_display(false)
 {
     try
     {
