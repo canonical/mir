@@ -90,13 +90,22 @@ MirEvent const* old_ev_from_new(MirInputEvent const* ev)
 {
     return reinterpret_cast<MirEvent const*>(ev);
 }
+
 MirKeyEvent const& old_kev_from_new(MirKeyInputEvent const* ev)
 {
     auto old_ev = reinterpret_cast<MirEvent const*>(ev);
     expect_old_event_type(old_ev, mir_event_type_key);
     return old_ev->key;
 }
+
 MirMotionEvent const& old_mev_from_new(MirTouchInputEvent const* ev)
+{
+    auto old_ev = reinterpret_cast<MirEvent const*>(ev);
+    expect_old_event_type(old_ev, mir_event_type_motion);
+    return old_ev->motion;
+}
+
+MirMotionEvent const& old_mev_from_new(MirPointerInputEvent const* ev)
 {
     auto old_ev = reinterpret_cast<MirEvent const*>(ev);
     expect_old_event_type(old_ev, mir_event_type_motion);
@@ -433,4 +442,78 @@ MirPointerInputEvent const* mir_input_event_get_pointer_input_event(MirInputEven
     }
 
     return reinterpret_cast<MirPointerInputEvent const*>(ev);
+}
+
+MirInputEventModifiers mir_pointer_input_event_get_modifiers(MirPointerInputEvent const* pev)
+{    
+    auto const& old_mev = old_mev_from_new(pev);
+    return old_modifiers_to_new(static_cast<MirKeyModifier>(old_mev.modifiers));
+}
+
+MirPointerInputEventAction mir_pointer_input_event_get_action(MirPointerInputEvent const* pev)
+{    
+    auto const& old_mev = old_mev_from_new(pev);
+    auto masked_action = old_mev.action & MIR_EVENT_ACTION_MASK;
+    switch (masked_action)
+    {
+    case mir_motion_action_up:
+    case mir_motion_action_pointer_up:
+        return mir_pointer_input_event_action_up;
+    case mir_motion_action_down:
+    case mir_motion_action_pointer_down:
+        return mir_pointer_input_event_action_down;
+    case mir_motion_action_hover_enter:
+        return mir_pointer_input_event_action_enter;
+    case mir_motion_action_hover_exit:
+        return mir_pointer_input_event_action_leave;
+    case mir_motion_action_move:
+    case mir_motion_action_hover_move:
+    case mir_motion_action_outside:
+    default:
+        return mir_pointer_input_event_action_change;
+    }
+}
+
+namespace
+{
+MirPointerInputEventButtons old_buttons_to_new(int old_button_state)
+{
+    int new_buttons = 0;
+    if (old_button_state & mir_motion_button_primary)
+        new_buttons |= mir_pointer_input_button_primary;
+    if (old_button_state & mir_motion_button_secondary)
+        new_buttons |= mir_pointer_input_button_secondary;
+    if (old_button_state & mir_motion_button_tertiary)
+        new_buttons |= mir_pointer_input_button_tertiary;
+    if (old_button_state & mir_motion_button_back)
+        new_buttons |= mir_pointer_input_button_back;
+    if (old_button_state & mir_motion_button_forward)
+        new_buttons |= mir_pointer_input_button_forward;
+    return static_cast<MirPointerInputEventButtons>(new_buttons);
+}
+}
+
+MirPointerInputEventButtons mir_pointer_input_event_get_buttons(MirPointerInputEvent const* pev)
+{
+   auto const& old_mev = old_mev_from_new(pev);
+   return old_buttons_to_new(old_mev.button_state);
+}
+
+float mir_pointer_input_event_get_axis_value(MirPointerInputEvent const* pev, MirPointerInputEventAxis axis)
+{
+   auto const& old_mev = old_mev_from_new(pev);
+   switch (axis)
+   {
+   case mir_pointer_input_axis_x:
+       return old_mev.pointer_coordinates[0].x;
+   case mir_pointer_input_axis_y:
+       return old_mev.pointer_coordinates[0].y;
+   case mir_pointer_input_axis_vscroll:
+       return old_mev.pointer_coordinates[0].vscroll;
+   case mir_pointer_input_axis_hscroll:
+       return old_mev.pointer_coordinates[0].hscroll;
+   default:
+       mir::log_critical("Invalid axis enumeration " + std::to_string(axis));
+       abort();
+   }
 }
