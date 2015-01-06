@@ -114,7 +114,7 @@ TEST_F(Display, creation_creates_egl_resources_properly)
         null_display_report);
 }
 
-TEST_F(Display, selects_usable_configuration)
+TEST_F(Display, selects_usable_egl_configuration)
 {
     using namespace testing;
     int const incorrect_visual_id = 2;
@@ -304,7 +304,7 @@ TEST_F(Display, catches_exceptions_when_turning_off_in_destructor)
     mga::Display display(stub_db_factory, stub_gl_program_factory, stub_gl_config, null_display_report);
 }
 
-TEST_F(Display, configures_display_buffer)
+TEST_F(Display, configures_power_modes)
 {
     stub_db_factory->with_next_config([](mtd::MockHwcConfiguration& mock_config)
     {
@@ -319,34 +319,50 @@ TEST_F(Display, configures_display_buffer)
     mga::Display display(stub_db_factory, stub_gl_program_factory, stub_gl_config, null_display_report);
 
     auto configuration = display.configuration();
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-    {
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        //on by default
+        EXPECT_EQ(output.power_mode, mir_power_mode_on);
         output.power_mode = mir_power_mode_on;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-    {
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        EXPECT_EQ(output.power_mode, mir_power_mode_on);
         output.power_mode = mir_power_mode_standby;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-    {
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        EXPECT_EQ(output.power_mode, mir_power_mode_standby);
         output.power_mode = mir_power_mode_off;
     });
     display.configure(*configuration);
 
-    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-    {
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        EXPECT_EQ(output.power_mode, mir_power_mode_off);
         output.power_mode = mir_power_mode_suspend;
     });
     display.configure(*configuration);
+
+    configuration->for_each_output([&](mg::UserDisplayConfigurationOutput& output) {
+        EXPECT_EQ(output.power_mode, mir_power_mode_suspend);
+    });
 }
 
 //TODO: query for 2nd display on start
 TEST_F(Display, supports_one_output_configuration_at_start)
 {
+    using namespace testing;
+    geom::Size pixel_size{344, 111};
+    geom::Size physical_size{4230, 2229};
+    double vrefresh{4442.32};
+
+    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
+    {
+        ON_CALL(mock_config, active_attribs_for(_))
+            .WillByDefault(Return(mga::DisplayAttribs{pixel_size, physical_size, vrefresh, true}));
+    });
+
     mga::Display display(
         stub_db_factory,
         stub_gl_program_factory,
@@ -355,12 +371,69 @@ TEST_F(Display, supports_one_output_configuration_at_start)
     auto config = display.configuration();
 
     size_t num_configs = 0;
-    config->for_each_output([&](mg::DisplayConfigurationOutput const&)
+    config->for_each_output([&](mg::DisplayConfigurationOutput const& disp_conf)
     {
+        ASSERT_EQ(1u, disp_conf.modes.size());
+        auto& disp_mode = disp_conf.modes[0];
+        EXPECT_EQ(pixel_size, disp_mode.size);
+        EXPECT_EQ(vrefresh, disp_mode.vrefresh_hz);
+
+        EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id);
+        EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id);
+        EXPECT_TRUE(disp_conf.connected);
+        EXPECT_TRUE(disp_conf.used);
+        auto origin = geom::Point{0,0};
+        EXPECT_EQ(origin, disp_conf.top_left);
+        EXPECT_EQ(0, disp_conf.current_mode_index);
+        EXPECT_EQ(physical_size, disp_conf.physical_size_mm);
         num_configs++;
     });
 
     EXPECT_EQ(1u, num_configs);
+}
+
+TEST_F(Display, incorrect_display_configure_throws)
+{
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report);
+    auto config = display.configuration();
+    config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
+        c.current_format = mir_pixel_format_invalid;
+    });
+    EXPECT_THROW({
+        display.configure(*config);
+    }, std::logic_error); 
+
+    config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
+        c.current_format = mir_pixel_format_bgr_888;
+    });
+    EXPECT_THROW({
+        display.configure(*config);
+    }, std::logic_error); 
+}
+
+//TODO: the list does not support fb target rotation yet
+TEST_F(Display, display_orientation_not_supported)
+{
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report);
+
+    auto config = display.configuration();
+    config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
+        c.orientation = mir_orientation_left;
+    });
+    display.configure(*config); 
+
+    config = display.configuration();
+    config->for_each_output([](mg::UserDisplayConfigurationOutput const& c){
+        EXPECT_EQ(mir_orientation_left, c.orientation);
+    });
 }
 
 TEST_F(Display, keeps_subscription_to_hotplug)
@@ -402,7 +475,9 @@ TEST_F(Display, will_requery_display_configuration_after_hotplug)
         stub_gl_program_factory,
         stub_gl_config,
         null_display_report);
+
     auto config = display.configuration();
+
     hotplug_fn();
     config = display.configuration();
     config = display.configuration();

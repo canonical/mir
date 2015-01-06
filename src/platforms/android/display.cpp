@@ -23,6 +23,7 @@
 #include "mir/graphics/gl_context.h"
 #include "mir/graphics/egl_resources.h"
 #include "display.h"
+#include "display_buffer.h"
 #include "display_buffer_builder.h"
 #include "mir/geometry/rectangle.h"
 
@@ -39,6 +40,27 @@ try
 {
     config.power_mode(mga::DisplayName::primary, mode);
 } catch (...) {}
+
+mg::DisplayConfigurationOutput query_config(
+    mga::HwcConfiguration& hwc_config, MirPixelFormat format)
+{
+    auto attribs = hwc_config.active_attribs_for(mga::DisplayName::primary);
+    return mg::DisplayConfigurationOutput{
+        mg::DisplayConfigurationOutputId{1},
+        mg::DisplayConfigurationCardId{0},
+        mg::DisplayConfigurationOutputType::lvds,
+        {format},
+        {mg::DisplayConfigurationMode{attribs.pixel_size, attribs.vrefresh_hz}},
+        0,
+        attribs.mm_size,
+        attribs.connected,
+        true,
+        geom::Point{0,0},
+        0,
+        format,
+        mir_power_mode_on,
+        mir_orientation_normal};
+}
 }
 
 mga::Display::Display(
@@ -50,7 +72,8 @@ mga::Display::Display(
     gl_context{display_buffer_builder->display_format(), *gl_config, *display_report},
     display_buffer{display_buffer_builder->create_display_buffer(*gl_program_factory, gl_context)},
     hwc_config{display_buffer_builder->create_hwc_configuration()},
-    hotplug_subscription{hwc_config->subscribe_to_config_changes(std::bind(&mga::Display::on_hotplug, this))}
+    hotplug_subscription{hwc_config->subscribe_to_config_changes(std::bind(&mga::Display::on_hotplug, this))},
+    primary_configuration(query_config(*hwc_config, display_buffer_builder->display_format()))
 {
     safe_power_mode(*hwc_config, mir_power_mode_on);
 
@@ -64,7 +87,7 @@ mga::Display::Display(
 
 mga::Display::~Display()
 {
-    if (display_buffer->configuration().power_mode != mir_power_mode_off)
+    if (primary_configuration.power_mode != mir_power_mode_off)
         safe_power_mode(*hwc_config, mir_power_mode_off);
 }
 
@@ -72,7 +95,7 @@ void mga::Display::for_each_display_buffer(std::function<void(mg::DisplayBuffer&
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
-    if (display_buffer->configuration().power_mode == mir_power_mode_on)
+    if (primary_configuration.power_mode == mir_power_mode_on)
         f(*display_buffer);
 }
 
@@ -81,23 +104,31 @@ std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
     return std::unique_ptr<mg::DisplayConfiguration>(
-        new mga::DisplayConfiguration(display_buffer->configuration()));
+        new mga::DisplayConfiguration(mg::DisplayConfigurationOutput(primary_configuration)));
 }
 
-void mga::Display::configure(mg::DisplayConfiguration const& configuration)
+void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
 {
-    if (!configuration.valid())
+    if (!new_configuration.valid())
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid or inconsistent display configuration"));
 
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
-    configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
-    {
-        if (display_buffer->configuration().power_mode != output.power_mode)
+    new_configuration.for_each_output([this](mg::DisplayConfigurationOutput const& output) {
+        if (output.current_format != primary_configuration.current_format)
+            BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
+
+        if (output.power_mode != primary_configuration.power_mode)
         {
             hwc_config->power_mode(mga::DisplayName::primary, output.power_mode);
-            display_buffer->configure(output);
+            primary_configuration.power_mode = output.power_mode;
         }
+
+        //TODO: We don't support rotation yet, so
+        //we preserve this orientation change so the compositor can rotate everything in GL 
+        primary_configuration.orientation = output.orientation;
+
+        display_buffer->configure(primary_configuration.power_mode, primary_configuration.orientation);
     });
 }
 

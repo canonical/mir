@@ -120,6 +120,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> mga::OutputBuilder::create_displ
         native_window,
         gl_context,
         gl_program_factory,
+        mir_orientation_normal,
         overlay_optimization));
 }
 

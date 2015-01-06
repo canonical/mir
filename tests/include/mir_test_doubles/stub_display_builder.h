@@ -46,17 +46,7 @@ struct StubConfigurableDisplayBuffer : public graphics::android::ConfigurableDis
     bool post_renderables_if_optimizable(graphics::RenderableList const&) { return false; }
     MirOrientation orientation() const override { return mir_orientation_normal; }
     bool uses_alpha() const override { return false; };
-    void configure(graphics::DisplayConfigurationOutput const&) {} 
-    graphics::DisplayConfigurationOutput configuration() const
-    {
-        return graphics::DisplayConfigurationOutput{
-                   graphics::DisplayConfigurationOutputId{1},
-                   graphics::DisplayConfigurationCardId{0},
-                   graphics::DisplayConfigurationOutputType::vga,
-                   {}, {}, 0, {}, false, false, {}, 0, mir_pixel_format_abgr_8888, 
-                   mir_power_mode_on,
-                   mir_orientation_normal};
-    }
+    void configure(MirPowerMode, MirOrientation) {}
 private:
     geometry::Rectangle rect;
 };
@@ -65,7 +55,10 @@ struct MockHwcConfiguration : public graphics::android::HwcConfiguration
 {
     MockHwcConfiguration()
     {
-        ON_CALL(*this, subscribe_to_config_changes(testing::_)).WillByDefault(testing::Return(nullptr));
+        using namespace testing;
+        ON_CALL(*this, subscribe_to_config_changes(_)).WillByDefault(Return(nullptr));
+        ON_CALL(*this, active_attribs_for(_))
+            .WillByDefault(Return(graphics::android::DisplayAttribs{{}, {}, 0.0, true}));
     }
     MOCK_METHOD2(power_mode, void(graphics::android::DisplayName, MirPowerMode));
     MOCK_METHOD1(active_attribs_for, graphics::android::DisplayAttribs(graphics::android::DisplayName));
