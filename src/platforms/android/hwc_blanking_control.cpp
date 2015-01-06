@@ -93,3 +93,9 @@ mga::DisplayAttribs mga::HwcBlankingControl::active_attribs_for(DisplayName disp
         true
     };
 }
+
+mga::ConfigChangeSubscription mga::HwcBlankingControl::subscribe_to_config_changes(
+    std::function<void()> const&)
+{
+    return nullptr;
+}

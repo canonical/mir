@@ -61,6 +61,11 @@ mga::DisplayAttribs mga::FbControl::active_attribs_for(DisplayName)
       true};
 }
 
+mga::ConfigChangeSubscription mga::FbControl::subscribe_to_config_changes(std::function<void()> const&)
+{
+    return nullptr;
+}
+
 mga::FBDevice::FBDevice(std::shared_ptr<framebuffer_device_t> const& fbdev) :
     fb_device(fbdev)
 {

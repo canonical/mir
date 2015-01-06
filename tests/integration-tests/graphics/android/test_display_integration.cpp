@@ -24,11 +24,13 @@
 #include "src/platforms/android/output_builder.h"
 #include "src/server/graphics/program_factory.h"
 #include "src/server/report/null_report_factory.h"
+//#include "mir/glib_main_loop.h"
 
 #include "examples/graphics.h"
 #include "mir_test_doubles/mock_display_report.h"
 #include "mir_test_doubles/stub_gl_config.h"
 #include "mir_test_doubles/stub_renderable.h"
+#include "mir_test/fake_clock.h"
 
 #include <gtest/gtest.h>
 #include <stdexcept>
@@ -111,4 +113,56 @@ TEST_F(AndroidDisplay, display_can_post_overlay)
 
         db.post_renderables_if_optimizable(list);
     });
+}
+
+//doesn't use the HW modules, rather tests mainloop integration
+struct AndroidDisplayHotplug : ::testing::Test
+{
+    struct StubOutputBuilder : public mga::DisplayBufferBuilder
+    {
+        MirPixelFormat display_format() override
+        {
+            return mir_pixel_format_abgr_8888;
+        }
+
+        std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
+            mg::GLProgramFactory const&, mga::GLContext const&) override
+        {
+            return nullptr;
+        }
+
+        std::unique_ptr<mga::HwcConfiguration> create_hwc_configuration() override
+        {
+            return nullptr;
+        }
+    };
+
+#if 0
+    mir::GLibMainLoop mainloop(std::make_shared<mt::FakeClock>());
+    auto buffer_allocator = std::make_shared<mga::AndroidGraphicBufferAllocator>();
+    auto display_buffer_factory = std::make_shared<mga::OutputBuilder>(
+        buffer_allocator, stub_resource_factory, mga::OverlayOptimization::enabled, report);
+    auto stub_gl_config = std::make_shared<mtd::StubGLConfig>();
+    auto program_factory = std::make_shared<mg::ProgramFactory>();
+    auto null_display_report = mir::report::null_display_report();
+    auto display = std::make_shared<mga::Display>(
+        display_buffer_factory, program_factory, stub_gl_config, null_display_report);
+#endif
+};
+
+TEST_F(AndroidDisplay, hotplug_generates_mainloop_event)
+{
+#if 0
+    std::atomic<int> call_count = 0;
+    std::function<void()> change_handler = [&call_count]
+    {
+        call_count++;
+    };
+
+    display->register_configuration_change_handler(mainloop, change_handler);
+
+    stub_resource_factory->simulate_hotplug();
+    stub_resource_factory->simulate_hotplug();
+    EXPECT_THAT(call_count, testing::Eq(2));
+#endif
 }

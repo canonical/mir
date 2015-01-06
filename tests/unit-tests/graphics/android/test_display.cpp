@@ -363,13 +363,13 @@ TEST_F(Display, supports_one_output_configuration_at_start)
     EXPECT_EQ(1u, num_configs);
 }
 
-TEST_F(Display, subscribes_to_hotplug)
+TEST_F(Display, keeps_subscription_to_hotplug)
 {
     using namespace testing;
     std::shared_ptr<void> subscription = std::make_shared<int>(3433);
     stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
     {
-        EXPECT_CALL(mock_config, subscribe_to_config_change(_))
+        EXPECT_CALL(mock_config, subscribe_to_config_changes(_))
             .WillOnce(Return(subscription));
     });
 
@@ -380,9 +380,9 @@ TEST_F(Display, subscribes_to_hotplug)
             stub_gl_program_factory,
             stub_gl_config,
             null_display_report);
-        EXPECT_THAT(use_count_before, Lt(subscription.use_count());
+        EXPECT_THAT(use_count_before, Lt(subscription.use_count()));
     }
-    EXPECT_THAT(use_count_before, Eq(subscription.use_count());
+    EXPECT_THAT(use_count_before, Eq(subscription.use_count()));
 }
 
 TEST_F(Display, will_requery_display_configuration_after_hotplug)
@@ -392,7 +392,7 @@ TEST_F(Display, will_requery_display_configuration_after_hotplug)
     std::function<void()> hotplug_fn = []{};
     stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
     {
-        EXPECT_CALL(mock_config, subscribe_to_config_change(_))
+        EXPECT_CALL(mock_config, subscribe_to_config_changes(_))
             .WillOnce(DoAll(SaveArg<0>(&hotplug_fn), Return(subscription)));
         EXPECT_CALL(mock_config, active_attribs_for(_))
             .Times(2);
