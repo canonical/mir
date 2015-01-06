@@ -45,14 +45,14 @@ try
 } catch (...) {}
 
 
-std::unique_ptr<mga::ConfigurableDisplayBuffer> create_primary_display_buffer(
+std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
     mga::DisplayComponentFactory& display_buffer_builder,
-    mga::DisplayAttribs const& primary_attribs,
+    mga::DisplayAttribs const& attribs,
     std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
     mga::PbufferGLContext const& gl_context,
     mga::OverlayOptimization overlay_option)
 {
-    std::shared_ptr<mga::FramebufferBundle> fbs{display_buffer_builder.create_framebuffers(primary_attribs)};
+    std::shared_ptr<mga::FramebufferBundle> fbs{display_buffer_builder.create_framebuffers(attribs)};
     auto cache = std::make_shared<mga::InterpreterCache>();
     auto interpreter = std::make_shared<mga::ServerRenderWindow>(fbs, cache);
     auto native_window = std::make_shared<mga::MirNativeWindow>(interpreter);
@@ -76,7 +76,7 @@ mga::Display::Display(
     hwc_config{display_buffer_builder->create_hwc_configuration()},
     attribs(hwc_config->active_attribs_for(mga::DisplayName::primary)),
     gl_context{attribs.display_format, *gl_config, *display_report},
-    primary_display_buffer{create_primary_display_buffer(
+    display_buffer{create_display_buffer(
         *display_buffer_builder,
         attribs,
         gl_program_factory,
@@ -95,7 +95,7 @@ mga::Display::Display(
 
 mga::Display::~Display()
 {
-    if (primary_display_buffer->configuration().power_mode != mir_power_mode_off)
+    if (display_buffer->configuration().power_mode != mir_power_mode_off)
         safe_power_mode(*hwc_config, mir_power_mode_off);
 }
 
@@ -103,8 +103,8 @@ void mga::Display::for_each_display_buffer(std::function<void(mg::DisplayBuffer&
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
-    if (primary_display_buffer->configuration().power_mode == mir_power_mode_on)
-        f(*primary_display_buffer);
+    if (display_buffer->configuration().power_mode == mir_power_mode_on)
+        f(*display_buffer);
 }
 
 std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
@@ -112,7 +112,7 @@ std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
     return std::unique_ptr<mg::DisplayConfiguration>(
-        new mga::DisplayConfiguration(primary_display_buffer->configuration()));
+        new mga::DisplayConfiguration(display_buffer->configuration()));
 }
 
 void mga::Display::configure(mg::DisplayConfiguration const& configuration)
@@ -124,10 +124,10 @@ void mga::Display::configure(mg::DisplayConfiguration const& configuration)
 
     configuration.for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
-        if (primary_display_buffer->configuration().power_mode != output.power_mode)
+        if (display_buffer->configuration().power_mode != output.power_mode)
         {
             hwc_config->power_mode(mga::DisplayName::primary, output.power_mode);
-            primary_display_buffer->configure(output);
+            display_buffer->configure(output);
         }
     });
 }

@@ -81,7 +81,7 @@ private:
     mutable std::mutex configuration_mutex;
 
     //primary display is always connected
-    std::unique_ptr<ConfigurableDisplayBuffer> const primary_display_buffer;
+    std::unique_ptr<ConfigurableDisplayBuffer> const display_buffer;
 };
 
 }
