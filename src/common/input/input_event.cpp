@@ -493,7 +493,7 @@ MirPointerInputEventButtons old_buttons_to_new(int old_button_state)
 }
 }
 
-MirPointerInputEventButtons mir_pointer_input_event_get_buttons(MirPointerInputEvent const* pev)
+MirPointerInputEventButtons mir_pointer_input_event_get_button_state(MirPointerInputEvent const* pev)
 {
    auto const& old_mev = old_mev_from_new(pev);
    return old_buttons_to_new(old_mev.button_state);
