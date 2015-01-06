@@ -344,8 +344,8 @@ TEST_F(Display, configures_display_buffer)
     display.configure(*configuration);
 }
 
-//we only have single display and single mode on android for the time being
-TEST_F(Display, supports_one_output_configuration)
+//TODO: query for 2nd display on start
+TEST_F(Display, supports_one_output_configuration_at_start)
 {
     mga::Display display(
         stub_db_factory,
@@ -361,4 +361,50 @@ TEST_F(Display, supports_one_output_configuration)
     });
 
     EXPECT_EQ(1u, num_configs);
+}
+
+TEST_F(Display, subscribes_to_hotplug)
+{
+    using namespace testing;
+    std::shared_ptr<void> subscription = std::make_shared<int>(3433);
+    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
+    {
+        EXPECT_CALL(mock_config, subscribe_to_config_change(_))
+            .WillOnce(Return(subscription));
+    });
+
+    auto use_count_before = subscription.use_count();
+    {
+        mga::Display display(
+            stub_db_factory,
+            stub_gl_program_factory,
+            stub_gl_config,
+            null_display_report);
+        EXPECT_THAT(use_count_before, Lt(subscription.use_count());
+    }
+    EXPECT_THAT(use_count_before, Eq(subscription.use_count());
+}
+
+TEST_F(Display, will_requery_display_configuration_after_hotplug)
+{
+    using namespace testing;
+    std::shared_ptr<void> subscription = std::make_shared<int>(3433);
+    std::function<void()> hotplug_fn = []{};
+    stub_db_factory->with_next_config([&](mtd::MockHwcConfiguration& mock_config)
+    {
+        EXPECT_CALL(mock_config, subscribe_to_config_change(_))
+            .WillOnce(DoAll(SaveArg<0>(&hotplug_fn), Return(subscription)));
+        EXPECT_CALL(mock_config, active_attribs_for(_))
+            .Times(2);
+    });
+
+    mga::Display display(
+        stub_db_factory,
+        stub_gl_program_factory,
+        stub_gl_config,
+        null_display_report);
+    auto config = display.configuration();
+    hotplug_fn();
+    config = display.configuration();
+    config = display.configuration();
 }
