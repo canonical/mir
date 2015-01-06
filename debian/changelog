@@ -10,14 +10,16 @@ mir (0.10.0-0ubuntu1) UNRELEASED; urgency=medium
         best driver for you.
       . Demo shell (mir_proving_server): Added desktop zoom feature using
         Super + mouse wheel.
-      . Demo renamed: mir_demo_server_basic -> mir_demo_server
       . Demo renamed: mir_demo_server_shell -> mir_proving_server
+      . Other demo servers merged into -> mir_demo_server
       . Wider support for display buffer pixel formats in the mesa driver, for
         wider hardware support.
       . Performance: On mesa/desktop at least; only hold compositor buffers
         for the duration of the render, instead of the duration of the frame.
         Following this change the compositor report can now finally report
         render time instead of frame time.
+      . Mir now starts reliably when a TV is connected by HDMI, and up to
+        4K resolution (2160p) is known to work.
       . Plenty more enhancements logged in the bugs list below.
     - ABI summary: Servers need rebuilding, but clients do not;
       . Mirclient ABI unchanged at 8
