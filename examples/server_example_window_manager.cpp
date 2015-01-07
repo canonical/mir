@@ -40,7 +40,6 @@
 
 namespace mc = mir::compositor;
 namespace me = mir::examples;
-namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -61,9 +60,9 @@ public:
 
     virtual void remove_surface(std::weak_ptr<ms::Surface> const& surface) = 0;
 
-    virtual void add_session(std::shared_ptr<mf::Session> const& session) = 0;
+    virtual void add_session(std::shared_ptr<ms::Session> const& session) = 0;
 
-    virtual void remove_session(std::shared_ptr<mf::Session> const& session) = 0;
+    virtual void remove_session(std::shared_ptr<ms::Session> const& session) = 0;
 
     virtual void add_display(Rectangle const& area) = 0;
 
@@ -80,9 +79,9 @@ private:
 
     void remove_surface(std::weak_ptr<ms::Surface> const&) override {}
 
-    void add_session(std::shared_ptr<mf::Session> const&) override {}
+    void add_session(std::shared_ptr<ms::Session> const&) override {}
 
-    void remove_session(std::shared_ptr<mf::Session> const&) override {}
+    void remove_session(std::shared_ptr<ms::Session> const&) override {}
 
     void add_display(Rectangle const&) override {}
 
@@ -123,14 +122,14 @@ class TilingWindowManager : public WindowManager
         std::lock_guard<decltype(mutex)> lock(mutex);
     }
 
-    void add_session(std::shared_ptr<mf::Session> const& session)
+    void add_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         tiles[session.get()] = Rectangle{};
         update_tiles();
     }
 
-    void remove_session(std::shared_ptr<mf::Session> const& session)
+    void remove_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         tiles.erase(session.get());
@@ -186,7 +185,7 @@ private:
         }
     }
 
-    void update_surfaces(mf::Session const* session, Rectangle const& old_tile, Rectangle const& new_tile)
+    void update_surfaces(ms::Session const* session, Rectangle const& old_tile, Rectangle const& new_tile)
     {
         auto displacement = new_tile.top_left - old_tile.top_left;
         auto const moved = surfaces.equal_range(session);
@@ -230,8 +229,8 @@ private:
 
     std::mutex mutex;
     std::vector<Rectangle> displays;
-    std::map<mf::Session const*, Rectangle> tiles;
-    std::multimap<mf::Session const*, std::weak_ptr<ms::Surface>> surfaces;
+    std::map<ms::Session const*, Rectangle> tiles;
+    std::multimap<ms::Session const*, std::weak_ptr<ms::Surface>> surfaces;
 };
 
 auto const option = "window-manager";
