@@ -26,6 +26,7 @@
 #include "mir/geometry/rectangles.h"
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/input/composite_event_filter.h"
 #include "mir/options/option.h"
 #include "mir/scene/observer.h"
 #include "mir/scene/session.h"
@@ -33,6 +34,7 @@
 #include "mir/scene/placement_strategy.h"
 #include "mir/scene/session_listener.h"
 #include "mir/scene/surface_creation_parameters.h"
+#include "mir/shell/focus_controller.h"
 
 #include <algorithm>
 #include <map>
@@ -41,6 +43,7 @@
 namespace mc = mir::compositor;
 namespace me = mir::examples;
 namespace mg = mir::graphics;
+namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 using namespace mir::geometry;
@@ -69,6 +72,10 @@ public:
     virtual void add_display(Rectangle const& area) = 0;
 
     virtual void remove_display(Rectangle const& area) = 0;
+
+    virtual void click(Point cursor) = 0;
+
+    virtual void drag(Point cursor) = 0;
 };
 
 class FullscreenWindowManager : public WindowManager, me::FullscreenPlacementStrategy
@@ -88,10 +95,24 @@ private:
     void add_display(Rectangle const&) override {}
 
     void remove_display(Rectangle const&) override {}
+
+    void click(Point) override {}
+
+    void drag(Point) override {}
 };
 
 class TilingWindowManager : public WindowManager
 {
+public:
+    // TODO we can't take the msh::FocusController directly as we create a WindowManager
+    // TODO in the_session_listener() and that is called when creating the focus controller
+    using FocusControllerFactory = std::function<std::shared_ptr<msh::FocusController>()>;
+
+    explicit TilingWindowManager(FocusControllerFactory const& focus_controller) :
+        focus_controller{focus_controller}
+    {
+    }
+
     auto place(ms::Session const& session, ms::SurfaceCreationParameters const& request_parameters)
     -> ms::SurfaceCreationParameters override
     {
@@ -155,6 +176,29 @@ class TilingWindowManager : public WindowManager
         auto const i = std::find(begin(displays), end(displays), area);
         if (i != end(displays)) displays.erase(i);
         update_tiles();
+    }
+
+    void click(Point cursor) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+
+        for(auto& tile : tiles)
+        {
+            if (tile.second.contains(cursor))
+            {
+                auto const session = sessions[tile.first].lock();
+                focus_controller()->set_focus_to(session);
+                break;
+            }
+        }
+
+        old_cursor = cursor;
+    }
+
+    void drag(Point cursor) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        old_cursor = cursor;
     }
 
 private:
@@ -232,11 +276,81 @@ private:
         surface.resize({width, height});
     }
 
+    FocusControllerFactory const focus_controller;
+
     std::mutex mutex;
     std::vector<Rectangle> displays;
     std::map<ms::Session const*, Rectangle> tiles;
     std::multimap<ms::Session const*, std::weak_ptr<ms::Surface>> surfaces;
     std::map<ms::Session const*, std::weak_ptr<ms::Session>> sessions;
+    Point old_cursor{};
+};
+
+class EventTracker : public mi::EventFilter
+{
+public:
+    explicit EventTracker(std::shared_ptr<WindowManager> const& window_manager) :
+        window_manager{window_manager} {}
+
+    bool handle(MirEvent const& event) override
+    {
+        switch (event.type)
+        {
+        case mir_event_type_key:
+            return handle_key_event(event.key);
+
+        case mir_event_type_motion:
+            return handle_motion_event(event.motion);
+
+        default:
+            return false;
+        }
+    }
+
+private:
+    bool handle_key_event(MirKeyEvent const& /*event*/)
+    {
+        return false;
+    }
+
+    bool handle_motion_event(MirMotionEvent const& event)
+    {
+        if (event.action == mir_motion_action_down ||
+            event.action == mir_motion_action_pointer_down)
+        {
+            if (auto const wm = window_manager.lock())
+            {
+                wm->click(average_pointer(event.pointer_count, event.pointer_coordinates));
+                return true;
+            }
+        }
+        else if (event.action == mir_motion_action_move)
+        {
+            if (auto const wm = window_manager.lock())
+            {
+                wm->drag(average_pointer(event.pointer_count, event.pointer_coordinates));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    static Point average_pointer(size_t pointer_count, MirMotionPointer const* pointer_coordinates)
+    {
+        long total_x = 0;
+        long total_y = 0;
+
+        for (auto p = pointer_coordinates; p != pointer_coordinates + pointer_count; ++p)
+        {
+            total_x += p->x;
+            total_y += p->y;
+        }
+
+        return Point{total_x/pointer_count, total_y/pointer_count};
+    }
+
+    std::weak_ptr<WindowManager> const window_manager;
 };
 
 auto const option = "window-manager";
@@ -259,12 +373,17 @@ public:
             auto const selection = options->get<std::string>(option);
 
             if (selection == tiling)
-                tmp = std::make_shared<TilingWindowManager>();
+            {
+                auto focus_controller_factory = [this] { return server.the_focus_controller(); };
+                tmp = std::make_shared<TilingWindowManager>(focus_controller_factory);
+            }
             else if (selection == fullscreen)
                 tmp = std::make_shared<FullscreenWindowManager>(server.the_shell_display_layout());
             else
                 throw mir::AbnormalExit("Unknown window manager: " + selection);
 
+            et = std::make_shared<EventTracker>(tmp);
+            server.the_composite_event_filter()->prepend(et);
             wm = tmp;
         }
 
@@ -274,6 +393,7 @@ public:
 private:
     mir::Server& server;
     std::weak_ptr<WindowManager> wm;
+    std::shared_ptr<EventTracker> et;
 };
 
 class SceneTracker : public ms::SessionListener
