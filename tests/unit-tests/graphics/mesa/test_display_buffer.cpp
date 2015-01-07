@@ -294,7 +294,7 @@ TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
         mock_egl.fake_egl_context);
 }
 
-TEST_F(MesaDisplayBufferTest, first_post_flips_but_no_wait)
+TEST_F(MesaDisplayBufferTest, first_flip_flips_but_no_wait)
 {
     EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
         .Times(1);
@@ -311,10 +311,11 @@ TEST_F(MesaDisplayBufferTest, first_post_flips_but_no_wait)
         gl_config,
         mock_egl.fake_egl_context);
 
-    db.post_update();
+    db.gl_swap_buffers();
+    db.flip();
 }
 
-TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_post)
+TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_flip)
 {
     InSequence seq;
 
@@ -339,8 +340,11 @@ TEST_F(MesaDisplayBufferTest, waits_for_page_flip_on_second_post)
         gl_config,
         mock_egl.fake_egl_context);
 
-    db.post_update();
-    db.post_update();
+    db.gl_swap_buffers();
+    db.flip();
+
+    db.gl_swap_buffers();
+    db.flip();
 }
 
 TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_list)

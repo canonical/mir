@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 
 #include "mir_toolkit/event.h"
-#include "mir_toolkit/input/input_event.h"
+#include "mir_toolkit/events/input/input_event.h"
 
 // See: https://bugs.launchpad.net/mir/+bug/1311699
 #define MIR_EVENT_ACTION_POINTER_INDEX_MASK 0xff00
@@ -115,7 +115,7 @@ TEST(KeyInputEventProperties, keycode_scancode_and_modifiers_taken_from_old_styl
     auto new_kev = mir_input_event_get_key_input_event(mir_event_get_input_event(&old_ev));
     EXPECT_EQ(key_code, mir_key_input_event_get_key_code(new_kev));
     EXPECT_EQ(scan_code, mir_key_input_event_get_scan_code(new_kev));
-    EXPECT_EQ(mir_key_input_event_modifier_shift, mir_key_input_event_get_modifiers(new_kev));
+    EXPECT_EQ(mir_input_event_modifier_shift, mir_key_input_event_get_modifiers(new_kev));
 }
 
 TEST(TouchInputEventProperties, touch_count_taken_from_pointer_count)

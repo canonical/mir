@@ -47,8 +47,34 @@ public:
     /** Releases the current GL rendering target. */
     virtual void release_current() = 0;
 
-    /** This will trigger OpenGL rendering and post the result to the screen. */
-    virtual void post_update() = 0;
+    /**
+     * Swap buffers for OpenGL rendering.
+     * After this method returns is the earliest time that it is safe to
+     * free GL-related resources such as textures and buffers.
+     */
+    virtual void gl_swap_buffers() = 0;
+
+    /**
+     * After gl_swap_buffers, flip the new front buffer to the screen
+     * This most likely involves a wait for vblank so can be very time
+     * consuming. This function is separate to gl_swap_buffers() because in
+     * real display systems the act of scanning out (or flipping) the
+     * front buffer is a very separate step to the GL buffer swapping. Not
+     * least because "flipping" is a hardware operation that is independent
+     * of the graphics library (OpenGL or other). Also, flip() can be a
+     * dramatically slower operation than gl_swap_buffers() and it would be
+     * an unacceptable performance hit to wait for both before freeing
+     * GL resources.
+     */
+    virtual void flip() = 0;
+
+    /**
+     * \deprecated Please try to implement separate gl_swap_buffers and
+     * flip functions instead. If not possible, just move your old
+     * post_update() logic into gl_swap_buffers.
+     */
+    __attribute__((__deprecated__("Use gl_swap_buffers() and flip(), remembering to release all compositor buffers in the middle.")))
+    void post_update() { gl_swap_buffers(); flip(); }
 
     /** This will render renderlist to the screen and post the result to the 
      *  screen if there is a hardware optimization that can be done.

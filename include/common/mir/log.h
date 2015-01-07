@@ -52,6 +52,8 @@ inline void log_info(std::string const& message)
                MIR_LOG_COMPONENT, message);
 }
 
+// TODO later as required: error, critical, warning, debug
+
 template<typename... Args>
 void log_info(char const* fmt, Args... args)
 {
@@ -59,7 +61,25 @@ void log_info(char const* fmt, Args... args)
                MIR_LOG_COMPONENT, fmt, args...);
 }
 
-// TODO later as required: error, critical, warning, debug
+template<typename... Args>
+void log_error(char const* fmt, Args... args)
+{
+    ::mir::log(::mir::logging::Severity::error,
+               MIR_LOG_COMPONENT, fmt, args...);
+}
+
+inline void log_critical(std::string const& message)
+{
+    ::mir::log(::mir::logging::Severity::critical,
+               MIR_LOG_COMPONENT, message);
+}
+
+
+inline void log_error(std::string const& message)
+{
+    ::mir::log(::mir::logging::Severity::error,
+               MIR_LOG_COMPONENT, message);
+}
 
 } // (nested anonymous) namespace
 #endif

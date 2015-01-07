@@ -45,7 +45,11 @@ struct StubDisplayBuffer : mtd::StubDisplayBuffer
     {
     }
     
-    void post_update() override
+    void gl_swap_buffers() override
+    {
+    }
+
+    void flip() override
     {
         auto now = std::chrono::high_resolution_clock::now();
         auto next_sync = last_sync + std::chrono::seconds(1) / vsync_rate_in_hz;
@@ -100,9 +104,4 @@ std::shared_ptr<mg::Display> VsyncSimulatingPlatform::create_display(
 std::shared_ptr<mg::PlatformIpcOperations> VsyncSimulatingPlatform::make_ipc_operations() const
 {
     return std::make_shared<mtd::NullPlatformIpcOperations>();
-}
-
-std::shared_ptr<mg::InternalClient> VsyncSimulatingPlatform::create_internal_client()
-{
-    return nullptr;
 }

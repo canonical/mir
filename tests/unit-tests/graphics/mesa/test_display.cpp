@@ -439,7 +439,8 @@ TEST_F(MesaDisplayTest, post_update)
 
     display->for_each_display_buffer([](mg::DisplayBuffer& db)
     {
-        db.post_update();
+        db.gl_swap_buffers();
+        db.flip();
     });
 }
 
@@ -477,7 +478,8 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
 
         display->for_each_display_buffer([](mg::DisplayBuffer& db)
         {
-            db.post_update();
+            db.gl_swap_buffers();
+            db.flip();
         });
     }, std::runtime_error);
 }
@@ -801,5 +803,31 @@ TEST_F(MesaDisplayTest, respects_gl_config)
         create_platform(),
         std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
         mir::test::fake_shared(mock_gl_config),
+        null_report};
+}
+
+TEST_F(MesaDisplayTest, supports_as_low_as_15bit_colour)
+{  // Regression test for LP: #1212753
+    using namespace testing;
+
+    mtd::StubGLConfig stub_gl_config;
+
+    EXPECT_CALL(mock_egl,
+                eglChooseConfig(
+                    _,
+                    AllOf(mtd::EGLConfigContainsAttrib(EGL_RED_SIZE, 5),
+                          mtd::EGLConfigContainsAttrib(EGL_GREEN_SIZE, 5),
+                          mtd::EGLConfigContainsAttrib(EGL_BLUE_SIZE, 5),
+                          mtd::EGLConfigContainsAttrib(EGL_ALPHA_SIZE, 0)),
+                    _,_,_))
+        .Times(AtLeast(1))
+        .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                        SetArgPointee<4>(1),
+                        Return(EGL_TRUE)));
+
+    mgm::Display display{
+        create_platform(),
+        std::make_shared<mg::DefaultDisplayConfigurationPolicy>(),
+        mir::test::fake_shared(stub_gl_config),
         null_report};
 }
