@@ -41,27 +41,46 @@ try
     config.power_mode(mga::DisplayName::primary, mode);
 } catch (...) {}
 
-mg::DisplayConfigurationOutput query_config(
-    mga::DisplayName display_name,
+std::array<mg::DisplayConfigurationOutput, 2> query_configs(
     mga::HwcConfiguration& hwc_config,
     MirPixelFormat format)
 {
-    auto attribs = hwc_config.active_attribs_for(display_name);
-    return mg::DisplayConfigurationOutput{
-        mg::DisplayConfigurationOutputId{1},
-        mg::DisplayConfigurationCardId{0},
-        mg::DisplayConfigurationOutputType::lvds,
-        {format},
-        {mg::DisplayConfigurationMode{attribs.pixel_size, attribs.vrefresh_hz}},
-        0,
-        attribs.mm_size,
-        attribs.connected,
-        true,
-        geom::Point{0,0},
-        0,
-        format,
-        mir_power_mode_on,
-        mir_orientation_normal};
+    auto primary_attribs = hwc_config.active_attribs_for(mga::DisplayName::primary);
+    auto external_attribs = hwc_config.active_attribs_for(mga::DisplayName::external);
+    return {
+        mg::DisplayConfigurationOutput{
+            mg::DisplayConfigurationOutputId{mga::DisplayName::primary},
+            mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::lvds,
+            {format},
+            {mg::DisplayConfigurationMode{primary_attribs.pixel_size, primary_attribs.vrefresh_hz}},
+            0,
+            primary_attribs.mm_size,
+            primary_attribs.connected,
+            true,
+            geom::Point{0,0},
+            0,
+            format,
+            mir_power_mode_on,
+            mir_orientation_normal
+        },
+        mg::DisplayConfigurationOutput{
+            mg::DisplayConfigurationOutputId{mga::DisplayName::external},
+            mg::DisplayConfigurationCardId{0},
+            mg::DisplayConfigurationOutputType::displayport,
+            {format},
+            {mg::DisplayConfigurationMode{external_attribs.pixel_size, external_attribs.vrefresh_hz}},
+            0,
+            external_attribs.mm_size,
+            external_attribs.connected,
+            false,
+            geom::Point{0,0},
+            0,
+            format,
+            mir_power_mode_on,
+            mir_orientation_normal
+        }
+    };
 }
 }
 
@@ -75,8 +94,7 @@ mga::Display::Display(
     display_buffer{display_buffer_builder->create_display_buffer(*gl_program_factory, gl_context)},
     hwc_config{display_buffer_builder->create_hwc_configuration()},
     hotplug_subscription{hwc_config->subscribe_to_config_changes(std::bind(&mga::Display::on_hotplug, this))},
-    primary_configuration(query_config(mga::DisplayName::primary, *hwc_config, display_buffer_builder->display_format())),
-    external_configuration(query_config(mga::DisplayName::external, *hwc_config, display_buffer_builder->display_format()))
+    configurations(query_configs(*hwc_config, display_buffer_builder->display_format()))
 {
     //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
     safe_power_mode(*hwc_config, mir_power_mode_on);
@@ -91,7 +109,7 @@ mga::Display::Display(
 
 mga::Display::~Display()
 {
-    if (primary_configuration.power_mode != mir_power_mode_off)
+    if (configurations[mga::DisplayName::primary].power_mode != mir_power_mode_off)
         safe_power_mode(*hwc_config, mir_power_mode_off);
 }
 
@@ -99,7 +117,7 @@ void mga::Display::for_each_display_buffer(std::function<void(mg::DisplayBuffer&
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
-    if (primary_configuration.power_mode == mir_power_mode_on)
+    if (configurations[mga::DisplayName::primary].power_mode == mir_power_mode_on)
         f(*display_buffer);
 }
 
@@ -108,12 +126,11 @@ std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     if (configuration_dirty)
     {
-        primary_configuration = query_config(mga::DisplayName::primary, *hwc_config, display_buffer_builder->display_format());
+        configurations = query_configs(*hwc_config, display_buffer_builder->display_format());
         configuration_dirty = false;
     }
 
-    return std::unique_ptr<mg::DisplayConfiguration>(
-        new mga::DisplayConfiguration(primary_configuration, external_configuration));
+    return std::unique_ptr<mg::DisplayConfiguration>(new mga::DisplayConfiguration(configurations));
 }
 
 void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
@@ -124,20 +141,22 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
     new_configuration.for_each_output([this](mg::DisplayConfigurationOutput const& output) {
-        if (output.current_format != primary_configuration.current_format)
+        if (output.current_format != configurations[output.id.as_value()].current_format)
             BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
 
-        if (output.power_mode != primary_configuration.power_mode)
+        if (output.power_mode != configurations[output.id.as_value()].power_mode)
         {
             hwc_config->power_mode(mga::DisplayName::primary, output.power_mode);
-            primary_configuration.power_mode = output.power_mode;
+            configurations[output.id.as_value()].power_mode = output.power_mode;
         }
 
         //TODO: We don't support rotation yet, so
         //we preserve this orientation change so the compositor can rotate everything in GL 
-        primary_configuration.orientation = output.orientation;
+        configurations[output.id.as_value()].orientation = output.orientation;
 
-        display_buffer->configure(primary_configuration.power_mode, primary_configuration.orientation);
+        //TODO: add an external framebuffer
+        if (output.id.as_value() == mga::DisplayName::primary)
+            display_buffer->configure(output.power_mode, output.orientation);
     });
 }
 

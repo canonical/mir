@@ -382,7 +382,7 @@ TEST_F(Display, returns_correct_config_with_one_connected_output_at_start)
     auto& disp_mode = outputs[0].modes[0];
     EXPECT_EQ(pixel_size, disp_mode.size);
     EXPECT_EQ(vrefresh, disp_mode.vrefresh_hz);
-    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, outputs[0].id);
+    EXPECT_EQ(mg::DisplayConfigurationOutputId{0}, outputs[0].id);
     EXPECT_EQ(mg::DisplayConfigurationCardId{0}, outputs[0].card_id);
     EXPECT_TRUE(outputs[0].connected);
     EXPECT_TRUE(outputs[0].used);
@@ -390,7 +390,6 @@ TEST_F(Display, returns_correct_config_with_one_connected_output_at_start)
     EXPECT_EQ(0, outputs[0].current_mode_index);
     EXPECT_EQ(physical_size, outputs[0].physical_size_mm);
 
-    EXPECT_EQ(0u, outputs[1].modes.size());
     EXPECT_FALSE(outputs[1].connected);
     EXPECT_FALSE(outputs[1].used);
 }
@@ -427,7 +426,7 @@ TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start
     auto& disp_mode = outputs[0].modes[0];
     EXPECT_EQ(primary_pixel_size, disp_mode.size);
     EXPECT_EQ(primary_vrefresh, disp_mode.vrefresh_hz);
-    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, outputs[0].id);
+    EXPECT_EQ(mg::DisplayConfigurationOutputId{0}, outputs[0].id);
     EXPECT_EQ(mg::DisplayConfigurationCardId{0}, outputs[0].card_id);
     EXPECT_TRUE(outputs[0].connected);
     EXPECT_TRUE(outputs[0].used);
@@ -439,10 +438,10 @@ TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start
     disp_mode = outputs[1].modes[0];
     EXPECT_EQ(external_pixel_size, disp_mode.size);
     EXPECT_EQ(external_vrefresh, disp_mode.vrefresh_hz);
-    EXPECT_EQ(mg::DisplayConfigurationOutputId{2}, outputs[1].id);
+    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, outputs[1].id);
     EXPECT_EQ(mg::DisplayConfigurationCardId{0}, outputs[1].card_id);
     EXPECT_TRUE(outputs[1].connected);
-    EXPECT_TRUE(outputs[1].used);
+    EXPECT_FALSE(outputs[1].used);
     EXPECT_EQ(origin, outputs[1].top_left);
     EXPECT_EQ(0, outputs[1].current_mode_index);
     EXPECT_EQ(external_physical_size, outputs[1].physical_size_mm);
@@ -543,7 +542,9 @@ TEST_F(Display, will_requery_display_configuration_after_hotplug)
             .WillOnce(testing::Return(attribs1))
             .WillOnce(testing::Return(attribs2));
         EXPECT_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
-            .WillOnce(testing::Return(attribs1));
+            .Times(2)
+            .WillOnce(testing::Return(attribs1))
+            .WillOnce(testing::Return(attribs2));
     });
 
     mga::Display display(

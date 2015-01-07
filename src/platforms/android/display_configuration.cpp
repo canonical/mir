@@ -21,9 +21,8 @@ namespace mga = mg::android;
 namespace geom = mir::geometry;
 
 mga::DisplayConfiguration::DisplayConfiguration(
-    mg::DisplayConfigurationOutput primary,
-    mg::DisplayConfigurationOutput external) :
-    configurations{std::move(primary), std::move(external)},
+    std::array<DisplayConfigurationOutput, 2> const& configurations) :
+    configurations(configurations),
     card{mg::DisplayConfigurationCardId{0}, 1}
 {
 }

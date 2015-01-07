@@ -30,7 +30,7 @@ namespace android
 class DisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-    DisplayConfiguration(DisplayConfigurationOutput primary, DisplayConfigurationOutput external);
+    DisplayConfiguration(std::array<DisplayConfigurationOutput, 2> const& configurations);
 
     DisplayConfiguration(DisplayConfiguration const& other);
     DisplayConfiguration& operator=(DisplayConfiguration const& other);

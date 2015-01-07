@@ -26,6 +26,7 @@
 
 #include <memory>
 #include <mutex>
+#include <array>
 
 namespace mir
 {
@@ -83,8 +84,7 @@ private:
     std::unique_ptr<ConfigurableDisplayBuffer> const display_buffer;
     std::unique_ptr<HwcConfiguration> const hwc_config;
     ConfigChangeSubscription const hotplug_subscription;
-    DisplayConfigurationOutput mutable primary_configuration;
-    DisplayConfigurationOutput mutable external_configuration;
+    std::array<DisplayConfigurationOutput, 2> mutable configurations;
 };
 
 }
