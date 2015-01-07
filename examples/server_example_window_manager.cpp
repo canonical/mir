@@ -31,9 +31,8 @@
 #include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/placement_strategy.h"
+#include "mir/scene/session_listener.h"
 #include "mir/scene/surface_creation_parameters.h"
-#include "mir/shell/session_coordinator_wrapper.h"
-#include "mir/shell/surface_coordinator_wrapper.h"
 
 #include <algorithm>
 #include <map>
@@ -272,59 +271,37 @@ private:
     std::weak_ptr<WindowManager> wm;
 };
 
-class SessionTracker : public msh::SessionCoordinatorWrapper
+class SceneTracker : public ms::SessionListener
 {
 public:
-    SessionTracker(
-        std::shared_ptr<ms::SessionCoordinator> const& wrapped,
-        std::shared_ptr<WindowManager> const& window_manager) :
-        msh::SessionCoordinatorWrapper(wrapped),
+    SceneTracker(std::shared_ptr<WindowManager> const& window_manager) :
         window_manager(window_manager)
     {
     }
 
 private:
-    auto open_session(pid_t client_pid, std::string const& name, std::shared_ptr<mf::EventSink> const& sink)
-    -> std::shared_ptr<mf::Session> override
+
+    void starting(std::shared_ptr<ms::Session> const& session) override
     {
-        auto const new_session = msh::SessionCoordinatorWrapper::open_session(client_pid, name, sink);
-        window_manager->add_session(new_session);
-        return new_session;
+        window_manager->add_session(session);
     }
 
-    void close_session(std::shared_ptr<mf::Session> const& session) override
+    void stopping(std::shared_ptr<ms::Session> const& session) override
     {
         window_manager->remove_session(session);
-        msh::SessionCoordinatorWrapper::close_session(session);
     }
 
-    std::shared_ptr<WindowManager> const window_manager;
-};
+    void focused(std::shared_ptr<ms::Session> const& /*session*/) override {}
+    void unfocused() override {}
 
-class SurfaceTracker : public msh::SurfaceCoordinatorWrapper
-{
-public:
-    SurfaceTracker(
-        std::shared_ptr<ms::SurfaceCoordinator> const& wrapped,
-        std::shared_ptr<WindowManager> const& window_manager) :
-        msh::SurfaceCoordinatorWrapper(wrapped),
-        window_manager(window_manager)
+    void surface_created(ms::Session& session, std::shared_ptr<ms::Surface> const& surface) override
     {
+        window_manager->add_surface(surface, &session);
     }
 
-private:
-    auto add_surface(ms::SurfaceCreationParameters const& params, ms::Session* session)
-    -> std::shared_ptr<ms::Surface> override
-    {
-        auto const new_surface = msh::SurfaceCoordinatorWrapper::add_surface(params, session);
-        window_manager->add_surface(new_surface, session);
-        return new_surface;
-    }
-
-    void remove_surface(std::weak_ptr<ms::Surface> const& surface)
+    void destroying_surface(ms::Session& /*session*/, std::shared_ptr<ms::Surface> const& surface) override
     {
         window_manager->remove_surface(surface);
-        msh::SurfaceCoordinatorWrapper::remove_surface(surface);
     }
 
     std::shared_ptr<WindowManager> const window_manager;
@@ -402,28 +379,15 @@ void me::add_window_manager_option_to(Server& server)
             return factory->window_manager();
         });
 
-    server.wrap_session_coordinator([factory, &server]
-        (std::shared_ptr<ms::SessionCoordinator> const& wrapped)
-        -> std::shared_ptr<ms::SessionCoordinator>
+    server.override_the_session_listener([factory, &server]()
+        -> std::shared_ptr<ms::SessionListener>
         {
             auto const options = server.get_options();
 
             if (!options->is_set(option))
-                return wrapped;
+                return std::shared_ptr<ms::SessionListener>{};
 
-            return std::make_shared<SessionTracker>(wrapped, factory->window_manager());
-        });
-
-    server.wrap_surface_coordinator([factory, &server]
-        (std::shared_ptr<ms::SurfaceCoordinator> const& wrapped)
-        -> std::shared_ptr<ms::SurfaceCoordinator>
-        {
-            auto const options = server.get_options();
-
-            if (!options->is_set(option))
-                return wrapped;
-
-            return std::make_shared<SurfaceTracker>(wrapped, factory->window_manager());
+            return std::make_shared<SceneTracker>(factory->window_manager());
         });
 
     server.wrap_display_buffer_compositor_factory([factory, &server]
