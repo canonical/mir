@@ -85,14 +85,14 @@ struct InputClient
         auto spec = mir_connection_create_spec_for_normal_surface(connection, surface_width,
             surface_height, mir_pixel_format_bgr_888);
         mir_surface_spec_set_name(spec, client_name.c_str());
-        auto surface = mir_surface_create_sync(spec);
+        surface = mir_surface_create_sync(spec);
         mir_surface_spec_release(spec);
 
         MirEventDelegate const event_delegate { handle_input, this };
         mir_surface_set_event_handler(surface, &event_delegate);
         mir_surface_swap_buffers_sync(surface);
 
-        wait_for_surface_to_become_focused_and_exposed(surface);
+        wait_for_surface_to_become_focused_and_exposed();
 
         ready_to_accept_events.wake_up_everyone();
         all_events_received.wait_for_at_most_seconds(10);
@@ -111,10 +111,10 @@ struct InputClient
         client->handler.handle_input(ev);
     }
 
-    void wait_for_surface_to_become_focused_and_exposed(MirSurface* surface)
+    void wait_for_surface_to_become_focused_and_exposed()
     {
         bool success = mt::spin_wait_for_condition_or_timeout(
-            [surface]
+            [&]
             {
                 return mir_surface_get_visibility(surface) == mir_surface_visibility_exposed &&
                        mir_surface_get_focus(surface) == mir_surface_focused;
@@ -135,6 +135,8 @@ struct InputClient
     MockInputHandler handler;
     mir::test::WaitCondition all_events_received;
     mir::test::WaitCondition ready_to_accept_events;
+    
+    MirSurface* surface;
 };
 
 using ClientInputRegions = std::map<std::string, std::vector<geom::Rectangle>>;
@@ -501,6 +503,10 @@ TEST_F(TestClientInput, hidden_clients_do_not_receive_pointer_events)
             if (session->name() == test_client_name_2)
                 session->hide();
         });
+    // As the surface will not be unocludded immediately when the other surface is
+    // hidden (due to the compositor feedback approach used)
+    // See bug: https://bugs.launchpad.net/mir/+bug/1408168
+    client1.wait_for_surface_to_become_focused_and_exposed();
 
     fake_event_hub()->synthesize_event(mis::a_motion_event().with_movement(1,1));
 }
