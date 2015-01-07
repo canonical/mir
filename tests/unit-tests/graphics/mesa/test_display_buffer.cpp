@@ -313,7 +313,8 @@ TEST_F(MesaDisplayBufferTest, clone_mode_first_flip_flips_but_no_wait)
         gl_config,
         mock_egl.fake_egl_context);
 
-    db.post_update();
+    db.gl_swap_buffers();
+    db.flip();
 }
 
 TEST_F(MesaDisplayBufferTest, single_mode_first_post_flips_with_wait)
