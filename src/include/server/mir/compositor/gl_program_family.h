@@ -37,7 +37,7 @@ namespace mir { namespace compositor {
 class GLProgramFamily
 {
 public:
-    GLProgramFamily();
+    GLProgramFamily() = default;
     GLProgramFamily(GLProgramFamily const&) = delete;
     GLProgramFamily& operator=(GLProgramFamily const&) = delete;
     ~GLProgramFamily() noexcept;
