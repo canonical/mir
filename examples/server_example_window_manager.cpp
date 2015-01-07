@@ -196,12 +196,25 @@ public:
         {
             if (session == session_under(old_cursor))
             {
-                if (auto const default_surface = session->default_surface())
+                auto const surface = session->default_surface();
+                if (surface && surface->input_area_contains(old_cursor))
                 {
-                    if (default_surface->input_bounds().contains(old_cursor))
+                    auto const new_pos = surface->top_left() + (cursor - old_cursor);
+                    surface->move_to(new_pos);
+                }
+                else
+                {
+                    auto const surface_list = surfaces.equal_range(session.get());
+
+                    for (auto ps = surface_list.first; ps != surface_list.second; ++ps)
                     {
-                        auto const new_pos = default_surface->top_left() + (cursor - old_cursor);
-                        default_surface->move_to(new_pos);
+                        auto const surface = ps->second.lock();
+                        if (surface && surface->input_area_contains(old_cursor))
+                        {
+                            auto const new_pos = surface->top_left() + (cursor - old_cursor);
+                            surface->move_to(new_pos);
+                            break;
+                        }
                     }
                 }
             }
