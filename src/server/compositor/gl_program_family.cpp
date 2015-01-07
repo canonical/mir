@@ -74,8 +74,8 @@ GLProgramFamily::~GLProgramFamily() noexcept
     }
 }
 
-GLuint GLProgramFamily::add_program(const char* vshader_src,
-                                    const char* fshader_src)
+GLuint GLProgramFamily::add_program(const char* const vshader_src,
+                                    const char* const fshader_src)
 {
     auto& v = vshader[vshader_src];
     if (!v.id) v.init(GL_VERTEX_SHADER, vshader_src);

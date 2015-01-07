@@ -26,6 +26,14 @@
 
 namespace mir { namespace compositor {
 
+/**
+ * GLProgramFamily represents a set of GLSL programs that are closely
+ * related. Programs which point to the same shader source strings will be
+ * made to share the same compiled shader objects.
+ *   A secondary intention is that this class may be extended to allow the
+ * different programs within the family to share common patterns of uniform
+ * usage too.
+ */
 class GLProgramFamily
 {
 public:
@@ -34,7 +42,8 @@ public:
     GLProgramFamily& operator=(GLProgramFamily const&) = delete;
     ~GLProgramFamily() noexcept;
 
-    GLuint add_program(const char* vshader, const char* fshader);
+    GLuint add_program(const char* const static_vshader_src,
+                       const char* const static_fshader_src);
 
 private:
     struct Shader
