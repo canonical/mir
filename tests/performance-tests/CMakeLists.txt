@@ -21,3 +21,4 @@ target_link_libraries(
 
   ${GTEST_BOTH_LIBRARIES}
 )
+

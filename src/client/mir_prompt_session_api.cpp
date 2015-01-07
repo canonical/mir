@@ -16,10 +16,13 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "MirPromptSessionAPI"
 
 #include "mir_toolkit/mir_prompt_session.h"
 #include "mir_prompt_session.h"
 #include "mir_connection.h"
+
+#include "uncaught.h"
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
@@ -46,9 +49,10 @@ MirPromptSession *mir_connection_create_prompt_session_sync(
                      nullptr));
         return prompt_session;
     }
-    catch (std::exception const&)
+    catch (std::exception const& ex)
     {
         // TODO callback with an error
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
 }
@@ -65,8 +69,9 @@ MirWaitHandle* mir_prompt_session_new_fds_for_prompt_providers(
             prompt_session->new_fds_for_prompt_providers(no_of_fds, callback, context) :
             nullptr;
     }
-    catch (std::exception const&)
+    catch (std::exception const& ex)
     {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
 }
