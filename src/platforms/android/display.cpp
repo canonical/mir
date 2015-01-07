@@ -75,6 +75,7 @@ mga::Display::Display(
     hotplug_subscription{hwc_config->subscribe_to_config_changes(std::bind(&mga::Display::on_hotplug, this))},
     primary_configuration(query_config(*hwc_config, display_buffer_builder->display_format()))
 {
+    //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
     safe_power_mode(*hwc_config, mir_power_mode_on);
 
     display_report->report_successful_setup_of_native_resources();
