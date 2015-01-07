@@ -51,7 +51,7 @@ public:
         std::shared_ptr<GLConfig> const& gl_config,
         std::shared_ptr<DisplayReport> const& display_report,
         OverlayOptimization overlay_option);
-    ~Display();
+    ~Display() noexcept;
 
     void for_each_display_buffer(std::function<void(graphics::DisplayBuffer&)> const& f) override;
 

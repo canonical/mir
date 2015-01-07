@@ -83,6 +83,7 @@ mga::Display::Display(
         gl_context,
         overlay_option)}
 {
+    //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
     safe_power_mode(*hwc_config, mir_power_mode_on);
 
     display_report->report_successful_setup_of_native_resources();
