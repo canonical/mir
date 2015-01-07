@@ -232,106 +232,16 @@ TEST_F(DisplayBuffer, release_current)
     db.release_current();
 }
 
-#if 0
-TEST_F(DisplayBuffer, changes_display_power_mode)
+TEST_F(DisplayBuffer, notifies_list_that_content_is_cleared)
 {
-    mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
-
-    EXPECT_CALL(*mock_display_device, content_cleared());
-
-    auto config = db.configuration();
-    config.power_mode = mir_power_mode_off;
-    db.configure(config);
-
-    config = db.configuration();
-    config.power_mode = mir_power_mode_on;
-    db.configure(config); 
-}
-
-<<<<<<< TREE
-=======
-TEST_F(DisplayBuffer, power_mode_request_stored)
-{
-    mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
-
     EXPECT_CALL(*mock_display_device, content_cleared())
         .Times(3);
-
-    auto config = db.configuration();
-    EXPECT_EQ(config.power_mode, mir_power_mode_on);
-    config.power_mode = mir_power_mode_off;
-    db.configure(config);
-
-    config = db.configuration();
-    EXPECT_EQ(config.power_mode, mir_power_mode_off);
-    config.power_mode = mir_power_mode_suspend;
-    db.configure(config);
-
-    config = db.configuration();
-    EXPECT_EQ(config.power_mode, mir_power_mode_suspend);
-    config.power_mode = mir_power_mode_standby;
-    db.configure(config);
-
-    config = db.configuration();
-    EXPECT_EQ(config.power_mode, mir_power_mode_standby);
-    config.power_mode = mir_power_mode_on;
-    db.configure(config);
+    db.configure(mir_power_mode_off, mir_orientation_normal);
+    db.configure(mir_power_mode_suspend, mir_orientation_normal);
+    db.configure(mir_power_mode_standby, mir_orientation_normal);
+    db.configure(mir_power_mode_on, mir_orientation_normal);
 }
 
->>>>>>> MERGE-SOURCE
-//configuration tests
-//TODO: the list does not support fb target rotation yet
-TEST_F(DisplayBuffer, display_orientation_not_supported)
-{
-    mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
-
-    auto config = db.configuration();
-    config.orientation = mir_orientation_left;
-    db.configure(config); 
-
-    config = db.configuration();
-    EXPECT_EQ(mir_orientation_left, config.orientation);
-}
-
-TEST_F(DisplayBuffer, incorrect_display_configure_throws)
-{
-    mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
-    auto config = db.configuration();
-    //error
-    config.current_format = mir_pixel_format_invalid;
-    EXPECT_THROW({
-        db.configure(config);
-    }, std::runtime_error); 
-}
-
-TEST_F(DisplayBuffer, android_display_configuration_info)
-{
-    mga::DisplayBuffer db(
-        mock_fb_bundle, mock_display_device, native_window, *gl_context, stub_program_factory, mga::OverlayOptimization::enabled);
-    auto disp_conf = db.configuration();
-
-    ASSERT_EQ(1u, disp_conf.modes.size());
-    auto& disp_mode = disp_conf.modes[0];
-    EXPECT_EQ(display_size, disp_mode.size);
-
-    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id);
-    EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id);
-    EXPECT_TRUE(disp_conf.connected);
-    EXPECT_TRUE(disp_conf.used);
-    auto origin = geom::Point{0,0};
-    EXPECT_EQ(origin, disp_conf.top_left);
-    EXPECT_EQ(0, disp_conf.current_mode_index);
-
-    EXPECT_EQ(refresh_rate, disp_mode.vrefresh_hz);
-    //TODO fill physical_size_mm fields accordingly;
-}
-
->>>>>>> MERGE-SOURCE
-#endif
 TEST_F(DisplayBuffer, does_not_use_alpha)
 {
     EXPECT_FALSE(db.uses_alpha());
