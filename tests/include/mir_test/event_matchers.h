@@ -220,7 +220,7 @@ MATCHER_P2(ButtonDownEvent, x, y, "")
         return false;
     if (mir_pointer_input_event_get_action(pev) != mir_pointer_input_event_action_down)
         return false;
-    if (mir_pointer_input_event_get_button_state(pev, mir_pointer_input_event_button_primary) == false)
+    if (mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_primary) == false)
         return false;
     if (mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_x) != x)
         return false;
@@ -236,7 +236,7 @@ MATCHER_P2(ButtonUpEvent, x, y, "")
         return false;
     if (mir_pointer_input_event_get_action(pev) != mir_pointer_input_event_action_up)
         return false;
-    if (mir_pointer_input_event_get_button_state(pev, mir_pointer_input_event_primary) == true)
+    if (mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_primary) == true)
         return false;
     if (mir_pointer_input_event_get_axis_value(pev, mir_pointer_input_axis_x) != x)
         return false;
