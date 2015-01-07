@@ -51,6 +51,7 @@ mga::Display::Display(
     display_buffer{display_buffer_builder->create_display_buffer(*gl_program_factory, gl_context)},
     hwc_config{display_buffer_builder->create_hwc_configuration()}
 {
+    //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
     safe_power_mode(*hwc_config, mir_power_mode_on);
 
     display_report->report_successful_setup_of_native_resources();
