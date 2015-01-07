@@ -19,6 +19,8 @@
 #ifndef MIR_TOOLKIT_POINTER_INPUT_EVENT_H_
 #define MIR_TOOLKIT_POINTER_INPUT_EVENT_H_
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 /**
  * \addtogroup mir_toolkit
@@ -63,15 +65,15 @@ typedef enum {
 } MirPointerInputEventAxis;
 
 /* 
- * Flags representing pointer button state.
+ * Identifiers for pointer buttons
  */
 typedef enum {
-    mir_pointer_input_button_primary   = 1 << 0,
-    mir_pointer_input_button_secondary = 1 << 1,
-    mir_pointer_input_button_tertiary  = 1 << 2,
-    mir_pointer_input_button_back      = 1 << 3,
-    mir_pointer_input_button_forward   = 1 << 4
-} MirPointerInputEventButtons;
+    mir_pointer_input_button_primary   = 1,
+    mir_pointer_input_button_secondary = 2,
+    mir_pointer_input_button_tertiary  = 3,
+    mir_pointer_input_button_back      = 4,
+    mir_pointer_input_button_forward   = 5
+} MirPointerInputEventButton;
 
 /**
  * Retrieve the modifier keys pressed when the pointer action occured.
@@ -90,12 +92,15 @@ MirInputEventModifiers mir_pointer_input_event_get_modifiers(MirPointerInputEven
 MirPointerInputEventAction mir_pointer_input_event_get_action(MirPointerInputEvent const* event);
 
 /**
- * Retrieve the pointer button state when the action occurred.
+ * Retrieve the state of a given pointer button when the action occurred.
  *
  * \param [in] event         The pointer event
- * \return                   The pointer button state
+ * \param [in] button        The button to check
+ *
+ * \return                   Whether the given button is depressed
  */
-MirPointerInputEventButtons mir_pointer_input_event_get_button_state(MirPointerInputEvent const* event);
+bool mir_pointer_input_event_get_button_state(MirPointerInputEvent const* event,
+    MirPointerInputEventButton button);
 
 /**
  * Retrieve the axis value reported by a given pointer event.
