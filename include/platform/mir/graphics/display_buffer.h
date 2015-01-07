@@ -73,6 +73,7 @@ public:
      * flip functions instead. If not possible, just move your old
      * post_update() logic into gl_swap_buffers.
      */
+    __attribute__((__deprecated__("Use gl_swap_buffers() and flip(), remembering to release all compositor buffers in the middle.")))
     void post_update() { gl_swap_buffers(); flip(); }
 
     /** This will render renderlist to the screen and post the result to the 

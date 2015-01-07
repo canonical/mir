@@ -40,7 +40,7 @@ f623dcf3c2ed134c1be20106eb54bcccc84af462  include/common/mir_toolkit/events/prom
 748f5c2aab11189aa02c4a89ab900561548e7304  include/platform/mir/graphics/buffer_properties.h
 ffa857f624f1c8cbd50a190107137346fc3204d6  include/platform/mir/graphics/cursor.h
 fe2b5f13ccd3ec6b78d90d3abbb7d88b48238578  include/platform/mir/graphics/cursor_image.h
-0025a5c3e9d916820f3ef27aee9f5d4a9985723b  include/platform/mir/graphics/display_buffer.h
+c2fee623b2fbe55e3eefed051ab7e58f11c240ad  include/platform/mir/graphics/display_buffer.h
 f53a0020b8f1bd4a941a201eb26271cffee0a7dd  include/platform/mir/graphics/display_configuration.h
 6fe08da318c920b0d20ea8b8f560f5ac7ed389fe  include/platform/mir/graphics/display_configuration_policy.h
 41ea906d208b761e3d5d5056095de9de2d4ffa17  include/platform/mir/graphics/display.h
