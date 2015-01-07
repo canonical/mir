@@ -94,6 +94,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmircommon3 (= ${binary:Version}), 
          libprotobuf-dev (>= 2.4.1),
+         libxkbcommon-dev,
          ${misc:Depends},
 Breaks: mircommon-dev (<< 0.6)
 Replaces: mircommon-dev (<< 0.6)
