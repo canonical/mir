@@ -18,6 +18,7 @@
 #define MIR_GRAPHICS_ANDROID_DISPLAY_CONFIGURATION_H_
 
 #include "mir/graphics/display_configuration.h"
+#include <array>
 
 namespace mir
 {
@@ -29,7 +30,8 @@ namespace android
 class DisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-    DisplayConfiguration(DisplayConfigurationOutput&& output);
+    DisplayConfiguration(DisplayConfigurationOutput primary, DisplayConfigurationOutput external);
+
     DisplayConfiguration(DisplayConfiguration const& other);
     DisplayConfiguration& operator=(DisplayConfiguration const& other);
 
@@ -40,7 +42,7 @@ public:
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
 
 private:
-    DisplayConfigurationOutput configuration;
+    std::array<DisplayConfigurationOutput, 2> configurations;
     DisplayConfigurationCard card;
 };
 

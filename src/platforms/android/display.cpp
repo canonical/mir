@@ -113,7 +113,7 @@ std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
     }
 
     return std::unique_ptr<mg::DisplayConfiguration>(
-        new mga::DisplayConfiguration(mg::DisplayConfigurationOutput(primary_configuration)));
+        new mga::DisplayConfiguration(primary_configuration, external_configuration));
 }
 
 void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)

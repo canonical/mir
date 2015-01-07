@@ -349,9 +349,10 @@ TEST_F(Display, configures_power_modes)
     });
 }
 
-TEST_F(Display, returns_correct_config_with_one_output_at_start)
+TEST_F(Display, returns_correct_config_with_one_connected_output_at_start)
 {
     using namespace testing;
+    auto origin = geom::Point{0,0};
     geom::Size pixel_size{344, 111};
     geom::Size physical_size{4230, 2229};
     double vrefresh{4442.32};
@@ -371,26 +372,27 @@ TEST_F(Display, returns_correct_config_with_one_output_at_start)
         null_display_report);
     auto config = display.configuration();
 
-    size_t num_configs = 0;
-    config->for_each_output([&](mg::DisplayConfigurationOutput const& disp_conf)
-    {
-        ASSERT_EQ(1u, disp_conf.modes.size());
-        auto& disp_mode = disp_conf.modes[0];
-        EXPECT_EQ(pixel_size, disp_mode.size);
-        EXPECT_EQ(vrefresh, disp_mode.vrefresh_hz);
-
-        EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, disp_conf.id);
-        EXPECT_EQ(mg::DisplayConfigurationCardId{0}, disp_conf.card_id);
-        EXPECT_TRUE(disp_conf.connected);
-        EXPECT_TRUE(disp_conf.used);
-        auto origin = geom::Point{0,0};
-        EXPECT_EQ(origin, disp_conf.top_left);
-        EXPECT_EQ(0, disp_conf.current_mode_index);
-        EXPECT_EQ(physical_size, disp_conf.physical_size_mm);
-        num_configs++;
+    std::vector<mg::DisplayConfigurationOutput> outputs;
+    config->for_each_output([&](mg::DisplayConfigurationOutput const& disp_conf) {
+        outputs.push_back(disp_conf);
     });
+    ASSERT_EQ(2u, outputs.size());
 
-    EXPECT_EQ(1u, num_configs);
+    ASSERT_EQ(1u, outputs[0].modes.size());
+    auto& disp_mode = outputs[0].modes[0];
+    EXPECT_EQ(pixel_size, disp_mode.size);
+    EXPECT_EQ(vrefresh, disp_mode.vrefresh_hz);
+    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, outputs[0].id);
+    EXPECT_EQ(mg::DisplayConfigurationCardId{0}, outputs[0].card_id);
+    EXPECT_TRUE(outputs[0].connected);
+    EXPECT_TRUE(outputs[0].used);
+    EXPECT_EQ(origin, outputs[0].top_left);
+    EXPECT_EQ(0, outputs[0].current_mode_index);
+    EXPECT_EQ(physical_size, outputs[0].physical_size_mm);
+
+    EXPECT_EQ(0u, outputs[1].modes.size());
+    EXPECT_FALSE(outputs[1].connected);
+    EXPECT_FALSE(outputs[1].used);
 }
 
 TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start)
@@ -421,7 +423,6 @@ TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start
         outputs.push_back(disp_conf);
     });
     ASSERT_EQ(2u, outputs.size());
-
     ASSERT_EQ(1u, outputs[0].modes.size());
     auto& disp_mode = outputs[0].modes[0];
     EXPECT_EQ(primary_pixel_size, disp_mode.size);
@@ -438,7 +439,7 @@ TEST_F(Display, returns_correct_config_with_external_and_primary_output_at_start
     disp_mode = outputs[1].modes[0];
     EXPECT_EQ(external_pixel_size, disp_mode.size);
     EXPECT_EQ(external_vrefresh, disp_mode.vrefresh_hz);
-    EXPECT_EQ(mg::DisplayConfigurationOutputId{1}, outputs[1].id);
+    EXPECT_EQ(mg::DisplayConfigurationOutputId{2}, outputs[1].id);
     EXPECT_EQ(mg::DisplayConfigurationCardId{0}, outputs[1].card_id);
     EXPECT_TRUE(outputs[1].connected);
     EXPECT_TRUE(outputs[1].used);
