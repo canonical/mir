@@ -58,7 +58,9 @@ public:
         std::shared_ptr<ms::Surface> const& surface,
         ms::Session* session) = 0;
 
-    virtual void remove_surface(std::weak_ptr<ms::Surface> const& surface) = 0;
+    virtual void remove_surface(
+        std::weak_ptr<ms::Surface> const& surface,
+        ms::Session* session) = 0;
 
     virtual void add_session(std::shared_ptr<ms::Session> const& session) = 0;
 
@@ -77,7 +79,7 @@ public:
 private:
     void add_surface(std::shared_ptr<ms::Surface> const&, ms::Session*) override {}
 
-    void remove_surface(std::weak_ptr<ms::Surface> const&) override {}
+    void remove_surface(std::weak_ptr<ms::Surface> const&, ms::Session*) override {}
 
     void add_session(std::shared_ptr<ms::Session> const&) override {}
 
@@ -116,7 +118,9 @@ class TilingWindowManager : public WindowManager
         surfaces.emplace(session, surface);
     }
 
-    void remove_surface(std::weak_ptr<ms::Surface> const& /*surface*/)
+    void remove_surface(
+        std::weak_ptr<ms::Surface> const& /*surface*/,
+        ms::Session* /*session*/)
     {
         // This looks odd but we want to block in case we're using the surface
         std::lock_guard<decltype(mutex)> lock(mutex);
@@ -126,13 +130,14 @@ class TilingWindowManager : public WindowManager
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         tiles[session.get()] = Rectangle{};
+        sessions[session.get()] = session;
         update_tiles();
     }
 
     void remove_session(std::shared_ptr<ms::Session> const& session)
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        tiles.erase(session.get());
+        sessions.erase(session.get());
         surfaces.erase(session.get());
         update_tiles();
     }
@@ -231,6 +236,7 @@ private:
     std::vector<Rectangle> displays;
     std::map<ms::Session const*, Rectangle> tiles;
     std::multimap<ms::Session const*, std::weak_ptr<ms::Surface>> surfaces;
+    std::map<ms::Session const*, std::weak_ptr<ms::Session>> sessions;
 };
 
 auto const option = "window-manager";
@@ -298,9 +304,9 @@ private:
         window_manager->add_surface(surface, &session);
     }
 
-    void destroying_surface(ms::Session& /*session*/, std::shared_ptr<ms::Surface> const& surface) override
+    void destroying_surface(ms::Session& session, std::shared_ptr<ms::Surface> const& surface) override
     {
-        window_manager->remove_surface(surface);
+        window_manager->remove_surface(surface, &session);
     }
 
     std::shared_ptr<WindowManager> const window_manager;
