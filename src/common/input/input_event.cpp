@@ -477,29 +477,25 @@ MirPointerInputEventAction mir_pointer_input_event_get_action(MirPointerInputEve
     }
 }
 
-namespace
-{
-MirPointerInputEventButtons old_buttons_to_new(int old_button_state)
-{
-    int new_buttons = 0;
-    if (old_button_state & mir_motion_button_primary)
-        new_buttons |= mir_pointer_input_button_primary;
-    if (old_button_state & mir_motion_button_secondary)
-        new_buttons |= mir_pointer_input_button_secondary;
-    if (old_button_state & mir_motion_button_tertiary)
-        new_buttons |= mir_pointer_input_button_tertiary;
-    if (old_button_state & mir_motion_button_back)
-        new_buttons |= mir_pointer_input_button_back;
-    if (old_button_state & mir_motion_button_forward)
-        new_buttons |= mir_pointer_input_button_forward;
-    return static_cast<MirPointerInputEventButtons>(new_buttons);
-}
-}
-
-MirPointerInputEventButtons mir_pointer_input_event_get_button_state(MirPointerInputEvent const* pev)
+bool mir_pointer_input_event_get_button_state(MirPointerInputEvent const* pev,
+    MirPointerInputEventButton button)
 {
    auto const& old_mev = old_mev_from_new(pev);
-   return old_buttons_to_new(old_mev.button_state);
+   switch (button)
+   {
+   case mir_pointer_input_button_primary:
+       return old_mev.button_state & mir_motion_button_primary;
+   case mir_pointer_input_button_secondary:
+       return old_mev.button_state & mir_motion_button_secondary;
+   case mir_pointer_input_button_tertiary:
+       return old_mev.button_state & mir_motion_button_tertiary;
+   case mir_pointer_input_button_back:
+       return old_mev.button_state & mir_motion_button_back;
+   case mir_pointer_input_button_forward:
+       return old_mev.button_state & mir_motion_button_forward;
+   default:
+       return false;
+   }
 }
 
 float mir_pointer_input_event_get_axis_value(MirPointerInputEvent const* pev, MirPointerInputEventAxis axis)

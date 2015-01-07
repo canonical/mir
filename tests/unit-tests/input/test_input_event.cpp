@@ -364,10 +364,17 @@ TEST(PointerInputEventProperties, button_state_translated)
     old_ev.motion.button_state = mir_motion_button_primary;
     auto pev = mir_input_event_get_pointer_input_event(mir_event_get_input_event(&old_ev));
     
-    EXPECT_EQ(mir_pointer_input_button_primary, mir_pointer_input_event_get_button_state(pev));
+    EXPECT_TRUE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_primary));
+    EXPECT_FALSE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_secondary));
+
     old_ev.motion.button_state = static_cast<MirMotionButton>(old_ev.motion.button_state | (mir_motion_button_secondary));
-    EXPECT_EQ(mir_pointer_input_button_primary | 
-        mir_pointer_input_button_secondary, mir_pointer_input_event_get_button_state(pev));
+
+    EXPECT_TRUE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_primary));
+    EXPECT_TRUE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_secondary));
+
+    EXPECT_FALSE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_tertiary));
+    EXPECT_FALSE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_back));
+    EXPECT_FALSE(mir_pointer_input_event_get_button_state(pev, mir_pointer_input_button_forward));
 }
 
 TEST(PointerInputEventProperties, axis_values_copied)
