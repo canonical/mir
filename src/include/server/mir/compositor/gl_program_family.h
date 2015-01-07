@@ -42,16 +42,16 @@ public:
     GLProgramFamily& operator=(GLProgramFamily const&) = delete;
     ~GLProgramFamily() noexcept;
 
-    GLuint add_program(const char* const static_vshader_src,
-                       const char* const static_fshader_src);
+    GLuint add_program(const GLchar* const static_vshader_src,
+                       const GLchar* const static_fshader_src);
 
 private:
     struct Shader
     {
         GLuint id = 0;
-        void init(GLenum type, const char* src);
+        void init(GLenum type, const GLchar* src);
     };
-    typedef std::unordered_map<const char*, Shader> ShaderMap;
+    typedef std::unordered_map<const GLchar*, Shader> ShaderMap;
     ShaderMap vshader, fshader;
 
     typedef std::pair<GLuint, GLuint> ShaderPair;

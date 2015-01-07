@@ -20,7 +20,7 @@
 
 namespace mir { namespace compositor {
 
-void GLProgramFamily::Shader::init(GLenum type, const char* src)
+void GLProgramFamily::Shader::init(GLenum type, const GLchar* src)
 {
     if (!id)
     {
@@ -70,8 +70,8 @@ GLProgramFamily::~GLProgramFamily() noexcept
     }
 }
 
-GLuint GLProgramFamily::add_program(const char* const vshader_src,
-                                    const char* const fshader_src)
+GLuint GLProgramFamily::add_program(const GLchar* const vshader_src,
+                                    const GLchar* const fshader_src)
 {
     auto& v = vshader[vshader_src];
     if (!v.id) v.init(GL_VERTEX_SHADER, vshader_src);
