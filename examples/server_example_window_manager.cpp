@@ -182,15 +182,8 @@ public:
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
 
-        for(auto& tile : tiles)
-        {
-            if (tile.second.contains(cursor))
-            {
-                auto const session = sessions[tile.first].lock();
-                focus_controller()->set_focus_to(session);
-                break;
-            }
-        }
+        if (auto const session = session_under(cursor))
+            focus_controller()->set_focus_to(session);
 
         old_cursor = cursor;
     }
@@ -198,6 +191,22 @@ public:
     void drag(Point cursor) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
+
+        if (auto const session = session_under(cursor))
+        {
+            if (session == session_under(old_cursor))
+            {
+                if (auto const default_surface = session->default_surface())
+                {
+                    if (default_surface->input_bounds().contains(old_cursor))
+                    {
+                        auto const new_pos = default_surface->top_left() + (cursor - old_cursor);
+                        default_surface->move_to(new_pos);
+                    }
+                }
+            }
+        }
+
         old_cursor = cursor;
     }
 
@@ -274,6 +283,19 @@ private:
         auto height = std::min(new_tile.size.height.as_int()-displacement.dy.as_int(), scaled_height.as_int());
 
         surface.resize({width, height});
+    }
+
+    std::shared_ptr<ms::Session> session_under(Point position)
+    {
+        for(auto& tile : tiles)
+        {
+            if (tile.second.contains(position))
+            {
+                return sessions[tile.first].lock();
+            }
+        }
+
+        return std::shared_ptr<ms::Session>{};
     }
 
     FocusControllerFactory const focus_controller;
