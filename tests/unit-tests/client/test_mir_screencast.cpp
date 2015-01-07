@@ -17,11 +17,11 @@
  */
 
 #include "src/client/mir_screencast.h"
-#include "src/client/client_buffer_factory.h"
 #include "src/client/client_platform.h"
 
 #include "mir_test_doubles/null_client_buffer.h"
 #include "mir_test_doubles/stub_client_buffer_factory.h"
+#include "mir_test_doubles/mock_client_buffer_factory.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -127,14 +127,6 @@ struct StubEGLNativeWindowFactory : mcl::EGLNativeWindowFactory
 EGLNativeWindowType StubEGLNativeWindowFactory::egl_native_window{
     reinterpret_cast<EGLNativeWindowType>(&StubEGLNativeWindowFactory::egl_native_window)};
 
-struct MockClientBufferFactory : mcl::ClientBufferFactory
-{
-    MOCK_METHOD3(create_buffer,
-                 std::shared_ptr<mcl::ClientBuffer>(
-                    std::shared_ptr<MirBufferPackage> const& /*package*/,
-                    mir::geometry::Size /*size*/, MirPixelFormat /*pf*/));
-};
-
 MATCHER_P(WithOutputId, value, "")
 {
     return arg->output_id() == value;
@@ -236,7 +228,7 @@ public:
           default_pixel_format{mir_pixel_format_xbgr_8888},
           stub_egl_native_window_factory{std::make_shared<StubEGLNativeWindowFactory>()},
           stub_client_buffer_factory{std::make_shared<mtd::StubClientBufferFactory>()},
-          mock_client_buffer_factory{std::make_shared<MockClientBufferFactory>()}
+          mock_client_buffer_factory{std::make_shared<mtd::MockClientBufferFactory>()}
     {
     }
 
@@ -247,7 +239,7 @@ public:
     MirPixelFormat default_pixel_format;
     std::shared_ptr<StubEGLNativeWindowFactory> const stub_egl_native_window_factory;
     std::shared_ptr<mtd::StubClientBufferFactory> const stub_client_buffer_factory;
-    std::shared_ptr<MockClientBufferFactory> const mock_client_buffer_factory;
+    std::shared_ptr<mtd::MockClientBufferFactory> const mock_client_buffer_factory;
 };
 
 }

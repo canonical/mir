@@ -30,6 +30,10 @@ message SurfaceId {
   required int32 value = 1;
 };
 
+message BufferStreamId {
+  required int32 value = 1;
+};
+
 message BufferRequest {
   optional SurfaceId id = 1;
   optional Buffer buffer = 2;
@@ -101,6 +105,13 @@ message Connection {
   repeated uint32 surface_pixel_format = 5;
 
   optional string error = 127;
+}
+
+message BufferStream {
+  optional BufferStreamId id = 1;
+  optional int32 pixel_format = 2;
+  optional int32 buffer_usage = 3;
+  optional Buffer buffer = 4;
 }
 
 message Surface {
