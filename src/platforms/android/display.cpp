@@ -42,9 +42,11 @@ try
 } catch (...) {}
 
 mg::DisplayConfigurationOutput query_config(
-    mga::HwcConfiguration& hwc_config, MirPixelFormat format)
+    mga::DisplayName display_name,
+    mga::HwcConfiguration& hwc_config,
+    MirPixelFormat format)
 {
-    auto attribs = hwc_config.active_attribs_for(mga::DisplayName::primary);
+    auto attribs = hwc_config.active_attribs_for(display_name);
     return mg::DisplayConfigurationOutput{
         mg::DisplayConfigurationOutputId{1},
         mg::DisplayConfigurationCardId{0},
@@ -73,7 +75,8 @@ mga::Display::Display(
     display_buffer{display_buffer_builder->create_display_buffer(*gl_program_factory, gl_context)},
     hwc_config{display_buffer_builder->create_hwc_configuration()},
     hotplug_subscription{hwc_config->subscribe_to_config_changes(std::bind(&mga::Display::on_hotplug, this))},
-    primary_configuration(query_config(*hwc_config, display_buffer_builder->display_format()))
+    primary_configuration(query_config(mga::DisplayName::primary, *hwc_config, display_buffer_builder->display_format())),
+    external_configuration(query_config(mga::DisplayName::external, *hwc_config, display_buffer_builder->display_format()))
 {
     //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
     safe_power_mode(*hwc_config, mir_power_mode_on);
@@ -105,7 +108,7 @@ std::unique_ptr<mg::DisplayConfiguration> mga::Display::configuration() const
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     if (configuration_dirty)
     {
-        primary_configuration = query_config(*hwc_config, display_buffer_builder->display_format());
+        primary_configuration = query_config(mga::DisplayName::primary, *hwc_config, display_buffer_builder->display_format());
         configuration_dirty = false;
     }
 

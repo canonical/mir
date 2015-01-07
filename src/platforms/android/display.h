@@ -84,6 +84,7 @@ private:
     std::unique_ptr<HwcConfiguration> const hwc_config;
     ConfigChangeSubscription const hotplug_subscription;
     DisplayConfigurationOutput mutable primary_configuration;
+    DisplayConfigurationOutput mutable external_configuration;
 };
 
 }

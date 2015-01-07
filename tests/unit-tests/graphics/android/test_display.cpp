@@ -537,10 +537,12 @@ TEST_F(Display, will_requery_display_configuration_after_hotplug)
     {
         EXPECT_CALL(mock_config, subscribe_to_config_changes(_))
             .WillOnce(DoAll(SaveArg<0>(&hotplug_fn), Return(subscription)));
-        EXPECT_CALL(mock_config, active_attribs_for(_))
+        EXPECT_CALL(mock_config, active_attribs_for(mga::DisplayName::primary))
             .Times(2)
             .WillOnce(testing::Return(attribs1))
             .WillOnce(testing::Return(attribs2));
+        EXPECT_CALL(mock_config, active_attribs_for(mga::DisplayName::external))
+            .WillOnce(testing::Return(attribs1));
     });
 
     mga::Display display(
