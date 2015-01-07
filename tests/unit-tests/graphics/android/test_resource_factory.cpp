@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "src/platform/graphics/android/resource_factory.h"
+#include "src/platforms/android/resource_factory.h"
 #include "mir_test_doubles/mock_android_hw.h"
 
 #include <stdexcept>

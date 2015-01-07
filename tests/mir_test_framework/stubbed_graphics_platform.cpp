@@ -17,12 +17,16 @@
  */
 
 #include "stubbed_graphics_platform.h"
+#include "mir_test_framework/stub_graphics_platform_operation.h"
 
 #include "mir/graphics/buffer_ipc_message.h"
-#include "mir/graphics/buffer_writer.h"
+
+#include "mir_test_framework/stub_platform_helpers.h"
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display.h"
+#include "mir/fd.h"
+#include "mir_test/pipe.h"
 
 #ifdef ANDROID
 #include "mir_test_doubles/stub_android_native_buffer.h"
@@ -31,6 +35,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <system_error>
 #include <boost/exception/errinfo_errno.hpp>
@@ -145,13 +150,62 @@ class StubIpcOps : public mg::PlatformIpcOperations
 
     std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
     {
-        return std::make_shared<mg::PlatformIPCPackage>();
+        auto package = std::make_shared<mg::PlatformIPCPackage>();
+        mtf::pack_stub_ipc_package(*package);
+        return package;
     }
 
-    mg::PlatformIPCPackage platform_operation(
-         unsigned int const, mg::PlatformIPCPackage const&) override
+    mg::PlatformOperationMessage platform_operation(
+         unsigned int const opcode, mg::PlatformOperationMessage const& message) override
     {
-        return mg::PlatformIPCPackage();
+        mg::PlatformOperationMessage reply;
+
+        if (opcode == static_cast<unsigned int>(mtf::StubGraphicsPlatformOperation::add))
+        {
+            if (message.data.size() != 2 * sizeof(int))
+            {
+                BOOST_THROW_EXCEPTION(
+                    std::runtime_error("Invalid parameters for 'add' platform operation"));
+            }
+
+            auto const int_data = reinterpret_cast<int const*>(message.data.data());
+
+            reply.data.resize(sizeof(int));
+            *(reinterpret_cast<int*>(reply.data.data())) = int_data[0] + int_data[1];
+        }
+        else if (opcode == static_cast<unsigned int>(mtf::StubGraphicsPlatformOperation::echo_fd))
+        {
+            if (message.fds.size() != 1)
+            {
+                BOOST_THROW_EXCEPTION(
+                    std::runtime_error("Invalid parameters for 'echo_fd' platform operation"));
+            }
+
+            mir::Fd const request_fd{message.fds[0]};
+            char request_char{0};
+            if (read(request_fd, &request_char, 1) != 1)
+            {
+                BOOST_THROW_EXCEPTION(
+                    std::runtime_error("Failed to read character from request fd in 'echo_fd' operation"));
+            }
+
+            mir::test::Pipe pipe;
+
+            if (write(pipe.write_fd(), &request_char, 1) != 1)
+            {
+                BOOST_THROW_EXCEPTION(
+                    std::runtime_error("Failed to write to pipe in 'echo_fd' operation"));
+            }
+
+            reply.fds.push_back(dup(pipe.read_fd()));
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error("Invalid platform operation"));
+        }
+
+        return reply;
     }
 };
 }
@@ -171,36 +225,108 @@ std::shared_ptr<mg::PlatformIpcOperations> mtf::StubGraphicPlatform::make_ipc_op
     return std::make_shared<StubIpcOps>();
 }
 
+namespace
+{
+std::shared_ptr<mg::Display> display_preset;
+}
+
 std::shared_ptr<mg::Display> mtf::StubGraphicPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
     std::shared_ptr<mg::GLProgramFactory> const&,
     std::shared_ptr<mg::GLConfig> const&)
 {
+    if (display_preset)
+        return std::move(display_preset);
+
     return std::make_shared<mtd::StubDisplay>(display_rects);
 }
 
-std::shared_ptr<mg::BufferWriter> mtf::StubGraphicPlatform::make_buffer_writer()
+namespace
 {
-    struct NullWriter : mg::BufferWriter
+std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
+
+struct GuestPlatformAdapter : mg::Platform
+{
+    GuestPlatformAdapter(
+        std::shared_ptr<mg::NestedContext> const& context,
+        std::shared_ptr<mg::Platform> const& adaptee) :
+        context(context),
+        adaptee(adaptee),
+        ipc_ops(adaptee->make_ipc_operations())
     {
-        void write(mg::Buffer& /* buffer */,
-            unsigned char const* /* data */, size_t /* size */) override
-        {
-        }
-    };
-    return std::make_shared<NullWriter>();
+    }
+
+    std::shared_ptr<mg::GraphicBufferAllocator> create_buffer_allocator() override
+    {
+        return adaptee->create_buffer_allocator();
+    }
+
+    std::shared_ptr<mg::PlatformIpcOperations> make_ipc_operations() const override
+    {
+        return ipc_ops;
+    }
+
+    std::shared_ptr<mg::Display> create_display(
+        std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
+        std::shared_ptr<mg::GLProgramFactory> const& gl_program_factory,
+        std::shared_ptr<mg::GLConfig> const& gl_config) override
+    {
+        return adaptee->create_display(initial_conf_policy, gl_program_factory, gl_config);
+    }
+
+    EGLNativeDisplayType egl_native_display() const override
+    {
+        return adaptee->egl_native_display();
+    }
+
+    std::shared_ptr<mg::NestedContext> const context;
+    std::shared_ptr<mg::Platform> const adaptee;
+    std::shared_ptr<mg::PlatformIpcOperations> const ipc_ops;
+};
+
+std::weak_ptr<mg::Platform> the_graphics_platform{};
 }
 
-extern "C" std::shared_ptr<mg::Platform> create_platform(
+extern "C" std::shared_ptr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mg::DisplayReport> const& /*report*/)
 {
-    static std::vector<geom::Rectangle> const display_rects{geom::Rectangle{{0,0},{1600,1600}}};
-    return std::make_shared<mtf::StubGraphicPlatform>(display_rects);
+    std::shared_ptr<mg::Platform> result{};
+
+    if (auto const display_rects = std::move(chosen_display_rects))
+    {
+        result = std::make_shared<mtf::StubGraphicPlatform>(*display_rects);
+    }
+    else
+    {
+        static std::vector<geom::Rectangle> const default_display_rects{geom::Rectangle{{0,0},{1600,1600}}};
+        result = std::make_shared<mtf::StubGraphicPlatform>(default_display_rects);
+    }
+    the_graphics_platform = result;
+    return result;
+}
+
+extern "C" std::shared_ptr<mg::Platform> create_guest_platform(
+    std::shared_ptr<mg::DisplayReport> const&,
+    std::shared_ptr<mg::NestedContext> const& context)
+{
+    auto graphics_platform = the_graphics_platform.lock();
+    return std::make_shared<GuestPlatformAdapter>(context, graphics_platform);
 }
 
 extern "C" void add_platform_options(
     boost::program_options::options_description& /*config*/)
 {
+}
+
+extern "C" void set_display_rects(
+    std::unique_ptr<std::vector<geom::Rectangle>>&& display_rects)
+{
+    chosen_display_rects = std::move(display_rects);
+}
+
+extern "C" void preset_display(std::shared_ptr<mir::graphics::Display> const& display)
+{
+    display_preset = display;
 }

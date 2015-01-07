@@ -17,7 +17,7 @@
  */
 
 #include "mir/thread/basic_thread_pool.h"
-#include <mir/run_mir.h>
+#include "mir/terminate_with_current_exception.h"
 
 #include <deque>
 #include <algorithm>
@@ -27,6 +27,42 @@ namespace mt = mir::thread;
 
 namespace
 {
+
+class Task
+{
+public:
+    Task(std::function<void()> const& task) : task{task} {}
+
+    void execute()
+    {
+        try
+        {
+            task();
+        }
+        catch (...)
+        {
+            task_exception = std::current_exception();
+        }
+    }
+
+    void notify_done()
+    {
+        if (task_exception)
+            promise.set_exception(task_exception);
+        else
+            promise.set_value();
+    }
+
+    std::future<void> get_future()
+    {
+        return promise.get_future();
+    }
+
+private:
+    std::function<void()> const task;
+    std::promise<void> promise;
+    std::exception_ptr task_exception;
+};
 
 class Worker
 {
@@ -50,11 +86,12 @@ public:
 
            if (!exiting)
            {
-               auto& task = tasks.front();
+               auto task = std::move(tasks.front());
                lock.unlock();
-               task();
+               task.execute();
                lock.lock();
                tasks.pop_front();
+               task.notify_done();
            }
        }
     }
@@ -63,7 +100,7 @@ public:
         mir::terminate_with_current_exception();
     }
 
-    void queue_task(std::packaged_task<void()> task)
+    void queue_task(Task task)
     {
         std::lock_guard<std::mutex> lock{state_mutex};
         tasks.push_back(std::move(task));
@@ -84,7 +121,7 @@ public:
     }
 
 private:
-    std::deque<std::packaged_task<void()>> tasks;
+    std::deque<Task> tasks;
     bool exiting;
     std::mutex mutable state_mutex;
     std::condition_variable task_available_cv;
@@ -111,7 +148,7 @@ public:
             thread.join();
     }
 
-    void queue_task(std::packaged_task<void()> task, mt::BasicThreadPool::TaskId the_id)
+    void queue_task(Task task, mt::BasicThreadPool::TaskId the_id)
     {
         worker.queue_task(std::move(task));
         id_ = the_id;
@@ -172,7 +209,7 @@ std::future<void> mt::BasicThreadPool::run(WorkerThread* worker_thread,
         worker_thread = threads.back().get();
     }
 
-    std::packaged_task<void()> a_task{task};
+    Task a_task{task};
     auto future = a_task.get_future();
     worker_thread->queue_task(std::move(a_task), id);
     return future;

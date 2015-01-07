@@ -1,4 +1,4 @@
-MIR_SERVER_27 {
+MIR_SERVER_28 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -39,7 +39,6 @@ MIR_SERVER_27 {
     mir::DefaultServerConfiguration::the_android_input_dispatcher*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
-    mir::DefaultServerConfiguration::the_buffer_writer*;
     mir::DefaultServerConfiguration::the_clock*;
     mir::DefaultServerConfiguration::the_composite_event_filter*;
     mir::DefaultServerConfiguration::the_compositor*;
@@ -69,7 +68,6 @@ MIR_SERVER_27 {
     mir::DefaultServerConfiguration::the_gl_config*;
     mir::DefaultServerConfiguration::the_global_event_sink*;
     mir::DefaultServerConfiguration::the_gl_program_factory*;
-    mir::DefaultServerConfiguration::the_graphics_native_platform*;
     mir::DefaultServerConfiguration::the_graphics_platform*;
     mir::DefaultServerConfiguration::the_host_connection*;
     mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
@@ -122,6 +120,7 @@ MIR_SERVER_27 {
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
     mir::DefaultServerConfiguration::wrap_cursor_listener*;
+    mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory*;
     mir::DefaultServerConfiguration::wrap_display_configuration_policy*;
     mir::DefaultServerConfiguration::wrap_session_coordinator*;
     mir::DefaultServerConfiguration::wrap_surface_coordinator*;
@@ -130,7 +129,6 @@ MIR_SERVER_27 {
     mir::DisplayServer::run*;
     mir::DisplayServer::stop*;
     mir::EmergencyCleanup::operator*;
-    mir::frontend::as_internal_surface*;
     mir::frontend::DisplayChanger::active_configuration*;
     mir::frontend::DisplayChanger::configure*;
     mir::frontend::DisplayChanger::?DisplayChanger*;
@@ -204,7 +202,6 @@ MIR_SERVER_27 {
     mir::frontend::Surface::?Surface*;
     mir::frontend::Surface::Surface*;
     mir::frontend::Surface::swap_buffers*;
-    mir::frontend::Surface::swap_buffers_blocking*;
     mir::input::CompositeEventFilter::append*;
     mir::input::CompositeEventFilter::prepend*;
     mir::input::CursorImages::?CursorImages*;
@@ -258,6 +255,7 @@ MIR_SERVER_27 {
     mir::scene::CoordinateTranslator::surface_to_screen*;
     mir::scene::NullSurfaceObserver::alpha_set_to*;
     mir::scene::NullSurfaceObserver::attrib_changed*;
+    mir::scene::NullSurfaceObserver::client_surface_close_requested*;
     mir::scene::NullSurfaceObserver::cursor_image_set_to*;
     mir::scene::NullSurfaceObserver::frame_posted*;
     mir::scene::NullSurfaceObserver::hidden_set_to*;
@@ -355,6 +353,7 @@ MIR_SERVER_27 {
     mir::scene::Surface::name*;
     mir::scene::SurfaceObserver::alpha_set_to*;
     mir::scene::SurfaceObserver::attrib_changed*;
+    mir::scene::SurfaceObserver::client_surface_close_requested*;
     mir::scene::SurfaceObserver::cursor_image_set_to*;
     mir::scene::SurfaceObserver::frame_posted*;
     mir::scene::SurfaceObserver::hidden_set_to*;
@@ -367,6 +366,7 @@ MIR_SERVER_27 {
     mir::scene::SurfaceObserver::SurfaceObserver*;
     mir::scene::SurfaceObserver::transformation_set_to*;
     mir::scene::Surface::remove_observer*;
+    mir::scene::Surface::request_client_surface_close*;
     mir::scene::Surface::resize*;
     mir::scene::Surface::set_alpha*;
     mir::scene::Surface::set_cursor_image*;
@@ -412,6 +412,7 @@ MIR_SERVER_27 {
     mir::Server::override_the_compositor*;
     mir::Server::override_the_display_buffer_compositor_factory*;
     mir::Server::override_the_gl_config*;
+    mir::Server::override_the_host_lifecycle_event_listener*;
     mir::Server::override_the_input_dispatcher*;
     mir::Server::override_the_logger*;
     mir::Server::override_the_placement_strategy*;
@@ -420,6 +421,7 @@ MIR_SERVER_27 {
     mir::Server::override_the_server_status_listener*;
     mir::Server::override_the_session_authorizer*;
     mir::Server::override_the_session_listener*;
+    mir::Server::override_the_session_mediator_report*;
     mir::Server::override_the_shell_focus_setter*;
     mir::Server::override_the_surface_configurator*;
     mir::Server::run*;
@@ -436,6 +438,7 @@ MIR_SERVER_27 {
     mir::ServerStatusListener::ServerStatusListener*;
     mir::ServerStatusListener::started*;
     mir::Server::stop*;
+    mir::Server::supported_pixel_formats*;
     mir::Server::the_composite_event_filter*;
     mir::Server::the_compositor*;
     mir::Server::the_cursor_listener*;
@@ -443,6 +446,7 @@ MIR_SERVER_27 {
     mir::Server::the_focus_controller*;
     mir::Server::the_gl_config*;
     mir::Server::the_graphics_platform*;
+    mir::Server::the_logger*;
     mir::Server::the_main_loop*;
     mir::Server::the_prompt_session_listener*;
     mir::Server::the_prompt_session_manager*;
@@ -454,6 +458,7 @@ MIR_SERVER_27 {
     mir::Server::the_surface_coordinator*;
     mir::Server::the_touch_visualizer*;
     mir::Server::wrap_cursor_listener*;
+    mir::Server::wrap_display_buffer_compositor_factory*;
     mir::Server::wrap_display_configuration_policy*;
     mir::Server::wrap_session_coordinator*;
     mir::Server::wrap_surface_coordinator*;
@@ -517,7 +522,6 @@ MIR_SERVER_27 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_android_input_dispatcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_allocator*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_stream_factory*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_buffer_writer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_clock*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_composite_event_filter*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_compositor*;
@@ -545,7 +549,6 @@ MIR_SERVER_27 {
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_gl_config*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_global_event_sink*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_gl_program_factory*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_graphics_native_platform*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_graphics_platform*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_host_connection*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
@@ -617,6 +620,7 @@ MIR_SERVER_27 {
     non-virtual?thunk?to?mir::scene::CoordinateTranslator::?CoordinateTranslator*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::alpha_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::attrib_changed*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::client_surface_close_requested*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::cursor_image_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::frame_posted*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::hidden_set_to*;
@@ -773,7 +777,7 @@ MIR_SERVER_27 {
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::Timer;
 
-# these symbols are needed by mir_demo_server_shell but are not intended to be public
+# these symbols are needed by mir_proving_server but are not intended to be public
     mir::compositor::GLRenderer::begin*;
     mir::compositor::GLRenderer::destination_alpha*;
     mir::compositor::GLRenderer::end*;

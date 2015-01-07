@@ -1,3 +1,5 @@
+add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mircommon")
+
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 set(MIR_COMMON_SOURCES)
 set(MIR_COMMON_REFERENCES)
@@ -15,7 +17,10 @@ add_subdirectory(env)
 add_subdirectory(sharedlibrary)
 add_subdirectory(thread)
 add_subdirectory(time)
-list(APPEND MIR_COMMON_SOURCES $<TARGET_OBJECTS:mirtime>)
+list(APPEND MIR_COMMON_SOURCES
+  $<TARGET_OBJECTS:mirtime>
+  ${CMAKE_CURRENT_SOURCE_DIR}/log.cpp
+)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -30,6 +35,10 @@ set(
 
 MESSAGE( STATUS "MIR_COMMON_SOURCES. . . : ${MIR_COMMON_SOURCES}" )
 MESSAGE( STATUS "MIR_COMMON_REFERENCES . : ${MIR_COMMON_REFERENCES}" )
+
+list(APPEND MIR_COMMON_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/event.cpp
+)
 
 add_library(mircommon
   SHARED

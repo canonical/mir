@@ -1,6 +1,7 @@
 include_directories(
   ${CMAKE_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/src/include/platform
+  ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
 
@@ -17,6 +18,7 @@ set(
   test_protobuf_socket_server.cpp
   mock_timer.cpp
   mock_frame_dropping_policy_factory.cpp
+  null_logger.cpp
   platform_factory.cpp
   stub_buffer.cpp
 )
@@ -28,13 +30,14 @@ set(
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_gl.cpp
 )
 
-if (MIR_TEST_PLATFORM STREQUAL "mesa")
+if (MIR_BUILD_PLATFORM_MESA)
 include_directories(${DRM_INCLUDE_DIRS} ${GBM_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
 list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_drm.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_gbm.cpp
 )
-elseif (MIR_TEST_PLATFORM STREQUAL "android")
+endif()
+if (MIR_BUILD_PLATFORM_ANDROID)
 list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/mock_android_hw.cpp
 )

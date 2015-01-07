@@ -29,6 +29,7 @@
 #include "src/server/frontend/resource_cache.h" /* needed by test_server.h */
 #include "mir_test/test_protobuf_server.h"
 #include "mir_test/stub_server_tool.h"
+#include "mir_test_doubles/stub_client_buffer_factory.h"
 
 #include "mir_protobuf.pb.h"
 
@@ -40,6 +41,7 @@
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -75,16 +77,6 @@ struct MockRpcChannel : public mir::client::rpc::MirBasicRpcChannel
     MOCK_METHOD1(configure_display_sent, void(mp::DisplayConfiguration const*));
 };
 
-struct StubClientBufferFactory : public mcl::ClientBufferFactory
-{
-    std::shared_ptr<mcl::ClientBuffer> create_buffer(std::shared_ptr<MirBufferPackage> const& /* package */,
-                                                     geom::Size /*size*/, MirPixelFormat /*pf*/) override
-    {
-        return std::shared_ptr<mcl::ClientBuffer>();
-    }
-};
-
-
 struct MockClientPlatform : public mcl::ClientPlatform
 {
     MockClientPlatform()
@@ -97,7 +89,7 @@ struct MockClientPlatform : public mcl::ClientPlatform
         ON_CALL(*this, create_egl_native_display())
             .WillByDefault(Return(native_display));
         ON_CALL(*this, create_buffer_factory())
-            .WillByDefault(Return(std::make_shared<StubClientBufferFactory>()));
+            .WillByDefault(Return(std::make_shared<mtd::StubClientBufferFactory>()));
         ON_CALL(*this, create_egl_native_window(_))
             .WillByDefault(Return(std::shared_ptr<EGLNativeWindowType>()));
     }
@@ -512,8 +504,8 @@ TEST_F(MirConnectionTest, focused_window_synthesises_unfocus_event_on_release)
 {
     using namespace testing;
 
-    MirSurfaceParameters params;
-    params.name = __PRETTY_FUNCTION__;
+    MirSurfaceSpec params{nullptr, 640, 480, mir_pixel_format_abgr_8888};
+    params.surface_name = __PRETTY_FUNCTION__;
 
     MirEventDelegate const event_delegate = {
         &surface_event_callback,
@@ -550,8 +542,8 @@ TEST_F(MirConnectionTest, unfocused_window_does_not_synthesise_unfocus_event_on_
 {
     using namespace testing;
 
-    MirSurfaceParameters params;
-    params.name = __PRETTY_FUNCTION__;
+    MirSurfaceSpec params{nullptr, 640, 480, mir_pixel_format_abgr_8888};
+    params.surface_name = __PRETTY_FUNCTION__;
 
     MirEventDelegate const event_delegate = {
         &surface_event_callback,

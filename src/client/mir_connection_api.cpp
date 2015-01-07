@@ -16,6 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "MirConnectionAPI"
+
 #include "mir_connection_api.h"
 #include "mir_toolkit/mir_connection.h"
 #include "mir_toolkit/mir_client_library_drm.h"
@@ -27,6 +29,7 @@
 #include "default_connection_configuration.h"
 #include "display_configuration.h"
 #include "error_connections.h"
+#include "uncaught.h"
 
 
 #include <unordered_set>
@@ -98,11 +101,13 @@ public:
                 auto wait_handle = connection->disconnect();
                 wait_handle->wait_for_all();
             }
-            catch (std::exception const&)
+            catch (std::exception const& ex)
             {
                 // We're implementing a C API so no exceptions are to be
                 // propagated. And that's OK because if disconnect() fails,
                 // we don't care why. We're finished with the connection anyway.
+
+                MIR_LOG_UNCAUGHT_EXCEPTION(ex);
             }
         }
         else
@@ -142,8 +147,9 @@ MirWaitHandle* mir_connect(
                                                 callback,
                                                 context);
     }
-    catch (std::exception const&)
+    catch (std::exception const& ex)
     {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
 }
@@ -176,8 +182,9 @@ void mir_connection_release(MirConnection* connection)
     {
         return mir_connection_api_impl->release(connection);
     }
-    catch (std::exception const&)
+    catch (std::exception const& ex)
     {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     }
 }
 
@@ -276,8 +283,9 @@ MirWaitHandle* mir_connection_apply_display_config(
     {
         return connection ? connection->configure_display(display_configuration) : nullptr;
     }
-    catch (std::exception const&)
+    catch (std::exception const& ex)
     {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
         return nullptr;
     }
 }
@@ -296,6 +304,23 @@ void mir_connection_get_available_surface_formats(
 {
     if ((connection) && (formats) && (num_valid_formats))
         connection->available_surface_formats(formats, format_size, *num_valid_formats);
+}
+
+MirWaitHandle* mir_connection_platform_operation(
+    MirConnection* connection, unsigned int opcode,
+    MirPlatformMessage const* request,
+    mir_platform_operation_callback callback, void* context)
+{
+    try
+    {
+        return connection->platform_operation(opcode, request, callback, context);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+        return nullptr;
+    }
+
 }
 
 /**************************

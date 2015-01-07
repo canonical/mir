@@ -13,8 +13,7 @@ include /usr/share/dpkg/default.mk
 export CC=$(DEB_HOST_GNU_TYPE)-gcc-4.9
 export CXX=$(DEB_HOST_GNU_TYPE)-g++-4.9
 
-export PLATFORM_DRIVER = platform4driver
-export CLIENT_DRIVER = client8driver
+export PLATFORM_DRIVER = platform5driver
 
 %:
 	dh $@ --parallel --fail-missing
@@ -24,7 +23,6 @@ override_dh_auto_test:
 	GTEST_OUTPUT=xml:./ dh_auto_test --max-parallel=1 -- ARGS="-V"
 
 COMMON_CONFIGURE_OPTIONS = \
-  -DBUILD_DOXYGEN=YES \
   -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"
 
 override_dh_auto_configure:
@@ -46,6 +44,10 @@ else
 endif
 endif
 
+# Only build the docs when we need them
+override_dh_auto_build-indep:
+	dh_auto_build -- doc
+
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
 	dh_makeshlibs -V
@@ -54,10 +56,9 @@ override_dh_install:
 # Nothing outside Mir should link to libmirprotobuf directly.
 # Delete the symlink so that --fail-missing doesn't think we've missed it
 # accidentally.
-	rm debian/tmp/usr/lib/*/libmirprotobuf.so
+	-rm debian/tmp/usr/lib/*/libmirprotobuf.so
 	dh_install --fail-missing \
-	  -Xusr/lib/$(DEB_HOST_MULTIARCH)/libmir$(PLATFORM_DRIVER).so \
-	  -Xusr/lib/$(DEB_HOST_MULTIARCH)/libmir$(CLIENT_DRIVER).so
+	  -Xusr/lib/$(DEB_HOST_MULTIARCH)/libmir$(PLATFORM_DRIVER).so
 	sh debian/install_ld_so_conf.sh $(DEB_HOST_ARCH) $(DEB_HOST_MULTIARCH)
 
 override_dh_installdeb:
@@ -67,5 +68,4 @@ override_dh_installdeb:
 
 override_dh_gencontrol:
 	dh_gencontrol -- \
-		-Vplatform-driver=$(PLATFORM_DRIVER) \
-		-Vclient-driver=$(CLIENT_DRIVER)
+		-Vplatform-driver=$(PLATFORM_DRIVER)

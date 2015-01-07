@@ -17,6 +17,7 @@
  */
 
 #include "frame_uniformity_test.h"
+#include "mir_test_framework/executable_path.h"
 
 #include <assert.h>
 #include <cmath>
@@ -27,6 +28,7 @@
 #include <gtest/gtest.h>
 
 namespace geom = mir::geometry;
+namespace mtf = mir_test_framework;
 
 namespace
 {
@@ -116,6 +118,11 @@ TEST(FrameUniformity, average_frame_offset)
     int const run_count = 1;
     double average_lag = 0, average_uniformity = 0;
 
+    // Ensure we load the correct platform libraries
+    setenv("MIR_CLIENT_PLATFORM_PATH",
+           (mtf::library_path() + "/client-modules").c_str(),
+           true);
+    
     for (int i = 0; i < run_count; i++)
     {
         FrameUniformityTest t({screen_size, touch_start_point, touch_end_point, touch_duration});

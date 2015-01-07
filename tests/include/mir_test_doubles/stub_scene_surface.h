@@ -70,6 +70,7 @@ public:
 
     void hide() override {}
     void show() override {}
+    bool visible() const override { return true; }
     void move_to(geometry::Point const&) override {}
     void take_input_focus(std::shared_ptr<shell::InputTargeter> const&) override {}
     void set_input_region(std::vector<geometry::Rectangle> const&) override {}
@@ -88,6 +89,8 @@ public:
 
     void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& /* image */) {}
     std::shared_ptr<graphics::CursorImage> cursor_image() const { return {}; }
+
+    void request_client_surface_close() override {}
 
     MirPixelFormat pixel_format() const override { return mir_pixel_format_xrgb_8888; }
 

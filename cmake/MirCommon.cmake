@@ -168,3 +168,28 @@ function (mir_precompiled_header TARGET HEADER)
     add_dependencies(${TARGET} ${TARGET}_pch)
   endif()
 endfunction()
+
+function (mir_add_wrapped_executable TARGET)
+  set(REAL_EXECUTABLE .${TARGET}-uninstalled)
+
+  list(GET ARGN 0 modifier)
+  if ("${modifier}" STREQUAL "NOINSTALL")
+    list(REMOVE_AT ARGN 0)
+  else()
+    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/${REAL_EXECUTABLE}
+      DESTINATION ${CMAKE_INSTALL_BINDIR}
+      RENAME ${TARGET}
+    )
+  endif()
+
+  add_executable(${TARGET} ${ARGN})
+  set_target_properties(${TARGET} PROPERTIES
+    OUTPUT_NAME ${REAL_EXECUTABLE}
+    SKIP_BUILD_RPATH TRUE
+  )
+
+  add_custom_target(${TARGET}-wrapped
+    ln -fs wrapper ${CMAKE_BINARY_DIR}/bin/${TARGET}
+  )
+  add_dependencies(${TARGET} ${TARGET}-wrapped)
+endfunction()

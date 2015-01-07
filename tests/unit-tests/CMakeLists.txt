@@ -5,6 +5,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/platform
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/client
+  ${PROJECT_SOURCE_DIR}/src/include/common
   ${GLIB_INCLUDE_DIRS}
 )
 
@@ -50,13 +51,12 @@ add_subdirectory(graphics/)
 add_subdirectory(input/)
 add_subdirectory(android_input/)
 add_subdirectory(scene/)
-add_subdirectory(draw/)
 add_subdirectory(examples/)
 add_subdirectory(thread/)
 
 link_directories(${LIBRARY_OUTPUT_PATH})
 
-add_executable(mir_unit_tests 
+mir_add_wrapped_executable(mir_unit_tests
   ${UNIT_TEST_SOURCES}
   ${MIR_SERVER_OBJECTS}
   $<TARGET_OBJECTS:mirclientobjects>
@@ -74,7 +74,6 @@ target_link_libraries(
   mir_unit_tests
 
   mirdraw
-  mirtestdraw
   mirclientrpc
   mirclientlttngstatic
   demo-shell
@@ -117,11 +116,6 @@ CMAKE_DEPENDENT_OPTION(
 if (MIR_RUN_UNIT_TESTS)
   mir_discover_tests(mir_unit_tests LD_PRELOAD=libumockdev-preload.so.0 G_SLICE=always-malloc G_DEBUG=gc-friendly)
 endif (MIR_RUN_UNIT_TESTS)
-
-install(
-    TARGETS mir_unit_tests
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
 
 add_custom_command(TARGET mir_unit_tests POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory

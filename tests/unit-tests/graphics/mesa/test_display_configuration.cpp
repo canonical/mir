@@ -20,8 +20,8 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display.h"
 #include "src/server/graphics/default_display_configuration_policy.h"
-#include "src/platform/graphics/mesa/platform.h"
-#include "src/platform/graphics/mesa/kms_display_configuration.h"
+#include "src/platforms/mesa/platform.h"
+#include "src/platforms/mesa/kms_display_configuration.h"
 
 #include "mir_test_doubles/mock_egl.h"
 #include "mir_test_doubles/mock_gl.h"
@@ -56,8 +56,8 @@ mg::DisplayConfigurationMode conf_mode_from_drm_mode(drmModeModeInfo const& mode
     /* Calculate vertical refresh rate from DRM mode information */
     if (mode.htotal != 0.0 && mode.vtotal != 0.0)
     {
-        vrefresh_hz = mode.clock * 1000.0 / (mode.htotal * mode.vtotal);
-        vrefresh_hz = round(vrefresh_hz * 10.0) / 10.0;
+        vrefresh_hz = (mode.clock * 100000LL /
+                       ((long)mode.htotal * (long)mode.vtotal)) / 100.0;
     }
 
     return mg::DisplayConfigurationMode{size, vrefresh_hz};

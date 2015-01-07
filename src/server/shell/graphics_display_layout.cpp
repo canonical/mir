@@ -44,17 +44,19 @@ void msh::GraphicsDisplayLayout::clip_to_output(geometry::Rectangle& rect)
     if (output.size.width > geom::Width{0} && output.size.height > geom::Height{0} &&
         rect.size.width > geom::Width{0} && rect.size.height > geom::Height{0})
     {
-        auto tl = rect.top_left;
+        auto tl_closed = rect.top_left;
         auto br_closed = rect.bottom_right() - geom::Displacement{1,1};
 
         geom::Rectangles rectangles;
         rectangles.add(output);
 
+        rectangles.confine(tl_closed);
         rectangles.confine(br_closed);
 
+        rect.top_left = tl_closed;
         rect.size =
-            geom::Size{br_closed.x.as_int() - tl.x.as_int() + 1,
-                       br_closed.y.as_int() - tl.y.as_int() + 1};
+            geom::Size{br_closed.x.as_int() - tl_closed.x.as_int() + 1,
+                       br_closed.y.as_int() - tl_closed.y.as_int() + 1};
     }
     else
     {
@@ -79,10 +81,10 @@ void msh::GraphicsDisplayLayout::place_in_output(
     config->for_each_output([&](mg::DisplayConfigurationOutput const& output)
     {
         if (output.id == id &&
-            output.current_mode_index < output.modes.size() &&
-            rect.size == output.extents().size)
+            output.current_mode_index < output.modes.size())
         {
             rect.top_left = output.top_left;
+            rect.size = output.extents().size;
             placed = true;
         }
     });
@@ -93,19 +95,23 @@ void msh::GraphicsDisplayLayout::place_in_output(
 
 geom::Rectangle msh::GraphicsDisplayLayout::get_output_for(geometry::Rectangle& rect)
 {
-    geom::Rectangle output;
+    int max_area = -1;
+    geometry::Rectangle best = rect;
 
-    /*
-     * TODO: We need a better heuristic to decide in which output a
-     * rectangle/surface belongs.
-     */
     display->for_each_display_buffer(
-        [&output,&rect](mg::DisplayBuffer const& db)
+        [&](mg::DisplayBuffer const& db)
         {
-            auto view_area = db.view_area();
-            if (view_area.contains(rect.top_left))
-                output = view_area;
+            auto const& screen = db.view_area();
+            auto const& overlap = rect.intersection_with(screen);
+            int area = overlap.size.width.as_int() *
+                       overlap.size.height.as_int();
+
+            if (area > max_area)
+            {
+                best = screen;
+                max_area = area;
+            }
         });
 
-    return output;
+    return best;
 }

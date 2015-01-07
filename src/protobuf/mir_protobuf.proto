@@ -19,6 +19,11 @@ message SurfaceParameters {
   // TODO: Make required when we bump protobuf and server ABI
   optional string surface_name = 5;
   optional uint32 output_id = 6;
+
+  optional int32 type = 7;
+  optional int32 state = 8;
+  optional int32 pref_orientation = 9;
+  optional int32 parent_id = 10;
 }
 
 message SurfaceId {
@@ -203,6 +208,15 @@ message PromptSessionParameters {
   required int32 application_pid = 1;
 }
 
+message PlatformOperationMessage {
+  optional uint32 opcode = 1;
+  optional bytes data = 2;
+  repeated sint32 fd = 3;
+  optional int32  fds_on_side_channel = 4;
+
+  optional string error = 127;
+}
+
 service DisplayServer {
   // Platform independent requests
   rpc connect(ConnectParameters) returns (Connection);
@@ -213,6 +227,7 @@ service DisplayServer {
 
   // Platform specific requests
   rpc drm_auth_magic(DRMMagic) returns (DRMAuthMagicStatus);
+  rpc platform_operation(PlatformOperationMessage) returns (PlatformOperationMessage);
 
   rpc configure_surface(SurfaceSetting) returns (SurfaceSetting);
   rpc configure_display(DisplayConfiguration) returns (DisplayConfiguration);

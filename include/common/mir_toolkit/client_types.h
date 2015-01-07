@@ -21,7 +21,7 @@
 #ifndef MIR_TOOLKIT_CLIENT_TYPES_H_
 #define MIR_TOOLKIT_CLIENT_TYPES_H_
 
-#include <mir_toolkit/event.h>
+#include <mir_toolkit/events/event.h>
 #include <mir_toolkit/common.h>
 
 #include <stddef.h>
@@ -45,6 +45,7 @@ typedef void* MirEGLNativeWindowType;
 typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
 typedef struct MirSurface MirSurface;
+typedef struct MirSurfaceSpec MirSurfaceSpec;
 typedef struct MirScreencast MirScreencast;
 typedef struct MirPromptSession MirPromptSession;
 
@@ -54,6 +55,8 @@ typedef struct MirPromptSession MirPromptSession;
  * on the lifetime of wait handles.
  */
 typedef struct MirWaitHandle MirWaitHandle;
+
+typedef struct MirPlatformMessage MirPlatformMessage;
 
 /**
  * Callback to be passed when issuing a mir_connect request.
@@ -240,7 +243,8 @@ typedef struct MirDisplayOutput
 {
     uint32_t num_modes;
     MirDisplayMode* modes;
-    uint32_t preferred_mode;
+    uint32_t preferred_mode;  /**< There might be no preferred mode, which
+                                   is indicated by a value >=num_modes. */
     uint32_t current_mode;
 
     uint32_t num_output_formats;
@@ -335,6 +339,19 @@ typedef void (*mir_prompt_session_callback)(MirPromptSession* prompt_provider, v
  */
 typedef void (*mir_prompt_session_state_change_callback)(
     MirPromptSession* prompt_provider, MirPromptSessionState state, void* context);
+
+/**
+ * Callback called when a platform operation completes.
+ *
+ *   \warning The reply is owned by the callee, who should release it when it's
+ *            not needed any more.
+ *
+ *   \param [in] connection   The connection associated with the platform operation
+ *   \param [in] reply        The platform operation reply
+ *   \param [in,out] context  The context provided by the client
+ */
+typedef void (*mir_platform_operation_callback)(
+    MirConnection* connection, MirPlatformMessage* reply, void* context);
 
 #ifdef __cplusplus
 }

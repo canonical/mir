@@ -18,12 +18,12 @@
 
 #include "vsync_simulating_graphics_platform.h"
 
-#include "mir/graphics/buffer_writer.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
 
 #include "mir_test_doubles/stub_buffer_allocator.h"
 #include "mir_test_doubles/stub_display.h"
+#include "mir_test_doubles/null_platform_ipc_operations.h"
 
 #include <chrono>
 #include <functional>
@@ -36,38 +36,6 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-struct StubBufferWriter : public mg::BufferWriter
-{
-    void write(mg::Buffer&, unsigned char const*, size_t) override
-    {
-    }
-};
-
-class StubIpcOps : public mg::PlatformIpcOperations
-{
-    void pack_buffer(
-        mg::BufferIpcMessage&,
-        mg::Buffer const&,
-        mg::BufferIpcMsgType) const override
-    {
-    }
-
-    void unpack_buffer(
-        mg::BufferIpcMessage&, mg::Buffer const&) const override
-    {
-    }
-
-    std::shared_ptr<mg::PlatformIPCPackage> connection_ipc_package() override
-    {
-        return std::make_shared<mg::PlatformIPCPackage>();
-    }
-
-    mg::PlatformIPCPackage platform_operation(unsigned int const, mg::PlatformIPCPackage const&) override
-    {
-        return mg::PlatformIPCPackage();
-    }
-};
-
 struct StubDisplayBuffer : mtd::StubDisplayBuffer
 {
     StubDisplayBuffer(geom::Size output_size, int vsync_rate_in_hz)
@@ -77,7 +45,11 @@ struct StubDisplayBuffer : mtd::StubDisplayBuffer
     {
     }
     
-    void post_update() override
+    void gl_swap_buffers() override
+    {
+    }
+
+    void flip() override
     {
         auto now = std::chrono::high_resolution_clock::now();
         auto next_sync = last_sync + std::chrono::seconds(1) / vsync_rate_in_hz;
@@ -121,11 +93,6 @@ std::shared_ptr<mg::GraphicBufferAllocator> VsyncSimulatingPlatform::create_buff
     return std::make_shared<mtd::StubBufferAllocator>();
 }
 
-std::shared_ptr<mg::BufferWriter> VsyncSimulatingPlatform::make_buffer_writer()
-{
-    return std::make_shared<StubBufferWriter>();
-}
-    
 std::shared_ptr<mg::Display> VsyncSimulatingPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
     std::shared_ptr<mg::GLProgramFactory> const&,
@@ -136,10 +103,5 @@ std::shared_ptr<mg::Display> VsyncSimulatingPlatform::create_display(
     
 std::shared_ptr<mg::PlatformIpcOperations> VsyncSimulatingPlatform::make_ipc_operations() const
 {
-    return std::make_shared<StubIpcOps>();
-}
-
-std::shared_ptr<mg::InternalClient> VsyncSimulatingPlatform::create_internal_client()
-{
-    return nullptr;
+    return std::make_shared<mtd::NullPlatformIpcOperations>();
 }

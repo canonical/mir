@@ -17,13 +17,15 @@
  */
 
 #include "application_session.h"
+#include "snapshot_strategy.h"
+#include "default_session_container.h"
+
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
 #include "mir/scene/surface_coordinator.h"
-#include "snapshot_strategy.h"
+#include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/session_listener.h"
 #include "mir/frontend/event_sink.h"
-#include "default_session_container.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -71,12 +73,20 @@ mf::SurfaceId ms::ApplicationSession::next_id()
     return mf::SurfaceId(next_surface_id.fetch_add(1));
 }
 
-mf::SurfaceId ms::ApplicationSession::create_surface(const SurfaceCreationParameters& params)
+mf::SurfaceId ms::ApplicationSession::create_surface(SurfaceCreationParameters const& params)
 {
     auto const id = next_id();
 
     auto const observer = std::make_shared<scene::SurfaceEventSource>(id, event_sink);
     auto surf = surface_coordinator->add_surface(params, this);
+
+    if (params.state.is_set())
+        surf->configure(mir_surface_attrib_state, params.state.value());
+    if (params.type.is_set())
+        surf->configure(mir_surface_attrib_type, params.type.value());
+    if (params.preferred_orientation.is_set())
+        surf->configure(mir_surface_attrib_preferred_orientation, params.preferred_orientation.value());
+
     surf->add_observer(observer);
 
     {
@@ -201,4 +211,22 @@ void ms::ApplicationSession::stop_prompt_session()
     stop_event.type = mir_event_type_prompt_session_state_change;
     stop_event.prompt_session.new_state = mir_prompt_session_state_stopped;
     event_sink->handle_event(stop_event);
+}
+
+void ms::ApplicationSession::suspend_prompt_session()
+{
+    MirEvent start_event;
+    memset(&start_event, 0, sizeof start_event);
+    start_event.type = mir_event_type_prompt_session_state_change;
+    start_event.prompt_session.new_state = mir_prompt_session_state_suspended;
+    event_sink->handle_event(start_event);
+}
+
+void ms::ApplicationSession::resume_prompt_session()
+{
+    MirEvent start_event;
+    memset(&start_event, 0, sizeof start_event);
+    start_event.type = mir_event_type_prompt_session_state_change;
+    start_event.prompt_session.new_state = mir_prompt_session_state_started;
+    event_sink->handle_event(start_event);
 }
