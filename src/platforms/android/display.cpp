@@ -144,19 +144,21 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
         if (output.current_format != configurations[output.id.as_value()].current_format)
             BOOST_THROW_EXCEPTION(std::logic_error("could not change display buffer format"));
 
-        if (output.power_mode != configurations[output.id.as_value()].power_mode)
-        {
-            hwc_config->power_mode(mga::DisplayName::primary, output.power_mode);
-            configurations[output.id.as_value()].power_mode = output.power_mode;
-        }
-
         //TODO: We don't support rotation yet, so
         //we preserve this orientation change so the compositor can rotate everything in GL 
         configurations[output.id.as_value()].orientation = output.orientation;
 
-        //TODO: add an external framebuffer
+        //TODO: add the external displaybuffer
         if (output.id.as_value() == mga::DisplayName::primary)
+        {
+            if (output.power_mode != configurations[output.id.as_value()].power_mode)
+            {
+                hwc_config->power_mode(mga::DisplayName::primary, output.power_mode);
+                configurations[mga::DisplayName::primary].power_mode = output.power_mode;
+            }
+
             display_buffer->configure(output.power_mode, output.orientation);
+        }
     });
 }
 
