@@ -171,23 +171,25 @@ endfunction()
 
 function (mir_add_wrapped_executable TARGET)
   set(REAL_EXECUTABLE .${TARGET}-uninstalled)
+
+  list(GET ARGN 0 modifier)
+  if ("${modifier}" STREQUAL "NOINSTALL")
+    list(REMOVE_AT ARGN 0)
+  else()
+    install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/${REAL_EXECUTABLE}
+      DESTINATION ${CMAKE_INSTALL_BINDIR}
+      RENAME ${TARGET}
+    )
+  endif()
+
   add_executable(${TARGET} ${ARGN})
-  set_target_properties(${TARGET} PROPERTIES OUTPUT_NAME ${REAL_EXECUTABLE})
-
-  add_executable(${TARGET}-wrapper ${PROJECT_SOURCE_DIR}/cmake/src/wrapper.c)
-  set_property(TARGET ${TARGET}-wrapper
-               APPEND_STRING PROPERTY COMPILE_FLAGS " -DEXECUTABLE=\\\"${REAL_EXECUTABLE}\\\"")
-  set_property(TARGET ${TARGET}-wrapper
-               APPEND_STRING PROPERTY COMPILE_FLAGS " -DBUILD_PREFIX=\\\"${CMAKE_BINARY_DIR}\\\"")
-  set_property(TARGET ${TARGET}-wrapper
-               APPEND_STRING PROPERTY COMPILE_FLAGS " -D_BSD_SOURCE")
-  set_property(TARGET ${TARGET}-wrapper
-	       PROPERTY OUTPUT_NAME ${TARGET})
-
-  add_dependencies(${TARGET} ${TARGET}-wrapper)
-  
-  install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/${REAL_EXECUTABLE}
-          DESTINATION ${CMAKE_INSTALL_BINDIR}
-          RENAME ${TARGET}
+  set_target_properties(${TARGET} PROPERTIES
+    OUTPUT_NAME ${REAL_EXECUTABLE}
+    SKIP_BUILD_RPATH TRUE
   )
+
+  add_custom_target(${TARGET}-wrapped
+    ln -fs wrapper ${CMAKE_BINARY_DIR}/bin/${TARGET}
+  )
+  add_dependencies(${TARGET} ${TARGET}-wrapped)
 endfunction()
