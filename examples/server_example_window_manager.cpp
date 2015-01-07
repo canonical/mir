@@ -112,7 +112,7 @@ class TilingWindowManager : public WindowManager
 
     void add_surface(
         std::shared_ptr<ms::Surface> const& surface,
-        ms::Session* session)
+        ms::Session* session) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         surfaces.emplace(session, surface);
@@ -120,13 +120,13 @@ class TilingWindowManager : public WindowManager
 
     void remove_surface(
         std::weak_ptr<ms::Surface> const& /*surface*/,
-        ms::Session* /*session*/)
+        ms::Session* /*session*/) override
     {
         // This looks odd but we want to block in case we're using the surface
         std::lock_guard<decltype(mutex)> lock(mutex);
     }
 
-    void add_session(std::shared_ptr<ms::Session> const& session)
+    void add_session(std::shared_ptr<ms::Session> const& session) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         tiles[session.get()] = Rectangle{};
@@ -134,7 +134,7 @@ class TilingWindowManager : public WindowManager
         update_tiles();
     }
 
-    void remove_session(std::shared_ptr<ms::Session> const& session)
+    void remove_session(std::shared_ptr<ms::Session> const& session) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         sessions.erase(session.get());
@@ -142,14 +142,14 @@ class TilingWindowManager : public WindowManager
         update_tiles();
     }
 
-    void add_display(Rectangle const& area)
+    void add_display(Rectangle const& area) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         displays.push_back(area);
         update_tiles();
     }
 
-    void remove_display(Rectangle const& area)
+    void remove_display(Rectangle const& area) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         auto const i = std::find(begin(displays), end(displays), area);
