@@ -640,7 +640,7 @@ private:
             if (auto const wm = window_manager.lock())
             {
                 wm->click(average_pointer(event.pointer_count, event.pointer_coordinates));
-                return true;
+                return false;
             }
         }
         else if (event.action == mir_motion_action_move &&
