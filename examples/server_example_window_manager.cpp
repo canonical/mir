@@ -38,6 +38,7 @@
 
 #include <algorithm>
 #include <map>
+#include <vector>
 #include <mutex>
 
 namespace mc = mir::compositor;
@@ -119,10 +120,10 @@ public:
         auto parameters = request_parameters;
 
         std::lock_guard<decltype(mutex)> lock(mutex);
-        auto const ptile = tiles.find(&session);
-        if (ptile != end(tiles))
+        auto const ptile = session_info.find(&session);
+        if (ptile != end(session_info))
         {
-            Rectangle const& tile = ptile->second;
+            Rectangle const& tile = ptile->second.tile;
             parameters.top_left = parameters.top_left + (tile.top_left - Point{0, 0});
 
             clip_to_tile(parameters, tile);
@@ -136,30 +137,37 @@ public:
         ms::Session* session) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        surfaces.emplace(session, surface);
+        session_info[session].surfaces.push_back(surface);
     }
 
     void remove_surface(
-        std::weak_ptr<ms::Surface> const& /*surface*/,
-        ms::Session* /*session*/) override
+        std::weak_ptr<ms::Surface> const& surface,
+        ms::Session* session) override
     {
-        // This looks odd but we want to block in case we're using the surface
         std::lock_guard<decltype(mutex)> lock(mutex);
+        auto& surfaces = session_info[session].surfaces;
+
+        for (auto i = begin(surfaces); i != end(surfaces); ++i)
+        {
+            if (surface.lock() == i->lock())
+            {
+                surfaces.erase(i);
+                break;
+            }
+        }
     }
 
     void add_session(std::shared_ptr<ms::Session> const& session) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        tiles[session.get()] = Rectangle{};
-        sessions[session.get()] = session;
+        session_info[session.get()] = session;
         update_tiles();
     }
 
     void remove_session(std::shared_ptr<ms::Session> const& session) override
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        sessions.erase(session.get());
-        surfaces.erase(session.get());
+        session_info.erase(session.get());
         update_tiles();
     }
 
@@ -196,15 +204,13 @@ public:
         {
             if (session == session_under(old_cursor))
             {
-                auto const tile = tiles[session.get()];
+                auto& info = session_info[session.get()];
 
-                if (!drag(session->default_surface(), cursor, old_cursor, tile))
+                if (!drag(session->default_surface(), cursor, old_cursor, info.tile))
                 {
-                    auto const surface_list = surfaces.equal_range(session.get());
-
-                    for (auto ps = surface_list.first; ps != surface_list.second; ++ps)
+                    for (auto const& ps : info.surfaces)
                     {
-                        if (drag(ps->second.lock(), cursor, old_cursor, tile))
+                        if (drag(ps.lock(), cursor, old_cursor, info.tile))
                             break;
                     }
                 }
@@ -217,9 +223,9 @@ public:
 private:
     void update_tiles()
     {
-        if (tiles.size() < 1 || displays.size() < 1) return;
+        if (session_info.size() < 1 || displays.size() < 1) return;
 
-        auto const sessions = tiles.size();
+        auto const sessions = session_info.size();
         Rectangles view;
 
         for (auto const& display : displays)
@@ -232,29 +238,29 @@ private:
 
         auto index = 0;
 
-        for (auto& tile : tiles)
+        for (auto& info : session_info)
         {
             auto const x = (total_width*index)/sessions;
             ++index;
             auto const dx = (total_width*index)/sessions - x;
 
-            auto const old_tile = tile.second;
+            auto const old_tile = info.second.tile;
             Rectangle const new_tile{{x, 0}, {dx, total_height}};
 
-            update_surfaces(tile.first, old_tile, new_tile);
+            update_surfaces(info.first, old_tile, new_tile);
 
-            tile.second = new_tile;
+            info.second.tile = new_tile;
         }
     }
 
     void update_surfaces(ms::Session const* session, Rectangle const& old_tile, Rectangle const& new_tile)
     {
         auto displacement = new_tile.top_left - old_tile.top_left;
-        auto const moved = surfaces.equal_range(session);
+        auto& info = session_info[session];
 
-        for (auto p = moved.first; p != moved.second; ++p)
+        for (auto const& ps : info.surfaces)
         {
-            if (auto const surface = p->second.lock())
+            if (auto const surface = ps.lock())
             {
                 auto const old_pos = surface->top_left();
                 surface->move_to(old_pos + displacement);
@@ -310,11 +316,11 @@ private:
 
     std::shared_ptr<ms::Session> session_under(Point position)
     {
-        for(auto& tile : tiles)
+        for(auto& info : session_info)
         {
-            if (tile.second.contains(position))
+            if (info.second.tile.contains(position))
             {
-                return sessions[tile.first].lock();
+                return info.second.session.lock();
             }
         }
 
@@ -325,9 +331,22 @@ private:
 
     std::mutex mutex;
     std::vector<Rectangle> displays;
-    std::map<ms::Session const*, Rectangle> tiles;
-    std::multimap<ms::Session const*, std::weak_ptr<ms::Surface>> surfaces;
-    std::map<ms::Session const*, std::weak_ptr<ms::Session>> sessions;
+
+    struct SessionInfo
+    {
+        SessionInfo() = default;
+        SessionInfo& operator=(std::weak_ptr<ms::Session> const& session)
+        {
+            this->session = session;
+            surfaces.clear();
+            return *this;
+        }
+        std::weak_ptr<ms::Session> session;
+        Rectangle tile;
+        std::vector<std::weak_ptr<ms::Surface>> surfaces;
+    };
+
+    std::map<ms::Session const*, SessionInfo> session_info;
     Point old_cursor{};
 };
 
