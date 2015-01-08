@@ -156,7 +156,10 @@ bool me::WindowManager::handle(MirEvent const& event)
                 // Ask the app to close politely. It has the right to refuse.
                 auto const surf = app->default_surface();
                 if (surf)
+                {
                     surf->request_client_surface_close();
+                    return true;
+                }
             }
         }
         else if ((event.key.modifiers & mir_key_modifier_alt &&
