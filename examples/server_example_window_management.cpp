@@ -120,6 +120,10 @@ private:
     void resize(Point, double) override {}
 
     void toggle_maximized() override {}
+
+    void toggle_max_horizontal() override {}
+
+    void toggle_max_vertical() override {}
 };
 
 // simple tiling algorithm
@@ -308,6 +312,68 @@ public:
                     focussed_surface->move_to(session_info.tile.top_left);
                     focussed_surface->resize(session_info.tile.size);
                     surface_info.state = SurfaceInfo::maximized;
+                }
+                else
+                {
+                    focussed_surface->move_to(surface_info.restore_rect.top_left);
+                    focussed_surface->resize(surface_info.restore_rect.size);
+                    surface_info.state = SurfaceInfo::restored;
+
+                }
+            }
+        }
+    }
+
+    void toggle_max_horizontal() override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+
+        if (auto const focussed_session = focus_controller()->focussed_application().lock())
+        {
+            if (auto const focussed_surface = focussed_session->default_surface())
+            {
+                auto const& session_info = this->session_info[focussed_session.get()];
+                auto& surface_info = this->surface_info[focussed_surface];
+
+                if (surface_info.state == SurfaceInfo::restored)
+                {
+                    surface_info.restore_rect =
+                        {focussed_surface->top_left(), focussed_surface->size()};
+
+                    focussed_surface->move_to({session_info.tile.top_left.x, surface_info.restore_rect.top_left.y});
+                    focussed_surface->resize({session_info.tile.size.width, surface_info.restore_rect.size.height});
+                    surface_info.state = SurfaceInfo::hmax;
+                }
+                else
+                {
+                    focussed_surface->move_to(surface_info.restore_rect.top_left);
+                    focussed_surface->resize(surface_info.restore_rect.size);
+                    surface_info.state = SurfaceInfo::restored;
+
+                }
+            }
+        }
+    }
+
+    void toggle_max_vertical()
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+
+        if (auto const focussed_session = focus_controller()->focussed_application().lock())
+        {
+            if (auto const focussed_surface = focussed_session->default_surface())
+            {
+                auto const& session_info = this->session_info[focussed_session.get()];
+                auto& surface_info = this->surface_info[focussed_surface];
+
+                if (surface_info.state == SurfaceInfo::restored)
+                {
+                    surface_info.restore_rect =
+                        {focussed_surface->top_left(), focussed_surface->size()};
+
+                    focussed_surface->move_to({surface_info.restore_rect.top_left.x, session_info.tile.top_left.y});
+                    focussed_surface->resize({surface_info.restore_rect.size.width, session_info.tile.size.height});
+                    surface_info.state = SurfaceInfo::vmax;
                 }
                 else
                 {
@@ -532,13 +598,34 @@ public:
 private:
     bool handle_key_event(MirKeyEvent const& event)
     {
+        static const int modifier_mask =
+            mir_key_modifier_alt |
+            mir_key_modifier_shift |
+            mir_key_modifier_sym |
+            mir_key_modifier_function |
+            mir_key_modifier_ctrl |
+            mir_key_modifier_meta;
+
         if (event.action == mir_key_action_down &&
             event.scan_code == KEY_F11)
         {
             if (auto const wm = window_manager.lock())
+            switch (event.modifiers & modifier_mask)
             {
+            case mir_key_modifier_none:
                 wm->toggle_maximized();
                 return true;
+
+            case mir_key_modifier_shift:
+                wm->toggle_max_vertical();
+                return true;
+
+            case mir_key_modifier_ctrl:
+                wm->toggle_max_horizontal();
+                return true;
+
+            default:
+                break;
             }
         }
 
