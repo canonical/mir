@@ -289,11 +289,18 @@ private:
         surface.resize({width, height});
     }
 
-    static bool drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle /*bounds*/)
+    static bool drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle bounds)
     {
         if (surface && surface->input_area_contains(from))
         {
-            auto const new_pos = surface->top_left() + (to - from);
+            auto const movement = to - from;
+            auto const new_pos = surface->top_left() + movement;
+            auto const surface_size = surface->size();
+            auto const bottom_right = new_pos + Displacement{surface_size.width.as_int(), surface_size.height.as_int()};
+
+            if ((movement.dx < DeltaX{0} || movement.dy < DeltaY{0}) && !bounds.contains(new_pos)) return true;
+            if ((movement.dx > DeltaX{0} || movement.dy > DeltaY{0}) && !bounds.contains(bottom_right)) return true;
+
             surface->move_to(new_pos);
             return true;
         }
