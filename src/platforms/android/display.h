@@ -23,6 +23,7 @@
 #include "gl_context.h"
 #include "hwc_configuration.h"
 #include "display_configuration.h"
+#include "mir/fd.h"
 
 #include <memory>
 #include <mutex>
@@ -42,6 +43,7 @@ namespace android
 class DisplayBufferBuilder;
 class DisplaySupportProvider;
 class ConfigurableDisplayBuffer;
+class DisplayChangePipe;
 
 class Display : public graphics::Display
 {
@@ -85,6 +87,7 @@ private:
     std::unique_ptr<HwcConfiguration> const hwc_config;
     ConfigChangeSubscription const hotplug_subscription;
     std::array<DisplayConfigurationOutput, 2> mutable configurations;
+    std::unique_ptr<DisplayChangePipe> display_change_pipe;
 };
 
 }

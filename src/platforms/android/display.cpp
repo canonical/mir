@@ -26,12 +26,35 @@
 #include "display_buffer.h"
 #include "display_buffer_builder.h"
 #include "mir/geometry/rectangle.h"
+#include "mir/graphics/event_handler_register.h"
 
 #include <boost/throw_exception.hpp>
+
+#include <unistd.h>
 
 namespace mga=mir::graphics::android;
 namespace mg=mir::graphics;
 namespace geom=mir::geometry;
+
+struct mga::DisplayChangePipe
+{
+    DisplayChangePipe()
+    {
+        int pipes_raw[2] {-1, -1};
+        ::pipe(pipes_raw);
+        read_pipe = mir::Fd{pipes_raw[0]}; 
+        write_pipe = mir::Fd{pipes_raw[1]}; 
+    }
+    void notify_change() { ::write(write_pipe, &data, sizeof(data)); }
+    void ack_change()
+    {
+        char tmp{'b'};
+        ::read(read_pipe, &tmp, sizeof(tmp));
+    }
+    mir::Fd read_pipe;
+    mir::Fd write_pipe;
+    char const data{'a'};
+};
 
 namespace
 {
@@ -90,6 +113,7 @@ std::array<mg::DisplayConfigurationOutput, 2> query_configs(
         }
     };
 }
+
 }
 
 mga::Display::Display(
@@ -102,7 +126,8 @@ mga::Display::Display(
     display_buffer{display_buffer_builder->create_display_buffer(*gl_program_factory, gl_context)},
     hwc_config{display_buffer_builder->create_hwc_configuration()},
     hotplug_subscription{hwc_config->subscribe_to_config_changes(std::bind(&mga::Display::on_hotplug, this))},
-    configurations(query_configs(*hwc_config, display_buffer_builder->display_format()))
+    configurations(query_configs(*hwc_config, display_buffer_builder->display_format())),
+    display_change_pipe(new DisplayChangePipe)
 {
     //Some drivers (depending on kernel state) incorrectly report an error code indicating that the display is already on. Ignore the first failure.
     safe_power_mode(*hwc_config, mir_power_mode_on);
@@ -170,16 +195,22 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
     });
 }
 
+//NOTE: We cannot call back to hwc from within the hotplug callback. Only arrange for an update.
 void mga::Display::on_hotplug()
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
     configuration_dirty = true;
+    display_change_pipe->notify_change();
 }
 
 void mga::Display::register_configuration_change_handler(
-    EventHandlerRegister&,
-    DisplayConfigurationChangeHandler const&)
+    EventHandlerRegister& event_handler,
+    DisplayConfigurationChangeHandler const& change_handler)
 {
+    event_handler.register_fd_handler({display_change_pipe->read_pipe}, this, [&](int){
+        change_handler();
+        display_change_pipe->ack_change();
+    });
 }
 
 void mga::Display::register_pause_resume_handlers(

@@ -215,17 +215,21 @@ struct AndroidDisplayHotplug : ::testing::Test
 
 TEST_F(AndroidDisplayHotplug, hotplug_generates_mainloop_event)
 {
-    std::atomic<int> call_count{0};
-    std::function<void()> change_handler = [&call_count]
+    std::mutex mutex;
+    std::condition_variable cv;
+    int call_count{0};
+    std::function<void()> change_handler = [&]
     {
+        std::unique_lock<decltype(mutex)> lk(mutex);
         call_count++;
+        cv.notify_all();
     };
 
+    std::unique_lock<decltype(mutex)> lk(mutex);
     display.register_configuration_change_handler(mainloop, change_handler);
-    EXPECT_THAT(call_count, testing::Eq(0));
+    stub_output_builder->stub_config.simulate_hotplug();
+    EXPECT_TRUE(cv.wait_for(lk, std::chrono::seconds(2), [&]{ return call_count == 1; }));
 
     stub_output_builder->stub_config.simulate_hotplug();
-    EXPECT_THAT(call_count, testing::Eq(1));
-    stub_output_builder->stub_config.simulate_hotplug();
-    EXPECT_THAT(call_count, testing::Eq(2));
+    EXPECT_TRUE(cv.wait_for(lk, std::chrono::seconds(2), [&]{ return call_count == 2; }));
 }
