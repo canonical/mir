@@ -84,6 +84,10 @@ mir (0.10.0-0ubuntu1) UNRELEASED; urgency=medium
       . Mir reports vertical refresh rates slightly inaccurately (LP: #1407558)
       . [Enhancement] Add an API to lock surface orientation (LP: #1382209)
       . Bootloop with system language Turkish on the Nexus 4 (LP: #1398984)
+      . Remove the implicit assumption that there every surface can be mapped
+        to an input handle. (LP: #1216727)
+      . When revealing hidden surfaces wait for them to become exposed before
+        sending events which we expect them to receive (LP: #1407783)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Fri, 12 Dec 2014 14:33:12 +0800
 
