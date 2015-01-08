@@ -196,25 +196,16 @@ public:
         {
             if (session == session_under(old_cursor))
             {
-                auto const surface = session->default_surface();
-                if (surface && surface->input_area_contains(old_cursor))
-                {
-                    auto const new_pos = surface->top_left() + (cursor - old_cursor);
-                    surface->move_to(new_pos);
-                }
-                else
+                auto const tile = tiles[session.get()];
+
+                if (!drag(session->default_surface(), cursor, old_cursor, tile))
                 {
                     auto const surface_list = surfaces.equal_range(session.get());
 
                     for (auto ps = surface_list.first; ps != surface_list.second; ++ps)
                     {
-                        auto const surface = ps->second.lock();
-                        if (surface && surface->input_area_contains(old_cursor))
-                        {
-                            auto const new_pos = surface->top_left() + (cursor - old_cursor);
-                            surface->move_to(new_pos);
+                        if (drag(ps->second.lock(), cursor, old_cursor, tile))
                             break;
-                        }
                     }
                 }
             }
@@ -296,6 +287,18 @@ private:
         auto height = std::min(new_tile.size.height.as_int()-displacement.dy.as_int(), scaled_height.as_int());
 
         surface.resize({width, height});
+    }
+
+    static bool drag(std::shared_ptr<ms::Surface> surface, Point to, Point from, Rectangle /*bounds*/)
+    {
+        if (surface && surface->input_area_contains(from))
+        {
+            auto const new_pos = surface->top_left() + (to - from);
+            surface->move_to(new_pos);
+            return true;
+        }
+
+        return false;
     }
 
     std::shared_ptr<ms::Session> session_under(Point position)
