@@ -43,6 +43,7 @@ using namespace mir::geometry;
 ///\example server_example_window_management.cpp
 /// Demonstrate simple window management strategies
 
+// TODO these are useful operations that should be part of the library
 namespace mir
 {
 namespace geometry
@@ -57,13 +58,37 @@ inline Height operator*(double scale, Height const& h)
     return Height{scale*h.as_int()};
 }
 
+inline DeltaX operator*(double scale, DeltaX const& dx)
+{
+    return DeltaX{scale*dx.as_int()};
+}
+
+inline DeltaY operator*(double scale, DeltaY const& dy)
+{
+    return DeltaY{scale*dy.as_int()};
+}
+
 inline Size operator*(double scale, Size const& size)
 {
     return Size{scale*size.width, scale*size.height};
 }
-}
+
+inline Displacement operator*(double scale, Displacement const& disp)
+{
+    return Displacement{scale*disp.dx, scale*disp.dy};
 }
 
+inline Displacement as_displacement(Size const& size)
+{
+    return Displacement{size.width.as_int(), size.height.as_int()};
+}
+
+inline Size as_size(Displacement const& disp)
+{
+    return Size{disp.dx.as_int(), disp.dy.as_int()};
+}
+}
+}
 
 namespace
 {
@@ -338,7 +363,7 @@ private:
         {
             auto const top_left = surface->top_left();
             auto const surface_size = surface->size();
-            auto const bottom_right = top_left + Displacement{surface_size.width.as_int(), surface_size.height.as_int()};
+            auto const bottom_right = top_left + as_displacement(surface_size);
 
             auto movement = to - from;
 
@@ -363,14 +388,33 @@ private:
         return false;
     }
 
-    static bool resize(std::shared_ptr<ms::Surface> surface, Point center, double scale, Rectangle /*bounds*/)
+    static bool resize(std::shared_ptr<ms::Surface> surface, Point center, double scale, Rectangle bounds)
     {
         if (surface && surface->input_area_contains(center))
         {
-//            auto const top_left = surface->top_left();
+            auto const old_top_left = surface->top_left();
+            auto new_pos = center + scale*(old_top_left - center);
             auto new_size = scale * surface->size();
 
-            surface->resize(new_size);
+            if (new_pos.x < bounds.top_left.x)
+                new_pos.x = bounds.top_left.x;
+
+            if (new_pos.y < bounds.top_left.y)
+                new_pos.y = bounds.top_left.y;
+
+            auto bottom_right = new_pos + as_displacement(new_size);
+
+            if (bottom_right.x > bounds.bottom_right().x)
+                bottom_right.x = bounds.bottom_right().x;
+
+            if (bottom_right.y > bounds.bottom_right().y)
+                bottom_right.y = bounds.bottom_right().y;
+
+            auto const br_disp = bottom_right - new_pos;
+
+            surface->move_to(new_pos);
+            surface->resize(as_size(br_disp));
+
             return true;
         }
 
