@@ -28,6 +28,8 @@
 #include "mir/scene/session_listener.h"
 #include "mir/shell/focus_controller.h"
 
+#include <linux/input.h>
+
 #include <map>
 #include <vector>
 #include <mutex>
@@ -116,6 +118,8 @@ private:
     void drag(Point) override {}
 
     void resize(Point, double) override {}
+
+    void toggle_maximized() override {}
 };
 
 // simple tiling algorithm
@@ -155,6 +159,7 @@ public:
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         session_info[session].surfaces.push_back(surface);
+        surface_info[surface].state = SurfaceInfo::restored;
     }
 
     void remove_surface(
@@ -172,6 +177,8 @@ public:
                 break;
             }
         }
+
+        surface_info.erase(surface);
     }
 
     void add_session(std::shared_ptr<ms::Session> const& session) override
@@ -281,6 +288,38 @@ public:
             }
         }
     }
+
+    void toggle_maximized() override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+
+        if (auto const focussed_session = focus_controller()->focussed_application().lock())
+        {
+            if (auto const focussed_surface = focussed_session->default_surface())
+            {
+                auto const& session_info = this->session_info[focussed_session.get()];
+                auto& surface_info = this->surface_info[focussed_surface];
+
+                if (surface_info.state == SurfaceInfo::restored)
+                {
+                    surface_info.restore_rect =
+                        {focussed_surface->top_left(), focussed_surface->size()};
+
+                    focussed_surface->move_to(session_info.tile.top_left);
+                    focussed_surface->resize(session_info.tile.size);
+                    surface_info.state = SurfaceInfo::maximized;
+                }
+                else
+                {
+                    focussed_surface->move_to(surface_info.restore_rect.top_left);
+                    focussed_surface->resize(surface_info.restore_rect.size);
+                    surface_info.state = SurfaceInfo::restored;
+
+                }
+            }
+        }
+    }
+
 
 private:
     void update_tiles()
@@ -435,11 +474,6 @@ private:
         return std::shared_ptr<ms::Session>{};
     }
 
-    FocusControllerFactory const focus_controller;
-
-    std::mutex mutex;
-    std::vector<Rectangle> displays;
-
     struct SessionInfo
     {
         SessionInfo() = default;
@@ -454,7 +488,21 @@ private:
         std::vector<std::weak_ptr<ms::Surface>> surfaces;
     };
 
+    struct SurfaceInfo
+    {
+        SurfaceInfo() = default;
+        enum State { restored, maximized, hmax, vmax } state;
+        Rectangle restore_rect;
+    };
+
+    FocusControllerFactory const focus_controller;
+
+    std::mutex mutex;
+    std::vector<Rectangle> displays;
+
     std::map<ms::Session const*, SessionInfo> session_info;
+    std::map<std::weak_ptr<ms::Surface>, SurfaceInfo, std::owner_less<std::weak_ptr<ms::Surface>>> surface_info;
+
     Point old_cursor{};
     std::weak_ptr<ms::Surface> old_surface;
 };
@@ -482,8 +530,18 @@ public:
     }
 
 private:
-    bool handle_key_event(MirKeyEvent const& /*event*/)
+    bool handle_key_event(MirKeyEvent const& event)
     {
+        if (event.action == mir_key_action_down &&
+            event.scan_code == KEY_F11)
+        {
+            if (auto const wm = window_manager.lock())
+            {
+                wm->toggle_maximized();
+                return true;
+            }
+        }
+
         return false;
     }
 
