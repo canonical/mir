@@ -43,6 +43,28 @@ using namespace mir::geometry;
 ///\example server_example_window_management.cpp
 /// Demonstrate simple window management strategies
 
+namespace mir
+{
+namespace geometry
+{
+inline Width operator*(double scale, Width const& w)
+{
+    return Width{scale*w.as_int()};
+}
+
+inline Height operator*(double scale, Height const& h)
+{
+    return Height{scale*h.as_int()};
+}
+
+inline Size operator*(double scale, Size const& size)
+{
+    return Size{scale*size.width, scale*size.height};
+}
+}
+}
+
+
 namespace
 {
 // Very simple - make every surface fullscreen
@@ -67,6 +89,8 @@ private:
     void click(Point) override {}
 
     void drag(Point) override {}
+
+    void resize(Point, double) override {}
 };
 
 // simple tiling algorithm
@@ -172,7 +196,7 @@ public:
         {
             if (session == session_under(old_cursor))
             {
-                auto& info = session_info[session.get()];
+                auto const& info = session_info[session.get()];
 
                 if (drag(old_surface.lock(), cursor, old_cursor, info.tile))
                 {
@@ -199,6 +223,38 @@ public:
         }
 
         old_cursor = cursor;
+    }
+
+    void resize(Point cursor, double scale) override
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+
+        if (auto const session = session_under(cursor))
+        {
+            auto const& info = session_info[session.get()];
+
+            if (resize(old_surface.lock(), cursor, scale, info.tile))
+            {
+                // Still dragging the same old_surface
+            }
+            else if (resize(session->default_surface(), cursor, scale, info.tile))
+            {
+                old_surface = session->default_surface();
+            }
+            else
+            {
+                for (auto const& ps : info.surfaces)
+                {
+                    auto const new_surface = ps.lock();
+
+                    if (resize(new_surface, cursor, scale, info.tile))
+                    {
+                        old_surface = new_surface;
+                        break;
+                    }
+                }
+            }
+        }
     }
 
 private:
@@ -307,6 +363,21 @@ private:
         return false;
     }
 
+    static bool resize(std::shared_ptr<ms::Surface> surface, Point center, double scale, Rectangle /*bounds*/)
+    {
+        if (surface && surface->input_area_contains(center))
+        {
+//            auto const top_left = surface->top_left();
+            auto new_size = scale * surface->size();
+
+            surface->resize(new_size);
+            return true;
+        }
+
+        return false;
+    }
+
+
     std::shared_ptr<ms::Session> session_under(Point position)
     {
         for(auto& info : session_info)
@@ -389,6 +460,16 @@ private:
             if (auto const wm = window_manager.lock())
             {
                 wm->drag(average_pointer(event.pointer_count, event.pointer_coordinates));
+                return true;
+            }
+        }
+        else if (event.action == mir_motion_action_scroll &&
+                 event.modifiers & mir_key_modifier_meta)
+        {
+            if (auto const wm = window_manager.lock())
+            {
+                wm->resize(average_pointer(event.pointer_count, event.pointer_coordinates),
+                    std::pow(1.2f, event.pointer_coordinates[0].vscroll));
                 return true;
             }
         }

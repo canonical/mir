@@ -59,6 +59,8 @@ public:
     virtual void click(geometry::Point cursor) = 0;
 
     virtual void drag(geometry::Point cursor) = 0;
+
+    virtual void resize(geometry::Point cursor, double scale) = 0;
 };
 
 class EventTracker;
