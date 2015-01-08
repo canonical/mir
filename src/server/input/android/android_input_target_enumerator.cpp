@@ -45,6 +45,6 @@ void mia::InputTargetEnumerator::for_each(std::function<void(droidinput::sp<droi
         [&callback, this](std::shared_ptr<mi::Surface> const& target)
         {
             auto handle = repository->handle_for_channel(target->input_channel());
-            callback(handle);
+            if (handle != NULL) callback(handle);
         });
 }
