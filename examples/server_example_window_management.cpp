@@ -357,7 +357,8 @@ private:
                 return true;
             }
         }
-        else if (event.action == mir_motion_action_move)
+        else if (event.action == mir_motion_action_move &&
+                 event.modifiers & mir_key_modifier_alt)
         {
             if (auto const wm = window_manager.lock())
             {
