@@ -176,7 +176,7 @@ public:
 
                 if (drag(old_surface.lock(), cursor, old_cursor, info.tile))
                 {
-                    // DONE
+                    // Still dragging the same old_surface
                 }
                 else if (drag(session->default_surface(), cursor, old_cursor, info.tile))
                 {
@@ -280,13 +280,25 @@ private:
     {
         if (surface && surface->input_area_contains(from))
         {
-            auto const movement = to - from;
-            auto const new_pos = surface->top_left() + movement;
+            auto const top_left = surface->top_left();
             auto const surface_size = surface->size();
-            auto const bottom_right = new_pos + Displacement{surface_size.width.as_int(), surface_size.height.as_int()};
+            auto const bottom_right = top_left + Displacement{surface_size.width.as_int(), surface_size.height.as_int()};
 
-            if ((movement.dx < DeltaX{0} || movement.dy < DeltaY{0}) && !bounds.contains(new_pos)) return true;
-            if ((movement.dx > DeltaX{0} || movement.dy > DeltaY{0}) && !bounds.contains(bottom_right)) return true;
+            auto movement = to - from;
+
+            if (movement.dx < DeltaX{0})
+                movement.dx = std::max(movement.dx, (bounds.top_left - top_left).dx);
+
+            if (movement.dy < DeltaY{0})
+                movement.dy = std::max(movement.dy, (bounds.top_left - top_left).dy);
+
+            if (movement.dx > DeltaX{0})
+                movement.dx = std::min(movement.dx, (bounds.bottom_right() - bottom_right).dx);
+
+            if (movement.dy > DeltaY{0})
+                movement.dy = std::min(movement.dy, (bounds.bottom_right() - bottom_right).dy);
+
+            auto new_pos = surface->top_left() + movement;
 
             surface->move_to(new_pos);
             return true;
