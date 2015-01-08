@@ -23,6 +23,7 @@ add_library(exampleserverconfig STATIC
   server_example_fullscreen_placement_strategy.cpp
   server_example_host_lifecycle_event.cpp
   server_example_window_manager.cpp
+  server_example_window_management.cpp
 )
 
 target_link_libraries(eglapp
