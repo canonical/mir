@@ -25,6 +25,7 @@
 #include "src/server/graphics/program_factory.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/glib_main_loop.h"
+#include "mir/time/steady_clock.h"
 
 #include "examples/graphics.h"
 #include "mir_test_doubles/mock_display_report.h"
@@ -191,20 +192,18 @@ struct AndroidDisplayHotplug : ::testing::Test
     };
 
     AndroidDisplayHotplug() :
-        loop([this]{ mainloop.run(); })
+        loop{std::thread([this]{ mainloop.run(); })}
     {
     }
 
     ~AndroidDisplayHotplug()
     {
-        mainloop.stop();
-        if (loop.joinable())
-            loop.join();
+        mainloop.enqueue(this, [this] { mainloop.stop(); });
+        loop.join();
     }
 
+    mir::GLibMainLoop mainloop{std::make_shared<mir::time::SteadyClock>()};
     std::thread loop;
-    std::shared_ptr<mtd::AdvanceableClock> clock{std::make_shared<mtd::AdvanceableClock>()};
-    mir::GLibMainLoop mainloop{clock};
     std::shared_ptr<StubOutputBuilder> stub_output_builder{std::make_shared<StubOutputBuilder>()};
     mga::Display display{
         stub_output_builder,
@@ -218,13 +217,12 @@ TEST_F(AndroidDisplayHotplug, hotplug_generates_mainloop_event)
     std::mutex mutex;
     std::condition_variable cv;
     int call_count{0};
-    std::function<void()> change_handler = [&]
+    std::function<void()> change_handler{[&]
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         call_count++;
         cv.notify_all();
-    };
-
+    }};
     std::unique_lock<decltype(mutex)> lk(mutex);
     display.register_configuration_change_handler(mainloop, change_handler);
     stub_output_builder->stub_config.simulate_hotplug();
@@ -232,4 +230,5 @@ TEST_F(AndroidDisplayHotplug, hotplug_generates_mainloop_event)
 
     stub_output_builder->stub_config.simulate_hotplug();
     EXPECT_TRUE(cv.wait_for(lk, std::chrono::seconds(2), [&]{ return call_count == 2; }));
+    mainloop.unregister_fd_handler(&display);
 }
