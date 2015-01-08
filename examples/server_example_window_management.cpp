@@ -174,12 +174,25 @@ public:
             {
                 auto& info = session_info[session.get()];
 
-                if (!drag(session->default_surface(), cursor, old_cursor, info.tile))
+                if (drag(old_surface.lock(), cursor, old_cursor, info.tile))
+                {
+                    // DONE
+                }
+                else if (drag(session->default_surface(), cursor, old_cursor, info.tile))
+                {
+                    old_surface = session->default_surface();
+                }
+                else
                 {
                     for (auto const& ps : info.surfaces)
                     {
-                        if (drag(ps.lock(), cursor, old_cursor, info.tile))
+                        auto const new_surface = ps.lock();
+
+                        if (drag(new_surface, cursor, old_cursor, info.tile))
+                        {
+                            old_surface = new_surface;
                             break;
+                        }
                     }
                 }
             }
@@ -316,6 +329,7 @@ private:
 
     std::map<ms::Session const*, SessionInfo> session_info;
     Point old_cursor{};
+    std::weak_ptr<ms::Surface> old_surface;
 };
 }
 
