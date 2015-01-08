@@ -113,7 +113,6 @@ std::array<mg::DisplayConfigurationOutput, 2> query_configs(
         }
     };
 }
-
 }
 
 mga::Display::Display(
