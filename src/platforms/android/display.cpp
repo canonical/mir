@@ -35,21 +35,29 @@ namespace geom=mir::geometry;
 
 namespace
 {
+static mg::DisplayConfigurationOutputId const primary_id{0};
+static mg::DisplayConfigurationOutputId const external_id{1};
+
 void safe_power_mode(mga::HwcConfiguration& config, MirPowerMode mode) noexcept
 try
 {
     config.power_mode(mga::DisplayName::primary, mode);
 } catch (...) {}
 
+//TODO: probably could be in the helper class
 std::array<mg::DisplayConfigurationOutput, 2> query_configs(
     mga::HwcConfiguration& hwc_config,
     MirPixelFormat format)
 {
     auto primary_attribs = hwc_config.active_attribs_for(mga::DisplayName::primary);
     auto external_attribs = hwc_config.active_attribs_for(mga::DisplayName::external);
+    std::vector<mg::DisplayConfigurationMode> external_modes;
+    if (external_attribs.connected)
+        external_modes.emplace_back(
+            mg::DisplayConfigurationMode{external_attribs.pixel_size, external_attribs.vrefresh_hz});
     return {
         mg::DisplayConfigurationOutput{
-            mg::DisplayConfigurationOutputId{mga::DisplayName::primary},
+            primary_id,
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::lvds,
             {format},
@@ -65,11 +73,11 @@ std::array<mg::DisplayConfigurationOutput, 2> query_configs(
             mir_orientation_normal
         },
         mg::DisplayConfigurationOutput{
-            mg::DisplayConfigurationOutputId{mga::DisplayName::external},
+            external_id,
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::displayport,
             {format},
-            {mg::DisplayConfigurationMode{external_attribs.pixel_size, external_attribs.vrefresh_hz}},
+            external_modes,
             0,
             external_attribs.mm_size,
             external_attribs.connected,
@@ -109,7 +117,7 @@ mga::Display::Display(
 
 mga::Display::~Display()
 {
-    if (configurations[mga::DisplayName::primary].power_mode != mir_power_mode_off)
+    if (configurations[primary_id.as_value()].power_mode != mir_power_mode_off)
         safe_power_mode(*hwc_config, mir_power_mode_off);
 }
 
@@ -117,7 +125,7 @@ void mga::Display::for_each_display_buffer(std::function<void(mg::DisplayBuffer&
 {
     std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
 
-    if (configurations[mga::DisplayName::primary].power_mode == mir_power_mode_on)
+    if (configurations[primary_id.as_value()].power_mode == mir_power_mode_on)
         f(*display_buffer);
 }
 
@@ -149,12 +157,12 @@ void mga::Display::configure(mg::DisplayConfiguration const& new_configuration)
         configurations[output.id.as_value()].orientation = output.orientation;
 
         //TODO: add the external displaybuffer
-        if (output.id.as_value() == mga::DisplayName::primary)
+        if (output.id == primary_id)
         {
             if (output.power_mode != configurations[output.id.as_value()].power_mode)
             {
                 hwc_config->power_mode(mga::DisplayName::primary, output.power_mode);
-                configurations[mga::DisplayName::primary].power_mode = output.power_mode;
+                configurations[output.id.as_value()].power_mode = output.power_mode;
             }
 
             display_buffer->configure(output.power_mode, output.orientation);
