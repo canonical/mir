@@ -47,8 +47,8 @@ void mir::report::lttng::CompositorReport::rendered_frame(SubCompositorId id)
     mir_tracepoint(mir_server_compositor, rendered_frame, id);
 }
 
-void mir::report::lttng::CompositorReport::finished_frame(bool bypassed, SubCompositorId id)
+void mir::report::lttng::CompositorReport::finished_frame(SubCompositorId id)
 {
-    mir_tracepoint(mir_server_compositor, finished_frame, bypassed, id);
+    mir_tracepoint(mir_server_compositor, finished_frame, id);
 }
 

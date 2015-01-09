@@ -71,11 +71,10 @@ TRACEPOINT_EVENT(
 TRACEPOINT_EVENT(
     mir_server_compositor,
     finished_frame,
-    TP_ARGS(int, bypassed, void const*, id),
+    TP_ARGS(void const*, id),
     TP_FIELDS(
-        ctf_integer(int, bypassed, bypassed)
         ctf_integer_hex(uintptr_t, id, (uintptr_t)(id))
-    )
+     )
 )
 
 #endif /* MIR_LTTNG_COMPOSITOR_REPORT_TP_H_ */

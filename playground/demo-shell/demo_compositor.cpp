@@ -123,7 +123,6 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer.suspend();
-        report->finished_frame(true, this);
     }
     else
     {
@@ -144,8 +143,9 @@ void me::DemoCompositor::composite(mc::SceneElementSequence&& elements)
         renderable_list.clear();
 
         display_buffer.flip();
-        report->finished_frame(false, this);
     }
+
+    report->finished_frame(this);
 }
 
 void me::DemoCompositor::on_cursor_movement(

@@ -77,7 +77,6 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     if (display_buffer.post_renderables_if_optimizable(renderable_list))
     {
         renderer->suspend();
-        report->finished_frame(true, this);
     }
     else
     {
@@ -96,6 +95,7 @@ void mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         renderable_list.clear();
 
         display_buffer.flip();
-        report->finished_frame(false, this);
     }
+
+    report->finished_frame(this);
 }
